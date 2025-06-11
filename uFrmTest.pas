@@ -1370,7 +1370,7 @@ var
 begin
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 
-  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
+//  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
 
 
   Wh.ExecReference(myfrm_Rep_Salary);exit; //myfrm_J_Parsec
