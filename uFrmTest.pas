@@ -1355,6 +1355,40 @@ exit;
   Wh.ExecReference(myfrm_R_MinRemainsI);
   Exit;
   Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable], fAdd, null, null); //myfoModal, myfoSizeable
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 //TForm_References.Create(Self, myfrm_R_DelayedInprodReasons, [myfoEnableMaximize, myfoMultiCopy, myfoSizeable], fNone, 0, null);
 //  res := TFrmXWAbout.Create(Self, False);
 //  res.ShowModal;
@@ -1370,7 +1404,7 @@ var
 begin
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 
-//  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
+  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
 
 
   Wh.ExecReference(myfrm_Rep_Salary);exit; //myfrm_J_Parsec

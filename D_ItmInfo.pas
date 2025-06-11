@@ -95,6 +95,10 @@ uses
   F_TestTree
   ;
 
+
+
+
+
 procedure TDlg_ItmInfo.DelNom(Del: Boolean = False);
 var
   va: TVarDynArray;
