@@ -1,0 +1,2 @@
+inherited myDBParsec: TmyDBParsec
+end
