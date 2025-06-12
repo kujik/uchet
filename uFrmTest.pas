@@ -1332,7 +1332,7 @@ var
 begin
   TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
   if i = 0 then begin
-
+    i:=4;
   end;
 
   Exit;
