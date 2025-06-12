@@ -10,9 +10,7 @@ object FrmTest: TFrmTest
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Visible = True
-  PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
     Left = 377
@@ -202,6 +200,7 @@ object FrmTest: TFrmTest
     EditLabel.Height = 13
     EditLabel.Caption = 'LabeledEdit1'
     TabOrder = 14
+    Text = ''
     OnChange = LabeledEdit1Change
   end
   object Bt_Dlg_BasicInput: TBitBtn
@@ -431,6 +430,8 @@ object FrmTest: TFrmTest
     Padding.Right = 4
     Padding.Bottom = 4
     TabOrder = 29
+    ExplicitTop = 663
+    ExplicitWidth = 1213
     object Panel2: TPanel
       Left = 1168
       Top = 4

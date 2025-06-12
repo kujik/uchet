@@ -1330,6 +1330,8 @@ var
   st: string;
 begin
   TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
+
+  Exit;
   //Wh.ExecReference(myfrm_Rep_PlannedMaterials); Exit;
 //  TFrmGridRef.Show(Self, 'myfrm_R_StdProjects_1', [myfoSizeable], fNone, 10, null); exit;
   TFrmTestMdi1.Show(Application, '123456789', [], fNone, 0, null); exit;
@@ -1355,34 +1357,6 @@ exit;
   Wh.ExecReference(myfrm_R_MinRemainsI);
   Exit;
   Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable], fAdd, null, null); //myfoModal, myfoSizeable
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
