@@ -906,7 +906,34 @@ where
   and z.id_status in (30, 32)
 ;
 
-select * from v_reservpos_completed_orders;
+create or replace view v_reservpos_completed_orders2 as 
+--позиции резерва по завершенным в ”чете заказам
+select 
+  s.*,
+  o.ornum,
+  o.dt_end,
+  z.id_status,
+  n.name,
+  '[' || o.ornum || ' ' || to_char(o.dt_end) || '] [' || n.name || '] [' || to_char(s.quantity) || ']' as info
+from 
+  orders o,
+  dv.stock s,
+  dv.zakaz z,
+  dv.nomenclatura n
+where 
+  z.id_zakaz = o.id_itm 
+  and o.id_itm is not null
+  and o.dt_end is not null
+  and s.doctype = 27
+  and s.id_doc = z.id_zakaz
+  and n.id_nomencl = s.id_nomencl
+  --and z.id_status in (30, 32)  //!!!!
+order by
+  o.dt_end desc  
+;
+
+
+select * from v_reservpos_completed_orders2;
 select * from stock where doctype = 27;
 
 --заказы, которые завершены или отгружены, но по ним числ€тс€ позиции в резерве
@@ -914,6 +941,38 @@ select distinct numzakaz from v_reservpos_completed_orders order by numzakaz;
 
 --удаление из резерва данных по заказам,  которые завершены или отгружены
 --delete from dv.stock where id_stock in (select id_stock from v_reservpos_completed_orders);
+
+
+create or replace procedure P_Itm_DelRezervForOrder(
+--удаление резерва по заказу с переданным јйƒи (в ”чете!)
+  AIdOrder in number
+)  
+is
+  FIdZakaz number;
+begin
+  select id_itm into FIdZakaz from orders where id = AIdOrder;
+  if FIdZakaz is not null then 
+    delete from dv.stock s where s.doctype=27 and s.id_doc=FIdZakaz;
+    update dv.nomenclatura_in_izdel niz set niz.rezerv_id=0 where niz.rezerv_id=1 and niz.id_zakaz=FIdZakaz;
+  end if;
+end;
+/
+
+create or replace procedure P_Itm_DelRezervForCompleted
+is
+--удаление резерва »“ћ по всем заказам, завершенным в ”чете
+begin
+  for c1 in (select id from orders where dt_end is not null) loop
+    P_Itm_DelRezervForOrder(c1.id);
+  end loop;
+end;
+/
+
+begin
+--  P_Itm_DelRezervForCompleted;
+end;
+/  
+
 
 
 --------------------------------------------------------------------------------

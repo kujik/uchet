@@ -55,6 +55,7 @@ type
     function  CreateDemand: Boolean;
     procedure FillFromPlanned;
     procedure SetDetailInfo;
+    procedure ClearInvalidReserve;
   protected
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
@@ -184,6 +185,7 @@ begin
   Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnParams, User.Role(rOr_Other_R_MinRemains_Ch)],[btnGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
     [-btnCustom_SetCategory], [-btnCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
     [-btnCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-btnCustom_SetOnWayPeriod],
+    [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
     [],[btnExcelView],[-1001, True,'Просмотреть историю'],[],[btnGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[btnCtlPanel]
   ]);
 
@@ -431,6 +433,9 @@ begin
     ) < 0 then
       Exit;
     Wh.ExecReference(myfrm_J_SnHistory, Self, [], va2[0]);
+  end
+  else if Tag = 1002 then begin
+    ClearInvalidReserve;
   end
   else if Tag = btnParams then begin
     repeat
@@ -914,7 +919,7 @@ begin
   Q.QExecSql('update spl_minremains_params set d0=:d0$i,d1=:d1$i,d2=:d2$i,d3=:d3$i,d4=:d4$i,d5=:d5$i,d6=:d6$i', [va2[0]] + va1);
 //  SetCaptions;
 //  Gh.SetGridColumnsProperty(DBGridEh1, cptCaption, Pr[1].Fields, Pr[1].Captions);
-  Refresh;
+  Frg1.RefreshGrid;
 end;
 
 procedure TFrmOGedtSnMain.SetCategory;
@@ -1294,6 +1299,27 @@ begin
       Frg3.DBGridEh1.FindFieldColumn(f).Color := RGB(150, 255, 150);
   end;
 end;
+
+procedure TFrmOGedtSnMain.ClearInvalidReserve;
+var
+  va: TVarDynArray;
+  i: Integer;
+begin
+  i := Q.QSelectOneRow('select count(*) from v_reservpos_completed_orders2', [])[0];
+  if i = 0 then begin
+    MyInfoMessage('Нет подвисших резервов.');
+    Exit;
+  end;
+  va := Q.QLoadToVarDynArrayOneCol('select info from v_reservpos_completed_orders2', []);
+  if MyQuestionMessage('В резерве зависли следующие (' + IntToStr(i) + ') позиции по закрытым в Учете заказам:'#13#10+
+    '(Нажмите "Да" чтобы очистить резервы)'#13#10 + A.Implode(va, #13#10), 1) <> mrYes then
+    Exit;
+  Q.QBeginTrans(True);
+  Q.QCallStoredProc('P_Itm_DelRezervForCompleted', '', []);
+  Q.QCommitOrRollback(True);
+  Frg1.RefreshGrid;
+end;
+
 
 
 
