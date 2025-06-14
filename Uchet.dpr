@@ -54,7 +54,7 @@ uses
   uFrmTest in 'uFrmTest.pas' {FrmTest},
   D_SelectUsers in 'D_SelectUsers.pas' {Dlg_SelectUsers},
   D_SnOrder in 'D_SnOrder.pas' {Dlg_SnOrder},
-  D_NoOraAfterStart in 'D_NoOraAfterStart.pas' {Dlg_NoOraAfterStart},
+  uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
   D_MainSettings in 'D_MainSettings.pas' {Dlg_MainSettings},
   D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
@@ -262,7 +262,7 @@ begin
 
   AfterProgramStart := true;
 
-  if not TDlg_NoOraAfterStart.Execute then
+  if not FrmXWNoConnectionAfterStart.Execute then
     Exit;
   if not TFrmXDmsgIncorrectDate.Execute then
     Exit;

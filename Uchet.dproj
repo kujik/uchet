@@ -128,7 +128,7 @@
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV_;SRV_;PROD_;OR;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.8982;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.14 13:18:10;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.8982;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.14 13:38:34;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
@@ -213,8 +213,8 @@
         <DCCReference Include="D_SnOrder.pas">
             <Form>Dlg_SnOrder</Form>
         </DCCReference>
-        <DCCReference Include="D_NoOraAfterStart.pas">
-            <Form>Dlg_NoOraAfterStart</Form>
+        <DCCReference Include="uFrmXWNoConnectionAfterStart.pas">
+            <Form>FrmXWNoConnectionAfterStart</Form>
         </DCCReference>
         <DCCReference Include="D_SetPassword.pas">
             <Form>Dlg_SetPassword</Form>
