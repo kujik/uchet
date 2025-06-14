@@ -605,7 +605,8 @@ begin
     myfrm_R_OrderTypes,
     myfrm_R_WorkCellTypes,
     myfrm_J_OrItemsInProd,
-    myfrm_J_ItmLog
+    myfrm_J_ItmLog,
+    myfrm_J_SnHistory
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);

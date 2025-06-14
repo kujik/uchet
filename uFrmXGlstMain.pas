@@ -1534,6 +1534,47 @@ begin
     Frg1.InfoArray:=[
     ];
   end
+  else if FormDoc = myfrm_J_SnHistory then begin
+    Caption := 'Состояние СН на дату';
+    va2 := [
+      ['id$i','_id','40'],
+      ['dt$d','Дата','120'],
+      ['state$s','Статус','120'],
+      ['supplierinfo$s','Основной поставщик','150'],
+      ['qnta0$f','Текущий остаток|ПЩ','60'],
+      ['qnta1$f','Текущий остаток|И','60'],
+      ['qnta2$f','Текущий остаток|ДМ','60'],
+      ['qnt$f','Текущий остаток|Всего','60'],
+      ['rezerva0$f','Текущий резерв|ПЩ','40'],
+      ['rezerva1$f','Текущий резерв|И','40'],
+      ['rezerva2$f','Текущий резерв|ДМ','40'],
+      ['rezerv$f','Текущий резерв|Всего','40'],
+      ['qnt_onway$f','В пути','40'],
+      ['qnt_in_processing$f','В обработке','40'],
+      ['planned_need_days$i','Период закупки','40','t=3'],
+      ['qnt_order$f','Заказ|Кол-ко','60','t=3'],
+      ['to_order$i','Заказ|В заявку','40', 'chb','t=3'],
+      ['need$f','Потребность|Мин.','60'],
+      ['need_p$f','Потребность|Плановая','60'],
+      ['price_check$f','Стоимость|Контрольная цена','60'],
+      ['price_main$f','Стоимость|Цена','60'],
+      ['qnt_pl1$f','Плановый резерв|1''60'],
+      ['qnt_pl2$f','Плановый резерв|2''60'],
+      ['qnt_pl3$f','Плановый резерв|3''60'],
+      ['qnt_pl$f', 'Плановый резерв|Всего','60']
+    ];
+    Frg1.Opt.SetFields([['name','Наименование','300;h']] + va2);
+    Frg1.Opt.SetTable('v_spl_history', '', 'id');
+    Frg2.Opt.SetFields(va2);
+    Frg2.Opt.SetTable('spl_history');
+    Frg2.Opt.SetWhere('where id = :id$i');
+    Frg2.Opt.Caption := 'История по номенклатуре';
+    //01-02-2025 00:10:25 Заказ
+    Q.QSetContextValue('spl_history_date', IncSecond(EncodeDateTime(
+      StrToInt(Copy(AddParam, 7, 4)), StrToInt(Copy(AddParam, 4, 2)), StrToInt(Copy(AddParam, 1, 2)),
+      StrToInt(Copy(AddParam, 12, 2)), StrToInt(Copy(AddParam, 15, 2)), StrToInt(Copy(AddParam, 18, 2)), 0
+    )));
+  end;
   ;
 
   //--------------------------------------------------
@@ -2385,6 +2426,8 @@ begin
     Fr.SetSqlParameters('id_format$i', [Frg1.ID]);
   if (FormDoc =  myfrm_J_Sgp_Acts) then
     Fr.SetSqlParameters('id$i;doctype$s', [Frg1.ID, Frg1.GetValueS('doctype')]);
+  if FormDoc = myfrm_J_SnHistory then
+    Fr.SetSqlParameters('id$i', [Frg1.ID]);
 end;
 
 procedure TFrmXGlstMain.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);

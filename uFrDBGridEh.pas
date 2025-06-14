@@ -950,6 +950,8 @@ begin
     FSql.Table := FSql.View;
   if FSql.Table = '*' then
     FSql.Table := FSql.View;
+  if AIdField <> '' then
+    FSql.IdField := AIdField;
   FSql.RefreshBeforeSave := ARefreshBeforeSave;
   FSql.RefreshAfterSave := ARefreshAfterSave;
 end;

@@ -67,6 +67,7 @@ type
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
 //    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Msg: string); virtual;
 //    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
+    procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
   public
   end;
 
@@ -137,10 +138,10 @@ begin
   //Q.QExecSql('selet 1 from', [], False);
   va := Copy(PeriodNames, 1);
   //поля по периодам для прихода
-  for i:=1 to High(Days) do
+  for i:=1 to High(va) + 1 do
     va2 := va2 + [['qnti' + InttoStr(i) + '$f', 'Приход|' + va[i - 1], '60', 't=1']];
   //поля по периодам для расхода
-  for i:=1 to High(Days) do
+  for i:=1 to High(va) + 1 do
     va2 := va2 + [['qnt' + InttoStr(i) + '$f', 'Расход|' + va[i - 1], '60', 't=1']];
   va2 := va2 +
   [
@@ -181,8 +182,9 @@ begin
 
   //кнопки (формирование заявки только для тех у кого права на изменение)
   Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnParams, User.Role(rOr_Other_R_MinRemains_Ch)],[btnGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
-    [-btnCustom_SetCategory], [-btnCustom_SnRecalcPlannedEst], [-btnCustom_SnFillFromPlanned], [-btnCustom_SetOnWayPeriod],
-    [],[btnExcelView],[],[btnGo, User.Role(rOr_Other_R_MinRemains_Ch)],[btnCtlPanel]
+    [-btnCustom_SetCategory], [-btnCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
+    [-btnCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-btnCustom_SetOnWayPeriod],
+    [],[btnExcelView],[-1001, True,'Просмотреть историю'],[],[btnGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[btnCtlPanel]
   ]);
 
   Frg1.CreateAddControls('1', cntCheck, 'Данные по периодам', 'ChbPeriods', '', 4, yrefC, 129);
@@ -197,6 +199,38 @@ begin
   Frg1.CreateAddControls('1', cntCheck, 'Пустые', 'ChbCatEmpty', '', 620 , yrefC, 80);
   Frg1.CreateAddControls('1', cntCheck, 'Все', 'ChbCatAll', '', 620 + 80, yrefC, 40);
 //  Frg1.ReadControlValues;
+
+  Frg2.Opt.SetFields([
+    ['id$i','_id','40'],
+    ['dt$d','Дата','120'],
+    ['state$s','Статус','120'],
+    ['supplierinfo$s','Основной поставщик','150'],
+    ['qnta0$f','Текущий остаток|ПЩ','60'],
+    ['qnta1$f','Текущий остаток|И','60'],
+    ['qnta2$f','Текущий остаток|ДМ','60'],
+    ['qnt$f','Текущий остаток|Всего','60'],
+    ['rezerva0$f','Текущий резерв|ПЩ','40'],
+    ['rezerva1$f','Текущий резерв|И','40'],
+    ['rezerva2$f','Текущий резерв|ДМ','40'],
+    ['rezerv$f','Текущий резерв|Всего','40'],
+    ['qnt_onway$f','В пути','40'],
+    ['qnt_in_processing$f','В обработке','40'],
+    ['planned_need_days$i','Период закупки','40','t=3'],
+    ['qnt_order$f','Заказ|Кол-ко','60','t=3'],
+    ['to_order$i','Заказ|В заявку','40', 'chb','t=3'],
+    ['need$f','Потребность|Мин.','60'],
+    ['need_p$f','Потребность|Плановая','60'],
+    ['price_check$f','Стоимость|Контрольная цена','60'],
+    ['price_main$f','Стоимость|Цена','60'],
+    ['qnt_pl1$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 0))],'60'],
+    ['qnt_pl2$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 1))],'60'],
+    ['qnt_pl3$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 2))],'60'],
+    ['qnt_pl$f', 'Плановый резерв|Всего','60']
+  ]);
+  Frg2.Opt.SetTable('spl_history');
+  Frg2.Opt.SetWhere('where id = :id$i');
+  Frg2.Opt.Caption := 'История по номенклатуре';
+
   SetCategoryes;
 
   //изменяемые поля если есть права на изменение
@@ -387,6 +421,16 @@ begin
   end
   else if Tag = btnCustom_SnFillFromPlanned then begin
     FillFromPlanned;
+  end
+  else if Tag = 1001 then begin
+    va1 := Q.QLoadToVarDynArrayOneCol('select caption from v_spl_history_contents', []);
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~История состояния СН', 50 + 200, 50,
+      [[cntComboL, 'Дата:','1:500']],
+      [VarArrayOf(['', VarArrayOf(va1)])],
+      va2, [['']], nil
+    ) < 0 then
+      Exit;
+    Wh.ExecReference(myfrm_J_SnHistory, Self, [], va2[0]);
   end
   else if Tag = btnParams then begin
     repeat
@@ -792,6 +836,11 @@ begin
   SetDetailInfo;
 end;
 
+procedure TFrmOGedtSnMain.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
+begin
+  Fr.SetSqlParameters('id$i', [Frg1.ID]);
+end;
+
 
 {END события грида}
 
@@ -1116,7 +1165,7 @@ function TFrmOGedtSnMain.CreateDemand: Boolean;
 //перед созданием возможно сохранение всей таблицы (со снятым фильтром) в экселе в специальном каталоге
 //в заявку выгрузятся только позиции по текущей категории, для которых задана и не нулевое количество к заказу и стоит галка В заказ
 var
-  i, j: Integer;
+  i, j, ToDemand: Integer;
   idd, res: Integer;
   gf: TVarDynArray2;
   id_category: Integer;
@@ -1126,9 +1175,9 @@ begin
   //получим айди категории
   id_category:= Frg1.GetControlValue('CbCategory');
   //количество, которое попадет в заявку
-  i := Q.QSelectOneRow('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [id_category])[0];
+  ToDemand := Q.QSelectOneRow('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [id_category])[0];
   //если ничего нет, то выйдем
-  if i = 0 then begin
+  if ToDemand = 0 then begin
     MyInfoMessage('Нет ни одной позиции к заказу!');
     Result := False;
     Exit;
@@ -1147,7 +1196,7 @@ begin
   end;
   //переспросим
   if MyQuestionMessage(
-    'Создать заявку на снабжение из ' + S.GetEndingFull(i, 'позици', 'и', 'й', 'й') + ' по категории "' +
+    'Создать заявку на снабжение из ' + S.GetEndingFull(ToDemand, 'позици', 'и', 'й', 'й') + ' по категории "' +
     A.FindValueInArray2(id_category, 1, 0, Categoryes) + '"?'
     ) <> mrYes then  Exit;
   //спросим, сохранить ли в экселе
@@ -1162,7 +1211,8 @@ begin
   end;
   //вызовем процедуру формирования заявки поставщику по переданной категории
   Q.QBeginTrans(True);
-  Length(Q.QCallStoredProc('P_CreateSplDemand', 'IdCategory$i', [id_category]));
+  Q.QCallStoredProc('P_Spl_Create_History', 'st$s', ['Заказ']);
+  Q.QCallStoredProc('P_CreateSplDemand', 'IdCategory$i', [id_category]);
   Q.QCommitOrRollback();
   //если завершилось неудачно, сообщим и выйдем
   if Q.PackageMode <> 1 then begin
@@ -1170,9 +1220,8 @@ begin
     Exit;
   end;
   //удача - сообщим и обновим грид
-  Refresh;
+  Frg1.RefreshGrid;
   MyInfoMessage('Заявка создана.');
-  Close;
 end;
 
 procedure TFrmOGedtSnMain.FillFromPlanned;
@@ -1230,6 +1279,8 @@ begin
     f := Frg3.MemTableEh1.Fields[i].FieldName;
     Frg3.MemTableEh1.Fields[i].Value := null;
 //    if not MemTableEh1.Active or (MemTableEh1.RecordCount < 1) then Continue;
+    if Frg1.DbGridEh1.FindFieldColumn(f) = nil then
+      Continue;
     Frg3.MemTableEh1.Fields[i].Value := Frg1.MemTableEh1.FieldByName(f).Value;
     if (Length(RowColors) > 0) and (not VarIsEmpty(RowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index])) then
       Frg3.DBGridEh1.FindFieldColumn(f).Color := RowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index];

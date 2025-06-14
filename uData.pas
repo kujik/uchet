@@ -904,6 +904,7 @@ const
   myfrm_R_OrderTypes='R_OrderTypes';
   myfrm_R_WorkCellTypes='R_WorkCellTypes';
   myfrm_J_OrItemsInProd='J_OrItemsInProd';
+  myfrm_J_SnHistory='J_SnHistory';
   myfrm_J_ItmLog='J_ItmLog';
 
   myfrm_Adm_UserInterface = 'Adm_UserInterface';

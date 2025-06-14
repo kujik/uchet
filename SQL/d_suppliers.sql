@@ -1324,6 +1324,11 @@ create table spl_history (
   id number(11),
   supplierinfo varchar2(4000),
   qnt number,
+  qnta0 number,
+  qnta1 number,
+  qnta2 number,
+  qnt_in_processing number,
+  qnt_pl number,
   qnt_pl1 number,
   qnt_pl2 number, 
   qnt_pl3 number,
@@ -1335,6 +1340,8 @@ create table spl_history (
   price_check number(11,2),
   qnt_order number,
   to_order number(1),
+  need number,
+  need_p number,
   constraint pk_spl_history primary key (id, dt)
 );  
 
@@ -1348,15 +1355,20 @@ where
   v.id = l.id (+)
   and h.id (+) = l.id and h.dt (+) = l.dt 
   and v.id = 13053  
+  and l.rn = 1
 ; 
 
 
 create or replace procedure P_Spl_Create_History( 
+--добавляем в историю снабжения записи по номенклатуре, по тем позициям, которых в истории еще вообще нет, либо самая посздняя по дате запись
+--для этой номенклатуры хотя бы одним полем отличается от записи для нее в таблице снабжения
   AState varchar2
 ) is
+  FDate date;
   cursor c1 is
     select 
-      v.id, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order 
+      v.id, v.supplierinfo, v.qnt, v.qnta0, v.qnta1, v.qnta2, v.qnt_in_processing, v.qnt_pl, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, 
+      v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p 
     from 
       v_spl_minremains v,
       (select id, dt, row_number() over (partition by id order by dt desc) as rn from spl_history) l,
@@ -1366,27 +1378,69 @@ create or replace procedure P_Spl_Create_History(
       and l.rn (+) = 1
       and h.id (+) = l.id and h.dt (+) = l.dt
       and (
-      nvl(v.supplierinfo,0) <> nvl(h.supplierinfo,0) or nvl(v.qnt,0) <> nvl(h.qnt,0) or nvl(v.qnt_pl1,0) <> nvl(h.qnt_pl1,0) or 
-      nvl(v.qnt_pl2,0) <> nvl(h.qnt_pl2,0) or nvl(v.qnt_pl3,0) <> nvl(h.qnt_pl3,0) or 
+      state is not null or
+      nvl(v.supplierinfo,0) <> nvl(h.supplierinfo,0) or nvl(v.qnt,0) <> nvl(h.qnt,0) or nvl(v.qnta0,0) <> nvl(h.qnta0,0) or nvl(v.qnta1,0) <> nvl(h.qnta1,0) or nvl(v.qnta2,0) <> nvl(h.qnta2,0) or
+      nvl(v.qnt_in_processing,0) <> nvl(h.qnt_in_processing,0) or nvl(v.qnt_pl,0) <> nvl(h.qnt_pl,0) or 
+      nvl(v.qnt_pl1,0) <> nvl(h.qnt_pl1,0) or nvl(v.qnt_pl2,0) <> nvl(h.qnt_pl2,0) or nvl(v.qnt_pl3,0) <> nvl(h.qnt_pl3,0) or 
       nvl(v.rezerv,0) <> nvl(h.rezerv,0) or nvl(v.rezerva0,0) <> nvl(h.rezerva0,0) or nvl(v.rezerva1,0) <> nvl(h.rezerva1,0) or nvl(v.rezerva2,0) <> nvl(h.rezerva2,0) or
       nvl(v.qnt_onway,0) <> nvl(h.qnt_onway,0) or nvl(v.planned_need_days,0) <> nvl(h.planned_need_days,0) or nvl(v.price_main,0) <> nvl(h.price_main,0) or
-      nvl(v.price_check,0) <> nvl(h.price_check,0) or nvl(v.qnt_order,0) <> nvl(h.qnt_order,0) or nvl(v.to_order,0) <> nvl(h.to_order,0)
+      nvl(v.price_check,0) <> nvl(h.price_check,0) or nvl(v.qnt_order,0) <> nvl(h.qnt_order,0) or nvl(v.to_order,0) <> nvl(h.to_order,0) or nvl(v.need,0) <> nvl(h.need,0) or nvl(v.need_p,0) <> nvl(h.need_p,0)
       )   
     ; 
 begin
+  select sysdate into FDate from dual;
   for v in c1 loop
     insert into spl_history
       (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order)
       values
-      (v.id, sysdate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order)
+      (v.id, FDate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order)
       ;   
   end loop;
 end;
 
 begin
-  P_Spl_Create_History('');
+  P_Spl_Create_History();
+--  P_Spl_Create_History('заказ');
 end;
 /  
+
+create or replace view v_spl_history as
+select
+  n.name,
+  h.*
+from 
+  (select h.*, row_number() over (partition by id order by dt desc) as rn from spl_history h where h.dt < sys_context('context_uchet22','spl_history_date') ) h,
+  dv.nomenclatura n 
+where
+  n.id_nomencl = h.id
+  and rn = 1
+;
+
+
+create or replace view v_spl_history_contents as
+select 
+  to_char(s.dt, 'DD.MM.YYYY HH24:MI:SS')  || ' ' || s.state as caption
+from
+  (select distinct dt from spl_history) l, 
+  (select dt, max(state) as state from spl_history group by dt) s
+where 
+  l.dt = s.dt
+order by
+  s.dt desc
+;   
+
+select * from v_spl_history_contents; 
+
+
+select to_char(to_date('01.08.2025 02:33:04', 'DD.MM.YYYY HH24:MI:SS')) from dual;
+select to_char(sysdate) from dual;
+
+
+begin
+  set_context_value('spl_history_date', to_date('01.08.2025', 'DD.MM.YYYY'));
+end;
+/
+select * from v_spl_history where id = 13053; 
 
 
 --================================================================================

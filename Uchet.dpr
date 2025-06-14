@@ -183,7 +183,7 @@ end;
 begin
   //посчистаем количество ключей компиляции, указывающийх тип модуля
   MNum := 0;
-  //иконки в зависимости от модуля (удалить иконку из Uchet.dproj)
+  //иконки в зависимости от модуля (обязательно удалить иконку (всю строку <Icon_MainIcon> !) из Uchet.dproj)
   {$IFDEF  ADMIN}
   {$R 'Icons\Uchet_Icon_0.res' 'Icons\Uchet_Icon_0.rc'}
   inc(MNum);
@@ -262,7 +262,7 @@ begin
 
   AfterProgramStart := true;
 
-  if not FrmXWNoConnectionAfterStart.Execute then
+  if not TFrmXWNoConnectionAfterStart.Execute then
     Exit;
   if not TFrmXDmsgIncorrectDate.Execute then
     Exit;
