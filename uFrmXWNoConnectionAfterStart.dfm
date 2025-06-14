@@ -1,4 +1,4 @@
-object Dlg_NoOraAfterStart: TDlg_NoOraAfterStart
+object FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart
   Left = 0
   Top = 0
   BorderStyle = bsDialog
@@ -11,9 +11,7 @@ object Dlg_NoOraAfterStart: TDlg_NoOraAfterStart
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesktopCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object Image1: TImage
     Left = 8

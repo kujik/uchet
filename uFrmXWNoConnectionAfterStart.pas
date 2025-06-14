@@ -1,4 +1,4 @@
-unit D_NoOraAfterStart;
+unit uFrmXWNoConnectionAfterStart;
 
 interface
 
@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.Buttons, uData, uMessages, uDBOra;
 
 type
-  TDlg_NoOraAfterStart = class(TForm)
+  TFrmXWNoConnectionAfterStart = class(TForm)
     BitBtn2: TBitBtn;
     Image1: TImage;
     Label1: TLabel;
@@ -21,7 +21,7 @@ type
   end;
 
 var
-  Dlg_NoOraAfterStart: TDlg_NoOraAfterStart;
+  FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart;
 
 implementation
 
@@ -30,20 +30,20 @@ uses
 
 {$R *.dfm}
 
-class function TDlg_NoOraAfterStart.Execute: Boolean;
+class function TFrmXWNoConnectionAfterStart.Execute: Boolean;
 begin
   Result:=Q.Connected;
   {$IFDEF SRV}
   Exit;
   {$ENDIF}
   if Result then exit;
-  Dlg_NoOraAfterStart:=TDlg_NoOraAfterStart.Create(nil);
-  Dlg_NoOraAfterStart.Caption:=ModuleRecArr[cMainModule].Caption;
-  Dlg_NoOraAfterStart.Lb_Message.Caption:=S.IIFStr(Q.ConnectionFileFull = '',
+  FrmXWNoConnectionAfterStart:=TFrmXWNoConnectionAfterStart.Create(nil);
+  FrmXWNoConnectionAfterStart.Caption:=ModuleRecArr[cMainModule].Caption;
+  FrmXWNoConnectionAfterStart.Lb_Message.Caption:=S.IIFStr(Q.ConnectionFileFull = '',
     'В каталоге программы не найден файл настроек соединения "connect.udl"',
     'Запустите файл "connect.udl" в каталоге программы, настройте и проверьте подключение.'
   );
-  Dlg_NoOraAfterStart.ShowModal;
+  FrmXWNoConnectionAfterStart.ShowModal;
 end;
 
 end.
