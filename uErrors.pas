@@ -170,7 +170,7 @@ var
 implementation
 
 uses
-  uFrmXDmsgNoConnection, D_OraError, uMessages, uFrmMain, uSys, uDBOra, uModule;
+  uFrmXDmsgNoConnection, uFrmXWOracleError, uMessages, uFrmMain, uSys, uDBOra, uModule;
 
 constructor TmyErrors.Create;
 begin
@@ -334,7 +334,7 @@ begin
       if IsOraError then begin
       //для ошибки работы с БД выведем кнопку Подробно для просмотра инфы
         if myMessageDlg(KnownErrMsg + #13#10 + 'Данные не изменены!', mtWarning, [mbYes, mbOk], 'Подробно;Ok') = mrYes then begin
-          Dlg_OraError.ShowDialog(FErrDbRow, FErrDBErr, FErrDBQuery, FErrDBParams);
+          FrmXWOracleError.ShowDialog(FErrDbRow, FErrDBErr, FErrDBQuery, FErrDBParams);
         end;
       end
       else begin
@@ -628,7 +628,7 @@ procedure TMyErrors.ExceptActionHandler(action: TExceptAction; const exceptIntf:
 begin
   if action = eaPrintBugReport then begin
     handled := True;
-    Dlg_OraError.ShowDialog(FErrDbRow, FErrDBErr, FErrDBQuery, FErrDBParams);
+    FrmXWOracleError.ShowDialog(FErrDbRow, FErrDBErr, FErrDBQuery, FErrDBParams);
   end;
   if action = eaSaveBugReport then begin
 //    Sys.SaveTextToFile('__err', exceptIntf.BugReport); //GetThreadStackTrace);
@@ -674,7 +674,7 @@ exit;}
     FrmMain.StatusBar.Panels[0].Text := EMessage;
       //myMessageDlg(st+#13#10+'Данные не изменены!', mtWarning, [mbOK]);
     if myMessageDlg(st + #13#10 + 'Данные не изменены!', mtWarning, [mbYes, mbOk], 'Подробно;Ok') = mrYes then begin
-      Dlg_OraError.ShowDialog(-1);
+      FrmXWOracleError.ShowDialog(-1);
     end;
     Module.CloseAppTimer(0);
     FrmMain.StatusBar.Panels[0].Text := '';
@@ -936,4 +936,3 @@ begin
   Errors := TmyErrors.Create;
 
 end.
-

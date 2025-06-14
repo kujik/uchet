@@ -47,7 +47,6 @@ uses
   V_MDI in 'V_MDI.pas' {Form_MDI},
   V_Normal in 'V_Normal.pas' {Form_Normal},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
-  D_OraError in 'D_OraError.pas' {Dlg_OraError},
   D_ExpenseItems in 'D_ExpenseItems.pas' {Dlg_ExpenseItems},
   uFrmXDmsgNoConnection in 'uFrmXDmsgNoConnection.pas' {Dlg_D_SQLNoConnection},
   D_Sn_Calendar in 'D_Sn_Calendar.pas' {Dlg_Sn_Calendar},
@@ -136,7 +135,8 @@ uses
   uFrmBasicEditabelGrid in 'uFrmBasicEditabelGrid.pas' {FrmBasicEditabelGrid},
   uFrmOWOrder in 'uFrmOWOrder.pas' {FrmOWOrder},
   uFrmOGedtSgpRevision in 'uFrmOGedtSgpRevision.pas' {FrmOGedtSgpRevision},
-  uFrmXGsrvSqlMonitor in 'uFrmXGsrvSqlMonitor.pas' {FrmXGsrvSqlMonitor};
+  uFrmXGsrvSqlMonitor in 'uFrmXGsrvSqlMonitor.pas' {FrmXGsrvSqlMonitor},
+  uFrmXWOracleError in 'uFrmXWOracleError.pas' {FrmXWOracleError};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
@@ -285,7 +285,6 @@ begin
 
   Application.CreateForm(TForm_Normal, Form_Normal);
   Application.CreateForm(TFrmXWAbout, FrmXWAbout);
-  Application.CreateForm(TDlg_OraError, Dlg_OraError);
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
   Application.CreateForm(TDlg_SelectUsers, Dlg_SelectUsers);
   Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
@@ -310,6 +309,7 @@ begin
   Application.CreateForm(TFrmCWAcoountBasis, FrmCWAcoountBasis);
   Application.CreateForm(TFrmADedtItmCopyRigths, FrmADedtItmCopyRigths);
   Application.CreateForm(TFrmXDedtMemo, FrmXDedtMemo);
+  Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
 
   Application.Run;
 

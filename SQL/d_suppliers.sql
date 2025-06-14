@@ -1316,6 +1316,78 @@ where
 select * from v_spl_need_curr;
 
 
+--таблица истории изменений параметров по снабжению
+drop table spl_history cascade constraints;
+create table spl_history (
+  dt date,
+  state varchar2(30),
+  id number(11),
+  supplierinfo varchar2(4000),
+  qnt number,
+  qnt_pl1 number,
+  qnt_pl2 number, 
+  qnt_pl3 number,
+  rezerv number,
+  rezerva0 number, rezerva1 number, rezerva2 number,
+  qnt_onway number,
+  planned_need_days number(3),
+  price_main number(11,2),
+  price_check number(11,2),
+  qnt_order number,
+  to_order number(1),
+  constraint pk_spl_history primary key (id, dt)
+);  
+
+select 
+  v.id, h.planned_need_days, rn, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order 
+from 
+  v_spl_minremains v,
+  (select id, dt, row_number() over (partition by id order by dt desc) as rn from spl_history) l,
+  spl_history h
+where
+  v.id = l.id (+)
+  and h.id (+) = l.id and h.dt (+) = l.dt 
+  and v.id = 13053  
+; 
+
+
+create or replace procedure P_Spl_Create_History( 
+  AState varchar2
+) is
+  cursor c1 is
+    select 
+      v.id, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order 
+    from 
+      v_spl_minremains v,
+      (select id, dt, row_number() over (partition by id order by dt desc) as rn from spl_history) l,
+      spl_history h
+    where
+      v.id = l.id (+)
+      and l.rn (+) = 1
+      and h.id (+) = l.id and h.dt (+) = l.dt
+      and (
+      nvl(v.supplierinfo,0) <> nvl(h.supplierinfo,0) or nvl(v.qnt,0) <> nvl(h.qnt,0) or nvl(v.qnt_pl1,0) <> nvl(h.qnt_pl1,0) or 
+      nvl(v.qnt_pl2,0) <> nvl(h.qnt_pl2,0) or nvl(v.qnt_pl3,0) <> nvl(h.qnt_pl3,0) or 
+      nvl(v.rezerv,0) <> nvl(h.rezerv,0) or nvl(v.rezerva0,0) <> nvl(h.rezerva0,0) or nvl(v.rezerva1,0) <> nvl(h.rezerva1,0) or nvl(v.rezerva2,0) <> nvl(h.rezerva2,0) or
+      nvl(v.qnt_onway,0) <> nvl(h.qnt_onway,0) or nvl(v.planned_need_days,0) <> nvl(h.planned_need_days,0) or nvl(v.price_main,0) <> nvl(h.price_main,0) or
+      nvl(v.price_check,0) <> nvl(h.price_check,0) or nvl(v.qnt_order,0) <> nvl(h.qnt_order,0) or nvl(v.to_order,0) <> nvl(h.to_order,0)
+      )   
+    ; 
+begin
+  for v in c1 loop
+    insert into spl_history
+      (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order)
+      values
+      (v.id, sysdate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order)
+      ;   
+  end loop;
+end;
+
+begin
+  P_Spl_Create_History('');
+end;
+/  
+
 
 --================================================================================
 select count(*) from v_spl_minremains;

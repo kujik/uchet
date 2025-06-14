@@ -1,5 +1,4 @@
 object MyData: TMyData
-  OldCreateOrder = False
   Height = 572
   Width = 720
   object IL_GalkaMinus: TImageList

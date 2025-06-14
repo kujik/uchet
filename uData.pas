@@ -992,6 +992,7 @@ const
   myfrm_Dlg_R_OrderTypes='Dlg_R_OrderTypes';
   myfrm_Dlg_R_WorkCellTypes='Dlg_R_WorkCellTypes';
   myfrm_Dlg_Rep_FinByOrders='Dlg_Rep_FinByOrders';
+  myfrm_Dlg_OracleError='Dlg_OracleError';
   myfrm_Dlg_Test='Dlg_Test';
 
 
