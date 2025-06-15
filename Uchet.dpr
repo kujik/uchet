@@ -94,7 +94,6 @@ uses
   D_R_Itm_Units in 'D_R_Itm_Units.pas' {Dlg_R_Itm_Units},
   uFrmXWGridAdminOptions in 'uFrmXWGridAdminOptions.pas' {FrmXWGridAdminOptions},
   uFrmTestMdi1 in 'uFrmTestMdi1.pas' {FrmTestMdi1},
-  F_Sgp_Revision in 'F_Sgp_Revision.pas' {Form_Sgp_Revision},
   uFrmDlgRItmSupplier in 'uFrmDlgRItmSupplier.pas' {FrmDlgRItmSupplier},
   uFrmBasicInput in 'uFrmBasicInput.pas' {FrmBasicInput},
   uFrmOWInvoiceToSgp in 'uFrmOWInvoiceToSgp.pas' {FrmOWInvoiceToSgp},

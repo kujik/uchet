@@ -1085,7 +1085,100 @@ where
   ibs.id_inbill = ib.id_inbill
 ;    
 
-select * from v_spl_nom_inbills where ibs.id_ibspec = 21899;
+
+create or replace view v_spl_nom_movebills as 
+--информация из накладных перемещения по данной номенклатуре
+select
+  s.id_mbspec as id,
+  h.id_movebill as id_doc,
+  h.movebillnum as numdoc,
+  h.movebilldate as dt,
+  h.sourceskladname,
+  h.destskladname,
+  h.n as basis,
+  h.id_docstate,
+  h.is_delete,
+  s.name,        
+  s.artikul, 
+  s.name_unit,        
+  s.movebillquantity as quantity
+from
+  dv.v_move_bills h,
+  dv.v_movebillspec s
+where
+  s.id_movebill = h.id_movebill
+;
+
+create or replace view v_spl_nom_offminuses as 
+--информация из актов списания по данной номенклатуре
+select
+  s.id_omspec as id,
+  h.id_offminus as id_doc,
+  h.offminusnum as numdoc,
+  h.offminusdate as dt,
+  h.skladname,
+  h.basedoc as basis,
+  h.id_docstate,
+  h.comments,
+  s.name,        
+  --s.artikul, 
+  s.name_unit,        
+  s.omquantity as quantity
+from
+  dv.v_offminuses h,
+  dv.v_offminusspec s
+where
+  s.id_offminus = h.id_offminus
+;
+
+
+create or replace view v_spl_nom_postpluses as 
+--информация из актов оприходования по данной номенклатуре
+select
+  s.id_ppspec as id,
+  h.id_postplus as id_doc,
+  h.postplusnum as numdoc,
+  h.postplusdate as dt,
+  h.skladname,
+  h.basedoc as basis,
+  h.id_docstate,
+  h.comments,
+  s.name,        
+  s.artikul, 
+  s.name_unit,        
+  s.ppquantity as quantity
+from
+  dv.v_postpluses h,
+  dv.v_postplusspec s
+where
+  s.id_postplus = h.id_postplus
+;
+
+create or replace view v_spl_nom_acts as 
+--информация из АВР по данной номенклатуре
+select
+  s.id_act_spec_nomencl as id,
+  h.id_act as id_doc,
+  h.actnum as numdoc,
+  h.actdate as dt,
+  h.numzakaz || ' ' || h.zakazname as basis,
+  h.id_docstate,
+  h.comments,
+  s.name,        
+  s.artikul, 
+  --s.name_unit,        
+  s.countnomencl as quantity,
+  s.skladname
+from
+  dv.v_acts h,
+  dv.v_actspec_materials s
+where
+  s.id_act = h.id_act
+;    
+    
+    
+    
+
 
 
 

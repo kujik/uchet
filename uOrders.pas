@@ -86,6 +86,7 @@ type
     function SetTaskForCreateOrder(AIdOrder: Integer): Boolean;
     function ExportPassportToXLSX(AIdOrder: Integer; OrderPath: string; Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
     procedure CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
+    procedure ViewItmDocumentFromLog(AParent: TForm; AId: Variant);
   end;
 
 var
@@ -2539,6 +2540,70 @@ begin
      [User.GetId, IdStdItem, IdOrItem]
   );
 end;
+
+procedure TOrders.ViewItmDocumentFromLog(AParent: TForm; AId: Variant);
+var
+  i, j: Integer;
+  va: TVarDynArray;
+  va2: TVarDynArray2;
+  st, st2: string;
+  DocId: Variant;
+  DocType: string;
+  procedure GetDocNum(st: string);
+  var
+    i: integer;
+  begin
+    DocId := '';
+    i := Pos('№', st);
+    if i > 0 then
+      while (i <= Length(st)) and (st[i] in ['0'..'9']) do begin
+        DocId := DocId + st[i];
+        inc(i);
+      end;
+  end;
+begin
+  va := Q.QSelectOneRow('select id, doctype, id_doc, commentsfull, name, user_windows from v_itm_log where id = :id$i', [AId]);
+  DocId := '';
+  if (va[0] = null) or (va[1] = null) then
+    Exit;
+  if va[2] <> null then
+    DocId := va[2]
+  else
+    GetDocNum(va[3]);
+  DocType := S.Decode([
+    va[1], null, '',
+    'Приходная накладная', myfrm_R_Itm_InBill,
+    'Накладная перемещения', myfrm_R_Itm_MoveBill,
+    'Акт списания', myfrm_R_Itm_OffMinus,
+    'Акт оприходования', myfrm_R_Itm_PostPlus,
+    'АВР', myfrm_R_Itm_Act,
+    'Счет поставщика', myfrm_R_Itm_Schet,
+    '?'
+  ]);
+{'Расходная накладная' 'Заявка поставщику'}
+  if (DocType = '') then
+    Exit;
+  if S.NSt(DocId) = '' then begin
+    va2 := Q.QLoadToVarDynArray2(
+      'select id, doctype, id_doc, commentsfull, user_windows from v_itm_log where id < :id$i and  id > :id0$i and doctype = :dt$s and name = :nm$s ' +
+      'and (id_doc is not null or commentsfull is not null) and comments = ''Открытие формы'' order by id desc',
+      [va[0], va[0] - 100, va[1], va[4]]
+    );
+  end;
+  if (Length(va2) > 0) then begin
+    if va2[0][2] <> null then
+      DocId := va2[0][2]
+    else
+      GetDocNum(va2[0][3]);
+  end;
+  if (DocType = '') or (S.NSt(DocId) = '') then
+    Exit;
+  if DocType = '?' then
+    MyInfoMessage('Документ с id = ' + VarToStr(DocId))
+  else
+    Wh.ExecReference(DocType, AParent, [myfoDialog, myfoSizeable, myfoEnableMaximize], DocId);
+end;
+
 
 
 

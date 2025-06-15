@@ -106,7 +106,7 @@ function TFrmXGlstMain.PrepareForm: Boolean;
 var
   p: TPanel;
   i, j: Integer;
-  st: string;
+  st, st1, st2: string;
   v: Variant;
   va, va1: TVarDynArray;
   va2: TVarDynArray2;
@@ -1214,22 +1214,25 @@ begin
     Frg1.Opt.SetTable('dv.v_spschetspec');
     Frg1.Opt.SetWhere('where id_schet = :id_schet$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    Frg1.CreateAddControls('1', cntLabelClr, '', 'LbCapt1', '', 5, yrefT, 3000);
-    Frg1.CreateAddControls('1', cntLabelClr, '', 'LbCapt2', '', 5, yrefB, 3000);
     va1:=Q.QSelectOneRow(
       'select s.num, s.date_registr, s.states, k.name_org, s.docstr '+
       'from dv.sp_schet s, dv.kontragent k '+
       'where k.id_kontragent = s.id_kontragent2 and id_schet = :id_schet$i',
       [VarToStr(AddParam)]
     );
-    TLabelClr(Frg1.FindComponent('LbCapt1')).SetCaption2(
-     '[№ документа $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    [$FF0000' + VarToStr(va1[2]) + '$000000]    Поставщик: $FF0000' + VarToStr(va1[3]) + '$000000 '
-    );
-    TLabelClr(Frg1.FindComponent('LbCapt2')).SetCaption2('Основание: $FF0000' + VarToStr(va1[4]) + '$000000 ');
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 := '[№ документа $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    [$FF0000' +
+      VarToStr(va1[2]) + '$000000]    Поставщик: $FF0000' + VarToStr(va1[3]) + '$000000 ';
+    st2 := 'Основание: $FF0000' + VarToStr(va1[4]) + '$000000 ';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefT, 800);
+    Frg1.CreateAddControls('1', cntLabelClr, st2, 'LbCapt2', '', 5, yrefB, 800);
     Frg1.InfoArray := [['Счет от поставщика (из ИТМ).'#13#10'(Только просмотр.)']];
   end
   else if FormDoc = myfrm_R_Itm_InBill then begin
-  //приходная накладная из итм
+    //приходная накладная из итм
     Caption:='Приходная накладная';
     Frg1.Opt.SetFields([
       ['id_ibspec$i','_id','40'],
@@ -1244,8 +1247,6 @@ begin
     Frg1.Opt.SetTable('v_spl_nom_inbills');
     Frg1.Opt.SetWhere('where id_inbill = :id_inbill$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    Frg1.CreateAddControls('1', cntLabelClr, '', 'LbCapt1', '', 5, yrefT, 3000);
-    Frg1.CreateAddControls('1', cntLabelClr, '', 'LbCapt2', '', 5, yrefB, 3000);
     va1:=Q.QSelectOneRow(
       'select inbillnum, inbilldate, id_docstate, '+  //номер, дата регистрации, статус 3=проведена
       'name_org, sclad, '+  //поставщик, склад
@@ -1254,18 +1255,133 @@ begin
       'where id_inbill = :id_inbill$i',
       [VarToStr(AddParam)]
     );
-    TLabelClr(Frg1.FindComponent('LbCapt1')).SetCaption2(
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 :=
      '[№ $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    '+
      S.IIfStr(va1[2] <> 3, ' ($0000FFНе проведена$000000)   ') +
      '$000000[Склад: $FF0000' + VarToStr(va1[4]) + '$000000]    ' +
-     '$000000[Поставщик: $FF0000' + VarToStr(va1[3]) + '$000000]'
-    );
-    TLabelClr(Frg1.FindComponent('LbCapt2')).SetCaption2(
-      '[№ поставщика $FF0000' + VarToStr(va1[5]) + '$000000 от $FF0000' + DateTimeToStr(va1[6]) + '$000000]    '+
+     '$000000[Поставщик: $FF0000' + VarToStr(va1[3]) + '$000000]';
+    if va1[5] <> null then
+      st2 := '[№ поставщика $FF0000' + VarToStr(va1[5]) + '$000000 от $FF0000' + DateTimeToStr(va1[6]) + '$000000]    ';
+    st2 := st2 +
       '[Сумма: $FF0000' + FormatFloat( '# ###.00', S.NNum(va1[7])) + '$000000]    '+
-      '[Основание: $FF0000' + S.NSt(va1[8]) + '$000000]'
-    );
+      '[Основание: $FF0000' + S.NSt(va1[8]) + '$000000]';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefT, 800);
+    Frg1.CreateAddControls('1', cntLabelClr, st2, 'LbCapt2', '', 5, yrefB, 800);
     Frg1.InfoArray := [['Приходная накладная (из ИТМ).'#13#10'(Только просмотр.)']];
+  end
+  else if FormDoc = myfrm_R_Itm_MoveBill then begin
+    Caption:='Накладная перемещения';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_doc$i','_id','40'],
+      ['artikul','Артикул','120'],
+      ['name','Наименование','300;h'],
+      ['name_unit','Ед. изм','80'],
+      ['quantity','Кол-во','70']
+    ]);
+    Frg1.Opt.SetTable('v_spl_nom_movebills');
+    Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
+    Frg1.Opt.SetButtons(1, 'sp');
+    va1:=Q.QSelectOneRow(
+      'select numdoc, dt, id_docstate, is_delete, sourceskladname, destskladname, basis '+
+      'from v_spl_nom_movebills '+
+      'where id_doc = :id_doc$i',
+      [VarToStr(AddParam)]
+    );
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 :=
+     '[№ $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    '+
+     S.IIfStr(va1[3] <> 0,  ' ($0000FFУдалена$000000)   ', S.IIfStr(va1[2] <> 3, ' ($0000FFНе проведена$000000)   ')) +
+     '$000000[Со склада: $FF0000' + VarToStr(va1[4]) + '$000000 на склад: $FF0000' + VarToStr(va1[5]) + '$000000]    ' +
+     '$000000[Заказ: $FF0000' + VarToStr(va1[6]) + '$000000]';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefC, 800);
+    Frg1.InfoArray := [['Накладная перемещения (из ИТМ).'#13#10'(Только просмотр.)']];
+  end
+  else if FormDoc = myfrm_R_Itm_OffMinus then begin
+    Caption:='Акт списания';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_doc$i','_id','40'],
+      ['name','Наименование','300;h'],
+      ['name_unit','Ед. изм','80'],
+      ['quantity','Кол-во','70']
+    ]);
+    Frg1.Opt.SetTable('v_spl_nom_offminuses');
+    Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
+    Frg1.Opt.SetButtons(1, 'sp');
+    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_offminuses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 :=
+     '[№ $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    '+
+     S.IIfStr(va1[2] <> 3, ' ($0000FFНе проведен$000000)   ') +
+     '$000000[Со cклада: $FF0000' + VarToStr(va1[4]) + '$000000]    ' +
+     '$000000[Основание: $FF0000' + VarToStr(va1[5]) + ' $000000]';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefT, 800);
+    Frg1.CreateAddControls('1', cntLabelClr, '$000000[Комментарий: $FF0000' + VarToStr(va1[5]) + ' $000000]', 'LbCapt2', '', 5, yrefB, 800);
+    Frg1.InfoArray := [['Акт списания (из ИТМ).'#13#10'(Только просмотр.)']];
+  end
+  else if FormDoc = myfrm_R_Itm_PostPlus then begin
+    Caption:='Акт оприходования';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_doc$i','_id','40'],
+      ['name','Наименование','300;h'],
+      ['name_unit','Ед. изм','80'],
+      ['quantity','Кол-во','70']
+    ]);
+    Frg1.Opt.SetTable('v_spl_nom_postpluses');
+    Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
+    Frg1.Opt.SetButtons(1, 'sp');
+    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_postpluses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 :=
+     '[№ $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    '+
+     S.IIfStr(va1[2] <> 3, ' ($0000FFНе проведен$000000)   ') +
+     '$000000[Со cклада: $FF0000' + VarToStr(va1[4]) + '$000000]    ' +
+     '$000000[Основание: $FF0000' + VarToStr(va1[5]) + ' $000000]';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefT, 800);
+    Frg1.CreateAddControls('1', cntLabelClr, '$000000[Комментарий: $FF0000' + VarToStr(va1[5]) + ' $000000]', 'LbCapt2', '', 5, yrefB, 800);
+    Frg1.InfoArray := [['Акт оприходования (из ИТМ).'#13#10'(Только просмотр.)']];
+  end
+  else if FormDoc = myfrm_R_Itm_Act then begin
+    Caption:='АВР';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_doc$i','_id','40'],
+      ['artikul','Артикул','120'],
+      ['name','Наименование','300;h'],
+      ['skladname','Со склада','80'],
+      ['quantity','Кол-во','70']
+    ]);
+    Frg1.Opt.SetTable('v_spl_nom_acts');
+    Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
+    Frg1.Opt.SetButtons(1, 'sp');
+    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, null, basis, comments from v_spl_nom_acts where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    if va1[0] = null then begin
+      MyInfoMessage('Документ не найден!');
+      Exit;
+    end;
+    st1 :=
+     '[№ $FF0000' + VarToStr(va1[0]) + '$000000 от $FF0000' + DateTimeToStr(va1[1]) + '$000000]    '+
+     S.IIfStr(va1[2] <> 3, ' ($0000FFНе проведен$000000)   ') +
+     //'$000000[Склад: $FF0000' + VarToStr(va1[4]) + '$000000]    ' +
+     '$000000[Основание: $FF0000' + VarToStr(va1[5]) + ' $000000]';
+    Frg1.CreateAddControls('1', cntLabelClr, st1, 'LbCapt1', '', 5, yrefT, 800);
+    Frg1.CreateAddControls('1', cntLabelClr, '$000000[Комментарий: $FF0000' + VarToStr(va1[5]) + ' $000000]', 'LbCapt2', '', 5, yrefB, 800);
+    Frg1.InfoArray := [['АВР (из ИТМ).'#13#10'(Только просмотр.)']];
   end
   else if FormDoc = myfrm_R_OrderStdItems_SEL then begin  //!!!
     Caption:='Выбор стандартныого изделия';
@@ -1524,6 +1640,7 @@ begin
       ['data_time','Время','150'],
       ['name','Пользователь','120'],
       ['user_windows','Логин','120'],
+      ['doctype','Вид документа', '160','bt=Просмотреть документ'],
       ['comments','Комментарий','300;h'],
       ['addinfo','Дополнение','300;h'],
       ['commentsfull','Комментарий слукжебный','300;h']
@@ -1926,7 +2043,9 @@ begin
     end;
   end;
 
-
+  if (FormDoc = myfrm_J_ItmLog) then begin
+    Orders.ViewItmDocumentFromLog(Self, Fr.ID);
+  end;
   if (FormDoc = myfrm_R_Or_ItmExtNomencl)and(TCellButtonEh(Sender).Hint = 'Движение номенклатуры') then begin
     Wh.ExecDialog(myfrm_Dlg_Spl_InfoGrid_MoveNomencl, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
       Fr.GetValue('id_nomencl'), VararrayOf([Fr.GetValueS('name'), ''])
@@ -2073,8 +2192,10 @@ begin
   else if FormDoc = myfrm_R_Itm_Schet then
     Fr.SetSqlParameters('id_schet$i', [AddParam])
   else if FormDoc = myfrm_R_Itm_InBill then
-    Fr.SetSqlParameters('id_inbill$i', [AddParam]);
-
+    Fr.SetSqlParameters('id_inbill$i', [AddParam])
+  else if A.InArray(FormDoc, [myfrm_R_Itm_MoveBill, myfrm_R_Itm_OffMinus, myfrm_R_Itm_PostPlus, myfrm_R_Itm_Act]) then
+    Fr.SetSqlParameters('id_doc$i', [AddParam])
+  ;
 end;
 
 procedure TFrmXGlstMain.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);

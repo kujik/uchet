@@ -118,7 +118,6 @@ uses
   D_Or_FindNameInEstimates, D_ItmInfo, D_J_Montage,
   F_Rep_Orders_PrimeCost, D_R_OrStdItems, D_NewEstimateInput,
   D_SuppliersMinPart, D_R_Spl_Categoryes, D_Spl_InfoGrid, D_R_Itm_Units,
-  F_Sgp_Revision,
   F_Adm_Installer,
 
   uFrmXGsrvSqlMonitor,
@@ -531,7 +530,7 @@ begin
   if AMyFormOptions <> [] then
     MyFormOptions := AMyFormOptions
   else
-    MyFormOptions := [myfoOneCopy, myfoSizeable, myfoEnableMaximize, myfoShowStatusbar]; //myfoModal  //myfoAutoShowModal
+    MyFormOptions := [myfoOneCopy, myfoSizeable, myfoEnableMaximize{, myfoShowStatusbar}]; //myfoModal  //myfoAutoShowModal
   if IsModalFormOpen then
     Include(MyFormOptions, myfoModal);
   if A.InArray(F, [
@@ -597,6 +596,10 @@ begin
     myfrm_R_OrderStdItems_SEL,
     myfrm_R_Itm_Schet,
     myfrm_R_Itm_InBill,
+    myfrm_R_Itm_MoveBill,
+    myfrm_R_Itm_OffMinus,
+    myfrm_R_Itm_PostPlus,
+    myfrm_R_Itm_Act,
     myfrm_Rep_OrderStdItems_Err,
     myfrm_Rep_ItmNomOverEstimate,
     myfrm_Rep_Order_Complaints,
@@ -928,7 +931,6 @@ begin
     TFrmDlgRItmSupplier.Show(AOwner, F, MyFormOptions + [myfoDialog, myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Sgp_Revision then begin
-//    Form := TForm_Sgp_Revision.Create(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopyWoId, myfoRefreshParent, myfodialog], fMode, AId, null);
     TFrmOGedtSgpRevision.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoDialog], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_InvoiceToSgp then begin

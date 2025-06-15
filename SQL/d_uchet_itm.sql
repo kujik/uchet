@@ -1110,6 +1110,9 @@ where
 select * from dv.v_au_user_document;
 select * from dv.lu_doing;
 --select distinct(aud) from dv.lu_doing;
+
+
+
 create or replace view v_itm_log as
   SELECT l.id_module,
          l.id_user,
@@ -1141,10 +1144,32 @@ create or replace view v_itm_log as
               NULL
           END)                                AS id_doc,
          TRUNC (l.data_time)                  AS Log_dates,
-         TO_CHAR (l.data_time, 'HH24.MI.SS')  AS Log_time
+         TO_CHAR (l.data_time, 'HH24.MI.SS')  AS Log_time,
+         (case when instr(upper(l.comments), 'ACTS') = 1 then 'АВР' 
+          when instr(upper(l.comments), 'MOVE_BILL') = 1 then 'Накладная перемещения' 
+          when instr(upper(l.comments), 'OFF_MINUS') = 1 then 'Акт списания' 
+          when instr(upper(l.comments), 'OFF_PLUS') = 1 then  '???' 
+          when instr(upper(l.comments), 'IN_BILL') = 1 then   'Приходная накладная' 
+          when instr(upper(l.comments), 'OUT_BILL') = 1 then  'Расходная накладная' 
+          when instr(upper(l.comments), 'POST_PLUSES') = 1 then 'Акт оприходования' 
+          when instr(upper(l.comments), 'ЗАЯВКА ПОСТАВЩИКУ') = 1 then 'Заявка поставщику' 
+          when instr(upper(l.comments), 'СЧЕТ ПОСТАВЩИКА') = 1 then 'Счет поставщика' 
+          when instr(upper(l.comments), 'SP_SCHET') = 1 then 'Счет поставщика' 
+          when instr(upper(l.comments), 'DEMAND_SUPPLIER') = 1 then 'Заявка поставщику' 
+          when instr(upper(l.comments), 'ZAKAZ') = 1 then 'Заказ' 
+          --when instr(upper(l.comments), '') = 1 then '' 
+         end) as doctype
+         
     FROM dv.lu_users l, dv.lu_doing d, dv.au_user au
-   WHERE l.id_doing = d.id AND au.id = l.id_user AND l.id_user > -1;
+   WHERE 
+     l.id_doing = d.id AND au.id = l.id_user AND l.id_user > -1
+     and not d.comments in ('-Открытие формы', 'Закрытие формы', 'Завершение работы модуля', 'Загрузка модуля', 'Печать отчета', 'Формирование заявок',
+       '(Справ. Номенклатуры) Печать карточки номенклатурной единицы','(Документ) Экспортирование')
+     and not (d.comments = 'Открытие формы' and not substr(l.comments, 1, 1) in ('A','I','E','M','O','P','S','D'))
+     and data_time > to_date('01.01.2025', 'DD.MM.YYYY')
+     ;
 
+select count(*) from v_itm_log;
 
 
 --------------------------------------------------------------------------------

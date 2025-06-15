@@ -906,6 +906,10 @@ const
   myfrm_J_OrItemsInProd='J_OrItemsInProd';
   myfrm_J_SnHistory='J_SnHistory';
   myfrm_J_ItmLog='J_ItmLog';
+  myfrm_R_Itm_MoveBill='R_Itm_MoveBill';
+  myfrm_R_Itm_OffMinus='R_Itm_OffMinus';
+  myfrm_R_Itm_PostPlus='R_Itm_PostPlus';
+  myfrm_R_Itm_Act='R_Itm_Act';
 
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 

@@ -1,13 +1,70 @@
 inherited FrmXGlstMain: TFrmXGlstMain
   Caption = 'FrmXGlstMain'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
+  ClientHeight = 362
+  ClientWidth = 593
+  ExplicitWidth = 605
+  ExplicitHeight = 400
   TextHeight = 13
   inherited PMDIMain: TPanel
-    ExplicitHeight = 520
+    Width = 593
+    Height = 346
     inherited PMDIClient: TPanel
+      Width = 583
+      Height = 297
+      inherited PTop: TPanel
+        Width = 583
+        ExplicitWidth = 786
+      end
+      inherited PBottom: TPanel
+        Top = 251
+        Width = 583
+        ExplicitTop = 425
+        ExplicitWidth = 786
+      end
+      inherited PLeft: TPanel
+        Height = 242
+        ExplicitHeight = 416
+      end
       inherited PGrid1: TPanel
+        Width = 573
+        Height = 242
         inherited Frg1: TFrDBGridEh
+          Width = 571
+          Height = 240
+          inherited PGrid: TPanel
+            Width = 561
+            Height = 186
+            ExplicitWidth = 764
+            ExplicitHeight = 360
+            inherited DbGridEh1: TDBGridEh
+              Width = 559
+              Height = 163
+            end
+            inherited PStatus: TPanel
+              Top = 164
+              Width = 559
+              ExplicitTop = 338
+              ExplicitWidth = 762
+            end
+          end
+          inherited PLeft: TPanel
+            Height = 186
+            ExplicitHeight = 360
+          end
+          inherited PTop: TPanel
+            Width = 571
+            ExplicitWidth = 774
+          end
+          inherited PContainer: TPanel
+            Width = 571
+            ExplicitWidth = 774
+          end
+          inherited PBottom: TPanel
+            Top = 240
+            Width = 571
+            ExplicitTop = 414
+            ExplicitWidth = 774
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -25,8 +82,33 @@ inherited FrmXGlstMain: TFrmXGlstMain
         end
       end
       inherited PFrg2: TPanel
+        Top = 256
+        Width = 583
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          Width = 581
+          inherited PGrid: TPanel
+            Width = 571
+            ExplicitWidth = 774
+            inherited DbGridEh1: TDBGridEh
+              Width = 569
+            end
+            inherited PStatus: TPanel
+              Width = 569
+              ExplicitWidth = 772
+            end
+          end
+          inherited PTop: TPanel
+            Width = 581
+            ExplicitWidth = 784
+          end
+          inherited PContainer: TPanel
+            Width = 581
+            ExplicitWidth = 784
+          end
+          inherited PBottom: TPanel
+            Width = 581
+            ExplicitWidth = 784
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -43,25 +125,59 @@ inherited FrmXGlstMain: TFrmXGlstMain
           end
         end
       end
+      inherited PRight: TPanel
+        Left = 578
+        Height = 242
+        ExplicitLeft = 781
+        ExplicitHeight = 416
+      end
     end
     inherited PDlgPanel: TPanel
+      Top = 302
+      Width = 583
+      ExplicitTop = 476
+      ExplicitWidth = 786
       inherited BvDlg: TBevel
-        Width = 788
+        Width = 581
+        ExplicitWidth = 788
       end
       inherited BvDlgBottom: TBevel
-        Width = 788
+        Width = 581
+        ExplicitWidth = 788
       end
       inherited PDlgMain: TPanel
-        Width = 788
-        ExplicitWidth = 788
+        Width = 581
+        ExplicitWidth = 784
         inherited PDlgBtnForm: TPanel
-          Left = 689
+          Left = 482
+          ExplicitLeft = 685
         end
         inherited PDlgChb: TPanel
-          Left = 461
-          ExplicitLeft = 461
+          Left = 254
+          ExplicitLeft = 457
+        end
+        inherited PDlgBtnR: TPanel
+          Left = 383
+          ExplicitLeft = 586
+        end
+        inherited PDlgCenter: TPanel
+          Width = 114
+          ExplicitWidth = 317
         end
       end
+    end
+  end
+  inherited PStatusBar: TPanel
+    Top = 346
+    Width = 593
+    ExplicitTop = 520
+    ExplicitWidth = 796
+    inherited LbStatusBarRight: TLabel
+      Left = 501
+      Height = 14
+    end
+    inherited LbStatusBarLeft: TLabel
+      Height = 14
     end
   end
 end
