@@ -1,3 +1,4 @@
+
 create user ORD identified by ORD default tablespace users temporary tablespace temp;
 grant connect, resources to ORD;
 alter user ORD default role all;
