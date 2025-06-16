@@ -48,7 +48,7 @@ type
     E_managername: TDBEditEh;
     Cb_main: TDBComboBoxEh;
     Cb_Area: TDBComboBoxEh;
-    Cb_ordertype: TDBComboBoxEh;
+    Cb_id_ordertype: TDBComboBoxEh;
     E_planningname: TDBEditEh;
     PHFin: TPanel;
     PHSum: TPanel;
@@ -91,16 +91,28 @@ type
   private
     WorkCellTypes: TNamedArr;
     WorkCellAreas: TVarDynArray2;
-    function Prepare: Boolean; override;
-    function SetControlsLayout: Boolean;
-    function PrepareFrgItems: Boolean;
-    function PrepareFrgReclamations: Boolean;
-    function PrepareFrgSemiproducts: Boolean;
-    function PrepareFrgFiles: Boolean;
-    function PrepareWorkCells: Boolean;
+    function  Prepare: Boolean; override;
+    function  SetControlsLayout: Boolean;
+    function  PrepareFrgItems: Boolean;
+    function  PrepareFrgReclamations: Boolean;
+    function  PrepareFrgSemiproducts: Boolean;
+    function  PrepareFrgFiles: Boolean;
+    function  PrepareWorkCells: Boolean;
     procedure DefineFields;
-    function LoadOrderComboBoxes: Boolean;
-    function LoadOrder: Boolean;
+    function  LoadOrderComboBoxes: Boolean;
+    function  LoadOrder: Boolean;
+
+//    procedure VerifyBeforeSave; virtual;
+//    function  Save: Boolean; virtual;
+    procedure ControlOnChange(Sender: TObject); override;
+//    procedure ControlOnEnter(Sender: TObject); virtual;
+//    procedure ControlOnExit(Sender: TObject); virtual;
+//    procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
+//    procedure BtOkClick(Sender: TObject); virtual;
+//    procedure BtCancelClick(Sender: TObject); virtual;
+//    procedure BtClick(Sender: TObject); virtual;
+
+
 
     //события грида изделий
     procedure FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
@@ -206,7 +218,24 @@ end;
 
 procedure TFrmOWOrder.DefineFields;
 begin
-  F.DefineFields := [['id$i'], ['ornum$i;0'], ['id_organization$s;id_organization$', 'V=1:400'], ['area$i', 'V=1:100'], ['project$s', 'V=1:500::T'], ['id_or_format_estimates$i', 'V=1:400'], ['address$s', 'V=0:400'], ['account$s', 'V=0:400'], ['managername$s'], ['dt_beg$d'], ['dt_end$d'], ['dt_otgr$d'], ['dt_montage_beg$d'], ['dt_montage_end$d'], ['dt_change$d'], ['cashtype$i', 'V=', #0]{    ['','V=',#0],
+  F.DefineFields := [
+    ['id$i'],
+    ['ornum$i;0'],
+    ['_id_ordertype$i;0', 'V=1:400'],
+    ['id_organization$s;id_organization$i', 'V=1:400'],
+    ['area$i', 'V=1:100'], ['project$s', 'V=1:500::T'],
+    ['id_or_format_estimates$i', 'V=1:400'],
+    ['address$s', 'V=0:400'],
+    ['account$s', 'V=0:400'],
+    ['managername$s'],
+    ['dt_beg$d'],
+    ['dt_end$d'],
+    ['dt_otgr$d'],
+    ['dt_montage_beg$d'],
+    ['dt_montage_end$d'],
+    ['dt_change$d'],
+    ['cashtype$i', 'V=', #0]
+    {['','V=',#0],
     ['','V=',#0],
     ['','V=',#0],
     ['','V=',#0],
@@ -219,9 +248,13 @@ end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
 begin
-  Cth.AddToComboBoxEh(Cb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  //Cth.AddToComboBoxEh(Cb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], Cb_id_ordertype, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('_id_ordertype')], Cb_id_ordertype, cntComboLK, 1);
   Cth.AddToComboBoxEh(Cb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
-//  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], Cb_Format, cntComboLK);
+
+
+  //  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], Cb_Format, cntComboLK);
   //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], Cb_Format, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], Cb_id_organization, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], Cb_id_organization, cntComboLK, 1);
@@ -250,16 +283,18 @@ function TFrmOWOrder.LoadOrder: Boolean;
 var
   FieldsSt: string;
   CtrlValues: TVarDynArray;
-  i: Integer;
+  i, j: Integer;
 begin
   for i := 0 to F.Count do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
     end;
   CtrlValues := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', 'v_orders', FieldsSt), [id]);
+  j := 0;
   for i := 0 to F.Count do
     if F.GetProp(i, fvtFNameL) <> '' then begin
-      F.SetPropP(i, CtrlValues[i], fvtVBeg);
+      F.SetPropP(i, CtrlValues[j], fvtVBeg);
+      inc(j);
     end;
   Result := True;
 end;
@@ -356,6 +391,34 @@ begin
 //      FrgItems.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(WorkCellAreas, 0), A.VarDynArray2RowToVD1(WorkCellAreas, i), True);
   end;
 end;
+
+
+
+
+procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
+var
+  SenderName: string;
+  SenderValue : Variant;
+begin
+  SenderName := TControl(Sender).Name;
+  SenderValue := Cth.GetControlValue(Sender);
+  if Sender = Cb_id_ordertype then begin
+    if (S.NNum(SenderValue) = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
+      F.SetProp('id_organization', -1);
+    if (S.NNum(SenderValue) <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
+      F.SetProp('id_organization', null);
+  end;
+  if Sender = Cb_id_organization then begin
+  end;
+  if F.GetProp('_id_ordertype') = null then
+    F.SetProp('id_organization', null)
+  else if (F.GetProp('_id_ordertype') = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
+    F.SetProp('id_organization', -1)
+  else if (F.GetProp('_id_ordertype') <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
+    F.SetProp('id_organization', null);
+  inherited;
+end;
+
 
 procedure TFrmOWOrder.FrgItemsCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 begin

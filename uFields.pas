@@ -31,6 +31,7 @@ type TDefFiledcValueType = (
   fvtCtrlPanel = 16,
   fvtCtrlSizes = 17,
   fvtFlags = 18,
+  fvtTags = 19,
 
   fvtCustom = 20
 );
@@ -43,6 +44,7 @@ const
   fvpPanel = 'P=';       //панель, в которую вставляется контрол
   fvpFlags = 'F=';       //флаги
   fvpSizes = 'S=';       //определение размеров и положения при создании контрола
+  fvpTags = 'T=';        //теги, через запятую
 
 type TDefFiledcValue = (
   _D = -MaxInt + 1,
@@ -131,14 +133,19 @@ begin
     for j := 0 to High(DefineFields[i]) do begin
       v := DefineFields[i][j];
       if j = 0 then begin
-        va := a.Explode(v + ';', ';');
+        //поле видя "{_}fieldname{;nameforsave|;0}{;nameforlod|;0}"
+        va := a.Explode(v + ';;', ';');
         SetF(fvtVName, S.GetDBFieldNameFromSt(va[0]));
         SetF(fvtFName, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0], True)));
         SetF(fvtFNameL, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0])));
         SetF(fvtFNameS, S.IIFStr((Pos('_', va[1]) <> 1)and(Pos('0', va[1]) <> 1), S.IIFStr(va[1] = '', va[0], va[1])));
-        c := Cth.FindControlByFieldName(FSelf, FDefineFieldsAdd[i][Integer(fvtVName)]);
+        SetF(fvtFNameL, S.IIFStr((Pos('_', va[2]) <> 1)and(Pos('0', va[2]) <> 1), S.IIFStr(va[2] = '', va[0], va[2])));
+        st := FDefineFieldsAdd[i][Integer(fvtVName)];
+        if Pos('_', st) = 1 then
+          St := Copy(st, 2);
+        c := Cth.FindControlByFieldName(FSelf, st);
         if c = nil then
-          c := TControl(FSelf.FindComponent(FDefineFieldsAdd[i][Integer(fvtVName)]));
+          c := TControl(FSelf.FindComponent(st));
         if c <> nil then
           FDefineFieldsAdd[i][Integer(fvtCtrl)] := c.Name;
         Continue;
@@ -151,16 +158,18 @@ begin
         SetF(fvtCtrlType, v);
       if k = 0 then begin
         if S.VarType(v) = varString then begin
-          if Pos(fvpVer, v) = 1 then
+          if Pos(fvpVer, UpperCase(v)) = 1 then
             SetF(fvtVer, Copy(v, 3));
-          if Pos(fvpName, v) = 1 then
+          if Pos(fvpName, UpperCase(v)) = 1 then
             SetF(fvtCtrlCaption, Copy(v, 3));
-          if Pos(fvpPanel, v) = 1 then
+          if Pos(fvpPanel, UpperCase(v)) = 1 then
             SetF(fvtCtrlPanel, Copy(v, 3));
-          if Pos(fvpFlags, v) = 1 then
+          if Pos(fvpFlags, UpperCase(v)) = 1 then
             SetF(fvtFlags, Copy(v, 3));
-          if Pos(fvpSizes, v) = 1 then
+          if Pos(fvpSizes, UpperCase(v)) = 1 then
             SetF(fvtCtrlSizes, Copy(v, 3));
+          if Pos(fvpTags, UpperCase(v)) = 1 then
+            SetF(fvtTags, Copy(v, 3));
         end;
       end
       else begin
@@ -240,6 +249,7 @@ var
   c: TComponent;
   b: Boolean;
 begin
+  try
   FDefineFieldsAdd[FindProp(PropName)][Integer(PropValueType)] := Value;
   c := FSelf.FindComponent(FDefineFieldsAdd[FindProp(PropName)][Integer(fvtCtrl)]);
   if c <> nil then begin
@@ -263,6 +273,12 @@ begin
   end
   else if True then begin
 //    Verify()
+  end;
+  except on E: Exception do begin
+    Errors.SetParam('TFields.SetProp', 'Ошибка при установке свойства "' + PropName + '" в "' + VarToStr(Value) + '"');
+    Application.ShowException(E);
+    Errors.SetParam;
+  end;
   end;
 end;
 

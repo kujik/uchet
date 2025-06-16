@@ -1633,9 +1633,9 @@ begin
     Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['id_doc','id_doc','40'],
-      ['act','act','40'],
-      ['aud','act','100'],
+      ['id_doc','_id_doc','40'],
+      ['act','_act','40'],
+      ['aud','_aud','100'],
       ['log_dates','Дата','75'],
       ['data_time','Время','150'],
       ['name','Пользователь','120'],
@@ -1643,7 +1643,7 @@ begin
       ['doctype','Вид документа', '160','bt=Просмотреть документ'],
       ['comments','Комментарий','300;h'],
       ['addinfo','Дополнение','300;h'],
-      ['commentsfull','Комментарий слукжебный','300;h']
+      ['commentsfull','_Комментарий слукжебный','300;h']
     ]);
     Frg1.Opt.SetTable('v_itm_log');
     Frg1.Opt.FilterRules := [[], ['log_dates']];

@@ -3,9 +3,8 @@ inherited FrmOWOrder: TFrmOWOrder
   ClientHeight = 707
   ClientWidth = 1295
   OnResize = FormResize
-  ExplicitWidth = 1311
-  ExplicitHeight = 746
-  PixelsPerInch = 96
+  ExplicitWidth = 1307
+  ExplicitHeight = 745
   TextHeight = 13
   inherited PMDIMain: TPanel
     Width = 1295
@@ -15,8 +14,8 @@ inherited FrmOWOrder: TFrmOWOrder
     inherited PMDIClient: TPanel
       Width = 1285
       Height = 642
-      ExplicitWidth = 1285
-      ExplicitHeight = 642
+      ExplicitWidth = 1281
+      ExplicitHeight = 641
       object PDividor1: TPanel
         Left = 0
         Top = 324
@@ -25,6 +24,7 @@ inherited FrmOWOrder: TFrmOWOrder
         Align = alTop
         Caption = 'PDividor1'
         TabOrder = 0
+        ExplicitWidth = 1281
         object Bevel1: TBevel
           Left = 1064
           Top = 8
@@ -40,6 +40,7 @@ inherited FrmOWOrder: TFrmOWOrder
         Align = alTop
         Caption = 'PHeader2'
         TabOrder = 1
+        ExplicitWidth = 1281
         object PHAddDocs: TPanel
           Left = 984
           Top = 1
@@ -47,6 +48,7 @@ inherited FrmOWOrder: TFrmOWOrder
           Height = 118
           Align = alRight
           TabOrder = 0
+          ExplicitLeft = 980
           object PHAddDocsCaption: TPanel
             Left = 1
             Top = 1
@@ -117,6 +119,10 @@ inherited FrmOWOrder: TFrmOWOrder
                 Width = 187
                 ExplicitTop = 40
                 ExplicitWidth = 187
+                inherited LbStatusBarLeft: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
               end
             end
             inherited PLeft: TPanel
@@ -139,16 +145,17 @@ inherited FrmOWOrder: TFrmOWOrder
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-                666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-                72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-                657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-                72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-                66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-                2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-                5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-                3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-                5C7061720D0A7D0D0A00}
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32323030307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
             end
           end
         end
@@ -160,6 +167,7 @@ inherited FrmOWOrder: TFrmOWOrder
           Align = alRight
           Caption = 'PHRelatedDocs'
           TabOrder = 1
+          ExplicitLeft = 579
           object PHRelatedDocsCaption: TPanel
             Left = 1
             Top = 1
@@ -221,6 +229,10 @@ inherited FrmOWOrder: TFrmOWOrder
                 Width = 138
                 ExplicitTop = 40
                 ExplicitWidth = 138
+                inherited LbStatusBarLeft: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
               end
             end
             inherited PLeft: TPanel
@@ -243,16 +255,17 @@ inherited FrmOWOrder: TFrmOWOrder
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-                666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-                72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-                657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-                72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-                66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-                2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-                5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-                3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-                5C7061720D0A7D0D0A00}
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32323030307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
             end
           end
           inline FrgSemiproducts: TFrDBGridEh
@@ -301,6 +314,10 @@ inherited FrmOWOrder: TFrmOWOrder
                 Width = 138
                 ExplicitTop = 40
                 ExplicitWidth = 138
+                inherited LbStatusBarLeft: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
               end
             end
             inherited PLeft: TPanel
@@ -323,16 +340,17 @@ inherited FrmOWOrder: TFrmOWOrder
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-                666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-                72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-                657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-                72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-                66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-                2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-                5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-                3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-                5C7061720D0A7D0D0A00}
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32323030307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
             end
           end
         end
@@ -344,6 +362,7 @@ inherited FrmOWOrder: TFrmOWOrder
           Align = alClient
           Caption = 'Panel1'
           TabOrder = 2
+          ExplicitWidth = 578
           DesignSize = (
             582
             118)
@@ -366,6 +385,7 @@ inherited FrmOWOrder: TFrmOWOrder
             MaxLength = 400
             TabOrder = 0
             Visible = True
+            ExplicitWidth = 1037
           end
           object DBMemoEh1: TDBMemoEh
             Left = 65
@@ -385,6 +405,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 1
             Visible = True
             WantReturns = True
+            ExplicitWidth = 1038
           end
         end
       end
@@ -396,6 +417,8 @@ inherited FrmOWOrder: TFrmOWOrder
         Align = alBottom
         Caption = 'Panel1'
         TabOrder = 2
+        ExplicitTop = 611
+        ExplicitWidth = 1281
       end
       object PTop: TPanel
         Left = 0
@@ -405,6 +428,7 @@ inherited FrmOWOrder: TFrmOWOrder
         Align = alTop
         Caption = 'PTop'
         TabOrder = 3
+        ExplicitWidth = 1281
       end
       object PHeaderTop: TPanel
         Left = 0
@@ -413,6 +437,7 @@ inherited FrmOWOrder: TFrmOWOrder
         Height = 236
         Align = alTop
         TabOrder = 4
+        ExplicitWidth = 1281
         object PHDates: TPanel
           Left = 697
           Top = 1
@@ -790,7 +815,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 1
             Visible = True
           end
-          object Cb_ordertype: TDBComboBoxEh
+          object Cb_id_ordertype: TDBComboBoxEh
             Left = 65
             Top = 11
             Width = 269
@@ -1257,6 +1282,8 @@ inherited FrmOWOrder: TFrmOWOrder
         Align = alClient
         Caption = 'PGrid'
         TabOrder = 5
+        ExplicitWidth = 1281
+        ExplicitHeight = 147
         inline FrgItems: TFrDBGridEh
           Left = 1
           Top = 1
@@ -1266,13 +1293,13 @@ inherited FrmOWOrder: TFrmOWOrder
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 1283
-          ExplicitHeight = 146
+          ExplicitWidth = 1279
+          ExplicitHeight = 145
           inherited PGrid: TPanel
             Width = 1273
             Height = 92
-            ExplicitWidth = 1273
-            ExplicitHeight = 92
+            ExplicitWidth = 1269
+            ExplicitHeight = 91
             inherited DbGridEh1: TDBGridEh
               Width = 1271
               Height = 69
@@ -1288,52 +1315,57 @@ inherited FrmOWOrder: TFrmOWOrder
                 ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
-                ExplicitHeight = 30
+                ExplicitHeight = 29
                 inherited PRowDetailPanel: TPanel
                   Width = 44
-                  Height = 28
+                  Height = 27
                   ExplicitWidth = 44
-                  ExplicitHeight = 28
+                  ExplicitHeight = 27
                 end
               end
             end
             inherited PStatus: TPanel
               Top = 70
               Width = 1271
-              ExplicitTop = 70
-              ExplicitWidth = 1271
+              ExplicitTop = 69
+              ExplicitWidth = 1267
+              inherited LbStatusBarLeft: TLabel
+                Height = 13
+                ExplicitHeight = 13
+              end
             end
           end
           inherited PLeft: TPanel
             Height = 92
-            ExplicitHeight = 92
+            ExplicitHeight = 91
           end
           inherited PTop: TPanel
             Width = 1283
-            ExplicitWidth = 1283
+            ExplicitWidth = 1279
           end
           inherited PContainer: TPanel
             Width = 1283
-            ExplicitWidth = 1283
+            ExplicitWidth = 1279
           end
           inherited PBottom: TPanel
             Top = 146
             Width = 1283
-            ExplicitTop = 146
-            ExplicitWidth = 1283
+            ExplicitTop = 145
+            ExplicitWidth = 1279
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
-              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-              666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-              72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-              657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-              72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-              66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-              2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-              5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-              3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-              5C7061720D0A7D0D0A00}
+              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+              7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+              305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+              666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+              66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+              720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+              205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+              34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+              305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
           end
         end
       end
@@ -1341,8 +1373,8 @@ inherited FrmOWOrder: TFrmOWOrder
     inherited PDlgPanel: TPanel
       Top = 647
       Width = 1285
-      ExplicitTop = 647
-      ExplicitWidth = 1285
+      ExplicitTop = 646
+      ExplicitWidth = 1281
       inherited BvDlg: TBevel
         Width = 1283
         ExplicitWidth = 1812
@@ -1353,22 +1385,22 @@ inherited FrmOWOrder: TFrmOWOrder
       end
       inherited PDlgMain: TPanel
         Width = 1283
-        ExplicitWidth = 1283
+        ExplicitWidth = 1279
         inherited PDlgBtnForm: TPanel
           Left = 1184
-          ExplicitLeft = 1184
+          ExplicitLeft = 1180
         end
         inherited PDlgChb: TPanel
           Left = 956
-          ExplicitLeft = 956
+          ExplicitLeft = 952
         end
         inherited PDlgBtnR: TPanel
           Left = 1085
-          ExplicitLeft = 1085
+          ExplicitLeft = 1081
         end
         inherited PDlgCenter: TPanel
           Width = 816
-          ExplicitWidth = 816
+          ExplicitWidth = 812
         end
       end
     end
@@ -1376,8 +1408,8 @@ inherited FrmOWOrder: TFrmOWOrder
   inherited PStatusBar: TPanel
     Top = 691
     Width = 1295
-    ExplicitTop = 691
-    ExplicitWidth = 1295
+    ExplicitTop = 690
+    ExplicitWidth = 1291
     inherited LbStatusBarRight: TLabel
       Left = 1203
       Height = 14
