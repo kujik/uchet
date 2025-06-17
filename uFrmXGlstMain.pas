@@ -1783,13 +1783,13 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Bcad_Units, Self, [], fMode, Fr.ID, null);
     if ((FormDoc = myfrm_J_OrPayments) or (FormDoc = myfrm_J_OrPayments_N)) and (Tag = btnAdd) then begin
        //для заказов - заказы по кнопке Add - добавить платеж к текущей записи на сумму остатка
-       if TFrmBasicInput.ShowDialog(Self, '~Платёж', [], fAdd, '', 150, 60,
+       if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Платёж', 150, 60,
           [[cntDEdit, 'Дата', ':'],[cntNEdit, 'Сумма', '1:1000000000:2']],
           [Date, Frg1.GetValue('restsum')],
           va, [['']], nil
         ) < 0 then Exit;
       Q.QCallStoredProc('p_Or_Payment' + S.IIfStr(FormDoc = myfrm_J_OrPayments_N, '_n'), 'IdOrder$i;PSum$f;PDt$d;PAdd$i', [Fr.ID, va[1], va[0], 1]);
-      if Frg1.GetValue('ornum') = 'Н' then
+      if Pos('Н', Frg1.GetValueS('ornum')) = 1 then
         Orders.FinalizeOrder(Fr.ID, myOrFinalizePay);
       Fr.RefreshRecord;
       if Fr.DBGridEh1.RowDetailPanel.Visible then
@@ -2485,7 +2485,7 @@ begin
   if fMode <> fNone then begin
     if ((FormDoc = myfrm_J_OrPayments)or(FormDoc = myfrm_J_OrPayments_N)) then begin
       //вызов диалога ввода платежа по заказу в Журнале платежей по заказам
-       if TFrmBasicInput.ShowDialog(Self, '~Платёж', [], fMode, '', 150, 60,
+       if TFrmBasicInput.ShowDialog(Self, '', [], fMode, '~Платёж', 150, 60,
           [[cntDEdit, 'Дата', ':'],[cntNEdit, 'Сумма', '1:1000000000:2']],
           [S.IIf(fMode = fAdd, Date, Fr.GetValue('dt')), S.IIf(fMode <> fAdd, Fr.GetValue('sum'), Frg1.GetValue('restsum'))],
           va, [['']], nil
@@ -2493,7 +2493,7 @@ begin
       Q.QCallStoredProc('p_Or_Payment' + S.IIfStr(FormDoc = myfrm_J_OrPayments_N, '_n'), 'IdOrder$i;PSum$f;PDt$d;PAdd$i',
         [Frg1.ID, S.IIf(fMode = fDelete, 0, va[1]), va[0], S.IIf(fMode = fAdd, 1, 0)]
       );
-      if Frg1.GetValue('ornum') = 'Н' then
+      if Pos('Н', Frg1.GetValueS('ornum')) = 1 then
         Orders.FinalizeOrder(Frg1.ID, myOrFinalizePay);
       Fr.RefreshGrid;
       Frg1.SetRowDetailPanelSize;

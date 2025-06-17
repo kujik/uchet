@@ -444,7 +444,7 @@ begin
       for i := 0 to High(va1) do
         if va1[i] < 0 then
           va1[i] := 0;
-      if TFrmBasicInput.ShowDialog(Self, 'Параметры', [], fEdit, '', 200, 100,
+      if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, '~Параметры', 200, 100,
           [
             [cntNEdit, '% выделения'#13#10'мин. остатка', '1:100', 80],
             [cntNEdit, '% выделения'#13#10'факт. остатка', '1:100', 80],
@@ -493,7 +493,7 @@ begin
     Fr.RefreshGrid;
   end
   else if Tag = btnCustom_SetOnWayPeriod then begin
-    if TFrmBasicInput.ShowDialog(Self, 'Период "В пути', [], fEdit, '', 200, 100,
+    if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, '~Период "В пути', 200, 100,
         [
           [cntCheck, 'Включить', '', 80],
           [cntDtEdit, 'Период с', '*:*', 80],

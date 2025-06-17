@@ -1968,7 +1968,7 @@ begin
       res := myMessageDlg('Закрыть заказ на дату "' + DateToStr(va2[9]) + '"?', mtConfirmation, [mbYes, mbNo, mbCancel], 'Да;Дата;Отмена');
       if res = mrNo then begin
         //по кнопке Дата запросим дату
-        if TFrmBasicInput.ShowDialog(FrmMain, '', [], fAdd, 'Изменить наименование', 10, 90,
+        if TFrmBasicInput.ShowDialog(FrmMain, '', [], fAdd, '~Изменить наименование', 10, 90,
           [[cntDTEdit, 80, 'Дата закрытия', S.DateTimeToIntStr(va2[3]) + ':' + S.DateTimeToIntStr(Date)]],
           [va2[9]], va, [['']], nil) < 0 then
           Exit;
@@ -2047,7 +2047,7 @@ begin
   end;
   va1:= [vai[0], vai[0]];
   if TFrmBasicInput.ShowDialog(
-    FrmMain, '', [], fEdit, 'Изменить наименование', 780, 160,
+    FrmMain, '', [], fEdit, '~Изменить наименование', 780, 160,
     [
       [cntEdit, 'Текущее наименование', '1:400:T', 600],
       [cntEdit, 'Новое наименование', '1:400:T', 600]

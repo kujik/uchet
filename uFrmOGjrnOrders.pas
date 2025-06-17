@@ -456,7 +456,7 @@ begin
     then begin MyInfoMessage('Не найдено ни одного шаблона!'); Exit; end;
   van:=A.VarDynArray2ColToVD1(va2, 0);
   vaid:=A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select id from v_orders where id <= -1 order by templatename asc', []), 0);
-  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Шаблон заказа', 820, 85, [
+  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Шаблон заказа', 820, 85, [
 //  if Dlg_BasicInput.ShowDialog(Self, 'Создать заказ из шаблона', 820, 85, fAdd, [
     [cntComboLK, 'Шаблон заказа','1:500:0']
    ],

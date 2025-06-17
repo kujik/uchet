@@ -243,7 +243,7 @@ begin
   end;
   if Length(vav) = 0 then
     Exit;
-  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Скопировать стандартные изделия', 300, 80,
+  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Скопировать стандартные изделия', 300, 80,
    [[cntComboLK, 'Источник', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) >= 0 then begin
     Fields := 'id$i;id_or_format_estimates$i;name$s;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;r9$i;resale$i;price$f;price_pp$f;setofpan$i';
     if MyQuestionMessage('Будут скопированы изделия из справочника'#13#10 + '"' + vav[A.PosInArray(va[0], vak)] + '"'#13#10 + '(кроме тех, что уже существуют).'#13#10'Продолжить?') <> mrYes then
