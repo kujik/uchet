@@ -1,11 +1,10 @@
 inherited Form_Adm_Installer: TForm_Adm_Installer
   Anchors = [akLeft, akTop, akBottom]
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 519
-  ClientWidth = 795
-  ExplicitWidth = 801
-  ExplicitHeight = 547
-  PixelsPerInch = 96
+  ClientHeight = 515
+  ClientWidth = 788
+  ExplicitWidth = 800
+  ExplicitHeight = 553
   TextHeight = 13
   object Lb_InstalledInfo: TLabel [0]
     Left = 8
@@ -22,7 +21,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   end
   object Lb_FilesInfo: TLabel [1]
     Left = 8
-    Top = 455
+    Top = 451
     Width = 93
     Height = 16
     Anchors = [akLeft, akBottom]
@@ -33,10 +32,11 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    ExplicitTop = 455
   end
   object Lb_Status: TLabel [2]
     Left = 480
-    Top = 485
+    Top = 481
     Width = 93
     Height = 16
     Anchors = [akLeft, akBottom]
@@ -47,6 +47,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
+    ExplicitTop = 485
   end
   object Lb_PrevInstall: TLabel [3]
     Left = 8
@@ -56,15 +57,15 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
   end
   inherited P_StatusBar: TPanel
-    Top = 518
-    Width = 795
+    Top = 514
+    Width = 788
     Height = 1
     Visible = False
-    ExplicitTop = 467
-    ExplicitWidth = 795
+    ExplicitTop = 517
+    ExplicitWidth = 791
     ExplicitHeight = 1
     inherited Lb_StatusBar_Right: TLabel
-      Left = 706
+      Left = 699
       ExplicitLeft = 706
     end
     inherited Lb_StatusBar_Left: TLabel
@@ -194,14 +195,16 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 592
-    Top = 478
+    Left = 581
+    Top = 474
     Width = 195
     Height = 33
     Anchors = [akRight, akBottom]
     Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
     TabOrder = 8
     OnClick = Bt_OkClick
+    ExplicitLeft = 584
+    ExplicitTop = 477
   end
   object Dbg_PrevInstall: TDBGridEh [13]
     Left = 8

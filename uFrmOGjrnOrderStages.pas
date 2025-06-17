@@ -470,7 +470,7 @@ begin
     Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo', [Fr.ID, OpMode, DtEdit, Fr.GetValue('qnt'), 1, -1]);
     Q.QCommitOrRollback(True);
     if (OpMode in [mToSgp, mFromSgp]) then
-      Orders.FinalizeOrder(Fr.ID, S.Decode([OpMode, mToSgp, myOrFinalizeToSgp, mFromSgp, myOrFinalizeFromSgp]));
+      Orders.FinalizeOrder(Frg1.ID, S.Decode([OpMode, mToSgp, myOrFinalizeToSgp, mFromSgp, myOrFinalizeFromSgp]));
     Changed := True;
   end;
   if Changed then begin
