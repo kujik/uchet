@@ -923,11 +923,10 @@ from
 where 
   z.id_zakaz = o.id_itm 
   and o.id_itm is not null
-  and o.dt_end is not null
+  and (z.id_status in (30, 32) or (o.dt_end is not null and o.dt_end < add_months(sysdate, -1)))
   and s.doctype = 27
   and s.id_doc = z.id_zakaz
   and n.id_nomencl = s.id_nomencl
-  --and z.id_status in (30, 32)  //!!!!
 order by
   o.dt_end desc  
 ;
@@ -962,14 +961,23 @@ create or replace procedure P_Itm_DelRezervForCompleted
 is
 --удаление резерва ИТМ по всем заказам, завершенным в Учете
 begin
-  for c1 in (select id from orders where dt_end is not null) loop
+  for c1 in (
+    select 
+      id 
+    from 
+      orders o, dv.zakaz z 
+    where 
+      z.id_zakaz = o.id_itm and o.id_itm is not null
+      and (z.id_status in (30, 32) or (o.dt_end is not null and o.dt_end < add_months(sysdate, -1)))
+    )
+  loop
     P_Itm_DelRezervForOrder(c1.id);
   end loop;
 end;
 /
 
 begin
---  P_Itm_DelRezervForCompleted;
+  --P_Itm_DelRezervForCompleted;
 end;
 /  
 
