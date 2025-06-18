@@ -2463,7 +2463,7 @@ begin
   );
   SaOI := Q.QLoadToRec(
     'select pos, slash, fullitemname as fullname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, kns, thn, comm '+
-    'from v_order_items where id_order = :id_order$i and qnt > 0',
+    'from v_order_items where id_order = :id_order$i and qnt > 0 order by pos',
     [SaO.G('id')]
   );
 //  va := A.ExplodeV(SaO.G('ch'), ',');
@@ -2488,7 +2488,7 @@ begin
         Continue;
       st1 := VarToStr(SaOI.V[i][j]);
       if st = 'POS' then
-        st1 := IntToStr(i);
+        st1 := IntToStr(i + 1);
       if A.PosInArray(st, ['std', 'nstd', 'sgp', 'resale', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7'], True) >= 0 then
         if (st1 = '0') or (st1 = '') then
           st1 := ''
