@@ -1324,7 +1324,7 @@ begin
   va1 := Q.QLoadToVarDynArray2('select id, code from work_cell_types', []);
   for i := 0 to High(RouteFields) do
     if A.PosInArray(RouteFields[i], va1, 1) < 0 then begin
-      MyWarningMessage(va1[i][1]);
+      MyWarningMessage(RouteFields[i]);
       Exit;
     end;
   va2 := Q.QLoadToVarDynArray2('select id, r1,r2,r3,r4,r5,r6,r7 from or_std_items', []);
@@ -1333,11 +1333,11 @@ begin
     for j := 1 to High(va2[i]) do begin
       if S.NNum(va2[i][j]) = 0 then
         Continue;
-      k := A.PosInArray(RouteFields[j], va1, 1);
+      k := A.PosInArray(RouteFields[j-1], va1, 1);
       S.ConcatStP(st, va1[k][1], ',');
       Q.QExecSql('insert into or_std_item_route (id_or_std_item, id_work_cell_type) values (:v1$i, :v2$i)', [va2[i][0], va1[k][0]]);
     end;
-    Q.QExecSql('update or_std_items set route = :v$s where id = :id$i', [st, va2[i][0]]);
+    //Q.QExecSql('update or_std_items set route = :v$s where id = :id$i', [st, va2[i][0]]);
   end;
 end;
 

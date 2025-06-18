@@ -71,7 +71,7 @@ begin
   Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
   Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_R_StdItems_Ch)],[btnAdd,1],[btnCopy,1],[btnDelete,1],[],
     [btnViewEstimate],[btnLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-btnCopyEstimate,1,'Скопировать смету'],[-btnDeleteEstimate,1],[],
-    [-btnCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[btnGridSettings],[],[btnCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']]
+    [-btnCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[btnGridSettings],[],[btnCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[btnTest]]
   );
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
   SetCbEstimate;

@@ -1041,11 +1041,12 @@ create or replace view v_or_std_items as (
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
     prc.sum as priceraw
-    ,(select rtrim(
-       regexp_replace(listagg(t.code || ',') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' ), ',')
+    ,rtrim(
+    (select 
+       regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
        from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
        where id_or_std_item = i.id
-    ) as route3
+    ), ', ') as route
   from
     or_std_items i,
     estimates e,
@@ -1061,7 +1062,7 @@ create or replace view v_or_std_items as (
 
 select count(*) from v_or_std_items;
 
-select route, route3 from v_or_std_items;
+select route, route2 from v_or_std_items;
 
 
 create or replace procedure P_SetStdItemPrice(

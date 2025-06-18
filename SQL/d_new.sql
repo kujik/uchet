@@ -11,10 +11,24 @@ create table or_std_item_route (
 
 delete from or_std_item_route;
 
-alter table or_std_items add route varchar2(400);
+--alter table or_std_items add route varchar2(400);
+--alter table or_std_items drop column route;
 
 
 
 --------------------------------------------------------------------------------
+/*
+не получается сделать без пробела в t.code || ', ', если его убрать, то при одинаковых конце одного участка и начале следующего будет неверно:
+КС,СТ -> КСТ
+    ,rtrim(
+    (select 
+       regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
+       from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
+       where id_or_std_item = i.id
+    ), ', ') as route
+
+
 --v_or_std_items
 --D ConvertNewOrStdItemRoutes
+
+*/
