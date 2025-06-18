@@ -11,7 +11,6 @@ object Form_MDI: TForm_MDI
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDefault
   Visible = True
   OnActivate = FormActivate
@@ -20,7 +19,6 @@ object Form_MDI: TForm_MDI
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object P_StatusBar: TPanel
     Left = 0
@@ -31,21 +29,25 @@ object Form_MDI: TForm_MDI
     Color = cl3DLight
     ParentBackground = False
     TabOrder = 0
+    ExplicitTop = 451
+    ExplicitWidth = 790
     object Lb_StatusBar_Right: TLabel
       Left = 705
       Top = 1
       Width = 88
-      Height = 13
+      Height = 17
       Align = alRight
       Caption = 'Lb_StatusBar_Left'
+      ExplicitHeight = 13
     end
     object Lb_StatusBar_Left: TLabel
       Left = 1
       Top = 1
       Width = 88
-      Height = 13
+      Height = 17
       Align = alLeft
       Caption = 'Lb_StatusBar_Left'
+      ExplicitHeight = 13
     end
   end
   object Timer_AfterStart: TTimer

@@ -457,6 +457,7 @@ begin
   Prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [ID_Estimate])[0];
   SetRoute;
   Verify(nil);
+  PreventResize := True;
 end;
 
 end.

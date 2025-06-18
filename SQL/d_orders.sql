@@ -1,4 +1,4 @@
-alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
+Alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
 
@@ -1037,10 +1037,15 @@ create or replace view v_or_std_items as (
     i.*,
     fi.prefix,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
+    --F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
     prc.sum as priceraw
+    ,(select rtrim(
+       regexp_replace(listagg(t.code || ',') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' ), ',')
+       from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
+       where id_or_std_item = i.id
+    ) as route3
   from
     or_std_items i,
     estimates e,
@@ -1052,7 +1057,11 @@ create or replace view v_or_std_items as (
    and prc.id(+) = i.id
 );   
 
-select * from v_or_std_items;
+((select i.id_or_std_item, t.code, t.pos, row_number() over (order by t.pos) no from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type));
+
+select count(*) from v_or_std_items;
+
+select route, route3 from v_or_std_items;
 
 
 create or replace procedure P_SetStdItemPrice(

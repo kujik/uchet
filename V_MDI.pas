@@ -111,6 +111,7 @@ type
     MyFormOptions: TMyFormOptions;
     //флаг того что находится в процедуре загрузки данных
     InPrepare: Boolean;
+    InFormShow: Boolean;
     //результат выполнения функции препаре
     PrepareResult: Boolean;
     FormDialogResult: Integer;
@@ -382,10 +383,12 @@ procedure TForm_MDI.FormCanResize(Sender: TObject; var NewWidth, NewHeight: Inte
 //учитываем и максимальные и минимальные значения
 //если максимальное равно минимальному, то в этом направлении форму растянуть/сузить нельзя
 begin
-  Resize := True;
+  Resize := True;  //exit;
   if FIISetStatusBar then
     Exit;
   //разрешаем произвольные изменения размеров формы на этапе подготовке данных в потомке
+  if InFormShow then
+    Exit;
   if InPrepare then
     Exit;
   Resize := False;
@@ -452,6 +455,7 @@ begin
     Left := mycHiddenFormLeft;
     Exit;
   end;
+  InFormShow := True;
   if (myfoDialog in MyFormOptions) and (ParentForm <> nil) and (ParentForm is TForm) then begin
     //для диалоговых отцентрируем относительно родительской формы
 
@@ -476,6 +480,7 @@ begin
   //восстанавливаем размеры и положение окна, если таковые сохранены в бд
   //это невозможно сделать в oncreate в случае если запуск модальный
   Settings.RestoreWindowPos(Self, FormDoc);
+  InFormShow := False;
 end;
 
 procedure TForm_MDI.Timer_AfterStartTimer(Sender: TObject);
