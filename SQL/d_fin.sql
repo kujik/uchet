@@ -184,11 +184,7 @@ group by
 
 create or replace view v_fin_estitem_raw_prices as 
 select
---считает закупочные суммы стандартных изделий
---позиции, являющиеся изделиями, не разворачивает,
---цены находит в stock в последней по дате проводке по ПН для данной номенклатуры
-  --i.name,
-  --b.name,
+--получает закупочные цену по сметной номенклатуре
   ei.id,
   round(s.summa / decode(nvl(s.quantity, 1), 0 ,1, s.quantity),2) as price,
   round(ei.qnt1_itm * s.summa / decode(nvl(s.quantity, 1), 0 ,1, s.quantity),2) as sum
