@@ -180,5 +180,27 @@ where
   and s.id_nomencl = n.id_nomencl and s.rn = 1
 group by 
   i.id  
+;
+
+create or replace view v_fin_estitem_raw_prices as 
+select
+--считает закупочные суммы стандартных изделий
+--позиции, являющиеся изделиями, не разворачивает,
+--цены находит в stock в последней по дате проводке по ПН для данной номенклатуры
+  --i.name,
+  --b.name,
+  ei.id,
+  round(s.summa / decode(nvl(s.quantity, 1), 0 ,1, s.quantity),2) as price,
+  round(ei.qnt1_itm * s.summa / decode(nvl(s.quantity, 1), 0 ,1, s.quantity),2) as sum
+from
+  estimate_items ei,
+  bcad_nomencl b,
+  dv.nomenclatura n,
+  (select row_number() over (partition by doctype, id_nomencl order by stockdate desc) as rn, id_nomencl, quantity, summa, stockdate from dv.stock where doctype = 1) s 
+where
+  b.id = ei.id_name
+  and n.name = b.name
+  and s.id_nomencl = n.id_nomencl and s.rn = 1
 ;  
+  
 

@@ -1,5 +1,5 @@
 
-alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
+Alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
 
@@ -648,7 +648,9 @@ create or replace view v_estimate as (
     bc.name as comm,
     fe.prefix as prefix,
     e.id_order_item,
-    e.id_std_item
+    e.id_std_item,
+    prc.price,
+    prc.sum as sum1
   from
     estimate_items ei,
     bcad_nomencl bn,
@@ -657,6 +659,7 @@ create or replace view v_estimate as (
     bcad_groups bg,
     or_std_items si,
     or_format_estimates fe,
+    v_fin_estitem_raw_prices prc,    
     estimates e
   where
     ei.id_name = bn.id (+) and
@@ -665,6 +668,7 @@ create or replace view v_estimate as (
     ei.id_comment = bc.id (+) and
     ei.id_group = bg.id (+) and
     si.id_or_format_estimates = fe.id (+) and
+    ei.id = prc.id (+) and
     ei.id_estimate = e.id
 );
 
@@ -675,6 +679,9 @@ create or replace view v_estimate_prices as select
 from
   v_estimate e
 ;    
+
+
+
         
 
 

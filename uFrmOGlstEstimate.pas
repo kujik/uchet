@@ -60,7 +60,7 @@ begin
       ['sum1$f','—умма за ед.','80','f=r:'],
       ['0 as chb','_chb','60']
     ]);
-    Frg1.Opt.SetTable('v_estimate_prices');
+    Frg1.Opt.SetTable('v_estimate');  //v_estimate_prices
     if AddParam[0] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
       Capt := Q.QSelectOneRow('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]])[0];

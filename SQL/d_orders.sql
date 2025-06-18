@@ -1045,7 +1045,7 @@ create or replace view v_or_std_items as (
     or_std_items i,
     estimates e,
     or_format_estimates fi,
-    v_fin_stditem_raw_prices  prc
+    v_fin_stditem_raw_prices prc
   where
    i.id = e.id_std_item (+) 
    and i.id_or_format_estimates = fi.id
