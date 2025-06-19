@@ -2502,7 +2502,7 @@ begin
   //журнал стандартных форматов паспортов
     if (FormDoc = myfrm_R_StdPspFormats) then begin
       //форматы смет для стандартных паспортов заказа (иначе группы изделий)
-      if Fr.ID <= 1 then
+      if Frg1.ID <= 1 then
         Exit; //для общих и доп.компл. нельзя создавать / редактировать группы
       if Fr.IsNotEmpty and (fMode <> fAdd)
         then va := [Fr.GetValueS('name'), Fr.GetValueS('prefix'), S.IIf(Fr.GetValueI('active') = 1 , True, False)]
