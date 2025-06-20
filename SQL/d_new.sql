@@ -18,7 +18,8 @@ alter table or_format_estimates add prefix_prod varchar2(20);           --префик
 alter table or_format_estimates add is_semiproduct number(1) default 0; --это группа полуфабрикатов
 
 --create table or_std_items 
-alter table or_std_items add type_of_semiproduct number(11) default 0; --тип полуфабриката, соотвествует одному из участков
+alter table or_std_items drop column type_of_semiproduct cascade constraints;
+alter table or_std_items add type_of_semiproduct number(11); --тип полуфабриката, соотвествует одному из участков
 alter table or_std_items add constraint fk_or_std_items_sem foreign key (type_of_semiproduct) references work_cell_types(id);
 
 

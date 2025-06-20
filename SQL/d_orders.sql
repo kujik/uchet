@@ -1006,7 +1006,7 @@ create table or_std_items (
   price number(12,2),                  --цена
   price_pp number(12,2),               --цена перепродажи, входит в итоговую цену, не больше ее (всегда равна в случае д/к)
   wo_estimate number(1) default 0,     --если 1, то смета не требуется (по факту требуется запись в estimates с полем isempty = 1)
-  type_of_semiproduct number(11) default 0, --тип полуфабриката, соотвествует одному из участков
+  type_of_semiproduct number(11), --тип полуфабриката, соотвествует одному из участков
 
   r0 number(1) default 0,              --если 1, то производдственный маршрут не задается
   
@@ -1021,7 +1021,7 @@ create table or_std_items (
   r9 number(1),
   
   by_sgp number(1) default 0,          --для данного изделия ведется учет СГП по стандартным изделиям 
-  constraint pk_or_std_items primary key (id),
+  constraint pk_or_std_items primary key (id), 
   constraint fk_or_std_items_est foreign key (id_or_format_estimates) references or_format_estimates(id),
   constraint fk_or_std_items_sem foreign key (type_of_semiproduct) references work_cell_types(id)
 );
