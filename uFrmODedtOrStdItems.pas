@@ -86,10 +86,12 @@ begin
     ]
   ];
   Result := inherited;
-  FNameOld := F.GetPropB('name');
-  FWoEstimateOld:=F.GetPropB('wo_estimate');
-  FIdEstimate := AddParam;;
-  FPrefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0];
+  if Mode <> fDelete then begin
+    FNameOld := S.NSt(F.GetPropB('name'));
+    FWoEstimateOld:=S.NInt(F.GetPropB('wo_estimate'));
+    FIdEstimate := AddParam;;
+    FPrefix := S.NSt(Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0]);
+  end;
   SetRoute;
 end;
 

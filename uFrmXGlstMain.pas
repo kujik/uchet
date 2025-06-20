@@ -961,6 +961,8 @@ begin
       ['ras','ras','50'],
       ['catalog','catalog','60']
     ]);
+    Frg1.Opt.SetTable('v_itm_ext_nomencl');
+    Frg1.Opt.SetButtons(1, 'rs');
   end
   else if FormDoc = myfrm_R_EstimatesReplace then begin
     Caption:='Автозамена номенклатуры';
