@@ -2417,7 +2417,10 @@ begin
   Gh.GridFilterRestore(DbGridEh1, va2);
   InLoadData := False;
   MemTableEh1.EnableControls;
-  DBGridEh1.RestoreVertPos(KeyString);
+  try
+    DBGridEh1.RestoreVertPos(KeyString);  //здесь может возникать ошибка, причину пока не отследил.
+  except
+  end;
 end;
 
 

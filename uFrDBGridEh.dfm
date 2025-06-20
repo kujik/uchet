@@ -80,7 +80,7 @@ object FrDBGridEh: TFrDBGridEh
       Left = 352
       Top = 344
       Width = 121
-      Height = 21
+      Height = 23
       DynProps = <>
       EditButtons = <>
       TabOrder = 2
