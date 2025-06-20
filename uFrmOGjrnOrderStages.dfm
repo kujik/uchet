@@ -1,39 +1,22 @@
 inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
   Caption = 'FrmOGjrnOrderStages'
-  ClientWidth = 800
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited PMDIMain: TPanel
-    Width = 800
     inherited PMDIClient: TPanel
-      Width = 790
-      inherited PTop: TPanel
-        Width = 790
-      end
-      inherited PBottom: TPanel
-        Width = 790
-      end
+      ExplicitWidth = 786
       inherited PGrid1: TPanel
-        Width = 780
+        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          Width = 778
+          ExplicitWidth = 774
           inherited PGrid: TPanel
-            Width = 768
             inherited DbGridEh1: TDBGridEh
-              Height = 337
               OnKeyDown = Frg1DbGridEh1KeyDown
             end
             inherited PStatus: TPanel
-              Top = 338
+              ExplicitTop = 338
             end
-          end
-          inherited PTop: TPanel
-            Width = 778
-          end
-          inherited PContainer: TPanel
-            Width = 778
-          end
-          inherited PBottom: TPanel
-            Width = 778
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -52,21 +35,9 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
         end
       end
       inherited PFrg2: TPanel
-        Width = 790
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          Width = 788
-          inherited PGrid: TPanel
-            Width = 778
-          end
-          inherited PTop: TPanel
-            Width = 788
-          end
-          inherited PContainer: TPanel
-            Width = 788
-          end
-          inherited PBottom: TPanel
-            Width = 788
-          end
+          ExplicitWidth = 784
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -83,16 +54,9 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
           end
         end
       end
-      inherited PRight: TPanel
-        Left = 785
-      end
-    end
-    inherited PDlgPanel: TPanel
-      Width = 790
     end
   end
   inherited PStatusBar: TPanel
-    Width = 800
     inherited LbStatusBarRight: TLabel
       Height = 14
     end

@@ -232,7 +232,7 @@ begin
         ['dt2e','Дата кон.','75']
       ]);
       Frg2.Opt.SetTable('v_order_delinprod_items');
-      Frg2.Opt.SetWhere('where id_order = :id_order$i and st4 is not null order by slash asc');
+      Frg2.Opt.SetWhere('where id_order = :id_order$i order by slash asc');
       if User.Role(rOr_J_Orderstages_Otk_Ch) then
         EditMode := 1;
       Q.QSetContextValue('order_stages_dt4c', DtEdit);
