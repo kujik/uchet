@@ -12,7 +12,7 @@ ToolWin, ImgList, DB, ADODB, EhLibMTE, DataDriverEh, DBGridEh, PrnDbgeh,
 ADODataDriverEh, PropFilerEh, PropStorageEh, EhLibADO, AppEvnts, uUtils,
 uErrors, psAPI, uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants,
 Vcl.Imaging.pngimage, System.ImageList, System.Actions, System.StrUtils,
-Vcl.ActnMan, Vcl.ActnCtrls, uTasks, uString, uSys;
+Vcl.ActnMan, Vcl.ActnCtrls, uTasks, uString, uSys, Vcl.DBActns;
 
 type
   TFrmMain = class(TForm)
@@ -37,6 +37,15 @@ type
     MM_Window_Minimize: TMenuItem;
     MM_Window_TileIVertical: TMenuItem;
     FormsList: TToolBar;
+    AlsWindows: TActionList;
+    Action1: TAction;
+    DatasetPrior1: TDataSetPrior;
+    WindowClose1: TWindowClose;
+    WindowCascade1: TWindowCascade;
+    WindowTileHorizontal1: TWindowTileHorizontal;
+    WindowTileVertical1: TWindowTileVertical;
+    WindowMinimizeAll1: TWindowMinimizeAll;
+    WindowArrange1: TWindowArrange;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
