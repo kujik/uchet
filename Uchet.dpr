@@ -135,7 +135,8 @@ uses
   uFrmOWOrder in 'uFrmOWOrder.pas' {FrmOWOrder},
   uFrmOGedtSgpRevision in 'uFrmOGedtSgpRevision.pas' {FrmOGedtSgpRevision},
   uFrmXGsrvSqlMonitor in 'uFrmXGsrvSqlMonitor.pas' {FrmXGsrvSqlMonitor},
-  uFrmXWOracleError in 'uFrmXWOracleError.pas' {FrmXWOracleError};
+  uFrmXWOracleError in 'uFrmXWOracleError.pas' {FrmXWOracleError},
+  uFrmOGedtEstimate in 'uFrmOGedtEstimate.pas' {FrmOGedtEstimate};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
@@ -236,7 +237,7 @@ begin
   //  if (MT=0)and not((ParamCount >= 1)and(ParamStr(1) = '/multicopy')) then begin
   if (MT = 0) and not Sys.GetDevFile then begin
     {$IFDEF SRV}
-    Halt;
+    Halt;                                                                                                                                                                                                      mau
     {$ENDIF}
     MessageBox(0, pWideChar('Приложение "' + string(ModuleRecArr[cMainModule].Caption) + '" уже запущено'), 'Ошибка', 0);
     Halt;

@@ -286,6 +286,9 @@ create table or_format_estimates (
   id number(11),
   id_format number(11),
   name varchar2(400) not null,        --наименование проекта
+  prefix varchar2(20),                --префикс для итм, для отгрузочного паспорта 
+  prefix_prod varchar2(20),           --префикс для итм, для производственного паспорта
+  is_semiproduct number(1) default 0, --это группа полуфабрикатов
   active number(1),                   --признак активности
   constraint pk_or_format_estimates primary key (id),
   constraint fk_or_format_estimates_f foreign key (id_format) references or_formats(id)

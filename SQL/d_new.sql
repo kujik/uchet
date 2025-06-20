@@ -14,6 +14,10 @@ delete from or_std_item_route;
 --alter table or_std_items add route varchar2(400);
 --alter table or_std_items drop column route;
 
+alter table or_format_estimates add prefix_prod varchar2(20);           --префикс для итм, для производственного паспорта
+alter table or_format_estimates add is_semiproduct number(1) default 0; --это группа полуфабрикатов
+
+
 
 
 --------------------------------------------------------------------------------

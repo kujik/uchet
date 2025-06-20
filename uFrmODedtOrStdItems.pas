@@ -149,52 +149,40 @@ begin
   Q.QBeginTrans(True);
   repeat
   //сохраним основные данные
-  Result:=inherited;
-  if (Mode <> fDelete) and FIsRouteChanged then begin
-    Q.QExecSql('delete from or_std_item_route where id_or_std_item = :id$i', [ID]);
-    for i := 0 to ComponentCount - 1 do
-      if (Copy(Components[i].Name, 1, 6) = 'Chb_r_')and(TDBCheckBoxEh(Components[i]).Checked ) then
-        Q.QExecSql('insert into or_std_item_route (id_or_std_item, id_work_cell_type) values (:ido$i, :idt$i)', [ID, Copy(Components[i].Name, 7)])
-  end;
-  if (Mode = fEdit) and (E_Name.Text <> FNameOld) then begin
+    Result := inherited;
+    if (Mode <> fDelete) and FIsRouteChanged then begin
+      Q.QExecSql('delete from or_std_item_route where id_or_std_item = :id$i', [ID]);
+      for i := 0 to ComponentCount - 1 do
+        if (Copy(Components[i].name, 1, 6) = 'Chb_r_') and (TDBCheckBoxEh(Components[i]).Checked) then
+          Q.QExecSql('insert into or_std_item_route (id_or_std_item, id_work_cell_type) values (:ido$i, :idt$i)', [ID, Copy(Components[i].name, 7)])
+    end;
+    if (Mode = fEdit) and (E_Name.Text <> FNameOld) then begin
     //если это редактирование и наименование изменилось - попробуем изменить его и в Ѕƒ »“ћ (с учетом префикса)
     //получим префикс изеди€
-    prefix:='';
-    if FIdEstimate > 0
-      then prefix:=Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0];
+      prefix := '';
+      if FIdEstimate > 0 then
+        prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0];
     //старое и новое им€
-    name:=S.IIFStr(prefix <> '', prefix + '_', '') + Trim(E_Name.Text);
-    nameold:=S.IIFStr(prefix <> '', prefix + '_', '') + FNameOld;
+      name := S.IIFStr(prefix <> '', prefix + '_', '') + Trim(E_Name.Text);
+      nameold := S.IIFStr(prefix <> '', prefix + '_', '') + FNameOld;
     //проверим, есть ли уже в итм в продукции запись соответствующа€ новому имени
-    Res:=Q.QSelectOneRow(
-      'select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s',
-      [ItmGroups_Production_ID, name]
-    )[0];
-    if Res = 0 then begin
+      Res := Q.QSelectOneRow('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, name])[0];
+      if Res = 0 then begin
       //если нет, то переименуем запись со старым именем в новое (если она естественно есть)
-      Result:= Q.QExecSql(
-        'update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s',
-        [name, name, ItmGroups_Production_ID, nameold]
-      ) >= 0;
+        Result := Q.QExecSql('update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s', [name, name, ItmGroups_Production_ID, nameold]) >= 0;
+      end;
     end;
-  end;
-  if not Result then Break;
-  if (Mode = fEdit) and (Cth.GetControlValue(Chb_Wo_Estimate) <> FWoEstimateOld) then begin
+    if not Result then
+      Break;
+    if (Mode = fEdit) and (Cth.GetControlValue(Chb_Wo_Estimate) <> FWoEstimateOld) then begin
     //если изменилс€ признак "Ѕез сметы", то удал€ем смету
     //(в проверке перед записью спросит, если при этом была подгружена непуста€ смета)
-    Result:=Orders.RemoveEstimateForStdItem(id, True);
-  end;
-  if (Mode = fEdit) then begin
+      Result := Orders.RemoveEstimateForStdItem(id, True);
+    end;
+    if (Mode = fEdit) then begin
     //утсановим в шаблонах цену и маршрут изделий, соответствующих данному
-      Result:= Q.QExecSql(
-        'update order_items set '+
-        'price = :price$f, price_pp = :price_pp$f '+
-        'where id_order < 0 and id_std_item = :id_std_item$i',
-        [Ne_Price.Value, Ne_Price_PP.Value,
-         ID
-        ]
-      ) >= 0;
-      if Result then          begin
+      Result := Q.QExecSql('update order_items set ' + 'price = :price$f, price_pp = :price_pp$f ' + 'where id_order < 0 and id_std_item = :id_std_item$i', [Ne_Price.Value, Ne_Price_PP.Value, ID]) >= 0;
+      if Result then begin
 {      Result:= Q.QExecSql(
         'update order_items set '+
         'r0 = :r0$i, r1 = :r1$i, r2 = :r2$i, r3 = :r3$i, r4 = :r4$i, r5 = :r5$i, r6 = :r6$i, r7 = :r7$i '+
@@ -205,7 +193,7 @@ begin
         ]
       ) >= 0;}
       end;
-  end;
+    end;
   until True;
   Q.QCommitOrRollback(Result);
 end;
