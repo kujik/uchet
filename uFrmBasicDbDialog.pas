@@ -16,10 +16,10 @@ type
     Table: string;                          //таблица, в которую записываем данные
     Sequence: string;                       //секвенция, если нужна
     IdAfterInsert: Variant;                 //В процедуре Save сюдф записывается Айди, полученное при вставке записи (нужно, если требуются доп. действия в потомке после стандартной записи)
-    function Prepare: Boolean; override;
-    function Load: Boolean; virtual;
-    function Save: Boolean; override;
-    function LoadComboBoxes: Boolean; virtual;
+    function  Prepare: Boolean; override;
+    function  Load: Boolean; virtual;
+    function  Save: Boolean; override;
+    function  LoadComboBoxes: Boolean; virtual;
     procedure SetStatusBarText(VisibleStatusBar: Boolean; Text: string); virtual;
   public
   end;

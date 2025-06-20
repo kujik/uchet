@@ -1,21 +1,42 @@
 inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
   Caption = 'FrmOGrefOrStdItems'
+  ClientWidth = 800
   OnDestroy = FormDestroy
-  ExplicitWidth = 812
-  ExplicitHeight = 575
   TextHeight = 13
   inherited PMDIMain: TPanel
+    Width = 800
     inherited PMDIClient: TPanel
-      ExplicitWidth = 786
+      Width = 790
+      ExplicitWidth = 790
+      inherited PTop: TPanel
+        Width = 790
+      end
+      inherited PBottom: TPanel
+        Width = 790
+      end
       inherited PGrid1: TPanel
-        ExplicitWidth = 776
+        Width = 780
+        ExplicitWidth = 780
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
+          Width = 778
           inherited PGrid: TPanel
-            inherited PStatus: TPanel
-              ExplicitTop = 338
-              ExplicitWidth = 762
+            Width = 768
+            inherited DbGridEh1: TDBGridEh
+              Height = 337
             end
+            inherited PStatus: TPanel
+              Top = 338
+              ExplicitTop = 338
+            end
+          end
+          inherited PTop: TPanel
+            Width = 778
+          end
+          inherited PContainer: TPanel
+            Width = 778
+          end
+          inherited PBottom: TPanel
+            Width = 778
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -34,13 +55,20 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
         end
       end
       inherited PFrg2: TPanel
-        ExplicitWidth = 786
+        Width = 790
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          Width = 788
           inherited PGrid: TPanel
-            inherited PStatus: TPanel
-              ExplicitWidth = 772
-            end
+            Width = 778
+          end
+          inherited PTop: TPanel
+            Width = 788
+          end
+          inherited PContainer: TPanel
+            Width = 788
+          end
+          inherited PBottom: TPanel
+            Width = 788
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -58,9 +86,16 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
           end
         end
       end
+      inherited PRight: TPanel
+        Left = 785
+      end
+    end
+    inherited PDlgPanel: TPanel
+      Width = 790
     end
   end
   inherited PStatusBar: TPanel
+    Width = 800
     inherited LbStatusBarRight: TLabel
       Height = 14
     end

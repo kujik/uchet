@@ -1328,6 +1328,7 @@ begin
       Exit;
     end;
   va2 := Q.QLoadToVarDynArray2('select id, r1,r2,r3,r4,r5,r6,r7 from or_std_items', []);
+  Q.QExecSql('delete from or_std_item_route', []);
   for i := 0 to High(va2) do begin
     st := '';
     for j := 1 to High(va2[i]) do begin

@@ -148,6 +148,7 @@ type
     FInBtOkClick: Boolean;
     FInBtCancelClick: Boolean;
     FInPrepare: Boolean;
+    FInControlOnChaange: Boolean;
     FAfterFormShow: Boolean;
     //была ли сделана блокировка, результат FormDbLock = Mode, если здесь будет fDelete or FEdit то блокировка автоматом снимается при закрытии формы
     //если True, то при закрытии формы блокирока снимается, используя как ключи FormDoc и ID
@@ -231,6 +232,9 @@ type
     procedure VerifyBeforeSave; virtual;
     //сохраняет даннные. должна перекрываться для реального сохранения
     function  Save: Boolean; virtual;
+    //событие вызывается для OnCange или для чекбоксов OnClick для всех контролов на форме, кроме дилоговой панели
+    procedure ControlOnChangeEvent(Sender: TObject); virtual;
+    //событие вызывается нерекурсивно - если изменение значения контрола происходит в этом событии, то оно не вызовется повторно (проверяяет флаг)
     procedure ControlOnChange(Sender: TObject); virtual;
     procedure ControlOnEnter(Sender: TObject); virtual;
     procedure ControlOnExit(Sender: TObject); virtual;
@@ -1135,7 +1139,7 @@ begin
   //передается массив имен контролов и их условий проверки [cname1, cver1, cname2, cver2...]
   Cth.SetControlsVerification(Self, FControlVerifycations);
   //назаначим события всем дб-контролам формы, если они не были назначены явно в дизайнере формы или в Prepare
-  Cth.SetControlsEhEvents(PMDIClient, False, True, nil, ControlOnExit, ControlOnChange, ControlCheckDrawRequiredState);
+  Cth.SetControlsEhEvents(PMDIClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState);
 exit;
   Cth.SetControlsOnChange(Self, ControlOnChange, True);
   Cth.SetControlsOnExit(Self, ControlOnExit);
@@ -1191,14 +1195,24 @@ begin
   if NullIfEmpty then Result:=S.NullIfEmpty(Result);
 end;
 
-procedure TFrmBasicMdi.ControlOnChange(Sender: TObject);
+procedure TFrmBasicMdi.ControlOnChangeEvent(Sender: TObject);
 //событие изменения данных контрола
 begin
   //выход если в процедуре загрузки
   if FInPrepare then Exit;
+  if not FInControlOnChaange then begin
+    FInControlOnChaange := True;
+    ControlOnChange(Sender);
+  end;
   //проверим, признак что в этом событии проверка
   Serialize;
   Verify(Sender, True);
+  FInControlOnChaange := False;
+end;
+
+procedure TFrmBasicMdi.ControlOnChange(Sender: TObject);
+begin
+
 end;
 
 procedure TFrmBasicMdi.ControlOnEnter(Sender: TObject);

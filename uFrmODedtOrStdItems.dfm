@@ -2,16 +2,19 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
   Caption = 'FrmODedtOrStdItems'
   ClientHeight = 254
   ClientWidth = 835
-  ExplicitWidth = 851
-  ExplicitHeight = 293
-  PixelsPerInch = 96
+  ExplicitWidth = 847
+  ExplicitHeight = 292
   TextHeight = 13
   inherited PMDIMain: TPanel
     Width = 835
     Height = 238
+    ExplicitWidth = 831
+    ExplicitHeight = 237
     inherited PMDIClient: TPanel
       Width = 825
       Height = 189
+      ExplicitWidth = 821
+      ExplicitHeight = 188
       object E_Name: TDBEditEh
         Left = 97
         Top = 7
@@ -66,7 +69,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         Visible = True
       end
       object Ne_Price_PP: TDBNumberEditEh
-        Left = 281
+        Left = 294
         Top = 85
         Width = 104
         Height = 21
@@ -96,25 +99,34 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
     inherited PDlgPanel: TPanel
       Top = 194
       Width = 825
+      ExplicitTop = 193
+      ExplicitWidth = 821
       inherited BvDlg: TBevel
         Width = 823
+        ExplicitWidth = 823
       end
       inherited BvDlgBottom: TBevel
         Width = 823
+        ExplicitWidth = 823
       end
       inherited PDlgMain: TPanel
         Width = 823
+        ExplicitWidth = 819
         inherited PDlgBtnForm: TPanel
           Left = 724
+          ExplicitLeft = 720
         end
         inherited PDlgChb: TPanel
           Left = 496
+          ExplicitLeft = 492
         end
         inherited PDlgBtnR: TPanel
           Left = 625
+          ExplicitLeft = 621
         end
         inherited PDlgCenter: TPanel
           Width = 356
+          ExplicitWidth = 352
         end
       end
     end
@@ -122,9 +134,12 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
   inherited PStatusBar: TPanel
     Top = 238
     Width = 835
+    ExplicitTop = 237
+    ExplicitWidth = 831
     inherited LbStatusBarRight: TLabel
       Left = 743
       Height = 14
+      ExplicitLeft = 743
     end
     inherited LbStatusBarLeft: TLabel
       Height = 14
