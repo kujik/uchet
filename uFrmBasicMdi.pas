@@ -1606,6 +1606,7 @@ begin
   FCtrlBegValuesStr := FCtrlCurrValuesStr;
   if FFormDoc <> '' then
     Settings.RestoreWindowPos(Self, FormDoc);
+  Self.Top := max(Self.Top, 0);
   Verify(nil);
   RefreshStatusBar('', '', True); //нужно после изменения размеров, иначе правая надпись может уехать
   //для диалоговых отцентрируем относительно родительской формы

@@ -18,6 +18,8 @@ type
     Ne_Price: TDBNumberEditEh;
     Ne_Price_PP: TDBNumberEditEh;
     Chb_by_sgp: TDBCheckBoxEh;
+    Cb_type_of_semiproduct: TDBComboBoxEh;
+    Cb_id_or_format_estimates: TDBComboBoxEh;
   private
     FRcount: Integer;
     FNameOld : string;

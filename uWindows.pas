@@ -127,7 +127,7 @@ uses
   uFrmAWUsersAndRoles, uFrmWGjrnParsec, uFrmOGjrnUchetLog, uFrmOGrefOrStdItems,
   uFrmOGrepSgp, uFrmWGrepSalary, uFrmOGjrnOrderStages, uFrmOGrepItemsInOrder,
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
-  uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision,
+  uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -636,7 +636,8 @@ begin
 //    Form := TForm_Rep_Orders_QntItems_2.Create(Application, F, MyFormOptions, FNone, 0, null);
   end
   else if F = myfrm_Adm_UserInterface then begin
-    Form := TForm_UserInterface.Create(Application, F, MyFormOptions, FNone, 0, null);
+//    Form := TForm_UserInterface.Create(Application, F, MyFormOptions, FNone, 0, null);
+    TFrmXWndUserInterface.Show(Application, F, [myfoDialog], fNone, 0, null);
   end
   else if F = myfrm_Rep_W_Personnel_1 then begin
 //!!!    Form := TForm_Rep_Personnel_1.Create(Application, F, MyFormOptions, FNone, 0, null);

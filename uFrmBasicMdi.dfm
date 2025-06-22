@@ -2,8 +2,8 @@ object FrmBasicMdi: TFrmBasicMdi
   Left = 0
   Top = 0
   Caption = 'FrmBasicMdi'
-  ClientHeight = 410
-  ClientWidth = 848
+  ClientHeight = 100
+  ClientWidth = 278
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,29 +20,31 @@ object FrmBasicMdi: TFrmBasicMdi
   object PMDIMain: TPanel
     Left = 0
     Top = 0
-    Width = 848
-    Height = 394
+    Width = 278
+    Height = 84
     Align = alClient
     AutoSize = True
     Padding.Left = 4
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
+    ExplicitWidth = 844
+    ExplicitHeight = 393
     object PMDIClient: TPanel
       Left = 5
       Top = 5
-      Width = 838
-      Height = 345
+      Width = 268
+      Height = 35
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 842
-      ExplicitHeight = 346
+      ExplicitWidth = 834
+      ExplicitHeight = 344
     end
     object PDlgPanel: TPanel
       Left = 5
-      Top = 350
-      Width = 838
+      Top = 40
+      Width = 268
       Height = 43
       Margins.Left = 0
       Margins.Top = 0
@@ -55,10 +57,12 @@ object FrmBasicMdi: TFrmBasicMdi
       Ctl3D = True
       ParentCtl3D = False
       TabOrder = 1
+      ExplicitTop = 349
+      ExplicitWidth = 834
       object BvDlg: TBevel
         Left = 1
         Top = 1
-        Width = 836
+        Width = 266
         Height = 3
         Align = alTop
         ExplicitWidth = 782
@@ -66,7 +70,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object BvDlgBottom: TBevel
         Left = 1
         Top = 39
-        Width = 836
+        Width = 266
         Height = 3
         Align = alBottom
         ExplicitLeft = 7
@@ -76,7 +80,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object PDlgMain: TPanel
         Left = 1
         Top = 4
-        Width = 836
+        Width = 266
         Height = 35
         Margins.Left = 0
         Margins.Top = 0
@@ -90,26 +94,28 @@ object FrmBasicMdi: TFrmBasicMdi
         Padding.Bottom = 4
         ParentCtl3D = False
         TabOrder = 0
+        ExplicitWidth = 832
         object PDlgBtnForm: TPanel
           Tag = -1
-          Left = 737
+          Left = 167
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'PDlgBtnForm'
           TabOrder = 0
-          ExplicitLeft = 741
+          ExplicitLeft = 733
         end
         object PDlgChb: TPanel
           Tag = -2
-          Left = 509
+          Left = -61
           Top = 4
           Width = 129
           Height = 27
           Align = alRight
           Caption = 'PDlgChb'
           TabOrder = 1
+          ExplicitLeft = 505
           DesignSize = (
             129
             27)
@@ -125,14 +131,14 @@ object FrmBasicMdi: TFrmBasicMdi
         end
         object PDlgBtnR: TPanel
           Tag = -3
-          Left = 638
+          Left = 68
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'PDlgBtnR'
           TabOrder = 2
-          ExplicitLeft = 642
+          ExplicitLeft = 634
         end
         object PDlgInfo: TPanel
           Tag = 1
@@ -163,20 +169,20 @@ object FrmBasicMdi: TFrmBasicMdi
         object PDlgCenter: TPanel
           Left = 140
           Top = 4
-          Width = 369
+          Width = 11
           Height = 27
           Align = alClient
           Caption = 'PDlgCenter'
           TabOrder = 5
-          ExplicitWidth = 373
+          ExplicitWidth = 365
         end
       end
     end
   end
   object PStatusBar: TPanel
     Left = 0
-    Top = 394
-    Width = 848
+    Top = 84
+    Width = 278
     Height = 16
     Align = alBottom
     Color = cl3DLight
@@ -184,23 +190,26 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Right = 8
     ParentBackground = False
     TabOrder = 1
-    ExplicitTop = 395
-    ExplicitWidth = 852
+    ExplicitTop = 393
+    ExplicitWidth = 844
     object LbStatusBarRight: TLabel
-      Left = 760
+      Left = 186
       Top = 1
       Width = 83
-      Height = 13
+      Height = 14
       Align = alRight
       Caption = 'LbStatusBarRight'
+      ExplicitLeft = 760
+      ExplicitHeight = 13
     end
     object LbStatusBarLeft: TLabel
       Left = 9
       Top = 1
       Width = 77
-      Height = 13
+      Height = 14
       Align = alLeft
       Caption = 'LbStatusBarLeft'
+      ExplicitHeight = 13
     end
   end
   object Timer_AfterStart: TTimer

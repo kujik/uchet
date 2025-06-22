@@ -95,6 +95,38 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         TabOrder = 5
       end
+      object Cb_type_of_semiproduct: TDBComboBoxEh
+        Left = 97
+        Top = 135
+        Width = 121
+        Height = 21
+        ControlLabel.Width = 80
+        ControlLabel.Height = 26
+        ControlLabel.Caption = #1058#1080#1087#13#10#1087#1086#1083#1091#1092#1072#1073#1088#1080#1082#1072#1090#1072
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftBottomEh
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 6
+        Text = 'Cb_type_of_semiproduct'
+        Visible = False
+      end
+      object Cb_id_or_format_estimates: TDBComboBoxEh
+        Left = 98
+        Top = 163
+        Width = 300
+        Height = 21
+        ControlLabel.Width = 81
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1043#1088#1091#1087#1087#1072' '#1080#1079#1076#1077#1083#1080#1081
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftBottomEh
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 7
+        Text = 'DBComboBoxEh1'
+        Visible = True
+      end
     end
     inherited PDlgPanel: TPanel
       Top = 194
@@ -144,5 +176,9 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
     inherited LbStatusBarLeft: TLabel
       Height = 14
     end
+  end
+  inherited Timer_AfterStart: TTimer
+    Left = 24
+    Top = 56
   end
 end

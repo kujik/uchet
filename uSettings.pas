@@ -66,6 +66,7 @@ implementation
 uses
   VCL.Themes,
   uSys,
+  uFrmBasicMdi,
   uFrmMain
   ;
 
@@ -151,7 +152,14 @@ begin
           L := Max(0, DW - W);
         if (T + H > DH) then
           T := Max(0, DH - H);
-        SetBounds(L, T, W, H);
+        Left := L;
+        Top := T;
+//        if not (Form is TFrmBasicMdi) or (myfoSizeable in TFrmBasicMdi(Form).MyFormOptions) then begin
+        if Form.BorderStyle = bsSizeable then begin
+          Width := W;
+          Height := H;
+        end;
+//        SetBounds(L, T, W, H);
       end
     end;
   except

@@ -136,7 +136,8 @@ uses
   uFrmOGedtSgpRevision in 'uFrmOGedtSgpRevision.pas' {FrmOGedtSgpRevision},
   uFrmXGsrvSqlMonitor in 'uFrmXGsrvSqlMonitor.pas' {FrmXGsrvSqlMonitor},
   uFrmXWOracleError in 'uFrmXWOracleError.pas' {FrmXWOracleError},
-  uFrmOGedtEstimate in 'uFrmOGedtEstimate.pas' {FrmOGedtEstimate};
+  uFrmOGedtEstimate in 'uFrmOGedtEstimate.pas' {FrmOGedtEstimate},
+  uFrmXWndUserInterface in 'uFrmXWndUserInterface.pas' {FrmXWndUserInterface};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},

@@ -4222,6 +4222,8 @@ begin
   //массив контролов и их параметров
   for i:=0 to TPanel(AParent).ControlCount - 1 do begin
     c:= TPanel(AParent).Controls[i];
+    if not c.Visible then
+      Continue;
     //проверим, не в исключениях ли контрол
     for j:= 0 to High(Exclude) do
       if TPanel(AParent).Controls[i] = Exclude[j]
