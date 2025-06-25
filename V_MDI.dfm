@@ -29,8 +29,8 @@ object Form_MDI: TForm_MDI
     Color = cl3DLight
     ParentBackground = False
     TabOrder = 0
-    ExplicitTop = 451
-    ExplicitWidth = 790
+    ExplicitTop = 156
+    ExplicitWidth = 329
     object Lb_StatusBar_Right: TLabel
       Left = 244
       Top = 1
@@ -38,7 +38,6 @@ object Form_MDI: TForm_MDI
       Height = 17
       Align = alRight
       Caption = 'Lb_StatusBar_Left'
-      ExplicitLeft = 705
       ExplicitHeight = 13
     end
     object Lb_StatusBar_Left: TLabel

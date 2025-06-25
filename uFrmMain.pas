@@ -147,6 +147,7 @@ begin
   AfterCreate := True;
   AfterStart := True;
   TimerAfterMainShow.Enabled := True;
+  TlbMain.Height := 0;
   //перстроим меню в зависимости от модуля
   //главное меню
   Menu := MainMenu;

@@ -485,6 +485,8 @@ begin
     Self.Top := max(x, 0);
 
   end;
+  Self.Top := Max(FrmMain.Lb_GetTop.Top, Self.Top);
+
   //восстанавливаем размеры и положение окна, если таковые сохранены в бд
   //это невозможно сделать в oncreate в случае если запуск модальный
   Settings.RestoreWindowPos(Self, FormDoc);

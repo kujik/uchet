@@ -7,8 +7,7 @@ uses
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   MemTableDataEh, Db, MemTableEh, EhLibVCL, Math, ExtCtrls, Types,
-  Registry, IniFiles,
-  GridToolCtrlsEh, SearchPanelsEh,
+  Registry, IniFiles,  GridToolCtrlsEh, SearchPanelsEh,
   DBLookupUtilsEh,
   PropFilerEh, MemTreeEh,
   ImgList, StdActns, ActnList,
@@ -153,6 +152,7 @@ begin
         if (T + H > DH) then
           T := Max(0, DH - H);
         Left := L;
+        //T := Max(FrmMain.Lb_GetTop.Top, T);
         Top := T;
 //        if not (Form is TFrmBasicMdi) or (myfoSizeable in TFrmBasicMdi(Form).MyFormOptions) then begin
         if Form.BorderStyle = bsSizeable then begin
