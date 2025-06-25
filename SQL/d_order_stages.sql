@@ -659,10 +659,12 @@ select
   i.qnt2,              --ïğèíÿòî íà ñãï
   i.qnt_inprod,
   i.qnt - i.qnt_inprod as qnt_rest, 
-  o.ornum || '_' || substr('000000' || i.pos, -3) as slash   --¹ ñëıøà
+  o.ornum || '_' || substr('000000' || i.pos, -3) as slash,   --¹ ñëıøà
+  pa.shortname as area_short
 from
   orders o,  
   or_std_items s,
+  ref_production_areas pa, 
 (select 
   i.id as id_order_item, sum(i.qnt) as qnt, sum(nvl(os.qnt,0)) as qnt2, sum(i.qnt) - sum(nvl(os.qnt,0)) qnt_inprod, 
   max(id_order) as id_order,
@@ -681,7 +683,9 @@ having sum(i.qnt) - sum(nvl(os.qnt,0)) > 0
 ) i
 where
   o.id = i.id_order
-  and i.id_std_item = s.id 
+  and i.id_std_item = s.id
+  and pa.id(+) = o.area 
+   
 ;
 
 --------------------------------------------------------------------------------

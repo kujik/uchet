@@ -1615,6 +1615,7 @@ begin
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['id_order$i','_id_order','40'],
+      ['area_short$s','Площадка','80'],
       ['slash','№','120','bt=Паспорт заказа'],
       ['itemname','Изделие','450;h'],
       ['dt_beg','Дата запуска','75'],
