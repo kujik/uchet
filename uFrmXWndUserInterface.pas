@@ -78,71 +78,13 @@ begin
   end;
 end;
 
-{procedure TFrmXWndUserInterface.Bt_DefClick(Sender: TObject);
-begin
-  Cb_Q.ItemIndex:=0;
-  Cb_J.ItemIndex:=0;
-  Cb_D.ItemIndex:=1;
-  Cb_Styles.ItemIndex:=0;
-end;
-
-procedure TFrmXWndUserInterface.Cb_Change(Sender: TObject);
-begin
-  if InPrepare then Exit;
-  Settings.WriteInterfaceSettings(S.IIFStr(Cb_Styles.ItemIndex = 0, '', Cb_Styles.Text), Cb_Q.ItemIndex, Cb_J.ItemIndex, Cb_D.ItemIndex);
-end;
-
-procedure TFrmXWndUserInterface.Cb_StylesChange(Sender: TObject);
-var
-  st: string;
-begin
-  if InPrepare then Exit;
-  if Cb_Styles.Text = 'СТАНДАРТ' then st:='' else st:= Module.GetPath_Styles + '\' + Cb_Styles.Text;
-  Settings.WriteInterfaceSettings(S.IIFStr(Cb_Styles.ItemIndex = 0, '', Cb_Styles.Text), Cb_Q.ItemIndex, Cb_J.ItemIndex, Cb_D.ItemIndex);
-  Module.SetStyle(st);
-  Close;
-  FrmMain.TimerSetStyle.Enabled := True;
-end;
-
-procedure TFrmXWndUserInterface.Chb_DesignReportsClick(Sender: TObject);
-begin
-  inherited;
-  if InPrepare then Exit;
-  PrintReport.SetDesignReport(Chb_DesignReports.Checked);
-end;
-
-}
-
 function TFrmXWndUserInterface.Prepare: Boolean;
 var
   i: Integer;
   sda: TStringDynArray;
   va2: TVarDynArray2;
 begin
-{  Mth.AddGridColumn(DBGridEh1, 'f1', 'Заголовок 1', 150, True);
-  Mth.AddGridColumn(DBGridEh1, 'f2', 'Заголовок 2', 150, True);
-  Mth.AddGridColumn(DBGridEh1, 'f3', '3', 50, True);
-  MemTableEh1.Close;
-  //очистим определение полей
-  MemTableEh1.FieldDefs.Clear;
-  //определяем поля
-  MemTableEh1.FieldDefs.Add('f1', ftString, 20, False);
-  MemTableEh1.FieldDefs.Add('f2', ftString, 20, False);
-  MemTableEh1.FieldDefs.Add('f3', ftInteger, 0, False);
-  MemTableEh1.CreateDataSet;
-  MemTableEh1.Active:=True;
-  for i:=1 to 10 do begin
-    MemTableEh1.Insert;
-    MemTableEh1.FieldByName('f1').Value:='Строка ' + inttostr(i);
-    MemTableEh1.FieldByName('f3').Value:=S.IIf(odd(i), 0, 1);
-    MemTableEh1.Post;
-  end;
-  Gh.SetGridInCellCheckBoxes(DBGridEh1, 'f3', '1;', -1);
-  DBGridEh1.FieldColumns['f2'].CellButtons.Add;
-  DBGridEh1.FieldColumns['f2'].CellButtons[0].Style:=ebsEllipsisEh;
-  DBGridEh1.FieldColumns['f2'].CellButtons[0].hint:='кнопка в таблице';
-  Gh.SetGridOptionsDefault(DBGridEh1);
-  Gh.SetGridOptionsMain(DBGridEh1);}
+  Caption := '~Настройки программы';
 
   Frg1.Opt.SetFields([
     ['f1$s','100;w','Заголовок 1'],

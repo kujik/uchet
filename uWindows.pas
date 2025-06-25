@@ -110,14 +110,14 @@ uses
   uFrmMain,
 
   D_Sn_Calendar,
-  D_ExpenseItems, F_UserInterface,
+  D_ExpenseItems,
 
   //~D_WorkerStatus, F_D_TURV, D_AddTurv, F_Payroll, D_Candidate, D_Vacancy, D_Division,
 
-  D_Order, D_LoadKB, D_J_Devel,
+  D_Order, D_LoadKB,
   D_Or_FindNameInEstimates, D_ItmInfo, D_J_Montage,
   F_Rep_Orders_PrimeCost, D_R_OrStdItems, D_NewEstimateInput,
-  D_SuppliersMinPart, D_R_Spl_Categoryes, D_Spl_InfoGrid, D_R_Itm_Units,
+  D_SuppliersMinPart, D_Spl_InfoGrid,
   F_Adm_Installer,
 
   uFrmXGsrvSqlMonitor,
@@ -128,6 +128,7 @@ uses
   uFrmOGrepSgp, uFrmWGrepSalary, uFrmOGjrnOrderStages, uFrmOGrepItemsInOrder,
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
+  uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -882,7 +883,8 @@ begin
 //    Form := TForm_BasicInput.ShowDialog(AOwner, F, 'Ед. изм. bCAD', 450, 90, fMode, AId, [[cntEdit, 0, 'Наименование', '1:50']], [['*', 'select name from bcad_units where id = :id']], ['bcad_units', '', 'id$i;name'], [['caption dlgedit']], MyFormOptions);
   end
   else if F = myfrm_Dlg_J_Devel then begin
-    Form := TDlg_J_Devel.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+//    Form := TDlg_J_Devel.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+    TFrmODedtDevel.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Customer_Main then begin
     //!!! есть комбобоксы, но сейчас не сделал!!!
@@ -920,13 +922,15 @@ begin
     Form := TDlg_SuppliersMinPart.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_R_Spl_Categoryes then begin
-    Form := TDlg_R_Spl_Categoryes.Create(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
+//    Form := TDlg_R_Spl_Categoryes.Create(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
+    TFrmODedtSplCategoryes.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if A.InArray(F, [myfrm_Dlg_Spl_InfoGrid_MoveNomencl, myfrm_Dlg_Spl_InfoGrid_DiffInOrder]) then begin
     Form := TDlg_Spl_InfoGrid.Create(AOwner, F, [myfoModal, myfoSizeable, myfoDialog], fView, AId, AAddParam);
   end
   else if F = myfrm_Dlg_R_Itm_Units then begin
-    Form := TDlg_R_Itm_Units.Create(AOwner, F, MyFormOptions + [myfoDialog], fMode, AId, null);
+//    Form := TDlg_R_Itm_Units.Create(AOwner, F, MyFormOptions + [myfoDialog], fMode, AId, null);
+    TFrmODedtItmUnits.Show(AOwner, F, MyFormOptions + [myfoDialog], fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Itm_Suppliers then begin
     TFrmDlgRItmSupplier.Show(AOwner, F, MyFormOptions + [myfoDialog, myfoSizeable], fMode, AId, null);

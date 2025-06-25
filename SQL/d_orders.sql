@@ -1,6 +1,21 @@
 Alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
+--------------------------------------------------------------------------------
+--найти все пропуски позиции в заказе
+SELECT pos - 1 AS missing_number
+FROM (
+    SELECT pos,
+           LAG(pos) OVER (ORDER BY pos) AS prev_pos
+    FROM order_items where id_order = -90
+)
+WHERE pos - prev_pos > 1;
+
+
+
+
+
+
 
 --------------------------------------------------------------------------------
 -- Справочник покупателей

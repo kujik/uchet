@@ -1213,7 +1213,7 @@ begin
         for j := 0 to DbGridEh1.DataSource.DataSet.Fields.Count - 1 do
           Result[i][j] := DbGridEh1.DataSource.DataSet.Fields[j].AsVariant;
       end;
-    finally
+    except
     end;
   end;
   if st <> '' then begin
@@ -1655,9 +1655,13 @@ begin
   if not (C is TCustomDBEditEh) then
     Exit;
   v1 := GetDynProp(C, dpVerify);
-  if v1 = '' then
-    Exit;
+//  if v1 = '' then
+//    Exit;
   ver := A.ExplodeS(v1, ':');
+  if ver[0] = '' then begin
+    SetErrorMarker(C, False);
+    Exit;
+  end;
   //!!! 2024-01-15 - убрал строку нен понимаю зачем она, но может повлиять на все проверки
 //  if TDBEditEh(c).Text = '' then Result:= (ver[3] <> '');
   if Result then

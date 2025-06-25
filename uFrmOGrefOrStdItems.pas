@@ -62,8 +62,8 @@ begin
     ['price$f','Цена','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['price_pp$f','Перепродажа','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['priceraw$f','Цена по смете','70','f=r'],
-//    ['route2','Производственный маршрут','120'],
-    ['route','Производственный маршрут','120'],
+    ['route2','Производственный маршрут','120'],
+//    ['route','Производственный маршрут','120'],
     ['dt_estimate','Смета','75'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
@@ -102,9 +102,9 @@ begin
     if Fr.IsEmpty and (fMode <> fAdd) then
       Exit;
 //  if (Tag = btnTest) or (Fr.GetControlValue('CbEstimate') = 35) then                                             //!!!
-    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
+//    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
  // else
- // Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
+    Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
   end
   else if Tag = btnCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)

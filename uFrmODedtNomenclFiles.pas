@@ -137,7 +137,7 @@ end;
 procedure TFrmODedtNomenclFiles.Frg1DbGridEh1DblClick(Sender: TObject);
 begin
   try
-  Sys.ExecFile(Path + '\' + Frg1.GetValue);
+  Sys.ExecFile(Path + '\' + Frg1.GetValueS);
   finally
   end;
 end;

@@ -58,7 +58,6 @@ uses
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
   D_MainSettings in 'D_MainSettings.pas' {Dlg_MainSettings},
   D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
-  F_UserInterface in 'F_UserInterface.pas' {Form_UserInterface},
   D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
   D_MailingCustomAddr in 'D_MailingCustomAddr.pas' {Dlg_MailingCustomAddr},
@@ -68,7 +67,6 @@ uses
   D_LoadKB in 'D_LoadKB.pas' {dlg_LoadKB},
   D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
-  D_J_Devel in 'D_J_Devel.pas' {Dlg_J_Devel},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
   D_R_Order_Plans in 'D_R_Order_Plans.pas' {Dlg_R_Order_Plans},
   D_Or_FindNameInEstimates in 'D_Or_FindNameInEstimates.pas' {Dlg_Or_FindNameInEstimates},
@@ -90,8 +88,6 @@ uses
   D_Spl_InfoGrid in 'D_Spl_InfoGrid.pas' {Dlg_Spl_InfoGrid},
   uFrmTestDropDownEh in 'uFrmTestDropDownEh.pas' {FrmTestDropDownEh: TCustomDropDownFormEh},
   uFrDBGridEh in 'uFrDBGridEh.pas' {FrDBGridEh: TFrame},
-  D_R_Spl_Categoryes in 'D_R_Spl_Categoryes.pas' {Dlg_R_Spl_Categoryes},
-  D_R_Itm_Units in 'D_R_Itm_Units.pas' {Dlg_R_Itm_Units},
   uFrmXWGridAdminOptions in 'uFrmXWGridAdminOptions.pas' {FrmXWGridAdminOptions},
   uFrmTestMdi1 in 'uFrmTestMdi1.pas' {FrmTestMdi1},
   uFrmDlgRItmSupplier in 'uFrmDlgRItmSupplier.pas' {FrmDlgRItmSupplier},
@@ -137,7 +133,10 @@ uses
   uFrmXGsrvSqlMonitor in 'uFrmXGsrvSqlMonitor.pas' {FrmXGsrvSqlMonitor},
   uFrmXWOracleError in 'uFrmXWOracleError.pas' {FrmXWOracleError},
   uFrmOGedtEstimate in 'uFrmOGedtEstimate.pas' {FrmOGedtEstimate},
-  uFrmXWndUserInterface in 'uFrmXWndUserInterface.pas' {FrmXWndUserInterface};
+  uFrmXWndUserInterface in 'uFrmXWndUserInterface.pas' {FrmXWndUserInterface},
+  uFrmODedtDevel in 'uFrmODedtDevel.pas' {FrmODedtDevel},
+  uFrmODedtItmUnits in 'uFrmODedtItmUnits.pas' {FrmODedtItmUnits},
+  uFrmODedtSplCategoryes in 'uFrmODedtSplCategoryes.pas' {FrmODedtSplCategoryes};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},

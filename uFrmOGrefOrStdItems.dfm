@@ -2,13 +2,12 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
   Caption = 'FrmOGrefOrStdItems'
   ClientWidth = 800
   OnDestroy = FormDestroy
-  ExplicitHeight = 574
   TextHeight = 13
   inherited PMDIMain: TPanel
     Width = 800
-    ExplicitHeight = 520
     inherited PMDIClient: TPanel
       Width = 790
+      ExplicitWidth = 790
       inherited PTop: TPanel
         Width = 790
       end
@@ -17,6 +16,7 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
       end
       inherited PGrid1: TPanel
         Width = 780
+        ExplicitWidth = 780
         inherited Frg1: TFrDBGridEh
           Width = 778
           inherited PGrid: TPanel
@@ -26,7 +26,6 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
             end
             inherited PStatus: TPanel
               Top = 338
-              ExplicitTop = 337
             end
           end
           inherited PTop: TPanel
@@ -92,27 +91,12 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
     end
     inherited PDlgPanel: TPanel
       Width = 790
-      ExplicitTop = 475
+      ExplicitTop = 476
       inherited BvDlg: TBevel
-        Width = 788
+        ExplicitWidth = 788
       end
       inherited BvDlgBottom: TBevel
-        Width = 788
-      end
-      inherited PDlgMain: TPanel
-        Width = 788
-        inherited PDlgBtnForm: TPanel
-          Left = 689
-        end
-        inherited PDlgChb: TPanel
-          Left = 461
-        end
-        inherited PDlgBtnR: TPanel
-          Left = 590
-        end
-        inherited PDlgCenter: TPanel
-          Width = 321
-        end
+        ExplicitWidth = 788
       end
     end
   end

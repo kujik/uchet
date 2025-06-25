@@ -1,8 +1,8 @@
 inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   Caption = #1057#1090#1072#1085#1076#1072#1088#1090#1085#1086#1077' '#1080#1079#1076#1077#1083#1080#1077
   ClientHeight = 160
-  ClientWidth = 672
-  ExplicitWidth = 684
+  ClientWidth = 671
+  ExplicitWidth = 683
   ExplicitHeight = 198
   TextHeight = 13
   object Lb_Route: TLabel [0]
@@ -14,35 +14,35 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   end
   inherited P_StatusBar: TPanel
     Top = 141
-    Width = 672
+    Width = 671
     ExplicitTop = 140
     ExplicitWidth = 668
     inherited Lb_StatusBar_Right: TLabel
-      Left = 583
+      Left = 582
       ExplicitLeft = 583
     end
   end
   inherited P_Bottom: TPanel
     Top = 110
-    Width = 672
+    Width = 671
     ExplicitTop = 109
     ExplicitWidth = 668
     inherited Bevel1: TBevel
-      Width = 672
+      Width = 671
       ExplicitWidth = 672
     end
     inherited Bt_OK: TBitBtn
-      Left = 501
+      Left = 500
       ExplicitLeft = 497
       ExplicitTop = 4
     end
     inherited Bt_Cancel: TBitBtn
-      Left = 582
+      Left = 581
       ExplicitLeft = 578
       ExplicitTop = 4
     end
     inherited Chb_NoClose: TCheckBox
-      Left = 374
+      Left = 373
       ExplicitLeft = 370
       ExplicitTop = 9
     end

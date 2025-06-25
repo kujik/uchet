@@ -3,8 +3,8 @@ object Form_MDI: TForm_MDI
   Top = 257
   BorderStyle = bsDialog
   Caption = 'v_md'
-  ClientHeight = 471
-  ClientWidth = 794
+  ClientHeight = 176
+  ClientWidth = 333
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,8 +22,8 @@ object Form_MDI: TForm_MDI
   TextHeight = 13
   object P_StatusBar: TPanel
     Left = 0
-    Top = 452
-    Width = 794
+    Top = 157
+    Width = 333
     Height = 19
     Align = alBottom
     Color = cl3DLight
@@ -32,12 +32,13 @@ object Form_MDI: TForm_MDI
     ExplicitTop = 451
     ExplicitWidth = 790
     object Lb_StatusBar_Right: TLabel
-      Left = 705
+      Left = 244
       Top = 1
       Width = 88
       Height = 17
       Align = alRight
       Caption = 'Lb_StatusBar_Left'
+      ExplicitLeft = 705
       ExplicitHeight = 13
     end
     object Lb_StatusBar_Left: TLabel

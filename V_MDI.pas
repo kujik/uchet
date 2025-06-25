@@ -90,6 +90,7 @@ type
     FTextLeft, FTextRight: Variant;
     FStatusBarHeight: Integer;
     FIISetStatusBar: Boolean;
+    FIsFormShown: Boolean;
     //в режиме showdialog после закрытия диалога он вызывается еще раз. данный флаг блокирует повторный вызов.
     procedure WMSysCommand(var Msg: TWMSysCommand); message WM_SYSCOMMAND;
   public
@@ -223,6 +224,8 @@ end;
 
 constructor TForm_MDI.Create(AOwner: TComponent; ADoc: string; AMyFormOptions: TMyFormOptions; AMode: TDialogType; Aid: Variant; AAddParam: Variant);
 //конструктор класса
+var
+  i :Integer;
 begin
   ModuleId := cMainModule;
   MyFormOptions := AMyFormOptions;
@@ -236,6 +239,8 @@ begin
   //создадим объект
   //в этот момент он отобразится! независимо от режима модал/мди
   inherited Create(Application);
+  i:=Self.Width;
+//  Self.Width := 500;
   //сдвинем форму влево, по идет обработка данных, чтобы она не была видна
   Left := mycHiddenFormLeft;
  // Hide;
@@ -383,7 +388,10 @@ procedure TForm_MDI.FormCanResize(Sender: TObject; var NewWidth, NewHeight: Inte
 //учитываем и максимальные и минимальные значения
 //если максимальное равно минимальному, то в этом направлении форму растянуть/сузить нельзя
 begin
-  Resize := True;  //exit;
+//  Resize := False; exit;
+  if not FIsFormShown then begin
+    Resize := True;  exit;
+  end;
   if FIISetStatusBar then
     Exit;
   //разрешаем произвольные изменения размеров формы на этапе подготовке данных в потомке
@@ -481,6 +489,7 @@ begin
   //это невозможно сделать в oncreate в случае если запуск модальный
   Settings.RestoreWindowPos(Self, FormDoc);
   InFormShow := False;
+  FIsFormShown := True;
 end;
 
 procedure TForm_MDI.Timer_AfterStartTimer(Sender: TObject);
