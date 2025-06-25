@@ -68,6 +68,7 @@ type
     UseChbNoClose: Boolean;
     //автоматическое выравнивание контролов, можно применять если они все располдожены в PMDIClient; произойдет и подгонка размеров формы.
     AutoAlignControls: Boolean;
+    ControlsWoAligment: TControlArray;
     AutoControlDataChanged: Boolean;
     //реакция на закрытие формы по крестику или при закрытии приложения
     RequestWhereClose: TMDICloseQuery;
@@ -976,7 +977,7 @@ var
 begin
   //подгоним/выровняем контролы в основной панели
   if FOpt.AutoAlignControls then
-    FWHCorrected := Cth.AlignControls(PMDIClient, [], False);
+    FWHCorrected := Cth.AlignControls(PMDIClient, FOpt.ControlsWoAligment, False);
   if FOpt.AutoAlignControls then
     Cth.MakePanelsFlat(PMDIClient, []);
   //запомним контролы, у которых якоря по правому и нижнему краю, и сбросим эти якоря

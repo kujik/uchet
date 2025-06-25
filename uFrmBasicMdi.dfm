@@ -28,8 +28,8 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
-    ExplicitWidth = 844
-    ExplicitHeight = 393
+    ExplicitWidth = 274
+    ExplicitHeight = 83
     object PMDIClient: TPanel
       Left = 5
       Top = 5
@@ -38,8 +38,8 @@ object FrmBasicMdi: TFrmBasicMdi
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 834
-      ExplicitHeight = 344
+      ExplicitWidth = 264
+      ExplicitHeight = 34
     end
     object PDlgPanel: TPanel
       Left = 5
@@ -57,8 +57,8 @@ object FrmBasicMdi: TFrmBasicMdi
       Ctl3D = True
       ParentCtl3D = False
       TabOrder = 1
-      ExplicitTop = 349
-      ExplicitWidth = 834
+      ExplicitTop = 39
+      ExplicitWidth = 264
       object BvDlg: TBevel
         Left = 1
         Top = 1
@@ -94,7 +94,7 @@ object FrmBasicMdi: TFrmBasicMdi
         Padding.Bottom = 4
         ParentCtl3D = False
         TabOrder = 0
-        ExplicitWidth = 832
+        ExplicitWidth = 262
         object PDlgBtnForm: TPanel
           Tag = -1
           Left = 167
@@ -104,7 +104,7 @@ object FrmBasicMdi: TFrmBasicMdi
           Align = alRight
           Caption = 'PDlgBtnForm'
           TabOrder = 0
-          ExplicitLeft = 733
+          ExplicitLeft = 163
         end
         object PDlgChb: TPanel
           Tag = -2
@@ -115,7 +115,7 @@ object FrmBasicMdi: TFrmBasicMdi
           Align = alRight
           Caption = 'PDlgChb'
           TabOrder = 1
-          ExplicitLeft = 505
+          ExplicitLeft = -65
           DesignSize = (
             129
             27)
@@ -138,7 +138,7 @@ object FrmBasicMdi: TFrmBasicMdi
           Align = alRight
           Caption = 'PDlgBtnR'
           TabOrder = 2
-          ExplicitLeft = 634
+          ExplicitLeft = 64
         end
         object PDlgInfo: TPanel
           Tag = 1
@@ -174,7 +174,6 @@ object FrmBasicMdi: TFrmBasicMdi
           Align = alClient
           Caption = 'PDlgCenter'
           TabOrder = 5
-          ExplicitWidth = 365
         end
       end
     end
@@ -190,8 +189,8 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Right = 8
     ParentBackground = False
     TabOrder = 1
-    ExplicitTop = 393
-    ExplicitWidth = 844
+    ExplicitTop = 83
+    ExplicitWidth = 274
     object LbStatusBarRight: TLabel
       Left = 186
       Top = 1
@@ -199,7 +198,6 @@ object FrmBasicMdi: TFrmBasicMdi
       Height = 14
       Align = alRight
       Caption = 'LbStatusBarRight'
-      ExplicitLeft = 760
       ExplicitHeight = 13
     end
     object LbStatusBarLeft: TLabel

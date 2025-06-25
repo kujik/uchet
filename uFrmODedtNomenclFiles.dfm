@@ -173,7 +173,11 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
     ExplicitWidth = 768
     inherited LbStatusBarRight: TLabel
       Left = 680
+      Height = 14
       ExplicitLeft = 680
+    end
+    inherited LbStatusBarLeft: TLabel
+      Height = 14
     end
   end
   inherited Timer_AfterStart: TTimer

@@ -169,7 +169,8 @@ uses
   uFrmCWCash,
   uFrmCDedtCashRevision,
   uFrmBasicEditabelGrid,
-  uFrmOWOrder
+  uFrmOWOrder,
+  uFrmOWSearchInEstimates
   ;
 
 
@@ -1405,7 +1406,9 @@ var
   st: string;
   va2: tvardynarray2;
 begin
-  ConvertNewOrStdItemRoutes; exit;
+  //ConvertNewOrStdItemRoutes; exit;
+
+  TFrmOWSearchInEstimates.Show(Application, '22222', [myfoDialog, myfoSizeable], fNone, 0, null); exit;
 
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 

@@ -115,7 +115,7 @@ uses
   //~D_WorkerStatus, F_D_TURV, D_AddTurv, F_Payroll, D_Candidate, D_Vacancy, D_Division,
 
   D_Order, D_LoadKB,
-  D_Or_FindNameInEstimates, D_ItmInfo, D_J_Montage,
+  D_ItmInfo, D_J_Montage,
   F_Rep_Orders_PrimeCost, D_R_OrStdItems, D_NewEstimateInput,
   D_SuppliersMinPart, D_Spl_InfoGrid,
   F_Adm_Installer,
@@ -128,7 +128,7 @@ uses
   uFrmOGrepSgp, uFrmWGrepSalary, uFrmOGjrnOrderStages, uFrmOGrepItemsInOrder,
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
-  uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes,
+  uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -864,7 +864,8 @@ begin
 //[['*', 'select name from ref_candidates_ad where id = :id']], ['ref_candidates_ad', 'sq_ref_suppliers', 'id;name'], [['caption dlgedit dlgactive']], MyFormOptions);
   end
   else if F = myfrm_Dlg_Or_FindNameInEstimates then begin
-    Form := TDlg_Or_FindNameInEstimates.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+//    Form := TDlg_Or_FindNameInEstimates.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+    TFrmOWSearchInEstimates.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Or_ItmInfo then begin
     Form := TDlg_ItmInfo.Create(AOwner, F, MyFormOptions, fMode, AId, null);

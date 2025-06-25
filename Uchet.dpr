@@ -136,7 +136,8 @@ uses
   uFrmXWndUserInterface in 'uFrmXWndUserInterface.pas' {FrmXWndUserInterface},
   uFrmODedtDevel in 'uFrmODedtDevel.pas' {FrmODedtDevel},
   uFrmODedtItmUnits in 'uFrmODedtItmUnits.pas' {FrmODedtItmUnits},
-  uFrmODedtSplCategoryes in 'uFrmODedtSplCategoryes.pas' {FrmODedtSplCategoryes};
+  uFrmODedtSplCategoryes in 'uFrmODedtSplCategoryes.pas' {FrmODedtSplCategoryes},
+  uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
