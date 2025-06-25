@@ -11,11 +11,13 @@ uses
 
 type
   TFrmOGlstEstimate = class(TFrmBasicGrid2)
+    procedure DBGridEh1CanUserSelectRow(Grid: TCustomDBGridEh; var CanSelectRow: Boolean);
   private
     Capt: string;
     IsPrepared: Boolean;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
+    procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure GetStockList;
@@ -131,6 +133,8 @@ begin
     TDBEditEh(Frg1.FindComponent('ENums')).Text := '';
   end;
   Result := inherited;
+  if Frg1.FindComponent('CbStock') <> nil then
+    Frg1.SetControlValue('CbStock', null);
 end;
 
 procedure TFrmOGlstEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -154,10 +158,52 @@ begin
     inherited;
 end;
 
+procedure TFrmOGlstEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+var
+  i, n: Integer;
+  e, eall: Extended;
+  b: Boolean;
+begin
+  //CanSelectRow := True;
+  //inherited;
+  //для общей сметы - посчитаем сумму по позициям, отмеченным чекбоксами
+  //если отметка есть, то выведем эту сумму, а иначе выведем автосумму
+  if True and (FormDoc = myfrm_R_AggEstimate) then begin
+    e := 0;
+    eall := 0;
+    b := False;
+    //так можно пройти по всему с\писку отфильтрованных позиций, без перемещения фокуса (но мы пойдем другим путем!)
+    {for i := 0 to MemTableEh1.RecordsView.Count - 1 do begin
+      eall := eall + MemTableEh1.FieldByName('qnt').AsFloat;
+    end;}
+    //посчитаем отмеченные чекбоксами /ТОЛЬКО среди отфильтрованных записей/
+    for i := 0 to Frg1.MemTableEh1.InstantReadRowCount - 1 do begin
+      Frg1.MemTableEh1.InstantReadEnter(i); //в режим чтения
+      if Frg1.DBGridEh1.SelectedRows.CurrentRowSelected then begin
+        b := True;
+        e := e + Frg1.MemTableEh1.FieldByName('qnt').AsFloat;
+      end;
+      Frg1.MemTableEh1.InstantReadLeave;    //в нормальный режим
+    end;
+    //если не найдено отмеченных, то включим автосумму, а иначе запишем текст
+    if not b then begin
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.ValueType := fvtSum;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clWindowText;
+    end
+    else begin
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.ValueType := fvtStaticText;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clBlue;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Value := FormatFloat('#,###.###', e);
+    end;
+  end;
+end;
+
+
+
 
 procedure TFrmOGlstEstimate.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 //подстановка параметров
-//здесь же меняем текст запроса - о тображать количества итм или исходные
+//здесь же меняем текст запроса - отображать количества итм или исходные
 //в данном случае это удобнее чем делать скрытые поля, к тому же в одном из 4 вариантов смет скл-запрос задается явно
 var
   va, vak, res: TVarDynArray;
@@ -259,6 +305,47 @@ begin
   Frg1.MemTableEh1.RecNo := recno;
   Frg1.MemTableEh1.EnableControls;
 end;
+
+procedure TFrmOGlstEstimate.DBGridEh1CanUserSelectRow(Grid: TCustomDBGridEh; var CanSelectRow: Boolean);
+var
+  i, n: Integer;
+  e, eall: Extended;
+  b: Boolean;
+begin
+  CanSelectRow := True;
+  inherited;
+  //для общей сметы - посчитаем сумму по позициям, отмеченным чекбоксами
+  //если отметка есть, то выведем эту сумму, а иначе выведем автосумму
+  if True and (FormDoc = myfrm_R_AggEstimate) then begin
+    e := 0;
+    eall := 0;
+    b := False;
+    //так можно пройти по всему с\писку отфильтрованных позиций, без перемещения фокуса (но мы пойдем другим путем!)
+    {for i := 0 to MemTableEh1.RecordsView.Count - 1 do begin
+      eall := eall + MemTableEh1.FieldByName('qnt').AsFloat;
+    end;}
+    //посчитаем отмеченные чекбоксами /ТОЛЬКО среди отфильтрованных записей/
+    for i := 0 to Frg1.MemTableEh1.InstantReadRowCount - 1 do begin
+      Frg1.MemTableEh1.InstantReadEnter(i); //в режим чтения
+      if Frg1.DBGridEh1.SelectedRows.CurrentRowSelected then begin
+        b := True;
+        e := e + Frg1.MemTableEh1.FieldByName('qnt').AsFloat;
+      end;
+      Frg1.MemTableEh1.InstantReadLeave;    //в нормальный режим
+    end;
+    //если не найдено отмеченных, то включим автосумму, а иначе запишем текст
+    if not b then begin
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.ValueType := fvtSum;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clWindowText;
+    end
+    else begin
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.ValueType := fvtStaticText;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clBlue;
+      Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Value := FormatFloat('#,###.###', e);
+    end;
+  end;
+end;
+
 
 procedure TFrmOGlstEstimate.Print;
 var

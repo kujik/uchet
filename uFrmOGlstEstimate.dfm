@@ -81,6 +81,7 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
     inherited LbStatusBarRight: TLabel
       Left = 704
       Height = 14
+      ExplicitLeft = 704
     end
     inherited LbStatusBarLeft: TLabel
       Height = 14
