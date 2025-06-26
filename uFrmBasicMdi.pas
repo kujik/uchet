@@ -401,20 +401,28 @@ begin
         TextLeft := Cth.FModeToCaption(Mode);
       end;
 
+      if TextLeft = '*' then
+        TextLeft := FTextLeft;
+      if TextRight = '*' then
+        TextRight := FTextRight;
+
       //проверка обязательна! в mdi_grid1 сейчас вызывается в repaint и если не проверять очень тормозит при изменении размера
       if (VarToStr(TextLeft) = S.NSt(FTextLeft)) and (VarToStr(TextRight) = S.NSt(FTextRight)) and (FStatusBarHeight = PStatusBar.Height) then
         Break;
 
-      FTextLeft := TextLeft;
-      FTextRight := TextRight;
-      if VarIsArray(TextLeft) then
-        LbStatusBarLeft.SetCaptionAr2(TextLeft)
+      if TextLeft <> '*' then
+        FTextLeft := TextLeft;
+      if TextRight <> '*' then
+        FTextRight := TextRight;
+
+      if VarIsArray(FTextLeft) then
+        LbStatusBarLeft.SetCaptionAr2(FTextLeft)
       else
-        LbStatusBarLeft.SetCaption2(TextLeft);
-      if VarIsArray(TextRight) then
-        LbStatusBarRight.SetCaptionAr2(TextRight)
+        LbStatusBarLeft.SetCaption2(FTextLeft);
+      if VarIsArray(FTextRight) then
+        LbStatusBarRight.SetCaptionAr2(FTextRight)
       else begin
-        st := Trim(VarToStr(TextRight));
+        st := Trim(VarToStr(FTextRight));
         if (st = '') or (st[1] <> '$') then begin
           LbStatusBarRight.Font.Color := clBlack;
           LbStatusBarRight.Caption := st;
@@ -1332,8 +1340,8 @@ begin
     then st:= TControl(Sender).Name;
   if not FInPrepare
     then FIsDataChanged:= (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or (GridsCh);
-  if FOpt.StatusBarMode = stbmDialog then
-    RefreshStatusBar('', '', True);
+//  if FOpt.StatusBarMode = stbmDialog then
+    RefreshStatusBar('*', '*', True);
 end;
 
 procedure TFrmBasicMdi.SetError(Value: Boolean);
@@ -1343,8 +1351,8 @@ begin
   b:= FHasError <> Value;
   FHasError := Value;
   //выведем информацию в статусбаре
-  if FOpt.StatusBarMode = stbmDialog then
-    if b then RefreshStatusBar('', '', True);
+//  if FOpt.StatusBarMode = stbmDialog then
+    if b then RefreshStatusBar('*', '*', True);
   //статус кнопки Ок
   if BtOk <> nil then BtOk.Enabled := not HasError;
 end;
@@ -1611,8 +1619,8 @@ begin
     Settings.RestoreWindowPos(Self, FormDoc);
   Self.Top := max(Self.Top, 0);
   Verify(nil);
-  if FOpt.StatusBarMode = stbmDialog then
-    RefreshStatusBar('', '', True); //нужно после изменения размеров, иначе правая надпись может уехать
+ // if FOpt.StatusBarMode = stbmDialog then
+    RefreshStatusBar('*', '*', True); //нужно после изменения размеров, иначе правая надпись может уехать
   //для диалоговых отцентрируем относительно родительской формы
   if (myfoDialog in MyFormOptions) and (ParentForm <> nil) and ((ParentForm is TForm) or (ParentForm is TFrDBGridEh)) then
     CenteringByParent;

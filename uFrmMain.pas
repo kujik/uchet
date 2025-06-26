@@ -584,10 +584,10 @@ begin
     ['Журнал прихода/ухода работников', myfrm_J_Parsec, User.Roles([], [rW_J_Parsec_V, rW_J_Parsec_V_All])],
 
     ['Отчеты'],
-    ['Свод по зарплатным ведомостям', myfrm_Rep_WPayroll, User.Role(rW_Rep_Payroll)],
+    ['Свод по зарплатным ведомостям', myfrm_Rep_W_Payroll, User.Role(rW_Rep_Payroll)],
     ['Отчет о кадровом составе', myfrm_Rep_W_Personnel_1, User.Role(rW_Rep_Personnel_1)],
     ['Отчет по подбору персонала', myfrm_Rep_W_Personnel_2, User.Role(rW_Rep_Personnel_2)],
-    ['Отчет по заработной плате', myfrm_Rep_Salary], User.Roles([], [rW_Rep_Salary_V, rW_Rep_Salary_Ch]),
+    ['Отчет по заработной плате', myfrm_Rep_Salary, User.Roles([], [rW_Rep_Salary_V, rW_Rep_Salary_Ch])],
     []
     {$ENDIF}
 

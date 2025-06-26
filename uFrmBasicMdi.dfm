@@ -28,23 +28,19 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
-    ExplicitWidth = 278
-    ExplicitHeight = 84
     object PMDIClient: TPanel
       Left = 5
       Top = 5
-      Width = 268
-      Height = 35
+      Width = 264
+      Height = 34
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 264
-      ExplicitHeight = 34
     end
     object PDlgPanel: TPanel
       Left = 5
-      Top = 40
-      Width = 268
+      Top = 39
+      Width = 264
       Height = 43
       Margins.Left = 0
       Margins.Top = 0
@@ -60,7 +56,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object BvDlg: TBevel
         Left = 1
         Top = 1
-        Width = 266
+        Width = 262
         Height = 3
         Align = alTop
         ExplicitWidth = 782
@@ -68,7 +64,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object BvDlgBottom: TBevel
         Left = 1
         Top = 39
-        Width = 266
+        Width = 262
         Height = 3
         Align = alBottom
         ExplicitLeft = 7
@@ -78,7 +74,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object PDlgMain: TPanel
         Left = 1
         Top = 4
-        Width = 266
+        Width = 262
         Height = 35
         Margins.Left = 0
         Margins.Top = 0
@@ -94,18 +90,17 @@ object FrmBasicMdi: TFrmBasicMdi
         TabOrder = 0
         object PDlgBtnForm: TPanel
           Tag = -1
-          Left = 167
+          Left = 163
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'PDlgBtnForm'
           TabOrder = 0
-          ExplicitLeft = 163
         end
         object PDlgChb: TPanel
           Tag = -2
-          Left = -61
+          Left = -65
           Top = 4
           Width = 129
           Height = 27
