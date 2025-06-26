@@ -477,7 +477,9 @@
             <Form>FrmOWrepOrdersPrimeCost</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="F_MDIDlg1.pas"/>
+        <DCCReference Include="F_MDIDlg1.pas">
+            <Form>Form_MDIDlg1</Form>
+        </DCCReference>
         <DCCReference Include="F_D_Turv.pas">
             <Form>Dlg_TURV</Form>
         </DCCReference>

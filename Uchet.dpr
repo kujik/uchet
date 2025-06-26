@@ -139,7 +139,7 @@ uses
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
 //!!!
-  F_MDIDlg1 in 'F_MDIDlg1.pas',
+  F_MDIDlg1 in 'F_MDIDlg1.pas' {Form_MDIDlg1},
 
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
   D_Division in 'D_Division.pas' {Dlg_Division},
