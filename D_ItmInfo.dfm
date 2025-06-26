@@ -2,18 +2,21 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   Caption = 'Form_MD'
   ClientHeight = 421
   ClientWidth = 656
-  ExplicitWidth = 662
-  ExplicitHeight = 450
-  PixelsPerInch = 96
+  ExplicitWidth = 668
+  ExplicitHeight = 459
   TextHeight = 13
   inherited P_StatusBar: TPanel
     Top = 402
     Width = 656
-    ExplicitTop = 402
-    ExplicitWidth = 656
+    ExplicitTop = 401
+    ExplicitWidth = 652
     inherited Lb_StatusBar_Right: TLabel
       Left = 567
+      Height = 17
       ExplicitLeft = 567
+    end
+    inherited Lb_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   object P_Top: TPanel [1]
@@ -23,6 +26,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     Height = 89
     Align = alTop
     TabOrder = 1
+    ExplicitWidth = 652
     DesignSize = (
       656
       89)
@@ -55,12 +59,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
       Caption = 'Label1'
     end
     object Bt_Go: TSpeedButton
-      Left = 620
+      Left = 616
       Top = 8
       Width = 32
       Height = 32
       Anchors = [akTop, akRight]
       OnClick = Bt_GoClick
+      ExplicitLeft = 620
     end
   end
   object Pc_1: TPageControl [2]
@@ -68,15 +73,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     Top = 89
     Width = 656
     Height = 313
-    ActivePage = Ts_ToDel
+    ActivePage = Ts_Artikul
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 652
+    ExplicitHeight = 312
     object Ts_Artikul: TTabSheet
       Caption = #1040#1088#1090#1080#1082#1091#1083#1099
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object DBGridEh1: TDBGridEh
         Left = 0
         Top = 0
@@ -112,10 +115,6 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     object Ts_Nomencl: TTabSheet
       Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1103
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object DBGridEh2: TDBGridEh
         Left = 0
         Top = 0
@@ -151,10 +150,6 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     object Ts_FromCAD: TTabSheet
       Caption = #1053#1086#1084#1077#1085#1082#1083#1072#1090#1091#1088#1072' '#1080#1079' CAD'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object DBGridEh3: TDBGridEh
         Left = 0
         Top = 0
@@ -191,10 +186,6 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     object Ts_ToDel: TTabSheet
       Caption = #1053#1072' '#1091#1076#1072#1083#1077#1085#1080#1077
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object DBGridEh4: TDBGridEh
         Left = 0
         Top = 0

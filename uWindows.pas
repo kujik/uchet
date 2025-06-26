@@ -116,7 +116,7 @@ uses
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
-  F_Rep_Orders_PrimeCost, D_R_OrStdItems, D_NewEstimateInput,
+  D_R_OrStdItems, D_NewEstimateInput,
   D_SuppliersMinPart, D_Spl_InfoGrid,
   F_Adm_Installer,
 
@@ -129,6 +129,7 @@ uses
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
+  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -884,7 +885,6 @@ begin
 //    Form := TForm_BasicInput.ShowDialog(AOwner, F, 'Ед. изм. bCAD', 450, 90, fMode, AId, [[cntEdit, 0, 'Наименование', '1:50']], [['*', 'select name from bcad_units where id = :id']], ['bcad_units', '', 'id$i;name'], [['caption dlgedit']], MyFormOptions);
   end
   else if F = myfrm_Dlg_J_Devel then begin
-//    Form := TDlg_J_Devel.Create(AOwner, F, MyFormOptions, fMode, AId, null);
     TFrmODedtDevel.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Customer_Main then begin
@@ -911,13 +911,14 @@ begin
     Form := TDlg_J_Montage.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_Rep_Order_Primecost2 then begin
-    Form := TForm_Rep_Orders_PrimeCost.Create(AOwner, F, MyFormOptions, fNone, null, null);
+    TFrmOWrepOrdersPrimeCost.Show(AOwner, F, MyFormOptions, fNone, null, null);
   end
   else if F = myfrm_Dlg_R_OrderStdItems then begin
     Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
-    Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!
+  //  TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_SupplierMinPart then begin
     Form := TDlg_SuppliersMinPart.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);

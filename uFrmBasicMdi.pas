@@ -389,7 +389,7 @@ begin
     if not PStatusBar.Visible then
       Break;
 
-    if FAfterFormShow then begin
+    if FAfterFormShow or FInPrepare then begin  //!!!
       ;
       if FOpt.StatusBarMode = stbmDialog then begin
         if HasError then
@@ -1332,7 +1332,8 @@ begin
     then st:= TControl(Sender).Name;
   if not FInPrepare
     then FIsDataChanged:= (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or (GridsCh);
-  RefreshStatusBar('', '', True);
+  if FOpt.StatusBarMode = stbmDialog then
+    RefreshStatusBar('', '', True);
 end;
 
 procedure TFrmBasicMdi.SetError(Value: Boolean);
@@ -1342,7 +1343,8 @@ begin
   b:= FHasError <> Value;
   FHasError := Value;
   //выведем информацию в статусбаре
-  if b then RefreshStatusBar('', '', True);
+  if FOpt.StatusBarMode = stbmDialog then
+    if b then RefreshStatusBar('', '', True);
   //статус кнопки Ок
   if BtOk <> nil then BtOk.Enabled := not HasError;
 end;
@@ -1609,7 +1611,8 @@ begin
     Settings.RestoreWindowPos(Self, FormDoc);
   Self.Top := max(Self.Top, 0);
   Verify(nil);
-  RefreshStatusBar('', '', True); //нужно после изменения размеров, иначе правая надпись может уехать
+  if FOpt.StatusBarMode = stbmDialog then
+    RefreshStatusBar('', '', True); //нужно после изменения размеров, иначе правая надпись может уехать
   //для диалоговых отцентрируем относительно родительской формы
   if (myfoDialog in MyFormOptions) and (ParentForm <> nil) and ((ParentForm is TForm) or (ParentForm is TFrDBGridEh)) then
     CenteringByParent;

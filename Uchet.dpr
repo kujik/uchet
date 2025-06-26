@@ -69,7 +69,6 @@ uses
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
   D_R_Order_Plans in 'D_R_Order_Plans.pas' {Dlg_R_Order_Plans},
-  D_Or_FindNameInEstimates in 'D_Or_FindNameInEstimates.pas' {Dlg_Or_FindNameInEstimates},
   D_ItmInfo in 'D_ItmInfo.pas' {Dlg_ItmInfo},
   D_DelayedInProd in 'D_DelayedInProd.pas' {Dlg_DelayedInProd},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
@@ -80,7 +79,6 @@ uses
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
   F_Adm_Installer in 'F_Adm_Installer.pas' {Form_Adm_Installer},
   D_J_Error_Log in 'D_J_Error_Log.pas' {Dlg_J_Error_Log},
-  F_Rep_Orders_PrimeCost in 'F_Rep_Orders_PrimeCost.pas' {Form_Rep_Orders_PrimeCost},
   D_R_OrStdItems in 'D_R_OrStdItems.pas' {Dlg_R_OrStdItems},
   F_MdiGridDialogTemplate in 'F_MdiGridDialogTemplate.pas' {Form_MdiGridDialogTemplate},
   D_NewEstimateInput in 'D_NewEstimateInput.pas' {Dlg_NewEstimateInput},
@@ -137,7 +135,9 @@ uses
   uFrmODedtDevel in 'uFrmODedtDevel.pas' {FrmODedtDevel},
   uFrmODedtItmUnits in 'uFrmODedtItmUnits.pas' {FrmODedtItmUnits},
   uFrmODedtSplCategoryes in 'uFrmODedtSplCategoryes.pas' {FrmODedtSplCategoryes},
-  uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates};
+  uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
+  uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
+  uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost};
 
 (*
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},

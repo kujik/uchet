@@ -209,10 +209,12 @@ end;
 
 --позиция в смете
 --alter table estimate_items drop column id_name_resale_std;
-alter table estimate_items add qnt_itm_last number(15,5) default null;
+--alter table estimate_items add id_or_std_item number(11);
+--alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
 create table estimate_items(
   id number(11),
   id_estimate number(11),                      --родительская смета
+  id_or_std_item number(11),                   --айди стандартного изделия, если смета является стандартным изделием
   id_group number(11),                         --группа бкад
   id_name number(11),                          --наименование бкад
   id_unit number(11),                          --единица измерения
@@ -224,6 +226,7 @@ create table estimate_items(
   qnt_itm_last number(15,5) default null,      --последнее переданное в итм количество по данной позиции 
   deleted number(1) default 0,                 --признак, что данная позиция удалена (=1)
   constraint pk_estimate_items primary key (id),
+  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id),
   constraint fk_estimate_items_estimate foreign key (id_estimate) references estimates(id) on delete cascade,
   constraint fk_estimate_items_group foreign key (id_group) references bcad_groups(id),
   constraint fk_estimate_items_name foreign key (id_name) references bcad_nomencl(id),

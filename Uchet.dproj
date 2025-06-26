@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9165</VerInfo_Build>
+        <VerInfo_Build>9204</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV_;SRV_;PROD_;OR;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9165;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.25 21:20:08;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9204;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.26 17:45:05;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -259,9 +259,6 @@
         <DCCReference Include="D_R_Order_Plans.pas">
             <Form>Dlg_R_Order_Plans</Form>
         </DCCReference>
-        <DCCReference Include="D_Or_FindNameInEstimates.pas">
-            <Form>Dlg_Or_FindNameInEstimates</Form>
-        </DCCReference>
         <DCCReference Include="D_ItmInfo.pas">
             <Form>Dlg_ItmInfo</Form>
         </DCCReference>
@@ -291,9 +288,6 @@
         </DCCReference>
         <DCCReference Include="D_J_Error_Log.pas">
             <Form>Dlg_J_Error_Log</Form>
-        </DCCReference>
-        <DCCReference Include="F_Rep_Orders_PrimeCost.pas">
-            <Form>Form_Rep_Orders_PrimeCost</Form>
         </DCCReference>
         <DCCReference Include="D_R_OrStdItems.pas">
             <Form>Dlg_R_OrStdItems</Form>
@@ -473,6 +467,14 @@
         </DCCReference>
         <DCCReference Include="uFrmOWSearchInEstimates.pas">
             <Form>FrmOWSearchInEstimates</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmOWrepItmInfo.pas">
+            <Form>FrmOWrepItmInfo</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmOWrepOrdersPrimeCost.pas">
+            <Form>FrmOWrepOrdersPrimeCost</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

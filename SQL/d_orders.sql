@@ -1069,7 +1069,8 @@ create or replace view v_or_std_items as (
        regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
        from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
        where id_or_std_item = i.id
-    ), ', ') as route
+    ), ', ') as route,
+    fi.is_semiproduct
   from
     or_std_items i,
     estimates e,

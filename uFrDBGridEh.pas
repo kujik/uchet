@@ -1872,9 +1872,9 @@ begin
   Tag:= -1;
   ChangeSelectedData;
   //и если кнопка не заблокировалась, вызовем действие
-  if Sender is TSpeedButton then
-    if TSpeedButton(Sender).Enabled then
-      Tag:=Integer(TSpeedButton(Sender).Tag);
+  if (Sender is TButton) or  (Sender is TBitBtn) or (Sender is TSpeedButton) then
+    if TButton(Sender).Enabled then
+      Tag:=Integer(TButton(Sender).Tag);
   if Sender is TMenuItem then
     if TMenuItem(Sender).Enabled then
       Tag:=Integer(TSpeedButton(Sender).Tag);

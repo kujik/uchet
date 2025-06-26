@@ -727,6 +727,7 @@ begin
           Caption := ACaption;
           HorzPlacement := AHPosition;
         end;
+//        DBGridEh1.Columns[i].CellButtons[DBGridEh1.Columns[i]].Color
       end;
 end;
 
@@ -1811,9 +1812,10 @@ begin
   j := MY_FORMPRM_V_TOP;
   for i := 0 to High(ACaptions) do begin
     if Pos('$', ACaptions[i]) > 0 then
-      Cth.CreateControls(AParent, cntLabelClr, ACaptions[i], '', '', 0, MY_FORMPRM_H_EDGES, j)
+      c := Cth.CreateControls(AParent, cntLabelClr, ACaptions[i], '', '', 0, MY_FORMPRM_H_EDGES, j)
     else
-      Cth.CreateControls(AParent, cntLabel, ACaptions[i], '', '', 0, MY_FORMPRM_H_EDGES, j);
+      c := Cth.CreateControls(AParent, cntLabel, ACaptions[i], '', '', 0, MY_FORMPRM_H_EDGES, j);
+    c.Top := j;
     j := j + MY_FORMPRM_V_MARGIN + MY_FORMPRM_LABEL_H;
     b := True;
   end;
