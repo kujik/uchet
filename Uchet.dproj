@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9210</VerInfo_Build>
+        <VerInfo_Build>9221</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <DCC_Define>PC_;PICK_;ADMIN_;TURV_;SRV_;PROD_;OR;madExcept;$(DCC_Define)</DCC_Define>
+        <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9210;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.27 01:26:35;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9221;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.27 02:01:31;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -476,6 +476,46 @@
         <DCCReference Include="uFrmOWrepOrdersPrimeCost.pas">
             <Form>FrmOWrepOrdersPrimeCost</Form>
             <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="F_MDIDlg1.pas"/>
+        <DCCReference Include="F_D_Turv.pas">
+            <Form>Dlg_TURV</Form>
+        </DCCReference>
+        <DCCReference Include="D_Division.pas">
+            <Form>Dlg_Division</Form>
+        </DCCReference>
+        <DCCReference Include="D_WorkerStatus.pas">
+            <Form>Dlg_WorkerStatus</Form>
+        </DCCReference>
+        <DCCReference Include="D_AddTurv.pas">
+            <Form>Dlg_AddTurv</Form>
+        </DCCReference>
+        <DCCReference Include="D_CreatePayroll.pas">
+            <Form>Dlg_CreatePayroll</Form>
+        </DCCReference>
+        <DCCReference Include="F_Payroll.pas">
+            <Form>Form_Payroll</Form>
+        </DCCReference>
+        <DCCReference Include="D_PayrollSettings.pas">
+            <Form>Dlg_PayrollSettings</Form>
+        </DCCReference>
+        <DCCReference Include="D_TURV_Comment.pas">
+            <Form>Dlg_TURV_Comment</Form>
+        </DCCReference>
+        <DCCReference Include="D_Turv_FromParsec.pas">
+            <Form>Dlg_Turv_FromParsec</Form>
+        </DCCReference>
+        <DCCReference Include="D_Grid1.pas">
+            <Form>Dlg_Grid1</Form>
+        </DCCReference>
+        <DCCReference Include="D_Vacancy.pas">
+            <Form>Dlg_Vacancy</Form>
+        </DCCReference>
+        <DCCReference Include="D_Candidate.pas">
+            <Form>Dlg_Candidate</Form>
+        </DCCReference>
+        <DCCReference Include="D_CandidatesFromWorkerStatus.pas">
+            <Form>Dlg_CandidatesFromWorkerStatus</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -576,7 +576,7 @@ begin
       ['isoffice','Офис/Цех','80'],
       ['head','Руководитель','150'],
       ['editusernames','Заполняют ТУРВ','300'],
-      ['active','Используется','70']
+      ['active','Используется','70','pic']
     ]);
     Frg1.Opt.SetTable('v_ref_divisions');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));

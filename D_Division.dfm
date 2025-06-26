@@ -1,0 +1,130 @@
+inherited Dlg_Division: TDlg_Division
+  Caption = #1055#1086#1076#1088#1072#1079#1076#1077#1083#1077#1085#1080#1077
+  ClientHeight = 209
+  ClientWidth = 621
+  ExplicitWidth = 637
+  ExplicitHeight = 248
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Img_Info: TImage [0]
+    Left = 8
+    Top = 176
+    Width = 23
+    Height = 25
+    Anchors = [akLeft, akBottom]
+  end
+  inherited Bt_Cancel: TBitBtn
+    Left = 538
+    Top = 176
+    TabOrder = 6
+    ExplicitLeft = 534
+    ExplicitTop = 152
+  end
+  inherited Bt_OK: TBitBtn
+    Left = 457
+    Top = 176
+    TabOrder = 5
+    ExplicitLeft = 453
+    ExplicitTop = 152
+  end
+  object Cb_IsOffice: TDBComboBoxEh
+    Left = 104
+    Top = 8
+    Width = 121
+    Height = 21
+    ControlLabel.Width = 51
+    ControlLabel.Height = 13
+    ControlLabel.Caption = #1062#1077#1093'/'#1054#1092#1080#1089
+    ControlLabel.Visible = True
+    ControlLabelLocation.Position = lpLeftCenterEh
+    DynProps = <>
+    EditButtons = <>
+    Items.Strings = (
+      #1062#1077#1093
+      #1054#1092#1080#1089)
+    KeyItems.Strings = (
+      '0'
+      '1')
+    TabOrder = 0
+    Visible = True
+  end
+  object Cb_Head: TDBComboBoxEh
+    Left = 104
+    Top = 89
+    Width = 508
+    Height = 21
+    ControlLabel.Width = 73
+    ControlLabel.Height = 13
+    ControlLabel.Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
+    ControlLabel.Visible = True
+    ControlLabelLocation.Position = lpLeftCenterEh
+    DynProps = <>
+    EditButtons = <>
+    TabOrder = 3
+    Text = 'Cb_Cash'
+    Visible = True
+  end
+  object E_Name: TDBEditEh
+    Left = 104
+    Top = 62
+    Width = 509
+    Height = 21
+    ControlLabel.Width = 73
+    ControlLabel.Height = 13
+    ControlLabel.Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
+    ControlLabel.Visible = True
+    ControlLabelLocation.Position = lpLeftCenterEh
+    DynProps = <>
+    EditButtons = <>
+    TabOrder = 2
+    Text = 'E_Name'
+    Visible = True
+  end
+  object E_users: TDBEditEh
+    Left = 104
+    Top = 116
+    Width = 508
+    Height = 21
+    ControlLabel.Width = 85
+    ControlLabel.Height = 13
+    ControlLabel.Caption = #1047#1072#1087#1086#1083#1085#1103#1102#1090' '#1058#1059#1056#1042
+    ControlLabel.Visible = True
+    ControlLabelLocation.Position = lpLeftCenterEh
+    DynProps = <>
+    EditButtons = <
+      item
+        OnClick = E_usersEditButtons0Click
+      end>
+    ReadOnly = True
+    TabOrder = 4
+    Visible = True
+  end
+  object E_Code: TDBEditEh
+    Left = 104
+    Top = 35
+    Width = 121
+    Height = 21
+    ControlLabel.Width = 20
+    ControlLabel.Height = 13
+    ControlLabel.Caption = #1050#1086#1076
+    ControlLabel.Visible = True
+    ControlLabelLocation.Position = lpLeftCenterEh
+    DynProps = <>
+    EditButtons = <>
+    MaxLength = 5
+    TabOrder = 1
+    Text = 'E_Code'
+    Visible = True
+  end
+  object Chb_Active: TDBCheckBoxEh
+    Left = 101
+    Top = 143
+    Width = 97
+    Height = 17
+    Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
+    Color = clRed
+    DynProps = <>
+    ParentColor = False
+    TabOrder = 7
+  end
+end
