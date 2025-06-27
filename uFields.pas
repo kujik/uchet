@@ -156,6 +156,8 @@ begin
       end;
       if (j = 1) and (S.VarType(v) = varInteger) then
         SetF(fvtCtrlType, v);
+      if (j in [1,2]) and (S.VarType(v) = varBoolean) then  //!!!
+        SetF(fvtDsbl, not v);
       if k = 0 then begin
         if S.VarType(v) = varString then begin
           if Pos(fvpVer, UpperCase(v)) = 1 then
@@ -266,6 +268,8 @@ begin
     if PropValueType = fvtDsbl then begin
       //статус доступности (True - Enabled!)
       b := (S.VarType(Value) = varBoolean) and (Value = True) or (S.VarType(Value) = varString) and (Value = '') or (S.VarType(Value) = varInteger) and (Value = 1);
+//if b = true then
+//  b:=true;
       Cth.SetControlNotEditable(TControl(c), not b, False, True);
       if c is TCustomDBEditEh then
         Cth.SetEhControlEditButtonState(TControl(c), b, b);

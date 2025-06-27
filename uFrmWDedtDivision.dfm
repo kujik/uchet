@@ -1,0 +1,159 @@
+inherited FrmWDedtDivision: TFrmWDedtDivision
+  Caption = 'FrmWDedtDivision'
+  ClientHeight = 418
+  ClientWidth = 856
+  TextHeight = 13
+  inherited PMDIMain: TPanel
+    Width = 856
+    Height = 402
+    ExplicitWidth = 856
+    ExplicitHeight = 402
+    inherited PMDIClient: TPanel
+      Width = 846
+      Height = 353
+      ExplicitWidth = 842
+      ExplicitHeight = 352
+      object Cb_Office: TDBComboBoxEh
+        Left = 104
+        Top = 8
+        Width = 121
+        Height = 21
+        ControlLabel.Width = 51
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1062#1077#1093'/'#1054#1092#1080#1089
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        Items.Strings = (
+          #1062#1077#1093
+          #1054#1092#1080#1089)
+        KeyItems.Strings = (
+          '0'
+          '1')
+        TabOrder = 0
+        Visible = True
+      end
+      object E_Code: TDBEditEh
+        Left = 104
+        Top = 35
+        Width = 121
+        Height = 21
+        ControlLabel.Width = 20
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1050#1086#1076
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        MaxLength = 5
+        TabOrder = 1
+        Text = 'E_Code'
+        Visible = True
+      end
+      object E_Name: TDBEditEh
+        Left = 104
+        Top = 62
+        Width = 509
+        Height = 21
+        ControlLabel.Width = 73
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 2
+        Text = 'E_Name'
+        Visible = True
+      end
+      object Cb_id_head: TDBComboBoxEh
+        Left = 104
+        Top = 89
+        Width = 508
+        Height = 21
+        ControlLabel.Width = 73
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 3
+        Text = 'Cb_Cash'
+        Visible = True
+      end
+      object E_editusernames: TDBEditEh
+        Left = 104
+        Top = 116
+        Width = 508
+        Height = 21
+        ControlLabel.Width = 85
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1047#1072#1087#1086#1083#1085#1103#1102#1090' '#1058#1059#1056#1042
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <
+          item
+            OnClick = E_usersEditButtons0Click
+          end>
+        ReadOnly = True
+        TabOrder = 4
+        Visible = True
+      end
+      object Chb_Active: TDBCheckBoxEh
+        Left = 101
+        Top = 143
+        Width = 97
+        Height = 17
+        Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
+        Color = clRed
+        DynProps = <>
+        ParentColor = False
+        TabOrder = 5
+      end
+    end
+    inherited PDlgPanel: TPanel
+      Top = 358
+      Width = 846
+      inherited BvDlg: TBevel
+        Width = 844
+      end
+      inherited BvDlgBottom: TBevel
+        Width = 844
+      end
+      inherited PDlgMain: TPanel
+        Width = 844
+        inherited PDlgBtnForm: TPanel
+          Left = 745
+          ExplicitLeft = 741
+        end
+        inherited PDlgChb: TPanel
+          Left = 517
+        end
+        inherited PDlgBtnR: TPanel
+          Left = 646
+          ExplicitLeft = 642
+        end
+        inherited PDlgCenter: TPanel
+          Width = 377
+          ExplicitWidth = 373
+        end
+      end
+    end
+  end
+  inherited PStatusBar: TPanel
+    Top = 402
+    Width = 856
+    ExplicitTop = 401
+    ExplicitWidth = 852
+    inherited LbStatusBarRight: TLabel
+      Left = 764
+      Height = 14
+    end
+    inherited LbStatusBarLeft: TLabel
+      Height = 14
+    end
+  end
+end

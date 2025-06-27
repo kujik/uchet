@@ -142,7 +142,7 @@ end;
 
 function TFrmODedtTasks.Prepare: Boolean;
 begin
-  Caption:='Задача';
+  Caption := 'Задача';
   F.DefineFields:=[
     ['id$i'],
     ['type$s','V=1:100::TL'],
@@ -162,9 +162,9 @@ begin
     ['confirmed$i']
   ];
 
-  View:='v_j_tasks';
-  Table:='j_tasks';
-  FOpt.UseChbNoClose:= True;
+  View := 'v_j_tasks';
+  Table := 'j_tasks';
+  FOpt.UseChbNoClose := True;
   //Opt.RequestWhereClose:= cqYNC;
   FOpt.InfoArray:= [
     ['Ввод данных задачи.'#13#10+
@@ -188,9 +188,9 @@ begin
     ['Данные задачи'
     ,A.InArray(Mode, [fView, fDelete])]
   ];
-  FWHBounds.X2:= -1;
-  FWHBounds.Y2:= -1;
-  Result:=inherited;
+  FWHBounds.X2 := -1;
+  FWHBounds.Y2 := -1;
+  Result := inherited;
   if not Result then
     Exit;
   SetControlsEditable([], True);

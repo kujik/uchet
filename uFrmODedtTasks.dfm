@@ -2,20 +2,19 @@ inherited FrmODedtTasks: TFrmODedtTasks
   Caption = 'FrmDlgJTasks'
   ClientHeight = 492
   ClientWidth = 851
-  ExplicitWidth = 867
-  ExplicitHeight = 531
-  PixelsPerInch = 96
+  ExplicitWidth = 863
+  ExplicitHeight = 530
   TextHeight = 13
   inherited PMDIMain: TPanel
     Width = 851
     Height = 476
-    ExplicitWidth = 851
-    ExplicitHeight = 476
+    ExplicitWidth = 847
+    ExplicitHeight = 475
     inherited PMDIClient: TPanel
       Width = 841
       Height = 427
-      ExplicitWidth = 841
-      ExplicitHeight = 427
+      ExplicitWidth = 837
+      ExplicitHeight = 426
       object Cb_type: TDBComboBoxEh
         Left = 104
         Top = 8
@@ -245,34 +244,32 @@ inherited FrmODedtTasks: TFrmODedtTasks
     inherited PDlgPanel: TPanel
       Top = 432
       Width = 841
-      ExplicitTop = 432
-      ExplicitWidth = 841
+      ExplicitTop = 431
+      ExplicitWidth = 837
       inherited BvDlg: TBevel
         Width = 839
-        ExplicitWidth = 848
       end
       inherited BvDlgBottom: TBevel
         Width = 839
-        ExplicitWidth = 848
       end
       inherited PDlgMain: TPanel
         Width = 839
-        ExplicitWidth = 839
+        ExplicitWidth = 835
         inherited PDlgBtnForm: TPanel
           Left = 740
-          ExplicitLeft = 740
+          ExplicitLeft = 736
         end
         inherited PDlgChb: TPanel
           Left = 512
-          ExplicitLeft = 512
+          ExplicitLeft = 508
         end
         inherited PDlgBtnR: TPanel
           Left = 641
-          ExplicitLeft = 641
+          ExplicitLeft = 637
         end
         inherited PDlgCenter: TPanel
           Width = 372
-          ExplicitWidth = 372
+          ExplicitWidth = 368
         end
       end
     end
@@ -280,8 +277,8 @@ inherited FrmODedtTasks: TFrmODedtTasks
   inherited PStatusBar: TPanel
     Top = 476
     Width = 851
-    ExplicitTop = 476
-    ExplicitWidth = 851
+    ExplicitTop = 475
+    ExplicitWidth = 847
     inherited LbStatusBarRight: TLabel
       Left = 759
       Height = 14

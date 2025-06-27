@@ -138,11 +138,8 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-//!!!
   F_MDIDlg1 in 'F_MDIDlg1.pas' {Form_MDIDlg1},
-
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
-  D_Division in 'D_Division.pas' {Dlg_Division},
   D_WorkerStatus in 'D_WorkerStatus.pas' {Dlg_WorkerStatus},
   D_AddTurv in 'D_AddTurv.pas' {Dlg_AddTurv},
   D_CreatePayroll in 'D_CreatePayroll.pas' {Dlg_CreatePayroll},
@@ -153,8 +150,9 @@ uses
   D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
   D_Vacancy in 'D_Vacancy.pas' {Dlg_Vacancy},
   D_Candidate in 'D_Candidate.pas' {Dlg_Candidate},
-  D_CandidatesFromWorkerStatus in 'D_CandidatesFromWorkerStatus.pas' {Dlg_CandidatesFromWorkerStatus}
-  ;
+  D_CandidatesFromWorkerStatus in 'D_CandidatesFromWorkerStatus.pas' {Dlg_CandidatesFromWorkerStatus},
+  uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision};
+
 //!!!
 
                         
