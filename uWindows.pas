@@ -112,9 +112,9 @@ uses
   D_Sn_Calendar,
   D_ExpenseItems,
 
-  D_WorkerStatus, F_D_TURV, D_AddTurv, F_Payroll, D_Candidate, D_Vacancy,
+  D_WorkerStatus, F_D_TURV, F_Payroll, D_Candidate, D_Vacancy,
 
-  uFrmWDedtDivision,
+  uFrmWDedtDivision, uFrmWDAddTurv,
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
@@ -846,6 +846,7 @@ begin
   end
   else if F = myfrm_Dlg_AddTurv then begin
 //~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);
+    TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Payroll then begin
 //~    Form := TForm_Payroll.ShowDialog(AOwner, F, fMode, AId, MyFormOptions);

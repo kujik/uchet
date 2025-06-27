@@ -1,16 +1,18 @@
 inherited FrmWDedtDivision: TFrmWDedtDivision
   Caption = 'FrmWDedtDivision'
-  ClientHeight = 418
-  ClientWidth = 856
+  ClientHeight = 252
+  ClientWidth = 672
+  ExplicitWidth = 684
+  ExplicitHeight = 290
   TextHeight = 13
   inherited PMDIMain: TPanel
-    Width = 856
-    Height = 402
-    ExplicitWidth = 856
-    ExplicitHeight = 402
+    Width = 672
+    Height = 236
+    ExplicitWidth = 852
+    ExplicitHeight = 401
     inherited PMDIClient: TPanel
-      Width = 846
-      Height = 353
+      Width = 662
+      Height = 187
       ExplicitWidth = 842
       ExplicitHeight = 352
       object Cb_Office: TDBComboBoxEh
@@ -115,42 +117,49 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
     end
     inherited PDlgPanel: TPanel
-      Top = 358
-      Width = 846
+      Top = 192
+      Width = 662
+      ExplicitTop = 357
+      ExplicitWidth = 842
       inherited BvDlg: TBevel
-        Width = 844
+        Width = 660
+        ExplicitWidth = 844
       end
       inherited BvDlgBottom: TBevel
-        Width = 844
+        Width = 660
+        ExplicitWidth = 844
       end
       inherited PDlgMain: TPanel
-        Width = 844
+        Width = 660
+        ExplicitWidth = 840
         inherited PDlgBtnForm: TPanel
-          Left = 745
+          Left = 561
           ExplicitLeft = 741
         end
         inherited PDlgChb: TPanel
-          Left = 517
+          Left = 333
+          ExplicitLeft = 513
         end
         inherited PDlgBtnR: TPanel
-          Left = 646
+          Left = 462
           ExplicitLeft = 642
         end
         inherited PDlgCenter: TPanel
-          Width = 377
+          Width = 193
           ExplicitWidth = 373
         end
       end
     end
   end
   inherited PStatusBar: TPanel
-    Top = 402
-    Width = 856
+    Top = 236
+    Width = 672
     ExplicitTop = 401
     ExplicitWidth = 852
     inherited LbStatusBarRight: TLabel
-      Left = 764
+      Left = 580
       Height = 14
+      ExplicitLeft = 764
     end
     inherited LbStatusBarLeft: TLabel
       Height = 14
