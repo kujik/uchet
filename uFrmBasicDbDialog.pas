@@ -53,6 +53,7 @@ var
   CtrlValues: TVarDynArray2;
   i: Integer;
 begin
+  Result := False;
   for i := 0 to F.Count do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
@@ -122,7 +123,8 @@ begin
   if Table = '' then
     Table := View;
   if Mode <> fAdd then
-    Load;
+    if not Load then
+      Exit;
   //загрузим комбобоксы и сделаем другие кастомные действия
   if not LoadComboBoxes then
     Exit;

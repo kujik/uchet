@@ -8,44 +8,44 @@ inherited FrmBasicDbDialog: TFrmBasicDbDialog
   inherited PMDIMain: TPanel
     Width = 856
     Height = 402
-    ExplicitWidth = 860
-    ExplicitHeight = 403
+    ExplicitWidth = 856
+    ExplicitHeight = 402
     inherited PMDIClient: TPanel
-      Width = 850
-      Height = 354
+      Width = 846
+      Height = 353
       ExplicitWidth = 850
       ExplicitHeight = 354
     end
     inherited PDlgPanel: TPanel
-      Top = 359
-      Width = 850
-      ExplicitTop = 359
-      ExplicitWidth = 850
+      Top = 358
+      Width = 846
+      ExplicitTop = 358
+      ExplicitWidth = 846
       inherited BvDlg: TBevel
-        Width = 848
+        Width = 844
         ExplicitWidth = 848
       end
       inherited BvDlgBottom: TBevel
-        Width = 848
+        Width = 844
         ExplicitWidth = 848
       end
       inherited PDlgMain: TPanel
-        Width = 848
-        ExplicitWidth = 848
+        Width = 844
+        ExplicitWidth = 844
         inherited PDlgBtnForm: TPanel
-          Left = 749
+          Left = 745
           ExplicitLeft = 749
         end
         inherited PDlgChb: TPanel
-          Left = 521
-          ExplicitLeft = 521
+          Left = 517
+          ExplicitLeft = 517
         end
         inherited PDlgBtnR: TPanel
-          Left = 650
+          Left = 646
           ExplicitLeft = 650
         end
         inherited PDlgCenter: TPanel
-          Width = 381
+          Width = 377
           ExplicitWidth = 381
         end
       end

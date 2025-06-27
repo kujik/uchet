@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9238</VerInfo_Build>
+        <VerInfo_Build>9254</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9238;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.27 04:45:30;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9254;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.27 06:22:08;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -483,9 +483,6 @@
         <DCCReference Include="F_D_Turv.pas">
             <Form>Dlg_TURV</Form>
         </DCCReference>
-        <DCCReference Include="D_WorkerStatus.pas">
-            <Form>Dlg_WorkerStatus</Form>
-        </DCCReference>
         <DCCReference Include="D_CreatePayroll.pas">
             <Form>Dlg_CreatePayroll</Form>
         </DCCReference>
@@ -519,6 +516,10 @@
         </DCCReference>
         <DCCReference Include="uFrmWDAddTurv.pas">
             <Form>FrmWDAddTurv</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmWDedtWorkerStatus.pas">
+            <Form>FrmWDedtWorkerStatus</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
