@@ -6,12 +6,12 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   ExplicitWidth = 800
   ExplicitHeight = 553
   TextHeight = 13
-  object Lb_InstalledInfo: TLabel [0]
+  object lbl_InstalledInfo: TLabel [0]
     Left = 8
     Top = 51
     Width = 93
     Height = 16
-    Caption = 'Lb_InstalledInfo'
+    Caption = 'lbl_InstalledInfo'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -19,13 +19,13 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Font.Style = []
     ParentFont = False
   end
-  object Lb_FilesInfo: TLabel [1]
+  object lbl_FilesInfo: TLabel [1]
     Left = 8
     Top = 451
     Width = 93
     Height = 16
     Anchors = [akLeft, akBottom]
-    Caption = 'Lb_InstalledInfo'
+    Caption = 'lbl_InstalledInfo'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -34,13 +34,13 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     ParentFont = False
     ExplicitTop = 455
   end
-  object Lb_Status: TLabel [2]
+  object lbl_Status: TLabel [2]
     Left = 480
     Top = 481
     Width = 93
     Height = 16
     Anchors = [akLeft, akBottom]
-    Caption = 'Lb_InstalledInfo'
+    Caption = 'lbl_InstalledInfo'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -13
@@ -49,14 +49,14 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     ParentFont = False
     ExplicitTop = 485
   end
-  object Lb_PrevInstall: TLabel [3]
+  object lbl_PrevInstall: TLabel [3]
     Left = 8
     Top = 303
     Width = 91
     Height = 13
     Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
   end
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 514
     Width = 788
     Height = 1
@@ -64,15 +64,15 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     ExplicitTop = 517
     ExplicitWidth = 791
     ExplicitHeight = 1
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 699
       ExplicitLeft = 706
     end
-    inherited Lb_StatusBar_Left: TLabel
+    inherited lbl_StatusBar_Left: TLabel
       Anchors = [akLeft, akBottom]
     end
   end
-  object Cb_Module: TDBComboBoxEh [5]
+  object cmb_Module: TDBComboBoxEh [5]
     Left = 8
     Top = 24
     Width = 241
@@ -85,11 +85,11 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     EditButtons = <>
     LimitTextToListValues = True
     TabOrder = 1
-    Text = 'Cb_Module'
+    Text = 'cmb_Module'
     Visible = True
-    OnChange = Cb_ModuleChange
+    OnChange = cmb_ModuleChange
   end
-  object E_Version: TDBEditEh [6]
+  object edt_Version: TDBEditEh [6]
     Left = 272
     Top = 24
     Width = 241
@@ -107,7 +107,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     TabOrder = 2
     Visible = True
   end
-  object E_DtCompiled: TDBEditEh [7]
+  object edt_DtCompiled: TDBEditEh [7]
     Left = 545
     Top = 24
     Width = 241
@@ -125,7 +125,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     TabOrder = 3
     Visible = True
   end
-  object E_SrcPath: TDBEditEh [8]
+  object edt_SrcPath: TDBEditEh [8]
     Left = 8
     Top = 89
     Width = 377
@@ -138,9 +138,9 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     EditButtons = <>
     TabOrder = 4
     Visible = True
-    OnChange = Cb_ModuleChange
+    OnChange = cmb_ModuleChange
   end
-  object E_DstPath: TDBEditEh [9]
+  object edt_DstPath: TDBEditEh [9]
     Left = 409
     Top = 89
     Width = 377
@@ -153,9 +153,9 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     EditButtons = <>
     TabOrder = 5
     Visible = True
-    OnChange = Cb_ModuleChange
+    OnChange = cmb_ModuleChange
   end
-  object M_Users: TDBMemoEh [10]
+  object mem_Users: TDBMemoEh [10]
     Left = 8
     Top = 136
     Width = 778
@@ -165,7 +165,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     ControlLabel.Caption = #1052#1086#1076#1091#1083#1100' '#1086#1090#1082#1088#1099#1090' '#1091' '#1089#1083#1077#1076#1091#1102#1097#1080#1093' '#1087#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1077#1081
     ControlLabel.Visible = True
     Lines.Strings = (
-      'M_Users')
+      'mem_Users')
     AutoSize = False
     Color = clBtnFace
     DynProps = <>
@@ -174,7 +174,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Visible = True
     WantReturns = True
   end
-  object M_Comment: TDBMemoEh [11]
+  object mem_Comment: TDBMemoEh [11]
     Left = 8
     Top = 208
     Width = 778
@@ -184,7 +184,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081' '#1082' '#1091#1089#1090#1072#1085#1086#1074#1082#1077
     ControlLabel.Visible = True
     Lines.Strings = (
-      'M_Users')
+      'mem_Users')
     AutoSize = False
     DynProps = <>
     EditButtons = <>
@@ -218,7 +218,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     object RowDetailData: TRowDetailPanelControlEh
     end
   end
-  object M_PrevInstalllcomment: TDBMemoEh [14]
+  object mem_PrevInstalllcomment: TDBMemoEh [14]
     Left = 279
     Top = 322
     Width = 498
@@ -237,7 +237,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Visible = True
     WantReturns = True
   end
-  object Chb_CloseSessions: TDBCheckBoxEh [15]
+  object chb_CloseSessions: TDBCheckBoxEh [15]
     Left = 592
     Top = 455
     Width = 195
@@ -256,13 +256,13 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Step = 20
     TabOrder = 12
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 152
     Top = 544
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 10000
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 184
     Top = 749
   end

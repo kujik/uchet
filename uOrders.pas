@@ -327,7 +327,7 @@ function TOrders.SyncOrderWithITM(IdOrder: Integer; OrderItems: TVarDynArray; Lo
 //состав заказа всегда подгоняется под эти критерии в полном составе, независмо от LoadOrderAllItems, последее влияет только собственно
 //на загрузку смет в итм, загружэаются или все, иле переденные в OrderItems только, чтобы сметы не загрузились
 //но заказ синхронизировался, над передать несуществующий слеш
-//у P_SyncOrderWithITM есть третий необязательный параметр, если он не 0, то синхронизация завершенного в ИТМ заказа пройдет иначе нет, только удаление
+//у pnl_SyncOrderWithITM есть третий необязательный параметр, если он не 0, то синхронизация завершенного в ИТМ заказа пройдет иначе нет, только удаление
 //если в итм такой заказ есть, и у него статус >= Выполнен, то в процедуре будет выход и синхронизация не выполнится (кроме удаления заказа)!
 var
   st: string;
@@ -336,7 +336,7 @@ begin
   //сделаем строку из массива измененяемых смет, и добавим 0, чтобы шла всегда синхронизация переданного массива
   st:=A.Implode(OrderItems, ',', True) + S.IIFStr(not LoadOrderAllItems, ',0');
  // if SyncWithITM then begin  //!!!глюк. код внутри не выполняется никогда, хотя константа SyncWithITM = True !!!
-  if Length(Q.QCallStoredProc('P_SyncOrderWithITM', 'AIdOrder$i;AOrItems$s', [IdOrder, st])) = 0 then Exit;
+  if Length(Q.QCallStoredProc('p_SyncOrderWithITM', 'AIdOrder$i;AOrItems$s', [IdOrder, st])) = 0 then Exit;
 //  end;
   Result:= True;
 end;
@@ -383,8 +383,8 @@ begin
     //финишная процедура по заказу вызывается ТОЛЬКО в случае изменений в составе заказа или смет
     //сейчас попадет сюда если были ЛЮБЫЕ изменения в табличной части заказа, втч не касающиеся смет
     if HasestimateUpload then begin
-      va := Q.QCallStoredProc('DV.P_SyncOrder_Finish', 'id_dv$i', [IdOrder]);
-      Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['P_SyncOrder_Finish', 'id_order ' + VarToStr(IdOrder)]);
+      va := Q.QCallStoredProc('DV.p_SyncOrder_Finish', 'id_dv$i', [IdOrder]);
+      Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncOrder_Finish', 'id_order ' + VarToStr(IdOrder)]);
     end
     else begin
       Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['Order finished', 'id_order ' + VarToStr(IdOrder)]);
@@ -604,7 +604,7 @@ begin
         Break;
       if QntChanged then begin
       //коррекция количества в смете, передается айди заказа, процедура сама находит количество в заказе
-        va1 := Q.QCallStoredProc('P_CorrectEstimateQnt', 'idorderitem$i', [IdOrderItem]);
+        va1 := Q.QCallStoredProc('p_CorrectEstimateQnt', 'idorderitem$i', [IdOrderItem]);
         if Length(va1) = 0 then
           Res := -1;
       end
@@ -643,27 +643,27 @@ begin
         Break;
     //++
     //скорректируем смету с учетом автозамены, проставим количества для итм
-      if Length(Q.QCallStoredProc('P_CorrectEstimateWithReplace', 'id_estimate$i', [IdEstimate])) = 0 then
+      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [IdEstimate])) = 0 then
         Break;
     //удалим смету, если в ней нет ни одного элемента
-      Q.QCallStoredProc('P_DeleteFreeEstimate', 'id_estimate$i', [IdEstimate]);
+      Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [IdEstimate]);
     end;
     //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
     if (IdOrderItem <> null) and (OneItem)
       then SyncOrderWithITM(OrderIdUchet, [IdOrderItem], False);
 (*!!!!!
     if SyncWithITM and (OrSyncWithITM = 1) and (IdOrderItem <> null) and (OrItemIdItm <> null) and (OrderIdItm <> null) then begin
-      va1 := Q.QCallStoredProc('P_SendEstimateToItm', 'idestimate$i;idzakaz$i;idparentizdel$i;count$i', [IdEstimate, OrderIdItm, OrItemIdItm, -1]);
+      va1 := Q.QCallStoredProc('p_SendEstimateToItm', 'idestimate$i;idzakaz$i;idparentizdel$i;count$i', [IdEstimate, OrderIdItm, OrItemIdItm, -1]);
       Res := S.IIf(Length(va1) = 0, -1, 1);
       if Res = -1 then
         Break;
       if OneItem and SyncWithITM then begin
       //если грузим одну позицию, вызовем финишную процедуру - сформируем заявку поставщику
-        va1 := Q.QCallStoredProc('DV.P_SyncOrder_Finish', 'id_dv$i', [OrderIdUchet]);
+        va1 := Q.QCallStoredProc('DV.p_SyncOrder_Finish', 'id_dv$i', [OrderIdUchet]);
         Res := S.IIf(Length(va1) = 0, -1, 1);
         if Res = -1 then
           Break;
-        Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['P_SyncOrder_Finish_OnePos', 'id_order ' + VarToStr(OrderIdUchet)]);
+        Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncOrder_Finish_OnePos', 'id_order ' + VarToStr(OrderIdUchet)]);
       end;
     end; *)
   until True;
@@ -2325,8 +2325,8 @@ begin
       );
     end;
     //сохраним в таблице общих параметров дату начала периода и дату расчета
-    Q.QCallStoredProc('P_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_beg', '', DtBeg, null, null]);
-    Q.QCallStoredProc('P_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_calc', '', Now, null, null]);
+    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_beg', '', DtBeg, null, null]);
+    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_calc', '', Now, null, null]);
     Q.QCommitOrRollback;
   end;
 end;
@@ -2511,7 +2511,7 @@ begin
   //то отображаеются в ячеке решетки ####################
   //для исправлени истуации установим формат General (NumberFormat := '';)
   Rep.TemplateSheet.Cells[y, x].NumberFormat := '';
-{ if (Ne_Attention.Value = 1) then begin
+{ if (nedt_Attention.Value = 1) then begin
     Rep.TemplateSheet.Cells[y, x].Font.Underline := 2; //xlUnderlineStyleSingle;
     Rep.TemplateSheet.Cells[y, x].Font.FontStyle := 'Bold';
   end;}
@@ -2535,7 +2535,7 @@ end;
 procedure TOrders.CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
 begin
   Q.QCallStoredProc(
-    'P_CopyEstimateToUserTemp',
+    'p_CopyEstimateToUserTemp',
     'id_user$i;id_std_item$i;id_or_item$i',
      [User.GetId, IdStdItem, IdOrItem]
   );

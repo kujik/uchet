@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9254</VerInfo_Build>
+        <VerInfo_Build>9348</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
+        <DCC_Define>PC_;PICK_;ADMIN;TURV_;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9254;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.27 06:22:08;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9348;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.06.29 07:32:02;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -230,9 +230,6 @@
         </DCCReference>
         <DCCReference Include="uFrmXDmsgIncorrectDate.pas">
             <Form>FrmXDmsgIncorrectDate</Form>
-        </DCCReference>
-        <DCCReference Include="D_MailingCustomAddr.pas">
-            <Form>Dlg_MailingCustomAddr</Form>
         </DCCReference>
         <DCCReference Include="D_Otk.pas">
             <Form>Dlg_Otk</Form>
@@ -477,9 +474,6 @@
             <Form>FrmOWrepOrdersPrimeCost</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="F_MDIDlg1.pas">
-            <Form>Form_MDIDlg1</Form>
-        </DCCReference>
         <DCCReference Include="F_D_Turv.pas">
             <Form>Dlg_TURV</Form>
         </DCCReference>
@@ -520,6 +514,14 @@
         </DCCReference>
         <DCCReference Include="uFrmWDedtWorkerStatus.pas">
             <Form>FrmWDedtWorkerStatus</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmXDedtMailingCustomAddr.pas">
+            <Form>FrmXDedtMailingCustomAddr</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmXGsesUsersChoice.pas">
+            <Form>FrmXGsesUsersChoice</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">

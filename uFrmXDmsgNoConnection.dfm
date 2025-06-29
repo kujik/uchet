@@ -17,7 +17,7 @@ object FrmXDmsgNoConnection: TFrmXDmsgNoConnection
   OnClose = FormClose
   PixelsPerInch = 96
   TextHeight = 13
-  object ImgError: TImage
+  object imgError: TImage
     Left = 8
     Top = 8
     Width = 64
@@ -176,7 +176,7 @@ object FrmXDmsgNoConnection: TFrmXDmsgNoConnection
       339EA1BD26D7EC04DE8CB5ED93D05F99D2B5FBF5D8FE0764F753CAED71292300
       00000049454E44AE426082}
   end
-  object LbMessage: TLabel
+  object lblMessage: TLabel
     Left = 120
     Top = 8
     Width = 303
@@ -190,7 +190,7 @@ object FrmXDmsgNoConnection: TFrmXDmsgNoConnection
     ParentFont = False
     WordWrap = True
   end
-  object BtClose: TBitBtn
+  object btnClose: TBitBtn
     Left = 120
     Top = 76
     Width = 210
@@ -234,10 +234,10 @@ object FrmXDmsgNoConnection: TFrmXDmsgNoConnection
     ModalResult = 2
     TabOrder = 0
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Enabled = False
     Interval = 10000
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 40
     Top = 80
   end

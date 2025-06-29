@@ -14,10 +14,10 @@ uses
 
 type
   TFrmXDmsgIncorrectDate = class(TForm)
-    LbCaption: TLabel;
-    ImgError: TImage;
-    LbMsg: TLabel;
-    BtClose: TBitBtn;
+    lblCaption: TLabel;
+    imgError: TImage;
+    lblMsg: TLabel;
+    btnClose: TBitBtn;
   private
   public
     class function Execute: Boolean;

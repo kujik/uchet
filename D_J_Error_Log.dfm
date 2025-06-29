@@ -21,42 +21,42 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       DesignSize = (
         786
         424)
-      object Lb_Module: TLabel
+      object lbl_Module: TLabel
         Left = 16
         Top = 3
         Width = 41
         Height = 13
         Caption = #1052#1086#1076#1091#1083#1100':'
       end
-      object Lb_User: TLabel
+      object lbl_User: TLabel
         Left = 16
         Top = 86
         Width = 79
         Height = 13
         Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100'::'
       end
-      object Lb_Ver: TLabel
+      object lbl_Ver: TLabel
         Left = 16
         Top = 22
         Width = 40
         Height = 13
         Caption = #1042#1077#1088#1089#1080#1103':'
       end
-      object Lb_Compile: TLabel
+      object lbl_Compile: TLabel
         Left = 152
         Top = 22
         Width = 94
         Height = 13
         Caption = #1044#1072#1090#1072' '#1082#1086#1084#1087#1080#1083#1103#1094#1080#1080':'
       end
-      object Lb_ErrDt: TLabel
+      object lbl_ErrDt: TLabel
         Left = 16
         Top = 54
         Width = 158
         Height = 13
         Caption = #1042#1088#1077#1084#1103' '#1074#1086#1079#1085#1080#1082#1085#1086#1074#1077#1085#1080#1103' '#1086#1096#1080#1073#1082#1080':'
       end
-      object M_ErrorText: TDBMemoEh
+      object mem_ErrorText: TDBMemoEh
         Left = 16
         Top = 128
         Width = 753
@@ -66,7 +66,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         ControlLabel.Caption = #1057#1086#1086#1073#1097#1077#1085#1080#1077' '#1086#1073' '#1086#1096#1080#1073#1082#1077':'
         ControlLabel.Visible = True
         Lines.Strings = (
-          'M_ErrorText')
+          'mem_ErrorText')
         Anchors = [akLeft, akTop, akRight]
         AutoSize = False
         DynProps = <>
@@ -96,7 +96,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         RowDetailPanel.Height = 250
         TabOrder = 0
         object RowDetailData: TRowDetailPanelControlEh
-          object E_PPComment: TDBEditEh
+          object edt_PPComment: TDBEditEh
             Left = 299
             Top = 215
             Width = 494
@@ -109,7 +109,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
             DynProps = <>
             EditButtons = <>
             TabOrder = 0
-            Text = 'E_PPComment'
+            Text = 'edt_PPComment'
             Visible = False
           end
         end
@@ -142,7 +142,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object Panel1: TPanel
+      object pnl1: TPanel
         Left = 0
         Top = 0
         Width = 786
@@ -150,21 +150,21 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
-        object Lb_SrcPath: TLabel
+        object lbl_SrcPath: TLabel
           Left = 8
           Top = 3
           Width = 27
           Height = 13
           Caption = #1055#1091#1090#1100':'
         end
-        object Lb_FileName: TLabel
+        object lbl_FileName: TLabel
           Left = 8
           Top = 22
           Width = 32
           Height = 13
           Caption = #1060#1072#1081#1083':'
         end
-        object Lb_ErrorInfo: TLabel
+        object lbl_ErrorInfo: TLabel
           Left = 200
           Top = 22
           Width = 76
@@ -172,7 +172,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
           Caption = #1052#1077#1089#1090#1086' '#1074#1099#1079#1086#1074#1072':'
         end
       end
-      object M_SourceFile: TfsSyntaxMemo
+      object mem_SourceFile: TfsSyntaxMemo
         Left = 0
         Top = 41
         Width = 786
@@ -236,7 +236,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         Align = alBottom
         TabOrder = 0
       end
-      object M_OraParams: TDBMemoEh
+      object mem_OraParams: TDBMemoEh
         Left = 0
         Top = 280
         Width = 786
@@ -262,7 +262,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         Height = 73
         Align = alTop
         TabOrder = 2
-        object M_OraError: TDBMemoEh
+        object mem_OraError: TDBMemoEh
           Left = 1
           Top = 16
           Width = 784
@@ -292,7 +292,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         DesignSize = (
           786
           207)
-        object M_OraSQL: TDBMemoEh
+        object mem_OraSQL: TDBMemoEh
           Left = 1
           Top = 23
           Width = 784
@@ -341,7 +341,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object M_FullReport: TfsSyntaxMemo
+      object mem_FullReport: TfsSyntaxMemo
         Left = 0
         Top = 0
         Width = 786
@@ -392,7 +392,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 136
     Top = 432
   end

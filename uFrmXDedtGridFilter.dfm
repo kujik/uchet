@@ -6,23 +6,23 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
   ExplicitHeight = 198
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 386
     Height = 143
     ExplicitWidth = 386
     ExplicitHeight = 143
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 376
       Height = 94
       ExplicitWidth = 376
       ExplicitHeight = 94
-      object Bevel1: TBevel
+      object bvl1: TBevel
         Left = 8
         Top = 84
         Width = 352
         Height = 2
       end
-      object De1: TDBDateTimeEditEh
+      object dedt1: TDBDateTimeEditEh
         Left = 103
         Top = 30
         Width = 121
@@ -31,14 +31,14 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         DynProps = <>
         EditButtons = <
           item
-            DropdownMenu = PmPeriod
+            DropdownMenu = pmPeriod
             Style = ebsPlusEh
           end>
         Kind = dtkDateEh
         TabOrder = 0
         Visible = True
       end
-      object De2: TDBDateTimeEditEh
+      object dedt2: TDBDateTimeEditEh
         Left = 247
         Top = 32
         Width = 121
@@ -54,7 +54,7 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         TabOrder = 1
         Visible = True
       end
-      object NeDays: TDBNumberEditEh
+      object nedtDays: TDBNumberEditEh
         Left = 103
         Top = 57
         Width = 121
@@ -75,7 +75,7 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         TabOrder = 2
         Visible = True
       end
-      object CbField: TDBComboBoxEh
+      object cmbField: TDBComboBoxEh
         Left = 103
         Top = 3
         Width = 265
@@ -88,10 +88,10 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         DynProps = <>
         EditButtons = <>
         TabOrder = 3
-        Text = 'CbField'
+        Text = 'cmbField'
         Visible = True
       end
-      object CbPeriod: TDBCheckBoxEh
+      object cmbPeriod: TDBCheckBoxEh
         Left = 8
         Top = 34
         Width = 97
@@ -100,7 +100,7 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         DynProps = <>
         TabOrder = 4
       end
-      object CbDays: TDBCheckBoxEh
+      object cmbDays: TDBCheckBoxEh
         Left = 9
         Top = 57
         Width = 88
@@ -110,60 +110,60 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
         TabOrder = 5
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 99
       Width = 376
       ExplicitTop = 99
       ExplicitWidth = 376
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 374
         ExplicitWidth = 370
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 374
         ExplicitWidth = 370
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 374
         ExplicitWidth = 374
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 275
           ExplicitLeft = 275
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 47
           ExplicitLeft = 47
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 176
           ExplicitLeft = 176
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 28
           ExplicitWidth = 28
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 143
     Width = 386
     ExplicitTop = 143
     ExplicitWidth = 386
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 294
       Height = 13
       ExplicitLeft = 294
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 13
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 96
     Top = 424
   end
-  object PmPeriod: TPopupMenu
+  object pmPeriod: TPopupMenu
     Left = 341
     Top = 61
   end

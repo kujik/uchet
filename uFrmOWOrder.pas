@@ -17,45 +17,45 @@ type
     PHeader2: TPanel;
     PHAddDocs: TPanel;
     PHAddDocsCaption: TPanel;
-    Label5: TLabel;
-    PBottom: TPanel;
+    lbl5: TLabel;
+    pnlBottom: TPanel;
     PHFilesButtons: TPanel;
     FrgFiles: TFrDBGridEh;
-    PTop: TPanel;
-    Bevel1: TBevel;
+    pnlTop: TPanel;
+    bvl1: TBevel;
     PHeaderTop: TPanel;
     PHDates: TPanel;
-    De_dt: TDBDateTimeEditEh;
-    De_dt_otgr: TDBDateTimeEditEh;
-    De_dt_change: TDBDateTimeEditEh;
-    De_dt_montage_beg: TDBDateTimeEditEh;
-    De_dt_montage_end: TDBDateTimeEditEh;
-    De_dt_beg: TDBDateTimeEditEh;
+    dedt_dt: TDBDateTimeEditEh;
+    dedt_dt_otgr: TDBDateTimeEditEh;
+    dedt_dt_change: TDBDateTimeEditEh;
+    dedt_dt_montage_beg: TDBDateTimeEditEh;
+    dedt_dt_montage_end: TDBDateTimeEditEh;
+    dedt_dt_beg: TDBDateTimeEditEh;
     PHCustomer: TPanel;
     DBComboBoxEh1: TDBComboBoxEh;
     DBComboBoxEh2: TDBComboBoxEh;
     DBEditEh2: TDBEditEh;
-    Cb_legalname: TDBComboBoxEh;
-    E_account: TDBEditEh;
+    cmb_legalname: TDBComboBoxEh;
+    edt_account: TDBEditEh;
     DBEditEh4: TDBEditEh;
-    Cb_CashType: TDBComboBoxEh;
-    E_address: TDBEditEh;
+    cmb_CashType: TDBComboBoxEh;
+    edt_address: TDBEditEh;
     PHOrder: TPanel;
-    Cb_id_organization: TDBComboBoxEh;
-    E_ornum: TDBEditEh;
-    Cb_id_or_format_estimates: TDBComboBoxEh;
-    Cb_project: TDBComboBoxEh;
-    E_managername: TDBEditEh;
-    Cb_main: TDBComboBoxEh;
-    Cb_Area: TDBComboBoxEh;
-    Cb_id_ordertype: TDBComboBoxEh;
-    E_planningname: TDBEditEh;
+    cmb_id_organization: TDBComboBoxEh;
+    edt_ornum: TDBEditEh;
+    cmb_id_or_format_estimates: TDBComboBoxEh;
+    cmb_project: TDBComboBoxEh;
+    edt_managername: TDBEditEh;
+    cmb_main: TDBComboBoxEh;
+    cmb_Area: TDBComboBoxEh;
+    cmb_id_ordertype: TDBComboBoxEh;
+    edt_planningname: TDBEditEh;
     PHFin: TPanel;
     PHSum: TPanel;
     DBNumberEditEh26: TDBNumberEditEh;
     DBNumberEditEh27: TDBNumberEditEh;
     DBNumberEditEh28: TDBNumberEditEh;
-    Ne_sum_i: TDBNumberEditEh;
+    nedt_sum_i: TDBNumberEditEh;
     DBNumberEditEh30: TDBNumberEditEh;
     DBNumberEditEh31: TDBNumberEditEh;
     DBNumberEditEh32: TDBNumberEditEh;
@@ -73,15 +73,15 @@ type
     DBNumberEditEh43: TDBNumberEditEh;
     DBNumberEditEh44: TDBNumberEditEh;
     PHFinCaptions: TPanel;
-    Label10: TLabel;
-    Label11: TLabel;
-    Label12: TLabel;
-    Label13: TLabel;
-    PGrid: TPanel;
+    lbl10: TLabel;
+    lbl11: TLabel;
+    lbl12: TLabel;
+    lbl13: TLabel;
+    pnlGrid: TPanel;
     FrgItems: TFrDBGridEh;
     PHRelatedDocs: TPanel;
     PHRelatedDocsCaption: TPanel;
-    Label1: TLabel;
+    lbl1: TLabel;
     FrgReclamations: TFrDBGridEh;
     FrgSemiproducts: TFrDBGridEh;
     PHCommentsLeft: TPanel;
@@ -108,9 +108,9 @@ type
 //    procedure ControlOnEnter(Sender: TObject); virtual;
 //    procedure ControlOnExit(Sender: TObject); virtual;
 //    procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
-//    procedure BtOkClick(Sender: TObject); virtual;
-//    procedure BtCancelClick(Sender: TObject); virtual;
-//    procedure BtClick(Sender: TObject); virtual;
+//    procedure btnOkClick(Sender: TObject); virtual;
+//    procedure btnCancelClick(Sender: TObject); virtual;
+//    procedure btnClick(Sender: TObject); virtual;
 
 
 
@@ -144,9 +144,9 @@ var
 begin
   inherited;
   PHOrder.Width := (PHOrder.Width + PHCustomer.Width) div 2;
-  E_managername.Width := (PHOrder.Width div 2 - E_managername.Left);
-  E_planningname.Width := E_managername.Width;
-  E_planningname.Left := Cb_project.Left + Cb_project.Width - E_planningname.Width;
+  edt_managername.Width := (PHOrder.Width div 2 - edt_managername.Left);
+  edt_planningname.Width := edt_managername.Width;
+  edt_planningname.Left := cmb_project.Left + cmb_project.Width - edt_planningname.Width;
 end;
 
 function TFrmOWOrder.Prepare: Boolean;
@@ -159,7 +159,7 @@ var
   st, st2: string;
   i: Integer;
 begin
-  PTop.Hide;
+  pnlTop.Hide;
   Caption := 'Заказ';
   Mode := fEdit;
   FOpt.DlgPanelStyle := dpsTopLeft;
@@ -187,13 +187,13 @@ end;
 
 function TFrmOWOrder.SetControlsLayout: Boolean;
 begin
-  Cth.MakePanelsFlat(PMDIClient, [], True);
+  Cth.MakePanelsFlat(pnlFrmClient, [], True);
   Cth.AlignControls(PHOrder, [], True);
   Cth.AlignControls(PHCustomer, [], True);
   Cth.AlignControls(PHDates, [], True);
   Cth.AlignControls(PHSum, [], True);
   Cth.AlignControls(PHTotalSum, [], True);
-  PHFinCaptions.Height := De_dt.Top + De_dt.Height;
+  PHFinCaptions.Height := dedt_dt.Top + dedt_dt.Height;
   PHFin.Height := PHSum.Height + PHTotalSum.Height;
   PHeaderTop.Height := S.MaxOf([PHOrder.Height, PHCustomer.Height, PHDates.Height, PHFin.Height]);
   PHFin.Align := alRight;
@@ -201,8 +201,8 @@ begin
   PHOrder.Align := alLeft;
   PHCustomer.Align := alClient;
   Cth.AlignControls(PDividor1, [], True);
-  Bevel1.Left := 0;
-  Bevel1.Width := 4000;
+  bvl1.Left := 0;
+  bvl1.Width := 4000;
 //  Cth.AlignControls(PHCommentsLeft, [], True);
 //  Cth.AlignControls(PHAddDocs, [], True);
   PHeader2.Height := PHCommentsLeft.Height;
@@ -213,7 +213,7 @@ begin
 //PHCommentsLeft.Align := alclient;
   Width := Width - 1;
   FormResize(Self);
-//  Cb_project.ControlLabel.Left := 5;
+//  cmb_project.ControlLabel.Left := 5;
 end;
 
 procedure TFrmOWOrder.DefineFields;
@@ -248,28 +248,28 @@ end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
 begin
-  //Cth.AddToComboBoxEh(Cb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
-  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], Cb_id_ordertype, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('_id_ordertype')], Cb_id_ordertype, cntComboLK, 1);
-  Cth.AddToComboBoxEh(Cb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
+  //Cth.AddToComboBoxEh(cmb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], cmb_id_ordertype, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('_id_ordertype')], cmb_id_ordertype, cntComboLK, 1);
+  Cth.AddToComboBoxEh(cmb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
 
 
-  //  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], Cb_Format, cntComboLK);
-  //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], Cb_Format, cntComboLK, 1);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], Cb_id_organization, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], Cb_id_organization, cntComboLK, 1);
+  //  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], cmb_Format, cntComboLK);
+  //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], cmb_id_organization, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_id_organization, cntComboLK, 1);
   //Organizations := Q.QLoadToVarDynArray2('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
-  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], Cb_Area, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], Cb_Project, cntComboE);
-  Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], Cb_id_or_format_estimates, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], cmb_Area, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], cmb_Project, cntComboE);
+  Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], cmb_id_or_format_estimates, cntComboLK);
 
 
 {  Customers := Q.QLoadToVarDynArray2('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
-  Cb_CustomerName.Images := Il_Columns;
-  Cb_CustomerMan.Images := Il_Columns;
-  Cb_CustomerLegalName.Images := Il_Columns;
+  cmb_CustomerName.Images := Il_Columns;
+  cmb_CustomerMan.Images := Il_Columns;
+  cmb_CustomerLegalName.Images := Il_Columns;
   for i := 0 to High(Customers) do
-    Cb_CustomerName.Items.Add(Customers[i][0]);
+    cmb_CustomerName.Items.Add(Customers[i][0]);
   CustomerContacts := Q.QLoadToVarDynArray2('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
   CustomerLegal := Q.QLoadToVarDynArray2('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
 
@@ -317,7 +317,7 @@ begin
   for i := 0 to WorkCellTypes.Count - 1 do
     if WorkCellTypes.G(i, 'refers_to_prod_area') = 1 then
       FrgItems.Opt.SetPick('r_' + VarToStr(WorkCellTypes.G(i, 'id')), ['ПЩ', 'И', 'ДМ'], ['0', '1', '2'], True, False);
-  FrgItems.Opt.SetButtons(1, [[btnInsert, True, 1], [btnAdd, True, 1], [btnDelete, True, 1]]);
+  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1]]);
   FrgItems.Opt.SetGridOperations('uaid');
   FrgItems.Opt.SetTable('v_order_items');
   FrgItems.Opt.SetWhere('where id_order = 8482');
@@ -369,7 +369,7 @@ begin
   FrgFiles.Opt.SetGridOperations('uaid');
   FrgFiles.Opt.SetTable('bcad_groups');
   FrgFiles.SetInitData('*', []);
-  FrgFiles.Opt.SetButtons(1, [[btnAdd, True], [btnDelete, True]], 2, PHFilesButtons, 0, True);
+  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, PHFilesButtons, 0, True);
   FrgFiles.Prepare;
   FrgFiles.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
   FrgFiles.RefreshGrid;
@@ -402,13 +402,13 @@ var
 begin
   SenderName := TControl(Sender).Name;
   SenderValue := Cth.GetControlValue(Sender);
-  if Sender = Cb_id_ordertype then begin
+  if Sender = cmb_id_ordertype then begin
     if (S.NNum(SenderValue) = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
       F.SetProp('id_organization', -1);
     if (S.NNum(SenderValue) <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
       F.SetProp('id_organization', null);
   end;
-  if Sender = Cb_id_organization then begin
+  if Sender = cmb_id_organization then begin
   end;
   if F.GetProp('_id_ordertype') = null then
     F.SetProp('id_organization', null)
@@ -441,11 +441,11 @@ end;
 procedure TFrmOWOrder.FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   case Tag of
-    btnInsert:
+    mbtInsert:
       FrgItems.InsertRow;
-    btnAdd:
+    mbtAdd:
       FrgItems.AddRow;
-    btnDelete:
+    mbtDelete:
       FrgItems.DeleteRow;
   end;
 end;

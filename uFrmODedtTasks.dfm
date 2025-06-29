@@ -1,21 +1,21 @@
 inherited FrmODedtTasks: TFrmODedtTasks
   Caption = 'FrmDlgJTasks'
-  ClientHeight = 492
-  ClientWidth = 851
+  ClientHeight = 491
+  ClientWidth = 847
   ExplicitWidth = 863
   ExplicitHeight = 530
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    Width = 851
-    Height = 476
+  inherited pnlFrmMain: TPanel
+    Width = 847
+    Height = 475
     ExplicitWidth = 847
     ExplicitHeight = 475
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 841
       Height = 427
       ExplicitWidth = 837
       ExplicitHeight = 426
-      object Cb_type: TDBComboBoxEh
+      object cmb_type: TDBComboBoxEh
         Left = 104
         Top = 8
         Width = 201
@@ -28,10 +28,10 @@ inherited FrmODedtTasks: TFrmODedtTasks
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'Cb_type'
+        Text = 'cmb_type'
         Visible = True
       end
-      object Cb_id_order: TDBComboBoxEh
+      object cmb_id_order: TDBComboBoxEh
         Left = 104
         Top = 86
         Width = 734
@@ -47,7 +47,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Text = 'DBComboBoxEh1'
         Visible = True
       end
-      object Cb_id_order_item: TDBComboBoxEh
+      object cmb_id_order_item: TDBComboBoxEh
         Left = 105
         Top = 113
         Width = 733
@@ -63,7 +63,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Text = 'DBComboBoxEh1'
         Visible = True
       end
-      object E_user1: TDBEditEh
+      object edt_user1: TDBEditEh
         Left = 104
         Top = 62
         Width = 201
@@ -79,7 +79,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Text = 'DBEditEh1'
         Visible = True
       end
-      object Cb_id_user2: TDBComboBoxEh
+      object cmb_id_user2: TDBComboBoxEh
         Left = 400
         Top = 62
         Width = 209
@@ -95,7 +95,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Text = 'DBComboBoxEh1'
         Visible = True
       end
-      object M_Comm1: TDBMemoEh
+      object mem_Comm1: TDBMemoEh
         Left = 105
         Top = 140
         Width = 734
@@ -115,7 +115,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Visible = True
         WantReturns = True
       end
-      object De_dt: TDBDateTimeEditEh
+      object dedt_dt: TDBDateTimeEditEh
         Left = 104
         Top = 236
         Width = 121
@@ -131,7 +131,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         TabOrder = 6
         Visible = True
       end
-      object De_dt_planned: TDBDateTimeEditEh
+      object dedt_dt_planned: TDBDateTimeEditEh
         Left = 304
         Top = 236
         Width = 121
@@ -147,7 +147,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         TabOrder = 7
         Visible = True
       end
-      object Cb_id_state: TDBComboBoxEh
+      object cmb_id_state: TDBComboBoxEh
         Left = 104
         Top = 263
         Width = 209
@@ -163,7 +163,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Text = 'DBComboBoxEh1'
         Visible = True
       end
-      object De_dt_beg: TDBDateTimeEditEh
+      object dedt_dt_beg: TDBDateTimeEditEh
         Left = 104
         Top = 290
         Width = 121
@@ -179,7 +179,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         TabOrder = 9
         Visible = True
       end
-      object De_dt_end: TDBDateTimeEditEh
+      object dedt_dt_end: TDBDateTimeEditEh
         Left = 304
         Top = 290
         Width = 121
@@ -195,7 +195,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         TabOrder = 10
         Visible = True
       end
-      object M_Comm2: TDBMemoEh
+      object mem_Comm2: TDBMemoEh
         Left = 104
         Top = 317
         Width = 734
@@ -215,7 +215,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         Visible = True
         WantReturns = True
       end
-      object Chb_confirmed: TDBCheckBoxEh
+      object chb_confirmed: TDBCheckBoxEh
         Left = 725
         Top = 410
         Width = 112
@@ -224,7 +224,7 @@ inherited FrmODedtTasks: TFrmODedtTasks
         DynProps = <>
         TabOrder = 12
       end
-      object E_name: TDBEditEh
+      object edt_name: TDBEditEh
         Left = 105
         Top = 35
         Width = 734
@@ -237,55 +237,53 @@ inherited FrmODedtTasks: TFrmODedtTasks
         DynProps = <>
         EditButtons = <>
         TabOrder = 13
-        Text = 'E_name'
+        Text = 'edt_name'
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
-      Top = 432
-      Width = 841
+    inherited pnlFrmBtns: TPanel
+      Top = 431
+      Width = 837
       ExplicitTop = 431
       ExplicitWidth = 837
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 839
+        ExplicitWidth = 839
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 839
+        ExplicitWidth = 839
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 839
         ExplicitWidth = 835
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 740
           ExplicitLeft = 736
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 512
           ExplicitLeft = 508
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 641
           ExplicitLeft = 637
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 372
           ExplicitWidth = 368
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
-    Top = 476
-    Width = 851
+  inherited pnlStatusBar: TPanel
+    Top = 475
+    Width = 847
     ExplicitTop = 475
     ExplicitWidth = 847
-    inherited LbStatusBarRight: TLabel
-      Left = 759
-      Height = 14
-      ExplicitLeft = 759
-    end
-    inherited LbStatusBarLeft: TLabel
-      Height = 14
+    inherited lblStatusBarR: TLabel
+      Left = 778
+      ExplicitLeft = 778
     end
   end
 end

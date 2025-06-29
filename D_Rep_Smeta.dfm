@@ -8,14 +8,14 @@ inherited Dlg_Rep_Smeta: TDlg_Rep_Smeta
   ExplicitHeight = 394
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_AddOrders: TLabel
+  object lbl_AddOrders: TLabel
     Left = 8
     Top = 39
     Width = 123
     Height = 13
     Caption = #1053#1077#1090' '#1074#1099#1073#1088#1072#1085#1085#1099#1093' '#1079#1072#1082#1072#1079#1086#1074
   end
-  object Lb_Progress: TLabel
+  object lbl_Progress: TLabel
     Left = 8
     Top = 58
     Width = 152

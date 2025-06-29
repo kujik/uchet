@@ -40,7 +40,7 @@ type
     IdSMTP1: TIdSMTP;
     Bt_LoadXLSM: TBitBtn;
     LabeledEdit1: TLabeledEdit;
-    Label1: TLabel;
+    lbl1: TLabel;
     Bt_Dlg_BasicInput: TBitBtn;
     Bt_LoadXLS: TBitBtn;
     Bt_SaveXLSX: TBitBtn;
@@ -53,15 +53,15 @@ type
     N11: TMenuItem;
     N21: TMenuItem;
     N31: TMenuItem;
-    SpeedButton1: TSpeedButton;
+    btn1: TSpeedButton;
     Bt_Tree: TBitBtn;
     DBLookupComboboxEh1: TDBLookupComboboxEh;
     ProgressBar1: TProgressBar;
-    P_Btns: TPanel;
+    pnl_Btns: TPanel;
     CheckBox1: TCheckBox;
-    Label2: TLabel;
-    Panel1: TPanel;
-    e_1: TDBEditEh;
+    lbl2: TLabel;
+    pnl1: TPanel;
+    edt_1: TDBEditEh;
     l1: TLabel;
     l2: TLabel;
     bv3: TBevel;
@@ -92,7 +92,7 @@ type
     procedure BitBtn3Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Bt_LoadXLSMClick(Sender: TObject);
-    procedure Label1Click(Sender: TObject);
+    procedure lbl1Click(Sender: TObject);
     procedure Bt_Dlg_BasicInputClick(Sender: TObject);
     procedure Bt_LoadXLSClick(Sender: TObject);
     procedure LabeledEdit1Change(Sender: TObject);
@@ -366,8 +366,8 @@ begin
 //    QExecSql('update orders set dt_to_sgp = :dt1$d, dt_from_sgp = :dt2$d where id = :id$i',
 //      VarArrayOf([ar2[i][1],  S.IIf(ar2[i][2] = -1, null,ar2[i][1]), ar2[i][0]])
 //    );
-//   QCallStoredProc('p_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', VarArrayOf([ar2[i][0], 2]));
-//    QCallStoredProc('p_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', VarArrayOf([ar2[i][0], 3]));
+//   QCallStoredProc('pnl_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', VarArrayOf([ar2[i][0], 2]));
+//    QCallStoredProc('pnl_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', VarArrayOf([ar2[i][0], 3]));
     QExecSql('update orders set dt_to_sgp = :dt1$d, dt_from_sgp = :dt2$d where id = :id$i',
       VarArrayOf([S.IIf(Ar.InArray(ar2[i][0], va2), ar2[i][1], null),  S.IIf(Ar.InArray(ar2[i][0], va3), ar2[i][1], null), ar2[i][0]])
     );
@@ -525,21 +525,21 @@ begin
   Orders.SetTaskForCreateOrder(7963);exit;
 
 
-Cth.CreateButtons(P_Btns, [
+Cth.CreateButtons(pnl_Btns, [
 ['sdadsada'],
-  [btnGridSettings, True, -120, 'Tect', 'add'],
-  [btnRefresh, True], [btnRefresh], [btnDividorM], [btnPrint], [btnPrintPassport], [btnPrintLabels], [btnDividorM], [btnCtlPanel],[btndividor],
-  [btngo,'asdf'],
+  [mbtGridSettings, True, -120, 'Tect', 'add'],
+  [mbtRefresh, True], [mbtRefresh], [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [mbtCtlPanel],[mbtdividor],
+  [mbtgo,'asdf'],
   [50.0],
-  //[btnSpace, True, 50],
+  //[mbtSpace, True, 50],
   [1234, True, 120, 'Tect', 'add'],
-  [btnCopy, True, -200], [btnDelete, True, -200], [btnEdit, True, -200]
+  [mbtCopy, True, -200], [mbtDelete, True, -200], [mbtEdit, True, -200]
   ], nil, 1, '', 2, 0, False
 );
-//TSpeedButton(P_Btns.Controls[0]).GroupIndex:=1;
-//TSpeedButton(P_Btns.Controls[0]).AllowAllup:=True;
+//TSpeedButton(pnl_Btns.Controls[0]).GroupIndex:=1;
+//TSpeedButton(pnl_Btns.Controls[0]).AllowAllup:=True;
 
-//TSpeedButton(P_Btns.Controls[0]).Down:=True;
+//TSpeedButton(pnl_Btns.Controls[0]).Down:=True;
 Exit;
 
 
@@ -949,10 +949,10 @@ begin
 end;
 
 
-procedure TFrmTest.Label1Click(Sender: TObject);
+procedure TFrmTest.lbl1Click(Sender: TObject);
 begin
   inherited;
-    with Label1  do begin
+    with lbl1  do begin
     SetCaption('Каждый'+'$0000FFохотник'+'$FF0000желает'+'знать');
 {    ColorsPos('Каждый', 255000000);
     ColorsPos('охотник', 42495);
@@ -975,9 +975,9 @@ var
   button: TControl;
   lowerLeft: TPoint;
 begin
-SpeedButton1.Width:=80;
-SpeedButton1.Height:=32;
-  Cth.SetSpeedButton(SpeedButton1, mybtPrint, False, ''+#$25BC);
+btn1.Width:=80;
+btn1.Height:=32;
+  Cth.SetSpeedButton(btn1, mybtPrint, False, ''+#$25BC);
   if Sender is TControl then
   begin
     button := TControl(Sender);
@@ -1229,7 +1229,7 @@ begin
     Exit;
   end;
 //  Rep.PasteBand('HEADER');
-//  Rep.SetValue('#TITLE#',Lb_Caption1.Caption);
+//  Rep.SetValue('#TITLE#',lbl_Caption1.Caption);
   Rep.TemplateSheet := Rep.Excel.Workbooks[1].Sheets[1];
   MyInfoMessage(Rep.TemplateSheet.Cells[6,2].Value);
 
@@ -1247,16 +1247,16 @@ procedure TFrmTest.Bt_AlignClick(Sender: TObject);
 begin
   inherited;
   cth.SetBtn(bt_44,mybtrefresh, True);
-  Cth.AlignControls(Panel1, [], True);
+  Cth.AlignControls(pnl1, [], True);
 exit;
-  myinfomessage(inttostr(Self.componentcount) + ' ' + inttostr(panel1.componentcount) + ' ' + inttostr(Self.controlcount) + ' ' + inttostr(panel1.controlcount));
-  myinfomessage(A.Implode(Cth.GetChildControlNames(Panel1),'; '));
+  myinfomessage(inttostr(Self.componentcount) + ' ' + inttostr(pnl1.componentcount) + ' ' + inttostr(Self.controlcount) + ' ' + inttostr(pnl1.controlcount));
+  myinfomessage(A.Implode(Cth.GetChildControlNames(pnl1),'; '));
   myinfomessage(A.Implode(Cth.GetChildControlNames(Self),'; '));
   myinfomessage(A.Implode(Cth.GetChildControlNames(Self, False),'; '));
   myinfomessage(booltostr(Cth.IsChildControl(Self, 'DBEditEh2')));
   myinfomessage(booltostr(Cth.IsChildControl(Self, 'dbEditEh2'{, False})));
   myinfomessage(booltostr(Cth.IsChildControl(self, 'Edit1')));
-  myinfomessage(booltostr(Cth.IsChildControl(panel1, 'Edit1')));
+  myinfomessage(booltostr(Cth.IsChildControl(pnl1, 'Edit1')));
 end;
 
 procedure TFrmTest.Bt_Dlg_BasicInputClick(Sender: TObject);
@@ -1370,12 +1370,12 @@ begin
 //i:=TFrmDlgRItmSupplier.Show(Self, 'dddddddd', [myfoMultiCopy, myfoDialog, myfoSizeable], fView, 5753, null);   //id 5753
 //i:=FrmMDI.width;
 //st:=TFrmDlgRItmSupplier(FrmMdi).BitBtn1.Caption;
-//TFrmDlgRItmSupplier(FrmMdi).BtOk.free;
-//st:=TFrmDlgRItmSupplier(FrmMdi).BtOk.Caption;
+//TFrmDlgRItmSupplier(FrmMdi).btnOk.free;
+//st:=TFrmDlgRItmSupplier(FrmMdi).btnOk.Caption;
 //st:=TFrmDlgRItmSupplier(FrmMdi).BitBtn1.Caption;
-//TFrmDlgRItmSupplier(FrmMdi).BtOk.OnClick(nil);
+//TFrmDlgRItmSupplier(FrmMdi).btnOk.OnClick(nil);
 //st:=TFrmDlgRItmSupplier(FrmMdi).dbediteh1.Text;
-//st:=TFrmDlgRItmSupplier(FrmMdi).E_Name_Org.text;
+//st:=TFrmDlgRItmSupplier(FrmMdi).edt_name_org.text;
 exit;
 
 //  TFrmDlgFindNameInEstimates.Show(Self, 'ddd', [myfoSizeable], fNone, null, null);  exit;
@@ -1434,7 +1434,7 @@ begin
 TFrmBasicInput._TestFunctionDB;
 //i:=FrmMDI.width;
 //st:=TFrmDlgRItmSupplier(FrmMdi).Edit1.Text;
-//st:=TFrmDlgRItmSupplier(FrmMdi).E_Name_Org.text;
+//st:=TFrmDlgRItmSupplier(FrmMdi).edt_name_org.text;
 exit;
 
 //  TFrmDlgRItmSupplier.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fAdd, null, null); exit;

@@ -69,11 +69,11 @@ const
 
 type
   TForm_MDI = class(TForm)
-    Timer_AfterStart: TTimer;
-    P_StatusBar: TPanel;
-    Lb_StatusBar_Right: TLabel;
-    Lb_StatusBar_Left: TLabel;
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    tmrAfterCreate: TTimer;
+    pnl_StatusBar: TPanel;
+    lbl_StatusBar_Right: TLabel;
+    lbl_StatusBar_Left: TLabel;
+    procedure tmrAfterCreateTimer(Sender: TObject);
     //не допускает уменьшение формы ниже минимального размера или больше максимальных
     procedure FormCanResize(Sender: TObject; var NewWidth, NewHeight: Integer; var Resize: Boolean);
     //восстанавливаем размеры и положение окна, если таковые сохранены в бд
@@ -256,17 +256,17 @@ begin
   ParentForm := AOwner;
   AddParam := AAddParam;
   ModalResult := mrNone;
-//  Timer_AfterStart.Enabled := True;
+//  tmrAfterCreate.Enabled := True;
   //Wh.SelectDialogResult := [];
   //Wh.SelectDialogResult2 := [];
   FormDialogResult := mrNone;
   //видимость панели статусбара
-  P_StatusBar.Visible := not (myfoDialog in MyFormOptions);
-  P_StatusBar.BevelInner:=bvNone;
-  P_StatusBar.BevelOuter:=bvNone;
-  P_StatusBar.Color:=cl3DLight;
+  pnl_StatusBar.Visible := not (myfoDialog in MyFormOptions);
+  pnl_StatusBar.BevelInner:=bvNone;
+  pnl_StatusBar.BevelOuter:=bvNone;
+  pnl_StatusBar.Color:=cl3DLight;
   //очистим обе метки на нем
-  //++SetStatusBar('', '', P_StatusBar.Visible);
+  //++SetStatusBar('', '', pnl_StatusBar.Visible);
   //запретим развертывание окна в максимум (надо еще запретить по даблклику на заголовке)
   if (myfoDialog in MyFormOptions) and (not (myfoEnableMaximize in MyFormOptions)) then
     if biMaximize in BorderIcons then
@@ -469,8 +469,8 @@ begin
 
     x := FrmMain.Height;
     i := FrmMain.ClientHeight;
-    x := FrmMain.lb_GetTop.top;
-    i := FrmMain.lb_GetBottom.top;
+    x := FrmMain.lbl_GetTop.top;
+    i := FrmMain.lbl_GetBottom.top;
 
     x := TForm(ParentForm).Left + TForm(ParentForm).Width div 2 - Self.Width div 2;
 //    i:=FrmMain.Width div 2 - Self.Width div 2;
@@ -480,12 +480,12 @@ begin
     Self.Left := max(x, 0);
 
     x := TForm(ParentForm).Top + TForm(ParentForm).Height div 2 - Self.Height div 2;
-    if x + Self.Height > FrmMain.FormsList.Top - FrmMain.Lb_GetTop.Top - 10 then
-      x := FrmMain.FormsList.Top - FrmMain.Lb_GetTop.Top - Self.Height - 10;
+    if x + Self.Height > FrmMain.FormsList.Top - FrmMain.lbl_GetTop.Top - 10 then
+      x := FrmMain.FormsList.Top - FrmMain.lbl_GetTop.Top - Self.Height - 10;
     Self.Top := max(x, 0);
 
   end;
-  Self.Top := Max(FrmMain.Lb_GetTop.Top, Self.Top);
+  Self.Top := Max(FrmMain.lbl_GetTop.Top, Self.Top);
 
   //восстанавливаем размеры и положение окна, если таковые сохранены в бд
   //это невозможно сделать в oncreate в случае если запуск модальный
@@ -494,9 +494,9 @@ begin
   FIsFormShown := True;
 end;
 
-procedure TForm_MDI.Timer_AfterStartTimer(Sender: TObject);
+procedure TForm_MDI.tmrAfterCreateTimer(Sender: TObject);
 begin
-  Timer_AfterStart.Enabled := False;
+  tmrAfterCreate.Enabled := False;
   AfterStart;
 end;
 
@@ -572,50 +572,50 @@ var
   b: Boolean;
 begin
   //проверка обязательна! в mdi_grid1 сейчас вызывается в repaint и если не проверять очень тормозит при изменении размера
-  if (P_StatusBar.Visible = AVisible) and (VarToStr(TextLeft) = S.NSt(FTextLeft)) and (VarToStr(TextRight) = S.NSt(FTextRight)) and (FStatusBarHeight = P_StatusBar.Height) then
+  if (pnl_StatusBar.Visible = AVisible) and (VarToStr(TextLeft) = S.NSt(FTextLeft)) and (VarToStr(TextRight) = S.NSt(FTextRight)) and (FStatusBarHeight = pnl_StatusBar.Height) then
     Exit;
   FIISetStatusBar := True;
-  b := (P_StatusBar.Visible = AVisible) or (FStatusBarHeight = -1);
+  b := (pnl_StatusBar.Visible = AVisible) or (FStatusBarHeight = -1);
   if FStatusBarHeight = -1 then
-    FStatusBarHeight := P_StatusBar.Height;
-  P_StatusBar.Visible := AVisible;
+    FStatusBarHeight := pnl_StatusBar.Height;
+  pnl_StatusBar.Visible := AVisible;
   //фиксим баг, когда статусбар может уехать в середину формы при наличии панелей с выравнивание alBotoom, alcleent...
-  //if P_StatusBar.Visible then
+  //if pnl_StatusBar.Visible then
   if not b then
     Self.ClientHeight := Self.ClientHeight + S.IIf(AVisible, FStatusBarHeight, -FStatusBarHeight);
   if InPrepare and not AVisible then
     Self.ClientHeight := Self.ClientHeight - FStatusBarHeight;
   if AVisible then
-    P_StatusBar.Height := FStatusBarHeight;
+    pnl_StatusBar.Height := FStatusBarHeight;
   if not AVisible then
-    P_StatusBar.Height := 0;
+    pnl_StatusBar.Height := 0;
   if AVisible then
-    P_StatusBar.Top := 1000
+    pnl_StatusBar.Top := 1000
   else
-    P_StatusBar.Top := Self.ClientHeight - P_StatusBar.Height;
-//  P_StatusBar.Top:=1000;
-//  if AVisible and (P_StatusBar.Height = 0) then Self.ClientHeight:=Self.ClientHeight + FStatusBarHeight;
+    pnl_StatusBar.Top := Self.ClientHeight - pnl_StatusBar.Height;
+//  pnl_StatusBar.Top:=1000;
+//  if AVisible and (pnl_StatusBar.Height = 0) then Self.ClientHeight:=Self.ClientHeight + FStatusBarHeight;
 
-  Self.ClientHeight := P_StatusBar.Top + P_StatusBar.Height;
+  Self.ClientHeight := pnl_StatusBar.Top + pnl_StatusBar.Height;
 
 //  if not b then Self.ClientHeight:=Self.ClientHeight + S.IIf(AVisible, FStatusBarHeight, -FStatusBarHeight);
 
   FTextLeft := TextLeft;
   FTextRight := TextRight;
 
-  Lb_StatusBar_Left.ResetColors;
-  Lb_StatusBar_Left.Caption := '';
+  lbl_StatusBar_Left.ResetColors;
+  lbl_StatusBar_Left.Caption := '';
   if VarIsArray(TextLeft) then
-    Lb_StatusBar_Left.SetCaptionAr2(TextLeft)
+    lbl_StatusBar_Left.SetCaptionAr2(TextLeft)
   else
-    Lb_StatusBar_Left.SetCaption2(TextLeft);
+    lbl_StatusBar_Left.SetCaption2(TextLeft);
 
-  Lb_StatusBar_Right.ResetColors;
-  Lb_StatusBar_Right.Caption := '';
+  lbl_StatusBar_Right.ResetColors;
+  lbl_StatusBar_Right.Caption := '';
   if VarIsArray(TextRight) then
-    Lb_StatusBar_Right.SetCaptionAr2(TextRight)
+    lbl_StatusBar_Right.SetCaptionAr2(TextRight)
   else
-    Lb_StatusBar_Right.SetCaption2(TextRight);
+    lbl_StatusBar_Right.SetCaption2(TextRight);
   FIISetStatusBar := False;
 end;
 

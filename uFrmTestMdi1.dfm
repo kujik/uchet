@@ -6,12 +6,12 @@ inherited FrmTestMdi1: TFrmTestMdi1
   ExplicitHeight = 533
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 620
     Height = 479
     ExplicitWidth = 620
     ExplicitHeight = 479
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 610
       Height = 433
       ExplicitWidth = 610
@@ -36,7 +36,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
         Width = 305
         Height = 3
       end
-      object Bevel1: TBevel
+      object bvl1: TBevel
         Tag = -100
         Left = 25
         Top = 175
@@ -45,7 +45,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
         ParentShowHint = False
         ShowHint = False
       end
-      object e_1: TDBEditEh
+      object edt_1: TDBEditEh
         Left = 33
         Top = 18
         Width = 121
@@ -143,59 +143,59 @@ inherited FrmTestMdi1: TFrmTestMdi1
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 438
       Width = 610
       Height = 40
       ExplicitTop = 438
       ExplicitWidth = 610
       ExplicitHeight = 40
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 608
         ExplicitWidth = 419
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Top = 36
         Width = 608
         ExplicitTop = 36
         ExplicitWidth = 419
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 608
         Height = 32
         ExplicitWidth = 608
         ExplicitHeight = 32
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 509
           Height = 24
           ExplicitLeft = 509
           ExplicitHeight = 24
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 281
           Height = 24
           ExplicitLeft = 281
           ExplicitHeight = 24
-          inherited ChbDlgNoClose: TCheckBox
+          inherited chbNoclose: TCheckBox
             Top = -63
             ExplicitTop = -63
           end
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 410
           Height = 24
           ExplicitLeft = 410
           ExplicitHeight = 24
         end
-        inherited PDlgInfo: TPanel
+        inherited pnlFrmBtnsInfo: TPanel
           Height = 24
           ExplicitHeight = 24
         end
-        inherited PDlgBtnL: TPanel
+        inherited pnlFrmBtnsL: TPanel
           Height = 24
           ExplicitHeight = 24
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 141
           Height = 24
           ExplicitWidth = 141
@@ -204,21 +204,21 @@ inherited FrmTestMdi1: TFrmTestMdi1
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 479
     Width = 620
     ExplicitTop = 479
     ExplicitWidth = 620
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 528
       Height = 14
       ExplicitLeft = 528
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 96
     Top = 368
   end

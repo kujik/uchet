@@ -9,12 +9,12 @@ uses
 
 type
   TForm_MdiDialogTemplate = class(TForm_MDI)
-    P_Bottom: TPanel;
+    pnl_Bottom: TPanel;
     Bt_OK: TBitBtn;
     Bt_Cancel: TBitBtn;
     Img_Info: TImage;
-    Chb_NoClose: TCheckBox;
-    Bevel1: TBevel;
+    chb_NoClose: TCheckBox;
+    bvl1: TBevel;
     procedure ControlOnChange(Sender: TObject); virtual;
     procedure ControlOnExit(Sender: TObject); virtual;
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
@@ -145,7 +145,7 @@ begin
   RefreshParentForm;
   if DefFocusedControl <> nil then
     DefFocusedControl.SetFocus;
-  if (not Chb_NoClose.Visible) or (not Chb_NoClose.Checked) then begin
+  if (not chb_NoClose.Visible) or (not chb_NoClose.Checked) then begin
     Close;
   end;
 end;
@@ -168,7 +168,7 @@ begin
     st := ' $FF00FF Данные ' + S.Iif(Mode = fAdd, 'введены.', 'изменены.')
   else
     st := '';
-  if P_StatusBar.Visible then begin
+  if pnl_StatusBar.Visible then begin
     SetStatusBar(Cth.FModeToCaption(Mode), st, True);
   end;
 end;
@@ -185,7 +185,7 @@ begin
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TControl then begin
       c := TControl(Components[i]);
-      if A.PosInArray(c.Name, ['p_statusbar', 'Lb_StatusBar_Left', 'Lb_StatusBar_Right', 'p_bottom', 'bt_ok', 'bt_cancel', 'Chb_NoClose'], True) >= 0 then
+      if A.PosInArray(c.Name, ['pnl_statusbar', 'lbl_StatusBar_Left', 'lbl_StatusBar_Right', 'pnl_bottom', 'bt_ok', 'bt_cancel', 'chb_NoClose'], True) >= 0 then
         Continue;
       if (Length(AConrols) = 0) or (A.PosInArray(c.Name, va, True) >= 0) then begin
         Cth.SetControlNoTEditable(c, not Editable, False, True);
@@ -252,7 +252,7 @@ begin
     CtrlCurrValuesStr := '';
     Exit;
   end;
-  CtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['Chb_NoClose']))
+  CtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['chb_NoClose']))
 end;
 
 procedure TForm_MdiDialogTemplate.ControlOnChange(Sender: TObject);
@@ -278,17 +278,17 @@ end;
 
 procedure TForm_MdiDialogTemplate.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  FreeAndNil(Lb_StatusBar_Left);
-  FreeAndNil(Lb_StatusBar_Right);
+  FreeAndNil(lbl_StatusBar_Left);
+  FreeAndNil(lbl_StatusBar_Right);
   inherited;
 end;
 
 procedure TForm_MdiDialogTemplate.FormShow(Sender: TObject);
 begin
   inherited;
-  P_Bottom.Width := Self.ClientWidth;
-  Bt_Cancel.Left := P_Bottom.Width - Bt_Cancel.Width - 5;
-  Bt_Ok.Left := P_Bottom.Width - Bt_Cancel.Width - 5 - Bt_Ok.Width - 5;
+  pnl_Bottom.Width := Self.ClientWidth;
+  Bt_Cancel.Left := pnl_Bottom.Width - Bt_Cancel.Width - 5;
+  Bt_Ok.Left := pnl_Bottom.Width - Bt_Cancel.Width - 5 - Bt_Ok.Width - 5;
   Bt_Cancel.Top := 2;
   Bt_Ok.Top := 2;
   Img_Info.Left := 5;
@@ -432,10 +432,10 @@ begin
   CtrlBegValuesStr:= CtrlCurrValuesStr;
   SetStatusBar('', '', True);
   Verify(nil);
-  P_Bottom.Align := alNone;
-//  P_Bottom.Top:=Self.ClientHeight - StatusBar.Height - P_Bottom.Height;
-  P_Bottom.Align := alBottom;
-  Chb_NoClose.Visible := NoCloseIfAdd and (Mode in [fAdd, fCopy]);
+  pnl_Bottom.Align := alNone;
+//  pnl_Bottom.Top:=Self.ClientHeight - StatusBar.Height - pnl_Bottom.Height;
+  pnl_Bottom.Align := alBottom;
+  chb_NoClose.Visible := NoCloseIfAdd and (Mode in [fAdd, fCopy]);
   Result := True;
 end;
 

@@ -22,13 +22,13 @@ uses
 
 type
   TFrmXDmsgNoConnection = class(TForm)
-    ImgError: TImage;
-    LbMessage: TLabel;
-    BtClose: TBitBtn;
-    Timer1: TTimer;
+    imgError: TImage;
+    lblMessage: TLabel;
+    btnClose: TBitBtn;
+    tmr1: TTimer;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormActivate(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure tmr1Timer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -48,7 +48,7 @@ uses
 procedure TFrmXDmsgNoConnection.FormActivate(Sender: TObject);
 begin
   Caption:=ModuleRecArr[cMainModule].Caption;
-  Timer1.Enabled:= True;
+  tmr1.Enabled:= True;
 end;
 
 procedure TFrmXDmsgNoConnection.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -56,7 +56,7 @@ begin
   Halt;
 end;
 
-procedure TFrmXDmsgNoConnection.Timer1Timer(Sender: TObject);
+procedure TFrmXDmsgNoConnection.tmr1Timer(Sender: TObject);
 begin
   Halt;
 end;

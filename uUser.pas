@@ -138,7 +138,7 @@ var
   i: Integer;
   va2: TVarDynArray2;
 begin
-  Q.QCallStoredProc('P_UserLogon', 'IdModule$i;IdUser$i', [cMainModule, User.GetId]);
+  Q.QCallStoredProc('p_UserLogon', 'IdModule$i;IdUser$i', [cMainModule, User.GetId]);
   va2:=Q.QLoadToVarDynArray2('select r.rights from adm_roles r, adm_user_roles ur where r.id = ur.id_role and ur.id_user = :id', [UserID]);
   UserRights:=',';
   for i:=0 to High(va2) do

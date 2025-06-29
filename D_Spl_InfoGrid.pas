@@ -15,7 +15,7 @@ type
     MemTableEh2: TMemTableEh;
     DBGridEh2: TDBGridEh;
     DBEditEh1: TDBEditEh;
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     procedure DBGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
     procedure DBGridEh1DblClick(Sender: TObject);
     procedure CellButtonClick(Sender: TObject; var Handled: Boolean);
@@ -503,10 +503,10 @@ begin
      'Информация'
   ]);
   InfoArr := [];
-  P_Top.Visible := True;
-  P_Bottom.Visible := False;
-  Lb_Caption.Caption := AddParam[0];
-  //Lb_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
+  pnl_Top.Visible := True;
+  pnl_Bottom.Visible := False;
+  lbl_Caption.Caption := AddParam[0];
+  //lbl_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
   Result := True;
 end;
 

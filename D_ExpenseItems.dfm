@@ -29,7 +29,7 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     Height = 25
     Anchors = [akLeft, akBottom]
   end
-  object E_Name: TDBEditEh
+  object edt_name: TDBEditEh
     Left = 88
     Top = 35
     Width = 535
@@ -43,9 +43,9 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     EditButtons = <>
     TabOrder = 1
     Visible = True
-    OnChange = E_NameChange
+    OnChange = edt_NameChange
   end
-  object Cb_Active: TDBCheckBoxEh
+  object cmb_Active: TDBCheckBoxEh
     Left = 95
     Top = 165
     Width = 97
@@ -55,7 +55,7 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     ParentColor = False
     TabOrder = 8
-    OnClick = Cb_ActiveClick
+    OnClick = cmb_ActiveClick
   end
   object Bt_OK: TBitBtn
     Left = 474
@@ -77,7 +77,7 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     TabOrder = 10
     OnClick = Bt_CancelClick
   end
-  object E_users: TDBEditEh
+  object edt_users: TDBEditEh
     Left = 88
     Top = 62
     Width = 535
@@ -90,14 +90,14 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     EditButtons = <
       item
-        OnClick = E_usersEditButtons0Click
+        OnClick = edt_usersEditButtons0Click
       end>
     ReadOnly = True
     TabOrder = 2
     Visible = True
-    OnChange = E_NameChange
+    OnChange = edt_NameChange
   end
-  object E_Agreed: TDBEditEh
+  object edt_Agreed: TDBEditEh
     Left = 88
     Top = 89
     Width = 535
@@ -110,14 +110,14 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     EditButtons = <
       item
-        OnClick = E_AgreedEditButtons0Click
+        OnClick = edt_AgreedEditButtons0Click
       end>
     ReadOnly = True
     TabOrder = 3
     Visible = True
-    OnChange = E_NameChange
+    OnChange = edt_NameChange
   end
-  object Cb_Group: TDBComboBoxEh
+  object cmb_Group: TDBComboBoxEh
     Left = 88
     Top = 8
     Width = 535
@@ -132,7 +132,7 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     TabOrder = 0
     Visible = True
   end
-  object Chb_RecvReceipt: TDBCheckBoxEh
+  object chb_RecvReceipt: TDBCheckBoxEh
     Left = 95
     Top = 142
     Width = 121
@@ -142,9 +142,9 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     ParentColor = False
     TabOrder = 7
-    OnClick = Cb_ActiveClick
+    OnClick = cmb_ActiveClick
   end
-  object Chb_AccountTO: TDBCheckBoxEh
+  object chb_AccountTO: TDBCheckBoxEh
     Left = 95
     Top = 119
     Width = 138
@@ -154,9 +154,9 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     ParentColor = False
     TabOrder = 4
-    OnClick = Chb_AccountTOClick
+    OnClick = chb_AccountTOClick
   end
-  object Chb_AccountTS: TDBCheckBoxEh
+  object chb_AccountTS: TDBCheckBoxEh
     Left = 247
     Top = 119
     Width = 146
@@ -166,9 +166,9 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     ParentColor = False
     TabOrder = 5
-    OnClick = Chb_AccountTSClick
+    OnClick = chb_AccountTSClick
   end
-  object Chb_AccountM: TDBCheckBoxEh
+  object chb_AccountM: TDBCheckBoxEh
     Left = 415
     Top = 119
     Width = 146
@@ -178,6 +178,6 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
     DynProps = <>
     ParentColor = False
     TabOrder = 6
-    OnClick = Chb_AccountMClick
+    OnClick = chb_AccountMClick
   end
 end

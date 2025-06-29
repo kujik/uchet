@@ -5,17 +5,17 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
   ExplicitWidth = 597
   ExplicitHeight = 164
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 585
     Height = 110
     ExplicitWidth = 848
     ExplicitHeight = 400
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 575
       Height = 61
       ExplicitWidth = 838
       ExplicitHeight = 351
-      object E_UserNames: TDBEditEh
+      object edt_UserNames: TDBEditEh
         Left = 83
         Top = 35
         Width = 488
@@ -29,13 +29,13 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
         DynProps = <>
         EditButtons = <
           item
-            OnClick = E_UserNamesEditButtons0Click
+            OnClick = edt_UserNamesEditButtons0Click
           end>
         ReadOnly = True
         TabOrder = 0
         Visible = True
       end
-      object E_Name: TDBEditEh
+      object edt_name: TDBEditEh
         Left = 83
         Top = 8
         Width = 270
@@ -51,49 +51,49 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 66
       Width = 575
       ExplicitTop = 356
       ExplicitWidth = 838
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 573
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 573
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 573
         ExplicitWidth = 836
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 474
           ExplicitLeft = 737
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 246
           ExplicitLeft = 509
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 375
           ExplicitLeft = 638
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 106
           ExplicitWidth = 369
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 110
     Width = 585
     ExplicitTop = 400
     ExplicitWidth = 848
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 493
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

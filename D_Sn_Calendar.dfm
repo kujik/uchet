@@ -21,7 +21,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
   OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
-  object Gb_Payments: TGroupBox
+  object gb_Payments: TGroupBox
     Left = 0
     Top = 135
     Width = 922
@@ -31,7 +31,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Color = clBtnFace
     ParentColor = False
     TabOrder = 0
-    object Lb_Payments_Error: TLabel
+    object lbl_Payments_Error: TLabel
       Left = 9
       Top = 13
       Width = 142
@@ -187,7 +187,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
     end
-    object Ne_1: TDBNumberEditEh
+    object nedt_1: TDBNumberEditEh
       Left = 168
       Top = 26
       Width = 121
@@ -197,9 +197,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 5
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_2: TDBNumberEditEh
+    object nedt_2: TDBNumberEditEh
       Left = 168
       Top = 53
       Width = 121
@@ -209,9 +209,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 6
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_3: TDBNumberEditEh
+    object nedt_3: TDBNumberEditEh
       Left = 168
       Top = 80
       Width = 121
@@ -221,9 +221,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 7
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_4: TDBNumberEditEh
+    object nedt_4: TDBNumberEditEh
       Left = 168
       Top = 107
       Width = 121
@@ -233,9 +233,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 8
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_5: TDBNumberEditEh
+    object nedt_5: TDBNumberEditEh
       Left = 168
       Top = 134
       Width = 121
@@ -245,7 +245,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 9
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
     object Dt_6: TDBDateTimeEditEh
       Left = 352
@@ -337,7 +337,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
     end
-    object Ne_6: TDBNumberEditEh
+    object nedt_6: TDBNumberEditEh
       Left = 480
       Top = 26
       Width = 121
@@ -347,9 +347,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 15
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_7: TDBNumberEditEh
+    object nedt_7: TDBNumberEditEh
       Left = 479
       Top = 53
       Width = 121
@@ -359,9 +359,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 16
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_8: TDBNumberEditEh
+    object nedt_8: TDBNumberEditEh
       Left = 480
       Top = 80
       Width = 121
@@ -371,9 +371,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 17
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_9: TDBNumberEditEh
+    object nedt_9: TDBNumberEditEh
       Left = 480
       Top = 107
       Width = 121
@@ -383,9 +383,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 18
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
-    object Ne_10: TDBNumberEditEh
+    object nedt_10: TDBNumberEditEh
       Left = 480
       Top = 134
       Width = 121
@@ -395,10 +395,10 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 19
       Visible = True
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
   end
-  object Gb_General: TGroupBox
+  object gb_General: TGroupBox
     Left = 0
     Top = 0
     Width = 922
@@ -460,7 +460,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         E4BA0000000049454E44AE426082}
       Stretch = True
     end
-    object Lb_General_Error: TLabel
+    object lbl_General_Error: TLabel
       Left = 9
       Top = 13
       Width = 142
@@ -475,7 +475,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       ParentColor = False
       ParentFont = False
     end
-    object Cb_Cash: TDBComboBoxEh
+    object cmb_Cash: TDBComboBoxEh
       Left = 104
       Top = 25
       Width = 121
@@ -497,7 +497,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = True
       OnExit = ControlExit
     end
-    object E_Account: TDBEditEh
+    object edt_Account: TDBEditEh
       Left = 270
       Top = 25
       Width = 483
@@ -511,7 +511,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       EditButtons = <>
       TabOrder = 1
-      Text = 'E_Account'
+      Text = 'edt_Account'
       Visible = True
       OnExit = ControlExit
     end
@@ -534,7 +534,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
     end
-    object Cb_Org: TDBComboBoxEh
+    object cmb_Org: TDBComboBoxEh
       Left = 579
       Top = 52
       Width = 331
@@ -548,7 +548,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       EditButtons = <>
       TabOrder = 3
-      Text = 'Cb_Cash'
+      Text = 'cmb_Cash'
       Visible = True
       OnExit = ControlExit
     end
@@ -564,7 +564,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabStop = False
       OnClick = Bt_RefreshSuppliersClick
     end
-    object Cb_Supplier: TDBComboBoxEh
+    object cmb_Supplier: TDBComboBoxEh
       Left = 104
       Top = 52
       Width = 350
@@ -577,11 +577,11 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       EditButtons = <>
       TabOrder = 5
-      Text = 'Cb_Cash'
+      Text = 'cmb_Cash'
       Visible = True
       OnExit = ControlExit
     end
-    object Cb_ExpenseItem: TDBComboBoxEh
+    object cmb_ExpenseItem: TDBComboBoxEh
       Left = 104
       Top = 78
       Width = 350
@@ -594,12 +594,12 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       EditButtons = <>
       TabOrder = 6
-      Text = 'Cb_Cash'
+      Text = 'cmb_Cash'
       Visible = True
-      OnChange = Cb_ExpenseItemChange
+      OnChange = cmb_ExpenseItemChange
       OnExit = ControlExit
     end
-    object Ne_Sum: TDBNumberEditEh
+    object nedt_Sum: TDBNumberEditEh
       Left = 104
       Top = 105
       Width = 121
@@ -618,7 +618,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = True
       OnExit = ControlExit
     end
-    object Cb_User: TDBComboBoxEh
+    object cmb_User: TDBComboBoxEh
       Left = 579
       Top = 74
       Width = 331
@@ -633,7 +633,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       EditButtons = <>
       ReadOnly = True
       TabOrder = 8
-      Text = 'Cb_Cash'
+      Text = 'cmb_Cash'
       Visible = True
       OnExit = ControlExit
     end
@@ -649,7 +649,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabStop = False
       OnClick = Bt_SelectSupplierClick
     end
-    object Cb_Nds: TDBComboBoxEh
+    object cmb_Nds: TDBComboBoxEh
       Left = 270
       Top = 105
       Width = 121
@@ -671,7 +671,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = True
       OnExit = ControlExit
     end
-    object Ne_SumWoNds: TDBNumberEditEh
+    object nedt_SumWoNds: TDBNumberEditEh
       Left = 480
       Top = 105
       Width = 121
@@ -687,7 +687,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = True
     end
   end
-  object Gb_Additional: TGroupBox
+  object gb_Additional: TGroupBox
     Left = 0
     Top = 678
     Width = 922
@@ -698,21 +698,21 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     DesignSize = (
       922
       72)
-    object Lb_AccountFile: TLabel
+    object lbl_AccountFile: TLabel
       Left = 71
       Top = 47
       Width = 60
       Height = 13
       Caption = #1060#1072#1081#1083' '#1089#1095#1077#1090#1072
     end
-    object Lb_RequestFile: TLabel
+    object lbl_RequestFile: TLabel
       Left = 271
       Top = 47
       Width = 74
       Height = 13
-      Caption = 'Lb_AccountFile'
+      Caption = 'lbl_AccountFile'
     end
-    object Label1: TLabel
+    object lbl1: TLabel
       Left = 599
       Top = 46
       Width = 63
@@ -772,7 +772,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         E4BA0000000049454E44AE426082}
       Stretch = True
     end
-    object E_Comm: TDBEditEh
+    object edt_Comm: TDBEditEh
       Left = 96
       Top = 13
       Width = 814
@@ -833,7 +833,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 4
       OnClick = Bt_ReqestFileOpenClick
     end
-    object Chb_Agreed1: TDBCheckBoxEh
+    object chb_Agreed1: TDBCheckBoxEh
       Left = 679
       Top = 45
       Width = 159
@@ -842,9 +842,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
       DynProps = <>
       TabOrder = 5
-      OnClick = Chb_Agreed1Click
+      OnClick = chb_Agreed1Click
     end
-    object Chb_Agreed2: TDBCheckBoxEh
+    object chb_Agreed2: TDBCheckBoxEh
       Left = 836
       Top = 45
       Width = 82
@@ -855,7 +855,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 6
     end
   end
-  object P_Buttons: TPanel
+  object pnl_Buttons: TPanel
     Left = 0
     Top = 750
     Width = 922
@@ -866,14 +866,14 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     DesignSize = (
       922
       39)
-    object Lb_Payments: TLabel
+    object lbl_Payments: TLabel
       Left = 16
       Top = 6
       Width = 64
       Height = 13
-      Caption = 'Lb_Payments'
+      Caption = 'lbl_Payments'
     end
-    object Cb_RecReceipt: TDBComboBoxEh
+    object cmb_RecReceipt: TDBComboBoxEh
       Left = 865
       Top = 30
       Width = 65
@@ -893,7 +893,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 0
       Visible = False
     end
-    object E_File: TDBEditEh
+    object edt_File: TDBEditEh
       Left = 779
       Top = 33
       Width = 51
@@ -932,7 +932,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnClick = Bt_CancelClick
     end
   end
-  object Gb_Route: TGroupBox
+  object gb_Route: TGroupBox
     Left = 0
     Top = 296
     Width = 922
@@ -940,7 +940,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1052#1072#1088#1096#1088#1091#1090
     TabOrder = 4
-    object P_Route: TPanel
+    object pnl_Route: TPanel
       Left = 2
       Top = 15
       Width = 918
@@ -948,7 +948,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      object Lb_Route_Error: TLabel
+      object lbl_Route_Error: TLabel
         Left = 7
         Top = 25
         Width = 142
@@ -1014,7 +1014,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
           E4BA0000000049454E44AE426082}
         Stretch = True
       end
-      object Cb_CarType: TDBComboBoxEh
+      object cmb_CarType: TDBComboBoxEh
         Left = 85
         Top = 4
         Width = 178
@@ -1030,7 +1030,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         TabOrder = 0
         Visible = True
       end
-      object Cb_Flight: TDBComboBoxEh
+      object cmb_Flight: TDBComboBoxEh
         Left = 325
         Top = 4
         Width = 170
@@ -1045,9 +1045,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         LimitTextToListValues = True
         TabOrder = 1
         Visible = True
-        OnChange = Cb_FlightChange
+        OnChange = cmb_FlightChange
       end
-      object Ne_Kilometrage: TDBNumberEditEh
+      object nedt_Kilometrage: TDBNumberEditEh
         Left = 703
         Top = 4
         Width = 90
@@ -1065,7 +1065,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         TabOrder = 3
         Visible = True
       end
-      object De_FlightDt: TDBDateTimeEditEh
+      object dedt_FlightDt: TDBDateTimeEditEh
         Left = 536
         Top = 4
         Width = 87
@@ -1081,7 +1081,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         TabOrder = 2
         Visible = True
       end
-      object Ne_Idle: TDBNumberEditEh
+      object nedt_Idle: TDBNumberEditEh
         Left = 857
         Top = 4
         Width = 58
@@ -1096,7 +1096,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         TabOrder = 4
         Visible = True
       end
-      object Ne_PriceKm: TDBNumberEditEh
+      object nedt_PriceKm: TDBNumberEditEh
         Left = 325
         Top = 31
         Width = 87
@@ -1114,7 +1114,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         Visible = True
         OnExit = ControlExit
       end
-      object Ne_PriceIdle: TDBNumberEditEh
+      object nedt_PriceIdle: TDBNumberEditEh
         Left = 536
         Top = 31
         Width = 87
@@ -1132,7 +1132,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         Visible = True
         OnExit = ControlExit
       end
-      object Ne_SumOther: TDBNumberEditEh
+      object nedt_SumOther: TDBNumberEditEh
         Left = 828
         Top = 31
         Width = 87
@@ -1170,7 +1170,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       end
     end
   end
-  object Gb_Payments_T: TGroupBox
+  object gb_Payments_T: TGroupBox
     Left = 0
     Top = 620
     Width = 922
@@ -1178,7 +1178,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1055#1083#1072#1090#1077#1078#1080
     TabOrder = 5
-    object Lb_Payments_T_Error: TLabel
+    object lbl_Payments_T_Error: TLabel
       Left = 9
       Top = 13
       Width = 142
@@ -1263,7 +1263,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
     end
-    object Ne_T1: TDBNumberEditEh
+    object nedt_T1: TDBNumberEditEh
       Left = 168
       Top = 28
       Width = 121
@@ -1272,9 +1272,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       EditButtons = <>
       TabOrder = 1
       Visible = True
-      OnChange = Ne_T1Change
+      OnChange = nedt_T1Change
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
     object Dt_T2: TDBDateTimeEditEh
       Left = 352
@@ -1295,7 +1295,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
     end
-    object Ne_T2: TDBNumberEditEh
+    object nedt_T2: TDBNumberEditEh
       Left = 479
       Top = 28
       Width = 121
@@ -1304,12 +1304,12 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       EditButtons = <>
       TabOrder = 3
       Visible = True
-      OnChange = Ne_T2Change
+      OnChange = nedt_T2Change
       OnExit = ControlExit
-      OnKeyPress = Ne_1KeyPress
+      OnKeyPress = nedt_1KeyPress
     end
   end
-  object Gb_Basis: TGroupBox
+  object gb_Basis: TGroupBox
     Left = 0
     Top = 457
     Width = 922
@@ -1317,7 +1317,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1054#1089#1085#1086#1074#1072#1085#1080#1077
     TabOrder = 6
-    object P_Basis: TPanel
+    object pnl_Basis: TPanel
       Left = 2
       Top = 15
       Width = 918
@@ -1328,7 +1328,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DesignSize = (
         918
         19)
-      object Lb_Basis_Error: TLabel
+      object lbl_Basis_Error: TLabel
         Left = 28
         Top = 3
         Width = 142
@@ -1394,7 +1394,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
           E4BA0000000049454E44AE426082}
         Stretch = True
       end
-      object Ne_BasisSum: TDBNumberEditEh
+      object nedt_BasisSum: TDBNumberEditEh
         Left = 824
         Top = -3
         Width = 80
@@ -1443,9 +1443,9 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Left = 704
     Top = 388
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 1
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 746
     Top = 376
   end

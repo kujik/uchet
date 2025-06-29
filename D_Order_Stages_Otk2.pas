@@ -15,16 +15,16 @@ type
   TDlg_Order_Stages_Otk2 = class(TForm_Normal)
     DataSource1: TDataSource;
     MemTableEh1: TMemTableEh;
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     Bt_Cancel: TBitBtn;
     Bt_Ok: TBitBtn;
     Img_Info: TImage;
     Bt_Add: TBitBtn;
     Bt_Del: TBitBtn;
-    Bevel1: TBevel;
-    Timer1: TTimer;
+    bvl1: TBevel;
+    tmr1: TTimer;
     procedure DBGridEh1SumListAfterRecalcAll(Sender: TObject);
     procedure MemTableEh1AfterPost(DataSet: TDataSet);
     procedure MemTableEh1AfterScroll(DataSet: TDataSet);
@@ -34,7 +34,7 @@ type
     procedure Bt_DelClick(Sender: TObject);
     procedure Bt_AddClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure tmr1Timer(Sender: TObject);
   private
     { Private declarations }
     ID_Order, ID_Order_Item: Integer;
@@ -297,17 +297,17 @@ procedure TDlg_Order_Stages_Otk2.SetCaptionLabel;
 var
   q: Extended;
 begin
-  TLabel(Lb_Caption).ResetColors;
+  TLabel(lbl_Caption).ResetColors;
   q:=Qnt - S.NNum(Gh.GetGridColumn(DBGridEh1, 'qnt').Footer.SumValue);
   if q  < 0 then q:=-1;
   if q  > 0 then q:= 1;
-  TLabel(Lb_Caption).SetCaptionAr([
+  TLabel(lbl_Caption).SetCaptionAr([
 //  '$000000', 'Общее количество: ', S.Decode([q, 0, '$00FF00', 1, '$FF0000', -1, '$0000FF']), FloatToStr(Qnt) + ' шт.'
   '$000000', 'Общее количество: ', '$FF0000', FloatToStr(Qnt) + ' шт.'
 ]);
 end;
 
-procedure TDlg_Order_Stages_Otk2.Timer1Timer(Sender: TObject);
+procedure TDlg_Order_Stages_Otk2.tmr1Timer(Sender: TObject);
 begin
   inherited;
   //если сделать удаление (похоже, что просто уход фокуса) с таблицы, в которой нет ни одной строки, то
@@ -425,7 +425,7 @@ begin
   Cth.SetBtn(Bt_Del, mybtDelete, True);
   Bt_Add.Visible:=Mode = fEdit;
   Bt_Del.Visible:=Mode = fEdit;
-  Bevel1.Visible:=Bt_Add.Visible;
+  bvl1.Visible:=Bt_Add.Visible;
   Result:=ShowModal = mrOk;
 end;
 

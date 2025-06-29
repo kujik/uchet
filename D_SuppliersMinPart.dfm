@@ -6,21 +6,21 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
   ExplicitHeight = 276
   PixelsPerInch = 96
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 228
     Width = 748
     ExplicitTop = 228
     ExplicitWidth = 748
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 659
       Height = 17
       ExplicitLeft = 659
     end
-    inherited Lb_StatusBar_Left: TLabel
+    inherited lbl_StatusBar_Left: TLabel
       Height = 17
     end
   end
-  inherited P_Buttons: TPanel
+  inherited pnl_Buttons: TPanel
     Top = 195
     Width = 748
     ExplicitTop = 195
@@ -37,7 +37,7 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
       Left = 662
       ExplicitLeft = 662
     end
-    inherited Chb_NoClose: TCheckBox
+    inherited chb_NoClose: TCheckBox
       Left = 366
       ExplicitLeft = 366
     end
@@ -50,24 +50,24 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
       ExplicitLeft = 541
     end
   end
-  inherited P_Bottom: TPanel
+  inherited pnl_Bottom: TPanel
     Top = 170
     Width = 748
     ExplicitTop = 170
     ExplicitWidth = 748
   end
-  inherited P_Top: TPanel
+  inherited pnl_Top: TPanel
     Width = 748
     ExplicitWidth = 748
-    object Lb_Caption: TLabel
+    object lbl_Caption: TLabel
       Left = 8
       Top = 6
       Width = 54
       Height = 13
-      Caption = 'Lb_Caption'
+      Caption = 'lbl_Caption'
     end
   end
-  inherited P_Client: TPanel
+  inherited pnl_Client: TPanel
     Width = 748
     Height = 145
     ExplicitWidth = 748

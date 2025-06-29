@@ -66,7 +66,7 @@ type
     DlgButtonsR: TVarDynArray2;
     //создать и использовать чекбокс "Не закрывать" в панели кнопок, при режимах fAdd и fCopy
     UseChbNoClose: Boolean;
-    //автоматическое выравнивание контролов, можно применять если они все располдожены в PMDIClient; произойдет и подгонка размеров формы.
+    //автоматическое выравнивание контролов, можно применять если они все располдожены в pnlFrmClient; произойдет и подгонка размеров формы.
     AutoAlignControls: Boolean;
     ControlsWoAligment: TControlArray;
     AutoControlDataChanged: Boolean;
@@ -84,24 +84,24 @@ type
 
 
   TFrmBasicMdi = class(TForm)
-    PMDIMain: TPanel;
-    PMDIClient: TPanel;
-    PDlgPanel: TPanel;
-    BvDlg: TBevel;
-    BvDlgBottom: TBevel;
-    PDlgMain: TPanel;
-    PDlgBtnForm: TPanel;
-    PDlgChb: TPanel;
-    ChbDlgNoClose: TCheckBox;
-    PDlgBtnR: TPanel;
-    PDlgInfo: TPanel;
-    ImgFormInfo: TImage;
-    PDlgBtnL: TPanel;
-    PDlgCenter: TPanel;
-    PStatusBar: TPanel;
-    LbStatusBarRight: TLabel;
-    LbStatusBarLeft: TLabel;
-    Timer_AfterStart: TTimer;
+    pnlFrmMain: TPanel;
+    pnlFrmClient: TPanel;
+    pnlFrmBtns: TPanel;
+    bvlFrmBtnsTl: TBevel;
+    bvlFrmBtnsB: TBevel;
+    pnlFrmBtnsContainer: TPanel;
+    pnlFrmBtnsMain: TPanel;
+    pnlFrmBtnsChb: TPanel;
+    chbNoclose: TCheckBox;
+    pnlFrmBtnsR: TPanel;
+    pnlFrmBtnsInfo: TPanel;
+    imgFrmInfo: TImage;
+    pnlFrmBtnsL: TPanel;
+    pnlFrmBtnsC: TPanel;
+    pnlStatusBar: TPanel;
+    lblStatusBarR: TLabel;
+    lblStatusBarL: TLabel;
+    tmrAfterCreate: TTimer;
     {события формы}
     procedure FormCanResize(Sender: TObject; var NewWidth, NewHeight: Integer; var Resize: Boolean);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -109,7 +109,7 @@ type
     procedure FormActivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
   private
     FFormDoc: string;
     FMode: TDialogType;
@@ -171,9 +171,9 @@ type
     //сообщение при попытке закрытия окна по крестику, если при этом установлен флаг IsDataChanged
     FQueryCloseMessage: string;
     //кнопка подтверждения в панели кнопок
-    BtOk: TBitBtn;
+    btnOk: TBitBtn;
     //кнопка отмены, пока не инициализируется
-    BtCancel: TBitBtn;
+    btnCancel: TBitBtn;
     //поля
     FAllreadyCreated: Boolean;
     F: TFields;
@@ -240,9 +240,9 @@ type
     procedure ControlOnEnter(Sender: TObject); virtual;
     procedure ControlOnExit(Sender: TObject); virtual;
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
-    procedure BtOkClick(Sender: TObject); virtual;
-    procedure BtCancelClick(Sender: TObject); virtual;
-    procedure BtClick(Sender: TObject); virtual;
+    procedure btnOkClick(Sender: TObject); virtual;
+    procedure btnCancelClick(Sender: TObject); virtual;
+    procedure btnClick(Sender: TObject); virtual;
     procedure GetFormLTWH;
     //получить значение контрола на форме по его имени
     //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
@@ -361,32 +361,32 @@ var
   b: Boolean;
   st: string;
 begin
-  if not PStatusBar.Visible then
+  if not pnlStatusBar.Visible then
     Exit;
   FInSetStatusBar := True;
-  PStatusBar.Visible := (FOpt.StatusBarMode <> stbmNone);
-  PStatusBar.BevelInner := bvNone;
-  PStatusBar.BevelOuter := bvNone;
-  PStatusBar.Color := cl3DLight;
+  pnlStatusBar.Visible := (FOpt.StatusBarMode <> stbmNone);
+  pnlStatusBar.BevelInner := bvNone;
+  pnlStatusBar.BevelOuter := bvNone;
+  pnlStatusBar.Color := cl3DLight;
 
   repeat
-    b := (PStatusBar.Visible = AVisible) or (FStatusBarHeight = -1);
+    b := (pnlStatusBar.Visible = AVisible) or (FStatusBarHeight = -1);
     if FStatusBarHeight = -1 then
-      FStatusBarHeight := PStatusBar.Height;
+      FStatusBarHeight := pnlStatusBar.Height;
   //фиксим баг, когда статусбар может уехать в середину формы при наличии панелей с выравнивание alBotoom, alcleent...
     if not b then
       Self.ClientHeight := Self.ClientHeight + S.IIf(AVisible, FStatusBarHeight, -FStatusBarHeight);
     if FInPrepare and not AVisible then
       Self.ClientHeight := Self.ClientHeight - FStatusBarHeight;
     if AVisible then
-      PStatusBar.Height := FStatusBarHeight;
+      pnlStatusBar.Height := FStatusBarHeight;
     if not AVisible then
-      PStatusBar.Height := 0;
+      pnlStatusBar.Height := 0;
     if AVisible then
-      PStatusBar.Top := 1000
+      pnlStatusBar.Top := 1000
     else
-      PStatusBar.Top := Self.ClientHeight - PStatusBar.Height;
-    if not PStatusBar.Visible then
+      pnlStatusBar.Top := Self.ClientHeight - pnlStatusBar.Height;
+    if not pnlStatusBar.Visible then
       Break;
 
     if FAfterFormShow or FInPrepare then begin  //!!!
@@ -407,7 +407,7 @@ begin
         TextRight := FTextRight;
 
       //проверка обязательна! в mdi_grid1 сейчас вызывается в repaint и если не проверять очень тормозит при изменении размера
-      if (VarToStr(TextLeft) = S.NSt(FTextLeft)) and (VarToStr(TextRight) = S.NSt(FTextRight)) and (FStatusBarHeight = PStatusBar.Height) then
+      if (VarToStr(TextLeft) = S.NSt(FTextLeft)) and (VarToStr(TextRight) = S.NSt(FTextRight)) and (FStatusBarHeight = pnlStatusBar.Height) then
         Break;
 
       if TextLeft <> '*' then
@@ -416,20 +416,20 @@ begin
         FTextRight := TextRight;
 
       if VarIsArray(FTextLeft) then
-        LbStatusBarLeft.SetCaptionAr2(FTextLeft)
+        lblStatusBarL.SetCaptionAr2(FTextLeft)
       else
-        LbStatusBarLeft.SetCaption2(FTextLeft);
+        lblStatusBarL.SetCaption2(FTextLeft);
       if VarIsArray(FTextRight) then
-        LbStatusBarRight.SetCaptionAr2(FTextRight)
+        lblStatusBarR.SetCaptionAr2(FTextRight)
       else begin
         st := Trim(VarToStr(FTextRight));
         if (st = '') or (st[1] <> '$') then begin
-          LbStatusBarRight.Font.Color := clBlack;
-          LbStatusBarRight.Caption := st;
+          lblStatusBarR.Font.Color := clBlack;
+          lblStatusBarR.Caption := st;
         end
         else begin
-          LbStatusBarRight.Font.Color := StrToInt(Copy(st, 1, 7));
-          LbStatusBarRight.Caption := Copy(st, 8);
+          lblStatusBarR.Font.Color := StrToInt(Copy(st, 1, 7));
+          lblStatusBarR.Caption := Copy(st, 8);
         end;
       end;
     end;
@@ -538,113 +538,113 @@ begin
   if FAllreadyCreated then
     Exit;
   if FOpt.DlgPanelStyle = dpsNone then begin
-    PDlgPanel.Height:= 0;
-    PDlgPanel.Visible:= False;
+    pnlFrmBtns.Height:= 0;
+    pnlFrmBtns.Visible:= False;
     Exit;
   end;
-  PDlgMain.Padding.Top := MY_FORMPRM_BTNPANEL_V_EDGES;
-  PDlgMain.Padding.Bottom := PDlgMain.Padding.Top;
-  PDlgPanel.Height:= Max(PDlgPanel.Height, MY_FORMPRM_BTN_DEF_H + PDlgMain.Padding.Top * 2 + 2 * 2 + 4);
+  pnlFrmBtnsContainer.Padding.Top := MY_FORMPRM_BTNPANEL_V_EDGES;
+  pnlFrmBtnsContainer.Padding.Bottom := pnlFrmBtnsContainer.Padding.Top;
+  pnlFrmBtns.Height:= Max(pnlFrmBtns.Height, MY_FORMPRM_BTN_DEF_H + pnlFrmBtnsContainer.Padding.Top * 2 + 2 * 2 + 4);
   if FOpt.DlgPanelStyle in [dpsTopLeft, dpsTopRight]  then begin
-    PMDIClient.Align:=alNone;
-    PDlgPanel.Align:=alTop;
-    PMDIClient.Align:=alClient;
-    PDlgMain.Top:= 0;
+    pnlFrmClient.Align:=alNone;
+    pnlFrmBtns.Align:=alTop;
+    pnlFrmClient.Align:=alClient;
+    pnlFrmBtnsContainer.Top:= 0;
   end;
-  BvDlgBottom.Visible:= FOpt.DlgPanelStyle in [dpsTopLeft, dpsTopRight];
-  BvDlg.Visible:= not BvDlgBottom.Visible;
+  bvlFrmBtnsB.Visible:= FOpt.DlgPanelStyle in [dpsTopLeft, dpsTopRight];
+  bvlFrmBtnsTl.Visible:= not bvlFrmBtnsB.Visible;
   PTemp:=TPanel.Create(Self);
-  i:=PDlgMain.ControlCount;
-  For i:= PDlgMain.ControlCount - 1 downto 0 do
-    if PDlgMain.Controls[i] is TPanel then begin
-      p:= TPanel(PDlgMain.Controls[i]);
+  i:=pnlFrmBtnsContainer.ControlCount;
+  For i:= pnlFrmBtnsContainer.ControlCount - 1 downto 0 do
+    if pnlFrmBtnsContainer.Controls[i] is TPanel then begin
+      p:= TPanel(pnlFrmBtnsContainer.Controls[i]);
       p.Caption:='';
       p.BevelInner:= bvNone;
       p.BevelOuter:= bvNone;
-      p.Height:= PDlgMain.Height;
+      p.Height:= pnlFrmBtnsContainer.Height;
     end;
   if FOpt.DlgPanelStyle in [dpsTopLeft, dpsBottomLeft] then begin
-    PDlgBtnForm.Tag:= 1;
-    PDlgChb.Tag:= 2;
-    PDlgBtnL.Tag:= 3;
-    PDlgBtnR.Tag:= -2;
-    PDlgInfo.Tag:= -1;
+    pnlFrmBtnsMain.Tag:= 1;
+    pnlFrmBtnsChb.Tag:= 2;
+    pnlFrmBtnsL.Tag:= 3;
+    pnlFrmBtnsR.Tag:= -2;
+    pnlFrmBtnsInfo.Tag:= -1;
   end
   else begin
-    PDlgChb.Tag:= -3;
-    PDlgBtnR.Tag:= -2;
-    PDlgBtnForm.Tag:= -1;
+    pnlFrmBtnsChb.Tag:= -3;
+    pnlFrmBtnsR.Tag:= -2;
+    pnlFrmBtnsMain.Tag:= -1;
   end;
-  SetPanelsAlign(PDlgMain);
-  Cth.CreateButtons(PDlgBtnForm,
-    [[btnOk, Mode in [fEdit, FAdd, fCopy, fDelete], S.Decode([Mode, fDelete, 'Удалить', 'Ок']), S.Decode([Mode, fDelete, 'delete', 'ok'])],
-     [btnCancel, True, S.Decode([Mode, fView, 'Закрыть', fNone, 'Закрыть', 'Отмена']), S.Decode([Mode, fView, 'viewclose', fNone, 'cancel', 'cancel'])]],
-    BtCancelClick, cbttBNormal, '', 0, 0, False);
+  SetPanelsAlign(pnlFrmBtnsContainer);
+  Cth.CreateButtons(pnlFrmBtnsMain,
+    [[mbtOk, Mode in [fEdit, FAdd, fCopy, fDelete], S.Decode([Mode, fDelete, 'Удалить', 'Ок']), S.Decode([Mode, fDelete, 'delete', 'ok'])],
+     [mbtCancel, True, S.Decode([Mode, fView, 'Закрыть', fNone, 'Закрыть', 'Отмена']), S.Decode([Mode, fView, 'viewclose', fNone, 'cancel', 'cancel'])]],
+    btnCancelClick, cbttBNormal, '', 0, 0, False);
   //если не сделать заведомо длиную панель, может нарушаться порядок панелей, если в какой-либо из них динамически установленная длина превысит ту, что в дизайнере формы
-  //в конце поставим PDlgBtnForm.AutoSize := True;
-  PDlgBtnForm.AutoSize := False;
-  PDlgBtnForm.Width := 1024 * 10;
+  //в конце поставим pnlFrmBtnsMain.AutoSize := True;
+  pnlFrmBtnsMain.AutoSize := False;
+  pnlFrmBtnsMain.Width := 1024 * 10;
     //основной кнопке назначим обработчик для закрытия если это просмотр или пустой режим, во всех остальных случаях обработчик OK
   if Mode in [fView, fNone]
-    then BtCancel := TBitBtn(PDlgBtnForm.Controls[0])
+    then btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[0])
     else begin
-      BtOk := TBitBtn(PDlgBtnForm.Controls[0]);
-      BtCancel := TBitBtn(PDlgBtnForm.Controls[1]);
+      btnOk := TBitBtn(pnlFrmBtnsMain.Controls[0]);
+      btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[1]);
     end;
-  if BtOk <> nil then begin
-    TButton(BtOk).OnClick:= BtOkClick;
-    TButton(BtOk).Cancel := False;
-    TButton(BtOk).ModalResult := mrNone;
+  if btnOk <> nil then begin
+    TButton(btnOk).OnClick:= btnOkClick;
+    TButton(btnOk).Cancel := False;
+    TButton(btnOk).ModalResult := mrNone;
   end;
-  if BtCancel <> nil then begin
-    TButton(BtCancel).OnClick:= BtCancelClick;
-    TButton(BtCancel).Cancel := FMode in [fView, fDelete];
-    TButton(BtCancel).ModalResult := mrCancel;
+  if btnCancel <> nil then begin
+    TButton(btnCancel).OnClick:= btnCancelClick;
+    TButton(btnCancel).Cancel := FMode in [fView, fDelete];
+    TButton(btnCancel).ModalResult := mrCancel;
   end;
   Self.ModalResult := mrNone;
-  //BtOk.ModalResult:= mrOk;
+  //btnOk.ModalResult:= mrOk;
   //если есть динамическмие кнопки для левой и правой панели, то создадим кнопки и изменим размер панели,
   //иначе, если в ней нет контролов, то выставим ширину = 0, а если есть то оставим размеры без изменения
   if Length(FOpt.DlgButtonsL) > 0
-    then Cth.CreateButtons(PDlgBtnL, FOpt.DlgButtonsL, BtClick, cbttBNormal, '', 0, 0, False)
-    else if PDlgBtnL.ControlCount = 0
-      then PDlgBtnL.Width := 0;
+    then Cth.CreateButtons(pnlFrmBtnsL, FOpt.DlgButtonsL, btnClick, cbttBNormal, '', 0, 0, False)
+    else if pnlFrmBtnsL.ControlCount = 0
+      then pnlFrmBtnsL.Width := 0;
   if Length(FOpt.DlgButtonsR) > 0
     then begin
-      Cth.CreateButtons(PDlgBtnR, FOpt.DlgButtonsR, BtClick, cbttBNormal, '', 0, 0, False);
+      Cth.CreateButtons(pnlFrmBtnsR, FOpt.DlgButtonsR, btnClick, cbttBNormal, '', 0, 0, False);
     end
-    else if PDlgBtnR.ControlCount = 0
-      then PDlgBtnR.Width := 0;
+    else if pnlFrmBtnsR.ControlCount = 0
+      then pnlFrmBtnsR.Width := 0;
   //если в панелях есть только разделитель, уберем его
-  if (PDlgBtnL.ControlCount = 1) and (PDlgBtnL.Controls[0] is TBevel) then
-    PDlgBtnL.Controls[0].Free;
-  if (PDlgBtnR.ControlCount = 1) and (PDlgBtnR.Controls[0] is TBevel) then
-    PDlgBtnR.Controls[0].Free;
-{  for i := 0 to PDlgBtnL.ComponentCount - 1 do
-    if (PDlgBtnL.Components[i] is TButton) and not Assigned(TButton(PDlgBtnL.Components[i]).OnClick) then
-      TButton(PDlgBtnL.Components[i]).OnClick := BtClick;
-  for i := 0 to PDlgBtnR.ComponentCount - 1 do
-    if (PDlgBtnL.Components[i] is TButton) and not Assigned(TButton(PDlgBtnL.Components[i]).OnClick) then
-      TButton(PDlgBtnL.Components[i]).OnClick := BtClick; }
-//  Cth.CreateButtons(PDlgBtnR, FOpt.DlgButtonsR, BtClick, cbttBNormal, '', 0, 0, False);
-  PDlgChb.Visible:=FOpt.UseChbNoClose and (Mode in [FAdd, FCopy]);
+  if (pnlFrmBtnsL.ControlCount = 1) and (pnlFrmBtnsL.Controls[0] is TBevel) then
+    pnlFrmBtnsL.Controls[0].Free;
+  if (pnlFrmBtnsR.ControlCount = 1) and (pnlFrmBtnsR.Controls[0] is TBevel) then
+    pnlFrmBtnsR.Controls[0].Free;
+{  for i := 0 to pnlFrmBtnsL.ComponentCount - 1 do
+    if (pnlFrmBtnsL.Components[i] is TButton) and not Assigned(TButton(pnlFrmBtnsL.Components[i]).OnClick) then
+      TButton(pnlFrmBtnsL.Components[i]).OnClick := BtClick;
+  for i := 0 to pnlFrmBtnsR.ComponentCount - 1 do
+    if (pnlFrmBtnsL.Components[i] is TButton) and not Assigned(TButton(pnlFrmBtnsL.Components[i]).OnClick) then
+      TButton(pnlFrmBtnsL.Components[i]).OnClick := BtClick; }
+//  Cth.CreateButtons(pnlFrmBtnsR, FOpt.DlgButtonsR, BtClick, cbttBNormal, '', 0, 0, False);
+  pnlFrmBtnsChb.Visible:=FOpt.UseChbNoClose and (Mode in [FAdd, FCopy]);
   //если на форме не найдено картинки с именем ImgInfoMain, то переименуем картинку в этой панели в нее, она станет главной подсказкой формы
   //иначе скроем панель подсказки
   c:= FindComponent('ImgInfoMain');
   if (c = nil) and (Length(Cth.SetInfoIconText(Self, FOpt.InfoArray)) > 0) then begin
-    ImgFormInfo.Left:= 3;
-    ImgFormInfo.Name:= 'ImgInfoMain';
+    imgFrmInfo.Left:= 3;
+    imgFrmInfo.Name:= 'ImgInfoMain';
   end;
   c:= FindComponent('ImgInfoMain');
-  if (c <> nil) and (TControl(c).Parent = PDlgInfo)
-    then PDlgInfo.Width := MY_FORMPRM_BTN_DEF_H + 4
-    else PDlgInfo.Width := 0;
-  For i:= PDlgMain.ControlCount - 1 downto 0 do begin
-    TWinControl(PDlgMain.Controls[i]).Height:= PDlgMain.ClientHeight;
-    VertAlignCtrls(TWinControl(PDlgMain.Controls[i]));
+  if (c <> nil) and (TControl(c).Parent = pnlFrmBtnsInfo)
+    then pnlFrmBtnsInfo.Width := MY_FORMPRM_BTN_DEF_H + 4
+    else pnlFrmBtnsInfo.Width := 0;
+  For i:= pnlFrmBtnsContainer.ControlCount - 1 downto 0 do begin
+    TWinControl(pnlFrmBtnsContainer.Controls[i]).Height:= pnlFrmBtnsContainer.ClientHeight;
+    VertAlignCtrls(TWinControl(pnlFrmBtnsContainer.Controls[i]));
   end;
-  PDlgBtnForm.AutoSize := True;
-  FDlgPanelMinWidth:= Self.Width {- PDlgMain.ClientWidth} - PDlgCenter.Width;
+  pnlFrmBtnsMain.AutoSize := True;
+  FDlgPanelMinWidth:= Self.Width {- pnlFrmBtnsContainer.ClientWidth} - pnlFrmBtnsC.Width;
 end;
 
 
@@ -786,7 +786,7 @@ begin
   //если поместить TEdit на форму, то его значения после вызова формы в модальном режиме все рпвно читается.
   //также читается значение контрола, созданного в дочерней форме, при приведении типа формы.
   //После Free будет получено пустой значение контрола этой формы или вообще ошибка, в зависимости от контрола.
-  //однако для созданных динамически кнопок например текст возвращается, даже если здесь вызвать явно TFrmBasicMdi(AForm).BtOk.Free;
+  //однако для созданных динамически кнопок например текст возвращается, даже если здесь вызвать явно TFrmBasicMdi(AForm).btnOk.Free;
   //Release посылает себе же сообщение CM_RELEASE, и должно корректно уничтожить форму, из сообщений лучше использовать ее
   //однко Free по справке использовать также корректно
   //владелец объекта отвечает за вызов деструктора этого объекта при вызове своего собственного деструктора, так что динамически
@@ -834,7 +834,7 @@ begin
   end;
   FInPrepare := False;
   Cth.SetWaitCursor;
-//  PStatusBar.Visible:= Opt.HasStatusBar;
+//  pnlStatusBar.Visible:= Opt.HasStatusBar;
   AfterPrepare;
   Cth.SetWaitCursor(False);
   //устанавливаем возможность изменения размеров формы (установив соотв бордерстайл)
@@ -854,21 +854,21 @@ var
 begin
   x := FrmMain.Height;
   i := FrmMain.ClientHeight;
-  x := FrmMain.lb_GetTop.top;
-  i := FrmMain.lb_GetBottom.top;
+  x := FrmMain.lbl_GetTop.top;
+  i := FrmMain.lbl_GetBottom.top;
   x := TForm(ParentForm).Left + TForm(ParentForm).Width div 2 - Self.Width div 2;
   if x + Self.Width > FrmMain.ClientWidth - 10 then
     x := FrmMain.ClientWidth - Self.Width - 30;
   Self.Left := max(x, 0);
   x := TForm(ParentForm).Top + TForm(ParentForm).Height div 2 - Self.Height div 2;
-  if x + Self.Height > FrmMain.FormsList.Top - FrmMain.Lb_GetTop.Top - 10 then
-    x := FrmMain.FormsList.Top - FrmMain.Lb_GetTop.Top - Self.Height - 10;
+  if x + Self.Height > FrmMain.FormsList.Top - FrmMain.lbl_GetTop.Top - 10 then
+    x := FrmMain.FormsList.Top - FrmMain.lbl_GetTop.Top - Self.Height - 10;
   Self.Top := max(x, 0);
 end;
 
-procedure TFrmBasicMdi.Timer_AfterStartTimer(Sender: TObject);
+procedure TFrmBasicMdi.tmrAfterCreateTimer(Sender: TObject);
 begin
-  Timer_AfterStart.Enabled := False;
+  tmrAfterCreate.Enabled := False;
   AfterStart;
 end;
 
@@ -985,14 +985,14 @@ var
 begin
   //подгоним/выровняем контролы в основной панели
   if FOpt.AutoAlignControls then
-    FWHCorrected := Cth.AlignControls(PMDIClient, FOpt.ControlsWoAligment, False);
+    FWHCorrected := Cth.AlignControls(pnlFrmClient, FOpt.ControlsWoAligment, False);
   if FOpt.AutoAlignControls then
-    Cth.MakePanelsFlat(PMDIClient, []);
+    Cth.MakePanelsFlat(pnlFrmClient, []);
   //запомним контролы, у которых якоря по правому и нижнему краю, и сбросим эти якоря
   for i := 0 to Self.ComponentCount - 1 do begin
     c := Self.Components[i];
     if c is TControl then begin
-      if not Cth.IsChildControl(PMDIClient, TControl(c), True) then
+      if not Cth.IsChildControl(pnlFrmClient, TControl(c), True) then
         Continue;
       if (akRight in (TControl(c).Anchors)) or (c.Tag = -100) then begin
         ar := ar + [TControl(c)];
@@ -1009,7 +1009,7 @@ begin
   //!!! пока не учитываем центральную панель, ширина которой автоматическая alClient
   j:= 0;
   if FOpt.DlgPanelStyle <> dpsNone then begin
-    j:=PDlgBtnForm.Width + PDlgBtnL.Width + PDlgBtnR.Width + S.IIf(PDlgChb.Visible, PDlgChb.Width, 0) + S.IIf(PDlgInfo.Visible, PDlgInfo.Width, 0) + 12;
+    j:=pnlFrmBtnsMain.Width + pnlFrmBtnsL.Width + pnlFrmBtnsR.Width + S.IIf(pnlFrmBtnsChb.Visible, pnlFrmBtnsChb.Width, 0) + S.IIf(pnlFrmBtnsInfo.Visible, pnlFrmBtnsInfo.Width, 0) + 12;
   end;
   //минимальная ширина не меньше ширины панели
 //  WHBounds.X:= Max(WHBounds.X, FDlgPanelMinWidth);
@@ -1025,7 +1025,7 @@ begin
     FWHBounds.X := Width;
 
   if (FWHCorrected.Y <> 0) then
-    ClientHeight := FWHCorrected.Y + MY_FORMPRM_V_TOP * 2 + PDlgPanel.Height + S.IIf(PStatusBar.Visible and (FOpt.StatusBarMode <> stbmNone), PStatusBar.Height, 0);
+    ClientHeight := FWHCorrected.Y + MY_FORMPRM_V_TOP * 2 + pnlFrmBtns.Height + S.IIf(pnlStatusBar.Visible and (FOpt.StatusBarMode <> stbmNone), pnlStatusBar.Height, 0);
   if (FWHBounds.Y = 0) then
     FWHBounds.Y := Height;
 
@@ -1036,7 +1036,7 @@ begin
       FWHBounds.X := Width;
   end;}
 {  if (FWHCorrected.Y <> 0) or (FOpt.DlgPanelStyle <> dpsNone) then begin
-    ClientHeight := FWHCorrected.Y + MY_FORMPRM_V_TOP * 2 + PDlgPanel.Height + S.IIf(PStatusBar.Visible, PStatusBar.Height, 0);
+    ClientHeight := FWHCorrected.Y + MY_FORMPRM_V_TOP * 2 + pnlFrmBtns.Height + S.IIf(pnlStatusBar.Visible, pnlStatusBar.Height, 0);
     if (FWHBounds.Y = 0) then
       FWHBounds.Y := Height;
   end;}
@@ -1148,7 +1148,7 @@ begin
   //передается массив имен контролов и их условий проверки [cname1, cver1, cname2, cver2...]
   Cth.SetControlsVerification(Self, FControlVerifycations);
   //назаначим события всем дб-контролам формы, если они не были назначены явно в дизайнере формы или в Prepare
-  Cth.SetControlsEhEvents(PMDIClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState);
+  Cth.SetControlsEhEvents(pnlFrmClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState);
 exit;
   Cth.SetControlsOnChange(Self, ControlOnChange, True);
   Cth.SetControlsOnExit(Self, ControlOnExit);
@@ -1169,9 +1169,9 @@ begin
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TWinControl then begin
       c := TControl(Components[i]);
-      if not Cth.IsChildControl(PMDIClient, TWinControl(c), True)
+      if not Cth.IsChildControl(pnlFrmClient, TWinControl(c), True)
         then Continue;
-//      if A.PosInArray(c.Name, ['p_statusbar', 'Lb_StatusBar_Left', 'Lb_StatusBar_Right', 'p_bottom', 'bt_ok', 'bt_cancel', 'Chb_NoClose'], True) >= 0 then
+//      if A.PosInArray(c.Name, ['pnl_statusbar', 'lbl_StatusBar_Left', 'lbl_StatusBar_Right', 'pnl_bottom', 'bt_ok', 'bt_cancel', 'chb_NoClose'], True) >= 0 then
 //        Continue;
       if (Length(AConrols) = 0) or (A.PosInArray(c.Name, va, True) >= 0) then begin
         Cth.SetControlNotEditable(c, not Editable, False, True);
@@ -1188,7 +1188,7 @@ begin
     FCtrlCurrValuesStr := '';
     Exit;
   end;
-  FCtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['Chb_NoClose']))
+  FCtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['chb_NoClose']))
 end;
 
 
@@ -1316,7 +1316,7 @@ begin
   if (Mode = fView) or (Mode = fDelete) then begin
     HasError := False;
     FIsDataChanged:= False;
-    if BtOk <> nil then BtOk.Enabled := not HasError;
+    if btnOk <> nil then btnOk.Enabled := not HasError;
     Exit;
   end;
   if Sender = nil then begin
@@ -1354,7 +1354,7 @@ begin
 //  if FOpt.StatusBarMode = stbmDialog then
     if b then RefreshStatusBar('*', '*', True);
   //статус кнопки Ок
-  if BtOk <> nil then BtOk.Enabled := not HasError;
+  if btnOk <> nil then btnOk.Enabled := not HasError;
 end;
 
 
@@ -1363,9 +1363,9 @@ begin
   Result:= True;
 end;
 
-procedure TFrmBasicMdi.BtOkClick(Sender: TObject);
+procedure TFrmBasicMdi.btnOkClick(Sender: TObject);
 //обработка кнопки подтверждения
-//(контрола, который присвоен полю BtOk)
+//(контрола, который присвоен полю btnOk)
 begin
   FInBtOkClick:= True;
 {  TButton(Sender).Cancel := False;
@@ -1402,7 +1402,7 @@ begin
   RefreshParentForm;
   if FOpt.DefFocusedControl <> nil then
     FOpt.DefFocusedControl.SetFocus;
-  if (not ChbDlgNoClose.Visible) or (not ChbDlgNoClose.Checked) then begin
+  if (not chbNoclose.Visible) or (not chbNoclose.Checked) then begin
     Self.ModalResult:= mrOk;
     if Formstyle <> fsNormal then Close;
     Break;
@@ -1412,7 +1412,7 @@ begin
   FInBtOkClick:= False;
 end;
 
-procedure TFrmBasicMdi.BtCancelClick(Sender: TObject);
+procedure TFrmBasicMdi.btnCancelClick(Sender: TObject);
 begin
   FInBtCancelClick:= True;
   ModalResult:= mrNone;
@@ -1420,7 +1420,7 @@ begin
   FInBtCancelClick:= False;
 end;
 
-procedure TFrmBasicMdi.BtClick(Sender: TObject);
+procedure TFrmBasicMdi.btnClick(Sender: TObject);
 begin
 end;
 
@@ -1534,7 +1534,7 @@ begin
   //не совсем корректно: обработаем нажатие кнопки со свойством Cancel
   //если фокус не на этой кнопке то считаем что это было нажатие Esc
   EscPressed := False;
-  if (FMode in [fAdd, fCopy, fEdit, fNone]) and FIsDataChanged and (BtCancel <> nil) and not BtCancel.Focused then begin
+  if (FMode in [fAdd, fCopy, fEdit, fNone]) and FIsDataChanged and (btnCancel <> nil) and not btnCancel.Focused then begin
     EscPressed := True;
   end;
   EscPressed := False; //!!!
@@ -1552,7 +1552,7 @@ begin
     mr:= MyMessageDlg(FQueryCloseMessageSt, mtConfirmation, [mbYes, mbNo, mbCancel]);
     CanClose:= mr = mrNo;
     if mr = mrYes
-      then BtOkClick(btOk);
+      then btnOkClick(btnOk);
   end;
   //обработка закрытий формы, созданной при старте приложения - скрываем вместо закрытия
   if (not FFormNotCreatedByApplication) and (FormStyle <> fsNormal) then begin
@@ -1624,8 +1624,8 @@ begin
   //для диалоговых отцентрируем относительно родительской формы
   if (myfoDialog in MyFormOptions) and (ParentForm <> nil) and ((ParentForm is TForm) or (ParentForm is TFrDBGridEh)) then
     CenteringByParent;
-  if BtOk <> nil then
-    BtOk.Focused;
+  if btnOk <> nil then
+    btnOk.Focused;
   FAllreadyCreated := True;
 end;
 
@@ -1657,6 +1657,7 @@ begin
   FFormDoc := AFormDoc;
   if FFormDoc = '*' then
     FFormDoc := Self.Name;
+  Caption := ACaption;
   FMode := AMode;
   FId := AID;
   if myfoDialogButtonsB in FMyFormOptions then
@@ -1768,7 +1769,7 @@ end.
 --Размеры формы, их ограничение и изменение.
 WHCorrected.X, Y - к этим размерам корректируется размер формы при показе, если эти
 размеры не нулевые. Устанавливать нужно например по данным выравнивания контролов.
-Если контролы все на PMDIClient, то сделать WHCorrected:=Cth.AlignControls(PMDIClient, [], False),
+Если контролы все на pnlFrmClient, то сделать WHCorrected:=Cth.AlignControls(pnlFrmClient, [], False),
 или, что то же, установить Opt.AutoAlignControls
 Также, если видна панель кнопок, то ширина будет скорректирована еще и на основании ее содержимого,
 с учетом и видимости иконки подсказки.
@@ -1790,7 +1791,7 @@ WHCorrected.X, Y - к этим размерам корректируется размер формы при показе, если 
 Если на форме заметить TImage с именем ImgInfoMain, то к ней будет привязан текст подсказки
 (если его нет, то наоборот она будет скрыта). Если такой иконки нет, то будет создана в
 панели кнопок, при наличии панели. Имеет значение регистр имени контрола -
-ImgInfoMAIN создает иконку х32, ImgInfomain - х24, ImgInfoMain - по ее размеру (ширине)
+ImgInfoMAIN создает иконку х32, imgInfomain - х24, ImgInfoMain - по ее размеру (ширине)
 
 --Заголовок окна
 К заголовку автоматически добавляется тип операции после Caption, если только он не
@@ -1896,10 +1897,10 @@ procedure TFrmADedtItmCopyRigths.ShowDialog;
 begin
   //установка параметров
   PrepareCreatedForm(Application, '', '~Права пользователя ИТМ', fEdit, null, {MyFormOptions=[myfoModal, myfoDialog, myfoDialogButtonsB], AutoAlign});
-  F.DefineFields:=[['cbsrc','V=1:255'], ['cbdst','V=1:255']];
+  F.DefineFields:=[['cmbSrc','V=1:255'], ['cmbDst','V=1:255']];
   //проверка что событие OnCreate формы ужже вызывалось, объекты уже созданы
   if not Self.FAllreadyCreated then Frg1.Prepare;
-  Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], CbSrc, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], cmbSrc, cntComboLK);
  //вызов всегда должен быть модальный
   Self.ShowModal;
 end;

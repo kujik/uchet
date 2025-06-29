@@ -16,8 +16,8 @@ uses
 
 type
   TDlg_SnOrder = class(TForm_Normal)
-    De_Date: TDBDateTimeEditEh;
-    Ne_Sum: TDBNumberEditEh;
+    dedtDate: TDBDateTimeEditEh;
+    nedt_Sum: TDBNumberEditEh;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
     procedure Bt_OkClick(Sender: TObject);
@@ -45,7 +45,7 @@ uses
 
 procedure TDlg_SnOrder.Bt_OkClick(Sender: TObject);
 begin
-  if (De_Date.Value = null) or (Ne_Sum.Value = null)
+  if (dedtDate.Value = null) or (nedt_Sum.Value = null)
     then ModalResult:=mrNone
     else ModalResult:=mrOk;
 end;
@@ -64,16 +64,16 @@ begin
   OrNum:=aOrNum;
   Mode:=aMode;
   Cth.SetDialogForm(Self, Mode, 'Платёж');
-  Self.De_Date.Value:=adt;
-  if Mode = fAdd then De_Date.Value:=Date;
-  Self.Ne_Sum.Value:=aSum;
-  Self.Ne_Sum.Enabled:=(Mode<>fDelete);
-  Self.De_Date.Enabled:=Self.Ne_Sum.Enabled;
+  Self.dedtDate.Value:=adt;
+  if Mode = fAdd then dedtDate.Value:=Date;
+  Self.nedt_Sum.Value:=aSum;
+  Self.nedt_Sum.Enabled:=(Mode<>fDelete);
+  Self.dedtDate.Enabled:=Self.nedt_Sum.Enabled;
   Result:=-1;
   if Self.ShowModal = mrOk then
     begin
       Q.QCallStoredProc('p_Or_Payment'+S.IIf(Journal = 2, '_n', ''), 'IdOrder$i;PSum$f;PDt$d;PAdd$i',
-        [ID_order, S.IIf(Mode = fDelete, 0, Cth.GetControlValue(Ne_Sum)), Cth.GetControlValue(De_Date), S.IIf(Mode = fAdd, 1, 0)]
+        [ID_order, S.IIf(Mode = fDelete, 0, Cth.GetControlValue(nedt_Sum)), Cth.GetControlValue(dedtDate), S.IIf(Mode = fAdd, 1, 0)]
       );
       Result:=1;
       if OrNum[1] = 'Н'
@@ -81,7 +81,7 @@ begin
  {     Exit;
       if Mode = fDelete
         then v:=[ID]
-        else v:= [ID, ID_Order, Cth.GetControlValue(De_Date), Cth.GetControlValue(Ne_Sum)];
+        else v:= [ID, ID_Order, Cth.GetControlValue(dedtDate), Cth.GetControlValue(nedt_Sum)];
       case Mode of
         fAdd, fCopy: IUDMode:='i';
         fDelete: IUDMode:='d';

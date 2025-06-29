@@ -13,7 +13,7 @@ object FrmXDmsgIncorrectDate: TFrmXDmsgIncorrectDate
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object LbCaption: TLabel
+  object lblCaption: TLabel
     Left = 84
     Top = 8
     Width = 195
@@ -26,7 +26,7 @@ object FrmXDmsgIncorrectDate: TFrmXDmsgIncorrectDate
     Font.Style = []
     ParentFont = False
   end
-  object ImgError: TImage
+  object imgError: TImage
     Left = 8
     Top = 8
     Width = 64
@@ -185,7 +185,7 @@ object FrmXDmsgIncorrectDate: TFrmXDmsgIncorrectDate
       339EA1BD26D7EC04DE8CB5ED93D05F99D2B5FBF5D8FE0764F753CAED71292300
       00000049454E44AE426082}
   end
-  object LbMsg: TLabel
+  object lblMsg: TLabel
     Left = 88
     Top = 33
     Width = 170
@@ -195,7 +195,7 @@ object FrmXDmsgIncorrectDate: TFrmXDmsgIncorrectDate
       #1090' '#1074#1088#1077#1084#1077#1085#1080' '#1089#1077#1088#1074#1077#1088#1072'! '#1048#1089#1087#1088#1072#1074#1100#1090#1077' '#1101#1090#1091' '#1087#1088#1086#1073#1083#1077#1084#1091'!'
     WordWrap = True
   end
-  object BtClose: TBitBtn
+  object btnClose: TBitBtn
     Left = 36
     Top = 103
     Width = 210

@@ -21,10 +21,10 @@ object Dlg_MainSettings: TDlg_MainSettings
     Top = 0
     Width = 919
     Height = 386
-    ActivePage = Ts_Mail
+    ActivePage = ts_Mail
     Align = alClient
     TabOrder = 0
-    object Ts_Paths: TTabSheet
+    object ts_Paths: TTabSheet
       Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
       ExplicitLeft = 0
       ExplicitTop = 0
@@ -33,7 +33,7 @@ object Dlg_MainSettings: TDlg_MainSettings
       DesignSize = (
         911
         358)
-      object Label1: TLabel
+      object lbl1: TLabel
         Left = 3
         Top = 37
         Width = 563
@@ -42,7 +42,7 @@ object Dlg_MainSettings: TDlg_MainSettings
           '* '#1059#1078#1077' '#1080#1084#1077#1102#1097#1080#1077#1089#1103' '#1076#1072#1085#1085#1099#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099' '#1053#1045' '#1073#1091#1076#1091#1090' '#1072#1074#1090#1086#1084#1072#1090#1080#1095#1077#1089#1082#1080' '#1087#1077#1088#1077#1085#1077#1089#1077 +
           #1085#1099' '#1087#1088#1080' '#1080#1079#1084#1077#1085#1077#1085#1080#1080' '#1076#1072#1085#1085#1086#1081' '#1085#1072#1089#1090#1088#1086#1081#1082#1080'!'
       end
-      object Label2: TLabel
+      object lbl2: TLabel
         Left = 0
         Top = 345
         Width = 911
@@ -53,7 +53,7 @@ object Dlg_MainSettings: TDlg_MainSettings
           #1083#1086#1075#1086#1074' '#1085#1077' '#1087#1088#1086#1074#1077#1088#1103#1077#1090#1089#1103'!!!'
         ExplicitWidth = 491
       end
-      object E_PathToFiles: TDBEditEh
+      object edt_PathToFiles: TDBEditEh
         Left = 0
         Top = 15
         Width = 908
@@ -68,10 +68,10 @@ object Dlg_MainSettings: TDlg_MainSettings
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PathToFiles'
+        Text = 'edt_PathToFiles'
         Visible = True
       end
-      object E_ZCurrent: TDBEditEh
+      object edt_ZCurrent: TDBEditEh
         Left = 0
         Top = 93
         Width = 908
@@ -84,10 +84,10 @@ object Dlg_MainSettings: TDlg_MainSettings
         DynProps = <>
         EditButtons = <>
         TabOrder = 1
-        Text = 'E_PathToFiles'
+        Text = 'edt_PathToFiles'
         Visible = True
       end
-      object E_ZArchive: TDBEditEh
+      object edt_ZArchive: TDBEditEh
         Left = 0
         Top = 135
         Width = 908
@@ -100,11 +100,11 @@ object Dlg_MainSettings: TDlg_MainSettings
         DynProps = <>
         EditButtons = <>
         TabOrder = 2
-        Text = 'E_PathToFiles'
+        Text = 'edt_PathToFiles'
         Visible = True
       end
     end
-    object Ts_Mail: TTabSheet
+    object ts_Mail: TTabSheet
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1087#1086#1095#1090#1099
       ImageIndex = 1
       ExplicitLeft = 0
@@ -114,13 +114,13 @@ object Dlg_MainSettings: TDlg_MainSettings
       DesignSize = (
         911
         358)
-      object Bevel1: TBevel
+      object bvl1: TBevel
         Left = 11
         Top = 141
         Width = 897
         Height = 3
       end
-      object E_EMailDomain: TDBEditEh
+      object edt_EMailDomain: TDBEditEh
         Left = 11
         Top = 23
         Width = 430
@@ -136,7 +136,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 0
         Visible = True
       end
-      object E_EmailUser: TDBEditEh
+      object edt_EmailUser: TDBEditEh
         Left = 475
         Top = 23
         Width = 430
@@ -152,7 +152,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 1
         Visible = True
       end
-      object E_EmailServer: TDBEditEh
+      object edt_EmailServer: TDBEditEh
         Left = 11
         Top = 63
         Width = 430
@@ -168,7 +168,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 2
         Visible = True
       end
-      object E_EMailLogin: TDBEditEh
+      object edt_EMailLogin: TDBEditEh
         Left = 475
         Top = 63
         Width = 430
@@ -184,7 +184,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 3
         Visible = True
       end
-      object E_EMailPassword: TDBEditEh
+      object edt_EMailPassword: TDBEditEh
         Left = 11
         Top = 103
         Width = 430
@@ -201,7 +201,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 4
         Visible = True
       end
-      object E_EMailPassword2: TDBEditEh
+      object edt_EMailPassword2: TDBEditEh
         Left = 478
         Top = 103
         Width = 430
@@ -218,7 +218,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 5
         Visible = True
       end
-      object E_MailingOrdersCh: TDBEditEh
+      object edt_MailingOrdersCh: TDBEditEh
         Left = 11
         Top = 164
         Width = 897
@@ -230,13 +230,13 @@ object Dlg_MainSettings: TDlg_MainSettings
         DynProps = <>
         EditButtons = <
           item
-            OnClick = E_MailingOrdersChEditButtons0Click
+            OnClick = edt_MailingOrdersChEditButtons0Click
           end>
         ReadOnly = True
         TabOrder = 6
         Visible = True
       end
-      object E_MailingOrdersChITM: TDBEditEh
+      object edt_MailingOrdersChITM: TDBEditEh
         Left = 11
         Top = 204
         Width = 897
@@ -253,7 +253,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 7
         Visible = True
       end
-      object E_MailingAttachSmeta: TDBEditEh
+      object edt_MailingAttachSmeta: TDBEditEh
         Left = 11
         Top = 244
         Width = 897
@@ -270,7 +270,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 8
         Visible = True
       end
-      object E_MailingReportSmeta: TDBEditEh
+      object edt_MailingReportSmeta: TDBEditEh
         Left = 11
         Top = 284
         Width = 897
@@ -287,7 +287,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 9
         Visible = True
       end
-      object E_MailingAttachTHN: TDBEditEh
+      object edt_MailingAttachTHN: TDBEditEh
         Left = 11
         Top = 324
         Width = 897
@@ -305,14 +305,14 @@ object Dlg_MainSettings: TDlg_MainSettings
         Visible = True
       end
     end
-    object Ts_DeleteOld: TTabSheet
+    object ts_DeleteOld: TTabSheet
       Caption = #1059#1076#1072#1083#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
       ImageIndex = 2
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object Ne_MoveToArchive: TDBNumberEditEh
+      object nedt_MoveToArchive: TDBNumberEditEh
         Left = 0
         Top = 16
         Width = 81
@@ -332,7 +332,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 0
         Visible = True
       end
-      object Ne_DeleteOrders: TDBNumberEditEh
+      object nedt_DeleteOrders: TDBNumberEditEh
         Left = 0
         Top = 56
         Width = 81
@@ -352,7 +352,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 1
         Visible = True
       end
-      object Ne_DeleteAccounts: TDBNumberEditEh
+      object nedt_DeleteAccounts: TDBNumberEditEh
         Left = 0
         Top = 96
         Width = 81
@@ -372,7 +372,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 2
         Visible = True
       end
-      object Ne_DeleteTurv: TDBNumberEditEh
+      object nedt_DeleteTurv: TDBNumberEditEh
         Left = 0
         Top = 136
         Width = 81
@@ -394,7 +394,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 3
         Visible = True
       end
-      object Ne_DeletePayrolls: TDBNumberEditEh
+      object nedt_DeletePayrolls: TDBNumberEditEh
         Left = 0
         Top = 176
         Width = 81
@@ -418,7 +418,7 @@ object Dlg_MainSettings: TDlg_MainSettings
       end
     end
   end
-  object Panel1: TPanel
+  object pnl1: TPanel
     Left = 0
     Top = 386
     Width = 919
@@ -429,7 +429,7 @@ object Dlg_MainSettings: TDlg_MainSettings
     DesignSize = (
       919
       35)
-    object Lb_Warning: TLabel
+    object lbl_Warning: TLabel
       Left = 4
       Top = 12
       Width = 758

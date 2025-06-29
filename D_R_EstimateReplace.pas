@@ -14,11 +14,11 @@ type
     Bt_Cancel: TBitBtn;
     Bt_Ok: TBitBtn;
     Img_Info: TImage;
-    E_1: TDBEditEh;
-    E_2: TDBEditEh;
+    edt_1: TDBEditEh;
+    edt_2: TDBEditEh;
     procedure Bt_OkClick(Sender: TObject);
-    procedure E_1EditButtons0Click(Sender: TObject; var Handled: Boolean);
-    procedure E_2EditButtons0Click(Sender: TObject; var Handled: Boolean);
+    procedure edt_1EditButtons0Click(Sender: TObject; var Handled: Boolean);
+    procedure edt_2EditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     { Private declarations }
     Id: Variant;
@@ -57,14 +57,14 @@ var
   res: Integer;
 begin
   inherited;
-  E_1.Text:=Trim(E_1.Text);
-  E_2.Text:=Trim(E_2.Text);
+  edt_1.Text:=Trim(edt_1.Text);
+  edt_2.Text:=Trim(edt_2.Text);
   ModalResult:=mrNone;
-  if (E_1.Text = '')or(E_1.Text = E_2.Text)
+  if (edt_1.Text = '')or(edt_1.Text = edt_2.Text)
     then begin MyWarningMessage('ƒанные некорректны!'); Exit; end;
-  id1:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [E_1.Text])[0];
-  if E_2.Text <> ''
-    then id2:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [E_2.Text])[0]
+  id1:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [edt_1.Text])[0];
+  if edt_2.Text <> ''
+    then id2:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [edt_2.Text])[0]
     else id2 := -1;
   if (id1 = null)or(id2 = null)
     then begin MyWarningMessage('ƒолжны быть выбраны существующие номенклатурные позиции!'); Exit; end;
@@ -82,16 +82,16 @@ begin
   ModalResult:=mrOk;
 end;
 
-procedure TDlg_R_EstimateReplace.E_1EditButtons0Click(Sender: TObject; var Handled: Boolean);
+procedure TDlg_R_EstimateReplace.edt_1EditButtons0Click(Sender: TObject; var Handled: Boolean);
 begin
   inherited;
-  SelectNom(E_1);
+  SelectNom(edt_1);
 end;
 
-procedure TDlg_R_EstimateReplace.E_2EditButtons0Click(Sender: TObject; var Handled: Boolean);
+procedure TDlg_R_EstimateReplace.edt_2EditButtons0Click(Sender: TObject; var Handled: Boolean);
 begin
   inherited;
-  SelectNom(E_2);
+  SelectNom(edt_2);
 end;
 
 function TDlg_R_EstimateReplace.ShowDialog(AId: Variant; AMode: TDialogType): Boolean;
@@ -105,8 +105,8 @@ begin
     else va:=[-1, '', -1, ''];
   //выходим без диалога дл€ заказов не того префикса, если заказ не найден, если рекламаци€
   if (Length(va) = 0)and(Mode <> fAdd) then Exit;
-  Cth.SetControlValue(E_1, va[1]);
-  Cth.SetControlValue(E_2, va[3]);
+  Cth.SetControlValue(edt_1, va[1]);
+  Cth.SetControlValue(edt_2, va[3]);
   Cth.DlgSetControlsEnabled(Self, Mode, [], []);
   Cth.SetInfoIcon(Img_Info,Cth.SetInfoIconText(Self, [
     ['¬ыберите из списка исходную номенклатуру, и ту, на которую она будет замен€тьс€ в сметах, нажав на кнопку.'#13#10+

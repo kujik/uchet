@@ -29,9 +29,9 @@ uses
 type
   TFrmOGedtSnByAreas = class(TFrmBasicGrid2)
   private
-    IdArea: Integer;
-    AreaSuffix: string;
-    AreaName: string;
+    FIdArea: Integer;
+    FAreaSuffix: string;
+    FAreaName: string;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
@@ -66,25 +66,25 @@ var
   va2: TVarDynArray2;
   i, j: Integer;
 begin
-  IdArea:= 0;
-  if FormDoc = myfrm_R_MinRemainsI then IdArea:= 1;
-  if FormDoc = myfrm_R_MinRemainsD then IdArea:= 2;
-  AreaSuffix:='_' + IntToStr(IdArea);
-  AreaName:= Q.QSelectOneRow('select name from ref_production_areas where id = :id$i', [IdArea])[0];
-  Caption := 'Потребность по участку "' + AreaName + '"';
+  FIdArea:= 0;
+  if FormDoc = myfrm_R_MinRemainsI then FIdArea:= 1;
+  if FormDoc = myfrm_R_MinRemainsD then FIdArea:= 2;
+  FAreaSuffix:='_' + IntToStr(FIdArea);
+  FAreaName:= Q.QSelectOneRow('select name from ref_production_areas where id = :id$i', [FIdArea])[0];
+  Caption := 'Потребность по участку "' + FAreaName + '"';
   Frg1.Options := Frg1.Options + [myogGridLabels];
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
     ['artikul','Артикул','100'],
     ['name','Наименование','400;h'],
-    ['qnt'+AreaSuffix,'Текущий остаток','80'],
-    ['qnt_min'+AreaSuffix,'Минимальный остаток','80','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)],
-    ['qnt_order'+AreaSuffix,'К заказу','80','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)],
-    ['to_order'+AreaSuffix,'В заявку','60','chb','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)]
+    ['qnt'+FAreaSuffix,'Текущий остаток','80'],
+    ['qnt_min'+FAreaSuffix,'Минимальный остаток','80','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)],
+    ['qnt_order'+FAreaSuffix,'К заказу','80','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)],
+    ['to_order'+FAreaSuffix,'В заявку','60','chb','e',User.Role(rOr_Other_R_MinRemainsI_ChAll)]
   ]);
   Frg1.Opt.SetTable('v_spl_minremains_byareas');
   Frg1.Opt.SetWhere('');
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnAdd, User.Role(rOr_Other_R_MinRemainsI_ChAll)],[btnDelete,1],[],[btnGridSettings],[],[btnGo,User.Role(rOr_Other_R_MinRemainsI_ChAll)]]);
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtAdd, User.Role(rOr_Other_R_MinRemainsI_ChAll)],[mbtDelete,1],[],[mbtGridSettings],[],[mbtGo,User.Role(rOr_Other_R_MinRemainsI_ChAll)]]);
   Frg1.InfoArray:=[
     [Caption + '.'#13#10#13#10],
     ['Добавьте через меню ПКМ наименования, остатки по которым на складах площадки нужно контролировать.'#13#10, User.Role(rOr_Other_R_MinRemainsIAdd_Ch)],
@@ -108,13 +108,13 @@ var
   va, va1, va2: TVarDynArray;
   b: Boolean;
 begin
-  if Tag = btnGo then begin
+  if Tag = mbtGo then begin
     CreateDemand;
   end
-  else if Tag in [btnAdd] then begin
+  else if Tag in [mbtAdd] then begin
     va1:=['', 0];
     while True do begin
-      if TFrmBasicInput.ShowDialog(Self, '', [], CtH.BtnModeToFMode(Tag), S.Decode([Tag, btnAdd, 'Добавить', btnEdit, 'Изменить', btnDelete, 'Удалить']), 700, 85,
+      if TFrmBasicInput.ShowDialog(Self, '', [], CtH.BtnModeToFMode(Tag), S.Decode([Tag, mbtAdd, 'Добавить', mbtEdit, 'Изменить', mbtDelete, 'Удалить']), 700, 85,
         [[cntEdit, 'Наименование', '1:400:T', 600], [cntCheck, 'не закрывать окно', '', 200]],
         va1, va2, [['Введите наименование номенклатуры, которая есть в ИТМ.'#13#10]], nil
       ) >= 0
@@ -131,7 +131,7 @@ begin
       Break;
     end;
   end
-  else if Tag = btnDelete then begin
+  else if Tag = mbtDelete then begin
     if MyQuestionMessage('Удалить позицию из списка?') <> mrYes then Exit;
     Q.QExecSql('delete from spl_minremains_byareas where id = :id$i', [id]);
     Refresh;
@@ -165,7 +165,7 @@ var
   id_category, idi: Integer;
 begin
   //количество, которое попадет в заявку
-  i := Q.QSelectOneRow('select count(*) from spl_minremains_byareas where nvl(qnt_order'+AreaSuffix+', 0) > 0 and to_order'+AreaSuffix+' = 1', [])[0];
+  i := Q.QSelectOneRow('select count(*) from spl_minremains_byareas where nvl(qnt_order'+FAreaSuffix+', 0) > 0 and to_order'+FAreaSuffix+' = 1', [])[0];
   //если ничего нет, то выйдем
   if i = 0 then begin
     MyInfoMessage('Нет ни одной позиции к заказу!');
@@ -184,16 +184,16 @@ begin
   Q.QBeginTrans(True);
   Q.QExecSql('update spl_itm_nom_props set to_order = 0 where to_order = 1 and id_category = :id_category$i', [1]);
   for i:=0 to Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList.Count - 1 do begin
-    if S.NInt(Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['to_order'+AreaSuffix, dvvValueEh]) <> 1 then Continue;
-    e:=S.NNum(Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['qnt_order'+AreaSuffix, dvvValueEh]);
+    if S.NInt(Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['to_order'+FAreaSuffix, dvvValueEh]) <> 1 then Continue;
+    e:=S.NNum(Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['qnt_order'+FAreaSuffix, dvvValueEh]);
     idi:= Frg1.MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['id', dvvValueEh];
     if e = 0 then Continue;
     //to_order
-    Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([idi, 5, 1]));
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([idi, 5, 1]));
     //qnt_order
-    Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([idi, 4, e]));
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([idi, 4, e]));
   end;
-  Q.QExecSql('update spl_minremains_byareas set to_order'+AreaSuffix+' = 0', []);
+  Q.QExecSql('update spl_minremains_byareas set to_order'+FAreaSuffix+' = 0', []);
   Q.QCommitOrRollback();
   //если завершилось неудачно, сообщим и выйдем
   if Q.PackageMode <> 1 then begin

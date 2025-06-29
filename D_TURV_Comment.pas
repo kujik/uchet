@@ -14,12 +14,12 @@ uses
 type
   TDlg_TURV_Comment = class(TForm)
     Bt_Close: TBitBtn;
-    Lb_Ruk: TLabel;
-    Label1: TLabel;
-    Timer1: TTimer;
-    Lb_Par: TLabel;
-    Lb_Sogl: TLabel;
-    procedure Timer1Timer(Sender: TObject);
+    lbl_Ruk: TLabel;
+    lbl1: TLabel;
+    tmr1: TTimer;
+    lbl_Par: TLabel;
+    lbl_Sogl: TLabel;
+    procedure tmr1Timer(Sender: TObject);
     procedure Bt_CloseClick(Sender: TObject);
   private
     { Private declarations }
@@ -50,7 +50,7 @@ begin
   Close;
 end;
 
-procedure TDlg_TURV_Comment.Timer1Timer(Sender: TObject);
+procedure TDlg_TURV_Comment.tmr1Timer(Sender: TObject);
 begin
   Close;
 end;
@@ -66,9 +66,9 @@ begin
   if v4 <> '' then begin
     v1:='Время работы ночью ' + v4 + 'ч.';
     v4:='';
-    Label1.Caption:='';
+    lbl1.Caption:='';
   end
-  else Label1.Caption:='Комментарий:';
+  else lbl1.Caption:='Комментарий:';
   //так проверять не стоит, потому что Visible остается истиной при клике мимо формы, когда форма по факту исчезает (скрывается)
   //if Visible then Exit;
   //а вот баттон фокус уже теряет
@@ -80,42 +80,42 @@ begin
   Y:=AY;
 
   //задаем текст меток, обеспечиваем их растяжку по высоте (по ширине у меня не получилось, но не слишком пытался)
-  Lb_Ruk.AutoSize:=True;
-  Lb_Ruk.Caption:=VarToStr(v1);
-//  if Lb_Ruk.Width < 350 then begin
-    Lb_Ruk.AutoSize:=False;
-    Lb_Ruk.WordWrap:=True;
+  lbl_Ruk.AutoSize:=True;
+  lbl_Ruk.Caption:=VarToStr(v1);
+//  if lbl_Ruk.Width < 350 then begin
+    lbl_Ruk.AutoSize:=False;
+    lbl_Ruk.WordWrap:=True;
 //    Width:=210;
-    Lb_Ruk.Width:=290;
-    Lb_Ruk.AutoSize:=True;
-  Lb_Ruk.Visible:=Lb_Ruk.Caption <> '';
+    lbl_Ruk.Width:=290;
+    lbl_Ruk.AutoSize:=True;
+  lbl_Ruk.Visible:=lbl_Ruk.Caption <> '';
 //  end;
 
-  Lb_Par.AutoSize:=True;
-  Lb_Par.Caption:=VarToStr(v2);
-  Lb_Par.AutoSize:=False;
-  Lb_Par.WordWrap:=True;
-  Lb_Par.Width:=290;
-  Lb_Par.AutoSize:=True;
-  Lb_Par.Visible:=Lb_Par.Caption <> '';
+  lbl_Par.AutoSize:=True;
+  lbl_Par.Caption:=VarToStr(v2);
+  lbl_Par.AutoSize:=False;
+  lbl_Par.WordWrap:=True;
+  lbl_Par.Width:=290;
+  lbl_Par.AutoSize:=True;
+  lbl_Par.Visible:=lbl_Par.Caption <> '';
 
-  Lb_Sogl.AutoSize:=True;
-  Lb_Sogl.Caption:=VarToStr(v3);
-  Lb_Sogl.AutoSize:=False;
-  Lb_Sogl.WordWrap:=True;
-  Lb_Sogl.Width:=290;
-  Lb_Sogl.AutoSize:=True;
-  Lb_Sogl.Visible:=Lb_Sogl.Caption <> '';
+  lbl_Sogl.AutoSize:=True;
+  lbl_Sogl.Caption:=VarToStr(v3);
+  lbl_Sogl.AutoSize:=False;
+  lbl_Sogl.WordWrap:=True;
+  lbl_Sogl.Width:=290;
+  lbl_Sogl.AutoSize:=True;
+  lbl_Sogl.Visible:=lbl_Sogl.Caption <> '';
 
   //подгоним высоту формы
-  Height:=Lb_Sogl.Top + Lb_Sogl.Height + Bt_Close.Height + 20;
+  Height:=lbl_Sogl.Top + lbl_Sogl.Height + Bt_Close.Height + 20;
 
   //подгоним координаты формы, делаем чуть ниже и правее квадратика-метки, но чтобы не выходило за границы родительского окна
   //(сделано криво!)
 //  Left:=Max(5, Min(Owner.Left+X+20, Owner.Left + Owner.Width - Width -15));
 //  Top:=Max(5, min(Owner.Top+50+Y+95, Owner.Top + Owner.Height - Height - 15));
 
-//Lb_Ruk.Caption:=inttostr(Mouse.CursorPos.y)+' '+inttostr(FrmMain.top);
+//lbl_Ruk.Caption:=inttostr(Mouse.CursorPos.y)+' '+inttostr(FrmMain.top);
 
   //окно чуть ниже и правее курсора мышки, но если окажется за границами главного окна приложения, то подгоним чтобы не выходило за границы
   //позиция курсора мышки определяется относительно экрана а не главного окна!

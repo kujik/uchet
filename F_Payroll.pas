@@ -37,18 +37,18 @@ uses
 
 type
   TForm_Payroll = class(TForm_MDI)
-    P_Top: TPanel;
+    pnl_Top: TPanel;
     DBGridEh1: TDBGridEh;
     DBGridEh3: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
-    Lb_Caption1: TLabel;
-    P_Right: TPanel;
-    Lb_Info: TLabel;
+    lbl_Caption1: TLabel;
+    pnl_Right: TPanel;
+    lbl_Info: TLabel;
     Timer_AfterUpdate: TTimer;
-    P_Left: TPanel;
-    P_Center: TPanel;
+    pnl_Left: TPanel;
+    pnl_Center: TPanel;
     PrintDBGridEh1: TPrintDBGridEh;
     FileOpenDialog1: TFileOpenDialog;
     Timer_Print: TTimer;
@@ -734,9 +734,9 @@ begin
   CalcMode:=v[8];
   Commit:=v[9] = 1;
 
-  Lb_Caption1.Caption:=S.IIf(WorkerName<>'', WorkerName + ' (' + DivisionName + ')', DivisionName) + ' с ' +DateToStr(PeriodStartDate) + ' по ' +DateToStr(PeriodEndDate);
+  lbl_Caption1.Caption:=S.IIf(WorkerName<>'', WorkerName + ' (' + DivisionName + ')', DivisionName) + ' с ' +DateToStr(PeriodStartDate) + ' по ' +DateToStr(PeriodEndDate);
   IsEditable:=Mode = fEdit;
-//  Lb_ReadOnly.Visible:=IsEditable;
+//  lbl_ReadOnly.Visible:=IsEditable;
 
   Norma01:=Q.QSelectOneRow('select norm0, norm1 from payroll_norm where dt = :dt$d', [PeriodStartDate]);
   Norma:=S.IIf(IsOffice, Norma01[1], Norma01[0]);
@@ -832,7 +832,7 @@ begin
   Self.Width:=w1;
   Self.MinWidth:=1100;
   Self.MinHeight:=300;
-//  Lb_ReadOnly.Left:=Width - P_Right.Width - Lb_ReadOnly.Width - 50;
+//  lbl_ReadOnly.Left:=Width - pnl_Right.Width - lbl_ReadOnly.Width - 50;
 
   //если в данной ведомости нет ни одной записи, попробуем их создать
   CreateTurvList;
@@ -848,13 +848,13 @@ begin
 //  Buttons:=[mybtSettings, mybtDividor, mybtCustom_Turv, mybtCustom_Payroll, mybtCard, mybtDividor, mybtExcel, mybtPrint, mybtPrint, mybtPrintLabel, mybtDividor, mybtLock];
   Buttons:=[mybtSettings, mybtDividor, mybtCustom_Turv, mybtCustom_Payroll, mybtCard, mybtDividor, mybtExcel, mybtDividorM, mybtPrint, mybtPrint, mybtPrintLabels, mybtDividorM, mybtDividor, mybtLock];
   ButtonsState:=[True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True];
-  P_Left.Width:=Cth.CreateGridBtns(Self, P_Left, Buttons, ButtonsState, Bt_Click) + 5;
-  Cth.GetSpeedBtn(P_Left, btnCard).Hint:='Загрузить НДФЛ и карты';
+  pnl_Left.Width:=Cth.CreateGridBtns(Self, pnl_Left, Buttons, ButtonsState, Bt_Click) + 5;
+  Cth.GetSpeedBtn(pnl_Left, mbtCard).Hint:='Загрузить НДФЛ и карты';
   SetButtons;
   CheckEmpty;
 
   //установим доступность стандартных кнопок в зависимости от наличия данных в таблице
-//  Cth.SetBtnAndMenuEnabled(Panel1, Pm_Grid, btnView, IsNotEmpty);
+//  Cth.SetBtnAndMenuEnabled(pnl1, Pm_Grid, mbtView, IsNotEmpty);
 
 
   Result:=True;
@@ -878,22 +878,22 @@ begin
     if TMenuItem(Sender).Enabled
       then BtnTag:=Integer(TMenuItem(Sender).tag);
   case BtnTag of
-    btnCustom_Turv:
+    mbtCustom_Turv:
       if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then GetTurvList;
-    btnCustom_Payroll:
+    mbtCustom_Payroll:
       if MyQuestionMessage('Загрузить расчет баллов?') = mrYes then GetXlsData;
-    btnCard:
+    mbtCard:
       if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then GetNdfl;
-    btnSettings:
+    mbtSettings:
       PayrollSettings;
-    btnExcel:
+    mbtExcel:
       ExportToXlsxA7;
 //      ClearFilter;
-    btnPrint:
+    mbtPrint:
       PrintGrid;
-    btnPrintLabels:
+    mbtPrintLabels:
       PrintLabels;
-    btnLock:
+    mbtLock:
       CommitPayroll;
   end;
 end;
@@ -922,42 +922,42 @@ procedure TForm_Payroll.SetButtons;
 begin
   if Mode = fView
     then begin
-      Lb_Info.Caption:='Только просмотр.';
-      Lb_Info.Font.Color:=clBlack;
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnSettings, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCard, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnLock, False);
+      lbl_Info.Caption:='Только просмотр.';
+      lbl_Info.Font.Color:=clBlack;
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, False);
     end
     else if (Norma = null) or (CalcMode = null) then begin
-      Lb_Info.Caption:='Задайте параметры!';
-      Lb_Info.Font.Color:=clRed;
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnSettings, True);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCard, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnLock, False);
+      lbl_Info.Caption:='Задайте параметры!';
+      lbl_Info.Font.Color:=clRed;
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, True);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, False);
     end
     else if Commit then begin
-      Lb_Info.Caption:='Ведомость закрыта, только просмотр.';
-      Lb_Info.Font.Color:=clGreen;
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnSettings, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCard, False);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnLock, True);
+      lbl_Info.Caption:='Ведомость закрыта, только просмотр.';
+      lbl_Info.Font.Color:=clGreen;
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, True);
     end
     else begin
-      Lb_Info.Caption:='Ввод данных.';
-      Lb_Info.Font.Color:=RGB(255, 0, 255);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnSettings, True);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Turv, True);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCustom_Payroll, Integer(CalcMode) in [13, 14]);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnCard, True);
-      Cth.SetBtnAndMenuEnabled(P_Left, nil, btnLock, True);
+      lbl_Info.Caption:='Ввод данных.';
+      lbl_Info.Font.Color:=RGB(255, 0, 255);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, True);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, True);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, Integer(CalcMode) in [13, 14]);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, True);
+      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, True);
     end;
-  Cth.GetSpeedBtn(P_Left, btnLock).Hint:=S.IIf(Commit, 'Отменить закрытие ведомости', 'Закрыть ведомость');
+  Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIf(Commit, 'Отменить закрытие ведомости', 'Закрыть ведомость');
   SetColumns;
 end;
 
@@ -1187,7 +1187,7 @@ procedure TForm_Payroll.PrintLabels;
 //печать этикеток на конверты  //пока по F7
 begin
   if MyQuestionMessage('Напечатать этикетки?') <> mrYes then Exit;
-  PrintReport.P_PayrollLabels(MemTableEh1);
+  PrintReport.pnl_PayrollLabels(MemTableEh1);
 end;
 
 procedure TForm_Payroll.PrintGrid;
@@ -1222,7 +1222,7 @@ begin
   }
   Gh.SetGridOptionsTitleAppearance(DBGridEh1, False);
   //Title отображается вторая строка, вместо первой просто полоска, но вторая строка обрезается по высоте, так нечитаемо.
-//  PrintDBGridEh1.Title.Clear;  PrintDBGridEh1.Title[0]:=Lb_Caption1.Caption;
+//  PrintDBGridEh1.Title.Clear;  PrintDBGridEh1.Title[0]:=lbl_Caption1.Caption;
   //используем BeforeGridText - форматированная строка
   //получилось только задать текст в редакторе, одну форматированную строку, и здесь ее заменять
 //  PrintDBGridEh1.BeforeGridText.Clear; PrintDBGridEh1.BeforeGridText.Delete(0);
@@ -1230,7 +1230,7 @@ begin
 //  i:=Gh.GetGridColumn(DBGridEh1, 'name').Width;
 //  Gh.GetGridColumn(DBGridEh1, 'name').Width:=1800;
 //  PrintDBGridEh1.Options:=PrintDBGridEh1.Options - [pghFitGridToPageWidth];
-  PrintDBGridEh1.BeforeGridText[0]:=Lb_Caption1.Caption;
+  PrintDBGridEh1.BeforeGridText[0]:=lbl_Caption1.Caption;
   //альбомная ориентация
   PrinterPreview.Orientation := poLandscape;
   //масштабируем всю таблицу для умещения на стронице
@@ -1273,7 +1273,7 @@ begin
     Exit;
   end;
   Rep.PasteBand('HEADER');
-  Rep.SetValue('#TITLE#',Lb_Caption1.Caption);
+  Rep.SetValue('#TITLE#',lbl_Caption1.Caption);
   rn:=MemTableEh1.RecNo;
   for j:=0 to MemTableEh1.Fields.Count - 1 do begin
     Rep.ExcelFind('#d' + IntToStr(j) + '#', x, y, xlValues);

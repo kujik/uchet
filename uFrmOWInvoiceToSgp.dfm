@@ -6,25 +6,25 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
   ExplicitHeight = 484
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 687
     Height = 430
     ExplicitWidth = 687
     ExplicitHeight = 430
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 677
       Height = 381
       ExplicitWidth = 677
       ExplicitHeight = 381
-      object PSelectOrder: TPanel
+      object pnlSelectOrder: TPanel
         Left = 0
         Top = 0
         Width = 677
         Height = 41
         Align = alTop
-        Caption = 'PSelectOrder'
+        Caption = 'pnlSelectOrder'
         TabOrder = 0
-        object Bevel1: TBevel
+        object bvl1: TBevel
           Left = 1
           Top = 38
           Width = 675
@@ -35,50 +35,50 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
           ExplicitWidth = 50
         end
       end
-      object PTitle: TPanel
+      object pnlTitle: TPanel
         Left = 0
         Top = 41
         Width = 677
         Height = 80
         Align = alTop
-        Caption = 'PTitle'
+        Caption = 'pnlTitle'
         TabOrder = 1
-        object LbInvoice: TLabel
+        object lblInvoice: TLabel
           Left = 10
           Top = 6
           Width = 46
           Height = 13
-          Caption = 'LbInvoice'
+          Caption = 'lblInvoice'
         end
-        object LbOrder: TLabel
+        object lblOrder: TLabel
           Left = 8
           Top = 25
           Width = 39
           Height = 13
-          Caption = 'LbOrder'
+          Caption = 'lblOrder'
         end
-        object LbM: TLabel
+        object lblM: TLabel
           Left = 8
           Top = 44
           Width = 19
           Height = 13
-          Caption = 'LbM'
+          Caption = 'lblM'
         end
-        object LbS: TLabel
+        object lblS: TLabel
           Left = 8
           Top = 61
           Width = 17
           Height = 13
-          Caption = 'LbS'
+          Caption = 'lblS'
         end
       end
-      object PGrid: TPanel
+      object pnlGrid: TPanel
         Left = 0
         Top = 121
         Width = 677
         Height = 260
         Align = alClient
-        Caption = 'PGrid'
+        Caption = 'pnlGrid'
         TabOrder = 2
         inline Frg1: TFrDBGridEh
           Left = 1
@@ -91,7 +91,7 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
           ExplicitTop = 1
           ExplicitWidth = 675
           ExplicitHeight = 258
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             Width = 665
             Height = 204
             ExplicitWidth = 665
@@ -106,26 +106,26 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
                 ExplicitHeight = 0
               end
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               Top = 182
               Width = 663
               ExplicitTop = 182
               ExplicitWidth = 663
             end
           end
-          inherited PLeft: TPanel
+          inherited pnlLeft: TPanel
             Height = 204
             ExplicitHeight = 204
           end
-          inherited PTop: TPanel
+          inherited pnlTop: TPanel
             Width = 675
             ExplicitWidth = 675
           end
-          inherited PContainer: TPanel
+          inherited pnlContainer: TPanel
             Width = 675
             ExplicitWidth = 675
           end
-          inherited PBottom: TPanel
+          inherited pnlBottom: TPanel
             Top = 258
             Width = 675
             ExplicitTop = 258
@@ -147,38 +147,38 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 386
       Width = 677
       ExplicitTop = 386
       ExplicitWidth = 677
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 675
         ExplicitWidth = 675
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 675
         ExplicitWidth = 675
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 675
         ExplicitWidth = 675
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 576
           ExplicitLeft = 576
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 348
           ExplicitLeft = 348
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 477
           ExplicitLeft = 477
         end
-        inherited PDlgBtnL: TPanel
+        inherited pnlFrmBtnsL: TPanel
           Width = 272
           ExplicitWidth = 272
-          object CbOrder: TDBComboBoxEh
+          object cmbOrder: TDBComboBoxEh
             Left = 42
             Top = 4
             Width = 121
@@ -192,10 +192,10 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
             EditButtons = <>
             LimitTextToListValues = True
             TabOrder = 0
-            Text = 'CbOrder'
+            Text = 'cmbOrder'
             Visible = True
           end
-          object BtFill: TBitBtn
+          object btnFill: TBitBtn
             Left = 169
             Top = 2
             Width = 96
@@ -205,7 +205,7 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
             OnClick = BtFillClick
           end
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Left = 313
           Width = 35
           ExplicitLeft = 313
@@ -214,21 +214,21 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 430
     Width = 687
     ExplicitTop = 430
     ExplicitWidth = 687
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 595
       Height = 13
       ExplicitLeft = 595
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 13
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 168
     Top = 424
   end

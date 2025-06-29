@@ -16,8 +16,8 @@ uses
 type
   TFrmOGjrnUchetLog = class(TFrmBasicGrid2)
   private
-    IdOperation: Integer;
-    Capt: string;
+    FIdOperation: Integer;
+    FCapt: string;
     function  PrepareForm: Boolean; override;
     procedure GetIdOperation;
   public
@@ -45,7 +45,7 @@ var
   st: string;
 begin
   GetIdOperation;
-  Caption:= 'Журнал работы (' + Capt + ')';
+  Caption:= 'Журнал работы (' + FCapt + ')';
 
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   va2 := [
@@ -55,7 +55,7 @@ begin
     ['dt','Время операции','120'],
     ['username','Сотрудник','150']
   ];
-  if IdOperation in [mToSgp, mFromSgp, mOtk] then begin
+  if FIdOperation in [mToSgp, mFromSgp, mOtk] then begin
     va2 := va2 +[
       ['document','Изделие','400;h'],
       ['qnt1','Кол-во','80'],
@@ -65,7 +65,7 @@ begin
   end;
   Frg1.Opt.SetFields(va2);
   Frg1.Opt.SetTable('v_adm_uchet_log');
-  Frg1.Opt.SetWhere('where id_operation = ' + IntToStr(IdOperation));
+  Frg1.Opt.SetWhere('where id_operation = ' + IntToStr(FIdOperation));
   Frg1.Opt.FilterRules := [[], ['dt_day' + st]];
   Frg1.Opt.SetButtons(1, 'rfsp');
   Frg1.InfoArray:=[];
@@ -76,15 +76,15 @@ end;
 
 procedure TFrmOGjrnUchetLog.GetIdOperation;
 begin
-//  if (FormDoc = myfrm_J_OrderStages_ToProd) then IdOperation:=mToProd;
-  if (FormDoc = myfrm_J_OrderStages_ToSgp_Log) then IdOperation:=mToSgp;
-  if (FormDoc = myfrm_J_OrderStages_FromSgp_Log) then IdOperation:=mFromSgp;
-  if (FormDoc = myfrm_J_OrderStages_Otk_Log) then IdOperation:=mOtk;
-//  if (FormDoc = myfrm_J_Or_DelayedInProd) then IdOperation:=mDelInProd;
-//  if (FormDoc = myfrm_J_Or_Montage) then IdOperation:=mMontage;
-  if (FormDoc = myfrm_J_OrderStages_ToSgp_Log) then Capt:=captToSgp;
-  if (FormDoc = myfrm_J_OrderStages_FromSgp_Log) then Capt:=captFromSgp;
-  if (FormDoc = myfrm_J_OrderStages_Otk_Log) then Capt:=captOtk;
+//  if (FormDoc = myfrm_J_OrderStages_ToProd) then FIdOperation:=mToProd;
+  if (FormDoc = myfrm_J_OrderStages_ToSgp_Log) then FIdOperation:=mToSgp;
+  if (FormDoc = myfrm_J_OrderStages_FromSgp_Log) then FIdOperation:=mFromSgp;
+  if (FormDoc = myfrm_J_OrderStages_Otk_Log) then FIdOperation:=mOtk;
+//  if (FormDoc = myfrm_J_Or_DelayedInProd) then FIdOperation:=mDelInProd;
+//  if (FormDoc = myfrm_J_Or_Montage) then FIdOperation:=mMontage;
+  if (FormDoc = myfrm_J_OrderStages_ToSgp_Log) then FCapt:=captToSgp;
+  if (FormDoc = myfrm_J_OrderStages_FromSgp_Log) then FCapt:=captFromSgp;
+  if (FormDoc = myfrm_J_OrderStages_Otk_Log) then FCapt:=captOtk;
 end;
 {$R *.dfm}
 

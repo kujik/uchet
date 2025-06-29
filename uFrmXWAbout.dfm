@@ -1,7 +1,7 @@
 object FrmXWAbout: TFrmXWAbout
   Left = 445
   Top = 127
-  ActiveControl = BtOk
+  ActiveControl = btnOk
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
   ClientHeight = 375
@@ -23,14 +23,14 @@ object FrmXWAbout: TFrmXWAbout
     375)
   PixelsPerInch = 96
   TextHeight = 13
-  object PMain: TPanel
+  object pnlMain: TPanel
     Left = 8
     Top = 8
     Width = 201
     Height = 320
     BevelOuter = bvNone
     TabOrder = 0
-    object ImgMain: TImage
+    object imgMain: TImage
       Left = -2
       Top = 3
       Width = 200
@@ -2142,9 +2142,9 @@ object FrmXWAbout: TFrmXWAbout
         49EA434B79EAE69DBF985E5AFE87B150FC5267D4FF0F1799CEB24EAE9D0B0000
         000049454E44AE426082}
       Transparent = True
-      OnClick = ImgMainClick
+      OnClick = imgMainClick
     end
-    object LbUchet: TLabel
+    object lblUchet: TLabel
       Left = -4
       Top = 209
       Width = 85
@@ -2158,7 +2158,7 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = [fsBold, fsItalic]
       ParentFont = False
     end
-    object LbAuthor: TLabel
+    object lblAuthor: TLabel
       Left = 0
       Top = 16
       Width = 81
@@ -2170,9 +2170,9 @@ object FrmXWAbout: TFrmXWAbout
       Font.Name = 'MS Sans Serif'
       Font.Style = []
       ParentFont = False
-      OnDblClick = LbAuthorDblClick
+      OnDblClick = lblAuthorDblClick
     end
-    object LbYears: TLabel
+    object lblYears: TLabel
       Left = 141
       Top = 181
       Width = 51
@@ -2185,7 +2185,7 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = []
       ParentFont = False
     end
-    object LbRandom: TLabel
+    object lblRandom: TLabel
       Left = 183
       Top = 16
       Width = 9
@@ -2198,7 +2198,7 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = []
       ParentFont = False
     end
-    object LbModule: TLabel
+    object lblModule: TLabel
       Left = -2
       Top = 249
       Width = 205
@@ -2211,12 +2211,12 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = [fsBold, fsItalic]
       ParentFont = False
     end
-    object LbVersion: TLabel
+    object lblVersion: TLabel
       Left = 0
       Top = 275
       Width = 67
       Height = 16
-      Caption = 'Lb_Module'
+      Caption = 'lbl_Module'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clPurple
       Font.Height = -13
@@ -2224,12 +2224,12 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = []
       ParentFont = False
     end
-    object LbDate: TLabel
+    object lblDate: TLabel
       Left = 0
       Top = 297
       Width = 35
       Height = 13
-      Caption = 'LbDate'
+      Caption = 'lblDate'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlue
       Font.Height = -9
@@ -2238,7 +2238,7 @@ object FrmXWAbout: TFrmXWAbout
       ParentFont = False
     end
   end
-  object BtOk: TButton
+  object btnOk: TButton
     Left = 142
     Top = 334
     Width = 65
@@ -2249,7 +2249,7 @@ object FrmXWAbout: TFrmXWAbout
     TabOrder = 1
     IsControl = True
   end
-  object PLinks: TPanel
+  object pnlLinks: TPanel
     Left = 0
     Top = 324
     Width = 136
@@ -2257,7 +2257,7 @@ object FrmXWAbout: TFrmXWAbout
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 2
-    object LbSql: TLabel
+    object lblSql: TLabel
       Left = 8
       Top = 10
       Width = 67
@@ -2269,9 +2269,9 @@ object FrmXWAbout: TFrmXWAbout
       Font.Name = 'MS Sans Serif'
       Font.Style = [fsUnderline]
       ParentFont = False
-      OnClick = LbSqlClick
+      OnClick = lblSqlClick
     end
-    object LbErrors: TLabel
+    object lblErrors: TLabel
       Left = 8
       Top = 29
       Width = 60
@@ -2283,7 +2283,7 @@ object FrmXWAbout: TFrmXWAbout
       Font.Name = 'MS Sans Serif'
       Font.Style = [fsUnderline]
       ParentFont = False
-      OnClick = LbErrorsClick
+      OnClick = lblErrorsClick
     end
   end
 end

@@ -14,9 +14,9 @@ uses
 
 type
   TDlg_NewEstimateInput = class(TForm_MdiGridDialogTemplate)
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     Bt_Load: TBitBtn;
-    Lb_Type: TLabel;
+    lbl_Type: TLabel;
     Bt_LoadSelf: TBitBtn;
     Bt_PasteEstimate: TBitBtn;
     Bt_CopyEstimate: TBitBtn;
@@ -334,14 +334,14 @@ begin
   if (Mode <> fView) and (id <> null)
     then Mode:= fEdit else Mode := fAdd;
   InfoArr := [['Ввод новой сметы.', id = null], ['Редактирование сметы.', id <> null], ['www', False]];
-  P_Top.Visible := True;
-  P_Bottom.Visible := False;
-  Lb_Type.Caption := '';
-  Lb_Caption.Caption := '';
-  Lb_Type.Caption := S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:');
-  Lb_Caption.Caption := TVarDynArray(AddParam)[2];
-  //Lb_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
-  //Lb_Caption.WordWrap := True;
+  pnl_Top.Visible := True;
+  pnl_Bottom.Visible := False;
+  lbl_Type.Caption := '';
+  lbl_Caption.Caption := '';
+  lbl_Type.Caption := S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:');
+  lbl_Caption.Caption := TVarDynArray(AddParam)[2];
+  //lbl_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
+  //lbl_Caption.WordWrap := True;
   Cth.SetBtn(Bt_Load, mybtExcel, True, 'Загрузить смету из файла');
   Cth.SetBtn(Bt_LoadSelf, mybtLoad, True, 'Загрузить текущую смету из БД');
   Cth.SetBtn(Bt_PasteEstimate, mybtPasteEstimate, True, 'Вставить смету из буфера');

@@ -12,7 +12,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
     ExplicitTop = 402
     ExplicitWidth = 878
   end
-  object P_Top: TPanel [1]
+  object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
     Width = 878
@@ -20,7 +20,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    object Cb_Division: TDBComboBoxEh
+    object cmb_Division: TDBComboBoxEh
       Left = 91
       Top = 7
       Width = 546
@@ -36,7 +36,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 0
       Visible = True
     end
-    object Cb_Job: TDBComboBoxEh
+    object cmb_Job: TDBComboBoxEh
       Left = 91
       Top = 34
       Width = 546
@@ -52,7 +52,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 1
       Visible = True
     end
-    object Cb_Head: TDBComboBoxEh
+    object cmb_Head: TDBComboBoxEh
       Left = 91
       Top = 61
       Width = 546
@@ -68,7 +68,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 2
       Visible = True
     end
-    object De_Dt: TDBDateTimeEditEh
+    object dedt_Dt: TDBDateTimeEditEh
       Left = 732
       Top = 7
       Width = 140
@@ -84,7 +84,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 3
       Visible = True
     end
-    object Cb_Status: TDBComboBoxEh
+    object cmb_Status: TDBComboBoxEh
       Left = 732
       Top = 34
       Width = 140
@@ -100,7 +100,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 4
       Visible = True
     end
-    object Ne_Qnt: TDBNumberEditEh
+    object nedt_Qnt: TDBNumberEditEh
       Left = 732
       Top = 61
       Width = 46
@@ -118,7 +118,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 5
       Visible = True
     end
-    object Ne_QntOpen: TDBNumberEditEh
+    object nedt_QntOpen: TDBNumberEditEh
       Left = 826
       Top = 61
       Width = 46
@@ -137,7 +137,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       Visible = True
     end
   end
-  object P_Grid: TPanel [2]
+  object pnl_Grid: TPanel [2]
     Left = 0
     Top = 94
     Width = 878
@@ -145,7 +145,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
-    object Lb_Candidates: TLabel
+    object lbl_Candidates: TLabel
       Left = 18
       Top = 105
       Width = 60
@@ -165,7 +165,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 0
       OnDblClick = DBGridEh1DblClick
       object RowDetailData: TRowDetailPanelControlEh
-        object E_PPComment: TDBEditEh
+        object edt_PPComment: TDBEditEh
           Left = 299
           Top = 215
           Width = 494
@@ -178,7 +178,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
           DynProps = <>
           EditButtons = <>
           TabOrder = 0
-          Text = 'E_PPComment'
+          Text = 'edt_PPComment'
           Visible = False
         end
       end
@@ -211,7 +211,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       OnClick = Bt_EditClick
     end
   end
-  object P_Bottom: TPanel [3]
+  object pnl_Bottom: TPanel [3]
     Left = 0
     Top = 316
     Width = 878
@@ -219,14 +219,14 @@ inherited Dlg_Vacancy: TDlg_Vacancy
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 3
-    object Lb_comm: TLabel
+    object lbl_comm: TLabel
       Left = 15
       Top = 39
       Width = 70
       Height = 13
       Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
     end
-    object De_DtEnd: TDBDateTimeEditEh
+    object dedt_DtEnd: TDBDateTimeEditEh
       Left = 326
       Top = 1
       Width = 140
@@ -242,7 +242,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 0
       Visible = True
     end
-    object Cb_Reason: TDBComboBoxEh
+    object cmb_Reason: TDBComboBoxEh
       Left = 577
       Top = 1
       Width = 295
@@ -258,26 +258,26 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       TabOrder = 1
       Visible = True
     end
-    object M_Comm: TMemo
+    object mem_Comm: TMemo
       Left = 91
       Top = 28
       Width = 781
       Height = 41
       Lines.Strings = (
-        'M_Comm')
+        'mem_Comm')
       TabOrder = 2
     end
-    object Chb_Close: TCheckBox
+    object chb_Close: TCheckBox
       Left = 91
       Top = 1
       Width = 97
       Height = 17
       Caption = #1042#1072#1082#1072#1085#1089#1080#1103' '#1089#1085#1103#1090#1072
       TabOrder = 3
-      OnClick = Chb_CloseClick
+      OnClick = chb_CloseClick
     end
   end
-  object P_Buttons: TPanel [4]
+  object pnl_Buttons: TPanel [4]
     Left = 0
     Top = 391
     Width = 878
@@ -314,7 +314,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
       OnClick = Bt_CancelClick
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 32
     Top = 486
   end

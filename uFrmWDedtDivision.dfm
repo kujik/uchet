@@ -5,17 +5,17 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
   ExplicitWidth = 684
   ExplicitHeight = 290
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 672
     Height = 236
     ExplicitWidth = 852
     ExplicitHeight = 401
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 662
       Height = 187
       ExplicitWidth = 842
       ExplicitHeight = 352
-      object Cb_Office: TDBComboBoxEh
+      object cmb_Office: TDBComboBoxEh
         Left = 104
         Top = 8
         Width = 121
@@ -36,7 +36,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         TabOrder = 0
         Visible = True
       end
-      object E_Code: TDBEditEh
+      object edt_Code: TDBEditEh
         Left = 104
         Top = 35
         Width = 121
@@ -50,10 +50,10 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         EditButtons = <>
         MaxLength = 5
         TabOrder = 1
-        Text = 'E_Code'
+        Text = 'edt_Code'
         Visible = True
       end
-      object E_Name: TDBEditEh
+      object edt_name: TDBEditEh
         Left = 104
         Top = 62
         Width = 509
@@ -66,10 +66,10 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         DynProps = <>
         EditButtons = <>
         TabOrder = 2
-        Text = 'E_Name'
+        Text = 'edt_name'
         Visible = True
       end
-      object Cb_id_head: TDBComboBoxEh
+      object cmb_id_head: TDBComboBoxEh
         Left = 104
         Top = 89
         Width = 508
@@ -82,10 +82,10 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         DynProps = <>
         EditButtons = <>
         TabOrder = 3
-        Text = 'Cb_Cash'
+        Text = 'cmb_Cash'
         Visible = True
       end
-      object E_editusernames: TDBEditEh
+      object edt_editusernames: TDBEditEh
         Left = 104
         Top = 116
         Width = 508
@@ -98,13 +98,13 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         DynProps = <>
         EditButtons = <
           item
-            OnClick = E_usersEditButtons0Click
+            OnClick = edt_usersEditButtons0Click
           end>
         ReadOnly = True
         TabOrder = 4
         Visible = True
       end
-      object Chb_Active: TDBCheckBoxEh
+      object chb_Active: TDBCheckBoxEh
         Left = 101
         Top = 143
         Width = 97
@@ -116,52 +116,52 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         TabOrder = 5
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 192
       Width = 662
       ExplicitTop = 357
       ExplicitWidth = 842
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 660
         ExplicitWidth = 844
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 660
         ExplicitWidth = 844
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 660
         ExplicitWidth = 840
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 561
           ExplicitLeft = 741
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 333
           ExplicitLeft = 513
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 462
           ExplicitLeft = 642
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 193
           ExplicitWidth = 373
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 236
     Width = 672
     ExplicitTop = 401
     ExplicitWidth = 852
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 580
       Height = 14
       ExplicitLeft = 764
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

@@ -55,7 +55,7 @@ begin
   ]);
   Frg1.Opt.SetTable('v_rep_salary', '', 'rownum', False, False); //нельзя обновлять строку, так как у нас нет реального айди
   Frg1.Opt.SetWhere('where dt = :dt$d');
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnGo,User.Role(rW_Rep_Salary_Ch) or User.IsDeveloper],[],[btnExcel],[btnPrintGrid],[],[btnGridSettings],[],[btnCtlPanel]]);
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGo,User.Role(rW_Rep_Salary_Ch) or User.IsDeveloper],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.CreateAddControls('1', cntComboL, 'Дата', 'CbDates', ':', 60, yrefC, 85);
   Frg1.CreateAddControls('1', cntNEditS, 'Период расчета'#13#10'(по 2 недели)', 'NePeriod', '2:24:0:N', 250, yrefC, 45);
   CreateDatesList;
@@ -86,7 +86,7 @@ var
   dt1, dt2, dt3: TDateTime;
   i: Integer;
 begin
-  if (Tag = btnGo) then begin
+  if (Tag = mbtGo) then begin
     if Fr.GetControlValue('CbDates') = null then
       Exit;
     if S.NNum(Fr.GetControlValue('NePeriod')) = 0 then begin
@@ -169,9 +169,9 @@ begin
       va:=[[Turv.GetTurvBegDate(IncDay(va[0][0], 19))]] + va;
   Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbDates')), va);
 {  for i:=0 to High(va) do
-    Cb_Dt.Items.Add(VarToStr(va[i][0]));
-  Cb_Dt.ItemIndex:=0;
-  Cb_Dt.LimitTextToListValues:=True;}
+    cmb_Dt.Items.Add(VarToStr(va[i][0]));
+  cmb_Dt.ItemIndex:=0;
+  cmb_Dt.LimitTextToListValues:=True;}
 end;
 
 

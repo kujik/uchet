@@ -2,21 +2,20 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
   Caption = 'FrmDlgEditNomenclatura'
   ClientHeight = 173
   ClientWidth = 537
-  ExplicitWidth = 553
-  ExplicitHeight = 212
-  PixelsPerInch = 96
+  ExplicitWidth = 549
+  ExplicitHeight = 211
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 537
     Height = 157
-    ExplicitWidth = 537
-    ExplicitHeight = 157
-    inherited PMDIClient: TPanel
+    ExplicitWidth = 533
+    ExplicitHeight = 156
+    inherited pnlFrmClient: TPanel
       Width = 527
-      Height = 111
-      ExplicitWidth = 527
-      ExplicitHeight = 111
-      object E_Name: TDBEditEh
+      Height = 108
+      ExplicitWidth = 523
+      ExplicitHeight = 107
+      object edt_name: TDBEditEh
         Left = 84
         Top = 3
         Width = 439
@@ -31,10 +30,11 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
         EditButtons = <>
         MaxLength = 400
         TabOrder = 0
-        Text = 'E_Name'
+        Text = 'edt_name'
         Visible = True
+        ExplicitWidth = 435
       end
-      object Cb_Id_Group: TDBComboBoxEh
+      object cmb_id_group: TDBComboBoxEh
         Left = 84
         Top = 30
         Width = 441
@@ -48,10 +48,11 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
         DynProps = <>
         EditButtons = <>
         TabOrder = 1
-        Text = 'Cb_Id_Group'
+        Text = 'cmb_id_group'
         Visible = True
+        ExplicitWidth = 437
       end
-      object Cb_Id_Unit: TDBComboBoxEh
+      object cmb_id_unit: TDBComboBoxEh
         Left = 84
         Top = 84
         Width = 115
@@ -64,10 +65,10 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
         DynProps = <>
         EditButtons = <>
         TabOrder = 2
-        Text = 'Cb_Id_Unit'
+        Text = 'cmb_id_unit'
         Visible = True
       end
-      object E_Id_Group_Itm: TDBEditEh
+      object edt_id_group_itm: TDBEditEh
         Left = 84
         Top = 57
         Width = 439
@@ -83,57 +84,62 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
           item
             DefaultAction = True
             Style = ebsPlusEh
-            OnClick = E_Id_Group_ItmEditButtons0Click
+            OnClick = edt_id_group_itmEditButtons0click
           end>
         MaxLength = 400
         TabOrder = 3
-        Text = 'E_Id_Group_Itm'
+        Text = 'edt_id_group_itm'
         Visible = True
+        ExplicitWidth = 435
       end
     end
-    inherited PDlgPanel: TPanel
-      Top = 116
+    inherited pnlFrmBtns: TPanel
+      Top = 113
       Width = 527
-      ExplicitTop = 116
-      ExplicitWidth = 527
-      inherited BvDlg: TBevel
+      ExplicitTop = 112
+      ExplicitWidth = 523
+      inherited bvlFrmBtnsTl: TBevel
         Width = 525
         ExplicitWidth = 525
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 525
         ExplicitWidth = 525
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 525
-        ExplicitWidth = 525
-        inherited PDlgBtnForm: TPanel
+        ExplicitWidth = 521
+        inherited pnlFrmBtnsMain: TPanel
           Left = 426
-          ExplicitLeft = 426
+          ExplicitLeft = 422
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 198
-          ExplicitLeft = 198
+          ExplicitLeft = 194
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 327
-          ExplicitLeft = 327
+          ExplicitLeft = 323
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 58
-          ExplicitWidth = 58
+          ExplicitWidth = 54
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 157
     Width = 537
-    ExplicitTop = 157
-    ExplicitWidth = 537
-    inherited LbStatusBarRight: TLabel
-      Left = 445
-      ExplicitLeft = 445
+    ExplicitTop = 156
+    ExplicitWidth = 533
+    inherited lblStatusBarR: TLabel
+      Left = 464
+      Height = 14
+      ExplicitLeft = 464
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

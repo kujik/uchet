@@ -3,16 +3,15 @@ inherited Dlg_TURV: TDlg_TURV
   ClientHeight = 578
   ClientWidth = 1526
   ExplicitWidth = 1542
-  ExplicitHeight = 616
-  PixelsPerInch = 96
+  ExplicitHeight = 617
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 559
     Width = 1526
     ExplicitTop = 559
     ExplicitWidth = 1526
   end
-  object Panel1: TPanel [1]
+  object pnl1: TPanel [1]
     Left = 0
     Top = 0
     Width = 1526
@@ -20,7 +19,7 @@ inherited Dlg_TURV: TDlg_TURV
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    object P_Left: TPanel
+    object pnl_Left: TPanel
       Left = 0
       Top = 0
       Width = 217
@@ -29,7 +28,7 @@ inherited Dlg_TURV: TDlg_TURV
       BevelOuter = bvNone
       TabOrder = 0
     end
-    object P_Center: TPanel
+    object pnl_Center: TPanel
       Left = 217
       Top = 0
       Width = 1269
@@ -37,23 +36,23 @@ inherited Dlg_TURV: TDlg_TURV
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
-      object Lb_Division: TLabel
+      object lbl_Division: TLabel
         Left = 6
         Top = 4
-        Width = 55
+        Width = 53
         Height = 13
-        Caption = 'Lb_Division'
+        Caption = 'lbl_Division'
       end
-      object Lb_Worker: TLabel
+      object lbl_Worker: TLabel
         Left = 6
         Top = 23
         Width = 1243
         Height = 13
         AutoSize = False
-        Caption = 'Lb_Worker'
+        Caption = 'lbl_Worker'
       end
     end
-    object P_Right: TPanel
+    object pnl_Right: TPanel
       Left = 1486
       Top = 0
       Width = 40
@@ -127,14 +126,14 @@ inherited Dlg_TURV: TDlg_TURV
         Footers = <>
       end>
     object RowDetailData: TRowDetailPanelControlEh
-      object Lb_Title_Worker: TLabel
+      object lbl_Title_Worker: TLabel
         Left = 8
         Top = 8
-        Width = 79
+        Width = 77
         Height = 13
-        Caption = 'Lb_Title_Worker'
+        Caption = 'lbl_Title_Worker'
       end
-      object Label2: TLabel
+      object lbl2: TLabel
         Left = 17
         Top = 414
         Width = 120
@@ -142,14 +141,14 @@ inherited Dlg_TURV: TDlg_TURV
         Caption = #1059#1095#1077#1090' '#1088#1072#1073#1086#1095#1077#1075#1086' '#1074#1088#1077#1084#1077#1085#1080
         Visible = False
       end
-      object Lb_Comment: TLabel
+      object lbl_Comment: TLabel
         Left = 229
         Top = 8
         Width = 44
         Height = 13
         Caption = 'Comment'
       end
-      object Lb_Premium: TLabel
+      object lbl_Premium: TLabel
         Left = 340
         Top = 8
         Width = 40
@@ -201,7 +200,7 @@ inherited Dlg_TURV: TDlg_TURV
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 792
     Top = 472
   end

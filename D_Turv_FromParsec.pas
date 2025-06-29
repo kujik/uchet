@@ -9,14 +9,14 @@ uses
 
 type
   TDlg_Turv_FromParsec = class(TForm_Normal)
-    E_FileName: TDBEditEh;
-    De_1: TDBDateTimeEditEh;
-    De_2: TDBDateTimeEditEh;
+    edt_FileName: TDBEditEh;
+    dedt_1: TDBDateTimeEditEh;
+    dedt_2: TDBDateTimeEditEh;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
     OpenDialog1: TOpenDialog;
     procedure Bt_OkClick(Sender: TObject);
-    procedure E_FileNameEditButtons0Click(Sender: TObject;
+    procedure edt_FileNameEditButtons0Click(Sender: TObject;
       var Handled: Boolean);
   private
     { Private declarations }
@@ -45,22 +45,22 @@ var
   b, b1, b2: Boolean;
 begin
   inherited;
-  b1:= Cth.VerifyControl(De_1);
-  b2:= Cth.VerifyControl(De_2);
-  if b1 and (De_1.Value > Date) then Cth.SetErrorMarker(De_1, True);
-  if b2 and ((De_2.Value > Date)or(De_2.Value < De_1.Value)) then Cth.SetErrorMarker(De_2,True);
-  Cth.SetErrorMarker(E_FileName, (Length(E_FileName.Text) < 6) or not FileExists(FileName));
+  b1:= Cth.VerifyControl(dedt_1);
+  b2:= Cth.VerifyControl(dedt_2);
+  if b1 and (dedt_1.Value > Date) then Cth.SetErrorMarker(dedt_1, True);
+  if b2 and ((dedt_2.Value > Date)or(dedt_2.Value < dedt_1.Value)) then Cth.SetErrorMarker(dedt_2,True);
+  Cth.SetErrorMarker(edt_FileName, (Length(edt_FileName.Text) < 6) or not FileExists(FileName));
   b:=Cth.VerifyVisualise(Self);
   ModalResult:=S.IIf(b, mrOk, mrNone);
 end;
 
-procedure TDlg_Turv_FromParsec.E_FileNameEditButtons0Click(Sender: TObject;
+procedure TDlg_Turv_FromParsec.edt_FileNameEditButtons0Click(Sender: TObject;
   var Handled: Boolean);
 begin
   inherited;
   if OpenDialog1.Execute then begin
     FileName:=OpenDialog1.FileName;
-    E_FileName.Text:=ExtractFileName(FileName);
+    edt_FileName.Text:=ExtractFileName(FileName);
   end;
 end;
 
@@ -70,9 +70,9 @@ var
 begin
   Cth.SetBtn(Bt_Ok, mybtOk, False);
   Cth.SetBtn(Bt_Cancel, mybtCancel, False);
-  if not Cth.DteValueIsDate(De_1) then De_1.Value:=dt1;
-  if not Cth.DteValueIsDate(De_2) then De_2.Value:=min(dt2, Date);
-  Cth.SetControlsVerification([De_1, De_2], [
+  if not Cth.DteValueIsDate(dedt_1) then dedt_1.Value:=dt1;
+  if not Cth.DteValueIsDate(dedt_2) then dedt_2.Value:=min(dt2, Date);
+  Cth.SetControlsVerification([dedt_1, dedt_2], [
     S.DateTimeToIntStr(dt1) + ':' + S.DateTimeToIntStr(dt2),
     S.DateTimeToIntStr(dt1) + ':' + S.DateTimeToIntStr(dt2)
   ]);

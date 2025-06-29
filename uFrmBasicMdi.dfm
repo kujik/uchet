@@ -17,7 +17,7 @@ object FrmBasicMdi: TFrmBasicMdi
   OnCreate = FormCreate
   OnShow = FormShow
   TextHeight = 13
-  object PMDIMain: TPanel
+  object pnlFrmMain: TPanel
     Left = 0
     Top = 0
     Width = 274
@@ -28,7 +28,7 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
-    object PMDIClient: TPanel
+    object pnlFrmClient: TPanel
       Left = 5
       Top = 5
       Width = 264
@@ -37,7 +37,7 @@ object FrmBasicMdi: TFrmBasicMdi
       BevelOuter = bvNone
       TabOrder = 0
     end
-    object PDlgPanel: TPanel
+    object pnlFrmBtns: TPanel
       Left = 5
       Top = 39
       Width = 264
@@ -53,7 +53,7 @@ object FrmBasicMdi: TFrmBasicMdi
       Ctl3D = True
       ParentCtl3D = False
       TabOrder = 1
-      object BvDlg: TBevel
+      object bvlFrmBtnsTl: TBevel
         Left = 1
         Top = 1
         Width = 262
@@ -61,7 +61,7 @@ object FrmBasicMdi: TFrmBasicMdi
         Align = alTop
         ExplicitWidth = 782
       end
-      object BvDlgBottom: TBevel
+      object bvlFrmBtnsB: TBevel
         Left = 1
         Top = 39
         Width = 262
@@ -71,7 +71,7 @@ object FrmBasicMdi: TFrmBasicMdi
         ExplicitTop = 104
         ExplicitWidth = 770
       end
-      object PDlgMain: TPanel
+      object pnlFrmBtnsContainer: TPanel
         Left = 1
         Top = 4
         Width = 262
@@ -88,29 +88,29 @@ object FrmBasicMdi: TFrmBasicMdi
         Padding.Bottom = 4
         ParentCtl3D = False
         TabOrder = 0
-        object PDlgBtnForm: TPanel
+        object pnlFrmBtnsMain: TPanel
           Tag = -1
           Left = 163
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
-          Caption = 'PDlgBtnForm'
+          Caption = 'pnlFrmBtnsMain'
           TabOrder = 0
         end
-        object PDlgChb: TPanel
+        object pnlFrmBtnsChb: TPanel
           Tag = -2
           Left = -65
           Top = 4
           Width = 129
           Height = 27
           Align = alRight
-          Caption = 'PDlgChb'
+          Caption = 'pnlFrmBtnsChb'
           TabOrder = 1
           DesignSize = (
             129
             27)
-          object ChbDlgNoClose: TCheckBox
+          object chbNoclose: TCheckBox
             Left = 6
             Top = -60
             Width = 121
@@ -120,55 +120,55 @@ object FrmBasicMdi: TFrmBasicMdi
             TabOrder = 0
           end
         end
-        object PDlgBtnR: TPanel
+        object pnlFrmBtnsR: TPanel
           Tag = -3
           Left = 64
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
-          Caption = 'PDlgBtnR'
+          Caption = 'pnlFrmBtnsR'
           TabOrder = 2
         end
-        object PDlgInfo: TPanel
+        object pnlFrmBtnsInfo: TPanel
           Tag = 1
           Left = 0
           Top = 4
           Width = 41
           Height = 27
           Align = alLeft
-          Caption = 'PDlgInfo'
+          Caption = 'pnlFrmBtnsInfo'
           TabOrder = 3
-          object ImgFormInfo: TImage
+          object imgFrmInfo: TImage
             Left = 8
             Top = -1
             Width = 20
             Height = 20
           end
         end
-        object PDlgBtnL: TPanel
+        object pnlFrmBtnsL: TPanel
           Tag = 2
           Left = 41
           Top = 4
           Width = 99
           Height = 27
           Align = alLeft
-          Caption = 'PDlgBtnL'
+          Caption = 'pnlFrmBtnsL'
           TabOrder = 4
         end
-        object PDlgCenter: TPanel
+        object pnlFrmBtnsC: TPanel
           Left = 140
           Top = 4
           Width = 11
           Height = 27
           Align = alClient
-          Caption = 'PDlgCenter'
+          Caption = 'pnlFrmBtnsC'
           TabOrder = 5
         end
       end
     end
   end
-  object PStatusBar: TPanel
+  object pnlStatusBar: TPanel
     Left = 0
     Top = 83
     Width = 274
@@ -179,24 +179,24 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Right = 8
     ParentBackground = False
     TabOrder = 1
-    object LbStatusBarRight: TLabel
+    object lblStatusBarR: TLabel
       Left = 186
       Top = 1
-      Width = 83
+      Width = 64
       Height = 13
       Align = alRight
-      Caption = 'LbStatusBarRight'
+      Caption = 'lblStatusBarR'
     end
-    object LbStatusBarLeft: TLabel
+    object lblStatusBarL: TLabel
       Left = 9
       Top = 1
-      Width = 77
+      Width = 62
       Height = 13
       Align = alLeft
-      Caption = 'LbStatusBarLeft'
+      Caption = 'lblStatusBarL'
     end
   end
-  object Timer_AfterStart: TTimer
+  object tmrAfterCreate: TTimer
     Interval = 1
     Left = 8
     Top = 96

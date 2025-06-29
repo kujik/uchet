@@ -5,13 +5,13 @@ object FrDBGridEh: TFrDBGridEh
   Height = 469
   TabOrder = 0
   OnResize = FrameResize
-  object PGrid: TPanel
+  object pnlGrid: TPanel
     Left = 10
     Top = 54
     Width = 740
     Height = 415
     Align = alClient
-    Caption = 'PGrid'
+    Caption = 'pnlGrid'
     TabOrder = 0
     object DbGridEh1: TDBGridEh
       Left = 1
@@ -52,16 +52,16 @@ object FrDBGridEh: TFrDBGridEh
         end
       end
     end
-    object PStatus: TPanel
+    object pnlStatusBar: TPanel
       Left = 1
       Top = 393
       Width = 738
       Height = 21
       Align = alBottom
-      Caption = 'PStatus'
+      Caption = 'pnlStatusBar'
       TabOrder = 1
       OnResize = PStatusResize
-      object LbStatusBarLeft: TLabel
+      object lblStatusBarL: TLabel
         Left = 1
         Top = 1
         Width = 3
@@ -87,7 +87,7 @@ object FrDBGridEh: TFrDBGridEh
       Visible = False
     end
   end
-  object PLeft: TPanel
+  object pnlLeft: TPanel
     Left = 0
     Top = 54
     Width = 10
@@ -95,7 +95,7 @@ object FrDBGridEh: TFrDBGridEh
     Align = alLeft
     TabOrder = 1
   end
-  object PTop: TPanel
+  object pnlTop: TPanel
     Left = 0
     Top = 49
     Width = 750
@@ -103,7 +103,7 @@ object FrDBGridEh: TFrDBGridEh
     Align = alTop
     TabOrder = 2
   end
-  object PContainer: TPanel
+  object pnlContainer: TPanel
     Left = 0
     Top = 0
     Width = 750
@@ -111,13 +111,13 @@ object FrDBGridEh: TFrDBGridEh
     Align = alTop
     TabOrder = 3
   end
-  object PBottom: TPanel
+  object pnlBottom: TPanel
     Left = 0
     Top = 469
     Width = 750
     Height = 0
     Align = alBottom
-    Caption = 'PBottom'
+    Caption = 'pnlBottom'
     TabOrder = 4
   end
   object MemTableEh1: TMemTableEh
@@ -198,9 +198,9 @@ object FrDBGridEh: TFrDBGridEh
       34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
       305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
   end
-  object TimerAfterStart: TTimer
+  object tmrAfterCreate: TTimer
     Interval = 1
-    OnTimer = TimerAfterStartTimer
+    OnTimer = tmrAfterCreateTimer
     Left = 234
     Top = 398
   end

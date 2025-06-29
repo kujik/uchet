@@ -14,7 +14,7 @@ object Dlg_SetPassword: TDlg_SetPassword
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_MinLen: TLabel
+  object lbl_MinLen: TLabel
     Left = 85
     Top = 62
     Width = 112
@@ -41,7 +41,7 @@ object Dlg_SetPassword: TDlg_SetPassword
     ModalResult = 2
     TabOrder = 1
   end
-  object E_Pwd1: TDBEditEh
+  object edt_Pwd1: TDBEditEh
     Left = 85
     Top = 8
     Width = 137
@@ -58,7 +58,7 @@ object Dlg_SetPassword: TDlg_SetPassword
     TabOrder = 2
     Visible = True
   end
-  object E_Pwd2: TDBEditEh
+  object edt_Pwd2: TDBEditEh
     Left = 85
     Top = 35
     Width = 137

@@ -132,17 +132,17 @@ type
     //--------------------------------------------------------------------------
     //процедуры для конкретных отчетов
     procedure D_StdItemsAddCompl;
-    procedure P_StdItemsAddCompl(Name: string; Id: Integer; Copyes: Integer; Prefix: string = '02');
+    procedure pnl_StdItemsAddCompl(Name: string; Id: Integer; Copyes: Integer; Prefix: string = '02');
     procedure D_StdItem;
-    procedure P_StdItem(ID: Integer; Show: Boolean = True);
+    procedure pnl_StdItem(ID: Integer; Show: Boolean = True);
     procedure D_Turvl;
-    procedure P_OrderLabels(Id: Integer; MemTableEh1: TMemTableEh; OrderFields: TVarDynArray);
+    procedure pnl_OrderLabels(Id: Integer; MemTableEh1: TMemTableEh; OrderFields: TVarDynArray);
     procedure D_OrderLabels;
-    procedure P_Order(Id: Integer);
-    procedure P_PayrollLabels(MemTableEh1:TMemTableEh);
+    procedure pnl_Order(Id: Integer);
+    procedure pnl_PayrollLabels(MemTableEh1:TMemTableEh);
     //печать сметы;  1-смета на стд изделие или позицию заказа; 2 - объединенная смета
-    procedure P_Estimate(MemTableEh1:TMemTableEh; Mode: Integer);
-    procedure P_InvoiceToSgp(MemTableEh1:TMemTableEh);
+    procedure pnl_Estimate(MemTableEh1:TMemTableEh; Mode: Integer);
+    procedure pnl_InvoiceToSgp(MemTableEh1:TMemTableEh);
   end;
 
 
@@ -202,7 +202,7 @@ begin
   frxReport1.DesignReport;
 end;
 
-procedure TPrintReport.P_StdItemsAddCompl(Name: string; Id: Integer; Copyes: Integer; Prefix: string = '02');
+procedure TPrintReport.pnl_StdItemsAddCompl(Name: string; Id: Integer; Copyes: Integer; Prefix: string = '02');
 var
   BarCode: TfrxBarCodeView;
   Memo: TfrxMemoView;
@@ -253,7 +253,7 @@ begin
   frxReport1.DesignReport;
 end;
 
-procedure TPrintReport.P_StdItem(ID: Integer; Show: Boolean = True);
+procedure TPrintReport.pnl_StdItem(ID: Integer; Show: Boolean = True);
 var
   FieldNames: string;
   BarCode: TfrxBarCodeView;
@@ -312,7 +312,7 @@ begin
   frxReport1.DesignReport;
 end;
 
-procedure TPrintReport.P_OrderLabels(Id: Integer; MemTableEh1: TMemTableEh; OrderFields: TVarDynArray);
+procedure TPrintReport.pnl_OrderLabels(Id: Integer; MemTableEh1: TMemTableEh; OrderFields: TVarDynArray);
 var
   BarCode: TfrxBarCodeView;
   Memo: TfrxMemoView;
@@ -397,7 +397,7 @@ st:=MemTableEh1.FieldByName('qnt_p').AsString;
   end;
 end;
 
-procedure TPrintReport.P_Order(Id: Integer);
+procedure TPrintReport.pnl_Order(Id: Integer);
 //печать паспорта заказа, на основе даннх из БД
 begin
   try
@@ -424,7 +424,7 @@ begin
 end;
 
 
-procedure TPrintReport.P_PayrollLabels(MemTableEh1:TMemTableEh);
+procedure TPrintReport.pnl_PayrollLabels(MemTableEh1:TMemTableEh);
 //печать этикеток на конверты, на основе мемтейбл
 begin
   try
@@ -443,7 +443,7 @@ begin
   end;
 end;
 
-procedure TPrintReport.P_Estimate(MemTableEh1:TMemTableEh; Mode: Integer);
+procedure TPrintReport.pnl_Estimate(MemTableEh1:TMemTableEh; Mode: Integer);
 //печать сметы;  1-смета на стд изделие или позицию заказа; 2 - объединенная смета
 begin
   try
@@ -463,7 +463,7 @@ begin
   end;
 end;
 
-procedure TPrintReport.P_InvoiceToSgp(MemTableEh1:TMemTableEh);
+procedure TPrintReport.pnl_InvoiceToSgp(MemTableEh1:TMemTableEh);
 begin
   try
   frxReport1.LoadFromFile(GetReportFileFr3('Накладная перемещения на СГП'), True);

@@ -14,7 +14,7 @@ uses
 
 type
   TFrmOGinfSgp = class(TFrmBasicGrid2)
-    LbCaption: TLabel;
+    lblCaption: TLabel;
   private
     function  PrepareForm: Boolean; override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
@@ -55,7 +55,7 @@ begin
   ]);
   //заголовочный лейбл - наименование выбранного для детализации изделия
   va:= Q.QSelectOneRow('select slash, name from v_sgp_sell_items where id = :id$i', [ID]);
-  LbCaption.SetCaption2('$FF0000 ' + S.NSt(va[0]) + ' $000000 ' + S.NSt(va[1]));
+  lblCaption.SetCaption2('$FF0000 ' + S.NSt(va[0]) + ' $000000 ' + S.NSt(va[1]));
 
   FldDef := [
     ['id_order','_id','40'],

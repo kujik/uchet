@@ -11,13 +11,13 @@ uses
 
 type
   TFrmWDedtDivision = class(TFrmBasicDbDialog)
-    Cb_Office: TDBComboBoxEh;
-    E_Code: TDBEditEh;
-    E_Name: TDBEditEh;
-    Cb_id_head: TDBComboBoxEh;
-    E_editusernames: TDBEditEh;
-    Chb_Active: TDBCheckBoxEh;
-    procedure E_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
+    cmb_Office: TDBComboBoxEh;
+    edt_Code: TDBEditEh;
+    edt_name: TDBEditEh;
+    cmb_id_head: TDBComboBoxEh;
+    edt_editusernames: TDBEditEh;
+    chb_Active: TDBCheckBoxEh;
+    procedure edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -65,24 +65,24 @@ begin
   Result:=inherited;
   if not Result then
     Exit;
-  E_editusernames.ReadOnly := True;
+  edt_editusernames.ReadOnly := True;
 end;
 
 
 function TFrmWDedtDivision.LoadComboBoxes: Boolean;
 begin
-  Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], Cb_id_head, cntComboLK);
-  Cth.AddToComboBoxEh(Cb_office, [['÷ех',0], ['ќфис',1]]);
+  Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], cmb_id_head, cntComboLK);
+  Cth.AddToComboBoxEh(cmb_office, [['÷ех',0], ['ќфис',1]]);
   Result := True;
 end;
 
-procedure TFrmWDedtDivision.E_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
+procedure TFrmWDedtDivision.edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
 var
   NewIds, NewNames: string;
 begin
   if Dlg_SelectUsers.ShowDialog(FormDoc + '_1', F.GetProp('editusers'), True, NewIds, NewNames) <> mrOk then
     exit;
-  E_editusernames.Value := NewNames;
+  edt_editusernames.Value := NewNames;
   F.SetProp('editusers', NewIds);
 end;
 

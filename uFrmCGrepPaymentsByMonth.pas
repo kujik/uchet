@@ -18,7 +18,7 @@ type
     Chart1: TChart;
     Series1: TLineSeries;
     Series2: TPieSeries;
-    DBComboBoxEh1: TDBComboBoxEh;
+    cmb1: TDBComboBoxEh;
     procedure Frg1DbGridEh1ColEnter(Sender: TObject);
   private
     function  PrepareForm: Boolean; override;
@@ -55,7 +55,7 @@ begin
     va2 := va2 + [['s' + IntToStr(i) + '$i', MonthsRu[i], '70', 'f=f:']];
   va2 := va2 + [['sall$i', 'Всего', '80', 'f=f:']];
   Frg1.Opt.SetFields(va2);
-  Frg1.Opt.SetButtons(1, [[btnRefresh],[],[btnCtlPanel]]);
+  Frg1.Opt.SetButtons(1, [[mbtRefresh],[],[mbtCtlPanel]]);
   Frg1.CreateAddControls('1', cntComboL, 'За год', 'CbYear', '', 4, yrefC, 60);
   Frg1.CreateAddControls('1', cntCheck, 'По статьям расходов', 'ChbItems', '', 68, yrefT, 220);
   Frg1.CreateAddControls('1', cntCheck, 'По группам статей', 'ChbGroups', '', 68, yrefB, 220);
@@ -84,7 +84,7 @@ end;
 
 procedure TFrmCGrepPaymentsByMonth.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = btnRefresh then begin
+  if Tag = mbtRefresh then begin
     LoadData;
     Q.QExecSql('update sn_initialdebt set sum = :sum', [Frg1.GetControlValue('NeInitialDebt')]);
     Exit;
@@ -219,7 +219,7 @@ begin
   'a.sum as sumall '+
   'from '+
   '( '+
-  '(select to_char(p.dtpaid, ''mm'') month, sum(p.sum) sum1, sum(round(p.sum/((a.nds+100)/100))) sum, max(g.name) as ie_name'+             //RoundTo(Ne_Sum.Value / ((nds + 100) /100), -2);
+  '(select to_char(p.dtpaid, ''mm'') month, sum(p.sum) sum1, sum(round(p.sum/((a.nds+100)/100))) sum, max(g.name) as ie_name'+             //RoundTo(nedt_Sum.Value / ((nds + 100) /100), -2);
   '  from'+
   '    sn_calendar_payments p, sn_calendar_accounts a, ref_expenseitems i, ref_grexpenseitems g'+
   '  where'+

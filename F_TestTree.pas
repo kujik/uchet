@@ -14,18 +14,18 @@ type
     DataSource1: TDataSource;
     MemTableEh1: TMemTableEh;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     Bt_Ok: TBitBtn;
     ADODataDriverEh1: TADODataDriverEh;
     Bt_Collapse: TBitBtn;
     Bt_Expand: TBitBtn;
-    Chb_Materials: TDBCheckBoxEh;
+    chb_Materials: TDBCheckBoxEh;
     procedure Bt_OkClick(Sender: TObject);
     procedure Bt_CollapseClick(Sender: TObject);
     procedure Bt_ExpandClick(Sender: TObject);
     procedure DBGridEh1DblClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure Chb_MaterialsClick(Sender: TObject);
+    procedure chb_MaterialsClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
     { Private declarations }
@@ -119,7 +119,7 @@ begin
 //    then MyInfoMessage(MemTableEh1.FieldByName('groupname').AsString);
 end;
 
-procedure TForm_TestTree.Chb_MaterialsClick(Sender: TObject);
+procedure TForm_TestTree.chb_MaterialsClick(Sender: TObject);
 var
   st:string;
 begin
@@ -146,7 +146,7 @@ procedure TForm_TestTree.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
   Settings.WriteProperty(FormDoc, 'position_tree', SavePositionTreeStr(MemTableEh1));
-  Settings.WriteProperty(FormDoc, 'materials_only', Cth.GetControlValue(Chb_Materials));
+  Settings.WriteProperty(FormDoc, 'materials_only', Cth.GetControlValue(chb_Materials));
 end;
 
 procedure TForm_TestTree.FormShow(Sender: TObject);
@@ -163,7 +163,7 @@ begin
     'select id_group, id_parentgroup, groupname from dv.groups g1 ' +
     'connect by prior g1.id_group = g1.id_parentgroup '+
     'start with g1.id_group = '+
-    S.IIfStr(Chb_Materials.checked, '4', '1')+
+    S.IIfStr(chb_Materials.checked, '4', '1')+
     ' order by groupname'
     ;
 end;
@@ -226,7 +226,7 @@ begin
   MemTableEh1.ReadOnly:=False;
 
   st:=Settings.ReadProperty(FormDoc, 'position_tree');
-  Cth.SetControlValue(Chb_Materials, S.IIf(Settings.ReadProperty(FormDoc, 'materials_only') = '1', 1, 0));
+  Cth.SetControlValue(chb_Materials, S.IIf(Settings.ReadProperty(FormDoc, 'materials_only') = '1', 1, 0));
 
   SetQuery;
 

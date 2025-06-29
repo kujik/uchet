@@ -6,18 +6,18 @@ inherited Form_MdiDialogTemplate: TForm_MdiDialogTemplate
   ExplicitHeight = 390
   PixelsPerInch = 96
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 342
     Width = 584
     TabOrder = 1
     ExplicitTop = 342
     ExplicitWidth = 584
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 495
       ExplicitLeft = 495
     end
   end
-  object P_Bottom: TPanel [1]
+  object pnl_Bottom: TPanel [1]
     Left = 0
     Top = 311
     Width = 584
@@ -34,7 +34,7 @@ inherited Form_MdiDialogTemplate: TForm_MdiDialogTemplate
       Width = 20
       Height = 20
     end
-    object Bevel1: TBevel
+    object bvl1: TBevel
       Left = 0
       Top = 0
       Width = 584
@@ -68,7 +68,7 @@ inherited Form_MdiDialogTemplate: TForm_MdiDialogTemplate
       OnClick = Bt_CancelClick
       ExplicitTop = 3
     end
-    object Chb_NoClose: TCheckBox
+    object chb_NoClose: TCheckBox
       Left = 290
       Top = 9
       Width = 121
@@ -79,7 +79,7 @@ inherited Form_MdiDialogTemplate: TForm_MdiDialogTemplate
       ExplicitTop = 8
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 240
     Top = 160
   end

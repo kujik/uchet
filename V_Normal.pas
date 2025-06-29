@@ -101,7 +101,7 @@ begin
     if x + Self.Width > FrmMain.Width - 25 then x := FrmMain.Width - Self.Width-25;
     Self.Left:=max(x, 0);
     i:=TForm(ParentForm).Top + delta;
-    if TForm(Parentform).FormStyle=fsMDIChild then i:=i+FrmMain.Lb_GetTop.Top;
+    if TForm(Parentform).FormStyle=fsMDIChild then i:=i+FrmMain.lbl_GetTop.Top;
     x:=i + TForm(ParentForm).Height div 2 - Self.Height div 2;
     if x + Self.Height > FrmMain.FormsList.Top - 10 + delta then x := FrmMain.FormsList.Top - Self.Height- 10 + delta;
     Self.Top:=max(x, 0);

@@ -13,24 +13,24 @@ uses
 
 type
   TFrmXWndUserInterface = class(TFrmBasicMdi)
-    PLeft: TPanel;
-    Bevel1: TBevel;
-    Bt_Def: TBitBtn;
-    Chb_DesignReports: TCheckBox;
-    Cb_D: TDBComboBoxEh;
-    Cb_J: TDBComboBoxEh;
-    Cb_Q: TDBComboBoxEh;
-    Cb_Styles: TDBComboBoxEh;
-    Bt_1: TBitBtn;
-    RadioButton1: TRadioButton;
-    CheckBox1: TCheckBox;
-    DBEditEh1: TDBEditEh;
-    Label1: TLabel;
-    Label2: TLabel;
+    pnlLeft: TPanel;
+    bvl1: TBevel;
+    btnDef: TBitBtn;
+    chbDesignReports: TCheckBox;
+    cmbD: TDBComboBoxEh;
+    cmbJ: TDBComboBoxEh;
+    cmbQ: TDBComboBoxEh;
+    cmbStyles: TDBComboBoxEh;
+    btn1: TBitBtn;
+    rb1: TRadioButton;
+    chb1: TCheckBox;
+    edt1: TDBEditEh;
+    lbl1: TLabel;
+    lbl2: TLabel;
     Frg1: TFrDBGridEh;
     procedure Bt_DefClick(Sender: TObject);
   private
-    function Prepare: Boolean; override;
+    function  Prepare: Boolean; override;
     procedure ControlOnChange(Sender: TObject); override;
   public
   end;
@@ -54,10 +54,10 @@ uses
 
 procedure TFrmXWndUserInterface.Bt_DefClick(Sender: TObject);
 begin
-  Cb_Q.ItemIndex:=0;
-  Cb_J.ItemIndex:=0;
-  Cb_D.ItemIndex:=1;
-  Cb_Styles.ItemIndex:=0;
+  cmbQ.ItemIndex:=0;
+  cmbJ.ItemIndex:=0;
+  cmbD.ItemIndex:=1;
+  cmbStyles.ItemIndex:=0;
 end;
 
 procedure TFrmXWndUserInterface.ControlOnChange(Sender: TObject);
@@ -65,13 +65,13 @@ var
   st: string;
 begin
   if FInPrepare then Exit;
-  if A.InArray(TControl(Sender).Name, ['Cb_Q', 'Cb_J', 'Cb_D']) then
-    Settings.WriteInterfaceSettings(S.IIFStr(Cb_Styles.ItemIndex = 0, '', Cb_Styles.Text), Cb_Q.ItemIndex, Cb_J.ItemIndex, Cb_D.ItemIndex)
-  else if TControl(Sender).Name = 'Chb_DesignReports' then
-    PrintReport.SetDesignReport(Chb_DesignReports.Checked)
-  else if TControl(Sender).Name = 'Cb_Styles' then begin
-    if Cb_Styles.Text = 'СТАНДАРТ' then st:='' else st:= Module.GetPath_Styles + '\' + Cb_Styles.Text;
-    Settings.WriteInterfaceSettings(S.IIFStr(Cb_Styles.ItemIndex = 0, '', Cb_Styles.Text), Cb_Q.ItemIndex, Cb_J.ItemIndex, Cb_D.ItemIndex);
+  if A.InArray(TControl(Sender).Name, ['cmbQ', 'cmbJ', 'cmbD']) then
+    Settings.WriteInterfaceSettings(S.IIFStr(cmbStyles.ItemIndex = 0, '', cmbStyles.Text), cmbQ.ItemIndex, cmbJ.ItemIndex, cmbD.ItemIndex)
+  else if TControl(Sender).Name = 'chbDesignReports' then
+    PrintReport.SetDesignReport(chbDesignReports.Checked)
+  else if TControl(Sender).Name = 'cmbStyles' then begin
+    if cmbStyles.Text = 'СТАНДАРТ' then st:='' else st:= Module.GetPath_Styles + '\' + cmbStyles.Text;
+    Settings.WriteInterfaceSettings(S.IIFStr(cmbStyles.ItemIndex = 0, '', cmbStyles.Text), cmbQ.ItemIndex, cmbJ.ItemIndex, cmbD.ItemIndex);
     Module.SetStyle(st);
     Close;
     FrmMain.TimerSetStyle.Enabled := True;
@@ -97,24 +97,24 @@ begin
   Frg1.Prepare;
   Frg1.RefreshGrid;
 
-  Cth.SetBtn(Bt_1, mybtCancel);
-  Bt_1.Caption:='Кнопка';
-  //Label1.Font.Color:=rgb(200,10,210);
+  Cth.SetBtn(btn1, mybtCancel);
+  btn1.Caption:='Кнопка';
+  //lbl1.Font.Color:=rgb(200,10,210);
   sda:=Sys.GetFileInDirectoryOnly(Module.GetPath_Styles);
-  Cb_Styles.Items.Add('СТАНДАРТ');
-  for i:=0 to high(sda) do Cb_Styles.Items.Add(SysUtils.ExtractFileName(sda[i]));
-  if Module.StyleName='' then Cb_Styles.ItemIndex:= 0 else Cb_Styles.Text:=Module.StyleName;
-  Cb_Q.Items.Add('Завершить без подтверждения');
-  Cb_Q.Items.Add('Спросить, если открыты любые окна');
-  Cb_Q.Items.Add('Спросить, если открыт ввод данных');
-  Cb_Q.ItemIndex:=Settings.InterfaceQuit;
-  Cb_J.Items.Add('Открывать только одно окно данного типа');
-  Cb_J.Items.Add('Открывать несколько окон');
-  Cb_J.ItemIndex:=Settings.InterfaceFormsN;
-  Cb_D.Items.Add('Открывать только одно окно данного типа');
-  Cb_D.Items.Add('Открывать несколько окон');
-  Cb_D.ItemIndex:=Settings.InterfaceDialogsN;
-  Chb_DesignReports.Checked:=PrintReport.DesignReport;
+  cmbStyles.Items.Add('СТАНДАРТ');
+  for i:=0 to high(sda) do cmbStyles.Items.Add(SysUtils.ExtractFileName(sda[i]));
+  if Module.StyleName='' then cmbStyles.ItemIndex:= 0 else cmbStyles.Text:=Module.StyleName;
+  cmbQ.Items.Add('Завершить без подтверждения');
+  cmbQ.Items.Add('Спросить, если открыты любые окна');
+  cmbQ.Items.Add('Спросить, если открыт ввод данных');
+  cmbQ.ItemIndex:=Settings.InterfaceQuit;
+  cmbJ.Items.Add('Открывать только одно окно данного типа');
+  cmbJ.Items.Add('Открывать несколько окон');
+  cmbJ.ItemIndex:=Settings.InterfaceFormsN;
+  cmbD.Items.Add('Открывать только одно окно данного типа');
+  cmbD.Items.Add('Открывать несколько окон');
+  cmbD.ItemIndex:=Settings.InterfaceDialogsN;
+  chbDesignReports.Checked:=PrintReport.DesignReport;
   FOpt.AutoAlignControls := False;
   Result:=True;
 end;

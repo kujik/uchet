@@ -17,12 +17,12 @@ inherited Dlg_Otk: TDlg_Otk
     Anchors = []
     ExplicitTop = 185
   end
-  object Lb_Caption: TLabel
+  object lbl_Caption: TLabel
     Left = 8
     Top = 5
     Width = 54
     Height = 13
-    Caption = 'Lb_Caption'
+    Caption = 'lbl_Caption'
   end
   object DBGridEh1: TDBGridEh
     Left = 0
@@ -37,7 +37,7 @@ inherited Dlg_Otk: TDlg_Otk
     RowDetailPanel.Height = 250
     TabOrder = 0
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -50,7 +50,7 @@ inherited Dlg_Otk: TDlg_Otk
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end

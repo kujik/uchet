@@ -64,10 +64,10 @@ var
 begin
   Result := False;
   FOpt.DlgPanelStyle := dpsBottomRight;
-  i := Cth.CreateLabelColors(PTop, FTitleTexts);
+  i := Cth.CreateLabelColors(pnlTop, FTitleTexts);
   if i > 0 then
-    PTop.Height := i;
-  PTop.Visible := PTop.ControlCount > 0;
+    pnlTop.Height := i;
+  pnlTop.Visible := pnlTop.ControlCount > 0;
   if not PrepareFormAdd then
     Exit;
   Result := Inherited;
@@ -76,8 +76,8 @@ end;
 
 function TFrmBasicEditabelGrid.PrepareFormAdd: Boolean;
 begin
-  Frg1.Opt.SetButtons(4, [[btnInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations], [btnAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
-    [btnDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],[btnDividorA],[-4]], cbttBSmall, PDlgBtnR
+  Frg1.Opt.SetButtons(4, [[mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations], [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
+    [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],[mbtDividorA],[-4]], cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
 end;

@@ -11,7 +11,7 @@ uses
 
 type
   TDlg_SuppliersMinPart = class(TForm_MdiGridDialogTemplate)
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
@@ -230,9 +230,9 @@ begin
      'Данные будут сохранены (если они корректны) при нажатии кнопки "Ок".'#13#10
     , Mode = fEdit]
   ];
-  P_Top.Visible:=True;
-  P_Bottom.Visible:=False;
-  Lb_Caption.Caption := AddParam[0];
+  pnl_Top.Visible:=True;
+  pnl_Bottom.Visible:=False;
+  lbl_Caption.Caption := AddParam[0];
   Result := True;
 end;
 

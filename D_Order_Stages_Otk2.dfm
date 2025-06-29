@@ -7,12 +7,12 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
   ExplicitHeight = 294
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_Caption: TLabel
+  object lbl_Caption: TLabel
     Left = 8
     Top = 5
     Width = 54
     Height = 13
-    Caption = 'Lb_Caption'
+    Caption = 'lbl_Caption'
   end
   object Img_Info: TImage
     Left = 8
@@ -21,7 +21,7 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     Height = 20
     Anchors = [akLeft, akBottom]
   end
-  object Bevel1: TBevel
+  object bvl1: TBevel
     Left = 748
     Top = 231
     Width = 3
@@ -44,7 +44,7 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     OnKeyPress = DBGridEh1KeyPress
     OnSumListAfterRecalcAll = DBGridEh1SumListAfterRecalcAll
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -57,7 +57,7 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end
@@ -116,9 +116,9 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     Left = 75
     Top = 76
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 100
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 48
     Top = 232
   end

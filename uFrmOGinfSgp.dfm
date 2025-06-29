@@ -4,26 +4,26 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
   ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
-      inherited PTop: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
+      inherited pnlTop: TPanel
         Height = 25
         ExplicitHeight = 25
-        object LbCaption: TLabel
+        object lblCaption: TLabel
           Left = 11
           Top = 7
           Width = 48
           Height = 13
-          Caption = 'LbCaption'
+          Caption = 'lblCaption'
         end
       end
-      inherited PLeft: TPanel
+      inherited pnlLeft: TPanel
         Top = 25
         Height = 401
         ExplicitTop = 25
         ExplicitHeight = 401
       end
-      inherited PGrid1: TPanel
+      inherited pnlGrid1: TPanel
         Top = 25
         Height = 401
         ExplicitTop = 25
@@ -31,22 +31,22 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
         inherited Frg1: TFrDBGridEh
           Height = 399
           ExplicitHeight = 399
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             Height = 345
             ExplicitHeight = 345
             inherited DbGridEh1: TDBGridEh
               Height = 322
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               Top = 323
               ExplicitTop = 323
             end
           end
-          inherited PLeft: TPanel
+          inherited pnlLeft: TPanel
             Height = 345
             ExplicitHeight = 345
           end
-          inherited PBottom: TPanel
+          inherited pnlBottom: TPanel
             Top = 399
             ExplicitTop = 399
           end
@@ -65,7 +65,7 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -82,7 +82,7 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
           end
         end
       end
-      inherited PRight: TPanel
+      inherited pnlRight: TPanel
         Top = 25
         Height = 401
         ExplicitTop = 25

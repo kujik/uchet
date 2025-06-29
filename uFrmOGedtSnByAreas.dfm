@@ -2,9 +2,9 @@ inherited FrmOGedtSnByAreas: TFrmOGedtSnByAreas
   Caption = 'FrmOGedtSnByAreas'
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
-      inherited PGrid1: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
+      inherited pnlGrid1: TPanel
         inherited Frg1: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -21,7 +21,7 @@ inherited FrmOGedtSnByAreas: TFrmOGedtSnByAreas
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {

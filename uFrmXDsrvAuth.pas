@@ -27,18 +27,18 @@ uses
 
 type
   TFrmXDsrvAuth = class(TForm)
-    CbUser: TDBComboBoxEh;
-    EPwd: TDBEditEh;
-    BtOk: TBitBtn;
-    BtCancel: TBitBtn;
-    ImgUchet: TImage;
-    procedure BtOkClick(Sender: TObject);
-    procedure BtCancelClick(Sender: TObject);
+    cmbUser: TDBComboBoxEh;
+    edtPwd: TDBEditEh;
+    btnOk: TBitBtn;
+    btnCancel: TBitBtn;
+    imgUchet: TImage;
+    procedure btnOkClick(Sender: TObject);
+    procedure btnCancelClick(Sender: TObject);
     procedure ImgUchetDblClick(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
     { Private declarations }
-    ShowNoActiveUsers: Boolean;
+    FShowNoActiveUsers: Boolean;
   public
     { Public declarations }
     function ShowDialog: Integer;
@@ -57,7 +57,7 @@ uses uFrmMain;
 
 //uses uFrmMain;
 
-procedure TFrmXDsrvAuth.BtCancelClick(Sender: TObject);
+procedure TFrmXDsrvAuth.btnCancelClick(Sender: TObject);
 begin
   if Not(User.IsLogged) then
     begin
@@ -65,12 +65,12 @@ begin
     end;
 end;
 
-procedure TFrmXDsrvAuth.BtOkClick(Sender: TObject);
+procedure TFrmXDsrvAuth.btnOkClick(Sender: TObject);
 var
   v: TVarDynArray;
   b: Boolean;
 begin
-  if User.LoginManual(CbUser.text, EPwd.text)
+  if User.LoginManual(cmbUser.text, edtPwd.text)
     then begin
       ModalResult:=mrOk;
       Hide;
@@ -83,23 +83,23 @@ end;
 function TFrmXDsrvAuth.ShowDialog: Integer;
 begin
   Cth.SetDialogForm(Self, fNone, 'Авторизация');
-  EPwd.Text:='';
-  CbUser.Text:='';
-  ShowNoActiveUsers:=False;
-  User.SetUsersComboBox(CbUser);
+  edtPwd.Text:='';
+  cmbUser.Text:='';
+  FShowNoActiveUsers:=False;
+  User.SetUsersComboBox(cmbUser);
   Result:=ShowModal;
 end;
 
 procedure TFrmXDsrvAuth.ImgUchetDblClick(Sender: TObject);
 begin
-  if CbUser.Text <> 'Администратор' then Exit;
-  ShowNoActiveUsers:=True;
-  User.SetUsersComboBox(CbUser, ShowNoActiveUsers);
+  if cmbUser.Text <> 'Администратор' then Exit;
+  FShowNoActiveUsers:=True;
+  User.SetUsersComboBox(cmbUser, FShowNoActiveUsers);
 end;
 
 procedure TFrmXDsrvAuth.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key=#13 then BtOkClick(nil);
+  if Key=#13 then btnOkClick(nil);
 end;
 
 //основной диалог авторизации

@@ -13,26 +13,26 @@ uses
 
   type
   TFrmXWAbout = class(TForm_Normal)
-    PMain: TPanel;
-    BtOk: TButton;
-    ImgMain: TImage;
-    LbUchet: TLabel;
-    LbAuthor: TLabel;
-    LbYears: TLabel;
-    LbRandom: TLabel;
-    LbModule: TLabel;
-    LbVersion: TLabel;
-    LbDate: TLabel;
-    PLinks: TPanel;
-    LbSql: TLabel;
-    LbErrors: TLabel;
-    procedure LbAuthorDblClick(Sender: TObject);
+    pnlMain: TPanel;
+    btnOk: TButton;
+    imgMain: TImage;
+    lblUchet: TLabel;
+    lblAuthor: TLabel;
+    lblYears: TLabel;
+    lblRandom: TLabel;
+    lblModule: TLabel;
+    lblVersion: TLabel;
+    lblDate: TLabel;
+    pnlLinks: TPanel;
+    lblSql: TLabel;
+    lblErrors: TLabel;
+    procedure lblAuthorDblClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure ImgMainClick(Sender: TObject);
-    procedure LbSqlClick(Sender: TObject);
-    procedure LbErrorsClick(Sender: TObject);
+    procedure imgMainClick(Sender: TObject);
+    procedure lblSqlClick(Sender: TObject);
+    procedure lblErrorsClick(Sender: TObject);
   private
     { Private declarations }
     RndVal: Integer;
@@ -62,10 +62,10 @@ begin
 end;
 
 
-procedure TFrmXWAbout.ImgMainClick(Sender: TObject);
+procedure TFrmXWAbout.imgMainClick(Sender: TObject);
 begin
   inherited;
-  PLinks.Visible:=True;
+  pnlLinks.Visible:=True;
 end;
 
 procedure TFrmXWAbout.InitializeNewForm;
@@ -91,14 +91,14 @@ procedure TFrmXWAbout.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   if pwd = '-' then begin
   end;
-  if not LbRandom.Visible then Exit;
+  if not lblRandom.Visible then Exit;
   if Key in ['0'..'9'] then begin
     Pwd:=Pwd+Key;
   end
   else if (Key = #8)and(Length(Pwd) > 0) then begin
     delete(Pwd, Length(Pwd),1);
   end;
-  if pwd=S.IIf(StrToInt(LbRandom.Caption) <5, '0', '9') + '3251158' + IntToStr(StrToInt(LbRandom.Caption) * 3)
+  if pwd=S.IIf(StrToInt(lblRandom.Caption) <5, '0', '9') + '3251158' + IntToStr(StrToInt(lblRandom.Caption) * 3)
     then begin
       MyInfoMessage('!!!');
     end;
@@ -107,29 +107,29 @@ end;
 procedure TFrmXWAbout.FormShow(Sender: TObject);
 begin
   inherited;
-  LbRandom.Hide;
-  LbModule.Caption:=ModuleRecArr[cMainModule].Caption;
-  LbVersion.Caption:='сборка: ' + Module.Version;
-  LbDate.Caption:='время сборки: ' + Module.CompileDate;
-  LbYears.Caption:='2022-' + Copy(Module.CompileDate, 1, 4);
-  PLinks.Visible:=False;//User.IsDeveloper;
+  lblRandom.Hide;
+  lblModule.Caption:=ModuleRecArr[cMainModule].Caption;
+  lblVersion.Caption:='сборка: ' + Module.Version;
+  lblDate.Caption:='время сборки: ' + Module.CompileDate;
+  lblYears.Caption:='2022-' + Copy(Module.CompileDate, 1, 4);
+  pnlLinks.Visible:=False;//User.IsDeveloper;
 end;
 
-procedure TFrmXWAbout.LbAuthorDblClick(Sender: TObject);
+procedure TFrmXWAbout.lblAuthorDblClick(Sender: TObject);
 begin
   Randomize;
   RndVal:=Random(9);
-  LbRandom.Caption:=IntToStr(RndVal);
-  LbRandom.Show;
+  lblRandom.Caption:=IntToStr(RndVal);
+  lblRandom.Show;
 end;
 
-procedure TFrmXWAbout.LbErrorsClick(Sender: TObject);
+procedure TFrmXWAbout.lblErrorsClick(Sender: TObject);
 begin
   inherited;
   Wh.ExecReference(myfrm_J_Error_Log);
 end;
 
-procedure TFrmXWAbout.LbSqlClick(Sender: TObject);
+procedure TFrmXWAbout.lblSqlClick(Sender: TObject);
 begin
   inherited;
   Wh.ExecReference(myfrm_Srv_SqlMonitor);

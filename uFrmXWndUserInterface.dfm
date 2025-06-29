@@ -5,16 +5,16 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
   ExplicitWidth = 816
   ExplicitHeight = 310
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 804
     Height = 272
     ExplicitWidth = 848
     ExplicitHeight = 410
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 794
       Height = 266
       ExplicitHeight = 403
-      object Bevel1: TBevel
+      object bvl1: TBevel
         Left = 241
         Top = 0
         Width = 3
@@ -23,14 +23,14 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         ExplicitLeft = 281
         ExplicitHeight = 345
       end
-      object Label1: TLabel
+      object lbl1: TLabel
         Left = 252
         Top = 240
         Width = 71
         Height = 13
         Caption = #1063#1077#1088#1085#1099#1081' '#1090#1077#1082#1089#1090
       end
-      object Label2: TLabel
+      object lbl2: TLabel
         Left = 340
         Top = 240
         Width = 76
@@ -43,7 +43,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         Font.Style = []
         ParentFont = False
       end
-      object PLeft: TPanel
+      object pnlLeft: TPanel
         Left = 0
         Top = 0
         Width = 241
@@ -51,7 +51,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         Align = alLeft
         TabOrder = 0
         ExplicitHeight = 403
-        object Bt_Def: TBitBtn
+        object btnDef: TBitBtn
           Left = 8
           Top = 228
           Width = 226
@@ -60,7 +60,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           TabOrder = 0
           OnClick = Bt_DefClick
         end
-        object Chb_DesignReports: TCheckBox
+        object chbDesignReports: TCheckBox
           Left = 8
           Top = 196
           Width = 245
@@ -68,7 +68,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           Caption = #1054#1090#1082#1088#1099#1074#1072#1090#1100' '#1076#1080#1079#1072#1081#1085#1077#1088' '#1086#1090#1095#1077#1090#1086#1074' '#1087#1088#1080' '#1087#1077#1095#1072#1090#1080
           TabOrder = 1
         end
-        object Cb_D: TDBComboBoxEh
+        object cmbD: TDBComboBoxEh
           Left = 8
           Top = 169
           Width = 226
@@ -81,10 +81,10 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           EditButtons = <>
           LimitTextToListValues = True
           TabOrder = 2
-          Text = 'Cb_Styles'
+          Text = 'cmbStyles'
           Visible = True
         end
-        object Cb_J: TDBComboBoxEh
+        object cmbJ: TDBComboBoxEh
           Left = 8
           Top = 127
           Width = 226
@@ -97,10 +97,10 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           EditButtons = <>
           LimitTextToListValues = True
           TabOrder = 3
-          Text = 'Cb_Styles'
+          Text = 'cmbStyles'
           Visible = True
         end
-        object Cb_Q: TDBComboBoxEh
+        object cmbQ: TDBComboBoxEh
           Left = 8
           Top = 85
           Width = 226
@@ -113,10 +113,10 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           EditButtons = <>
           LimitTextToListValues = True
           TabOrder = 4
-          Text = 'Cb_Styles'
+          Text = 'cmbStyles'
           Visible = True
         end
-        object Cb_Styles: TDBComboBoxEh
+        object cmbStyles: TDBComboBoxEh
           Left = 8
           Top = 31
           Width = 226
@@ -129,19 +129,19 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
           EditButtons = <>
           LimitTextToListValues = True
           TabOrder = 5
-          Text = 'Cb_Styles'
+          Text = 'cmbStyles'
           Visible = True
         end
       end
-      object Bt_1: TBitBtn
+      object btn1: TBitBtn
         Left = 247
         Top = 204
         Width = 89
         Height = 25
-        Caption = 'Bt_1'
+        Caption = 'btn1'
         TabOrder = 1
       end
-      object RadioButton1: TRadioButton
+      object rb1: TRadioButton
         Left = 429
         Top = 208
         Width = 113
@@ -149,7 +149,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         Caption = #1055#1077#1088#1077#1082#1083#1102#1095#1072#1090#1077#1083#1100
         TabOrder = 2
       end
-      object CheckBox1: TCheckBox
+      object chb1: TCheckBox
         Left = 350
         Top = 208
         Width = 73
@@ -157,7 +157,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         Caption = #1060#1083#1072#1078#1086#1082
         TabOrder = 3
       end
-      object DBEditEh1: TDBEditEh
+      object edt1: TDBEditEh
         Left = 615
         Top = 206
         Width = 175
@@ -184,7 +184,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         ExplicitLeft = 240
         ExplicitWidth = 550
         ExplicitHeight = 190
-        inherited PGrid: TPanel
+        inherited pnlGrid: TPanel
           Width = 540
           Height = 136
           ExplicitWidth = 540
@@ -212,12 +212,12 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
               end
             end
           end
-          inherited PStatus: TPanel
+          inherited pnlStatusBar: TPanel
             Top = 114
             Width = 538
             ExplicitTop = 114
             ExplicitWidth = 538
-            inherited LbStatusBarLeft: TLabel
+            inherited lblStatusBarL: TLabel
               Height = 13
               ExplicitHeight = 13
             end
@@ -227,19 +227,19 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
             ExplicitHeight = 21
           end
         end
-        inherited PLeft: TPanel
+        inherited pnlLeft: TPanel
           Height = 136
           ExplicitHeight = 136
         end
-        inherited PTop: TPanel
+        inherited pnlTop: TPanel
           Width = 550
           ExplicitWidth = 550
         end
-        inherited PContainer: TPanel
+        inherited pnlContainer: TPanel
           Width = 550
           ExplicitWidth = 550
         end
-        inherited PBottom: TPanel
+        inherited pnlBottom: TPanel
           Top = 190
           Width = 550
           ExplicitTop = 190
@@ -261,43 +261,43 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 271
       Width = 794
       Height = 0
       ExplicitTop = 408
       ExplicitHeight = 0
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 792
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Top = -4
         Width = 792
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 792
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 693
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 465
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 594
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 325
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 272
     Width = 804
     Height = 0
     ExplicitTop = 409
     ExplicitHeight = 0
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 712
     end
   end

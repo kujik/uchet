@@ -15,27 +15,27 @@ uses
 
 type
   TFrmOGrepItemsInOrder = class(TFrmBasicGrid2)
-    P_Left: TPanel;
-    LbAddOrders: TLabel;
-    CbProekt: TDBComboBoxEh;
-    De1: TDBDateTimeEditEh;
-    De2: TDBDateTimeEditEh;
-    BtAddOrders: TBitBtn;
-    BtDelProekt: TBitBtn;
-    EOrIds: TDBEditEh;
-    EOrNum: TDBEditEh;
-    EOrCnt: TDBEditEh;
-    CbCustomer: TDBComboBoxEh;
-    procedure BtAddOrdersClick(Sender: TObject);
-    procedure LbAddOrdersClick(Sender: TObject);
-    procedure BtDelProektClick(Sender: TObject);
+    pnlLeft: TPanel;
+    lblAddOrders: TLabel;
+    cmbProekt: TDBComboBoxEh;
+    dedt1: TDBDateTimeEditEh;
+    dedt2: TDBDateTimeEditEh;
+    btnAddOrders: TBitBtn;
+    btnDelProekt: TBitBtn;
+    edtOrIds: TDBEditEh;
+    edtOrNum: TDBEditEh;
+    edtOrCnt: TDBEditEh;
+    cmbCustomer: TDBComboBoxEh;
+    procedure btnAddOrdersClick(Sender: TObject);
+    procedure lblAddOrdersClick(Sender: TObject);
+    procedure btnDelProektClick(Sender: TObject);
   private
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure ReadSettings;
     procedure LoadProekts;
-    procedure SetLb_AddOrders;
+    procedure SetLblAddOrders;
   public
   end;
 
@@ -62,8 +62,8 @@ begin
     ['orqnt',' ол-во заказов','70'],
     ['cntbyor',' ол-во на заказ','70']
   ]);
-  Frg1.Opt.SetButtons(1,[[btnGo],[],[btnExcel],[btnPrintGrid],[],[btnGridSettings],[],[btnCtlPanel]]);
-  Frg1.Opt.SetButtonsIfEmpty([btnGo]);
+  Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.InfoArray:=[[
     'ќтчет по заказам.'#13#10+
     '‘ормирует сводный отчет по составу заказов дл€ заказов по указанному проекту за указанный период.'#13#10+
@@ -77,49 +77,49 @@ begin
   Result := True;
 end;
 
-procedure TFrmOGrepItemsInOrder.BtAddOrdersClick(Sender: TObject);
+procedure TFrmOGrepItemsInOrder.btnAddOrdersClick(Sender: TObject);
 var
   v: TVarDynArray;
   i, j:Integer;
   st1, st2: string;
   vv: Variant;
 begin
-  vv := VarArrayOf([AnsiUpperCase(StringReplace(CbProekt.Text, '*', '%', [])), EOrIds.Text, '', '']);
+  vv := VarArrayOf([AnsiUpperCase(StringReplace(cmbProekt.Text, '*', '%', [])), edtOrIds.Text, '', '']);
   Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal], vv);
   if Length(Wh.SelectDialogResult) = 0 then
     Exit;
-  EOrIds.Text := '';
-  EOrNum.Text := '';
+  edtOrIds.Text := '';
+  edtOrNum.Text := '';
   if Length(Wh.SelectDialogResult2) > 50 then
     MyWarningMessage('¬ыбрано слишшком много заказов!'#13#10'Ѕудут добавлены только 50 первых заказов.');
-  EOrCnt.Text := IntToStr(Min(Length(Wh.SelectDialogResult2), 50));
+  edtOrCnt.Text := IntToStr(Min(Length(Wh.SelectDialogResult2), 50));
   for i := 0 to Min(High(Wh.SelectDialogResult2), 49) do begin
-    EOrIds.Text := EOrIds.Text + S.IIFStr(Length(EOrIds.Text) = 0, '', ';') + IntToStr(Integer(Wh.SelectDialogResult2[i][0]));
-    EOrNum.Text := EOrNum.Text + S.IIFStr(Length(EOrNum.Text) = 0, '', ';  ') + Wh.SelectDialogResult2[i][2];
+    edtOrIds.Text := edtOrIds.Text + S.IIFStr(Length(edtOrIds.Text) = 0, '', ';') + IntToStr(Integer(Wh.SelectDialogResult2[i][0]));
+    edtOrNum.Text := edtOrNum.Text + S.IIFStr(Length(edtOrNum.Text) = 0, '', ';  ') + Wh.SelectDialogResult2[i][2];
   end;
-  SetLb_AddOrders;
+  SetLblAddOrders;
 end;
 
-procedure TFrmOGrepItemsInOrder.BtDelProektClick(Sender: TObject);
+procedure TFrmOGrepItemsInOrder.btnDelProektClick(Sender: TObject);
 begin
   //удалим из таблицы-списка значение
-  if (CbProekt.Text = '') then
+  if (cmbProekt.Text = '') then
     Exit;
-  Q.QExecSql('delete from sn_orders_qntreport_proekts where name = :name', [CbProekt.Text], False);
-  CbProekt.Text := '';
+  Q.QExecSql('delete from sn_orders_qntreport_proekts where name = :name', [cmbProekt.Text], False);
+  cmbProekt.Text := '';
   LoadProekts;
 end;
 
 procedure TFrmOGrepItemsInOrder.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = btnGo then begin
-    if (CbProekt.Text = '') or (not Cth.DteValueIsDate(De1)) or (not Cth.DteValueIsDate(De2)) then
+  if Tag = mbtGo then begin
+    if (cmbProekt.Text = '') or (not Cth.DteValueIsDate(dedt1)) or (not Cth.DteValueIsDate(dedt2)) then
       Exit;
     //вставим в таблицу списка используемых проектов, если там не существует еще такой записи
     //может быть ошибка, если различаетс€ регистром, тк там регистронезависимый индекс
     Q.QExecSql('insert into sn_orders_qntreport_proekts (name) ' +
       'select :name1 from dual where not exists (select 1 from sn_orders_qntreport_proekts where name = :name2)',
-      [CbProekt.Text, CbProekt.Text], False
+      [cmbProekt.Text, cmbProekt.Text], False
     );
     Fr.RefreshGrid;
     LoadProekts;
@@ -131,8 +131,8 @@ procedure TFrmOGrepItemsInOrder.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No
 var
   ids: string;
 begin
-  if EOrIds.Text <> ''
-    then ids:='or o.id=' + StringReplace(EOrIds.Text, ';', ' or o.id=', [rfReplaceAll])
+  if edtOrIds.Text <> ''
+    then ids:='or o.id=' + StringReplace(edtOrIds.Text, ';', ' or o.id=', [rfReplaceAll])
     else ids:='';
     //Frg1.ADODataDriverEh1.SelectSQL.Text:=
     Frg1.Opt.SetSql(
@@ -166,7 +166,7 @@ begin
       '  o.dt_beg <= :dt_end$d '+
       '  and '+
       '  (o.id_customer = :id_customer$i'+
-        S.IIFStr(Cth.GetControlValue(CbCustomer) = '0', ' or o.id_customer > 0', '')+')'+
+        S.IIFStr(Cth.GetControlValue(cmbCustomer) = '0', ' or o.id_customer > 0', '')+')'+
       '  and ('+
       '  (upper(o.project) like :proekt$s)'+
       ids +') '+
@@ -178,10 +178,10 @@ begin
       );
    Frg1.SetSqlParameters('dt_beg$d;dt_end$d;proekt$s;id_customer$i',
     [
-      S.IIf(Cth.DteValueIsDate(De1), De1.Value, IncMonth(Date, +1000)),
-      S.IIf(Cth.DteValueIsDate(De2), De2.Value, IncMonth(Date, +1000)),
-      AnsiUpperCase(StringReplace(CbProekt.Text,'*','%',[])),
-      S.NNum(Cth.GetControlValue(CbCustomer))
+      S.IIf(Cth.DteValueIsDate(dedt1), dedt1.Value, IncMonth(Date, +1000)),
+      S.IIf(Cth.DteValueIsDate(dedt2), dedt2.Value, IncMonth(Date, +1000)),
+      AnsiUpperCase(StringReplace(cmbProekt.Text,'*','%',[])),
+      S.NNum(Cth.GetControlValue(cmbCustomer))
     ]);
 end;
 
@@ -189,31 +189,31 @@ procedure TFrmOGrepItemsInOrder.ReadSettings;
 begin
   LoadProekts;
   Cth.SetControlValuesArr2(Self, Cth.DeSerializeControlValuesArr2(Settings.ReadProperty(FormDoc, 'Settings')));
-  Cth.SetBtn(BtDelProekt, mybtDelete, True, '');
-  Cth.SetBtn(BtAddOrders, mybtAdd, False, 'ƒобавить заказы');
-  SetLb_AddOrders;
+  Cth.SetBtn(btnDelProekt, mybtDelete, True, '');
+  Cth.SetBtn(btnAddOrders, mybtAdd, False, 'ƒобавить заказы');
+  SetLblAddOrders;
 end;
 
-procedure TFrmOGrepItemsInOrder.LbAddOrdersClick(Sender: TObject);
+procedure TFrmOGrepItemsInOrder.lblAddOrdersClick(Sender: TObject);
 begin
-  if StrToIntDef(EOrCnt.Text, 0) = 0 then
+  if StrToIntDef(edtOrCnt.Text, 0) = 0 then
     Exit;
-  MyInfoMessage(EOrNum.Text);
+  MyInfoMessage(edtOrNum.Text);
 end;
 
 procedure TFrmOGrepItemsInOrder.LoadProekts;
 begin
-  Q.QLoadToDBComboBoxEh('select name from sn_orders_qntreport_proekts order by name', [], CbProekt, cntComboL, 0);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_customers order by name',[], CbCustomer, cntComboLK0, 0);
+  Q.QLoadToDBComboBoxEh('select name from sn_orders_qntreport_proekts order by name', [], cmbProekt, cntComboL, 0);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_customers order by name',[], cmbCustomer, cntComboLK0, 0);
 end;
 
-procedure TFrmOGrepItemsInOrder.SetLb_AddOrders;
+procedure TFrmOGrepItemsInOrder.SetLblAddOrders;
 begin
-  LbAddOrders.Caption:=S.IIFStr(StrtoIntDef(EOrCnt.Text, 0) = 0,
+  lblAddOrders.Caption:=S.IIFStr(StrtoIntDef(edtOrCnt.Text, 0) = 0,
     'Ќет дополнительных заказов',
-    EOrCnt.Text +
-    ' дополнительн' + S.GetEnding(StrtoIntDef(EOrCnt.Text, 0),'ый','ых','ых') +
-    ' заказ' + S.GetEnding(StrtoIntDef(EOrCnt.Text, 0),'','а','ов'));
+    edtOrCnt.Text +
+    ' дополнительн' + S.GetEnding(StrtoIntDef(edtOrCnt.Text, 0),'ый','ых','ых') +
+    ' заказ' + S.GetEnding(StrtoIntDef(edtOrCnt.Text, 0),'','а','ов'));
 end;
 
 

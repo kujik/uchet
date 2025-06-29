@@ -1,37 +1,41 @@
 inherited FrmAWOracleSessions: TFrmAWOracleSessions
   Caption = 'FrmAWOracleSessions'
-  ExplicitWidth = 320
-  ExplicitHeight = 240
-  PixelsPerInch = 96
+  ClientWidth = 800
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    Height = 536
+  inherited pnlFrmMain: TPanel
+    Width = 800
+    Height = 535
     ExplicitHeight = 536
-    inherited PMDIClient: TPanel
-      Height = 529
-      ExplicitHeight = 529
-      inherited PBottom: TPanel
-        Top = 523
-        ExplicitTop = 523
+    inherited pnlFrmClient: TPanel
+      Width = 790
+      Height = 528
+      ExplicitHeight = 528
+      inherited pnlTop: TPanel
+        Width = 790
       end
-      inherited PLeft: TPanel
+      inherited pnlBottom: TPanel
+        Top = 522
+        Width = 790
+        ExplicitTop = 522
+      end
+      inherited pnlLeft: TPanel
         Width = 193
-        Height = 514
+        Height = 513
         ExplicitWidth = 193
-        ExplicitHeight = 514
-        object BtCloseModules: TBitBtn
+        ExplicitHeight = 513
+        object btnCloseModules: TBitBtn
           Left = 6
-          Top = 483
+          Top = 482
           Width = 181
           Height = 25
           Anchors = [akLeft, akRight, akBottom]
-          Caption = 'BtCloseModules'
+          Caption = 'btnCloseModules'
           TabOrder = 0
-          OnClick = BtCloseModulesClick
+          OnClick = btnCloseModulesClick
         end
-        object NeIdle: TDBNumberEditEh
+        object nedtIdle: TDBNumberEditEh
           Left = 4
-          Top = 456
+          Top = 455
           Width = 97
           Height = 21
           ControlLabel.Width = 103
@@ -48,113 +52,140 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
           Visible = True
         end
       end
-      inherited PGrid1: TPanel
+      inherited pnlGrid1: TPanel
         Left = 193
         Width = 592
-        Height = 514
+        Height = 513
         ExplicitLeft = 193
-        ExplicitWidth = 592
-        ExplicitHeight = 514
+        ExplicitWidth = 588
+        ExplicitHeight = 513
         inherited Frg1: TFrDBGridEh
           Width = 590
-          Height = 512
-          ExplicitWidth = 590
-          ExplicitHeight = 512
-          inherited PGrid: TPanel
+          Height = 511
+          ExplicitWidth = 586
+          ExplicitHeight = 511
+          inherited pnlGrid: TPanel
             Width = 580
-            Height = 458
-            ExplicitWidth = 580
-            ExplicitHeight = 458
+            Height = 457
+            ExplicitWidth = 576
+            ExplicitHeight = 457
             inherited DbGridEh1: TDBGridEh
               Width = 578
-              Height = 435
+              Height = 434
             end
-            inherited PStatus: TPanel
-              Top = 436
+            inherited pnlStatusBar: TPanel
+              Top = 435
               Width = 578
-              ExplicitTop = 436
-              ExplicitWidth = 578
+              ExplicitTop = 435
+              ExplicitWidth = 574
             end
           end
-          inherited PLeft: TPanel
-            Height = 458
-            ExplicitHeight = 458
+          inherited pnlLeft: TPanel
+            Height = 457
+            ExplicitHeight = 457
           end
-          inherited PTop: TPanel
+          inherited pnlTop: TPanel
             Width = 590
-            ExplicitWidth = 590
+            ExplicitWidth = 586
           end
-          inherited PContainer: TPanel
+          inherited pnlContainer: TPanel
             Width = 590
-            ExplicitWidth = 590
+            ExplicitWidth = 586
           end
-          inherited PBottom: TPanel
-            Top = 512
+          inherited pnlBottom: TPanel
+            Top = 511
             Width = 590
-            ExplicitTop = 512
-            ExplicitWidth = 590
+            ExplicitTop = 511
+            ExplicitWidth = 586
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
-              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-              666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-              72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-              657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-              72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-              66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-              2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-              5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-              3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-              5C7061720D0A7D0D0A00}
+              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+              7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+              305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+              666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+              66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+              720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+              205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+              34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+              305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
           end
         end
       end
-      inherited PFrg2: TPanel
-        Top = 528
+      inherited pnlFrg2: TPanel
+        Top = 527
+        Width = 790
         Height = 1
-        ExplicitTop = 528
+        ExplicitTop = 527
         ExplicitHeight = 1
         inherited Frg2: TFrDBGridEh
+          Width = 788
+          inherited pnlGrid: TPanel
+            Width = 778
+          end
+          inherited pnlTop: TPanel
+            Width = 788
+          end
+          inherited pnlContainer: TPanel
+            Width = 788
+          end
+          inherited pnlBottom: TPanel
+            Width = 788
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
-              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-              666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-              72736574323034205461686F6D613B7D7B5C66315C666E696C5C666368617273
-              657430205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-              72645C66305C667331365C2763665C2766305C2765655C2765355C2765615C27
-              66323A20255B50726F656B745D5C7061720D0A5C2763665C2765355C2766305C
-              2765385C2765655C276534205C276631205C6C616E67313033335C6631202025
-              5B4474315D205C6C616E67313034395C66305C2765665C2765655C6C616E6731
-              3033335C66312020255B4474325D5C6C616E67313034395C66305C7061720D0A
-              5C7061720D0A7D0D0A00}
+              7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+              7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+              305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+              666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+              66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+              720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+              205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+              34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+              305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
           end
         end
       end
-      inherited PRight: TPanel
-        Height = 514
-        ExplicitHeight = 514
+      inherited pnlRight: TPanel
+        Left = 785
+        Height = 513
+        ExplicitHeight = 513
       end
     end
-    inherited PDlgPanel: TPanel
-      Top = 534
+    inherited pnlFrmBtns: TPanel
+      Top = 533
+      Width = 790
       Height = 1
-      ExplicitTop = 534
+      ExplicitTop = 533
       ExplicitHeight = 1
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Top = -3
         ExplicitTop = -3
       end
+      inherited pnlFrmBtnsContainer: TPanel
+        inherited pnlFrmBtnsChb: TPanel
+          ExplicitLeft = 457
+        end
+      end
     end
   end
-  inherited PStatusBar: TPanel
-    Top = 536
+  inherited pnlStatusBar: TPanel
+    Top = 535
+    Width = 800
     Height = 1
-    ExplicitTop = 536
+    ExplicitTop = 535
     ExplicitHeight = 1
+    inherited lblStatusBarR: TLabel
+      Left = 727
+    end
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 5000
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 630
     Top = 281
   end

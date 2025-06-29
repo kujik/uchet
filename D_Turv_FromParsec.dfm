@@ -7,7 +7,7 @@ inherited Dlg_Turv_FromParsec: TDlg_Turv_FromParsec
   ExplicitHeight = 149
   PixelsPerInch = 96
   TextHeight = 13
-  object E_FileName: TDBEditEh
+  object edt_FileName: TDBEditEh
     Left = 12
     Top = 27
     Width = 208
@@ -21,13 +21,13 @@ inherited Dlg_Turv_FromParsec: TDlg_Turv_FromParsec
       item
         DefaultAction = False
         Style = ebsEllipsisEh
-        OnClick = E_FileNameEditButtons0Click
+        OnClick = edt_FileNameEditButtons0Click
       end>
     ReadOnly = True
     TabOrder = 0
     Visible = True
   end
-  object De_1: TDBDateTimeEditEh
+  object dedt_1: TDBDateTimeEditEh
     Left = 12
     Top = 54
     Width = 90
@@ -44,7 +44,7 @@ inherited Dlg_Turv_FromParsec: TDlg_Turv_FromParsec
     TabOrder = 1
     Visible = True
   end
-  object De_2: TDBDateTimeEditEh
+  object dedt_2: TDBDateTimeEditEh
     Left = 129
     Top = 54
     Width = 90

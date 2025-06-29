@@ -7,7 +7,7 @@ inherited Dlg_PayrollSettings: TDlg_PayrollSettings
   ExplicitHeight = 156
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_Norm: TLabel
+  object lbl_Norm: TLabel
     Left = 8
     Top = 8
     Width = 297
@@ -33,7 +33,7 @@ inherited Dlg_PayrollSettings: TDlg_PayrollSettings
     ModalResult = 2
     TabOrder = 1
   end
-  object Ne_Norm0: TDBNumberEditEh
+  object nedt_Norm0: TDBNumberEditEh
     Left = 30
     Top = 23
     Width = 55
@@ -52,7 +52,7 @@ inherited Dlg_PayrollSettings: TDlg_PayrollSettings
     TabOrder = 2
     Visible = True
   end
-  object Cb_Method: TDBComboBoxEh
+  object cmb_Method: TDBComboBoxEh
     Left = 8
     Top = 71
     Width = 320
@@ -68,7 +68,7 @@ inherited Dlg_PayrollSettings: TDlg_PayrollSettings
     TabOrder = 3
     Visible = True
   end
-  object Ne_Norm1: TDBNumberEditEh
+  object nedt_Norm1: TDBNumberEditEh
     Left = 123
     Top = 23
     Width = 55

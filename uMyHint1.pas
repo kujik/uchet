@@ -8,8 +8,8 @@ Dialogs, ExtCtrls;
 
 type
 TForm2 = class(TForm)
-Timer1: TTimer;
-procedure Timer1Timer(Sender: TObject);
+tmr1: TTimer;
+procedure tmr1Timer(Sender: TObject);
 { Private declarations }
 
 { Public declarations }
@@ -42,8 +42,8 @@ GetCursorPos(Cp);
 Form2.Top := Cp.Y + 2;
 Form2.Left := Cp.X + 2;
 Form2.Caption := Caption;
-Form2.Timer1.Enabled := False;
-Form2.Timer1.Enabled := True;
+Form2.tmr1.Enabled := False;
+Form2.tmr1.Enabled := True;
 Form2.Show;
 end;
 
@@ -53,7 +53,7 @@ Caption := AHint;
 Paint;
 end;
 
-procedure TForm2.Timer1Timer(Sender: TObject);
+procedure TForm2.tmr1Timer(Sender: TObject);
 begin
 Close;
 end;

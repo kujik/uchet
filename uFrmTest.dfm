@@ -12,27 +12,27 @@ object FrmTest: TFrmTest
   Font.Style = []
   Visible = True
   TextHeight = 13
-  object Label1: TLabel
+  object lbl1: TLabel
     Left = 377
     Top = 390
     Width = 31
     Height = 13
-    Caption = 'Label1'
-    OnClick = Label1Click
+    Caption = 'lbl1'
+    OnClick = lbl1Click
   end
-  object SpeedButton1: TSpeedButton
+  object btn1: TSpeedButton
     Left = 25
     Top = 421
     Width = 23
     Height = 22
     OnClick = SpeedButton1Click
   end
-  object Label2: TLabel
+  object lbl2: TLabel
     Left = 880
     Top = 584
     Width = 31
     Height = 13
-    Caption = 'Label2'
+    Caption = 'lbl2'
   end
   object Image2: TImage
     Left = 1008
@@ -296,7 +296,7 @@ object FrmTest: TFrmTest
     Style = pbstMarquee
     TabOrder = 24
   end
-  object P_Btns: TPanel
+  object pnl_Btns: TPanel
     Left = 8
     Top = 511
     Width = 529
@@ -311,12 +311,12 @@ object FrmTest: TFrmTest
     Caption = 'CheckBox1'
     TabOrder = 26
   end
-  object Panel1: TPanel
+  object pnl1: TPanel
     Left = 720
     Top = 8
     Width = 495
     Height = 278
-    Caption = 'Panel1'
+    Caption = 'pnl1'
     TabOrder = 27
     object l1: TLabel
       Left = 176
@@ -338,7 +338,7 @@ object FrmTest: TFrmTest
       Width = 305
       Height = 3
     end
-    object e_1: TDBEditEh
+    object edt_1: TDBEditEh
       Left = 33
       Top = 18
       Width = 121
@@ -438,7 +438,7 @@ object FrmTest: TFrmTest
       Width = 41
       Height = 44
       Align = alLeft
-      Caption = 'PDlgInfo'
+      Caption = 'pnlFrmBtnsInfo'
       TabOrder = 0
       object Image1: TImage
         Left = 8
@@ -453,7 +453,7 @@ object FrmTest: TFrmTest
       Width = 99
       Height = 44
       Align = alLeft
-      Caption = 'PDlgBtnL'
+      Caption = 'pnlFrmBtnsL'
       TabOrder = 1
     end
     object Panel4: TPanel
@@ -462,7 +462,7 @@ object FrmTest: TFrmTest
       Width = 99
       Height = 62
       Align = alRight
-      Caption = 'PDlgBtnR'
+      Caption = 'pnlFrmBtnsR'
       TabOrder = 2
     end
     object Panel5: TPanel
@@ -471,7 +471,7 @@ object FrmTest: TFrmTest
       Width = 99
       Height = 44
       Align = alRight
-      Caption = 'PDlgBtnForm'
+      Caption = 'pnlFrmBtnsMain'
       TabOrder = 3
     end
     object Panel6: TPanel
@@ -480,7 +480,7 @@ object FrmTest: TFrmTest
       Width = 129
       Height = 44
       Align = alRight
-      Caption = 'PDlgChb'
+      Caption = 'pnlFrmBtnsChb'
       TabOrder = 4
       DesignSize = (
         129

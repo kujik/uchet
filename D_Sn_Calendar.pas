@@ -15,105 +15,105 @@ const
 
 type
   TDlg_Sn_Calendar = class(TForm_MDI)
-    Gb_Payments: TGroupBox;
+    gb_Payments: TGroupBox;
     Dt_1: TDBDateTimeEditEh;
     Dt_2: TDBDateTimeEditEh;
     Dt_3: TDBDateTimeEditEh;
     Dt_4: TDBDateTimeEditEh;
     Dt_5: TDBDateTimeEditEh;
-    Ne_1: TDBNumberEditEh;
-    Ne_2: TDBNumberEditEh;
-    Ne_3: TDBNumberEditEh;
-    Ne_4: TDBNumberEditEh;
-    Ne_5: TDBNumberEditEh;
+    nedt_1: TDBNumberEditEh;
+    nedt_2: TDBNumberEditEh;
+    nedt_3: TDBNumberEditEh;
+    nedt_4: TDBNumberEditEh;
+    nedt_5: TDBNumberEditEh;
     Dt_6: TDBDateTimeEditEh;
     Dt_7: TDBDateTimeEditEh;
     Dt_8: TDBDateTimeEditEh;
     Dt_9: TDBDateTimeEditEh;
     Dt_10: TDBDateTimeEditEh;
-    Ne_6: TDBNumberEditEh;
-    Ne_7: TDBNumberEditEh;
-    Ne_8: TDBNumberEditEh;
-    Ne_9: TDBNumberEditEh;
-    Ne_10: TDBNumberEditEh;
-    Gb_General: TGroupBox;
-    Cb_Cash: TDBComboBoxEh;
-    E_Account: TDBEditEh;
+    nedt_6: TDBNumberEditEh;
+    nedt_7: TDBNumberEditEh;
+    nedt_8: TDBNumberEditEh;
+    nedt_9: TDBNumberEditEh;
+    nedt_10: TDBNumberEditEh;
+    gb_General: TGroupBox;
+    cmb_Cash: TDBComboBoxEh;
+    edt_Account: TDBEditEh;
     Dt_Account: TDBDateTimeEditEh;
-    Cb_Org: TDBComboBoxEh;
+    cmb_Org: TDBComboBoxEh;
     Bt_RefreshSuppliers: TBitBtn;
-    Cb_Supplier: TDBComboBoxEh;
-    Cb_ExpenseItem: TDBComboBoxEh;
-    Ne_Sum: TDBNumberEditEh;
-    Cb_User: TDBComboBoxEh;
-    Gb_Additional: TGroupBox;
-    P_Buttons: TPanel;
-    Lb_Payments: TLabel;
+    cmb_Supplier: TDBComboBoxEh;
+    cmb_ExpenseItem: TDBComboBoxEh;
+    nedt_Sum: TDBNumberEditEh;
+    cmb_User: TDBComboBoxEh;
+    gb_Additional: TGroupBox;
+    pnl_Buttons: TPanel;
+    lbl_Payments: TLabel;
     OpenDialog1: TOpenDialog;
-    Cb_RecReceipt: TDBComboBoxEh;
-    E_File: TDBEditEh;
+    cmb_RecReceipt: TDBComboBoxEh;
+    edt_File: TDBEditEh;
     Bt_OK: TBitBtn;
     Bt_Cancel: TBitBtn;
-    E_Comm: TDBEditEh;
+    edt_Comm: TDBEditEh;
     Bt_FileAttach: TBitBtn;
     Bt_FileOpen: TBitBtn;
-    Lb_AccountFile: TLabel;
+    lbl_AccountFile: TLabel;
     Bt_ReqestFileAttach: TBitBtn;
     Bt_ReqestFileOpen: TBitBtn;
-    Lb_RequestFile: TLabel;
-    Label1: TLabel;
-    Chb_Agreed1: TDBCheckBoxEh;
-    Chb_Agreed2: TDBCheckBoxEh;
-    Gb_Route: TGroupBox;
-    Gb_Payments_T: TGroupBox;
-    Gb_Basis: TGroupBox;
+    lbl_RequestFile: TLabel;
+    lbl1: TLabel;
+    chb_Agreed1: TDBCheckBoxEh;
+    chb_Agreed2: TDBCheckBoxEh;
+    gb_Route: TGroupBox;
+    gb_Payments_T: TGroupBox;
+    gb_Basis: TGroupBox;
     Dt_T1: TDBDateTimeEditEh;
-    Ne_T1: TDBNumberEditEh;
+    nedt_T1: TDBNumberEditEh;
     Dt_T2: TDBDateTimeEditEh;
-    Ne_T2: TDBNumberEditEh;
-    P_Route: TPanel;
-    P_Basis: TPanel;
-    Cb_CarType: TDBComboBoxEh;
-    Cb_Flight: TDBComboBoxEh;
-    Ne_Kilometrage: TDBNumberEditEh;
+    nedt_T2: TDBNumberEditEh;
+    pnl_Route: TPanel;
+    pnl_Basis: TPanel;
+    cmb_CarType: TDBComboBoxEh;
+    cmb_Flight: TDBComboBoxEh;
+    nedt_Kilometrage: TDBNumberEditEh;
     DBGridEh1: TDBGridEh;
     DBGridEh2: TDBGridEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
-    Timer1: TTimer;
+    tmr1: TTimer;
     PopupMenu1: TPopupMenu;
     N1: TMenuItem;
     N2: TMenuItem;
-    De_FlightDt: TDBDateTimeEditEh;
-    Ne_Idle: TDBNumberEditEh;
-    Lb_Payments_Error: TLabel;
-    Lb_Route_Error: TLabel;
-    Lb_Basis_Error: TLabel;
-    Lb_Payments_T_Error: TLabel;
+    dedt_FlightDt: TDBDateTimeEditEh;
+    nedt_Idle: TDBNumberEditEh;
+    lbl_Payments_Error: TLabel;
+    lbl_Route_Error: TLabel;
+    lbl_Basis_Error: TLabel;
+    lbl_Payments_T_Error: TLabel;
     MemTableEh2: TMemTableEh;
     DataSource2: TDataSource;
     PopupMenu2: TPopupMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
-    Ne_BasisSum: TDBNumberEditEh;
+    nedt_BasisSum: TDBNumberEditEh;
     Img_H_Payments: TImage;
     Img_H_General: TImage;
     Img_H_Routes: TImage;
     Img_H_Basis: TImage;
     Img_H_PaymentsT: TImage;
     Img_H_Additional: TImage;
-    Lb_General_Error: TLabel;
+    lbl_General_Error: TLabel;
     Bt_SelectSupplier: TBitBtn;
-    Ne_PriceKm: TDBNumberEditEh;
-    Ne_PriceIdle: TDBNumberEditEh;
-    Ne_SumOther: TDBNumberEditEh;
-    Cb_Nds: TDBComboBoxEh;
-    Ne_SumWoNds: TDBNumberEditEh;
+    nedt_PriceKm: TDBNumberEditEh;
+    nedt_PriceIdle: TDBNumberEditEh;
+    nedt_SumOther: TDBNumberEditEh;
+    cmb_Nds: TDBComboBoxEh;
+    nedt_SumWoNds: TDBNumberEditEh;
     procedure Bt_OKClick(Sender: TObject);
-    procedure Ne_1Change(Sender: TObject);
+    procedure nedt_1Change(Sender: TObject);
     procedure Dt1_KeyPress(Sender: TObject; var Key: Char);
     procedure control_Exit(Sender: TObject);
-    procedure Ne_1KeyPress(Sender: TObject; var Key: Char);
+    procedure nedt_1KeyPress(Sender: TObject; var Key: Char);
     procedure Bt_FileAttachClick(Sender: TObject);
     procedure Bt_FileOpenClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -121,7 +121,7 @@ type
     procedure Bt_ReqestFileOpenClick(Sender: TObject);
     procedure Bt_CancelClick(Sender: TObject);
     procedure Bt_RefreshSuppliersClick(Sender: TObject);
-    procedure Cb_FlightChange(Sender: TObject);
+    procedure cmb_FlightChange(Sender: TObject);
     procedure DBGridEh1KeyPress(Sender: TObject; var Key: Char);
     procedure DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
     procedure DBGridEh1ColEnter(Sender: TObject);
@@ -130,7 +130,7 @@ type
     procedure ControlExit(Sender: TObject);
     procedure DBGridEh1Exit(Sender: TObject);
     procedure DBGridEh1ColExit(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure tmr1Timer(Sender: TObject);
     procedure N1Click(Sender: TObject);
     procedure N2Click(Sender: TObject);
     procedure FormCanResize(Sender: TObject; var NewWidth, NewHeight: Integer;
@@ -138,16 +138,16 @@ type
     procedure FormResize(Sender: TObject);
     procedure Dt_T1Change(Sender: TObject);
     procedure Dt_T2Change(Sender: TObject);
-    procedure Ne_T1Change(Sender: TObject);
-    procedure Ne_T2Change(Sender: TObject);
+    procedure nedt_T1Change(Sender: TObject);
+    procedure nedt_T2Change(Sender: TObject);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem2Click(Sender: TObject);
     procedure DBGridEh1Enter(Sender: TObject);
     procedure Image1MouseEnter(Sender: TObject);
     procedure Image1MouseLeave(Sender: TObject);
-    procedure Cb_ExpenseItemChange(Sender: TObject);
+    procedure cmb_ExpenseItemChange(Sender: TObject);
     procedure Bt_SelectSupplierClick(Sender: TObject);
-    procedure Chb_Agreed1Click(Sender: TObject);
+    procedure chb_Agreed1Click(Sender: TObject);
     procedure DBGridEh2DblClick(Sender: TObject);
   private
     { Private declarations }
@@ -266,30 +266,30 @@ begin
 
   //инициируем контролы для режима транспортного счета
   if (AccMode = 1)or(AccMode=2) then begin
-    Cb_Flight.Value:=null;
-    Cb_Flight.Items.Clear;
-    Cb_Flight.Items.Add('Прямой');
-    Cb_Flight.Items.Add('Фиксированный');
-    Cb_Flight.KeyItems.Add('1');
-    Cb_Flight.KeyItems.Add('2');
+    cmb_Flight.Value:=null;
+    cmb_Flight.Items.Clear;
+    cmb_Flight.Items.Add('Прямой');
+    cmb_Flight.Items.Add('Фиксированный');
+    cmb_Flight.KeyItems.Add('1');
+    cmb_Flight.KeyItems.Add('2');
     //загрузим данные из дополнительной таблицы для транспортного счета
     vt:=VarArrayOf([0, 0]);
     if (Mode = fEdit) or (Mode = fView) or (Mode = fDelete) then begin
       vt:=Q.QSelectOneRow(Q.QSIUDSql('s', 'sn_calendar_accounts_t', 'id;cartype$i;flighttype$i;flightdt;kilometrage;idle;basissum;othersum;priceidle;pricekm;freeidletime'), [ID]);
-      Cth.SetControlValue(Cb_Cartype, vt[1]);
-      Cth.SetControlValue(Cb_Flight, vt[2]);
-      Cth.SetControlValue(De_FlightDt, vt[3]);
-      Cth.SetControlValue(Ne_Kilometrage, vt[4]);
-      Cth.SetControlValue(Ne_SumOther, vt[7]);
-      Cth.SetControlValue(Ne_PriceIdle, vt[8]);
-      Cth.SetControlValue(Ne_PriceKm, vt[9]);
+      Cth.SetControlValue(cmb_Cartype, vt[1]);
+      Cth.SetControlValue(cmb_Flight, vt[2]);
+      Cth.SetControlValue(dedt_FlightDt, vt[3]);
+      Cth.SetControlValue(nedt_Kilometrage, vt[4]);
+      Cth.SetControlValue(nedt_SumOther, vt[7]);
+      Cth.SetControlValue(nedt_PriceIdle, vt[8]);
+      Cth.SetControlValue(nedt_PriceKm, vt[9]);
       MaxIdle:=vt[10];
     end
     else begin
       MaxIdle:=Q.QSelectOneRow('select transport_maxidle from sn_calendar_cfg', [])[0];
     end;
     //типы автомобилей
-    Q.QLoadToDBComboBoxEh('select name, id from ref_sn_cartypes where active = 1 or id = :id order by name', [vt[1]], Cb_CarType, cntComboLK);
+    Q.QLoadToDBComboBoxEh('select name, id from ref_sn_cartypes where active = 1 or id = :id order by name', [vt[1]], cmb_CarType, cntComboLK);
     //локации
     Points0:=TStringList.Create;
     Points1:=TStringList.Create;
@@ -349,66 +349,66 @@ begin
   end;
 
   ID_Curr_Supplier:=StrToIntDef(v[3],-999);
-  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id$i order by legalname', [v[3]], Cb_Supplier, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id$i order by legalname', [v[3]], cmb_Supplier, cntComboLK);
   Q.QLoadToTStringList('select agreed, id from ref_expenseitems', [], ExpAgreed);
   if User.Role(rPC_A_ChAll)
     then begin
       Q.QLoadToDBComboBoxEh('select name, id from ref_expenseitems where (accounttype = :accmode$i and active = 1) or id = :id_expenseitem$i order by name',
-        [AccMode, v[5]], Cb_ExpenseItem, cntComboLK);
+        [AccMode, v[5]], cmb_ExpenseItem, cntComboLK);
       Q.QLoadToDBComboBoxEh('select recvreceipt, id from ref_expenseitems where (accounttype = :accmode$i and active = 1) or id = :id_expenseitem$i order by name',
-        [AccMode, v[5]], Cb_RecReceipt, cntComboLK);
+        [AccMode, v[5]], cmb_RecReceipt, cntComboLK);
     end
     else begin
       //загрузим только статьи расходов, по которым можно редактировать (в итоге если открыть на редактирование счет не  по своей статье, то его не сохранить тк стаья будет пустая)
       Q.QLoadToDBComboBoxEh('select name, id from ref_expenseitems where (anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i) or id = :id_expenseitem$i order by name',
-        [User.GetId, AccMode, v[5]], Cb_ExpenseItem, cntComboLK);
+        [User.GetId, AccMode, v[5]], cmb_ExpenseItem, cntComboLK);
       Q.QLoadToDBComboBoxEh('select recvreceipt, id from ref_expenseitems where (anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i) or id = :id_expenseitem$i order by name',
-        [User.GetId, AccMode, v[5]], Cb_RecReceipt, cntComboLK);
+        [User.GetId, AccMode, v[5]], cmb_RecReceipt, cntComboLK);
     end;
   Q.QLoadToDBComboBoxEh(
     'select name, id from ref_sn_organizations where (active = 1 and is_buyer = 1) or id = :id$i order by name',
-    [v[4]], Cb_Org, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from adm_users order by name', [], Cb_User, cntComboLK);
+    [v[4]], cmb_Org, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from adm_users order by name', [], cmb_User, cntComboLK);
   if Mode=fCopy then begin
     //сбросим согласования и дату регистрации счета
     v[10]:=False;
     v[11]:=False;
     v[13]:=Date;
   end;
-  Cb_Cash.Value:=v[1];
-  E_Account.Value:=v[2];
-  Cb_Supplier.Value:=v[3];
-  Cb_Org.Value:=v[4];
-  Cb_ExpenseItem.Value:=v[5];//S.IIf(v[5]>0, v[5], '');
-  Cb_User.Value:=v[6];
-  Ne_Sum.Value:=v[7];
-  E_Comm.Value:=v[8];
-  E_File.Value:=v[9];
-  Cth.SetControlValue(Chb_Agreed1, v[10]);
-  Cth.SetControlValue(Chb_Agreed2, v[11]);
+  cmb_Cash.Value:=v[1];
+  edt_Account.Value:=v[2];
+  cmb_Supplier.Value:=v[3];
+  cmb_Org.Value:=v[4];
+  cmb_ExpenseItem.Value:=v[5];//S.IIf(v[5]>0, v[5], '');
+  cmb_User.Value:=v[6];
+  nedt_Sum.Value:=v[7];
+  edt_Comm.Value:=v[8];
+  edt_File.Value:=v[9];
+  Cth.SetControlValue(chb_Agreed1, v[10]);
+  Cth.SetControlValue(chb_Agreed2, v[11]);
   Cth.SetControlValue(Dt_Account, v[12]);
-  Cth.AddToComboBoxEh(Cb_NDS, [
+  Cth.AddToComboBoxEh(cmb_NDS, [
     ['без НДС', '0'],
     ['20%', '20']
   ]);
-  Cth.SetControlValue(Cb_Nds, v[16]);
+  Cth.SetControlValue(cmb_Nds, v[16]);
   CalculateSumWoNds;
 
   Dt:=v[13];
   for i:=1 to 10 do begin
     (Self.FindComponent('Dt_'+IntToStr(i)) as TDBDateTimeEditEh).Clear;
-    (Self.FindComponent('Ne_'+IntToStr(i)) as TDBNumberEditEh).Clear;
+    (Self.FindComponent('nedt_'+IntToStr(i)) as TDBNumberEditEh).Clear;
   end;
-  IsAgreed:=Chb_Agreed1.Checked;
+  IsAgreed:=chb_Agreed1.Checked;
   //подпись чекбокса - кто согласовал, если согласован, или Руководитель
   if IsAgreed
     then begin
-      Chb_Agreed1.Caption:=Q.QSelectOneRow('select name from adm_users where id = :id$i', [v[15]])[0];
+      chb_Agreed1.Caption:=Q.QSelectOneRow('select name from adm_users where id = :id$i', [v[15]])[0];
     end
-    else Chb_Agreed1.Caption:='Руководитель';
+    else chb_Agreed1.Caption:='Руководитель';
   if (Mode = fAdd) or (Mode = fCopy) then begin
-    Cb_User.Value:=User.GetId;
-    E_File.Value:=FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now);
+    cmb_User.Value:=User.GetId;
+    edt_File.Value:=FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now);
   end;
   PaymentsCount := 0;
   Paid:=False;
@@ -425,67 +425,67 @@ begin
     end;
   Q.QClose;
   for i:=0 to PaymentsCount-1 do begin
-    Cth.SetControlValue(TControl(Self.FindComponent('Ne_'+IntToStr(i+1))), Payments[i][2]);
+    Cth.SetControlValue(TControl(Self.FindComponent('nedt_'+IntToStr(i+1))), Payments[i][2]);
     Cth.SetControlValue(TControl(Self.FindComponent('Dt_'+IntToStr(i+1))), Payments[i][1]);
     (Self.FindComponent('Dt_'+IntToStr(i+1)) as TDBDateTimeEditEh).enabled:=(Payments[i][3] <> 1);
-    (Self.FindComponent('Ne_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=(Payments[i][3] <> 1);
+    (Self.FindComponent('nedt_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=(Payments[i][3] <> 1);
     if Payments[i][3] = 1 then Paid:=True;
   end;
   for i:=PaymentsCount to 9 do begin
     (Self.FindComponent('Dt_'+IntToStr(i+1)) as TDBDateTimeEditEh).enabled:=True;
-    (Self.FindComponent('Ne_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=True;
+    (Self.FindComponent('nedt_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=True;
   end;
   if (Mode = fView)or(Mode=fdelete) then
     for i:=0 to 9 do begin
       (Self.FindComponent('Dt_'+IntToStr(i+1)) as TDBDateTimeEditEh).enabled:=False;
-      (Self.FindComponent('Ne_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=False;
+      (Self.FindComponent('nedt_'+IntToStr(i+1)) as TDBNumberEditEh).Enabled:=False;
     end;
   //продублируем значения платежей в групбоксе платежей по транспорту
-  if Gb_Payments_T.Visible then begin
+  if gb_Payments_T.Visible then begin
     Dt_T1.Value:=Dt_1.Value;
     Dt_T1.Enabled:=Dt_1.Enabled;
     Dt_T2.Value:=Dt_2.Value;
     Dt_T2.Enabled:=Dt_2.Enabled;
-    Ne_T1.Value:=Ne_1.Value;
-    Ne_T1.Enabled:=Ne_1.Enabled;
-    Ne_T2.Value:=Ne_2.Value;
-    Ne_T2.Enabled:=Ne_2.Enabled;
+    nedt_T1.Value:=nedt_1.Value;
+    nedt_T1.Enabled:=nedt_1.Enabled;
+    nedt_T2.Value:=nedt_2.Value;
+    nedt_T2.Enabled:=nedt_2.Enabled;
   end;
 
   //доступность контролов
   //редактировать заголовок позволяем если не было еще проведено платежей, и не было согласования директора, и не было согласования руководителя либо пользователь имеет право на это согласование
   e1:=(Mode <> fView) and (Mode <> fDelete);
-  e2:= e1 and ((Mode<>fEdit) or (((not Paid)or User.IsDataEditor) and (IsAgreed1Enabled or (not IsAgreed)) and (not Chb_Agreed2.Checked)));
-  Cb_Cash.Enabled:=e2;
-  E_Account.Enabled:=e2;
+  e2:= e1 and ((Mode<>fEdit) or (((not Paid)or User.IsDataEditor) and (IsAgreed1Enabled or (not IsAgreed)) and (not chb_Agreed2.Checked)));
+  cmb_Cash.Enabled:=e2;
+  edt_Account.Enabled:=e2;
   Dt_Account.Enabled:=e2;
-  Cb_Supplier.Enabled:=e2;
-  Cb_Org.Enabled:=e2;
-  Cb_ExpenseItem.Enabled:=e2;
-  Cb_User.Enabled:=False;
-  Ne_Sum.Enabled:=e2;
-  E_Comm.Enabled:=e1;
+  cmb_Supplier.Enabled:=e2;
+  cmb_Org.Enabled:=e2;
+  cmb_ExpenseItem.Enabled:=e2;
+  cmb_User.Enabled:=False;
+  nedt_Sum.Enabled:=e2;
+  edt_Comm.Enabled:=e1;
   Bt_FileAttach.Enabled:=e2;
   Bt_SelectSupplier.Enabled:=e2;
   Bt_RefreshSuppliers.Enabled:=e2;
-  Chb_Agreed1.Enabled:=IsAgreed1Enabled  and (not Chb_Agreed2.Checked) and e1;   //активна, если может согласовывать хотя бы что-то
-  Chb_Agreed2.Enabled:=User.Roles([], [rPC_A_AgrDir]) and e1;
-  Cb_CarType.Enabled:=e2;
-  Cb_Flight.Enabled:=e2;
-  De_FlightDt.Enabled:=e2 and not Ne_Idle.Visible;
-  Ne_Kilometrage.Enabled:=e2 and not Ne_Idle.Visible;
-  Ne_PriceKm.Enabled:=e2;
-  Ne_PriceIdle.Enabled:=e2;
-  Ne_SumOther.Enabled:=e2;
+  chb_Agreed1.Enabled:=IsAgreed1Enabled  and (not chb_Agreed2.Checked) and e1;   //активна, если может согласовывать хотя бы что-то
+  chb_Agreed2.Enabled:=User.Roles([], [rPC_A_AgrDir]) and e1;
+  cmb_CarType.Enabled:=e2;
+  cmb_Flight.Enabled:=e2;
+  dedt_FlightDt.Enabled:=e2 and not nedt_Idle.Visible;
+  nedt_Kilometrage.Enabled:=e2 and not nedt_Idle.Visible;
+  nedt_PriceKm.Enabled:=e2;
+  nedt_PriceIdle.Enabled:=e2;
+  nedt_SumOther.Enabled:=e2;
   if not e2 then DBGridEh1.Enabled:=False;
   if not e2 then DBGridEh2.Enabled:=False;
-  Cb_Nds.Enabled:=e2;
-  Ne_SumWoNds.Enabled:=False;
-  Lb_Payments.Caption:='';
+  cmb_Nds.Enabled:=e2;
+  nedt_SumWoNds.Enabled:=False;
+  lbl_Payments.Caption:='';
   if Mode = fEdit then begin
-    if (IsAgreed and not IsAgreed1Enabled) or Chb_Agreed2.Checked then st:='согласован';
+    if (IsAgreed and not IsAgreed1Enabled) or chb_Agreed2.Checked then st:='согласован';
     if Paid and not User.IsDataEditor then st:=S.IIFStr(st<>'', st + ' и ', '(частично) оплачен');
-    if st<> '' then Lb_Payments.Caption:='Счет ' + st + '!'+#13#10+'Возможно только редактирование запланированных платежей!';
+    if st<> '' then lbl_Payments.Caption:='Счет ' + st + '!'+#13#10+'Возможно только редактирование запланированных платежей!';
   end;
 
   //проверим
@@ -508,22 +508,22 @@ begin
   //запретим выходить по Esc при редактировании данных, тк эта клавиша может быть нажата в гриде не при редактировании ячейки, и тогда следует закрыти формы
   Bt_Cancel.Cancel:=not((Mode = fAdd)or(Mode = fEdit)or(Mode = fCopy));
   //покажем нужные групбоксы и подгоним высоту формы
-  Gb_Route.Visible:=A.InArray(AccMode, [1,2]);      //маршрут, для транспортных
-  Gb_Basis.Visible:=A.InArray(AccMode, [1,2,3]);    //основания, для транспортных и монтажа
-  Gb_Payments.Visible:=not A.InArray(AccMode, [1,2,3]);  //грид платежей на 10 штук, для обычных
-  Gb_Payments_T.Visible:=not Gb_Payments.Visible;      //платежа на две штуки, если нет грида на 10
-  Self.ClientHeight:=P_Buttons.Top + P_Buttons.Height;
+  gb_Route.Visible:=A.InArray(AccMode, [1,2]);      //маршрут, для транспортных
+  gb_Basis.Visible:=A.InArray(AccMode, [1,2,3]);    //основания, для транспортных и монтажа
+  gb_Payments.Visible:=not A.InArray(AccMode, [1,2,3]);  //грид платежей на 10 штук, для обычных
+  gb_Payments_T.Visible:=not gb_Payments.Visible;      //платежа на две штуки, если нет грида на 10
+  Self.ClientHeight:=pnl_Buttons.Top + pnl_Buttons.Height;
   //возьмем размеры формы из настроек
   Self.Width:= StrtoInt(Settings.ReadProperty(FormDoc, 'Width_' + IntToStr(AccMode), '0'));
   Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));
   Self.Resize;
 {  Cth.SetControlsOnExit(Self, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_General, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_Payments, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_Payments_T, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_Route, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_Basis, ControlExit);
-  Cth.SetControlsOnExit(Self.Gb_Additional, ControlExit);}
+  Cth.SetControlsOnExit(Self.gb_General, ControlExit);
+  Cth.SetControlsOnExit(Self.gb_Payments, ControlExit);
+  Cth.SetControlsOnExit(Self.gb_Payments_T, ControlExit);
+  Cth.SetControlsOnExit(Self.gb_Route, ControlExit);
+  Cth.SetControlsOnExit(Self.gb_Basis, ControlExit);
+  Cth.SetControlsOnExit(Self.gb_Additional, ControlExit);}
   Verify;
   InLoadData:=False;
   Result:=True;
@@ -553,16 +553,16 @@ begin
   if Mode=fView then begin Close; exit; end;
   Verify;
   //если пользователь не имеет права согласования руководителя, то сбросим эту галку в исходное состояние, если не имеет прав согласования на статью расходов
-//  if not(User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (IntToStr(User.GetId) =ExpAgreed.Values[Cth.GetControlValue(Cb_ExpenseItem)]))
+//  if not(User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (IntToStr(User.GetId) =ExpAgreed.Values[Cth.GetControlValue(cmb_ExpenseItem)]))
   //2023-11-26
   //в поле таблицы несколько пользователей через запятую, которые могут согласовывать по данной статье
-  if not(User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and S.InCommaStr(IntToStr(User.GetId), ExpAgreed.Values[Cth.GetControlValue(Cb_ExpenseItem)]))
-    then Chb_Agreed1.Checked:= IsAgreed;
-  if  (Cth.GetControlValue(E_Account)<> '')and(Mode<>fDelete) then begin
+  if not(User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and S.InCommaStr(IntToStr(User.GetId), ExpAgreed.Values[Cth.GetControlValue(cmb_ExpenseItem)]))
+    then chb_Agreed1.Checked:= IsAgreed;
+  if  (Cth.GetControlValue(edt_Account)<> '')and(Mode<>fDelete) then begin
     //проверим чтобы не было другого счета у того же поставщика с таким же номером при том же годе, взятом из даты выставления счета
     v1:= Q.QSelectOneRow(
       'select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
-      [Cth.GetControlValue(Cb_Supplier), S.IIfInt(Mode = fEdit, ID, -1000), E_Account.Text, YearOf(S.IIfV(Cth.DteValueIsDate(Dt_Account), Dt_Account.Value, Date))]
+      [Cth.GetControlValue(cmb_Supplier), S.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(S.IIfV(Cth.DteValueIsDate(Dt_Account), Dt_Account.Value, Date))]
     );
     if v1[0] <> null  then begin
       if myQuestionMessage('Счет с таким же номером у этого поставщика уже есть. Вы уверены, что хотите сохранить данные?') <> mrYes then Exit;
@@ -575,28 +575,28 @@ begin
   Q.QBeginTrans(True);
   if Mode = fEdit then begin
     ErrSql:=Q.QExecSql(Q.QSIUDSql('u', 'sn_calendar_accounts', FieldNames),
-      [Cth.GetControlValue(Cb_Cash),
-       Cth.GetControlValue(E_Account),
-       Cth.GetControlValue(Cb_Supplier),
-       Cth.GetControlValue(Cb_Org),
-       Cth.GetControlValue(Cb_ExpenseItem),
-       Cth.GetControlValue(Cb_User),
-       Cth.GetControlValue(Ne_Sum),
-       Cth.GetControlValue(E_Comm),
-       Cth.GetControlValue(E_File),
-       Cth.GetControlValue(Chb_Agreed1),
-       Cth.GetControlValue(Chb_Agreed2),
+      [Cth.GetControlValue(cmb_Cash),
+       Cth.GetControlValue(edt_Account),
+       Cth.GetControlValue(cmb_Supplier),
+       Cth.GetControlValue(cmb_Org),
+       Cth.GetControlValue(cmb_ExpenseItem),
+       Cth.GetControlValue(cmb_User),
+       Cth.GetControlValue(nedt_Sum),
+       Cth.GetControlValue(edt_Comm),
+       Cth.GetControlValue(edt_File),
+       Cth.GetControlValue(chb_Agreed1),
+       Cth.GetControlValue(chb_Agreed2),
        Cth.GetControlValue(Dt_Account),
        Dt,
        AccMode,
        WhoAgreed,
-       Cth.GetControlValue(Cb_NDS),
+       Cth.GetControlValue(cmb_NDS),
        ID
       ]);
     if ((AccMode = 1) or (AccMode = 2))and(ErrSql = 0) then begin
       ErrSql:=Q.QExecSql(Q.QSIUDSql('u', 'sn_calendar_accounts_t', 'id;cartype$i;flighttype$i;flightdt$d;kilometrage$f;idle$f;basissum$f;othersum$f;pricekm$f;priceidle$f'), [
-        S.NullIfEmpty(Cth.GetControlValue(Cb_CarType)), S.NullIfEmpty(Cth.GetControlValue(Cb_Flight)), S.NullIfEmpty(Cth.GetControlValue(De_FlightDt)), S.NullIfEmpty(Cth.GetControlValue(Ne_Kilometrage)),
-        S.NullIfEmpty(Cth.GetControlValue(Ne_Idle)), 0 ,S.NullIfEmpty(Cth.GetControlValue(Ne_SumOther)), S.NullIfEmpty(Cth.GetControlValue(Ne_PriceKm)), S.NullIfEmpty(Cth.GetControlValue(Ne_PriceIdle)), ID
+        S.NullIfEmpty(Cth.GetControlValue(cmb_CarType)), S.NullIfEmpty(Cth.GetControlValue(cmb_Flight)), S.NullIfEmpty(Cth.GetControlValue(dedt_FlightDt)), S.NullIfEmpty(Cth.GetControlValue(nedt_Kilometrage)),
+        S.NullIfEmpty(Cth.GetControlValue(nedt_Idle)), 0 ,S.NullIfEmpty(Cth.GetControlValue(nedt_SumOther)), S.NullIfEmpty(Cth.GetControlValue(nedt_PriceKm)), S.NullIfEmpty(Cth.GetControlValue(nedt_PriceIdle)), ID
       ]);
     end;
   end
@@ -605,27 +605,27 @@ begin
     ErrSql:=Q.QExecSql(Q.QSIUDSql('i', 'sn_calendar_accounts', FieldNames),
       [
        ID,
-       Cth.GetControlValue(Cb_Cash),
-       Cth.GetControlValue(E_Account),
-       Cth.GetControlValue(Cb_Supplier),
-       Cth.GetControlValue(Cb_Org),
-       Cth.GetControlValue(Cb_ExpenseItem),
-       Cth.GetControlValue(Cb_User),
-       Cth.GetControlValue(Ne_Sum),
-       Cth.GetControlValue(E_Comm),
-       Cth.GetControlValue(E_File),
-       Cth.GetControlValue(Chb_Agreed1),
-       Cth.GetControlValue(Chb_Agreed2),
+       Cth.GetControlValue(cmb_Cash),
+       Cth.GetControlValue(edt_Account),
+       Cth.GetControlValue(cmb_Supplier),
+       Cth.GetControlValue(cmb_Org),
+       Cth.GetControlValue(cmb_ExpenseItem),
+       Cth.GetControlValue(cmb_User),
+       Cth.GetControlValue(nedt_Sum),
+       Cth.GetControlValue(edt_Comm),
+       Cth.GetControlValue(edt_File),
+       Cth.GetControlValue(chb_Agreed1),
+       Cth.GetControlValue(chb_Agreed2),
        Cth.GetControlValue(Dt_Account),
        Dt,
        AccMode,
        WhoAgreed,
-       Cth.GetControlValue(Cb_NDS)
+       Cth.GetControlValue(cmb_NDS)
    ]);
       ErrSql:=Q.QExecSql(Q.QSIUDSql('i', 'sn_calendar_accounts_t', 'id;cartype$i;flighttype$i;flightdt$d;kilometrage$f;idle$f;basissum$f;othersum$f;pricekm$f;priceidle$f;freeidletime$f'), [
         ID,
-        S.NullIfEmpty(Cth.GetControlValue(Cb_CarType)), S.NullIfEmpty(Cth.GetControlValue(Cb_Flight)), S.NullIfEmpty(Cth.GetControlValue(De_FlightDt)), S.NullIfEmpty(Cth.GetControlValue(Ne_Kilometrage)),
-        S.NullIfEmpty(Cth.GetControlValue(Ne_Idle)), 0 ,S.NullIfEmpty(Cth.GetControlValue(Ne_SumOther)), S.NullIfEmpty(Cth.GetControlValue(Ne_PriceKm)), S.NullIfEmpty(Cth.GetControlValue(Ne_PriceIdle)), MaxIdle
+        S.NullIfEmpty(Cth.GetControlValue(cmb_CarType)), S.NullIfEmpty(Cth.GetControlValue(cmb_Flight)), S.NullIfEmpty(Cth.GetControlValue(dedt_FlightDt)), S.NullIfEmpty(Cth.GetControlValue(nedt_Kilometrage)),
+        S.NullIfEmpty(Cth.GetControlValue(nedt_Idle)), 0 ,S.NullIfEmpty(Cth.GetControlValue(nedt_SumOther)), S.NullIfEmpty(Cth.GetControlValue(nedt_PriceKm)), S.NullIfEmpty(Cth.GetControlValue(nedt_PriceIdle)), MaxIdle
       ]);
   end
   else if Mode = fDelete then begin
@@ -640,7 +640,7 @@ begin
       for i:=0 to PaymentsCount-1 do begin
         //проход по платежам, которые были в прошлой версии счета
         v1:=Cth.GetControlValue(TControl(Self.FindComponent('Dt_'+IntToStr(i+1))));
-        v2:=Cth.GetControlValue(TControl(Self.FindComponent('Ne_'+IntToStr(i+1))));
+        v2:=Cth.GetControlValue(TControl(Self.FindComponent('nedt_'+IntToStr(i+1))));
         if v2 = null then v2:=0; //на случай пустого контрола суммы
         if (v2 = 0) then begin
           //если сумма 0 или пустая, то удалим этот платеж
@@ -654,7 +654,7 @@ begin
       for i:=PaymentsCount to 9 do begin
         //занесем в бд вновь добавленные платежи, если они не пустые или не 0
         v1:=Cth.GetControlValue(TControl(Self.FindComponent('Dt_'+IntToStr(i+1))));
-        v2:=Cth.GetControlValue(TControl(Self.FindComponent('Ne_'+IntToStr(i+1))));
+        v2:=Cth.GetControlValue(TControl(Self.FindComponent('nedt_'+IntToStr(i+1))));
         if v2 = null then v2:=0;
         if v2 > 0 then begin
           IDpm:=Q.QSelectId('sq_sn_calendar_payments');
@@ -666,7 +666,7 @@ begin
       //в случае копирования занесем все платежи
       for i:=0 to 9 do begin
         v1:=Cth.GetControlValue(TControl(Self.FindComponent('Dt_'+IntToStr(i+1))));
-        v2:=Cth.GetControlValue(TControl(Self.FindComponent('Ne_'+IntToStr(i+1))));
+        v2:=Cth.GetControlValue(TControl(Self.FindComponent('nedt_'+IntToStr(i+1))));
         if v2 = null then v2:=0;
         if v2 > 0 then begin
           IDpm:=Q.QSelectId('sq_sn_calendar_payments');
@@ -774,14 +774,14 @@ end;
 function TDlg_Sn_Calendar.IsAgreed1Enabled: Boolean;
 begin
   Result:=False;
-  if Cth.GetControlValue(Cb_ExpenseItem) = null then Exit;
+  if Cth.GetControlValue(cmb_ExpenseItem) = null then Exit;
 {  Result:=
-    (User.IsDataEditor) or ((not Chb_Agreed2.Checked) and
-      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (IntToStr(User.GetId) = S.IIFStr(S.NSt(Cth.GetControlValue(Cb_ExpenseItem)) ='', '', ExpAgreed.Values[Cth.GetControlValue(Cb_ExpenseItem)]))));
+    (User.IsDataEditor) or ((not chb_Agreed2.Checked) and
+      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (IntToStr(User.GetId) = S.IIFStr(S.NSt(Cth.GetControlValue(cmb_ExpenseItem)) ='', '', ExpAgreed.Values[Cth.GetControlValue(cmb_ExpenseItem)]))));
       }
   Result:=
-    (User.IsDataEditor) or ((not Chb_Agreed2.Checked) and
-      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (S.InCommaStr(IntToStr(User.GetId), ExpAgreed.Values[Cth.GetControlValue(Cb_ExpenseItem)]))));
+    (User.IsDataEditor) or ((not chb_Agreed2.Checked) and
+      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (S.InCommaStr(IntToStr(User.GetId), ExpAgreed.Values[Cth.GetControlValue(cmb_ExpenseItem)]))));
 end;
 
 function TDlg_Sn_Calendar.PointInLocations(st: string): Integer;
@@ -807,10 +807,10 @@ begin
   for i:=1 to 10 do
     begin
       if ((Self.FindComponent('Dt_'+IntToStr(i)) as TDBDateTimeEditEh).text<>'  .  .    ') and
-         (Self.FindComponent('Ne_'+IntToStr(i))<>Sender)
-        then Result:=Result+(Self.FindComponent('Ne_'+IntToStr(i)) as TDBNumberEditEh).value;
+         (Self.FindComponent('nedt_'+IntToStr(i))<>Sender)
+        then Result:=Result+(Self.FindComponent('nedt_'+IntToStr(i)) as TDBNumberEditEh).value;
     end;
-  Result:= Ne_Sum.Value - Result;
+  Result:= nedt_Sum.Value - Result;
   (Sender as TDBNumberEditEh).Value:= Result;
 end;
 
@@ -828,7 +828,7 @@ begin
   IsRouteGridEdited:=True;
 end;
 
-procedure TDlg_Sn_Calendar.Ne_1Change(Sender: TObject);
+procedure TDlg_Sn_Calendar.nedt_1Change(Sender: TObject);
 var
   i, j:Integer;
 begin
@@ -841,63 +841,63 @@ var
   e:Extended;
   ok1, ok2: Boolean;
 begin
-//  Ok:=(Ne_Sum.Text<>'');
+//  Ok:=(nedt_Sum.Text<>'');
   Ok:=
-    (Cb_Cash.Text<>'') and
-    ((E_Account.Text<>'') or (Cb_Cash.value='2')) and          //должен быть номер счета, или наличный расчет
-    (Cb_Nds.Text<>'') and
-    (not((Cb_Nds.Value<>'0') and (Cb_Cash.value='2'))) and     //нельзя ненулевое НДС при наличном расчете
-    (Cb_Supplier.Text<>'') and
-    (Cb_Org.Text<>'') and
-    (Cb_User.Text<>'') and
-    (Cb_ExpenseItem.Text<>'') and
-    (Ne_Sum.Text<>'') and
-    (E_File.Text<>'') and
+    (cmb_Cash.Text<>'') and
+    ((edt_Account.Text<>'') or (cmb_Cash.value='2')) and          //должен быть номер счета, или наличный расчет
+    (cmb_Nds.Text<>'') and
+    (not((cmb_Nds.Value<>'0') and (cmb_Cash.value='2'))) and     //нельзя ненулевое НДС при наличном расчете
+    (cmb_Supplier.Text<>'') and
+    (cmb_Org.Text<>'') and
+    (cmb_User.Text<>'') and
+    (cmb_ExpenseItem.Text<>'') and
+    (nedt_Sum.Text<>'') and
+    (edt_File.Text<>'') and
     (Dt_Account.Text<>'');
-  Lb_General_Error.Visible:=not Ok;
+  lbl_General_Error.Visible:=not Ok;
   Ok1:=True;
   e:=0;
   for i:=1 to 10 do
     begin
       v1:=(Self.FindComponent('Dt_'+IntToStr(i)) as TDBDateTimeEditEh).text;
-      v2:=(Self.FindComponent('Ne_'+IntToStr(i)) as TDBNumberEditEh).text;
+      v2:=(Self.FindComponent('nedt_'+IntToStr(i)) as TDBNumberEditEh).text;
       if StrToFloatDef(v2, 0)<0 then Ok1:=False;
       if ((v1<>'  .  .    ')and(v2=''))or((v1='  .  .    ')and(v2<>'')) then Ok1:=False;
       e:= e+StrToFloatDef(v2, 0)
     end;
-  ok1:=Ok1 and (e = Ne_Sum.Value);
-  Lb_Payments_Error.Visible:=not Ok1;
-  Lb_Payments_T_Error.Visible:=Lb_Payments_Error.Visible;
+  ok1:=Ok1 and (e = nedt_Sum.Value);
+  lbl_Payments_Error.Visible:=not Ok1;
+  lbl_Payments_T_Error.Visible:=lbl_Payments_Error.Visible;
   Ok:=Ok and Ok1;
   if (AccMode = 1)or(AccMode=2) then begin
     //для транспортных счетов
-    Ok1:=(not Lb_Route_Error.Visible)and(Cb_CarType.Text<>'')and(Cb_Flight.Text<>'')and(De_FlightDt.value<>null);
-    if Ne_Idle.visible
-      then Ok1:=Ok1 and (Ne_Idle.Text<>'') and (Ne_PriceKm.Text<>'') and (Ne_PriceIdle.Text<>'') and (Ne_SumOther.Text<>'');
-    Lb_Basis_Error.Visible:=False;
+    Ok1:=(not lbl_Route_Error.Visible)and(cmb_CarType.Text<>'')and(cmb_Flight.Text<>'')and(dedt_FlightDt.value<>null);
+    if nedt_Idle.visible
+      then Ok1:=Ok1 and (nedt_Idle.Text<>'') and (nedt_PriceKm.Text<>'') and (nedt_PriceIdle.Text<>'') and (nedt_SumOther.Text<>'');
+    lbl_Basis_Error.Visible:=False;
     Ok:=Ok and Ok1;
   end;
   if (AccMode = 3) then begin
     //для монтажных счетов
     Ok1:=True;
     //грид оснований может быть пустым, а больше дополнительных данных там нет
-    Lb_Basis_Error.Visible:=False;
+    lbl_Basis_Error.Visible:=False;
     Ok:=Ok and Ok1;
   end;
 end;
 
 procedure TDlg_Sn_Calendar.CalculateSumWoNds;
 begin
-  if (Cb_Nds.Text = '')or(Ne_Sum.Text = '')
-    then Ne_SumWoNds.Value:=null
-//    else Ne_SumWoNds.Value:= RoundTo(Ne_Sum.Value - (Ne_Sum.Value * Cb_Nds.Value /100), -2);
-    else Ne_SumWoNds.Value:= RoundTo(Ne_Sum.Value / ((Cb_Nds.Value + 100)/100), -2);
+  if (cmb_Nds.Text = '')or(nedt_Sum.Text = '')
+    then nedt_SumWoNds.Value:=null
+//    else nedt_SumWoNds.Value:= RoundTo(nedt_Sum.Value - (nedt_Sum.Value * cmb_Nds.Value /100), -2);
+    else nedt_SumWoNds.Value:= RoundTo(nedt_Sum.Value / ((cmb_Nds.Value + 100)/100), -2);
 end;
 
 
 procedure TDlg_Sn_Calendar.ControlExit(Sender: TObject);
 begin
-  if (Sender = Ne_Sum)or(Sender = Cb_Nds) then CalculateSumWoNds;
+  if (Sender = nedt_Sum)or(Sender = cmb_Nds) then CalculateSumWoNds;
   Verify;
 end;
 
@@ -941,24 +941,24 @@ begin
           st:=Cth.GetControlValue(TControl(Self.FindComponent('Dt_'+IntToStr(i))));
           if st<>'' then dt2:=StrToDateDef(st, S.BadDate);
           if dt2 = S.BadDate then Continue;
-          v2:=(Self.FindComponent('Ne_'+IntToStr(i)) as TDBNumberEditEh).value;
+          v2:=(Self.FindComponent('nedt_'+IntToStr(i)) as TDBNumberEditEh).value;
           if v2 = null then Continue;
           if dt2 = dt then begin
             v[0]:=v[0]+v2;
           end;
 //          dt2:=Cth.GetControlValue(TDBDateTimeEditEh(Self.FindComponent('Dt_'+IntToStr(i))));
 {          if (v1 = null)or(v1 = '') then continue;
-          v2:=(Self.FindComponent('Ne_'+IntToStr(i)) as TDBNumberEditEh).value;
+          v2:=(Self.FindComponent('nedt_'+IntToStr(i)) as TDBNumberEditEh).value;
           if v2 = null then v2:=0;
           if v1 = dt then begin
             v[0]:=v[0]+v2;
           end;    }
         end;
-//      Lb_Payments.Caption
+//      lbl_Payments.Caption
       st:='На ' + DateToStr(dt) + ' запланирована сумма ' + VarToStr(v[0]) + 'р.' + #10#13 + '(включая этот счет)';
       MyInfoMessage(st);
     except
-      //Lb_Payments.Caption:='';
+      //lbl_Payments.Caption:='';
     end;
     Key:=#0;
   end;
@@ -983,15 +983,15 @@ var
 begin
   Resize:=False;
   if AccMode = 0 then begin
-    min:=P_Buttons.top + P_Buttons.Height + 40;
+    min:=pnl_Buttons.top + pnl_Buttons.Height + 40;
     max:=min;
   end
   else if A.InArray(AccMode, [1,2]) then begin
-    min:=Gb_Route.Top + Gb_Additional.Height + P_Buttons.Height + 2*160 + 40 ;
+    min:=gb_Route.Top + gb_Additional.Height + pnl_Buttons.Height + 2*160 + 40 ;
     max:=1080;
   end
   else if A.InArray(AccMode, [3]) then begin
-    min:=Gb_Basis.Top + Gb_Additional.Height + P_Buttons.Height + 1*160 + 40 ;
+    min:=gb_Basis.Top + gb_Additional.Height + pnl_Buttons.Height + 1*160 + 40 ;
     max:=1080;
   end;
   if InLoadData then begin
@@ -1021,13 +1021,13 @@ var
 begin
   if AccMode = 0 then Exit;
   if A.InArray(AccMode, [1,2]) then begin
-    i:=ClientHeight - (Gb_Route.Top+Gb_Payments_T.Height+Gb_Additional.Height+P_Buttons.Height);
-    Gb_Route.Height:=i div 2;
-    Gb_Basis.Height:=i div 2;
+    i:=ClientHeight - (gb_Route.Top+gb_Payments_T.Height+gb_Additional.Height+pnl_Buttons.Height);
+    gb_Route.Height:=i div 2;
+    gb_Basis.Height:=i div 2;
   end;
   if A.InArray(AccMode, [3]) then begin
-    i:=ClientHeight - (Gb_Basis.Top+Gb_Payments_T.Height+Gb_Additional.Height+P_Buttons.Height);
-    Gb_Basis.Height:=i;
+    i:=ClientHeight - (gb_Basis.Top+gb_Payments_T.Height+gb_Additional.Height+pnl_Buttons.Height);
+    gb_Basis.Height:=i;
   end;
 end;
 
@@ -1036,7 +1036,7 @@ begin
   Verify;
 end;
 
-procedure TDlg_Sn_Calendar.Ne_1KeyPress(Sender: TObject; var Key: Char);
+procedure TDlg_Sn_Calendar.nedt_1KeyPress(Sender: TObject; var Key: Char);
 begin
   if Key = ' ' then begin
     GetSum(Sender);
@@ -1044,16 +1044,16 @@ begin
   end
 end;
 
-procedure TDlg_Sn_Calendar.Ne_T1Change(Sender: TObject);
+procedure TDlg_Sn_Calendar.nedt_T1Change(Sender: TObject);
 begin
   if InLoadData then Exit;
-  Ne_1.Value:=Ne_T1.Value;
+  nedt_1.Value:=nedt_T1.Value;
 end;
 
-procedure TDlg_Sn_Calendar.Ne_T2Change(Sender: TObject);
+procedure TDlg_Sn_Calendar.nedt_T2Change(Sender: TObject);
 begin
   if InLoadData then Exit;
-  Ne_2.Value:=Ne_T2.Value;
+  nedt_2.Value:=nedt_T2.Value;
 end;
 
 procedure TDlg_Sn_Calendar.Bt_CancelClick(Sender: TObject);
@@ -1075,7 +1075,7 @@ var
   res, i, j: Integer;
   FName: string;
 begin
-  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id order by legalname', [ID_Curr_Supplier], Cb_Supplier, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id order by legalname', [ID_Curr_Supplier], cmb_Supplier, cntComboLK);
   exit;
 
 {
@@ -1112,8 +1112,8 @@ begin
   try
   for i:=0 to Files.Count-1 do begin
     if FileExists(Files[i]) then begin
-      spath:=Module.GetPath_Accounts_A(E_File.Text);
-      zpath:=Module.GetPath_Accounts_Z(E_File.Text);
+      spath:=Module.GetPath_Accounts_A(edt_File.Text);
+      zpath:=Module.GetPath_Accounts_Z(edt_File.Text);
       ForceDirectories(spath);
       ForceDirectories(zpath);
       CopyFile(PChar(Files[i]), PChar(S.IIFStr(Mode, SPath, ZPath) + '\' + ExtractFileName(Files[i])), True);
@@ -1131,20 +1131,20 @@ var
   b1, b2: Boolean;
 begin
   Result:= True;  b1:=True; b2:=True;
-  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_A(E_File.Text));
+  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_A(edt_File.Text));
   if Length(a) = 0
-    then begin b1:=False; Lb_AccountFile.Caption:='Файл счета не загружен!'; end
-    else Lb_AccountFile.Caption:='Файл счета загружен';
-  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_Z(E_File.Text));
+    then begin b1:=False; lbl_AccountFile.Caption:='Файл счета не загружен!'; end
+    else lbl_AccountFile.Caption:='Файл счета загружен';
+  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_Z(edt_File.Text));
   if Length(a) = 0
     then begin
-      if (Cb_ExpenseItem.ItemIndex = -1)or(Cb_RecReceipt.Items[Cb_ExpenseItem.ItemIndex] = '1')
-        then if Ne_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req) then b2:=False;
-      Lb_RequestFile.Caption:='Файл заявки не загружен!';
+      if (cmb_ExpenseItem.ItemIndex = -1)or(cmb_RecReceipt.Items[cmb_ExpenseItem.ItemIndex] = '1')
+        then if nedt_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req) then b2:=False;
+      lbl_RequestFile.Caption:='Файл заявки не загружен!';
     end
-    else Lb_RequestFile.Caption:='Файл заявки загружен';
-  if b1 then Lb_AccountFile.Font.Color:=clWindowText else Lb_AccountFile.Font.Color:=RGB(240,0,0);
-  if b2 then Lb_RequestFile.Font.Color:=clWindowText else Lb_RequestFile.Font.Color:=RGB(240,0,0);
+    else lbl_RequestFile.Caption:='Файл заявки загружен';
+  if b1 then lbl_AccountFile.Font.Color:=clWindowText else lbl_AccountFile.Font.Color:=RGB(240,0,0);
+  if b2 then lbl_RequestFile.Font.Color:=clWindowText else lbl_RequestFile.Font.Color:=RGB(240,0,0);
   Result:=b1 and b2;
 end;
 
@@ -1163,12 +1163,12 @@ var
   st: string;
   b: Boolean;
 begin
-  Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(E_File.Text), 'Файл счета не найден!');
+  Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(edt_File.Text), 'Файл счета не найден!');
 end;
 
 procedure TDlg_Sn_Calendar.Bt_ReqestFileOpenClick(Sender: TObject);
 begin
-  Sys.OpenFileOrDirectory(Module.GetPath_Accounts_Z(E_File.Text), 'Файл заявки не найден!');
+  Sys.OpenFileOrDirectory(Module.GetPath_Accounts_Z(edt_File.Text), 'Файл заявки не найден!');
 end;
 
 procedure TDlg_Sn_Calendar.Bt_SelectSupplierClick(Sender: TObject);
@@ -1177,56 +1177,56 @@ begin
   Wh.SelectDialogResult:=[];
   Wh.ExecReference(myfrm_R_Suppliers_SELCH);
   if Length(Wh.SelectDialogResult) = 0 then Exit;
-  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id order by legalname', [ID_Curr_Supplier], Cb_Supplier, cntComboLK);
-  Cb_Supplier.Text:=Wh.SelectDialogResult[1];
+  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id order by legalname', [ID_Curr_Supplier], cmb_Supplier, cntComboLK);
+  cmb_Supplier.Text:=Wh.SelectDialogResult[1];
 end;
 
-procedure TDlg_Sn_Calendar.Cb_ExpenseItemChange(Sender: TObject);
+procedure TDlg_Sn_Calendar.cmb_ExpenseItemChange(Sender: TObject);
 //сбросим галку согласовано руководителем и задисаблим для статей для которых нельзя поставить
 begin
   if inloaddata then exit;
-  Chb_Agreed1.Enabled:=IsAgreed1Enabled;
-  if not Chb_Agreed1.Enabled then Chb_Agreed1.Checked:=False;
+  chb_Agreed1.Enabled:=IsAgreed1Enabled;
+  if not chb_Agreed1.Enabled then chb_Agreed1.Checked:=False;
 end;
 
-procedure TDlg_Sn_Calendar.Cb_FlightChange(Sender: TObject);
+procedure TDlg_Sn_Calendar.cmb_FlightChange(Sender: TObject);
 //при изменении комбобокса
 //запретим сбросить значение в пустое
 //если же меняется на противоположное, то спросим
 begin
 //exit;
   if InLoadData then Exit;
-  if (Cb_Flight.Text = '')and(OldFlight <> '')
+  if (cmb_Flight.Text = '')and(OldFlight <> '')
     then begin
-      Cb_Flight.Text := OldFlight;
+      cmb_Flight.Text := OldFlight;
       Exit;
     end;
-  if OldFlight <> Cb_Flight.Text then begin
+  if OldFlight <> cmb_Flight.Text then begin
   {
     if (OldFlight = '') or (MyQuestionMessage('Данные маршрута будут частично утеряны! продолжить?') = mrYes)
       then begin
         SetRouteGridType;
       end
-      else Cb_Flight.Text := OldFlight;
+      else cmb_Flight.Text := OldFlight;
     }
     IsRouteGridChanged:=True;
     IsRouteGridEdited:=True;
     SetRouteGridType;
     MemTableEh1AfterEditCorrectData;
   end;
-  if Cb_Flight.Text<>'' then OldFlight:=Cb_Flight.Text;
+  if cmb_Flight.Text<>'' then OldFlight:=cmb_Flight.Text;
 end;
 
-procedure TDlg_Sn_Calendar.Chb_Agreed1Click(Sender: TObject);
+procedure TDlg_Sn_Calendar.chb_Agreed1Click(Sender: TObject);
 begin
   inherited;
-  if Chb_Agreed1.Checked
+  if chb_Agreed1.Checked
     then begin
-      Chb_Agreed1.Caption:=User.GetName;
+      chb_Agreed1.Caption:=User.GetName;
       WhoAgreed:=User.GetId;
     end
     else begin
-      Chb_Agreed1.Caption:='Руководитель';
+      chb_Agreed1.Caption:='Руководитель';
       WhoAgreed:=null;
     end;
 end;
@@ -1330,8 +1330,8 @@ procedure TDlg_Sn_Calendar.SetRouteGridType;
 var
   i:Integer;
 begin
-  DBGridEh1.Enabled:=(Cb_Flight.value <> '')and(Mode<>fView)and(Mode<>fDelete);
-  DBGridEh1.Columns[1].Visible:=(Cb_Flight.value = '1')and(AccMode = 1);
+  DBGridEh1.Enabled:=(cmb_Flight.value <> '')and(Mode<>fView)and(Mode<>fDelete);
+  DBGridEh1.Columns[1].Visible:=(cmb_Flight.value = '1')and(AccMode = 1);
   DBGridEh1.Columns[3].Visible:=DBGridEh1.Columns[1].Visible;
   DBGridEh1.Columns[4].Visible:=DBGridEh1.Columns[1].Visible;
   DBGridEh1.Columns[5].Visible:=DBGridEh1.Columns[1].Visible;
@@ -1355,22 +1355,22 @@ begin
   for i:=0 to 5 do begin
     DBGridEh1.Columns[i].AutoFitColWidth:=(i in [0,2]);     //использовать этот столбец для подгонки
   end;
-  Ne_Idle.Enabled:=False;
-  Ne_Idle.Visible:=DBGridEh1.Columns[1].Visible;
-  Ne_Kilometrage.Enabled:=not Ne_Idle.Visible;
-  De_FlightDt.Enabled:=not Ne_Idle.Visible;
-  Ne_PriceKm.Visible:=Ne_Idle.Visible;
-  Ne_PriceIdle.Visible:=Ne_Idle.Visible;
-  Ne_SumOther.Visible:=Ne_Idle.Visible;
-  if not Ne_Idle.Visible then begin
-    Ne_Idle.Value:=null;
-    Ne_PriceKm.Value:=null;
-    Ne_PriceIdle.Value:=null;
-    Ne_SumOther.Value:=null;
-    P_Route.Height:=Ne_Idle.top+Ne_Idle.Height+10;
+  nedt_Idle.Enabled:=False;
+  nedt_Idle.Visible:=DBGridEh1.Columns[1].Visible;
+  nedt_Kilometrage.Enabled:=not nedt_Idle.Visible;
+  dedt_FlightDt.Enabled:=not nedt_Idle.Visible;
+  nedt_PriceKm.Visible:=nedt_Idle.Visible;
+  nedt_PriceIdle.Visible:=nedt_Idle.Visible;
+  nedt_SumOther.Visible:=nedt_Idle.Visible;
+  if not nedt_Idle.Visible then begin
+    nedt_Idle.Value:=null;
+    nedt_PriceKm.Value:=null;
+    nedt_PriceIdle.Value:=null;
+    nedt_SumOther.Value:=null;
+    pnl_Route.Height:=nedt_Idle.top+nedt_Idle.Height+10;
   end
   else begin
-    P_Route.Height:=Ne_SumOther.Top+Ne_SumOther.Height+10;
+    pnl_Route.Height:=nedt_SumOther.Top+nedt_SumOther.Height+10;
   end;
 end;
 
@@ -1540,19 +1540,19 @@ begin
   //итоги километража и простоя
   if vmode then begin
     if err then begin
-      Ne_Kilometrage.Value:=null;
-      Ne_Idle.Value:=null;
-      De_FlightDt.Value:=null;
+      nedt_Kilometrage.Value:=null;
+      nedt_Idle.Value:=null;
+      dedt_FlightDt.Value:=null;
     end
     else begin
-      Ne_Kilometrage.Value:=km;
-      Ne_Idle.Value:=tm;
-      De_FlightDt.Value:=int(dtflight);
+      nedt_Kilometrage.Value:=km;
+      nedt_Idle.Value:=tm;
+      dedt_FlightDt.Value:=int(dtflight);
     end;
   end;
   MemTableEh1.RecNo:=rn;
   DBGridEh1.Columns[0].ReadOnly:=(MemTableEh1.RecNo>1);
-  Lb_Route_Error.Visible:=err;
+  lbl_Route_Error.Visible:=err;
   InRouteGridEdit1:=False;
 end;
 
@@ -1635,7 +1635,7 @@ begin
 //  if not MemTableEh1.ReadOnly then MemTableEh1.Edit;
 end;
 
-procedure TDlg_Sn_Calendar.Timer1Timer(Sender: TObject);
+procedure TDlg_Sn_Calendar.tmr1Timer(Sender: TObject);
 begin
   if IsRouteGridChanged then begin
     Mth.Post(MemTableEh1);
@@ -1656,7 +1656,7 @@ begin
     sum:=sum + StrToFloatDef(MemTableEh2.FieldByName('sum').AsString, 0);
   end;
   MemTableEh1.RecNo:=rn;
-  Ne_Basissum.Value:=sum;
+  nedt_Basissum.Value:=sum;
 end;
 
 

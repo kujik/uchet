@@ -12,25 +12,25 @@ uses
 
 type
   TFrmXWGridOptions = class(TFrmBasicMdi)
-    PLeft: TPanel;
-    PRight: TPanel;
-    PLefttTop: TPanel;
-    PRightTop: TPanel;
+    pnlLeft: TPanel;
+    pnlRight: TPanel;
+    pnlLeftTop: TPanel;
+    pnlRightTop: TPanel;
     Frg1: TFrDBGridEh;
-    Label1: TLabel;
-    Label2: TLabel;
+    lbl1: TLabel;
+    lbl2: TLabel;
     procedure FormShow(Sender: TObject);
   private
-    FrDbGrid: TFrDBGridEh;
-    Chb: TVarDynArray2;
-    ChbsH: Integer;
-    OwnerFormDoc: string;
-    FrozenColumn: string;
+    FFrDbGrid: TFrDBGridEh;
+    FChbs: TVarDynArray2;
+    FChbsH: Integer;
+    FOwnerFormDoc: string;
+    FFrozenColumn: string;
     function  Prepare: Boolean; override;
     procedure SetCheckBoxes;
     procedure LoaDGridOptions;
-    procedure BtOkClick(Sender: TObject); override;
-    procedure BtClick(Sender: TObject); override;
+    procedure btnOkClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
     procedure ControlOnChange(Sender: TObject); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -68,8 +68,8 @@ const
 
 procedure TFrmXWGridOptions.SetLoadDefaultEnabled;
 begin
-//  Cth.SetButtonsAndPopupMenuCaptionEnabled([PDlgBtnR], 1000, null, Settings.IsDefaultFrDBGridEhSettingsExists(OwnerFormDoc, FrDbGrid), '');
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, 1000, null, Settings.IsDefaultFrDBGridEhSettingsExists(OwnerFormDoc, FrDbGrid), '');
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled([pnlFrmBtnsR], 1000, null, Settings.IsDefaultFrDBGridEhSettingsExists(FOwnerFormDoc, FFrDbGrid), '');
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, 1000, null, Settings.IsDefaultFrDBGridEhSettingsExists(FOwnerFormDoc, FFrDbGrid), '');
 end;
 
 procedure TFrmXWGridOptions.SetCheckBoxes;
@@ -78,7 +78,7 @@ var
   i: Integer;
   c: TControl;
 begin
-  chb := [
+  FChbs := [
     ['FilterPanel',
      'Панель фильтра',
      myogPanelFilter,
@@ -136,24 +136,24 @@ begin
     'В противном случае, при сортировке произойдет переход к первой строке таблицы.'+chr(10)+chr(13)
     ]
   ];
-  for i:= 0 to High(chb) do begin
-    c:=Cth.CreateControls(PLeft, cntCheck, chb[i][1], 'Chb' + chb[i][0], '', 0);
+  for i:= 0 to High(FChbs) do begin
+    c:=Cth.CreateControls(pnlLeft, cntCheck, FChbs[i][1], 'FChbs' + FChbs[i][0], '', 0);
     c.Left := 4;
     c.Width := 180;
-    c.Top := PLefttTop.Height + 4 + i * MY_FORMPRM_CONTROL_H;
+    c.Top := pnlLeftTop.Height + 4 + i * MY_FORMPRM_CONTROL_H;
     c := TImage.Create(Self);
-    c.Name := 'Img' + chb[i][0];
-    c.Parent := PLeft;
+    c.Name := 'Img' + FChbs[i][0];
+    c.Parent := pnlLeft;
     c.Left := 194;
-    c.Top := PLefttTop.Height + 4 + i * MY_FORMPRM_CONTROL_H;
-    ChbsH := c.Top;
-    Cth.SetInfoIcon(TImage(c), Cth.SetInfoIconText(TForm(Self), [[chb[i][3]]]), MY_FORMPRM_CONTROL_H);
+    c.Top := pnlLeftTop.Height + 4 + i * MY_FORMPRM_CONTROL_H;
+    FChbsH := c.Top;
+    Cth.SetInfoIcon(TImage(c), Cth.SetInfoIconText(TForm(Self), [[FChbs[i][3]]]), MY_FORMPRM_CONTROL_H);
   end;
-//  PRight.Width := 4 + MY_FORMPRM_CONTROL_H + 4;
+//  pnlRight.Width := 4 + MY_FORMPRM_CONTROL_H + 4;
   c := TImage.Create(Self);
-  c.Parent := PRightTop;
+  c.Parent := pnlRightTop;
   c.Top := 2;
-  c.Left := Label2.Width + 4 + 4; //PRightTop.Width - MY_FORMPRM_CONTROL_H - 4;
+  c.Left := lbl2.Width + 4 + 4; //pnlRightTop.Width - MY_FORMPRM_CONTROL_H - 4;
   c.Name := 'ImgGrid';
   Cth.SetInfoIcon(TImage(c), Cth.SetInfoIconText(TForm(Self),
     [[
@@ -181,27 +181,27 @@ begin
   //отобразим только те столбцы, которые пользователь имеет право видеть
   //в порядке, в котором они находятся сейчас в гриде
   //(не сервисные с _, не нулл, и не скрытые
-  for i:=0 to FrDbGrid.DBGridEh1.Columns.Count-1 do
+  for i:=0 to FFrDbGrid.DBGridEh1.Columns.Count-1 do
     begin
-//      if (Pos('_', FrDbGrid.DBGridEh1.Columns[i].Title.Caption) = 1) then Continue;
-      if FrDbGrid.Opt.Sql.Fields[i].Invisible or FrDbGrid.Opt.Sql.Fields[i].FIsNull or (Pos('_', FrDbGrid.Opt.Sql.Fields[i].Caption) = 1) then
+//      if (Pos('_', FFrDbGrid.DBGridEh1.Columns[i].Title.Caption) = 1) then Continue;
+      if FFrDbGrid.Opt.Sql.Fields[i].Invisible or FFrDbGrid.Opt.Sql.Fields[i].FIsNull or (Pos('_', FFrDbGrid.Opt.Sql.Fields[i].Caption) = 1) then
         Continue;
       va2 := va2 + [[
         i,
-        FrDbGrid.DBGridEh1.Columns[i].FieldName,
-        FrDbGrid.DBGridEh1.Columns[i].Title.Caption,
-        S.IIf(FrDbGrid.DBGridEh1.Columns[i].Visible, 1, 0),
-        S.IIf(FrDbGrid.DBGridEh1.Columns[i].WordWrap, 1, 0),
-        S.IIf(FrDbGrid.DBGridEh1.Columns[i].AutoFitColWidth, 1, 0)
+        FFrDbGrid.DBGridEh1.Columns[i].FieldName,
+        FFrDbGrid.DBGridEh1.Columns[i].Title.Caption,
+        S.IIf(FFrDbGrid.DBGridEh1.Columns[i].Visible, 1, 0),
+        S.IIf(FFrDbGrid.DBGridEh1.Columns[i].WordWrap, 1, 0),
+        S.IIf(FFrDbGrid.DBGridEh1.Columns[i].AutoFitColWidth, 1, 0)
       ]];
     end;
   Frg1.LoadSourceDataFromArray(va2);
-  for i := 0 to High(Chb) do
-    if Chb[i][2] <> - 1 then begin
-      c := TDBCheckBoxEh(Self.FindComponent('Chb' + Chb[i][0]));
-      c.Checked := TFrDBGridOption(Chb[i][2]) in FrDbGrid.Options;
+  for i := 0 to High(FChbs) do
+    if FChbs[i][2] <> - 1 then begin
+      c := TDBCheckBoxEh(Self.FindComponent('FChbs' + FChbs[i][0]));
+      c.Checked := TFrDBGridOption(FChbs[i][2]) in FFrDbGrid.Options;
     end;
-  FrozenColumn := FrDbGrid.Opt.FrozenColumn;
+  FFrozenColumn := FFrDbGrid.Opt.FrozenColumn;
   Frg1.MemTableEh1.First;
   Frg1.OnColumnsUpdateData := Frg1ColumnsUpdateData;
   Frg1.OnButtonClick := Frg1ButtonClick;
@@ -212,7 +212,7 @@ procedure TFrmXWGridOptions.FormShow(Sender: TObject);
 begin
   inherited;
   SetLoadDefaultEnabled;
-  PDlgBtnForm.Width := PDlgBtnForm.Width + 4 + MY_FORMPRM_CONTROL_H + 4;
+  pnlFrmBtnsMain.Width := pnlFrmBtnsMain.Width + 4 + MY_FORMPRM_CONTROL_H + 4;
 end;
 
 procedure TFrmXWGridOptions.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -224,16 +224,16 @@ end;
 procedure TFrmXWGridOptions.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
   inherited;
-  if FrozenColumn = Fr.GetValue('field') then
+  if FFrozenColumn = Fr.GetValue('field') then
     Params.Background := clSkyBlue;
 end;
 
 
 procedure TFrmXWGridOptions.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if FrozenColumn = Fr.GetValue('field')
-    then FrozenColumn := ''
-    else FrozenColumn := Fr.GetValue('field');
+  if FFrozenColumn = Fr.GetValue('field')
+    then FFrozenColumn := ''
+    else FFrozenColumn := Fr.GetValue('field');
 end;
 
 procedure TFrmXWGridOptions.ControlOnChange(Sender: TObject);
@@ -244,28 +244,28 @@ begin
     TDBCheckBoxEh(FindComponent('ChbFilterPanel')).Checked := False;
 end;
 
-procedure TFrmXWGridOptions.BtClick(Sender: TObject);
+procedure TFrmXWGridOptions.btnClick(Sender: TObject);
 begin
   if TButton(Sender).Tag = 1001 then begin
     //to Default
-    if OwnerFormDoc <> '' then
-      Settings.WriteFrDBGridEhSettings(OwnerFormDoc, FrDbGrid, True);
+    if FOwnerFormDoc <> '' then
+      Settings.WriteFrDBGridEhSettings(FOwnerFormDoc, FFrDbGrid, True);
     SetLoadDefaultEnabled;
   end;
   if TButton(Sender).Tag = 1002 then begin
-    FrmXWGridAdminOptions.ShowDialog(FrDbGrid);
+    FrmXWGridAdminOptions.ShowDialog(FFrDbGrid);
   end;
   if TButton(Sender).Tag = 1000 then begin
     //По умолчанию
     if MyQuestionMessage('Установить для таблицы вид по умолчанию?') <> mrYes then
       Exit;
-    if OwnerFormDoc <> '' then
-      Settings.RestoreFrDBGridEhSettings(OwnerFormDoc, FrDbGrid, True);
+    if FOwnerFormDoc <> '' then
+      Settings.RestoreFrDBGridEhSettings(FOwnerFormDoc, FFrDbGrid, True);
     MyInfoMessage('Вид по умолчанию установлен!');
   end;
 end;
 
-procedure TFrmXWGridOptions.BtOkClick(Sender: TObject);
+procedure TFrmXWGridOptions.btnOkClick(Sender: TObject);
 var
   c: TDBCheckBoxEh;
   i, j: Integer;
@@ -275,20 +275,20 @@ begin
     begin
     st := Frg1.GetValue('field', i);
     j := Frg1.GetValue('visible', i);
-//    FrDbGrid.DBGridEh1.FindFieldColumn(st).Visible := Frg1.GetValue('visible', i) = 1;
-    FrDbGrid.Opt.SetFieldVisible(st, Frg1.GetValue('visible', i) = 1);
-    FrDbGrid.DBGridEh1.FindFieldColumn(st).WordWrap := Frg1.GetValue('wordwrap', i) = 1;
-    FrDbGrid.DBGridEh1.FindFieldColumn(st).AutoFitColWidth := Frg1.GetValue('autofit', i) = 1;
+//    FFrDbGrid.DBGridEh1.FindFieldColumn(st).Visible := Frg1.GetValue('visible', i) = 1;
+    FFrDbGrid.Opt.SetFieldVisible(st, Frg1.GetValue('visible', i) = 1);
+    FFrDbGrid.DBGridEh1.FindFieldColumn(st).WordWrap := Frg1.GetValue('wordwrap', i) = 1;
+    FFrDbGrid.DBGridEh1.FindFieldColumn(st).AutoFitColWidth := Frg1.GetValue('autofit', i) = 1;
     end;
-  for i := 0 to High(Chb) do
-    if Chb[i][2] <> - 1 then begin
-      c := TDBCheckBoxEh(Self.FindComponent('Chb' + Chb[i][0]));
+  for i := 0 to High(FChbs) do
+    if FChbs[i][2] <> - 1 then begin
+      c := TDBCheckBoxEh(Self.FindComponent('FChbs' + FChbs[i][0]));
       if c.Checked
-        then FrDbGrid.Options := FrDbGrid.Options + [TFrDBGridOption(Chb[i][2])]
-        else FrDbGrid.Options := FrDbGrid.Options - [TFrDBGridOption(Chb[i][2])];
+        then FFrDbGrid.Options := FFrDbGrid.Options + [TFrDBGridOption(FChbs[i][2])]
+        else FFrDbGrid.Options := FFrDbGrid.Options - [TFrDBGridOption(FChbs[i][2])];
     end;
-  FrDbGrid.Opt.FrozenColumn := FrozenColumn;
-  FrDbGrid.SetColumnsVisible;
+  FFrDbGrid.Opt.FrozenColumn := FFrozenColumn;
+  FFrDbGrid.SetColumnsVisible;
   inherited;
 end;
 
@@ -302,19 +302,19 @@ begin
   Mode := FEdit;
   Caption := '~Настройка вида таблицы';
   FOpt.DlgPanelStyle:= dpsBottomRight;
-  Cth.MakePanelsFlat(PMDIClient, []);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
   if User.IsDeveloper then
     FOpt.DlgButtonsL:=[[1001, User.IsDeveloper, True, 100, 'To default', 'to_settings'],[1002, User.IsDeveloper, True, 100, 'Admin', 'settings_spanner']];                                //'settings_spanner'
-  FOpt.DlgButtonsR:=[[1000, True, True, 120, 'По умолчанию', 'settings_def'], [btnDividor, True], [btnSpace, True, 1]];
+  FOpt.DlgButtonsR:=[[1000, True, True, 120, 'По умолчанию', 'settings_def'], [mbtDividor, True], [mbtSpace, True, 1]];
   FOpt.StatusBarMode:=stbmNone;
 
-  OwnerFormDoc := '';
+  FOwnerFormDoc := '';
   if ParentForm is TFrmBasicMdi
-    then OwnerFormDoc:= TFrmBasicMdi(ParentForm).FormDoc
+    then FOwnerFormDoc:= TFrmBasicMdi(ParentForm).FormDoc
     else if ParentForm is TForm_MDI
-      then OwnerFormDoc:= TForm_MDI(ParentForm).FormDoc;
+      then FOwnerFormDoc:= TForm_MDI(ParentForm).FormDoc;
 
-  FrDbGrid := TFrDBGridEh(ParentControl);
+  FFrDbGrid := TFrDBGridEh(ParentControl);
 
   Frg1.Options:=[myogIndicatorColumn, myogColoredTitle, myogHiglightEditableColumns, myogHiglightEditableCells];
   Frg1.Opt.SetDataMode(myogdmFromArray);
@@ -322,9 +322,9 @@ begin
     ['num$i', '_N', '20'],
     ['field$s', '_Поле', '100'],
     ['name$s', 'Столбец', '200;W'],
-    ['visible$s', 'Показать', '70', 'chb', 'e'],
-    ['wordwrap$s', 'Переносить по словам', '70', 'chb', 'e'],
-    ['autofit$s', 'Подгонять ширину', '70', 'chb', 'e']
+    ['visible$s', 'Показать', '70', 'FChbs', 'e'],
+    ['wordwrap$s', 'Переносить по словам', '70', 'FChbs', 'e'],
+    ['autofit$s', 'Подгонять ширину', '70', 'FChbs', 'e']
   ]);
   Frg1.Opt.SetButtons(1, [[-1000, True, 'Закрепить столбец']]);
   Frg1.Prepare;
@@ -333,7 +333,7 @@ begin
   LoaDGridOptions;
 
   i:=Min(Frg1.DBGridEh1.RowCount * mydefRowHeight + 35, mydefGridMaxHeight);
-  FWHCorrected.Y:=Max(ChbsH + 4 + MY_FORMPRM_CONTROL_H, i + Frg1.Top{ + PDlgPanel.Height + 10});
+  FWHCorrected.Y:=Max(FChbsH + 4 + MY_FORMPRM_CONTROL_H, i + Frg1.Top{ + pnlFrmBtns.Height + 10});
   FWHCorrected.X:= 800;
   FWHBounds.X:= 800;
   FWHBounds.X2:= -1;

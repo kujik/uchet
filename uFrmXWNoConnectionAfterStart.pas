@@ -9,14 +9,12 @@ uses
 
 type
   TFrmXWNoConnectionAfterStart = class(TForm)
-    BitBtn2: TBitBtn;
-    Image1: TImage;
-    Label1: TLabel;
-    Lb_Message: TLabel;
+    btnOk: TBitBtn;
+    imgError: TImage;
+    lblText: TLabel;
+    lblMessage: TLabel;
   private
-    { Private declarations }
   public
-    { Public declarations }
     class function Execute: Boolean;
   end;
 
@@ -39,7 +37,7 @@ begin
   if Result then exit;
   FrmXWNoConnectionAfterStart:=TFrmXWNoConnectionAfterStart.Create(nil);
   FrmXWNoConnectionAfterStart.Caption:=ModuleRecArr[cMainModule].Caption;
-  FrmXWNoConnectionAfterStart.Lb_Message.Caption:=S.IIFStr(Q.ConnectionFileFull = '',
+  FrmXWNoConnectionAfterStart.lblMessage.Caption:=S.IIFStr(Q.ConnectionFileFull = '',
     'В каталоге программы не найден файл настроек соединения "connect.udl"',
     'Запустите файл "connect.udl" в каталоге программы, настройте и проверьте подключение.'
   );

@@ -38,7 +38,7 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     TabOrder = 1
     OnClick = Bt_OkClick
   end
-  object E_1: TDBEditEh
+  object edt_1: TDBEditEh
     Left = 8
     Top = 24
     Width = 405
@@ -52,13 +52,13 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     EditButtons = <
       item
         Style = ebsPlusEh
-        OnClick = E_1EditButtons0Click
+        OnClick = edt_1EditButtons0Click
       end>
     TabOrder = 2
-    Text = 'E_1'
+    Text = 'edt_1'
     Visible = True
   end
-  object E_2: TDBEditEh
+  object edt_2: TDBEditEh
     Left = 8
     Top = 64
     Width = 405
@@ -72,10 +72,10 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     EditButtons = <
       item
         Style = ebsPlusEh
-        OnClick = E_2EditButtons0Click
+        OnClick = edt_2EditButtons0Click
       end>
     TabOrder = 3
-    Text = 'E_2'
+    Text = 'edt_2'
     Visible = True
   end
 end

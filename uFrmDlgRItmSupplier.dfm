@@ -2,21 +2,20 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
   Caption = 'FrmDlgRItmSupplier'
   ClientHeight = 177
   ClientWidth = 539
-  ExplicitWidth = 555
-  ExplicitHeight = 216
-  PixelsPerInch = 96
+  ExplicitWidth = 551
+  ExplicitHeight = 215
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 539
     Height = 161
-    ExplicitWidth = 539
-    ExplicitHeight = 161
-    inherited PMDIClient: TPanel
+    ExplicitWidth = 535
+    ExplicitHeight = 160
+    inherited pnlFrmClient: TPanel
       Width = 529
-      Height = 115
-      ExplicitWidth = 529
-      ExplicitHeight = 115
-      object E_Name_Org: TDBEditEh
+      Height = 112
+      ExplicitWidth = 525
+      ExplicitHeight = 111
+      object edt_name_org: TDBEditEh
         Left = 84
         Top = 3
         Width = 441
@@ -31,10 +30,11 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
         EditButtons = <>
         MaxLength = 400
         TabOrder = 1
-        Text = 'E_Name_Org'
+        Text = 'edt_name_org'
         Visible = True
+        ExplicitWidth = 437
       end
-      object E_Full_Name: TDBEditEh
+      object edt_full_name: TDBEditEh
         Left = 84
         Top = 30
         Width = 441
@@ -49,10 +49,11 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
         EditButtons = <>
         MaxLength = 400
         TabOrder = 2
-        Text = 'E_Name_Unit'
+        Text = 'edt_Name_Unit'
         Visible = True
+        ExplicitWidth = 437
       end
-      object E_E_Mail: TDBEditEh
+      object edt_e_mail: TDBEditEh
         Left = 84
         Top = 57
         Width = 441
@@ -67,10 +68,11 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
         EditButtons = <>
         MaxLength = 400
         TabOrder = 3
-        Text = 'E_Name_E_Mail'
+        Text = 'edt_Name_E_Mail'
         Visible = True
+        ExplicitWidth = 437
       end
-      object E_Inn: TDBEditEh
+      object edt_inn: TDBEditEh
         Left = 84
         Top = 86
         Width = 101
@@ -84,56 +86,56 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
         EditButtons = <>
         MaxLength = 400
         TabOrder = 0
-        Text = 'E_Name_E_Mail'
+        Text = 'edt_Name_E_Mail'
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
-      Top = 120
+    inherited pnlFrmBtns: TPanel
+      Top = 117
       Width = 529
-      ExplicitTop = 120
-      ExplicitWidth = 529
-      inherited BvDlg: TBevel
+      ExplicitTop = 116
+      ExplicitWidth = 525
+      inherited bvlFrmBtnsTl: TBevel
         Width = 527
         ExplicitWidth = 527
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 527
         ExplicitWidth = 527
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 527
-        ExplicitWidth = 527
-        inherited PDlgBtnForm: TPanel
+        ExplicitWidth = 523
+        inherited pnlFrmBtnsMain: TPanel
           Left = 428
-          ExplicitLeft = 428
+          ExplicitLeft = 424
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 200
-          ExplicitLeft = 200
+          ExplicitLeft = 196
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 329
-          ExplicitLeft = 329
+          ExplicitLeft = 325
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 60
-          ExplicitWidth = 60
+          ExplicitWidth = 56
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 161
     Width = 539
-    ExplicitTop = 161
-    ExplicitWidth = 539
-    inherited LbStatusBarRight: TLabel
-      Left = 447
+    ExplicitTop = 160
+    ExplicitWidth = 535
+    inherited lblStatusBarR: TLabel
+      Left = 466
       Height = 14
-      ExplicitLeft = 447
+      ExplicitLeft = 466
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

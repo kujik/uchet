@@ -13,13 +13,13 @@ uses
 type
   TDlg_Otk = class(TForm_Normal)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
     Img_Info: TImage;
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     procedure Bt_OkClick(Sender: TObject);
     procedure MemTableEh1AfterPost(DataSet: TDataSet);
     procedure FormActivate(Sender: TObject);
@@ -157,7 +157,7 @@ begin
   Img_Info.left:=1;
   Img_Info.top:=bt_ok.top+4;
   Img_Info.top:=240;}
-  Lb_Caption.Caption:=aName + ' ('+ IntToStr(Qnt) + ' רע.)';
+  lbl_Caption.Caption:=aName + ' ('+ IntToStr(Qnt) + ' רע.)';
   if DBGridEh1.Columns.Count = 1 then begin
     MemTableEh1.DataDriver:=nil;
     MemTableEh1.FieldDefs.Clear;

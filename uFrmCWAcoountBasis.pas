@@ -16,23 +16,23 @@ uses
 
 type
   TFrmCWAcoountBasis = class(TFrmBasicMdi)
-    PBottom: TPanel;
-    SpeedButton1: TSpeedButton;
-    ImgInfomain: TImage;
-    EBasis: TEdit;
-    NePrc: TDBNumberEditEh;
-    BtOk: TBitBtn;
-    PgMain: TPageControl;
-    TsOrders: TTabSheet;
-    TsAccounts: TTabSheet;
+    pnlBottom: TPanel;
+    btn1: TSpeedButton;
+    imgInfomain: TImage;
+    edtBasis: TEdit;
+    nedtPrc: TDBNumberEditEh;
+    btnOk: TBitBtn;
+    pgcMain: TPageControl;
+    tsOrders: TTabSheet;
+    tsAccounts: TTabSheet;
     Frg1: TFrDBGridEh;
     Frg2: TFrDBGridEh;
-    procedure PgMainChange(Sender: TObject);
-    procedure BtOkClick(Sender: TObject);
+    procedure pgcMainChange(Sender: TObject);
+    procedure btnOkClick(Sender: TObject);
   private
-    Sn_Calendar: TDlg_Sn_Calendar;
-    IdAccount: Integer;
-    AccMode:Integer;  //1-странспорт снабжения, 2-транспорт отгрузки, 3-монтаж
+    FSnCalendar: TDlg_Sn_Calendar;
+    FIdAccount: Integer;
+    FAccMode: Integer;  //1-странспорт снабжения, 2-транспорт отгрузки, 3-монтаж
     procedure InsertToAccount;
     procedure FrgOnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); virtual;
     procedure FrgAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
@@ -64,8 +64,8 @@ var
   b: Boolean;
   va2: TVarDynArray2;
 begin
-  nm := EBasis.Text;
-  if PgMain.ActivePage = TsOrders then begin
+  nm := edtBasis.Text;
+  if pgcMain.ActivePage = tsOrders then begin
     if Frg1.IsEmpty then
       Exit;
     tp := 'Заказ';
@@ -81,9 +81,9 @@ begin
   end;
   //проверим, есть ли уже такое основание в гриде в диалоге счета, и не даем выбрать если есть
   b:=True;
-  for i := 1 to Sn_Calendar.MemTableEh2.RecordCount do begin
-    Sn_Calendar.MemTableEh2.RecNo := i;
-    if (Sn_Calendar.MemTableEh2.Fields[0].AsInteger = id) and (Sn_Calendar.MemTableEh2.Fields[1].AsString = tp) then begin
+  for i := 1 to FSnCalendar.MemTableEh2.RecordCount do begin
+    FSnCalendar.MemTableEh2.RecNo := i;
+    if (FSnCalendar.MemTableEh2.Fields[0].AsInteger = id) and (FSnCalendar.MemTableEh2.Fields[1].AsString = tp) then begin
       b := False;
       Break;
     end;
@@ -95,28 +95,28 @@ begin
     {
     //(тип берем из родительских счетов, так как в таблице не хранится)
     MaxPrc :=QSelectOneRow(
-    'select nvl(sum(prc),0) ' + S.IIf((Pg_Main.ActivePage = Ts_Orders), 'id_order', 'id_acc') + ' '+
+    'select nvl(sum(prc),0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ' '+
     'from '+
     'sn_calendar_t_basis b, sn_calendar_accounts a '+
     'where '+
     'a.id = b.id_account and '+
     'id_account <> :id and '+
     S.IIf(AccMode = 3, 'a.accounttype = 3', 'a.accounttype in (1,2)') + ' and '+
-    S.IIf((Pg_Main.ActivePage = Ts_Orders), 'id_order', 'id_acc') + ' = :id_basis',
+    S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ' = :id_basis',
     VarArrayOf([IDAccount, id])
     )[0];
     }
-    va2 := Q.QLoadToVarDynArray2(//      'select nvl(prc,0) ' + S.IIf((Pg_Main.ActivePage = Ts_Orders), 'id_order', 'id_acc') + ', '+
-//      'select nvl(prc,0) ' + S.IIf((Pg_Main.ActivePage = Ts_Orders), 'id_order', 'id_acc') + ', '+
+    va2 := Q.QLoadToVarDynArray2(//      'select nvl(prc,0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ', '+
+//      'select nvl(prc,0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ', '+
       'select nvl(prc,0), a.dt, a.account, a.supplier ' +
       'from '+
       'sn_calendar_t_basis b, v_sn_calendar_accounts a '+
       'where '+
       'a.id = b.id_account and '+
       'id_account <> :id and '+
-      S.IIf(AccMode = 3, 'a.accounttype = 3', 'a.accounttype in (1,2)') + ' and '+
-      S.IIf((PgMain.ActivePage = TsOrders), 'id_order', 'id_acc') + ' = :id_basis',
-      [IDAccount, id]
+      S.IIf(FAccMode = 3, 'a.accounttype = 3', 'a.accounttype in (1,2)') + ' and '+
+      S.IIf((pgcMain.ActivePage = tsOrders), 'id_order', 'id_acc') + ' = :id_basis',
+      [FIDAccount, id]
     );
     maxprc := 0;
     st := '';
@@ -132,22 +132,22 @@ begin
     else if (maxprc > 0) and (prc > 100 - maxprc) then begin
       MyInfoMessage('Эта запись может быть внесена в счет в качестве основания, при условии выставления процента не более' + IntToStr(100 - maxprc) + '!' + st);
       b := False;
-      NePrc.Value := Min(100, maxprc);
-      NePrc.MaxValue := maxprc;
+      nedtPrc.Value := Min(100, maxprc);
+      nedtPrc.MaxValue := maxprc;
     end;
 //    MaxPrc:=100-MaxPrc;
   end;
   if b then begin
-    prc := NePrc.Value;
-    Sn_Calendar.MemTableEh2.Append;
-    Sn_Calendar.MemTableEh2.Fields[0].AsInteger := id;
-    Sn_Calendar.MemTableEh2.Fields[1].AsString := tp;
-    Sn_Calendar.MemTableEh2.Fields[2].AsString := nm;
-    Sn_Calendar.MemTableEh2.Fields[3].AsInteger := prc;
-    Sn_Calendar.MemTableEh2.Fields[4].AsFloat := round(sum / 100 * prc);
-    Sn_Calendar.MemTableEh2.Post;
-    Sn_Calendar.BasisTableGetSum;
-    Sn_Calendar.isBasisGridEdited := True;
+    prc := nedtPrc.Value;
+    FSnCalendar.MemTableEh2.Append;
+    FSnCalendar.MemTableEh2.Fields[0].AsInteger := id;
+    FSnCalendar.MemTableEh2.Fields[1].AsString := tp;
+    FSnCalendar.MemTableEh2.Fields[2].AsString := nm;
+    FSnCalendar.MemTableEh2.Fields[3].AsInteger := prc;
+    FSnCalendar.MemTableEh2.Fields[4].AsFloat := round(sum / 100 * prc);
+    FSnCalendar.MemTableEh2.Post;
+    FSnCalendar.BasisTableGetSum;
+    FSnCalendar.isBasisGridEdited := True;
   end;
 end;
 
@@ -161,7 +161,7 @@ begin
   Fr.SetSqlParameters('dt$d', [dt]);
 end;
 
-procedure TFrmCWAcoountBasis.BtOkClick(Sender: TObject);
+procedure TFrmCWAcoountBasis.btnOkClick(Sender: TObject);
 begin
   InsertToAccount;
 end;
@@ -178,24 +178,24 @@ end;
 
 procedure TFrmCWAcoountBasis.FrgSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-  EBasis.Text := '';
+  edtBasis.Text := '';
   if Fr.IsEmpty then
     Exit;
   if Fr.Name = 'Frg1'
-    then EBasis.Text := Fr.GetValueS('ordernum') + ' | ' + Fr.GetValueS('dt_beg') + ' | ' + Fr.GetValueS('customer')
-    else EBasis.Text := Fr.GetValueS('supplier') + ' | ' + Fr.GetValueS('accountdt') + ' | ' + Fr.GetValueS('account');
-  NePrc.Value:=100;
+    then edtBasis.Text := Fr.GetValueS('ordernum') + ' | ' + Fr.GetValueS('dt_beg') + ' | ' + Fr.GetValueS('customer')
+    else edtBasis.Text := Fr.GetValueS('supplier') + ' | ' + Fr.GetValueS('accountdt') + ' | ' + Fr.GetValueS('account');
+  nedtPrc.Value:=100;
 end;
 
-procedure TFrmCWAcoountBasis.PgMainChange(Sender: TObject);
+procedure TFrmCWAcoountBasis.pgcMainChange(Sender: TObject);
 begin
   inherited;
-  if (PgMain.ActivePage = TsOrders) and not Frg1.IsPrepared then begin
+  if (pgcMain.ActivePage = tsOrders) and not Frg1.IsPrepared then begin
     Frg1.RefreshGrid;
     Frg1.Align := alNone;
     Frg1.Align := alClient;
   end;
-  if (PgMain.ActivePage = TsAccounts) and not Frg2.IsPrepared then begin
+  if (pgcMain.ActivePage = tsAccounts) and not Frg2.IsPrepared then begin
     Frg2.RefreshGrid;
   end;
 end;
@@ -204,9 +204,9 @@ procedure TFrmCWAcoountBasis.ShowDialog(aSn_Calendar:TDlg_Sn_Calendar; aIdAccoun
 var
   b: Boolean;
 begin
-  Sn_Calendar:=aSn_Calendar;
-  IdAccount:=aIdAccount;
-  AccMode:=aAccMode;
+  FSnCalendar:=aSn_Calendar;
+  FIdAccount:=aIdAccount;
+  FAccMode:=aAccMode;
   FormDoc := Self.Name;
   Cth.MakePanelsFlat(Self, []);
   MyFormOptions := [myfoModal, myfoDialog, myfoSizeable];
@@ -257,13 +257,13 @@ begin
     Frg2.Prepare;
   end;
 
-  PgMain.ActivePage := TsOrders;
-  PgMainChange(nil);
+  pgcMain.ActivePage := tsOrders;
+  pgcMainChange(nil);
 
-  Cth.SetControlVerification(NePrc, '0:100:0');
+  Cth.SetControlVerification(nedtPrc, '0:100:0');
 
   //для счета монтажа не нужен список счетов
-  TsAccounts.TabVisible:=AccMode <> 3;
+  tsAccounts.TabVisible := FAccMode <> 3;
 
   FOpt.InfoArray := [[
    'Выберите документы-основания для счета.'#13#10+

@@ -6,17 +6,17 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
   ExplicitHeight = 461
   PixelsPerInch = 96
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 414
     Width = 755
     ExplicitTop = 414
     ExplicitWidth = 755
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 666
       ExplicitLeft = 666
     end
   end
-  object P_Buttons: TPanel [1]
+  object pnl_Buttons: TPanel [1]
     Left = 0
     Top = 381
     Width = 755
@@ -66,7 +66,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       TabOrder = 1
       OnClick = Bt_CancelClick
     end
-    object Chb_NoClose: TCheckBox
+    object chb_NoClose: TCheckBox
       Left = 373
       Top = 3
       Width = 121
@@ -96,7 +96,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       OnClick = Bt_DelClick
     end
   end
-  object P_Bottom: TPanel [2]
+  object pnl_Bottom: TPanel [2]
     Left = 0
     Top = 356
     Width = 755
@@ -105,7 +105,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
     BevelOuter = bvNone
     TabOrder = 2
   end
-  object P_Top: TPanel [3]
+  object pnl_Top: TPanel [3]
     Left = 0
     Top = 0
     Width = 755
@@ -114,7 +114,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
     BevelOuter = bvNone
     TabOrder = 3
   end
-  object P_Client: TPanel [4]
+  object pnl_Client: TPanel [4]
     Left = 0
     Top = 25
     Width = 755
@@ -138,7 +138,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       OnAdvDrawDataCell = DBGridEh1AdvDrawDataCell
       OnColEnter = DBGridEh1ColEnter
       object RowDetailData: TRowDetailPanelControlEh
-        object E_PPComment: TDBEditEh
+        object edt_PPComment: TDBEditEh
           Left = 299
           Top = 215
           Width = 494
@@ -151,13 +151,13 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
           DynProps = <>
           EditButtons = <>
           TabOrder = 0
-          Text = 'E_PPComment'
+          Text = 'edt_PPComment'
           Visible = False
         end
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 112
     Top = 416
   end

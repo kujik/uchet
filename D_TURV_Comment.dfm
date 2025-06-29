@@ -17,7 +17,7 @@ object Dlg_TURV_Comment: TDlg_TURV_Comment
     148)
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_Ruk: TLabel
+  object lbl_Ruk: TLabel
     Left = 0
     Top = 13
     Width = 282
@@ -29,7 +29,7 @@ object Dlg_TURV_Comment: TDlg_TURV_Comment
     ExplicitTop = 19
     ExplicitWidth = 138
   end
-  object Label1: TLabel
+  object lbl1: TLabel
     Left = 0
     Top = 0
     Width = 282
@@ -44,7 +44,7 @@ object Dlg_TURV_Comment: TDlg_TURV_Comment
     ParentFont = False
     ExplicitWidth = 71
   end
-  object Lb_Par: TLabel
+  object lbl_Par: TLabel
     Left = 0
     Top = 26
     Width = 282
@@ -63,7 +63,7 @@ object Dlg_TURV_Comment: TDlg_TURV_Comment
     ExplicitTop = 52
     ExplicitWidth = 138
   end
-  object Lb_Sogl: TLabel
+  object lbl_Sogl: TLabel
     Left = 0
     Top = 39
     Width = 282
@@ -94,9 +94,9 @@ object Dlg_TURV_Comment: TDlg_TURV_Comment
     TabOrder = 0
     OnClick = Bt_CloseClick
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 10000
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 12
     Top = 114
   end

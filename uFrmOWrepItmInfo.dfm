@@ -5,59 +5,59 @@ inherited FrmOWrepItmInfo: TFrmOWrepItmInfo
   ExplicitWidth = 757
   ExplicitHeight = 433
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 745
     Height = 379
     ExplicitWidth = 270
     ExplicitHeight = 82
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 735
       Height = 330
       ExplicitWidth = 260
       ExplicitHeight = 33
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 335
       Width = 735
       ExplicitTop = 38
       ExplicitWidth = 260
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 733
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 733
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 733
         ExplicitWidth = 258
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 634
           ExplicitLeft = 159
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 406
           ExplicitLeft = -69
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 535
           ExplicitLeft = 60
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 266
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 379
     Width = 745
     ExplicitTop = 82
     ExplicitWidth = 270
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 653
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

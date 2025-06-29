@@ -5,29 +5,29 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   ExplicitWidth = 683
   ExplicitHeight = 198
   TextHeight = 13
-  object Lb_Route: TLabel [0]
+  object lbl_Route: TLabel [0]
     Left = 4
     Top = 34
     Width = 88
     Height = 13
     Caption = #1055#1088#1086#1080#1079#1074'. '#1084#1072#1088#1096#1088#1091#1090
   end
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 141
     Width = 671
     ExplicitTop = 140
     ExplicitWidth = 668
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 582
       ExplicitLeft = 583
     end
   end
-  inherited P_Bottom: TPanel
+  inherited pnl_Bottom: TPanel
     Top = 110
     Width = 671
     ExplicitTop = 109
     ExplicitWidth = 668
-    inherited Bevel1: TBevel
+    inherited bvl1: TBevel
       Width = 671
       ExplicitWidth = 672
     end
@@ -41,13 +41,13 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
       ExplicitLeft = 578
       ExplicitTop = 4
     end
-    inherited Chb_NoClose: TCheckBox
+    inherited chb_NoClose: TCheckBox
       Left = 373
       ExplicitLeft = 370
       ExplicitTop = 9
     end
   end
-  object E_Name: TDBEditEh [3]
+  object edt_name: TDBEditEh [3]
     Left = 97
     Top = 7
     Width = 568
@@ -61,10 +61,10 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     EditButtons = <>
     MaxLength = 400
     TabOrder = 2
-    Text = 'E_Name'
+    Text = 'edt_name'
     Visible = True
   end
-  object Chb_R1: TDBCheckBoxEh [4]
+  object chb_R1: TDBCheckBoxEh [4]
     Left = 96
     Top = 33
     Width = 49
@@ -73,7 +73,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 3
   end
-  object Chb_R2: TDBCheckBoxEh [5]
+  object chb_R2: TDBCheckBoxEh [5]
     Left = 151
     Top = 33
     Width = 49
@@ -82,7 +82,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 5
   end
-  object Chb_R3: TDBCheckBoxEh [6]
+  object chb_R3: TDBCheckBoxEh [6]
     Left = 206
     Top = 33
     Width = 49
@@ -91,7 +91,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 4
   end
-  object Chb_R4: TDBCheckBoxEh [7]
+  object chb_R4: TDBCheckBoxEh [7]
     Left = 261
     Top = 33
     Width = 49
@@ -100,7 +100,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 6
   end
-  object Chb_R5: TDBCheckBoxEh [8]
+  object chb_R5: TDBCheckBoxEh [8]
     Left = 316
     Top = 33
     Width = 49
@@ -109,7 +109,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 7
   end
-  object Chb_R6: TDBCheckBoxEh [9]
+  object chb_R6: TDBCheckBoxEh [9]
     Left = 371
     Top = 33
     Width = 49
@@ -118,7 +118,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 8
   end
-  object Chb_R0: TDBCheckBoxEh [10]
+  object chb_R0: TDBCheckBoxEh [10]
     Left = 481
     Top = 33
     Width = 95
@@ -127,7 +127,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 10
   end
-  object Chb_Wo_Estimate: TDBCheckBoxEh [11]
+  object chb_Wo_Estimate: TDBCheckBoxEh [11]
     Left = 590
     Top = 33
     Width = 82
@@ -136,7 +136,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 11
   end
-  object Ne_Price: TDBNumberEditEh [12]
+  object nedt_Price: TDBNumberEditEh [12]
     Left = 96
     Top = 56
     Width = 104
@@ -154,7 +154,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     TabOrder = 12
     Visible = True
   end
-  object Ne_Price_PP: TDBNumberEditEh [13]
+  object nedt_Price_PP: TDBNumberEditEh [13]
     Left = 280
     Top = 56
     Width = 104
@@ -172,7 +172,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     TabOrder = 13
     Visible = True
   end
-  object Chb_by_sgp: TDBCheckBoxEh [14]
+  object chb_by_sgp: TDBCheckBoxEh [14]
     Left = 97
     Top = 83
     Width = 96
@@ -181,7 +181,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 14
   end
-  object Chb_R7: TDBCheckBoxEh [15]
+  object chb_R7: TDBCheckBoxEh [15]
     Left = 426
     Top = 33
     Width = 49
@@ -190,7 +190,7 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     DynProps = <>
     TabOrder = 9
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 160
     Top = 312
   end

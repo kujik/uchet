@@ -20,7 +20,7 @@ inherited Dlg_Grid1: TDlg_Grid1
     RowDetailPanel.Height = 250
     TabOrder = 0
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -33,7 +33,7 @@ inherited Dlg_Grid1: TDlg_Grid1
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end

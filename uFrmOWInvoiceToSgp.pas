@@ -16,38 +16,38 @@ uses
 
 type
   TFrmOWInvoiceToSgp = class(TFrmBasicMdi)
-    PSelectOrder: TPanel;
-    PTitle: TPanel;
-    PGrid: TPanel;
-    LbInvoice: TLabel;
-    LbOrder: TLabel;
-    LbM: TLabel;
-    Bevel1: TBevel;
-    CbOrder: TDBComboBoxEh;
-    BtFill: TBitBtn;
+    pnlSelectOrder: TPanel;
+    pnlTitle: TPanel;
+    pnlGrid: TPanel;
+    lblInvoice: TLabel;
+    lblOrder: TLabel;
+    lblM: TLabel;
+    bvl1: TBevel;
+    cmbOrder: TDBComboBoxEh;
+    btnFill: TBitBtn;
     Frg1: TFrDBGridEh;
-    LbS: TLabel;
+    lblS: TLabel;
     procedure BtFillClick(Sender: TObject);
   private
     { Private declarations }
-    Num: Integer;
-    State: Integer;
-    IdOrder: Integer;
-    DtM: TDateTime;
-    UserM: string;
-    DtS: TDateTime;
-    UserS: string;
-    OrNum: string;
-    Project: string;
-    DtBeg: TDateTime;
-    DtOtgr: TDateTime;
-    UpdR: Integer;
+    FNum: Integer;
+    FState: Integer;
+    FIdOrder: Integer;
+    FDtM: TDateTime;
+    FUserM: string;
+    FDtS: TDateTime;
+    FUserS: string;
+    FOrNum: string;
+    FProject: string;
+    FDtBeg: TDateTime;
+    FDtOtgr: TDateTime;
+    FUpdR: Integer;
     function  Prepare: Boolean; override;
     procedure AfterPrepare; override;
     function  Save: Boolean; override;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     procedure VerifyTable(IsChanded: Boolean = False);
-    procedure BtClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
     function  LoadData: Boolean;
     procedure LoadOrderList;
     function  Fill: Boolean;
@@ -107,13 +107,13 @@ begin
   end;
 end;
 
-procedure TFrmOWInvoiceToSgp.BtClick(Sender: TObject);
+procedure TFrmOWInvoiceToSgp.btnClick(Sender: TObject);
 //обработка нажатия кнопок (кроме основных кнопок диалога)
 var
   i: Integer;
 begin
-  if TControl(Sender).Tag = btnPrint then Print;
-  if TControl(Sender).Tag = btnGo then begin
+  if TControl(Sender).Tag = mbtPrint then Print;
+  if TControl(Sender).Tag = mbtGo then begin
     for i := 0 to Frg1.GetCount - 1 do
       Frg1.SetValue('qnt_s', i, True, Frg1.GetValue('qnt_m', i));
     Frg1.DbGridEh1.SetFocus;
@@ -127,10 +127,10 @@ procedure TFrmOWInvoiceToSgp.LoadOrderList;
 begin
   //загружаем номера заказов по площадке И, в которых есть хотя бы один слеш, не принятый на СГП в полном количестве
   Q.QLoadToDBComboBoxEh(
-    'select distinct(ornum) from (select ornum from v_invoice_to_sgp_getitems where qnt > qnt_sgp and area = :area$i) order by ornum',
-    [AddParam[1]], CbOrder, cntComboL
+    'select distinct(FOrNum) from (select FOrNum from v_invoice_to_sgp_getitems where qnt > qnt_sgp and area = :area$i) order by FOrNum',
+    [AddParam[1]], cmbOrder, cntComboL
   );
-  Cth.SetControlValue(CbOrder, null);
+  Cth.SetControlValue(cmbOrder, null);
 end;
 
 function TFrmOWInvoiceToSgp.Fill: Boolean;
@@ -138,19 +138,19 @@ function TFrmOWInvoiceToSgp.Fill: Boolean;
 //если данные уже загружены, то они будут заменены без запроса
 var
   va: TVarDynArray2;
-  num: string;
+  FNum: string;
 begin
-  num:= Cth.GetControlValue(CbOrder);
-  if num = '' then Exit;
+  FNum:= Cth.GetControlValue(cmbOrder);
+  if FNum = '' then Exit;
   //поля табличной части
-  va:=Q.QLoadToVarDynArray2('select id, ornum, project, dt_beg, dt_otgr from orders where ornum = :id$s', [num]);
+  va:=Q.QLoadToVarDynArray2('select id, FOrNum, FProject, dt_beg, dt_otgr from orders where FOrNum = :id$s', [FNum]);
   if Length(va) = 0 then
     Exit;
-  IdOrder:=va[0][0];
-  OrNum:=va[0][1];
-  Project:=va[0][2];
-  DtBeg:=va[0][3];
-  DtOtgr:=va[0][4];
+  FIdOrder:=va[0][0];
+  FOrNum:=va[0][1];
+  FProject:=va[0][2];
+  FDtBeg:=va[0][3];
+  FDtOtgr:=va[0][4];
   //отрисуем заголовок
   SetTitle;
   //проверка - статус ошибки, а по нему установит доступность кнопок
@@ -158,7 +158,7 @@ begin
   //формируем табличную часть на основе айди заказа
   va:=Q.QLoadToVarDynArray2(
     'select id, id, slash, fullitemname, qnt, qnt_max, null, null from v_invoice_to_sgp_getitems where id_order = :id$i and qnt > qnt_sgp order by slash',
-    [IdOrder]
+    [FIdOrder]
   );
   //загрузим в мемтейбл
   Frg1.LoadSourceDataFromArray(va);
@@ -168,16 +168,16 @@ procedure TFrmOWInvoiceToSgp.Settitle;
 //установка цветных лейблов в заголовчной части
 begin
   //номер накладной будет только после печати или уже после сохранения
-  LbInvoice.SetCaption2('Накладная:'+S.IIfStr(Num > 0, ' $FF0000 '+IntToStr(Num)+'$000000')+' от $FF0000 '+DateToStr(DtM));
+  lblInvoice.SetCaption2('Накладная:'+S.IIfStr(FNum > 0, ' $FF0000 '+IntToStr(FNum)+'$000000')+' от $FF0000 '+DateToStr(FDtM));
   //информация по заказу-основанию только если он уже загружен
-  LbOrder.SetCaption2('Заказ:');
-  if IdOrder <> 0 then
-    LbOrder.SetCaption2('Заказ:$FF0000 '+OrNum+'$000000 от$FF0000 '+DateToStr(DtBeg)+'$000000 [$FF0000'+Project+'$000000], отгрузка$FF0000 '+DateToStr(DtOtgr));
+  lblOrder.SetCaption2('Заказ:');
+  if FIdOrder <> 0 then
+    lblOrder.SetCaption2('Заказ:$FF0000 '+FOrNum+'$000000 от$FF0000 '+DateToStr(FDtBeg)+'$000000 [$FF0000'+FProject+'$000000], отгрузка$FF0000 '+DateToStr(FDtOtgr));
   //информация о создателе накладной (мастер)
-  LbM.SetCaption2('Создал:$FF0000 '+UserM+S.IIfStr(True, '$000000 в$FF0000 '+FormatDateTime('hh:nn', DtM)+'$000000'));
+  lblM.SetCaption2('Создал:$FF0000 '+FUserM+S.IIfStr(True, '$000000 в$FF0000 '+FormatDateTime('hh:nn', FDtM)+'$000000'));
   //если есть лейбл для инфы по приемке, отрисуем (он есть при и после ввода данных кладовщиком)
-  if LbS <> nil then
-    LbS.SetCaption2('Принял на СГП:$FF0000 '+UserS+S.IIfStr(True, '$000000 ,$FF0000 '+FormatDateTime('dd.mm.yyyy hh:nn', DtS)+'$000000'));
+  if lblS <> nil then
+    lblS.SetCaption2('Принял на СГП:$FF0000 '+FUserS+S.IIfStr(True, '$000000 ,$FF0000 '+FormatDateTime('dd.mm.yyyy hh:nn', FDtS)+'$000000'));
 end;
 
 function TFrmOWInvoiceToSgp.LoadData: Boolean;
@@ -188,32 +188,32 @@ var
 begin
   if Mode = fAdd then begin
     //при создании новой - только выставим необходимые поля
-    IdOrder:= 0;
-    DtM:=Now;
-    UserM:=User.GetName;
+    FIdOrder:= 0;
+    FDtM:=Now;
+    FUserM:=User.GetName;
     LoadOrderList;
   end
   else begin
     //при просмотре и редактировании загрузим из таблиц
     //заголовочная часть
     va:=Q.QLoadToVarDynArray2(
-      'select num, id_order, ornum, project, dt_beg, dt_otgr, dt_m, user_m, dt_s, user_s from v_invoice_to_sgp where id = :id$i',
+      'select FNum, id_order, FOrNum, FProject, dt_beg, dt_otgr, dt_m, user_m, dt_s, user_s from v_invoice_to_sgp where id = :id$i',
       [ID]
     );
-    Num := va[0][0];
-    IdOrder := va[0][1];
-    OrNum := va[0][2];
-    Project := va[0][3];
-    DtBeg := va[0][4];
-    DtOtgr := va[0][5];
-    DtM := va[0][6];
-    UserM := va[0][7];
-    if va[0][8] <> null then DtS := va[0][8];  //проверяем дату приемки на нулл, тк там тит тдатетиме
-    UserS := S.NSt(va[0][9]);
+    FNum := va[0][0];
+    FIdOrder := va[0][1];
+    FOrNum := va[0][2];
+    FProject := va[0][3];
+    FDtBeg := va[0][4];
+    FDtOtgr := va[0][5];
+    FDtM := va[0][6];
+    FUserM := va[0][7];
+    if va[0][8] <> null then FDtS := va[0][8];  //проверяем дату приемки на нулл, тк там тит тдатетиме
+    FUserS := S.NSt(va[0][9]);
     //для режима редактирования - получим дату-время приемки на сгп и имя кладовщика
     if Mode = fEdit then begin
-      DtS := Now;
-      UserS := User.GetName;
+      FDtS := Now;
+      FUserS := User.GetName;
     end;
     //загрузим тело таблицы
     va:=Q.QLoadToVarDynArray2(
@@ -241,16 +241,16 @@ begin
   //все пишем в транзакциях
   //режим создания (заполенния мастером)
   if Mode = fAdd then begin
-    if Num = 0 then
-      Num := Q.QCallStoredProc('P_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
+    if FNum = 0 then
+      FNum := Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
     for i := 0 to Frg1.GetCount - 1 do
       if S.NSt(Frg1.GetValue('qnt_m', i)) <> '' then
         S.ConcatStP(items, Frg1.GetValue('slash', i), ', ');
     Q.QBeginTrans(True);
     IdInvoice := Q.QIUD(
       'i', 'invoice_to_sgp', '',
-      'id$i;num$i;id_order$i;dt_m$d;id_user_m$s;state$i;items$s',
-      [-1, Num, IdOrder, DtM, User.GetId, 0, Copy(items, 1, 4000)]
+      'id$i;FNum$i;id_order$i;dt_m$d;id_user_m$s;FState$i;items$s',
+      [-1, FNum, FIdOrder, FDtM, User.GetId, 0, Copy(items, 1, 4000)]
     );
     for i := 0 to Frg1.GetCount - 1 do
       if S.NSt(Frg1.GetValue('qnt_m', i)) <> '' then
@@ -264,17 +264,17 @@ begin
   end;
   //режим ввода данных кладовщиками
   Q.QBeginTrans(True);
-  State := 2;
+  FState := 2;
   for i := 0 to Frg1.GetCount - 1 do begin
     if Frg1.GetValue('qnt_s', i) <> Frg1.GetValue('qnt_m', i) then begin
-      State := 1;
+      FState := 1;
       S.ConcatStP(items, Frg1.GetValue('slash', i) + S.IIfStr(S.NNum(Frg1.GetValue('qnt_s', i)) > 0,  '(п)'), ', ');
     end
     else S.ConcatStP(items, Frg1.GetValue('slash', i) + '(П)', ', ');
   end;
   Q.QIUD(
-    'u', 'invoice_to_sgp', '', 'id$i;dt_s$d;id_user_s$s;state$i;items$s',
-    [ID, DtS, User.GetId, State, Copy(items, 1, 4000)]
+    'u', 'invoice_to_sgp', '', 'id$i;dt_s$d;id_user_s$s;FState$i;items$s',
+    [ID, FDtS, User.GetId, FState, Copy(items, 1, 4000)]
   );
   for i := 0 to Frg1.GetCount - 1 do begin
    if Q.QIUD(
@@ -290,7 +290,7 @@ begin
   end;
   Result:=Q.QCommitOrRollback;
   //патыемся завершить заказ (актуально для П)
-  Orders.FinalizeOrder(IdOrder, myOrFinalizeToSgp);
+  Orders.FinalizeOrder(FIdOrder, myOrFinalizeToSgp);
 end;
 
 procedure TFrmOWInvoiceToSgp.VerifyTable(IsChanded: Boolean = False);
@@ -310,10 +310,10 @@ begin
   end;
   if (Mode = fEdit) then begin
     //в режиме редактирования кладаовщиком - должно быть заполнено количество принимаемых по всем позициям
-    State := 2;
+    FState := 2;
     for i := 0 to Frg1.GetCount - 1 do begin
       if S.NSt(Frg1.GetValue('qnt_s', i)) <> S.NSt(Frg1.GetValue('qnt_m', i))
-        then State := 1;
+        then FState := 1;
       if S.NSt(Frg1.GetValue('qnt_s', i)) = ''
         then Break;
     end;
@@ -335,7 +335,7 @@ begin
   //if Sender <> nil then Exit;
   inherited;
   //заказ должен быть привязан
-  HasError:=HasError or (IdOrder = 0);
+  HasError:=HasError or (FIdOrder = 0);
 {  if not HasError and (Mode = fAdd) then begin
     //в режиме первоначального заполнения - должен быть заполно количество передаваемых хотя бы по одной позиции
     for i := 0 to Frg1.GetCount - 1 do
@@ -345,17 +345,17 @@ begin
   end;
   if not HasError and (Mode = fEdit) then begin
     //в режиме редактирования кладаовщиком - должно быть заполнено количество принимаемых по всем позициям
-    State := 2;
+    FState := 2;
     for i := 0 to Frg1.GetCount - 1 do begin
       if S.NSt(Frg1.GetValue('qnt_s', i)) <> S.NSt(Frg1.GetValue('qnt_m', i))
-        then State := 1;
+        then FState := 1;
       if S.NSt(Frg1.GetValue('qnt_s', i)) = ''
         then Break;
     end;
     HasError := i < Frg1.GetCount;
   end;  }
   //установим доступность кнопки печати
-  Cth.SetButtonsAndPopupMenuCaptionEnabled([PDlgBtnR], btnPrint, True, not HasError, '');
+  Cth.SetButtonsAndPopupMenuCaptionEnabled([pnlFrmBtnsR], mbtPrint, True, not HasError, '');
 end;
 
 procedure TFrmOWInvoiceToSgp.Print;
@@ -364,8 +364,8 @@ begin
   if Frg1.RecordCount = 0 then
     Exit;
   //если еще не присвоен номер - получим его функцией бд
-  if Num = 0 then
-    Num := Q.QCallStoredProc('P_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
+  if FNum = 0 then
+    FNum := Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
   //перерисуем заголовочную часть
   SetTitle;
   Frg1.MemTableEh1.DisableControls;
@@ -375,12 +375,12 @@ begin
   //передача в датасет данных заголовка документа
   PrintReport.SetReportDataset(
     'c1$s;c2$s;c3$s',
-    ['Накладная №'+IntToStr(Num)+' от '+DateToStr(DtM),
-     'Заказ: '+OrNum+' от '+DateToStr(DtBeg)+' ['+Project+'], отгрузка '+DateToStr(DtOtgr),
-     'Создал: '+UserM+' в '+FormatDateTime('hh:nn', DtM)]
+    ['Накладная №'+IntToStr(FNum)+' от '+DateToStr(FDtM),
+     'Заказ: '+FOrNum+' от '+DateToStr(FDtBeg)+' ['+FProject+'], отгрузка '+DateToStr(FDtOtgr),
+     'Создал: '+FUserM+' в '+FormatDateTime('hh:nn', FDtM)]
   );
   //вызов процедуры печати
-  PrintReport.P_InvoiceToSgp(Frg1.MemTableEh1);
+  PrintReport.pnl_InvoiceToSgp(Frg1.MemTableEh1);
   //покажем снова все записи
   Gh.GetGridColumn(Frg1.DBGridEh1, 'qnt_m').STFilter.ExpressionStr := '';
   Frg1.DBGridEh1.DefaultApplyFilter;
@@ -430,7 +430,7 @@ begin
   VerifyTable(True);
 //  Verify(nil);
   Handled := True;
-  UpdR := Fr.RecNo;
+  FUpdR := Fr.RecNo;
 end;
 
 procedure TFrmOWInvoiceToSgp.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -442,9 +442,9 @@ var
   r: Integer;
 begin
   //Verify(nil);
-  if (UpdR > 0)and(Fr.DbGridEh1.Col in [3]) then begin
-    r := UpdR;
-    UpdR := 0;
+  if (FUpdR > 0)and(Fr.DbGridEh1.Col in [3]) then begin
+    r := FUpdR;
+    FUpdR := 0;
     if Fr.RecordCount < r
       then Fr.MemTableEh1.RecNo := r + 1;
     Fr.DbGridEh1.Col:=IIf(Mode = fAdd, Fr.DbGridEh1.FindFieldColumn('qnt_m').Index, Fr.DbGridEh1.FindFieldColumn('qnt_s').Index) + 1;
@@ -454,7 +454,7 @@ end;
 function TFrmOWInvoiceToSgp.Prepare: Boolean;
 //подготовка к открытию формы
 //в AddParam:
-//[статус, area, ornumъ
+//[статус, area, FOrNumъ
 var
   i, j: Integer;
   c: TControl;
@@ -466,22 +466,22 @@ begin
     then Mode := fView;
   if not ((Mode = fEdit) or (AddParam[0] > 0)) then begin
     //уберем лейбл инфы по оприходованию на СГП
-    FreeAndNil(LbS);
+    FreeAndNil(lblS);
   end;
 //    if FormDbLock = fNone then Exit;
   FOpt.DlgPanelStyle := dpsBottomRight;
-  Cth.MakePanelsFlat(PMDIClient, []);
-  Cth.SetBtn(BtFill, mybtGo, False, 'Заполнить');
+  Cth.MakePanelsFlat(pnlFrmClient, []);
+  Cth.SetBtn(btnFill, mybtGo, False, 'Заполнить');
 //  FWHCorrected.X:=0;
-  //Cth.AlignControls(PSelectOrder, [], True);
-  PSelectOrder.Height := 0;
-  Cth.AlignControls(PTitle, [], True, 2);
-  FOpt.DlgButtonsR:=[[btnPrint, Mode <> FEdit], [btnGo, (Mode = FEdit), 'Заполнить'], [btnDividor], [btnSpace, 4]];
+  //Cth.AlignControls(pnlSelectOrder, [], True);
+  pnlSelectOrder.Height := 0;
+  Cth.AlignControls(pnlTitle, [], True, 2);
+  FOpt.DlgButtonsR:=[[mbtPrint, Mode <> FEdit], [mbtGo, (Mode = FEdit), 'Заполнить'], [mbtDividor], [mbtSpace, 4]];
   FOpt.StatusBarMode := stbmNone; //stbmDialog;
   FOpt.RefreshParent := True;
   if Mode <> fAdd then begin
-    CbOrder.Visible := False;
-    BtFill.Visible := False;
+    cmbOrder.Visible := False;
+    btnFill.Visible := False;
   end;
   //настроим фрейм гида
   Frg1.Options := [myogIndicatorColumn, myogColoredTitle, myogHiglightEditableCells, myogHiglightEditableColumns, myogHasStatusBar];
@@ -562,7 +562,7 @@ Handled не устанавливать
 
 var
   pa: TPointerList;
-  pa:=[@project, @DtEnd];
+  pa:=[@FProject, @DtEnd];
 //  Variant(pa[0]^):='qwerty';
   string(pa[0]^):=VarToStr(Date);
   v:=PVariant(pa[0]^)

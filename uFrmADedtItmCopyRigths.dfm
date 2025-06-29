@@ -6,13 +6,13 @@ inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
   ExplicitHeight = 180
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 314
     Height = 125
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 304
       Height = 76
-      object CbSrc: TDBComboBoxEh
+      object cmbSrc: TDBComboBoxEh
         Left = 8
         Top = 16
         Width = 319
@@ -25,10 +25,10 @@ inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
         EditButtons = <>
         LimitTextToListValues = True
         TabOrder = 0
-        Text = 'CbSrc'
+        Text = 'cmbSrc'
         Visible = True
       end
-      object CbDst: TDBComboBoxEh
+      object cmbDst: TDBComboBoxEh
         Left = 8
         Top = 56
         Width = 319
@@ -41,40 +41,40 @@ inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
         EditButtons = <>
         LimitTextToListValues = True
         TabOrder = 1
-        Text = 'Cb_Src'
+        Text = 'cmb_Src'
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 81
       Width = 304
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 302
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 302
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 302
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 203
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = -25
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 104
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 37
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 125
     Width = 314
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 222
     end
   end

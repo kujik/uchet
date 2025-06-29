@@ -12,46 +12,46 @@ uses
 
 type
   TDlg_Candidate = class(TForm_MDI)
-    Gb_Candidate: TGroupBox;
-    E_F: TDBEditEh;
-    De_Birth: TDBDateTimeEditEh;
-    E_I: TDBEditEh;
-    E_Phone: TDBEditEh;
-    E_O: TDBEditEh;
-    Lb_History: TLabel;
-    Gb_Vacancy: TGroupBox;
-    P_Vacancy: TPanel;
-    Cb_Division: TDBComboBoxEh;
-    Cb_Job: TDBComboBoxEh;
-    Cb_Head: TDBComboBoxEh;
-    Gb_Status: TGroupBox;
-    De_Dt: TDBDateTimeEditEh;
-    De_Pr: TDBDateTimeEditEh;
-    De_Uv: TDBDateTimeEditEh;
-    Cb_Status: TDBComboBoxEh;
-    Gb_Comment: TGroupBox;
-    P_Comment: TPanel;
-    M_Comment: TMemo;
-    P_Buttons: TPanel;
+    gb_Candidate: TGroupBox;
+    edt_F: TDBEditEh;
+    dedt_Birth: TDBDateTimeEditEh;
+    edt_I: TDBEditEh;
+    edt_Phone: TDBEditEh;
+    edt_O: TDBEditEh;
+    lbl_History: TLabel;
+    gb_Vacancy: TGroupBox;
+    pnl_Vacancy: TPanel;
+    cmb_Division: TDBComboBoxEh;
+    cmb_Job: TDBComboBoxEh;
+    cmb_Head: TDBComboBoxEh;
+    gb_Status: TGroupBox;
+    dedt_Dt: TDBDateTimeEditEh;
+    dedt_Pr: TDBDateTimeEditEh;
+    dedt_Uv: TDBDateTimeEditEh;
+    cmb_Status: TDBComboBoxEh;
+    gb_Comment: TGroupBox;
+    pnl_Comment: TPanel;
+    mem_Comment: TMemo;
+    pnl_Buttons: TPanel;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
-    Lb_StatusError: TLabel;
-    Cb_Ad: TDBComboBoxEh;
+    lbl_StatusError: TLabel;
+    cmb_Ad: TDBComboBoxEh;
     Img_Info: TImage;
     Bt_SelectAd: TBitBtn;
-    Cb_Vacancy: TDBComboBoxEh;
-    Lb_VClosed: TLabel;
-    Lb_Dt1: TLabel;
-    Lb_Dt2: TLabel;
+    cmb_Vacancy: TDBComboBoxEh;
+    lbl_VClosed: TLabel;
+    lbl_Dt1: TLabel;
+    lbl_Dt2: TLabel;
     Bt_AddWorker: TBitBtn;
-    procedure Cb_VacancyChange(Sender: TObject);
+    procedure cmb_VacancyChange(Sender: TObject);
     procedure ControlOnChange(Sender: TObject);
     procedure ControlOnExit(Sender: TObject);
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean);
     procedure Bt_OkClick(Sender: TObject);
     procedure Bt_CancelClick(Sender: TObject);
     procedure Bt_SelectAdClick(Sender: TObject);
-    procedure Lb_HistoryClick(Sender: TObject);
+    procedure lbl_HistoryClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Bt_AddWorkerClick(Sender: TObject);
   private
@@ -93,7 +93,7 @@ begin
 end;
 
 
-procedure TDlg_Candidate.Cb_VacancyChange(Sender: TObject);
+procedure TDlg_Candidate.cmb_VacancyChange(Sender: TObject);
 //смена вакансии
 var
   v: TVarDynArray;
@@ -101,27 +101,27 @@ begin
   inherited;
   //при загрузке меняем тошлько при прямом вызове - чтобы проставить данные, вызываем явно в препаре с нил
   if (InPrepare)and(Sender <> nil) then Exit;
-  if Cb_Vacancy.ItemIndex <= 0 then begin
-    Cb_Division.Text:='';
-    Cb_Division.LimitTextToListValues:=True;
-    Cb_Division.Enabled:=True;
-    Cb_Job.Text:='';
-    Cb_Job.LimitTextToListValues:=True;
-    Cb_Job.Enabled:=True;
-    Cb_Head.Text:='';
-    Cb_Head.LimitTextToListValues:=True;
-    Cb_Head.Enabled:=True;
+  if cmb_Vacancy.ItemIndex <= 0 then begin
+    cmb_Division.Text:='';
+    cmb_Division.LimitTextToListValues:=True;
+    cmb_Division.Enabled:=True;
+    cmb_Job.Text:='';
+    cmb_Job.LimitTextToListValues:=True;
+    cmb_Job.Enabled:=True;
+    cmb_Head.Text:='';
+    cmb_Head.LimitTextToListValues:=True;
+    cmb_Head.Enabled:=True;
   end
   else begin
-    Cb_Division.LimitTextToListValues:=False;
-    Cb_Division.Text:=Q.QSelectOneRow('select divisionname from v_j_vacancy where id = :id$i', [StrToInt(Cb_Vacancy.Value)])[0];
-    Cb_Division.Enabled:=False;
-    Cb_Job.LimitTextToListValues:=False;
-    Cb_Job.Text:=Q.QSelectOneRow('select job from v_j_vacancy where id = :id$i', [StrToInt(Cb_Vacancy.Value)])[0];
-    Cb_Job.Enabled:=False;
-    Cb_Head.LimitTextToListValues:=False;
-    Cb_Head.Text:=Q.QSelectOneRow('select headname from v_j_vacancy where id = :id$i', [StrToInt(Cb_Vacancy.Value)])[0];
-    Cb_Head.Enabled:=False;
+    cmb_Division.LimitTextToListValues:=False;
+    cmb_Division.Text:=Q.QSelectOneRow('select divisionname from v_j_vacancy where id = :id$i', [StrToInt(cmb_Vacancy.Value)])[0];
+    cmb_Division.Enabled:=False;
+    cmb_Job.LimitTextToListValues:=False;
+    cmb_Job.Text:=Q.QSelectOneRow('select job from v_j_vacancy where id = :id$i', [StrToInt(cmb_Vacancy.Value)])[0];
+    cmb_Job.Enabled:=False;
+    cmb_Head.LimitTextToListValues:=False;
+    cmb_Head.Text:=Q.QSelectOneRow('select headname from v_j_vacancy where id = :id$i', [StrToInt(cmb_Vacancy.Value)])[0];
+    cmb_Head.Enabled:=False;
   end;
 end;
 
@@ -140,42 +140,42 @@ begin
   if FormDbLock = fNone then Exit;
 
   aControls:=[
-    E_F, E_I, E_O,
-    De_Birth,
-    E_Phone,
-    Cb_Ad,
+    edt_F, edt_I, edt_O,
+    dedt_Birth,
+    edt_Phone,
+    cmb_Ad,
     //статус
-    De_Dt,
-//    Chb_Pr,
-    De_Pr,
- //   Chb_Uv,
-    De_Uv,
-    Cb_Status,
-    M_Comment,
-    Cb_Vacancy,
-    Cb_Division,
-    Cb_Job,
-    Cb_Head
+    dedt_Dt,
+//    chb_Pr,
+    dedt_Pr,
+ //   chb_Uv,
+    dedt_Uv,
+    cmb_Status,
+    mem_Comment,
+    cmb_Vacancy,
+    cmb_Division,
+    cmb_Job,
+    cmb_Head
   ];
 
   //вакансии
   Q.QLoadToDBComboBoxEh(
     'select caption1 || ''  -  '' || job, id from v_j_vacancy where dt_end is null or id = (select id_vacancy from j_candidates where id = :id$i) order by caption1',
-    [ID], Cb_Vacancy, cntComboLK0);
+    [ID], cmb_Vacancy, cntComboLK0);
   //подразделения
-  Q.QLoadToDBComboBoxEh('select name, id from ref_divisions order by name', [], Cb_Division, cntComboLK0);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_divisions order by name', [], cmb_Division, cntComboLK0);
   //профессии
-  Q.QLoadToDBComboBoxEh('select name, id from ref_jobs order by name',[], Cb_Job, cntComboLK0);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_jobs order by name',[], cmb_Job, cntComboLK0);
   //работники  v_j_worker_status
   //!!!неправильно, если подтягивается вакансия, а руководитель, в ней прописанный, уже не работает!!!
   Q.QLoadToDBComboBoxEh(
 //    'select workername, id from v_j_worker_status where status <> 3 or id = (select id_head from v_j_candidates where id = :id$i) order by workername',
     'select workername, max(id_worker) from v_j_worker_status where status <> 3 or id_worker = (select id_head from v_j_candidates where id = :id$i) group by workername order by workername',
-    [ID], Cb_Head, cntComboLK0);
+    [ID], cmb_Head, cntComboLK0);
   //статусы
-  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_status where id >= 10 order by name', [], Cb_Status, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_status where id >= 10 order by name', [], cmb_Status, cntComboLK);
   //источники информации
-  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_ad order by name', [], Cb_Ad, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_ad order by name', [], cmb_Ad, cntComboLK);
   //получим данные из основной таблицы
 //  FieldNames:='id$i;f$s;i$s;o$s;dt_birth$d;phone$s;id_ad$i;dt$d;0,dt1$d;0,dt2$d;id_status$i;comm$s;id_vacancy$i;id_division;id_job;id_head;vacancyclosed';
   FieldNames:='id$i;f$s;i$s;o$s;dt_birth$d;phone$s;id_ad$i;dt$d;dt1$d;dt2$d;id_status$i;comm$s;id_vacancy$i;id_division;id_job;id_head;vacancyclosed';
@@ -221,12 +221,12 @@ begin
   Cth.SetControlsOnCheckDrawRequired(Self, ControlCheckDrawRequiredState);
   //параметры проверки контролов
   Cth.SetControlsVerification(
-    [E_F, E_I, E_O,
-     De_Birth,
-     E_Phone,
-     Cb_Ad,
-     De_Dt,
-     Cb_Status
+    [edt_F, edt_I, edt_O,
+     dedt_Birth,
+     edt_Phone,
+     cmb_Ad,
+     dedt_Dt,
+     cmb_Status
     ],
     ['1:25:0:T','1:25:0:T','0:25:0:T',
      '1',
@@ -247,7 +247,7 @@ begin
   end;
 
   //проставим данные по подразделению и профессии из вакансии
-  if Cb_Vacancy.ItemIndex > 0 then Cb_VacancyChange(nil);
+  if cmb_Vacancy.ItemIndex > 0 then cmb_VacancyChange(nil);
 
   Cth.SetDialogForm(Self, Mode, 'Соискатель.');
   Cth.SetBtn(Bt_SelectAd, mybtSelectFromList, True, 'Справочник источников информации о вакансии.');
@@ -258,14 +258,14 @@ begin
 
   //если пришел по закрытой вакансии, то в режете редактирования не дадим менять вакансию и статусы, кроме возможности увольнения
   if (Mode = fEdit) and (v[16] <> null) then begin
-    Lb_VClosed.Visible:=True;
-    Cb_Division.Enabled:=False;
-    Cb_Job.Enabled:=False;
-    Cb_Head.Enabled:=False;
-    Cb_Vacancy.Enabled:=False;
-    De_Dt.Enabled:=False;
-    De_Pr.Enabled:=False;
-    Cb_Status.Enabled:=False;
+    lbl_VClosed.Visible:=True;
+    cmb_Division.Enabled:=False;
+    cmb_Job.Enabled:=False;
+    cmb_Head.Enabled:=False;
+    cmb_Vacancy.Enabled:=False;
+    dedt_Dt.Enabled:=False;
+    dedt_Pr.Enabled:=False;
+    cmb_Status.Enabled:=False;
   end;
 
   Bt_AddWorker.Visible:= not(Mode in [fDelete, fView]);
@@ -311,12 +311,12 @@ begin
   Result:=True;
 
   //!!!
-  Lb_VClosed.Visible:=False;
+  lbl_VClosed.Visible:=False;
 end;
 
 procedure TDlg_Candidate.ControlOnChange(Sender: TObject);
 begin
-  if Sender = Cb_Vacancy then Cb_VacancyChange(Sender);
+  if Sender = cmb_Vacancy then cmb_VacancyChange(Sender);
   //выход если в процедуре загрузки
   if InPrepare then Exit;
   //проверим, признак что в этом событии проверка
@@ -331,7 +331,7 @@ begin
   if InPrepare then Exit;
   //проверим
   Verify(Sender);
-  st:=E_F.Text + '|' + E_I.Text + '|' + E_O.Text + '|' + De_Birth.Text;
+  st:=edt_F.Text + '|' + edt_I.Text + '|' + edt_O.Text + '|' + dedt_Birth.Text;
   if st <> LastName then begin
     LastName:= st;
     GetCandidateInfo;
@@ -359,35 +359,35 @@ var
   param: TVarDynArray;
   sql: TvarDynArray;
 begin
-  if (E_F.Text = '') or (E_I.Text = '') then begin
-    Lb_History.Visible := False;
+  if (edt_F.Text = '') or (edt_I.Text = '') then begin
+    lbl_History.Visible := False;
   end
   else begin
-    Param:= VarArrayOf([ID, E_F.Text, E_I.Text, E_O.Text, De_Birth.Value]);
+    Param:= VarArrayOf([ID, edt_F.Text, edt_I.Text, edt_O.Text, dedt_Birth.Value]);
     sql:=['id<>:id$i', 'lower(f)=lower(:f$s)', 'lower(i)=lower(:i$s)', 'lower(o)=lower(:o$s)', 'dt_birth=:d$d'];
-    if not(Cth.DteValueIsDate(De_Birth)) then SetLength(Param, 4);
-    if (E_O.Text = '')and(not(Cth.DteValueIsDate(De_Birth))) then SetLength(Param, 3);
+    if not(Cth.DteValueIsDate(dedt_Birth)) then SetLength(Param, 4);
+    if (edt_O.Text = '')and(not(Cth.DteValueIsDate(dedt_Birth))) then SetLength(Param, 3);
     SetLength(Sql, Length(Param));
     st:=A.Implode(sql, ' and ');
     CandidateInfo:=Q.QLoadToVarDynArray2(
       'select name, dt_birth, dt, job, statusfull, comm from v_j_candidates where ' + st + ' order by dt asc',
       Param
     );
-    Lb_History.Caption:=
+    lbl_History.Caption:=
       S.IIFStr(Length(CandidateInfo) = 0, 'Обращений не было.', 'Было ' + IntToStr(Length(CandidateInfo)) + ' обращени' + S.GetEnding(Length(CandidateInfo), 'е', 'я', 'й') + '.');
-    Lb_History.Visible := True;
+    lbl_History.Visible := True;
     if Length(CandidateInfo) > 0 then begin
-      Lb_History.Font.Color:=clBlue;
-      Lb_History.Font.Style:=[fsUnderline];
+      lbl_History.Font.Color:=clBlue;
+      lbl_History.Font.Style:=[fsUnderline];
     end
     else begin
-      Lb_History.Font.Color:=clBlack;
-      Lb_History.Font.Style:=[];
+      lbl_History.Font.Color:=clBlack;
+      lbl_History.Font.Style:=[];
     end;
   end;
 end;
 
-procedure TDlg_Candidate.Lb_HistoryClick(Sender: TObject);
+procedure TDlg_Candidate.lbl_HistoryClick(Sender: TObject);
 begin
   inherited;
 //  'select name, dt_birth, dt, job, statusfull, comm from v_j_candidates where ' + st + ' order by dt asc',
@@ -422,7 +422,7 @@ begin
     end;
   //проверим данные по статусу и отобразим
   SetStatus;
-//  Cth.VerifyControl(Cb_Status, False);
+//  Cth.VerifyControl(cmb_Status, False);
   if Sender = nil
     //проверим все DbEh
     then Cth.VerifyAllDbEhControls(Self)
@@ -436,18 +436,18 @@ end;
 
 procedure TDlg_Candidate.SetStatus;
 begin
-  Cb_Status.Visible:=not((Cth.DteValueIsDate(De_Pr))or(Cth.DteValueIsDate(De_Uv)));
-//  Cth.SetControlsVerification([Cb_Status], [S.IIFStr(Cth.DteValueIsDate(De_Dt), '0:200:0:n', '0:200:0')]);
+  cmb_Status.Visible:=not((Cth.DteValueIsDate(dedt_Pr))or(Cth.DteValueIsDate(dedt_Uv)));
+//  Cth.SetControlsVerification([cmb_Status], [S.IIFStr(Cth.DteValueIsDate(dedt_Dt), '0:200:0:n', '0:200:0')]);
   OkStatus:=(
-    Cth.DteValueIsDate(De_Dt) and (
-      (not((Cth.DteValueIsDate(De_Pr))or(Cth.DteValueIsDate(De_Uv))) and (Cb_Status.ItemIndex >=0))
+    Cth.DteValueIsDate(dedt_Dt) and (
+      (not((Cth.DteValueIsDate(dedt_Pr))or(Cth.DteValueIsDate(dedt_Uv))) and (cmb_Status.ItemIndex >=0))
       or
-      (Cth.DteValueIsDate(De_Pr)and(De_Pr.Value >= De_Dt.Value)and(not Cth.DteValueIsDate(De_Uv)))
+      (Cth.DteValueIsDate(dedt_Pr)and(dedt_Pr.Value >= dedt_Dt.Value)and(not Cth.DteValueIsDate(dedt_Uv)))
       or
-      ((Cth.DteValueIsDate(De_Pr)and(De_Pr.Value >= De_Dt.Value)and(Cth.DteValueIsDate(De_Uv))and(De_Uv.Value >= De_Pr.Value)))
+      ((Cth.DteValueIsDate(dedt_Pr)and(dedt_Pr.Value >= dedt_Dt.Value)and(Cth.DteValueIsDate(dedt_Uv))and(dedt_Uv.Value >= dedt_Pr.Value)))
       )
     );
-  Lb_StatusError.Visible:= not OkStatus;
+  lbl_StatusError.Visible:= not OkStatus;
 end;
 
 procedure TDlg_Candidate.Bt_CancelClick(Sender: TObject);
@@ -463,26 +463,26 @@ var
   v: Variant;
 begin
   if (Mode = fView) then begin Close; Exit; end;
-//v:=Cth.GetControlValue(Cb_Status);
+//v:=Cth.GetControlValue(cmb_Status);
   b:= Q.QIUD(Q.QFModeToIUD(Mode),
     'j_candidates', 'sq_j_candidates', 'id$i;f$s;i$s;o$s;dt_birth$d;phone$s;id_ad$i;dt$d;dt1$d;dt2$d;id_status$i;comm$s;id_vacancy$i;id_division$i;id_job$i;id_head$i',
     VarArrayOf([
       ID,
-      Cth.GetControlValue(E_F),
-      Cth.GetControlValue(E_I),
-      Cth.GetControlValue(E_O),
-      Cth.GetControlValue(De_Birth),
-      Cth.GetControlValue(E_Phone),
-      Cth.GetControlValue(Cb_Ad),
-      Cth.GetControlValue(De_Dt),
-      Cth.GetControlValue(De_Pr),
-      Cth.GetControlValue(De_Uv),
-      S.IIfV(Cth.DteValueIsDate(De_Pr) or Cth.DteValueIsDate(De_Uv), null, Cth.GetControlValue(Cb_Status)),
-      M_Comment.Text,
-      S.IIfV(Cb_Vacancy.ItemIndex <= 0, null,  Cth.GetControlValue(Cb_Vacancy)),
-      S.IIfV((Cb_Vacancy.ItemIndex > 0)or(Cb_Division.ItemIndex <= 0), null,  Cth.GetControlValue(Cb_Division)),
-      S.IIfV((Cb_Vacancy.ItemIndex > 0)or(Cb_Job.ItemIndex <= 0), null,  Cth.GetControlValue(Cb_Job)),
-      S.IIfV((Cb_Vacancy.ItemIndex > 0)or(Cb_Head.ItemIndex <= 0), null,  Cth.GetControlValue(Cb_Head))
+      Cth.GetControlValue(edt_F),
+      Cth.GetControlValue(edt_I),
+      Cth.GetControlValue(edt_O),
+      Cth.GetControlValue(dedt_Birth),
+      Cth.GetControlValue(edt_Phone),
+      Cth.GetControlValue(cmb_Ad),
+      Cth.GetControlValue(dedt_Dt),
+      Cth.GetControlValue(dedt_Pr),
+      Cth.GetControlValue(dedt_Uv),
+      S.IIfV(Cth.DteValueIsDate(dedt_Pr) or Cth.DteValueIsDate(dedt_Uv), null, Cth.GetControlValue(cmb_Status)),
+      mem_Comment.Text,
+      S.IIfV(cmb_Vacancy.ItemIndex <= 0, null,  Cth.GetControlValue(cmb_Vacancy)),
+      S.IIfV((cmb_Vacancy.ItemIndex > 0)or(cmb_Division.ItemIndex <= 0), null,  Cth.GetControlValue(cmb_Division)),
+      S.IIfV((cmb_Vacancy.ItemIndex > 0)or(cmb_Job.ItemIndex <= 0), null,  Cth.GetControlValue(cmb_Job)),
+      S.IIfV((cmb_Vacancy.ItemIndex > 0)or(cmb_Head.ItemIndex <= 0), null,  Cth.GetControlValue(cmb_Head))
     ])
   );
   if b = -1 then Exit;
@@ -504,8 +504,8 @@ begin
   Wh.ExecMDIForm(myfrm_R_Candidates_Ad_SELCH, True);
   if Length(Wh.SelectDialogResult) = 0 then Exit;
   try
-  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_ad order by name', [], Cb_Ad, cntComboLK);
-  Cb_Ad.Text:=Wh.SelectDialogResult[1];
+  Q.QLoadToDBComboBoxEh('select name, id from ref_candidates_ad order by name', [], cmb_Ad, cntComboLK);
+  cmb_Ad.Text:=Wh.SelectDialogResult[1];
   finally
   end;}//++
 end;
@@ -513,24 +513,24 @@ end;
 procedure TDlg_Candidate.Bt_AddWorkerClick(Sender: TObject);
 begin
   inherited;
-  if (E_F.Text ='') or (E_I.Text = '') then Exit;
-  if Q.QSelectOneRow('select count(id) from ref_workers where f=:f$s and i=:i$s and o=:o$s', [E_F.Text, E_I.Text, E_O.Text])[0] = 0 then
-    if MyQuestionMessage('Создать работника "' + E_F.Text + ' ' + E_I.Text + ' ' + E_O.Text + '"') = mrYes then begin
+  if (edt_F.Text ='') or (edt_I.Text = '') then Exit;
+  if Q.QSelectOneRow('select count(id) from ref_workers where f=:f$s and i=:i$s and o=:o$s', [edt_F.Text, edt_I.Text, edt_O.Text])[0] = 0 then
+    if MyQuestionMessage('Создать работника "' + edt_F.Text + ' ' + edt_I.Text + ' ' + edt_O.Text + '"') = mrYes then begin
       Q.QIUD(
         'i',
         'ref_workers',
         'sq_ref_workers',
         'id;f;i;o;active',
-        [null, E_F.Text, E_I.Text, E_O.Text, 1]
+        [null, edt_F.Text, edt_I.Text, edt_O.Text, 1]
       );
     end
     else Exit;
   Wh.ExecAdd(myfrm_Dlg_WorkerStatus, Self, fAdd, 0, [],
     VarArrayOf([
-      E_F.Text + ' ' + E_I.Text + ' ' + E_O.Text,
-      Cb_Division.Text,
-      Cb_Job.Text,
-      S.IIfV(Cth.DteValueIsDate(De_Uv), De_Uv.Value, S.IIfV(Cth.DteValueIsDate(De_Pr), De_Pr.Value, null))
+      edt_F.Text + ' ' + edt_I.Text + ' ' + edt_O.Text,
+      cmb_Division.Text,
+      cmb_Job.Text,
+      S.IIfV(Cth.DteValueIsDate(dedt_Uv), dedt_Uv.Value, S.IIfV(Cth.DteValueIsDate(dedt_Pr), dedt_Pr.Value, null))
       ]),
     True
   );

@@ -21,7 +21,7 @@ type
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
-    procedure BtClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
     procedure VerifyBeforeSave; override;
     function  Save: Boolean; override;
     procedure LoadFromDB;
@@ -48,7 +48,7 @@ var
 begin
   Caption:= 'Смета';
   FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:'),  '$FF0000' + TVarDynArray(AddParam)[2]];
-  PTop.Height := 50;
+  pnlTop.Height := 50;
 
   Orders.LoadBcadGroups(True);
 
@@ -90,27 +90,27 @@ end;
 function TFrmOGedtEstimate.PrepareFormAdd: Boolean;
 begin
   Frg1.Opt.SetButtons(4, [
-    [btnExcel, True, 'Загрузить смету из файла'],
-    [btnLoad, True, 'Загрузить текущую смету из БД'],
-    [btnPasteEstimate, True, 'Вставить смету из буфера'],
-    [btnInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
-    [btnAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
-    [btnDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
-    [btnDividorA],[-4]],
-    cbttBSmall, PDlgBtnR
+    [mbtExcel, True, 'Загрузить смету из файла'],
+    [mbtLoad, True, 'Загрузить текущую смету из БД'],
+    [mbtPasteEstimate, True, 'Вставить смету из буфера'],
+    [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
+    [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
+    [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
+    [mbtDividorA],[-4]],
+    cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
 end;
 
 procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = btnLoad then
+  if Tag = mbtLoad then
     Frg1.LoadData('*', [ID])
-{  else if Tag = btnAdd then
+{  else if Tag = mbtAdd then
     Frg1.AddRow
-  else if Tag = btnInsert then
+  else if Tag = mbtInsert then
     Frg1.InsertRow
-  else if Tag = btnDelete then
+  else if Tag = mbtDelete then
     Frg1.DeleteRow}
   else
     inherited;
@@ -190,7 +190,7 @@ end;
 
 
 
-procedure TFrmOGedtEstimate.BtClick(Sender: TObject);
+procedure TFrmOGedtEstimate.btnClick(Sender: TObject);
 var
   Tag: Integer;
 begin

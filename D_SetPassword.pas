@@ -16,9 +16,9 @@ type
   TDlg_SetPassword = class(TForm_Normal)
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
-    E_Pwd1: TDBEditEh;
-    E_Pwd2: TDBEditEh;
-    Lb_MinLen: TLabel;
+    edt_Pwd1: TDBEditEh;
+    edt_Pwd2: TDBEditEh;
+    lbl_MinLen: TLabel;
     procedure Bt_OkClick(Sender: TObject);
   private
     { Private declarations }
@@ -44,16 +44,16 @@ uses
 
 procedure TDlg_SetPassword.Bt_OkClick(Sender: TObject);
 begin
-  if E_Pwd1.Text <> E_Pwd2.Text
+  if edt_Pwd1.Text <> edt_Pwd2.Text
     then begin MyWarningMessage('Пароли не совпадают!'); Exit; end;
-  if length(E_Pwd1.Text) < 5
+  if length(edt_Pwd1.Text) < 5
     then begin MyWarningMessage('Пароль слишком короткий!'); Exit; end;
   if MyQuestionMessage('Установить новый ' + Self.Caption + '?') <> mrYes then Exit;
   if Mode1 = 1 then begin
-    Q.QExecSql('update adm_users set pwd = get_hash_val(:pwd) where id = 0', [E_Pwd1.text]);
+    Q.QExecSql('update adm_users set pwd = get_hash_val(:pwd) where id = 0', [edt_Pwd1.text]);
   end
   else begin
-    Q.QExecSql('update adm_password set password = get_hash_val(:pwd)', [E_Pwd1.text]);
+    Q.QExecSql('update adm_password set password = get_hash_val(:pwd)', [edt_Pwd1.text]);
   end;
   Self.Close;
 end;

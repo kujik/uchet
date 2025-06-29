@@ -12,21 +12,21 @@ uses
 
 type
   TForm_MdiGridDialogTemplate = class(TForm_MDI)
-    P_Buttons: TPanel;
+    pnl_Buttons: TPanel;
     Img_Info: TImage;
     Bt_OK: TBitBtn;
     Bt_Cancel: TBitBtn;
-    Chb_NoClose: TCheckBox;
+    chb_NoClose: TCheckBox;
     Bt_Add: TBitBtn;
     Bt_Del: TBitBtn;
     Bev_Buttons: TBevel;
-    P_Bottom: TPanel;
-    P_Top: TPanel;
-    P_Client: TPanel;
+    pnl_Bottom: TPanel;
+    pnl_Top: TPanel;
+    pnl_Client: TPanel;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     //MemTableEh
     procedure MemTableEh1AfterScroll(DataSet: TDataSet);
     procedure MemTableEh1AfterPost(DataSet: TDataSet);
@@ -522,16 +522,16 @@ begin
 //  CtrlBegValuesStr:= CtrlCurrValuesStr;
   SetStatusBar('', '', False);
 //  Verify(nil);
-//  P_Bottom.Align := alNone;
-//  P_Bottom.Top:=Self.ClientHeight - StatusBar.Height - P_Bottom.Height;
-//  P_Bottom.Align := alBottom;
+//  pnl_Bottom.Align := alNone;
+//  pnl_Bottom.Top:=Self.ClientHeight - StatusBar.Height - pnl_Bottom.Height;
+//  pnl_Bottom.Align := alBottom;
   //доп. кнопки
   Cth.SetBtn(Bt_Add, mybtAdd, True);
   Cth.SetBtn(Bt_Del, mybtDelete, True);
   Bt_Add.Visible := Mode in [fEdit, fAdd, fCopy];
   Bt_Del.Visible := Bt_Add.Visible;
   Bev_Buttons.Visible := Bt_Add.Visible;
-  Chb_NoClose.Visible := False;
+  chb_NoClose.Visible := False;
   Result := True;
 end;
 

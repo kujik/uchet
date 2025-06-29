@@ -17,18 +17,18 @@ uses
 
 type
   TFrmOWSearchInEstimates = class(TFrmBasicMdi)
-    E_Name: TDBEditEh;
-    Chb_InclosedOrders: TCheckBox;
-    Chb_Like: TCheckBox;
-    PgcResults: TPageControl;
-    TsStdItems: TTabSheet;
-    TsOrderItems: TTabSheet;
+    edt_name: TDBEditEh;
+    chbInclosedOrders: TCheckBox;
+    chbLike: TCheckBox;
+    pgcResults: TPageControl;
+    tsStdItems: TTabSheet;
+    tsOrderItems: TTabSheet;
     Frg1: TFrDBGridEh;
     Frg2: TFrDBGridEh;
     procedure FormCreate(Sender: TObject);
   private
     function  Prepare: Boolean; override;
-    procedure BtClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
     procedure Frg2CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
   public
@@ -64,8 +64,8 @@ begin
   Mode := fView;
   Caption := '~Поиск сметной позиции';
   FOpt.DlgPanelStyle:= dpsBottomRight;
-  Cth.MakePanelsFlat(PMDIClient, []);
-  FOpt.DlgButtonsR:=[[btnFind, True, 'Найти']];
+  Cth.MakePanelsFlat(pnlFrmClient, []);
+  FOpt.DlgButtonsR:=[[mbtFind, True, 'Найти']];
   FOpt.StatusBarMode:=stbmNone;
   //грид стандартных изделий
   Frg1.Options := FrDBGridOptionDef + [myogPrintGrid, myogPanelFind];
@@ -95,7 +95,7 @@ begin
   Frg2.RefreshGrid;
   //не дает результата - гриды съезжают, правим при показе формы
   FOpt.ControlsWoAligment := [Frg1, Frg2];
-//  PgcResults.ActivePageIndex := 0;
+//  pgcResults.ActivePageIndex := 0;
   //минимальные размеры формы (высота явно, ширина определяется панелью кнопок)
   FWHBounds.Y:= 400;
   FWHBounds.X:=500;
@@ -128,24 +128,24 @@ begin
   Result := True;
 end;
 
-procedure TFrmOWSearchInEstimates.BtClick(Sender: TObject);
+procedure TFrmOWSearchInEstimates.btnClick(Sender: TObject);
 var
   Wherest: string;
 begin
-  if TControl(Sender).Tag = btnFind then begin
-    if E_Name.Text = '' then
+  if TControl(Sender).Tag = mbtFind then begin
+    if edt_name.Text = '' then
       Exit;
-    Wherest:= S.IIf(Chb_Like.Checked, 'upper(bcadname) like upper(:name)', 'bcadname = :name');
+    Wherest:= S.IIf(chbLike.Checked, 'upper(bcadname) like upper(:name)', 'bcadname = :name');
     Frg1.LoadData(
       'select id_std_item, id_estimate, formatname, stdname from v_findinestimate_std where ' + wherest + ' order by formatname, stdname',
-      [E_Name.Text]
+      [edt_name.Text]
     );
     Frg2.LoadData(
       'select id_order_item, id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_findinestimate_inorders where ' +
       Wherest +
-      S.IIf(not Chb_InClosedOrders.Checked, ' and dt_end is null ', ' ') +
+      S.IIf(not chbInclosedOrders.Checked, ' and dt_end is null ', ' ') +
       ' order by slash, itemname',
-      [E_Name.Text]
+      [edt_name.Text]
     );
   end;
 end;

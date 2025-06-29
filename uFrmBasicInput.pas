@@ -289,7 +289,7 @@ begin
   h := 3;
   k := 0;
   for i := 0 to High(va2) do begin
-    Ctrls[i]:= Cth.CreateControls(PMDIClient, va2[i][0], va2[i][1], 'Ctrl_'+IntToStr(i), va2[i][2]);
+    Ctrls[i]:= Cth.CreateControls(pnlFrmClient, va2[i][0], va2[i][1], 'Ctrl_'+IntToStr(i), va2[i][2]);
     Ctrls[i].Left:=FLeft;
     Ctrls[i].Top:=h;
     //есть четвертый параметр - расположим контрол на той же строке, в позиции Х равном этому параметру
@@ -328,13 +328,13 @@ begin
   if myfoSizeable in MyFormOptions then begin
     FWHBounds.Y2:=-1;
     ClientWidth:= Max(r + 3, 5);
-    FWHCorrected:= Cth.AlignControls(PMDIClient, [], False) ;
+    FWHCorrected:= Cth.AlignControls(pnlFrmClient, [], False) ;
     FWHCorrected.X:= Max(r + 3, FWidth);
     ClientWidth := FWHCorrected.X + MY_FORMPRM_H_EDGES + 2;
   //  FOpt.AutoAlignControls:=True;
   end
   else begin
-    FWHCorrected:= Cth.AlignControls(PMDIClient, [], False) ;
+    FWHCorrected:= Cth.AlignControls(pnlFrmClient, [], False) ;
     FWHCorrected.X:= Max(r + 3, FWidth);
     ClientWidth := FWHCorrected.X + MY_FORMPRM_H_EDGES + 2;
   end;

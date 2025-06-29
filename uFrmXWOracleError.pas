@@ -18,15 +18,15 @@ uses
 
 type
   TFrmXWOracleError = class(TFrmBasicMdi)
-    PCenter: TPanel;
-    PLeft: TPanel;
+    pnlCenter: TPanel;
+    pnlLeft: TPanel;
     MError: TDBMemoEh;
     MSql: TDBMemoEh;
     MParams: TDBMemoEh;
     Image1: TImage;
     procedure FormActivate(Sender: TObject);
   private
-    procedure BtClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
   public
     //покажем окно с ошибкой, запросом и параметрами запроса к Ѕƒ
     //если заданы строковые значени€ AError и т.д., то будут показаны они
@@ -47,7 +47,7 @@ uses
 
 {$R *.dfm}
 
-procedure TFrmXWOracleError.BtClick(Sender: TObject);
+procedure TFrmXWOracleError.btnClick(Sender: TObject);
 begin
   Wh.ExecReference(myfrm_Srv_SqlMonitor);
 end;

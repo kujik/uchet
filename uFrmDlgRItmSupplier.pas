@@ -10,13 +10,13 @@ uses
 
 type
   TFrmDlgRItmSupplier = class(TFrmBasicDbDialog)
-    E_Name_Org: TDBEditEh;
-    E_Full_Name: TDBEditEh;
-    E_E_Mail: TDBEditEh;
-    E_Inn: TDBEditEh;
+    edt_name_org: TDBEditEh;
+    edt_full_name: TDBEditEh;
+    edt_e_mail: TDBEditEh;
+    edt_inn: TDBEditEh;
   private
     { Private declarations }
-    FullName: string;
+    FFullName: string;
     function  Prepare: Boolean; override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
     procedure VerifyBeforeSave; override;
@@ -53,8 +53,8 @@ var
   i: Integer;
 begin
 //a:='111' + adoc;
-//  TFrmDlgRItmSupplier(ASelf).E_Inn.ControlLabel.Caption:=va[0];
-  TFrmDlgRItmSupplier(ASelf).E_Inn.ControlLabel.Caption:=AControlValues[0];
+//  TFrmDlgRItmSupplier(ASelf).edt_inn.ControlLabel.Caption:=va[0];
+  TFrmDlgRItmSupplier(ASelf).edt_inn.ControlLabel.Caption:=AControlValues[0];
 end;
 begin
   va:=[AAddParam];
@@ -71,10 +71,10 @@ procedure TFrmDlgRItmSupplier.ControlOnChange(Sender: TObject);
 begin
   if FInPrepare then  Exit;
   //если полное имя совпадает с кратким (не было измененно), то при вводе краткого имени полное выставляем таким же
-  if Sender = E_Name_Org then begin
-    if FullName = E_Full_Name.Text then begin
-      E_Full_Name.Text:= E_Name_Org.Text;
-      FullName:=E_Full_Name.Text;
+  if Sender = edt_name_org then begin
+    if FFullName = edt_full_name.Text then begin
+      edt_full_name.Text:= edt_name_org.Text;
+      FFullName:=edt_full_name.Text;
     end;
   end;
   inherited;
@@ -84,8 +84,8 @@ end;
 function TFrmDlgRItmSupplier.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
 begin
   if Mode = fDelete then Exit;
-  Cth.SetErrorMarker(E_E_Mail, (E_E_Mail.Text <> '') and not S.IsValidEmail(E_E_Mail.Text));
-  Cth.SetErrorMarker(E_Inn, (E_Inn.Text <> '') and (S.ValidateInn(E_Inn.Text) <> ''));
+  Cth.SetErrorMarker(edt_e_mail, (edt_e_mail.Text <> '') and not S.IsValidEmail(edt_e_mail.Text));
+  Cth.SetErrorMarker(edt_inn, (edt_inn.Text <> '') and (S.ValidateInn(edt_inn.Text) <> ''));
 end;
 
 
@@ -106,21 +106,21 @@ begin
   if Mode = fDelete then
     Exit;
   FErrorMessage:= '';
-  {if (E_E_Mail.Text <> '') and not S.IsValidEmail(E_E_Mail.Text) then begin
+  {if (edt_e_mail.Text <> '') and not S.IsValidEmail(edt_e_mail.Text) then begin
     ErrorMessage:= 'Неверный адрес электронной почты!';
   end
-  else if E_Inn.Text <> '' then begin
-    st1 := S.ValidateInn(E_Inn.Text);
+  else if edt_inn.Text <> '' then begin
+    st1 := S.ValidateInn(edt_inn.Text);
     if st1 <> '' then
       ErrorMessage:= 'Ошибка в ИНН:'#13#10 + st1;
   end
   else begin}
-  st1 := StRep(E_Name_Org.Text);
+  st1 := StRep(edt_name_org.Text);
   //получис наименования всех поставщиков (при редактировании - кроме текущего)
   va := Q.QLoadToVarDynArrayOneCol('select name_org from dv.kontragent where id_kontragent <> :id$i', [S.IIf(Mode = fEdit, id, -100000)]);
   for i := 0 to High(va) do begin
     //проверка на такое же название (в бд условия уникальности нет!)
-    if E_Name_Org.Text = S.NSt(va[i]) then begin
+    if edt_name_org.Text = S.NSt(va[i]) then begin
       FErrorMessage:= 'Поставщик с таким названием уже существует!';
       Exit;
     end;
@@ -134,7 +134,7 @@ end;
 
 {function Dlg_R_Itm_Supplier.LoadComboBoxes: Boolean;
 begin
-  Q.QLoadToDBComboBoxEh('select name, id_measuregroup from dv.groups_measure order by name', [], Cb_Id_MeasureGroup, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id_measuregroup from dv.groups_measure order by name', [], cmb_Id_MeasureGroup, cntComboLK);
   Result:=True;
 end;}
 
@@ -163,7 +163,7 @@ function TFrmDlgRItmSupplier.Prepare: Boolean;
 begin
   Caption:='Поставщик';
   F.DefineFields:=[
-    ['id_kontragent$i',#0,-1], ['name_org$s','V=1:255::T'], ['full_name$s','V=1:1000::T'], ['inn$s','V=0:12::T'], ['e_mail$s','V=0:50::T']
+    ['id_kontragent$i',#0,-1], ['name_org$s','V=1:255::T'], ['full_name$s','V=1:1000::T'], ['inn$s','V=0:12::T'], ['edt_mail$s','V=0:50::T']
   ];
   View:='v_itm_suppliers';
   Table:='dv.kontragent';
@@ -187,7 +187,7 @@ begin
   FWHBounds.Y2:= -1;
   Result:=inherited;
   //сохраним для синхронизации вводе краткого и полного наименования
-  FullName:=E_Full_Name.Text;
+  FFullName:=edt_full_name.Text;
 //  FormResult:= 10;
 //  ModalResult:= mrYes;
 //  frmmdi:=self;

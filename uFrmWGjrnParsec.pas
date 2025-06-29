@@ -40,8 +40,8 @@ begin
   if not myDBParsec.Connect(True) then
     Exit;
   Frg1.Opt.SetFields([
-    ['dt$s','Äàòà','140'],
-    ['dt2$s','Óõîä','80'],
+    ['dt$d','Äàòà','140'],
+    ['dt2$d','Óõîä','80'],
     ['event$s','Ñîáûòèå','80'],
     ['name$s','Ğàáîòíèê','180'],
     ['id$s','_id_äàòà','90']
@@ -110,7 +110,8 @@ begin
 //st2:='590145';     st:='';
   Result :=
   'select '+
-  'format(dateadd(hour, 3, t.tran_date), ''dd.MM.yyyy HH:mm'') as dt, '+
+//  'TRY_CONVERT(DATETIME, format(dateadd(hour, 3, t.tran_date), ''YYYY-MM-DD HH:MI:SS''), 120) as dt, '+
+  'dateadd(hour, 3, t.tran_date) as dt, '+
   '(select top(1) format(dateadd(hour, 3, tran_date), ''HH:mm'') from parsec3trans.dbo.translog pt where '+
   '  day(pt.tran_date) = day(t.tran_date) and '+
   '  pt.tran_date > t.tran_date '+

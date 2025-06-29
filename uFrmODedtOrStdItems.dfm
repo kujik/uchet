@@ -5,17 +5,17 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
   ExplicitWidth = 847
   ExplicitHeight = 292
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 835
     Height = 238
     ExplicitWidth = 831
     ExplicitHeight = 237
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 825
       Height = 189
       ExplicitWidth = 821
       ExplicitHeight = 188
-      object E_Name: TDBEditEh
+      object edt_name: TDBEditEh
         Left = 97
         Top = 7
         Width = 724
@@ -29,10 +29,10 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         EditButtons = <>
         MaxLength = 400
         TabOrder = 0
-        Text = 'E_Name'
+        Text = 'edt_name'
         Visible = True
       end
-      object Chb_R0: TDBCheckBoxEh
+      object chb_R0: TDBCheckBoxEh
         Left = 97
         Top = 62
         Width = 95
@@ -41,7 +41,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         TabOrder = 1
       end
-      object Chb_Wo_Estimate: TDBCheckBoxEh
+      object chb_Wo_Estimate: TDBCheckBoxEh
         Left = 206
         Top = 62
         Width = 82
@@ -50,7 +50,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         TabOrder = 2
       end
-      object Ne_Price: TDBNumberEditEh
+      object nedt_Price: TDBNumberEditEh
         Left = 97
         Top = 85
         Width = 104
@@ -68,7 +68,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         TabOrder = 3
         Visible = True
       end
-      object Ne_Price_PP: TDBNumberEditEh
+      object nedt_Price_PP: TDBNumberEditEh
         Left = 294
         Top = 85
         Width = 104
@@ -86,7 +86,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         TabOrder = 4
         Visible = True
       end
-      object Chb_by_sgp: TDBCheckBoxEh
+      object chb_by_sgp: TDBCheckBoxEh
         Left = 98
         Top = 112
         Width = 96
@@ -95,7 +95,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         TabOrder = 5
       end
-      object Cb_type_of_semiproduct: TDBComboBoxEh
+      object cmb_type_of_semiproduct: TDBComboBoxEh
         Left = 97
         Top = 135
         Width = 121
@@ -108,10 +108,10 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         EditButtons = <>
         TabOrder = 6
-        Text = 'Cb_type_of_semiproduct'
+        Text = 'cmb_type_of_semiproduct'
         Visible = False
       end
-      object Cb_id_or_format_estimates: TDBComboBoxEh
+      object cmb_id_or_format_estimates: TDBComboBoxEh
         Left = 98
         Top = 163
         Width = 300
@@ -128,56 +128,56 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 194
       Width = 825
       ExplicitTop = 193
       ExplicitWidth = 821
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 823
         ExplicitWidth = 823
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 823
         ExplicitWidth = 823
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 823
         ExplicitWidth = 819
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 724
           ExplicitLeft = 720
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 496
           ExplicitLeft = 492
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 625
           ExplicitLeft = 621
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 356
           ExplicitWidth = 352
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 238
     Width = 835
     ExplicitTop = 237
     ExplicitWidth = 831
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 743
       Height = 14
       ExplicitLeft = 743
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 24
     Top = 56
   end

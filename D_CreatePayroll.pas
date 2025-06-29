@@ -36,16 +36,16 @@ type
     Bt_OK: TBitBtn;
     Bt_Cancel: TBitBtn;
     PageControl1: TPageControl;
-    Ts_Divisions: TTabSheet;
-    Ts_Worker: TTabSheet;
-    Label1: TLabel;
-    De_Dt1: TDBDateTimeEditEh;
-    De_Dt2: TDBDateTimeEditEh;
-    Label2: TLabel;
-    Chb_Prev: TDBCheckBoxEh;
-    Chb_Curr: TDBCheckBoxEh;
-    De_W: TDBDateTimeEditEh;
-    Cb_Worker: TDBComboBoxEh;
+    ts_Divisions: TTabSheet;
+    ts_Worker: TTabSheet;
+    lbl1: TLabel;
+    dedt_Dt1: TDBDateTimeEditEh;
+    dedt_Dt2: TDBDateTimeEditEh;
+    lbl2: TLabel;
+    chb_Prev: TDBCheckBoxEh;
+    chb_Curr: TDBCheckBoxEh;
+    dedt_W: TDBDateTimeEditEh;
+    cmb_Worker: TDBComboBoxEh;
     procedure Bt_OKClick(Sender: TObject);
   private
     { Private declarations }
@@ -91,21 +91,21 @@ begin
   //для создания по всем подразделениям
   if PageControl1.ActivePageIndex = 0 then begin
     //дата начала периода должна быть корректной датой, но произвольной, по ней высчитываем начало турв
-    if not Cth.DteValueIsDate(De_Dt1) then Exit;
+    if not Cth.DteValueIsDate(dedt_Dt1) then Exit;
     if MyQuestionMessage('Создать зарплатные ведомости?') <> mrYes then Exit;
     //поставим дату начала и конца периода турв исходя из даты начала
     //используется для отладки, в реальном режиме даты изменять нельзя
-    De_Dt1.Value:=Turv.GetTurvBegDate(De_Dt1.Value);
-    De_Dt2.Value:=Turv.GetTurvEndDate(De_Dt1.Value);
+    dedt_Dt1.Value:=Turv.GetTurvBegDate(dedt_Dt1.Value);
+    dedt_Dt2.Value:=Turv.GetTurvEndDate(dedt_Dt1.Value);
     //получим список созданных турв за период
     va1:=Q.QLoadToVarDynArray2(
       'select id_division, name, commit from v_turv_period where dt1 = :dt1$d',
-      [De_Dt1.Value]
+      [dedt_Dt1.Value]
     );
     //получим список ведомостей по зп, по полным подразделениям за этот период
     va2:=Q.QLoadToVarDynArray2(
       'select id_division from v_payroll where dt1 = :dt1$d and id_worker is null',  //and id_division = :id_division$i
-      [De_Dt1.Value]
+      [dedt_Dt1.Value]
     );
     for i:=0 to High(va1) do begin
       b:=True;
@@ -119,9 +119,9 @@ begin
           st:=st +  va1[i,1] + #13#10;  //в собщение
         end;
       if b then begin
-  //      if QIUD('i', 'payroll', 'sq_payroll', 'id;id_division$i;dt1$d;dt2$d', [0, va1[i,0], De_Dt1.Value, De_Dt2.Value], False) <> -1
+  //      if QIUD('i', 'payroll', 'sq_payroll', 'id;id_division$i;dt1$d;dt2$d', [0, va1[i,0], dedt_Dt1.Value, dedt_Dt2.Value], False) <> -1
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
-        if Q.QIUD('i', 'payroll', 'sq_payroll', 'id;id_division;dt1;dt2', [0, Integer(va1[i,0]), De_Dt1.Value, De_Dt2.Value], False) <> -1
+        if Q.QIUD('i', 'payroll', 'sq_payroll', 'id;id_division;dt1;dt2', [0, Integer(va1[i,0]), dedt_Dt1.Value, dedt_Dt2.Value], False) <> -1
           then inc(cnt);  //увеличим количество созданных
       end;
     end;
@@ -131,7 +131,7 @@ begin
   end
   //для создания по выбранному работнику
   else begin
-    if (not Cth.DteValueIsDate(De_W))or(not Chb_Prev.Checked and not Chb_Curr.Checked and not De_W.Visible) then Exit;
+    if (not Cth.DteValueIsDate(dedt_W))or(not chb_Prev.Checked and not chb_Curr.Checked and not dedt_W.Visible) then Exit;
     //не создаем ведомости по работнику, если хотя бы у кого-то открыты по подразделениям любые ведомости
     //тк создание может привести к удалению из существующей ведомости
     v:=Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s', [myfrm_Dlg_Payroll]);
@@ -140,17 +140,17 @@ begin
       Exit;
     end;
     if MyQuestionMessage('Создать зарплатные ведомости?') <> mrYes then Exit;
-    wid:=Cth.GetControlValue(Cb_Worker);
+    wid:=Cth.GetControlValue(cmb_Worker);
     va1:=Turv.GetWorkerStatusArr(wid);
 //  Result:=QLoadToVarDynArray2('select dt, status, id_division, id_job from j_worker_status where id_worker = :id$i order by dt desc, id_division, id_job', id);
     for periods:=0 to 1 do begin
       dt1:= MinDateTime;
       //получим дату начала периода
       //если виден ввод даты, то только один период и это значение
-      if De_W.Visible and (periods = 0) then dt1:= Turv.GetTurvBegDate(De_W.Value);
+      if dedt_W.Visible and (periods = 0) then dt1:= Turv.GetTurvBegDate(dedt_W.Value);
       //иначе, если отмечено галками, прошлый и текущий период
-      if not(De_W.Visible) and (Chb_Prev.Checked) and (periods = 0) then dt1:= De_Dt1.Value;
-      if not(De_W.Visible) and (Chb_Curr.Checked) and (periods = 1) then dt1:= Turv.GetTurvBegDate(Date);
+      if not(dedt_W.Visible) and (chb_Prev.Checked) and (periods = 0) then dt1:= dedt_Dt1.Value;
+      if not(dedt_W.Visible) and (chb_Curr.Checked) and (periods = 1) then dt1:= Turv.GetTurvBegDate(Date);
       if dt1 = MinDateTime then continue;
       //конец периода
       dt2:=Turv.GetTurvEndDate(dt1);
@@ -195,26 +195,26 @@ begin
   Cth.SetBtn(Bt_Ok, mybtOk, False);
   Cth.SetBtn(Bt_Cancel, mybtCancel, False);
   //даты для отделов по текущему периоду
-  De_Dt1.Value:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
-  De_Dt2.Value:=Turv.GetTurvEndDate(De_Dt1.Value);
+  dedt_Dt1.Value:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
+  dedt_Dt2.Value:=Turv.GetTurvEndDate(dedt_Dt1.Value);
   //даты для ведомости по работнику - текущий и предыдущий периоды
-//  Chb_Prev.Caption:='с ' + DateToStr(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(De_Dt1.Value), -1)))+ ' по ' + DateToStr(IncDay(Turv.GetTurvBegDate(De_Dt2.Value), -1));
-  Chb_Prev.Caption:='с ' + DateToStr(De_Dt1.Value) + ' по ' + DateToStr(De_Dt2.Value);
-  Chb_Curr.Caption:='с ' + DateToStr(Turv.GetTurvBegDate(Date)) + ' по ' + DateToStr(Turv.GetTurvEndDate(Date));
+//  chb_Prev.Caption:='с ' + DateToStr(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(dedt_Dt1.Value), -1)))+ ' по ' + DateToStr(IncDay(Turv.GetTurvBegDate(dedt_Dt2.Value), -1));
+  chb_Prev.Caption:='с ' + DateToStr(dedt_Dt1.Value) + ' по ' + DateToStr(dedt_Dt2.Value);
+  chb_Curr.Caption:='с ' + DateToStr(Turv.GetTurvBegDate(Date)) + ' по ' + DateToStr(Turv.GetTurvEndDate(Date));
   //менять даты для отделов и вводить произвольную для работнику разрешим только разработчику и администратору дянных (для отладки)
-  De_W.Value:=Turv.GetTurvBegDate(Date);
-  De_Dt1.Enabled:=User.IsDeveloper or User.IsDataEditor;
-  De_Dt2.Enabled:=De_Dt1.Enabled;
-  De_W.Visible:=De_Dt1.Enabled;
+  dedt_W.Value:=Turv.GetTurvBegDate(Date);
+  dedt_Dt1.Enabled:=User.IsDeveloper or User.IsDataEditor;
+  dedt_Dt2.Enabled:=dedt_Dt1.Enabled;
+  dedt_W.Visible:=dedt_Dt1.Enabled;
   //список работников
-  Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], Cb_Worker, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], cmb_Worker, cntComboLK);
 
 
   {  if Mode = 1 then begin
-//    Label1.Caption:='Создать зарплатные ведомости по подразделениям.';
+//    lbl1.Caption:='Создать зарплатные ведомости по подразделениям.';
     //даты по прошлому периоду турв
-    De_Dt1.Value:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
-    De_Dt2.Value:=Turv.GetTurvEndDate(De_Dt1.Value);
+    dedt_Dt1.Value:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
+    dedt_Dt2.Value:=Turv.GetTurvEndDate(dedt_Dt1.Value);
     ShowModal;
   end;}
   ShowModal;

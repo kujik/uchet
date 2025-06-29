@@ -11,20 +11,20 @@ uses
 
 type
   TFrmBasicGrid2 = class(TFrmBasicMdi)
-    PTop: TPanel;
-    PBottom: TPanel;
-    PLeft: TPanel;
-    PGrid1: TPanel;
+    pnlTop: TPanel;
+    pnlBottom: TPanel;
+    pnlLeft: TPanel;
+    pnlGrid1: TPanel;
     Frg1: TFrDBGridEh;
-    ImgTemp: TImage;
+    imgTemp: TImage;
     Frg2: TFrDBGridEh;
-    PFrg2: TPanel;
-    PRight: TPanel;
+    pnlFrg2: TPanel;
+    pnlRight: TPanel;
     {обработчики событий, определенные в данном классе. в потомках должны бьть расположены в этой же секции}
     //в этом событии в основном раскрашиваем текст и фон €чеек; в потомках об€зательно вызывает inherited
     procedure Frg1DbGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState); virtual;
     procedure Frg2DbGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState); virtual;
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
   private
     procedure FrgSetEvents(AFrg: TFrDBGridEh);
   protected
@@ -111,7 +111,7 @@ begin
 end;
 
 
-procedure TFrmBasicGrid2.Timer_AfterStartTimer(Sender: TObject);
+procedure TFrmBasicGrid2.tmrAfterCreateTimer(Sender: TObject);
 begin
   inherited;
 end;
@@ -275,19 +275,19 @@ var
 begin
   Result := False;
   try
-  Cth.MakePanelsFlat(PMDIClient, []);
-  if PTop.Height < 10 then PTop.Visible := False;
-  if PBottom.Height < 10 then PBottom.Visible := False;
-  if PLeft.Width < 10 then PLeft.Visible := False;
-  if PRight.Width < 10 then PRight.Visible := False;
-  PFrg2.Visible := False;
+  Cth.MakePanelsFlat(pnlFrmClient, []);
+  if pnlTop.Height < 10 then pnlTop.Visible := False;
+  if pnlBottom.Height < 10 then pnlBottom.Visible := False;
+  if pnlLeft.Width < 10 then pnlLeft.Visible := False;
+  if pnlRight.Width < 10 then pnlRight.Visible := False;
+  pnlFrg2.Visible := False;
 
   FrgSetEvents(Frg1);
   FrgSetEvents(Frg2);
 
   if not PrepareForm then Exit;
 
-  FWHBounds.X := PLeft.Width + Frg1.PTop.Width + 60;
+  FWHBounds.X := pnlLeft.Width + Frg1.pnlTop.Width + 60;
   FWHBounds.Y := 300;
   Result := True;
   except on E: Exception do begin
@@ -322,12 +322,12 @@ end.
     Frg1.Opt.SetTable('v_planned_orders_w_sum');
     //кнопки, в произвольном месте. если есть доп контролы, об€зательно создать btnCtlPanel, ее длина по умолчанию подгонитс€ под контролы
     Frg1.Opt.SetButtons(1,[
-      [btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_J_PlannedOrders_Ch)],[btnCustom_OrderFromTemplate,1],[btnDelete,1],[],[btnGridFilter],[],[btnGridSettings],[btnCtlPanel{, True, 140}]
+      [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_PlannedOrders_Ch)],[mbtCustom_OrderFromTemplate,1],[mbtDelete,1],[],[mbtGridFilter],[],[mbtGridSettings],[mbtCtlPanel{, True, 140}]
     ]);
     //или, если бы не было нестандартных кнопок, можно указать так, кнопки по первым буквам, ревереш, просмотра/редактировани€,фильтр,настройки,
     //панель, всега будут те что перечислены в дефолтном фарианте, и роль дл€ всего редактировани€, по умолчанию труе
      //Frg1.Opt.SetButtons(1, 'rveacdfsp'? ARight);
-    Frg1.Opt.SetButtonsIfEmpty([btnCustom_OrderFromTemplate]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
     //создаем контролы
     Frg1.CreateAddControls('1', cntCheck, 'ѕо мес€цам', 'ChbMonthsSum', '', 4, yrefC, 130);
     //если надо €вно обработать контролы сразу, то перечитаем, можем установить их значени€, и сделаем зависимые настройки полей
@@ -350,7 +350,7 @@ end.
 
 {    FOpt.StatusBarMode := stbmDialog;
     FOpt.DlgPanelStyle := dpsBottomRight;
-    Frg1.Opt.SetButtons(1, [[btnAdd]], 4, PDlgBtnR);
+    Frg1.Opt.SetButtons(1, [[mbtAdd]], 4, pnlFrmBtnsR);
     FMode := fView;}
 
       //картинка, в строке через ":"

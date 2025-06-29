@@ -11,34 +11,30 @@ uses
 
 type
   TFrmOGjrnSemiproducts = class(TFrmBasicGrid2)
-    procedure Frg1DbGridEh1DrawDataCell(Sender: TObject; const Rect: TRect;
-      Field: TField; State: TGridDrawState);
-    procedure Frg1DbGridEh1DataGroupGetRowText(Sender: TCustomDBGridEh;
-      GroupDataTreeNode: TGroupDataTreeNodeEh; var GroupRowText: string);
-    procedure Frg1DbGridEh1DataGroupGetRowParams(Sender: TCustomDBGridEh;
-      GroupDataTreeNode: TGroupDataTreeNodeEh; Params: TGroupRowParamsEh);
-    procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure Frg1DbGridEh1DrawDataCell(Sender: TObject; const Rect: TRect; Field: TField; State: TGridDrawState);
+    procedure Frg1DbGridEh1DataGroupGetRowText(Sender: TCustomDBGridEh; GroupDataTreeNode: TGroupDataTreeNodeEh; var GroupRowText: string);
+    procedure Frg1DbGridEh1DataGroupGetRowParams(Sender: TCustomDBGridEh; GroupDataTreeNode: TGroupDataTreeNodeEh; Params: TGroupRowParamsEh);
+    procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure Frg1DbGridEh1ApplyFilter(Sender: TObject);
   private
     //количество заказов к обработке (полностью заполенных)
-    QntOrdersToDemand: Integer;
+    FQntOrdersToDemand: Integer;
     //номера заказов к обработке (где хотя бы одна позиция заполнена)
-    OrdersToDemand: TVarDynArray;
+    FOrdersToDemand: TVarDynArray;
     //заказы, ранее обработанные (есть информация в таблице обработанных изделий по этому заказу)
-    OrdersProcessed: TVarDynArray;
+    FOrdersProcessed: TVarDynArray;
     //заказы, которые были обработаны, и с тех пор количество или состав изделий в заказе изменился
     //(не попадет сюда, если изделие из заказа было удалено!))
-    OrdersModifyed: TVarDynArray;
+    FOrdersModifyed: TVarDynArray;
     //то же, по слешам в заказе
-    OrderItemsModifyed: TVarDynArray;
+    FOrderItemsModifyed: TVarDynArray;
     //заказы, по которым нельзя создать ПЗ, т.к. не удалось загрузить или не согласованы данные по стд. изделиям, соотвествующим полуфабрикатам
-    OrdersWithErrors: TVarDynArray;
+    FOrdersWithErrors: TVarDynArray;
     //исходные заказы, успешно обработанные по нажатии кнопки создать в Save
-    OrdersTreated: TVarDynArray;
+    FOrdersTreated: TVarDynArray;
     //производственные заказы, которые были созданы по исходным в Save
-    OrdersCreated: TVarDynArray;
-    InSaveData: Boolean;
+    FOrdersCreated: TVarDynArray;
+    FInSaveData: Boolean;
     function  PrepareForm: Boolean; override;
     procedure LoadData;
     procedure VerifyTable(RecNo: Integer = MaxInt);
@@ -147,7 +143,7 @@ begin
   Frg1.Opt.SetButtons(1, [
    [1000, True, -90, 'Группировка', 'grouping'], [1001, True, 'Раскрыть все', 'expand'], [1002, True, 'Схлопнуть все', 'collapse'], [],
    [1003, Mode = FEdit, 'Заполнить выбранные', 'ok_double'], [],
-   [btnGo, Mode = FEdit, 'Сформировать паспорта'], [], [btnCtlPanel]
+   [mbtGo, Mode = FEdit, 'Сформировать паспорта'], [], [mbtCtlPanel]
   ]);
 
   //данные группировки (масиивы полей, каждое соотвествует уроню групировки, шрифтов и цветов фона - могут быть пустыми), и активность группировки.
@@ -209,11 +205,11 @@ begin
   inherited;
   //раскрасим строки в зависимости от статуса заказа либо слеша
   va := A.Explode(Params.GroupRowText, ' ');
-  if (High(va) >= 1) and A.InArray(va[1], OrdersModifyed)
+  if (High(va) >= 1) and A.InArray(va[1], FOrdersModifyed)
     then Params.Font.Color := clBlue
-    else if (High(va) >= 1) and A.InArray(va[1], OrdersProcessed)
+    else if (High(va) >= 1) and A.InArray(va[1], FOrdersProcessed)
       then Params.Font.Color := clGreen;
-  if (High(va) >= 1) and A.InArray(va[1], OrderItemsModifyed)
+  if (High(va) >= 1) and A.InArray(va[1], FOrderItemsModifyed)
     then Params.Font.Color := clBlue;
 end;
 
@@ -229,7 +225,7 @@ begin
   //добавим сообщение статуса в конце строки для заголовков заказов -
   //вводятся данные или введены полностью по данному заказу
   va := A.Explode(GroupRowText, ' ');
-  if (High(va) >= 1) and A.InArray(va[1], OrdersToDemand) then
+  if (High(va) >= 1) and A.InArray(va[1], FOrdersToDemand) then
     if Pos(va[1], Frg1.ErrorMessage) > 0
       then GroupRowText := GroupRowText + '     (Ввод)'
       else GroupRowText := GroupRowText + '     (Данные введены)';
@@ -247,7 +243,7 @@ procedure TFrmOGjrnSemiproducts.Frg1DbGridEh1KeyDown(Sender: TObject; var Key: W
 var
   st: string;
 begin
-  if InSaveData then
+  if FInSaveData then
     Exit;
   Frg1.DbGridEh1KeyDown(Sender, Key, Shift);
   if Frg1.DbGridEh1.DataGrouping.Active and (Frg1.CurrField = 'qnt_in_demand') and (Key = 16{VK_LSHIFT}) then begin
@@ -272,9 +268,9 @@ end;
 procedure TFrmOGjrnSemiproducts.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 //обработка нажатия кнопок/меню
 begin
-  if InSaveData then
+  if FInSaveData then
     Exit;
-  if Tag = btnGo then
+  if Tag = mbtGo then
     //сохраним данные, создадим заявки и заказы (если это возможно)
     Save;
   if Tag = 1000 then begin
@@ -308,7 +304,7 @@ begin
   //доступность кнопки Ввод для отмеченных - при группировке и если есть отмеченные чекбоксы в индикаторе
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, 1003, null, Fr.DbGridEh1.DataGrouping.Active and (Frg1.DbGridEh1.SelectedRows.Count > 0));
   //доступность кнопки Сформировать
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnGo, null, Fr.DbGridEh1.DataGrouping.Active);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtGo, null, Fr.DbGridEh1.DataGrouping.Active);
 end;
 
 
@@ -346,7 +342,7 @@ begin
   //выйдей если уже в этом событии
   if Fr.InAddControlChange then
     Exit;
-  if InSaveData then
+  if FInSaveData then
     Exit;
   Fr.InAddControlChange := True;
   if TControl(Sender).Name = 'CbType' then begin
@@ -428,21 +424,21 @@ begin
   st := '';
   err := '';
   m := 0;
-  QntOrdersToDemand := 0;  //сколько заказов в заявку
-  OrdersToDemand := [];
+  FQntOrdersToDemand := 0;  //сколько заказов в заявку
+  FOrdersToDemand := [];
   for i := 0 to Frg1.GetCount(False) do begin
     if (i = Frg1.GetCount(False)) or (st <> Frg1.GetValue('ornum', i, False)) then begin
       if st <> '' then begin
         //при переходе на другой заказ
         if (j <> 0) then
           //заказы к обработке (где хотя-бы что-то введено)
-          OrdersToDemand := OrdersToDemand + [st];
+          FOrdersToDemand := FOrdersToDemand + [st];
         if (j <> 0) and (j <> k) then
           //если введено количество хотя бы одно, но не по всем позициям - номер заказа в текст ошибки
           S.ConcatStP(err, st, ', ');
         if j = k then
           //если введено по всем - увеличим количество заказов к формированию
-          inc(QntOrdersToDemand);
+          inc(FQntOrdersToDemand);
       end;
       if i = Frg1.GetCount(False) then
         Break;
@@ -456,7 +452,7 @@ begin
   end;
   //проставим статус
   //изменением обозначим наличие заказов для заявки, ошибка и ее статусное сообщение - неполностью заполеннные заказы
-  Frg1.SetState(Length(OrdersToDemand) > 0, err <> '', S.IIfStr(err <> '', 'Данные по следующим заказам заполнены не полностью:'#13#10 + err));
+  Frg1.SetState(Length(FOrdersToDemand) > 0, err <> '', S.IIfStr(err <> '', 'Данные по следующим заказам заполнены не полностью:'#13#10 + err));
 
   //посчитаем потребность - добавим к первоначально загруженной по данной номенклатуре введенное количество
   //(тк потребность отрицательна)
@@ -476,7 +472,7 @@ begin
         Frg1.SetValue('need_curr', i, False, e);
   end;
   //выбор типа полуфабриката доступен, если только нет введенных данных в графе К заказу
-  TDBComboBoxEh(Frg1.FindComponent('CbType')).Enabled := Length(OrdersToDemand) = 0;
+  TDBComboBoxEh(Frg1.FindComponent('CbType')).Enabled := Length(FOrdersToDemand) = 0;
 end;
 
 
@@ -520,15 +516,15 @@ begin
   //загрузим массив в мемтейбл
   Frg1.LoadSourceDataFromArray(va2, '', True);
   //получим номера заказов - уже обработанных, которые были изменены, и слеши, которые были изменены
-  OrdersProcessed := [];
-  OrdersModifyed := [];
-  OrderItemsModifyed := [];
+  FOrdersProcessed := [];
+  FOrdersModifyed := [];
+  FOrderItemsModifyed := [];
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if S.Nst(Frg1.GetValue('qnt_in_demand_old', i, False)) <> '' then
-      OrdersProcessed := OrdersProcessed + [Frg1.GetValue('ornum', i, False)];
+      FOrdersProcessed := FOrdersProcessed + [Frg1.GetValue('ornum', i, False)];
     if S.Nst(Frg1.GetValue('qnt_in_order_diff', i, False)) <> '' then begin
-      OrdersModifyed := OrdersModifyed + [Frg1.GetValue('ornum', i, False)];
-      OrderItemsModifyed := OrderItemsModifyed + [Frg1.GetValue('slash', i, False)];
+      FOrdersModifyed := FOrdersModifyed + [Frg1.GetValue('ornum', i, False)];
+      FOrderItemsModifyed := FOrderItemsModifyed + [Frg1.GetValue('slash', i, False)];
     end;
   end;
   //получим заказы с потребностью.
@@ -539,9 +535,9 @@ begin
   //установим значение в служебной колонке для фильтрации галками по типу заказа
   //(новый, обработан, изменен), и плюс еще если по заказу по любой позиции есть потребность
   for i := 0 to Frg1.GetCount(False) - 1 do begin
-    if A.InArray(Frg1.GetValue('ornum', i, False), OrdersModifyed)
+    if A.InArray(Frg1.GetValue('ornum', i, False), FOrdersModifyed)
       then j := 2
-      else if A.InArray(Frg1.GetValue('ornum', i, False), OrdersProcessed)
+      else if A.InArray(Frg1.GetValue('ornum', i, False), FOrdersProcessed)
         then j := 1
         else j := 0;
     if not A.InArray(Frg1.GetValue('ornum', i, False), va) then
@@ -574,17 +570,17 @@ begin
     MyWarningMessage(Frg1.ErrorMessage);
     Exit;
   end;
-  if QntOrdersToDemand = 0 then begin
+  if FQntOrdersToDemand = 0 then begin
     MyWarningMessage('Нет заказов для обработки!');
     Exit;
   end;
-  if MyQuestionMessage('Сформировать заявки и паспорта по ' + S.GetEndingFull(QntOrdersToDemand, 'заказ', 'у', 'ам', 'ам') + '?') <> mrYes then
+  if MyQuestionMessage('Сформировать заявки и паспорта по ' + S.GetEndingFull(FQntOrdersToDemand, 'заказ', 'у', 'ам', 'ам') + '?') <> mrYes then
     Exit;
 
-  InSaveData := True;
+  FInSaveData := True;
 
-  OrdersTreated := [];
-  OrdersCreated := [];
+  FOrdersTreated := [];
+  FOrdersCreated := [];
 
   FDisableClose := True;
   Enabled := False;
@@ -592,9 +588,9 @@ begin
   try
     b := GetDataForSemiproducts;
     if b then
-      for i := 0 to High(OrdersToDemand) do begin
-        if not A.InArray(OrdersToDemand[i], OrdersWithErrors) then
-          TreatOrder(OrdersToDemand[i]);
+      for i := 0 to High(FOrdersToDemand) do begin
+        if not A.InArray(FOrdersToDemand[i], FOrdersWithErrors) then
+          TreatOrder(FOrdersToDemand[i]);
       end;
   except on E: Exception do
     begin
@@ -608,7 +604,7 @@ begin
   if b then
     MyInfoMessage('Готово!');
 
-  InSaveData := False;
+  FInSaveData := False;
   if b then
     LoadData;
 end;
@@ -698,9 +694,9 @@ var
     if Frg1.GetValue('dt_otgr', rb, False) < DtO then
       DtO := Frg1.GetValue('dt_otgr', rb, False);
     StC := 'К заказу ' + Frg1.GetValue('ornum', rb, False);
-    //P_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
+    //pnl_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
     va := Q.QCallStoredProc(
-      'P_CreatePspForSemiproducts',
+      'p_CreatePspForSemiproducts',
       'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id$io;ornum$so',
        [IdT, StI, User.GetId, StC, DtO, -1, -1]
     );
@@ -805,11 +801,11 @@ var
 begin
   Result := False;
   Frg1.SetStatusBarCaption('Получении информации по номенклатуре полуфабрикатов...', True);
-  OrdersWithErrors := [];
+  FOrdersWithErrors := [];
   tmpl := 2;
   //проходим по всему массиву
   for i := 0 to Frg1.GetCount(False) - 1 do begin
-    if not A.InArray(Frg1.GetValue('ornum', i, False), OrdersToDemand) then
+    if not A.InArray(Frg1.GetValue('ornum', i, False), FOrdersToDemand) then
       Continue;
     nm := Frg1.GetValue('name', i, False);
     //пропустим позиции, которые не идут к заказу
@@ -857,7 +853,7 @@ begin
         msg := Frg1.GetValue('ornum', i, False) + '     : ' + 'разные шаблоны для изделий.';
       //признак, что есть ошибки в заказе
       if msg1 <> ''
-        then OrdersWithErrors := OrdersWithErrors + [Frg1.GetValue('ornum', i, False)];
+        then FOrdersWithErrors := FOrdersWithErrors + [Frg1.GetValue('ornum', i, False)];
       //общее сообщение
       S.ConcatStP(msg, msg1, #13#10, True);
       msg1 := '';
@@ -867,8 +863,8 @@ begin
   //если есть ошибка, спросим продолжить ли
   if msg <> '' then begin
     MyWarningMessage(msg, 1);
-    if Length(OrdersWithErrors) <> Length(OrdersToDemand)
-      then Result := MyQuestionMessage('Паспорта по следующим заказам не могут быть сформированы!'#13#10 + A.Implode(OrdersWithErrors, ', ') + #13#10'Сформировать по остальным заказам?', 1) = mrYes
+    if Length(FOrdersWithErrors) <> Length(FOrdersToDemand)
+      then Result := MyQuestionMessage('Паспорта по следующим заказам не могут быть сформированы!'#13#10 + A.Implode(FOrdersWithErrors, ', ') + #13#10'Сформировать по остальным заказам?', 1) = mrYes
       else MyWarningMessage('Не может быть создан ни один паспорт заказа!');
   end
   else Result := True;

@@ -41,7 +41,7 @@ inherited Dlg_DelayedInProd: TDlg_DelayedInProd
     ExplicitLeft = 410
     ExplicitTop = 224
   end
-  object Cb_Reason: TDBComboBoxEh
+  object cmb_Reason: TDBComboBoxEh
     Left = 8
     Top = 20
     Width = 487
@@ -53,10 +53,10 @@ inherited Dlg_DelayedInProd: TDlg_DelayedInProd
     DynProps = <>
     EditButtons = <>
     TabOrder = 2
-    Text = 'Cb_Reason'
+    Text = 'cmb_Reason'
     Visible = True
   end
-  object M_Comment: TDBMemoEh
+  object mem_Comment: TDBMemoEh
     Left = 8
     Top = 64
     Width = 487
@@ -66,7 +66,7 @@ inherited Dlg_DelayedInProd: TDlg_DelayedInProd
     ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081':'
     ControlLabel.Visible = True
     Lines.Strings = (
-      'M_Comment')
+      'mem_Comment')
     AutoSize = False
     DynProps = <>
     EditButtons = <>

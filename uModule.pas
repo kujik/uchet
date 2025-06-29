@@ -280,11 +280,11 @@ begin
    if TStyleManager.IsValidStyle(FileName, StyleInfo)=True then
    begin
      {выводим информацию}
-{      label8.Caption:=si.Name;
-      label9.Caption:=si.Author;
-      label10.Caption:=si.AuthorEMail;
-      label11.Caption:=si.AuthorURL;
-      label12.Caption:=si.Version;}
+{      lbl8.Caption:=si.Name;
+      lbl9.Caption:=si.Author;
+      lbl10.Caption:=si.AuthorEMail;
+      lbl11.Caption:=si.AuthorURL;
+      lbl12.Caption:=si.Version;}
      //проверяем возможность подключения стиля
      if TStyleManager.TrySetStyle(StyleInfo.Name,False)=False then
      begin

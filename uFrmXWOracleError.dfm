@@ -5,20 +5,20 @@ inherited FrmXWOracleError: TFrmXWOracleError
   ExplicitWidth = 595
   ExplicitHeight = 244
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 583
     Height = 190
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 573
       Height = 141
-      object PCenter: TPanel
+      object pnlCenter: TPanel
         Left = 73
         Top = 0
         Width = 500
         Height = 141
         Align = alClient
         BevelOuter = bvNone
-        Caption = 'PCenter'
+        Caption = 'pnlCenter'
         Padding.Top = 20
         Padding.Bottom = 4
         TabOrder = 0
@@ -90,7 +90,7 @@ inherited FrmXWOracleError: TFrmXWOracleError
           ExplicitHeight = 321
         end
       end
-      object PLeft: TPanel
+      object pnlLeft: TPanel
         Left = 0
         Top = 0
         Width = 73
@@ -266,40 +266,40 @@ inherited FrmXWOracleError: TFrmXWOracleError
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 146
       Width = 573
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 571
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 571
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 571
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 472
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 244
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 373
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 104
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 190
     Width = 583
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 491
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 96
     Top = 216
   end

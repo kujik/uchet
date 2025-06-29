@@ -16,14 +16,14 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     Anchors = []
     ExplicitLeft = 8
   end
-  object Lb_Caption: TLabel
+  object lbl_Caption: TLabel
     Left = 8
     Top = 5
     Width = 54
     Height = 13
-    Caption = 'Lb_Caption'
+    Caption = 'lbl_Caption'
   end
-  object Bevel1: TBevel
+  object bvl1: TBevel
     Left = 101
     Top = 272
     Width = 3
@@ -47,7 +47,7 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     OnKeyPress = DBGridEh1KeyPress
     OnSumListAfterRecalcAll = DBGridEh1SumListAfterRecalcAll
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -60,7 +60,7 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end
@@ -119,9 +119,9 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     Left = 31
     Top = 218
   end
-  object Timer1: TTimer
+  object tmr1: TTimer
     Interval = 100
-    OnTimer = Timer1Timer
+    OnTimer = tmr1Timer
     Left = 160
     Top = 8
   end

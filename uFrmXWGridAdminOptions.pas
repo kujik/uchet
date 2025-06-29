@@ -22,7 +22,7 @@ uses
 type
   TFrmXWGridAdminOptions = class(TForm_Normal)
     BitBtn1: TBitBtn;
-    Panel1: TPanel;
+    pnl1: TPanel;
     DBGridEh1: TDBGridEh;
     procedure FormCreate(Sender: TObject);
   private

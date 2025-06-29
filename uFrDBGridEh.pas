@@ -169,8 +169,8 @@ type
     A: TVarDynArray2;            //массив определяет кнопки на панели
     T: Integer;                  //тип кнопок cbttXXXX (или число что означает стандартную кнопку такой длины), по умолчанию cbttSBig
     H: Integer;                  //высота панели кнопок, по умолчанию подгоняется по типу кнопок с отступами от них  = 2
-    V: Boolean;                  //вертикальное расположиние кнопок, по умолчанию горизонтально, если только панель не PLeft
-    P: TPanel;                   //панель, в которой располагаются кнопки. если задана только массив кнопок для индекса 0, то она станет PTop
+    V: Boolean;                  //вертикальное расположиние кнопок, по умолчанию горизонтально, если только панель не pnlLeft
+    P: TPanel;                   //панель, в которой располагаются кнопки. если задана только массив кнопок для индекса 0, то она станет pnlTop
                                  //панель может и не принадлежать фрейму, быть на форме
   end;
 
@@ -396,14 +396,14 @@ type
   объект фрейма
   }
   TFrDBGridEh = class(TFrame)
-    PContainer: TPanel;
-    PGrid: TPanel;
-    PTop: TPanel;
-    PLeft: TPanel;
-    PBottom: TPanel;
-    PStatus: TPanel;
+    pnlContainer: TPanel;
+    pnlGrid: TPanel;
+    pnlTop: TPanel;
+    pnlLeft: TPanel;
+    pnlBottom: TPanel;
+    pnlStatusBar: TPanel;
     PRowDetailPanel: TPanel;
-    LbStatusBarLeft: TLabel;
+    lblStatusBarL: TLabel;
     PmGrid: TPopupMenu;
     MemTableEh1: TMemTableEh;
     ADODataDriverEh1: TADODataDriverEh;
@@ -411,12 +411,12 @@ type
     DbGridEh1: TDBGridEh;
     PrintDBGridEh1: TPrintDBGridEh;
     MemTableEh1Field1: TIntegerField;
-    TimerAfterStart: TTimer;
+    tmrAfterCreate: TTimer;
     CProp: TDBEditEh;
     ImgState: TImage;
     {собития фрейма}
     procedure FrameResize(Sender: TObject);
-    procedure TimerAfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
     procedure PStatusResize(Sender: TObject);
     {события датасета}
     procedure MemTableEh1AfterInsert(DataSet: TDataSet);
@@ -812,7 +812,7 @@ begin
   //по умолчанию допускаем апдейт данных в гриде
   TFrDBGridEh(FrDBGridEh).DbGridEh1.AllowedOperations := [alopUpdateEh];
   //кнопки, которые доступны при пустом гриде
-  FButtonsIfEmpty := [btnRefresh, btnAdd, btnGridFilter, btnGridSettings];
+  FButtonsIfEmpty := [mbtRefresh, mbtAdd, mbtGridFilter, mbtGridSettings];
 end;
 
 procedure TFrDBGridEhOpt.SetFields(AFields: TVarDynArray2);
@@ -934,11 +934,11 @@ begin
     else if Pos('+', AButtons) = 1
       then AButtons := CButtons + Copy(AButtons, 2);
   SetButtons(AIndex, [
-    [btnSelectFromList, Pos('l', AButtons) > 0], [], [btnRefresh, Pos('r', AButtons) > 0], [], [btnView, Pos('v', AButtons) > 0], [],
-    [btnEdit, (Pos('e', AButtons) > 0) and ARight], [btnAdd, (Pos('a', AButtons) > 0) and ARight],
-    [btnCopy, (Pos('c', AButtons) > 0) and ARight], [btnDelete, (Pos('d', AButtons) > 0) and ARight], [],
-    [btnGridFilter, (Pos('f', AButtons) > 0)], [], [btnGridSettings, (Pos('s', AButtons) > 0)], [],
-    [btnCtlPanel, (Pos('p', AButtons) > 0)]
+    [mbtSelectFromList, Pos('l', AButtons) > 0], [], [mbtRefresh, Pos('r', AButtons) > 0], [], [mbtView, Pos('v', AButtons) > 0], [],
+    [mbtEdit, (Pos('e', AButtons) > 0) and ARight], [mbtAdd, (Pos('a', AButtons) > 0) and ARight],
+    [mbtCopy, (Pos('c', AButtons) > 0) and ARight], [mbtDelete, (Pos('d', AButtons) > 0) and ARight], [],
+    [mbtGridFilter, (Pos('f', AButtons) > 0)], [], [mbtGridSettings, (Pos('s', AButtons) > 0)], [],
+    [mbtCtlPanel, (Pos('p', AButtons) > 0)]
   ]);
 end;
 
@@ -1173,7 +1173,7 @@ begin
   FOpt := TFrDBGridEhOpt.Create(Self);
   FDynProps := TDynVarsEh.Create(Self);
   FDynProps.CreateDynVar('vvv', 'qqq');
-  PStatus.Height := 1;
+  pnlStatusBar.Height := 1;
   ColumnTemp := nil;
 end;
 
@@ -1205,32 +1205,32 @@ var
   c, p: TControl;
 begin
   //скорректируем панели (несмотря на выставленные якоря, если не менять их положение в этом событии, то авторасположение не работает)
-  PGrid.Left:=PLeft.Left + PLeft.Width;
-  PGrid.Width:=PTop.Width - PLeft.Width;
-  PGrid.Top:=PTop.Top + PTop.Height;
-  PGrid.Height:=PLeft.Height;
+  pnlGrid.Left:=pnlLeft.Left + pnlLeft.Width;
+  pnlGrid.Width:=pnlTop.Width - pnlLeft.Width;
+  pnlGrid.Top:=pnlTop.Top + pnlTop.Height;
+  pnlGrid.Height:=pnlLeft.Height;
   //если есть иконка подсказки (всегад в верхней панеле кнопок), то изменим ее положение)
   c:=TControl(FindComponent('ImgInfo'));
   if c <> nil then begin
-    c.Left := PGrid.Width - 36;
+    c.Left := pnlGrid.Width - 36;
     //скроем иконку, если ушла под кнопки
     c.Visible := c.Left > TControl(FindComponent('PTopBtns')).Width;
   end;
 end;
 
-procedure TFrDBGridEh.TimerAfterStartTimer(Sender: TObject);
+procedure TFrDBGridEh.tmrAfterCreateTimer(Sender: TObject);
 //события таймера после создания фрейма
 //если установлено в опциях, то сначала покажем окно с фреймом, в котором загружен грид без данных
 //(загрузка данных по невыполнимому условию)
 //а после подгружаем данные, что отображается надписью и затенением грида
 begin
   if not (myogLoadAfterVisible in Options) then begin
-    TimerAfterStart.Enabled := False;
+    tmrAfterCreate.Enabled := False;
     Exit;
   end;
   if not TForm(Self.Owner).Visible then
     Exit;
-  TimerAfterStart.Enabled := False;
+  tmrAfterCreate.Enabled := False;
   RefreshGrid;
 end;
 
@@ -1238,7 +1238,7 @@ procedure TFrDBGridEh.PStatusResize(Sender: TObject);
 //выравнивает картинку стауса изменения/ошибки в статусбаре.
 //если ей просто задать алигн, торможения при изменении размеров.
 begin
-  ImGState.Left := PStatus.Width - 18;
+  ImGState.Left := pnlStatusBar.Width - 18;
 end;
 
 
@@ -1485,7 +1485,7 @@ procedure TFrDBGridEh.DbGridEh1DblClick(Sender: TObject);
 //двойной клие на гриде
 var
   Handled: Boolean;
-  BtnE, BtnV: TSpeedButton;
+  BtnE, mbtV: TSpeedButton;
   T: Tpoint;
   MouseTop, MouseLeft: Integer;
   c: TComponent;
@@ -1512,19 +1512,19 @@ begin
   c := nil;
   for j := PmGrid.ComponentCount - 1 downto 0 do begin
     c := PmGrid.Components[j];
-    if (c.Tag = btnSelectFromList) and (TMenuItem(c).Enabled) then
+    if (c.Tag = mbtSelectFromList) and (TMenuItem(c).Enabled) then
       Break;
   end;
   if j = -1 then
     for j := PmGrid.ComponentCount - 1 downto 0 do begin
       c := PmGrid.Components[j];
-      if (c.Tag = btnEdit) and (TMenuItem(c).Enabled) then
+      if (c.Tag = mbtEdit) and (TMenuItem(c).Enabled) then
         Break;
     end;
   if j = -1 then
     for j := PmGrid.ComponentCount - 1 downto 0 do begin
       c := PmGrid.Components[j];
-      if (c.Tag = btnView) and (TMenuItem(c).Enabled) then
+      if (c.Tag = mbtView) and (TMenuItem(c).Enabled) then
         Break;
     end;
   if (j >= 0) and (c <> nil) then
@@ -1845,9 +1845,9 @@ begin
    else DBGridEh1.AutoFitColWidths := False;
 //      DBGridEh1.STFilter.InstantApply := False;
    //почему-то, если скрыть панель статуса или сделать ее высоту = 0 то грид пропадает.
-   //PStatus.Visible:= False;//myogHasStatusBar in FOptions;
-  PStatus.Height := S.IIf(myogHasStatusBar in FOptions, MY_FORMPRM_LABEL_H + 4, 1);
-  LbStatusBarLeft.Top := 2;
+   //pnlStatusBar.Visible:= False;//myogHasStatusBar in FOptions;
+  pnlStatusBar.Height := S.IIf(myogHasStatusBar in FOptions, MY_FORMPRM_LABEL_H + 4, 1);
+  lblStatusBarL.Top := 2;
 end;
 
 
@@ -1895,7 +1895,7 @@ begin
   if Handled then Exit;
   //если не обработана
   //обработаем дефолтные функции
-  if Tag = btnRefresh then begin
+  if Tag = mbtRefresh then begin
     //если не снять флаг, то какой-то конфликт и при нажатии кнопки Обновить и открытом детальном гриде, в котором были изменения,
     //то в процедуре обновления основного грида на memtableeh1.refresh виснет
     //!!! проверить, что происходит при нажатии других кнопок при этом флаге
@@ -1903,66 +1903,66 @@ begin
     RefreshGrid;
 //-    ChangeSelectedData;
   end
-  else if Tag = btnExcel then begin
+  else if Tag = mbtExcel then begin
     Gh.ExportGridToXlsxNew(DBGridEh1, Module.RunSaveDialog(StringReplace(Caption + ' ' + DateTimeToStr(Now), ':', '-', [rfReplaceAll]), 'xlsx'), true, Caption + ' ' + DateTimeToStr(Now), '');
   end
-  else if (Tag = btnPrint) or (Tag = btnPrintGrid) then begin
+  else if (Tag = mbtPrint) or (Tag = mbtPrintGrid) then begin
     PrintDBGridEh1.SetSubstitutes(['%[Today]', DateTimeToStr(Now), '%[UserName]', User.GetName, '%[Document]', Caption]);
     PrintDBGridEh1.Preview;
   end
-  else if Tag = btnAddRow then begin
+  else if Tag = mbtAddRow then begin
     AddRow;
   end
-  else if Tag = btnInsertRow then begin
+  else if Tag = mbtInsertRow then begin
     InsertRow;
   end
-  else if Tag = btnDeleteRow then begin
+  else if Tag = mbtDeleteRow then begin
     DeleteRow;
   end
-  else if Tag = btnSetGridLabel then begin
+  else if Tag = mbtSetGridLabel then begin
     //установим метку на текущую запись в цикле
     SetGridLabel(-1);
   end
-  else if Tag = btnClearGridLabels then begin
+  else if Tag = mbtClearGridLabels then begin
     //очистим все метки по таблице
     SetGridLabel(-2);
   end
-  else if Tag = btnToGridLabelDown then begin
+  else if Tag = mbtToGridLabelDown then begin
     //установим метку на текущую запись в цикле
     GoToGridLabel(+1);
   end
-  else if Tag = btnClearOrRestoreGridFilter then begin
+  else if Tag = mbtClearOrRestoreGridFilter then begin
     //сбросим/восстановим фильтр
     ClearOrRestoreFilter;
   end
-  else if Tag = btnSelectAll then begin
+  else if Tag = mbtSelectAll then begin
     //отметим все ОТФИЛЬТРОВАННЫЕ строки, скрытые не трогаем
     FDisableChangeSelectedData := True;
     Gh.SetGridIndicatorSelection(DbGridEh1, 1);
     FDisableChangeSelectedData := False;
     ChangeSelectedData;
   end
-  else if Tag = btnDeSelectAll then begin
+  else if Tag = mbtDeSelectAll then begin
     FDisableChangeSelectedData := True;
     Gh.SetGridIndicatorSelection(DbGridEh1, -1);
     FDisableChangeSelectedData := False;
     ChangeSelectedData;
   end
-  else if Tag = btnInvertSelection then begin
+  else if Tag = mbtInvertSelection then begin
     FDisableChangeSelectedData := True;
     Gh.SetGridIndicatorSelection(DbGridEh1, 0);
     FDisableChangeSelectedData := False;
     ChangeSelectedData;
   end
-  else if Tag = btnGridSettings then begin
+  else if Tag = mbtGridSettings then begin
 //    Dlg_GridOptions.DlgShow(Self, DBGridEh1);
     TFrmXWGridOptions.Show(Self, '', [myfoModal, myfoDialog, myfoSizeable], fNone, 1, null);
   end
-  else if Tag = btnGridFilter then begin
+  else if Tag = mbtGridFilter then begin
     if TFrmXDedtGridFilter.ShowModal2(Self, '', [myfoDialog], fEdit, 1, null).ModalResult = mrOk then
       RefreshGrid;
   end
-  else if Tag = btnSelectFromList then begin
+  else if Tag = mbtSelectFromList then begin
     if MemTableEh1.RecordCount > 0 then begin
       //кнопка выбора/закрытия окна, используется в таблицах в которых надо выбраьть запись/записи, как правило в модальном режиме
       DbGridEh1.Datasource.DataSet.DisableControls;
@@ -2145,14 +2145,14 @@ procedure TFrDBGridEh.CreateInfoIcon;
 var
   c: TControl;
 begin
-  if (PTop.Height < 10) or (Length(FInfoArray) = 0) then
+  if (pnlTop.Height < 10) or (Length(FInfoArray) = 0) then
     Exit;
   c := TImage.Create(Self);
   c.Name := 'ImgInfo';
-  c.Parent := PTop;
-  c.Left := PGrid.width;
+  c.Parent := pnlTop;
+  c.Left := pnlGrid.width;
   c.Top := 2;
-  Cth.SetInfoIcon(TImage(c), Cth.SetInfoIconText(TForm(Self), InfoArray), S.IIf(PTop.Height > 10, 32, 24));
+  Cth.SetInfoIcon(TImage(c), Cth.SetInfoIconText(TForm(Self), InfoArray), S.IIf(pnlTop.Height > 10, 32, 24));
 end;
 
 procedure TFrDBGridEh.GetColumnEvents;
@@ -2213,7 +2213,7 @@ var
 begin
   try
   //выйдем, если нет статусбара (при остсутствии высота = 1)
-  if PStatus.Height < 10 then Exit;
+  if pnlStatusBar.Height < 10 then Exit;
   //проверим и выйдем, если новый текст такой же, как последний отрисованны
   st1 := Opt.FCaption;
   if FStatusBarText = '' then begin
@@ -2228,7 +2228,7 @@ begin
   end;
   FLastStatusBarText := st;
   //установим цветной текст в лейбле
-  LbStatusBarLeft.SetCaption2(st);
+  lblStatusBarL.SetCaption2(st);
   //событие изменения состояния ячеек (чтобы можно было среагировать например на измениние состояния фильтра и чекбоксов в индикаторе)
   ChangeSelectedData;
   except
@@ -3028,7 +3028,7 @@ begin
       Exit;
     FGridLabelsIds := [];
   end;
-  Q.QCallStoredProc('P_SetGridLabel', 'pdoc$s;piduser$i;ptablerow$i;ptablenum$i;plabelnum$i',
+  Q.QCallStoredProc('p_SetGridLabel', 'pdoc$s;piduser$i;ptablerow$i;ptablenum$i;plabelnum$i',
     [TFrmBasicMdi(Owner).FormDoc, User.GetId, S.IIf(Mode < -1, -1, ID), 1, labelnum
   ]);
 {    if pos('0 as collabel', Pr[1].Fields) > 0 then begin
@@ -3176,10 +3176,10 @@ begin
   FBtnIds:= [];
   for i:= Low(Opt.Buttons) to High(Opt.Buttons) do
     if Length(Opt.Buttons[i].A) > 0 then begin
-      if (i = 1) and (Opt.Buttons[i].P = nil) then Opt.Buttons[i].P:= PTop;
-      if Opt.Buttons[i].P = PLeft then Opt.Buttons[i].V:= true;
+      if (i = 1) and (Opt.Buttons[i].P = nil) then Opt.Buttons[i].P:= pnlTop;
+      if Opt.Buttons[i].P = pnlLeft then Opt.Buttons[i].V:= true;
       if Opt.Buttons[i].P <> nil then begin
-        if (Opt.Buttons[i].P = PTop) or (Opt.Buttons[i].P = PLeft) or (Opt.Buttons[i].P = PBottom)
+        if (Opt.Buttons[i].P = pnlTop) or (Opt.Buttons[i].P = pnlLeft) or (Opt.Buttons[i].P = pnlBottom)
           then begin
             Panel:=TPanel.Create(Self);
             Panel.Parent:= Opt.Buttons[i].P;
@@ -3189,26 +3189,26 @@ begin
           FPanelsBtn:= FPanelsBtn + [Panel];
         if Opt.Buttons[i].T = 0 then Opt.Buttons[i].T := cbttSBig;
         Cth.CreateButtons(Panel, Opt.Buttons[i].A, ButtonOrPopupMenuClick, Opt.Buttons[i].T, S.IIfStr(i > 1, IntToStr(i)), 2, Opt.Buttons[i].H, Opt.Buttons[i].V);
-        if uString.A.PosInArray(btnToAlRight, Opt.Buttons[i].A, 0) >= 0 then begin
+        if uString.A.PosInArray(mbtToAlRight, Opt.Buttons[i].A, 0) >= 0 then begin
           Panel.Align:=alClient;
         end;
         MenuItems:= MenuItems + Opt.Buttons[i].A;
       end;
     end;
   for i := 0 to High(MenuItems) do
-    if (MenuItems[i][0] = btnPrintGrid) or (MenuItems[i][0] = btnExcel) or (MenuItems[i][0] = btnGridSettings) then begin
-      MenuItems[i][0] := btnDividor;
+    if (MenuItems[i][0] = mbtPrintGrid) or (MenuItems[i][0] = mbtExcel) or (MenuItems[i][0] = mbtGridSettings) then begin
+      MenuItems[i][0] := mbtDividor;
     end;
     if myogGridLabels in Options then
-      MenuItems := MenuItems + [[btnDividor], [btnSetGridLabel], [btnToGridLabelDown], {[btnShowGridLabels],} [btnClearGridLabels]];
+      MenuItems := MenuItems + [[mbtDividor], [mbtSetGridLabel], [mbtToGridLabelDown], {[mbtShowGridLabels],} [mbtClearGridLabels]];
     if myogColumnFilter in Options then
-      MenuItems := MenuItems + [[btnDividor], [btnClearOrRestoreGridFilter]];
+      MenuItems := MenuItems + [[mbtDividor], [mbtClearOrRestoreGridFilter]];
     if (myogIndicatorCheckBoxes in Options) and (myogMultiSelect in Options) then
-      MenuItems := MenuItems + [[btnDividor], [btnSelectAll], [btnDeSelectAll], [btnInvertSelection]];
+      MenuItems := MenuItems + [[mbtDividor], [mbtSelectAll], [mbtDeSelectAll], [mbtInvertSelection]];
     if myogSaveOptions in Options then
-      MenuItems := MenuItems + [[btnDividor], [btnGridSettings]];
+      MenuItems := MenuItems + [[mbtDividor], [mbtGridSettings]];
     if myogPrintGrid in Options then
-      MenuItems := MenuItems + [[btnDividor], [btnPrintGrid], [btnExcel]];
+      MenuItems := MenuItems + [[mbtDividor], [mbtPrintGrid], [mbtExcel]];
   if Length(MenuItems) > 0 then begin
     for i := 0 to High(MenuItems) do
       if High(MenuItems[i]) >= 0 then begin
@@ -3253,10 +3253,10 @@ begin
       TPanel(Self.Components[i]).BevelInner:= bvNone;
       TPanel(Self.Components[i]).BevelOuter:= bvNone;
     end;
-  SetPanelState(PContainer);
-  SetPanelState(PTop);
-  SetPanelState(PBottom);
-  SetPanelState(PLeft);
+  SetPanelState(pnlContainer);
+  SetPanelState(pnlTop);
+  SetPanelState(pnlBottom);
+  SetPanelState(pnlLeft);
   FrameResize(nil);
 end;
 
@@ -3315,7 +3315,7 @@ begin
   end;
   st := Q.QSIUDSql('a', FOpt.SQL.View, st);
   sts := FOpt.SQL.Select;
-  if (myogLoadAfterVisible in Options) and (TimerAfterStart.Enabled)
+  if (myogLoadAfterVisible in Options) and (tmrAfterCreate.Enabled)
     then stwa := 'where 1 = 2'
     else stwa := Trim(FOpt.SQL.WhereAllways);
   if FOpt.SQL.Select = '=' then
@@ -3434,8 +3434,8 @@ begin
   for i := 0 to TDBGridEhMy(FGrid2.DBGridEh1).FooterRowCount - 1 do
     fh := fh + mydefGridRowHeight;
 
-  i := Min(DBGridEh1.RowDetailPanel.Height + FGrid2.PGrid.Top - 200,
-    FGrid2.PGrid.Top +
+  i := Min(DBGridEh1.RowDetailPanel.Height + FGrid2.pnlGrid.Top - 200,
+    FGrid2.pnlGrid.Top +
     rh +  //высота строк грида с заголовком
     fh +  //высота футера
 //    mydefGridRowHeight * (FGrid2.DBGridEh1.RowCount + 1) + //высота строк детального рида + возможный футер

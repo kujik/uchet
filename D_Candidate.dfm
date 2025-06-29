@@ -12,7 +12,7 @@ inherited Dlg_Candidate: TDlg_Candidate
     ExplicitTop = 451
     ExplicitWidth = 651
   end
-  object Gb_Candidate: TGroupBox [1]
+  object gb_Candidate: TGroupBox [1]
     Left = 0
     Top = 0
     Width = 651
@@ -20,15 +20,15 @@ inherited Dlg_Candidate: TDlg_Candidate
     Align = alTop
     Caption = #1057#1086#1080#1089#1082#1072#1090#1077#1083#1100
     TabOrder = 1
-    object Lb_History: TLabel
+    object lbl_History: TLabel
       Left = 11
       Top = 70
       Width = 30
       Height = 13
       Caption = 'Found'
-      OnClick = Lb_HistoryClick
+      OnClick = lbl_HistoryClick
     end
-    object E_F: TDBEditEh
+    object edt_F: TDBEditEh
       Left = 93
       Top = 16
       Width = 140
@@ -41,11 +41,11 @@ inherited Dlg_Candidate: TDlg_Candidate
       DynProps = <>
       EditButtons = <>
       TabOrder = 0
-      Text = 'E_F'
+      Text = 'edt_F'
       Visible = True
       OnChange = ControlOnChange
     end
-    object De_Birth: TDBDateTimeEditEh
+    object dedt_Birth: TDBDateTimeEditEh
       Left = 93
       Top = 43
       Width = 140
@@ -61,7 +61,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       TabOrder = 3
       Visible = True
     end
-    object E_I: TDBEditEh
+    object edt_I: TDBEditEh
       Left = 290
       Top = 16
       Width = 140
@@ -74,10 +74,10 @@ inherited Dlg_Candidate: TDlg_Candidate
       DynProps = <>
       EditButtons = <>
       TabOrder = 1
-      Text = 'E_F'
+      Text = 'edt_F'
       Visible = True
     end
-    object E_Phone: TDBEditEh
+    object edt_Phone: TDBEditEh
       Left = 290
       Top = 43
       Width = 349
@@ -90,10 +90,10 @@ inherited Dlg_Candidate: TDlg_Candidate
       DynProps = <>
       EditButtons = <>
       TabOrder = 4
-      Text = 'E_F'
+      Text = 'edt_F'
       Visible = True
     end
-    object E_O: TDBEditEh
+    object edt_O: TDBEditEh
       Left = 493
       Top = 16
       Width = 146
@@ -106,11 +106,11 @@ inherited Dlg_Candidate: TDlg_Candidate
       DynProps = <>
       EditButtons = <>
       TabOrder = 2
-      Text = 'E_F'
+      Text = 'edt_F'
       Visible = True
     end
   end
-  object Gb_Vacancy: TGroupBox [2]
+  object gb_Vacancy: TGroupBox [2]
     Left = 0
     Top = 94
     Width = 651
@@ -118,7 +118,7 @@ inherited Dlg_Candidate: TDlg_Candidate
     Align = alTop
     Caption = #1042#1072#1082#1072#1085#1089#1080#1103
     TabOrder = 2
-    object P_Vacancy: TPanel
+    object pnl_Vacancy: TPanel
       Left = 2
       Top = 46
       Width = 647
@@ -126,7 +126,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
-      object Cb_Division: TDBComboBoxEh
+      object cmb_Division: TDBComboBoxEh
         Left = 91
         Top = 7
         Width = 546
@@ -142,7 +142,7 @@ inherited Dlg_Candidate: TDlg_Candidate
         TabOrder = 0
         Visible = True
       end
-      object Cb_Job: TDBComboBoxEh
+      object cmb_Job: TDBComboBoxEh
         Left = 91
         Top = 34
         Width = 546
@@ -158,7 +158,7 @@ inherited Dlg_Candidate: TDlg_Candidate
         TabOrder = 1
         Visible = True
       end
-      object Cb_Head: TDBComboBoxEh
+      object cmb_Head: TDBComboBoxEh
         Left = 91
         Top = 64
         Width = 546
@@ -175,7 +175,7 @@ inherited Dlg_Candidate: TDlg_Candidate
         Visible = True
       end
     end
-    object Cb_Vacancy: TDBComboBoxEh
+    object cmb_Vacancy: TDBComboBoxEh
       Left = 93
       Top = 19
       Width = 546
@@ -190,10 +190,10 @@ inherited Dlg_Candidate: TDlg_Candidate
       LimitTextToListValues = True
       TabOrder = 1
       Visible = True
-      OnChange = Cb_VacancyChange
+      OnChange = cmb_VacancyChange
     end
   end
-  object Gb_Status: TGroupBox [3]
+  object gb_Status: TGroupBox [3]
     Left = 0
     Top = 242
     Width = 651
@@ -201,7 +201,7 @@ inherited Dlg_Candidate: TDlg_Candidate
     Align = alTop
     Caption = #1057#1090#1072#1090#1091#1089
     TabOrder = 3
-    object Lb_StatusError: TLabel
+    object lbl_StatusError: TLabel
       Left = 248
       Top = 20
       Width = 310
@@ -214,21 +214,21 @@ inherited Dlg_Candidate: TDlg_Candidate
       Font.Style = []
       ParentFont = False
     end
-    object Lb_Dt1: TLabel
+    object lbl_Dt1: TLabel
       Left = 53
       Top = 48
       Width = 37
       Height = 13
       Caption = #1055#1088#1080#1085#1103#1090
     end
-    object Lb_Dt2: TLabel
+    object lbl_Dt2: TLabel
       Left = 254
       Top = 48
       Width = 38
       Height = 13
       Caption = #1059#1074#1086#1083#1077#1085
     end
-    object De_Dt: TDBDateTimeEditEh
+    object dedt_Dt: TDBDateTimeEditEh
       Left = 93
       Top = 13
       Width = 140
@@ -244,7 +244,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       TabOrder = 0
       Visible = True
     end
-    object De_Pr: TDBDateTimeEditEh
+    object dedt_Pr: TDBDateTimeEditEh
       Left = 93
       Top = 43
       Width = 140
@@ -257,7 +257,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       TabOrder = 1
       Visible = True
     end
-    object De_Uv: TDBDateTimeEditEh
+    object dedt_Uv: TDBDateTimeEditEh
       Left = 297
       Top = 43
       Width = 140
@@ -270,7 +270,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       TabOrder = 2
       Visible = True
     end
-    object Cb_Status: TDBComboBoxEh
+    object cmb_Status: TDBComboBoxEh
       Left = 498
       Top = 43
       Width = 140
@@ -287,7 +287,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       Visible = True
     end
   end
-  object Gb_Comment: TGroupBox [4]
+  object gb_Comment: TGroupBox [4]
     Left = 0
     Top = 320
     Width = 651
@@ -298,7 +298,7 @@ inherited Dlg_Candidate: TDlg_Candidate
     DesignSize = (
       651
       114)
-    object P_Comment: TPanel
+    object pnl_Comment: TPanel
       Left = 11
       Top = 18
       Width = 626
@@ -306,18 +306,18 @@ inherited Dlg_Candidate: TDlg_Candidate
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelOuter = bvNone
       TabOrder = 0
-      object M_Comment: TMemo
+      object mem_Comment: TMemo
         Left = 0
         Top = 0
         Width = 626
         Height = 61
         Align = alClient
         Lines.Strings = (
-          'M_Comment')
+          'mem_Comment')
         TabOrder = 0
       end
     end
-    object Cb_Ad: TDBComboBoxEh
+    object cmb_Ad: TDBComboBoxEh
       Left = 134
       Top = 85
       Width = 473
@@ -346,7 +346,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       OnClick = Bt_SelectAdClick
     end
   end
-  object P_Buttons: TPanel [5]
+  object pnl_Buttons: TPanel [5]
     Left = 0
     Top = 434
     Width = 651
@@ -366,7 +366,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       Height = 25
       Anchors = [akLeft, akBottom]
     end
-    object Lb_VClosed: TLabel
+    object lbl_VClosed: TLabel
       Left = 35
       Top = 6
       Width = 402
@@ -415,7 +415,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       OnClick = Bt_AddWorkerClick
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 65532
     Top = 633
   end

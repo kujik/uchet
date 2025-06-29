@@ -10,24 +10,24 @@ uses
 
 type
   TFrmODedtTasks = class(TFrmBasicDbDialog)
-    Cb_type: TDBComboBoxEh;
-    Cb_id_order: TDBComboBoxEh;
-    Cb_id_order_item: TDBComboBoxEh;
-    E_user1: TDBEditEh;
-    Cb_id_user2: TDBComboBoxEh;
-    M_Comm1: TDBMemoEh;
-    De_dt: TDBDateTimeEditEh;
-    De_dt_planned: TDBDateTimeEditEh;
-    Cb_id_state: TDBComboBoxEh;
-    De_dt_beg: TDBDateTimeEditEh;
-    De_dt_end: TDBDateTimeEditEh;
-    M_Comm2: TDBMemoEh;
-    Chb_confirmed: TDBCheckBoxEh;
-    E_name: TDBEditEh;
+    cmb_type: TDBComboBoxEh;
+    cmb_id_order: TDBComboBoxEh;
+    cmb_id_order_item: TDBComboBoxEh;
+    edt_user1: TDBEditEh;
+    cmb_id_user2: TDBComboBoxEh;
+    mem_Comm1: TDBMemoEh;
+    dedt_dt: TDBDateTimeEditEh;
+    dedt_dt_planned: TDBDateTimeEditEh;
+    cmb_id_state: TDBComboBoxEh;
+    dedt_dt_beg: TDBDateTimeEditEh;
+    dedt_dt_end: TDBDateTimeEditEh;
+    mem_Comm2: TDBMemoEh;
+    chb_confirmed: TDBCheckBoxEh;
+    edt_name: TDBEditEh;
   private
-    IsStateChanged: Boolean;
-    OldState: string;
-    OldOrder: string;
+    FIsStateChanged: Boolean;
+    FOldState: string;
+    FOldOrder: string;
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
@@ -55,26 +55,26 @@ var
   i: Integer;
 begin
   inherited;
-  if (Sender = Cb_id_order) and (Cb_id_order.Text <> '') and (Cb_id_order.Text <> OldOrder) then begin
+  if (Sender = cmb_id_order) and (cmb_id_order.Text <> '') and (cmb_id_order.Text <> FOldOrder) then begin
     Q.QLoadToDBComboBoxEh('select slash || '' '' || itemname, id from v_order_items where id_order = :id$i and qnt > 0 and dt_end is null or id = :id_old$i order by slash',
-    [Cb_id_order.Value, F.GetProp('id_order_item')], Cb_id_order_item, cntComboLK);
-    Cb_id_order_item.ItemIndex := 0;
-    OldOrder := Cb_id_order.Text;
+    [cmb_id_order.Value, F.GetProp('id_order_item')], cmb_id_order_item, cntComboLK);
+    cmb_id_order_item.ItemIndex := 0;
+    FOldOrder := cmb_id_order.Text;
   end;
 
-  if (Sender = Cb_id_state) and (IsStateChanged) and (Cb_id_state.Value <> OldState) then begin
-    i := S.NInt(Cb_id_state.Value);
+  if (Sender = cmb_id_state) and (FIsStateChanged) and (cmb_id_state.Value <> FOldState) then begin
+    i := S.NInt(cmb_id_state.Value);
     if i = 0 then
       Exit;
-    if (i = 1) and Cth.DteValueIsDate(De_dt_beg) and (De_dt_beg.Value <> Date) then
+    if (i = 1) and Cth.DteValueIsDate(dedt_dt_beg) and (dedt_dt_beg.Value <> Date) then
       if MyQuestionMessage('Дата начала задачи будет очищена. Установить снова вы ее сможете только равной текущей дате. Продолжить?') = mrYes
-        then De_dt_beg.Value := null
-        else Cb_id_state.Value := OldState;
-    if (i < 99) and Cth.DteValueIsDate(De_dt_end) and (De_dt_end.Value <> Date) then
+        then dedt_dt_beg.Value := null
+        else cmb_id_state.Value := FOldState;
+    if (i < 99) and Cth.DteValueIsDate(dedt_dt_end) and (dedt_dt_end.Value <> Date) then
       if MyQuestionMessage('Дата сдачи задачи будет очищена. Установить снова вы ее сможете только равной текущей дате. Продолжить?') = mrYes
-        then De_dt_end.Value := null
-        else Cb_id_state.Value := OldState;
-    OldState := Cb_id_state.Value;
+        then dedt_dt_end.Value := null
+        else cmb_id_state.Value := FOldState;
+    FOldState := cmb_id_state.Value;
   end;
 end;
 
@@ -83,24 +83,24 @@ var
   i: Integer;
 begin
   inherited;
-  if (Sender = Cb_id_order) then begin
-    Cth.AddToComboBoxEh(Cb_id_order_item, [['','']]);
+  if (Sender = cmb_id_order) then begin
+    Cth.AddToComboBoxEh(cmb_id_order_item, [['','']]);
   end;
-  if Sender = Cb_id_state then begin
-    IsStateChanged := True;
-    i := S.NInt(Cb_id_state.Value);
+  if Sender = cmb_id_state then begin
+    FIsStateChanged := True;
+    i := S.NInt(cmb_id_state.Value);
     if i = 0 then
       Exit;
-    if (i > 1) and (not Cth.DteValueIsDate(De_dt_beg)) then
-      De_dt_beg.Value := Date;
-    if (i = 1) and Cth.DteValueIsDate(De_dt_beg) and (De_dt_beg.Value = Date) then
-      De_dt_beg.Value := null;
-    if (i = 99) and (not Cth.DteValueIsDate(De_dt_end)) then
-      De_dt_end.Value := Date;
-    if (i < 99) and Cth.DteValueIsDate(De_dt_end) and (De_dt_end.Value = Date) then
-      De_dt_end.Value := null;
+    if (i > 1) and (not Cth.DteValueIsDate(dedt_dt_beg)) then
+      dedt_dt_beg.Value := Date;
+    if (i = 1) and Cth.DteValueIsDate(dedt_dt_beg) and (dedt_dt_beg.Value = Date) then
+      dedt_dt_beg.Value := null;
+    if (i = 99) and (not Cth.DteValueIsDate(dedt_dt_end)) then
+      dedt_dt_end.Value := Date;
+    if (i < 99) and Cth.DteValueIsDate(dedt_dt_end) and (dedt_dt_end.Value = Date) then
+      dedt_dt_end.Value := null;
     //согласование редактирет инициатор при статусе Готово
-    SetControlsEditable([Chb_confirmed], (User.GetId = S.NInt(F.GetProp('id_user1'))) and (S.NInt(Cb_id_state.Value) = 99));
+    SetControlsEditable([chb_confirmed], (User.GetId = S.NInt(F.GetProp('id_user1'))) and (S.NInt(cmb_id_state.Value) = 99));
   end;
 end;
 
@@ -109,26 +109,26 @@ begin
   //загружаем комбобоксы
   if (Mode = fAdd) or (Mode = fCopy) or ((Mode = fEdit) and (User.GetId = S.NInt(F.GetPropB('id_user1'))))then begin
     //для инициатора
-    Q.QLoadToDBComboBoxEh('select distinct type from j_tasks where id_user1 = :id$i order by type', [User.GetId], Cb_type, cntComboE);
+    Q.QLoadToDBComboBoxEh('select distinct type from j_tasks where id_user1 = :id$i order by type', [User.GetId], cmb_type, cntComboE);
     Q.QLoadToDBComboBoxEh('select ornum || '' '' || project, id from v_orders where id > 0 and dt_end is null or id = :id_old$i order by 1',
-      [F.GetProp('id_order', fvtVBeg)], Cb_id_order, cntComboLK);
+      [F.GetProp('id_order', fvtVBeg)], cmb_id_order, cntComboLK);
     Q.QLoadToDBComboBoxEh('select slash || '' '' || itemname, id from v_order_items where id_order = :id$i and qnt > 0 and dt_end is null or id = :id_old$i order by slash',
-      [F.GetProp('id_order', fvtVBeg), F.GetProp('id_order_item', fvtVBeg)], Cb_id_order_item, cntComboLK);
+      [F.GetProp('id_order', fvtVBeg), F.GetProp('id_order_item', fvtVBeg)], cmb_id_order_item, cntComboLK);
     Q.QLoadToDBComboBoxEh('select name, id from adm_users where active = 1 and id > 0 or id = :id_old$i order by name asc',
-      [F.GetProp('id_user2', fvtVBeg)], Cb_Id_user2, cntComboLK);
+      [F.GetProp('id_user2', fvtVBeg)], cmb_Id_user2, cntComboLK);
   end
   else begin
     //для просмотра или редактирования Исполнителем
-    Q.QLoadToDBComboBoxEh('select distinct type from j_tasks order by type', [], Cb_type, cntComboE);
+    Q.QLoadToDBComboBoxEh('select distinct type from j_tasks order by type', [], cmb_type, cntComboE);
     Q.QLoadToDBComboBoxEh('select ornum || '' '' || project, id from v_orders where id = :id_old$i',
-      [F.GetProp('id_order', fvtVBeg)], Cb_id_order, cntComboLK);
+      [F.GetProp('id_order', fvtVBeg)], cmb_id_order, cntComboLK);
     Q.QLoadToDBComboBoxEh('select slash || '' '' || itemname, id from v_order_items where id = :id_old$i',
-      [F.GetProp('id_order_item', fvtVBeg)], Cb_id_order_item, cntComboLK);
+      [F.GetProp('id_order_item', fvtVBeg)], cmb_id_order_item, cntComboLK);
     Q.QLoadToDBComboBoxEh('select name, id from adm_users where id = :id_old$i',
-      [F.GetPropB('id_user2')], Cb_Id_user2, cntComboLK);
+      [F.GetPropB('id_user2')], cmb_Id_user2, cntComboLK);
   end;
   //комбобокс статуса жестко прописан
-  Cth.AddToComboBoxEh(Cb_Id_State, [
+  Cth.AddToComboBoxEh(cmb_Id_State, [
     ['новая', '1'],
     ['в работе', '2'],
     ['остановлена', '3'],
@@ -195,22 +195,22 @@ begin
     Exit;
   SetControlsEditable([], True);
   //даты и инициаора никогда не редактируем
-  SetControlsEditable([E_user1, De_dt, De_dt_beg, De_dt_end], False);
+  SetControlsEditable([edt_user1, dedt_dt, dedt_dt_beg, dedt_dt_end], False);
   //согласование редактирет инициатор при статусе Готово
-  SetControlsEditable([Chb_confirmed], (User.GetId = S.NInt(F.GetPropB('id_user1'))) and (S.NInt(F.GetPropB('id_state')) = 99));
+  SetControlsEditable([chb_confirmed], (User.GetId = S.NInt(F.GetPropB('id_user1'))) and (S.NInt(F.GetPropB('id_state')) = 99));
   if (Mode in [fCopy, fAdd, fEdit]) and not ((User.GetId = S.NNum(F.GetPropB('id_user2'))) or (User.GetId = S.NInt(F.GetPropB('id_user1')))) then begin
     //закроем поля исполнителя, если открывает не исполнитель (или не инициатор, ему все открыто!)
-    SetControlsEditable([Cb_id_state, M_comm2], False);
+    SetControlsEditable([cmb_id_state, mem_comm2], False);
   end
   else if (Mode in [fEdit]) and (User.GetId <> S.NInt(F.GetPropB('id_user1'))) then begin
     //закроем поля инициатора, если открывает не инициатор (при редактировании)
-    SetControlsEditable([Cb_type, E_name, Cb_id_user2, Cb_id_order, Cb_id_order_item, M_comm1, De_dt_planned, Chb_confirmed], False);
+    SetControlsEditable([cmb_type, edt_name, cmb_id_user2, cmb_id_order, cmb_id_order_item, mem_comm1, dedt_dt_planned, chb_confirmed], False);
   end
   else if Mode in [fDelete, fView] then
     SetControlsEditable([], False);
-  Cth.SetControlVerification(De_dt_planned, S.DateTimeToIntStr(F.GetPropB('dt')));
-  OldState := Cb_id_state.Value;
-  OldOrder := Cb_id_order.Text;
+  Cth.SetControlVerification(dedt_dt_planned, S.DateTimeToIntStr(F.GetPropB('dt')));
+  FOldState := cmb_id_state.Value;
+  FOldOrder := cmb_id_order.Text;
 end;
 
 

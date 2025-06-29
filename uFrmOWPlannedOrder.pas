@@ -30,28 +30,28 @@ uses
 
 type
   TFrmOWPlannedOrder = class(TFrmBasicDbDialog)
-    PTop: TPanel;
-    PCenter: TPanel;
-    PTopFields: TPanel;
-    Ne_num: TDBNumberEditEh;
-    De_dt: TDBDateTimeEditEh;
-    De_dt_change: TDBDateTimeEditEh;
-    E_ProjectName: TDBEditEh;
-    Chb_is_plannedorder: TDBCheckBoxEh;
-    Chb_is_preorder: TDBCheckBoxEh;
-    De_dt_start: TDBDateTimeEditEh;
-    De_dt_end: TDBDateTimeEditEh;
-    E_UserName: TDBEditEh;
-    PTopFiles: TPanel;
-    PTopComment: TPanel;
-    M_Comm: TDBMemoEh;
-    Bevel1: TBevel;
-    LbCaptionFiles: TLabel;
+    pnlTop: TPanel;
+    pnlCenter: TPanel;
+    pnlTopFields: TPanel;
+    nedt_num: TDBNumberEditEh;
+    dedt_dt: TDBDateTimeEditEh;
+    dedt_dt_change: TDBDateTimeEditEh;
+    edt_ProjectName: TDBEditEh;
+    chb_is_plannedorder: TDBCheckBoxEh;
+    chb_is_preorder: TDBCheckBoxEh;
+    dedt_dt_start: TDBDateTimeEditEh;
+    dedt_dt_end: TDBDateTimeEditEh;
+    edt_UserName: TDBEditEh;
+    pnlTopFiles: TPanel;
+    pnlTopComment: TPanel;
+    mem_Comm: TDBMemoEh;
+    bvl1: TBevel;
+    lblCaptionFiles: TLabel;
     FrgFiles: TFrDBGridEh;
-    PGrid: TPanel;
+    pnlGrid: TPanel;
     Frg1: TFrDBGridEh;
-    E_TemplateName: TDBEditEh;
-    E_FormatName: TDBEditEh;
+    edt_TemplateName: TDBEditEh;
+    edt_FormatName: TDBEditEh;
     procedure Frg1DbGridEh1Enter(Sender: TObject);
   private
     { Private declarations }
@@ -158,7 +158,7 @@ begin
   FOpt.DlgPanelStyle := dpsTopLeft;
   FOpt.RefreshParent := True;
   FOpt.StatusBarMode := stbmDialog;
-  Cth.MakePanelsFlat(PMDIClient, []);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
 
   if Mode = fAdd then begin
     if AddParam <> null then begin
@@ -176,7 +176,7 @@ begin
       F.SetProps('is_preorder;is_plannedorder', [[0, fvtDsbl]]);
     end;
     try
-      F.SetProp('num', StrtoInt(Q.QCallStoredProc('P_GetDocumNum', 'd$s;y$i;n$io;ns$i;yp$i;dg$i', ['planned_order', YearOf(Date), -1, 1, 1, 4])[2]), fvtVBeg);
+      F.SetProp('num', StrtoInt(Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io;ns$i;yp$i;dg$i', ['planned_order', YearOf(Date), -1, 1, 1, 4])[2]), fvtVBeg);
     except
     end;
     F.SetPropsControls;
@@ -193,37 +193,37 @@ begin
 
 
   if ((Mode = fAdd)and(AddParam = null))or(False) then begin
-    FreeAndNil(E_TemplateName);
-    FreeAndNil(E_FormatName);
+    FreeAndNil(edt_TemplateName);
+    FreeAndNil(edt_FormatName);
   end;
 
-  //PTopFiles.Width:=250;
-  crd := Cth.AlignControls(PTopFields, [], True);
-  PTop.Height := crd.Y;
-  crd := Cth.AlignControls(PTopComment, [], False);
-//  M_Comm.Height := M_Comm.Height - MY_FORMPRM_V_TOP;
-  M_Comm.Height := PTopComment.Height - M_Comm.Top - MY_FORMPRM_V_TOP;
-  M_Comm.Width:=PTopComment.Width - MY_FORMPRM_H_EDGES * 2;
-  M_Comm.Tag:=-100;
-  FWHBounds.X := PTopFields.Width + 300 + PTopFiles.Width;
+  //pnlTopFiles.Width:=250;
+  crd := Cth.AlignControls(pnlTopFields, [], True);
+  pnlTop.Height := crd.Y;
+  crd := Cth.AlignControls(pnlTopComment, [], False);
+//  mem_Comm.Height := mem_Comm.Height - MY_FORMPRM_V_TOP;
+  mem_Comm.Height := pnlTopComment.Height - mem_Comm.Top - MY_FORMPRM_V_TOP;
+  mem_Comm.Width:=pnlTopComment.Width - MY_FORMPRM_H_EDGES * 2;
+  mem_Comm.Tag:=-100;
+  FWHBounds.X := pnlTopFields.Width + 300 + pnlTopFiles.Width;
   FWHBounds.Y := 400;
   //настроим фрейм гида
   FrgFiles.Align:=alNone;
-  LbCaptionFiles.Top:= M_Comm.ControlLabel.Top;
-  LbCaptionFiles.Left:=MY_FORMPRM_H_EDGES;
-  FrgFiles.Top:=M_Comm.Top;
+  lblCaptionFiles.Top:= mem_Comm.ControlLabel.Top;
+  lblCaptionFiles.Left:=MY_FORMPRM_H_EDGES;
+  FrgFiles.Top:=mem_Comm.Top;
   FrgFiles.Left:=MY_FORMPRM_H_EDGES;
-  FrgFiles.Height:=M_Comm.Height;
+  FrgFiles.Height:=mem_Comm.Height;
   FrgFiles.Options:=[myogIndicatorColumn, myogColoredTitle, myogHiglightEditableCells, myogHiglightEditableColumns, myogMultiSelect{, myogIndicatorCheckBoxes}];
   FrgFiles.Opt.SetDataMode(myogdmFromArray);
   FrgFiles.Opt.SetFields([['name$s', 'Ќаименование файла', '300']]);
-//  FrgFiles.PLeft.Visible:=True;FrgFiles.PLeft.width:=26;
-//  FrgFiles.Opt.S(gotButtons, 1, [[btnAdd], [btnDelete], [btnView]], 80);//, FrgFiles.PLeft, 0, True);//, FrgFiles.PLeft, 0, True);
-//  FrgFiles.Opt.S(gotButtons, 2, [[btnAdd], [btnDelete], [btnView]], 80, FrgFiles.PLeft, 0, True);//, FrgFiles.PLeft, 0, True);
+//  FrgFiles.pnlLeft.Visible:=True;FrgFiles.pnlLeft.width:=26;
+//  FrgFiles.Opt.S(gotButtons, 1, [[mbtAdd], [mbtDelete], [mbtView]], 80);//, FrgFiles.pnlLeft, 0, True);//, FrgFiles.pnlLeft, 0, True);
+//  FrgFiles.Opt.S(gotButtons, 2, [[mbtAdd], [mbtDelete], [mbtView]], 80, FrgFiles.pnlLeft, 0, True);//, FrgFiles.pnlLeft, 0, True);
 //  FrgFiles.Opt.S(gotAllowedOperations, [alopUpdateEh]);
   //подготовим фрейм грида
   FrgFiles.Prepare;
-  FrgFiles.DbGridEh1.Left:= FrgFiles.PLeft.Width + 1;
+  FrgFiles.DbGridEh1.Left:= FrgFiles.pnlLeft.Width + 1;
   FrgFiles.DbGridEh1.FindFieldColumn('name').TextEditing := False;
   FrgFiles.DbGridEh1.Options:=FrgFiles.DbGridEh1.Options -[ dgTitles];
 
@@ -246,7 +246,7 @@ begin
 //  Frg1.OnColumnsGetCellParams := Frg1ColumnsGetCellParams;
 
   TableSetColumnsEditable;
-//  Frg1.Opt.S(gotButtons, 2, [[btnAdd], [-btnDelete], [btnView]], 4, Frg1.PLeft, 0, True);
+//  Frg1.Opt.S(gotButtons, 2, [[mbtAdd], [-mbtDelete], [mbtView]], 4, Frg1.pnlLeft, 0, True);
 
 //  Frg1.Cprop.Value:='11111';
 
@@ -305,33 +305,33 @@ begin
     Exit;
   InControlOnChange := True;
   repeat
-    if Sender = De_dt_start then begin
+    if Sender = dedt_dt_start then begin
       //начальна€ дата периода документа
       //исправл€ем на первое число введенного мес€ца, не ранее мес€ц создани€ заказа и не позднее 31-12-YY+1
-      if not S.IsDateTime(S.NSt(De_dt_start.Value)) then
+      if not S.IsDateTime(S.NSt(dedt_dt_start.Value)) then
         Break;
-      dt := Cth.GetControlValue(De_dt_start);
+      dt := Cth.GetControlValue(dedt_dt_start);
       if (dt < F.GetProp('dt')) or (YearOf(dt) > YearOf(F.GetProp('dt')) + 1) then
         dt := F.GetProp('dt');
       dt := EncodeDateTime(YearOf(dt), MonthOf(dt), 1, 0, 0, 0, 0);
-      if S.IsDateTime(S.NSt(De_dt_end.Value)) and (De_dt_end.Value < dt) then begin
-        De_dt_end.Value := EncodeDateTime(YearOf(dt), 12, 31, 0, 0, 0, 0);
+      if S.IsDateTime(S.NSt(dedt_dt_end.Value)) and (dedt_dt_end.Value < dt) then begin
+        dedt_dt_end.Value := EncodeDateTime(YearOf(dt), 12, 31, 0, 0, 0, 0);
       end;
-      De_dt_end.SetFocus;
-      De_dt_start.Value := dt;
+      dedt_dt_end.SetFocus;
+      dedt_dt_start.Value := dt;
       IsPeriodChanged := True;
     end;
-    if Sender = De_dt_end then begin
-      if not S.IsDateTime(S.NSt(De_dt_start.Value)) then
+    if Sender = dedt_dt_end then begin
+      if not S.IsDateTime(S.NSt(dedt_dt_start.Value)) then
         Break;
-      if not S.IsDateTime(S.NSt(De_dt_end.Value)) then
+      if not S.IsDateTime(S.NSt(dedt_dt_end.Value)) then
         Break;
-      dt := Cth.GetControlValue(De_dt_end);
+      dt := Cth.GetControlValue(dedt_dt_end);
       dt := EncodeDateTime(YearOf(dt), MonthOf(dt), DaysInMonth(dt), 0, 0, 0, 0);
-      if (YearOf(dt) <> YearOf(De_dt_start.Value)) or (De_dt_start.Value > dt) then
-        dt := EncodeDateTime(YearOf(De_dt_start.Value), 12, 31, 0, 0, 0, 0);
-      De_dt_start.SetFocus;
-      De_dt_end.Value := dt;
+      if (YearOf(dt) <> YearOf(dedt_dt_start.Value)) or (dedt_dt_start.Value > dt) then
+        dt := EncodeDateTime(YearOf(dedt_dt_start.Value), 12, 31, 0, 0, 0, 0);
+      dedt_dt_start.SetFocus;
+      dedt_dt_end.Value := dt;
       IsPeriodChanged := True;
     end;
   until True;
@@ -514,13 +514,13 @@ begin
   //иначе запретим ввод данных ранее начальной и позднее конечно
   if (Frg1.CurrField = 'qnt') or (Pos('qnt', Frg1.CurrField) = 0) then
     Exit;
-  if not S.IsDateTime(S.NSt(De_dt_start.Value)) or not S.IsDateTime(S.NSt(De_dt_end.Value)) then begin
+  if not S.IsDateTime(S.NSt(dedt_dt_start.Value)) or not S.IsDateTime(S.NSt(dedt_dt_end.Value)) then begin
     Params.ReadOnly := True;
     Exit;
   end;
   m := StrToInt(Copy(Frg1.CurrField, 4));
-  m1 := MonthOf(De_dt_start.Value);
-  m2 := MonthOf(De_dt_end.Value);
+  m1 := MonthOf(dedt_dt_start.Value);
+  m2 := MonthOf(dedt_dt_end.Value);
   if (m < m1) or (m > m2) then
     Params.ReadOnly := True;
 end;
@@ -558,8 +558,8 @@ var
   st: string;
 begin
   st := '';
-  if S.IsDateTime(S.NSt(De_dt_start.Value)) and S.IsDateTime(S.NSt(De_dt_end.Value)) then
-    for i:= MonthOf(De_dt_start.Value) to MonthOf(De_dt_end.Value) do
+  if S.IsDateTime(S.NSt(dedt_dt_start.Value)) and S.IsDateTime(S.NSt(dedt_dt_end.Value)) then
+    for i:= MonthOf(dedt_dt_start.Value) to MonthOf(dedt_dt_end.Value) do
       S.ConcatStP(st, 'qnt' + InttoStr(i), ';');
   Frg1.Opt.SetColFeature(st, 'e', not (Mode in [fView, fDelete]), True);
 end;
@@ -571,10 +571,10 @@ var
 begin
   Result := True;
   TableSetColumnsEditable;
-  if not S.IsDateTime(S.NSt(De_dt_start.Value)) or not S.IsDateTime(S.NSt(De_dt_end.Value)) then
+  if not S.IsDateTime(S.NSt(dedt_dt_start.Value)) or not S.IsDateTime(S.NSt(dedt_dt_end.Value)) then
     Exit;
-  m1 := MonthOf(De_dt_start.Value);
-  m2 := MonthOf(De_dt_end.Value);
+  m1 := MonthOf(dedt_dt_start.Value);
+  m2 := MonthOf(dedt_dt_end.Value);
   Result := False;
   for i := 0 to Frg1.GetCount - 1 do
     for m := 1 to 12 do

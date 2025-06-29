@@ -7,7 +7,7 @@ unit uLabelColors;
 
   –аскрасить подстроки в тексте TLabel
   если посдстрока не найдена, то раскрашена не будет
-  with Label1  do begin
+  with lbl1  do begin
     Caption:=' аждый'+'охотник'+'желает'+'знать';
     ColorsPos(' аждый', 255);
     ColorsPos('охотник', 42495);

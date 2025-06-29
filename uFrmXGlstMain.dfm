@@ -5,31 +5,31 @@ inherited FrmXGlstMain: TFrmXGlstMain
   ExplicitWidth = 605
   ExplicitHeight = 400
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 593
     Height = 346
     ExplicitWidth = 593
     ExplicitHeight = 346
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 583
       Height = 297
       ExplicitWidth = 579
       ExplicitHeight = 296
-      inherited PTop: TPanel
+      inherited pnlTop: TPanel
         Width = 583
         ExplicitWidth = 579
       end
-      inherited PBottom: TPanel
+      inherited pnlBottom: TPanel
         Top = 251
         Width = 583
         ExplicitTop = 250
         ExplicitWidth = 579
       end
-      inherited PLeft: TPanel
+      inherited pnlLeft: TPanel
         Height = 242
         ExplicitHeight = 241
       end
-      inherited PGrid1: TPanel
+      inherited pnlGrid1: TPanel
         Width = 573
         Height = 242
         ExplicitWidth = 569
@@ -39,7 +39,7 @@ inherited FrmXGlstMain: TFrmXGlstMain
           Height = 240
           ExplicitWidth = 567
           ExplicitHeight = 239
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             Width = 561
             Height = 186
             ExplicitWidth = 557
@@ -48,26 +48,26 @@ inherited FrmXGlstMain: TFrmXGlstMain
               Width = 559
               Height = 163
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               Top = 164
               Width = 559
               ExplicitTop = 163
               ExplicitWidth = 555
             end
           end
-          inherited PLeft: TPanel
+          inherited pnlLeft: TPanel
             Height = 186
             ExplicitHeight = 185
           end
-          inherited PTop: TPanel
+          inherited pnlTop: TPanel
             Width = 571
             ExplicitWidth = 567
           end
-          inherited PContainer: TPanel
+          inherited pnlContainer: TPanel
             Width = 571
             ExplicitWidth = 567
           end
-          inherited PBottom: TPanel
+          inherited pnlBottom: TPanel
             Top = 240
             Width = 571
             ExplicitTop = 239
@@ -89,7 +89,7 @@ inherited FrmXGlstMain: TFrmXGlstMain
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         Top = 256
         Width = 583
         ExplicitTop = 255
@@ -97,26 +97,26 @@ inherited FrmXGlstMain: TFrmXGlstMain
         inherited Frg2: TFrDBGridEh
           Width = 581
           ExplicitWidth = 577
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             Width = 571
             ExplicitWidth = 567
             inherited DbGridEh1: TDBGridEh
               Width = 569
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               Width = 569
               ExplicitWidth = 565
             end
           end
-          inherited PTop: TPanel
+          inherited pnlTop: TPanel
             Width = 581
             ExplicitWidth = 577
           end
-          inherited PContainer: TPanel
+          inherited pnlContainer: TPanel
             Width = 581
             ExplicitWidth = 577
           end
-          inherited PBottom: TPanel
+          inherited pnlBottom: TPanel
             Width = 581
             ExplicitWidth = 577
           end
@@ -136,59 +136,59 @@ inherited FrmXGlstMain: TFrmXGlstMain
           end
         end
       end
-      inherited PRight: TPanel
+      inherited pnlRight: TPanel
         Left = 578
         Height = 242
         ExplicitLeft = 574
         ExplicitHeight = 241
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 302
       Width = 583
       ExplicitTop = 301
       ExplicitWidth = 579
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 581
         ExplicitWidth = 788
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 581
         ExplicitWidth = 788
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 581
         ExplicitWidth = 577
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 482
           ExplicitLeft = 478
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 254
           ExplicitLeft = 250
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 383
           ExplicitLeft = 379
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 114
           ExplicitWidth = 110
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 346
     Width = 593
     ExplicitTop = 345
     ExplicitWidth = 589
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 501
       Height = 14
       ExplicitLeft = 501
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

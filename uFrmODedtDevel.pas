@@ -11,18 +11,18 @@ uses
 
 type
   TFrmODedtDevel = class(TFrmBasicDbDialog)
-    M_Comm: TDBMemoEh;
-    Ne_Time: TDBNumberEditEh;
-    Ne_Cnt: TDBNumberEditEh;
-    Cb_Id_Kns: TDBComboBoxEh;
-    Cb_Id_Status: TDBComboBoxEh;
-    De_Dt_End: TDBDateTimeEditEh;
-    De_Dt_Plan: TDBDateTimeEditEh;
-    De_Dt_Beg: TDBDateTimeEditEh;
-    Cb_Name: TDBComboBoxEh;
-    Cb_Project: TDBComboBoxEh;
-    Cb_Slash: TDBComboBoxEh;
-    Cb_Id_DevelType: TDBComboBoxEh;
+    mem_Comm: TDBMemoEh;
+    nedt_Time: TDBNumberEditEh;
+    nedt_Cnt: TDBNumberEditEh;
+    cmb_Id_Kns: TDBComboBoxEh;
+    cmb_Id_Status: TDBComboBoxEh;
+    dedt_Dt_End: TDBDateTimeEditEh;
+    dedt_Dt_Plan: TDBDateTimeEditEh;
+    dedt_Dt_Beg: TDBDateTimeEditEh;
+    cmb_Name: TDBComboBoxEh;
+    cmb_Project: TDBComboBoxEh;
+    cmb_Slash: TDBComboBoxEh;
+    cmb_Id_DevelType: TDBComboBoxEh;
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -40,13 +40,13 @@ implementation
 function TFrmODedtDevel.LoadComboBoxes: Boolean;
 begin
   //загружаем комбобоксы
-  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes order by name', [], Cb_Id_DevelType, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select distinct project from j_development order by project', [], Cb_Project, cntComboE);
-  Q.QLoadToDBComboBoxEh('select distinct name from j_development order by name', [], Cb_Name, cntComboE);
-  Q.QLoadToDBComboBoxEh('select slash from v_order_items where id_order > 0 and qnt > 0 and dt_end is null order by slash', [], Cb_Slash, cntComboE);
-  Cb_Slash.MaxLength:=25;
+  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes order by name', [], cmb_Id_DevelType, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select distinct project from j_development order by project', [], cmb_Project, cntComboE);
+  Q.QLoadToDBComboBoxEh('select distinct name from j_development order by name', [], cmb_Name, cntComboE);
+  Q.QLoadToDBComboBoxEh('select slash from v_order_items where id_order > 0 and qnt > 0 and dt_end is null order by slash', [], cmb_Slash, cntComboE);
+  cmb_Slash.MaxLength:=25;
   //комбобокс статуса жестко прописан
-  Cth.AddToComboBoxEh(Cb_Id_Status, [
+  Cth.AddToComboBoxEh(cmb_Id_Status, [
     ['новый', '1'],
     ['в работе', '2'],
     ['остановлен', '3'],
@@ -58,7 +58,7 @@ begin
   Q.QLoadToDBComboBoxEh(
     'select name, id from adm_users where (job = :id_job$i and active = 1) or id = :id_old$i order by name asc',
     [myjobKNS, F.GetPropB('id_kns')],
-    Cb_Id_Kns,
+    cmb_Id_Kns,
     cntComboLK
   );
   Result:=True;
@@ -97,10 +97,10 @@ begin
   FWHBounds.X := 610;
   FWHBounds.Y := 400;
   Result:=inherited;
-  SetControlsEditable([De_Dt_Beg], False);
-  SetControlsEditable([De_Dt_End], (Cb_Id_Status.Value = '100')and(Mode in [fCopy, fEdit, fAdd]));
+  SetControlsEditable([dedt_Dt_Beg], False);
+  SetControlsEditable([dedt_Dt_End], (cmb_Id_Status.Value = '100')and(Mode in [fCopy, fEdit, fAdd]));
   if F.GetPropB('id_status') = 100 then
-    Cth.SetControlVerification(De_dt_end, '1');
+    Cth.SetControlVerification(dedt_dt_end, '1');
 end;
 
 procedure TFrmODedtDevel.ControlOnChange(Sender: TObject);
@@ -109,18 +109,18 @@ begin
   //выход если в процедуре загрузки
   if FInPrepare then
     Exit;
-  if Sender = Cb_Id_Status then
-    if Cb_Id_Status.Value = '100' then begin
-      Cth.SetControlsVerification([De_Dt_End], ['1']);
-      Cth.SetControlValue(De_Dt_End, Date);
-      SetControlsEditable([De_Dt_End], True);
-      Verify(De_Dt_End);
+  if Sender = cmb_Id_Status then
+    if cmb_Id_Status.Value = '100' then begin
+      Cth.SetControlsVerification([dedt_Dt_End], ['1']);
+      Cth.SetControlValue(dedt_Dt_End, Date);
+      SetControlsEditable([dedt_Dt_End], True);
+      Verify(dedt_Dt_End);
     end
     else begin
-      Cth.SetControlsVerification([De_Dt_End], ['']);
-      Cth.SetControlValue(De_Dt_End, null);
-      SetControlsEditable([De_Dt_End], False);
-      Verify(De_Dt_End);
+      Cth.SetControlsVerification([dedt_Dt_End], ['']);
+      Cth.SetControlValue(dedt_Dt_End, null);
+      SetControlsEditable([dedt_Dt_End], False);
+      Verify(dedt_Dt_End);
     end;
   inherited;
 end;

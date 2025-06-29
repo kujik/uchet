@@ -15,7 +15,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
   Position = poMainFormCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object Panel1: TPanel
+  object pnl1: TPanel
     Left = 0
     Top = 386
     Width = 898
@@ -27,7 +27,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
     DesignSize = (
       898
       35)
-    object Lb_Warning: TLabel
+    object lbl_Warning: TLabel
       Left = 4
       Top = 12
       Width = 499
@@ -67,22 +67,22 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
       ExplicitLeft = 783
     end
   end
-  object Pg_1: TPageControl
+  object pgc_1: TPageControl
     Left = 0
     Top = 0
     Width = 898
     Height = 386
-    ActivePage = Ts_Workers
+    ActivePage = ts_Workers
     Align = alClient
     TabOrder = 1
     ExplicitWidth = 862
-    object Ts_SN: TTabSheet
+    object ts_SN: TTabSheet
       Caption = #1055#1083#1072#1090#1077#1078#1085#1099#1081' '#1082#1072#1083#1077#1085#1076#1072#1088#1100
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 854
       ExplicitHeight = 0
-      object Ne_Sum_AutoAgreed: TDBNumberEditEh
+      object nedt_Sum_AutoAgreed: TDBNumberEditEh
         Left = 3
         Top = 22
         Width = 121
@@ -100,7 +100,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 0
         Visible = True
       end
-      object Ne_Sum_Need_Req: TDBNumberEditEh
+      object nedt_Sum_Need_Req: TDBNumberEditEh
         Left = 3
         Top = 61
         Width = 121
@@ -118,7 +118,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 1
         Visible = True
       end
-      object Ne_Transport_MaxIdle: TDBNumberEditEh
+      object nedt_Transport_MaxIdle: TDBNumberEditEh
         Left = 3
         Top = 100
         Width = 121
@@ -135,14 +135,14 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         Visible = True
       end
     end
-    object Ts_Workers: TTabSheet
+    object ts_Workers: TTabSheet
       Caption = #1056#1072#1073#1086#1090#1085#1080#1082#1080
       ImageIndex = 1
       ExplicitLeft = 0
       ExplicitTop = 28
       ExplicitWidth = 854
       ExplicitHeight = 0
-      object Ne_W_Time_AutoAggreed: TDBNumberEditEh
+      object nedt_W_Time_AutoAggreed: TDBNumberEditEh
         Left = 9
         Top = 25
         Width = 121
@@ -160,7 +160,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 0
         Visible = True
       end
-      object Ne_W_Time_Dinne_1: TDBNumberEditEh
+      object nedt_W_Time_Dinne_1: TDBNumberEditEh
         Left = 9
         Top = 64
         Width = 121
@@ -176,7 +176,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 1
         Visible = True
       end
-      object Ne_W_Time_Dinner_2: TDBNumberEditEh
+      object nedt_W_Time_Dinner_2: TDBNumberEditEh
         Left = 9
         Top = 100
         Width = 121
@@ -192,7 +192,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 2
         Visible = True
       end
-      object Ne_W_Time_Beg_Diff_2: TDBNumberEditEh
+      object nedt_W_Time_Beg_Diff_2: TDBNumberEditEh
         Left = 9
         Top = 172
         Width = 121
@@ -211,7 +211,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
         TabOrder = 3
         Visible = True
       end
-      object De_W_Time_Beg_2: TDBDateTimeEditEh
+      object dedt_W_Time_Beg_2: TDBDateTimeEditEh
         Left = 9
         Top = 135
         Width = 119

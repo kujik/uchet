@@ -2,9 +2,9 @@ inherited FrmOGrepSgp: TFrmOGrepSgp
   Caption = 'FrmOGrepSgp'
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
-      inherited PGrid1: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
+      inherited pnlGrid1: TPanel
         inherited Frg1: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -21,7 +21,7 @@ inherited FrmOGrepSgp: TFrmOGrepSgp
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -40,11 +40,11 @@ inherited FrmOGrepSgp: TFrmOGrepSgp
       end
     end
   end
-  inherited PStatusBar: TPanel
-    inherited LbStatusBarRight: TLabel
+  inherited pnlStatusBar: TPanel
+    inherited lblStatusBarR: TLabel
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

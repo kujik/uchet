@@ -19,7 +19,7 @@ inherited Dlg_OrderPrintLabels: TDlg_OrderPrintLabels
     RowDetailPanel.Height = 250
     TabOrder = 0
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -32,7 +32,7 @@ inherited Dlg_OrderPrintLabels: TDlg_OrderPrintLabels
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end

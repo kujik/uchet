@@ -12,37 +12,37 @@ uses
 
 type
   TDlg_Vacancy = class(TForm_MDI)
-    P_Top: TPanel;
-    P_Grid: TPanel;
-    P_Bottom: TPanel;
-    P_Buttons: TPanel;
-    Cb_Division: TDBComboBoxEh;
-    Cb_Job: TDBComboBoxEh;
-    Cb_Head: TDBComboBoxEh;
-    De_Dt: TDBDateTimeEditEh;
-    Cb_Status: TDBComboBoxEh;
-    Ne_Qnt: TDBNumberEditEh;
-    Ne_QntOpen: TDBNumberEditEh;
+    pnl_Top: TPanel;
+    pnl_Grid: TPanel;
+    pnl_Bottom: TPanel;
+    pnl_Buttons: TPanel;
+    cmb_Division: TDBComboBoxEh;
+    cmb_Job: TDBComboBoxEh;
+    cmb_Head: TDBComboBoxEh;
+    dedt_Dt: TDBDateTimeEditEh;
+    cmb_Status: TDBComboBoxEh;
+    nedt_Qnt: TDBNumberEditEh;
+    nedt_QntOpen: TDBNumberEditEh;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     DataSource1: TDataSource;
     MemTableEh1: TMemTableEh;
-    De_DtEnd: TDBDateTimeEditEh;
-    Cb_Reason: TDBComboBoxEh;
+    dedt_DtEnd: TDBDateTimeEditEh;
+    cmb_Reason: TDBComboBoxEh;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
-    M_Comm: TMemo;
-    Lb_comm: TLabel;
+    mem_Comm: TMemo;
+    lbl_comm: TLabel;
     Img_Info: TImage;
-    Chb_Close: TCheckBox;
+    chb_Close: TCheckBox;
     Bt_Refresh: TBitBtn;
     Bt_Add: TBitBtn;
     Bt_Edit: TBitBtn;
-    Lb_Candidates: TLabel;
+    lbl_Candidates: TLabel;
     procedure ControlOnChange(Sender: TObject);
     procedure ControlOnExit(Sender: TObject);
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean);
-    procedure Chb_CloseClick(Sender: TObject);
+    procedure chb_CloseClick(Sender: TObject);
     procedure Bt_CancelClick(Sender: TObject);
     procedure Bt_OkClick(Sender: TObject);
     procedure Bt_RefreshClick(Sender: TObject);
@@ -97,41 +97,41 @@ begin
   if FormDbLock = fNone then Exit;
 
   aControls:=[
-    Cb_Division,
-    Cb_Job,
-    Cb_Head,
-    De_Dt,
-    Cb_Status,
-    Ne_Qnt,
-    Ne_QntOpen,
+    cmb_Division,
+    cmb_Job,
+    cmb_Head,
+    dedt_Dt,
+    cmb_Status,
+    nedt_Qnt,
+    nedt_QntOpen,
 
-    De_DtEnd,
-    Cb_Reason,
-    M_Comm,
-    Chb_Close
+    dedt_DtEnd,
+    cmb_Reason,
+    mem_Comm,
+    chb_Close
   ];
 
 
-  Cb_Status.Items.Add('Плановая');
-  Cb_Status.KeyItems.Add('0');
-  Cb_Status.Items.Add('Срочная');
-  Cb_Status.KeyItems.Add('1');
-  Cb_Status.Items.Add('Резерв');
-  Cb_Status.KeyItems.Add('2');
+  cmb_Status.Items.Add('Плановая');
+  cmb_Status.KeyItems.Add('0');
+  cmb_Status.Items.Add('Срочная');
+  cmb_Status.KeyItems.Add('1');
+  cmb_Status.Items.Add('Резерв');
+  cmb_Status.KeyItems.Add('2');
 
-  Cb_Reason.Items.Add('Вакансия закрыта');
-  Cb_Reason.KeyItems.Add('1');
-  Cb_Reason.Items.Add('Решение руководителя');
-  Cb_Reason.KeyItems.Add('2');
+  cmb_Reason.Items.Add('Вакансия закрыта');
+  cmb_Reason.KeyItems.Add('1');
+  cmb_Reason.Items.Add('Решение руководителя');
+  cmb_Reason.KeyItems.Add('2');
 
   //подразделения
-  Q.QLoadToDBComboBoxEh('select name, id from ref_divisions order by name', [], Cb_Division, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_divisions order by name', [], cmb_Division, cntComboLK);
   //профессии
-  Q.QLoadToDBComboBoxEh('select name, id from ref_jobs order by name',[], Cb_Job, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_jobs order by name',[], cmb_Job, cntComboLK);
   //работники
   Q.QLoadToDBComboBoxEh(
     'select workername, max(id_worker) from v_j_worker_status where status <> 3 or id_worker = (select id_head from v_j_vacancy where id = :id$i) group by workername order by workername',
-    [ID], Cb_Head, cntComboLK);
+    [ID], cmb_Head, cntComboLK);
   //получим данные из основной таблицы
   FieldNames:='id$i;id_division$i;id_job$i;id_head$i;dt_beg$d;status$i;qnt$i;qntopen$i;dt_end$d;reason$i;comm$s';
 //  FieldNamesCp:='id$i;f$s;i$s;o$s;dt_birth$d;phone$s';
@@ -216,9 +216,9 @@ begin
   Verify(nil);
 
   if Mode = fAdd then begin
-    P_Grid.Visible:=False;
-    P_Bottom.Visible:=False;
-    Self.ClientHeight:=P_Buttons.Top + P_Buttons.Height;
+    pnl_Grid.Visible:=False;
+    pnl_Bottom.Visible:=False;
+    Self.ClientHeight:=pnl_Buttons.Top + pnl_Buttons.Height;
 //    Self.Height:=Self.ClientHeight + 15;
   end;
 
@@ -233,21 +233,21 @@ procedure TDlg_Vacancy.SetControlsVer;
 begin
   Cth.SetControlsVerification(
     [
-      Cb_Division,
-      Cb_Job,
-      Cb_Head,
-      De_Dt,
-      Cb_Status,
-      Ne_Qnt,
-      De_DtEnd,
-      Cb_Reason
+      cmb_Division,
+      cmb_Job,
+      cmb_Head,
+      dedt_Dt,
+      cmb_Status,
+      nedt_Qnt,
+      dedt_DtEnd,
+      cmb_Reason
     ],
     ['1:400','1:400','0:400',
      '1',
      '1:400',
      '1:200:0',
-     S.IIFStr(Chb_Close.Checked, '1', ''),
-     S.IIFStr(Chb_Close.Checked, '1:400', '0:400:0:n')
+     S.IIFStr(chb_Close.Checked, '1', ''),
+     S.IIFStr(chb_Close.Checked, '1:400', '0:400:0:n')
     ]
   );
 end;
@@ -261,20 +261,20 @@ var
   c: TVarDynArray;
   b: Boolean;
 begin
-  b:=not Chb_Close.Checked and not (Mode in [fView, fDelete]);
+  b:=not chb_Close.Checked and not (Mode in [fView, fDelete]);
   Cth.DlgSetControlsEnabled(Self, Mode, [], []);
-  Cb_Division.Enabled:=b;
-  Cb_Job.Enabled:=b;
-  Cb_Head.Enabled:=b;
-  Cb_Status.Enabled:=b;
-  De_Dt.Enabled:=b;
-  Ne_Qnt.Enabled:=b;
-  Ne_QntOpen.Enabled:=False;
+  cmb_Division.Enabled:=b;
+  cmb_Job.Enabled:=b;
+  cmb_Head.Enabled:=b;
+  cmb_Status.Enabled:=b;
+  dedt_Dt.Enabled:=b;
+  nedt_Qnt.Enabled:=b;
+  nedt_QntOpen.Enabled:=False;
   Bt_Add.Enabled:=b;
   Bt_Edit.Enabled:=b;
   //дата и статус закрытия видны только при установке галки
-  De_DtEnd.Visible:=Chb_Close.Checked;
-  Cb_Reason.Visible:=Chb_Close.Checked;
+  dedt_DtEnd.Visible:=chb_Close.Checked;
+  cmb_Reason.Visible:=chb_Close.Checked;
 end;
 
 
@@ -290,7 +290,7 @@ begin
       Bt_Ok.enabled := Ok;
       Exit;
     end;
-//  Cth.VerifyControl(Cb_Status, False);
+//  Cth.VerifyControl(cmb_Status, False);
   if Sender = nil
     //проверим все DbEh
     then Cth.VerifyAllDbEhControls(Self)
@@ -334,20 +334,20 @@ begin
 end;
 
 
-procedure TDlg_Vacancy.Chb_CloseClick(Sender: TObject);
+procedure TDlg_Vacancy.chb_CloseClick(Sender: TObject);
 //клик на чекбоксе Вакансия снята
 begin
   inherited;
   if InClose or InPrepare then Exit;
   InClose:=True;
   //если поставили галку, проверим все ли введено в режиме БЕЗ галки, и если не все то снимем
-  if (Chb_Close.Checked) then begin
-    Chb_Close.Checked:=False;
+  if (chb_Close.Checked) then begin
+    chb_Close.Checked:=False;
     SetControlsVer;
     if (not Ok) then begin
       MyWarningMessage('Не все данные по вакансии введены!');
     end
-    else Chb_Close.Checked:=True;
+    else chb_Close.Checked:=True;
   end;
   SetControlsVer;
   SetControlsEnabled;
@@ -367,21 +367,21 @@ var
   v: Variant;
 begin
   if (Mode = fView) then begin Close; Exit; end;
-//v:=Cth.GetControlValue(Cb_Status);
+//v:=Cth.GetControlValue(cmb_Status);
   b:= Q.QIUD(Q.QFModeToIUD(Mode),
     'j_vacancy', 'sq_j_vacancy',
     'id$i;id_division$i;id_job$i;id_head$i;dt_beg$d;status$i;qnt$i;dt_end$d;reason$i;comm$s',
     VarArrayOf([
       ID,
-      Cth.GetControlValue(Cb_Division),
-      Cth.GetControlValue(Cb_Job),
-      Cth.GetControlValue(Cb_Head),
-      Cth.GetControlValue(De_Dt),
-      Cth.GetControlValue(Cb_Status),
-      Cth.GetControlValue(Ne_Qnt),
-      S.IIfV(Chb_Close.Checked, Cth.GetControlValue(De_DtEnd), null),
-      S.IIfV(Chb_Close.Checked, Cth.GetControlValue(Cb_Reason), null),
-      M_Comm.Text
+      Cth.GetControlValue(cmb_Division),
+      Cth.GetControlValue(cmb_Job),
+      Cth.GetControlValue(cmb_Head),
+      Cth.GetControlValue(dedt_Dt),
+      Cth.GetControlValue(cmb_Status),
+      Cth.GetControlValue(nedt_Qnt),
+      S.IIfV(chb_Close.Checked, Cth.GetControlValue(dedt_DtEnd), null),
+      S.IIfV(chb_Close.Checked, Cth.GetControlValue(cmb_Reason), null),
+      mem_Comm.Text
     ])
   );
   if b = -1 then Exit;
@@ -430,7 +430,7 @@ begin
   Q.QLoadToMemTableEh('select id, name, dt, statusfull from v_j_candidates where id_vacancy = :id$i order by dt', [ID], MemTableEh1);
   MemTableEh1.First;
   if ID>0 then
-    Cth.SetControlValue(Ne_QntOpen, Q.QSelectOneRow('select qntopen from v_j_vacancy where id = :id$i', [ID])[0]);
+    Cth.SetControlValue(nedt_QntOpen, Q.QSelectOneRow('select qntopen from v_j_vacancy where id = :id$i', [ID])[0]);
 end;
 
 procedure TDlg_Vacancy.Bt_AddClick(Sender: TObject);

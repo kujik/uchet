@@ -13,7 +13,7 @@ object FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart
   Font.Style = []
   Position = poDesktopCenter
   TextHeight = 13
-  object Image1: TImage
+  object imgError: TImage
     Left = 8
     Top = 8
     Width = 64
@@ -172,7 +172,7 @@ object FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart
       339EA1BD26D7EC04DE8CB5ED93D05F99D2B5FBF5D8FE0764F753CAED71292300
       00000049454E44AE426082}
   end
-  object Label1: TLabel
+  object lblText: TLabel
     Left = 88
     Top = 8
     Width = 355
@@ -185,7 +185,7 @@ object FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart
     Font.Style = []
     ParentFont = False
   end
-  object Lb_Message: TLabel
+  object lblMessage: TLabel
     Left = 88
     Top = 33
     Width = 338
@@ -195,7 +195,7 @@ object FrmXWNoConnectionAfterStart: TFrmXWNoConnectionAfterStart
       #1088#1086#1074#1077#1088#1100#1090#1077' '#1087#1086#1076#1082#1083#1102#1095#1077#1085#1080#1077'.'
     WordWrap = True
   end
-  object BitBtn2: TBitBtn
+  object btnOk: TBitBtn
     Left = 120
     Top = 76
     Width = 210

@@ -11,9 +11,9 @@ uses
 
 type
   TFrmXDedtMemo = class(TFrmBasicMdi)
-    PCaption: TPanel;
-    LbCaption: TLabel;
-    MMain: TDBMemoEh;
+    pnlCaption: TPanel;
+    lblCaption: TLabel;
+    memMain: TDBMemoEh;
   private
   public
     function ShowDialog(AOwner: TObject; AFormDoc, AFormCaption, ATitle: string; var Text: string): Boolean;
@@ -29,12 +29,12 @@ implementation
 function TFrmXDedtMemo.ShowDialog(AOwner: TObject; AFormDoc, AFormCaption, ATitle: string; var Text: string): Boolean;
 begin
   PrepareCreatedForm(AOwner, Self.Name + '_' + AFormDoc, '~' + AFormCaption, fEdit, null, [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
-  MMain.Text := Text;
-  LbCaption.Caption := ATitle;
+  memMain.Text := Text;
+  lblCaption.Caption := ATitle;
   Result := ShowModal = mrOk;
   if not Result then
     Exit;
-  Text := MMain.Text;
+  Text := memMain.Text;
 end;
 
 end.

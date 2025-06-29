@@ -11,11 +11,11 @@ uses
 type
   TDlg_Rep_Smeta = class(TForm_Normal)
     Bt_Go: TBitBtn;
-    Lb_AddOrders: TLabel;
+    lbl_AddOrders: TLabel;
     Bt_AddOrders: TBitBtn;
     Memo1: TMemo;
     Bt_Stop: TBitBtn;
-    Lb_Progress: TLabel;
+    lbl_Progress: TLabel;
     procedure FormActivate(Sender: TObject);
     procedure Bt_AddOrdersClick(Sender: TObject);
     procedure Bt_GoClick(Sender: TObject);
@@ -90,7 +90,7 @@ end;
 
 procedure TDlg_Rep_Smeta.SetLb_AddOrders;
 begin
-  Lb_AddOrders.Caption:=S.IIFStr(OrCnt = 0,
+  lbl_AddOrders.Caption:=S.IIFStr(OrCnt = 0,
     'Заказы не выбраны!',
     IntToStr(OrCnt) +
 //    ' дополнительн' + S.GetEnding(OrCnt,'ый','ых','ых') +
@@ -122,7 +122,7 @@ const
 begin
   Stop:=False;
   Memo1.Lines.Clear;
-  Lb_Progress.Caption:='';
+  lbl_Progress.Caption:='';
   a1:=[[]];
   SetLength(a1, 50000);
   for i:= 0 to High(Orders) do begin
@@ -158,11 +158,11 @@ begin
       Memo1.Lines.Add(Orders[i, 2] + ':  ' + Err);
     end;
     Application.ProcessMessages;
-    Lb_Progress.Caption:='обработано:  ' + IntToStr(i+1) + ' из ' + IntToStr(Length(Orders));
+    lbl_Progress.Caption:='обработано:  ' + IntToStr(i+1) + ' из ' + IntToStr(Length(Orders));
   end;
-  Lb_Progress.Caption:='Подготовка отчета';
+  lbl_Progress.Caption:='Подготовка отчета';
   ExportToXlsxA7;
-  Lb_Progress.Caption:='Завершено';
+  lbl_Progress.Caption:='Завершено';
 end;
 
 procedure TDlg_Rep_Smeta.ExportToXlsxA7;
@@ -460,7 +460,7 @@ begin
   Cth.SetBtn(Bt_Go, mybtGo, False, 'Старт');
   Cth.SetBtn(Bt_Stop, mybtCancel, False, 'Стоп');
   SetLb_AddOrders;
-  Lb_Progress.Caption:='';
+  lbl_Progress.Caption:='';
   Excel:=null;
   ExcelExecute:= False;
 end;

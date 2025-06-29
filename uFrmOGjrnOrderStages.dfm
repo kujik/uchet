@@ -3,18 +3,18 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
   ExplicitWidth = 812
   ExplicitHeight = 575
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
       ExplicitWidth = 786
-      inherited PGrid1: TPanel
+      inherited pnlGrid1: TPanel
         ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
           ExplicitWidth = 774
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               OnKeyDown = Frg1DbGridEh1KeyDown
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               ExplicitTop = 338
             end
           end
@@ -34,7 +34,7 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 784
@@ -56,11 +56,11 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
       end
     end
   end
-  inherited PStatusBar: TPanel
-    inherited LbStatusBarRight: TLabel
+  inherited pnlStatusBar: TPanel
+    inherited lblStatusBarR: TLabel
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

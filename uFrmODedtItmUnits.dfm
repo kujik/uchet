@@ -5,17 +5,17 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
   ExplicitWidth = 301
   ExplicitHeight = 222
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 289
     Height = 168
     ExplicitWidth = 848
     ExplicitHeight = 400
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 279
       Height = 119
       ExplicitWidth = 838
       ExplicitHeight = 351
-      object Cb_Id_MeasureGroup: TDBComboBoxEh
+      object cmb_Id_MeasureGroup: TDBComboBoxEh
         Left = 84
         Top = 8
         Width = 195
@@ -30,7 +30,7 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
         TabOrder = 0
         Visible = True
       end
-      object E_Name_Unit: TDBEditEh
+      object edt_Name_Unit: TDBEditEh
         Left = 85
         Top = 35
         Width = 195
@@ -44,10 +44,10 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
         EditButtons = <>
         MaxLength = 400
         TabOrder = 1
-        Text = 'E_Name_Unit'
+        Text = 'edt_Name_Unit'
         Visible = True
       end
-      object Ne_Full_Name: TDBEditEh
+      object nedt_Full_Name: TDBEditEh
         Left = 84
         Top = 62
         Width = 195
@@ -61,10 +61,10 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
         EditButtons = <>
         MaxLength = 400
         TabOrder = 2
-        Text = 'E_Name'
+        Text = 'edt_name'
         Visible = True
       end
-      object Ne_Pression: TDBNumberEditEh
+      object nedt_Pression: TDBNumberEditEh
         Left = 84
         Top = 89
         Width = 104
@@ -84,53 +84,53 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 124
       Width = 279
       ExplicitTop = 356
       ExplicitWidth = 838
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 277
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 277
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 277
         ExplicitWidth = 836
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 178
           ExplicitLeft = 737
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = -50
           ExplicitLeft = 509
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 79
           ExplicitLeft = 638
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 39
           ExplicitWidth = 369
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 168
     Width = 289
     ExplicitTop = 400
     ExplicitWidth = 848
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 197
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Top = 136
   end
 end

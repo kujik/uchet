@@ -43,14 +43,14 @@ uses
 
 type
   TFrmXDedtGridFilter = class(TFrmBasicMdi)
-    De1: TDBDateTimeEditEh;
-    De2: TDBDateTimeEditEh;
-    NeDays: TDBNumberEditEh;
-    Bevel1: TBevel;
-    CbField: TDBComboBoxEh;
-    CbPeriod: TDBCheckBoxEh;
-    CbDays: TDBCheckBoxEh;
-    PmPeriod: TPopupMenu;
+    dedt1: TDBDateTimeEditEh;
+    dedt2: TDBDateTimeEditEh;
+    nedtDays: TDBNumberEditEh;
+    bvl1: TBevel;
+    cmbField: TDBComboBoxEh;
+    cmbPeriod: TDBCheckBoxEh;
+    cmbDays: TDBCheckBoxEh;
+    pmPeriod: TPopupMenu;
   private
     //грид - родитель
     FrDbGrid: TFrDBGridEh;
@@ -61,7 +61,7 @@ type
     FHasDate, FHasChb: Boolean;
     procedure SetControls;
     procedure PmPeriodClick(Sender: TObject);
-    procedure BtOkClick(Sender: TObject); override;
+    procedure btnOkClick(Sender: TObject); override;
     procedure ControlOnChange(Sender: TObject); override;
     function  Prepare: Boolean; override;
   public
@@ -123,12 +123,12 @@ var
   dt1, dt2: TDateTime;
   st1, st2: string;
 begin
-  v1 := GetCth(Frg, 'NeDays');
-  v2 := GetCth(Frg, 'De1');
-  v3 := GetCth(Frg, 'De2');
-  v4 := GetCth(Frg, 'CbPeriod');
-  v5 := GetCth(Frg, 'CbDays');
-  v6 := GetCth(Frg, 'CbField');
+  v1 := GetCth(Frg, 'nedtDays');
+  v2 := GetCth(Frg, 'dedt1');
+  v3 := GetCth(Frg, 'dedt2');
+  v4 := GetCth(Frg, 'cmbPeriod');
+  v5 := GetCth(Frg, 'cmbDays');
+  v6 := GetCth(Frg, 'cmbField');
   Result := '';
   if S.Nst(v6) = '' then
     Exit;
@@ -188,14 +188,14 @@ begin
 end;
 
 
-procedure TFrmXDedtGridFilter.BtOkClick(Sender: TObject);
+procedure TFrmXDedtGridFilter.btnOkClick(Sender: TObject);
 var
   st: string;
   b: Boolean;
 begin
   inherited;
   //сохраним значения контролов формы как результат фильра дляфрейма (строка - сериализованный массив имен/наченийй контролов)
-  FrDbGrid.Opt.FilterResult := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, PMDIClient, [], []));
+  FrDbGrid.Opt.FilterResult := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, pnlFrmClient, [], []));
   b := GetChb(FrDbGrid, 'prod');
   b := GetChb(FrDbGrid, 'pro');
   b := GetChb(FrDbGrid, 1);
@@ -209,8 +209,8 @@ var
   dt1, dt2 : TDateTime;
 begin
   S.GetDatePeriod(TComponent(Sender).Tag, Date, dt1, dt2);
-  De1.Value := dt1;
-  De2.Value := dt2;
+  dedt1.Value := dt1;
+  dedt2.Value := dt2;
 end;
 
 procedure TFrmXDedtGridFilter.ControlOnChange(Sender: TObject);
@@ -226,22 +226,22 @@ begin
   n := TControl(Sender).Name;
   v := Cth.GetControlValue(Sender);
   //для имени столбца, если оно пустое - выбираем первое
-  if (n = 'CbField')and(v = null) then
-    CbField.ItemIndex := 0
+  if (n = 'cmbField')and(v = null) then
+    cmbField.ItemIndex := 0
   //если это чекбокс За последние, дней, или поле ввода количества дней -
   //снимем галку За период, поставим За последние
-  else if (n = 'CbDays')or(n = 'NeDays') then begin
-    if CbPeriod.Checked then
-      CbPeriod.Checked := False;
-    if (n <> 'CbDays') and not CbDays.Checked then
-      CbDays.Checked := True;
+  else if (n = 'cmbDays')or(n = 'nedtDays') then begin
+    if cmbPeriod.Checked then
+      cmbPeriod.Checked := False;
+    if (n <> 'cmbDays') and not cmbDays.Checked then
+      cmbDays.Checked := True;
   end
   //с периодом дат - аналогично
-  else if (n = 'CbPeriod')or(n = 'De1')or(n = 'De2') then begin
-    if (n <> 'CbPeriod') and not CbPeriod.Checked then
-      CbPeriod.Checked := True;
-    if CbDays.Checked then
-      CbDays.Checked := False;
+  else if (n = 'cmbPeriod')or(n = 'dedt1')or(n = 'dedt2') then begin
+    if (n <> 'cmbPeriod') and not cmbPeriod.Checked then
+      cmbPeriod.Checked := True;
+    if cmbDays.Checked then
+      cmbDays.Checked := False;
   end;
   FControlOnChange := False;
 end;
@@ -270,15 +270,15 @@ begin
     //очистим, если ни одного столбца не найдено
     FHasDate := High(va2) > -1;
     //установим комбобокс столбцов
-    Cth.AddToComboBoxEh(CbField, va2);
-    CbField.ItemIndex := 0;
+    Cth.AddToComboBoxEh(cmbField, va2);
+    cmbField.ItemIndex := 0;
     //верх первого чекбокса
-    t := Bevel1.Top;
+    t := bvl1.Top;
   end;
   //если нет полей дат - удалим все контролы с панели формы
   if not FHasDate then begin
-    while PMDIClient.ControlCount > 0 do
-      PMDIClient.Controls[PMDIClient.ControlCount - 1].Free;
+    while pnlFrmClient.ControlCount > 0 do
+      pnlFrmClient.Controls[pnlFrmClient.ControlCount - 1].Free;
     t := 1;
   end;
   //создадим чекбоксы, переданные в с 2 по последний эеллементе массива правил фильра
@@ -291,16 +291,16 @@ begin
     if (High(FrDbGrid.Opt.FilterRules[i]) > 0) and (S.VarType(FrDbGrid.Opt.FilterRules[i][1]) = varString) and (FrDbGrid.Opt.FilterRules[i][1] <> '')
       then st := FrDbGrid.Opt.FilterRules[i][1]
       else st := 'Chb' + IntToStr(i - 1);
-    c:=Cth.CreateControls(PMDIClient, cntCheck, FrDbGrid.Opt.FilterRules[i][0], st, '', 0);
+    c:=Cth.CreateControls(pnlFrmClient, cntCheck, FrDbGrid.Opt.FilterRules[i][0], st, '', 0);
     c.Left := 4;
-    c.Width := PMDIClient.Width - 10;
+    c.Width := pnlFrmClient.Width - 10;
     c.Top := t + 4 + i * MY_FORMPRM_CONTROL_H;
     FHasChb := True;
   end;
   va2 := [];
   for i := 0 to High(DatePeriods) do
     va2 := va2 + [[i, True, DatePeriods[i], '']];
-  Cth.CreatePopupMenu(PmPeriod, va2, PmPeriodClick);
+  Cth.CreatePopupMenu(pmPeriod, va2, PmPeriodClick);
   //восстановим значения контролов из строки результата фильтра в фрейме
   Cth.SetControlValuesArr2(Self, Cth.DeSerializeControlValuesArr2(FrDbGrid.Opt.FilterResult));
 end;
@@ -316,7 +316,7 @@ begin
   Mode := fEdit;
   Caption := '~Фильтр';
   FOpt.DlgPanelStyle:= dpsBottomRight;
-  Cth.MakePanelsFlat(PMDIClient, []);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
   FrDbGrid := TFrDBGridEh(ParentControl);
   if High(FrDbGrid.Opt.FilterRules) = -1 then
     Exit;

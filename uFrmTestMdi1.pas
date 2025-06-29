@@ -11,7 +11,7 @@ uses
 
 type
   TFrmTestMdi1 = class(TFrmBasicMdi)
-    e_1: TDBEditEh;
+    edt_1: TDBEditEh;
     l1: TLabel;
     bt_44: TBitBtn;
     l2: TLabel;
@@ -21,7 +21,7 @@ type
     DBEditEh1: TDBEditEh;
     DBEditEh2: TDBEditEh;
     DBMemoEh1: TDBMemoEh;
-    Bevel1: TBevel;
+    bvl1: TBevel;
     DBEditEh3: TDBEditEh;
   private
     { Private declarations }
@@ -44,15 +44,15 @@ result := True;
   //Mode:= fEdit;
   FOpt.DlgPanelStyle:= dpsBottomRight;
   FOpt.UseChbNoClose:=True;
-  //Opt.DlgButtonsR:= [[btnApply, True, 'Сохранить'],[btnCopy],[btnEdit],[btnView]];
+  //Opt.DlgButtonsR:= [[mbtApply, True, 'Сохранить'],[mbtCopy],[mbtEdit],[mbtView]];
   FOpt.StatusBarMode:= stbmNone;
   FOpt.InfoArray:=[['Тестовая форма', True]];
-  //WHCorrected:=Cth.AlignControls(PMDIClient, [], True);
+  //WHCorrected:=Cth.AlignControls(pnlFrmClient, [], True);
   FOpt.AutoAlignControls:= True;
   //FWHBounds.Y:=Height;
   //FWHBounds.Y2:=-1;
   Caption:= 'Тестовая форма'; //~
-//ChbDlgNoClose.Visible:=False;
+//chbNoclose.Visible:=False;
   Result:= True;
 end;
 

@@ -13,98 +13,98 @@ uses
 
 type
   TDlg_Order = class(TForm_MDI)
-    P_Top: TPanel;
+    pnl_Top: TPanel;
     Bt_Ok: TBitBtn;
-    P_Bottom: TPanel;
-    P_Center: TPanel;
+    pnl_Bottom: TPanel;
+    pnl_Center: TPanel;
     DataSource1: TDataSource;
     MemTableEh1: TMemTableEh;
     DBGridEh1: TDBGridEh;
-    P_Header: TPanel;
-    P_Header_3: TPanel;
-    P_Header_Bottom: TPanel;
-    P_Header_2: TPanel;
-    P_Header_1: TPanel;
-    Cb_Organization: TDBComboBoxEh;
-    E_OrderNum: TDBEditEh;
-    Cb_OrderType: TDBComboBoxEh;
-    Cb_Format: TDBComboBoxEh;
-    Cb_Project: TDBComboBoxEh;
-    Cb_CustomerName: TDBComboBoxEh;
-    Cb_CustomerMan: TDBComboBoxEh;
-    E_CustomerContacts: TDBEditEh;
-    Cb_CustomerLegalName: TDBComboBoxEh;
-    E_CustomerINN: TDBEditEh;
-    E_Account: TDBEditEh;
-    De_Beg: TDBDateTimeEditEh;
-    De_Otgr: TDBDateTimeEditEh;
-    De_Change: TDBDateTimeEditEh;
-    P_Header_5: TPanel;
-    Ne_Trans_0: TDBNumberEditEh;
-    Ne_Montage_0: TDBNumberEditEh;
-    Ne_Sum: TDBNumberEditEh;
-    Ne_AC_0: TDBNumberEditEh;
-    P_Header_11: TPanel;
-    M_Comment: TDBMemoEh;
-    P_Header_12: TPanel;
+    pnl_Header: TPanel;
+    pnl_Header_3: TPanel;
+    pnl_Header_Bottom: TPanel;
+    pnl_Header_2: TPanel;
+    pnl_Header_1: TPanel;
+    cmb_Organization: TDBComboBoxEh;
+    edt_OrderNum: TDBEditEh;
+    cmb_OrderType: TDBComboBoxEh;
+    cmb_Format: TDBComboBoxEh;
+    cmb_Project: TDBComboBoxEh;
+    cmb_CustomerName: TDBComboBoxEh;
+    cmb_CustomerMan: TDBComboBoxEh;
+    edt_CustomerContacts: TDBEditEh;
+    cmb_CustomerLegalName: TDBComboBoxEh;
+    edt_CustomerINN: TDBEditEh;
+    edt_Account: TDBEditEh;
+    dedt_Beg: TDBDateTimeEditEh;
+    dedt_Otgr: TDBDateTimeEditEh;
+    dedt_Change: TDBDateTimeEditEh;
+    pnl_Header_5: TPanel;
+    nedt_Trans_0: TDBNumberEditEh;
+    nedt_Montage_0: TDBNumberEditEh;
+    nedt_Sum: TDBNumberEditEh;
+    nedt_AC_0: TDBNumberEditEh;
+    pnl_Header_11: TPanel;
+    mem_Comment: TDBMemoEh;
+    pnl_Header_12: TPanel;
     DBGridEh2: TDBGridEh;
-    Lb_Files: TLabel;
+    lbl_Files: TLabel;
     Bt_Cancel: TBitBtn;
-    P_Top_1: TPanel;
-    E_TemplateName: TDBEditEh;
+    pnl_Top_1: TPanel;
+    edt_TemplateName: TDBEditEh;
     Il_Item_Status: TImageList;
     BitBtn1: TBitBtn;
     PopupMenu1: TPopupMenu;
     Pmi1_DeleteRow: TMenuItem;
-    Ne_Items_0: TDBNumberEditEh;
-    Ne_Items_M: TDBNumberEditEh;
-    Ne_Items_D: TDBNumberEditEh;
-    Ne_Items: TDBNumberEditEh;
-    Ne_AC_M: TDBNumberEditEh;
-    Ne_AC_D: TDBNumberEditEh;
-    Ne_AC: TDBNumberEditEh;
-    Ne_Montage_M: TDBNumberEditEh;
-    Ne_Montage_D: TDBNumberEditEh;
-    Ne_Montage: TDBNumberEditEh;
-    Ne_Trans_M: TDBNumberEditEh;
-    Ne_Trans_D: TDBNumberEditEh;
-    Ne_Trans: TDBNumberEditEh;
-    Ne_Discount: TDBNumberEditEh;
-    Ne_SumWoNds: TDBNumberEditEh;
-    E_Manager: TDBEditEh;
-    De_MontageBeg: TDBDateTimeEditEh;
-    Cb_CashType: TDBComboBoxEh;
-    E_Address: TDBEditEh;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
+    nedt_Items_0: TDBNumberEditEh;
+    nedt_Items_M: TDBNumberEditEh;
+    nedt_Items_D: TDBNumberEditEh;
+    nedt_Items: TDBNumberEditEh;
+    nedt_AC_M: TDBNumberEditEh;
+    nedt_AC_D: TDBNumberEditEh;
+    nedt_AC: TDBNumberEditEh;
+    nedt_Montage_M: TDBNumberEditEh;
+    nedt_Montage_D: TDBNumberEditEh;
+    nedt_Montage: TDBNumberEditEh;
+    nedt_Trans_M: TDBNumberEditEh;
+    nedt_Trans_D: TDBNumberEditEh;
+    nedt_Trans: TDBNumberEditEh;
+    nedt_Discount: TDBNumberEditEh;
+    nedt_SumWoNds: TDBNumberEditEh;
+    edt_Manager: TDBEditEh;
+    dedt_MontageBeg: TDBDateTimeEditEh;
+    cmb_CashType: TDBComboBoxEh;
+    edt_Address: TDBEditEh;
+    lbl1: TLabel;
+    lbl2: TLabel;
+    lbl3: TLabel;
+    lbl4: TLabel;
     Pmi1_ShowColumns: TMenuItem;
-    Cb_EstimatePath: TDBComboBoxEh;
+    cmb_EstimatePath: TDBComboBoxEh;
     DataSource2: TDataSource;
     MemTableEh2: TMemTableEh;
     Pm_Files: TPopupMenu;
     OpenDialog1: TOpenDialog;
-    Cb_OrderReference: TDBComboBoxEh;
-    E_Complaints: TDBEditEh;
+    cmb_OrderReference: TDBComboBoxEh;
+    edt_Complaints: TDBEditEh;
     N1: TMenuItem;
     Pmi1_LoadKB: TMenuItem;
     Pm_Format: TPopupMenu;
     Pmi_Format_LoadKB: TMenuItem;
     Pmi_Format_LoadKBLog: TMenuItem;
     Pmi_RecalcPrices: TMenuItem;
-    Ne_Sum_Av: TDBNumberEditEh;
+    nedt_Sum_Av: TDBNumberEditEh;
     Bt_CreateXLS: TBitBtn;
-    Ne_Items_NoSgp: TDBNumberEditEh;
-    Lb_OrderSaveStatus: TLabel;
-    Chb_ViewEmptyItems: TCheckBox;
-    Lb_ITM: TLabel;
+    nedt_Items_NoSgp: TDBNumberEditEh;
+    lbl_OrderSaveStatus: TLabel;
+    chb_ViewEmptyItems: TCheckBox;
+    lbl_ITM: TLabel;
     Il_ItemsTypes: TImageList;
     Il_Columns: TImageList;
-    De_MontageEnd: TDBDateTimeEditEh;
-    Ne_Attention: TDBNumberEditEh;
-    Cb_Area: TDBComboBoxEh;
-    Lb_ItmStatus: TLabel;
+    dedt_MontageEnd: TDBDateTimeEditEh;
+    nedt_Attention: TDBNumberEditEh;
+    cmb_Area: TDBComboBoxEh;
+    lbl_ItmStatus: TLabel;
     procedure BitBtn1Click(Sender: TObject);
     procedure Pm_FilesClick(Sender: TObject);
     procedure Bt_OkClick(Sender: TObject);
@@ -122,23 +122,23 @@ type
     procedure DBGridEh1Exit(Sender: TObject);
     procedure DBGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
     procedure Pmi1_DeleteRowClick(Sender: TObject);
-    procedure P_HeaderClick(Sender: TObject);
+    procedure pnl_HeaderClick(Sender: TObject);
     procedure Pmi1_ShowColumnsClick(Sender: TObject);
     procedure DBGridEh2GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
     procedure DBGridEh2DblClick(Sender: TObject);
     procedure DBGridEh1Enter(Sender: TObject);
-    procedure E_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
-    procedure E_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+    procedure edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+    procedure edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
     procedure Pmi_Format_LoadKBClick(Sender: TObject);
     procedure Pmi_Format_LoadKBLogClick(Sender: TObject);
     procedure Pmi_RecalcPricesClick(Sender: TObject);
     procedure Bt_CreateXLSClick(Sender: TObject);
-    procedure Chb_ViewEmptyItemsClick(Sender: TObject);
+    procedure chb_ViewEmptyItemsClick(Sender: TObject);
     procedure DBGridEh1Columns0GetCellParams(Sender: TObject; EditMode: Boolean; Params: TColCellParamsEh);
-    procedure Cb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
-    procedure Cb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
-    procedure Cb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
-    procedure M_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure cmb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+    procedure cmb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+    procedure cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+    procedure mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     { Private declarations }
@@ -337,8 +337,8 @@ end;
 procedure TDlg_Order.FormResize(Sender: TObject);
 begin
   inherited;
-//  P_Header_1.Width:= (P_Header.Width - P_Header_3.Width - P_Header_4.Width - P_Header_5.Width) div 2;
-  P_Header_1.Width := (P_Header.Width - P_Header_3.Width - P_Header_5.Width) div 2;
+//  pnl_Header_1.Width:= (pnl_Header.Width - pnl_Header_3.Width - pnl_Header_4.Width - pnl_Header_5.Width) div 2;
+  pnl_Header_1.Width := (pnl_Header.Width - pnl_Header_3.Width - pnl_Header_5.Width) div 2;
 end;
 
 constructor TDlg_Order.ShowDialog(aOwner: TComponent; aFormDoc: string; aMode: TDialogType; aID: Variant; AMyFormOptions: TMyFormOptions; aV: Variant);
@@ -388,7 +388,7 @@ procedure TDlg_Order.SetControlDisabled(c: TComponent; enable: Boolean);
 begin
   if enable then begin
     TCustomDbEditEh(c).Enabled := True;
-//    E_CustomerINN.Color:=clWindow;  //так не получается, но строка ниже работает даже с датами и косбобоксами
+//    edt_CustomerINN.Color:=clWindow;  //так не получается, но строка ниже работает даже с датами и косбобоксами
     TDbEditEh(c).Color := clWindow;
   end
   else begin
@@ -409,7 +409,7 @@ begin
         if FieldsArr[i][cEditable] = -1 then
           SetControlDisabled(Self.FindComponent(FieldsArr[i][cControl]), False)
         else if FieldsArr[i][cEditable] = 1 then
-          SetControlDisabled(Self.FindComponent(FieldsArr[i][cControl]), Cb_Organization.Value <> '-1');
+          SetControlDisabled(Self.FindComponent(FieldsArr[i][cControl]), cmb_Organization.Value <> '-1');
       end;
     end;
 end;
@@ -459,56 +459,56 @@ begin
     ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
     ['', null, 'id_status_itm', '', -1, null, -1],
     ['', null, 'status_itm', '', -1, null, -1],
-    ['Cb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
-    ['Cb_Area', null, 'area', 'area$i', 1, null, 0],
-    ['E_OrderNum', null, 'ornum', '', 1, null, 0],
-    ['Cb_OrderReference', null, 'or_reference', 'or_reference$s', 1, null, 1],
-    ['E_Complaints', null, 'complaints', '', 1, null, 1],
-    ['Cb_Format', null, 'id_format', 'id_format$i', 1, null, 0],
-    ['Cb_EstimatePath', null, 'id_or_format_estimates', 'id_or_format_estimates$i', 1, null, 0],
-    ['Cb_CustomerName', null, 'customer', '', 2, null, 1],
-    ['Cb_CustomerMan', null, 'customerman', '', 2, null, 1],
-    ['E_CustomerContacts',  null, 'customercontact', '', 2, null, 1],
-    ['Cb_CustomerLegalName', null, 'customerlegal', '', 0, null, 1],
-    ['E_CustomerINN', null, 'customerinn', '', 0, null, 1],
-    ['E_Account', null, 'account', 'account$s', 2, null, 1],
-    ['Cb_OrderType', null, 'id_type', 'id_type$i', 1, null, 0],
-    ['E_Address', null, 'address', 'address$s', 2, null, 1],
-    ['De_Beg', Date, 'dt_beg', 'dt_beg$d', 1, null, -1],
-    ['De_Otgr', null, 'dt_otgr', 'dt_otgr$d', 1, null, 0],
-    ['De_MontageBeg', null, 'dt_montage_beg', 'dt_montage_beg$d', 2, null, 1],
-    ['De_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],//    ['De_Change', S.IIfV(Mode = fEdit, Now, null),  S.IIfV(Mode = fEdit, '', 'dt_change'), 'dt_change$d', 0, null, -1],
-    ['De_Change', null, 'dt_change', 'dt_change$d', 0, null, -1],
-    ['Cb_Project', null, 'project', 'project$s', 1, null, 0],
-    ['Ne_Items_0', null, 'cost_i_0', 'cost_i_0$f', 0, null, -1],
-    ['Ne_Items_M', null, 'm_i', 'm_i$f', 0, null, 1],
-    ['Ne_Items_D', null, 'd_i', 'd_i$f', 0, null, 1],
-    ['Ne_Items', null, 'cost_i', 'cost_i$f', 0, null, -1],
-    ['Ne_Items_NoSgp', null, 'cost_i_nosgp', 'cost_i_nosgp$f', 0, null, -1],
-    ['Ne_AC_0', null, 'cost_a_0', 'cost_a_0$f', 0, null, -1],
-    ['Ne_AC_M', null, 'm_a', 'm_a$f', 0, null, 1],
-    ['Ne_AC_D', null, 'd_a', 'd_a$f', 0, null, 1],
-    ['Ne_AC', null, 'cost_a', 'cost_a$f', 0, null, -1],
-    ['Ne_Montage_0', null, 'cost_m_0', 'cost_m_0$f', 0, null, 1],
-    ['Ne_Montage_M', null, 'm_m', 'm_m$f', 0, null, 1],
-    ['Ne_Montage_D', null, 'd_m', 'd_m$f', 0, null, 1],
-    ['Ne_Montage', null, 'cost_m', 'cost_m$f', 0, null, -1],
-    ['Ne_Trans_0', null, 'cost_d_0', 'cost_d_0$f', 0, null, 1],
-    ['Ne_Trans_M', null, 'm_d', 'm_d$f', 0, null, 1],
-    ['Ne_Trans_D', null, 'd_d', 'd_d$f', 0, null, 1],
-    ['Ne_Trans', null, 'cost_d', 'cost_d$f', 0, null, -1],
-    ['Ne_Sum', null, 'cost', 'cost$f', 0, null, -1],
-    ['Ne_SumWoNds', null, 'cost_wo_nds', 'cost_wo_nds$f', 0, null, -1],
-    ['Ne_Sum_Av', null, 'cost_av', 'cost_av$f', 0, null, 1],
-    ['Cb_CashType', null, 'cashtype_add', 'cashtype$i', 2, null, 1],
-    ['E_Manager', User.GetName, 'managername', '', 0, null, -1],
-    ['M_Comment', null, 'comm', 'comm$s', 0, null, 0],
-    ['Ne_Attention', 0, 'attention', 'attention$i', 0, null, -1],
+    ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
+    ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
+    ['edt_OrderNum', null, 'ornum', '', 1, null, 0],
+    ['cmb_OrderReference', null, 'or_reference', 'or_reference$s', 1, null, 1],
+    ['edt_Complaints', null, 'complaints', '', 1, null, 1],
+    ['cmb_Format', null, 'id_format', 'id_format$i', 1, null, 0],
+    ['cmb_EstimatePath', null, 'id_or_format_estimates', 'id_or_format_estimates$i', 1, null, 0],
+    ['cmb_CustomerName', null, 'customer', '', 2, null, 1],
+    ['cmb_CustomerMan', null, 'customerman', '', 2, null, 1],
+    ['edt_CustomerContacts',  null, 'customercontact', '', 2, null, 1],
+    ['cmb_CustomerLegalName', null, 'customerlegal', '', 0, null, 1],
+    ['edt_CustomerINN', null, 'customerinn', '', 0, null, 1],
+    ['edt_Account', null, 'account', 'account$s', 2, null, 1],
+    ['cmb_OrderType', null, 'id_type', 'id_type$i', 1, null, 0],
+    ['edt_Address', null, 'address', 'address$s', 2, null, 1],
+    ['dedt_Beg', Date, 'dt_beg', 'dt_beg$d', 1, null, -1],
+    ['dedt_Otgr', null, 'dt_otgr', 'dt_otgr$d', 1, null, 0],
+    ['dedt_MontageBeg', null, 'dt_montage_beg', 'dt_montage_beg$d', 2, null, 1],
+    ['dedt_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],//    ['dedt_Change', S.IIfV(Mode = fEdit, Now, null),  S.IIfV(Mode = fEdit, '', 'dt_change'), 'dt_change$d', 0, null, -1],
+    ['dedt_Change', null, 'dt_change', 'dt_change$d', 0, null, -1],
+    ['cmb_Project', null, 'project', 'project$s', 1, null, 0],
+    ['nedt_Items_0', null, 'cost_i_0', 'cost_i_0$f', 0, null, -1],
+    ['nedt_Items_M', null, 'mem_i', 'mem_i$f', 0, null, 1],
+    ['nedt_Items_D', null, 'd_i', 'd_i$f', 0, null, 1],
+    ['nedt_Items', null, 'cost_i', 'cost_i$f', 0, null, -1],
+    ['nedt_Items_NoSgp', null, 'cost_i_nosgp', 'cost_i_nosgp$f', 0, null, -1],
+    ['nedt_AC_0', null, 'cost_a_0', 'cost_a_0$f', 0, null, -1],
+    ['nedt_AC_M', null, 'mem_a', 'mem_a$f', 0, null, 1],
+    ['nedt_AC_D', null, 'd_a', 'd_a$f', 0, null, 1],
+    ['nedt_AC', null, 'cost_a', 'cost_a$f', 0, null, -1],
+    ['nedt_Montage_0', null, 'cost_m_0', 'cost_m_0$f', 0, null, 1],
+    ['nedt_Montage_M', null, 'mem_m', 'mem_m$f', 0, null, 1],
+    ['nedt_Montage_D', null, 'd_m', 'd_m$f', 0, null, 1],
+    ['nedt_Montage', null, 'cost_m', 'cost_m$f', 0, null, -1],
+    ['nedt_Trans_0', null, 'cost_d_0', 'cost_d_0$f', 0, null, 1],
+    ['nedt_Trans_M', null, 'mem_d', 'mem_d$f', 0, null, 1],
+    ['nedt_Trans_D', null, 'd_d', 'd_d$f', 0, null, 1],
+    ['nedt_Trans', null, 'cost_d', 'cost_d$f', 0, null, -1],
+    ['nedt_Sum', null, 'cost', 'cost$f', 0, null, -1],
+    ['nedt_SumWoNds', null, 'cost_wo_nds', 'cost_wo_nds$f', 0, null, -1],
+    ['nedt_Sum_Av', null, 'cost_av', 'cost_av$f', 0, null, 1],
+    ['cmb_CashType', null, 'cashtype_add', 'cashtype$i', 2, null, 1],
+    ['edt_Manager', User.GetName, 'managername', '', 0, null, -1],
+    ['mem_Comment', null, 'comm', 'comm$s', 0, null, 0],
+    ['nedt_Attention', 0, 'attention', 'attention$i', 0, null, -1],
     ['', User.GetID, 'id_manager', 'id_manager$i', 0, null, -1]
   ];
   //для шаблона добавим в массив данные по имени шаблона
   if IsTemplate then
-    FieldsArr := FieldsArr + [['E_TemplateName', null, 'templatename', 'templatename$s', 0, null, 0]];
+    FieldsArr := FieldsArr + [['edt_TemplateName', null, 'templatename', 'templatename$s', 0, null, 0]];
 
   FieldsL := '';
   HasWarn := False;
@@ -590,39 +590,39 @@ begin
   end;
 *)
   //выведем метку ИТМ рядом с кнопками проведения заказа, если включена синхронизация, но не отключена для конкретного заказа
-  Lb_ITM.Visible := OrSyncWithITM; //SyncWithITM and (not IsTemplate) and (not (Mode in [fView, fEdit]) or (GetBegValueFromFieldsArr('id_itm') <> null));
+  lbl_ITM.Visible := OrSyncWithITM; //SyncWithITM and (not IsTemplate) and (not (Mode in [fView, fEdit]) or (GetBegValueFromFieldsArr('id_itm') <> null));
   //покажем статус заказа в ИТМ, подсветим красным если он уже Выполнен или далее
   //(в этом случае не будет полной синхронизации заказа с ИТМ, только заголовок)
-  Lb_ITMStatus.Caption:=S.NSt(GetBegValueFromFieldsArr('status_itm'));
+  lbl_ITMStatus.Caption:=S.NSt(GetBegValueFromFieldsArr('status_itm'));
   //признак того, что нельзя редактировать состав заказа
   //(добавлять/удалять строки, изменять наименование, количество и галку Без сметы
   NoChangeItems:= (S.NNum(GetBegValueFromFieldsArr('id_status_itm')) >= cOrItmStatus_Completed) and (Mode = fEdit);
   if S.NNum(GetBegValueFromFieldsArr('id_status_itm')) < cOrItmStatus_Completed
-    then Lb_ITMStatus.Font.Color:= clBlue
-    else Lb_ITMStatus.Font.Color:= clRed;
-  Lb_ITMStatus.Visible := OrSyncWithITM and (Mode = fEdit);
+    then lbl_ITMStatus.Font.Color:= clBlue
+    else lbl_ITMStatus.Font.Color:= clRed;
+  lbl_ITMStatus.Visible := OrSyncWithITM and (Mode = fEdit);
 
   Id_Org_Old := FieldsArr[GetFieldsArrPos('id_organization')][cBegValue];
 
 //  va2:=Orders.GetAreasArray;
 //  va2[0][0]:='ПЩ';
-//  Cth.AddToComboBoxEh(Cb_Area, va2);
-//  Cth.AddToComboBoxEh(Cb_Area, [['ПЩ', '0'], ['И', '1']]);
-  Cth.AddToComboBoxEh(Cb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
-  Cth.AddToComboBoxEh(Cb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
-  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], Cb_Format, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], Cb_Format, cntComboLK, 1);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], Cb_Organization, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], Cb_Organization, cntComboLK, 1);
+//  Cth.AddToComboBoxEh(cmb_Area, va2);
+//  Cth.AddToComboBoxEh(cmb_Area, [['ПЩ', '0'], ['И', '1']]);
+  Cth.AddToComboBoxEh(cmb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  Cth.AddToComboBoxEh(cmb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
+  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], cmb_Format, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], cmb_Organization, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_Organization, cntComboLK, 1);
   Organizations := Q.QLoadToVarDynArray2('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
-  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [S.NInt(FieldsArr[GetFieldsArrPos('area'), cBegValue])], Cb_Area, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [FieldsArr[GetFieldsArrPos('project'), cBegValue]], Cb_Project, cntComboE);
+  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [S.NInt(FieldsArr[GetFieldsArrPos('area'), cBegValue])], cmb_Area, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [FieldsArr[GetFieldsArrPos('project'), cBegValue]], cmb_Project, cntComboE);
   Customers := Q.QLoadToVarDynArray2('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
-  Cb_CustomerName.Images := Il_Columns;
-  Cb_CustomerMan.Images := Il_Columns;
-  Cb_CustomerLegalName.Images := Il_Columns;
+  cmb_CustomerName.Images := Il_Columns;
+  cmb_CustomerMan.Images := Il_Columns;
+  cmb_CustomerLegalName.Images := Il_Columns;
   for i := 0 to High(Customers) do
-    Cb_CustomerName.Items.Add(Customers[i][0]);
+    cmb_CustomerName.Items.Add(Customers[i][0]);
   CustomerContacts := Q.QLoadToVarDynArray2('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
   CustomerLegal := Q.QLoadToVarDynArray2('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
 
@@ -641,8 +641,8 @@ begin
   //установим список смет, с сохранением занчения контрола
   SetEstimateList(True);
   //если копирование и организация выбрана, то сгенерируем номер заказа
-  if (Mode = fCopy) and (Cth.GetControlValue(Cb_Organization) <> null) then
-    E_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(Cb_Organization)])[0];
+  if (Mode = fCopy) and (Cth.GetControlValue(cmb_Organization) <> null) then
+    edt_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)])[0];
   //установим данные, зависящие от типа заказа (рекламация)
   SetComplaints;
 
@@ -739,11 +739,11 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
   //события onCahange и  onExit для всех dbeh контролов
   Cth.SetControlsOnCheckDrawRequired(Self, ControlCheckDrawRequiredState);
-  //De_Otgr.OnCheckDrawRequiredState:=ControlCheckDrawRequiredState;
+  //dedt_Otgr.OnCheckDrawRequiredState:=ControlCheckDrawRequiredState;
   Cth.SetControlsOnExit(Self, ControlOnExit);
   Cth.SetControlsOnChange(Self, ControlOnChange);
 
-  E_TemplateName.Visible := IsTemplate;
+  edt_TemplateName.Visible := IsTemplate;
 
   EnableControls;
 
@@ -772,25 +772,25 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
   GetAddFiles;
 
   //контролы в подвале формы
-  Chb_ViewEmptyItems.Checked := not (Mode = fView) or (IsTemplate);
-  Chb_ViewEmptyItems.Visible := (Mode = fView) and (not IsTemplate);
-  Lb_OrderSaveStatus.Visible := (Mode <> fView);
-  if not Lb_OrderSaveStatus.Visible then
-    Chb_ViewEmptyItems.Left := Lb_OrderSaveStatus.Left;
+  chb_ViewEmptyItems.Checked := not (Mode = fView) or (IsTemplate);
+  chb_ViewEmptyItems.Visible := (Mode = fView) and (not IsTemplate);
+  lbl_OrderSaveStatus.Visible := (Mode <> fView);
+  if not lbl_OrderSaveStatus.Visible then
+    chb_ViewEmptyItems.Left := lbl_OrderSaveStatus.Left;
 
   inLoadData := False;
 
   LoadCustomer(0);
-  ControlOnChange(Ne_Attention);
+  ControlOnChange(nedt_Attention);
 
   SetSumInHeader;
   SetAddTasksMenu;
   if Mode = fView then
     HighlightDifferences;
   SetOrderSaveStatusText('');
-  P_Bottom.Visible := True;
+  pnl_Bottom.Visible := True;
 
-  P_Header_5.Visible := ShowPrices;
+  pnl_Header_5.Visible := ShowPrices;
 
   EnableDeleteItemInEdit := False;
   Pmi1_ShowColumns.Visible := User.IsDeveloper;
@@ -809,7 +809,7 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
 end;
 
-procedure TDlg_Order.P_HeaderClick(Sender: TObject);
+procedure TDlg_Order.pnl_HeaderClick(Sender: TObject);
 begin
   inherited;
 
@@ -821,7 +821,7 @@ var
 v: tvardynarray;
 begin
 
-  myinfomessage(vartostr(QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', VarArrayOf([Date, Cth.GetControlValue(Cb_Organization)]))[0]));
+  myinfomessage(vartostr(QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', VarArrayOf([Date, Cth.GetControlValue(cmb_Organization)]))[0]));
 exit;
   inherited;
 v:=QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io', VarArrayOf(['test2','','','','',-1]));
@@ -835,7 +835,7 @@ exit;
   legalname varchar2,
   inn varchar2,
   id_customer out number}
-ADOStoredProc1.ProcedureName := 'p_add_customer';
+ADOStoredProc1.ProcedureName := 'pnl_add_customer';
 ADOStoredProc1.Parameters.Clear;
 ADOStoredProc1.Parameters.CreateParameter('p1',ftString,pdInput,20,null);
 ADOStoredProc1.Parameters.CreateParameter('p2',ftString,pdInput,20,null);
@@ -903,14 +903,14 @@ begin
     Exit;
   //для шаблона проверим уникальность наименования (но может быть не изменен в случае редактирования)
   if (IsTemplate) and (Mode <> fDelete) then begin
-    if Q.QSelectOneRow('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(E_TemplateName.Text)])[0] > 0 then begin
+    if Q.QSelectOneRow('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(edt_TemplateName.Text)])[0] > 0 then begin
       MyWarningMessage('Шаблон с таким наименованием уже есть!');
       Exit;
     end;
   end;
 
   //попытаемся сохранить заказ
-  Lock := Q.DBLock(True,'ordercreate', Cth.GetControlValue(Cb_Organization),'');
+  Lock := Q.DBLock(True,'ordercreate', Cth.GetControlValue(cmb_Organization),'');
   if Lock[0] = False then begin
     MyWarningMessage('Сейчас проводится заказ пользователем ' + Lock[1] + #13#10'Попробуйте чуть позже!');
     Exit;
@@ -935,11 +935,11 @@ begin
       os := SetTask;                            //задачу серверному процессу, если это не шаблон
     OrderSaved := os;
     Q.QCommitOrRollback(OrderSaved);  //фиксируем транзакцию
-    Q.DBLock(False, 'ordercreate', Cth.GetControlValue(Cb_Organization),'');
+    Q.DBLock(False, 'ordercreate', Cth.GetControlValue(cmb_Organization),'');
   except on E: Exception do
     begin
       Q.QRollbackTrans;  //фиксируем транзакцию
-      Q.DBLock(False, 'ordercreate', Cth.GetControlValue(Cb_Organization),'');
+      Q.DBLock(False, 'ordercreate', Cth.GetControlValue(cmb_Organization),'');
       Application.ShowException(E);
     end;
   end;
@@ -1000,7 +1000,7 @@ begin
         TDBEditEh(Self.FindComponent(FieldsArr[i][cControl])).Color := GetDiffColor;  //RGB(255,150,150);
       end;
   if A.InArray('addfiles', va) then
-    Lb_Files.Font.Color := GetDiffColor;
+    lbl_Files.Font.Color := GetDiffColor;
 end;
 
 function TDlg_Order.GetDifferences: string;
@@ -1015,7 +1015,7 @@ begin
   //and(not IsTemplate) then begin
     for i := 0 to High(FieldsArr) do
       if FieldsArr[i][cControl] <> '' then begin
-        if FieldsArr[i][cControl] = 'De_Change' then
+        if FieldsArr[i][cControl] = 'dedt_Change' then
           Continue;
         if VarToStr(S.NullIfEmpty(Cth.GetControlValue(TControl(Self.FindComponent(FieldsArr[i][cControl]))))) = VarToStr(S.NullIfEmpty(FieldsArr[i][cBegValue])) then begin
           TCustomDBEditEh(Self.FindComponent(FieldsArr[i][cControl])).ControlLabel.Font.Color := RGB(0, 0, 0);
@@ -1039,19 +1039,19 @@ var
 begin
   id_customer := -1;
   for i := 0 to High(Customers) do
-    if Cb_CustomerName.Text = Customers[i][0] then begin
+    if cmb_CustomerName.Text = Customers[i][0] then begin
       id_customer := Customers[i][1];
       Break;
     end;
-  Cb_CustomerMan.Items.Clear;
-  Cb_CustomerMan.DynProps.Clear;
-  Cb_CustomerLegalName.Items.Clear;
-  Cb_CustomerLegalName.DynProps.Clear;
+  cmb_CustomerMan.Items.Clear;
+  cmb_CustomerMan.DynProps.Clear;
+  cmb_CustomerLegalName.Items.Clear;
+  cmb_CustomerLegalName.DynProps.Clear;
   if DataType <> 0 then begin
-    Cb_CustomerMan.Text := '';
-    E_CustomerContacts.Text := '';
-    Cb_CustomerLegalName.Text := '';
-    E_CustomerInn.Text := '';
+    cmb_CustomerMan.Text := '';
+    edt_CustomerContacts.Text := '';
+    cmb_CustomerLegalName.Text := '';
+    edt_CustomerInn.Text := '';
   end;
   if id_customer = -1 then
     Exit;
@@ -1059,29 +1059,29 @@ begin
   //добавим в динпропс значения контактных данных, соответствующие данному человеку
   for i := 0 to High(CustomerContacts) do begin
     if CustomerContacts[i][2] = id_customer then begin
-      Cb_CustomerMan.Items.Add(CustomerContacts[i][0]);
-      Cb_CustomerMan.DynProps[IntToStr(Cb_CustomerMan.Items.Count - 1)].Value := S.NSt(CustomerContacts[i][1]);
+      cmb_CustomerMan.Items.Add(CustomerContacts[i][0]);
+      cmb_CustomerMan.DynProps[IntToStr(cmb_CustomerMan.Items.Count - 1)].Value := S.NSt(CustomerContacts[i][1]);
       j := i
     end;
   end;
   if DataType <> 0 then begin
-    if (Cb_CustomerMan.Items.Count = 1) then
-      Cb_CustomerMan.ItemIndex := 0;
-    ControlOnChange(Cb_CustomerMan);
+    if (cmb_CustomerMan.Items.Count = 1) then
+      cmb_CustomerMan.ItemIndex := 0;
+    ControlOnChange(cmb_CustomerMan);
   end;
 
   j := -1;
   for i := 0 to High(CustomerLegal) do begin
     if CustomerLegal[i][2] = id_customer then begin
-      Cb_CustomerLegalName.Items.Add(CustomerLegal[i][0]);
-      Cb_CustomerLegalName.DynProps[IntToStr(Cb_CustomerLegalName.Items.Count - 1)].Value := S.NSt(CustomerLegal[i][1]);
+      cmb_CustomerLegalName.Items.Add(CustomerLegal[i][0]);
+      cmb_CustomerLegalName.DynProps[IntToStr(cmb_CustomerLegalName.Items.Count - 1)].Value := S.NSt(CustomerLegal[i][1]);
       j := i
     end;
   end;
   if DataType <> 0 then begin
-    if (Cb_CustomerLegalName.Items.Count = 1) then
-      Cb_CustomerLegalName.ItemIndex := 0;
-    ControlOnChange(Cb_CustomerLegalName);
+    if (cmb_CustomerLegalName.Items.Count = 1) then
+      cmb_CustomerLegalName.ItemIndex := 0;
+    ControlOnChange(cmb_CustomerLegalName);
   end;
 end;
 
@@ -1102,7 +1102,7 @@ begin
   Result := False;
   //передается айди в схеме учет
 {  va:= QCallStoredProc(
-    'dv.P_SyncOrder_Finish',
+    'dv.p_SyncOrder_Finish',
     'id_dv$i',
     VarArrayOf([ID])
   );}
@@ -1138,7 +1138,7 @@ begin
       if FieldsArr[i][cControl] <> '' then
         FieldsArr[i][cNewValue] := S.NullIfEmpty(Cth.GetControlValue(TControl(Self.FindComponent(FieldsArr[i][cControl]))));
     //для формы оплаты поправим, для безнал ьез счета ставим просто безнл, тк в бд они не различаются (диффернетовка по значению Счет)
-      if (FieldsArr[i][cControl] = 'Cb_CashType') and (FieldsArr[i][cNewValue] <> null) then
+      if (FieldsArr[i][cControl] = 'cmb_CashType') and (FieldsArr[i][cNewValue] <> null) then
         FieldsArr[i][cNewValue] := S.IIf(FieldsArr[i][cNewValue] = 0, 1, FieldsArr[i][cNewValue]);
       if (FieldsArr[i][cFieldName] = 'id_manager') then
         FieldsArr[i][cNewValue] := FieldsArr[i][cBegValue];
@@ -1148,8 +1148,8 @@ begin
         Id_ITM := FieldsArr[i][cBegValue];
       if (FieldsArr[i][cFieldName] = 'ndsd') then begin
         FieldsArr[i][cNewValue] := 1;
-        if Cb_Organization.ItemIndex > 0 then
-          FieldsArr[i][cNewValue] := S.IIfV(S.NSt(Organizations[Cb_Organization.ItemIndex - 1][3]) <> '', 1.20, 1);
+        if cmb_Organization.ItemIndex > 0 then
+          FieldsArr[i][cNewValue] := S.IIfV(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 1.20, 1);
       end;
     end;
     for i := 0 to High(FieldsArr) do
@@ -1162,11 +1162,11 @@ begin
   //обновим/добавим покупателя в справочнике (хранимая процедура), и запишем в данных заказа что она вернула
     IsCustomerWholesale := False;
     if Mode <> fDelete then
-      if Trim(Cb_CustomerName.Text) = '' then begin
+      if Trim(cmb_CustomerName.Text) = '' then begin
         Customer := [null, null, null, null, null, null, null, null];
       end
       else begin
-        Customer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [Cb_CustomerName.Text, Cb_CustomerMan.Text, E_CustomerContacts.Text, Cb_CustomerLegalName.Text, E_CustomerINN.Text, -1, -1, -1]);
+        Customer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_CustomerName.Text, cmb_CustomerMan.Text, edt_CustomerContacts.Text, cmb_CustomerLegalName.Text, edt_CustomerINN.Text, -1, -1, -1]);
         if Length(Customer) = 0 then
           Break;
         Fields := Fields + ';id_customer$i;id_customer_contact$i;id_customer_org$i';
@@ -1175,23 +1175,23 @@ begin
         IsCustomerWholesale := Q.QSelectOneRow('select wholesale from ref_customers where id = :id$i', [Customer[5]])[0] = 1;
       end;
   //если не шаблон и заказа создается, либо при редактировании была изменена орган6изация, то получим номер заказа
-    OrNum := Cth.GetControlValue(E_OrderNum);
-    if (not IsTemplate) and (Mode <> fDelete) and ((Mode in [fAdd, fCopy]) or (Id_Org_Old <> Cth.GetControlValue(Cb_Organization))) then begin
-      v := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(Cb_Organization)]);
+    OrNum := Cth.GetControlValue(edt_OrderNum);
+    if (not IsTemplate) and (Mode <> fDelete) and ((Mode in [fAdd, fCopy]) or (Id_Org_Old <> Cth.GetControlValue(cmb_Organization))) then begin
+      v := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)]);
     //значения полей
       Fields := Fields + ';ornum$s;year$i;prefix$s;num$i';
       Values := Values + [v[0], YearOf(Date), Copy(v[0], 1, Length(v[0]) - 6), Copy(v[0], Length(v[0]) - 3, 4)];
     //итоговый номер в переменой, и в контроле, используется в дальнейшем напр при сохранении шаблона паспорта
       OrNum := v[0];
-      E_OrderNum.Text := OrNum;
+      edt_OrderNum.Text := OrNum;
     end;
     //получим наименование каталога заказа
     OrderPath :=
       S.NSt(Q.QSelectOneRow('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]])[0]) +
       OrNum + ' ' +
-      S.CorrectFileName(Trim(S.IIfV(Cb_CustomerName.Text = '', 'Производство', Cb_CustomerName.Text)) + ' ' + Trim(Cb_Project.Text))
+      S.CorrectFileName(Trim(S.IIfV(cmb_CustomerName.Text = '', 'Производство', cmb_CustomerName.Text)) + ' ' + Trim(cmb_Project.Text))
     ;
-//    S.IIf(Cb_Area.Value = '0', '', Cb_Area.Text) + OrNum + ' ' + S.CorrectFileName(Trim(S.IIfV(Cb_CustomerName.Text = '', 'Производство', Cb_CustomerName.Text)) + ' ' + Trim(Cb_Project.Text));
+//    S.IIf(cmb_Area.Value = '0', '', cmb_Area.Text) + OrNum + ' ' + S.CorrectFileName(Trim(S.IIfV(cmb_CustomerName.Text = '', 'Производство', cmb_CustomerName.Text)) + ' ' + Trim(cmb_Project.Text));
   //запрос на вставку данных в таблицу заказов
     Fields := Fields + ';path$s';
     Values := Values + [OrderPath];
@@ -1209,12 +1209,12 @@ begin
   //не синхронизируем при выключенной синхронизации для данного заказа независимо от наличия id_itm
     if (not IsTemplate) and (OrSyncWithITM) and ((Mode in [fAdd, fCopy]) or (ID_Itm <> null)) then
       if Mode <> fDelete then begin
-        ItmA := Q.QCallStoredProc('dv.P_SyncOrder', 'id_dv$i;op$i;ornum$s;dt_beg$d;dt_otgr$d;customer$s;org$s;id_itm$io',
-          [ID, S.IIf((SqlMode = 'i') or (ID_Itm = null), 1, 2), ornum, Cth.GetControlValue(De_Beg), Cth.GetControlValue(De_Otgr), S.IIfV(IsCustomerWholesale, Cb_CustomerName.Text, 'Розница'), Cb_Organization.Text, -1]);
+        ItmA := Q.QCallStoredProc('dv.pnl_SyncOrder', 'id_dv$i;op$i;ornum$s;dt_beg$d;dt_otgr$d;customer$s;org$s;id_itm$io',
+          [ID, S.IIf((SqlMode = 'i') or (ID_Itm = null), 1, 2), ornum, Cth.GetControlValue(dedt_Beg), Cth.GetControlValue(dedt_Otgr), S.IIfV(IsCustomerWholesale, cmb_CustomerName.Text, 'Розница'), cmb_Organization.Text, -1]);
         if Length(ItmA) = 0 then
           Break;
         ID_Itm := ItmA[7];
-        Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['P_SyncOrder', 'id_zakaz ' + VarToStr(Id_ITM) + ', id_order ' + VarToStr(id)]);
+        Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncOrder', 'id_zakaz ' + VarToStr(Id_ITM) + ', id_order ' + VarToStr(id)]);
         if ID_Itm < 0 then
           Break;
         res := Q.QExecSql('update orders set id_itm = :id_itm$i where id = :id$i', [ID_Itm, ID]);
@@ -1236,7 +1236,7 @@ begin
     end;
 *)
   //сохраним данные по причинам рекламаций
-    if Cth.GetControlValue(Cb_OrderType) = '2' then begin
+    if Cth.GetControlValue(cmb_OrderType) = '2' then begin
       for i := 0 to High(Complaints) do begin
         if (S.NNum(Complaints[i][3]) <> 0) and (S.NNum(Complaints[i][2]) = 0)        //вставим если она добавлена
           then
@@ -1296,35 +1296,35 @@ var
 begin
   if InLoadData then
     Exit;
-  if Sender = Cb_CustomerName then
+  if Sender = cmb_CustomerName then
     LoadCustomer(1);
-  if Sender = Cb_CustomerMan then begin
-    E_CustomerContacts.Text := '';
-    if Cb_CustomerMan.ItemIndex >= 0 then
-      E_CustomerContacts.Text := Cb_CustomerMan.DynProps[IntToStr(Cb_CustomerMan.ItemIndex)].Value;
+  if Sender = cmb_CustomerMan then begin
+    edt_CustomerContacts.Text := '';
+    if cmb_CustomerMan.ItemIndex >= 0 then
+      edt_CustomerContacts.Text := cmb_CustomerMan.DynProps[IntToStr(cmb_CustomerMan.ItemIndex)].Value;
   end;
-  if Sender = Cb_CustomerLegalName then begin
-    E_CustomerInn.Text := '';
-    if Cb_CustomerLegalName.ItemIndex >= 0 then
-      E_CustomerInn.Text := Cb_CustomerLegalName.DynProps[IntToStr(Cb_CustomerLegalName.ItemIndex)].Value;
+  if Sender = cmb_CustomerLegalName then begin
+    edt_CustomerInn.Text := '';
+    if cmb_CustomerLegalName.ItemIndex >= 0 then
+      edt_CustomerInn.Text := cmb_CustomerLegalName.DynProps[IntToStr(cmb_CustomerLegalName.ItemIndex)].Value;
   end;
   //подсветим (подчеркнем) для клиента, если данные из списка
-  if (Sender = Cb_CustomerName) or (Sender = Cb_CustomerMan) or (Sender = Cb_CustomerLegalName) and (Mode <> fView) then begin
+  if (Sender = cmb_CustomerName) or (Sender = cmb_CustomerMan) or (Sender = cmb_CustomerLegalName) and (Mode <> fView) then begin
 {    if TDBComboboxEh(Sender).ItemIndex >= 0
       then TDBComboboxEh(Sender).Font.Style:= [fsUnderline]
       else TDBComboboxEh(Sender).Font.Style:= [];}
   end;
   //если это выбор организации, то у нас значения зщависят производство это либо нет
-  if (Sender = Cb_Organization) then begin
+  if (Sender = cmb_Organization) then begin
     //изменим доступность контролов
     EnableControls;
     //получим номер заказа, предварительно, окончательноь будет при записи
-    if (Mode = fEdit) and (Cth.GetControlValue(Cb_Organization) = Id_Org_Old) then
-      E_OrderNum.Text := S.NSt(FieldsArr[GetFieldsArrPos('ornum')][cBegValue])
+    if (Mode = fEdit) and (Cth.GetControlValue(cmb_Organization) = Id_Org_Old) then
+      edt_OrderNum.Text := S.NSt(FieldsArr[GetFieldsArrPos('ornum')][cBegValue])
     else
-      E_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(Cb_Organization)])[0];
+      edt_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)])[0];
     //если это производство, то очистим поля
-    if Cth.GetControlValue(Cb_Organization) = -1 then
+    if Cth.GetControlValue(cmb_Organization) = -1 then
       for i := 0 to High(FieldsArr) do          //если выбрано производство, то очистим контролы с призанком 1
         if (FieldsArr[i][cControl] <> '') and (FieldsArr[i][cEditable] = 1) then begin
           EnableControls;
@@ -1334,39 +1334,39 @@ begin
     RenameSlashes;
 //    VerifyTable;
 //    DBGridEh1.SetFocus;
-//    Cb_Organization.SetFocus;
+//    cmb_Organization.SetFocus;
   end;
-  if (Sender = De_MontageBeg) then begin
-    if De_MontageBeg.Value = null then
-      De_MontageEnd.value := null;
-    Verify(De_MontageEnd);
-//    SetControlDisabled(De_MontageEnd, De_MontageBeg.Value <> null);
+  if (Sender = dedt_MontageBeg) then begin
+    if dedt_MontageBeg.Value = null then
+      dedt_MontageEnd.value := null;
+    Verify(dedt_MontageEnd);
+//    SetControlDisabled(dedt_MontageEnd, dedt_MontageBeg.Value <> null);
   end;
-  if (Sender = Cb_OrderType) then begin
+  if (Sender = cmb_OrderType) then begin
     SetComplaints;
-    if (Cb_OrderType.Value = '1') or (Cb_OrderType.Value = '3') then begin
-      Cb_OrderReference.Text := '';
+    if (cmb_OrderType.Value = '1') or (cmb_OrderType.Value = '3') then begin
+      cmb_OrderReference.Text := '';
     end;
   end;
-  if (Sender = Cb_Organization) or (Sender = Cb_OrderType) then
+  if (Sender = cmb_Organization) or (Sender = cmb_OrderType) then
     Verify(nil)
   else
     Verify(Sender, True);
-  if Sender = Cb_Format then begin
+  if Sender = cmb_Format then begin
     SetEstimateList;
     SetAddTasksMenu;
   end;
   //изменим цвет комментария в зависимости от признака его важности
-  if Sender = Ne_Attention then
-    if Ne_Attention.Value = 0 then
-      M_Comment.Font.Color := clWindowText
+  if Sender = nedt_Attention then
+    if nedt_Attention.Value = 0 then
+      mem_Comment.Font.Color := clWindowText
     else
-      M_Comment.Font.Color := clRed;
+      mem_Comment.Font.Color := clRed;
   //при изменении любого намбередита (для простоты, не перечислать контролы для ввода), или организзации - пересчитать сумму
-  if (Sender is TDBNumberEditEh) or (Sender = Cb_Organization) then
+  if (Sender is TDBNumberEditEh) or (Sender = cmb_Organization) then
     SetSumInHeader;
 
-  DBGridEh1.Enabled := (Cb_EstimatePath.Text <> '') and (Cb_Format.Text <> '');
+  DBGridEh1.Enabled := (cmb_EstimatePath.Text <> '') and (cmb_Format.Text <> '');
 end;
 
 procedure TDlg_Order.ControlOnExit(Sender: TObject);
@@ -1423,51 +1423,51 @@ begin
     if not IsTemplate then begin
       //для занчание проверки 0, валидно в любом случае
       //а также для 2 или 3, в любом случае при типе Производство
-      if c = De_Otgr then begin  //раньше можно было без даты отгрузки если производство, теперь она нужна всегда
-        Cth.SetErrorMarker(c, (not Cth.DteValueIsDate(De_Otgr) or (De_Otgr.Value < De_Beg.value))); //(Cb_Organization.Value <> '-1')and
+      if c = dedt_Otgr then begin  //раньше можно было без даты отгрузки если производство, теперь она нужна всегда
+        Cth.SetErrorMarker(c, (not Cth.DteValueIsDate(dedt_Otgr) or (dedt_Otgr.Value < dedt_Beg.value))); //(cmb_Organization.Value <> '-1')and
         Continue;
       end;
-      SetInvalidIfEmpty(c, (FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (Cb_Organization.Value = '-1')));
-      if c = Cb_OrderType  //тип заказа не может быть пустым, не может рекламация для производства, не может эксперимент не для производства
+      SetInvalidIfEmpty(c, (FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (cmb_Organization.Value = '-1')));
+      if c = cmb_OrderType  //тип заказа не может быть пустым, не может рекламация для производства, не может эксперимент не для производства
         then
-        Cth.SetErrorMarker(c, (Cb_OrderType.Text = '') or ((Cb_OrderType.Value = '2') and (Cb_Organization.Value = '-1')) or ((Cb_OrderType.Value = '3') and (Cb_Organization.Value <> '-1')));
-      if c = Cb_OrderReference then
-        Cth.SetErrorMarker(c, (Cb_OrderType.Value = '1') and (Cb_OrderReference.Text <> '') or (Cb_OrderType.Value = '2') and (Cb_OrderReference.Text = ''));
-      if c = E_Complaints then
-        Cth.SetErrorMarker(c, (Cb_OrderType.Value = '2') and (E_Complaints.Text = ''));
-      if c = E_CustomerINN then
-        SetInvalidIfEmpty(c, Cb_CustomerLegalName.Text = '');
+        Cth.SetErrorMarker(c, (cmb_OrderType.Text = '') or ((cmb_OrderType.Value = '2') and (cmb_Organization.Value = '-1')) or ((cmb_OrderType.Value = '3') and (cmb_Organization.Value <> '-1')));
+      if c = cmb_OrderReference then
+        Cth.SetErrorMarker(c, (cmb_OrderType.Value = '1') and (cmb_OrderReference.Text <> '') or (cmb_OrderType.Value = '2') and (cmb_OrderReference.Text = ''));
+      if c = edt_Complaints then
+        Cth.SetErrorMarker(c, (cmb_OrderType.Value = '2') and (edt_Complaints.Text = ''));
+      if c = edt_CustomerINN then
+        SetInvalidIfEmpty(c, cmb_CustomerLegalName.Text = '');
       //для сметы - должен быть в списке
-      if c = Cb_EstimatePath then
-        Cth.SetErrorMarker(Cb_EstimatePath, Cb_EstimatePath.ItemIndex < 0);
+      if c = cmb_EstimatePath then
+        Cth.SetErrorMarker(cmb_EstimatePath, cmb_EstimatePath.ItemIndex < 0);
       //дата начала монтажа - если разрешена, то или пустая, или больше даты отгрузки
-      if c = De_MontageBeg then
-        Cth.SetErrorMarker(c, c.Enabled and not (De_MontageBeg.Value = null) and (De_MontageBeg.Value < De_Otgr.value));
+      if c = dedt_MontageBeg then
+        Cth.SetErrorMarker(c, c.Enabled and not (dedt_MontageBeg.Value = null) and (dedt_MontageBeg.Value < dedt_Otgr.value));
       //дата окончания монтажа - если разрешана, то при пустой дате начала монтажа тое должна быть пустой,
       //а при заданной дате начала должна быть больше ее
-      if c = De_MontageEnd then
-        Cth.SetErrorMarker(c, c.Enabled and ((De_MontageBeg.Value = null) and (De_MontageBeg.Value <> null) or (De_MontageBeg.Value <> null) and ((De_MontageEnd.Value = null) or (De_MontageEnd.Value < De_MontageBeg.value))));
+      if c = dedt_MontageEnd then
+        Cth.SetErrorMarker(c, c.Enabled and ((dedt_MontageBeg.Value = null) and (dedt_MontageBeg.Value <> null) or (dedt_MontageBeg.Value <> null) and ((dedt_MontageEnd.Value = null) or (dedt_MontageEnd.Value < dedt_MontageBeg.value))));
     end;
     //для шаблона, должно быть заполнено имя шаблона
-    if c = E_TemplateName then
+    if c = edt_TemplateName then
       SetInvalidIfEmpty(c, not IsTemplate);
     //проверим при изменении организации, оплаты, счета - правильность комбобокса оплаты и номера счета
     //только если это не шаблон, и не Производство
-    if ((c = E_Account) or (c = Cb_CashType) or (c = Cb_Organization)) and (not IsTemplate) and (Cb_Organization.ItemIndex > 0) then begin
+    if ((c = edt_Account) or (c = cmb_CashType) or (c = cmb_Organization)) and (not IsTemplate) and (cmb_Organization.ItemIndex > 0) then begin
       b := False;  //True = оплата по безналу
-      if (Cb_Organization.ItemIndex > 0) and (Cb_Organization.ItemIndex <= High(Organizations) + 1) then
-        b := S.NSt(Organizations[Cb_Organization.ItemIndex - 1][2]) <> '';
+      if (cmb_Organization.ItemIndex > 0) and (cmb_Organization.ItemIndex <= High(Organizations) + 1) then
+        b := S.NSt(Organizations[cmb_Organization.ItemIndex - 1][2]) <> '';
       //вид оплаты соотвествует признаку кешлесс в массиве организаций
-      Cth.SetErrorMarker(Cb_CashType, (b and (Cb_CashType.Value = '2')) or (not b and (Cb_CashType.Value <> '2')) or (Cb_CashType.ItemIndex = -1));
+      Cth.SetErrorMarker(cmb_CashType, (b and (cmb_CashType.Value = '2')) or (not b and (cmb_CashType.Value <> '2')) or (cmb_CashType.ItemIndex = -1));
       //счет только для вырианта Безнал (не б/н без счета!!)
-      Cth.SetErrorMarker(E_Account, (E_Account.Text = '') and (Cb_CashType.Value = '1') or (E_Account.Text <> '') and (Cb_CashType.Value <> '1'))
+      Cth.SetErrorMarker(edt_Account, (edt_Account.Text = '') and (cmb_CashType.Value = '1') or (edt_Account.Text <> '') and (cmb_CashType.Value <> '1'))
     end;
   end;
-//      SetInvalidIfEmpty(De_Otgr, False);//(FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (Cb_Organization.Value = '-1')));
-//      b:= TDBDateTimeEditEh(De_Otgr).DynProps.VarExists('error');
-//      Cth.DotRedLine(De_Otgr);
-//      Cth.DotRedLine(Ne_Trans_0);
-//      if b then De_Otgr.Color:=RGB(255,0,0) else De_Otgr.Color:=RGB(255,255,255);
+//      SetInvalidIfEmpty(dedt_Otgr, False);//(FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (cmb_Organization.Value = '-1')));
+//      b:= TDBDateTimeEditEh(dedt_Otgr).DynProps.VarExists('error');
+//      Cth.DotRedLine(dedt_Otgr);
+//      Cth.DotRedLine(nedt_Trans_0);
+//      if b then dedt_Otgr.Color:=RGB(255,0,0) else dedt_Otgr.Color:=RGB(255,255,255);
   Ok := Cth.VerifyVisualise(Self);
 end;
 
@@ -1476,22 +1476,22 @@ procedure TDlg_Order.SetComplaints;
 var
   i: Integer;
 begin
-  if S.NSt(Cth.GetControlValue(Cb_OrderType)) = '2' then begin
+  if S.NSt(Cth.GetControlValue(cmb_OrderType)) = '2' then begin
   //это рекламация
     //покажем строку причин рекламации
-    E_Complaints.Visible := True;
+    edt_Complaints.Visible := True;
     //подправим расположение комментария
-    M_Comment.Top := E_Complaints.Top + E_Complaints.Height + 4;
-    if Cb_OrderReference.Items.Count = 0 then
-      Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], Cb_OrderReference, cntComboE, 0);
+    mem_Comment.Top := edt_Complaints.Top + edt_Complaints.Height + 4;
+    if cmb_OrderReference.Items.Count = 0 then
+      Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], cmb_OrderReference, cntComboE, 0);
   end
   else begin
   //это новый заказ
-    E_Complaints.Text := '';
-    E_Complaints.Visible := False;
-    M_Comment.Top := E_Complaints.Top;
+    edt_Complaints.Text := '';
+    edt_Complaints.Visible := False;
+    mem_Comment.Top := edt_Complaints.Top;
   end;
-  M_Comment.Height := M_Comment.Parent.Height - M_Comment.Top - 4;
+  mem_Comment.Height := mem_Comment.Parent.Height - mem_Comment.Top - 4;
 end;
 
 procedure TDlg_Order.LoadComplaints;
@@ -1534,12 +1534,12 @@ begin
   for i := 0 to High(Complaints) do
     if S.NNum(Complaints[i][3]) <> 0 then
       S.ConcatStP(Result, Complaints[i][1], '; ');
-  E_Complaints.Text := Result;
-  E_Complaints.ReadOnly := True;
-  E_Complaints.Hint := E_Complaints.Text;
-  E_Complaints.ShowHint := True;
-  E_Complaints.EditButtons[0].DropDownFormParams.DropDownForm := Dlg_Order_Complaints;
-//  E_Complaints.EditButtons[0].DropDownFormParams.Align:=daRight;
+  edt_Complaints.Text := Result;
+  edt_Complaints.ReadOnly := True;
+  edt_Complaints.Hint := edt_Complaints.Text;
+  edt_Complaints.ShowHint := True;
+  edt_Complaints.EditButtons[0].DropDownFormParams.DropDownForm := Dlg_Order_Complaints;
+//  edt_Complaints.EditButtons[0].DropDownFormParams.Align:=daRight;
 end;
 
 procedure TDlg_Order.GetEstimateList;
@@ -1576,20 +1576,20 @@ var
   i, j, k, l: Integer;
   st: string;
 begin
-  st := Cb_EstimatePath.Text;
-  Cb_EstimatePath.Items.Clear;
-  Cb_EstimatePath.KeyItems.Clear;
-  if (Cb_Format.Value = '-1') or (Cb_Format.Text = '') then
+  st := cmb_EstimatePath.Text;
+  cmb_EstimatePath.Items.Clear;
+  cmb_EstimatePath.KeyItems.Clear;
+  if (cmb_Format.Value = '-1') or (cmb_Format.Text = '') then
     Exit;
-  Cb_EstimatePath.Items.Add('[нет стандартных смет]');
-  Cb_EstimatePath.KeyItems.Add('0');
+  cmb_EstimatePath.Items.Add('[нет стандартных смет]');
+  cmb_EstimatePath.KeyItems.Add('0');
   for i := 0 to High(EstimateDirs) do
-    if Pos(UpperCase(Cb_Format.Text) + '\', UpperCase(EstimateDirs[i][0])) = 1 then begin
-      Cb_EstimatePath.Items.Add(EstimateDirs[i][0]);
-      Cb_EstimatePath.KeyItems.Add(EstimateDirs[i][1]);
+    if Pos(UpperCase(cmb_Format.Text) + '\', UpperCase(EstimateDirs[i][0])) = 1 then begin
+      cmb_EstimatePath.Items.Add(EstimateDirs[i][0]);
+      cmb_EstimatePath.KeyItems.Add(EstimateDirs[i][1]);
     end;
   if not PreserveValue then
-    Cb_EstimatePath.Text := '';
+    cmb_EstimatePath.Text := '';
 end;
 
 
@@ -1641,18 +1641,18 @@ begin
     'select name, id_nomencl from dv.nomenclatura where id_group = 2996 order by name asc',
     null
   );  }
-//i:=Cth.GetControlValue(Cb_EstimatePath);
+//i:=Cth.GetControlValue(cmb_EstimatePath);
   //адйи, имя, null, 9 участков производства, доп.компл, цена
   StdItems := [];
-  v := Cth.GetControlValue(Cb_EstimatePath);
+  v := Cth.GetControlValue(cmb_EstimatePath);
   if S.NSt(v) = '' then Exit;
-//  StdItems := Q.QLoadToVarDynArray2('select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp ' + 'from or_std_items where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' + 'order by name asc', [Cth.GetControlValue(Cb_EstimatePath)]);
+//  StdItems := Q.QLoadToVarDynArray2('select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp ' + 'from or_std_items where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' + 'order by name asc', [Cth.GetControlValue(cmb_EstimatePath)]);
   StdItems := Q.QLoadToVarDynArray2(
     'select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp, wo_estimate ' +
     'from or_std_items '+
     'where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' +
     'order by name asc',
-    [Cth.GetControlValue(Cb_EstimatePath)]
+    [Cth.GetControlValue(cmb_EstimatePath)]
   );
   Gh.GetGridColumn(DBGridEh1, 'name').PickList.Clear;
 //  Gh.GetGridColumn(DBGridEh1, 'name').KeyList.Clear;
@@ -1724,7 +1724,7 @@ end;
 
 function TDlg_Order.GetItemNum(r: Integer): string;
 begin
-  Result := E_OrderNum.Text + '_' + AnsiRightStr('000' + IntToStr(r), 3);
+  Result := edt_OrderNum.Text + '_' + AnsiRightStr('000' + IntToStr(r), 3);
 end;
 
 function TDlg_Order.IsRowEmpty(r: Integer): Boolean;
@@ -1766,7 +1766,7 @@ begin
     Exit;
   end;
   //не допускаются нестандартные позиции в производственно паспорте
-  if (Cth.GetControlValue(Cb_Organization) = -1) and (MemTableEh1.FieldByName('nstd').AsInteger = 1) then
+  if (Cth.GetControlValue(cmb_Organization) = -1) and (MemTableEh1.FieldByName('nstd').AsInteger = 1) then
     Exit;
   MemTableEh1.FieldByName('status').Value := 'E';
   //нельзя, чтобы одновременно был задан маршрут и галка Перепродажа либо СГП, и нельзя когда не задано ни то ни другое
@@ -1841,7 +1841,7 @@ begin
 {  if (MemTableEh1.FieldByName('sgp').AsString <> '')
     then if (MemTableEh1.FieldByName('sgp').AsFloat < 0)or(MemTableEh1.FieldByName('sgp').AsFloat > MemTableEh1.FieldByName('qnt').AsFloat) then Exit;}
   //галка СГП недопустима для производственного паспотра
-  if (MemTableEh1.FieldByName('sgp').AsInteger = 1) and (Cth.GetControlValue(Cb_Organization) = -1) then
+  if (MemTableEh1.FieldByName('sgp').AsInteger = 1) and (Cth.GetControlValue(cmb_Organization) = -1) then
     Exit;
   //не вышли раньше, статус меняем на ОК
   MemTableEh1.FieldByName('status').Value := '';
@@ -1910,19 +1910,19 @@ begin
   //ограничим количество добаляемых строк
   if MemTableEh1.RecNo = MaxTableRowCount + 1 then
     MemTableEh1.RecNo := MaxTableRowCount;
-//  Cb_Format.Enabled:= MemTableEh1.RecordCount = 0;
-//  Cb_EstimatePath.Enabled:=Cb_Format.Enabled;
+//  cmb_Format.Enabled:= MemTableEh1.RecordCount = 0;
+//  cmb_EstimatePath.Enabled:=cmb_Format.Enabled;
 end;
 
-procedure TDlg_Order.M_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TDlg_Order.mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 //установим признак важности комментария
 begin
   inherited;
   if (Key = Ord('Q')) and (Shift = [ssCtrl]) then begin
     //предотвратим изменение статуса важности на пустом комментарии
     //(иначе только одно изменение статуса, которое невидимо, пройдет как изменени паспорта)
-    if Trim(M_Comment.Text) = '' then Exit;
-    Ne_Attention.Value := Ne_Attention.Value xor 1;
+    if Trim(mem_Comment.Text) = '' then Exit;
+    nedt_Attention.Value := nedt_Attention.Value xor 1;
   end;
 end;
 
@@ -1980,7 +1980,7 @@ begin
   SetSumInHeader;
 end;
 
-procedure TDlg_Order.Cb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TDlg_Order.cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   inherited;
   ImageIndex := -1;
@@ -1990,7 +1990,7 @@ begin
     ImageIndex := 0;
 end;
 
-procedure TDlg_Order.Cb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TDlg_Order.cmb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   inherited;
   ImageIndex := -1;
@@ -2000,16 +2000,16 @@ begin
     ImageIndex := 0;
 end;
 
-procedure TDlg_Order.Cb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TDlg_Order.cmb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   //если здесь задаем ImageIndex, то картинка отображается в самом комбобоксе и во всех строках выпадающего списка
   //если же просто задать Images для комбобокса, то картинка бедт браться из имиджлиста в соответствии с итеминдекс, при этом и в выпадающем списке они будут разные
   //отличаются, надо разбираться:
-  //procedure TDlg_Order.Cb_CustomerManGetImageIndex(Sender: TObject;
-  //procedure TDlg_Order.Cb_CustomerManGetItemImageIndex(Sender: TObject;
-//  Cb_CustomerName.Images:=nil; //Il_Columns;
-//  Cb_CustomerMan.Images:=Il_Columns;
-//  Cb_CustomerLegalName.Images:=Il_Columns;
+  //procedure TDlg_Order.cmb_CustomerManGetImageIndex(Sender: TObject;
+  //procedure TDlg_Order.cmb_CustomerManGetItemImageIndex(Sender: TObject;
+//  cmb_CustomerName.Images:=nil; //Il_Columns;
+//  cmb_CustomerMan.Images:=Il_Columns;
+//  cmb_CustomerLegalName.Images:=Il_Columns;
   inherited;
   ImageIndex := -1; //без картинки
   if Mode = fView then
@@ -2020,7 +2020,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.Chb_ViewEmptyItemsClick(Sender: TObject);
+procedure TDlg_Order.chb_ViewEmptyItemsClick(Sender: TObject);
 begin
   inherited;
   if InLoadData then
@@ -2037,27 +2037,27 @@ begin
   if InLoadData then
     Exit;
   //суммма перепродажи в составе всех изделий
-  Ne_AC_0.Value := S.NNum(Gh.GetGridColumn(DBGridEh1, '_sum_resale').Footer.SumValue);
+  nedt_AC_0.Value := S.NNum(Gh.GetGridColumn(DBGridEh1, '_sum_resale').Footer.SumValue);
   //сумма изделий, кроме перепродажной части в них, но по изделиям с сгп принимается = 0
   sum_items_nosgp := S.NNum(Gh.GetGridColumn(DBGridEh1, '_sum_items_nosgp').Footer.SumValue);
   //суммма всех изделий, кроме перепродажной части в них
-  Ne_Items_0.Value := S.NNum(Gh.GetGridColumn(DBGridEh1, 'sum').Footer.SumValue) - S.NNum(Ne_AC_0.Value);
-  Ne_AC.Value := RoundTo(S.NNum(Ne_AC_0.Value) + S.NNum(Ne_AC_0.Value) / 100 * S.NNum(Ne_AC_M.Value) - S.NNum(Ne_AC_0.Value) / 100 * S.NNum(Ne_AC_D.Value), -2);
-  Ne_Items.Value := RoundTo(S.NNum(Ne_Items_0.Value) + S.NNum(Ne_Items_0.Value) / 100 * S.NNum(Ne_Items_M.Value) - S.NNum(Ne_Items_0.Value) / 100 * S.NNum(Ne_Items_D.Value), -2);
-  Ne_Items_NoSgp.Value := RoundTo(S.NNum(sum_items_nosgp) + S.NNum(sum_items_nosgp) / 100 * S.NNum(Ne_Items_M.Value) - S.NNum(sum_items_nosgp) / 100 * S.NNum(Ne_Items_D.Value), -2);
-  Ne_Trans.Value := RoundTo(S.NNum(Ne_Trans_0.Value) + S.NNum(Ne_Trans_0.Value) / 100 * S.NNum(Ne_Trans_M.Value) - S.NNum(Ne_Trans_0.Value) / 100 * S.NNum(Ne_Trans_D.Value), -2);
-  Ne_Montage.Value := RoundTo(S.NNum(Ne_Montage_0.Value) + S.NNum(Ne_Montage_0.Value) / 100 * S.NNum(Ne_Montage_M.Value) - S.NNum(Ne_Montage_0.Value) / 100 * S.NNum(Ne_Montage_D.Value), -2);
-  Ne_Sum.Value := Ne_Items.Value + Ne_AC.Value + Ne_Trans.Value + Ne_Montage.Value;
-  Ne_Discount.Value := Ne_Sum.Value - Ne_Items_0.Value + Ne_AC_0.Value + Ne_Trans_0.Value + Ne_Montage_0.Value;
+  nedt_Items_0.Value := S.NNum(Gh.GetGridColumn(DBGridEh1, 'sum').Footer.SumValue) - S.NNum(nedt_AC_0.Value);
+  nedt_AC.Value := RoundTo(S.NNum(nedt_AC_0.Value) + S.NNum(nedt_AC_0.Value) / 100 * S.NNum(nedt_AC_M.Value) - S.NNum(nedt_AC_0.Value) / 100 * S.NNum(nedt_AC_D.Value), -2);
+  nedt_Items.Value := RoundTo(S.NNum(nedt_Items_0.Value) + S.NNum(nedt_Items_0.Value) / 100 * S.NNum(nedt_Items_M.Value) - S.NNum(nedt_Items_0.Value) / 100 * S.NNum(nedt_Items_D.Value), -2);
+  nedt_Items_NoSgp.Value := RoundTo(S.NNum(sum_items_nosgp) + S.NNum(sum_items_nosgp) / 100 * S.NNum(nedt_Items_M.Value) - S.NNum(sum_items_nosgp) / 100 * S.NNum(nedt_Items_D.Value), -2);
+  nedt_Trans.Value := RoundTo(S.NNum(nedt_Trans_0.Value) + S.NNum(nedt_Trans_0.Value) / 100 * S.NNum(nedt_Trans_M.Value) - S.NNum(nedt_Trans_0.Value) / 100 * S.NNum(nedt_Trans_D.Value), -2);
+  nedt_Montage.Value := RoundTo(S.NNum(nedt_Montage_0.Value) + S.NNum(nedt_Montage_0.Value) / 100 * S.NNum(nedt_Montage_M.Value) - S.NNum(nedt_Montage_0.Value) / 100 * S.NNum(nedt_Montage_D.Value), -2);
+  nedt_Sum.Value := nedt_Items.Value + nedt_AC.Value + nedt_Trans.Value + nedt_Montage.Value;
+  nedt_Discount.Value := nedt_Sum.Value - nedt_Items_0.Value + nedt_AC_0.Value + nedt_Trans_0.Value + nedt_Montage_0.Value;
   //посчитаем сумму без ндс, выделать ли ндс смотрим в массиве организаций
   nds := 0;
   //возьмем ндс из массива ораганизаций, при этом данные в массиве сдвинуты вниз, в нем нет первой строки комбобокса Производство
-  if (Cb_Organization.ItemIndex > 0) and (Cb_Organization.ItemIndex <= High(Organizations) + 1) then
-    nds := S.IIf(S.NSt(Organizations[Cb_Organization.ItemIndex - 1][3]) <> '', 20, 0);
-  Ne_SumWoNds.Value := RoundTo(Ne_Sum.Value / ((nds + 100) / 100), -2);
-{  Ne_AddCompl.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_resale').Footer.SumValue;
-  Ne_Discount.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_discount').Footer.SumValue;
-  Ne_Sum.Value:=Gh.GetGridColumn(DBGridEh1, 'sum').Footer.SumValue + S.NNum(Ne_SumOtgr.Value) + S.NNum(Ne_SumMontage.Value);}
+  if (cmb_Organization.ItemIndex > 0) and (cmb_Organization.ItemIndex <= High(Organizations) + 1) then
+    nds := S.IIf(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 20, 0);
+  nedt_SumWoNds.Value := RoundTo(nedt_Sum.Value / ((nds + 100) / 100), -2);
+{  nedt_AddCompl.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_resale').Footer.SumValue;
+  nedt_Discount.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_discount').Footer.SumValue;
+  nedt_Sum.Value:=Gh.GetGridColumn(DBGridEh1, 'sum').Footer.SumValue + S.NNum(nedt_SumOtgr.Value) + S.NNum(nedt_SumMontage.Value);}
 end;
 
 procedure TDlg_Order.DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -2235,9 +2235,9 @@ var
   i, j: Integer;
   v: Variant;
 begin
-  Cb_Format.Enabled := False;
-  Cb_EstimatePath.Enabled := False;
-  Id_Estimate := S.NInt(Cth.GetControlValue(Cb_EstimatePath));
+  cmb_Format.Enabled := False;
+  cmb_EstimatePath.Enabled := False;
+  Id_Estimate := S.NInt(Cth.GetControlValue(cmb_EstimatePath));
   ItemPrefix := '';
   if Id_Estimate = 0 then
     Exit;
@@ -2499,7 +2499,7 @@ begin
         if (Fdbs[j] = 'pos$i') then v := i;
         if (Fmts[j] = 'id_std') then begin
           if S.NNum(MemTableEh1.FieldByName('nstd').Value) = 1 then begin
-            n := Q.QCallStoredProc('P_CreateOrStdItem_Nstd', 'name$s;newid$io', [MemTableEh1.FieldByName('name').AsString, -1]);
+            n := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [MemTableEh1.FieldByName('name').AsString, -1]);
             if Length(n) = 0
               then Res := -1 else v := n[1];
           end;
@@ -2527,8 +2527,8 @@ begin
       //вызовем процедуру синхронизации позиции заказа с ИТМ
       //после этого надо обязаетльно загрузить смету, если она есть, так как иначе все сметные позиции по изделию удалятся
         if SyncWithITM and SyncItemWithItm and not IsTemplate then begin
-          Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['P_SyncIzdel', 'id_zakaz ' + VarToStr(Id_ITM) + ', id_izdel ' + VarToStr(id_itm_izdel)]);
-          va2 := Q.QCallStoredProc('dv.P_SyncIzdel', 'id_dv$i;typeoperation$i;nameizdel$s;countizdel$f;idparentizdel$i;idaddizdel$io',
+          Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncIzdel', 'id_zakaz ' + VarToStr(Id_ITM) + ', id_izdel ' + VarToStr(id_itm_izdel)]);
+          va2 := Q.QCallStoredProc('dv.p_SyncIzdel', 'id_dv$i;typeoperation$i;nameizdel$s;countizdel$f;idparentizdel$i;idaddizdel$io',
           [ID_Itm, S.IIfV(id_itm_izdel = null, 1, 2), S.IIFStr(MemTableEh1.FieldByName('prefix').AsString = '', '', MemTableEh1.FieldByName('prefix').AsString + '_') + MemTableEh1.FieldByName('name').AsString, MemTableEh1.FieldByName('qnt').Value, MemTableEh1.FieldByName('id_itm').Value, -1]);
           Res := S.IIf((Length(va2) = 0) or (va2[5] = -1), -1, 1);
           if Res < 0 then  Break;
@@ -2727,7 +2727,7 @@ begin
       st := 'Скидка';
     if st = '+' then
       st := 'Наценка';
-    if (st = '=') or (st = 'Ne_Items_NoSgp') then
+    if (st = '=') or (st = 'nedt_Items_NoSgp') then
       st := '';
     st := S.DeleteRepSpaces(st);
     if (st <> '') and (Pos(', ' + st + ',', ', ' + st1 + ',') = 0) then
@@ -2830,7 +2830,7 @@ begin
     c := Self.FindComponent(FieldsArr[j][cControl]);
     if c = nil then
       Continue;
-//    if (st = 'comm')and(Ne_Attention.Value = 1)
+//    if (st = 'comm')and(nedt_Attention.Value = 1)
 //      then Rep.TemplateSheet.Cells[y, x].Font.Underline:= 2; //xlUnderlineStyleSingle;
     Rep.SetValue('#' + st + '#', TCustomDBEditEh(c).Text);
     if A.InArray(FieldsArr[j][cControl], va) then begin
@@ -2905,7 +2905,7 @@ begin
   MemTableEh1.RecNo := RecNo;
   MemTableEh1.EnableControls;
   Rep.PasteBand('FOOTER');
-  st1 := M_Comment.Text;
+  st1 := mem_Comment.Text;
   Rep.ExcelFind('#comm#', x, y, xlValues);
   //если текст длиный, то SetValue в ыдает ошибку, используем SetValueAsText
   Rep.SetValueAsText('#comm#', st1);
@@ -2913,7 +2913,7 @@ begin
   //то отображаеются в ячеке решетки ####################
   //для исправлени истуации установим формат General (NumberFormat := '';)
   Rep.TemplateSheet.Cells[y, x].NumberFormat := '';
-  if (Ne_Attention.Value = 1) then begin
+  if (nedt_Attention.Value = 1) then begin
     Rep.TemplateSheet.Cells[y, x].Font.Underline := 2; //xlUnderlineStyleSingle;
     Rep.TemplateSheet.Cells[y, x].Font.FontStyle := 'Bold';
   end;
@@ -2936,7 +2936,7 @@ begin
   SetOrderSaveStatusText('');
 end;
 
-procedure TDlg_Order.E_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+procedure TDlg_Order.edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
 //закрытие выпадающей формы причин рекламаций
 var
   va: TVarDynArray;
@@ -2952,7 +2952,7 @@ begin
   GetComplaintsString;
 end;
 
-procedure TDlg_Order.E_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+procedure TDlg_Order.edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
 //открытие выпадающей формы причин рекламаций
 //передаем в выпадающую форму рекламаций произвольные параметры
 var
@@ -3021,7 +3021,7 @@ begin
     if Mode = fDelete then begin
       Subj := 'Удален заказ ' + OrderPath;
       if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
-        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', OrderPath], ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])], ['year', YearOf(De_Beg.Value)], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
+        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', OrderPath], ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])], ['year', YearOf(dedt_Beg.Value)], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
       else
         TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
     end
@@ -3046,7 +3046,7 @@ begin
         ['directory', OrderPath],
         ['old-directory', S.NSt(FieldsArr[GetFieldsArrPos('path')][cBegValue])],
         ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])],
-        ['year', YearOf(De_Beg.Value)],
+        ['year', YearOf(dedt_Beg.Value)],
         ['passport', PspName],
         ['old-passport', PspNameOld],
         ['subject', Subj],
@@ -3080,7 +3080,7 @@ end;
 
 function TDlg_Order.PathToOrders: string;
 begin
-  Result := Module.GetPath_Order(IntToStr(YearOf(Cth.GetControlValue(De_Beg))), FieldsArr[GetFieldsArrPos('in_archive'), cBegValue]);
+  Result := Module.GetPath_Order(IntToStr(YearOf(Cth.GetControlValue(dedt_Beg))), FieldsArr[GetFieldsArrPos('in_archive'), cBegValue]);
 end;
 
 procedure TDlg_Order.ViewAddFile;
@@ -3106,10 +3106,10 @@ var
   i, j, RecNo: Integer;
 begin
   tag := TMenuItem(Sender).tag;
-  if tag = btnView then begin
+  if Tag = mbtView then begin
     ViewAddFile;
   end
-  else if tag = btnDelete then begin
+  else if Tag = mbtDelete then begin
     //удаление
     if MemTableEh2.RecordCount = 0 then
       Exit;
@@ -3127,7 +3127,7 @@ begin
       Mth.Post(MemTableEh2);
     end;
   end
-  else if tag = btnAdd then begin
+  else if Tag = mbtAdd then begin
     //добавление файла
     //диалог выбора, можно несколько
     OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
@@ -3266,7 +3266,7 @@ end;
 
 procedure TDlg_Order.SetAddTasksMenu;
 begin
-  if Cb_Format.Text = 'КБ' then
+  if cmb_Format.Text = 'КБ' then
     Pm_Format.AutoPopup := True
   else
     Pm_Format.AutoPopup := False;
@@ -3370,7 +3370,7 @@ begin
     Exit;
   end;
   LoadKBLogArr := [];
-  E_Address.Text := Addr;
+  edt_Address.Text := Addr;
   MemTableEh1.DisableControls;
   //проход по массиву документа
   for i := rBeg to rBeg + CntI - 1 do begin
@@ -3477,10 +3477,10 @@ procedure TDlg_Order.SetOrderSaveStatusText(Text: string);
 //показываем внизу формы статус сохранения заказа
 begin
   Application.ProcessMessages;
-{  Lb_OrderSaveStatus.Caption:='....';
+{  lbl_OrderSaveStatus.Caption:='....';
   Sleep(5000);
   Application.ProcessMessages;}
-  Lb_OrderSaveStatus.Caption := Text;
+  lbl_OrderSaveStatus.Caption := Text;
   Application.ProcessMessages;
 end;
 
@@ -3489,7 +3489,7 @@ procedure TDlg_Order.HideEmptyItems;
 begin
   DBGridEh1.STFilter.local := True;
   DBGridEh1.STFilter.InstantApply := False;     //не понял пока за что ттвечает
-  Gh.GetGridColumn(DBGridEh1, 'qnt').STFilter.ExpressionStr := S.IIfV(Chb_ViewEmptyItems.Checked, '', '<>0');
+  Gh.GetGridColumn(DBGridEh1, 'qnt').STFilter.ExpressionStr := S.IIfV(chb_ViewEmptyItems.Checked, '', '<>0');
   DBGridEh1.DefaultApplyFilter;
 end;
 

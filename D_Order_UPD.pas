@@ -18,9 +18,9 @@ type
   TDlg_Order_UPD = class(TForm_Normal)
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
-    De_Upd_Reg: TDBDateTimeEditEh;
-    De_Upd: TDBDateTimeEditEh;
-    E_Upd: TDBEditEh;
+    dedt_Upd_Reg: TDBDateTimeEditEh;
+    dedt_Upd: TDBDateTimeEditEh;
+    edt_Upd: TDBEditEh;
     Img_Info: TImage;
     procedure Bt_OkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -52,20 +52,20 @@ procedure TDlg_Order_UPD.Bt_OkClick(Sender: TObject);
 begin
   inherited;
   ModalResult:=mrNone;
-  if (va2[0][1] <> null)and(De_Upd.Value = null)and(Trim(E_Upd.Text) = '') then begin
+  if (va2[0][1] <> null)and(dedt_Upd.Value = null)and(Trim(edt_Upd.Text) = '') then begin
     if (MyQuestionMessage('Удалить данные УПД?') = mrYes) then begin
     end
     else Exit;
   end
-  else if (De_Upd.Value = null)or(Trim(E_Upd.Text) = '')or(De_Upd.Value > Date)or
-          (De_Upd.Value < Turv.GetDaysFromCalendar_Next(va2[0][6], -5))
+  else if (dedt_Upd.Value = null)or(Trim(edt_Upd.Text) = '')or(dedt_Upd.Value > Date)or
+          (dedt_Upd.Value < Turv.GetDaysFromCalendar_Next(va2[0][6], -5))
     then begin
       MyWarningMessage('Данные некорректны!');
       Exit;
     end;
   Q.QExecSql(
     'update orders set dt_upd_reg = :dt_upd_reg$d, dt_upd = :dt_upd$d, upd = :upd$s where id = :id$i',
-    [S.IIf(De_Upd.Value = null, null, De_Upd_Reg.Value), De_Upd.Value, Trim(E_Upd.Text), ID]
+    [S.IIf(dedt_Upd.Value = null, null, dedt_Upd_Reg.Value), dedt_Upd.Value, Trim(edt_Upd.Text), ID]
   );
   ModalResult:=mrOk;
 end;
@@ -89,13 +89,13 @@ begin
   //!!!временно
   Mode:=S.IIf((User.Role(rOr_D_Order_EnteringUPD)), fEdit, fView);
   Cth.SetDialogForm(Self, Mode, 'УПД');
-  Cth.SetControlValue(De_Upd_Reg, S.IIf(va2[0][1] = null, Date, va2[0][1]));
-  Cth.SetControlValue(De_Upd, va2[0][2]);
-  Cth.SetControlValue(E_Upd, va2[0][3]);
-  De_Upd_Reg.Enabled:=False;
-  De_Upd.Enabled:= Mode <> fView;
-  E_Upd.Enabled:= Mode <> fView;
-  E_Upd.MaxLength:=20;
+  Cth.SetControlValue(dedt_Upd_Reg, S.IIf(va2[0][1] = null, Date, va2[0][1]));
+  Cth.SetControlValue(dedt_Upd, va2[0][2]);
+  Cth.SetControlValue(edt_Upd, va2[0][3]);
+  dedt_Upd_Reg.Enabled:=False;
+  dedt_Upd.Enabled:= Mode <> fView;
+  edt_Upd.Enabled:= Mode <> fView;
+  edt_Upd.MaxLength:=20;
   Cth.SetInfoIcon(Img_Info,Cth.SetInfoIconText(Self, [
    ['Введите данные УПД.'#13#10+
     'Дата документа и его номер обязательны. Дата регистрации ставится автоматически.'#13#10 ,

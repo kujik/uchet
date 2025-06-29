@@ -24,8 +24,8 @@ type
     PrintDBGridEh1: TPrintDBGridEh;
     MainApplicationEvents: TApplicationEvents;
     TlbMain: TToolBar;
-    Lb_GetTop: TLabel;
-    Lb_GetBottom: TLabel;
+    lbl_GetTop: TLabel;
+    lbl_GetBottom: TLabel;
     //картинка с калькулятором
     Img_Main: TImage;
     Desctop_Label: TLabel;

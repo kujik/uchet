@@ -117,15 +117,15 @@ begin
   Frg1.CreateAddControls('1', cntCheck, 'Показать суммы', 'ChbViewSum', '', 4, yrefB, 200);
 
   Frg1.Opt.SetButtons(1, [
-   [btnRefresh], [],
-   [btnView], [btnEdit, User.Role(rOr_D_Order_Ch)], [btnAdd, 1], [btnCopy, 1], [btnCustom_OrderFromTemplate, 1], [btnDelete, User.Role(rOr_D_Order_Del)], [],
-   [btnViewEstimate], [btnLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-btnCustom_CreateAggregateEstimate, 1], [],
-   [-btnCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [], [-btnCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)], [],
-   [btnTest, User.IsDeveloper],
-   [btnDividorM], [btnPrint], [btnPrintPassport], [btnPrintLabels], [btnDividorM], [],
-   [btnGridFilter], [], [btnGridSettings], [], [btnCtlPanel]
+   [mbtRefresh], [],
+   [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
+   [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [],
+   [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [], [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)], [],
+   [mbtTest, User.IsDeveloper],
+   [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [],
+   [mbtGridFilter], [], [mbtGridSettings], [], [mbtCtlPanel]
   ]);
-  Frg1.Opt.SetButtonsIfEmpty([btnCustom_OrderFromTemplate]);
+  Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
 
 //  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Только производственные', 'prod'], ['Тест', '', True], ['Тест2'], ['ТТТТТТТТ', False]];
   Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_Sum)]];
@@ -153,10 +153,10 @@ begin
   Frg2.Opt.SetTable('v_order_items');
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
-    [btnRefresh], [], [btnViewEstimate], [btnLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-btnCopyEstimate, True, 'Скопировать смету в буфер'],
-    [-btnCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)], [-btnCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], [],
-    [-btnCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
-    [], [btnGridSettings], [-btnTest, User.IsDeveloper]
+    [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
+    [-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)], [-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], [],
+    [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
+    [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
 
   Frg1.ReadControlValues;
@@ -186,7 +186,7 @@ var
   st, st1: string;
   i, j: Integer;
 begin
-  if Tag = btnTest then begin
+  if Tag = mbtTest then begin
     TFrmOWOrder.Show( Self, '_order', [myfodialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
 {    Fr.setstate(null, True, 'wqdwqsdfwefsdfsdfgsdgsdfgdfsgdfsgsdfgdfgdfgfd');exit;
 //    Fr.MemTableEh1.Close;
@@ -195,7 +195,7 @@ begin
     Fr.Opt.SetColFeature('dt_end_manager', 'chbt', False, False);
     Fr.Opt.SetColFeature('pay', 'f=#.000:', True, True);}
   end
-{ else if (Tag = btnRefresh) then begin
+{ else if (Tag = mbtRefresh) then begin
     //если этот флаг установлен, то при закрытии перечитывается строка, но в итоге
     //при обновлении всей таблицы при открытой доп. панеле происходит зависание
     InRowPanelDataChanged:=False;
@@ -203,24 +203,24 @@ begin
 //    SetColumnsVisible;
     Exit;
   end}
-  else if Tag = btnCustom_OrToDevel then begin
+  else if Tag = mbtCustom_OrToDevel then begin
     Orders.OrderItemsToDevel(Fr.ID, null);
   end
-  else if Tag = btnViewEstimate then begin
+  else if Tag = mbtViewEstimate then begin
     //просмотр общей сметы по одному или нескольким (отмеченным чекбоксами в индикаторе) заказам
     va1:=A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
     if (Length(va1) = 0)
       then Wh.ExecReference(myfrm_R_AggEstimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([Fr.ID]))
       else Wh.ExecReference(myfrm_R_AggEstimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], va1);
   end
-  else if Tag = btnPrintPassport then begin
-    PrintReport.P_Order(Fr.ID);
+  else if Tag = mbtPrintPassport then begin
+    PrintReport.pnl_Order(Fr.ID);
   end
-  else if (Tag = btnCustom_OrderFromTemplate) then begin
+  else if (Tag = mbtCustom_OrderFromTemplate) then begin
     //заказ из шаблона
     OpenFromTemplate;
   end
-  else if (Tag = btnLoadEstimate) then begin
+  else if (Tag = mbtLoadEstimate) then begin
     //обновление смет по всем изделиям, обновляются на стандартные изделия по данным справочника, на нестандартные,
     //если смета уже есть то пересчитывается количество
     if Orders.IsOrderFinalized(Fr.ID) > 0 then
@@ -232,20 +232,20 @@ begin
     Fr.EndOperation;
     Fr.RefreshRecord;
   end
-  else if (Tag = btnCustom_SendSnDocuments) then begin
+  else if (Tag = mbtCustom_SendSnDocuments) then begin
     //отправить документы на снабжение
     if Orders.IsOrderFinalized(Fr.ID) > 0 then
       Exit;
     Orders.TaskForSendSnDocuments(Fr.ID, null);
     Fr.RefreshRecord;
   end
-  else if (Tag = btnPrintLabels) then begin
+  else if (Tag = mbtPrintLabels) then begin
     Dlg_OrderPrinTLabels.ShowDialog(Fr.ID);
   end
-  else if (Tag = btnCustom_CreateAggregateEstimate) then begin
+  else if (Tag = mbtCustom_CreateAggregateEstimate) then begin
     Orders.CreateAggregateEstimate(Fr.ID, 0);
   end
-  else if (Tag = btnCustom_CreateCompleteEstimate) then begin
+  else if (Tag = mbtCustom_CreateCompleteEstimate) then begin
     Orders.CreateAggregateEstimate(Fr.ID, 1);
   end
   else if Fmode <> fNone then begin
@@ -379,32 +379,32 @@ begin
   //у нас нет задач, которые нужны при пустой панели
 //  if MemTableEh2.RecordCount = 0 then Exit;
   case Tag of
-    btnTest:
+    mbtTest:
       begin
         Fr.SetState(True, True, null);
 //        Fr.SetState(True, True, 'Ощибка!');
       end;
-    btnCustom_OrToDevel:
+    mbtCustom_OrToDevel:
       begin
 //        Fr.SetState(False, False, null);
         Orders.OrderItemsToDevel(null, Fr.ID);
       end;
-    btnViewEstimate: //просмотр сметы
+    mbtViewEstimate: //просмотр сметы
       begin
         Wh.ExecReference(myfrm_R_Estimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([Fr.ID, null]));
       end;
-    btnLoadEstimate: //загрузка сметы по позиции
+    mbtLoadEstimate: //загрузка сметы по позиции
       begin
         Orders.LoadBcadGroups(True);
         Orders.LoadEstimate(null, Fr.ID, null);
         Fr.RefreshRecord;
         Fr.SetState(True, null, null);
       end;
-    btnCopyEstimate:
+    mbtCopyEstimate:
       begin
         Orders.CopyEstimateToBuffer(null, fr.ID);
       end;
-    btnCustom_Order_AttachThnDoc:
+    mbtCustom_Order_AttachThnDoc:
       begin
         if Orders.IsOrderFinalized(Frg1.ID, True, cOrItmStatus_Completed) >= cOrItmStatus_Completed then
           Exit;

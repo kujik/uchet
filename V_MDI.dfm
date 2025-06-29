@@ -20,7 +20,7 @@ object Form_MDI: TForm_MDI
   OnDestroy = FormDestroy
   OnShow = FormShow
   TextHeight = 13
-  object P_StatusBar: TPanel
+  object pnl_StatusBar: TPanel
     Left = 0
     Top = 157
     Width = 333
@@ -31,28 +31,28 @@ object Form_MDI: TForm_MDI
     TabOrder = 0
     ExplicitTop = 156
     ExplicitWidth = 329
-    object Lb_StatusBar_Right: TLabel
+    object lbl_StatusBar_Right: TLabel
       Left = 244
       Top = 1
       Width = 88
       Height = 17
       Align = alRight
-      Caption = 'Lb_StatusBar_Left'
+      Caption = 'lbl_StatusBar_Left'
       ExplicitHeight = 13
     end
-    object Lb_StatusBar_Left: TLabel
+    object lbl_StatusBar_Left: TLabel
       Left = 1
       Top = 1
       Width = 88
       Height = 17
       Align = alLeft
-      Caption = 'Lb_StatusBar_Left'
+      Caption = 'lbl_StatusBar_Left'
       ExplicitHeight = 13
     end
   end
-  object Timer_AfterStart: TTimer
+  object tmrAfterCreate: TTimer
     Interval = 1
-    OnTimer = Timer_AfterStartTimer
+    OnTimer = tmrAfterCreateTimer
     Left = 8
     Top = 96
   end

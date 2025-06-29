@@ -21,7 +21,7 @@ inherited Form_TestTree: TForm_TestTree
     TabOrder = 0
     OnDblClick = DBGridEh1DblClick
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -34,7 +34,7 @@ inherited Form_TestTree: TForm_TestTree
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end
@@ -69,7 +69,7 @@ inherited Form_TestTree: TForm_TestTree
     TabOrder = 3
     OnClick = Bt_ExpandClick
   end
-  object Chb_Materials: TDBCheckBoxEh
+  object chb_Materials: TDBCheckBoxEh
     Left = 170
     Top = 412
     Width = 97
@@ -78,7 +78,7 @@ inherited Form_TestTree: TForm_TestTree
     Caption = #1052#1072#1090#1077#1088#1080#1072#1083#1099
     DynProps = <>
     TabOrder = 4
-    OnClick = Chb_MaterialsClick
+    OnClick = chb_MaterialsClick
   end
   object DataSource1: TDataSource
     DataSet = MemTableEh1

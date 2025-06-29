@@ -13,7 +13,7 @@ uses
 type
   TDlg_Grid1 = class(TForm_Normal)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

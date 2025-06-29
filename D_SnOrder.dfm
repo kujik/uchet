@@ -15,7 +15,7 @@ object Dlg_SnOrder: TDlg_SnOrder
   Position = poOwnerFormCenter
   PixelsPerInch = 96
   TextHeight = 13
-  object De_Date: TDBDateTimeEditEh
+  object dedtDate: TDBDateTimeEditEh
     Left = 40
     Top = 8
     Width = 121
@@ -32,7 +32,7 @@ object Dlg_SnOrder: TDlg_SnOrder
     TabOrder = 0
     Visible = True
   end
-  object Ne_Sum: TDBNumberEditEh
+  object nedt_Sum: TDBNumberEditEh
     Left = 223
     Top = 8
     Width = 121

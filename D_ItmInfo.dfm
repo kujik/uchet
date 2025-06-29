@@ -5,21 +5,21 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   ExplicitWidth = 668
   ExplicitHeight = 459
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 402
     Width = 656
     ExplicitTop = 401
     ExplicitWidth = 652
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 567
       Height = 17
       ExplicitLeft = 567
     end
-    inherited Lb_StatusBar_Left: TLabel
+    inherited lbl_StatusBar_Left: TLabel
       Height = 17
     end
   end
-  object P_Top: TPanel [1]
+  object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
     Width = 656
@@ -30,33 +30,33 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     DesignSize = (
       656
       89)
-    object Label1: TLabel
+    object lbl1: TLabel
       Left = 12
       Top = 8
       Width = 32
       Height = 13
-      Caption = 'Label1'
+      Caption = 'lbl1'
     end
-    object Label2: TLabel
+    object lbl2: TLabel
       Left = 12
       Top = 27
       Width = 32
       Height = 13
-      Caption = 'Label1'
+      Caption = 'lbl1'
     end
-    object Label3: TLabel
+    object lbl3: TLabel
       Left = 12
       Top = 46
       Width = 32
       Height = 13
-      Caption = 'Label1'
+      Caption = 'lbl1'
     end
-    object Label4: TLabel
+    object lbl4: TLabel
       Left = 12
       Top = 65
       Width = 32
       Height = 13
-      Caption = 'Label1'
+      Caption = 'lbl1'
     end
     object Bt_Go: TSpeedButton
       Left = 616
@@ -73,12 +73,12 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     Top = 89
     Width = 656
     Height = 313
-    ActivePage = Ts_Artikul
+    ActivePage = ts_Artikul
     Align = alClient
     TabOrder = 2
     ExplicitWidth = 652
     ExplicitHeight = 312
-    object Ts_Artikul: TTabSheet
+    object ts_Artikul: TTabSheet
       Caption = #1040#1088#1090#1080#1082#1091#1083#1099
       object DBGridEh1: TDBGridEh
         Left = 0
@@ -93,7 +93,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
         RowDetailPanel.Height = 250
         TabOrder = 0
         object RowDetailData: TRowDetailPanelControlEh
-          object E_PPComment: TDBEditEh
+          object edt_PPComment: TDBEditEh
             Left = 299
             Top = 215
             Width = 494
@@ -106,13 +106,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
             DynProps = <>
             EditButtons = <>
             TabOrder = 0
-            Text = 'E_PPComment'
+            Text = 'edt_PPComment'
             Visible = False
           end
         end
       end
     end
-    object Ts_Nomencl: TTabSheet
+    object ts_Nomencl: TTabSheet
       Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1103
       ImageIndex = 2
       object DBGridEh2: TDBGridEh
@@ -141,13 +141,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
             DynProps = <>
             EditButtons = <>
             TabOrder = 0
-            Text = 'E_PPComment'
+            Text = 'edt_PPComment'
             Visible = False
           end
         end
       end
     end
-    object Ts_FromCAD: TTabSheet
+    object ts_FromCAD: TTabSheet
       Caption = #1053#1086#1084#1077#1085#1082#1083#1072#1090#1091#1088#1072' '#1080#1079' CAD'
       ImageIndex = 2
       object DBGridEh3: TDBGridEh
@@ -177,13 +177,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
             DynProps = <>
             EditButtons = <>
             TabOrder = 0
-            Text = 'E_PPComment'
+            Text = 'edt_PPComment'
             Visible = False
           end
         end
       end
     end
-    object Ts_ToDel: TTabSheet
+    object ts_ToDel: TTabSheet
       Caption = #1053#1072' '#1091#1076#1072#1083#1077#1085#1080#1077
       ImageIndex = 3
       object DBGridEh4: TDBGridEh
@@ -215,14 +215,14 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
             EditButtons = <>
             PopupMenu = Pm_3
             TabOrder = 0
-            Text = 'E_PPComment'
+            Text = 'edt_PPComment'
             Visible = False
           end
         end
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 4
     Top = 132
   end

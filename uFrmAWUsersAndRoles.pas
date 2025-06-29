@@ -15,24 +15,24 @@ type
     TsRoles: TTabSheet;
     TsUsers: TTabSheet;
     FrgUsers: TFrDBGridEh;
-    PRight: TPanel;
-    PUserData: TPanel;
-    PRTop: TPanel;
+    pnlRight: TPanel;
+    pnlUserData: TPanel;
+    pnlRTop: TPanel;
     FrgUserRoles: TFrDBGridEh;
-    E_Name: TDBEditEh;
-    E_Login: TDBEditEh;
-    E_Pwd: TDBEditEh;
-    E_Pwd2: TDBEditEh;
-    Cb_Job: TDBComboBoxEh;
-    E_EMail: TDBEditEh;
-    Chb_EMailAuto: TDBCheckBoxEh;
-    Chb_AutoLogin: TDBCheckBoxEh;
-    Chb_Active: TDBCheckBoxEh;
-    E_JobComm: TDBEditEh;
-    Ne_Idle: TDBNumberEditEh;
-    Chb_ChPwd: TDBCheckBoxEh;
+    edtname: TDBEditEh;
+    edtLogin: TDBEditEh;
+    edtPwd: TDBEditEh;
+    edtPwd2: TDBEditEh;
+    cmbJob: TDBComboBoxEh;
+    edtEMail: TDBEditEh;
+    chbEMailAuto: TDBCheckBoxEh;
+    chbAutoLogin: TDBCheckBoxEh;
+    chbActive: TDBCheckBoxEh;
+    edtJobComm: TDBEditEh;
+    nedtIdle: TDBNumberEditEh;
+    chbChPwd: TDBCheckBoxEh;
     FrgRoles: TFrDBGridEh;
-    Panel1: TPanel;
+    pnl1: TPanel;
     FrgRights: TFrDBGridEh;
     procedure BtUserSaveClick(Sender: TObject);
     procedure ControlOnChange(Sender: TObject); override;
@@ -73,26 +73,26 @@ implementation
 
 procedure TFrmAWUsersAndRoles.ControlOnChange(Sender: TObject);
 begin
-  if A.InArray(TControl(Sender).Name, ['Chb_EMailAuto', 'E_Login']) then
+  if A.InArray(TControl(Sender).Name, ['chbEMailAuto', 'edtLogin']) then
     SetEmailAddr;
-  if TControl(Sender).Name = 'Chb_ChPwd' then begin
-    if Chb_ChPwd.Checked then
+  if TControl(Sender).Name = 'chbChPwd' then begin
+    if chbChPwd.Checked then
       Exit;
-    E_Pwd.Enabled := True;
-    E_Pwd2.Enabled := True;
-    E_Pwd.Text := '';
-    E_Pwd2.Text := '';
+    edtPwd.Enabled := True;
+    edtPwd2.Enabled := True;
+    edtPwd.Text := '';
+    edtPwd2.Text := '';
   end;
 end;
 
 procedure TFrmAWUsersAndRoles.SetEmailAddr;
 begin
-  if Chb_EMailAuto.Checked then begin
-    E_EMail.Text:= E_Login.Text + '@' + EmailDomain;
+  if chbEMailAuto.Checked then begin
+    edtEMail.Text:= edtLogin.Text + '@' + EmailDomain;
   end
   else begin
   end;
-  E_EMail.Readonly:= Chb_EMailAuto.Checked;
+  edtEMail.Readonly:= chbEMailAuto.Checked;
 end;
 
 procedure TFrmAWUsersAndRoles.LoadUser;
@@ -105,20 +105,20 @@ begin
     'select name, login, decode(pwd, null, '''', 111), active, autologin, job, email, emailauto, job_comm, idletime from adm_users where id = :id$i',
     [S.IIf(UMode = fAdd, -9999, FrgUsers.Id)]
   );
-  E_Name.Value:=v[0];
-  E_Login.Value:=v[1];
-  E_Pwd.Value:=v[2];
-  E_Pwd2.Value:=v[2];
-  Cth.SetControlValue(Chb_Active, v[3]);
-  Cth.SetControlValue(Chb_AutoLogin, v[4]);
-  Cb_Job.ItemIndex:=S.IIf(v[5] = null, -1, v[5]);
-  Cth.SetControlValue(E_EMail, v[6]);
-  Cth.SetControlValue(Chb_EMailAuto, v[7]);
-  Cth.SetControlValue(E_JobComm, v[8]);
-  Cth.SetControlValue(Ne_Idle, v[9]);
-  Chb_ChPwd.Checked := UMode in [fAdd, fCopy];
-  E_Pwd.Enabled := Chb_ChPwd.Checked;
-  E_Pwd2.Enabled := Chb_ChPwd.Checked;
+  edtname.Value:=v[0];
+  edtLogin.Value:=v[1];
+  edtPwd.Value:=v[2];
+  edtPwd2.Value:=v[2];
+  Cth.SetControlValue(chbActive, v[3]);
+  Cth.SetControlValue(chbAutoLogin, v[4]);
+  cmbJob.ItemIndex:=S.IIf(v[5] = null, -1, v[5]);
+  Cth.SetControlValue(edtEMail, v[6]);
+  Cth.SetControlValue(chbEMailAuto, v[7]);
+  Cth.SetControlValue(edtJobComm, v[8]);
+  Cth.SetControlValue(nedtIdle, v[9]);
+  chbChPwd.Checked := UMode in [fAdd, fCopy];
+  edtPwd.Enabled := chbChPwd.Checked;
+  edtPwd2.Enabled := chbChPwd.Checked;
   SetEmailAddr;
   va2 := Q.QLoadToVarDynArray2('select id_role from adm_user_roles where id_user = :id$i', [S.IIf(UMode = fAdd, -9999, FrgUsers.Id)]);
   for i := 0 to FrgUserRoles.GetCount(False) - 1 do
@@ -128,18 +128,18 @@ end;
 
 procedure TFrmAWUsersAndRoles.BtUserSaveClick(Sender: TObject);
 begin
-  if TButton(Sender).Tag = btnCancel then begin
+  if TButton(Sender).Tag = mbtCancel then begin
   end
   else if not SaveUser(UMode) then
     Exit;
-  PUserData.Enabled := False;
+  pnlUserData.Enabled := False;
   FrgUserRoles.Opt.SetColFeature('value', 'e', False, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnEdit, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnAdd, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnCopy, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnDelete, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, btnOk, 'Сохранить', False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, btnCancel, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtEdit, null, True);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtAdd, null, True);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtCopy, null, True);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtDelete, null, True);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, mbtOk, 'Сохранить', False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, mbtCancel, null, False);
   FrgUsers.RefreshGrid;
 end;
 
@@ -152,10 +152,10 @@ var
 begin
   Result:=False;
   st := '';
-  if E_Name.value = '' then st := st + 'Имя должно быть задано'#10#13;
-  if E_Login.value = '' then st := st + 'Логин должен быть задан'#10#13;
-  if E_Pwd.value <> E_Pwd2.value then st := st + 'Пароли не совпадают'#10#13;
-  if (E_EMail.Text = '') or not S.IsValidEmail(E_EMail.Text) then st := st + 'Некорретный почтовый адрес'#10#13;
+  if edtname.value = '' then st := st + 'Имя должно быть задано'#10#13;
+  if edtLogin.value = '' then st := st + 'Логин должен быть задан'#10#13;
+  if edtPwd.value <> edtPwd2.value then st := st + 'Пароли не совпадают'#10#13;
+  if (edtEMail.Text = '') or not S.IsValidEmail(edtEMail.Text) then st := st + 'Некорретный почтовый адрес'#10#13;
   if St <> '' then begin
     myWarningMessage(st);
     Exit;
@@ -163,21 +163,21 @@ begin
 
   Q.QBeginTrans(True);
   id:= FrgUsers.ID;
-  email := E_EMail.Text;
-  emailauto := S.IIf(Chb_EMailAuto.Checked, 1, 0);
-  if E_EMail.Text = E_Login.Text + '@' + EmailDomain then begin
+  email := edtEMail.Text;
+  emailauto := S.IIf(chbEMailAuto.Checked, 1, 0);
+  if edtEMail.Text = edtLogin.Text + '@' + EmailDomain then begin
     email := '';
     emailauto := 1;
   end;
   res := Q.QIUD(VartoStr(S.IIf(UMode = fEdit, 'u', S.IIf((UMode = fAdd) or (UMode = fCopy), 'i', 'd')))[1],
     'adm_users', 'sq_adm_users', 'id;name;login;active;autologin;job;email;emailauto;job_comm;idletime',
-    [id, E_Name.value, E_login.value, Cth.GetControlValue(Chb_Active), Cth.GetControlValue(Chb_AutoLogin),
-    Cb_Job.ItemIndex, email, emailauto, Cth.GetControlValue(E_JobComm), Cth.GetControlValue(Ne_Idle)
+    [id, edtname.value, edtlogin.value, Cth.GetControlValue(chbActive), Cth.GetControlValue(chbAutoLogin),
+    cmbJob.ItemIndex, email, emailauto, Cth.GetControlValue(edtJobComm), Cth.GetControlValue(nedtIdle)
     ], True
   );
   if (UMode = fAdd) or (UMode = fCopy) then id:= Res;
-  if Chb_ChPwd.Checked then
-    Q.QExecSql('update adm_users set pwd = get_hash_val(:pwd$s) where id = :id', [E_Pwd.value, ID]);
+  if chbChPwd.Checked then
+    Q.QExecSql('update adm_users set pwd = get_hash_val(:pwd$s) where id = :id', [edtPwd.value, ID]);
   Res:=Q.QExecSql('delete from adm_user_roles where id_user = :id', [id]);
   if UMode<> fDelete then
     for i := 0 to FrgUserRoles.GetCount(False) - 1 do begin
@@ -213,8 +213,8 @@ begin
   FrgRights.DbGridEh1.Repaint;
   RightsOld := GetRightsStr;
   IsRightsChanged := False;
-//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, btnOk, null, False);
-//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, btnCancel, null, False);
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, mbtOk, null, False);
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, mbtCancel, null, False);
 end;
 
 procedure TFrmAWUsersAndRoles.SaveRole();
@@ -279,15 +279,15 @@ procedure TFrmAWUsersAndRoles.FrgUsersButtonClick(var Fr: TFrDBGridEh; const No:
 var
   v: Variant;
 begin
-  if Tag in [btnEdit, btnAdd, btnCopy, btnDelete] then begin
-    PUserData.Enabled := Tag <> btnDelete;
+  if Tag in [mbtEdit, mbtAdd, mbtCopy, mbtDelete] then begin
+    pnlUserData.Enabled := Tag <> mbtDelete;
     FrgUserRoles.Opt.SetColFeature('value', 'e', True, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnEdit, null, False);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnAdd, null, False);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnCopy, null, False);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, btnDelete, null, False);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, btnOk, S.Decode([Tag, btnEdit, 'Изменить', btnAdd, 'Добавить', btnCopy, 'Скопировать', btnDelete, 'Удалить']), True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, btnCancel, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtEdit, null, False);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtAdd, null, False);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtCopy, null, False);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgUsers, mbtDelete, null, False);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, mbtOk, S.Decode([Tag, mbtEdit, 'Изменить', mbtAdd, 'Добавить', mbtCopy, 'Скопировать', mbtDelete, 'Удалить']), True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Self, mbtCancel, null, True);
     UMode := Cth.BtnModeToFMode(Tag);
     LoadUser;
  end;
@@ -303,16 +303,16 @@ begin
   if FrgRoles.ID <= 0 then
     Exit;
   idr := FrgRoles.ID;
-  if Tag = btnCopy then begin
+  if Tag = mbtCopy then begin
     va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles where id = :id$i', [FrgRoles.ID]);
     idr := Q.QIUD('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, va2[0][1] + ' (копия)', va2[0][2]]);
     b := True;
   end;
-  if Tag = btnAdd then begin
+  if Tag = mbtAdd then begin
     idr := Q.QIUD('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, 'Новая роль', '']);
     b := True;
   end;
-  if Tag = btnDelete then begin
+  if Tag = mbtDelete then begin
     if MyQuestionMessage('Удалить роль?') <> mrYes then
       Exit;
     idr := Q.QIUD('d', 'adm_roles', '', 'id$i', [FrgRoles.ID]);
@@ -343,9 +343,9 @@ end;
 
 procedure TFrmAWUsersAndRoles.FrgRightsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = btnOk then
+  if Tag = mbtOk then
     SaveRole;
-  if Tag = btnCancel then
+  if Tag = mbtCancel then
     LoadRole;
   if Tag = 1000 then begin
     //кнопка группироки, со статусом нажата/отжата (меняется автоматически, им не управляем)
@@ -376,8 +376,8 @@ end;
 
 procedure TFrmAWUsersAndRoles.FrgRightsSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, btnOk, null, IsRightsChanged);
-//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, btnCancel, null, IsRightsChanged);
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, mbtOk, null, IsRightsChanged);
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FrgRights, mbtCancel, null, IsRightsChanged);
 end;
 
 
@@ -391,9 +391,9 @@ begin
   Result := False;
   Caption := 'Пользователи и роли';
   Mode:= fNone;
-  Cth.MakePanelsFlat(PMDIClient, []);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
   for i:=0 to High(MyJobNames) do
-    Cb_Job.Items.Add(MyJobNames[i]);
+    cmbJob.Items.Add(MyJobNames[i]);
 
   EmailDomain:=Q.QSelectOneRow('select emaildomain from adm_main_settings', [])[0];
 
@@ -408,7 +408,7 @@ begin
   FrgUsers.Opt.SetTable('v_users');
   FrgUsers.Opt.SetWhere('where id > 0 order by name');
   FrgUsers.Opt.Caption := 'Пользователи';
-  FrgUsers.Opt.SetButtons(1,[[btnEdit],[btnAdd],[btnCopy],[btnDelete]]);
+  FrgUsers.Opt.SetButtons(1,[[mbtEdit],[mbtAdd],[mbtCopy],[mbtDelete]]);
   FrgUsers.Prepare;
 
   FrgUserRoles.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef;
@@ -423,13 +423,13 @@ begin
   va2 := Q.QLoadToVarDynArray2('select id, name, 0 as value from adm_roles order by name', []);
   FrgUserRoles.LoadSourceDataFromArray(va2, '', True);
 
-  PRTop.Height := FrgUsers.PTop.Height;
-  Cth.CreateButtons(PRTop, [[btnToAlRight],[btnOk, True, False, 130, 'Сохранить'],[btnCancel, True, False, 130, 'Отменить']], BtUserSaveClick);
+  pnlRTop.Height := FrgUsers.pnlTop.Height;
+  Cth.CreateButtons(pnlRTop, [[mbtToAlRight],[mbtOk, True, False, 130, 'Сохранить'],[mbtCancel, True, False, 130, 'Отменить']], BtUserSaveClick);
 
-  Cth.AlignControls(PUserData, [], True);
+  Cth.AlignControls(pnlUserData, [], True);
 
   FrgUsers.RefreshGrid;
-  PUserData.Enabled := False;
+  pnlUserData.Enabled := False;
 
   FrgRoles.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef + [myogGridLabels];
   FrgRoles.OnButtonClick := FrgRolesButtonClick;
@@ -440,7 +440,7 @@ begin
     ['rights$s','_Права','180']
   ]);
   FrgRoles.Opt.Caption := 'Роли';
-  FrgRoles.Opt.SetButtons(1,[[btnEdit],[btnAdd],[btnCopy],[btnDelete]]);
+  FrgRoles.Opt.SetButtons(1,[[mbtEdit],[mbtAdd],[mbtCopy],[mbtDelete]]);
   FrgRoles.Opt.SetDataMode(myogdmFromArray);
   FrgRoles.Prepare;
   va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
@@ -461,10 +461,10 @@ begin
   ]);
   FrgRights.Opt.Caption := 'Права доступа';
   FrgRights.Opt.SetButtons(1, [
-    [1000, True, -90, 'Группировка', 'grouping'], [1001, True, 'Раскрыть все', 'expand'], [1002, True, 'Схлопнуть все', 'collapse'], [], [btnCtlPanel],
-    [btnToAlRight],[btnOk, True, False, 130, 'Сохранить'],[btnCancel, True, False, 130, 'Отменить']]
+    [1000, True, -90, 'Группировка', 'grouping'], [1001, True, 'Раскрыть все', 'expand'], [1002, True, 'Схлопнуть все', 'collapse'], [], [mbtCtlPanel],
+    [mbtToAlRight],[mbtOk, True, False, 130, 'Сохранить'],[mbtCancel, True, False, 130, 'Отменить']]
   );
-  FrgRights.Opt.SetButtonsIfEmpty([btnOk, btnCancel]);
+  FrgRights.Opt.SetButtonsIfEmpty([mbtOk, mbtCancel]);
   FrgRights.CreateAddControls('1', cntLabel, 'Текст', 'LbRoleName', '', 4, yrefC, 200);
 
   FrgRights.Opt.SetGrouping(['group1', 'group2'], [], [clGradientActiveCaption, clGradientInactiveCaption], True);

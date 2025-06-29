@@ -16,7 +16,7 @@ object FrmXDsrvAuth: TFrmXDsrvAuth
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96
   TextHeight = 13
-  object ImgUchet: TImage
+  object imgUchet: TImage
     Left = 8
     Top = 8
     Width = 100
@@ -357,7 +357,7 @@ object FrmXDsrvAuth: TFrmXDsrvAuth
       201FB2F27F4D45BBB210F4A1C70000000049454E44AE426082}
     OnDblClick = ImgUchetDblClick
   end
-  object CbUser: TDBComboBoxEh
+  object cmbUser: TDBComboBoxEh
     Left = 114
     Top = 43
     Width = 273
@@ -370,11 +370,11 @@ object FrmXDsrvAuth: TFrmXDsrvAuth
     EditButtons = <>
     LimitTextToListValues = True
     TabOrder = 0
-    Text = 'CbUser'
+    Text = 'cmbUser'
     Visible = True
     OnKeyPress = FormKeyPress
   end
-  object EPwd: TDBEditEh
+  object edtPwd: TDBEditEh
     Left = 114
     Top = 87
     Width = 273
@@ -387,20 +387,20 @@ object FrmXDsrvAuth: TFrmXDsrvAuth
     EditButtons = <>
     PasswordChar = '*'
     TabOrder = 1
-    Text = 'EPwd'
+    Text = 'edtPwd'
     Visible = True
     OnKeyPress = FormKeyPress
   end
-  object BtOk: TBitBtn
+  object btnOk: TBitBtn
     Left = 226
     Top = 114
     Width = 75
     Height = 25
-    Caption = 'BtOk'
+    Caption = 'btnOk'
     TabOrder = 2
-    OnClick = BtOkClick
+    OnClick = btnOkClick
   end
-  object BtCancel: TBitBtn
+  object btnCancel: TBitBtn
     Left = 312
     Top = 114
     Width = 75
@@ -409,6 +409,6 @@ object FrmXDsrvAuth: TFrmXDsrvAuth
     Caption = 'Bt_Ok'
     ModalResult = 2
     TabOrder = 3
-    OnClick = BtCancelClick
+    OnClick = btnCancelClick
   end
 end

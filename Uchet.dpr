@@ -60,7 +60,6 @@ uses
   D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
   D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
-  D_MailingCustomAddr in 'D_MailingCustomAddr.pas' {Dlg_MailingCustomAddr},
   D_Otk in 'D_Otk.pas' {Dlg_Otk},
   D_Order in 'D_Order.pas' {Dlg_Order},
   D_Order_Complaints in 'D_Order_Complaints.pas' {Dlg_Order_Complaints: TCustomDropDownFormEh},
@@ -138,7 +137,6 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-  F_MDIDlg1 in 'F_MDIDlg1.pas' {Form_MDIDlg1},
   F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
   D_CreatePayroll in 'D_CreatePayroll.pas' {Dlg_CreatePayroll},
   F_Payroll in 'F_Payroll.pas' {Form_Payroll},
@@ -151,7 +149,9 @@ uses
   D_CandidatesFromWorkerStatus in 'D_CandidatesFromWorkerStatus.pas' {Dlg_CandidatesFromWorkerStatus},
   uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision},
   uFrmWDAddTurv in 'uFrmWDAddTurv.pas' {FrmWDAddTurv},
-  uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus};
+  uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
+  uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
+  uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice};
 
 //!!!
 
@@ -293,7 +293,6 @@ begin
   Application.CreateForm(TDlg_MainSettings, Dlg_MainSettings);
   Application.CreateForm(TDlg_ModuleSettings, Dlg_ModuleSettings);
   Application.CreateForm(TDlg_Rep_Smeta, Dlg_Rep_Smeta);
-  Application.CreateForm(TDlg_MailingCustomAddr, Dlg_MailingCustomAddr);
   Application.CreateForm(TDlg_Otk, Dlg_Otk);
   Application.CreateForm(TDlg_Order_Complaints, Dlg_Order_Complaints);
   Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
@@ -311,6 +310,7 @@ begin
   Application.CreateForm(TFrmADedtItmCopyRigths, FrmADedtItmCopyRigths);
   Application.CreateForm(TFrmXDedtMemo, FrmXDedtMemo);
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
+  Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
 
   Application.Run;
 

@@ -16,7 +16,7 @@ inherited FrmXWGridAdminOptions: TFrmXWGridAdminOptions
     ModalResult = 1
     TabOrder = 0
   end
-  object Panel1: TPanel
+  object pnl1: TPanel
     Left = 0
     Top = 0
     Width = 1030

@@ -4,11 +4,11 @@ inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
   ExplicitHeight = 240
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
-      inherited PGrid1: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
+      inherited pnlGrid1: TPanel
         inherited Frg1: TFrDBGridEh
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 0
@@ -32,9 +32,9 @@ inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 0

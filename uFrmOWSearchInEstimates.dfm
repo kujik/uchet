@@ -1,11 +1,11 @@
 inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
   Caption = 'FrmOWSearchInEstimates'
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     ExplicitWidth = 278
     ExplicitHeight = 84
-    inherited PMDIClient: TPanel
-      object E_Name: TDBEditEh
+    inherited pnlFrmClient: TPanel
+      object edt_name: TDBEditEh
         Left = 4
         Top = 15
         Width = 260
@@ -21,7 +21,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
         Visible = True
         ExplicitWidth = 256
       end
-      object Chb_InclosedOrders: TCheckBox
+      object chbInclosedOrders: TCheckBox
         Left = 4
         Top = 42
         Width = 173
@@ -29,7 +29,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
         Caption = #1048#1089#1082#1072#1090#1100' '#1074' '#1079#1072#1082#1088#1099#1090#1099#1093' '#1079#1072#1082#1072#1079#1072#1093
         TabOrder = 1
       end
-      object Chb_Like: TCheckBox
+      object chbLike: TCheckBox
         Left = 183
         Top = 42
         Width = 114
@@ -37,17 +37,17 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
         Caption = #1048#1089#1082#1072#1090#1100' '#1087#1086' '#1084#1072#1089#1082#1077
         TabOrder = 2
       end
-      object PgcResults: TPageControl
+      object pgcResults: TPageControl
         Left = 4
         Top = 65
         Width = 260
         Height = 1
-        ActivePage = TsStdItems
+        ActivePage = tsStdItems
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 3
         ExplicitWidth = 256
         ExplicitHeight = 0
-        object TsStdItems: TTabSheet
+        object tsStdItems: TTabSheet
           Caption = #1057#1090#1072#1085#1076#1072#1088#1090#1085#1099#1077' '#1080#1079#1076#1077#1083#1080#1103
           inline Frg1: TFrDBGridEh
             Left = 0
@@ -58,7 +58,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             TabOrder = 0
             ExplicitWidth = 248
             ExplicitHeight = 89
-            inherited PGrid: TPanel
+            inherited pnlGrid: TPanel
               Top = 22
               Width = 242
               Height = 67
@@ -79,12 +79,12 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                   end
                 end
               end
-              inherited PStatus: TPanel
+              inherited pnlStatusBar: TPanel
                 Top = 45
                 Width = 240
                 ExplicitTop = 45
                 ExplicitWidth = 236
-                inherited LbStatusBarLeft: TLabel
+                inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
                 end
@@ -94,25 +94,25 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                 ExplicitHeight = 21
               end
             end
-            inherited PLeft: TPanel
+            inherited pnlLeft: TPanel
               Top = 22
               Height = 67
               ExplicitTop = 22
               ExplicitHeight = 67
             end
-            inherited PTop: TPanel
+            inherited pnlTop: TPanel
               Top = 17
               Width = 252
               ExplicitTop = 17
               ExplicitWidth = 248
             end
-            inherited PContainer: TPanel
+            inherited pnlContainer: TPanel
               Width = 252
               Height = 17
               ExplicitWidth = 248
               ExplicitHeight = 17
             end
-            inherited PBottom: TPanel
+            inherited pnlBottom: TPanel
               Top = 89
               Width = 252
               ExplicitTop = 89
@@ -134,7 +134,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             end
           end
         end
-        object TsOrderItems: TTabSheet
+        object tsOrderItems: TTabSheet
           Caption = #1047#1072#1082#1072#1079#1099
           ImageIndex = 1
           inline Frg2: TFrDBGridEh
@@ -146,7 +146,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             TabOrder = 0
             ExplicitWidth = 248
             ExplicitHeight = 89
-            inherited PGrid: TPanel
+            inherited pnlGrid: TPanel
               Top = 22
               Width = 242
               Height = 67
@@ -167,12 +167,12 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                   end
                 end
               end
-              inherited PStatus: TPanel
+              inherited pnlStatusBar: TPanel
                 Top = 45
                 Width = 240
                 ExplicitTop = 121
                 ExplicitWidth = 744
-                inherited LbStatusBarLeft: TLabel
+                inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
                 end
@@ -182,25 +182,25 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                 ExplicitHeight = 21
               end
             end
-            inherited PLeft: TPanel
+            inherited pnlLeft: TPanel
               Top = 22
               Height = 67
               ExplicitTop = 22
               ExplicitHeight = 143
             end
-            inherited PTop: TPanel
+            inherited pnlTop: TPanel
               Top = 17
               Width = 252
               ExplicitTop = 17
               ExplicitWidth = 756
             end
-            inherited PContainer: TPanel
+            inherited pnlContainer: TPanel
               Width = 252
               Height = 17
               ExplicitWidth = 756
               ExplicitHeight = 17
             end
-            inherited PBottom: TPanel
+            inherited pnlBottom: TPanel
               Top = 89
               Width = 252
               ExplicitTop = 165
@@ -224,16 +224,16 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
         end
       end
     end
-    inherited PDlgPanel: TPanel
-      inherited PDlgMain: TPanel
-        inherited PDlgCenter: TPanel
+    inherited pnlFrmBtns: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 31
           ExplicitWidth = 31
         end
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 16
     Top = 280
   end

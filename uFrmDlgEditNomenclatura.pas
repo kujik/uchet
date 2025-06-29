@@ -25,13 +25,13 @@ uses
 
 type
   TFrmDlgEditNomenclatura = class(TFrmBasicDbDialog)
-    E_Name: TDBEditEh;
-    Cb_Id_Group: TDBComboBoxEh;
-    Cb_Id_Unit: TDBComboBoxEh;
-    E_Id_Group_Itm: TDBEditEh;
-    procedure E_Id_Group_ItmEditButtons0Click(Sender: TObject; var Handled: Boolean);
+    edt_name: TDBEditEh;
+    cmb_id_group: TDBComboBoxEh;
+    cmb_id_unit: TDBComboBoxEh;
+    edt_id_group_itm: TDBEditEh;
+    procedure edt_id_group_itmEditButtons0click(Sender: TObject; var Handled: Boolean);
   private
-    IdGroupItm: Variant;
+    FIdGroupItm: Variant;
     function  Prepare: Boolean; override;
     procedure AfterPrepare; override;
     function  LoadComboBoxes: Boolean; override;
@@ -63,22 +63,22 @@ end;
 
 procedure TFrmDlgEditNomenclatura.GetGroupItm;
 begin
-  Cth.SetControlValue(E_Id_Group_Itm,
-    Q.QSelectOneRow('select path from v_itm_getnomenclpath where id_group = :id_group$i', [IdGroupItm])[0]
+  Cth.SetControlValue(edt_id_group_itm,
+    Q.QSelectOneRow('select path from v_itm_getnomenclpath where id_group = :id_group$i', [FIdGroupItm])[0]
   );
 end;
 
-procedure TFrmDlgEditNomenclatura.E_Id_Group_ItmEditButtons0Click(Sender: TObject; var Handled: Boolean);
+procedure TFrmDlgEditNomenclatura.edt_id_group_itmEditButtons0click(Sender: TObject; var Handled: Boolean);
 begin
   inherited;
-  IdGroupItm := Form_TestTree.ShowDialog(IdGroupItm);
+  FIdGroupItm := Form_TestTree.ShowDialog(FIdGroupItm);
   GetGroupItm;
 end;
 
 function TFrmDlgEditNomenclatura.LoadComboBoxes: Boolean;
 begin
-  Q.QLoadToDBComboBoxEh('select name, id from bcad_groups where name <> ''Готовые изделия'' order by name', [], Cb_Id_Group, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from bcad_units order by name', [], Cb_Id_Unit, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from bcad_groups where name <> ''Готовые изделия'' order by name', [], cmb_id_group, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from bcad_units order by name', [], cmb_id_unit, cntComboLK);
   Result := True;
 end;
 
@@ -91,11 +91,11 @@ var
   IdUnitItm: Integer;
 begin
   Result:= False;
-  if Q.QSelectOneRow('select count(*) from bcad_nomencl where name = :name$s', [E_Name.Text])[0] <> 0 then begin
+  if Q.QSelectOneRow('select count(*) from bcad_nomencl where name = :name$s', [edt_name.Text])[0] <> 0 then begin
     MyWarningMessage('Введенное наименование уже есть в базе номенклатуры Учета!');
     Exit;
   end;
-  vai:= Q.QSelectOneRow('select name, id_group, id_nomencltype from dv.nomenclatura where name = :name$s', [E_Name.Text]);
+  vai:= Q.QSelectOneRow('select name, id_group, id_nomencltype from dv.nomenclatura where name = :name$s', [edt_name.Text]);
   if (S.NSt(vai[0]) <> '') and (vai[2] = 0) then begin
     if MyQuestionMessage('Введенное наименование уже есть в базе номенклатуры ИТМ! Запись в ИТМ изменена не будет. Добавить запись в справочник Учета?') <> mrYes then
       Exit;
@@ -107,19 +107,19 @@ begin
 //  Result := True; Exit;
 
   Q.QBeginTrans(True);
-  IdUnitItm := Q.QSelectOneRow('select id_unit from dv.unit where name_unit = :name$s', [Cb_Id_Unit.Text])[0];
+  IdUnitItm := Q.QSelectOneRow('select id_unit from dv.unit where name_unit = :name$s', [cmb_id_unit.Text])[0];
 //  Q.QIUD(Q.QFModeToIUD(Mode), 'bcad_nomencl', '', 'id$i;name$s;id_group$i;id_unit$i',
-//    [ID, E_Name.Text, Cb_Id_Group.Value, Cb_Id_Unit.Value]
+//    [ID, edt_name.Text, cmb_id_group.Value, cmb_id_unit.Value]
 //  );
   Q.QIUD(Q.QFModeToIUD(Mode), 'bcad_nomencl', '', 'id$i;name$s',
-    [-1, E_Name.Text]
+    [-1, edt_name.Text]
   );
   //обработаем вставку в ИТМ
   //в том числе скорректируем счетчик, используемый для генерации артикула, который мог быть сбит ранее
   //вычленим макимальное число из позиций с артикулом и сохраним его в группе
   //после вставки позиции в итм присвоим артикул процедурой, она счетчик сама не корректирует
   //затем прибавим 1 к счетчику
-  va1:= Q.QLoadToVarDynArrayOneCol('select artikul from dv.nomenclatura where id_group = :id_group$i', [IdGroupItm]);
+  va1:= Q.QLoadToVarDynArrayOneCol('select artikul from dv.nomenclatura where id_group = :id_group$i', [FIdGroupItm]);
   va2:=[];
   for i:= 0 to High(va1) do begin
     j:= StrToIntDef(S.Right(S.NSt(va1[i]), 4), -1);
@@ -131,14 +131,14 @@ begin
     then i:= 0 else i:= va2[0];
   if S.NSt(vai[0]) = '' then begin
     ID := Q.QIUD(Q.QFModeToIUD(Mode), 'dv.nomenclatura', '', 'id_nomencl$i;name$s;fullname$s;id_group$i;id_unit$i;id_nomencltype$i',
-      [-1, E_Name.Text, E_Name.Text, IdGroupItm, IdUnitItm, 0]
+      [-1, edt_name.Text, edt_name.Text, FIdGroupItm, IdUnitItm, 0]
     );
-    Q.QExecSQL('update dv.groups set count_item = :count_item$i where id_group = :id_group$i', [i, IdGroupItm]);
+    Q.QExecSQL('update dv.groups set count_item = :count_item$i where id_group = :id_group$i', [i, FIdGroupItm]);
     Q.QExecSQL(
       'update dv.nomenclatura set id_group=:id_group$i, artikul=(select dv.CreateArtikul(:id_group1$i) from dual) where id_nomencl=:id$i',
-      [IdGroupItm, IdGroupItm, ID]
+      [FIdGroupItm, FIdGroupItm, ID]
     );
-    Q.QExecSQL('update dv.groups set count_item=nvl(count_item, 0) + 1 where id_group = :id_group$i', [IdGroupItm]);
+    Q.QExecSQL('update dv.groups set count_item=nvl(count_item, 0) + 1 where id_group = :id_group$i', [FIdGroupItm]);
   end;
   Q.QCommitOrRollback;
   Result:= Q.CommitSuccess;
@@ -150,8 +150,8 @@ end;
 procedure TFrmDlgEditNomenclatura.AfterPrepare;
 begin
   inherited;
-  Cb_Id_Group.Enabled := False;
-  E_Id_Group_Itm.ReadOnly := True;
+  cmb_id_group.Enabled := False;
+  edt_id_group_itm.ReadOnly := True;
 end;
 
 

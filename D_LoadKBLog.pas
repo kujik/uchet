@@ -13,7 +13,7 @@ uses
 type
   TDlg_LoadKBLog = class(TForm_Normal)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     procedure FormCreate(Sender: TObject);

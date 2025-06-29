@@ -2,24 +2,20 @@ inherited Form_Payroll: TForm_Payroll
   Caption = #1047#1072#1088#1087#1083#1072#1090#1085#1072#1103' '#1074#1077#1076#1086#1084#1086#1089#1090#1100
   ClientHeight = 383
   ClientWidth = 1284
-  ExplicitWidth = 1290
-  ExplicitHeight = 412
-  PixelsPerInch = 96
+  ExplicitWidth = 1300
+  ExplicitHeight = 422
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 364
     Width = 1284
     ExplicitTop = 364
     ExplicitWidth = 1284
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 1195
-      Height = 17
-    end
-    inherited Lb_StatusBar_Left: TLabel
-      Height = 17
+      ExplicitLeft = 1195
     end
   end
-  object P_Top: TPanel [1]
+  object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
     Width = 1284
@@ -27,7 +23,7 @@ inherited Form_Payroll: TForm_Payroll
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    object P_Right: TPanel
+    object pnl_Right: TPanel
       Left = 1221
       Top = 0
       Width = 63
@@ -36,7 +32,7 @@ inherited Form_Payroll: TForm_Payroll
       BevelOuter = bvNone
       TabOrder = 0
     end
-    object P_Left: TPanel
+    object pnl_Left: TPanel
       Left = 0
       Top = 0
       Width = 557
@@ -45,7 +41,7 @@ inherited Form_Payroll: TForm_Payroll
       BevelOuter = bvNone
       TabOrder = 1
     end
-    object P_Center: TPanel
+    object pnl_Center: TPanel
       Left = 557
       Top = 0
       Width = 664
@@ -53,12 +49,12 @@ inherited Form_Payroll: TForm_Payroll
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 2
-      object Lb_Caption1: TLabel
+      object lbl_Caption1: TLabel
         Left = 6
         Top = 5
-        Width = 60
+        Width = 58
         Height = 13
-        Caption = 'Lb_Caption1'
+        Caption = 'lbl_Caption1'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlue
         Font.Height = -11
@@ -66,7 +62,7 @@ inherited Form_Payroll: TForm_Payroll
         Font.Style = []
         ParentFont = False
       end
-      object Lb_Info: TLabel
+      object lbl_Info: TLabel
         Left = 6
         Top = 18
         Width = 89
@@ -111,7 +107,7 @@ inherited Form_Payroll: TForm_Payroll
         object RowDetailData: TRowDetailPanelControlEh
         end
       end
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -124,12 +120,12 @@ inherited Form_Payroll: TForm_Payroll
         DynProps = <>
         EditButtons = <>
         TabOrder = 1
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 2
     Top = 570
   end
@@ -170,12 +166,14 @@ inherited Form_Payroll: TForm_Payroll
     Left = 912
     Top = 99
     BeforeGridText_Data = {
-      7B5C727466315C616E73695C616E7369637067313235315C64656666305C6465
-      666C616E67313034397B5C666F6E7474626C7B5C66305C666E696C5C66636861
-      7273657430205461686F6D613B7D7B5C66315C666E696C5C6663686172736574
-      323034205461686F6D613B7D7D0D0A5C766965776B696E64345C7563315C7061
-      72645C6C616E67313033335C66305C6673323820736173617361736164617361
-      5C6C616E67313034395C66315C667331365C7061720D0A7D0D0A00}
+      7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+      7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+      305C666E696C5C666368617273657430205461686F6D613B7D7B5C66315C666E
+      696C5C6663686172736574323034205461686F6D613B7D7D0D0A7B5C2A5C6765
+      6E657261746F722052696368656432302031302E302E32323030307D5C766965
+      776B696E64345C756331200D0A5C706172645C66305C667332385C6C616E6731
+      303333207361736173617361646173615C66315C667331365C6C616E67313034
+      395C7061720D0A7D0D0A00}
   end
   object FileOpenDialog1: TFileOpenDialog
     FavoriteLinks = <>

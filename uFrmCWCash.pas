@@ -16,27 +16,27 @@ uses
 
 type
   TFrmCWCash = class(TFrmBasicMdi)
-    PTop: TPanel;
-    BtRefresh: TSpeedButton;
-    Lb_Caption: TLabel;
-    PGalka: TPanel;
-    ChbViewAll: TCheckBox;
-    PItog1: TPanel;
-    DBEditEh1: TDBEditEh;
-    PItog2: TPanel;
-    DBEditEh2: TDBEditEh;
-    DBEditEh3: TDBEditEh;
-    DBEditEh4: TDBEditEh;
-    DBEditEh5: TDBEditEh;
-    DBEditEh6: TDBEditEh;
-    DBEditEh7: TDBEditEh;
+    pnlTop: TPanel;
+    btnRefresh: TSpeedButton;
+    lblCaption: TLabel;
+    pnlCheck: TPanel;
+    chbViewAll: TCheckBox;
+    pnlTotal1: TPanel;
+    edt1: TDBEditEh;
+    pnlTotal2: TPanel;
+    edt2: TDBEditEh;
+    edt3: TDBEditEh;
+    edt4: TDBEditEh;
+    edt5: TDBEditEh;
+    edt6: TDBEditEh;
+    edt7: TDBEditEh;
     Frg1: TFrDBGridEh;
     Frg2: TFrDBGridEh;
-    LbCaptL: TLabel;
-    LbCaptR: TLabel;
+    lblCaptionL: TLabel;
+    lblCaptionR: TLabel;
     procedure FormResize(Sender: TObject);
-    procedure BtRefreshClick(Sender: TObject);
-    procedure ChbViewAllClick(Sender: TObject);
+    procedure btnRefreshClick(Sender: TObject);
+    procedure chbViewAllClick(Sender: TObject);
   private
     CashNo: Integer;
     IsCashEditable: Boolean;
@@ -114,19 +114,19 @@ begin
   Result := True;
 end;
 
-procedure TFrmCWCash.BtRefreshClick(Sender: TObject);
+procedure TFrmCWCash.btnRefreshClick(Sender: TObject);
 begin
   Frg1.RefreshGrid;
   Frg2.RefreshGrid;
   SetAmounts;
 end;
 
-procedure TFrmCWCash.ChbViewAllClick(Sender: TObject);
+procedure TFrmCWCash.chbViewAllClick(Sender: TObject);
 begin
   inherited;
   if FInPrepare then
     Exit;
-  BtRefreshClick(nil);
+  btnRefreshClick(nil);
 end;
 
 procedure TFrmCWCash.ControlOnEnter(Sender: TObject);
@@ -168,10 +168,10 @@ begin
     IsCurrDate := User.IsDataEditor or (Fr.GetValue('dt') = Date);
   if Fr.IsNotEmpty then
     sr := S.NInt(Fr.GetValue('source'));
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, btnEdit, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 11) or (sr = -9) or (sr = cs)));
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, btnDelete, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 11) or (sr = -9) or (sr = cs)));
-{    TSpeedButton(P_L_Buttons.FindComponent('Bt_L_'+IntToStr(btnEdit))).Enabled:=
-      P_L_Buttons.Visible and IsNotEmpty and IsCurrDate and ((sr=11)or(sr=-9)or(sr=cs));}
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, mbtEdit, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 11) or (sr = -9) or (sr = cs)));
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, mbtDelete, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 11) or (sr = -9) or (sr = cs)));
+{    TSpeedButton(pnl_L_Buttons.FindComponent('Bt_L_'+IntToStr(btnEdit))).Enabled:=
+      pnl_L_Buttons.Visible and IsNotEmpty and IsCurrDate and ((sr=11)or(sr=-9)or(sr=cs));}
 end;
 
 procedure TFrmCWCash.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
@@ -184,20 +184,20 @@ begin
     IsCurrDate := User.IsDataEditor or (Fr.GetValue('dt') = Date);
   if Fr.IsNotEmpty then
     sr := S.NInt(Fr.GetValue('receiver'));
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, btnEdit, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 1) or (sr = -9) or (sr = cs)));
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, btnDelete, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 1) or (sr = -9) or (sr = cs)));
-{    TSpeedButton(P_R_Buttons.FindComponent('Bt_R_'+IntToStr(btnEdit))).Enabled:=
-      P_L_Buttons.Visible and IsNotEmpty and IsCurrDate and ((sr=1)or(sr=-9)or(sr=cs));}
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, mbtEdit, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 1) or (sr = -9) or (sr = cs)));
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Fr, mbtDelete, null, Fr.IsNotEmpty and IsCurrDate and ((sr = 1) or (sr = -9) or (sr = cs)));
+{    TSpeedButton(pnl_R_Buttons.FindComponent('Bt_R_'+IntToStr(btnEdit))).Enabled:=
+      pnl_L_Buttons.Visible and IsNotEmpty and IsCurrDate and ((sr=1)or(sr=-9)or(sr=cs));}
 end;
 
 procedure TFrmCWCash.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
-  SqlWhere := 'receiver = -' + IntToStr(CashNo) + S.IIFStr(not ChbViewAll.Checked, ' and source >= 0');
+  SqlWhere := 'receiver = -' + IntToStr(CashNo) + S.IIFStr(not chbViewAll.Checked, ' and source >= 0');
 end;
 
 procedure TFrmCWCash.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
-  SqlWhere := 'source = -' + IntToStr(CashNo) + S.IIFStr(not ChbViewAll.Checked, ' and receiver >= 0');
+  SqlWhere := 'source = -' + IntToStr(CashNo) + S.IIFStr(not chbViewAll.Checked, ' and receiver >= 0');
 end;
 
 
@@ -207,7 +207,7 @@ var
   v: Variant;
 begin
   v:=Q.QSelectOneRow('select dt from sn_cash_revision_dt', []);
-  Lb_Caption.Caption:='Журнал Кассы' + IntToStr(CashNo) + ' с ' + DateToStr(v[0]) + ' по '  + DateToStr(Date);
+  lblCaption.Caption:='Журнал Кассы' + IntToStr(CashNo) + ' с ' + DateToStr(v[0]) + ' по '  + DateToStr(Date);
   v:=Q.QSelectOneRow('select sum1, sum1+sum2+sum9, sum1, sum2, sum9, arrivalday, spendingday from v_sn_cash_sum', []);
   for i:=1 to 7 do
     Amounts[i]:=v[i-1];
@@ -218,8 +218,8 @@ end;
 procedure TFrmCWCash.FormResize(Sender: TObject);
 begin
   inherited;
-  Frg1.Width := PMDIClient.ClientWidth div 2;
-  LbCaptR.Left := Frg1.Width + 4;
+  Frg1.Width := pnlFrmClient.ClientWidth div 2;
+  lblCaptionR.Left := Frg1.Width + 4;
 end;
 
 function TFrmCWCash.Prepare: Boolean;
@@ -233,14 +233,14 @@ begin
   if FormDbLock = fNone then
     Exit;
   IsCashEditable := User.Role(S.IIf(CashNo = 1, rPC_J_Cash_1_Ch, rPC_J_Cash_2_Ch)) and (Mode = fEdit);
-  Cth.SetSpeedButton(BtRefresh, mybtRefresh, True);
-  Cth.MakePanelsFlat(PMDIClient, []);
-  Cth.AlignControls(PTop, [], True);
-  Cth.AlignControls(PGalka, [], True);
-  Cth.AlignControls(PItog1, [], True);
-  Cth.AlignControls(PItog2, [], True);
-  PItog1.Visible := (CashNo = 1);
-  PItog2.Visible := (CashNo = 2);
+  Cth.SetSpeedButton(btnRefresh, mybtRefresh, True);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
+  Cth.AlignControls(pnlTop, [], True);
+  Cth.AlignControls(pnlCheck, [], True);
+  Cth.AlignControls(pnlTotal1, [], True);
+  Cth.AlignControls(pnlTotal2, [], True);
+  pnlTotal1.Visible := (CashNo = 1);
+  pnlTotal2.Visible := (CashNo = 2);
   if not PrepareGrids then
     Exit;
   Result := True;

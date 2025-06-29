@@ -11,18 +11,18 @@ type
   TDlg_J_Montage = class(TForm_MDI)
     Bt_OK: TBitBtn;
     Bt_Cancel: TBitBtn;
-    De_Beg: TDBDateTimeEditEh;
-    De_End: TDBDateTimeEditEh;
-    Chb_RC: TDBCheckBoxEh;
-    Chb_RI: TDBCheckBoxEh;
-    M_Comm: TDBMemoEh;
+    dedt_Beg: TDBDateTimeEditEh;
+    dedt_End: TDBDateTimeEditEh;
+    chb_RC: TDBCheckBoxEh;
+    chb_RI: TDBCheckBoxEh;
+    mem_Comm: TDBMemoEh;
     Bt_Act: TBitBtn;
-    Lb_Act: TLabel;
+    lbl_Act: TLabel;
     Bt_Photos: TBitBtn;
-    Lb_Photos: TLabel;
+    lbl_Photos: TLabel;
     Img_Info: TImage;
     OpenDialog1: TOpenDialog;
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     procedure ControlOnChange(Sender: TObject);
     procedure ControlOnExit(Sender: TObject);
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean);
@@ -73,13 +73,13 @@ procedure TDlg_J_Montage.ControlOnChange(Sender: TObject);
 begin
   //выход если в процедуре загрузки
   if InPrepare then Exit;
-  if Sender = De_Beg then begin
+  if Sender = dedt_Beg then begin
     //при изменении начальной даты, поправим проверку конечной - не должна быть ранее начальной и ранее мин даты редактирования
-    if not Cth.DteValueIsDate(De_Beg)
-      then Cth.SetControlsVerification([De_End], [S.DateTimeToIntStr(DtEditMin) + ':' + S.DateTimeToIntStr(IncYear(Date, -30))])
-      else Cth.SetControlsVerification([De_End], [S.DateTimeToIntStr(Max(De_Beg.Value, DtEditMin)) + ':' + S.DateTimeToIntStr(Date)]); // +':-' - кон дата обязательна
-//      else Cth.SetControlsVerification([De_End], [S.DateTimeToIntStr(De_Beg.Value) +':' + S.DateTimeToIntStr(Date)+':-']);
-    Verify(De_End);
+    if not Cth.DteValueIsDate(dedt_Beg)
+      then Cth.SetControlsVerification([dedt_End], [S.DateTimeToIntStr(DtEditMin) + ':' + S.DateTimeToIntStr(IncYear(Date, -30))])
+      else Cth.SetControlsVerification([dedt_End], [S.DateTimeToIntStr(Max(dedt_Beg.Value, DtEditMin)) + ':' + S.DateTimeToIntStr(Date)]); // +':-' - кон дата обязательна
+//      else Cth.SetControlsVerification([dedt_End], [S.DateTimeToIntStr(dedt_Beg.Value) +':' + S.DateTimeToIntStr(Date)+':-']);
+    Verify(dedt_End);
   end;
   //проверим, признак что в этом событии проверка
   Verify(Sender, True);
@@ -208,7 +208,7 @@ procedure TDlg_J_Montage.AfterPrepare;
 //вызывается после успешной отработки функции Prepare
 begin
   //поправим формат проверки коненой даты
-  ControlOnChange(De_Beg);
+  ControlOnChange(dedt_Beg);
 end;
 
 
@@ -227,11 +227,11 @@ begin
   //все поля основной таблицы в бд
   Fields:='id$i;dt_beg$d;dt_end$d;rep_customer$i;rep_installer$i;comm$s;path$s';
   //соотвествующий им контролы, кроме левого - id
-  Ctrls:=[nil, De_Beg, De_End, Chb_RC, Chb_RI, M_Comm, nil];
+  Ctrls:=[nil, dedt_Beg, dedt_End, chb_RC, chb_RI, mem_Comm, nil];
   //для добавления инициализация значений полей, для других режимов из запроса в базе
   BegValues:=Q.QSelectOneRow(Q.QSIUDSql('s', 'or_montage', Fields), [ID]);
   OrderIsEnding:=Q.QSelectOneRow('select dt_end from v_orders where id = :id$i', [ID])[0] <> null;
-  Lb_Caption.Caption:=S.NSt(Q.QSelectOneRow('select ornum from v_orders where id = :id$i', [ID])[0]);
+  lbl_Caption.Caption:=S.NSt(Q.QSelectOneRow('select ornum from v_orders where id = :id$i', [ID])[0]);
   if BegValues[0] = null
     then BegValues:=VarArrayOf([ID, Date, null, 0, 0, '', null]);
   OldPath:=S.NSt(BegValues[6]);
@@ -246,10 +246,10 @@ begin
   Cth.SetControlsOnCheckDrawRequired(Self, ControlCheckDrawRequiredState);
   //доступность контролов, в зависимости от режима, кроме дат начала/окончания - всегда дисейбл
   Cth.DlgSetControlsEnabled(Self, Mode, [], []);
-  De_Beg.Enabled:=not OrderIsEnding and De_Beg.Enabled and (not Cth.DteValueIsDate(De_Beg) or (De_Beg.Value >= DtEditMin));
-  De_End.Enabled:=not OrderIsEnding and De_End.Enabled and (not Cth.DteValueIsDate(De_End) or (De_End.Value >= DtEditMin));
+  dedt_Beg.Enabled:=not OrderIsEnding and dedt_Beg.Enabled and (not Cth.DteValueIsDate(dedt_Beg) or (dedt_Beg.Value >= DtEditMin));
+  dedt_End.Enabled:=not OrderIsEnding and dedt_End.Enabled and (not Cth.DteValueIsDate(dedt_End) or (dedt_End.Value >= DtEditMin));
   //параметры верификации контролов
-  CtrlVerifications:=['', S.IIFStr(De_Beg.Enabled, S.DateTimeToIntStr(DtEditMin) +':' + S.DateTimeToIntStr(Date), ''),':'+S.DateTimeToIntStr(Date)+':-','','','0:4000:0:T',''];
+  CtrlVerifications:=['', S.IIFStr(dedt_Beg.Enabled, S.DateTimeToIntStr(DtEditMin) +':' + S.DateTimeToIntStr(Date), ''),':'+S.DateTimeToIntStr(Date)+':-','','','0:4000:0:T',''];
   //параметры проверки контролов установив для них
   Cth.SetControlsVerification(Ctrls, CtrlVerifications);
   //проверка наличия файлов акта и фотоотчета
@@ -315,16 +315,16 @@ begin
   if DirectoryExists(Module.GetPath_OrMontage_Act(BegValues[6]))
     then a:=TDirectory.GetFiles(Module.GetPath_OrMontage_Act(BegValues[6]), '*', TSearchOption.soAllDirectories);
   if Length(a) = 0
-    then begin b1:=False; Lb_Act.Caption:='Акт не загружен!'; end
-    else Lb_Act.Caption:='Акт загружен';
+    then begin b1:=False; lbl_Act.Caption:='Акт не загружен!'; end
+    else lbl_Act.Caption:='Акт загружен';
   a:=[];
   if DirectoryExists(Module.GetPath_OrMontage_Photos(BegValues[6]))
     then a:=TDirectory.GetFiles(Module.GetPath_OrMontage_Photos(BegValues[6]), '*', TSearchOption.soAllDirectories);
   if Length(a) = 0
-    then begin b2:=False; Lb_Photos.Caption:='Фотоотчет не загружен!' end
-    else Lb_Photos.Caption:='Фотоотчет загружен';
-  if b1 then Lb_Act.Font.Color:=clWindowText else Lb_Act.Font.Color:=RGB(240,0,0);
-  if b2 then Lb_Photos.Font.Color:=clWindowText else Lb_Photos.Font.Color:=RGB(240,0,0);
+    then begin b2:=False; lbl_Photos.Caption:='Фотоотчет не загружен!' end
+    else lbl_Photos.Caption:='Фотоотчет загружен';
+  if b1 then lbl_Act.Font.Color:=clWindowText else lbl_Act.Font.Color:=RGB(240,0,0);
+  if b2 then lbl_Photos.Font.Color:=clWindowText else lbl_Photos.Font.Color:=RGB(240,0,0);
   Result:=b1 and b2;
   IsFilesLoaded:=Result;
 end;

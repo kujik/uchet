@@ -672,8 +672,8 @@ begin
       Break;
     end;
   //период за который выбираем данные
-  dt1:=Dlg_Turv_FromParsec.De_1.Value;
-  dt2:=Dlg_Turv_FromParsec.De_2.Value;
+  dt1:=Dlg_Turv_FromParsec.dedt_1.Value;
+  dt2:=Dlg_Turv_FromParsec.dedt_2.Value;
   //начало и конец месяца
   dt3:=EncodeDate(YearOf(PeriodStartDate), MonthOf(PeriodStartDate), 1);
   dt4:=IncDay(IncMonth(dt3, 1), -1);

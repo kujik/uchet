@@ -5,26 +5,26 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
   ExplicitWidth = 647
   ExplicitHeight = 257
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 635
     Height = 203
     ExplicitWidth = 270
     ExplicitHeight = 82
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 625
       Height = 145
       ExplicitWidth = 260
       ExplicitHeight = 33
-      object Lb_1_Caption: TLabel
+      object lbl_1_Caption: TLabel
         Left = 0
         Top = 0
         Width = 625
         Height = 13
         Align = alTop
-        Caption = 'Lb_1_Caption'
+        Caption = 'lbl_1_Caption'
         ExplicitWidth = 66
       end
-      object P_Main: TPanel
+      object pnl_Main: TPanel
         Left = 0
         Top = 13
         Width = 625
@@ -36,28 +36,28 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
         ExplicitTop = 22
         ExplicitWidth = 631
         ExplicitHeight = 130
-        object Lb_1: TLabel
+        object lbl_1: TLabel
           Left = 16
           Top = 24
           Width = 50
           Height = 13
           Caption = #1055#1088#1086#1076#1072#1078#1072':'
         end
-        object Lb_2: TLabel
+        object lbl_2: TLabel
           Left = 16
           Top = 64
           Width = 52
           Height = 13
           Caption = #1054#1090#1075#1088#1091#1079#1082#1072':'
         end
-        object Lb_3: TLabel
+        object lbl_3: TLabel
           Left = 16
           Top = 104
           Width = 63
           Height = 13
           Caption = #1056#1077#1072#1083#1080#1079#1072#1094#1080#1103':'
         end
-        object Ne_1_R: TDBNumberEditEh
+        object nedt_1_R: TDBNumberEditEh
           Left = 190
           Top = 21
           Width = 130
@@ -74,7 +74,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 0
           Visible = True
         end
-        object Ne_1_O: TDBNumberEditEh
+        object nedt_1_O: TDBNumberEditEh
           Left = 342
           Top = 21
           Width = 130
@@ -91,7 +91,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 1
           Visible = True
         end
-        object Ne_1_I: TDBNumberEditEh
+        object nedt_1_I: TDBNumberEditEh
           Left = 494
           Top = 21
           Width = 130
@@ -108,7 +108,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 2
           Visible = True
         end
-        object Ne_2_R: TDBNumberEditEh
+        object nedt_2_R: TDBNumberEditEh
           Left = 190
           Top = 61
           Width = 130
@@ -125,7 +125,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 3
           Visible = True
         end
-        object Ne_2_O: TDBNumberEditEh
+        object nedt_2_O: TDBNumberEditEh
           Left = 342
           Top = 61
           Width = 130
@@ -142,7 +142,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 4
           Visible = True
         end
-        object Ne_2_I: TDBNumberEditEh
+        object nedt_2_I: TDBNumberEditEh
           Left = 494
           Top = 61
           Width = 130
@@ -159,7 +159,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 5
           Visible = True
         end
-        object Ne_3_R: TDBNumberEditEh
+        object nedt_3_R: TDBNumberEditEh
           Left = 190
           Top = 101
           Width = 130
@@ -176,7 +176,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 6
           Visible = True
         end
-        object Ne_3_O: TDBNumberEditEh
+        object nedt_3_O: TDBNumberEditEh
           Left = 342
           Top = 101
           Width = 130
@@ -193,7 +193,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           TabOrder = 7
           Visible = True
         end
-        object Ne_3_I: TDBNumberEditEh
+        object nedt_3_I: TDBNumberEditEh
           Left = 494
           Top = 101
           Width = 130
@@ -212,40 +212,40 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 150
       Width = 625
       Height = 52
       ExplicitTop = 240
       ExplicitWidth = 858
       ExplicitHeight = 52
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 623
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Top = 48
         Width = 623
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 623
         Height = 44
         ExplicitWidth = 258
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 591
           Width = 32
           Height = 36
           ExplicitLeft = 824
           ExplicitWidth = 32
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 386
           Height = 36
           ExplicitLeft = -69
-          inherited ChbDlgNoClose: TCheckBox
+          inherited chbNoclose: TCheckBox
             Top = -51
           end
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 515
           Width = 76
           Height = 36
@@ -253,15 +253,15 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           ExplicitWidth = 76
           ExplicitHeight = 36
         end
-        inherited PDlgInfo: TPanel
+        inherited pnlFrmBtnsInfo: TPanel
           Height = 36
         end
-        inherited PDlgBtnL: TPanel
+        inherited pnlFrmBtnsL: TPanel
           Width = 368
           Height = 36
           ExplicitWidth = 368
           ExplicitHeight = 36
-          object Cb_DtB: TDBComboBoxEh
+          object cmb_DtB: TDBComboBoxEh
             Left = 57
             Top = 6
             Width = 130
@@ -277,7 +277,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
             TabOrder = 0
             Visible = True
           end
-          object Cb_DtE: TDBComboBoxEh
+          object cmb_DtE: TDBComboBoxEh
             Left = 238
             Top = 6
             Width = 130
@@ -294,7 +294,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
             Visible = True
           end
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Left = 409
           Width = 2
           Height = 36
@@ -302,16 +302,16 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 203
     Width = 635
     ExplicitTop = 82
     ExplicitWidth = 270
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 543
       Height = 14
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

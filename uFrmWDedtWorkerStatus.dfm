@@ -5,17 +5,17 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
   ExplicitWidth = 619
   ExplicitHeight = 251
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 607
     Height = 197
-    ExplicitWidth = 852
-    ExplicitHeight = 401
-    inherited PMDIClient: TPanel
+    ExplicitWidth = 603
+    ExplicitHeight = 196
+    inherited pnlFrmClient: TPanel
       Width = 597
       Height = 148
-      ExplicitWidth = 842
-      ExplicitHeight = 352
-      object Cb_Job: TDBComboBoxEh
+      ExplicitWidth = 593
+      ExplicitHeight = 147
+      object cmbJob: TDBComboBoxEh
         Left = 87
         Top = 122
         Width = 508
@@ -30,7 +30,7 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
         TabOrder = 0
         Visible = True
       end
-      object Cb_Division: TDBComboBoxEh
+      object cmbDivision: TDBComboBoxEh
         Left = 87
         Top = 95
         Width = 508
@@ -45,7 +45,7 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
         TabOrder = 1
         Visible = True
       end
-      object Cb_Status: TDBComboBoxEh
+      object cmbStatus: TDBComboBoxEh
         Left = 87
         Top = 68
         Width = 121
@@ -59,9 +59,9 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
         EditButtons = <>
         TabOrder = 2
         Visible = True
-        OnChange = Cb_StatusChange
+        OnChange = cmb_StatusChange
       end
-      object De_Date: TDBDateTimeEditEh
+      object dedtDate: TDBDateTimeEditEh
         Left = 87
         Top = 41
         Width = 121
@@ -77,7 +77,7 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
         TabOrder = 3
         Visible = True
       end
-      object Cb_Worker: TDBComboBoxEh
+      object cmbWorker: TDBComboBoxEh
         Left = 87
         Top = 14
         Width = 508
@@ -93,49 +93,52 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 153
       Width = 597
-      ExplicitTop = 357
-      ExplicitWidth = 842
-      inherited BvDlg: TBevel
+      ExplicitTop = 152
+      ExplicitWidth = 593
+      inherited bvlFrmBtnsTl: TBevel
         Width = 595
+        ExplicitWidth = 595
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 595
+        ExplicitWidth = 595
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 595
-        ExplicitWidth = 840
-        inherited PDlgBtnForm: TPanel
+        ExplicitWidth = 591
+        inherited pnlFrmBtnsMain: TPanel
           Left = 496
-          ExplicitLeft = 741
+          ExplicitLeft = 492
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 268
-          ExplicitLeft = 513
+          ExplicitLeft = 264
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 397
-          ExplicitLeft = 642
+          ExplicitLeft = 393
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 128
-          ExplicitWidth = 373
+          ExplicitWidth = 124
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 197
     Width = 607
-    ExplicitTop = 401
-    ExplicitWidth = 852
-    inherited LbStatusBarRight: TLabel
-      Left = 515
+    ExplicitTop = 196
+    ExplicitWidth = 603
+    inherited lblStatusBarR: TLabel
+      Left = 534
       Height = 14
+      ExplicitLeft = 534
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 14
     end
   end

@@ -28,22 +28,20 @@ uses
 
 type
   TFrmODedtNomenclFiles = class(TFrmBasicMdi)
-    PNomencl: TPanel;
-    LbNomencl: TLabel;
+    pnlNomencl: TPanel;
+    lblNomencl: TLabel;
     OpenDialog1: TOpenDialog;
-    Panel1: TPanel;
+    pnlGrid: TPanel;
     Frg1: TFrDBGridEh;
     procedure Frg1DbGridEh1DblClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    { Private declarations }
-    Path: string;
-    QntFiles: Integer;
+    FPath: string;
+    FQntFiles: Integer;
     function  Prepare: Boolean; override;
-    procedure BtClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;
     procedure GetExistFiles;
   public
-    { Public declarations }
     class procedure ShowDialog(AOwner: TComponent; AID: Variant);
   end;
 
@@ -75,7 +73,7 @@ begin
 end;
 
 
-procedure TFrmODedtNomenclFiles.BtClick(Sender: TObject);
+procedure TFrmODedtNomenclFiles.btnClick(Sender: TObject);
 //обработка нажатия кнопок (кроме основных кнопок диалога)
 var
   i: Integer;
@@ -83,26 +81,26 @@ var
   State : TKeyboardState;
   b: Boolean;
 begin
-  if TControl(Sender).Tag = btnAdd then begin
+  if TControl(Sender).Tag = mbtAdd then begin
     try
       OpenDialog1.Options:=[ofAllowMultiSelect, ofFileMustExist];
       if not OpenDialog1.Execute then Exit;
       st := Module.GetPath_Nomencl_Drawings(ID);
       ForceDirectories(st);
-      Path := st;
+      FPath := st;
       for i:=0 to OpenDialog1.Files.Count-1 do
         if FileExists(OpenDialog1.Files[i])
-          then CopyFile(PChar(OpenDialog1.Files[i]), PChar(Path + '\' + ExtractFileName(OpenDialog1.Files[i])), False)  //False - перезаписывать файл, True - будет ошибка если существует
+          then CopyFile(PChar(OpenDialog1.Files[i]), PChar(FPath + '\' + ExtractFileName(OpenDialog1.Files[i])), False)  //False - перезаписывать файл, True - будет ошибка если существует
           else myMessageDlg('Файл не найден!', mtWarning, [mbOk]);
     finally
       GetExistFiles;
     end;
   end;
-  if TControl(Sender).Tag = btnDelete then begin
+  if TControl(Sender).Tag = mbtDelete then begin
     try
       if (Frg1.RecNo = 0) or (MyQuestionMessage('Удалить файл'#13#10'"' + Frg1.GetValue + '"'#13#10'?') <> mrYes)
         then Exit;
-      DeleteFile(Path + '\' + Frg1.GetValue);
+      DeleteFile(FPath + '\' + Frg1.GetValue);
     finally
       GetExistFiles;
     end;
@@ -113,12 +111,12 @@ begin
       if (State[vk_Control] and 128) <> 0 then begin
         st := '';
         for i := 0 to Frg1.GetCount - 1 do
-          S.ConcatStP(st, '"' +  Path + '\' + Frg1.GetValue('name', i) + '"', ' ');
+          S.ConcatStP(st, '"' +  FPath + '\' + Frg1.GetValue('name', i) + '"', ' ');
         Clipboard.AsText := st;
       end
       else if (State[vk_Shift] and 128) <> 0
-        then Sys.CopyFilesToClipboard(Path + '\' + Frg1.GetValue)
-        else Clipboard.AsText := '"' + Path + '\' + Frg1.GetValue + '"';
+        then Sys.CopyFilesToClipboard(FPath + '\' + Frg1.GetValue)
+        else Clipboard.AsText := '"' + FPath + '\' + Frg1.GetValue + '"';
     finally
     end;
   end;
@@ -127,8 +125,8 @@ end;
 procedure TFrmODedtNomenclFiles.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
-  if ((QntFiles = 0) and (Frg1.RecordCount > 0)) or ((QntFiles > 0) and (Frg1.RecordCount = 0)) then begin
-    Q.QCallStoredProc('P_SetSplDemandValue', 'id$i;op$i;v$i', [ID, 8, Min(Frg1.RecordCount, 1)]);
+  if ((FQntFiles = 0) and (Frg1.RecordCount > 0)) or ((FQntFiles > 0) and (Frg1.RecordCount = 0)) then begin
+    Q.QCallStoredProc('p_SetSplDemandValue', 'id$i;op$i;v$i', [ID, 8, Min(Frg1.RecordCount, 1)]);
     RefreshParentForm;
   end;
   inherited;
@@ -137,7 +135,7 @@ end;
 procedure TFrmODedtNomenclFiles.Frg1DbGridEh1DblClick(Sender: TObject);
 begin
   try
-  Sys.ExecFile(Path + '\' + Frg1.GetValueS);
+  Sys.ExecFile(FPath + '\' + Frg1.GetValueS);
   finally
   end;
 end;
@@ -148,7 +146,7 @@ var
   va2: TVarDynArray2;
   i: Integer;
 begin
-  sa:= Sys.GetFileInDirectoryOnly(Path);
+  sa:= Sys.GetFileInDirectoryOnly(FPath);
   va2:=[];
   for i := 0 to High(sa) do
     va2 := va2 + [[ExtractFileName(sa[i]), DateTimeToStr(FileDateToDateTime(FileAge(sa[i])))]];
@@ -166,13 +164,13 @@ begin
 //FMode := fView;
   Caption := '~Файлы к номенклатуре';
   FOpt.DlgPanelStyle:= dpsBottomRight;
-  Cth.MakePanelsFlat(PMDIClient, []);
+  Cth.MakePanelsFlat(pnlFrmClient, []);
 //  if FMode = fNone then
-    FOpt.DlgButtonsR:=[[btnAdd, Mode = fNone], [btnDelete, 1], [btnDividor], [1000, 'В буфер'], [btnDividor, True], [btnSpace, True, 1]];
- // FOpt.DlgButtonsR:= FOpt.DlgButtonsR + [[btnDividor],[1000, 'В буфер']];
+    FOpt.DlgButtonsR:=[[mbtAdd, Mode = fNone], [mbtDelete, 1], [mbtDividor], [1000, 'В буфер'], [mbtDividor, True], [mbtSpace, True, 1]];
+ // FOpt.DlgButtonsR:= FOpt.DlgButtonsR + [[mbtDividor],[1000, 'В буфер']];
   FOpt.StatusBarMode:=stbmNone;
-  LbNomencl.Caption := S.NSt(Q.QSelectOneRow('select name from dv.nomenclatura where id_nomencl = :id$i', [ID])[0]);
-  Cth.AlignControls(PNomencl, [], True, 2);
+  lblNomencl.Caption := S.NSt(Q.QSelectOneRow('select name from dv.nomenclatura where id_nomencl = :id$i', [ID])[0]);
+  Cth.AlignControls(pnlNomencl, [], True, 2);
   //настроим фрейм гида
   Frg1.Options:=[myogIndicatorColumn, myogColoredTitle, myogHiglightEditableCells, myogHiglightEditableColumns{, myogMultiSelect, myogIndicatorCheckBoxes}];
   Frg1.Opt.SetDataMode(myogdmFromArray);
@@ -184,10 +182,10 @@ begin
 //Frg1.DBGridEh1.IndicatorOptions := Frg1.DBGridEh1.IndicatorOptions + [gioShowRowSelCheckBoxesEh];
 //Frg1.DBGridEh1.OptionsEh:=Frg1.DBGridEh1.OptionsEh - [dghClearSelection];
   if ID <> 0 then begin
-    Path := Module.GetPath_Nomencl_Drawings(ID);
+    FPath := Module.GetPath_Nomencl_Drawings(ID);
     GetExistFiles;
   end;
-  QntFiles := Frg1.RecordCount;
+  FQntFiles := Frg1.RecordCount;
   //минимальные размеры формы (высота явно, ширина определяется панелью кнопок)
   FWHBounds.Y:= 200;
   //FWHBounds.X:=300;

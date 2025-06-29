@@ -4,36 +4,36 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
   ExplicitWidth = 1092
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 1076
     ExplicitWidth = 1076
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 1066
       ExplicitWidth = 1066
-      object Bevel1: TBevel
+      object bvl1: TBevel
         Left = 0
         Top = 153
         Width = 1066
         Height = 3
         Align = alTop
       end
-      object PTop: TPanel
+      object pnlTop: TPanel
         Left = 0
         Top = 0
         Width = 1066
         Height = 153
         Align = alTop
-        Caption = 'PTop'
+        Caption = 'pnlTop'
         TabOrder = 0
-        object PTopFields: TPanel
+        object pnlTopFields: TPanel
           Left = 1
           Top = 1
           Width = 440
           Height = 151
           Align = alLeft
-          Caption = 'PTopFields'
+          Caption = 'pnlTopFields'
           TabOrder = 0
-          object Ne_num: TDBNumberEditEh
+          object nedt_num: TDBNumberEditEh
             Left = 58
             Top = 14
             Width = 90
@@ -48,7 +48,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             TabOrder = 0
             Visible = True
           end
-          object De_dt: TDBDateTimeEditEh
+          object dedt_dt: TDBDateTimeEditEh
             Left = 165
             Top = 14
             Width = 90
@@ -64,7 +64,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             TabOrder = 1
             Visible = True
           end
-          object De_dt_change: TDBDateTimeEditEh
+          object dedt_dt_change: TDBDateTimeEditEh
             Left = 309
             Top = 14
             Width = 115
@@ -80,7 +80,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             TabOrder = 2
             Visible = True
           end
-          object E_ProjectName: TDBEditEh
+          object edt_ProjectName: TDBEditEh
             Left = 57
             Top = 41
             Width = 369
@@ -94,10 +94,10 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             EditButtons = <>
             TabOrder = 3
-            Text = 'E_ProjectName'
+            Text = 'edt_ProjectName'
             Visible = True
           end
-          object Chb_is_plannedorder: TDBCheckBoxEh
+          object chb_is_plannedorder: TDBCheckBoxEh
             Left = 268
             Top = 95
             Width = 76
@@ -106,7 +106,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             TabOrder = 4
           end
-          object Chb_is_preorder: TDBCheckBoxEh
+          object chb_is_preorder: TDBCheckBoxEh
             Left = 350
             Top = 95
             Width = 76
@@ -115,7 +115,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             TabOrder = 5
           end
-          object De_dt_start: TDBDateTimeEditEh
+          object dedt_dt_start: TDBDateTimeEditEh
             Left = 57
             Top = 93
             Width = 90
@@ -131,7 +131,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             TabOrder = 6
             Visible = True
           end
-          object De_dt_end: TDBDateTimeEditEh
+          object dedt_dt_end: TDBDateTimeEditEh
             Left = 165
             Top = 93
             Width = 90
@@ -147,7 +147,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             TabOrder = 7
             Visible = True
           end
-          object E_UserName: TDBEditEh
+          object edt_UserName: TDBEditEh
             Left = 57
             Top = 120
             Width = 198
@@ -160,10 +160,10 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             EditButtons = <>
             TabOrder = 8
-            Text = 'E_username'
+            Text = 'edt_username'
             Visible = True
           end
-          object E_TemplateName: TDBEditEh
+          object edt_TemplateName: TDBEditEh
             Left = 58
             Top = 66
             Width = 197
@@ -176,10 +176,10 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             EditButtons = <>
             TabOrder = 9
-            Text = 'E_project'
+            Text = 'edt_project'
             Visible = True
           end
-          object E_FormatName: TDBEditEh
+          object edt_FormatName: TDBEditEh
             Left = 268
             Top = 68
             Width = 160
@@ -189,19 +189,19 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             DynProps = <>
             EditButtons = <>
             TabOrder = 10
-            Text = 'E_project'
+            Text = 'edt_project'
             Visible = True
           end
         end
-        object PTopFiles: TPanel
+        object pnlTopFiles: TPanel
           Left = 765
           Top = 1
           Width = 300
           Height = 151
           Align = alRight
-          Caption = 'PTopFiles'
+          Caption = 'pnlTopFiles'
           TabOrder = 1
-          object LbCaptionFiles: TLabel
+          object lblCaptionFiles: TLabel
             Left = 6
             Top = 0
             Width = 118
@@ -223,7 +223,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             ExplicitTop = 1
             ExplicitWidth = 298
             ExplicitHeight = 149
-            inherited PGrid: TPanel
+            inherited pnlGrid: TPanel
               Width = 288
               Height = 95
               ExplicitWidth = 288
@@ -242,7 +242,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
                   end
                 end
               end
-              inherited PStatus: TPanel
+              inherited pnlStatusBar: TPanel
                 Top = 73
                 Width = 286
                 ExplicitTop = 73
@@ -252,19 +252,19 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
                 Text = 'CProp'
               end
             end
-            inherited PLeft: TPanel
+            inherited pnlLeft: TPanel
               Height = 95
               ExplicitHeight = 95
             end
-            inherited PTop: TPanel
+            inherited pnlTop: TPanel
               Width = 298
               ExplicitWidth = 298
             end
-            inherited PContainer: TPanel
+            inherited pnlContainer: TPanel
               Width = 298
               ExplicitWidth = 298
             end
-            inherited PBottom: TPanel
+            inherited pnlBottom: TPanel
               Top = 149
               Width = 298
               ExplicitTop = 149
@@ -285,15 +285,15 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             end
           end
         end
-        object PTopComment: TPanel
+        object pnlTopComment: TPanel
           Left = 441
           Top = 1
           Width = 324
           Height = 151
           Align = alClient
-          Caption = 'PTopFiles'
+          Caption = 'pnlTopFiles'
           TabOrder = 2
-          object M_Comm: TDBMemoEh
+          object mem_Comm: TDBMemoEh
             Left = 6
             Top = 16
             Width = 323
@@ -303,7 +303,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
             ControlLabel.Visible = True
             Lines.Strings = (
-              'M_Comment')
+              'mem_Comment')
             AutoSize = False
             DynProps = <>
             EditButtons = <>
@@ -313,22 +313,22 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
           end
         end
       end
-      object PCenter: TPanel
+      object pnlCenter: TPanel
         Left = 0
         Top = 156
         Width = 1066
         Height = 198
         Align = alClient
-        Caption = 'PCenter'
+        Caption = 'pnlCenter'
         TabOrder = 1
         ExplicitHeight = 190
-        object PGrid: TPanel
+        object pnlGrid: TPanel
           Left = 1
           Top = 1
           Width = 1064
           Height = 196
           Align = alClient
-          Caption = 'PCenter'
+          Caption = 'pnlCenter'
           TabOrder = 0
           ExplicitHeight = 188
           inline Frg1: TFrDBGridEh
@@ -342,7 +342,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
             ExplicitTop = 1
             ExplicitWidth = 1062
             ExplicitHeight = 186
-            inherited PGrid: TPanel
+            inherited pnlGrid: TPanel
               Left = 30
               Width = 1032
               Height = 140
@@ -364,7 +364,7 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
                   end
                 end
               end
-              inherited PStatus: TPanel
+              inherited pnlStatusBar: TPanel
                 Top = 118
                 Width = 1030
                 ExplicitTop = 110
@@ -374,21 +374,21 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
                 Text = 'CProp'
               end
             end
-            inherited PLeft: TPanel
+            inherited pnlLeft: TPanel
               Width = 30
               Height = 140
               ExplicitWidth = 30
               ExplicitHeight = 132
             end
-            inherited PTop: TPanel
+            inherited pnlTop: TPanel
               Width = 1062
               ExplicitWidth = 1062
             end
-            inherited PContainer: TPanel
+            inherited pnlContainer: TPanel
               Width = 1062
               ExplicitWidth = 1062
             end
-            inherited PBottom: TPanel
+            inherited pnlBottom: TPanel
               Top = 194
               Width = 1062
               ExplicitTop = 186
@@ -411,43 +411,43 @@ inherited FrmOWPlannedOrder: TFrmOWPlannedOrder
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Width = 1066
       ExplicitWidth = 1066
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 1064
         ExplicitWidth = 1064
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 1064
         ExplicitWidth = 1064
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 1064
         ExplicitWidth = 1064
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 965
           ExplicitLeft = 965
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 737
           ExplicitLeft = 737
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 866
           ExplicitLeft = 866
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 597
           ExplicitWidth = 597
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Width = 1076
     ExplicitWidth = 1076
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 984
       ExplicitLeft = 984
     end

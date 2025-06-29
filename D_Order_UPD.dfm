@@ -37,7 +37,7 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     ModalResult = 2
     TabOrder = 1
   end
-  object De_Upd_Reg: TDBDateTimeEditEh
+  object dedt_Upd_Reg: TDBDateTimeEditEh
     Left = 72
     Top = 8
     Width = 124
@@ -54,7 +54,7 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     TabOrder = 2
     Visible = True
   end
-  object De_Upd: TDBDateTimeEditEh
+  object dedt_Upd: TDBDateTimeEditEh
     Left = 72
     Top = 35
     Width = 124
@@ -70,7 +70,7 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     TabOrder = 3
     Visible = True
   end
-  object E_Upd: TDBEditEh
+  object edt_Upd: TDBEditEh
     Left = 72
     Top = 62
     Width = 125
@@ -83,7 +83,7 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     DynProps = <>
     EditButtons = <>
     TabOrder = 4
-    Text = 'E_Upd'
+    Text = 'edt_Upd'
     Visible = True
   end
 end

@@ -21,7 +21,7 @@ uses
 
 type
   TDlg_TURV = class(TForm_MDI)
-    Panel1: TPanel;
+    pnl1: TPanel;
     DBGridEh1: TDBGridEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
@@ -30,13 +30,13 @@ type
     DBGridEh2: TDBGridEh;
     MemTableEh3: TMemTableEh;
     DataSource3: TDataSource;
-    Lb_Title_Worker: TLabel;
-    Label2: TLabel;
-    P_Left: TPanel;
-    P_Center: TPanel;
-    Lb_Division: TLabel;
+    lbl_Title_Worker: TLabel;
+    lbl2: TLabel;
+    pnl_Left: TPanel;
+    pnl_Center: TPanel;
+    lbl_Division: TLabel;
     Timer_AfterUpdate: TTimer;
-    Lb_Worker: TLabel;
+    lbl_Worker: TLabel;
     PM_2: TPopupMenu;
     N_Comment: TMenuItem;
     N_Premium: TMenuItem;
@@ -47,9 +47,9 @@ type
     N_Penelty_1: TMenuItem;
     Bt_Comment: TBitBtn;
     Bt_Premium: TBitBtn;
-    Lb_Comment: TLabel;
-    Lb_Premium: TLabel;
-    P_Right: TPanel;
+    lbl_Comment: TLabel;
+    lbl_Premium: TLabel;
+    pnl_Right: TPanel;
     Img_Info: TImage;
     N_Night: TMenuItem;
     //основной grid
@@ -669,20 +669,20 @@ begin
   //если не редактирование, и не права на ввод времени руководителя - сбросим режим ввода в основной сетке.
   if not(InEditMode and RgsEdit1) then EditInGrid1:=False;
   DBGridEh1.ReadOnly:=not (InEditMode and EditInGrid1);
-  Cth.GetSpeedBtn(P_Left, btnView).Hint:='Итоговое время';
-  Cth.GetSpeedBtn(P_Left, btnView).Enabled:=EditInGrid1 and InEditMode;
-  Cth.GetSpeedBtn(P_Left, btnEdit).Hint:='Ввод времени руководителя';
-  Cth.GetSpeedBtn(P_Left, btnEdit).Enabled:=not EditInGrid1 and InEditMode and RgsEdit1;
-  Cth.GetSpeedBtn(P_Left, btnCustom_FromParsec).Hint:='Загрузить данные парсек';
-  Cth.GetSpeedBtn(P_Left, btnCustom_FromParsec).Enabled:= RgsEdit2 and InEditMode;
-  Cth.GetSpeedBtn(P_Left, btnSendEMail).Enabled:= RgsEdit2 and InEditMode;
-  Cth.GetSpeedBtn(P_Left, btnCustom_SundaysToTurv).Enabled:= InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtView).Hint:='Итоговое время';
+  Cth.GetSpeedBtn(pnl_Left, mbtView).Enabled:=EditInGrid1 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Hint:='Ввод времени руководителя';
+  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Enabled:=not EditInGrid1 and InEditMode and RgsEdit1;
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Hint:='Загрузить данные парсек';
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Enabled:= RgsEdit2 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtSendEMail).Enabled:= RgsEdit2 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_SundaysToTurv).Enabled:= InEditMode;
   //видимость кнопки Завершить период (она одна и завершает и отменяет завершение)
   //должны быть права
   //а также или режим редактирования исходный, или видна только в случае уже Завершенного периода, те позволит при просмотре только снять завершение, но не выставить
   //(так как тогда надо делать блокировку при установке завершения, ведь при просмотре может быть турв открыта у кого-то на редактирование!)
-  Cth.GetSpeedBtn(P_Left, btnLock).Enabled:=RgsCommit and (IsCommited or (Mode = fEdit));
-  Cth.GetSpeedBtn(P_Left, btnLock).Hint:=S.IIFStr(IsCommited, 'Отменить закрытие периода', 'Закрыть период');
+  Cth.GetSpeedBtn(pnl_Left, mbtLock).Enabled:=RgsCommit and (IsCommited or (Mode = fEdit));
+  Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIFStr(IsCommited, 'Отменить закрытие периода', 'Закрыть период');
   if (InEditMode)and(EditInGrid1) then begin
     st:='Ввод времени руководителя';
     stc:='$FF0060';
@@ -699,8 +699,8 @@ begin
     st:='Только просмотр';
     stc:='$009000';
   end;
-  Lb_Division.ResetColors;
-  Lb_Division.SetCaptionAr([
+  lbl_Division.ResetColors;
+  lbl_Division.SetCaptionAr([
     '$000000', 'Подразделение: ', '$FF0000', DivisionName,
     '$000000', '   Период с ', '$FF0000',  DateToStr(PeriodStartDate), '$000000 по $FF0000', DateToStr(PeriodEndDate),
     '$000000      [', stc, st, '$000000]'
@@ -743,9 +743,9 @@ begin
   //получим тэг кнопки
   bt:=TBitBtn(Sender).Tag;
   //кнопки ввода времни руководителя/ввода итогов
-  if bt = btnEdit then EditInGrid1:=True;
-  if bt = btnView then EditInGrid1:=False;
-  if bt in [btnView, btnEdit] then begin
+  if bt = mbtEdit then EditInGrid1:=True;
+  if bt = mbtView then EditInGrid1:=False;
+  if bt in [mbtView, mbtEdit] then begin
     rn:=MemTableEh1.RecNo;
     for i := 1 to MemTableEh1.RecordCount do begin
       MemTableEh1.RecNo:=i;
@@ -757,7 +757,7 @@ begin
     DBGridEh1.Refresh;
   end;
   //кнопка закрытия периода
-  if bt = btnLock then begin
+  if bt = mbtLock then begin
     if Not IsCommited then
       //если период не закрыть, то проверим, можно ли его закрыть
       if Turv.GetStatus(ID_Division, PeriodStartDate) = -1
@@ -813,18 +813,18 @@ begin
     Q.QExecSql('update turv_period set commit = :commit$i where id_division = :id$i and dt1 = :dt1$d and dt2 = :dt2$d', [S.IIf(IsCommited, 1, 0), ID_Division, PeriodStartDate, PeriodEndDate]);
     RefreshParentForm;
   end;
-  if bt = btnSendEmail then begin
+  if bt = mbtSendEmail then begin
     SendEMailToHead;
   end;
-  if bt = btnCustom_FromParsec then begin
+  if bt = mbtCustom_FromParsec then begin
     if Dlg_Turv_FromParsec.ShowDialog(PeriodStartDate, PeriodEndDate) then begin
       ImporFromParsec(Dlg_Turv_FromParsec.FileName);
     end;
   end;
-  if bt = btnCustom_SundaysToTurv then begin
+  if bt = mbtCustom_SundaysToTurv then begin
     SundaysToTurv;
   end;
-  if bt = btnPrint then begin
+  if bt = mbtPrint then begin
     if RgsEdit2 then begin
       if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Экспорт в Excel', 270, 50,
 //      if Dlg_BasicInput.ShowDialog(Self, 'Экспорт в Excel', 270, 50, fAdd, [
@@ -847,7 +847,7 @@ begin
   end;
   //перерисуем кнопки и заголовки
   SetBtns;
-  //Cth.GetSpeedBtn(P_Left)
+  //Cth.GetSpeedBtn(pnl_Left)
 //  TMyHint.Create(BitBtn1);
 end;
 
@@ -870,13 +870,13 @@ begin
   if DBGridEh2.Focused
     then j:=DBGridEh2.Col - 1
     else j:=DBGridEh1.Col - 4;
-  Lb_Worker.ResetColors;
+  lbl_Worker.ResetColors;
   if (j<1)or(j>16)or(ArrTurv[i][j][atExists] = - 1)
     //не колонки дней - только фио
-    then Lb_Worker.SetCaptionAr(['$000000Работник: $FF00FF', ArrTitle[i][2]])
+    then lbl_Worker.SetCaptionAr(['$000000Работник: $FF00FF', ArrTitle[i][2]])
     //колонки дней - данные по текущей ячейке
     //два цвета не могут в лейбле сейчас идти подряд без промежутков!
-    else Lb_Worker.SetCaptionAr([
+    else lbl_Worker.SetCaptionAr([
       '$000000Работник: $FF00FF', ArrTitle[i][2],
       '$000000', '   Дата: ', '$FF0000', DateToStr(IncDay(PeriodStartDate, j-1)) +
       '$000000', '   Время: ', '$FF0000',
@@ -1181,7 +1181,7 @@ var
 begin
   inherited;
   //имя работника
-//  Lb_Title_Worker.Caption:=MemTableEh1.FieldByName('name').AsString;
+//  lbl_Title_Worker.Caption:=MemTableEh1.FieldByName('name').AsString;
   SetRowDetailCaptions;
   //заполним сетки
   for j:=1 to 16 do begin
@@ -1750,12 +1750,12 @@ begin
 
   Bt_Comment.Left:=w2 + 20;
   Cth.SetBtn(Bt_Comment, mybtEdit, True, 'Ввести комментарий');
-  Lb_Comment.Left:=Bt_Comment.Left + Bt_Comment.Width + 5;
+  lbl_Comment.Left:=Bt_Comment.Left + Bt_Comment.Width + 5;
 
   Bt_Premium.Left:=w3 + 38;
   Cth.SetBtn(Bt_Premium, mybtEdit, True, 'Ввести премию');
-  Lb_Premium.Left:=Bt_Premium.Left + Bt_Premium.Width + 5;
-  Lb_Comment.Width:= Bt_Premium.Left - Lb_Comment.Left - 15;
+  lbl_Premium.Left:=Bt_Premium.Left + Bt_Premium.Width + 5;
+  lbl_Comment.Width:= Bt_Premium.Left - lbl_Comment.Left - 15;
 
   SetRowDetailCaptions;
 
@@ -1781,7 +1781,7 @@ begin
 
   Buttons:=[mybtView, mybtEdit, mybtDividor, mybtCustom_SundaysToTurv, mybtDividor, mybtSendEmail, mybtCustom_FromParsec, mybtPrint, mybtLock];
   ButtonsState:=[True, True, True, True, True, True, True, True, True];
-  P_Left.Width:=Cth.CreateGridBtns(Self, P_Left, Buttons, ButtonsState, Bt_Click) + 5;
+  pnl_Left.Width:=Cth.CreateGridBtns(Self, pnl_Left, Buttons, ButtonsState, Bt_Click) + 5;
 
   //начальный режим ввода в сетке, будет сброшен в SetBtns если нет прав
   EditInGrid1:=True;
@@ -1848,7 +1848,7 @@ procedure TDlg_TURV.MemTableEh2AfterEdit(DataSet: TDataSet);
 //событие, если данные в гриде были изменены
 begin
   inherited;
-//  Label1.Caption:='Changed';
+//  lbl1.Caption:='Changed';
 end;
 
 procedure TDlg_TURV.MemTableEh2AfterScroll(DataSet: TDataSet);
@@ -2162,22 +2162,22 @@ procedure TDlg_TURV.SetRowDetailCaptions;
 //показать в детальной панеле премию и комментарий пользователя, кнопки редактирования
 begin
   if InLoad then Exit;
-  Lb_Title_Worker.ResetColors;
-  Lb_Title_Worker.SetCaptionAr(['$FF0000', ArrTitle[DBGridEh1.Row-1][2]]);
+  lbl_Title_Worker.ResetColors;
+  lbl_Title_Worker.SetCaptionAr(['$FF0000', ArrTitle[DBGridEh1.Row-1][2]]);
   Bt_Comment.Visible:=InEditMode;
   Bt_Comment.Width:=S.IIf(InEditMode, Bt_Comment.Height, 1);;
-  Lb_Comment.Left:=Bt_Comment.Left + Bt_Comment.Width + 5;
+  lbl_Comment.Left:=Bt_Comment.Left + Bt_Comment.Width + 5;
   Bt_Premium.Visible:=InEditMode and RgsEdit1;
   Bt_Premium.Width:=S.IIf(InEditMode, Bt_Premium.Height, 1);;
-  Lb_Premium.Left:=Bt_Premium.Left + Bt_Premium.Width + 5;
-  Lb_Comment.Width:= Bt_Premium.Left - Lb_Comment.Left - 15;
-  Lb_Comment.AutoSize:=False;
-  Lb_Comment.ResetColors;
-  Lb_Comment.SetCaptionAr(['Комментарий:$FF0000 ', S.IIf(S.NSt(ArrTitle[DBGridEh1.Row-1][6])<>'', ArrTitle[DBGridEh1.Row-1][6], 'нет')]);
-  Lb_Comment.ShowHint:=Length(VarToStr(ArrTitle[DBGridEh1.Row-1][6])) > 150;
-  Lb_Comment.Hint:=VarToStr(ArrTitle[DBGridEh1.Row-1][6]);
-  Lb_Premium.ResetColors;
-  Lb_Premium.SetCaptionAr(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(ArrTitle[DBGridEh1.Row-1][5]))]);
+  lbl_Premium.Left:=Bt_Premium.Left + Bt_Premium.Width + 5;
+  lbl_Comment.Width:= Bt_Premium.Left - lbl_Comment.Left - 15;
+  lbl_Comment.AutoSize:=False;
+  lbl_Comment.ResetColors;
+  lbl_Comment.SetCaptionAr(['Комментарий:$FF0000 ', S.IIf(S.NSt(ArrTitle[DBGridEh1.Row-1][6])<>'', ArrTitle[DBGridEh1.Row-1][6], 'нет')]);
+  lbl_Comment.ShowHint:=Length(VarToStr(ArrTitle[DBGridEh1.Row-1][6])) > 150;
+  lbl_Comment.Hint:=VarToStr(ArrTitle[DBGridEh1.Row-1][6]);
+  lbl_Premium.ResetColors;
+  lbl_Premium.SetCaptionAr(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(ArrTitle[DBGridEh1.Row-1][5]))]);
 end;
 
 
@@ -2264,8 +2264,8 @@ begin
       Break;
     end;
   //период за который выбираем данные
-  dt1:=Dlg_Turv_FromParsec.De_1.Value;
-  dt2:=Dlg_Turv_FromParsec.De_2.Value;
+  dt1:=Dlg_Turv_FromParsec.dedt_1.Value;
+  dt2:=Dlg_Turv_FromParsec.dedt_2.Value;
   //начало и конец месяца
   dt3:=EncodeDate(YearOf(PeriodStartDate), MonthOf(PeriodStartDate), 1);
   dt4:=IncDay(IncMonth(dt3, 1), -1);
@@ -2449,7 +2449,7 @@ begin
      Rep.SetValue('#ITOGA#', sumall);
   end;
 //  Rep.PasteBand('FOOTER');
-//  Rep.SetValue('#дополнение#',M_Comm.Text);
+//  Rep.SetValue('#дополнение#',mem_Comm.Text);
   Rep.DeleteCol1;
   Rep.Show;
   Rep.Free;

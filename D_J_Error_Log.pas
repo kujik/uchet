@@ -31,31 +31,31 @@ type
     TabSheet3: TTabSheet;
     MemTableEh1: TMemTableEh;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     DataSource1: TDataSource;
-    Lb_Module: TLabel;
-    Lb_User: TLabel;
-    Lb_Ver: TLabel;
-    Lb_Compile: TLabel;
-    M_ErrorText: TDBMemoEh;
-    Lb_ErrDt: TLabel;
+    lbl_Module: TLabel;
+    lbl_User: TLabel;
+    lbl_Ver: TLabel;
+    lbl_Compile: TLabel;
+    mem_ErrorText: TDBMemoEh;
+    lbl_ErrDt: TLabel;
     DBGridEh2: TDBGridEh;
     TabSheet4: TTabSheet;
-    Panel1: TPanel;
-    M_SourceFile: TfsSyntaxMemo;
-    Lb_SrcPath: TLabel;
-    Lb_FileName: TLabel;
-    Lb_ErrorInfo: TLabel;
+    pnl1: TPanel;
+    mem_SourceFile: TfsSyntaxMemo;
+    lbl_SrcPath: TLabel;
+    lbl_FileName: TLabel;
+    lbl_ErrorInfo: TLabel;
     TabSheet5: TTabSheet;
     Panel2: TPanel;
-    M_OraParams: TDBMemoEh;
+    mem_OraParams: TDBMemoEh;
     Panel3: TPanel;
-    M_OraError: TDBMemoEh;
+    mem_OraError: TDBMemoEh;
     Panel4: TPanel;
-    M_OraSQL: TDBMemoEh;
+    mem_OraSQL: TDBMemoEh;
     TabSheet6: TTabSheet;
     TabSheet7: TTabSheet;
-    M_FullReport: TfsSyntaxMemo;
+    mem_FullReport: TfsSyntaxMemo;
     Im_Pict: TImage;
     //даблклик по гриду стека вызовов, пытаемся загрузить исходник в соседнюю вкладку
     procedure DBGridEh2DblClick(Sender: TObject);
@@ -136,17 +136,17 @@ begin
   );
 
   //на главной вкладке
-  Lb_Module.ResetColors;
-  Lb_Module.SetCaption(Lb_Module.Caption + '  $FF0000' + ErrorArr[cmyerrModule]);
-  Lb_Ver.ResetColors;
-  Lb_Ver.SetCaption(Lb_Ver.Caption + '  $FF0000' + ErrorArr[cmyerrModuleVer]);
-  Lb_Compile.ResetColors;
-  Lb_Compile.SetCaption(Lb_Compile.Caption + '  $FF0000' + VarToStr(ErrorArr[cmyerrModuleCompile]));
-  Lb_User.ResetColors;
-  Lb_User.SetCaption(Lb_User.Caption + '  $FF0000' + S.NSt(ErrorArr[cmyerrUserName]) +  '(' + S.NSt(ErrorArr[cmyerrUserLogin]) + ')');
-  Lb_ErrDt.ResetColors;
-  Lb_ErrDt.SetCaption(Lb_ErrDt.Caption + '  $FF0000' + VarToStr(ErrorArr[cmyerrTime]));
-  M_ErrorText.Text:= ErrorArr[cmyerrMessage];
+  lbl_Module.ResetColors;
+  lbl_Module.SetCaption(lbl_Module.Caption + '  $FF0000' + ErrorArr[cmyerrModule]);
+  lbl_Ver.ResetColors;
+  lbl_Ver.SetCaption(lbl_Ver.Caption + '  $FF0000' + ErrorArr[cmyerrModuleVer]);
+  lbl_Compile.ResetColors;
+  lbl_Compile.SetCaption(lbl_Compile.Caption + '  $FF0000' + VarToStr(ErrorArr[cmyerrModuleCompile]));
+  lbl_User.ResetColors;
+  lbl_User.SetCaption(lbl_User.Caption + '  $FF0000' + S.NSt(ErrorArr[cmyerrUserName]) +  '(' + S.NSt(ErrorArr[cmyerrUserLogin]) + ')');
+  lbl_ErrDt.ResetColors;
+  lbl_ErrDt.SetCaption(lbl_ErrDt.Caption + '  $FF0000' + VarToStr(ErrorArr[cmyerrTime]));
+  mem_ErrorText.Text:= ErrorArr[cmyerrMessage];
 
 
   //вкладка General
@@ -214,15 +214,15 @@ begin
   );
 
   //ошибки базы данных Oracle
-  M_OraError.Lines.Text:=S.NSt(ErrorArr[cmyerrMessage]); M_OraError.ReadOnly:= True;
-  M_OraSQL.Lines.Text:=S.NSt(ErrorArr[cmyerrSql]); M_OraSQL.ReadOnly:= True;
-  M_OraParams.Lines.Text:=S.NSt(ErrorArr[cmyerrSqlParams]); M_OraParams.ReadOnly:= True;
-//  M_OraSQL.Lines.Text:=S.NSt(Copy(ErrorArr[cmyerrSql], Pos(': ', ErrorArr[cmyerrSql]) + 2)); M_OraSql.ReadOnly:= True;
-//  M_OraParams.Lines.Text:=S.NSt(Copy(ErrorArr[cmyerrSqlParams], Pos(': ', ErrorArr[cmyerrSqlParams]) + 2)); M_OraParams.ReadOnly:= True;
+  mem_OraError.Lines.Text:=S.NSt(ErrorArr[cmyerrMessage]); mem_OraError.ReadOnly:= True;
+  mem_OraSQL.Lines.Text:=S.NSt(ErrorArr[cmyerrSql]); mem_OraSQL.ReadOnly:= True;
+  mem_OraParams.Lines.Text:=S.NSt(ErrorArr[cmyerrSqlParams]); mem_OraParams.ReadOnly:= True;
+//  mem_OraSQL.Lines.Text:=S.NSt(Copy(ErrorArr[cmyerrSql], Pos(': ', ErrorArr[cmyerrSql]) + 2)); mem_OraSql.ReadOnly:= True;
+//  mem_OraParams.Lines.Text:=S.NSt(Copy(ErrorArr[cmyerrSqlParams], Pos(': ', ErrorArr[cmyerrSqlParams]) + 2)); mem_OraParams.ReadOnly:= True;
 
   //полный отчет в Тмемо
-  M_FullReport.Lines.Clear;
-  M_FullReport.Lines.Text:=S.NSt(ErrorArr[cmyerrFullReport]);
+  mem_FullReport.Lines.Clear;
+  mem_FullReport.Lines.Text:=S.NSt(ErrorArr[cmyerrFullReport]);
 
   PageControl1.ActivePageIndex:=0;
   Result := True;
@@ -263,19 +263,19 @@ begin
     Exit;
   end;
   {$I-}
-  Lb_FileName.SetCaption2('Файл:  $FF0000' + fname);
-  Lb_SrcPath.SetCaption2('Путь:  $FF0000' + dir);
-  Lb_ErrorInfo.SetCaption2('Место вызова:  Функция "$FF0000' +
+  lbl_FileName.SetCaption2('Файл:  $FF0000' + fname);
+  lbl_SrcPath.SetCaption2('Путь:  $FF0000' + dir);
+  lbl_ErrorInfo.SetCaption2('Место вызова:  Функция "$FF0000' +
     S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('function').AsString) + '$000000" в строке $FF0000' +
     S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').AsString) + '$000000   ($FF0000' +
     S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('relf').AsString) + '$000000)');
-  M_SourceFile.Lines.Clear;
-  M_SourceFile.Lines.LoadFromFile(st);
+  mem_SourceFile.Lines.Clear;
+  mem_SourceFile.Lines.LoadFromFile(st);
   strno:=S.VarToInt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').Value);
   if strno = -1 Then exit;
   try
-  M_SourceFile.AddBookmark(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').AsInteger - 1, 1);
-  M_SourceFile.GotoBookmark(1);
+  mem_SourceFile.AddBookmark(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').AsInteger - 1, 1);
+  mem_SourceFile.GotoBookmark(1);
   except
   end;
   {$I+}

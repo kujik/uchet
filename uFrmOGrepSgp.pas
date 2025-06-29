@@ -12,8 +12,8 @@ uses
 type
   TFrmOGrepSgp = class(TFrmBasicGrid2)
   private
-    Formats: TVarDynArray2;          //список форматов паспортов для отображение данных СГП
-    IdFormat: Variant;
+    FFormats: TVarDynArray2;          //список форматов паспортов для отображение данных СГП
+    FIdFormat: Variant;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
@@ -60,13 +60,13 @@ begin
   ]);
   Frg1.Opt.SetTable('v_sgp_items');
   Frg1.Opt.SetWhere('where id_format_est = :id_format_est$i');
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[-btnCustom_Revision,User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-btnCustom_JRevisions,1,'Журнал ревизий'],[],[btnGridSettings],[],[btnCtlPanel]]);
-  Frg1.Opt.SetButtonsIfEmpty([btnCustom_JRevisions]);
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[-mbtCustom_Revision,User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions,1,'Журнал ревизий'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  Frg1.Opt.SetButtonsIfEmpty([mbtCustom_JRevisions]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbFormat', '', 50, yrefC, 400);
-  Formats:=Q.QLoadToVarDynArray2('select name, id from v_sgp_sell_formats order by name', []);
-  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbFormat')), Formats);
+  FFormats:=Q.QLoadToVarDynArray2('select name, id from v_sgp_sell_formats order by name', []);
+  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbFormat')), FFormats);
   TDBComboBoxEh(Frg1.FindComponent('CbFormat')).ItemIndex := 0;
-  IdFormat:= Frg1.GetControlValue('CbFormat');
+  FIdFormat:= Frg1.GetControlValue('CbFormat');
   Frg1.InfoArray:=[
     [Caption + '.'#13#10#13#10],[
       'В таблице отображается и по ней контролируется состояние склада готовой продукции в разрезе '#13#10+
@@ -124,13 +124,13 @@ end;
 
 procedure TFrmOGrepSgp.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = btnCustom_Revision then begin
+  if Tag = mbtCustom_Revision then begin
     //ревизия сгп по формату
-    Wh.ExecDialog(myfrm_Dlg_Sgp_Revision, Self, [], fEdit, IdFormat, null);
+    Wh.ExecDialog(myfrm_Dlg_Sgp_Revision, Self, [], fEdit, FIdFormat, null);
   end
-  else if Tag = btnCustom_JRevisions then begin
+  else if Tag = mbtCustom_JRevisions then begin
     //журнал актов списания/оприходования по данному формату
-    Wh.ExecReference(myfrm_J_Sgp_Acts, Self, [], IdFormat);
+    Wh.ExecReference(myfrm_J_Sgp_Acts, Self, [], FIdFormat);
   end
   else inherited;
 end;
@@ -143,13 +143,13 @@ end;
 
 procedure TFrmOGrepSgp.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
-  IdFormat:= Fr.GetControlValue('CbFormat');
-  Fr.SetSqlParameters('id_format_est$i', [IdFormat]);
+  FIdFormat:= Fr.GetControlValue('CbFormat');
+  Fr.SetSqlParameters('id_format_est$i', [FIdFormat]);
 end;
 
 procedure TFrmOGrepSgp.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
-  Q.QCallStoredProc('P_SetSgpItemAdd', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 1, S.NullIfEmpty(Value)]));
+  Q.QCallStoredProc('p_SetSgpItemAdd', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 1, S.NullIfEmpty(Value)]));
 end;
 
 procedure TFrmOGrepSgp.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);

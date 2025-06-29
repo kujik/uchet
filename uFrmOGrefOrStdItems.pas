@@ -19,10 +19,10 @@ uses
 type
   TFrmOGrefOrStdItems = class(TFrmBasicGrid2)
     procedure FormDestroy(Sender: TObject);
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
   private
     //айди издели€, к которому будет автоматический переход
-    ItemId: Integer;
+    FItemId: Integer;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
@@ -69,9 +69,9 @@ begin
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
   Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_R_StdItems_Ch)],[btnAdd,1],[btnCopy,1],[btnDelete,1],[],
-    [btnViewEstimate],[btnLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-btnCopyEstimate,1,'—копировать смету'],[-btnDeleteEstimate,1],[],
-    [-btnCustom_RepOrStDItemsErr, True, 'Ќайти ошибки'],[],[btnGridSettings],[],[btnCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), '—копировать издели€ из...', 'copy'],[btnTest]]
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
+    [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'—копировать смету'],[-mbtDeleteEstimate,1],[],
+    [-mbtCustom_RepOrStDItemsErr, True, 'Ќайти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), '—копировать издели€ из...', 'copy'],[mbtTest]]
   );
   Frg1.CreateAddControls('1', cntComboLK, '‘ормат:', 'CbEstimate', '', 80, yrefC, 400);
   SetCbEstimate;
@@ -101,23 +101,23 @@ begin
       Exit;
     if Fr.IsEmpty and (fMode <> fAdd) then
       Exit;
-//  if (Tag = btnTest) or (Fr.GetControlValue('CbEstimate') = 35) then                                             //!!!
+//  if (Tag = mbtTest) or (Fr.GetControlValue('CbEstimate') = 35) then                                             //!!!
 //    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
  // else
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
   end
-  else if Tag = btnCustom_RepOrStDItemsErr then begin
+  else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)
   end
-  else if Tag = btnCopyEstimate then begin
+  else if Tag = mbtCopyEstimate then begin
     Orders.CopyEstimateToBuffer(Fr.ID, null);
   end
-  else if (Tag = btnViewEstimate) then begin
+  else if (Tag = mbtViewEstimate) then begin
     //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then
       Wh.ExecReference(myfrm_R_Estimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([null, Fr.ID]));
   end
-  else if (Tag = btnLoadEstimate) then begin
+  else if (Tag = mbtLoadEstimate) then begin
     //в справочнике стандартных изделий загрузим смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
       Orders.LoadBcadGroups(True);
@@ -125,7 +125,7 @@ begin
       Fr.RefreshGrid;
     end;
   end
-  else if (Tag = btnDeleteEstimate) then begin
+  else if (Tag = mbtDeleteEstimate) then begin
     //в справочнике стандартных изделий удалим смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
       Orders.RemoveEstimateForStdItem(Fr.ID);
@@ -159,7 +159,7 @@ end;
 procedure TFrmOGrefOrStdItems.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
   //запишем цену (пол€ 'price', 'price_pp')
-  Q.QCallStoredProc('P_SetStdItemPrice', 'IdStdItem$i;PriceNew$f;PriceType$i',
+  Q.QCallStoredProc('p_SetStdItemPrice', 'IdStdItem$i;PriceNew$f;PriceType$i',
     [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 1, 2])]
   );
 end;
@@ -196,13 +196,13 @@ begin
   TDBComboBoxEh(Frg1.FindComponent('CbEstimate')).ItemIndex:=0;  //нужно в случае первого запуска у пользовател€, если значение комбобокса не чиатес€ из бд, или он был очищен перед закрытием журнала
 end;
 
-procedure TFrmOGrefOrStdItems.Timer_AfterStartTimer(Sender: TObject);
+procedure TFrmOGrefOrStdItems.tmrAfterCreateTimer(Sender: TObject);
 begin
   inherited;
-  if ItemId = 0 then
+  if FItemId = 0 then
     Exit;
   FrmOGrefOrStdItems.Frg1.DbGridEh1.SetFocus;
-  FrmOGrefOrStdItems.Frg1.MemTableEh1.Locate('id', ItemId, []);
+  FrmOGrefOrStdItems.Frg1.MemTableEh1.Locate('id', FItemId, []);
 end;
 
 class procedure TFrmOGrefOrStdItems.GoToItem(AId: integer);
@@ -219,7 +219,7 @@ begin
   if FrmOGrefOrStdItems = nil then
     Wh.ExecReference(myfrm_R_OrderStdItems);
   FrmOGrefOrStdItems.Frg1.SetControlValue('CbEstimate', va[0]);
-  FrmOGrefOrStdItems.ItemId := AId;
+  FrmOGrefOrStdItems.FItemId := AId;
   FrmOGrefOrStdItems.Frg1.DbGridEh1.SetFocus;
   FrmOGrefOrStdItems.Frg1.MemTableEh1.Locate('id', AID, []);
 end;

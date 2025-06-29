@@ -11,7 +11,7 @@ uses
 type
   TDlg_Order_Complaints = class(TCustomDropDownFormEh)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     Bt_Ok: TBitBtn;

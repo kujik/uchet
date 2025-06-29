@@ -8,29 +8,29 @@ inherited Dlg_Order: TDlg_Order
   ExplicitHeight = 701
   PixelsPerInch = 96
   TextHeight = 13
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 629
     Width = 1276
     TabOrder = 4
     ExplicitTop = 629
     ExplicitWidth = 1276
-    inherited Lb_StatusBar_Right: TLabel
+    inherited lbl_StatusBar_Right: TLabel
       Left = 1187
       Height = 17
       ExplicitLeft = 1187
     end
-    inherited Lb_StatusBar_Left: TLabel
+    inherited lbl_StatusBar_Left: TLabel
       Height = 17
     end
   end
-  object P_Top: TPanel [1]
+  object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
     Width = 1276
     Height = 41
     Align = alTop
     TabOrder = 0
-    object Lb_ITM: TLabel
+    object lbl_ITM: TLabel
       Left = 228
       Top = 7
       Width = 54
@@ -43,12 +43,12 @@ inherited Dlg_Order: TDlg_Order
       Font.Style = []
       ParentFont = False
     end
-    object Lb_ItmStatus: TLabel
+    object lbl_ItmStatus: TLabel
       Left = 288
       Top = 14
       Width = 62
       Height = 13
-      Caption = 'Lb_ItmStatus'
+      Caption = 'lbl_ItmStatus'
     end
     object Bt_Ok: TBitBtn
       Left = 8
@@ -68,7 +68,7 @@ inherited Dlg_Order: TDlg_Order
       TabOrder = 1
       OnClick = Bt_CancelClick
     end
-    object P_Top_1: TPanel
+    object pnl_Top_1: TPanel
       Left = 671
       Top = 1
       Width = 604
@@ -79,7 +79,7 @@ inherited Dlg_Order: TDlg_Order
       DesignSize = (
         604
         39)
-      object E_TemplateName: TDBEditEh
+      object edt_TemplateName: TDBEditEh
         Left = 145
         Top = 14
         Width = 452
@@ -118,7 +118,7 @@ inherited Dlg_Order: TDlg_Order
       OnClick = Bt_CreateXLSClick
     end
   end
-  object P_Bottom: TPanel [2]
+  object pnl_Bottom: TPanel [2]
     Left = 0
     Top = 648
     Width = 1276
@@ -126,24 +126,24 @@ inherited Dlg_Order: TDlg_Order
     Align = alBottom
     TabOrder = 3
     Visible = False
-    object Lb_OrderSaveStatus: TLabel
+    object lbl_OrderSaveStatus: TLabel
       Left = 8
       Top = 6
       Width = 99
       Height = 13
-      Caption = 'Lb_OrderSaveStatus'
+      Caption = 'lbl_OrderSaveStatus'
     end
-    object Chb_ViewEmptyItems: TCheckBox
+    object chb_ViewEmptyItems: TCheckBox
       Left = 113
       Top = 4
       Width = 200
       Height = 17
       Caption = #1055#1086#1082#1072#1079#1072#1090#1100' '#1089' '#1085#1091#1083#1077#1074#1099#1084' '#1082#1086#1083#1080#1095#1077#1089#1090#1074#1086#1084
       TabOrder = 0
-      OnClick = Chb_ViewEmptyItemsClick
+      OnClick = chb_ViewEmptyItemsClick
     end
   end
-  object P_Center: TPanel [3]
+  object pnl_Center: TPanel [3]
     Left = 0
     Top = 309
     Width = 1276
@@ -169,22 +169,22 @@ inherited Dlg_Order: TDlg_Order
       end
     end
   end
-  object P_Header: TPanel [4]
+  object pnl_Header: TPanel [4]
     Left = 0
     Top = 41
     Width = 1276
     Height = 268
     Align = alTop
     TabOrder = 1
-    OnClick = P_HeaderClick
-    object P_Header_3: TPanel
+    OnClick = pnl_HeaderClick
+    object pnl_Header_3: TPanel
       Left = 695
       Top = 1
       Width = 193
       Height = 176
       Align = alRight
       TabOrder = 0
-      object De_Beg: TDBDateTimeEditEh
+      object dedt_Beg: TDBDateTimeEditEh
         Left = 72
         Top = 9
         Width = 115
@@ -200,7 +200,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 0
         Visible = True
       end
-      object De_Otgr: TDBDateTimeEditEh
+      object dedt_Otgr: TDBDateTimeEditEh
         Left = 72
         Top = 63
         Width = 115
@@ -216,7 +216,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 2
         Visible = True
       end
-      object De_Change: TDBDateTimeEditEh
+      object dedt_Change: TDBDateTimeEditEh
         Left = 72
         Top = 36
         Width = 115
@@ -234,7 +234,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 1
         Visible = True
       end
-      object De_MontageBeg: TDBDateTimeEditEh
+      object dedt_MontageBeg: TDBDateTimeEditEh
         Left = 72
         Top = 90
         Width = 115
@@ -250,7 +250,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 3
         Visible = True
       end
-      object De_MontageEnd: TDBDateTimeEditEh
+      object dedt_MontageEnd: TDBDateTimeEditEh
         Left = 72
         Top = 117
         Width = 115
@@ -267,14 +267,14 @@ inherited Dlg_Order: TDlg_Order
         Visible = True
       end
     end
-    object P_Header_Bottom: TPanel
+    object pnl_Header_Bottom: TPanel
       Left = 1
       Top = 177
       Width = 1274
       Height = 90
       Align = alBottom
       TabOrder = 1
-      object P_Header_11: TPanel
+      object pnl_Header_11: TPanel
         Left = 1
         Top = 1
         Width = 693
@@ -284,7 +284,7 @@ inherited Dlg_Order: TDlg_Order
         DesignSize = (
           693
           88)
-        object M_Comment: TDBMemoEh
+        object mem_Comment: TDBMemoEh
           Left = 64
           Top = 32
           Width = 623
@@ -302,9 +302,9 @@ inherited Dlg_Order: TDlg_Order
           TabOrder = 1
           Visible = True
           WantReturns = True
-          OnKeyDown = M_CommentKeyDown
+          OnKeyDown = mem_CommentKeyDown
         end
-        object E_Complaints: TDBEditEh
+        object edt_Complaints: TDBEditEh
           Left = 65
           Top = 5
           Width = 622
@@ -323,10 +323,10 @@ inherited Dlg_Order: TDlg_Order
           MaxLength = 400
           TabOrder = 0
           Visible = True
-          OnCloseDropDownForm = E_ComplaintsCloseDropDownForm
-          OnOpenDropDownForm = E_ComplaintsOpenDropDownForm
+          OnCloseDropDownForm = edt_ComplaintsCloseDropDownForm
+          OnOpenDropDownForm = edt_ComplaintsOpenDropDownForm
         end
-        object Ne_Attention: TDBNumberEditEh
+        object nedt_Attention: TDBNumberEditEh
           Left = 240
           Top = 52
           Width = 29
@@ -338,7 +338,7 @@ inherited Dlg_Order: TDlg_Order
           Visible = False
         end
       end
-      object P_Header_12: TPanel
+      object pnl_Header_12: TPanel
         Left = 694
         Top = 1
         Width = 579
@@ -348,7 +348,7 @@ inherited Dlg_Order: TDlg_Order
         DesignSize = (
           579
           88)
-        object Lb_Files: TLabel
+        object lbl_Files: TLabel
           Left = 6
           Top = 33
           Width = 56
@@ -372,7 +372,7 @@ inherited Dlg_Order: TDlg_Order
         end
       end
     end
-    object P_Header_2: TPanel
+    object pnl_Header_2: TPanel
       Left = 341
       Top = 1
       Width = 354
@@ -382,7 +382,7 @@ inherited Dlg_Order: TDlg_Order
       DesignSize = (
         354
         176)
-      object Cb_CustomerName: TDBComboBoxEh
+      object cmb_CustomerName: TDBComboBoxEh
         Left = 86
         Top = 11
         Width = 262
@@ -398,9 +398,9 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 0
         Visible = True
-        OnGetItemImageIndex = Cb_CustomerNameGetItemImageIndex
+        OnGetItemImageIndex = cmb_CustomerNameGetItemImageIndex
       end
-      object Cb_CustomerMan: TDBComboBoxEh
+      object cmb_CustomerMan: TDBComboBoxEh
         Left = 86
         Top = 38
         Width = 262
@@ -416,9 +416,9 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 1
         Visible = True
-        OnGetItemImageIndex = Cb_CustomerManGetItemImageIndex
+        OnGetItemImageIndex = cmb_CustomerManGetItemImageIndex
       end
-      object E_CustomerContacts: TDBEditEh
+      object edt_CustomerContacts: TDBEditEh
         Left = 86
         Top = 65
         Width = 262
@@ -435,7 +435,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 2
         Visible = True
       end
-      object Cb_CustomerLegalName: TDBComboBoxEh
+      object cmb_CustomerLegalName: TDBComboBoxEh
         Left = 86
         Top = 92
         Width = 186
@@ -451,9 +451,9 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 3
         Visible = True
-        OnGetItemImageIndex = Cb_CustomerLegalNameGetItemImageIndex
+        OnGetItemImageIndex = cmb_CustomerLegalNameGetItemImageIndex
       end
-      object E_CustomerINN: TDBEditEh
+      object edt_CustomerINN: TDBEditEh
         Left = 269
         Top = 92
         Width = 79
@@ -468,7 +468,7 @@ inherited Dlg_Order: TDlg_Order
         Text = '123456789023'
         Visible = True
       end
-      object E_Account: TDBEditEh
+      object edt_Account: TDBEditEh
         Left = 232
         Top = 118
         Width = 116
@@ -485,7 +485,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 6
         Visible = True
       end
-      object Cb_CashType: TDBComboBoxEh
+      object cmb_CashType: TDBComboBoxEh
         Left = 88
         Top = 119
         Width = 105
@@ -501,7 +501,7 @@ inherited Dlg_Order: TDlg_Order
         Text = #1073'/'#1085' ('#1085#1077#1090' '#1089#1095#1077#1090#1072')'
         Visible = True
       end
-      object E_Address: TDBEditEh
+      object edt_Address: TDBEditEh
         Left = 88
         Top = 145
         Width = 260
@@ -519,7 +519,7 @@ inherited Dlg_Order: TDlg_Order
         Visible = True
       end
     end
-    object P_Header_1: TPanel
+    object pnl_Header_1: TPanel
       Left = 1
       Top = 1
       Width = 340
@@ -529,7 +529,7 @@ inherited Dlg_Order: TDlg_Order
       DesignSize = (
         340
         176)
-      object Cb_Organization: TDBComboBoxEh
+      object cmb_Organization: TDBComboBoxEh
         Left = 66
         Top = 11
         Width = 156
@@ -545,7 +545,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 0
         Visible = True
       end
-      object E_OrderNum: TDBEditEh
+      object edt_OrderNum: TDBEditEh
         Left = 65
         Top = 38
         Width = 89
@@ -561,7 +561,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 2
         Visible = True
       end
-      object Cb_OrderType: TDBComboBoxEh
+      object cmb_OrderType: TDBComboBoxEh
         Left = 136
         Top = 38
         Width = 85
@@ -573,7 +573,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 3
         Visible = True
       end
-      object Cb_Format: TDBComboBoxEh
+      object cmb_Format: TDBComboBoxEh
         Left = 65
         Top = 65
         Width = 269
@@ -590,7 +590,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 5
         Visible = True
       end
-      object Cb_Project: TDBComboBoxEh
+      object cmb_Project: TDBComboBoxEh
         Left = 65
         Top = 92
         Width = 269
@@ -608,7 +608,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 6
         Visible = True
       end
-      object E_Manager: TDBEditEh
+      object edt_Manager: TDBEditEh
         Left = 66
         Top = 146
         Width = 268
@@ -625,7 +625,7 @@ inherited Dlg_Order: TDlg_Order
         Text = #1055#1088#1086#1082#1086#1087#1077#1085#1082#1086' '#1057'.'#1042'.'
         Visible = True
       end
-      object Cb_EstimatePath: TDBComboBoxEh
+      object cmb_EstimatePath: TDBComboBoxEh
         Left = 65
         Top = 119
         Width = 269
@@ -642,7 +642,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 7
         Visible = True
       end
-      object Cb_OrderReference: TDBComboBoxEh
+      object cmb_OrderReference: TDBComboBoxEh
         Left = 221
         Top = 38
         Width = 113
@@ -656,7 +656,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 4
         Visible = True
       end
-      object Cb_Area: TDBComboBoxEh
+      object cmb_Area: TDBComboBoxEh
         Left = 280
         Top = 11
         Width = 54
@@ -673,42 +673,42 @@ inherited Dlg_Order: TDlg_Order
         Visible = True
       end
     end
-    object P_Header_5: TPanel
+    object pnl_Header_5: TPanel
       Left = 888
       Top = 1
       Width = 387
       Height = 176
       Align = alRight
       TabOrder = 4
-      object Label1: TLabel
+      object lbl1: TLabel
         Left = 64
         Top = 12
         Width = 94
         Height = 13
         Caption = #1057#1091#1084#1084#1072' '#1073#1077#1079' '#1089#1082#1080#1076#1082#1080
       end
-      object Label2: TLabel
+      object lbl2: TLabel
         Left = 172
         Top = 12
         Width = 44
         Height = 13
         Caption = #1053#1072#1094#1077#1085#1082#1072
       end
-      object Label3: TLabel
+      object lbl3: TLabel
         Left = 229
         Top = 12
         Width = 37
         Height = 13
         Caption = #1057#1082#1080#1076#1082#1072
       end
-      object Label4: TLabel
+      object lbl4: TLabel
         Left = 285
         Top = 12
         Width = 30
         Height = 13
         Caption = #1048#1090#1086#1075#1086
       end
-      object Ne_Trans_0: TDBNumberEditEh
+      object nedt_Trans_0: TDBNumberEditEh
         Left = 64
         Top = 117
         Width = 95
@@ -727,7 +727,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Montage_0: TDBNumberEditEh
+      object nedt_Montage_0: TDBNumberEditEh
         Left = 64
         Top = 90
         Width = 95
@@ -746,7 +746,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Sum: TDBNumberEditEh
+      object nedt_Sum: TDBNumberEditEh
         Left = 64
         Top = 144
         Width = 89
@@ -765,7 +765,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_AC_0: TDBNumberEditEh
+      object nedt_AC_0: TDBNumberEditEh
         Left = 64
         Top = 63
         Width = 95
@@ -784,7 +784,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Items_0: TDBNumberEditEh
+      object nedt_Items_0: TDBNumberEditEh
         Left = 64
         Top = 36
         Width = 95
@@ -803,7 +803,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Items_M: TDBNumberEditEh
+      object nedt_Items_M: TDBNumberEditEh
         Left = 172
         Top = 36
         Width = 41
@@ -822,7 +822,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Items_D: TDBNumberEditEh
+      object nedt_Items_D: TDBNumberEditEh
         Left = 228
         Top = 36
         Width = 41
@@ -841,7 +841,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Items: TDBNumberEditEh
+      object nedt_Items: TDBNumberEditEh
         Left = 284
         Top = 36
         Width = 95
@@ -860,7 +860,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_AC_M: TDBNumberEditEh
+      object nedt_AC_M: TDBNumberEditEh
         Left = 172
         Top = 63
         Width = 41
@@ -879,7 +879,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_AC_D: TDBNumberEditEh
+      object nedt_AC_D: TDBNumberEditEh
         Left = 229
         Top = 63
         Width = 41
@@ -898,7 +898,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_AC: TDBNumberEditEh
+      object nedt_AC: TDBNumberEditEh
         Left = 284
         Top = 63
         Width = 95
@@ -917,7 +917,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Montage_M: TDBNumberEditEh
+      object nedt_Montage_M: TDBNumberEditEh
         Left = 172
         Top = 90
         Width = 41
@@ -936,7 +936,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Montage_D: TDBNumberEditEh
+      object nedt_Montage_D: TDBNumberEditEh
         Left = 228
         Top = 90
         Width = 41
@@ -955,7 +955,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Montage: TDBNumberEditEh
+      object nedt_Montage: TDBNumberEditEh
         Left = 284
         Top = 90
         Width = 95
@@ -974,7 +974,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Trans_M: TDBNumberEditEh
+      object nedt_Trans_M: TDBNumberEditEh
         Left = 172
         Top = 117
         Width = 41
@@ -993,7 +993,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Trans_D: TDBNumberEditEh
+      object nedt_Trans_D: TDBNumberEditEh
         Left = 228
         Top = 117
         Width = 41
@@ -1012,7 +1012,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Trans: TDBNumberEditEh
+      object nedt_Trans: TDBNumberEditEh
         Left = 284
         Top = 117
         Width = 95
@@ -1031,7 +1031,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Discount: TDBNumberEditEh
+      object nedt_Discount: TDBNumberEditEh
         Left = -28
         Top = 156
         Width = 77
@@ -1050,7 +1050,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = False
       end
-      object Ne_SumWoNds: TDBNumberEditEh
+      object nedt_SumWoNds: TDBNumberEditEh
         Left = 185
         Top = 144
         Width = 80
@@ -1069,7 +1069,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Sum_Av: TDBNumberEditEh
+      object nedt_Sum_Av: TDBNumberEditEh
         Left = 300
         Top = 144
         Width = 77
@@ -1088,7 +1088,7 @@ inherited Dlg_Order: TDlg_Order
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object Ne_Items_NoSgp: TDBNumberEditEh
+      object nedt_Items_NoSgp: TDBNumberEditEh
         Left = 60
         Top = 167
         Width = 77
@@ -1108,7 +1108,7 @@ inherited Dlg_Order: TDlg_Order
       end
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 300
     Top = 548
   end

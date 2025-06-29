@@ -13,8 +13,8 @@ type
   TFrmOGlstEstimate = class(TFrmBasicGrid2)
     procedure DBGridEh1CanUserSelectRow(Grid: TCustomDBGridEh; var CanSelectRow: Boolean);
   private
-    Capt: string;
-    IsPrepared: Boolean;
+    FCapt: string;
+    FIsPrepared: Boolean;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
@@ -44,9 +44,9 @@ var
   va2: TVarDynArray2;
   i, j: Integer;
 begin
-  Capt := '';
+  FCapt := '';
   Frg1.Options := Frg1.Options + [myogLoadAfterVisible, myogIndicatorCheckBoxes, myogMultiSelect];
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnPrint],[],[btnGridSettings],[],[btnCtlPanel]]);
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtPrint],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetGrouping(['groupname'], [], [clGradientActiveCaption], True);
   if FormDoc = myfrm_R_Estimate then begin
     Caption := 'Смета';
@@ -65,12 +65,12 @@ begin
     Frg1.Opt.SetTable('v_estimate');  //v_estimate_prices
     if AddParam[0] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
-      Capt := Q.QSelectOneRow('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]])[0];
+      FCapt := Q.QSelectOneRow('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]])[0];
       IsNstd := Q.QSelectOneRow('select nstd from v_order_items where id = :id$i', [AddParam[0]])[0] = 1;
     end;
     if AddParam[1] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_std_item = :id$i /*ANDWHERE*/');
-      Capt := Q.QSelectOneRow('select name from v_or_std_items where id = :id$i', [AddParam[1]])[0];
+      FCapt := Q.QSelectOneRow('select name from v_or_std_items where id = :id$i', [AddParam[1]])[0];
       IsNstd := False;
     end;
     //Frg1.CreateAddControls('1', cntComboLK, 'Площадка:', 'CbArea', '', 80, yrefC, 80);
@@ -107,7 +107,7 @@ begin
       );
     end;
     if Length(TVarDynArray(AddParam)) = 1 then
-      Capt := Q.QSelectOneRow('select ornum from v_orders where id = :id$i', TVarDynArray(AddParam))[0]
+      FCapt := Q.QSelectOneRow('select ornum from v_orders where id = :id$i', TVarDynArray(AddParam))[0]
     else begin
       j := Length(TVarDynArray(AddParam)) - 10;
       va := [];
@@ -115,15 +115,15 @@ begin
         va := va + [TVarDynArray(AddParam)[i]];
       A.VarDynArraySort(va);
       va2 := Q.QLoadToVarDynArray2('select ornum from v_orders where id in (' + A.Implode(va, ',') + ') order by ornum', []);
-      Capt := A.Implode(A.VarDynArray2ColToVD1(va2, 0), ', ') + S.IIf(j <= 0, '', ' и еще ' + IntToStr(j));
+      FCapt := A.Implode(A.VarDynArray2ColToVD1(va2, 0), ', ') + S.IIf(j <= 0, '', ' и еще ' + IntToStr(j));
     end;
   end;
-  Frg1.CreateAddControls('1', cntLabel, Capt, 'LbCapt', '', 5, yrefT, 3000);
+  Frg1.CreateAddControls('1', cntLabel, FCapt, 'LbCapt', '', 5, yrefT, 3000);
   Frg1.CreateAddControls('1', cntCheck, 'Показать по группам', 'ChbGrouping', '', 5, yrefB, 200);
   if True then begin
     Frg1.CreateAddControls('1', cntComboLK, 'Склад:', 'CbStock', '', 180, yrefB, 170);
     GetStockList;
-      //TDBComboBoxEh(FindComponent('Cb_Stock')).ItemIndex:=0;
+      //TDBComboBoxEh(FindComponent('cmb_Stock')).ItemIndex:=0;
   end;
   Frg1.CreateAddControls('1', cntCheck, 'Исходная', 'ChbSource', '', 360, yrefB, 80);
   if User.Role(rOr_R_Estimate_PrimeCost) then
@@ -146,11 +146,11 @@ var
   b, b1: Boolean;
   st: string;
 begin
-  if (FormDoc = myfrm_R_AggEstimate) and (Length(TVarDynArray(AddParam)) = 1) and (Tag = btnRefresh) then begin
+  if (FormDoc = myfrm_R_AggEstimate) and (Length(TVarDynArray(AddParam)) = 1) and (Tag = mbtRefresh) then begin
     Frg1.RefreshGrid;
     Handled := True;
   end
-  else if Tag = btnPrint then begin
+  else if Tag = mbtPrint then begin
     Print;
     Handled := True;
   end
@@ -393,8 +393,8 @@ begin
   end;
 
   Frg1.MemTableEh1.DisableControls; //иначе будет перемещение по гриду при печати
-  PrintReport.SetReportDataset('capt$s', [Capt]);
-  PrintReport.P_Estimate(Frg1.MemTableEh1, S.IIf(FormDoc = myfrm_R_AggEstimate, 2, 1));
+  PrintReport.SetReportDataset('FCapt$s', [FCapt]);
+  PrintReport.pnl_Estimate(Frg1.MemTableEh1, S.IIf(FormDoc = myfrm_R_AggEstimate, 2, 1));
   Frg1.MemTableEh1.EnableControls;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'chb').STFilter.ExpressionStr := '';
   Frg1.DBGridEh1.DefaultApplyFilter;

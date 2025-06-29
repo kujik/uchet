@@ -15,16 +15,16 @@ type
   TDlg_Order_Stages1 = class(TForm_Normal)
     MemTableEh1: TMemTableEh;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     DataSource1: TDataSource;
     Bt_Ok: TBitBtn;
     Bt_Cancel: TBitBtn;
     Img_Info: TImage;
-    Lb_Caption: TLabel;
+    lbl_Caption: TLabel;
     Bt_Del: TBitBtn;
     Bt_Add: TBitBtn;
-    Bevel1: TBevel;
-    Timer1: TTimer;
+    bvl1: TBevel;
+    tmr1: TTimer;
     procedure Bt_OkClick(Sender: TObject);
     procedure MemTableEh1AfterPost(DataSet: TDataSet);
     procedure FormActivate(Sender: TObject);
@@ -34,7 +34,7 @@ type
     procedure DBGridEh1SumListAfterRecalcAll(Sender: TObject);
     procedure Bt_AddClick(Sender: TObject);
     procedure Bt_DelClick(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure tmr1Timer(Sender: TObject);
   private
     { Private declarations }
     ID_Order, ID_Order_Item, ID_Stage: Integer;
@@ -289,17 +289,17 @@ var
   q: Extended;
 begin
   //информация вверху окна по количеству изделий
-  TLabel(Lb_Caption).ResetColors;
+  TLabel(lbl_Caption).ResetColors;
   q:=Qnt - S.NNum(Gh.GetGridColumn(DBGridEh1, 'qnt').Footer.SumValue);
   if q  < 0 then q:=-1;
   if q  > 0 then q:= 1;
-  //Lb_Caption.Caption:='Общее количество: '+ FloatToStr(Qnt) + ' шт.';
-  TLabel(Lb_Caption).SetCaptionAr([
+  //lbl_Caption.Caption:='Общее количество: '+ FloatToStr(Qnt) + ' шт.';
+  TLabel(lbl_Caption).SetCaptionAr([
   '$000000', 'Общее количество: ', S.Decode([q, 0, '$00FF00', 1, '$FF0000', -1, '$0000FF']), FloatToStr(Qnt) + ' шт.'
 ]);
 end;
 
-procedure TDlg_Order_Stages1.Timer1Timer(Sender: TObject);
+procedure TDlg_Order_Stages1.tmr1Timer(Sender: TObject);
 begin
   inherited;
   //если сделать удаление (похоже, что просто уход фокуса) с таблицы, в которой нет ни одной строки, то
@@ -386,7 +386,7 @@ begin
   Cth.SetBtn(Bt_Del, mybtDelete, True);
   Bt_Add.Visible:=Mode = fEdit;
   Bt_Del.Visible:=Mode = fEdit;
-  Bevel1.Visible:=Bt_Add.Visible;
+  bvl1.Visible:=Bt_Add.Visible;
   InLoad:=False;
   RowDisable;
   Changed:=False;

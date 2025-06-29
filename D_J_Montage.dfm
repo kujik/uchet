@@ -6,14 +6,14 @@ inherited Dlg_J_Montage: TDlg_J_Montage
   ExplicitHeight = 355
   PixelsPerInch = 96
   TextHeight = 13
-  object Lb_Act: TLabel [0]
+  object lbl_Act: TLabel [0]
     Left = 36
     Top = 256
     Width = 60
     Height = 13
     Caption = #1060#1072#1081#1083' '#1089#1095#1077#1090#1072
   end
-  object Lb_Photos: TLabel [1]
+  object lbl_Photos: TLabel [1]
     Left = 191
     Top = 256
     Width = 60
@@ -28,12 +28,12 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     Anchors = [akLeft, akBottom]
     ExplicitTop = 262
   end
-  object Lb_Caption: TLabel [3]
+  object lbl_Caption: TLabel [3]
     Left = 8
     Top = 8
     Width = 65
     Height = 13
-    Caption = 'Lb_Caption'
+    Caption = 'lbl_Caption'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -41,7 +41,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     Font.Style = [fsBold]
     ParentFont = False
   end
-  inherited P_StatusBar: TPanel
+  inherited pnl_StatusBar: TPanel
     Top = 298
     Width = 407
     ExplicitTop = 298
@@ -69,7 +69,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     TabOrder = 2
     OnClick = Bt_CancelClick
   end
-  object De_Beg: TDBDateTimeEditEh [7]
+  object dedt_Beg: TDBDateTimeEditEh [7]
     Left = 113
     Top = 28
     Width = 111
@@ -85,7 +85,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     TabOrder = 3
     Visible = True
   end
-  object De_End: TDBDateTimeEditEh [8]
+  object dedt_End: TDBDateTimeEditEh [8]
     Left = 113
     Top = 55
     Width = 111
@@ -101,7 +101,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     TabOrder = 4
     Visible = True
   end
-  object Chb_RC: TDBCheckBoxEh [9]
+  object chb_RC: TDBCheckBoxEh [9]
     Left = 245
     Top = 32
     Width = 185
@@ -110,7 +110,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     DynProps = <>
     TabOrder = 5
   end
-  object Chb_RI: TDBCheckBoxEh [10]
+  object chb_RI: TDBCheckBoxEh [10]
     Left = 245
     Top = 57
     Width = 185
@@ -119,7 +119,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     DynProps = <>
     TabOrder = 6
   end
-  object M_Comm: TDBMemoEh [11]
+  object mem_Comm: TDBMemoEh [11]
     Left = 8
     Top = 100
     Width = 393
@@ -129,7 +129,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081':'
     ControlLabel.Visible = True
     Lines.Strings = (
-      'M_Comm')
+      'mem_Comm')
     AutoSize = False
     DynProps = <>
     EditButtons = <>
@@ -161,7 +161,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     OnClick = Bt_PhotosClick
     OnExit = Bt_PhotosExit
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 320
     Top = 280
   end

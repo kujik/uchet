@@ -950,12 +950,12 @@ TColumnEh.Width, Используйте свойства TColumnEh.MaxWidth и TColumnEh.MinWidth
     end;
   MemTableEh1.Active:=False;
   //панель поиска/фильтра видна
-  b:=Chb_FilterPanel.Checked or Chb_SearchPanel.Checked;
+  b:=chb_FilterPanel.Checked or chb_SearchPanel.Checked;
   DBGridEh.SearchPanel.Enabled := b;
   //панель поиска фильтрует грид, иначе поиск+отображание вхождений в гриде
-  DBGridEh.SearchPanel.FilterOnTyping := Chb_FilterPanel.Checked;
+  DBGridEh.SearchPanel.FilterOnTyping := chb_FilterPanel.Checked;
   //выпадающий фильтр в стобцах
-  b:=Chb_STFilter.Checked;
+  b:=chb_STFilter.Checked;
   DBGridEh.STFilter.Visible:=b;
   if b then begin
     //локальная фильтрация
@@ -966,7 +966,7 @@ TColumnEh.Width, Используйте свойства TColumnEh.MaxWidth и TColumnEh.MinWidth
     DBGridEh.STFilter.InstantApply:=False;
   end;
   //сортировка по клику на колонке
-  b:=Chb_Sorting.checked;
+  b:=chb_Sorting.checked;
   if b
     then begin
       DBGridEh.OptionsEh:=DBGridEh.OptionsEh+[dghAutoSortMarking, dghMultiSortMarking];
@@ -976,7 +976,7 @@ TColumnEh.Width, Используйте свойства TColumnEh.MaxWidth и TColumnEh.MinWidth
       DBGridEh.OptionsEh:=DBGridEh.OptionsEh-[dghAutoSortMarking, dghMultiSortMarking];
     end;
   //автоподгонка высоты строк
-  b:=Chb_AutoHeight.Checked;
+  b:=chb_AutoHeight.Checked;
   if b
     then begin
       DBGridEh.OptionsEh:=DBGridEh.OptionsEh+[dghAutoFitRowHeight];
@@ -991,7 +991,7 @@ TColumnEh.Width, Используйте свойства TColumnEh.MaxWidth и TColumnEh.MinWidth
   //изменение ширины столбцов
   DBGridEh.OptionsEh:=DBGridEh.OptionsEh+[dghColumnResize];
   //автоподгонка ширины столбцов чтобы они занимали всю ширину видимой области грида, а не выходили за пределы видимой области
-  b:=Chb_AutoWidth.Checked;
+  b:=chb_AutoWidth.Checked;
   DBGridEh.AutoFitColWidths:=b;
   //автоподгонка ширины столбцовюю
   //TDBGridEh.MinAutoFitWidth     //минимальная ширина грилда, при которой происходит подгонка
@@ -1749,7 +1749,7 @@ begin
   for i := 0 to f.ComponentCount - 1 do begin
     c := TControl(f.Components[i]);
     st := c.name;
-    if c.name = 'Cb_Id_Unit' then
+    if c.name = 'cmb_id_unit' then
       st := c.name;
     if c is TDBCheckBoxEh then begin
       //для чекбокса отрисуем линию на самой форме под чекбоксом
@@ -1780,7 +1780,7 @@ begin
     end
     else if c is TDBDateTimeEditEh then begin
       b := not TDBDateTimeEditEh(c).DynProps.VarExists(dpError);
-      if (c.name = 'De_Otgr') and not b then
+      if (c.name = 'dedt_Otgr') and not b then
         st := c.name;
       if b then
         DotRedLine(c, False)
@@ -2121,13 +2121,13 @@ begin
   Result:= False;
   //если элемент массива (он сам массив) пустой, или его начальный элемент не целое число, выйдем и вернем False
   if High(AButtons[p]) = -1 then begin
-    AButtons[p] := [btnDividor];
+    AButtons[p] := [mbtDividor];
     //Exit;
   end;
   if (S.VarType(AButtons[p][0]) <> varInteger) then
     if S.VarType(AButtons[p][0]) = varDouble then begin
       //если дробное число, то сделает эту кнопку разделителем с этой шириной
-      AButtons[p] := [btnSpace, True, round(AButtons[p][0])];
+      AButtons[p] := [mbtSpace, True, round(AButtons[p][0])];
     end;
   if (S.VarType(AButtons[p][0]) <> varInteger) then Exit;
   //айди кнопки
@@ -2150,17 +2150,18 @@ begin
     end;
   end;
   //кнопки с таким же айди не должны повторяться
-  if BtnVis and not (BtnID in [btnDividor, btnDividorM, btnSpace, btnCtlPanel, btnToAlRight]) then begin
+  if BtnVis and not (BtnID in [mbtDividor, mbtDividorM, mbtSpace, mbtCtlPanel, mbtToAlRight]) then begin
     for i:= 0 to p - 1 do
       if (High(AButtons[i]) >= 0)and(S.VarType(AButtons[i][0]) = varInteger)and(AButtons[i][0] = BtnId)
         then Exit;
   end;
   //полчим индикатор создания подмен./выпадающего списка для кнопки
-  if (BtnID = btnDividorM)and(BtnVis)
-    then if IsDropDown = -1
-      then IsDropDown := p + 1
-      else IsDropDown := -1;
-  //получим параметры кнопок
+  if (BtnId = mbtDividorM) and (BtnVis) then
+    if IsDropDown = -1 then
+      IsDropDown := p + 1
+    else
+      IsDropDown := -1;
+    //получим параметры кнопок
   BtnCapt:='';
   BtnPict:='';
   ShortCut:= 0;
@@ -2295,11 +2296,11 @@ begin
     if not GetButtonParams(AButtons, i, BtnRec, BtnId, BtnVis, LastBtnVis, IsDropDown, BtnG, BtnCapt, BtnPict, ShortCut, BtnState, BtnW)
       then Continue;
     if BtnId < 0 then Continue;
-    if (BtnID = btnToAlRight) then begin
+    if (BtnID = mbtToAlRight) then begin
       AlRight:= True;
       FirstRight:= L;
     end;
-    if ((BtnID = btnDividor) and (IsDiv > 0)) or (BtnID = btnDividorA) then begin
+    if ((BtnID = mbtDividor) and (IsDiv > 0)) or (BtnID = mbtDividorA) then begin
       //создаем разделитель (только если они не идут подряд)
       Dividor := TBevel.Create(APanel.Owner);
       Dividor.Parent := APanel;
@@ -2318,16 +2319,16 @@ begin
       end;
       L := L + 2 + 8;
       Result := L;
-      if BtnID <> btnDividorA then
+      if BtnID <> mbtDividorA then
         IsDiv := -1;
     end;
-    if (BtnID = btnSpace) and BtnVis then begin
+    if (BtnID = mbtSpace) and BtnVis then begin
       //создаем путое пространство
       L:= L + BtnW;
       Result := L;
       IsDiv := 1;
     end;
-    if (BtnID = btnCtlPanel){ and BtnVis} then begin
+    if (BtnID = mbtCtlPanel){ and BtnVis} then begin
       //создаем панель контролов
       //если панель с таким именем уже есть, то используем ее, в этом случае можно не указывать видимость и ширину (ширина будет по размеру панели тогда)
       inc(PCtlN);
@@ -2350,7 +2351,7 @@ begin
         IsDiv := 1;
       end;
     end;
-    if BtnVis and not (BtnID in [btnDividor, btnDividorA, btnDividorM, btnSpace, btnCtlPanel, btnToAlRight]) and
+    if BtnVis and not (BtnID in [mbtDividor, mbtDividorA, mbtDividorM, mbtSpace, mbtCtlPanel, mbtToAlRight]) and
       ((IsDropDown = i) or (IsDropDown = -1)) then begin
       //создаем обычную кнопку
       if AButtonType in [cbttSBig, cbttSSmall]
@@ -2402,7 +2403,7 @@ begin
       //в результат - текущую длину/высоту
       Result := L;
     end
-    else if BtnVis and not (BtnID in [btnDividor, btnDividorM, btnSpace, btnCtlPanel, btnToAlRight]) and (IsDropDown <> -1) then begin
+    else if BtnVis and not (BtnID in [mbtDividor, mbtDividorM, mbtSpace, mbtCtlPanel, mbtToAlRight]) and (IsDropDown <> -1) then begin
       //если это кнопки, задающие пунсты выпадающего меню (вторая и далее после btnDividorM) - содадим пункты меню
       Mi := TMenuItem.Create(Pm);
       Mi.Name := 'MMi_' + S.IIf(ASuffix = '', '', ASuffix + '_') + IntToStr(BtnID);
@@ -2489,12 +2490,12 @@ begin
   for i := 0 to High(AButtons) do begin
     if not GetButtonParams(AButtons, i, BtnRec, BtnId, BtnVis, LastBtnVis, isSubMenu, BtnG, BtnCapt, BtnPict, ShortCut, BtnState, BtnW)
       then Continue;
-    if (BtnID = btnDividor) and (IsDiv > 0) then begin
+    if (BtnID = mbtDividor) and (IsDiv > 0) then begin
       mi := TMenuItem.Create(Pm);
       mi.Caption := '-';
       Pm.Items.Add(mi);
     end;
-    if BtnVis and not (BtnID in [btnDividor, btnDividorA, btnDividorM, btnSpace, btnCtlPanel, btnToAlRight]) then begin
+    if BtnVis and not (BtnID in [mbtDividor, mbtDividorA, mbtDividorM, mbtSpace, mbtCtlPanel, mbtToAlRight]) then begin
       mi := TMenuItem.Create(Pm);
       if isSubMenu = i then begin
         mi1 := mi;
@@ -2572,10 +2573,10 @@ begin
     AMenuItem.Hint := BtnPict;
   if (BtnPict = '') and (AMenuItem.Hint <> '') then
     BtnPict := AMenuItem.Hint;
-  if (BtnID in [btnDividor, btnDividorA, btnDividorM, btnSpace, btnCtlPanel]) then
+  if (BtnID in [mbtDividor, mbtDividorA, mbtDividorM, mbtSpace, mbtCtlPanel]) then
     Exit;
   if not ToRefresh then
-    AMenuItem.Caption := S.IIf(BtnID = btnDividor, '-', BtnCapt)
+    AMenuItem.Caption := S.IIf(BtnID = mbtDividor, '-', BtnCapt)
   else if ANewCaption <> '' then
     AMenuItem.Caption := ANewCaption;
 
@@ -2796,13 +2797,13 @@ begin
     end
     else
       b := blast;
-    if (AButtons[i].Bt = btnDividorM) then begin
+    if (AButtons[i].Bt = mbtDividorM) then begin
       if IsDropDown = -1 then
         IsDropDown := i + 1
       else
         IsDropDown := -1;
     end;
-    if (AButtons[i].Bt = btnDividor) and (ls > 0) then begin
+    if (AButtons[i].Bt = mbtDividor) and (ls > 0) then begin
       Dividor := TBevel.Create(APanel);
       Dividor.Parent := APanel;
       if Vertical then begin
@@ -2820,7 +2821,7 @@ begin
       L := L + 2 + 8;
       ls := -1;
     end;
-    if b and not (AButtons[i].Bt in [btnDividor, btnDividorM]) and ((IsDropDown = i) or (IsDropDown = -1)) then begin
+    if b and not (AButtons[i].Bt in [mbtDividor, mbtDividorM]) and ((IsDropDown = i) or (IsDropDown = -1)) then begin
       Btn := TSpeedButton.Create(APanel);
       Btn.Parent := APanel;
       Btn.Tag := AButtons[i].Bt;
@@ -2847,7 +2848,7 @@ begin
       ls := 1;
       Result := L;
     end
-    else if b and not (AButtons[i].Bt in [btnDividor, btnDividorM]) and (IsDropDown <> -1) then begin
+    else if b and not (AButtons[i].Bt in [mbtDividor, mbtDividorM]) and (IsDropDown <> -1) then begin
       Mi := TMenuItem.Create(Pm);
       Mi.Name := 'MMi_' + S.IIf(ASuffix = '', '', ASuffix + '_') + IntToStr(AButtons[i].Bt);
       SetMenuItem(Mi, AButtons[i], True);
@@ -2885,24 +2886,24 @@ begin
   for i := 0 to High(AButtons) do begin
     if (VarType(AButtonsState[i]) and VarTypeMask = varBoolean) then begin
       b := AButtonsState[i];
-if AButtons[i].bt=btnTest
-  then b := AButtonsState[i];
+      if AButtons[i].bt = mbtTest then
+        b := AButtonsState[i];
       blast := b;
     end
     else
       b := blast;
-    if (AButtons[i].Bt = btnDividor) and (ls > 0) then begin
+    if (AButtons[i].Bt = mbtDividor) and (ls > 0) then begin
       mi := TMenuItem.Create(Pm);
       mi.Caption := '-';
       Pm.Items.Add(mi);
     end;
-    if (AButtons[i].Bt = btnDividorM) then begin
+    if (AButtons[i].Bt = mbtDividorM) then begin
       if isSubMenu = -1 then
         isSubMenu := i + 1
       else
         isSubMenu := -1;
     end;
-    if b and not (AButtons[i].Bt = btnDividor) and not (AButtons[i].Bt = btnDividorM) then begin
+    if b and not (AButtons[i].Bt = mbtDividor) and not (AButtons[i].Bt = mbtDividorM) then begin
       b1 := True;
       for j := 0 to i - 1 do
         if AButtons[i].Bt = AButtons[j].Bt then begin
@@ -3317,44 +3318,44 @@ begin
   SetLength(Btns, 15);
   for i := 0 to High(Buttons) do
     Btns[i] := mybtNone;
-  if btnRefresh in AButtons then
+  if mbtRefresh in AButtons then
     Btns[0] := mybtRefresh;
 //  if (btnFirst in AButtons)and UseNavigateButtons then Btns[1]:=mybtFirst;
 //  if (btnLast in AButtons) and UseNavigateButtons then Btns[2]:=mybtLast;
   Btns[3] := mybtDividor;
-  if btnView in AButtons then
+  if mbtView in AButtons then
     Btns[4] := mybtView;
-  if btnAdd in AButtons then
+  if mbtAdd in AButtons then
     Btns[5] := mybtAdd;
-  if btnCopy in AButtons then
+  if mbtCopy in AButtons then
     Btns[6] := mybtCopy;
-  if btnEdit in AButtons then
+  if mbtEdit in AButtons then
     Btns[7] := mybtEdit;
-  if btnDelete in AButtons then
+  if mbtDelete in AButtons then
     Btns[8] := mybtDelete;
-  if btnApply in AButtons then
+  if mbtApply in AButtons then
     Btns[9] := mybtApply;
-  if btnCancel in AButtons then
+  if mbtCancel in AButtons then
     Btns[10] := mybtCancel;
   Btns[11] := mybtDividor;
-  if btnGridFilter in AButtons then
+  if mbtGridFilter in AButtons then
     Btns[12] := mybtGridFilter;
 //  Btns[13]:=mybtDividor;
-  if btnPrint in AButtons then
+  if mbtPrint in AButtons then
     Btns[13] := mybtPrint;
-  if btnGridSettings in AButtons then
+  if mbtGridSettings in AButtons then
     Btns[14] := mybtGridSettings;
   l := 5;
   k := 0;
   for i := 0 to High(Buttons) do begin
-    if Btns[i].Bt = btnDividor then begin
+    if Btns[i].Bt = mbtDividor then begin
       k := i - 1;
-      while (k >= 0) and (Btns[k].Bt = btnNone) do
+      while (k >= 0) and (Btns[k].Bt = mbtNone) do
         Dec(k);
-      if (k >= 0) and (Btns[k].bt <> btnDividor) then
+      if (k >= 0) and (Btns[k].bt <> mbtDividor) then
         l := l + 0; //7;
     end
-    else if Btns[i].Bt <> btnNone then begin
+    else if Btns[i].Bt <> mbtNone then begin
 //          Buttons[i]:= TBitBtn.Create(Apanel);
       Buttons[i] := TSpeedButton.Create(APanel);
       Buttons[i].Parent := APanel;
@@ -3383,7 +3384,7 @@ begin
   SetdialogCaption(Form, Mode, Caption);
   c := Form.FindComponent('Bt_Ok');
   if c = nil then
-    c := Form.FindComponent('BtOk');
+    c := Form.FindComponent('btnOk');
   if c <> nil then
     if Mode <> fDelete
       then Cth.SetBtn((c as TBitBtn), mybtOk, False)
@@ -3391,7 +3392,7 @@ begin
   (c as TBitBtn).Visible := (Mode <> fView);
   c := Form.FindComponent('Bt_Cancel');
   if c = nil then
-    c := Form.FindComponent('BtCancel');
+    c := Form.FindComponent('btnCancel');
   if c <> nil then
     if Mode <> fView
       then Cth.SetBtn((c as TBitBtn), mybtCancel, False)
@@ -3437,15 +3438,15 @@ function TControlsHelper.BtnModeToFMode(btn: Integer): TDialogType;
 begin
   Result := fNone;
   case btn of
-    btnView:
+    mbtView:
       Result := fView;
-    btnEdit:
+    mbtEdit:
       Result := fEdit;
-    btnAdd:
+    mbtAdd:
       Result := fAdd;
-    btnCopy:
+    mbtCopy:
       Result := fCopy;
-    btnDelete:
+    mbtDelete:
       Result := fDelete;
   end;
 end;
@@ -3456,15 +3457,15 @@ begin
   Result := -1;
   case fMode of
     fView:
-      Result := btnView;
+      Result := mbtView;
     fEdit:
-      Result := btnEdit;
+      Result := mbtEdit;
     fAdd:
-      Result := btnAdd;
+      Result := mbtAdd;
     fCopy:
-      Result := btnCopy;
+      Result := mbtCopy;
     fDelete:
-      Result := btnDelete;
+      Result := mbtDelete;
   end;
 end;
 
@@ -4343,10 +4344,10 @@ end.
 
 
 найти компонент на форме можно так, даже если он в дочерней панеле (без учета регистра)
-  st:=VarToStr(GetControlValue(TControl(ASelf.FindComponent('De_1'))));
-  st:=VarToStr(GetControlValue(TControl(p_left.FindChildControl('De_1'))));
+  st:=VarToStr(GetControlValue(TControl(ASelf.FindComponent('dedt_1'))));
+  st:=VarToStr(GetControlValue(TControl(pnl_left.FindChildControl('dedt_1'))));
 но не пойдет
-  st:=VarToStr(GetControlValue(TControl(p_left.FindComponent('De_1'))));
+  st:=VarToStr(GetControlValue(TControl(pnl_left.FindComponent('dedt_1'))));
 Components - массив компонентов, которыми владеет данный элемент. FindComponent ищет по Owner
 Controls - массив контролов по Parent
 

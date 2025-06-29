@@ -531,7 +531,7 @@ begin
  st:=Utf8Encode(WideString(exceptIntf.ScreenShot.AsBmpStr));
  }
       Q.AdoStoredProc.Parameters.Clear;
-      Q.AdoStoredProc.ProcedureName := 'P_To_Adm_Error_Log';
+      Q.AdoStoredProc.ProcedureName := 'pnl_To_Adm_Error_Log';
       Q.AdoStoredProc.Parameters.CreateParameter('dt', ftDatetime, pdInput, 0, VarToDateTime(FLogArray[r][cmyerrTime]));
       Q.AdoStoredProc.Parameters.CreateParameter('userlogin', ftString, pdInput, 4000, VarToStr(FLogArray[r][cmyerrUserLogin]));
       Q.AdoStoredProc.Parameters.CreateParameter('id_module', ftString, pdInput, 4000, VarToStr(FLogArray[r][cmyerrModule]));

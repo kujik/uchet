@@ -13,12 +13,12 @@ uses
 type
   TDlg_CandidatesFromWorkerStatus = class(TForm_Normal)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     Bt_Cancel: TBitBtn;
     Bt_Ok: TBitBtn;
-    Label1: TLabel;
+    lbl1: TLabel;
     procedure Bt_CancelClick(Sender: TObject);
     procedure Bt_OkClick(Sender: TObject);
     procedure DBGridEh1MouseDown(Sender: TObject; Button: TMouseButton;

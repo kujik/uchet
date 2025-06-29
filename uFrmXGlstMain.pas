@@ -16,7 +16,7 @@ type
     //в этом событии в основном раскрашиваем текст и фон ячеек; в потомках обязательно вызывает inherited
     procedure Frg1DbGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState); override;
     procedure Frg2DbGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState); override;
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
     procedure DbGridEh1Columns0AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
   private
   protected
@@ -138,7 +138,7 @@ begin
 //    Frg1.Opt.SetButtons(1,'rveasp');
     Frg1.Opt.SetButtons(1,'+p', False);
 //    Frg1.Opt.SetButtons(1,
-//      [[btnRefresh], [btnDividor], [btnView], [btnEdit], [btnAdd], [btnCopy], [btnDelete], [btnDividor], [btnCtlPanel], [btnDividor], [btnGridSettings]{, [btnCtlPanel, True, 140]}]);
+//      [[mbtRefresh], [mbtDividor], [mbtView], [mbtEdit], [mbtAdd], [mbtCopy], [mbtDelete], [mbtDividor], [mbtCtlPanel], [mbtDividor], [mbtGridSettings]{, [mbtCtlPanel, True, 140]}]);
 //    P:=TPanel.Create(Frg1);P.Name := 'PTopBtnsCtl1'; P.Width := 140; P.Height := 32;
     Frg1.CreateAddControls('1', cntCheck, 'Задать использование', 'Chb1', '', 4, yrefT, 200);
     Frg1.CreateAddControls('1', cntCheck, 'Показать неиспользуемые', 'Chb2', '', 4, yrefB, 200);
@@ -278,9 +278,9 @@ begin
     b3:=User.Role(rPC_A_ChAll)  //монтаж
       or (User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat]) and
       (Q.QSelectOneRow('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 3])[0] > 0));
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[], [btnView], [btnEdit,User.Roles([],[rPC_A_ChAll, rPC_A_ChSelf, rPC_A_ChSelfCat])], [btnAdd, b0],
-      [btnAdd_Account_TO,b1], [btnAdd_Account_TS,b2], [btnAdd_Account_M,b3], [btnCopy,b0], [btnDelete,1], [], [-btnCustom_AccountToClipboard], [], [btnGridFilter], [], [btnGridSettings]]);
-    Frg1.Opt.SetButtonsIfEmpty([btnAdd_Account_TO, btnAdd_Account_TS, btnAdd_Account_M]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit,User.Roles([],[rPC_A_ChAll, rPC_A_ChSelf, rPC_A_ChSelfCat])], [mbtAdd, b0],
+      [mbtAdd_Account_TO,b1], [mbtAdd_Account_TS,b2], [mbtAdd_Account_M,b3], [mbtCopy,b0], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard], [], [mbtGridFilter], [], [mbtGridSettings]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtAdd_Account_TO, mbtAdd_Account_TS, mbtAdd_Account_M]);
   end
   //платежный календарь - платежи
   else if FormDoc = myfrm_J_Payments then begin
@@ -307,14 +307,14 @@ begin
       ['agreed2$i','Директор','60','pic'],
       ['pdt$d','Дата платежа','80'],
       ['psum$f','Сумма платежа','80','f=r:'],
-      ['pstatus$i','Платеж проведен','60','chb=+','e',User.Role(rPC_P_Payment)]
+      ['pnlStatusBar$i','Платеж проведен','60','chb=+','e',User.Role(rPC_P_Payment)]
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_payments');
     Frg1.Opt.FilterRules := [[], ['accountdt;dt;pdt']];
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rPC_R_GrExp_Ch));
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[], [btnView], [btnEdit,User.Roles([],[rPC_A_ChSelfCat, rPC_A_ChAll])], [btnAdd, 1],
-      [btnCopy,1], [btnDelete,1], [], [-btnCustom_AccountToClipboard],[],[-btnCustom_RunPayments],[],[btnGridFilter], [], [btnGridSettings]]);
-    Frg1.Opt.SetButtonsIfEmpty([btnAdd_Account_TO, btnAdd_Account_TS, btnAdd_Account_M]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit,User.Roles([],[rPC_A_ChSelfCat, rPC_A_ChAll])], [mbtAdd, 1],
+      [mbtCopy,1], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard],[],[-mbtCustom_RunPayments],[],[mbtGridFilter], [], [mbtGridSettings]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtAdd_Account_TO, mbtAdd_Account_TS, mbtAdd_Account_M]);
   end
   //платежный календарь - группы статей расходов
   else if FormDoc = myfrm_R_GrExpenseItems then begin
@@ -360,7 +360,7 @@ begin
       ['active$i','Используется','60','pic']
     ]);
     Frg1.Opt.SetTable('ref_suppliers');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[],[btnRefresh],[],[btnView],[btnEdit,User.Role(rPC_R_Sp_Change)],[btnAdd,1],[btnCopy,1],[btnDelete,1],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rPC_R_Sp_Change)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[[Caption + '.'#13#10],
       ['Выбор поставщика.'#10#13'Выберите поставщика в таблице и нажмите кнопку "выбрать" или дважды кликните мышью на запись.'#10#13],
       ['Вы можете также создать поставщика, если нужного еще нет, или отредактировать существующую запись.', User.Role(rPC_R_Sp_Change)]
@@ -395,7 +395,7 @@ begin
       ['accsum$f','Сумма по счету','80','f=r:']
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_accounts');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[btnGridFilter],[-btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[mbtGridFilter],[-mbtGridSettings]]);
     Frg1.Opt.FilterRules := [[], ['accountdt']];
     Frg1.InfoArray:=[
       ['Выбор счета.'#10#13'Выберите необходимый счет в таблице и нажмите кнопку "выбрать" или дважды кликните мышью на запись.'#10#13],
@@ -480,7 +480,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_accounts_t_rep');
     Frg1.Opt.SetWhere('where dt_payment >= :dt_beg and dt_payment <= :dt_end and 1 = :i');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[],[btnExcel],[btnPrintGrid],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.CreateAddControls('1', cntDEdit, 'Дата с:', 'DeBeg', '', 4, yrefC, 100);
     Frg1.CreateAddControls('1', cntDEdit, 'по: ', 'DeEnd', '', -1, yrefC, 100);
     Frg1.InfoArray:=[[
@@ -506,7 +506,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_accounts_m_rep');
     Frg1.Opt.SetWhere('where accountdt >= :dt_beg and accountdt <= :dt_end and 1 = :i');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[],[btnExcel],[btnPrintGrid],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.CreateAddControls('1', cntDEdit, 'Дата с:', 'DeBeg', '', 4, yrefC, 100);
     Frg1.CreateAddControls('1', cntDEdit, 'по: ', 'DeEnd', '', -1, yrefC, 100);
     Frg1.InfoArray:=[[
@@ -561,7 +561,7 @@ begin
     Caption:='Обозначения ТУРВ';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['Код','Код','60'],
+      ['code','Код','60'],
       ['name','Расшифровка','150']
     ]);
     Frg1.Opt.SetTable('ref_turvcodes');
@@ -613,7 +613,7 @@ begin
       ['dt2','Уволен','75'],
       ['comm','Комментарий','200;h']
     ]);
-    Frg1.Opt.SetTable('v_sn_calendar_accounts');
+    Frg1.Opt.SetTable('v_j_candidates');
     Frg1.Opt.FilterRules := [[], ['dt;dt1;dt2;dt_birth']];
     Frg1.Opt.SetButtons(1, 'rveacdfs', User.Role(rW_J_Candidates_Ch));
     Frg1.CreateAddControls('1', cntComboLK, 'Площадка:', 'CbArea', '', 80, yrefC, 80);
@@ -642,7 +642,7 @@ begin
     Frg1.Opt.SetTable('v_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnEdit, v],[btnAdd, 1],[btnDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefT, 100);
@@ -674,8 +674,8 @@ begin
       ['dt2','Кон. дата','75'],
       ['committxt','Закрыта','60','pic=закрыт:13']
     ]);
-    Frg1.Opt.SetTable('');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[btnEdit],[btnAdd, 1],[btnDelete, 1],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetTable('v_payroll');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefT, 100);
@@ -699,8 +699,8 @@ begin
     ]);
     Frg1.Opt.SetTable('v_ref_holidays');
     Frg1.Opt.SetWhere('where extract(year from dt) = :year$i');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnCustom_LoadFromInet, User.IsDeveloper or User.Role(rW_R_Holideys_Ch)],[],[btnGridSettings],[],[btnCtlPanel]]);
-    Frg1.Opt.SetButtonsIfEmpty([btnCustom_LoadFromInet]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtCustom_LoadFromInet, User.IsDeveloper or User.Role(rW_R_Holideys_Ch)],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtCustom_LoadFromInet]);
     Frg1.CreateAddControls('1', cntComboL, 'Год:', 'CbYear', '', 40, yrefC, 50);
     for i:=2013 to YearOf(Date)+1 do
       TDBComboBoxEh(Frg1.FindComponent('CbYear')).Items.Add(IntToStr(i));
@@ -725,8 +725,8 @@ begin
     ]);
     Frg1.Opt.SetTable('v_payroll_sum');
     Frg1.Opt.SetWhere('where dt1 = :dt1$d');
-    Frg1.Opt.SetButtons(1,[[btnGo, False],[],[btnExcel],[btnPrintGrid],[],[btnGridSettings],[],[btnCtlPanel]]);
-    Frg1.Opt.SetButtonsIfEmpty([btnGo]);
+    Frg1.Opt.SetButtons(1,[[mbtGo, False],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
     Frg1.CreateAddControls('1', cntComboLK, 'Период:', 'CbPeriod', '', 60, yrefC, 150);
     Q.QLoadToDBComboBoxEh('select to_char(dt1, ''dd-mm-yyyy'') || '' - '' || to_char(max(dt2), ''dd-mm-yyyy'') as dt from v_payroll group by dt1 order by dt1 desc', [],
       TDBComboBoxEh(Frg1.FindComponent('CbPeriod')), cntComboL
@@ -743,7 +743,7 @@ begin
       ['qntopen','Открыто','75'],
       ['dt_beg','Дата открытия','75'],
       ['statusname','Статус','80'],
-      ['divisionname','Подразделение',''],
+      ['divisionname','Подразделение','140'],
       ['headname','Ответственный','120'],
       ['workers','Принятые','200;h'],
       ['candidates','Кандидаты','200;h'],
@@ -767,9 +767,9 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_accounts');
     Frg1.Opt.SetWhere('');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[btnGridFilter],[-btnGridSettings]]);
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[],[btnRefresh],[],[btnEdit],[btnAdd],[btnCopy],[btnDelete],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
-    Frg1.Opt.SetButtonsIfEmpty([btnGo]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[mbtGridFilter],[-mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtRefresh],[],[mbtEdit],[mbtAdd],[mbtCopy],[mbtDelete],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
     Frg1.Opt.FilterRules := [[], ['accountdt']];
     Frg1.Opt.SetButtons(1, 'rveacdfsp');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_Vacancy;
@@ -826,8 +826,8 @@ begin
       ['bcadcomment$s','Комментарий','300;w']
     ]);
     Frg1.Opt.SetTable('v_bcad_nomencl_add');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnAdd,User.Role(rOr_R_ITM_U_Nomencl_Add)],
-      [btnCustom_findInEstimates,User.Role(rOr_Other_Order_FindEstimate)],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtAdd,User.Role(rOr_R_ITM_U_Nomencl_Add)],
+      [mbtCustom_findInEstimates,User.Role(rOr_Other_Order_FindEstimate)],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.CreateAddControls('1', cntCheck, 'Показать по группам', 'ChbGrouping', '', -1, yrefC, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Только из ИТМ', 'ChbFromItm', '', 154, yrefT, 200);
     Frg1.CreateAddControls('1', cntCheck, 'Показать артикул ИТМ', 'ChbArtikul', '', 154, yrefB, 200);
@@ -929,7 +929,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_invoice_to_sgp');
     Frg1.Opt.SetWhere('where area = :area$i');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[btnAdd,User.Role(rOr_J_InvoiceToSgp_Ch_M)],[btnEdit,User.Role(rOr_J_InvoiceToSgp_Ch_S)],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtAdd,User.Role(rOr_J_InvoiceToSgp_Ch_M)],[mbtEdit,User.Role(rOr_J_InvoiceToSgp_Ch_S)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1_m']];
     Frg1.CreateAddControls('1', cntComboLK, 'Площадка:', 'CbArea', '', 80, yrefC, 80);
     Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas order by id', [], TDBComboBoxEh(Frg1.FindComponent('CbArea')), cntComboLK);
@@ -1020,7 +1020,7 @@ begin
       ['is_bcad_unit','Ед. bCAD','40','pic']
     ]);
     Frg1.Opt.SetTable('v_itm_units');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[],[btnRefresh],[],[btnEdit,User.Role(rOr_R_Itm_Units_Ch)],[btnAdd,1],[btnCopy,1],[btnDelete,User.Role(rOr_R_Itm_Units_Del)],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtRefresh],[],[mbtEdit,User.Role(rOr_R_Itm_Units_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_R_Itm_Units_Del)],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[['Справочник единиц измерения ИТМ'#13#10]];
   end
   else if FormDoc = myfrm_R_Itm_Suppliers then begin
@@ -1030,11 +1030,11 @@ begin
       ['id_kontragent$i','_id','40'],
       ['name_org','Наименование','200'],
       ['full_name','Полное наименование','200'],
-      ['e_mail','EMail','120'],
+      ['edt_mail','EMail','120'],
       ['inn','ИНН','100']
     ]);
     Frg1.Opt.SetTable('v_itm_suppliers', '', 'id_kontragent');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[],[btnRefresh],[],[btnEdit,User.Role(rOr_R_Itm_Suppliers_Ch)],[btnAdd,1],[btnCopy,1],[btnDelete,User.Role(rOr_R_Itm_Suppliers_Del)],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtRefresh],[],[mbtEdit,User.Role(rOr_R_Itm_Suppliers_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_R_Itm_Suppliers_Del)],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[['Справочник поставщиков']];
   end
   else if FormDoc = myfrm_R_Itm_InGroup_Nomencl then begin
@@ -1063,7 +1063,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sn_orders');
     Frg1.Opt.SetWhere('where upper(project) like :proekt and id > 0');
-    Frg1.Opt.SetButtons(1,[[btnSelectFromList],[],[btnGridFilter],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtGridFilter],[mbtGridSettings]]);
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end']];
     Frg1.InfoArray:=[[
       'Выберите один или несколько паспортов заказа.'#13#10+
@@ -1110,7 +1110,7 @@ begin
       [['rownum as id$i','_id','40'], ['name','Наименование','450;h']] + va2 + [['qnt_all','Всего','60']]
     );
     Frg1.Opt.SetTable('v_planned_order_estimate12');
-    Frg1.Opt.SetButtons(1,[[btnRefresh, User.Role(rOr_Rep_PlannedMaterials_Calc)],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh, User.Role(rOr_Rep_PlannedMaterials_Calc)],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Caption:='Годовая потребность в материалах';
     if User.Role(rOr_Rep_PlannedMaterials_Calc) then
       Frg1.CreateAddControls('1', cntDEdit, 'Рассчитать: ', 'DeBeg', '', 70, yrefC, 100);
@@ -1149,7 +1149,7 @@ begin
       ['comm','Комментарий','300;h']
     ]);
     Frg1.Opt.SetTable('v_j_development');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_J_Devel_Ch)],[btnAdd,1],[btnCopy,1],[btnDelete,User.Role(rOr_J_Devel_Del)],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_Devel_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_J_Devel_Del)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_plan;dt_end']];
   end
   else if FormDoc = myfrm_R_Itm_Nomencl then begin
@@ -1168,7 +1168,7 @@ begin
       ['has_files','Файлы','50','pic','bt=Файлы']
     ]);
     Frg1.Opt.SetTable('v_itm_nomencl_1');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnEdit,User.Role(rOr_R_Itm_Nomencl_Rename)],[btnAdd,User.Role(rOr_R_ITM_U_Nomencl_Add)],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtEdit,User.Role(rOr_R_Itm_Nomencl_Rename)],[mbtAdd,User.Role(rOr_R_ITM_U_Nomencl_Add)],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[
       [Caption+#13#10],
       ['Справочник номенклатурных позиций, имеющихся в базе ИТМ'#13#10+
@@ -1422,7 +1422,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sgp2');
     //Frg1.Opt.SetButtons(1, 'rfsp');
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnGridFilter],[-btnCustom_Revision, User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-btnCustom_JRevisions, 1,'Журнал ревизий'],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGridFilter],[-mbtCustom_Revision, User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions, 1,'Журнал ревизий'],[],[mbtGridSettings]]);
     Frg1.CreateAddControls('1', cntCheck, 'Только в наличии на СГП', 'ChbNot0', '', 4, yrefC, 200);
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr']];
     Frg1.InfoArray:=[[Caption + '.'#13#10], [
@@ -1457,7 +1457,7 @@ begin
       ['qnt','Кол-во','50']
     ]);
     Frg2.Opt.SetTable('v_sgp_move_list');
-    Frg2.Opt.SetButtons(1,[[-btnGridSettings]]);
+    Frg2.Opt.SetButtons(1,[[-mbtGridSettings]]);
     Frg2.Opt.SetWhere('where id_order = :id$i and doctype = :doctype$s order by slash');
     Frg1.InfoArray:=[
       [Caption+ #13#10],
@@ -1484,9 +1484,9 @@ begin
     Frg1.Opt.SetFields(va2);
     Frg1.Opt.SetTable('v_planned_orders_w_sum');
     Frg1.Opt.SetButtons(1,[
-      [btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_J_PlannedOrders_Ch)],[btnCustom_OrderFromTemplate,1],[btnDelete,1],[],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]
+      [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_PlannedOrders_Ch)],[mbtCustom_OrderFromTemplate,1],[mbtDelete,1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
-    Frg1.Opt.SetButtonsIfEmpty([btnCustom_OrderFromTemplate]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
     Frg1.CreateAddControls('1', cntCheck, 'По месяцам', 'ChbMonthsSum', '', 4, yrefC, 130);
     Frg1.Opt.FilterRules := [[], ['dt;dt_start;dt_end;dt_change']];
     Frg1.InfoArray:=[[Caption + '.'#13#10],
@@ -1534,7 +1534,7 @@ begin
       ['comm2$s','Комментарий исполнителя','d=200;h']
     ]);
     Frg1.Opt.SetTable('v_j_tasks');
-    Frg1.Opt.SetButtons(1, [[btnRefresh],[],[btnView],[btnEdit],[btnAdd {, User.Role(rOr_J_Tasks_Ch)}],[btnCopy],[btnDelete],[btnGridFilter],[],[btnGridSettings],[],[btnCtlPanel]]);
+    Frg1.Opt.SetButtons(1, [[mbtRefresh],[],[mbtView],[mbtEdit],[mbtAdd {, User.Role(rOr_J_Tasks_Ch)}],[mbtCopy],[mbtDelete],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
 //    Frg1.CreateAddControls('1', cntCheck, 'Мои задачи', 'ChbFromMy', '', -1, yrefC, S.IIf(User.Role(rOr_J_Tasks_Ch), 90, 0));
 //    Frg1.CreateAddControls('1', cntCheck, 'Задачи для меня', 'ChbForMy', '', -1, yrefC, S.IIf(User.Roles([], [rOr_J_Tasks_Ch, rOr_J_Tasks_VAll]),115,0));
     Frg1.CreateAddControls('1', cntCheck, 'Мои задачи', 'ChbFromMy', '', -1, yrefC, 90, -1);
@@ -1588,7 +1588,7 @@ begin
     Frg1.Opt.SetWhere('where id >= 100 order by pos');
     Frg1.Opt.SetTable('order_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderTypes;
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[], [btnEdit],[btnAdd,1],[btnDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[
     ];
   end
@@ -1605,7 +1605,7 @@ begin
     Frg1.Opt.SetWhere('where id >= 100 order by pos');
     Frg1.Opt.SetTable('work_cell_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_WorkCellTypes;
-    Frg1.Opt.SetButtons(1,[[btnRefresh],[], [btnEdit],[btnAdd,1],[btnDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[btnGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[
     ];
   end
@@ -1731,7 +1731,7 @@ begin
 end;
 
 
-procedure TFrmXGlstMain.Timer_AfterStartTimer(Sender: TObject);
+procedure TFrmXGlstMain.tmrAfterCreateTimer(Sender: TObject);
 begin
   inherited;
 //  Frg1.Opt.SetWhere('');
@@ -1786,7 +1786,7 @@ begin
       Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fView, ID, null);
     if FormDoc = myfrm_R_Bcad_Units then
       Wh.ExecDialog(myfrm_Dlg_Bcad_Units, Self, [], fMode, Fr.ID, null);
-    if ((FormDoc = myfrm_J_OrPayments) or (FormDoc = myfrm_J_OrPayments_N)) and (Tag = btnAdd) then begin
+    if ((FormDoc = myfrm_J_OrPayments) or (FormDoc = myfrm_J_OrPayments_N)) and (Tag = mbtAdd) then begin
        //для заказов - заказы по кнопке Add - добавить платеж к текущей записи на сумму остатка
        if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Платёж', 150, 60,
           [[cntDEdit, 'Дата', ':'],[cntNEdit, 'Сумма', '1:1000000000:2']],
@@ -1905,16 +1905,16 @@ begin
       Wh.ExecDialog(myfrm_Dlg_R_OrderTypes, Self, [], fMode, Fr.ID, null);}
   end
   //все остальные кнопки
-  else if (FormDoc = myfrm_J_Accounts)and(Tag = btnAdd_Account_TO) then begin
+  else if (FormDoc = myfrm_J_Accounts)and(Tag = mbtAdd_Account_TO) then begin
     Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fAdd, -1, 1);
   end
-  else if (FormDoc = myfrm_J_Accounts)and(Tag = btnAdd_Account_TS) then begin
+  else if (FormDoc = myfrm_J_Accounts)and(Tag = mbtAdd_Account_TS) then begin
     Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fAdd, -1, 2);
   end
-  else if (FormDoc = myfrm_J_Accounts)and(Tag = btnAdd_Account_M) then begin
+  else if (FormDoc = myfrm_J_Accounts)and(Tag = mbtAdd_Account_M) then begin
     Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fAdd, -1, 3);
   end
-  else if ((FormDoc = myfrm_J_Accounts)or(FormDoc = myfrm_J_Payments))and(Tag = btnCustom_AccountToClipboard) then begin
+  else if ((FormDoc = myfrm_J_Accounts)or(FormDoc = myfrm_J_Payments))and(Tag = mbtCustom_AccountToClipboard) then begin
     //в ПК в счетах и платежах - скоировать в буфер обмена имя файла счета; если счета нет или он не один, то буфер очистится
     Clipboard.AsText :='';
     try
@@ -1923,14 +1923,14 @@ begin
     except
     end;
   end
-  else if (FormDoc = myfrm_J_Payments)and(Tag = btnCustom_RunPayments) then begin
+  else if (FormDoc = myfrm_J_Payments)and(Tag = mbtCustom_RunPayments) then begin
     //для платежей (платежный календарь) - отметить все видимые оплаченными
     j:= 0;
     b:= False;
     //посчитаем сколько неоплаченных и согласованных в отфильтрованных записях (не обновляем, считаем по данным грида)
     for i:=0 to Fr.GetCount - 1 do
       begin
-        if S.NNum(Fr.GetValue('pstatus', i)) = 0
+        if S.NNum(Fr.GetValue('pnlStatusBar', i)) = 0
            //2024-01-10 - можно проводить несогласованные!!!
            //and
            //(MemTableEh1.RecordsView.Rec[i].DataValues['agreed1', dvvValueEh] = 1)and
@@ -1945,7 +1945,7 @@ begin
       //проход по отфильтрованным
       for i:=0 to Fr.GetCount - 1 do
         begin
-          if S.NNum(Fr.GetValue('pstatus', i)) = 0
+          if S.NNum(Fr.GetValue('pnlStatusBar', i)) = 0
            //2024-01-10 - можно проводить несогласованные!!!
              {and
              (MemTableEh1.RecordsView.Rec[i].DataValues['agreed1', dvvValueEh] = 1)and
@@ -1960,7 +1960,7 @@ begin
       Fr.RefreshGrid;
     end;
   end
-  else if (FormDoc = myfrm_R_Holideys) and (Tag = btnCustom_LoadFromInet) and (S.Nst(Fr.GetControlValue('CbYear')) <> '') and
+  else if (FormDoc = myfrm_R_Holideys) and (Tag = mbtCustom_LoadFromInet) and (S.Nst(Fr.GetControlValue('CbYear')) <> '') and
     (MyQuestionMessage('Загрузить производственный календарь из сети Интернет'#13#10'(с сайта http://xmlcalendar.ru)?'#13#10'При этом данные будут заменены.') = mrYes) then begin
      case Tasks.GetProductionCalendar(S.NInt(Fr.GetControlValue('CbYear'))) of
        1: begin
@@ -1971,26 +1971,26 @@ begin
        else MyInfoMessage('Ошибка загрузки календаря!');
      end;
   end
-  else if (FormDoc = myfrm_Rep_W_Payroll) and (Tag = btnGo) then
+  else if (FormDoc = myfrm_Rep_W_Payroll) and (Tag = mbtGo) then
     Fr.RefreshGrid
 
 
-  else if (FormDoc = myfrm_R_BCad_Nomencl) and (Tag = btnCustom_FindInEstimates) then begin
+  else if (FormDoc = myfrm_R_BCad_Nomencl) and (Tag = mbtCustom_FindInEstimates) then begin
     Wh.ExecDialog(myfrm_Dlg_Or_FindNameInEstimates, Self, [], fNone, Fr.ID, null);
   end
   else if FormDoc = myfrm_Rep_Sgp2 then begin
-    if Tag = btnCustom_Revision then begin
+    if Tag = mbtCustom_Revision then begin
       Wh.ExecDialog(myfrm_Dlg_Sgp_Revision, Self, [], fEdit, 0, null);
     end
-    else if Tag = btnCustom_JRevisions then begin
+    else if Tag = mbtCustom_JRevisions then begin
       Wh.ExecReference(myfrm_J_Sgp_Acts, Self, [], 0);
     end
   end
-  else if (formDoc = myfrm_J_PlannedOrders)and(Tag = btnCustom_OrderFromTemplate) then begin
+  else if (formDoc = myfrm_J_PlannedOrders)and(Tag = mbtCustom_OrderFromTemplate) then begin
     if Orders.OpenFromTemplate(Self, False, v) then
       TFrmOWPlannedOrder.Show(Self, myfrm_Dlg_PlannedOrder, [{myfoDialog, }myfoSizeable, myfoMultiCopy], fAdd, null, S.NullIfEmpty(v));
   end
-  else if (formDoc = myfrm_Rep_PlannedMaterials) and (Tag = btnRefresh) then begin
+  else if (formDoc = myfrm_Rep_PlannedMaterials) and (Tag = mbtRefresh) then begin
     if not S.IsDateTime(S.NSt(Fr.GetControlValue('DeBeg'))) then
       Exit;
     Orders.CrealeEstimateOnPlannesOrders(Fr.GetControlValue('DeBeg'));
@@ -2000,7 +2000,7 @@ begin
     if (Tag = 1001) or (Tag = 1002) then begin
 //      if (FormDoc = myfrm_R_WorkCellTypes) and (Fr.GetValue('posstd') <> null) then
 //        Exit;
-      Q.QCallStoredProc('P_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
+      Q.QCallStoredProc('p_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
       Fr.RefreshGrid;
     end;
   end
@@ -2086,28 +2086,28 @@ begin
     //удаление только несогласованных и не оплеченных
     if b2 then b3 := (S.NNum(Fr.GetValue('agreed1')) = 0)and(S.NNum(Fr.GetValue('agreed2')) = 0)
       and(S.NNum(Fr.GetValue(S.IIf(FormDoc = myfrm_J_Accounts, 'paidsum', 'psum'))) = 0);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnEdit, null, b2);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnCopy, null, b2);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnDelete, null, b3);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtEdit, null, b2);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCopy, null, b2);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtDelete, null, b3);
   end;
 
   if (FormDoc = myfrm_J_Turv) and Fr.IsNotEmpty then
     //для турв, на редактирование только указанным пользователям и только если период не закрыт
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnEdit, null,
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtEdit, null,
       (Fr.GetValueI('commit') <> 1) and (User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]) or S.InCommaStr(IntToStr(User.GetId), Fr.GetValueS('editusers')))
     );
 
   if FormDoc = myfrm_J_Tasks then begin
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnView, null,
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtView, null,
       (Fr.GetValue('id_user2') = User.GetId) or (Fr.GetValue('id_user1') = User.GetId) or User.Role(rOr_J_Tasks_VAll));
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnCopy, null, Fr.GetValue('id_user1') = User.GetId);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnDelete, null, Fr.GetValue('id_user1') = User.GetId);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnEdit, null, (Fr.GetValue('id_user2') =
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCopy, null, Fr.GetValue('id_user1') = User.GetId);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtDelete, null, Fr.GetValue('id_user1') = User.GetId);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtEdit, null, (Fr.GetValue('id_user2') =
       User.GetId) or (Fr.GetValue('id_user1') = User.GetId));
   end;
 
   if FormDoc = myfrm_J_InvoiceToSgp then begin
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnAdd, null, User.Role(rOr_J_InvoiceToSgp_Ch_M) and (Fr.GetControlValue('CbArea') <> ''));
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtAdd, null, User.Role(rOr_J_InvoiceToSgp_Ch_M) and (Fr.GetControlValue('CbArea') <> ''));
   end;
 
 end;
@@ -2281,11 +2281,11 @@ begin
     end
 
     else if FormDoc = myfrm_J_Payments then begin
-      if (Fr.CurrField = 'pstatus') and (User.Role(rPC_P_Payment)) and Fr.RefreshRecord then begin
+      if (Fr.CurrField = 'pnlStatusBar') and (User.Role(rPC_P_Payment)) and Fr.RefreshRecord then begin
         i := S.NInt(Fr.GetValue(Fr.CurrField));
         if MyQuestionMessage(S.IIf(i = 0, 'Провести платёж?', 'Отменить проведение платежа?')) = mrYes then begin
           Q.QExecSql(
-            'update sn_calendar_payments set status=:pstatus$i, dtpaid=:pdtpaid$d where id=:id$i',
+            'update sn_calendar_payments set status=:pnlStatusBar$i, dtpaid=:pdtpaid$d where id=:id$i',
             [S.IIf(i = 1, 0, 1), S.IIf(i = 1, null, Date), Fr.ID], False
           );
           Fr.RefreshRecord;
@@ -2441,7 +2441,7 @@ begin
       [[cntNEdit, 'Контрольная цена', '0:100000000:2:+', 80]],  //в позиции 3 не ставим N, тк не нужно требовать непустго значения
       va, va, [['Контрольная цена']], nil
     ) < 0 then Exit;
-    Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', [Fr.ID, 7, S.NullIfEmpty(va[0])]);
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', [Fr.ID, 7, S.NullIfEmpty(va[0])]);
     Fr.RefreshRecord;
     Handled := True;
   end
@@ -2623,12 +2623,12 @@ end.
     Frg1.Opt.SetTable('v_planned_orders_w_sum');
     //кнопки, в произвольном месте. если есть доп контролы, обязательно создать btnCtlPanel, ее длина по умолчанию подгонится под контролы
     Frg1.Opt.SetButtons(1,[
-      [btnRefresh],[],[btnView],[btnEdit,User.Role(rOr_J_PlannedOrders_Ch)],[btnCustom_OrderFromTemplate,1],[btnDelete,1],[],[btnGridFilter],[],[btnGridSettings],[btnCtlPanel{, True, 140}]
+      [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_PlannedOrders_Ch)],[mbtCustom_OrderFromTemplate,1],[mbtDelete,1],[],[mbtGridFilter],[],[mbtGridSettings],[mbtCtlPanel{, True, 140}]
     ]);
     //или, если бы не было нестандартных кнопок, можно указать так, кнопки по первым буквам, ревереш, просмотра/редактирования,фильтр,настройки,
     //панель, всега будут те что перечислены в дефолтном фарианте, и роль для всего редактирования, по умолчанию труе
      //Frg1.Opt.SetButtons(1, 'rveacdfsp'? ARight);
-    Frg1.Opt.SetButtonsIfEmpty([btnCustom_OrderFromTemplate]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
     //создаем контролы
     Frg1.CreateAddControls('1', cntCheck, 'По месяцам', 'ChbMonthsSum', '', 4, yrefC, 130);
     //если надо явно обработать контролы сразу, то перечитаем, можем установить их значения, и сделаем зависимые настройки полей
@@ -2651,7 +2651,7 @@ end.
 
 {    FOpt.StatusBarMode := stbmDialog;
     FOpt.DlgPanelStyle := dpsBottomRight;
-    Frg1.Opt.SetButtons(1, [[btnAdd]], 4, PDlgBtnR);
+    Frg1.Opt.SetButtons(1, [[mbtAdd]], 4, pnlFrmBtnsR);
     FMode := fView;}
 
       //картинка, в строке через ":"

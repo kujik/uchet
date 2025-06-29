@@ -24,12 +24,12 @@ uses
 
 type
   TDlg_ItmInfo = class(TForm_MDI)
-    P_Top: TPanel;
+    pnl_Top: TPanel;
     Pc_1: TPageControl;
-    Ts_Artikul: TTabSheet;
+    ts_Artikul: TTabSheet;
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
-    Ts_Nomencl: TTabSheet;
+    edt_PPComment: TDBEditEh;
+    ts_Nomencl: TTabSheet;
     DBGridEh2: TDBGridEh;
     DBEditEh1: TDBEditEh;
     ADODataDriverEh1: TADODataDriverEh;
@@ -38,8 +38,8 @@ type
     MemTableEh2: TMemTableEh;
     DataSource1: TDataSource;
     MemTableEh1: TMemTableEh;
-    Ts_FromCAD: TTabSheet;
-    Ts_ToDel: TTabSheet;
+    ts_FromCAD: TTabSheet;
+    ts_ToDel: TTabSheet;
     ADODataDriverEh3: TADODataDriverEh;
     DataSource3: TDataSource;
     MemTableEh3: TMemTableEh;
@@ -50,10 +50,10 @@ type
     DBEditEh2: TDBEditEh;
     DBGridEh4: TDBGridEh;
     DBEditEh3: TDBEditEh;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
+    lbl1: TLabel;
+    lbl2: TLabel;
+    lbl3: TLabel;
+    lbl4: TLabel;
     Bt_Go: TSpeedButton;
     Pm_3: TPopupMenu;
     procedure Bt_GoClick(Sender: TObject);
@@ -212,17 +212,17 @@ procedure TDlg_ItmInfo.MenuClick(Sender: TObject);
 var
   va, va0: TVarDynArray;
 begin
-  if TMenuItem(Sender).Tag = btnCustom_MoveToGroup then begin
+  if TMenuItem(Sender).Tag = mbtCustom_MoveToGroup then begin
     if MemTableEh3.RecordCount > 0
       then MoveNomToNewGroup(0, Form_TestTree.ShowDialog(null));
   end
-  else if TMenuItem(Sender).Tag = btnCustom_SupplierNom then begin
+  else if TMenuItem(Sender).Tag = mbtCustom_SupplierNom then begin
     Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
       MemTableEh3.FieldByName('id_nomencl').Value,
       VararrayOf([MemTableEh3.FieldByName('name').AsString, ''])
     );
   end
-  else if TMenuItem(Sender).Tag = btnCustom_PriceCheck then begin
+  else if TMenuItem(Sender).Tag = mbtCustom_PriceCheck then begin
     //зададим контрольную цену номенклатуры
     if MemTableEh3.RecordCount = 0 then Exit;
       //олучим текущую
@@ -293,12 +293,12 @@ begin
   DBGridEh1.AutoFitColWidths:=True;
   DbGridEh1.Enabled:=True;
   if MemTableEh1.RecordCount = 0 then begin
-    Label1.Caption:='Повторяющихся артикулов не найдено';
-    Label1.Font.Color:=clWindowText;
+    lbl1.Caption:='Повторяющихся артикулов не найдено';
+    lbl1.Font.Color:=clWindowText;
   end
   else begin
-    Label1.Caption:='Найдено ' + IntToStr(MemTableEh1.RecordCount) + ' повторяющихся артикулов!';
-    Label1.Font.Color:=clRed;
+    lbl1.Caption:='Найдено ' + IntToStr(MemTableEh1.RecordCount) + ' повторяющихся артикулов!';
+    lbl1.Font.Color:=clRed;
   end;
 
   ADODataDriverEh2.SelectSQL.Text:=
@@ -314,12 +314,12 @@ begin
   DBGridEh2.AutoFitColWidths:=True;
   DbGridEh2.Enabled:=True;
   if MemTableEh2.RecordCount = 0 then begin
-    Label2.Caption:='Повторяющихся наименований не найдено';
-    Label2.Font.Color:=clWindowText;
+    lbl2.Caption:='Повторяющихся наименований не найдено';
+    lbl2.Font.Color:=clWindowText;
   end
   else begin
-    Label2.Caption:='Найдено ' + IntToStr(MemTableEh2.RecordCount) + ' повторяющихся наименований!';
-    Label2.Font.Color:=clRed;
+    lbl2.Caption:='Найдено ' + IntToStr(MemTableEh2.RecordCount) + ' повторяющихся наименований!';
+    lbl2.Font.Color:=clRed;
   end;
 
   ADODataDriverEh3.SelectSQL.Text:=
@@ -341,12 +341,12 @@ begin
   DBGridEh3.optionseh := DBGridEh3.optionseh - [dghClearSelection];
 
   if MemTableEh3.RecordCount = 0 then begin
-    Label3.Caption:='Папка "' + Group_NomFromCAD_Name + '" пуста';
-    Label3.Font.Color:=clWindowText;
+    lbl3.Caption:='Папка "' + Group_NomFromCAD_Name + '" пуста';
+    lbl3.Font.Color:=clWindowText;
   end
   else begin
-    Label3.Caption:='В папке "' + Group_NomFromCAD_Name + '" ' + IntToStr(MemTableEh3.RecordCount) + ' наименований!';;
-    Label3.Font.Color:=clBlue;
+    lbl3.Caption:='В папке "' + Group_NomFromCAD_Name + '" ' + IntToStr(MemTableEh3.RecordCount) + ' наименований!';;
+    lbl3.Font.Color:=clBlue;
   end;
 
   ADODataDriverEh4.SelectSQL.Text:=
@@ -363,12 +363,12 @@ begin
   DBGridEh4.AutoFitColWidths:=True;
   DbGridEh4.Enabled:=True;
   if MemTableEh4.RecordCount = 0 then begin
-    Label4.Caption:='Папка "' + Group_NomToDel_Name + '" пуста';
-    Label4.Font.Color:=clWindowText;
+    lbl4.Caption:='Папка "' + Group_NomToDel_Name + '" пуста';
+    lbl4.Font.Color:=clWindowText;
   end
   else begin
-    Label4.Caption:='В папке "' + Group_NomToDel_Name + '" ' + IntToStr(MemTableEh4.RecordCount) + ' наименований!';;
-    Label4.Font.Color:=clBlue;
+    lbl4.Caption:='В папке "' + Group_NomToDel_Name + '" ' + IntToStr(MemTableEh4.RecordCount) + ' наименований!';;
+    lbl4.Font.Color:=clBlue;
   end;
 end;
 

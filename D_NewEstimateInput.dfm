@@ -2,16 +2,16 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
   Caption = 'Dlg_NewEstimateInput'
   PixelsPerInch = 96
   TextHeight = 13
-  inherited P_StatusBar: TPanel
-    inherited Lb_StatusBar_Right: TLabel
+  inherited pnl_StatusBar: TPanel
+    inherited lbl_StatusBar_Right: TLabel
       Height = 17
     end
-    inherited Lb_StatusBar_Left: TLabel
+    inherited lbl_StatusBar_Left: TLabel
       Height = 17
     end
   end
-  inherited P_Buttons: TPanel
-    inherited Chb_NoClose: TCheckBox
+  inherited pnl_Buttons: TPanel
+    inherited chb_NoClose: TCheckBox
       Left = 261
       Top = 6
       ExplicitLeft = 261
@@ -59,15 +59,15 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       OnClick = Bt_CopyEstimateClick
     end
   end
-  inherited P_Top: TPanel
+  inherited pnl_Top: TPanel
     Height = 33
     ExplicitHeight = 33
-    object Lb_Caption: TLabel
+    object lbl_Caption: TLabel
       Left = 8
       Top = 14
       Width = 54
       Height = 13
-      Caption = 'Lb_Caption'
+      Caption = 'lbl_Caption'
       Color = clBlue
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlue
@@ -77,15 +77,15 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       ParentColor = False
       ParentFont = False
     end
-    object Lb_Type: TLabel
+    object lbl_Type: TLabel
       Left = 8
       Top = 1
       Width = 42
       Height = 13
-      Caption = 'Lb_Type'
+      Caption = 'lbl_Type'
     end
   end
-  inherited P_Client: TPanel
+  inherited pnl_Client: TPanel
     Top = 33
     Height = 323
     ExplicitTop = 33

@@ -6,17 +6,17 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
   ExplicitHeight = 222
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 191
     Height = 167
     ExplicitWidth = 191
     ExplicitHeight = 167
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 181
       Height = 118
       ExplicitWidth = 181
       ExplicitHeight = 118
-      object De_Date: TDBDateTimeEditEh
+      object dedtDate: TDBDateTimeEditEh
         Left = 56
         Top = 8
         Width = 121
@@ -33,7 +33,7 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
         TabOrder = 0
         Visible = True
       end
-      object Ne_Cash1: TDBNumberEditEh
+      object nedtCash1: TDBNumberEditEh
         Left = 56
         Top = 35
         Width = 121
@@ -53,7 +53,7 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
         TabOrder = 1
         Visible = True
       end
-      object Ne_Cash2: TDBNumberEditEh
+      object nedtCash2: TDBNumberEditEh
         Left = 56
         Top = 62
         Width = 121
@@ -73,7 +73,7 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
         TabOrder = 2
         Visible = True
       end
-      object Ne_Deposit: TDBNumberEditEh
+      object nedtDeposit: TDBNumberEditEh
         Left = 56
         Top = 89
         Width = 121
@@ -94,56 +94,56 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
         Visible = True
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 123
       Width = 181
       ExplicitTop = 123
       ExplicitWidth = 181
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 179
         ExplicitWidth = 179
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 179
         ExplicitWidth = 179
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 179
         ExplicitWidth = 179
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 80
           ExplicitLeft = 80
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = -148
           ExplicitLeft = -148
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = -19
           ExplicitLeft = -19
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Width = 26
           ExplicitWidth = 26
         end
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 167
     Width = 191
     ExplicitTop = 167
     ExplicitWidth = 191
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 99
       Height = 13
       ExplicitLeft = 99
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 13
     end
   end
-  inherited Timer_AfterStart: TTimer
+  inherited tmrAfterCreate: TTimer
     Left = 216
     Top = 352
   end

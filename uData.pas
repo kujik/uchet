@@ -1013,322 +1013,322 @@ const
 
 //Кнопки и акции
 const
-  btnDividor = 255;   //разделитель (TBevel)
-  btnNone = 254;      //нет кнопки, на всякий случай
-  btnDividorM = 253;  //обозначает границы для создания кнопки с выпадающим списком или вложенного иеню
-  btnSpace = 252;     //задает пустой промежуток между кнопками
-  btnCtlPanel = 251;  //в панеле кнопок создается панель с именем панели сновок + 'Ctl' + No
-  btnToAlRight = 250; //после того, как встретится этот тег, кнопки начнут выравниваться по правому краю.
-  btnDividorA = 249;   //разделитель (TBevel), но показывается независимо от повторов разделителей
-  btnApply = 1;
-  btnOk = 2;
-  btnCancel = 3;
-  btnClose = 4;
-  btnOkNext = 5;
-  btnNewNext = 6;
-  btnCopyNext = 7;
-  btnPrev = 8;
-  btnNext = 9;
-  btnFirst = 10;
-  btnLast = 11;
-  btnAdd = 12;
-  btnInsert = 13;
-  btnCopy = 14;
-  btnEdit = 15;
-  btnDelete = 16;
-  btnRefresh = 17;
-  btnToEdit = 18;
-  btnToAdd = 19;
-  btnToInsert = 20;
-  btnView = 21;
-  btnInfo = 22;
-  btnGridSettings = 23;
-  btnGridFilter = 24;
-  btnCloseApp = 25;
-  btnYes = 26;
-  btnNo = 27;
-  btnAttach = 28;
-  btnViewClose = 29;
-  btnPrint = 30;
-  btnAdd_Account_TO = 31;
-  btnAdd_Account_TS = 32;
-  btnEnter = 33;
-  btnSelectFromList = 34;
-  btnExcel = 35;
-  btnGo = 36;
-  btnSelectAll = 37;
-  btnDeSelectAll = 38;
-  btnInvertSelection = 39;
-  btnCustom_RunPayments = 40;
-  btnCustom_AddPayroll_D = 41;
-  btnCustom_AddPayroll_W = 42;
-  btnCustom_Turv = 43;
-  btnCustom_Payroll = 44;
-  btnSettings = 45;
-  btnLock = 46;
-  btnUnLock = 47;
-  btnCustom_FromParsec = 48;
-  btnCard = 48;
-  btnCustom_LoadFromInet = 49;
-  btnCustom_SundaysToTurv = 50;
-  btnSendEMail = 51;
-  btnCustom_GetFromServer = 52;
-  btnCustom_DeleteOnServer = 53;
-  btnCustom_OtkSetFullOrder = 54;
-  btnCustom_OrderFromTemplate = 55;
-  btnLoadEstimate = 56;
-  btnViewEstimate = 57;
-  btnPrintLabels = 58;
-  btnCustom_CreateAggregateEstimate = 59;
-  btnCustom_SendSnDocuments = 60;
-  btnCustom_CreateCompleteEstimate = 61;
-  btnTest = 62;
-  btnCustom_OrderSetAllSN = 63;
-  btnCustom_Order_AttachThnDoc = 64;
-  btnCustom_AccountToClipboard = 65;
-  btnPrintPassport = 66;
-  btnCustom_RefreshEstimateInOrder = 67;
-  btnAdd_Account_M = 68;
-  btnCustom_OrToDevel = 69;
-  btnFolder = 70;
-  btnFind = 71;
-  btnCustom_FindInEstimates = 72;
-  btnParams = 73;
-  btnLoad = 74;
-  btnCustom_SetCategory = 75;
-  btnPrintGrid = 76;
-  btnExcelGrid = 77;
-  btnSetGridLabel = 78;
-  btnClearGridLabels = 79;
-  btnShowGridLabels = 80;
-  btnClearOrRestoreGridFilter = 81;
-  btnToGridLabelUp = 82;
-  btnToGridLabelDown = 83;
-  btnCustom_MoveToGroup = 84;
-  btnCustom_SupplierNom = 85;
-  btnExcelView = 86;
-  btnDeleteEstimate = 87;
-  btnCustom_SetOnWayPeriod = 88;
-  btnCustom_Revision = 89;
-  btnCustom_PriceCheck = 90;
-  btnCustom_JRevisions = 91;
-  btnUchetLog = 92;
-  btnCustom_SnRecalcPlannedEst = 93;
-  btnCustom_SnFillFromPlanned = 94;
-  btnCustom_RepOrStDItemsErr = 95;
-  btnCopyEstimate = 96;
-  btnPasteEstimate = 97;
-  btnAddRow = 98;
-  btnDeleteRow = 99;
-  btnInsertRow = 100;
+  mbtDividor = 255;   //разделитель (TBevel)
+  mbtNone = 254;      //нет кнопки, на всякий случай
+  mbtDividorM = 253;  //обозначает границы для создания кнопки с выпадающим списком или вложенного иеню
+  mbtSpace = 252;     //задает пустой промежуток между кнопками
+  mbtCtlPanel = 251;  //в панеле кнопок создается панель с именем панели сновок + 'Ctl' + No
+  mbtToAlRight = 250; //после того, как встретится этот тег, кнопки начнут выравниваться по правому краю.
+  mbtDividorA = 249;   //разделитель (TBevel), но показывается независимо от повторов разделителей
+  mbtApply = 1;
+  mbtOk = 2;
+  mbtCancel = 3;
+  mbtClose = 4;
+  mbtOkNext = 5;
+  mbtNewNext = 6;
+  mbtCopyNext = 7;
+  mbtPrev = 8;
+  mbtNext = 9;
+  mbtFirst = 10;
+  mbtLast = 11;
+  mbtAdd = 12;
+  mbtInsert = 13;
+  mbtCopy = 14;
+  mbtEdit = 15;
+  mbtDelete = 16;
+  mbtRefresh = 17;
+  mbtToEdit = 18;
+  mbtToAdd = 19;
+  mbtToInsert = 20;
+  mbtView = 21;
+  mbtInfo = 22;
+  mbtGridSettings = 23;
+  mbtGridFilter = 24;
+  mbtCloseApp = 25;
+  mbtYes = 26;
+  mbtNo = 27;
+  mbtAttach = 28;
+  mbtViewClose = 29;
+  mbtPrint = 30;
+  mbtAdd_Account_TO = 31;
+  mbtAdd_Account_TS = 32;
+  mbtEnter = 33;
+  mbtSelectFromList = 34;
+  mbtExcel = 35;
+  mbtGo = 36;
+  mbtSelectAll = 37;
+  mbtDeSelectAll = 38;
+  mbtInvertSelection = 39;
+  mbtCustom_RunPayments = 40;
+  mbtCustom_AddPayroll_D = 41;
+  mbtCustom_AddPayroll_W = 42;
+  mbtCustom_Turv = 43;
+  mbtCustom_Payroll = 44;
+  mbtSettings = 45;
+  mbtLock = 46;
+  mbtUnLock = 47;
+  mbtCustom_FromParsec = 48;
+  mbtCard = 48;
+  mbtCustom_LoadFromInet = 49;
+  mbtCustom_SundaysToTurv = 50;
+  mbtSendEMail = 51;
+  mbtCustom_GetFromServer = 52;
+  mbtCustom_DeleteOnServer = 53;
+  mbtCustom_OtkSetFullOrder = 54;
+  mbtCustom_OrderFromTemplate = 55;
+  mbtLoadEstimate = 56;
+  mbtViewEstimate = 57;
+  mbtPrintLabels = 58;
+  mbtCustom_CreateAggregateEstimate = 59;
+  mbtCustom_SendSnDocuments = 60;
+  mbtCustom_CreateCompleteEstimate = 61;
+  mbtTest = 62;
+  mbtCustom_OrderSetAllSN = 63;
+  mbtCustom_Order_AttachThnDoc = 64;
+  mbtCustom_AccountToClipboard = 65;
+  mbtPrintPassport = 66;
+  mbtCustom_RefreshEstimateInOrder = 67;
+  mbtAdd_Account_M = 68;
+  mbtCustom_OrToDevel = 69;
+  mbtFolder = 70;
+  mbtFind = 71;
+  mbtCustom_FindInEstimates = 72;
+  mbtParams = 73;
+  mbtLoad = 74;
+  mbtCustom_SetCategory = 75;
+  mbtPrintGrid = 76;
+  mbtExcelGrid = 77;
+  mbtSetGridLabel = 78;
+  mbtClearGridLabels = 79;
+  mbtShowGridLabels = 80;
+  mbtClearOrRestoreGridFilter = 81;
+  mbtToGridLabelUp = 82;
+  mbtToGridLabelDown = 83;
+  mbtCustom_MoveToGroup = 84;
+  mbtCustom_SupplierNom = 85;
+  mbtExcelView = 86;
+  mbtDeleteEstimate = 87;
+  mbtCustom_SetOnWayPeriod = 88;
+  mbtCustom_Revision = 89;
+  mbtCustom_PriceCheck = 90;
+  mbtCustom_JRevisions = 91;
+  mbtUchetLog = 92;
+  mbtCustom_SnRecalcPlannedEst = 93;
+  mbtCustom_SnFillFromPlanned = 94;
+  mbtCustom_RepOrStDItemsErr = 95;
+  mbtCopyEstimate = 96;
+  mbtPasteEstimate = 97;
+  mbtAddRow = 98;
+  mbtDeleteRow = 99;
+  mbtInsertRow = 100;
 
-  mybtDividor: TmybtRec = (Bt: btnDividor; Pict: ''; Caption: ''; hint: '');
-  mybtDividorM: TmybtRec = (Bt: btnDividorM; Pict: ''; Caption: ''; hint: '');
-  mybtSapace: TmybtRec = (Bt: btnSpace; Pict: ''; Caption: ''; hint: '');
-  mybtNone: TmybtRec = (Bt: btnNone; Pict: ''; Caption: ''; hint: '');
-  mybtTest: TmybtRec = (Bt: btnTest; Pict: ''; Caption: 'ТЕСТ'; hint: '');
-  mybtApply: TmybtRec = (Bt: btnApply; Pict: 'apply'; Caption: 'Применить'; hint: '');
-  mybtOk: TmybtRec = (Bt: btnOk; Pict: 'ok'; Caption: 'Ок'; hint: '');
-  mybtCancel: TmybtRec = (Bt: btnCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: '');
-  mybtClose: TmybtRec = (Bt: btnClose; Pict: 'close'; Caption: 'Закрыть'; hint: '');
-  mybtYes: TmybtRec = (Bt: btnYes; Pict: 'yes'; Caption: 'Да'; hint: '');
-  mybtNo: TmybtRec = (Bt: btnNo; Pict: 'no'; Caption: 'Нет'; hint: '');
-  mybtOkNext: TmybtRec = (Bt: btnOkNext; Pict: 'yes'; Caption: 'Дальше'; hint: '');
-  mybtNewNext: TmybtRec = (Bt: btnNewNext; Pict: 'yes'; Caption: 'Новый и дальше'; hint: '');
-  mybtCopyNext: TmybtRec = (Bt: btnCopyNext; Pict: 'yes'; Caption: 'Копия и дальше'; hint: '');
-  mybtPrev: TmybtRec = (Bt: btnPrev; Pict: 'prev'; Caption: 'Предыдущий'; hint: '');
-  mybtNext: TmybtRec = (Bt: btnNext; Pict: 'next'; Caption: 'Следующий'; hint: '');
-  mybtFirst: TmybtRec = (Bt: btnFirst; Pict: 'first'; Caption: 'Первый'; hint: '');
-  mybtLast: TmybtRec = (Bt: btnLast; Pict: 'last'; Caption: 'Последний'; hint: '');
-  mybtAdd: TmybtRec = (Bt: btnAdd; Pict: 'add'; Caption: 'Добавить'; hint: '');
-  mybtInsert: TmybtRec = (Bt: btnInsert; Pict: 'insert'; Caption: 'Вставить'; hint: '');
-  mybtCopy: TmybtRec = (Bt: btnCopy; Pict: 'copy'; Caption: 'Скопировать'; hint: '');
-  mybtEdit: TmybtRec = (Bt: btnEdit; Pict: 'edit'; Caption: 'Изменить'; hint: '');
-  mybtDelete: TmybtRec = (Bt: btnDelete; Pict: 'delete'; Caption: 'Удалить'; hint: '');
-  mybtRefresh: TmybtRec = (Bt: btnRefresh; Pict: 'refresh'; Caption: 'Обновить'; hint: '');
-  mybtToEdit: TmybtRec = (Bt: btnToEdit; Pict: 'toedit'; Caption: 'Начать редактирование'; hint: '');
-  mybtToAdd: TmybtRec = (Bt: btnToAdd; Pict: 'toadd'; Caption: 'Добавить'; hint: '');
-  mybtToInsert: TmybtRec = (Bt: btnToInsert; Pict: 'toinsert'; Caption: 'Вставить'; hint: '');
-  mybtView: TmybtRec = (Bt: btnView; Pict: 'view'; Caption: 'Просмотреть'; hint: '');
-  mybtInfo: TmybtRec = (Bt: btnInfo; Pict: 'info'; Caption: 'Информация'; hint: '');
-  mybtGridSettings: TmybtRec = (Bt: btnGridSettings; Pict: 'gridsettings'; Caption: 'Настроить вид таблицы'; hint: ''); //tablesettings
-  mybtGridFilter: TmybtRec = (Bt: btnGridFilter; Pict: 'filter'; Caption: 'Фильтр'; hint: '');
-  mybtCloseApp: TmybtRec = (Bt: btnCloseApp; Pict: 'quit'; Caption: 'Выйти'; hint: '');
-  mybtAttach: TmybtRec = (Bt: btnAttach; Pict: 'attach'; Caption: 'Прикрепить файл'; hint: '');
-  mybtViewClose: TmybtRec = (Bt: btnViewClose; Pict: 'viewclose'; Caption: 'Закрыть'; hint: '');
-  mybtPrint: TmybtRec = (Bt: btnPrint; Pict: 'print'; Caption: 'Печать'; hint: '');
-  mybtAdd_Account_TO: TmybtRec = (Bt: btnAdd_Account_TO; Pict: 'add_to_receipt'; Caption: 'Добавить счет (транспорт отгрузки)'; hint: '');
-  mybtAdd_Account_TS: TmybtRec = (Bt: btnAdd_Account_TS; Pict: 'add_sn_receipt'; Caption: 'Добавить счет (транспорт снабжения)'; hint: '');
-  mybtAdd_Account_M: TmybtRec = (Bt: btnAdd_Account_M; Pict: 'add_m_receipt'; Caption: 'Добавить счет (подрядчики по монтажу)'; hint: '');
-  mybtEnter: TmybtRec = (Bt: btnEnter; Pict: 'enter'; Caption: 'Вввод'; hint: '');
-  mybtSelectFromList: TmybtRec = (Bt: btnSelectFromList; Pict: 'selectfromlist'; Caption: 'Выбрать'; hint: '');
-  mybtExcel: TmybtRec = (Bt: btnExcel; Pict: 'excel'; Caption: 'Выгрузка в Excel'; hint: '');
-  mybtGo: TmybtRec = (Bt: btnGo; Pict: 'go'; Caption: 'Старт'; hint: '');
-  mybtRefreshGo: TmybtRec = (Bt: btnRefresh; Pict: 'go'; Caption: 'Старт'; hint: '');
-  mybtSelectAll: TmybtRec = (Bt: btnSelectAll; Pict: 'selectall'; Caption: 'Отметить все'; hint: '');
-  mybtDeSelectAll: TmybtRec = (Bt: btnDeSelectAll; Pict: 'deselectall'; Caption: 'Снять отметку'; hint: '');
-  mybtInvertSelection: TmybtRec = (Bt: btnInvertSelection; Pict: 'invertselection'; Caption: 'Инвертировать отметку'; hint: '');
-  mybtCustom_RunPayments: TmybtRec = (Bt: btnCustom_RunPayments; Pict: ''; Caption: 'Провести все платежи'; hint: '');
-  mybtCustom_AddPayroll_D: TmybtRec = (Bt: btnCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: '');
-  mybtCustom_AddPayroll_W: TmybtRec = (Bt: btnCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: '');
-  mybtCustom_Turv: TmybtRec = (Bt: btnCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: '');
-  mybtCustom_Payroll: TmybtRec = (Bt: btnCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: '');
-  mybtSettings: TmybtRec = (Bt: btnSettings; Pict: 'settings'; Caption: 'Параметры'; hint: '');
-  mybtLock: TmybtRec = (Bt: btnLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: '');
-  mybtUnLock: TmybtRec = (Bt: btnUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: '');
-  mybtCustom_FromParsec: TmybtRec = (Bt: btnCustom_FromParsec; Pict: 'timelist'; Caption: 'Загрузить данные Парсек'; hint: '');
-  mybtCard: TmybtRec = (Bt: btnCard; Pict: 'card'; Caption: 'Карта'; hint: '');
-  mybtCustom_LoadFromInet: TmybtRec = (Bt: btnCustom_LoadFromInet; Pict: 'go'; Caption: 'Загрузить из интернета'; hint: '');
-  mybtCustom_SundaysToTurv: TmybtRec = (Bt: btnCustom_SundaysToTurv; Pict: 'sunday'; Caption: 'Проставить выходные'; hint: '');
-  mybtSendEMail: TmybtRec = (Bt: btnSendEMail; Pict: 'sendemail'; Caption: 'Отправить письмо'; hint: '');
-  mybtCustom_GetFromServer: TmybtRec = (Bt: btnCustom_GetFromServer; Pict: 'go'; Caption: 'Получить данные с сервера'; hint: '');
-  mybtCustom_DeleteOnServer: TmybtRec = (Bt: btnCustom_DeleteOnServer; Pict: 'delete'; Caption: 'Удалить записи на сервере'; hint: '');
-  mybtCustom_OtkSetFullOrder: TmybtRec = (Bt: btnCustom_OtkSetFullOrder; Pict: 'selectall'; Caption: 'Принять весь заказ'; hint: '');
-  mybtCustom_OrderFromTemplate: TmybtRec = (Bt: btnCustom_OrderFromTemplate; Pict: 'add_from_template'; Caption: 'Создать из шаблона'; hint: '');
-  mybtLoadEstimate: TmybtRec = (Bt: btnLoadEstimate; Pict: 'estimate_add'; Caption: 'Загрузить смету'; hint: '');
-  mybtViewEstimate: TmybtRec = (Bt: btnViewEstimate; Pict: 'estimate'; Caption: 'Просмотреть смету'; hint: '');
-  mybtPrintLabels: TmybtRec = (Bt: btnPrintLabels; Pict: 'print'; Caption: 'Печать этикеток'; hint: '');
-  mybtCustom_CreateAggregateEstimate: TmybtRec = (Bt: btnCustom_CreateAggregateEstimate; Pict: ''; Caption: 'Создать общую смету'; hint: '');
-  mybtCustom_SendSnDocuments: TmybtRec = (Bt: btnCustom_SendSnDocuments; Pict: ''; Caption: 'Прикрепить документы для снабжения'; hint: '');
-  mybtCustom_CreateCompleteEstimate: TmybtRec = (Bt: btnCustom_CreateCompleteEstimate; Pict: ''; Caption: 'Создать смету для склада'; hint: '');
-  mybtCustom_OrderSetAllSN: TmybtRec = (Bt: btnCustom_OrderSetAllSN; Pict: ''; Caption: 'Снабжение - отметить все'; hint: '');
-  mybtCustom_Order_AttachThnDoc: TmybtRec = (Bt: btnCustom_Order_AttachThnDoc; Pict: ''; Caption: 'Прикрепить документы ТХН'; hint: '');
-  mybtCustom_AccountToClipboard: TmybtRec = (Bt: btnCustom_AccountToClipboard; Pict: ''; Caption: 'Скопировать путь к счету'; hint: '');
-  mybtPrintPassport: TmybtRec = (Bt: btnPrintPassport; Pict: 'print'; Caption: 'Печать паспорта заказа'; hint: '');
-  mybtCustom_RefreshEstimateInOrder: TmybtRec = (Bt: btnCustom_RefreshEstimateInOrder; Pict: 'saveas'; Caption: 'Обновить смету для изделия в заказе'; hint: '');
-  mybtCustom_OrToDevel: TmybtRec = (Bt: btnCustom_OrToDevel; Pict: ''; Caption: 'Добавить в журнал разработки'; hint: '');
-  mybtFolder: TmybtRec = (Bt: btnFolder; Pict: 'folder'; Caption: 'Открыть папку'; hint: '');
-  mybtFind: TmybtRec = (Bt: btnFind; Pict: 'find'; Caption: 'Найти'; hint: '');
-  mybtCustom_FindInEstimates: TmybtRec = (Bt: btnCustom_FindInEstimates; Pict: 'find'; Caption: 'Найти в сметах'; hint: '');
-  mybtParams: TmybtRec = (Bt: btNParams; Pict: 'settings_spanner'; Caption: 'Параметры'; hint: '');
-  mybtLoad: TmybtRec = (Bt: btnLoad; Pict: 'load'; Caption: 'Загрузить'; hint: '');
-  mybtCustom_SetCategory: TmybtRec = (Bt: btnCustom_SetCategory; Pict: ''; Caption: 'Установить категорию'; hint: '');
-  mybtPrintGrid: TmybtRec = (Bt: btnPrintGrid; Pict: 'print'; Caption: 'Печать таблицы'; hint: '');
-  mybtExcelGrid: TmybtRec = (Bt: btnExcelGrid; Pict: 'excel'; Caption: 'Экспорт в Excel'; hint: '');
-  mybtSetGridLabel: TmybtRec = (Bt: btnSetGridLabel; Pict: 'gridlabels'; Caption: 'Присвоить метку'; hint: ''; ShortCut: scCtrl + ord('Z'));
-  mybtClearGridLabels: TmybtRec = (Bt: btnClearGridLabels; Pict: 'gridlabelsclear'; Caption: 'Очистить все метки'; hint: '');
-  mybtShowGridLabels: TmybtRec = (Bt: btnClearGridLabels; Pict: ''; Caption: 'Показать/скрыть записи с метками'; hint: ''; ShortCut: scCtrl + scShift + ord('Z'));
-  mybtClearOrRestoreGridFilter: TmybtRec = (Bt: btnClearOrRestoreGridFilter; Pict: 'filterinvert'; Caption: 'Снять/восстановить фильтр'; hint: ''; ShortCut: scCtrl + ord('Q'));  //ShortCut(VK_F1, [ssCtrl])
-  mybtToGridLabelUp: TmybtRec = (Bt: btnToGridLabelUp; Pict: ''; Caption: 'Переход к метке (вверх)'; hint: ''; ShortCut: scShift + ord('Z'));
-  mybtToGridLabelDown: TmybtRec = (Bt: btnToGridLabelDown; Pict: 'gridlabelsdown'; Caption: 'Переход к метке (вниз)'; hint: ''; ShortCut: scShift + ord('Z')); //no use
-  mybtCustom_MoveToGroup: TmybtRec = (Bt: btnCustom_MoveToGroup; Pict: 'move_to_folder'; Caption: 'Перенести в группу'; hint: ''; ShortCut: scCtrl + ord('M'));
-  mybtCustom_SupplierNom: TmybtRec = (Bt: btnCustom_SupplierNom; Pict: ''; Caption: 'Номенклатура поставщика'; hint: ''; ShortCut: scCtrl + ord('S'));
-  mybtExcelView: TmybtRec = (Bt: btnExcelView; Pict: 'excelview'; Caption: 'Просмотреть в Excel'; hint: '');
-  mybtDeleteEstimate: TmybtRec = (Bt: btnDeleteEstimate; Pict: ''; Caption: 'Удалить смету'; hint: '');
-  mybtCustom_SetOnWayPeriod: TmybtRec = (Bt: btnCustom_SetOnWayPeriod; Pict: ''; Caption: 'Период "в пути"'; hint: '');
-  mybtCustom_Revision: TmybtRec = (Bt: btnCustom_Revision; Pict: ''; Caption: 'Ревизия'; hint: '');
-  mybtCustom_PriceCheck: TmybtRec = (Bt: btnCustom_PriceCheck; Pict: ''; Caption: 'Контрольная цена'; hint: '');
-  mybtCustom_JRevisions: TmybtRec = (Bt: btnCustom_JRevisions; Pict: ''; Caption: 'Журнал ревизий'; hint: '');
-  mybtUchetlog: TmybtRec = (Bt: btnUchetlog; Pict: ''; Caption: 'Журнал действий пользователей'; hint: '');
-  mybtCustom_SnRecalcPlannedEst: TmybtRec = (Bt: btnCustom_SnRecalcPlannedEst; Pict: ''; Caption: 'Пересчитать плановую потребность'; hint: '');
-  mybtCustom_SnFillFromPlanned: TmybtRec = (Bt: btnCustom_SnFillFromPlanned; Pict: ''; Caption: 'Заполнить из плановой потребности'; hint: '');
-  mybtCustom_RepOrStDItemsErr: TmybtRec = (Bt: btnCustom_RepOrStDItemsErr; Pict: ''; Caption: 'Найти ошибки'; hint: '');
-  mybtCopyEstimate: TmybtRec = (Bt: btnCopyEstimate; Pict: 'up'; Caption: 'Скопировать смету в буфер'; hint: '');
-  mybtPasteEstimate: TmybtRec = (Bt: btnPasteEstimate; Pict: 'down'; Caption: 'Вставить смету из буфера'; hint: '');
+  mybtDividor: TmybtRec = (Bt: mbtDividor; Pict: ''; Caption: ''; hint: '');
+  mybtDividorM: TmybtRec = (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: '');
+  mybtSapace: TmybtRec = (Bt: mbtSpace; Pict: ''; Caption: ''; hint: '');
+  mybtNone: TmybtRec = (Bt: mbtNone; Pict: ''; Caption: ''; hint: '');
+  mybtTest: TmybtRec = (Bt: mbtTest; Pict: ''; Caption: 'ТЕСТ'; hint: '');
+  mybtApply: TmybtRec = (Bt: mbtApply; Pict: 'apply'; Caption: 'Применить'; hint: '');
+  mybtOk: TmybtRec = (Bt: mbtOk; Pict: 'ok'; Caption: 'Ок'; hint: '');
+  mybtCancel: TmybtRec = (Bt: mbtCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: '');
+  mybtClose: TmybtRec = (Bt: mbtClose; Pict: 'close'; Caption: 'Закрыть'; hint: '');
+  mybtYes: TmybtRec = (Bt: mbtYes; Pict: 'yes'; Caption: 'Да'; hint: '');
+  mybtNo: TmybtRec = (Bt: mbtNo; Pict: 'no'; Caption: 'Нет'; hint: '');
+  mybtOkNext: TmybtRec = (Bt: mbtOkNext; Pict: 'yes'; Caption: 'Дальше'; hint: '');
+  mybtNewNext: TmybtRec = (Bt: mbtNewNext; Pict: 'yes'; Caption: 'Новый и дальше'; hint: '');
+  mybtCopyNext: TmybtRec = (Bt: mbtCopyNext; Pict: 'yes'; Caption: 'Копия и дальше'; hint: '');
+  mybtPrev: TmybtRec = (Bt: mbtPrev; Pict: 'prev'; Caption: 'Предыдущий'; hint: '');
+  mybtNext: TmybtRec = (Bt: mbtNext; Pict: 'next'; Caption: 'Следующий'; hint: '');
+  mybtFirst: TmybtRec = (Bt: mbtFirst; Pict: 'first'; Caption: 'Первый'; hint: '');
+  mybtLast: TmybtRec = (Bt: mbtLast; Pict: 'last'; Caption: 'Последний'; hint: '');
+  mybtAdd: TmybtRec = (Bt: mbtAdd; Pict: 'add'; Caption: 'Добавить'; hint: '');
+  mybtInsert: TmybtRec = (Bt: mbtInsert; Pict: 'insert'; Caption: 'Вставить'; hint: '');
+  mybtCopy: TmybtRec = (Bt: mbtCopy; Pict: 'copy'; Caption: 'Скопировать'; hint: '');
+  mybtEdit: TmybtRec = (Bt: mbtEdit; Pict: 'edit'; Caption: 'Изменить'; hint: '');
+  mybtDelete: TmybtRec = (Bt: mbtDelete; Pict: 'delete'; Caption: 'Удалить'; hint: '');
+  mybtRefresh: TmybtRec = (Bt: mbtRefresh; Pict: 'refresh'; Caption: 'Обновить'; hint: '');
+  mybtToEdit: TmybtRec = (Bt: mbtToEdit; Pict: 'toedit'; Caption: 'Начать редактирование'; hint: '');
+  mybtToAdd: TmybtRec = (Bt: mbtToAdd; Pict: 'toadd'; Caption: 'Добавить'; hint: '');
+  mybtToInsert: TmybtRec = (Bt: mbtToInsert; Pict: 'toinsert'; Caption: 'Вставить'; hint: '');
+  mybtView: TmybtRec = (Bt: mbtView; Pict: 'view'; Caption: 'Просмотреть'; hint: '');
+  mybtInfo: TmybtRec = (Bt: mbtInfo; Pict: 'info'; Caption: 'Информация'; hint: '');
+  mybtGridSettings: TmybtRec = (Bt: mbtGridSettings; Pict: 'gridsettings'; Caption: 'Настроить вид таблицы'; hint: ''); //tablesettings
+  mybtGridFilter: TmybtRec = (Bt: mbtGridFilter; Pict: 'filter'; Caption: 'Фильтр'; hint: '');
+  mybtCloseApp: TmybtRec = (Bt: mbtCloseApp; Pict: 'quit'; Caption: 'Выйти'; hint: '');
+  mybtAttach: TmybtRec = (Bt: mbtAttach; Pict: 'attach'; Caption: 'Прикрепить файл'; hint: '');
+  mybtViewClose: TmybtRec = (Bt: mbtViewClose; Pict: 'viewclose'; Caption: 'Закрыть'; hint: '');
+  mybtPrint: TmybtRec = (Bt: mbtPrint; Pict: 'print'; Caption: 'Печать'; hint: '');
+  mybtAdd_Account_TO: TmybtRec = (Bt: mbtAdd_Account_TO; Pict: 'add_to_receipt'; Caption: 'Добавить счет (транспорт отгрузки)'; hint: '');
+  mybtAdd_Account_TS: TmybtRec = (Bt: mbtAdd_Account_TS; Pict: 'add_sn_receipt'; Caption: 'Добавить счет (транспорт снабжения)'; hint: '');
+  mybtAdd_Account_M: TmybtRec = (Bt: mbtAdd_Account_M; Pict: 'add_m_receipt'; Caption: 'Добавить счет (подрядчики по монтажу)'; hint: '');
+  mybtEnter: TmybtRec = (Bt: mbtEnter; Pict: 'enter'; Caption: 'Вввод'; hint: '');
+  mybtSelectFromList: TmybtRec = (Bt: mbtSelectFromList; Pict: 'selectfromlist'; Caption: 'Выбрать'; hint: '');
+  mybtExcel: TmybtRec = (Bt: mbtExcel; Pict: 'excel'; Caption: 'Выгрузка в Excel'; hint: '');
+  mybtGo: TmybtRec = (Bt: mbtGo; Pict: 'go'; Caption: 'Старт'; hint: '');
+  mybtRefreshGo: TmybtRec = (Bt: mbtRefresh; Pict: 'go'; Caption: 'Старт'; hint: '');
+  mybtSelectAll: TmybtRec = (Bt: mbtSelectAll; Pict: 'selectall'; Caption: 'Отметить все'; hint: '');
+  mybtDeSelectAll: TmybtRec = (Bt: mbtDeSelectAll; Pict: 'deselectall'; Caption: 'Снять отметку'; hint: '');
+  mybtInvertSelection: TmybtRec = (Bt: mbtInvertSelection; Pict: 'invertselection'; Caption: 'Инвертировать отметку'; hint: '');
+  mybtCustom_RunPayments: TmybtRec = (Bt: mbtCustom_RunPayments; Pict: ''; Caption: 'Провести все платежи'; hint: '');
+  mybtCustom_AddPayroll_D: TmybtRec = (Bt: mbtCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: '');
+  mybtCustom_AddPayroll_W: TmybtRec = (Bt: mbtCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: '');
+  mybtCustom_Turv: TmybtRec = (Bt: mbtCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: '');
+  mybtCustom_Payroll: TmybtRec = (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: '');
+  mybtSettings: TmybtRec = (Bt: mbtSettings; Pict: 'settings'; Caption: 'Параметры'; hint: '');
+  mybtLock: TmybtRec = (Bt: mbtLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: '');
+  mybtUnLock: TmybtRec = (Bt: mbtUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: '');
+  mybtCustom_FromParsec: TmybtRec = (Bt: mbtCustom_FromParsec; Pict: 'timelist'; Caption: 'Загрузить данные Парсек'; hint: '');
+  mybtCard: TmybtRec = (Bt: mbtCard; Pict: 'card'; Caption: 'Карта'; hint: '');
+  mybtCustom_LoadFromInet: TmybtRec = (Bt: mbtCustom_LoadFromInet; Pict: 'go'; Caption: 'Загрузить из интернета'; hint: '');
+  mybtCustom_SundaysToTurv: TmybtRec = (Bt: mbtCustom_SundaysToTurv; Pict: 'sunday'; Caption: 'Проставить выходные'; hint: '');
+  mybtSendEMail: TmybtRec = (Bt: mbtSendEMail; Pict: 'sendemail'; Caption: 'Отправить письмо'; hint: '');
+  mybtCustom_GetFromServer: TmybtRec = (Bt: mbtCustom_GetFromServer; Pict: 'go'; Caption: 'Получить данные с сервера'; hint: '');
+  mybtCustom_DeleteOnServer: TmybtRec = (Bt: mbtCustom_DeleteOnServer; Pict: 'delete'; Caption: 'Удалить записи на сервере'; hint: '');
+  mybtCustom_OtkSetFullOrder: TmybtRec = (Bt: mbtCustom_OtkSetFullOrder; Pict: 'selectall'; Caption: 'Принять весь заказ'; hint: '');
+  mybtCustom_OrderFromTemplate: TmybtRec = (Bt: mbtCustom_OrderFromTemplate; Pict: 'add_from_template'; Caption: 'Создать из шаблона'; hint: '');
+  mybtLoadEstimate: TmybtRec = (Bt: mbtLoadEstimate; Pict: 'estimate_add'; Caption: 'Загрузить смету'; hint: '');
+  mybtViewEstimate: TmybtRec = (Bt: mbtViewEstimate; Pict: 'estimate'; Caption: 'Просмотреть смету'; hint: '');
+  mybtPrintLabels: TmybtRec = (Bt: mbtPrintLabels; Pict: 'print'; Caption: 'Печать этикеток'; hint: '');
+  mybtCustom_CreateAggregateEstimate: TmybtRec = (Bt: mbtCustom_CreateAggregateEstimate; Pict: ''; Caption: 'Создать общую смету'; hint: '');
+  mybtCustom_SendSnDocuments: TmybtRec = (Bt: mbtCustom_SendSnDocuments; Pict: ''; Caption: 'Прикрепить документы для снабжения'; hint: '');
+  mybtCustom_CreateCompleteEstimate: TmybtRec = (Bt: mbtCustom_CreateCompleteEstimate; Pict: ''; Caption: 'Создать смету для склада'; hint: '');
+  mybtCustom_OrderSetAllSN: TmybtRec = (Bt: mbtCustom_OrderSetAllSN; Pict: ''; Caption: 'Снабжение - отметить все'; hint: '');
+  mybtCustom_Order_AttachThnDoc: TmybtRec = (Bt: mbtCustom_Order_AttachThnDoc; Pict: ''; Caption: 'Прикрепить документы ТХН'; hint: '');
+  mybtCustom_AccountToClipboard: TmybtRec = (Bt: mbtCustom_AccountToClipboard; Pict: ''; Caption: 'Скопировать путь к счету'; hint: '');
+  mybtPrintPassport: TmybtRec = (Bt: mbtPrintPassport; Pict: 'print'; Caption: 'Печать паспорта заказа'; hint: '');
+  mybtCustom_RefreshEstimateInOrder: TmybtRec = (Bt: mbtCustom_RefreshEstimateInOrder; Pict: 'saveas'; Caption: 'Обновить смету для изделия в заказе'; hint: '');
+  mybtCustom_OrToDevel: TmybtRec = (Bt: mbtCustom_OrToDevel; Pict: ''; Caption: 'Добавить в журнал разработки'; hint: '');
+  mybtFolder: TmybtRec = (Bt: mbtFolder; Pict: 'folder'; Caption: 'Открыть папку'; hint: '');
+  mybtFind: TmybtRec = (Bt: mbtFind; Pict: 'find'; Caption: 'Найти'; hint: '');
+  mybtCustom_FindInEstimates: TmybtRec = (Bt: mbtCustom_FindInEstimates; Pict: 'find'; Caption: 'Найти в сметах'; hint: '');
+  mybtParams: TmybtRec = (Bt: mbtParams; Pict: 'settings_spanner'; Caption: 'Параметры'; hint: '');
+  mybtLoad: TmybtRec = (Bt: mbtLoad; Pict: 'load'; Caption: 'Загрузить'; hint: '');
+  mybtCustom_SetCategory: TmybtRec = (Bt: mbtCustom_SetCategory; Pict: ''; Caption: 'Установить категорию'; hint: '');
+  mybtPrintGrid: TmybtRec = (Bt: mbtPrintGrid; Pict: 'print'; Caption: 'Печать таблицы'; hint: '');
+  mybtExcelGrid: TmybtRec = (Bt: mbtExcelGrid; Pict: 'excel'; Caption: 'Экспорт в Excel'; hint: '');
+  mybtSetGridLabel: TmybtRec = (Bt: mbtSetGridLabel; Pict: 'gridlabels'; Caption: 'Присвоить метку'; hint: ''; ShortCut: scCtrl + ord('Z'));
+  mybtClearGridLabels: TmybtRec = (Bt: mbtClearGridLabels; Pict: 'gridlabelsclear'; Caption: 'Очистить все метки'; hint: '');
+  mybtShowGridLabels: TmybtRec = (Bt: mbtClearGridLabels; Pict: ''; Caption: 'Показать/скрыть записи с метками'; hint: ''; ShortCut: scCtrl + scShift + ord('Z'));
+  mybtClearOrRestoreGridFilter: TmybtRec = (Bt: mbtClearOrRestoreGridFilter; Pict: 'filterinvert'; Caption: 'Снять/восстановить фильтр'; hint: ''; ShortCut: scCtrl + ord('Q'));  //ShortCut(VK_F1, [ssCtrl])
+  mybtToGridLabelUp: TmybtRec = (Bt: mbtToGridLabelUp; Pict: ''; Caption: 'Переход к метке (вверх)'; hint: ''; ShortCut: scShift + ord('Z'));
+  mybtToGridLabelDown: TmybtRec = (Bt: mbtToGridLabelDown; Pict: 'gridlabelsdown'; Caption: 'Переход к метке (вниз)'; hint: ''; ShortCut: scShift + ord('Z')); //no use
+  mybtCustom_MoveToGroup: TmybtRec = (Bt: mbtCustom_MoveToGroup; Pict: 'move_to_folder'; Caption: 'Перенести в группу'; hint: ''; ShortCut: scCtrl + ord('M'));
+  mybtCustom_SupplierNom: TmybtRec = (Bt: mbtCustom_SupplierNom; Pict: ''; Caption: 'Номенклатура поставщика'; hint: ''; ShortCut: scCtrl + ord('S'));
+  mybtExcelView: TmybtRec = (Bt: mbtExcelView; Pict: 'excelview'; Caption: 'Просмотреть в Excel'; hint: '');
+  mybtDeleteEstimate: TmybtRec = (Bt: mbtDeleteEstimate; Pict: ''; Caption: 'Удалить смету'; hint: '');
+  mybtCustom_SetOnWayPeriod: TmybtRec = (Bt: mbtCustom_SetOnWayPeriod; Pict: ''; Caption: 'Период "в пути"'; hint: '');
+  mybtCustom_Revision: TmybtRec = (Bt: mbtCustom_Revision; Pict: ''; Caption: 'Ревизия'; hint: '');
+  mybtCustom_PriceCheck: TmybtRec = (Bt: mbtCustom_PriceCheck; Pict: ''; Caption: 'Контрольная цена'; hint: '');
+  mybtCustom_JRevisions: TmybtRec = (Bt: mbtCustom_JRevisions; Pict: ''; Caption: 'Журнал ревизий'; hint: '');
+  mybtUchetlog: TmybtRec = (Bt: mbtUchetlog; Pict: ''; Caption: 'Журнал действий пользователей'; hint: '');
+  mybtCustom_SnRecalcPlannedEst: TmybtRec = (Bt: mbtCustom_SnRecalcPlannedEst; Pict: ''; Caption: 'Пересчитать плановую потребность'; hint: '');
+  mybtCustom_SnFillFromPlanned: TmybtRec = (Bt: mbtCustom_SnFillFromPlanned; Pict: ''; Caption: 'Заполнить из плановой потребности'; hint: '');
+  mybtCustom_RepOrStDItemsErr: TmybtRec = (Bt: mbtCustom_RepOrStDItemsErr; Pict: ''; Caption: 'Найти ошибки'; hint: '');
+  mybtCopyEstimate: TmybtRec = (Bt: mbtCopyEstimate; Pict: 'up'; Caption: 'Скопировать смету в буфер'; hint: '');
+  mybtPasteEstimate: TmybtRec = (Bt: mbtPasteEstimate; Pict: 'down'; Caption: 'Вставить смету из буфера'; hint: '');
   mybt1: TmybtRec = (Bt: 1; Pict: ''; Caption: ''; hint: '');
 
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
   myDefaultBtns :  array[0..-1 + 5 + 94] of TmybtRec = (
-  (Bt: btnDividor; Pict: ''; Caption: ''),
-  (Bt: btnDividorM; Pict: ''; Caption: ''; hint: ''),
-  (Bt: btnSpace; Pict: ''; Caption: ''; hint: ''),
-  (Bt: btnNone; Pict: ''; Caption: ''; hint: ''),
-  (Bt: btnTest; Pict: ''; Caption: 'ТЕСТ'; hint: ''),
-  (Bt: btnApply; Pict: 'apply'; Caption: 'Применить'; hint: ''),
-  (Bt: btnOk; Pict: 'ok'; Caption: 'Ок'; hint: ''),
-  (Bt: btnCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: ''),
-  (Bt: btnClose; Pict: 'close'; Caption: 'Закрыть'; hint: ''),
-  (Bt: btnYes; Pict: 'yes'; Caption: 'Да'; hint: ''),
-  (Bt: btnNo; Pict: 'no'; Caption: 'Нет'; hint: ''),
-  (Bt: btnOkNext; Pict: 'yes'; Caption: 'Дальше'; hint: ''),
-  (Bt: btnNewNext; Pict: 'yes'; Caption: 'Новый и дальше'; hint: ''),
-  (Bt: btnCopyNext; Pict: 'yes'; Caption: 'Копия и дальше'; hint: ''),
-  (Bt: btnPrev; Pict: 'prev'; Caption: 'Предыдущий'; hint: ''),
-  (Bt: btnNext; Pict: 'next'; Caption: 'Следующий'; hint: ''),
-  (Bt: btnFirst; Pict: 'first'; Caption: 'Первый'; hint: ''),
-  (Bt: btnLast; Pict: 'last'; Caption: 'Последний'; hint: ''),
-  (Bt: btnAdd; Pict: 'add'; Caption: 'Добавить'; hint: ''),
-  (Bt: btnInsert; Pict: 'insert'; Caption: 'Вставить'; hint: ''),
-  (Bt: btnCopy; Pict: 'copy'; Caption: 'Скопировать'; hint: ''),
-  (Bt: btnEdit; Pict: 'edit'; Caption: 'Изменить'; hint: ''),
-  (Bt: btnDelete; Pict: 'delete'; Caption: 'Удалить'; hint: ''),
-  (Bt: btnRefresh; Pict: 'refresh'; Caption: 'Обновить'; hint: ''),
-  (Bt: btnToEdit; Pict: 'toedit'; Caption: 'Начать редактирование'; hint: ''),
-  (Bt: btnToAdd; Pict: 'toadd'; Caption: 'Добавить'; hint: ''),
-  (Bt: btnToInsert; Pict: 'toinsert'; Caption: 'Вставить'; hint: ''),
-  (Bt: btnView; Pict: 'view'; Caption: 'Просмотреть'; hint: ''),
-  (Bt: btnInfo; Pict: 'info'; Caption: 'Информация'; hint: ''),
-  (Bt: btnGridSettings; Pict: 'gridsettings'; Caption: 'Настроить вид таблицы'; hint: ''),
-  (Bt: btnGridFilter; Pict: 'filter'; Caption: 'Фильтр'; hint: ''),
-  (Bt: btnCloseApp; Pict: 'quit'; Caption: 'Выйти'; hint: ''),
-  (Bt: btnAttach; Pict: 'attach'; Caption: 'Прикрепить файл'; hint: ''),
-  (Bt: btnViewClose; Pict: 'viewclose'; Caption: 'Закрыть'; hint: ''),
-  (Bt: btnPrint; Pict: 'print'; Caption: 'Печать'; hint: ''),
-  (Bt: btnAdd_Account_TO; Pict: 'add_to_receipt'; Caption: 'Добавить счет (транспорт отгрузки)'; hint: ''),
-  (Bt: btnAdd_Account_TS; Pict: 'add_sn_receipt'; Caption: 'Добавить счет (транспорт снабжения)'; hint: ''),
-  (Bt: btnAdd_Account_M; Pict: 'add_m_receipt'; Caption: 'Добавить счет (подрядчики по монтажу)'; hint: ''),
-  (Bt: btnEnter; Pict: 'enter'; Caption: 'Вввод'; hint: ''),
-  (Bt: btnSelectFromList; Pict: 'selectfromlist'; Caption: 'Выбрать'; hint: ''),
-  (Bt: btnExcel; Pict: 'excel'; Caption: 'Выгрузка в Excel'; hint: ''),
-  (Bt: btnGo; Pict: 'go'; Caption: 'Старт'; hint: ''),
-  (Bt: btnRefresh; Pict: 'go'; Caption: 'Старт'; hint: ''),
-  (Bt: btnSelectAll; Pict: 'selectall'; Caption: 'Отметить все'; hint: ''),
-  (Bt: btnDeSelectAll; Pict: 'deselectall'; Caption: 'Снять отметку'; hint: ''),
-  (Bt: btnInvertSelection; Pict: 'invertselection'; Caption: 'Инвертировать отметку'; hint: ''),
-  (Bt: btnCustom_RunPayments; Pict: ''; Caption: 'Провести все платежи'; hint: ''),
-  (Bt: btnCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: ''),
-  (Bt: btnCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: ''),
-  (Bt: btnCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: ''),
-  (Bt: btnCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: ''),
-  (Bt: btnSettings; Pict: 'settings'; Caption: 'Параметры'; hint: ''),
-  (Bt: btnLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: ''),
-  (Bt: btnUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: ''),
-  (Bt: btnCustom_FromParsec; Pict: 'timelist'; Caption: 'Загрузить данные Парсек'; hint: ''),
-  (Bt: btnCard; Pict: 'card'; Caption: 'Карта'; hint: ''),
-  (Bt: btnCustom_LoadFromInet; Pict: 'go'; Caption: 'Загрузить из интернета'; hint: ''),
-  (Bt: btnCustom_SundaysToTurv; Pict: 'sunday'; Caption: 'Проставить выходные'; hint: ''),
-  (Bt: btnSendEMail; Pict: 'sendemail'; Caption: 'Отправить письмо'; hint: ''),
-  (Bt: btnCustom_GetFromServer; Pict: 'go'; Caption: 'Получить данные с сервера'; hint: ''),
-  (Bt: btnCustom_DeleteOnServer; Pict: 'delete'; Caption: 'Удалить записи на сервере'; hint: ''),
-  (Bt: btnCustom_OtkSetFullOrder; Pict: 'selectall'; Caption: 'Принять весь заказ'; hint: ''),
-  (Bt: btnCustom_OrderFromTemplate; Pict: 'add_from_template'; Caption: 'Создать из шаблона'; hint: ''),
-  (Bt: btnLoadEstimate; Pict: 'estimate_add'; Caption: 'Загрузить смету'; hint: ''),
-  (Bt: btnViewEstimate; Pict: 'estimate'; Caption: 'Просмотреть смету'; hint: ''),
-  (Bt: btnPrintLabels; Pict: 'print'; Caption: 'Печать этикеток'; hint: ''),
-  (Bt: btnCustom_CreateAggregateEstimate; Pict: ''; Caption: 'Создать общую смету'; hint: ''),
-  (Bt: btnCustom_SendSnDocuments; Pict: ''; Caption: 'Прикрепить документы для снабжения'; hint: ''),
-  (Bt: btnCustom_CreateCompleteEstimate; Pict: ''; Caption: 'Создать смету для склада'; hint: ''),
-  (Bt: btnCustom_OrderSetAllSN; Pict: ''; Caption: 'Снабжение - отметить все'; hint: ''),
-  (Bt: btnCustom_Order_AttachThnDoc; Pict: ''; Caption: 'Прикрепить документы ТХН'; hint: ''),
-  (Bt: btnCustom_AccountToClipboard; Pict: ''; Caption: 'Скопировать путь к счету'; hint: ''),
-  (Bt: btnPrintPassport; Pict: 'print'; Caption: 'Печать паспорта заказа'; hint: ''),
-  (Bt: btnCustom_RefreshEstimateInOrder; Pict: 'saveas'; Caption: 'Обновить смету для изделия в заказе'; hint: ''),
-  (Bt: btnCustom_OrToDevel; Pict: ''; Caption: 'Добавить в журнал разработки'; hint: ''),
-  (Bt: btnFolder; Pict: 'folder'; Caption: 'Открыть папку'; hint: ''),
-  (Bt: btnFind; Pict: 'find'; Caption: 'Найти'; hint: ''),
-  (Bt: btnCustom_FindInEstimates; Pict: 'find'; Caption: 'Найти в сметах'; hint: ''),
-  (Bt: btNParams; Pict: 'settings_spanner'; Caption: 'Параметры'; hint: ''),
-  (Bt: btnLoad; Pict: 'load'; Caption: 'Загрузить'; hint: ''),
-  (Bt: btnCustom_SetCategory; Pict: ''; Caption: 'Установить категорию'; hint: ''),
-  (Bt: btnPrintGrid; Pict: 'print'; Caption: 'Печать таблицы'; hint: ''),
-  (Bt: btnExcelGrid; Pict: 'excel'; Caption: 'Экспорт в Excel'; hint: ''),
-  (Bt: btnSetGridLabel; Pict: 'gridlabels'; Caption: 'Присвоить метку'; hint: ''; ShortCut: scCtrl + ord('Z')),
-  (Bt: btnClearGridLabels; Pict: 'gridlabelsclear'; Caption: 'Очистить все метки'; hint: ''),
-  (Bt: btnClearGridLabels; Pict: ''; Caption: 'Показать/скрыть записи с метками'; hint: ''; ShortCut: scCtrl + scShift + ord('Z')),
-  (Bt: btnClearOrRestoreGridFilter; Pict: 'filterinvert'; Caption: 'Снять/восстановить фильтр'; hint: ''; ShortCut: scCtrl + ord('Q')),  //ShortCut(VK_F1, [ssCtrl])
-  (Bt: btnToGridLabelUp; Pict: ''; Caption: 'Переход к метке (вверх)'; hint: ''; ShortCut: scShift + ord('Z')),
-  (Bt: btnToGridLabelDown; Pict: 'gridlabelsdown'; Caption: 'Переход к метке (вниз)'; hint: ''; ShortCut: scShift + ord('Z')), //no use
-  (Bt: btnCustom_MoveToGroup; Pict: 'move_to_folder'; Caption: 'Перенести в группу'; hint: ''; ShortCut: scCtrl + ord('M')),
-  (Bt: btnCustom_SupplierNom; Pict: ''; Caption: 'Номенклатура поставщика'; hint: ''; ShortCut: scCtrl + ord('S')),
-  (Bt: btnExcelView; Pict: 'excelview'; Caption: 'Просмотреть в Excel'; hint: ''),
-  (Bt: btnDeleteEstimate; Pict: ''; Caption: 'Удалить смету'; hint: ''),
-  (Bt: btnCustom_SetOnWayPeriod; Pict: ''; Caption: 'Период "в пути"'; hint: ''),
-  (Bt: btnUchetlog; Pict: ''; Caption: 'Журнал действий пользователей'; hint: ''),
-  (Bt: btnAddRow; Pict: 'add'; Caption: 'Добавить строку'; hint: ''; ShortCut: scCtrl + VK_DOWN),
-  (Bt: btnInsertRow; Pict: 'insert'; Caption: 'Вставить строку'; hint: ''; ShortCut: VK_INSERT),
-  (Bt: btnDeleteRow; Pict: 'delete'; Caption: 'Удалить строку'; hint: ''; ShortCut: scCtrl + VK_DELETE),
+  (Bt: mbtDividor; Pict: ''; Caption: ''),
+  (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
+  (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
+  (Bt: mbtNone; Pict: ''; Caption: ''; hint: ''),
+  (Bt: mbtTest; Pict: ''; Caption: 'ТЕСТ'; hint: ''),
+  (Bt: mbtApply; Pict: 'apply'; Caption: 'Применить'; hint: ''),
+  (Bt: mbtOk; Pict: 'ok'; Caption: 'Ок'; hint: ''),
+  (Bt: mbtCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: ''),
+  (Bt: mbtClose; Pict: 'close'; Caption: 'Закрыть'; hint: ''),
+  (Bt: mbtYes; Pict: 'yes'; Caption: 'Да'; hint: ''),
+  (Bt: mbtNo; Pict: 'no'; Caption: 'Нет'; hint: ''),
+  (Bt: mbtOkNext; Pict: 'yes'; Caption: 'Дальше'; hint: ''),
+  (Bt: mbtNewNext; Pict: 'yes'; Caption: 'Новый и дальше'; hint: ''),
+  (Bt: mbtCopyNext; Pict: 'yes'; Caption: 'Копия и дальше'; hint: ''),
+  (Bt: mbtPrev; Pict: 'prev'; Caption: 'Предыдущий'; hint: ''),
+  (Bt: mbtNext; Pict: 'next'; Caption: 'Следующий'; hint: ''),
+  (Bt: mbtFirst; Pict: 'first'; Caption: 'Первый'; hint: ''),
+  (Bt: mbtLast; Pict: 'last'; Caption: 'Последний'; hint: ''),
+  (Bt: mbtAdd; Pict: 'add'; Caption: 'Добавить'; hint: ''),
+  (Bt: mbtInsert; Pict: 'insert'; Caption: 'Вставить'; hint: ''),
+  (Bt: mbtCopy; Pict: 'copy'; Caption: 'Скопировать'; hint: ''),
+  (Bt: mbtEdit; Pict: 'edit'; Caption: 'Изменить'; hint: ''),
+  (Bt: mbtDelete; Pict: 'delete'; Caption: 'Удалить'; hint: ''),
+  (Bt: mbtRefresh; Pict: 'refresh'; Caption: 'Обновить'; hint: ''),
+  (Bt: mbtToEdit; Pict: 'toedit'; Caption: 'Начать редактирование'; hint: ''),
+  (Bt: mbtToAdd; Pict: 'toadd'; Caption: 'Добавить'; hint: ''),
+  (Bt: mbtToInsert; Pict: 'toinsert'; Caption: 'Вставить'; hint: ''),
+  (Bt: mbtView; Pict: 'view'; Caption: 'Просмотреть'; hint: ''),
+  (Bt: mbtInfo; Pict: 'info'; Caption: 'Информация'; hint: ''),
+  (Bt: mbtGridSettings; Pict: 'gridsettings'; Caption: 'Настроить вид таблицы'; hint: ''),
+  (Bt: mbtGridFilter; Pict: 'filter'; Caption: 'Фильтр'; hint: ''),
+  (Bt: mbtCloseApp; Pict: 'quit'; Caption: 'Выйти'; hint: ''),
+  (Bt: mbtAttach; Pict: 'attach'; Caption: 'Прикрепить файл'; hint: ''),
+  (Bt: mbtViewClose; Pict: 'viewclose'; Caption: 'Закрыть'; hint: ''),
+  (Bt: mbtPrint; Pict: 'print'; Caption: 'Печать'; hint: ''),
+  (Bt: mbtAdd_Account_TO; Pict: 'add_to_receipt'; Caption: 'Добавить счет (транспорт отгрузки)'; hint: ''),
+  (Bt: mbtAdd_Account_TS; Pict: 'add_sn_receipt'; Caption: 'Добавить счет (транспорт снабжения)'; hint: ''),
+  (Bt: mbtAdd_Account_M; Pict: 'add_m_receipt'; Caption: 'Добавить счет (подрядчики по монтажу)'; hint: ''),
+  (Bt: mbtEnter; Pict: 'enter'; Caption: 'Вввод'; hint: ''),
+  (Bt: mbtSelectFromList; Pict: 'selectfromlist'; Caption: 'Выбрать'; hint: ''),
+  (Bt: mbtExcel; Pict: 'excel'; Caption: 'Выгрузка в Excel'; hint: ''),
+  (Bt: mbtGo; Pict: 'go'; Caption: 'Старт'; hint: ''),
+  (Bt: mbtRefresh; Pict: 'go'; Caption: 'Старт'; hint: ''),
+  (Bt: mbtSelectAll; Pict: 'selectall'; Caption: 'Отметить все'; hint: ''),
+  (Bt: mbtDeSelectAll; Pict: 'deselectall'; Caption: 'Снять отметку'; hint: ''),
+  (Bt: mbtInvertSelection; Pict: 'invertselection'; Caption: 'Инвертировать отметку'; hint: ''),
+  (Bt: mbtCustom_RunPayments; Pict: ''; Caption: 'Провести все платежи'; hint: ''),
+  (Bt: mbtCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: ''),
+  (Bt: mbtCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: ''),
+  (Bt: mbtCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: ''),
+  (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: ''),
+  (Bt: mbtSettings; Pict: 'settings'; Caption: 'Параметры'; hint: ''),
+  (Bt: mbtLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: ''),
+  (Bt: mbtUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: ''),
+  (Bt: mbtCustom_FromParsec; Pict: 'timelist'; Caption: 'Загрузить данные Парсек'; hint: ''),
+  (Bt: mbtCard; Pict: 'card'; Caption: 'Карта'; hint: ''),
+  (Bt: mbtCustom_LoadFromInet; Pict: 'go'; Caption: 'Загрузить из интернета'; hint: ''),
+  (Bt: mbtCustom_SundaysToTurv; Pict: 'sunday'; Caption: 'Проставить выходные'; hint: ''),
+  (Bt: mbtSendEMail; Pict: 'sendemail'; Caption: 'Отправить письмо'; hint: ''),
+  (Bt: mbtCustom_GetFromServer; Pict: 'go'; Caption: 'Получить данные с сервера'; hint: ''),
+  (Bt: mbtCustom_DeleteOnServer; Pict: 'delete'; Caption: 'Удалить записи на сервере'; hint: ''),
+  (Bt: mbtCustom_OtkSetFullOrder; Pict: 'selectall'; Caption: 'Принять весь заказ'; hint: ''),
+  (Bt: mbtCustom_OrderFromTemplate; Pict: 'add_from_template'; Caption: 'Создать из шаблона'; hint: ''),
+  (Bt: mbtLoadEstimate; Pict: 'estimate_add'; Caption: 'Загрузить смету'; hint: ''),
+  (Bt: mbtViewEstimate; Pict: 'estimate'; Caption: 'Просмотреть смету'; hint: ''),
+  (Bt: mbtPrintLabels; Pict: 'print'; Caption: 'Печать этикеток'; hint: ''),
+  (Bt: mbtCustom_CreateAggregateEstimate; Pict: ''; Caption: 'Создать общую смету'; hint: ''),
+  (Bt: mbtCustom_SendSnDocuments; Pict: ''; Caption: 'Прикрепить документы для снабжения'; hint: ''),
+  (Bt: mbtCustom_CreateCompleteEstimate; Pict: ''; Caption: 'Создать смету для склада'; hint: ''),
+  (Bt: mbtCustom_OrderSetAllSN; Pict: ''; Caption: 'Снабжение - отметить все'; hint: ''),
+  (Bt: mbtCustom_Order_AttachThnDoc; Pict: ''; Caption: 'Прикрепить документы ТХН'; hint: ''),
+  (Bt: mbtCustom_AccountToClipboard; Pict: ''; Caption: 'Скопировать путь к счету'; hint: ''),
+  (Bt: mbtPrintPassport; Pict: 'print'; Caption: 'Печать паспорта заказа'; hint: ''),
+  (Bt: mbtCustom_RefreshEstimateInOrder; Pict: 'saveas'; Caption: 'Обновить смету для изделия в заказе'; hint: ''),
+  (Bt: mbtCustom_OrToDevel; Pict: ''; Caption: 'Добавить в журнал разработки'; hint: ''),
+  (Bt: mbtFolder; Pict: 'folder'; Caption: 'Открыть папку'; hint: ''),
+  (Bt: mbtFind; Pict: 'find'; Caption: 'Найти'; hint: ''),
+  (Bt: mbtCustom_FindInEstimates; Pict: 'find'; Caption: 'Найти в сметах'; hint: ''),
+  (Bt: mbtParams; Pict: 'settings_spanner'; Caption: 'Параметры'; hint: ''),
+  (Bt: mbtLoad; Pict: 'load'; Caption: 'Загрузить'; hint: ''),
+  (Bt: mbtCustom_SetCategory; Pict: ''; Caption: 'Установить категорию'; hint: ''),
+  (Bt: mbtPrintGrid; Pict: 'print'; Caption: 'Печать таблицы'; hint: ''),
+  (Bt: mbtExcelGrid; Pict: 'excel'; Caption: 'Экспорт в Excel'; hint: ''),
+  (Bt: mbtSetGridLabel; Pict: 'gridlabels'; Caption: 'Присвоить метку'; hint: ''; ShortCut: scCtrl + ord('Z')),
+  (Bt: mbtClearGridLabels; Pict: 'gridlabelsclear'; Caption: 'Очистить все метки'; hint: ''),
+  (Bt: mbtClearGridLabels; Pict: ''; Caption: 'Показать/скрыть записи с метками'; hint: ''; ShortCut: scCtrl + scShift + ord('Z')),
+  (Bt: mbtClearOrRestoreGridFilter; Pict: 'filterinvert'; Caption: 'Снять/восстановить фильтр'; hint: ''; ShortCut: scCtrl + ord('Q')),  //ShortCut(VK_F1, [ssCtrl])
+  (Bt: mbtToGridLabelUp; Pict: ''; Caption: 'Переход к метке (вверх)'; hint: ''; ShortCut: scShift + ord('Z')),
+  (Bt: mbtToGridLabelDown; Pict: 'gridlabelsdown'; Caption: 'Переход к метке (вниз)'; hint: ''; ShortCut: scShift + ord('Z')), //no use
+  (Bt: mbtCustom_MoveToGroup; Pict: 'move_to_folder'; Caption: 'Перенести в группу'; hint: ''; ShortCut: scCtrl + ord('M')),
+  (Bt: mbtCustom_SupplierNom; Pict: ''; Caption: 'Номенклатура поставщика'; hint: ''; ShortCut: scCtrl + ord('S')),
+  (Bt: mbtExcelView; Pict: 'excelview'; Caption: 'Просмотреть в Excel'; hint: ''),
+  (Bt: mbtDeleteEstimate; Pict: ''; Caption: 'Удалить смету'; hint: ''),
+  (Bt: mbtCustom_SetOnWayPeriod; Pict: ''; Caption: 'Период "в пути"'; hint: ''),
+  (Bt: mbtUchetlog; Pict: ''; Caption: 'Журнал действий пользователей'; hint: ''),
+  (Bt: mbtAddRow; Pict: 'add'; Caption: 'Добавить строку'; hint: ''; ShortCut: scCtrl + VK_DOWN),
+  (Bt: mbtInsertRow; Pict: 'insert'; Caption: 'Вставить строку'; hint: ''; ShortCut: VK_INSERT),
+  (Bt: mbtDeleteRow; Pict: 'delete'; Caption: 'Удалить строку'; hint: ''; ShortCut: scCtrl + VK_DELETE),
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
   );
 

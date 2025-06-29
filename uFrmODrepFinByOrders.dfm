@@ -6,34 +6,34 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
   ExplicitHeight = 444
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
+  inherited pnlFrmMain: TPanel
     Width = 1048
     Height = 389
     ExplicitWidth = 1040
     ExplicitHeight = 361
-    inherited PMDIClient: TPanel
+    inherited pnlFrmClient: TPanel
       Width = 1038
       Height = 340
       ExplicitWidth = 1030
       ExplicitHeight = 312
-      object Pgc_1: TPageControl
+      object pgc_1: TPageControl
         Left = 0
         Top = 25
         Width = 1038
         Height = 315
-        ActivePage = Ts_5
+        ActivePage = ts_5
         Align = alClient
         TabOrder = 0
         ExplicitTop = 24
         ExplicitWidth = 1030
         ExplicitHeight = 313
-        object Ts_1: TTabSheet
+        object ts_1: TTabSheet
           Caption = #1055#1088#1086#1076#1072#1078#1072
           ExplicitLeft = 0
           ExplicitTop = 0
           ExplicitWidth = 1022
           ExplicitHeight = 284
-          object P_1_Top: TPanel
+          object pnl_1_Top: TPanel
             Left = 0
             Top = 0
             Width = 1030
@@ -42,35 +42,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             ExplicitWidth = 1022
           end
-          object Gb_1_1: TGroupBox
+          object gb_1_1: TGroupBox
             Left = 3
             Top = 31
             Width = 494
             Height = 170
             Caption = #1056#1086#1079#1085#1080#1094#1072
             TabOrder = 1
-            object Label1: TLabel
+            object lbl1: TLabel
               Left = 110
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label2: TLabel
+            object lbl2: TLabel
               Left = 270
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label3: TLabel
+            object lbl3: TLabel
               Left = 350
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_1_RA: TDBNumberEditEh
+            object nedt_1_RA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -88,7 +88,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_1_RD: TDBNumberEditEh
+            object nedt_1_RD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -106,7 +106,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_1_RM: TDBNumberEditEh
+            object nedt_1_RM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -124,7 +124,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_1_R: TDBNumberEditEh
+            object nedt_1_R: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -142,7 +142,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_1_RI2: TDBNumberEditEh
+            object nedt_1_RI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -155,7 +155,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_1_RI3: TDBNumberEditEh
+            object nedt_1_RI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -169,7 +169,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_1_RA2: TDBNumberEditEh
+            object nedt_1_RA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -182,7 +182,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_1_RA3: TDBNumberEditEh
+            object nedt_1_RA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -196,7 +196,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_1_RD2: TDBNumberEditEh
+            object nedt_1_RD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -209,7 +209,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_1_RM2: TDBNumberEditEh
+            object nedt_1_RM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -222,7 +222,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_1_R2: TDBNumberEditEh
+            object nedt_1_R2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -235,7 +235,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_1_RD3: TDBNumberEditEh
+            object nedt_1_RD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -249,7 +249,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_1_RM3: TDBNumberEditEh
+            object nedt_1_RM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -263,7 +263,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_1_R3: TDBNumberEditEh
+            object nedt_1_R3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -277,7 +277,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_1_RI: TDBNumberEditEh
+            object nedt_1_RI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -296,35 +296,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object Gb_1_2: TGroupBox
+          object gb_1_2: TGroupBox
             Left = 518
             Top = 31
             Width = 494
             Height = 170
             Caption = #1054#1087#1090
             TabOrder = 2
-            object Label4: TLabel
+            object lbl4: TLabel
               Left = 96
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label5: TLabel
+            object lbl5: TLabel
               Left = 197
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label6: TLabel
+            object lbl6: TLabel
               Left = 274
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_1_OA: TDBNumberEditEh
+            object nedt_1_OA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -342,7 +342,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_1_OD: TDBNumberEditEh
+            object nedt_1_OD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -360,7 +360,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_1_OM: TDBNumberEditEh
+            object nedt_1_OM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -378,7 +378,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_1_O: TDBNumberEditEh
+            object nedt_1_O: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -396,7 +396,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_1_OI2: TDBNumberEditEh
+            object nedt_1_OI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -409,7 +409,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_1_OI3: TDBNumberEditEh
+            object nedt_1_OI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -423,7 +423,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_1_OA2: TDBNumberEditEh
+            object nedt_1_OA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -436,7 +436,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_1_OA3: TDBNumberEditEh
+            object nedt_1_OA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -450,7 +450,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_1_OD2: TDBNumberEditEh
+            object nedt_1_OD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -463,7 +463,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_1_OM2: TDBNumberEditEh
+            object nedt_1_OM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -476,7 +476,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_1_O2: TDBNumberEditEh
+            object nedt_1_O2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -489,7 +489,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_1_OD3: TDBNumberEditEh
+            object nedt_1_OD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -503,7 +503,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_1_OM3: TDBNumberEditEh
+            object nedt_1_OM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -517,7 +517,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_1_O3: TDBNumberEditEh
+            object nedt_1_O3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -531,7 +531,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_1_OI: TDBNumberEditEh
+            object nedt_1_OI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -550,35 +550,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object Gb_1_3: TGroupBox
+          object gb_1_3: TGroupBox
             Left = 289
             Top = 201
             Width = 440
             Height = 66
             Caption = #1042#1089#1077#1075#1086
             TabOrder = 3
-            object Label7: TLabel
+            object lbl7: TLabel
               Left = 48
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label8: TLabel
+            object lbl8: TLabel
               Left = 205
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label9: TLabel
+            object lbl9: TLabel
               Left = 290
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_1_I: TDBNumberEditEh
+            object nedt_1_I: TDBNumberEditEh
               Left = 48
               Top = 35
               Width = 130
@@ -596,7 +596,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_1_I2: TDBNumberEditEh
+            object nedt_1_I2: TDBNumberEditEh
               Left = 205
               Top = 35
               Width = 55
@@ -609,7 +609,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_1_I3: TDBNumberEditEh
+            object nedt_1_I3: TDBNumberEditEh
               Left = 290
               Top = 35
               Width = 130
@@ -625,14 +625,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             end
           end
         end
-        object Ts_2: TTabSheet
+        object ts_2: TTabSheet
           Caption = #1054#1090#1075#1088#1091#1079#1082#1072
           ImageIndex = 1
           ExplicitLeft = 0
           ExplicitTop = 0
           ExplicitWidth = 1022
           ExplicitHeight = 284
-          object P_2_Top: TPanel
+          object pnl_2_Top: TPanel
             Left = 0
             Top = 0
             Width = 1030
@@ -641,35 +641,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             ExplicitWidth = 1022
           end
-          object Gb_2_2: TGroupBox
+          object gb_2_2: TGroupBox
             Left = 518
             Top = 31
             Width = 494
             Height = 170
             Caption = #1054#1087#1090
             TabOrder = 1
-            object Label14: TLabel
+            object lbl14: TLabel
               Left = 110
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label15: TLabel
+            object lbl15: TLabel
               Left = 269
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label16: TLabel
+            object lbl16: TLabel
               Left = 350
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_2_OA: TDBNumberEditEh
+            object nedt_2_OA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -687,7 +687,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_2_OD: TDBNumberEditEh
+            object nedt_2_OD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -705,7 +705,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_2_OM: TDBNumberEditEh
+            object nedt_2_OM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -723,7 +723,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_2_O: TDBNumberEditEh
+            object nedt_2_O: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -741,7 +741,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_2_OI2: TDBNumberEditEh
+            object nedt_2_OI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -754,7 +754,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_2_OI3: TDBNumberEditEh
+            object nedt_2_OI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -768,7 +768,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_2_OA2: TDBNumberEditEh
+            object nedt_2_OA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -781,7 +781,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_2_OA3: TDBNumberEditEh
+            object nedt_2_OA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -795,7 +795,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_2_OD2: TDBNumberEditEh
+            object nedt_2_OD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -808,7 +808,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_2_OM2: TDBNumberEditEh
+            object nedt_2_OM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -821,7 +821,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_2_O2: TDBNumberEditEh
+            object nedt_2_O2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -834,7 +834,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_2_OD3: TDBNumberEditEh
+            object nedt_2_OD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -848,7 +848,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_2_OM3: TDBNumberEditEh
+            object nedt_2_OM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -862,7 +862,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_2_O3: TDBNumberEditEh
+            object nedt_2_O3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -876,7 +876,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_2_OI: TDBNumberEditEh
+            object nedt_2_OI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -895,35 +895,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object Gb_2_3: TGroupBox
+          object gb_2_3: TGroupBox
             Left = 289
             Top = 201
             Width = 440
             Height = 66
             Caption = #1042#1089#1077#1075#1086
             TabOrder = 2
-            object Label17: TLabel
+            object lbl17: TLabel
               Left = 48
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label18: TLabel
+            object lbl18: TLabel
               Left = 213
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label19: TLabel
+            object lbl19: TLabel
               Left = 298
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_2_I: TDBNumberEditEh
+            object nedt_2_I: TDBNumberEditEh
               Left = 48
               Top = 35
               Width = 130
@@ -941,7 +941,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_2_I2: TDBNumberEditEh
+            object nedt_2_I2: TDBNumberEditEh
               Left = 213
               Top = 35
               Width = 55
@@ -954,7 +954,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_2_I3: TDBNumberEditEh
+            object nedt_2_I3: TDBNumberEditEh
               Left = 298
               Top = 35
               Width = 130
@@ -969,35 +969,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object GroupBox1: TGroupBox
+          object gb1: TGroupBox
             Left = 3
             Top = 31
             Width = 494
             Height = 170
             Caption = #1056#1086#1079#1085#1080#1094#1072
             TabOrder = 3
-            object Label10: TLabel
+            object lbl10: TLabel
               Left = 110
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label11: TLabel
+            object lbl11: TLabel
               Left = 270
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label12: TLabel
+            object lbl12: TLabel
               Left = 350
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_2_RA: TDBNumberEditEh
+            object nedt_2_RA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -1015,7 +1015,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_2_RD: TDBNumberEditEh
+            object nedt_2_RD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -1033,7 +1033,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_2_RM: TDBNumberEditEh
+            object nedt_2_RM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -1051,7 +1051,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_2_R: TDBNumberEditEh
+            object nedt_2_R: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -1069,7 +1069,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_2_RI2: TDBNumberEditEh
+            object nedt_2_RI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -1082,7 +1082,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_2_RI3: TDBNumberEditEh
+            object nedt_2_RI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -1096,7 +1096,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_2_RA2: TDBNumberEditEh
+            object nedt_2_RA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -1109,7 +1109,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_2_RA3: TDBNumberEditEh
+            object nedt_2_RA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -1123,7 +1123,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_2_RD2: TDBNumberEditEh
+            object nedt_2_RD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -1136,7 +1136,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_2_RM2: TDBNumberEditEh
+            object nedt_2_RM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -1149,7 +1149,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_2_R2: TDBNumberEditEh
+            object nedt_2_R2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -1162,7 +1162,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_2_RD3: TDBNumberEditEh
+            object nedt_2_RD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -1176,7 +1176,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_2_RM3: TDBNumberEditEh
+            object nedt_2_RM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -1190,7 +1190,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_2_R3: TDBNumberEditEh
+            object nedt_2_R3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -1204,7 +1204,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_2_RI: TDBNumberEditEh
+            object nedt_2_RI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -1224,14 +1224,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             end
           end
         end
-        object Ts_4: TTabSheet
+        object ts_4: TTabSheet
           Caption = #1056#1077#1072#1083#1080#1079#1072#1094#1080#1103
           ImageIndex = 3
           ExplicitLeft = 0
           ExplicitTop = 0
           ExplicitWidth = 1022
           ExplicitHeight = 284
-          object Panel1: TPanel
+          object pnl1: TPanel
             Left = 0
             Top = 0
             Width = 1030
@@ -1240,35 +1240,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             ExplicitWidth = 1022
           end
-          object GroupBox5: TGroupBox
+          object gb5: TGroupBox
             Left = 3
             Top = 31
             Width = 494
             Height = 170
             Caption = #1056#1086#1079#1085#1080#1094#1072
             TabOrder = 1
-            object Label20: TLabel
+            object lbl20: TLabel
               Left = 110
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label21: TLabel
+            object lbl21: TLabel
               Left = 270
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label22: TLabel
+            object lbl22: TLabel
               Left = 350
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_4_RA: TDBNumberEditEh
+            object nedt_4_RA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -1286,7 +1286,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_4_RD: TDBNumberEditEh
+            object nedt_4_RD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -1304,7 +1304,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_4_RM: TDBNumberEditEh
+            object nedt_4_RM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -1322,7 +1322,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_4_R: TDBNumberEditEh
+            object nedt_4_R: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -1340,7 +1340,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_4_RI2: TDBNumberEditEh
+            object nedt_4_RI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -1353,7 +1353,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_4_RI3: TDBNumberEditEh
+            object nedt_4_RI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -1367,7 +1367,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_4_RA2: TDBNumberEditEh
+            object nedt_4_RA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -1380,7 +1380,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_4_RA3: TDBNumberEditEh
+            object nedt_4_RA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -1394,7 +1394,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_4_RD2: TDBNumberEditEh
+            object nedt_4_RD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -1407,7 +1407,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_4_RM2: TDBNumberEditEh
+            object nedt_4_RM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -1420,7 +1420,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_4_R2: TDBNumberEditEh
+            object nedt_4_R2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -1433,7 +1433,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_4_RD3: TDBNumberEditEh
+            object nedt_4_RD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -1447,7 +1447,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_4_RM3: TDBNumberEditEh
+            object nedt_4_RM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -1461,7 +1461,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_4_R3: TDBNumberEditEh
+            object nedt_4_R3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -1475,7 +1475,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_4_RI: TDBNumberEditEh
+            object nedt_4_RI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -1494,35 +1494,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object GroupBox6: TGroupBox
+          object gb6: TGroupBox
             Left = 514
             Top = 31
             Width = 494
             Height = 170
             Caption = #1054#1087#1090
             TabOrder = 2
-            object Label23: TLabel
+            object lbl23: TLabel
               Left = 110
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label24: TLabel
+            object lbl24: TLabel
               Left = 269
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label25: TLabel
+            object lbl25: TLabel
               Left = 350
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_4_OA: TDBNumberEditEh
+            object nedt_4_OA: TDBNumberEditEh
               Left = 110
               Top = 59
               Width = 130
@@ -1540,7 +1540,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_4_OD: TDBNumberEditEh
+            object nedt_4_OD: TDBNumberEditEh
               Left = 110
               Top = 86
               Width = 130
@@ -1558,7 +1558,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_4_OM: TDBNumberEditEh
+            object nedt_4_OM: TDBNumberEditEh
               Left = 110
               Top = 113
               Width = 130
@@ -1576,7 +1576,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_4_O: TDBNumberEditEh
+            object nedt_4_O: TDBNumberEditEh
               Left = 110
               Top = 140
               Width = 130
@@ -1594,7 +1594,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_4_OI2: TDBNumberEditEh
+            object nedt_4_OI2: TDBNumberEditEh
               Left = 270
               Top = 32
               Width = 55
@@ -1607,7 +1607,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_4_OI3: TDBNumberEditEh
+            object nedt_4_OI3: TDBNumberEditEh
               Left = 350
               Top = 32
               Width = 130
@@ -1621,7 +1621,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_4_OA2: TDBNumberEditEh
+            object nedt_4_OA2: TDBNumberEditEh
               Left = 270
               Top = 59
               Width = 55
@@ -1634,7 +1634,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 6
               Visible = True
             end
-            object Ne_4_OA3: TDBNumberEditEh
+            object nedt_4_OA3: TDBNumberEditEh
               Left = 350
               Top = 59
               Width = 130
@@ -1648,7 +1648,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 7
               Visible = True
             end
-            object Ne_4_OD2: TDBNumberEditEh
+            object nedt_4_OD2: TDBNumberEditEh
               Left = 270
               Top = 86
               Width = 55
@@ -1661,7 +1661,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 8
               Visible = True
             end
-            object Ne_4_OM2: TDBNumberEditEh
+            object nedt_4_OM2: TDBNumberEditEh
               Left = 270
               Top = 113
               Width = 55
@@ -1674,7 +1674,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 9
               Visible = True
             end
-            object Ne_4_O2: TDBNumberEditEh
+            object nedt_4_O2: TDBNumberEditEh
               Left = 270
               Top = 140
               Width = 55
@@ -1687,7 +1687,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 10
               Visible = True
             end
-            object Ne_4_OD3: TDBNumberEditEh
+            object nedt_4_OD3: TDBNumberEditEh
               Left = 350
               Top = 86
               Width = 130
@@ -1701,7 +1701,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 11
               Visible = True
             end
-            object Ne_4_OM3: TDBNumberEditEh
+            object nedt_4_OM3: TDBNumberEditEh
               Left = 350
               Top = 113
               Width = 130
@@ -1715,7 +1715,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 12
               Visible = True
             end
-            object Ne_4_O3: TDBNumberEditEh
+            object nedt_4_O3: TDBNumberEditEh
               Left = 350
               Top = 140
               Width = 130
@@ -1729,7 +1729,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 13
               Visible = True
             end
-            object Ne_4_OI: TDBNumberEditEh
+            object nedt_4_OI: TDBNumberEditEh
               Left = 110
               Top = 32
               Width = 130
@@ -1748,35 +1748,35 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object GroupBox7: TGroupBox
+          object gb7: TGroupBox
             Left = 289
             Top = 201
             Width = 440
             Height = 66
             Caption = #1042#1089#1077#1075#1086
             TabOrder = 3
-            object Label26: TLabel
+            object lbl26: TLabel
               Left = 48
               Top = 13
               Width = 31
               Height = 13
               Caption = #1057#1091#1084#1084#1072
             end
-            object Label27: TLabel
+            object lbl27: TLabel
               Left = 213
               Top = 13
               Width = 59
               Height = 13
               Caption = '% '#1086#1090' '#1087#1083#1072#1085#1072
             end
-            object Label28: TLabel
+            object lbl28: TLabel
               Left = 298
               Top = 13
               Width = 25
               Height = 13
               Caption = #1055#1083#1072#1085
             end
-            object Ne_4_I: TDBNumberEditEh
+            object nedt_4_I: TDBNumberEditEh
               Left = 48
               Top = 35
               Width = 130
@@ -1794,7 +1794,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_4_I2: TDBNumberEditEh
+            object nedt_4_I2: TDBNumberEditEh
               Left = 213
               Top = 35
               Width = 55
@@ -1807,7 +1807,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_4_I3: TDBNumberEditEh
+            object nedt_4_I3: TDBNumberEditEh
               Left = 298
               Top = 35
               Width = 130
@@ -1823,14 +1823,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             end
           end
         end
-        object Ts_3: TTabSheet
+        object ts_3: TTabSheet
           Caption = #1042#1099#1087#1091#1089#1082' '#1087#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1072
           ImageIndex = 2
           ExplicitLeft = 0
           ExplicitTop = 0
           ExplicitWidth = 1022
           ExplicitHeight = 284
-          object P_3_Top: TPanel
+          object pnl_3_Top: TPanel
             Left = 0
             Top = 0
             Width = 1030
@@ -1839,14 +1839,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             ExplicitWidth = 1022
           end
-          object GroupBox2: TGroupBox
+          object gb2: TGroupBox
             Left = 3
             Top = 31
             Width = 1010
             Height = 50
             Caption = #1048#1079#1076#1077#1083#1080#1103
             TabOrder = 1
-            object Ne_3_I: TDBNumberEditEh
+            object nedt_3_I: TDBNumberEditEh
               Left = 114
               Top = 15
               Width = 130
@@ -1864,7 +1864,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_3_IOk: TDBNumberEditEh
+            object nedt_3_IOk: TDBNumberEditEh
               Left = 706
               Top = 15
               Width = 130
@@ -1882,7 +1882,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_3_IPrc: TDBNumberEditEh
+            object nedt_3_IPrc: TDBNumberEditEh
               Left = 329
               Top = 15
               Width = 55
@@ -1899,7 +1899,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_3_IPrcOk: TDBNumberEditEh
+            object nedt_3_IPrcOk: TDBNumberEditEh
               Left = 931
               Top = 15
               Width = 55
@@ -1916,7 +1916,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_3_IPlan: TDBNumberEditEh
+            object nedt_3_IPlan: TDBNumberEditEh
               Left = 442
               Top = 15
               Width = 130
@@ -1935,14 +1935,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object GroupBox3: TGroupBox
+          object gb3: TGroupBox
             Left = 3
             Top = 87
             Width = 1010
             Height = 50
             Caption = #1044#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1072#1103' '#1082#1086#1084#1087#1083#1077#1082#1090#1072#1094#1080#1103
             TabOrder = 2
-            object Ne_3_A: TDBNumberEditEh
+            object nedt_3_A: TDBNumberEditEh
               Left = 114
               Top = 15
               Width = 130
@@ -1960,7 +1960,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_3_AOk: TDBNumberEditEh
+            object nedt_3_AOk: TDBNumberEditEh
               Left = 706
               Top = 15
               Width = 130
@@ -1978,7 +1978,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_3_APrc: TDBNumberEditEh
+            object nedt_3_APrc: TDBNumberEditEh
               Left = 329
               Top = 15
               Width = 55
@@ -1995,7 +1995,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_3_APrcOk: TDBNumberEditEh
+            object nedt_3_APrcOk: TDBNumberEditEh
               Left = 931
               Top = 15
               Width = 55
@@ -2012,7 +2012,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_3_APlan: TDBNumberEditEh
+            object nedt_3_APlan: TDBNumberEditEh
               Left = 442
               Top = 15
               Width = 130
@@ -2031,14 +2031,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
           end
-          object GroupBox4: TGroupBox
+          object gb4: TGroupBox
             Left = 3
             Top = 143
             Width = 1010
             Height = 50
             Caption = #1042#1089#1077#1075#1086
             TabOrder = 3
-            object Ne_3: TDBNumberEditEh
+            object nedt_3: TDBNumberEditEh
               Left = 114
               Top = 15
               Width = 130
@@ -2056,7 +2056,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_3_Prc: TDBNumberEditEh
+            object nedt_3_Prc: TDBNumberEditEh
               Left = 329
               Top = 15
               Width = 55
@@ -2073,7 +2073,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_3_Plan: TDBNumberEditEh
+            object nedt_3_Plan: TDBNumberEditEh
               Left = 442
               Top = 15
               Width = 130
@@ -2128,7 +2128,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             end
           end
         end
-        object Ts_5: TTabSheet
+        object ts_5: TTabSheet
           Caption = #1042' '#1087#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1077
           ImageIndex = 4
           ExplicitLeft = 0
@@ -2153,14 +2153,14 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             Visible = True
           end
-          object GroupBox8: TGroupBox
+          object gb8: TGroupBox
             Left = 3
             Top = 56
             Width = 1024
             Height = 105
             Caption = #1057#1091#1084#1084#1072' '#1089#1099#1088#1100#1103
             TabOrder = 1
-            object Ne_5_1: TDBNumberEditEh
+            object nedt_5_1: TDBNumberEditEh
               Left = 130
               Top = 23
               Width = 130
@@ -2178,7 +2178,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 0
               Visible = True
             end
-            object Ne_5_2: TDBNumberEditEh
+            object nedt_5_2: TDBNumberEditEh
               Left = 386
               Top = 23
               Width = 130
@@ -2196,7 +2196,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 1
               Visible = True
             end
-            object Ne_5_3: TDBNumberEditEh
+            object nedt_5_3: TDBNumberEditEh
               Left = 642
               Top = 23
               Width = 130
@@ -2214,7 +2214,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 2
               Visible = True
             end
-            object Ne_5_6: TDBNumberEditEh
+            object nedt_5_6: TDBNumberEditEh
               Left = 642
               Top = 68
               Width = 130
@@ -2232,7 +2232,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 3
               Visible = True
             end
-            object Ne_5_4: TDBNumberEditEh
+            object nedt_5_4: TDBNumberEditEh
               Left = 130
               Top = 68
               Width = 130
@@ -2250,7 +2250,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
-            object Ne_5_5: TDBNumberEditEh
+            object nedt_5_5: TDBNumberEditEh
               Left = 386
               Top = 68
               Width = 130
@@ -2268,7 +2268,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 5
               Visible = True
             end
-            object Ne_5_7: TDBNumberEditEh
+            object nedt_5_7: TDBNumberEditEh
               Left = 882
               Top = 68
               Width = 130
@@ -2297,56 +2297,56 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         Align = alTop
         Caption = 'Panel2'
         TabOrder = 1
-        object LbCaption: TLabel
+        object lblCaption: TLabel
           Left = 1
           Top = 1
           Width = 48
           Height = 13
           Align = alTop
-          Caption = 'LbCaption'
+          Caption = 'lblCaption'
         end
       end
     end
-    inherited PDlgPanel: TPanel
+    inherited pnlFrmBtns: TPanel
       Top = 345
       Width = 1038
       ExplicitTop = 317
       ExplicitWidth = 1030
-      inherited BvDlg: TBevel
+      inherited bvlFrmBtnsTl: TBevel
         Width = 1036
         ExplicitWidth = 1028
       end
-      inherited BvDlgBottom: TBevel
+      inherited bvlFrmBtnsB: TBevel
         Width = 1036
         ExplicitWidth = 1028
       end
-      inherited PDlgMain: TPanel
+      inherited pnlFrmBtnsContainer: TPanel
         Width = 1036
         ExplicitWidth = 1028
-        inherited PDlgBtnForm: TPanel
+        inherited pnlFrmBtnsMain: TPanel
           Left = 937
           ExplicitLeft = 929
         end
-        inherited PDlgChb: TPanel
+        inherited pnlFrmBtnsChb: TPanel
           Left = 690
           Width = 18
           ExplicitLeft = 682
           ExplicitWidth = 18
-          inherited ChbDlgNoClose: TCheckBox
+          inherited chbNoclose: TCheckBox
             Left = -105
             ExplicitLeft = -105
           end
         end
-        inherited PDlgBtnR: TPanel
+        inherited pnlFrmBtnsR: TPanel
           Left = 708
           Width = 229
           ExplicitLeft = 700
           ExplicitWidth = 229
         end
-        inherited PDlgBtnL: TPanel
+        inherited pnlFrmBtnsL: TPanel
           Width = 387
           ExplicitWidth = 387
-          object Cb_DtB: TDBComboBoxEh
+          object cmb_DtB: TDBComboBoxEh
             Left = 57
             Top = 4
             Width = 130
@@ -2362,7 +2362,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             TabOrder = 0
             Visible = True
           end
-          object Cb_DtE: TDBComboBoxEh
+          object cmb_DtE: TDBComboBoxEh
             Left = 241
             Top = 2
             Width = 130
@@ -2379,7 +2379,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             Visible = True
           end
         end
-        inherited PDlgCenter: TPanel
+        inherited pnlFrmBtnsC: TPanel
           Left = 428
           Width = 262
           ExplicitLeft = 428
@@ -2388,17 +2388,17 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
       end
     end
   end
-  inherited PStatusBar: TPanel
+  inherited pnlStatusBar: TPanel
     Top = 389
     Width = 1048
     ExplicitTop = 361
     ExplicitWidth = 1040
-    inherited LbStatusBarRight: TLabel
+    inherited lblStatusBarR: TLabel
       Left = 956
       Height = 13
       ExplicitLeft = 956
     end
-    inherited LbStatusBarLeft: TLabel
+    inherited lblStatusBarL: TLabel
       Height = 13
     end
   end

@@ -12,35 +12,35 @@ uses
 
 type
   TFrmOGedtSnMain = class(TFrmBasicGrid2)
-    PName: TPanel;
-    LbName: TLabel;
+    pnlName: TPanel;
+    lblName: TLabel;
     Frg3: TFrDBGridEh;
-    procedure Timer_AfterStartTimer(Sender: TObject);
+    procedure tmrAfterCreateTimer(Sender: TObject);
   private
-    Days: TVarDynArray;
-    PeriodNames: TVarDynArray;
-    EditFieldName: string;
-    PrcMinOst, PrcQnt, PrcNeedM: Extended;
-    Fields3: string;
-    Names3: string;
+    FDays: TVarDynArray;
+    FPeriodNames: TVarDynArray;
+    FEditFieldName: string;
+    FPrcMinOst, FPrcQnt, FPrcNeedM: Extended;
+    FFields3: string;
+    FNames3: string;
     //начальная дата, на которую сформированы плановые потребности
-    PlannedDt: TDateTime;
+    FPlannedDt: TDateTime;
     //данные для катомизации графы "в пути" - испольуются кастомные, дата конечная, дата начальная
-    CustomOnWay: TVarDynArray;
+    FCustomOnWay: TVarDynArray;
     //для передачи цвета ячеек в инфогрид, и в форму выгрузки в эксель
-    RowColors, RowFontColors: TVarDynArray;
+    FRowColors, FRowFontColors: TVarDynArray;
     //все категории (нейм, айди, пользователи)
-    Categoryes: TVarDynArray2;
+    FCategoryes: TVarDynArray2;
     //свои категории
-    CategoryesSelf: TVarDynArray2;
+    FCategoryesSelf: TVarDynArray2;
     //айди категории, по которой была выставлена блокировка на редактирование текущим пользователем
-    IdCategoryLock: Variant;
+    FIdCategoryLock: Variant;
     //если доступна категория "снабжение" (у них доп права)
-    IsSnab: Boolean;
+    FIsSnab: Boolean;
     //включен режим редактирования любых данных, для администратора данных, включается по Ctrl-E в гриде
-    AdminEditMode: Boolean;
+    FAdminEditMode: Boolean;
     InAddControlChangeEvent: Boolean;
-    LockEdit: Boolean;
+    FLockEdit: Boolean;
     function  PrepareForm: Boolean; override;
     procedure SetDetailGrid;
     procedure SetCategoryes;
@@ -99,21 +99,21 @@ var
   i, j: Integer;
 begin
   Caption := 'Формирование заявок на снабжение';
-  Days:=Q.QLoadToVarDynArrayOneRow('select d0,d1,d2,d3,d4,d5,d6,prc_min_ost, prc_qnt, prc_need_m, planned_dt from spl_minremains_params', []);
+  FDays:=Q.QLoadToVarDynArrayOneRow('select d0,d1,d2,d3,d4,d5,d6,prc_min_ost, prc_qnt, prc_need_m, planned_dt from spl_minremains_params', []);
 
   Q.QExecSql('delete from spl_remains_enter', []);
-  PrcMinOst:=Days[7];
-  PrcQnt:=Days[8];
-  PrcNeedM:=Days[9];
-  if Days[10] = null
-    then PlannedDt := Date
-    else PlannedDt:=Days[10];
-  Days:=Copy(Days, 0, 7);
-  PeriodNames := [];
-  for i := 0 to High(Days) - 1 do
-    PeriodNames := PeriodNames + [S.iif(Days[i] < 0, 'нет', S.GetDaysCountToName(Days[i]))];    //!!! ошибка при уборке периода в настройках
+  FPrcMinOst:=FDays[7];
+  FPrcQnt:=FDays[8];
+  FPrcNeedM:=FDays[9];
+  if FDays[10] = null
+    then FPlannedDt := Date
+    else FPlannedDt:=FDays[10];
+  FDays:=Copy(FDays, 0, 7);
+  FPeriodNames := [];
+  for i := 0 to High(FDays) - 1 do
+    FPeriodNames := FPeriodNames + [S.iif(FDays[i] < 0, 'нет', S.GetDaysCountToName(FDays[i]))];    //!!! ошибка при уборке периода в настройках
   //данные для кастомного отображения "в пути" (если onway_custom = 1) - важно порядок dt2, dt1, они в базе перепутаны логически(
-  CustomOnWay:=Q.QLoadToVarDynArrayOneRow('select onway_custom, onway_dt2, onway_dt1, onway_old_days from spl_minremains_params', []);
+  FCustomOnWay:=Q.QLoadToVarDynArrayOneRow('select onway_custom, onway_dt2, onway_dt1, onway_old_days from spl_minremains_params', []);
   //поля
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible, myogIndicatorCheckboxes, myogMultiSelect];
   va2 := [
@@ -121,9 +121,9 @@ begin
     ['aprc_min_ost$f','_aprc_min_ost','40'],
     ['aprc_qnt$f','_aprc_qnt','40'],
     ['aprc_need_m$f','_aprc_need_m','40'],
-    ['e_min_ostatok$i','_emo','40'],
-    ['e_qnt_order_opt$i','_eoo','40'],
-    ['e_qnt_order$i','_eqo','40'],
+    ['edt_min_ostatok$i','_emo','40'],
+    ['edt_qnt_order_opt$i','_eoo','40'],
+    ['edt_qnt_order$i','_eqo','40'],
     ['onway_old$f','_onway_old','40'],
 
     ['id_category$i','Категория','80;L'],
@@ -134,10 +134,10 @@ begin
     ['supplierinfo$s','Поставщик|Наименование','120','bt=Поставщики','t=2'],
     ['suppliers_cnt$s','Поставщик|Кол.','40','t=2'],
     ['no_namenom_supplier$s','Поставщик|Нет назв.','40','t=2','pic=-:6'],
-    ['qnt0$f','Расход|'+S.GetDaysCountToName(Days[0]),'60']
+    ['qnt0$f','Расход|'+S.GetDaysCountToName(FDays[0]),'60']
   ];
   //Q.QExecSql('selet 1 from', [], False);
-  va := Copy(PeriodNames, 1);
+  va := Copy(FPeriodNames, 1);
   //поля по периодам для прихода
   for i:=1 to High(va) + 1 do
     va2 := va2 + [['qnti' + InttoStr(i) + '$f', 'Приход|' + va[i - 1], '60', 't=1']];
@@ -173,29 +173,29 @@ begin
     ['qnt_cost$f','Стоимость|Остаток','60','f=r:'],
     ['onway_cost$f','Стоимость|В пути','60','f=r:'],
     ['ornumwoqnt$s','Заказ с нехваткой','60'],
-    ['qnt_pl1$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 0))],'60'],
-    ['qnt_pl2$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 1))],'60'],
-    ['qnt_pl3$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 2))],'60'],
+    ['qnt_pl1$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 0))],'60'],
+    ['qnt_pl2$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 1))],'60'],
+    ['qnt_pl3$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 2))],'60'],
     ['qnt_pl$f', 'Плановый резерв|Всего','60']
   ];
   Frg1.Opt.SetFields(va2);
   Frg1.Opt.SetTable('v_spl_minremains');
 
   //кнопки (формирование заявки только для тех у кого права на изменение)
-  Frg1.Opt.SetButtons(1,[[btnRefresh],[],[btnParams, User.Role(rOr_Other_R_MinRemains_Ch)],[btnGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
-    [-btnCustom_SetCategory], [-btnCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
-    [-btnCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-btnCustom_SetOnWayPeriod],
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtParams, User.Role(rOr_Other_R_MinRemains_Ch)],[mbtGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
+    [-mbtCustom_SetCategory], [-mbtCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
+    [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-mbtCustom_SetOnWayPeriod],
     [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
-    [],[btnExcelView],[-1001, True,'Просмотреть историю'],[],[btnGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[btnCtlPanel]
+    [],[mbtExcelView],[-1001, True,'Просмотреть историю'],[],[mbtGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[mbtCtlPanel]
   ]);
 
   Frg1.CreateAddControls('1', cntCheck, 'Данные по периодам', 'ChbPeriods', '', 4, yrefC, 129);
   Frg1.CreateAddControls('1', cntCheck, 'Поставщик', 'ChbSupplier', '', -1, yrefC, 120);
-//  Frg1.CreateAddControls('1', cntCheck, 'Артикул, ед.изм.', 'Chb_Article', '', 260, yrefT, 120);
-//  Frg1.CreateAddControls('1', cntCheck, 'Только выбранные', 'Chb_Checked', '', 1, yrefB, 120);
-//  Frg1.CreateAddControls('1', cntCheck, 'По фак. остаткам', 'Chb_AQnt', '', 130, yrefB, 120);
-//  Frg1.CreateAddControls('1', cntCheck, 'По мин. остаткам', 'Chb_AMinOst', '', 260, yrefB, 120);
-//  Frg1.CreateAddControls('1', cntCheck, 'По потребности', 'Chb_ANeedM', '', 390, yrefB, 120);
+//  Frg1.CreateAddControls('1', cntCheck, 'Артикул, ед.изм.', 'chb_Article', '', 260, yrefT, 120);
+//  Frg1.CreateAddControls('1', cntCheck, 'Только выбранные', 'chb_Checked', '', 1, yrefB, 120);
+//  Frg1.CreateAddControls('1', cntCheck, 'По фак. остаткам', 'chb_AQnt', '', 130, yrefB, 120);
+//  Frg1.CreateAddControls('1', cntCheck, 'По мин. остаткам', 'chb_AMinOst', '', 260, yrefB, 120);
+//  Frg1.CreateAddControls('1', cntCheck, 'По потребности', 'chb_ANeedM', '', 390, yrefB, 120);
 
   Frg1.CreateAddControls('1', cntComboLK, 'Категория', 'CbCategory', '', 420, yrefC, 180);
   Frg1.CreateAddControls('1', cntCheck, 'Пустые', 'ChbCatEmpty', '', 620 , yrefC, 80);
@@ -224,9 +224,9 @@ begin
     ['need_p$f','Потребность|Плановая','60'],
     ['price_check$f','Стоимость|Контрольная цена','60'],
     ['price_main$f','Стоимость|Цена','60'],
-    ['qnt_pl1$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 0))],'60'],
-    ['qnt_pl2$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 1))],'60'],
-    ['qnt_pl3$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(PlannedDt, 2))],'60'],
+    ['qnt_pl1$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 0))],'60'],
+    ['qnt_pl2$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 1))],'60'],
+    ['qnt_pl3$f','Плановый резерв|' + MonthsRu[MonthOf(IncMonth(FPlannedDt, 2))],'60'],
     ['qnt_pl$f', 'Плановый резерв|Всего','60']
   ]);
   Frg2.Opt.SetTable('spl_history');
@@ -340,11 +340,11 @@ begin
 //  Frg1.Prepare;
 //  Result := True;
 
-  IdCategoryLock := -1;
+  FIdCategoryLock := -1;
 //  SetLock;
 
-  SetLength(RowColors, Frg1.DBGridEh1.Columns.Count + 1);
-  SetLength(RowFontColors, Frg1.DBGridEh1.Columns.Count + 1);
+  SetLength(FRowColors, Frg1.DBGridEh1.Columns.Count + 1);
+  SetLength(FRowFontColors, Frg1.DBGridEh1.Columns.Count + 1);
 
   FrmOGedtSnMain := Self;
 end;
@@ -404,24 +404,24 @@ var
   va1, va2: TVarDynArray;
   b: Boolean;
 begin
-  if Tag = btnGo then begin
+  if Tag = mbtGo then begin
     CreateDemand;
   end
-  else if Tag = btnTest then begin
+  else if Tag = mbtTest then begin
   end
-  else if Tag = btnExcelView then begin
+  else if Tag = mbtExcelView then begin
     ViewXLSFiles;
   end
-  else if Tag = btnExcel then begin
+  else if Tag = mbtExcel then begin
     ExportGridToXLSX(True, False);
   end
-  else if Tag = btnCustom_SetCategory then begin
+  else if Tag = mbtCustom_SetCategory then begin
     SetCategory;
   end
-  else if Tag = btnCustom_SnRecalcPlannedEst then begin
+  else if Tag = mbtCustom_SnRecalcPlannedEst then begin
     RecalcPlannedEst;
   end
-  else if Tag = btnCustom_SnFillFromPlanned then begin
+  else if Tag = mbtCustom_SnFillFromPlanned then begin
     FillFromPlanned;
   end
   else if Tag = 1001 then begin
@@ -437,10 +437,10 @@ begin
   else if Tag = 1002 then begin
     ClearInvalidReserve;
   end
-  else if Tag = btnParams then begin
+  else if Tag = mbtParams then begin
     repeat
       va2:=[];
-      va1 := copy(Days);
+      va1 := copy(FDays);
       for i := 0 to High(va1) do
         if va1[i] < 0 then
           va1[i] := 0;
@@ -453,7 +453,7 @@ begin
             [cntNEdit, 'Период 1', '0:10000', 80], [cntNEdit, 'Период 2', '0:10000', 80],
             [cntNEdit, 'Период 3', '0:10000'], [cntNEdit, 'Период 4', '0:10000', 80], [cntNEdit, 'Период 5', '0:10000', 80], [cntNEdit, 'Период 6', '0:10000', 80]
           ],
-          [PrcMinOst, PrcQnt, PrcNeedM] + va1,
+          [FPrcMinOst, FPrcQnt, FPrcNeedM] + va1,
           va2,
           [['Задайте период оценки, проценты для выделения значений и периоды просмотра расхода/прихода (в днях).'#13#10+
             'Если поставить 0, то данный период отображаться не будет.'#13#10+
@@ -471,9 +471,9 @@ begin
       va1 := Copy(va2);
       MyWarningMessage('Должен быть задан хотя бы один период!');
     until False;
-    PrcMinOst := va2[0];
-    PrcQnt := va2[1];
-    PrcNeedM := va2[2];
+    FPrcMinOst := va2[0];
+    FPrcQnt := va2[1];
+    FPrcNeedM := va2[2];
     va1 := Copy(va2, 4);
     for i := 0 to High(va1) do
       if va1[i] = 0 then
@@ -482,17 +482,17 @@ begin
     for i := 0 to High(va1) do
       if va1[i] = 100000 then
         va1[i] := -100;
-    Days := [va2[3]] + va1;
+    FDays := [va2[3]] + va1;
     Q.QExecSql(
       'update spl_minremains_params set '+
       'd0=:d0$i,d1=:d1$i,d2=:d2$i,d3=:d3$i,d4=:d4$i,d5=:d5$i,d6=:d6$i,prc_min_ost=:prc_min_ost$i,prc_qnt=:prc_qnt$i,prc_need_m=:prc_need_m$i',
-      [va2[3]] + va1 + [PrcMinOst, PrcQnt, PrcNeedM]
+      [va2[3]] + va1 + [FPrcMinOst, FPrcQnt, FPrcNeedM]
     );
 //    SetCaptions;
 //!!!    Gh.SetGridColumnsProperty(DBGridEh1, cptCaption, Pr[1].Fields, Pr[1].Captions);
     Fr.RefreshGrid;
   end
-  else if Tag = btnCustom_SetOnWayPeriod then begin
+  else if Tag = mbtCustom_SetOnWayPeriod then begin
     if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, '~Период "В пути', 200, 100,
         [
           [cntCheck, 'Включить', '', 80],
@@ -500,7 +500,7 @@ begin
           [cntDtEdit, 'по', '*:*', 80],
           [cntNEdit, 'Подсветка, дней', '0:10000:0', 80]
         ],
-        CustomOnWay,
+        FCustomOnWay,
         va2,
         [['Задайте период отсечки данных для графы "В пути"'#13#10+
           '(для использования этих значений установить галочку "включить")'#13#10+
@@ -510,8 +510,8 @@ begin
          ]],
          nil
       ) <= 0 then Exit;  //выход по отмене или если нет изменений
-    CustomOnWay:= va2;
-    Q.QExecSql('update spl_minremains_params set onway_custom = :p1$i, onway_dt2 = :p2$d, onway_dt1 = :p3$d, onway_old_days = :p4$i', CustomOnWay);
+    FCustomOnWay:= va2;
+    Q.QExecSql('update spl_minremains_params set onway_custom = :p1$i, onway_dt2 = :p2$d, onway_dt1 = :p3$d, onway_old_days = :p4$i', FCustomOnWay);
     Fr.RefreshGrid;
   end
   else
@@ -537,18 +537,18 @@ var
 begin
   //поля, которые будут заменены на null независимо от их видимости [поля, скрыть(True), {сделать служебными - только если есть замена на нулл}, {значение для null - null, 0}]
 (*  Pr[1].NullFields := [];
-  b := Cth.GetControlValue(TControl(Self.FindComponent('Chb_Periods'))) = 1;
-  for i := 1 to High(Days) do
-    if (Days[i] < 0) { or (not b)} then begin
+  b := Cth.GetControlValue(TControl(Self.FindComponent('chb_Periods'))) = 1;
+  for i := 1 to High(FDays) do
+    if (FDays[i] < 0) { or (not b)} then begin
       Pr[1].NullFields := Pr[1].NullFields + [['qnt' + IntToStr(i), True, False, 0]];
       Pr[1].NullFields := Pr[1].NullFields + [['qnti' + IntToStr(i), True, False, 0]];
     end;*)
   SqlWhere := A.ImplodeNotEmpty([
-    //S.IIf(TDbCheckBoxEh(Self.FindComponent('Chb_Checked')).Checked, 'nvl(tomin, 0) = 1', ''),
-    //S.IIf(TDbCheckBoxEh(Self.FindComponent('Chb_AMinOst')).Checked, '(prc_min_ost <= -aprc_min_ost or prc_min_ost >= aprc_min_ost)', ''),
-    //S.IIf(TDbCheckBoxEh(Self.FindComponent('Chb_AQnt')).Checked, '(prc_qnt <= aprc_qnt)', ''),
-    //S.IIf(TDbCheckBoxEh(Self.FindComponent('Chb_ANeedM')).Checked, '((need_m < 0)or(prc_need_m <= -aprc_need_m or prc_need_m >= aprc_need_m))', ''),
-    S.IIfStr((Fr.GetControlValue('ChbCatAll') = 0) and (Length(CategoryesSelf) > 0),
+    //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_Checked')).Checked, 'nvl(tomin, 0) = 1', ''),
+    //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_AMinOst')).Checked, '(prc_min_ost <= -aprc_min_ost or prc_min_ost >= aprc_min_ost)', ''),
+    //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_AQnt')).Checked, '(prc_qnt <= aprc_qnt)', ''),
+    //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_ANeedM')).Checked, '((need_m < 0)or(prc_need_m <= -aprc_need_m or prc_need_m >= aprc_need_m))', ''),
+    S.IIfStr((Fr.GetControlValue('ChbCatAll') = 0) and (Length(FCategoryesSelf) > 0),
       '(id_category = ' + VarToStr(Fr.GetControlValue('CbCategory')) + S.IIfStr(Fr.GetControlValue('ChbCatEmpty') = 1, ' or id_category is null') + ')')
     ], ' and '
   );
@@ -585,26 +585,26 @@ begin
   repeat
     if (Fr.CurrField = 'tomin') then begin
       i := S.Iif(Fr.MemTableEh1.FieldByName(Fr.CurrField).AsInteger = 0, 1, 0);
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 1, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 1, S.NullIfEmpty(Value)]));
       Fr.RefreshRecord;
     end;
     if (Fr.CurrField = 'min_ostatok') then begin
       if not (S.IsNumber(Value, 0, 1000000) or (VarToStr(Value) = '')) then
         Break;
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 2, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 2, S.NullIfEmpty(Value)]));
 //      GoToNextEdit(1);    //для перемещения в ячекй внизу по Enter
       Fr.RefreshRecord;
     end;
     if (Fr.CurrField = 'qnt_order_opt') then begin
       if not (S.IsNumber(Value, 0, 1000000) or (VarToStr(Value) = '')) then
         Break;
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 3, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 3, S.NullIfEmpty(Value)]));
 //      GoToNextEdit(1);    //для перемещения в ячекй внизу по Enter
       Fr.RefreshRecord;
     end;
     if (Fr.CurrField = 'to_order'){ and not MemTableEh1.ReadOnly} then begin
       i := S.Iif(Fr.MemTableEh1.FieldByName(Fr.CurrField).AsInteger = 0, 1, 0);
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 5, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 5, S.NullIfEmpty(Value)]));
       va2 := Q.QLoadToVarDynArray2('select to_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
       if (Length(va2) = 0) or (va2[0][0] <> S.NullIfEmpty(Value)) then begin
         MyWarningMessage('Не удалось установить значение!');
@@ -621,7 +621,7 @@ begin
     if (Fr.CurrField = 'qnt_order') then begin
       if not (S.IsNumber(Value, 0, 1000000) or (VarToStr(Value) = '')) then
         Break;
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 4, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 4, S.NullIfEmpty(Value)]));
       va2 := Q.QLoadToVarDynArray2('select qnt_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
       if (Length(va2) = 0) or (va2[0][0] <> S.NullIfEmpty(Value)) then begin
         MyWarningMessage('Не удалось установить значение!');
@@ -630,25 +630,25 @@ begin
       else begin
         Fr.MemTableEh1.FieldByName(Fr.CurrField).AsVariant := S.NullIfEmpty(Value);
         Fr.MemTableEh1.FieldByName('order_cost').AsVariant := S.NullIf0(Round(S.NNum(Value) * S.NNum(Fr.MemTableEh1.FieldByName('price_main').AsFloat)));
-        Fr.MemTableEh1.FieldByName('e_qnt_order').AsInteger := 1;
+        Fr.MemTableEh1.FieldByName('edt_qnt_order').AsInteger := 1;
         Mth.PostAndEdit(Fr.MemTableEh1);
 //        GoToNextEdit(1);    //для перемещения в ячекй внизу по Enter
       end;
     end;
     if (Fr.CurrField = 'id_category') then begin
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 6, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 6, S.NullIfEmpty(Value)]));
       Fr.RefreshRecord;
     end;
     if (Fr.CurrField = 'price_check') then begin
       if not (S.IsNumber(Value, 0, 100000000, 2) or (VarToStr(Value) = '')) then
         Break;
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 7, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 7, S.NullIfEmpty(Value)]));
       Fr.RefreshRecord;
     end;
     if (Fr.CurrField = 'planned_need_days') then begin
       if not (S.IsNumber(Value, 0, 90, 0) or (VarToStr(Value) = '')) then
         Break;
-      Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 9, S.NullIfEmpty(Value)]));
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 9, S.NullIfEmpty(Value)]));
       Orders.CalcSplNeedPlanned(Fr.ID);
       Fr.RefreshRecord;
     end;
@@ -673,19 +673,19 @@ begin
       Params.Background := clmyYelow;  //желтый
   end;
   if FieldName = 'qnt_order_opt' then begin
-    if Fr.GetValue('e_qnt_order_opt') = 1 then begin
+    if Fr.GetValue('edt_qnt_order_opt') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
   end;
   if FieldName = 'min_ostatok' then begin
-    if Fr.GetValue('e_min_ostatok') = 1 then begin
+    if Fr.GetValue('edt_min_ostatok') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
   end;
   if FieldName = 'qnt_order' then begin
-    if Fr.GetValue('e_qnt_order') = 1 then begin
+    if Fr.GetValue('edt_qnt_order') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
@@ -695,15 +695,15 @@ begin
       then Params.Background := clmyPink;
   end;
   if FieldName = 'prc_qnt' then begin
-    if S.NNum(Fr.GetValue('aprc_qnt')) <> PrcQnt then
+    if S.NNum(Fr.GetValue('aprc_qnt')) <> FPrcQnt then
       Params.Font.Color := clBlue;
   end;
   if FieldName = 'prc_min_ost' then begin
-    if S.NNum(Fr.GetValue('aprc_min_ost')) <> PrcMinOst then
+    if S.NNum(Fr.GetValue('aprc_min_ost')) <> FPrcMinOst then
       Params.Font.Color := clBlue;
   end;
   if FieldName = 'prc_need_m' then begin
-    if S.NNum(Fr.GetValue('aprc_need_m')) <> PrcNeedM then
+    if S.NNum(Fr.GetValue('aprc_need_m')) <> FPrcNeedM then
       Params.Font.Color := clBlue;
   end;
   if FieldName = 'need' then begin
@@ -730,7 +730,7 @@ begin
   end;
   if FieldName = 'qnt_onway' then begin
     //подсветим ячейку "в пути", если задан кастомный период для этих данных
-    if CustomOnWay[0] = 1 then
+    if FCustomOnWay[0] = 1 then
       Params.Font.Color := clBlue;
     if (S.NNum(Fr.GetValue('onway_old')) = 1) then
       Params.Background :=clMyPink;  //розовый
@@ -744,9 +744,9 @@ begin
         then Params.Background := clmyPink;  //розовый
     end;
   end;
-  if (Length(RowColors) > 0) and (Frg1.MemTableEh1.Active) and (Frg1.MemTableEh1.RecordCount > 0) and (Frg1.MemTableEh1.RecNo = Frg1.DbGridEh1.Row) then begin
-    RowColors[TColumnEh(Sender).Index] := Params.BackGround;
-    RowFontColors[TColumnEh(Sender).Index] := Params.Font.Color;
+  if (Length(FRowColors) > 0) and (Frg1.MemTableEh1.Active) and (Frg1.MemTableEh1.RecordCount > 0) and (Frg1.MemTableEh1.RecNo = Frg1.DbGridEh1.Row) then begin
+    FRowColors[TColumnEh(Sender).Index] := Params.BackGround;
+    FRowFontColors[TColumnEh(Sender).Index] := Params.Font.Color;
 //    SetDetailInfo;
     //это вызывает внутреннюю ошибку в объектах при вызове MemTable.Refresh в родительском классе!!!
 //    ChangeSelectedData;
@@ -805,11 +805,11 @@ begin
     TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnt[0-9]{1}$') then begin
-    AddParamD:= VararrayOf(AddParamAr + [Days[StrtoInt(Fr.CurrField[4])]]);
+    AddParamD:= VararrayOf(AddParamAr + [FDays[StrtoInt(Fr.CurrField[4])]]);
     TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_Consumption, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnti[0-9]{1}$') then begin
-    AddParamD:= VararrayOf(AddParamAr + [Days[StrtoInt(Fr.CurrField[5])]]);
+    AddParamD:= VararrayOf(AddParamAr + [FDays[StrtoInt(Fr.CurrField[5])]]);
     TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_Incoming, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnt_pl[1-3]{1}$') then begin
@@ -831,8 +831,8 @@ begin
 //exit;
   if Fr.CurrField = 'price_check' then
   else if Fr.CurrField = 'id_category'
-    then ReadOnly := not (IsSnab or (A.PosInArray(Fr.GetValue('id_category'), CategoryesSelf + [['', null]], 1) >= 0))
-    else ReadOnly := (Length(CategoryesSelf) = 0) or (not AdminEditMode and
+    then ReadOnly := not (FIsSnab or (A.PosInArray(Fr.GetValue('id_category'), FCategoryesSelf + [['', null]], 1) >= 0))
+    else ReadOnly := (Length(FCategoryesSelf) = 0) or (not FAdminEditMode and
       not (Fr.GetValue('id_category') = Cth.GetControlValue(Fr, 'CbCategory')));
 end;
 
@@ -854,30 +854,30 @@ procedure TFrmOGedtSnMain.SetCategoryes;
 var
   i: Integer;
 begin
-  Categoryes:=Q.QLoadToVarDynArray2('select name, id, useravail from spl_categoryes order by name', []);
-  CategoryesSelf:=[];
-  for i:=0 to High(Categoryes) do
-    if S.InCommaStr(IntToStr(User.GetId), Categoryes[i, 2]) then begin
-      CategoryesSelf:=CategoryesSelf +[ [Categoryes[i][0], Categoryes[i][1]]];
-      if Categoryes[i][1] = 1 then IsSnab:= True;
+  FCategoryes:=Q.QLoadToVarDynArray2('select name, id, useravail from spl_categoryes order by name', []);
+  FCategoryesSelf:=[];
+  for i:=0 to High(FCategoryes) do
+    if S.InCommaStr(IntToStr(User.GetId), FCategoryes[i, 2]) then begin
+      FCategoryesSelf:=FCategoryesSelf +[ [FCategoryes[i][0], FCategoryes[i][1]]];
+      if FCategoryes[i][1] = 1 then FIsSnab:= True;
     end;
-  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbCategory')), CategoryesSelf);
+  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbCategory')), FCategoryesSelf);
   TDBComboBoxEh(Frg1.FindComponent('CbCategory')).ItemIndex:=0;
-  if not IsSnab then begin
+  if not FIsSnab then begin
     TDBCheckBoxEh(Frg1.FindComponent('ChbCatAll')).Checked:=False;
     TDBCheckBoxEh(Frg1.FindComponent('ChbCatAll')).Visible:=False;
   end
   else TDBComboBoxEh(Frg1.FindComponent('CbCategory')).Value:='1';
-  Frg1.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(Categoryes, 0), A.VarDynArray2ColToVD1(Categoryes, 1), True);
+  Frg1.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(FCategoryes, 0), A.VarDynArray2ColToVD1(FCategoryes, 1), True);
 end;
 
 procedure TFrmOGedtSnMain.SetFieldsEditable;
 //изменяемые поля если есть права на изменение
 begin
-  Frg1.Opt.SetColFeature('3', 'e', User.Roles([], [rOr_Other_R_MinRemains_Ch]) and not LockEdit, False);
-  Frg1.Opt.SetColFeature('price_check', 'e', User.Roles([], [rOr_Other_R_MinRemains_ChPriceCheck]) and not LockEdit, False);
+  Frg1.Opt.SetColFeature('3', 'e', User.Roles([], [rOr_Other_R_MinRemains_Ch]) and not FLockEdit, False);
+  Frg1.Opt.SetColFeature('price_check', 'e', User.Roles([], [rOr_Other_R_MinRemains_ChPriceCheck]) and not FLockEdit, False);
   Frg1.Opt.SetColFeature('id_category', 'e', User.Roles([], [rOr_Other_R_MinRemains_Ch]), False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, btnGo, null, not LockEdit);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtGo, null, not FLockEdit);
   Frg1.DBGridEh1.Repaint;
 end;
 
@@ -887,7 +887,7 @@ var
   va1, va2: TVarDynArray;
   b: Boolean;
 begin
-  va1 := copy(Days);
+  va1 := copy(FDays);
   for i := 0 to High(va1) do
     if va1[i] < 0 then
       va1[i] := 0;
@@ -915,7 +915,7 @@ begin
   for i := 0 to High(va1) do
     if va1[i] = 100000 then
       va1[i] := -100;
-  Days := [va2[0]] + va1;
+  FDays := [va2[0]] + va1;
   Q.QExecSql('update spl_minremains_params set d0=:d0$i,d1=:d1$i,d2=:d2$i,d3=:d3$i,d4=:d4$i,d5=:d5$i,d6=:d6$i', [va2[0]] + va1);
 //  SetCaptions;
 //  Gh.SetGridColumnsProperty(DBGridEh1, cptCaption, Pr[1].Fields, Pr[1].Captions);
@@ -935,7 +935,7 @@ var
   catname: string;
 begin
 (*
-//  if not IsSnab then Exit; //пока запретим устанвливать всем, кроме снабжения!!!
+//  if not FIsSnab then Exit; //пока запретим устанвливать всем, кроме снабжения!!!
   //получим массив отмеченных записей
   va2:= Gh.GetGridArrayOfChecked(DbGridEh1, -1);
   //сообщим и выйдем, если нет отмеченных
@@ -946,9 +946,9 @@ begin
   fcat:=MemTableEh1.FieldByName('id_category').Index;
   //массивы наименований и ключей своих категорий для диалога
   vak:=['']; vav:=[''];
-  for i:=0 to High(CategoryesSelf) do begin
-    vak:= vak + [CategoryesSelf[i][1]];
-    vav:= vav + [CategoryesSelf[i][0]];
+  for i:=0 to High(FCategoryesSelf) do begin
+    vak:= vak + [FCategoryesSelf[i][1]];
+    vav:= vav + [FCategoryesSelf[i][0]];
   end;
   //диалог
   if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, 'Установить категорию', 300, 80,
@@ -962,8 +962,8 @@ begin
   //получим название и айди выбранной категории
   cat:=va[0];
   catname:=''; if cat <> '' then begin
-    i:= A.PosInArray(cat, Categoryes, 1);
-    if i >=0 then catname:= Categoryes[i, 0];
+    i:= A.PosInArray(cat, FCategoryes, 1);
+    if i >=0 then catname:= FCategoryes[i, 0];
   end;
   if (Length(va2) = 0)or(MyQuestionMessage('Установить для ' + S.GetEndingFull(Length(va2), 'наименовани', 'я', 'й', 'й') + ' категорию "' + catname + '"?') <> mrYes)
     then Exit;
@@ -971,8 +971,8 @@ begin
   for i:=0 to High(va2) do begin
     //только если категория пустая или своя, и не такая же
     va:=Q.QSelectOneRow('select id, id_category from spl_itm_nom_props where id = :id$i', [va2[i][0]]);
-    if (va[0] <> null)and(VarToStr(va[1]) <> VarToStr(cat))and((va[1] = null)or(A.PosInArray(va[1], CategoryesSelf, 1) >= 0))
-      then Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i, 0], 6, S.NullIfEmpty(cat)]));
+    if (va[0] <> null)and(VarToStr(va[1]) <> VarToStr(cat))and((va[1] = null)or(A.PosInArray(va[1], FCategoryesSelf, 1) >= 0))
+      then Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i, 0], 6, S.NullIfEmpty(cat)]));
   end;
   //снимем отметку
   Gh.SetGridIndicatorSelection(DbGridEh1, -1);
@@ -1038,12 +1038,12 @@ begin
       //значение поля
       Rep.SetValue('#' + st + '#', st1);
       //установим цвет фона из сохраненных в событии грида, если он не цвет четной строки (их почему-то закрышивает черным)
-      if not VarIsEmpty(RowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index])
-        then if RowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index] <> Frg1.DBGridEh1.EvenRowColor
-          then Rep.TemplateSheet.Cells[y, x].Interior.Color := RowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index];
+      if not VarIsEmpty(FRowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index])
+        then if FRowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index] <> Frg1.DBGridEh1.EvenRowColor
+          then Rep.TemplateSheet.Cells[y, x].Interior.Color := FRowColors[Frg1.DBGridEh1.FindFieldColumn(st).Index];
       //и установим цвет шрифта - дает возможность отображать метки
-      if not VarIsEmpty(RowFontColors[Frg1.DBGridEh1.FindFieldColumn(st).Index])
-        then Rep.TemplateSheet.Cells[y, x].Font.Color := RowFontColors[Frg1.DBGridEh1.FindFieldColumn(st).Index];
+      if not VarIsEmpty(FRowFontColors[Frg1.DBGridEh1.FindFieldColumn(st).Index])
+        then Rep.TemplateSheet.Cells[y, x].Font.Color := FRowFontColors[Frg1.DBGridEh1.FindFieldColumn(st).Index];
     end;
   end;
   //вернемся к исходной строке таблицы
@@ -1083,10 +1083,10 @@ end;
 procedure TFrmOGedtSnMain.RecalcPlannedEst;
 //пересчитать плановую потребноть (по данным плановых заказов на три месяца вперед, включая текущий)
 begin
-  if MyQuestionMessage('Плановая потребность рассчитана на ' + DateTimeToStr(PlannedDt) + #13#10'Обновить?') <> mrYes then
+  if MyQuestionMessage('Плановая потребность рассчитана на ' + DateTimeToStr(FPlannedDt) + #13#10'Обновить?') <> mrYes then
     Exit;
   Orders.CrealeEstimateOnPlannesOrders(Now, True);
-  PlannedDt:=Q.QLoadToVarDynArrayOneRow('select planned_dt from spl_minremains_params', [])[0];
+  FPlannedDt:=Q.QLoadToVarDynArrayOneRow('select planned_dt from spl_minremains_params', [])[0];
   Frg1.RefreshGrid;
 end;
 
@@ -1118,14 +1118,14 @@ begin
   if not (User.Roles([], [rOr_Other_R_MinRemains_Ch]) and (S.NSt(Frg1.GetControlValue('CbCategory')) <> ''))
     then Exit;
   //очистим блокировку на прошлую выбранную категорию
-  va1:=Q.DBLock(False, FormDoc, VarToStr(IdCategoryLock), '', fNone);
+  va1:=Q.DBLock(False, FormDoc, VarToStr(FIdCategoryLock), '', fNone);
   //попытаемся взять блокировку
   va1:=Q.DBLock(True, FormDoc, VarToStr(Frg1.GetControlValue('CbCategory')), '', fNone);
   //сохраним категорию которую выбрали
-  IdCategoryLock:= Frg1.GetControlValue('CbCategory');
+  FIdCategoryLock:= Frg1.GetControlValue('CbCategory');
   //признка, что редактирование заблокировано
-  LockEdit:= not va1[0];
-  if LockEdit then begin
+  FLockEdit:= not va1[0];
+  if FLockEdit then begin
     //если заблокировано, то выдадим сообщение
     MyWarningMessage('Пользователь "' + S.NSt(va1[1]) + '" сейчас редактирует таблицу по данной категории.'#13#10'Вы не моежете редактировать данные и формировать заявку!');
   end;
@@ -1133,7 +1133,7 @@ begin
   SetFieldsEditable;
 end;
 
-procedure TFrmOGedtSnMain.Timer_AfterStartTimer(Sender: TObject);
+procedure TFrmOGedtSnMain.tmrAfterCreateTimer(Sender: TObject);
 begin
   inherited;
   SetLock;
@@ -1202,7 +1202,7 @@ begin
   //переспросим
   if MyQuestionMessage(
     'Создать заявку на снабжение из ' + S.GetEndingFull(ToDemand, 'позици', 'и', 'й', 'й') + ' по категории "' +
-    A.FindValueInArray2(id_category, 1, 0, Categoryes) + '"?'
+    A.FindValueInArray2(id_category, 1, 0, FCategoryes) + '"?'
     ) <> mrYes then  Exit;
   //спросим, сохранить ли в экселе
   if MyQuestionMessage('Сохранить текущее состояние данных в Excel-файле?') = mrYes then begin
@@ -1216,8 +1216,8 @@ begin
   end;
   //вызовем процедуру формирования заявки поставщику по переданной категории
   Q.QBeginTrans(True);
-  Q.QCallStoredProc('P_Spl_Create_History', 'st$s', ['Заказ']);
-  Q.QCallStoredProc('P_CreateSplDemand', 'IdCategory$i', [id_category]);
+  Q.QCallStoredProc('p_Spl_Create_History', 'st$s', ['Заказ']);
+  Q.QCallStoredProc('p_CreateSplDemand', 'IdCategory$i', [id_category]);
   Q.QCommitOrRollback();
   //если завершилось неудачно, сообщим и выйдем
   if Q.PackageMode <> 1 then begin
@@ -1237,7 +1237,7 @@ var
   i: Integer;
 begin
   //диалог выбора месяца
-  van := [MonthsRu[MonthOf(PlannedDt)], MonthsRu[MonthOf(IncMonth(PlannedDt, 1))], MonthsRu[MonthOf(IncMonth(PlannedDt, 2))]];
+  van := [MonthsRu[MonthOf(FPlannedDt)], MonthsRu[MonthOf(IncMonth(FPlannedDt, 1))], MonthsRu[MonthOf(IncMonth(FPlannedDt, 2))]];
   vaid := [1,2,3];
   if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Выбор периода', 160, 45,
     [[cntComboLK, 'Месяц:','1:50', 1]],
@@ -1257,8 +1257,8 @@ begin
   //пройдем пор полученному массиву и установим целевые значения (окрушляем до десятых)
   Q.QBeginTrans(True);
   for i := 0 to High(va2) do begin
-    Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i][0], 2, S.NullIfEmpty(RoundTo(va2[i][1], -1))]));     //min_ostatok
-    Q.QCallStoredProc('P_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i][0], 3, S.NullIfEmpty(RoundTo(va2[i][1], -1))]));     //qnt_order_opt
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i][0], 2, S.NullIfEmpty(RoundTo(va2[i][1], -1))]));     //min_ostatok
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([va2[i][0], 3, S.NullIfEmpty(RoundTo(va2[i][1], -1))]));     //qnt_order_opt
   end;
   Q.QCommitOrRollback(True);
   //обновим грид
@@ -1276,9 +1276,9 @@ begin
   if Frg1.MemTableEh1.ControlsDisabled then
     Exit;
   if not Frg1.MemTableEh1.Active or (Frg1.GetCount < 1) then
-    LbName.SetCaption2('')
+    lblName.SetCaption2('')
   else
-    LbName.SetCaption2('Наименование: $FF0000 ' + Frg1.GetValueS('name'));
+    lblName.SetCaption2('Наименование: $FF0000 ' + Frg1.GetValueS('name'));
   Frg3.MemTableEh1.Edit;
   for i := 0 to Frg3.MemTableEh1.Fields.Count - 1 do begin
     f := Frg3.MemTableEh1.Fields[i].FieldName;
@@ -1287,8 +1287,8 @@ begin
     if Frg1.DbGridEh1.FindFieldColumn(f) = nil then
       Continue;
     Frg3.MemTableEh1.Fields[i].Value := Frg1.MemTableEh1.FieldByName(f).Value;
-    if (Length(RowColors) > 0) and (not VarIsEmpty(RowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index])) then
-      Frg3.DBGridEh1.FindFieldColumn(f).Color := RowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index];
+    if (Length(FRowColors) > 0) and (not VarIsEmpty(FRowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index])) then
+      Frg3.DBGridEh1.FindFieldColumn(f).Color := FRowColors[Frg1.DBGridEh1.FindFieldColumn(f).Index];
     if TRegEx.IsMatch(f, 'price_main') then
       Frg3.DBGridEh1.FindFieldColumn(f).Color := RGB(150, 150, 255);
     if TRegEx.IsMatch(f, '_cost$') then
@@ -1315,7 +1315,7 @@ begin
     '(Нажмите "Да" чтобы очистить резервы)'#13#10 + A.Implode(va, #13#10), 1) <> mrYes then
     Exit;
   Q.QBeginTrans(True);
-  Q.QCallStoredProc('P_Itm_DelRezervForCompleted', '', []);
+  Q.QCallStoredProc('p_Itm_DelRezervForCompleted', '', []);
   Q.QCommitOrRollback(True);
   Frg1.RefreshGrid;
 end;

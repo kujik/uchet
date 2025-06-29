@@ -39,7 +39,7 @@ object Dlg_Order_Complaints: TDlg_Order_Complaints
     TabOrder = 2
     OnMouseDown = DBGridEh1MouseDown
     object RowDetailData: TRowDetailPanelControlEh
-      object E_PPComment: TDBEditEh
+      object edt_PPComment: TDBEditEh
         Left = 299
         Top = 215
         Width = 494
@@ -52,7 +52,7 @@ object Dlg_Order_Complaints: TDlg_Order_Complaints
         DynProps = <>
         EditButtons = <>
         TabOrder = 0
-        Text = 'E_PPComment'
+        Text = 'edt_PPComment'
         Visible = False
       end
     end

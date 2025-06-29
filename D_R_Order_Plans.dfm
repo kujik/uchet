@@ -15,35 +15,35 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     Height = 20
     Anchors = [akLeft, akBottom]
   end
-  object Label11: TLabel
+  object lbl11: TLabel
     Left = 96
     Top = 13
     Width = 94
     Height = 13
     Caption = #1055#1088#1086#1076#1072#1078#1072', '#1088#1086#1079#1085#1080#1094#1072
   end
-  object Label1: TLabel
+  object lbl1: TLabel
     Left = 232
     Top = 13
     Width = 71
     Height = 13
     Caption = #1055#1088#1086#1076#1072#1078#1072', '#1086#1087#1090
   end
-  object Label2: TLabel
+  object lbl2: TLabel
     Left = 368
     Top = 13
     Width = 96
     Height = 13
     Caption = #1054#1090#1075#1088#1091#1079#1082#1072', '#1088#1086#1079#1085#1080#1094#1072
   end
-  object Label3: TLabel
+  object lbl3: TLabel
     Left = 504
     Top = 13
     Width = 73
     Height = 13
     Caption = #1054#1090#1075#1088#1091#1079#1082#1072', '#1086#1087#1090
   end
-  object Lb_Caption: TLabel
+  object lbl_Caption: TLabel
     Left = 101
     Top = 224
     Width = 116
@@ -57,14 +57,14 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     Font.Style = []
     ParentFont = False
   end
-  object Label4: TLabel
+  object lbl4: TLabel
     Left = 96
     Top = 167
     Width = 121
     Height = 13
     Caption = #1055#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1086', '#1080#1079#1076#1077#1083#1080#1103
   end
-  object Label5: TLabel
+  object lbl5: TLabel
     Left = 368
     Top = 167
     Width = 177
@@ -93,7 +93,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 1
     OnClick = Bt_OkClick
   end
-  object Ne_Sum1RI: TDBNumberEditEh
+  object nedt_Sum1RI: TDBNumberEditEh
     Left = 96
     Top = 32
     Width = 110
@@ -110,7 +110,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 2
     Visible = True
   end
-  object Ne_Sum1RA: TDBNumberEditEh
+  object nedt_Sum1RA: TDBNumberEditEh
     Left = 96
     Top = 59
     Width = 110
@@ -127,7 +127,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 3
     Visible = True
   end
-  object Ne_Sum1RD: TDBNumberEditEh
+  object nedt_Sum1RD: TDBNumberEditEh
     Left = 96
     Top = 86
     Width = 110
@@ -144,7 +144,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 4
     Visible = True
   end
-  object Ne_Sum1RM: TDBNumberEditEh
+  object nedt_Sum1RM: TDBNumberEditEh
     Left = 96
     Top = 113
     Width = 110
@@ -161,7 +161,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 5
     Visible = True
   end
-  object Ne_Sum1R_: TDBNumberEditEh
+  object nedt_Sum1R_: TDBNumberEditEh
     Left = 96
     Top = 140
     Width = 110
@@ -180,7 +180,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 6
     Visible = True
   end
-  object Ne_Sum1OI: TDBNumberEditEh
+  object nedt_Sum1OI: TDBNumberEditEh
     Left = 232
     Top = 32
     Width = 110
@@ -194,7 +194,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 7
     Visible = True
   end
-  object Ne_Sum1OA: TDBNumberEditEh
+  object nedt_Sum1OA: TDBNumberEditEh
     Left = 232
     Top = 59
     Width = 110
@@ -208,7 +208,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 8
     Visible = True
   end
-  object Ne_Sum1OD: TDBNumberEditEh
+  object nedt_Sum1OD: TDBNumberEditEh
     Left = 232
     Top = 86
     Width = 110
@@ -222,7 +222,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 9
     Visible = True
   end
-  object Ne_Sum1OM: TDBNumberEditEh
+  object nedt_Sum1OM: TDBNumberEditEh
     Left = 232
     Top = 113
     Width = 110
@@ -236,7 +236,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 10
     Visible = True
   end
-  object Ne_Sum1O_: TDBNumberEditEh
+  object nedt_Sum1O_: TDBNumberEditEh
     Left = 232
     Top = 140
     Width = 110
@@ -252,7 +252,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 11
     Visible = True
   end
-  object Ne_Sum2RI: TDBNumberEditEh
+  object nedt_Sum2RI: TDBNumberEditEh
     Left = 368
     Top = 32
     Width = 110
@@ -266,7 +266,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 12
     Visible = True
   end
-  object Ne_Sum2RA: TDBNumberEditEh
+  object nedt_Sum2RA: TDBNumberEditEh
     Left = 368
     Top = 59
     Width = 110
@@ -280,7 +280,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 13
     Visible = True
   end
-  object Ne_Sum2RD: TDBNumberEditEh
+  object nedt_Sum2RD: TDBNumberEditEh
     Left = 368
     Top = 86
     Width = 110
@@ -294,7 +294,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 14
     Visible = True
   end
-  object Ne_Sum2RM: TDBNumberEditEh
+  object nedt_Sum2RM: TDBNumberEditEh
     Left = 368
     Top = 113
     Width = 110
@@ -308,7 +308,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 15
     Visible = True
   end
-  object Ne_Sum2R_: TDBNumberEditEh
+  object nedt_Sum2R_: TDBNumberEditEh
     Left = 368
     Top = 140
     Width = 110
@@ -324,7 +324,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 16
     Visible = True
   end
-  object Ne_Sum2OI: TDBNumberEditEh
+  object nedt_Sum2OI: TDBNumberEditEh
     Left = 504
     Top = 32
     Width = 110
@@ -338,7 +338,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 17
     Visible = True
   end
-  object Ne_Sum2OA: TDBNumberEditEh
+  object nedt_Sum2OA: TDBNumberEditEh
     Left = 504
     Top = 59
     Width = 110
@@ -352,7 +352,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 18
     Visible = True
   end
-  object Ne_Sum2OD: TDBNumberEditEh
+  object nedt_Sum2OD: TDBNumberEditEh
     Left = 504
     Top = 86
     Width = 110
@@ -366,7 +366,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 19
     Visible = True
   end
-  object Ne_Sum2OM: TDBNumberEditEh
+  object nedt_Sum2OM: TDBNumberEditEh
     Left = 505
     Top = 113
     Width = 110
@@ -380,7 +380,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 20
     Visible = True
   end
-  object Ne_Sum2O_: TDBNumberEditEh
+  object nedt_Sum2O_: TDBNumberEditEh
     Left = 504
     Top = 140
     Width = 110
@@ -396,7 +396,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 21
     Visible = True
   end
-  object Ne_Prc3i: TDBNumberEditEh
+  object nedt_Prc3i: TDBNumberEditEh
     Left = 232
     Top = 186
     Width = 41
@@ -413,7 +413,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 22
     Visible = True
   end
-  object Ne_Sum3A: TDBNumberEditEh
+  object nedt_Sum3A: TDBNumberEditEh
     Left = 368
     Top = 186
     Width = 110
@@ -430,7 +430,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 23
     Visible = True
   end
-  object Ne_Prc3A: TDBNumberEditEh
+  object nedt_Prc3A: TDBNumberEditEh
     Left = 504
     Top = 186
     Width = 41
@@ -447,7 +447,7 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 24
     Visible = True
   end
-  object Ne_Sum3i: TDBNumberEditEh
+  object nedt_Sum3i: TDBNumberEditEh
     Left = 96
     Top = 186
     Width = 110

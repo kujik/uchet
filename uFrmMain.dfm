@@ -3206,23 +3206,23 @@ object FrmMain: TFrmMain
     Font.Style = [fsBold, fsItalic]
     ParentFont = False
   end
-  object Lb_GetTop: TLabel
+  object lbl_GetTop: TLabel
     Left = 0
     Top = 42
     Width = 984
     Height = 13
     Align = alTop
-    Caption = 'Lb_GetTop'
+    Caption = 'lbl_GetTop'
     Visible = False
     ExplicitWidth = 54
   end
-  object Lb_GetBottom: TLabel
+  object lbl_GetBottom: TLabel
     Left = 0
     Top = 561
     Width = 984
     Height = 13
     Align = alBottom
-    Caption = 'Lb_GetBottom'
+    Caption = 'lbl_GetBottom'
     Color = clAppWorkSpace
     ParentColor = False
     Visible = False

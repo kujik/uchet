@@ -12,7 +12,7 @@ uses
 type
   TDlg_OrderPrintLabels = class(TForm_Normal)
     DBGridEh1: TDBGridEh;
-    E_PPComment: TDBEditEh;
+    edt_PPComment: TDBEditEh;
     MemTableEh1: TMemTableEh;
     DataSource1: TDataSource;
     Bt_Print: TBitBtn;
@@ -47,7 +47,7 @@ uses
 procedure TDlg_OrderPrintLabels.Bt_PrintClick(Sender: TObject);
 begin
   inherited;
-  PrintReport.P_OrderLabels(0, MemTableEh1, OrderFields);
+  PrintReport.pnl_OrderLabels(0, MemTableEh1, OrderFields);
 end;
 
 procedure TDlg_OrderPrintLabels.DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);

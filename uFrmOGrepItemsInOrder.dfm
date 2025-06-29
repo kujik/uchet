@@ -2,12 +2,12 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
   Caption = 'FrmOGrepItemsInOrder'
   PixelsPerInch = 96
   TextHeight = 13
-  inherited PMDIMain: TPanel
-    inherited PMDIClient: TPanel
-      inherited PTop: TPanel
+  inherited pnlFrmMain: TPanel
+    inherited pnlFrmClient: TPanel
+      inherited pnlTop: TPanel
         Height = 73
         ExplicitHeight = 73
-        object P_Left: TPanel
+        object pnlLeft: TPanel
           Left = 1
           Top = 1
           Width = 641
@@ -17,15 +17,15 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
           TabOrder = 0
           ExplicitLeft = 9
           ExplicitTop = 2
-          object LbAddOrders: TLabel
+          object lblAddOrders: TLabel
             Left = 454
             Top = 44
             Width = 152
             Height = 13
             Caption = #1053#1077#1090' '#1076#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1099#1093' '#1079#1072#1082#1072#1079#1086#1074
-            OnClick = LbAddOrdersClick
+            OnClick = lblAddOrdersClick
           end
-          object CbProekt: TDBComboBoxEh
+          object cmbProekt: TDBComboBoxEh
             Left = 57
             Top = 36
             Width = 224
@@ -42,7 +42,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 0
             Visible = True
           end
-          object De1: TDBDateTimeEditEh
+          object dedt1: TDBDateTimeEditEh
             Left = 344
             Top = 9
             Width = 99
@@ -59,7 +59,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 1
             Visible = True
           end
-          object De2: TDBDateTimeEditEh
+          object dedt2: TDBDateTimeEditEh
             Left = 344
             Top = 36
             Width = 99
@@ -76,7 +76,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 2
             Visible = True
           end
-          object BtAddOrders: TBitBtn
+          object btnAddOrders: TBitBtn
             Left = 449
             Top = 10
             Width = 157
@@ -86,9 +86,9 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             ParentShowHint = False
             ShowHint = True
             TabOrder = 3
-            OnClick = BtAddOrdersClick
+            OnClick = btnAddOrdersClick
           end
-          object BtDelProekt: TBitBtn
+          object btnDelProekt: TBitBtn
             Left = 287
             Top = 34
             Width = 24
@@ -98,9 +98,9 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             ParentShowHint = False
             ShowHint = True
             TabOrder = 4
-            OnClick = BtDelProektClick
+            OnClick = btnDelProektClick
           end
-          object EOrIds: TDBEditEh
+          object edtOrIds: TDBEditEh
             Left = 604
             Top = 6
             Width = 121
@@ -110,7 +110,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 5
             Visible = False
           end
-          object EOrNum: TDBEditEh
+          object edtOrNum: TDBEditEh
             Left = 604
             Top = 26
             Width = 121
@@ -120,7 +120,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 6
             Visible = False
           end
-          object EOrCnt: TDBEditEh
+          object edtOrCnt: TDBEditEh
             Left = 604
             Top = 44
             Width = 121
@@ -130,7 +130,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
             TabOrder = 7
             Visible = False
           end
-          object CbCustomer: TDBComboBoxEh
+          object cmbCustomer: TDBComboBoxEh
             Left = 57
             Top = 9
             Width = 254
@@ -148,28 +148,28 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
           end
         end
       end
-      inherited PLeft: TPanel
+      inherited pnlLeft: TPanel
         Top = 73
         Height = 353
       end
-      inherited PGrid1: TPanel
+      inherited pnlGrid1: TPanel
         Top = 73
         Height = 353
         inherited Frg1: TFrDBGridEh
           Height = 351
-          inherited PGrid: TPanel
+          inherited pnlGrid: TPanel
             Height = 297
             inherited DbGridEh1: TDBGridEh
               Height = 274
             end
-            inherited PStatus: TPanel
+            inherited pnlStatusBar: TPanel
               Top = 275
             end
           end
-          inherited PLeft: TPanel
+          inherited pnlLeft: TPanel
             Height = 297
           end
-          inherited PBottom: TPanel
+          inherited pnlBottom: TPanel
             Top = 351
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -187,7 +187,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
           end
         end
       end
-      inherited PFrg2: TPanel
+      inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -204,7 +204,7 @@ inherited FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder
           end
         end
       end
-      inherited PRight: TPanel
+      inherited pnlRight: TPanel
         Top = 73
         Height = 353
       end

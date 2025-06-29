@@ -31,16 +31,16 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
     Top = 0
     Width = 338
     Height = 145
-    ActivePage = Ts_Divisions
+    ActivePage = ts_Divisions
     Align = alTop
     TabOrder = 2
-    object Ts_Divisions: TTabSheet
+    object ts_Divisions: TTabSheet
       Caption = #1042#1089#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083#1077#1085#1080#1103
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object Label1: TLabel
+      object lbl1: TLabel
         Left = 3
         Top = 8
         Width = 306
@@ -50,7 +50,7 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
           #1079#1076#1077#1083#1077#1085#1080#1103#1084'.'
         WordWrap = True
       end
-      object De_Dt1: TDBDateTimeEditEh
+      object dedt_Dt1: TDBDateTimeEditEh
         Left = 57
         Top = 50
         Width = 121
@@ -66,7 +66,7 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
         TabOrder = 0
         Visible = True
       end
-      object De_Dt2: TDBDateTimeEditEh
+      object dedt_Dt2: TDBDateTimeEditEh
         Left = 202
         Top = 50
         Width = 121
@@ -83,14 +83,14 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
         Visible = True
       end
     end
-    object Ts_Worker: TTabSheet
+    object ts_Worker: TTabSheet
       Caption = #1056#1072#1073#1086#1090#1085#1080#1082
       ImageIndex = 1
       ExplicitLeft = 0
       ExplicitTop = 0
       ExplicitWidth = 0
       ExplicitHeight = 0
-      object Label2: TLabel
+      object lbl2: TLabel
         Left = 6
         Top = 11
         Width = 319
@@ -100,25 +100,25 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
           #1080#1081' '#1080'/'#1080#1083#1080' '#1087#1088#1077#1076#1099#1076#1091#1097#1080#1081' '#1087#1077#1088#1080#1086#1076'.'
         WordWrap = True
       end
-      object Chb_Prev: TDBCheckBoxEh
+      object chb_Prev: TDBCheckBoxEh
         Left = 3
         Top = 76
         Width = 187
         Height = 17
-        Caption = 'Chb_Prev'
+        Caption = 'chb_Prev'
         DynProps = <>
         TabOrder = 1
       end
-      object Chb_Curr: TDBCheckBoxEh
+      object chb_Curr: TDBCheckBoxEh
         Left = 3
         Top = 94
         Width = 187
         Height = 17
-        Caption = 'Chb_Prev'
+        Caption = 'chb_Prev'
         DynProps = <>
         TabOrder = 2
       end
-      object De_W: TDBDateTimeEditEh
+      object dedt_W: TDBDateTimeEditEh
         Left = 204
         Top = 89
         Width = 121
@@ -133,7 +133,7 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
         TabOrder = 3
         Visible = True
       end
-      object Cb_Worker: TDBComboBoxEh
+      object cmb_Worker: TDBComboBoxEh
         Left = 56
         Top = 49
         Width = 271
