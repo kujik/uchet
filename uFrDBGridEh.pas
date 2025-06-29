@@ -1993,7 +1993,7 @@ begin
             SetLength(Wh.SelectDialogResult2[i], DBGridEh1.DataSource.DataSet.Fields.Count);
             for j := 0 to DBGridEh1.DataSource.DataSet.Fields.Count - 1 do
               Wh.SelectDialogResult2[i][j] := DBGridEh1.DataSource.DataSet.Fields[j].AsVariant;
-          finally
+          except
           end;
         end;
       end;
@@ -2418,7 +2418,8 @@ begin
   InLoadData := False;
   MemTableEh1.EnableControls;
   try
-    DBGridEh1.RestoreVertPos(KeyString);  //здесь может возникать ошибка, причину пока не отследил.
+    if KeyString <> '' then
+      DBGridEh1.RestoreVertPos(KeyString);  //здесь может возникать ошибка, причину пока не отследил.
   except
   end;
 end;

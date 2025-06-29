@@ -1121,6 +1121,8 @@ const
   mbtAddRow = 98;
   mbtDeleteRow = 99;
   mbtInsertRow = 100;
+  mbtToClipboard = 101;
+  mbtFromClipboard = 102;
 
   mybtDividor: TmybtRec = (Bt: mbtDividor; Pict: ''; Caption: ''; hint: '');
   mybtDividorM: TmybtRec = (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: '');
@@ -1230,7 +1232,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 94] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 96] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1329,6 +1331,8 @@ const
   (Bt: mbtAddRow; Pict: 'add'; Caption: 'Добавить строку'; hint: ''; ShortCut: scCtrl + VK_DOWN),
   (Bt: mbtInsertRow; Pict: 'insert'; Caption: 'Вставить строку'; hint: ''; ShortCut: VK_INSERT),
   (Bt: mbtDeleteRow; Pict: 'delete'; Caption: 'Удалить строку'; hint: ''; ShortCut: scCtrl + VK_DELETE),
+  (Bt: mbtToClipboard; Pict: 'to_clipboard'; Caption: 'Скопировать в буфер'; hint: ''),
+  (Bt: mbtFromClipboard; Pict: 'from_clipboard'; Caption: 'Вставить из буфера'; hint: ''),
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
   );
 

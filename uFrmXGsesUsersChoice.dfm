@@ -5,6 +5,14 @@ inherited FrmXGsesUsersChoice: TFrmXGsesUsersChoice
     inherited pnlFrmClient: TPanel
       inherited pnlGrid1: TPanel
         inherited Frg1: TFrDBGridEh
+          inherited pnlGrid: TPanel
+            inherited DbGridEh1: TDBGridEh
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
+                ExplicitHeight = 120
+              end
+            end
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -23,6 +31,14 @@ inherited FrmXGsesUsersChoice: TFrmXGsesUsersChoice
       end
       inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
+          inherited pnlGrid: TPanel
+            inherited DbGridEh1: TDBGridEh
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
+                ExplicitWidth = 32
+              end
+            end
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -37,6 +53,16 @@ inherited FrmXGsesUsersChoice: TFrmXGsesUsersChoice
               34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
               305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
           end
+        end
+      end
+    end
+    inherited pnlFrmBtns: TPanel
+      ExplicitTop = 476
+      ExplicitWidth = 786
+      inherited pnlFrmBtnsContainer: TPanel
+        ExplicitWidth = 784
+        inherited pnlFrmBtnsChb: TPanel
+          ExplicitLeft = 457
         end
       end
     end

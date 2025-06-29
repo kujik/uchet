@@ -50,6 +50,10 @@ const
   dpSaveValue = 'SaveValue';
 
 type
+   TEditButtons1ClickEvent = procedure(Sender: TObject; var Handled: Boolean) of Object;
+
+
+type
   TGridEhHelper = record
   private
     //разобьем переданные в параметрах строки полей и значений (через ;) на массивы
@@ -190,8 +194,10 @@ procedure SetDynProps(Control: TObject; DynProps: TVarDynArray2);
 //если свойство не найдено, возвращает пустую строку
 function GetDynProp(Control: TObject; DynProp: string): Variant;
 function GetOwneredControlNames(AOwner: TComponent): TVarDynArray;
-procedure SetControlsEhEvents(AParent: TWinControl; AOnlyFields: Boolean; AIfEmptyEvent: Boolean; AOnEnter, AOnExit, AOnChange: TNotifyEvent; AOnCheckDrawRS: TOnCheckDrawRequiredStateEventEh);
+procedure SetControlsEhEvents(AParent: TWinControl; AOnlyFields: Boolean; AIfEmptyEvent: Boolean; AOnEnter, AOnExit, AOnChange: TNotifyEvent; AOnCheckDrawRS: TOnCheckDrawRequiredStateEventEh; AOnEditButtonsClick: TEditButtons1ClickEvent);
 procedure LoadBitmap(ImageList: TImageList; Number: Integer; Bitmap: TBitmap);
+procedure SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer);
+
     procedure SetControlValue(c: TControl; v: Variant); overload;
     procedure SetControlValue(f: TObject; c: string; v: Variant); overload;
     //вазвращаем значения из DBEhCtrls
@@ -4145,7 +4151,9 @@ begin
   end;
 end;
 
-procedure TControlsHelper.SetControlsEhEvents(AParent: TWinControl; AOnlyFields: Boolean; AIfEmptyEvent: Boolean; AOnEnter, AOnExit, AOnChange: TNotifyEvent; AOnCheckDrawRS: TOnCheckDrawRequiredStateEventEh);
+//procedure EditButtonsClick
+
+procedure TControlsHelper.SetControlsEhEvents(AParent: TWinControl; AOnlyFields: Boolean; AIfEmptyEvent: Boolean; AOnEnter, AOnExit, AOnChange: TNotifyEvent; AOnCheckDrawRS: TOnCheckDrawRequiredStateEventEh; AOnEditButtonsClick: TEditButtons1ClickEvent);
 var
   i, j: Integer;
   Owner, c: TComponent;
@@ -4175,6 +4183,9 @@ begin
         TDBEditEh(c).OnExit := AOnExit;
       if Assigned(AOnCheckDrawRS) and not AIfEmptyEvent or not Assigned(TDBEditEh(c).OnCheckDrawRequiredState) then
         TDBEditEh(c).OnCheckDrawRequiredState := AOnCheckDrawRS;
+      for j := 0 to TDBEditEh(c).EditButtons.Count - 1 do
+        if Assigned(AOnEditButtonsClick) and not AIfEmptyEvent or not Assigned(TDBEditEh(c).EditButtons[j].OnClick) then
+          TDBEditEh(c).EditButtons[j].OnClick := AOnEditButtonsClick;
     end
     else if c is TDBCheckBoxEh then begin
       if Assigned(AOnChange) and not AIfEmptyEvent or not Assigned(TDBCheckBoxEh(c).OnClick) then
@@ -4203,7 +4214,15 @@ begin
   end;
 end;
 
-
+procedure TControlsHelper.SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer);
+begin
+  AEditButton.Style := ebsGlyphEh;
+  AEditButton.Images.NormalImages := MyData.IL_CellButtons;
+  AEditButton.Images.NormalIndex := APictureIndex;
+  AEditButton.Images.HotIndex := AEditButton.Images.NormalIndex;
+  AEditButton.Images.PressedIndex := AEditButton.Images.NormalIndex;
+  AEditButton.Images.DisabledIndex := 32; //прозрачная
+end;
 
 function TControlsHelper.AlignControls(AParent: TObject; Exclude: TControlArray; ResizeParent: Boolean = False; VMargin: Integer = 0; LabelsToLeft: Boolean = False): TCoord;
 //выравнивает контролы в переданном конейнере, устанавливает порядок табуляции

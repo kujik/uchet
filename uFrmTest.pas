@@ -125,7 +125,6 @@ uses
   uWindows,
   uMessages,
   //~F_D_Turv,
-  D_SelectUsers,
   uData,
   uString,
   uTurv,

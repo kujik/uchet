@@ -13,14 +13,12 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   FormStyle = fsMDIChild
-  OldCreateOrder = False
   Position = poDefault
   Visible = True
   OnClose = FormClose
   DesignSize = (
     638
     220)
-  PixelsPerInch = 96
   TextHeight = 13
   object Img_Info: TImage
     Left = 8

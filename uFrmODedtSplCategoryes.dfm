@@ -8,13 +8,13 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
   inherited pnlFrmMain: TPanel
     Width = 585
     Height = 110
-    ExplicitWidth = 848
-    ExplicitHeight = 400
+    ExplicitWidth = 581
+    ExplicitHeight = 109
     inherited pnlFrmClient: TPanel
       Width = 575
       Height = 61
-      ExplicitWidth = 838
-      ExplicitHeight = 351
+      ExplicitWidth = 571
+      ExplicitHeight = 60
       object edt_UserNames: TDBEditEh
         Left = 83
         Top = 35
@@ -34,6 +34,7 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
         ReadOnly = True
         TabOrder = 0
         Visible = True
+        ExplicitWidth = 484
       end
       object edt_name: TDBEditEh
         Left = 83
@@ -54,32 +55,34 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
     inherited pnlFrmBtns: TPanel
       Top = 66
       Width = 575
-      ExplicitTop = 356
-      ExplicitWidth = 838
+      ExplicitTop = 65
+      ExplicitWidth = 571
       inherited bvlFrmBtnsTl: TBevel
         Width = 573
+        ExplicitWidth = 573
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 573
+        ExplicitWidth = 573
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 573
-        ExplicitWidth = 836
+        ExplicitWidth = 569
         inherited pnlFrmBtnsMain: TPanel
           Left = 474
-          ExplicitLeft = 737
+          ExplicitLeft = 470
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 246
-          ExplicitLeft = 509
+          ExplicitLeft = 242
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 375
-          ExplicitLeft = 638
+          ExplicitLeft = 371
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 106
-          ExplicitWidth = 369
+          ExplicitWidth = 102
         end
       end
     end
@@ -87,11 +90,12 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
   inherited pnlStatusBar: TPanel
     Top = 110
     Width = 585
-    ExplicitTop = 400
-    ExplicitWidth = 848
+    ExplicitTop = 109
+    ExplicitWidth = 581
     inherited lblStatusBarR: TLabel
-      Left = 493
+      Left = 512
       Height = 14
+      ExplicitLeft = 512
     end
     inherited lblStatusBarL: TLabel
       Height = 14

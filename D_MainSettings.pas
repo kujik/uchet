@@ -75,8 +75,7 @@ uses
   uForms,
   uMessages,
   uDBOra,
-  uData,
-  D_SelectUsers
+  uData
   ;
 
 procedure TDlg_MainSettings.Bt_OkClick(Sender: TObject);

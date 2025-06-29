@@ -11,7 +11,7 @@ uses
   DynVarsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB,
   MemTableEh, Data.Win.ADODB, DataDriverEh, ADODataDriverEh, VCL.ClipBrd,
   PrnDbgEh, DBGridEhXMLSpreadsheetExp, ShellApi, XlsMemFilesEh,
-  DBGridEhXlsMemFileExporters, DBGridEhImpExp, uString;
+  DBGridEhXlsMemFileExporters, DBGridEhImpExp, uString, uData;
 
 type
   TMailingInterface = class
@@ -35,13 +35,13 @@ type
     procedure SetAddresses(aUserIDs: string; aAddResses: string);
     procedure Load;
     procedure Save;
-    function IsChanged: Boolean;
+    function  IsChanged: Boolean;
   end;
 
 implementation
 
 uses
-  D_SelectUsers, uMessages, uFrmXDedtMailingCustomAddr, uDBOra;
+  uFrmXGsesUsersChoice, uMessages, uFrmXDedtMailingCustomAddr, uDBOra;
 
 constructor TMailingInterface.Create(AParent: TForm; AEdit: TDBEditEh; AMailingNum: Integer = 0; ACaption: string = ''; AUseCustomAddr: Boolean = True);
 begin
@@ -51,12 +51,18 @@ begin
   FEdit.EditButtons.Clear;
   FEdit.EditButtons.Add;
   FEdit.EditButtons[0].OnClick := EditButtons0Click;
+  FEdit.EditButtons[0].Style := ebsGlyphEh;
+  FEdit.EditButtons[0].Images.NormalImages := MyData.IL_CellButtons;
+  FEdit.EditButtons[0].Images.NormalIndex := 30;
   FUseCustomAddr := AUseCustomAddr;
   FMailingNum := AMailingNum;
   FCaption := ACaption;
   if AUseCustomAddr then begin
     FEdit.EditButtons.Add;
     FEdit.EditButtons[1].OnClick := EditButtons1Click;
+    FEdit.EditButtons[1].Style := ebsGlyphEh;
+    FEdit.EditButtons[1].Images.NormalImages := MyData.IL_CellButtons;
+    FEdit.EditButtons[1].Images.NormalIndex := 31;
   end;
 end;
 
@@ -116,10 +122,8 @@ procedure TMailingInterface.EditButtons0Click(Sender: TObject; var Handled: Bool
 var
   NewIds, NewNames: string;
 begin
-  if Dlg_SelectUsers.ShowDialog('_mailing', FUserIDs, True, NewIds, NewNames) <> mrOk then
+  if TFrmXGsesUsersChoice.ShowDialog(Application, True, FUserIDs, FNames) <> mrOk then
     exit;
-  FUserIDs := NewIds;
-  FNames := NewNames;
   SetEditText;
 end;
 

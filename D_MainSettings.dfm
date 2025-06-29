@@ -3,36 +3,32 @@ object Dlg_MainSettings: TDlg_MainSettings
   Top = 0
   BorderStyle = bsDialog
   Caption = #1054#1089#1085#1086#1074#1085#1099#1077' '#1085#1072#1089#1090#1088#1086#1081#1082#1080' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 421
-  ClientWidth = 919
+  ClientHeight = 420
+  ClientWidth = 915
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
-  PixelsPerInch = 96
   TextHeight = 13
   object PageControl1: TPageControl
     Left = 0
     Top = 0
-    Width = 919
-    Height = 386
+    Width = 915
+    Height = 385
     ActivePage = ts_Mail
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 919
+    ExplicitHeight = 386
     object ts_Paths: TTabSheet
       Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
-        911
-        358)
+        907
+        357)
       object lbl1: TLabel
         Left = 3
         Top = 37
@@ -44,19 +40,20 @@ object Dlg_MainSettings: TDlg_MainSettings
       end
       object lbl2: TLabel
         Left = 0
-        Top = 345
-        Width = 911
+        Top = 344
+        Width = 907
         Height = 13
         Align = alBottom
         Caption = 
           '* '#1041#1091#1076#1100#1090#1077' '#1074#1085#1080#1084#1072#1090#1077#1083#1100#1085#1099'! '#1057#1091#1097#1077#1089#1090#1074#1086#1074#1072#1085#1080#1077' '#1080' '#1076#1086#1089#1090#1091#1087#1085#1086#1089#1090#1100' '#1091#1082#1072#1079#1072#1085#1085#1099#1093' '#1082#1072#1090#1072 +
           #1083#1086#1075#1086#1074' '#1085#1077' '#1087#1088#1086#1074#1077#1088#1103#1077#1090#1089#1103'!!!'
+        ExplicitTop = 345
         ExplicitWidth = 491
       end
       object edt_PathToFiles: TDBEditEh
         Left = 0
         Top = 15
-        Width = 908
+        Width = 900
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 668
@@ -70,11 +67,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 0
         Text = 'edt_PathToFiles'
         Visible = True
+        ExplicitWidth = 908
       end
       object edt_ZCurrent: TDBEditEh
         Left = 0
         Top = 93
-        Width = 908
+        Width = 900
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 317
@@ -86,11 +84,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 1
         Text = 'edt_PathToFiles'
         Visible = True
+        ExplicitWidth = 908
       end
       object edt_ZArchive: TDBEditEh
         Left = 0
         Top = 135
-        Width = 908
+        Width = 900
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 315
@@ -102,18 +101,15 @@ object Dlg_MainSettings: TDlg_MainSettings
         TabOrder = 2
         Text = 'edt_PathToFiles'
         Visible = True
+        ExplicitWidth = 908
       end
     end
     object ts_Mail: TTabSheet
       Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1087#1086#1095#1090#1099
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       DesignSize = (
-        911
-        358)
+        907
+        357)
       object bvl1: TBevel
         Left = 11
         Top = 141
@@ -123,7 +119,7 @@ object Dlg_MainSettings: TDlg_MainSettings
       object edt_EMailDomain: TDBEditEh
         Left = 11
         Top = 23
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 85
@@ -135,11 +131,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         MaxLength = 200
         TabOrder = 0
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_EmailUser: TDBEditEh
         Left = 475
         Top = 23
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 288
@@ -151,11 +148,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         MaxLength = 200
         TabOrder = 1
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_EmailServer: TDBEditEh
         Left = 11
         Top = 63
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 75
@@ -167,11 +165,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         MaxLength = 200
         TabOrder = 2
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_EMailLogin: TDBEditEh
         Left = 475
         Top = 63
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 178
@@ -183,11 +182,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         MaxLength = 200
         TabOrder = 3
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_EMailPassword: TDBEditEh
         Left = 11
         Top = 103
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 96
@@ -200,11 +200,12 @@ object Dlg_MainSettings: TDlg_MainSettings
         PasswordChar = '*'
         TabOrder = 4
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_EMailPassword2: TDBEditEh
         Left = 478
         Top = 103
-        Width = 430
+        Width = 422
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 76
@@ -217,6 +218,7 @@ object Dlg_MainSettings: TDlg_MainSettings
         PasswordChar = '*'
         TabOrder = 5
         Visible = True
+        ExplicitWidth = 430
       end
       object edt_MailingOrdersCh: TDBEditEh
         Left = 11
@@ -308,10 +310,6 @@ object Dlg_MainSettings: TDlg_MainSettings
     object ts_DeleteOld: TTabSheet
       Caption = #1059#1076#1072#1083#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object nedt_MoveToArchive: TDBNumberEditEh
         Left = 0
         Top = 16
@@ -420,14 +418,16 @@ object Dlg_MainSettings: TDlg_MainSettings
   end
   object pnl1: TPanel
     Left = 0
-    Top = 386
-    Width = 919
+    Top = 385
+    Width = 915
     Height = 35
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 386
+    ExplicitWidth = 919
     DesignSize = (
-      919
+      915
       35)
     object lbl_Warning: TLabel
       Left = 4
@@ -446,7 +446,7 @@ object Dlg_MainSettings: TDlg_MainSettings
       ParentFont = False
     end
     object Bt_Ok: TBitBtn
-      Left = 759
+      Left = 751
       Top = 6
       Width = 75
       Height = 25
@@ -455,9 +455,10 @@ object Dlg_MainSettings: TDlg_MainSettings
       Default = True
       TabOrder = 0
       OnClick = Bt_OkClick
+      ExplicitLeft = 759
     end
     object Bt_Cancel: TBitBtn
-      Left = 840
+      Left = 832
       Top = 6
       Width = 75
       Height = 25
@@ -466,6 +467,7 @@ object Dlg_MainSettings: TDlg_MainSettings
       Caption = 'Bt_Cancel'
       ModalResult = 2
       TabOrder = 1
+      ExplicitLeft = 840
     end
   end
 end

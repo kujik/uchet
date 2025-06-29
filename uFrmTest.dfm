@@ -2,8 +2,8 @@ object FrmTest: TFrmTest
   Left = 0
   Top = 0
   Caption = 'FrmTest'
-  ClientHeight = 740
-  ClientWidth = 1219
+  ClientHeight = 739
+  ClientWidth = 1215
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,7 +15,7 @@ object FrmTest: TFrmTest
   object lbl1: TLabel
     Left = 377
     Top = 390
-    Width = 31
+    Width = 16
     Height = 13
     Caption = 'lbl1'
     OnClick = lbl1Click
@@ -30,7 +30,7 @@ object FrmTest: TFrmTest
   object lbl2: TLabel
     Left = 880
     Top = 584
-    Width = 31
+    Width = 16
     Height = 13
     Caption = 'lbl2'
   end
@@ -411,8 +411,8 @@ object FrmTest: TFrmTest
   object FlowPanel2: TFlowPanel
     AlignWithMargins = True
     Left = 3
-    Top = 663
-    Width = 1213
+    Top = 662
+    Width = 1209
     Height = 74
     Align = alBottom
     Alignment = taLeftJustify
@@ -430,8 +430,6 @@ object FrmTest: TFrmTest
     Padding.Right = 4
     Padding.Bottom = 4
     TabOrder = 29
-    ExplicitTop = 662
-    ExplicitWidth = 1209
     object Panel2: TPanel
       Left = 1164
       Top = 4

@@ -52,7 +52,6 @@ uses
   D_Sn_Calendar in 'D_Sn_Calendar.pas' {Dlg_Sn_Calendar},
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
   uFrmTest in 'uFrmTest.pas' {FrmTest},
-  D_SelectUsers in 'D_SelectUsers.pas' {Dlg_SelectUsers},
   D_SnOrder in 'D_SnOrder.pas' {Dlg_SnOrder},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
@@ -287,7 +286,6 @@ begin
   Application.CreateForm(TForm_Normal, Form_Normal);
   Application.CreateForm(TFrmXWAbout, FrmXWAbout);
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
-  Application.CreateForm(TDlg_SelectUsers, Dlg_SelectUsers);
   Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TDlg_SetPassword, Dlg_SetPassword);
   Application.CreateForm(TDlg_MainSettings, Dlg_MainSettings);

@@ -19,6 +19,7 @@ type
     chb_Active: TDBCheckBoxEh;
     procedure edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
+    FNewIds: string;
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
   public
@@ -30,7 +31,7 @@ var
 implementation
 
 uses
-  D_SelectUsers
+  uFrmXGsesUsersChoice
   ;
 
 {$R *.dfm}
@@ -65,7 +66,9 @@ begin
   Result:=inherited;
   if not Result then
     Exit;
+  FNewIds := S.NSt(F.GetProp('editusers'));
   edt_editusernames.ReadOnly := True;
+  Cth.SetEditButtonPictures(edt_editusernames.EditButtons[0], 30);
 end;
 
 
@@ -78,12 +81,12 @@ end;
 
 procedure TFrmWDedtDivision.edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
 var
-  NewIds, NewNames: string;
+  NewNames: string;
 begin
-  if Dlg_SelectUsers.ShowDialog(FormDoc + '_1', F.GetProp('editusers'), True, NewIds, NewNames) <> mrOk then
+  if TFrmXGsesUsersChoice.ShowDialog(Application, True, FNewIDs, NewNames) <> mrOk then
     exit;
   edt_editusernames.Value := NewNames;
-  F.SetProp('editusers', NewIds);
+  F.SetProp('editusers', FNewIds);
 end;
 
 

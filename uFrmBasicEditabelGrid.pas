@@ -77,7 +77,7 @@ end;
 function TFrmBasicEditabelGrid.PrepareFormAdd: Boolean;
 begin
   Frg1.Opt.SetButtons(4, [[mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations], [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
-    [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],[mbtDividorA],[-4]], cbttBSmall, pnlFrmBtnsR
+    [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],[mbtDividorA],[mbtSpace, True, True, 4]], cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
 end;

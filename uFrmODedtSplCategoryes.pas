@@ -15,6 +15,7 @@ type
     edt_name: TDBEditEh;
     procedure edt_UserNamesEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
+    FNewIds: string;
     function Prepare: Boolean; override;
   public
   end;
@@ -25,7 +26,7 @@ var
 implementation
 
 uses
-  D_SelectUsers
+  uFrmXGsesUsersChoice
   ;
 
 
@@ -52,6 +53,7 @@ begin
   MaxHeight:=148;}
   FWHBounds.Y2 := -1;
   Result:=inherited;
+  FNewIds := S.NSt(F.GetPropB('useravail'));
   edt_UserNames.ReadOnly := True;
   //не удаляем категорию с айди = 1
   if (Mode = fDelete)and(F.GetPropB('id') = 1)
@@ -61,12 +63,12 @@ end;
 
 procedure TFrmODedtSplCategoryes.edt_UserNamesEditButtons0Click(Sender: TObject; var Handled: Boolean);
 var
-  NewIds, NewNames: string;
+  NewNames: string;
 begin
-  if Dlg_SelectUsers.ShowDialog(FormDoc + '_1', S.NSt(F.GetPropB('useravail')), True, NewIds, NewNames) <> mrOk then
-    Exit;
+  if TFrmXGsesUsersChoice.ShowDialog(Application, True, FNewIDs, NewNames) <> mrOk then
+    exit;
   edt_UserNames.Value := NewNames;
-  F.SetProp('useravail', NewIds);
+  F.SetProp('useravail', FNewIds);
 end;
 
 end.

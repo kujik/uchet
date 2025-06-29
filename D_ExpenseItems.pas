@@ -55,7 +55,7 @@ implementation
 uses
 //  F_R_ExpenseItems,
   uWindows,
-  D_SelectUsers
+  uFrmXGsesUsersChoice
   ;
 
 //событие изменения данных контрола
@@ -228,8 +228,11 @@ procedure TDlg_ExpenseItems.edt_AgreedEditButtons0Click(Sender: TObject; var Han
 var
   NewIds, NewNames: string;
 begin
+//!!!
 //  if Dlg_SelectUsers.ShowDialog(FormDoc + '_2',  Agreed, False, NewIds, NewNames) <> mrOk then exit;
-  if Dlg_SelectUsers.ShowDialog(FormDoc + '_2',  Agreed, True, NewIds, NewNames) <> mrOk then exit;
+  if TFrmXGsesUsersChoice.ShowDialog(Application, False, NewIDs, NewNames) <> mrOk then
+    exit;
+//  if Dlg_SelectUsers.ShowDialog(FormDoc + '_2',  Agreed, True, NewIds, NewNames) <> mrOk then exit;
   edt_Agreed.Value:=NewNames;
   Agreed:=NewIds;
 end;
@@ -243,7 +246,9 @@ procedure TDlg_ExpenseItems.edt_usersEditButtons0Click(Sender: TObject;  var Han
 var
   NewIds, NewNames: string;
 begin
-  if Dlg_SelectUsers.ShowDialog(FormDoc + '_1',  UserIds, True, NewIds, NewNames) <> mrOk then exit;
+//!!!
+//  if Dlg_SelectUsers.ShowDialog(FormDoc + '_1',  UserIds, True, NewIds, NewNames) <> mrOk then exit;
+  if TFrmXGsesUsersChoice.ShowDialog(Application, True, NewIDs, NewNames) <> mrOk then
   edt_users.Value:=NewNames;
   UserIds:=NewIds;
 end;

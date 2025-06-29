@@ -243,6 +243,7 @@ type
     procedure btnOkClick(Sender: TObject); virtual;
     procedure btnCancelClick(Sender: TObject); virtual;
     procedure btnClick(Sender: TObject); virtual;
+    procedure EditButtonsClick(Sender: TObject; var Handled: Boolean); virtual;
     procedure GetFormLTWH;
     //получить значение контрола на форме по его имени
     //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
@@ -770,7 +771,7 @@ end;
 
 class procedure TFrmBasicMdi.AfterFormClose(AForm: TForm);
 //действия поле закрытия формы (нужны в случае, если форма была создана в режиме fsNormal,
-//это происходит в случае опсии myfoModal явно, или если вызов из модельного окна)
+//это происходит в случае опсии myfoModal явно, или если вызов из модального окна)
 begin
   //форма не в режиме нормал, выйдем.
   if TFrmBasicMdi(AForm).FormStyle <> fsNormal
@@ -1148,7 +1149,7 @@ begin
   //передается массив имен контролов и их условий проверки [cname1, cver1, cname2, cver2...]
   Cth.SetControlsVerification(Self, FControlVerifycations);
   //назаначим события всем дб-контролам формы, если они не были назначены явно в дизайнере формы или в Prepare
-  Cth.SetControlsEhEvents(pnlFrmClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState);
+  Cth.SetControlsEhEvents(pnlFrmClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState, EditButtonsClick);
 exit;
   Cth.SetControlsOnChange(Self, ControlOnChange, True);
   Cth.SetControlsOnExit(Self, ControlOnExit);
@@ -1423,6 +1424,11 @@ end;
 procedure TFrmBasicMdi.btnClick(Sender: TObject);
 begin
 end;
+
+procedure TFrmBasicMdi.EditButtonsClick(Sender: TObject; var Handled: Boolean);
+begin
+end;
+
 
 
 
