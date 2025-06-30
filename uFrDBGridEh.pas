@@ -681,7 +681,7 @@ type
     //динамическое создание контролов в переданной панели (чекбоксы, комбобоксы...), с переданными именами, размерами, положением (x, y (yrefT))
     //передается имя панели, если таковой не найдено, то она создается и подгоняется по размеру,
     //исходя из положения и размеров контролов, а по высоте всегда 32.
-    //чтобы панели с контролами вставлялись в панели кнопок, имя должно быть типа 'PTopBtnsCtl2'.
+    //чтобы панели с контролами вставлялись в панели кнопок, имя должно быть типа 'pnlTopBtnsCtl2'.
     //если имя - просто число, то генерируется имя для вставки в верхнюю панель.
     procedure CreateAddControls(ParentName: string; CType: TMyControlType; CLabel: string = ''; CName:
       string= ''; CVerify: string = ''; x: Integer = 1; y: Integer = yrefC; Width: Integer = 0; Tag: Integer = 0);
@@ -1214,7 +1214,7 @@ begin
   if c <> nil then begin
     c.Left := pnlGrid.Width - 36;
     //скроем иконку, если ушла под кнопки
-    c.Visible := c.Left > TControl(FindComponent('PTopBtns')).Width;
+    c.Visible := c.Left > TControl(FindComponent('pnlTopBtns')).Width;
   end;
 end;
 
@@ -2591,7 +2591,7 @@ procedure TFrDBGridEh.CreateAddControls(ParentName: string; CType: TMyControlTyp
 //динамическое создание контролов в переданной панели (чекбоксы, комбобоксы...), с переданными именами, размерами, положением (x, y (yrefT))
 //передается имя панели, если таковой не найдено, то она создается и подгоняется по размеру,
 //исходя из положения и размеров контролов, а по высоте всегда 32.
-//чтобы панели с контролами вставлялись в панели кнопок, имя должно быть типа 'PTopBtnsCtl2'.
+//чтобы панели с контролами вставлялись в панели кнопок, имя должно быть типа 'pnlTopBtnsCtl2'.
 //если имя - просто число, то генерируется имя для вставки в верхнюю панель.
 var
   C:TControl;
@@ -2602,7 +2602,7 @@ begin
   cntComboL = 8 //комбобокс - список;  cntComboLK = 9 //комбобокс - список с ключами;  cntComboE = 10 //комбобокс - эдит;
   cntComboEK = 11 //комбобокс - эдит с ключами;  cntComboL0 = 12 //с добавленной пустой строкой в лист;  cntComboLK0 = 13;}
   if S.IsNumber(ParentName, 1, 100, 0)
-    then ParentName := 'PTopBtnsCtl' + ParentName;
+    then ParentName := 'pnlTopBtnsCtl' + ParentName;
   P:=TPanel(FindComponent(ParentName));
   if P = nil then begin
     P:=TPanel.Create(Self);

@@ -139,12 +139,12 @@ begin
     Frg1.Opt.SetButtons(1,'+p', False);
 //    Frg1.Opt.SetButtons(1,
 //      [[mbtRefresh], [mbtDividor], [mbtView], [mbtEdit], [mbtAdd], [mbtCopy], [mbtDelete], [mbtDividor], [mbtCtlPanel], [mbtDividor], [mbtGridSettings]{, [mbtCtlPanel, True, 140]}]);
-//    P:=TPanel.Create(Frg1);P.Name := 'PTopBtnsCtl1'; P.Width := 140; P.Height := 32;
+//    P:=TPanel.Create(Frg1);P.Name := 'pnlTopBtnsCtl1'; P.Width := 140; P.Height := 32;
     Frg1.CreateAddControls('1', cntCheck, 'Задать использование', 'Chb1', '', 4, yrefT, 200);
     Frg1.CreateAddControls('1', cntCheck, 'Показать неиспользуемые', 'Chb2', '', 4, yrefB, 200);
     Frg1.CreateAddControls('1', cntCheck, 'yyyyyy', 'Chb4', '', 210+40, yreft, 60);
     Frg1.CreateAddControls('1', cntEdit, 'Текст', 'Chb3', '', 210+40, yrefB, 60);
-//    Frg1.Opt.SetPanelsSaved(['PTopBtnsCtl1']);
+//    Frg1.Opt.SetPanelsSaved(['pnlTopBtnsCtl1']);
     Frg1.ReadControlValues;
     Frg1.InfoArray:=[
       [Caption + '.'#13#10]
@@ -644,9 +644,9 @@ begin
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefT, 100);
-    Frg1.CreateAddControls('1', cntCheck, 'Только свои ТУРВ', 'ChbSelf', '', -1, yrefT, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
+    Frg1.CreateAddControls('1', cntCheck, 'Только свои ТУРВ', 'ChbSelf', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
     ['caption'],
     ['В колонке Завершен отображается статус закрытия ТУРВ (если там есть галочка, то его нельзя менять.'#13#10+
@@ -678,8 +678,8 @@ begin
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefT, 100);
-    Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefT, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 100);
+    Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
       ['Журнал зарплатных ведомостей.'#13#10+
       'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
@@ -2118,7 +2118,7 @@ end;
 
 procedure TFrmXGlstMain.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 var
-  st: string;
+  st, st1, st2: string;
   dt: TDateTime;
 begin
   if (FormDoc = myfrm_R_Test) then begin
@@ -2143,7 +2143,7 @@ begin
 
   else if (FormDoc = myfrm_J_Turv) then begin
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', editusers) = 1'),
-      S.IIfStr(A.ImplodeNotEmpty([
+      S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
         ' or '), '('#0')')], ' and '
@@ -2151,7 +2151,7 @@ begin
   end
   else if (FormDoc = myfrm_J_Payrolls) then begin
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_worker is null'),
-      S.IIfStr(A.ImplodeNotEmpty([
+      S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
         ' or '), '('#0')')], ' and '
