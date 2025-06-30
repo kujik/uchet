@@ -7,12 +7,9 @@ uses
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   MemTableDataEh, Db, MemTableEh, EhLibVCL, Math, ExtCtrls,
-  Registry, IniFiles,
-  GridToolCtrlsEh, SearchPanelsEh,
-  DBLookupUtilsEh,
-  PropFilerEh, MemTreeEh,
-  ImgList, StdActns, ActnList,
-  uData, Jpeg, uString, PngImage, DateUtils;
+  Registry, IniFiles, GridToolCtrlsEh, SearchPanelsEh, DBLookupUtilsEh,
+  PropFilerEh, MemTreeEh, ImgList, StdActns, ActnList, Jpeg, uString, PngImage, DateUtils,
+  uData, uForms;
 
 type
   TTurv = class(TObject)
@@ -38,6 +35,8 @@ type
     function LoadParsecData: Boolean;
     function GetDaysFromCalendar(DtBeg, DtEnd: TDateTime): TVarDynArray2;
     function GetDaysFromCalendar_Next(DtBeg: TDateTime; CntOfWork: Integer): TDateTime;
+    //диалог ввода графика работы и норм рабочего времени по нему
+    function ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
   end;
 
 var
@@ -50,7 +49,8 @@ uses
   uMessages,
   uTasks,
   uSys,
-  uDBParsec
+  uDBParsec,
+  uFrmBasicInput
   ;
 
 constructor TTurv.Create;
@@ -1367,6 +1367,38 @@ begin
       end;
     end;
   Result:=va2[i][0];
+end;
+
+function TTurv.ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+//диалог ввода графика работы и норм рабочего времени по нему
+var
+  i, j: Integer;
+  va11, va12, va13: TVarDynArray;
+  va2: TVarDynArray2;
+  Id, IdH: Variant;
+begin
+  Result := False;
+  va11 := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_ref_work_schedules where rownum = 1', []);
+  va12 := Q.QSelectOneRow('select code, name, hours1, hours2, hours3, hours4, active from v_ref_work_schedules where id = :id$i', [AId]);
+  if va12[0] = null then
+    va12 := ['', '', null, null, null, null, 1];
+  for i := 0 to 3 do
+    va2 := va2 + [[cntNEdit, 'С ' + DateToStr(va11[i]), '0:1000:2']];
+    if TFrmBasicInput.ShowDialog(AOwner, '', [], AMode, 'График работы', 350, 60,
+      [[cntEdit, 'Код', '0:50::T'], [cntEdit, 'Наименование', '0:400::T']] + va2 +  [[cntCheckX, 'Используется', '']],
+      va12,
+      va13, [['Добавьте или отредактируйте параметра графика работы'#13#10'Задайте нормы рабочего времени по ближайшим периодам для данного графика']], nil
+    ) < 0 then Exit;
+  Id := Q.QIUD(Q.QFModeToIUD(AMode), 'ref_work_schedules', '', 'id$i;code$s;name$s;active$i', [AId, va13[0], va13[1], va13[6]]);
+  if Id = -1 then
+    Exit;
+  if AMode = fAdd then
+    AId := Id;
+  for i := 0 to 3 do begin
+    IdH := Q.QSelectOneRow('select id from ref_working_hours where id_work_schedule = :id$i and dt = :dt$d', [AId, va11[i]])[0];
+    Id := Q.QIUD(S.IIf(IdH = null, 'i', 'u'), 'ref_working_hours', '', 'id$i;id_work_schedule$i;dt$d;hours$f', [IdH, AId, va11[i], va13[2 + i]]);
+  end;
+  Result := True;
 end;
 
 

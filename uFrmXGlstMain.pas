@@ -573,12 +573,18 @@ begin
       ['id$i','_id','40'],
       ['code','Код','80'],
       ['name','Наименование','150'],
-      ['dt1','Дата 1','100'],
-      ['dt2','Дата 2','100'],
-      ['dt3','Дата 3','100'],
-      ['active','Используется','70','pic']
+      ['hours1','Нормы|Дата 1','100'],
+      ['hours2','Нормы|Дата 2','100'],
+      ['hours3','Нормы|Дата 3','100'],
+      ['hours4','Нормы|Дата 4','100'],
+      ['active','Используется','90','pic']
     ]);
-    Frg1.Opt.SetTable('v_ref_divisions');
+    Frg1.Opt.SetTable('v_ref_work_schedules');
+    va := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_ref_work_schedules where rownum = 1', []);
+    Frg1.Opt.SetColFeature('hours1', 'c=Нормы|' + DateToStr(va[0]));
+    Frg1.Opt.SetColFeature('hours2', 'c=Нормы|' + DateToStr(va[1]));
+    Frg1.Opt.SetColFeature('hours3', 'c=Нормы|' + DateToStr(va[2]));
+    Frg1.Opt.SetColFeature('hours4', 'c=Нормы|' + DateToStr(va[3]));
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
   end
   else if FormDoc = myfrm_R_Divisions then begin
@@ -1827,6 +1833,10 @@ begin
       Wh.ExecDialog(myfrm_Dlg_R_TurvCodes, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Divisions then
       Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);
+    if FormDoc = myfrm_R_Work_Chedules then begin
+      if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
+        Fr.RefreshGrid;
+    end;
     if FormDoc = myfrm_R_Candidates_Ad_SELCH then
       Wh.ExecDialog(myfrm_Dlg_R_Candidates_Ad, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_J_Candidates then

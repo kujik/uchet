@@ -562,6 +562,7 @@ begin
     myfrm_R_Workers,
     myfrm_R_TurvCodes,
     myfrm_R_Jobs,
+    myfrm_R_Work_Chedules,
     myfrm_R_Divisions,
     myfrm_J_WorkerStatus,
     myfrm_J_Candidates,

@@ -1144,6 +1144,9 @@ begin
     if ASet
       then fr.FTags := st1
       else fr.FTags := '';
+  if (st = 'C') then begin
+    fr.Caption := st1;
+  end;
 end;
 
 
