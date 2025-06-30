@@ -1102,10 +1102,12 @@ group by id_job;
 --------------------------------------------------------------------------------
 
 --таблица графиков работы
+alter table ref_work_schedules add active number(1);
 create table ref_work_schedules(
   id number(11),
   code varchar2(50),
   name varchar2(400),
+  active number(1),
   constraint pk_work_schedules primary key (id)
 );  
 
@@ -1119,6 +1121,9 @@ begin
   select sq_ref_work_schedules.nextval into :new.id from dual;
 end;
 /
+
+insert into ref_work_schedules (code, name, active) values ('5/2', '5 через 2', 1);
+
  
 --таблица норма рабочего времени, по графикам и по периодам
 create table ref_working_hours(
@@ -1140,8 +1145,36 @@ begin
 end;
 /
 
+create or replace view v_ref_work_schedules as
+select
+  s.*,
+  to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd') as dt1,
+  h1.hours as hours1,
+  to_date(to_char(sysdate, 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt2,
+  h2.hours as hours2,
+  to_date(to_char(sysdate, 'yyyy-mm') || '-16', 'yyyy-mm-dd') as dt3,
+  h3.hours as hours3,
+  to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt4,
+  h4.hours as hours4
+from  
+  ref_work_schedules s,
+  ref_working_hours h1,
+  ref_working_hours h2,
+  ref_working_hours h3,
+  ref_working_hours h4
+where  
+  h1.id_work_schedule(+) = s.id and h1.dt(+) = to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd')
+  and h2.id_work_schedule(+) = s.id and h2.dt(+) = to_date(to_char(sysdate, 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  and h3.id_work_schedule(+) = s.id and h3.dt(+) = to_date(to_char(sysdate, 'yyyy-mm') || '-16', 'yyyy-mm-dd')
+  and h4.id_work_schedule(+) = s.id and h4.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+;  
 
-
+select * from v_ref_work_schedules;
+  
+  
+  
+  
+select to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd') from dual; 
 
 
 

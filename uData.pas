@@ -914,7 +914,7 @@ const
   myfrm_R_Itm_OffMinus='R_Itm_OffMinus';
   myfrm_R_Itm_PostPlus='R_Itm_PostPlus';
   myfrm_R_Itm_Act='R_Itm_Act';
-  myfrm_R_Work_Wchedules='R_Work_chedules';
+  myfrm_R_Work_Chedules='R_Work_chedules';
 
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 
