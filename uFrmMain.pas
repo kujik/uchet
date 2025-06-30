@@ -539,7 +539,9 @@ begin
     [],
     ['Лог событий БД', myfrm_Adm_Db_Log, User.IsDeveloper],
     ['Журнал ошибок', myfrm_J_Error_Log, User.IsDeveloper],
-    ['']
+    [],
+    ['Журнал задач', myfrm_J_Tasks, User.IsDeveloper],
+    []
     {$ENDIF}
 
     {$IFDEF  PC}
