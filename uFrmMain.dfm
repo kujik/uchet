@@ -3214,7 +3214,7 @@ object FrmMain: TFrmMain
     Align = alTop
     Caption = 'lbl_GetTop'
     Visible = False
-    ExplicitWidth = 54
+    ExplicitWidth = 55
   end
   object lbl_GetBottom: TLabel
     Left = 0
@@ -3226,7 +3226,7 @@ object FrmMain: TFrmMain
     Color = clAppWorkSpace
     ParentColor = False
     Visible = False
-    ExplicitWidth = 72
+    ExplicitWidth = 73
   end
   object StatusBar: TStatusBar
     Left = 0

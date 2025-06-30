@@ -914,6 +914,7 @@ const
   myfrm_R_Itm_OffMinus='R_Itm_OffMinus';
   myfrm_R_Itm_PostPlus='R_Itm_PostPlus';
   myfrm_R_Itm_Act='R_Itm_Act';
+  myfrm_R_Work_Wchedules='R_Work_chedules';
 
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 
@@ -1003,6 +1004,8 @@ const
   myfrm_Dlg_Rep_FinByOrders='Dlg_Rep_FinByOrders';
   myfrm_Dlg_OracleError='Dlg_OracleError';
   myfrm_Dlg_Test='Dlg_Test';
+  myfrm_Dlg_UsersChoice='Dlg_UsersChoice';
+  myfrm_Dlg_Work_Wchedules='Dlg_Work_chedules';
 
 
 const
@@ -1485,6 +1488,8 @@ const
   rW_Rep_Salary_Ch = '2-79';
   rW_J_Parsec_V = '2-13';
   rW_J_Parsec_V_All = '2-14';
+  rW_R_Work_Chedules_V = '2-15';
+  rW_R_Work_Chedules_Ch = '2-16';
 
   rProd_R_Materials_V = '5-01';
   rProd_J_Otk_V = '5-02';
@@ -1616,7 +1621,7 @@ const
   rOr_Rep_OrItemSInProd='6-126';
 
   const
-  URights : array [0..219] of array [0..3] of string = (
+  URights : array [0..221] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1697,6 +1702,8 @@ const
     (rW_R_TurvCode_Ch,'Модуль "Работники"','Справочник: Обозначения ТУРВ','Добавление, изменение, удаление'),
     (rW_R_Divisions_V,'Модуль "Работники"','Справочник: Подразделения','Доступ к справочнику'),
     (rW_R_Divisions_Ch,'Модуль "Работники"','Справочник: Подразделения','Добавление, изменение, удаление'),
+    (rW_R_Work_Chedules_V,'Модуль "Работники"','Справочник: Графики работы','Доступ к справочнику'),
+    (rW_R_Work_Chedules_Ch,'Модуль "Работники"','Справочник: Графики работы','Добавление, изменение, удаление'),
     (rW_R_Holideys_V,'Модуль "Работники"','Справочник: Производственный календарь','Доступ к справочнику'),
     (rW_R_Holideys_Ch,'Модуль "Работники"','Справочник: Производственный календарь','Добавление, изменение, удаление'),
     (rW_J_WorkerStatus_V,'Модуль "Работники"','Журналы: Статусы работников','Просмотр журнала'),

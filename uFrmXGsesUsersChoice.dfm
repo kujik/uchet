@@ -67,4 +67,9 @@ inherited FrmXGsesUsersChoice: TFrmXGsesUsersChoice
       end
     end
   end
+  inherited pnlStatusBar: TPanel
+    inherited lblStatusBarR: TLabel
+      ExplicitLeft = 727
+    end
+  end
 end

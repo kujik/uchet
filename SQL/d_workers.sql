@@ -1099,6 +1099,58 @@ select round(avg(sumall) * 2), id_job  from (
 )     
 group by id_job;
 
+--------------------------------------------------------------------------------
+
+--таблица графиков работы
+create table ref_work_schedules(
+  id number(11),
+  code varchar2(50),
+  name varchar2(400),
+  constraint pk_work_schedules primary key (id)
+);  
+
+create unique index idx_ref_work_schedules_code on ref_work_schedules(lower(code));
+create unique index idx_ref_work_schedules_name on ref_work_schedules(lower(name));
+
+create sequence sq_ref_work_schedules start with 100 nocache;
+
+create or replace trigger trg_ref_work_schedules_bi_r before insert on ref_work_schedules for each row
+begin
+  select sq_ref_work_schedules.nextval into :new.id from dual;
+end;
+/
+ 
+--таблица норма рабочего времени, по графикам и по периодам
+create table ref_working_hours(
+  id number(11),
+  id_work_schedule number(11), --айди графика работы 
+  dt date,                     --дата начала периода
+  hours number,                --норма, в часах
+  constraint pk_ref_working_hours primary key (id),
+  constraint fk_ref_working_hours_sсhedule foreign key (id_work_schedule) references ref_work_schedules(id) 
+);  
+
+create unique index idx_ref_working_hours_uq on ref_working_hours(id_work_schedule, dt);
+
+create sequence sq_ref_working_hours start with 100 nocache;
+
+create or replace trigger trg_ref_working_hours_bi_r before insert on ref_working_hours for each row
+begin
+  select sq_ref_working_hours.nextval into :new.id from dual;
+end;
+/
+
+
+
+
+
+
+
+
+
+
+
+
 --update rep_salary set sum0 = null;
 --delete from rep_salary;
 

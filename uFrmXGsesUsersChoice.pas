@@ -99,7 +99,7 @@ var
   F: TFrmXGsesUsersChoice;
   va2: TVarDynArray2;
 begin
-  F:= Create(AOwner, 'DlgUsersChoice', [myfoModal, myfoSizeable, myfoDialog], FEdit, null, VarArrayOf([AMultiSelect, AIds]), []);
+  F:= Create(AOwner, myfrm_Dlg_UsersChoice, [myfoModal, myfoSizeable, myfoDialog], FEdit, null, VarArrayOf([AMultiSelect, AIds]), []);
   Result := TFrmXGsesUsersChoice(F).ModalResult;
   if Result = mrOk then begin
     va2 := Gh.GetGridArrayOfChecked(TFrmXGsesUsersChoice(F).Frg1.DbGridEh1, -1);
