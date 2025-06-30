@@ -567,6 +567,20 @@ begin
     Frg1.Opt.SetTable('ref_turvcodes');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_TurvCode_Ch));
   end
+  else if FormDoc = myfrm_R_Work_Chedules then begin
+    Caption:='Графики работы';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['code','Код','80'],
+      ['name','Наименование','150'],
+      ['dt1','Дата 1','100'],
+      ['dt2','Дата 2','100'],
+      ['dt3','Дата 3','100'],
+      ['active','Используется','70','pic']
+    ]);
+    Frg1.Opt.SetTable('v_ref_divisions');
+    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
+  end
   else if FormDoc = myfrm_R_Divisions then begin
     Caption:='Справочник подразделений';
     Frg1.Opt.SetFields([
