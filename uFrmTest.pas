@@ -169,7 +169,8 @@ uses
   uFrmCDedtCashRevision,
   uFrmBasicEditabelGrid,
   uFrmOWOrder,
-  uFrmOWSearchInEstimates
+  uFrmOWSearchInEstimates,
+  uFrmWGEdtTurv
   ;
 
 
@@ -1407,7 +1408,7 @@ var
 begin
   //ConvertNewOrStdItemRoutes; exit;
 
-  TFrmOWSearchInEstimates.Show(Application, '22222', [myfoDialog, myfoSizeable], fNone, 0, null); exit;
+  TFrmWGEdtTurv.Show(Application, '22222', [myfoDialog, myfoSizeable], fNone, 0, null); exit;
 
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 

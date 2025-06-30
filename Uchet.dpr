@@ -150,7 +150,8 @@ uses
   uFrmWDAddTurv in 'uFrmWDAddTurv.pas' {FrmWDAddTurv},
   uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
-  uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice};
+  uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
+  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv};
 
 //!!!
 

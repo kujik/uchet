@@ -41,7 +41,7 @@ type
 implementation
 
 uses
-  uFrmXGsesUsersChoice, uMessages, uFrmXDedtMailingCustomAddr, uDBOra;
+  uFrmXGsesUsersChoice, uMessages, uFrmXDedtMailingCustomAddr, uDBOra, uForms;
 
 constructor TMailingInterface.Create(AParent: TForm; AEdit: TDBEditEh; AMailingNum: Integer = 0; ACaption: string = ''; AUseCustomAddr: Boolean = True);
 begin
@@ -51,18 +51,14 @@ begin
   FEdit.EditButtons.Clear;
   FEdit.EditButtons.Add;
   FEdit.EditButtons[0].OnClick := EditButtons0Click;
-  FEdit.EditButtons[0].Style := ebsGlyphEh;
-  FEdit.EditButtons[0].Images.NormalImages := MyData.IL_CellButtons;
-  FEdit.EditButtons[0].Images.NormalIndex := 30;
+  Cth.SetEditButtonPictures(FEdit.EditButtons[0], 30);
   FUseCustomAddr := AUseCustomAddr;
   FMailingNum := AMailingNum;
   FCaption := ACaption;
   if AUseCustomAddr then begin
     FEdit.EditButtons.Add;
     FEdit.EditButtons[1].OnClick := EditButtons1Click;
-    FEdit.EditButtons[1].Style := ebsGlyphEh;
-    FEdit.EditButtons[1].Images.NormalImages := MyData.IL_CellButtons;
-    FEdit.EditButtons[1].Images.NormalIndex := 31;
+    Cth.SetEditButtonPictures(FEdit.EditButtons[1], 31);
   end;
 end;
 
@@ -101,7 +97,7 @@ begin
 // if (FMailingNum <=0)or(FUserIDsOld + FAddressesOld = FUserIDs + FAddresses)
   if not IsChanged then
     Exit;
-  Q.QExecSql('update adm_mailing set FUserIDs = :FUserIDs$s, customemail = :customemail$s where id = :id$i', [FUserIDs, FAddresses, FMailingNum]);
+  Q.QExecSql('update adm_mailing set userids = :userids$s, customemail = :customemail$s where id = :id$i', [FUserIDs, FAddresses, FMailingNum]);
 end;
 
 function TMailingInterface.IsChanged: Boolean;
