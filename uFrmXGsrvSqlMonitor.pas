@@ -44,6 +44,7 @@ begin
   ]);
   Frg1.SetInitData([], '');
   Result := inherited;
+  LoadLogRowToGrid;
 end;
 
 procedure TFrmXGsrvSqlMonitor.FormCreate(Sender: TObject);

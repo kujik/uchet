@@ -1128,7 +1128,7 @@ const
   mybtDividorM: TmybtRec = (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: '');
   mybtSapace: TmybtRec = (Bt: mbtSpace; Pict: ''; Caption: ''; hint: '');
   mybtNone: TmybtRec = (Bt: mbtNone; Pict: ''; Caption: ''; hint: '');
-  mybtTest: TmybtRec = (Bt: mbtTest; Pict: ''; Caption: 'ТЕСТ'; hint: '');
+  mybtTest: TmybtRec = (Bt: mbtTest; Pict: 'test'; Caption: 'Тест'; hint: '');
   mybtApply: TmybtRec = (Bt: mbtApply; Pict: 'apply'; Caption: 'Применить'; hint: '');
   mybtOk: TmybtRec = (Bt: mbtOk; Pict: 'ok'; Caption: 'Ок'; hint: '');
   mybtCancel: TmybtRec = (Bt: mbtCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: '');
