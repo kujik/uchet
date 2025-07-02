@@ -3791,7 +3791,9 @@ var
   f, p: TVarDynArray;
   v : Variant;
 begin
-  if AClearTable then TMemTableEh(DBGridEh1.DataSource.Dataset).EmptyTable;
+  TMemTableEh(DBGridEh1.DataSource.Dataset).Active := True;
+  if AClearTable then
+    TMemTableEh(DBGridEh1.DataSource.Dataset).EmptyTable;
   if Length(AValues) <> 0 then begin
     TMemTableEh(DBGridEh1.DataSource.Dataset).DisableControls;
     f := A.Explode(AMemTableFields, ';', True);

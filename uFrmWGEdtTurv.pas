@@ -11,6 +11,14 @@ uses
 
 type
   TFrmWGEdtTurv = class(TFrmBasicGrid2)
+    procedure Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh;
+      var CanShow: Boolean);
+    procedure Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
+      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect;
+      var Params: TColCellParamsEh; var Processed: Boolean);
+    procedure Frg2DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
+      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect;
+      var Params: TColCellParamsEh; var Processed: Boolean);
   private
     FPeriodStartDate: TDateTime;
     FPeriodEndDate: TDateTime;
@@ -31,9 +39,11 @@ type
     function  GetTurvCell(ARow, ADay, ANum: Integer): Variant;
     procedure PushTurvToGrid;
     procedure PushTurvCellToGrid(ARow, ADay: Integer);
+    procedure PushTurvCellToDetailGrid(ARow, ADay: Integer);
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
 
+    procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
   public
   end;
 
@@ -85,7 +95,8 @@ const
 function TFrmWGEdtTurv.PrepareForm: Boolean;
 var
   i, j: Integer;
-  va2: TVarDynArray2;
+  va2, flds1, flds2, values2: TVarDynArray2;
+  Captions2: TVarDynArray;
 begin
   Result := False;
 
@@ -105,30 +116,36 @@ begin
   FDayColumnsCount := DaysBetween(FPeriodEndDate, FPeriodStartDate) + 1;
 
 
-  FDayColWidth := 55;
+  FDayColWidth := 40;
 
   //добавляем 16 колонок для дневных данных
   //заголовок соотвествует дню из даты
   //поле соответствует позиции в массиве
   //скроем столбцы, большие даты конца периода
-  va2 := [];
   for i := 1 to 16 do begin
-    va2 := va2 + [[
+    flds1 := flds1 + [[
       'd' + IntToStr(i) + '$s',
       S.IIfStr(IncDay(FPeriodStartDate, i - 1) > FPeriodEndDate, '_') +
-        'Период|' + IntToStr(DayOf(IncDay(FPeriodStartDate, i - 1))) + ', '+ DaysOfWeek2[DayOfTheWeek(IncDay(FPeriodStartDate, i - 1))],
+        //'Период|' +
+        IntToStr(DayOf(IncDay(FPeriodStartDate, i - 1))) + ', '+ DaysOfWeek2[DayOfTheWeek(IncDay(FPeriodStartDate, i - 1))],
+      IntToStr(FDayColWidth) + ';R',
+      'e'
+    ]];
+    flds2 := flds2 + [[
+      'd' + IntToStr(i) + '$s',
+      S.IIfStr(IncDay(FPeriodStartDate, i - 1) > FPeriodEndDate, '_') +
+        IntToStr(DayOf(IncDay(FPeriodStartDate, i - 1))) + ', '+ DaysOfWeek2[DayOfTheWeek(IncDay(FPeriodStartDate, i - 1))],
       IntToStr(FDayColWidth) + ';R',
       'e'
     ]];
   end;
 
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind];
   Frg1.Opt.SetFields([
-//  ['id$i','_id','40'],
     ['x$s', '*','20'],
     ['worker$s','Работник|ФИО','200'],
-    ['job$s','Работник|Должность','100'],
-    ['r$i','_Работник|Разряд','0']
-    ] + va2 + [
+    ['job$s','Работник|Должность','150']
+    ] + flds1 + [
     ['premium_p$f', 'Итоги|Время', '50'] ,
     ['time$f', 'Итоги|Премия за период', '50'],
     ['premium$f', 'Итоги|Премии', '50'],
@@ -136,8 +153,71 @@ begin
     ['comm$s', 'Итоги|Комментарий', '100']
   ]);
   Frg1.Opt.SetGridOperations('u');
+  Frg1.Opt.SetButtons(1, [
+    [mbtView],
+    [mbtEdit],
+    [],
+    [mbtSendEMail],
+    [mbtCustom_SundaysToTurv],
+    [mbtLock],
+    [],
+    [mbtCtlPanel]
+  ]);
+
   Frg1.SetInitData([], '');
-//  Frg1.Opt.SetTable('v_ref_work_schedules');
+
+
+ {
+    DBGridEh1.ReadOnly:=not (InEditMode and EditInGrid1);
+  Cth.GetSpeedBtn(pnl_Left, mbtView).Hint:='Итоговое время';
+  Cth.GetSpeedBtn(pnl_Left, mbtView).Enabled:=EditInGrid1 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Hint:='Ввод времени руководителя';
+  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Enabled:=not EditInGrid1 and InEditMode and RgsEdit1;
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Hint:='Загрузить данные парсек';
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Enabled:= RgsEdit2 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtSendEMail).Enabled:= RgsEdit2 and InEditMode;
+  Cth.GetSpeedBtn(pnl_Left, mbtCustom_SundaysToTurv).Enabled:= InEditMode;
+  //видимость кнопки Завершить период (она одна и завершает и отменяет завершение)
+  //должны быть права
+  //а также или режим редактирования исходный, или видна только в случае уже Завершенного периода, те позволит при просмотре только снять завершение, но не выставить
+  //(так как тогда надо делать блокировку при установке завершения, ведь при просмотре может быть турв открыта у кого-то на редактирование!)
+  Cth.GetSpeedBtn(pnl_Left, mbtLock).Enabled:=RgsCommit and (IsCommited or (Mode = fEdit));
+  Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIFStr(IsCommited, 'Отменить закрытие периода', 'Закрыть период');
+  if (InEditMode)and(EditInGrid1) then begin
+    st:='Ввод времени руководителя';
+    stc:='$FF0060';
+  end
+  else if (InEditMode)and(not EditInGrid1) then begin
+    st:='Ввод данных';
+    stc:='$FF00FF';
+  end
+  else if IsCommited then begin
+    st:='Только просмотр, период закрыт';
+    stc:='$0000FF';
+  end
+  else begin
+    st:='Только просмотр';
+    stc:='$009000';
+  end;
+  lbl_Division.ResetColors;
+  lbl_Division.SetCaptionAr([
+    '$000000', 'Подразделение: ', '$FF0000', DivisionName,
+    '$000000', '   Период с ', '$FF0000',  DateToStr(PeriodStartDate), '$000000 по $FF0000', DateToStr(PeriodEndDate),
+    '$000000      [', stc, st, '$000000]'
+    ]);
+end;
+}
+
+
+  Frg2.Options := FrDBGridOptionDef;
+  flds2 := [['type$s', 'Значение', '150']] + flds2;
+  Frg2.Opt.SetFields(flds2);
+  Frg2.Opt.SetGridOperations('u');
+
+  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Штраф'];
+  for i := 0 to High(Captions2) do
+    values2 := values2 + [[Captions2[i], null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]];
+  Frg2.SetInitData(values2, '');
 
   Result := inherited;
   if not (Result and LoadTurvCodes and LoadTurv) then
@@ -229,8 +309,8 @@ begin
       [FArrTitle[i][0], FIDDivision, FArrTitle[i][1], FPeriodStartDate]
     );
     if Length(vs) > 0 then begin
-      FArrTitle[i][cTlPremium] := vs[0][0];
-      FArrTitle[i][cTlComm] := vs[0][1];
+      FArrTitle[i][cTPar] := vs[0][0];
+      FArrTitle[i][cTSogl] := vs[0][1];
     end;
   end;
 end;
@@ -386,52 +466,67 @@ begin
   end}
 end;
 
-
-
-(*
-//отрисуем ячейку
-procedure TDlg_TURV.DBGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
-  AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect;
-  var Params: TColCellParamsEh; var Processed: Boolean);
+procedure TFrmWGEdtTurv.PushTurvCellToDetailGrid(ARow, ADay: Integer);
+//отобразим ячейку в общем гриде на основании массива данных
 var
-  v1, v2, v3, v4: Variant;
-  ARow, c: Integer;
+  i: Integer;
+  st: string;
+  v1, v2, v3: Variant;
 begin
-  inherited;
-  //рисуем только столбцы с днями
-  if (Params.Col<5)or(Params.Col>5+16-1) then Exit;
-//  v:=MemTableEh1.RecordsView.MemTableData.RecordsList[Params.row-1].DataValues['ADay'+ IntToStr(Params.Col-4),dvvValueEh];
-  //получим комментарии
-  v1:=ArrTurv[Params.row-1][Params.Col-4][atComRuk];
-  v2:=ArrTurv[Params.row-1][Params.Col-4][atComPar];
-  v3:=ArrTurv[Params.row-1][Params.Col-4][atComSogl];
-  v4:=ArrTurv[Params.row-1][Params.Col-4][atNight];
-  //если выйдем, то будет стандартная отрисовка
-//  if (v<>'8.00')and(v<>'8,00')  then exit;
-  //выйдем, если нет никакого комментария
-  if (((VarIsEmpty(v1))or(S.NSt(v1) = '')) and ((VarIsEmpty(v2))or(S.NSt(v2) = '')) and ((VarIsEmpty(v3))or(S.NSt(v3) = '')) and ((VarIsEmpty(v4))or(S.NNum(v4) = 0))) then Exit;
-  //стандартная отрисовка
-  TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
-  if S.NSt(v1) + S.NSt(v2) + S.NSt(v3) <> '' then begin
-    //и поверху квадратик комментария
-    TDBGridEh(Sender).Canvas.Pen.Width:=1;
-    //если есть комментарии проверенное/согласованное, то подсветим бирюзовым, если только мастер, то синим
-    if (VarToStr(v2) <> '')or(VarToStr(v3) <> '')
-      then TDBGridEh(Sender).Canvas.Brush.Color:=RGB(255,0,255)
-      else TDBGridEh(Sender).Canvas.Brush.Color:=clBlue;
-    //нарисуем прямоугольник в верхнем левом углу ячейки
-    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Top , ARect.Left+7, ARect.Top+7);
+  //получим автоматически номер активной строки грида
+  if ARow = -1 then
+    ARow := Frg1.RecNo - 1;
+  //клетка не входит в данный турв
+//  if VarType(ArrTurv[ARow][ADay][0]) <> varInteger then exit;
+  if FArrTurv[ARow][ADay][0] = -1 then begin
+    //сделаем все пустые и выйдем
+    for i := 0 to 4 do
+      Frg2.SetValue('d' + IntToStr(ADay), i, False, null);
+    exit;
   end;
-  if S.NNum(v4) <> 0 then begin
-    TDBGridEh(Sender).Canvas.Pen.Width:=1;
-    TDBGridEh(Sender).Canvas.Brush.Color:=clBlack;
-    //нарисуем прямоугольник в левом нижнем углу ячейки
-    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Bottom - 7 , ARect.Left+7, ARect.Bottom);
-  end;
-  //флаг что обработати, если не поставить то будет стандартная отрисовка
-  Processed:=True;
+  //изменим напрямую во внутреннем массиве данных
+  //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
+  v1 := GetTurvCell(ARow, ADay, cTmM);
+  v2 := GetTurvCell(ARow, ADay, cTmP);
+  v3 := GetTurvCell(ARow, ADay, cTmV);
+  //форматируем строку, если число
+  if S.IsNumber(S.NSt(v1), 0, 24) then
+    st := FormatFloat('0.00', S.VarToFloat(v1))
+  else
+    st := S.NSt(v1);
+  Frg2.SetValue('d' + IntToStr(ADay), 0, False, st);
+  if S.IsNumber(S.NSt(v2), 0, 24) then
+    st := FormatFloat('0.00', S.VarToFloat(v2))
+  else
+    st := S.NSt(v2);
+  Frg2.SetValue('d' + IntToStr(ADay), 1, False, st);
+  if S.IsNumber(S.NSt(v3), 0, 24) then
+    st := FormatFloat('0.00', S.VarToFloat(v3))
+  else
+    st := S.NSt(v3);
+  Frg2.SetValue('d' + IntToStr(ADay), 2, False, st);
+  //премии и штрафы
+  if (FArrTurv[ARow][ADay][cSumPr] <> null) then begin
+    st := FormatFloat('0', S.NNum(FArrTurv[ARow][ADay][cSumPr]));
+    Frg2.SetValue('d' + IntToStr(ADay), 3, False, st);
+  end
+  else
+    Frg2.SetValue('d' + IntToStr(ADay), 3, False, null);
+  if (FArrTurv[ARow][ADay][cSumSct] <> null) then begin
+    st := FormatFloat('0', S.NNum(FArrTurv[ARow][ADay][cSumSct]));
+    Frg2.SetValue('d' + IntToStr(ADay), 4, False, st);
+  end
+  else
+    Frg2.SetValue('d' + IntToStr(ADay), 4, False, null);
 end;
-*)
+
+
+
+
+
+
+
+
 
 procedure TFrmWGEdtTurv.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 var
@@ -450,5 +545,125 @@ begin
   else Params.Background := clmyGray;
 end;
 
+procedure TFrmWGEdtTurv.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
+//отрисуем ячейку
+var
+  v1, v2, v3, v4: Variant;
+  ARow, c: Integer;
+begin
+  inherited;
+  //рисуем только столбцы с днями
+  if (Params.Col < 5) or (Params.Col > 5 + 16 - 1) then
+    Exit;
+  //получим комментарии
+  v1 := FArrTurv[Params.row - 1][Params.Col - 4][cComRuk];
+  v2 := FArrTurv[Params.row - 1][Params.Col - 4][cComPar];
+  v3 := FArrTurv[Params.row - 1][Params.Col - 4][cComSogl];
+  v4 := FArrTurv[Params.row - 1][Params.Col - 4][cNight];
+  //если выйдем, то будет стандартная отрисовка
+  //выйдем, если нет никакого комментария
+  if (((VarIsEmpty(v1)) or (S.NSt(v1) = '')) and ((VarIsEmpty(v2)) or (S.NSt(v2) = '')) and ((VarIsEmpty(v3)) or (S.NSt(v3) = '')) and ((VarIsEmpty(v4)) or (S.NNum(v4) = 0))) then
+    Exit;
+  //стандартная отрисовка
+  TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
+  if S.NSt(v1) + S.NSt(v2) + S.NSt(v3) <> '' then begin
+    //и поверху квадратик комментария
+    TDBGridEh(Sender).Canvas.Pen.Width := 1;
+    //если есть комментарии проверенное/согласованное, то подсветим бирюзовым, если только мастер, то синим
+    if (VarToStr(v2) <> '') or (VarToStr(v3) <> '') then
+      TDBGridEh(Sender).Canvas.Brush.Color := RGB(255, 0, 255)
+    else
+      TDBGridEh(Sender).Canvas.Brush.Color := clBlue;
+    //нарисуем прямоугольник в верхнем левом углу ячейки
+    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Top, ARect.Left + 7, ARect.Top + 7);
+  end;
+  if S.NNum(v4) <> 0 then begin
+    TDBGridEh(Sender).Canvas.Pen.Width := 1;
+    TDBGridEh(Sender).Canvas.Brush.Color := clBlack;
+    //нарисуем прямоугольник в левом нижнем углу ячейки
+    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Bottom - 7, ARect.Left + 7, ARect.Bottom);
+  end;
+  //флаг что обработали, если не поставить то будет стандартная отрисовка
+  Processed := True;
+end;
+
+procedure TFrmWGEdtTurv.Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
+var
+  i: Integer;
+begin
+  Frg1.DbGridEh1RowDetailPanelShow(Sender, CanShow);
+//  SetRowDetailCaptions;
+  //заполним сетки
+  for i := 1 to 16 do begin
+    PushTurvCellToDetailGrid(-1, i);
+  end;
+//  SetBtns;
+end;
+
+procedure TFrmWGEdtTurv.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+var
+  Row, Day: Integer;
+  Color: Integer;
+begin
+  Row := Params.Row - 1;
+  Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
+  if Day <> -1 then begin
+{    case FArrTurv[Row][Day][cColor] of
+      1 : Params.Background := clRed;
+      2 : Params.Background := clYellow;
+      -1: Params.Font.Color := clRed;
+    end;}
+  end
+  else Params.Background := clmyGray;
+end;
+
+
+
+procedure TFrmWGEdtTurv.Frg2DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
+var
+  v1, v2, v3: Variant;
+  r, c: Integer;
+begin
+  inherited;
+  //рисуем только столбцы с днями
+  if (Params.Col <= 1) or (Params.Col > 1 + 16 - 1) then
+    Exit;
+  //получим комментарии
+  case Params.Row of
+    1..3:
+      v1 := FArrTurv[Frg1.RecNo - 1][Params.Col - 1][cComRuk + Params.row - 1];
+    4:
+      v1 := FArrTurv[Frg1.RecNo - 1][Params.Col - 1][cComPr];
+    5:
+      v1 := FArrTurv[Frg1.RecNo - 1][Params.Col - 1][cComSct];
+  end;
+  v2 := null;
+  if Params.Row = 2 then
+    v2 := FArrTurv[Frg1.RecNo - 1][Params.Col - 1][cNight];
+  //если выйдем, то будет стандартная отрисовка
+  //выйдем, если нет никакого комментария
+  if (VarToStr(v1) = '') and (VarToStr(v2) = '') then
+    Exit;
+  //стандартная отрисовка
+  TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
+  //и поверху квадратик комментария
+  TDBGridEh(Sender).Canvas.Pen.Width := 1;
+  if (VarToStr(v1) <> '') then begin
+    if (Params.Row in [2, 3]) then
+      TDBGridEh(Sender).Canvas.Brush.Color := RGB(255, 0, 255)
+    else
+      TDBGridEh(Sender).Canvas.Brush.Color := clBlue;
+    //нарисуем прямоугольник в верхнем левом углу ячейки
+    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Top, ARect.Left + 7, ARect.Top + 7);
+  end;
+  if S.NNum(v2) <> 0 then begin
+    TDBGridEh(Sender).Canvas.Pen.Width := 1;
+    TDBGridEh(Sender).Canvas.Brush.Color := clBlack;
+    //нарисуем прямоугольник в левом нижнем углу ячейки
+    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Bottom - 7, ARect.Left + 7, ARect.Bottom);
+  end;
+  //флаг что обработать, если не поставить то будет стандартная отрисовка
+  Processed := True;
+end;
 
 end.

@@ -2031,7 +2031,7 @@ begin
     end;
   end
   else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin
-    TFrmWGEdtTurv.Show(Application, '22222', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
+    TFrmWGEdtTurv.Show(Application, '22222-----', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
   else inherited;
 

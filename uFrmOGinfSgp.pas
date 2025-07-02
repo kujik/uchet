@@ -89,6 +89,15 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sgp_shipped_list');
   end
+  else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Shipped_Plan then begin
+    //информация по запланированным отгрузкам
+    //разница по слешам между количеством в заказке и отгруженным количеством
+    //(если в заказе не ноль и эти количества не одинаковые)
+    Frg1.Opt.SetFields(FldDef + [
+      ['qnt','Кол-во','80','f=f:']
+    ]);
+    Frg1.Opt.SetTable('v_sgp_shipped_plan_list');
+  end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Registered then begin
     //информация по приемке на сгп
     Frg1.Opt.SetFields(FldDef + [

@@ -2853,7 +2853,7 @@ begin
       //затенение с сообщением вызывает глюк - град темный, не отображаются данные
       //if myogGrayedWhenRefresh in Options then BeginOperation('Загрузка данных..');
       KeyString := Gh.GetGridServiceFields(DBGridEh1);
-      if KeyString <> '' then
+      if (KeyString <> '') and (MemTableEh1.Active) then
         DBGridEh1.SaveVertPos(KeyString);
       if FInitData.Sql <> '' then
         LoadData(InitData.Sql, InitData.Params)
@@ -2863,7 +2863,7 @@ begin
         LoadData(InitData.Arr, InitData.ArrFields);
       DBGridEh1.DefaultApplySorting;
       DBGridEh1.DefaultApplyFilter;
-      if KeyString <> '' then
+      if (KeyString <> '') and (MemTableEh1.Active) then
         DBGridEh1.RestoreVertPos(KeyString);
       //if myogIndicatorCheckBoxes in Options then EndOperation;
       if myogIndicatorCheckBoxes in Options then
