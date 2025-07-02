@@ -95,7 +95,8 @@ uses
   uFrmODedtNomenclFiles,
   uFrmOWPlannedOrder,
   uFrmXWGridAdminOptions,
-  uFrmOGinfSgp
+  uFrmOGinfSgp,
+  uFrmWGEdtTurv
   ;
 
 
@@ -662,7 +663,8 @@ begin
     Frg1.Opt.SetTable('v_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+v:=True;
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtTest],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -2027,6 +2029,9 @@ begin
       Q.QCallStoredProc('p_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
       Fr.RefreshGrid;
     end;
+  end
+  else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin
+    TFrmWGEdtTurv.Show(Application, '22222', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
   else inherited;
 

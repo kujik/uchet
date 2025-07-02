@@ -1240,7 +1240,7 @@ const
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtNone; Pict: ''; Caption: ''; hint: ''),
-  (Bt: mbtTest; Pict: ''; Caption: 'ТЕСТ'; hint: ''),
+  (Bt: mbtTest; Pict: 'test'; Caption: 'Тест'; hint: ''),
   (Bt: mbtApply; Pict: 'apply'; Caption: 'Применить'; hint: ''),
   (Bt: mbtOk; Pict: 'ok'; Caption: 'Ок'; hint: ''),
   (Bt: mbtCancel; Pict: 'cancel'; Caption: 'Отмена'; hint: ''),

@@ -14,18 +14,26 @@ type
   private
     FPeriodStartDate: TDateTime;
     FPeriodEndDate: TDateTime;
+    FDayColumnsCount: Integer;
     FIdDivision: Integer;
-    FDayColWidth: Integer;
     FArrTitle: TVarDynArray2;
     FTurvCodes: TNamedArr;
     FArrTurv: array of array of array of Variant;
+    FEditInGrid1: Boolean;
+    FInEditMode: Boolean;
+    FDayColWidth: Integer;
+
+
     function  PrepareForm: Boolean; override;
     function  LoadTurv: Boolean;
-    procedure LoadTurvCodes;
+    function  LoadTurvCodes: Boolean;
     function  GetTurvCode(AValue: Variant): Variant;
     function  GetTurvCell(ARow, ADay, ANum: Integer): Variant;
     procedure PushTurvToGrid;
-    procedure PushTurvCellToGrid(r, d: Integer);
+    procedure PushTurvCellToGrid(ARow, ADay: Integer);
+
+    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+
   public
   end;
 
@@ -63,6 +71,17 @@ const
   cNight = 20 ;            //время в часах в ночную смену
   cItog = 21;              //итоговая строка, которая отображается
 
+  cTlIdW = 0;             //id worker
+  cTlIdJ = 1;             //id job
+  cTlW = 2;               //workername
+  cTlJ = 3;               //job
+  cTlPremium = 5;         //премия за отчетный период
+  cTlcomm = 6;            //комментатрий, общий для работника
+
+  cTmM = 1;               //время или код от мастеров
+  cTmP = 2;               //время или код парсек
+  cTmV = 3;               //проверенное время или код
+
 function TFrmWGEdtTurv.PrepareForm: Boolean;
 var
   i, j: Integer;
@@ -70,24 +89,35 @@ var
 begin
   Result := False;
 
-  Mode := fEdit;
-
-  FPeriodStartDate :=  EncodeDate(2025, 06, 01);
-  FPeriodEndDate :=  EncodeDate(2025, 06, 15);
-  FDayColWidth := 30;
-
   Caption:='~ТУРВ';
+
+//  Mode := fEdit;
+//  ID := 2234;
+
+  Q.QLoadFromQuery('select id, id_division, code, name, dt1, dt2, committxt, commit, editusers, status from v_turv_period where id = :id$i', [ID], va2);
+
+  if Length(va2) = 0 then
+    Exit;
+
+  FIdDivision := va2[0][1];
+  FPeriodStartDate := va2[0][4];
+  FPeriodEndDate := va2[0][5];
+  FDayColumnsCount := DaysBetween(FPeriodEndDate, FPeriodStartDate) + 1;
+
+
+  FDayColWidth := 55;
 
   //добавляем 16 колонок для дневных данных
   //заголовок соотвествует дню из даты
   //поле соответствует позиции в массиве
   //скроем столбцы, большие даты конца периода
+  va2 := [];
   for i := 1 to 16 do begin
     va2 := va2 + [[
-      'd' + IntToStr(i) + '$f',
+      'd' + IntToStr(i) + '$s',
       S.IIfStr(IncDay(FPeriodStartDate, i - 1) > FPeriodEndDate, '_') +
         'Период|' + IntToStr(DayOf(IncDay(FPeriodStartDate, i - 1))) + ', '+ DaysOfWeek2[DayOfTheWeek(IncDay(FPeriodStartDate, i - 1))],
-      IntToStr(FDayColWidth),
+      IntToStr(FDayColWidth) + ';R',
       'e'
     ]];
   end;
@@ -110,6 +140,11 @@ begin
 //  Frg1.Opt.SetTable('v_ref_work_schedules');
 
   Result := inherited;
+  if not (Result and LoadTurvCodes and LoadTurv) then
+    Exit;
+
+  PushTurvToGrid;
+
 end;
 
 function TFrmWGEdtTurv.LoadTurv: Boolean;
@@ -124,33 +159,34 @@ var
   st: string;
 begin
   //получим список работников для данного турв
-  FArrTitle:=[];
-  FArrTurv:=[];
-  v:=[];
-  vs:=[];
-  v2:=[];
-  v:=Turv.GetTurvArrayFromDb(FIdDivision, FPeriodStartDate);
-  Result:=Length(v) > 0;
-  if not Result then Exit;
+  FArrTitle := [];
+  FArrTurv := [];
+  v := [];
+  vs := [];
+  v2 := [];
+  v := Turv.GetTurvArrayFromDb(FIdDivision, FPeriodStartDate);
+  Result := Length(v) > 0;
+  if not Result then
+    Exit;
   //проходим по списку
   for i := 0 to High(v) do begin
    //v:  0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
     SetLength(FArrTitle, i + 1, 7);
     SetLength(FArrTurv, i + 1, 31, cItog + 1);
     //массив заголовков (работник, должность...)
-    FArrTitle[i][0] := v[i][2];  //id worker
-    FArrTitle[i][1] := v[i][4];  //id job
-    FArrTitle[i][2] := v[i][3];  //workername
-    FArrTitle[i][3] := v[i][5];  //job
+    FArrTitle[i][cTlIdW] := v[i][2];  //id worker
+    FArrTitle[i][cTlIdJ] := v[i][4];  //id job
+    FArrTitle[i][cTlW] := v[i][3];  //workername
+    FArrTitle[i][cTlJ] := v[i][5];  //job
     FArrTitle[i][4] := '';       //ccegory
-    FArrTitle[i][5] := 0;        //премия за отчетный период
-    FArrTitle[i][6] := '';       //комментатрий, общий для работника
+    FArrTitle[i][cTlPremium] := 0;        //премия за отчетный период
+    FArrTitle[i][cTlComm] := '';       //комментатрий, общий для работника
     //читаем турв_дей в для данного работника в промежутке, в котором он в этом ТУРВ, сортируем по дате
     vs := Q.QLoadToVarDynArray2(
       'select dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
       'null, null, comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
       'from turv_day where id_worker = :id_worker$i and dt >= :dtbeg$d and dt <= :dtend$d order by dt',
-       [FArrTitle[i][0], v[i][0], v[i][1]]
+       [FArrTitle[i][cTlIdW], v[i][0], v[i][1]]
     );
     //проход по массиву турв
     for j := 1 to 16 do begin
@@ -193,16 +229,18 @@ begin
       [FArrTitle[i][0], FIDDivision, FArrTitle[i][1], FPeriodStartDate]
     );
     if Length(vs) > 0 then begin
-      FArrTitle[i][5] := vs[0][0];
-      FArrTitle[i][6] := vs[0][1];
+      FArrTitle[i][cTlPremium] := vs[0][0];
+      FArrTitle[i][cTlComm] := vs[0][1];
     end;
   end;
 end;
 
-procedure TFrmWGEdtTurv.LoadTurvCodes;
+function TFrmWGEdtTurv.LoadTurvCodes: Boolean;
 //загрузим справочник кодов турв
 begin
+  Result := False;
   Q.QLoadFromQuery('select id, code, name from ref_turvcodes order by code', [], FTurvCodes);
+  Result := True;
 end;
 
 
@@ -211,7 +249,7 @@ function TFrmWGEdtTurv.GetTurvCode(AValue: Variant): Variant;
 var
   i: Integer;
 begin
-  Result:=null;
+  Result := null;
   i := A.PosInArray(AValue, FTurvCodes.V, 0);
   if i >= 0 then
     Result := FTurvCodes.V[i][1];
@@ -227,28 +265,28 @@ end;
 
 procedure TFrmWGEdtTurv.PushTurvToGrid;
 var
-  i, j, k: Integer;
+  i, j: Integer;
 begin
-  for i := 0 to High(ArrTitle) do begin
-    MemTableEh1.Last;
-    MemTableEh1.Insert;
-    MemTableEh1.FieldByName('name').Value := ArrTitle[i][2];
-    MemTableEh1.FieldByName('job').Value := ArrTitle[i][3];
-    MemTableEh1.FieldByName('category').Value := null; //ArrTitle[i][4];
-    MemTableEh1.Post;
-    for j:=1 to 16 do begin
-      SetTurvAllDay(i, j);
+  for i := 0 to High(FArrTitle) do begin
+    Frg1.MemTableEh1.Last;
+    Frg1.MemTableEh1.Insert;
+    Frg1.MemTableEh1.FieldByName('worker').Value := FArrTitle[i][2];
+    Frg1.MemTableEh1.FieldByName('job').Value := FArrTitle[i][3];
+//    Frg1.MemTableEh1.FieldByName('category').Value := null;
+    Frg1.MemTableEh1.Post;
+    for j := 1 to 16 do begin
+      PushTurvCellToGrid(i, j);
     end;
   end;
 end;
 
+procedure TFrmWGEdtTurv.PushTurvCellToGrid(ARow, ADay: Integer);
 //отобразим ячейку в общем гриде на основании массива данных
-procedure TFrmWGEdtTurv.PushTurvCellToGrid(r, d: Integer);
 var
-  st:string;
-  v,v0,v1,v2,v3,v4: Variant;
+  st: string;
+  v, v0, v1, v2: Variant;
   color: Integer;
-  i,j: Integer;
+  i, j: Integer;
   sum: TVarDynArray;
   e: extended;
   b: Boolean;
@@ -262,103 +300,90 @@ var
    то хоть выводится парсек, но цвет красный, требует согласования
 }
 begin
-//exit;
-//  можно делать так или так, но таблица должна находиться в состоянии изменения
-//  DbGridEh1.FieldColumns['d'+ IntToStr(d)].Field.Value:=ArrTurv[DBGridEh1.Row][d][1];
-//  MemTableEh1.FieldByName('d'+ IntToStr(d)).Value:=ArrTurv[r][d][1];
-v:=ArrTurv[r][d][0];
+  v := FArrTurv[ARow][ADay][0];
   //получим автоматически номер активной строки грида
-  if r = -1 then r:=MemTableEh1.RecNo-1;
-
-//  if ArrTurv[r][d][0] <> 1 then begin //иначе данные не загружены в ячейку, и не могут быть изменены
-
-    v0:=GetTurvCell(r,d,3);  //проверенное время или код
-    v1:=GetTurvCell(r,d,1);  //время или код от мастеров
-    v2:=GetTurvCell(r,d,2);  //время или код парсек
-    color:=0;
+  if ARow = -1 then
+    ARow := Frg1.MemTableEh1.RecNo - 1;
+  v0 := GetTurvCell(ARow, ADay, cTmV);  //проверенное время или код
+  v1 := GetTurvCell(ARow, ADay, cTmM);  //время или код от мастеров
+  v2 := GetTurvCell(ARow, ADay, cTmP);  //время или код парсек
+  color := 0;
     //если задано проверенное время/код, то выводим его, иначе выводим от мастеров
-    if v0 = null then begin
-      if (v1 = null)and(v2 = null)
-        then begin
-          color:=0;
-        end
-        else if (v1<>null)and(v2=null)
-        then begin
-          color:=2;   //жетлтый
-          v0:=v1;
-        end
-        else if (v1 = null)and(v2 <> null)
-        then begin
-          color:=1;   //красный
-          v0:=v2;
-        end
-        else if (not S.IsNumber(S.NSt(v1),0,24)) and (not S.IsNumber(S.NSt(v2),0,24))
-        then begin
-          v0:=v2;
-        end
-        else if S.IsNumber(S.NSt(v1),0,24) and S.IsNumber(S.NSt(v2),0,24) and (abs(StrToFloat(S.NSt(v1)) - StrToFloat(S.NSt(v2))) <= Module.GetCfgVar(mycfgWtime_autoagreed))
-        then begin
-          v0:=v2;
-          if v1 <> v2 then color:=-1; //красный цвет шрифта
-        end
-        else begin
-          v0:=v2;
-          color := 1;
-        end;
+  if v0 = null then begin
+    if (v1 = null) and (v2 = null) then begin
+      color := 0;
+    end
+    else if (v1 <> null) and (v2 = null) then begin
+      color := 2;   //жетлтый
+      v0 := v1;
+    end
+    else if (v1 = null) and (v2 <> null) then begin
+      color := 1;   //красный
+      v0 := v2;
+    end
+    else if (not S.IsNumber(S.NSt(v1), 0, 24)) and (not S.IsNumber(S.NSt(v2), 0, 24)) then begin
+      v0 := v2;
+    end
+    else if S.IsNumber(S.NSt(v1), 0, 24) and S.IsNumber(S.NSt(v2), 0, 24) and (abs(StrToFloat(S.NSt(v1)) - StrToFloat(S.NSt(v2))) <= Module.GetCfgVar(mycfgWtime_autoagreed)) then begin
+      v0 := v2;
+      if v1 <> v2 then
+        color := -1; //красный цвет шрифта
+    end
+    else begin
+      v0 := v2;
+      color := 1;
     end;
-{
-if v1 = '5,5' then begin
-  b:= S.IsNumber(S.NSt(v1),0,24) ;
-  st:= VarToStr(S.NSt(v1));
-  v4:=GetTurvCell(r,d,1);
-end;
-}
-    ArrTurv[r][d][atColor]:=color;
+  end;
+  FArrTurv[ARow][ADay][cColor] := color;
     //при редактировании в основном гриде будем отображать в нем время от мастеров/руководителя
-    if (EditInGrid1)and(InEditMode) then v0:=v1;
+  if (FEditInGrid1) and (FInEditMode) then
+    v0 := v1;
     //форматируем строку, если число
-    if S.IsNumber(S.NSt(v0),0,24) then st:=FormatFloat('0.00', S.VarToFloat(v0)) else st:=S.NSt(v0);
+  if S.IsNumber(S.NSt(v0), 0, 24) then
+    st := FormatFloat('0.00', S.VarToFloat(v0))
+  else
+    st := S.NSt(v0);
     //изменим напрямую во внутреннем массиве данных
     //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
-    MemTableEh1.RecordsView.MemTableData.RecordsList[r].DataValues['d'+ IntToStr(d),dvvValueEh]:=st;
-//end;
-//exit;
+  Frg1.SetValue('d' + IntToStr(ADay), ARow, False, st);
 
   //итоги в правой части таблицы
   Setlength(sum, 3);
-  b:=True;
+  b := True;
   //цикл по дням
-  for i:=1 to DayColumnsCount do
-    begin
+  for i := 1 to FDayColumnsCount do begin
       //время - от мастеров, если установлено парсек то парсек, если установлено согласованное то оно
-      e:= S.NNum(ArrTurv[r][i][1]);
-      if (ArrTurv[r][i][2] <> null) or (ArrTurv[r][i][5] <> null) then e := S.NNum(ArrTurv[r][i][2]);
-      if (ArrTurv[r][i][3] <> null) or (ArrTurv[r][i][6] <> null) then e := S.NNum(ArrTurv[r][i][3]);
-      sum[0] := sum[0] + e;
-      sum[1] := sum[1] + S.NNum(ArrTurv[r][i][7]);
-      sum[2] := sum[2] + S.NNum(ArrTurv[r][i][9]);
+    e := S.NNum(FArrTurv[ARow][i][1]);
+    if (FArrTurv[ARow][i][2] <> null) or (FArrTurv[ARow][i][5] <> null) then
+      e := S.NNum(FArrTurv[ARow][i][2]);
+    if (FArrTurv[ARow][i][3] <> null) or (FArrTurv[ARow][i][6] <> null) then
+      e := S.NNum(FArrTurv[ARow][i][3]);
+    sum[0] := sum[0] + e;
+    sum[1] := sum[1] + S.NNum(FArrTurv[ARow][i][7]);
+    sum[2] := sum[2] + S.NNum(FArrTurv[ARow][i][9]);
       //ячейки красные и желтые, или пустые итоговые и при этом не серые - не даем возможности закрыть турв
-      if (S.NNum(ArrTurv[r][i][12]) = 1)or(S.NNum(ArrTurv[r][i][12]) = 2)or
-         ((ArrTurv[r][i][0] <> -1) and (ArrTurv[r][i][1]) = null)
-        then b:=False;
-    end;
+    if (S.NNum(FArrTurv[ARow][i][12]) = 1) or (S.NNum(FArrTurv[ARow][i][12]) = 2) or ((FArrTurv[ARow][i][0] <> -1) and (FArrTurv[ARow][i][1]) = null) then
+      b := False;
+  end;
   //заполним итоговые ячейки мемтейбл
-  MemTableEh1.RecordsView.MemTableData.RecordsList[r].DataValues['time', dvvValueEh]:=FormatFloat('0.00', S.NNum(sum[0]));
-  MemTableEh1.RecordsView.MemTableData.RecordsList[r].DataValues['premium_p', dvvValueEh]:=FormatFloat('0.00', S.NNum(ArrTitle[r][5]));
-  MemTableEh1.RecordsView.MemTableData.RecordsList[r].DataValues['premium', dvvValueEh]:=FormatFloat('0.00', S.NNum(sum[1]));
-  MemTableEh1.RecordsView.MemTableData.RecordsList[r].DataValues['penalty', dvvValueEh]:=FormatFloat('0.00', S.NNum(sum[2]));
-  //кнопка Закрыть период
-  Status:=1;
-  for j:= 0 to High(ArrTurv) do begin
-    for i:=1 to DayColumnsCount do
-      begin
-        if (ArrTurv[j][i][atColor] = -1)and(Status = 1) then Status:=2;
-        if ArrTurv[j][i][atColor] = 1 then Status:=3;
-        if Status = 3 then break
-      end;
-    if Status = 3 then break
-  end
-  //Bt_Commit.Enabled:=b; //!!!
+  Frg1.SetValue('time', ARow, False, FormatFloat('0.00', S.NNum(sum[0])));
+  Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle[ARow][cTlPremium])));
+  Frg1.SetValue('premium', ARow, False, FormatFloat('0.00', S.NNum(sum[1])));
+  Frg1.SetValue('penalty', ARow, False, FormatFloat('0.00', S.NNum(sum[2])));
+    //кнопка Закрыть период  //!!!
+{  Status := 1;
+  for j := 0 to High(ArrTurv) do begin
+    for i := 1 to DayColumnsCount do begin
+      if (ArrTurv[j][i][atColor] = -1) and (Status = 1) then
+        Status := 2;
+      if ArrTurv[j][i][atColor] = 1 then
+        Status := 3;
+      if Status = 3 then
+        break
+    end;
+    if Status = 3 then
+      break
+  end}
 end;
 
 
@@ -370,12 +395,12 @@ procedure TDlg_TURV.DBGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
   var Params: TColCellParamsEh; var Processed: Boolean);
 var
   v1, v2, v3, v4: Variant;
-  r, c: Integer;
+  ARow, c: Integer;
 begin
   inherited;
   //рисуем только столбцы с днями
   if (Params.Col<5)or(Params.Col>5+16-1) then Exit;
-//  v:=MemTableEh1.RecordsView.MemTableData.RecordsList[Params.row-1].DataValues['d'+ IntToStr(Params.Col-4),dvvValueEh];
+//  v:=MemTableEh1.RecordsView.MemTableData.RecordsList[Params.row-1].DataValues['ADay'+ IntToStr(Params.Col-4),dvvValueEh];
   //получим комментарии
   v1:=ArrTurv[Params.row-1][Params.Col-4][atComRuk];
   v2:=ArrTurv[Params.row-1][Params.Col-4][atComPar];
@@ -407,5 +432,23 @@ begin
   Processed:=True;
 end;
 *)
+
+procedure TFrmWGEdtTurv.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+var
+  Row, Day: Integer;
+  Color: Integer;
+begin
+  Row := Params.Row - 1;
+  Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
+  if Day <> -1 then begin
+    case FArrTurv[Row][Day][cColor] of
+      1 : Params.Background := clRed;
+      2 : Params.Background := clYellow;
+      -1: Params.Font.Color := clRed;
+    end;
+  end
+  else Params.Background := clmyGray;
+end;
+
 
 end.

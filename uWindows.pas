@@ -844,7 +844,7 @@ begin
     TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_Turv then begin
-//~    Form := TDlg_TURV.ShowDialog(AOwner, F, fMode, AId, MyFormOptions);
+    Form := TDlg_TURV.ShowDialog(AOwner, F, fMode, AId, MyFormOptions);
   end
   else if F = myfrm_Dlg_AddTurv then begin
 //~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);
