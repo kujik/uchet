@@ -11,14 +11,11 @@ uses
 
 type
   TFrmWGEdtTurv = class(TFrmBasicGrid2)
-    procedure Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh;
-      var CanShow: Boolean);
+    procedure Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh;  var CanShow: Boolean);
     procedure Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
-      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect;
-      var Params: TColCellParamsEh; var Processed: Boolean);
+      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
     procedure Frg2DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
-      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect;
-      var Params: TColCellParamsEh; var Processed: Boolean);
+      AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
   private
     FPeriodStartDate: TDateTime;
     FPeriodEndDate: TDateTime;
@@ -29,6 +26,7 @@ type
     FArrTurv: array of array of array of Variant;
     FEditInGrid1: Boolean;
     FInEditMode: Boolean;
+    FIsDetailGridUpdated: Boolean;
     FDayColWidth: Integer;
 
 
@@ -42,6 +40,7 @@ type
     procedure PushTurvCellToDetailGrid(ARow, ADay: Integer);
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
 
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
   public
@@ -86,7 +85,8 @@ const
   cTlW = 2;               //workername
   cTlJ = 3;               //job
   cTlPremium = 5;         //премия за отчетный период
-  cTlcomm = 6;            //комментатрий, общий для работника
+  cTlComm = 6;            //комментатрий, общий для работника
+  cTlSchedule = 7;
 
   cTmM = 1;               //время или код от мастеров
   cTmP = 2;               //время или код парсек
@@ -144,10 +144,11 @@ begin
   Frg1.Opt.SetFields([
     ['x$s', '*','20'],
     ['worker$s','Работник|ФИО','200'],
-    ['job$s','Работник|Должность','150']
+    ['job$s','Работник|Должность','150'],
+    ['schedule$s','Работник|График','60']
     ] + flds1 + [
-    ['premium_p$f', 'Итоги|Время', '50'] ,
-    ['time$f', 'Итоги|Премия за период', '50'],
+    ['time$f', 'Итоги|Время', '50'] ,
+    ['premium_p$f', 'Итоги|Премия за период', '50'],
     ['premium$f', 'Итоги|Премии', '50'],
     ['penalty$f', 'Итоги|Штрафы', '50'],
     ['comm$s', 'Итоги|Комментарий', '100']
@@ -251,16 +252,17 @@ begin
   //проходим по списку
   for i := 0 to High(v) do begin
    //v:  0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
-    SetLength(FArrTitle, i + 1, 7);
+    SetLength(FArrTitle, i + 1, 8);
     SetLength(FArrTurv, i + 1, 31, cItog + 1);
     //массив заголовков (работник, должность...)
     FArrTitle[i][cTlIdW] := v[i][2];  //id worker
     FArrTitle[i][cTlIdJ] := v[i][4];  //id job
-    FArrTitle[i][cTlW] := v[i][3];  //workername
-    FArrTitle[i][cTlJ] := v[i][5];  //job
-    FArrTitle[i][4] := '';       //ccegory
-    FArrTitle[i][cTlPremium] := 0;        //премия за отчетный период
-    FArrTitle[i][cTlComm] := '';       //комментатрий, общий для работника
+    FArrTitle[i][cTlW] := v[i][3];    //workername
+    FArrTitle[i][cTlJ] := v[i][5];    //job
+    FArrTitle[i][4] := '';            //ccegory
+    FArrTitle[i][cTlPremium] := 0;    //премия за отчетный период
+    FArrTitle[i][cTlComm] := '';      //комментатрий, общий для работника
+    FArrTitle[i][cTlSchedule] := '5/2';
     //читаем турв_дей в для данного работника в промежутке, в котором он в этом ТУРВ, сортируем по дате
     vs := Q.QLoadToVarDynArray2(
       'select dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
@@ -309,8 +311,8 @@ begin
       [FArrTitle[i][0], FIDDivision, FArrTitle[i][1], FPeriodStartDate]
     );
     if Length(vs) > 0 then begin
-      FArrTitle[i][cTPar] := vs[0][0];
-      FArrTitle[i][cTSogl] := vs[0][1];
+      FArrTitle[i][cTlPremium] := vs[0][0];
+      FArrTitle[i][cTlComm] := vs[0][1];
     end;
   end;
 end;
@@ -350,9 +352,9 @@ begin
   for i := 0 to High(FArrTitle) do begin
     Frg1.MemTableEh1.Last;
     Frg1.MemTableEh1.Insert;
-    Frg1.MemTableEh1.FieldByName('worker').Value := FArrTitle[i][2];
-    Frg1.MemTableEh1.FieldByName('job').Value := FArrTitle[i][3];
-//    Frg1.MemTableEh1.FieldByName('category').Value := null;
+    Frg1.MemTableEh1.FieldByName('worker').Value := FArrTitle[i][cTlW];
+    Frg1.MemTableEh1.FieldByName('job').Value := FArrTitle[i][cTlJ];
+    Frg1.MemTableEh1.FieldByName('schedule').Value := FArrTitle[i][cTlSchedule];
     Frg1.MemTableEh1.Post;
     for j := 1 to 16 do begin
       PushTurvCellToGrid(i, j);
@@ -426,6 +428,7 @@ begin
     //изменим напрямую во внутреннем массиве данных
     //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
   Frg1.SetValue('d' + IntToStr(ADay), ARow, False, st);
+  Frg1.DbGridEh1.Invalidate;
 
   //итоги в правой части таблицы
   Setlength(sum, 3);
@@ -473,6 +476,8 @@ var
   st: string;
   v1, v2, v3: Variant;
 begin
+  if (not Frg2.MemTableEh1.Active) or (Frg1.GetCount(False) = 0) then
+    Exit;
   //получим автоматически номер активной строки грида
   if ARow = -1 then
     ARow := Frg1.RecNo - 1;
@@ -518,6 +523,7 @@ begin
   end
   else
     Frg2.SetValue('d' + IntToStr(ADay), 4, False, null);
+  Frg2.DbGridEh1.Invalidate;
 end;
 
 
@@ -533,8 +539,12 @@ var
   Row, Day: Integer;
   Color: Integer;
 begin
+  if Params.Row = 0 then
+    Exit;
   Row := Params.Row - 1;
   Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
+//if (Row < 0) or (Day > 16) then begin
+//  Params.Background := clBlue; exit; end;
   if Day <> -1 then begin
     case FArrTurv[Row][Day][cColor] of
       1 : Params.Background := clRed;
@@ -545,6 +555,110 @@ begin
   else Params.Background := clmyGray;
 end;
 
+procedure TFrmWGEdtTurv.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+                           var
+  st, st1, stc: string;
+  v: Variant;
+  rsd: TVarDynArray;
+  e,e1: extended;
+  i,j,r,d,rd: Integer;
+  dt : TDateTime;
+  sa1: TStringDynArray;
+begin
+  FIsDetailGridUpdated:= TDBGridColumnEh(Sender).Grid = Frg2.DBGridEh1;
+
+  if UseText
+    then st:=Text
+    else st:=VarToStr(Value);
+
+  r:=Frg1.RecNo-1;
+
+  if FIsDetailGridUpdated
+    then begin
+      d:=Frg2.DBGridEh1.Col-1;
+      rd:=Frg1.RecNo-1;
+    end
+    else begin
+      d:=Frg1.DBGridEh1.Col-3;
+      rd:=0;
+    end;
+  dt := IncDay(FPeriodStartDate, d-1);
+  if d < 1 then exit;
+  if rd < 3 then begin
+    UseText:=True;
+    //выделим комментарий - часть введенной строки после прямого слэша
+    //!!! работает неправильно если есть слэши в коде турв или его описании, если в коде то он вообще не будет введен!!!
+    stc:='~'; //признак что комменатрий не изменился
+    sa1:=A.ExplodeS(st, '/');
+    st:=sa1[0];
+    if High(sa1) > 0
+      then begin
+        stc:=sa1[1];
+        for i:=2 to High(sa1) do stc:=stc + '/' + sa1[i];
+        stc:=trim(stc);
+      end;
+    if not S.IsNumber(st,0.01,24,2)
+      then begin
+        //не число, пытаемся вытащить код
+        FArrTurv[r][d][cTRuk+rd]:=null;
+        FArrTurv[r][d][cCRuk+rd]:=null;
+        i:=pos(' - ', st);
+        if i > 0 then st1:=copy(st,1,i - 1) else st1:=st;
+        st:= '';
+{        for i:= 0 to TurvCodes.Count-1 do
+          if UpperCase(st1) = UpperCase(TurvCodes[i])
+            then begin
+              st:= TurvCodes[i];
+              ArrTurv[r][d][atTRuk+rd]:=null;
+              ArrTurv[r][d][atCRuk+rd]:=TurvCodesIds[i];
+            end;}
+      end
+      else if dt > Date then begin
+        //чиисло, но дата больше текущей
+        FArrTurv[r][d][cTRuk-1+Frg1.RecNo]:=null;
+        FArrTurv[r][d][cCRuk-1+Frg1.RecNo]:=null;
+      end
+      else begin
+        //если число от 0 до 24
+        //округляем до четверти часа, не менее 0.25
+        e:=StrToFloat(st);
+{        if e<0.13 then e1:=0.25
+          else if frac(e)<0.13
+          then e1:=round(e)
+          else if frac(e)<0.26
+          then e1:=trunc(e)+0.25
+          else if frac(e)<0.51
+          then e1:=trunc(e)+0.5
+          else if frac(e)<0.76
+          then e1:=trunc(e)+0.75
+          else e1:=round(e);}
+        e1:=e;
+        //форматируем до двух знаков после запятой
+        st:=FormatFloat('0.00', e1);
+        FArrTurv[r][d][cTRuk+rd]:=e1;
+        FArrTurv[r][d][cCRuk+rd]:=null;
+      end;
+    //комментарий
+    if stc <> '~'
+      then FArrTurv[r][d][cComRuk+rd]:=stc;
+    //сбросим подсветку синим при отсутствии одного из времен парсек
+    if rd = 1
+      then FArrTurv[r][d][cSetTime]:=null;
+  end;
+  //событие обработано
+  Handled:=True;
+  //отобразим данные в основной таблице
+  PushTurvCellToGrid(r,StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2,2)));
+  //отобразим данные в детальной таблице
+  PushTurvCellToDetailGrid(r,StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2,2)));
+  //сменим фокус чтобы отобразить изменения в таблицах на экране
+//  Timer_AfterUpdate.Enabled:=True;
+  //сохраним в бд
+  rsd:=[cTRuk, cTPar, cTSogl, cTRuk, cTRuk];
+//!!!  SaveDayToDB(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)), rsd[rd]);
+end;
+
+
 procedure TFrmWGEdtTurv.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
 //отрисуем ячейку
 var
@@ -553,7 +667,7 @@ var
 begin
   inherited;
   //рисуем только столбцы с днями
-  if (Params.Col < 5) or (Params.Col > 5 + 16 - 1) then
+  if (Params.Col < 5) or (Params.Col > 5 + 16 - 1) then  //!!!
     Exit;
   //получим комментарии
   v1 := FArrTurv[Params.row - 1][Params.Col - 4][cComRuk];

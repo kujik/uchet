@@ -2,14 +2,21 @@ inherited Dlg_TURV: TDlg_TURV
   Caption = 'Dlg_TURV'
   ClientHeight = 578
   ClientWidth = 1526
-  ExplicitWidth = 1542
-  ExplicitHeight = 617
+  ExplicitWidth = 1538
+  ExplicitHeight = 616
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 559
     Width = 1526
-    ExplicitTop = 559
-    ExplicitWidth = 1526
+    ExplicitTop = 558
+    ExplicitWidth = 1522
+    inherited lbl_StatusBar_Right: TLabel
+      Left = 1439
+      Height = 17
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
+    end
   end
   object pnl1: TPanel [1]
     Left = 0
@@ -19,6 +26,7 @@ inherited Dlg_TURV: TDlg_TURV
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 1522
     object pnl_Left: TPanel
       Left = 0
       Top = 0
@@ -36,6 +44,7 @@ inherited Dlg_TURV: TDlg_TURV
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 1
+      ExplicitWidth = 1265
       object lbl_Division: TLabel
         Left = 6
         Top = 4
@@ -60,6 +69,7 @@ inherited Dlg_TURV: TDlg_TURV
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitLeft = 1482
       DesignSize = (
         40
         43)
