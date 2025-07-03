@@ -2523,6 +2523,7 @@ begin
   InLoadData := True;
   SetDataDriverCommandSelect;
   Q.QLoadFromQuery(ADODataDriverEh1.SelectSQL.Text, AParams, DBGridEh1, True);
+  MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
 end;
@@ -2534,6 +2535,7 @@ begin
     LoadData(AParams)
   else
     Q.QLoadFromQuery(ASql, AParams, DBGridEh1, True);
+  MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
 end;

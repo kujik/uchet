@@ -13,6 +13,7 @@ inherited Dlg_TURV: TDlg_TURV
     inherited lbl_StatusBar_Right: TLabel
       Left = 1439
       Height = 17
+      ExplicitLeft = 1439
     end
     inherited lbl_StatusBar_Left: TLabel
       Height = 17
