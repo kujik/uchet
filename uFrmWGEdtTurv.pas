@@ -21,6 +21,9 @@ type
     FPeriodEndDate: TDateTime;
     FDayColumnsCount: Integer;
     FIdDivision: Integer;
+    FDivisionName: string;
+    FIsCommited: Boolean;
+
     FArrTitle: TVarDynArray2;
     FTurvCodes: TNamedArr;
     FArrTurv: array of array of array of Variant;
@@ -38,11 +41,17 @@ type
     procedure PushTurvToGrid;
     procedure PushTurvCellToGrid(ARow, ADay: Integer);
     procedure PushTurvCellToDetailGrid(ARow, ADay: Integer);
+    procedure SetLblDivisionText;
+    procedure SetLblWorkerText;
+    function  FormatTurvCell(v: Variant): string;
+
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
+    procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
 
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
   public
   end;
 
@@ -52,7 +61,8 @@ var
 implementation
 
 uses
-  uTurv;
+  uTurv,
+  uLabelColors2;
 
 {$R *.dfm}
 
@@ -105,12 +115,13 @@ begin
 //  Mode := fEdit;
 //  ID := 2234;
 
-  Q.QLoadFromQuery('select id, id_division, code, name, dt1, dt2, committxt, commit, editusers, status from v_turv_period where id = :id$i', [ID], va2);
+  Q.QLoadFromQuery('select id, id_division, code, name, dt1, dt2, committxt, commit, editusers, status, name from v_turv_period where id = :id$i', [ID], va2);
 
   if Length(va2) = 0 then
     Exit;
 
   FIdDivision := va2[0][1];
+  FDivisionName := va2[0][10];
   FPeriodStartDate := va2[0][4];
   FPeriodEndDate := va2[0][5];
   FDayColumnsCount := DaysBetween(FPeriodEndDate, FPeriodStartDate) + 1;
@@ -164,6 +175,9 @@ begin
     [],
     [mbtCtlPanel]
   ]);
+  i:=i div i;
+  Frg1.CreateAddControls('1', cntLabelClr, '', 'lblDivision', '', 4, yrefT, 800);
+  Frg1.CreateAddControls('1', cntLabelClr, '', 'lblWorker', '', 4, yrefB, 800);
 
   Frg1.SetInitData([], '');
 
@@ -184,29 +198,6 @@ begin
   //(так как тогда надо делать блокировку при установке завершения, ведь при просмотре может быть турв открыта у кого-то на редактирование!)
   Cth.GetSpeedBtn(pnl_Left, mbtLock).Enabled:=RgsCommit and (IsCommited or (Mode = fEdit));
   Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIFStr(IsCommited, 'Отменить закрытие периода', 'Закрыть период');
-  if (InEditMode)and(EditInGrid1) then begin
-    st:='Ввод времени руководителя';
-    stc:='$FF0060';
-  end
-  else if (InEditMode)and(not EditInGrid1) then begin
-    st:='Ввод данных';
-    stc:='$FF00FF';
-  end
-  else if IsCommited then begin
-    st:='Только просмотр, период закрыт';
-    stc:='$0000FF';
-  end
-  else begin
-    st:='Только просмотр';
-    stc:='$009000';
-  end;
-  lbl_Division.ResetColors;
-  lbl_Division.SetCaptionAr([
-    '$000000', 'Подразделение: ', '$FF0000', DivisionName,
-    '$000000', '   Период с ', '$FF0000',  DateToStr(PeriodStartDate), '$000000 по $FF0000', DateToStr(PeriodEndDate),
-    '$000000      [', stc, st, '$000000]'
-    ]);
-end;
 }
 
 
@@ -224,6 +215,7 @@ end;
   if not (Result and LoadTurvCodes and LoadTurv) then
     Exit;
 
+  SetLblDivisionText;
   PushTurvToGrid;
 
 end;
@@ -476,7 +468,7 @@ var
   st: string;
   v1, v2, v3: Variant;
 begin
-  if (not Frg2.MemTableEh1.Active) or (Frg1.GetCount(False) = 0) then
+  if (not Frg2.MemTableEh1.Active) or (Frg2.GetCount(False) = 0) then
     Exit;
   //получим автоматически номер активной строки грида
   if ARow = -1 then
@@ -526,6 +518,89 @@ begin
   Frg2.DbGridEh1.Invalidate;
 end;
 
+ procedure TFrmWGEdtTurv.SetLblDivisionText;
+var
+  st, stc : string;
+begin
+  if (FInEditMode)and(FEditInGrid1) then begin
+    st:='Ввод времени руководителя';
+    stc:='$FF0060';
+  end
+  else if (FInEditMode)and(not FEditInGrid1) then begin
+    st:='Ввод данных';
+    stc:='$FF00FF';
+  end
+  else if FIsCommited then begin
+    st:='Только просмотр, период закрыт';
+    stc:='$0000FF';
+  end
+  else begin
+    st:='Только просмотр';
+    stc:='$009000';
+  end;
+  TLabelClr(Frg1.FindComponent('lblDivision')).SetCaptionAr2([
+    '$000000', 'Подразделение: ', '$FF0000', FDivisionName,
+    '$000000', '   Период с ', '$FF0000',  DateToStr(FPeriodStartDate), '$000000 по $FF0000', DateToStr(FPeriodEndDate),
+    '$000000      [', stc, st, '$000000]'
+    ]);
+end;
+
+procedure TFrmWGEdtTurv.SetLblWorkerText;
+//выведем данные по работнику и времни, на которого установлена позиция в основном гриде.
+//вызываем из события изменения столбца детального грида и изменения столбца основного, а также афтерскролл мемтейбл1
+//!если открыт детальнфй грид, и в из ячейки основного ткнуться в детальный и там сразу откроется редактирование, и обратно,
+//то сюда не попадает - не вызывается события ни colEnter, ни Cellclick, ни CellMouseClick, если ячейки уже в режиме редактирования!
+var
+  i, j: Integer;
+begin
+  //выйдем во время загрузки данных
+  //а первоначальный показ в итоге прихождится делать в form.onshow
+//  if Frg1.InLoadData or Frg2.InLoadData then
+//    Exit;
+  //если видна детальная панель, то получим из нее, иначе из основной
+  if Frg2.DBGridEh1.Focused then begin
+    if not Frg2.MemTableEh1.Active or (Frg2.RecNo < 1) or Frg2.InLoadData then
+      Exit;
+    j := StrToIntDef(Copy(Frg2.CurrField, 2, 2), -1)
+  end
+  else begin
+    if not Frg1.MemTableEh1.Active or (Frg1.RecNo < 1) or Frg1.InLoadData then
+      Exit;
+    j := StrToIntDef(Copy(Frg1.CurrField, 2, 2), -1);
+  end;
+  //позиции в массиве данных
+  i := Frg1.RecNo - 1;
+  if (i < 0) then
+    Exit;
+  if (j < 0) or (FArrTurv[i][j][cExists] = -1) then
+    //не колонки дней - только фио
+    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FArrTitle[i][cTlW]])
+  else
+    //колонки дней - данные по текущей ячейке
+    //два цвета не могут в лейбле сейчас идти подряд без промежутков!
+    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2([
+      '$000000Работник: $FF00FF', FArrTitle[i][cTlW],
+      '$000000', '   Дата: ', '$FF0000', DateToStr(IncDay(FPeriodStartDate, j-1)) +
+      '$000000', '   Время: ', '$FF0000',
+      FormatTurvCell(GetTurvCell(i, j, 1)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 2)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 3)),
+      S.IIf(FArrTurv[i][j][cSumPr] > 0, ' $000000   Премия: $FF0000 ' + VarToStr(FArrTurv[i][j][cSumPr]), ''),
+      S.IIf(FArrTurv[i][j][cSumSct] > 0, ' $000000   Штраф: $FF0000 ' + VarToStr(FArrTurv[i][j][cSumSct]), ''),
+      S.IIf(S.NSt(FArrTurv[i][j][cBegTime]) = '', '', ' $000000   Приход: $FF0000 ' + S.IIf(FArrTurv[i][j][cBegTime] = '-1', '-',
+        StringReplace(FormatFloat('00.00', S.VarToFloat(FArrTurv[i][j][cBegTime])), FormatSettings.DecimalSeparator, ':', []))),
+      S.IIf(S.NSt(FArrTurv[i][j][cEndTime]) = '', '', ' $000000   Уход: $FF0000 ' + S.IIf(FArrTurv[i][j][cEndTime] = '-1', '-',
+        StringReplace(FormatFloat('00.00', S.VarToFloat(FArrTurv[i][j][cEndTime])), FormatSettings.DecimalSeparator, ':', []))),
+      S.IIf(S.NSt(FArrTurv[i][j][cNight]) = '', '', ' $000000   Ночью: $FF0000 ' + VarToStr(FArrTurv[i][j][cNight]))
+    ]);
+end;
+
+function TFrmWGEdtTurv.FormatTurvCell(v: Variant): string;
+begin
+  if S.IsNumber(S.NSt(v), 0, 24) then
+    Result := FormatFloat('0.00', S.VarToFloat(v))
+  else
+    Result := S.NSt(v);
+end;
+
 
 
 
@@ -556,55 +631,58 @@ begin
 end;
 
 procedure TFrmWGEdtTurv.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
-                           var
+var
   st, st1, stc: string;
   v: Variant;
   rsd: TVarDynArray;
-  e,e1: extended;
-  i,j,r,d,rd: Integer;
-  dt : TDateTime;
+  e, e1: extended;
+  i, j, r, d, rd: Integer;
+  dt: TDateTime;
   sa1: TStringDynArray;
 begin
-  FIsDetailGridUpdated:= TDBGridColumnEh(Sender).Grid = Frg2.DBGridEh1;
-
-  if UseText
-    then st:=Text
-    else st:=VarToStr(Value);
-
-  r:=Frg1.RecNo-1;
-
-  if FIsDetailGridUpdated
-    then begin
-      d:=Frg2.DBGridEh1.Col-1;
-      rd:=Frg1.RecNo-1;
-    end
-    else begin
-      d:=Frg1.DBGridEh1.Col-3;
-      rd:=0;
-    end;
-  dt := IncDay(FPeriodStartDate, d-1);
-  if d < 1 then exit;
+  FIsDetailGridUpdated := TDBGridColumnEh(Sender).Grid = Frg2.DBGridEh1;
+  if UseText then
+    st := Text
+  else
+    st := VarToStr(Value);
+  r := Frg1.RecNo - 1;
+  d := StrToIntDef(Copy(TColumnEh(Sender).FieldName, 2, 2), -1);
+  if d = -1 then
+    Exit;
+  if FIsDetailGridUpdated then begin
+//    d := Frg2.DBGridEh1.Col - 1;
+    rd := Frg1.RecNo - 1;
+  end
+  else begin
+//    d := Frg1.DBGridEh1.Col - 3;
+    rd := 0;
+  end;
+  dt := IncDay(FPeriodStartDate, d - 1);
+  if d < 1 then
+    exit;
   if rd < 3 then begin
-    UseText:=True;
+    UseText := True;
     //выделим комментарий - часть введенной строки после прямого слэша
     //!!! работает неправильно если есть слэши в коде турв или его описании, если в коде то он вообще не будет введен!!!
-    stc:='~'; //признак что комменатрий не изменился
-    sa1:=A.ExplodeS(st, '/');
-    st:=sa1[0];
-    if High(sa1) > 0
-      then begin
-        stc:=sa1[1];
-        for i:=2 to High(sa1) do stc:=stc + '/' + sa1[i];
-        stc:=trim(stc);
-      end;
-    if not S.IsNumber(st,0.01,24,2)
-      then begin
+    stc := '~'; //признак что комменатрий не изменился
+    sa1 := A.ExplodeS(st, '/');
+    st := sa1[0];
+    if High(sa1) > 0 then begin
+      stc := sa1[1];
+      for i := 2 to High(sa1) do
+        stc := stc + '/' + sa1[i];
+      stc := trim(stc);
+    end;
+    if not S.IsNumber(st, 0.01, 24, 2) then begin
         //не число, пытаемся вытащить код
-        FArrTurv[r][d][cTRuk+rd]:=null;
-        FArrTurv[r][d][cCRuk+rd]:=null;
-        i:=pos(' - ', st);
-        if i > 0 then st1:=copy(st,1,i - 1) else st1:=st;
-        st:= '';
+      FArrTurv[r][d][cTRuk + rd] := null;
+      FArrTurv[r][d][cCRuk + rd] := null;
+      i := pos(' - ', st);
+      if i > 0 then
+        st1 := copy(st, 1, i - 1)
+      else
+        st1 := st;
+      st := '';
 {        for i:= 0 to TurvCodes.Count-1 do
           if UpperCase(st1) = UpperCase(TurvCodes[i])
             then begin
@@ -612,16 +690,16 @@ begin
               ArrTurv[r][d][atTRuk+rd]:=null;
               ArrTurv[r][d][atCRuk+rd]:=TurvCodesIds[i];
             end;}
-      end
-      else if dt > Date then begin
+    end
+    else if dt > Date then begin
         //чиисло, но дата больше текущей
-        FArrTurv[r][d][cTRuk-1+Frg1.RecNo]:=null;
-        FArrTurv[r][d][cCRuk-1+Frg1.RecNo]:=null;
-      end
-      else begin
+      FArrTurv[r][d][cTRuk - 1 + Frg1.RecNo] := null;
+      FArrTurv[r][d][cCRuk - 1 + Frg1.RecNo] := null;
+    end
+    else begin
         //если число от 0 до 24
         //округляем до четверти часа, не менее 0.25
-        e:=StrToFloat(st);
+      e := StrToFloat(st);
 {        if e<0.13 then e1:=0.25
           else if frac(e)<0.13
           then e1:=round(e)
@@ -632,31 +710,37 @@ begin
           else if frac(e)<0.76
           then e1:=trunc(e)+0.75
           else e1:=round(e);}
-        e1:=e;
+      e1 := e;
         //форматируем до двух знаков после запятой
-        st:=FormatFloat('0.00', e1);
-        FArrTurv[r][d][cTRuk+rd]:=e1;
-        FArrTurv[r][d][cCRuk+rd]:=null;
-      end;
+      st := FormatFloat('0.00', e1);
+      FArrTurv[r][d][cTRuk + rd] := e1;
+      FArrTurv[r][d][cCRuk + rd] := null;
+    end;
     //комментарий
-    if stc <> '~'
-      then FArrTurv[r][d][cComRuk+rd]:=stc;
+    if stc <> '~' then
+      FArrTurv[r][d][cComRuk + rd] := stc;
     //сбросим подсветку синим при отсутствии одного из времен парсек
-    if rd = 1
-      then FArrTurv[r][d][cSetTime]:=null;
+    if rd = 1 then
+      FArrTurv[r][d][cSetTime] := null;
   end;
   //событие обработано
-  Handled:=True;
+  Handled := True;
   //отобразим данные в основной таблице
-  PushTurvCellToGrid(r,StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2,2)));
+  PushTurvCellToGrid(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)));
   //отобразим данные в детальной таблице
-  PushTurvCellToDetailGrid(r,StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2,2)));
+  PushTurvCellToDetailGrid(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)));
   //сменим фокус чтобы отобразить изменения в таблицах на экране
 //  Timer_AfterUpdate.Enabled:=True;
   //сохраним в бд
-  rsd:=[cTRuk, cTPar, cTSogl, cTRuk, cTRuk];
+  rsd := [cTRuk, cTPar, cTSogl, cTRuk, cTRuk];
 //!!!  SaveDayToDB(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)), rsd[rd]);
 end;
+
+procedure TFrmWGEdtTurv.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+  SetLblWorkerText;
+end;
+
 
 
 procedure TFrmWGEdtTurv.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
@@ -779,5 +863,11 @@ begin
   //флаг что обработать, если не поставить то будет стандартная отрисовка
   Processed := True;
 end;
+
+procedure TFrmWGEdtTurv.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+  SetLblWorkerText;
+end;
+
 
 end.
