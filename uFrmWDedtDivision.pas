@@ -17,6 +17,7 @@ type
     cmb_id_head: TDBComboBoxEh;
     edt_editusernames: TDBEditEh;
     chb_Active: TDBCheckBoxEh;
+    cmb_id_schedule: TDBComboBoxEh;
     procedure edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     FNewIds: string;
@@ -47,6 +48,7 @@ begin
     ['editusers$s',''],
     ['editusernames$s;0','v=1:4000:0', True],
     ['code$s','v=0:5:0:T'],
+    ['id_schedule$i','v=1:50'],
     ['active$i','']
   ];
   View := 'v_ref_divisions';
@@ -75,6 +77,7 @@ end;
 function TFrmWDedtDivision.LoadComboBoxes: Boolean;
 begin
   Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], cmb_id_head, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select code, id from ref_work_schedules order by code', [], cmb_id_schedule, cntComboLK);
   Cth.AddToComboBoxEh(cmb_office, [['÷ех',0], ['ќфис',1]]);
   Result := True;
 end;

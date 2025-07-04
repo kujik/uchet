@@ -148,12 +148,15 @@ select
   d.*,
   w.f || ' ' || w.i  || ' ' || w.o as head,
   case when d.office = 1 then 'офис' else 'цех' end as isoffice,
-  getusernames(d.editusers) as editusernames 
+  getusernames(d.editusers) as editusernames,
+  s.code as schedule_code  
 from
   ref_divisions d,
-  ref_workers w
+  ref_workers w,
+  ref_work_schedules s
 where
   d.id_head = w.id
+  and s.id = d.id_schedule
 ;     
 
 
@@ -1375,7 +1378,9 @@ alter table turv_worker add  constraint fk_turv_worker_schedule foreign key (id_
 alter table turv_period add id_schedule number(11);
 alter table turv_period add  constraint fk_turv_period_schedule foreign key (id_schedule) references ref_work_schedules(id);
 alter table ref_divisions add id_schedule number(11);
-alter table ref_divisions add constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id)
+alter table ref_divisions add constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id);
+update ref_divisions set id_schedule = 100;
+update turv_period set id_schedule = 100;
 
 
 

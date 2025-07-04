@@ -1,18 +1,18 @@
 inherited FrmWDedtDivision: TFrmWDedtDivision
   Caption = 'FrmWDedtDivision'
-  ClientHeight = 252
+  ClientHeight = 281
   ClientWidth = 672
   ExplicitWidth = 684
-  ExplicitHeight = 290
+  ExplicitHeight = 319
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 672
-    Height = 236
-    ExplicitWidth = 672
-    ExplicitHeight = 236
+    Height = 265
+    ExplicitWidth = 668
+    ExplicitHeight = 235
     inherited pnlFrmClient: TPanel
       Width = 662
-      Height = 187
+      Height = 216
       ExplicitWidth = 658
       ExplicitHeight = 186
       object cmb_Office: TDBComboBoxEh
@@ -396,8 +396,8 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         Visible = True
       end
       object chb_Active: TDBCheckBoxEh
-        Left = 101
-        Top = 143
+        Left = 104
+        Top = 170
         Width = 97
         Height = 17
         Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
@@ -406,9 +406,30 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         ParentColor = False
         TabOrder = 5
       end
+      object cmb_id_schedule: TDBComboBoxEh
+        Left = 104
+        Top = 143
+        Width = 121
+        Height = 21
+        ControlLabel.Width = 51
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1062#1077#1093'/'#1054#1092#1080#1089
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        Items.Strings = (
+          #1062#1077#1093
+          #1054#1092#1080#1089)
+        KeyItems.Strings = (
+          '0'
+          '1')
+        TabOrder = 6
+        Visible = True
+      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 192
+      Top = 221
       Width = 662
       ExplicitTop = 191
       ExplicitWidth = 658
@@ -443,14 +464,14 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 236
+    Top = 265
     Width = 672
     ExplicitTop = 235
     ExplicitWidth = 668
     inherited lblStatusBarR: TLabel
       Left = 599
       Height = 14
-      ExplicitLeft = 580
+      ExplicitLeft = 599
     end
     inherited lblStatusBarL: TLabel
       Height = 14
