@@ -127,12 +127,14 @@ create table ref_divisions(
   id number(11),
   code varchar(5),
   id_head number(11),
+  id_schedule number(11),
   office number(1),
   name varchar2(400),
   editusers varchar2(4000),
   active number(1),
   constraint pk_ref_divisions primary key (id),
-  constraint fk_ref_divisions_head foreign key (id_head) references ref_workers(id) 
+  constraint fk_ref_divisions_head foreign key (id_head) references ref_workers(id), 
+  constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id)
 );
 
 
@@ -164,13 +166,15 @@ create table j_worker_status(
   id_division number(11),
   id_job number(11),
   id_worker number(11),
+  id_schedule number(11),
   dt date,
   status number(1),             --1=принят, 2=переведен, 3=уволен
-  comm varchar(100),  
+  comm varchar(100), 
   constraint pk_j_worker_status primary key (id),
   constraint fk_j_worker_status_div foreign key (id_division) references ref_divisions(id), 
   constraint fk_j_worker_status_job foreign key (id_job) references ref_jobs(id), 
-  constraint fk_j_worker_status_worker foreign key (id_worker) references ref_workers
+  constraint fk_j_worker_status_worker foreign key (id_worker) references ref_workers,
+  constraint fk_j_worker_status_schedule foreign key (id_schedule) references ref_work_schedules(id) 
 );
 
 create sequence sq_j_worker_status start with 1 nocache;
@@ -258,6 +262,7 @@ create table turv_worker(
   id_worker number(11),             --айди работника
   id_division number(11),           --айди подразделения
   id_job number(11),                --айди должности
+  id_schedule number(11),            
   dt1 date,                         --дата начала периода ТУРВ 
   dt2 date,                         --дата конца периода ТУРВ 
   dt1p date,                        --дата начала данных по этому работнику в ТУРВ 
@@ -268,7 +273,8 @@ create table turv_worker(
   constraint fk_turv_worker_turv foreign key (id_turv) references turv_period (id) on delete cascade,
   constraint fk_turv_worker_worker foreign key (id_worker) references ref_workers(id), 
   constraint fk_turv_worker_div foreign key (id_division) references ref_divisions(id),
-  constraint fk_turv_worker_job foreign key (id_job) references ref_jobs(id)
+  constraint fk_turv_worker_job foreign key (id_job) references ref_jobs(id),
+  constraint fk_turv_worker_schedule foreign key (id_schedule) references ref_work_schedules(id)
 );  
 
 create unique index idx_turv_worker_1 on turv_worker (id_worker, id_division, id_job, dt1, dt1p);
@@ -528,13 +534,14 @@ alter table turv_period  add constraint pk_turv_period  primary key (id);
 create table turv_period(  
   id number(11),                   
   id_division number(11),           --подразделение
+  id_schedule number(11),
   dt1 date,                         --дата начала периода ТУРВ
   dt2 date,                         --дата конца периода ТУРВ
   commit number(1),                 --период закрыт
   status number(1),                 --статус заполенности данных
   constraint pk_turv_period  primary key (id),
-  --constraint pk_turv_period primary key (id_division, dt1),
-  constraint fk_turv_period_div foreign key (id_division) references ref_divisions(id)
+  constraint fk_turv_period_div foreign key (id_division) references ref_divisions(id),
+  constraint fk_turv_period_schedule foreign key (id_schedule) references ref_work_schedules(id)
 );
 
 create unique index idx_turv_period_1 on turv_period(id_division, dt1);
@@ -1360,3 +1367,17 @@ select * from turv_day where id_worker = 78 order by dt desc;
 ---------------------------
 ---------------------------
 ---------------------------
+
+alter table j_worker_status add id_schedule number(11);
+alter table j_worker_status add  constraint fk_j_worker_status_schedule foreign key (id_schedule) references ref_work_schedules(id);
+alter table turv_worker add id_schedule number(11);
+alter table turv_worker add  constraint fk_turv_worker_schedule foreign key (id_schedule) references ref_work_schedules(id);
+alter table turv_period add id_schedule number(11);
+alter table turv_period add  constraint fk_turv_period_schedule foreign key (id_schedule) references ref_work_schedules(id);
+alter table ref_divisions add id_schedule number(11);
+alter table ref_divisions add constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id)
+
+
+
+   
+

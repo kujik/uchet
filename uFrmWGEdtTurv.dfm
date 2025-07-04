@@ -2,8 +2,8 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
   Caption = 'FrmWGEdtTurv'
   ClientHeight = 426
   ClientWidth = 753
-  ExplicitWidth = 769
-  ExplicitHeight = 465
+  ExplicitWidth = 765
+  ExplicitHeight = 464
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 753
@@ -13,8 +13,8 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
     inherited pnlFrmClient: TPanel
       Width = 743
       Height = 361
-      ExplicitWidth = 743
-      ExplicitHeight = 361
+      ExplicitWidth = 739
+      ExplicitHeight = 360
       inherited pnlTop: TPanel
         Width = 743
         ExplicitWidth = 739
@@ -32,13 +32,13 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
       inherited pnlGrid1: TPanel
         Width = 733
         Height = 306
-        ExplicitWidth = 733
-        ExplicitHeight = 306
+        ExplicitWidth = 729
+        ExplicitHeight = 305
         inherited Frg1: TFrDBGridEh
           Width = 731
           Height = 304
-          ExplicitWidth = 731
-          ExplicitHeight = 304
+          ExplicitWidth = 727
+          ExplicitHeight = 303
           inherited pnlGrid: TPanel
             Width = 721
             Height = 250
@@ -48,6 +48,7 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
               Width = 719
               Height = 227
               OnAdvDrawDataCell = Frg1DbGridEh1AdvDrawDataCell
+              OnDataHintShow = Frg1DbGridEh1DataHintShow
               OnRowDetailPanelShow = Frg1DbGridEh1RowDetailPanelShow
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
@@ -98,17 +99,18 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
       inherited pnlFrg2: TPanel
         Top = 320
         Width = 743
-        ExplicitTop = 320
-        ExplicitWidth = 743
+        ExplicitTop = 319
+        ExplicitWidth = 739
         inherited Frg2: TFrDBGridEh
           Width = 741
-          ExplicitWidth = 741
+          ExplicitWidth = 737
           inherited pnlGrid: TPanel
             Width = 731
             ExplicitWidth = 727
             inherited DbGridEh1: TDBGridEh
               Width = 729
               OnAdvDrawDataCell = Frg2DbGridEh1AdvDrawDataCell
+              OnDataHintShow = Frg2DbGridEh1DataHintShow
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
@@ -196,7 +198,11 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
     ExplicitWidth = 749
     inherited lblStatusBarR: TLabel
       Left = 680
+      Height = 14
       ExplicitLeft = 680
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

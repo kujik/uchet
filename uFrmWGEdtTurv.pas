@@ -16,6 +16,14 @@ type
       AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
     procedure Frg2DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell,
       AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
+    procedure Frg1DbGridEh1DataHintShow(Sender: TCustomDBGridEh;
+      CursorPos: TPoint; Cell: TGridCoord; InCellCursorPos: TPoint;
+      Column: TColumnEh; var Params: TDBGridEhDataHintParams;
+      var Processed: Boolean);
+    procedure Frg2DbGridEh1DataHintShow(Sender: TCustomDBGridEh;
+      CursorPos: TPoint; Cell: TGridCoord; InCellCursorPos: TPoint;
+      Column: TColumnEh; var Params: TDBGridEhDataHintParams;
+      var Processed: Boolean);
   private
     FPeriodStartDate: TDateTime;
     FPeriodEndDate: TDateTime;
@@ -72,7 +80,9 @@ implementation
 uses
   uTurv,
   uLabelColors2,
-  uFrmBasicInput;
+  uFrmBasicInput,
+  D_TURV_Comment
+  ;
 
 {$R *.dfm}
 
@@ -874,6 +884,30 @@ begin
   Processed := True;
 end;
 
+procedure TFrmWGEdtTurv.Frg1DbGridEh1DataHintShow(Sender: TCustomDBGridEh;
+  CursorPos: TPoint; Cell: TGridCoord; InCellCursorPos: TPoint;
+  Column: TColumnEh; var Params: TDBGridEhDataHintParams;
+  var Processed: Boolean);
+var
+  v1, v2, v3, v4: Variant;
+begin
+  inherited;
+  //только столбцы с днями
+  if (Cell.X < 5) or (Cell.X > 5 + 16 - 1) then
+    Exit;
+  //получим комментарии
+  v1 := FArrTurv[Cell.Y - 1][Cell.X - 4][cComRuk];
+  v2 := FArrTurv[Cell.Y - 1][Cell.X - 4][cComPar];
+  v3 := FArrTurv[Cell.Y - 1][Cell.X - 4][cComSogl];
+  v4 := FArrTurv[Cell.Y - 1][Cell.X - 4][cNight];
+  //если мышка в верхнем лефом углу, вызовем метод формы посказки, а он уже покажет форму, если комментарий непустой,
+  //также передаются координаты чтобы форма была помещена в нужном месте.
+  if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y <= 7)) then
+    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, v1, v2, v3, null);
+  if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y >= Frg1.DBGridEh1.CellRect(Cell.X, Cell.Y).Bottom - Frg1.DBGridEh1.CellRect(Cell.X, Cell.Y).Top - 7)) then
+    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
+end;
+
 procedure TFrmWGEdtTurv.Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
 var
   i: Integer;
@@ -960,6 +994,44 @@ begin
   Processed := True;
 end;
 
+procedure TFrmWGEdtTurv.Frg2DbGridEh1DataHintShow(Sender: TCustomDBGridEh;
+  CursorPos: TPoint; Cell: TGridCoord; InCellCursorPos: TPoint;
+  Column: TColumnEh; var Params: TDBGridEhDataHintParams;
+  var Processed: Boolean);
+var
+  v1, v2, v3, v4: Variant;
+begin
+  inherited;
+  if (Cell.X <= 1) or (Cell.X >= 1 + 16 - 1) then
+    Exit;
+  //получим комментарии
+  v1 := '';
+  v2 := '';
+  v3 := '';
+  v4 := '';
+  case Cell.Y of
+    1:
+      v1 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cComRuk];
+    2:
+      begin
+        v2 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cComPar];
+        v4 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cNight];
+      end;
+    3:
+      v3 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cComSogl];
+    4:
+      v1 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cComPr];
+    5:
+      v1 := FArrTurv[Frg1.RecNo - 1][Cell.X - 1][cComSct];
+  end;
+  //если мышка в верхнем лефом углу, вызовем метод формы посказки, а он уже покажет форму, если комментарий непустой,
+  //также передаются координаты чтобы форма была помещена в нужном месте.
+  if (InCellCursorPos.X <= 7) and (InCellCursorPos.Y <= 7) then
+    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y + Frg1.RecNo * Frg1.DBGridEh1.RowHeight, v1, v2, v3, null);
+  if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y >= Frg2.DBGridEh1.CellRect(Cell.X, Cell.Y).Bottom - Frg2.DBGridEh1.CellRect(Cell.X, Cell.Y).Top - 7)) then
+    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
+end;
+
 procedure TFrmWGEdtTurv.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 var
   i, j: Integer;
@@ -1008,9 +1080,9 @@ begin
     if Frg2.DbGridEh1.Focused then
       n1 := Frg2.RecNo - 1
     else
-      n1 := cComRuk;
+      n1 := 1;
     va1 := [S.NSt(FArrTurv[r][d][S.NInt(va3[n1])])];
-    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntEdit, 'Комментарий:','0:400::T']],
       va1, va2, [['']], nil
     ) < 0 then
@@ -1021,7 +1093,7 @@ begin
     if d = -1 then
       Exit;
     va1 := [S.NSt(FArrTurv[r][d][cSumPr]), S.NSt(FArrTurv[r][d][cComPr])];
-    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntNEdit, 'Сумма:','0:100000'],
       [cntEdit, 'Комментарий:','0:400::T']],
       va1, va2, [['']], nil
@@ -1034,7 +1106,7 @@ begin
     if d = -1 then
       Exit;
     va1 := [S.NSt(FArrTurv[r][d][cSumSct]), S.NSt(FArrTurv[r][d][cComSct])];
-    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntNEdit, 'Сумма:','0:100000'],
       [cntEdit, 'Комментарий:','0:400::T']],
       va1, va2, [['']], nil
@@ -1044,18 +1116,49 @@ begin
     FArrTurv[r][d][cComSct] := va2[1];
   end
   else if Mode = mbtPremiumForPeriod then begin
-    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+    va1 := [S.NSt(FArrTitle[r][cTlPremium])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 180, 60,
       [[cntNEdit, 'Сумма:','0:100000']],
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
+    FArrTitle[r][cTlPremium] := va2[0];
+    SetLblsDetailText;
+//    SaveWorkerToDB(r);
   end
   else if Mode = mbtCommentForWorker then begin
-    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+    va1 := [S.NSt(FArrTitle[r][cTlComm])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntEdit, 'Комментарий:','0:400::T']],
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
+    FArrTitle[r][cTlComm] := S.NSt(va2[0]);
+    SetLblsDetailText;
+  end
+  else if Mode = mbtDivisionScedule then begin
+    va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
+    va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
+    va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
+      [[cntComboLk, 'График:','1:50']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+    FArrTitle[r][cTlComm] := va2[0];
+    SetLblsDetailText;
+  end
+  else if Mode = mbtWorkerScedule then begin
+    va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
+    va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
+    va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
+      [[cntComboLk, 'График:','0:50']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+    FArrTitle[r][cTlComm] := va2[0];
+    SetLblsDetailText;
   end;
   //отобразим данные в основной таблице
   //(если это изменение в деатльной делается, то в основной значки комментов перерисуются при наведении мышки на ячейку!)

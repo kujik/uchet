@@ -151,7 +151,8 @@ uses
   uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
-  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv};
+  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
+  uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment};
 
 //!!!
 
@@ -310,6 +311,8 @@ begin
   Application.CreateForm(TFrmXDedtMemo, FrmXDedtMemo);
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
+  Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
+  Application.CreateForm(TDlg_TURV_Comment, Dlg_TURV_Comment);
 
   Application.Run;
 
