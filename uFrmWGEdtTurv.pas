@@ -48,15 +48,19 @@ type
     procedure SetLblsDetailText;
     function  FormatTurvCell(v: Variant): string;
     procedure FrgsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+    procedure InputDialog(Mode : Integer);
+    function  GetDay: Integer;
 
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
+    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
 
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
     procedure Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
+    procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
   public
   end;
 
@@ -67,7 +71,8 @@ implementation
 
 uses
   uTurv,
-  uLabelColors2;
+  uLabelColors2,
+  uFrmBasicInput;
 
 {$R *.dfm}
 
@@ -106,6 +111,18 @@ const
   cTmM = 1;               //время или код от мастеров
   cTmP = 2;               //время или код парсек
   cTmV = 3;               //проверенное время или код
+
+  cArrBtns:  array [0..7] of string = (
+    'График работы для подразделения',
+    'График работы для работника',
+    'Преимия за день',
+    'Штраф за день',
+    'Комментарий',
+    'Премия за период',
+    'Комментарий по работнику',
+    'Ночная смена'
+  );
+
 
 function TFrmWGEdtTurv.PrepareForm: Boolean;
 var
@@ -173,12 +190,12 @@ begin
     [mbtView, True, True, 'Итоговое время'],
     [mbtEdit, True, False, 'Ввод времени руководителя'],
     [],
-    [-1001, True, True, 'График работы для подразделения'],
-    [-1002, True, True, 'График работы для работника'],
+    [-mbtDivisionScedule, True, True],
+    [-mbtWorkerScedule, True, True],
     [],
-    [-1003, True, True, 'Преимия за день'],
-    [-1004, True, True, 'Штраф за день'],
-    [-1006, True, True, 'Комментарий'],
+    [-mbtPremiumForDay, True, True],
+    [-mbtFine, True, True],
+    [-mbtComment, True, True],
     [],
     [mbtSendEMail, True, FRgsEdit2 and FInEditMode],
     [mbtCustom_SundaysToTurv, True, FInEditMode],
@@ -188,30 +205,10 @@ begin
     [],
     [mbtCtlPanel]
   ]);
+
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblDivision', '', 4, yrefT, 800);
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblWorker', '', 4, yrefB, 800);
-
   Frg1.SetInitData([], '');
-
-
- {
-    DBGridEh1.ReadOnly:=not (InEditMode and EditInGrid1);
-  Cth.GetSpeedBtn(pnl_Left, mbtView).Hint:='Итоговое время';
-  Cth.GetSpeedBtn(pnl_Left, mbtView).Enabled:=EditInGrid1 and InEditMode;
-  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Hint:='Ввод времени руководителя';
-  Cth.GetSpeedBtn(pnl_Left, mbtEdit).Enabled:=not EditInGrid1 and InEditMode and RgsEdit1;
-  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Hint:='Загрузить данные парсек';
-  Cth.GetSpeedBtn(pnl_Left, mbtCustom_FromParsec).Enabled:= RgsEdit2 and InEditMode;
-  Cth.GetSpeedBtn(pnl_Left, mbtSendEMail).Enabled:= RgsEdit2 and InEditMode;
-  Cth.GetSpeedBtn(pnl_Left, mbtCustom_SundaysToTurv).Enabled:= InEditMode;
-  //видимость кнопки Завершить период (она одна и завершает и отменяет завершение)
-  //должны быть права
-  //а также или режим редактирования исходный, или видна только в случае уже Завершенного периода, те позволит при просмотре только снять завершение, но не выставить
-  //(так как тогда надо делать блокировку при установке завершения, ведь при просмотре может быть турв открыта у кого-то на редактирование!)
-  Cth.GetSpeedBtn(pnl_Left, mbtLock).Enabled:=RgsCommit and (IsCommited or (Mode = fEdit));
-  Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIFStr(IsCommited, 'Отменить закрытие периода', 'Закрыть период');
-}
-
 
   Frg2.Options := FrDBGridOptionDef;
   flds2 := [['type$s', 'Значение', IntToStr(FLeftPartWidth - 22)]] + flds2;
@@ -220,18 +217,19 @@ begin
   Frg2.Opt.SetButtons(1, [
     [mbtCtlPanel, True, FLeftPartWidth - 4],
     [],
-    [1001, True, False, 'Премия за период', 'edit'],
+    [mbtPremiumForPeriod, True, False, 'Премия за период', 'edit'],
     [mbtCtlPanel, True, 150],
     [],
-    [1002, True, False, 'Комментарий по работнику', 'edit'],
+    [mbtCommentForWorker, True, False, 'Комментарий по работнику', 'edit'],
     [mbtCtlPanel, True, 500],
     [],
-    [-1003, True, True, 'Преимия за день'],
-    [-1004, True, True, 'Штраф за день'],
-    [-1005, True, True, 'Ночная смена'],
-    [-1006, True, True, 'Комментарий'],
+    [-mbtPremiumForDay, True, True, 'Преимия за день'],
+    [-mbtFine, True, True, 'Штраф за день'],
+    [-ghtNightWork, True, True, 'Ночная смена'],
+    [-mbtComment, True, True, 'Комментарий'],
     []
   ], cbttSSmall);
+
   Frg2.CreateAddControls('1', cntLabelClr, 'Работник:', 'lblDWorker', '', 4, yrefC, FLeftPartWidth - 4);
   Frg2.CreateAddControls('2', cntLabelClr, 'Премия:', 'lblDPremium', '', 4, yrefC, 200);
   Frg2.CreateAddControls('3', cntLabelClr, 'Комментарий:', 'lblDComm', '', 4, yrefC, 500);
@@ -240,6 +238,36 @@ begin
   for i := 0 to High(Captions2) do
     values2 := values2 + [[Captions2[i], null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]];
   Frg2.SetInitData(values2, '');
+
+  Frg1.InfoArray := [
+  ['Табель учета рабочего времени.'#13#10#13#10],
+  [
+  'При открытии в сетке отображается время от руководителя, и Вы можете вводить данные непосредственно в основной таблице.'#13#10+
+  'Для отображения итогового времени нажмите соответствующую кнопку (в этом случае вводить данные в основной таблице будет нельзя!)'#13#10
+  , FInEditMode and FRgsEdit1],
+  [
+  'Вы можете нажать "+" слева от имени работника, и открыть таблицу со всеми данными'#13#10+
+  '(времена от руководителя, парксек, согласованное, премии), и редактировать данные уже в ней, в соответствии со своим доступом.'#13#10+
+  'Нажмите (в любой таблице) правую кнопку мыши для ввода премии или комментария.'#13#10+
+  'Подведите мышку к синему квадратику, для того чтобы увидеть комментарий.'#13#10+
+  'Также для удобства над таблицей отображается информация по работнику по той ячекй, которая сейчас активна.'+
+  ''#13#10#13#10
+  , FInEditMode],
+  [
+  'Ввод данных в ячекй начинается автоматически при вводе символа, а для редактирования надо дважды кликнуть мышкой по ячейке или нажать F2.'#13#10+
+  'Нажатие Enter завершает ввод и перемещает фокус на ячейку вправо, стрелки Вверх и Вниз также завершают ввод и перемещают в предыдущую или следуующую строку таблицы.'#13#10+
+  'Клавиша Esc отменяет ввод.'#13#10#13#10
+  , FInEditMode],
+  [
+  'Желтым в таблице отображается отсутствие времени, введенного по системе контроля доступа, а при расхождении'#13#10+
+  'его со временем руководителя более чем на час, ячейка становится красной. Серым отображаются дни, в которые работник не числится в подразделении.'#13#10+
+  ''#13#10
+  ],
+  [
+  'Данные при вводе сохраняются сразу, сохранять документ дополнительно не нужно.'#13#10
+  , FInEditMode]
+  ];
+
 
   Result := inherited;
   if not (Result and LoadTurvCodes and LoadTurv) then
@@ -793,6 +821,15 @@ begin
   end;
 end;
 
+procedure TFrmWGEdtTurv.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  case Tag of
+    mbtComment, mbtPremiumForDay, mbtFine, mbtDivisionScedule, mbtWorkerScedule: InputDialog(Tag);
+  end;
+  Handled := True;
+end;
+
+
 
 
 procedure TFrmWGEdtTurv.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
@@ -937,6 +974,105 @@ begin
     else
       Frg2.DBGridEh1.Columns[i].PickList.Clear;
   end;
+end;
+
+procedure TFrmWGEdtTurv.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  case Tag of
+    mbtComment, mbtPremiumForDay, mbtFine, mbtPremiumForPeriod, mbtCommentForWorker: InputDialog(Tag);
+  end;
+  Handled := True;
+end;
+
+
+procedure TFrmWGEdtTurv.InputDialog(Mode : Integer);
+var
+  va1, va2, va3, va4: TVarDynArray;
+  i, j, r, d, n, n1, n2: Integer;
+  st: string;
+begin
+  for i := 0 to High(myDefaultBtns) do
+    if myDefaultBtns[i].Bt = Mode then begin
+      st := myDefaultBtns[i].Caption;
+      Break;
+    end;
+  r := Frg1.RecNo - 1;
+  //строка в детальной, иначе 3-премия, 4 штраф
+//  n:=S.IIf(Mode = 0, DBGridEh2.Row-1, S.IIf(Mode = 1, 3 ,4));
+  //день турв
+  d := GetDay;
+  if Mode = mbtComment then begin
+    if d = -1 then
+      Exit;
+    va3 := [cComRuk, cComPar, cComSogl, cComPr, cComSct];
+    if Frg2.DbGridEh1.Focused then
+      n1 := Frg2.RecNo - 1
+    else
+      n1 := cComRuk;
+    va1 := [S.NSt(FArrTurv[r][d][S.NInt(va3[n1])])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+      [[cntEdit, 'Комментарий:','0:400::T']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+    FArrTurv[r][d][S.NInt(va3[n1])] := va2[0];
+  end
+  else if Mode = mbtPremiumForDay then begin
+    if d = -1 then
+      Exit;
+    va1 := [S.NSt(FArrTurv[r][d][cSumPr]), S.NSt(FArrTurv[r][d][cComPr])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+      [[cntNEdit, 'Сумма:','0:100000'],
+      [cntEdit, 'Комментарий:','0:400::T']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+    FArrTurv[r][d][cSumPr] := va2[0];
+    FArrTurv[r][d][cComPr] := va2[1];
+  end
+  else if Mode = mbtFine then begin
+    if d = -1 then
+      Exit;
+    va1 := [S.NSt(FArrTurv[r][d][cSumSct]), S.NSt(FArrTurv[r][d][cComSct])];
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+      [[cntNEdit, 'Сумма:','0:100000'],
+      [cntEdit, 'Комментарий:','0:400::T']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+    FArrTurv[r][d][cSumSct] := va2[0];
+    FArrTurv[r][d][cComSct] := va2[1];
+  end
+  else if Mode = mbtPremiumForPeriod then begin
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+      [[cntNEdit, 'Сумма:','0:100000']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+  end
+  else if Mode = mbtCommentForWorker then begin
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 300, 80,
+      [[cntEdit, 'Комментарий:','0:400::T']],
+      va1, va2, [['']], nil
+    ) < 0 then
+      Exit;
+  end;
+  //отобразим данные в основной таблице
+  //(если это изменение в деатльной делается, то в основной значки комментов перерисуются при наведении мышки на ячейку!)
+  PushTurvCellToGrid(r, d);
+  //отобразим данные в детальной таблице
+  PushTurvCellToDetailGrid(r, d);
+  //запишем в БД
+//!!!    SaveDayToDB(r, d, rsd[rr]);
+end;
+
+
+function TFrmWGEdtTurv.GetDay: Integer;
+begin
+  if Frg2.DbGridEh1.Focused then
+    Result := StrToIntDef(Copy(Frg2.CurrField, 2, 2), -1)
+  else
+    Result := StrToIntDef(Copy(Frg1.CurrField, 2, 2), -1);
 end;
 
 

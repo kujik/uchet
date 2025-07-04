@@ -1126,6 +1126,19 @@ const
   mbtInsertRow = 100;
   mbtToClipboard = 101;
   mbtFromClipboard = 102;
+  mbtDivisionScedule = 103;
+  mbtWorkerScedule = 104;
+  mbtPremiumForDay = 105;
+  mbtFine= 106;
+  mbtComment = 107;
+  mbtPremiumForPeriod = 108;
+  mbtCommentForWorker =109;
+  ghtNightWork = 110;
+
+
+
+
+
 
   mybtDividor: TmybtRec = (Bt: mbtDividor; Pict: ''; Caption: ''; hint: '');
   mybtDividorM: TmybtRec = (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: '');
@@ -1235,7 +1248,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 96] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 104] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1336,6 +1349,16 @@ const
   (Bt: mbtDeleteRow; Pict: 'delete'; Caption: 'Удалить строку'; hint: ''; ShortCut: scCtrl + VK_DELETE),
   (Bt: mbtToClipboard; Pict: 'to_clipboard'; Caption: 'Скопировать в буфер'; hint: ''),
   (Bt: mbtFromClipboard; Pict: 'from_clipboard'; Caption: 'Вставить из буфера'; hint: ''),
+  (Bt: mbtDivisionScedule; Pict: ''; Caption: 'График работы для подразделения'; hint: ''),
+  (Bt: mbtWorkerScedule; Pict: ''; Caption:  'График работы для работника'; hint: ''),
+  (Bt: mbtPremiumForDay; Pict: ''; Caption:  'Преимия за день'; hint: ''),
+  (Bt: mbtFine; Pict: ''; Caption:  'Штраф за день'; hint: ''),
+  (Bt: mbtComment; Pict: ''; Caption:  'Комментарий'; hint: ''),
+  (Bt: mbtPremiumForPeriod; Pict: ''; Caption:  'Премия за период'; hint: ''),
+  (Bt: mbtCommentForWorker; Pict: ''; Caption:  'Комментарий по работнику'; hint: ''),
+  (Bt: ghtNightWork; Pict: ''; Caption:  'Ночная смена'; hint: ''),
+
+
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
   );
 
