@@ -539,6 +539,7 @@ var
   st: string;
   v1, v2, v3: Variant;
 begin
+  try
   if (not Frg2.MemTableEh1.Active) or (Frg2.GetCount(False) = 0) then
     Exit;
   //получим автоматически номер активной строки грида
@@ -587,6 +588,9 @@ begin
   else
     Frg2.SetValue('d' + IntToStr(ADay), 4, False, null);
   Frg2.DbGridEh1.Invalidate;
+  except on E: Exception do
+    Application.ShowException(E);
+  end;
 end;
 
  procedure TFrmWGEdtTurv.SetLblDivisionText;
@@ -673,7 +677,7 @@ begin
   TLabelClr(Frg2.FindComponent('lblDComm')).SetCaptionAr2(['Комментарий:$FF0000 ', S.IIf(S.NSt(FArrTitle.G(Frg1.RecNo - 1, 'comm')) <> '', FArrTitle.G(Frg1.RecNo - 1, 'comm'), 'нет')]);
   TLabelClr(Frg2.FindComponent('lblDComm')).ShowHint := Length(VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'))) > 150;
   TLabelClr(Frg2.FindComponent('lblDComm')).Hint := VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'));
-  TLabelClr(Frg2.FindComponent('lblDPremium')).SetCaptionAr(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(FArrTitle.G(Frg1.RecNo - 1, 'comm')))]);
+  TLabelClr(Frg2.FindComponent('lblDPremium')).SetCaptionAr2(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(FArrTitle.G(Frg1.RecNo - 1, 'premium')))]);
   Frg2.SetBtnNameEnabled(1001, null, FInEditMode and FRgsEdit1);
   Frg2.SetBtnNameEnabled(1002, null, FInEditMode);
 end;
@@ -1118,17 +1122,21 @@ begin
     FArrTurv[r][d][cComSct] := va2[1];
   end
   else if Mode = mbtPremiumForPeriod then begin
+    if d = -1 then
+      d := 1;
     va1 := [S.NSt(FArrTitle.G(r, 'premium'))];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 180, 60,
       [[cntNEdit, 'Сумма:','0:100000']],
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-//!!!    FArrTitle.  .G(r, 'premium') := va2[0];
+    FArrTitle.SetValue(r, 'premium', va2[0]);
     SetLblsDetailText;
 //    SaveWorkerToDB(r);
   end
   else if Mode = mbtCommentForWorker then begin
+    if d = -1 then
+      d := 1;
     va1 := [S.NSt(FArrTitle.G(r, 'comm'))];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntEdit, 'Комментарий:','0:400::T']],
@@ -1136,9 +1144,12 @@ begin
     ) < 0 then
       Exit;
 //    FArrTitle[r][cTlComm] := S.NSt(va2[0]);
+    FArrTitle.SetValue(r, 'comm', va2[0]);
     SetLblsDetailText;
   end
   else if Mode = mbtDivisionScedule then begin
+    if d = -1 then
+      d := 1;
     va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
     va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
@@ -1147,10 +1158,11 @@ begin
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-//    FArrTitle[r][cTlComm] := va2[0];
     SetLblsDetailText;
   end
   else if Mode = mbtWorkerScedule then begin
+    if d = -1 then
+      d := 1;
     va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
     va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
@@ -1159,7 +1171,6 @@ begin
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-//    FArrTitle[r][cTlComm] := va2[0];
     SetLblsDetailText;
   end;
   //отобразим данные в основной таблице

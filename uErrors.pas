@@ -729,6 +729,8 @@ begin
 
     [oraeChildFound, 'fk_or_otk_rejected_res', 'Эта запись используется в таблице приемки ОТК'],
     ['', 'IDX_REF_OTK_REJECT_REASONS_N', 'Причина неприемки ОТК должна быть уникальна (без учета регистра букв)']];
+//  FKnownErrors := [];
+
 {*)}
 (*
 
