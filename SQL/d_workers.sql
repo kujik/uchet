@@ -295,7 +295,8 @@ select
   F_FIO(rw.f, rw.i, rw.o) as workername,
   rj.name as job,
   decode(tw.id_schedule, null, 0, 1) as worker_has_schedule,
-  decode(tw.id_schedule, null, s2.code, s1.code) as schedule
+  decode(tw.id_schedule, null, s2.code, s1.code) as schedule,
+  decode(tw.id_schedule, null, s2.id, s1.id) as id_schedule_active
 from
   turv_worker tw,
   ref_workers rw,

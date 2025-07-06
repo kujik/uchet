@@ -84,7 +84,7 @@ begin
   dt:=Turv.GetTurvBegDate(dt);
   //запрос. сортировка принципиальна
   Q.QLoadFromQuery(
-    'select dt1p, dt2p, id_worker, workername, id_job, job, worker_has_schedule, id_schedule, schedule, premium, comm '+
+    'select dt1p, dt2p, id_worker, workername, id_job, job, worker_has_schedule, id_schedule, schedule, id_schedule_active, premium, comm, id_division '+
     'from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d '+
     'order by ' + S.IIf(SortByJob, 'job', 'workername'),
     [DivisionId, dt],
