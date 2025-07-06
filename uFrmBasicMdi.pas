@@ -937,20 +937,10 @@ var
   i: Integer;
   Form: TForm;
 begin
-{ //++ проверить и доделать
-  Form:=Wh.GetFormFromWindows(TForm(ParentForm));
-  if form <> nil then myinfomessage('!!!');
-Exit;
-  For i:=0 to High(Wh.Windows) do
-
- }
   if not FOpt.RefreshParent then
     Exit;
   if ParentForm <> nil then
   try
-//    if (ParentForm is TForm_MDI_Grid1) then begin
-//      TForm_MDI_Grid1(ParentForm).Refresh;
-//    end;
     if (ParentForm is TFrmBasicMdi) then begin
       if TFrmBasicMdi(ParentForm).FindComponent('Frg1') <> nil then
         TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid;

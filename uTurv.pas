@@ -112,7 +112,7 @@ begin
   dt1:=Turv.GetTurvBegDate(dt);
   dt2:=Turv.GetTurvEndDate(dt);
   //запрос. сортировка принципиальна
-  v:=Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, id_schedule, dt from v_j_worker_status order by workername, dt, job, id_division',[]);
+  v:=Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, dt, id_schedule from v_j_worker_status order by workername, dt, job, id_division',[]);
   if Length(v) = 0 then Exit;
   w:=v[0][2];
   //v1 - массив по одному работнику
@@ -137,7 +137,7 @@ begin
       if (v[i][0] = DivisionId)and(Integer(v[i][5]) in [1, 2]) then begin
         //работник принял или переведен в это подразделение
         if Length(v1) = 0 Then SetLength(v1, 1);
-        v1[0]:=[dt1, dt2, v[i][1], v[i][2], v[i][3], v[i][4], 0];
+        v1[0]:=[dt1, dt2, v[i][1], v[i][2], v[i][3], v[i][4], 0, v[i][7]];
       end
       else begin
         //уволен или переведен в другое подразделение
@@ -155,7 +155,7 @@ begin
           v1[High(v1)][6]:=1;
         end;
         SetLength(v1, Length(v1)+1);
-        v1[High(v1)]:=[v[i][6], dt2, v[i][1], v[i][2], v[i][3], v[i][4], 0];
+        v1[High(v1)]:=[v[i][6], dt2, v[i][1], v[i][2], v[i][3], v[i][4], 0, v[i][7]];
       end
       else if Integer(v[i][5]) in [1, 2] then begin
         //переведен в другое подраздление
@@ -243,7 +243,7 @@ begin
     else
       begin
         v0:=Q.QLoadToVarDynArray2(
-          'select id, name, active, editusers from v_ref_divisions where id in (:st$i)' + st, [A.Implode(A.VarIntToArray(DivisionId), ',')]
+          'select id, name, active, editusers, id_schedule from v_ref_divisions where id in (:st$i)' + st, [A.Implode(A.VarIntToArray(DivisionId), ',')]
         );
       end;
   end;
@@ -264,7 +264,7 @@ begin
       continue;
     end;
     Q.QBeginTrans;
-    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i;id_schedule', [0, v0[i][0], dt, GetTurvEndDate(dt), 0, v0[i][3]]);
+    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i;id_schedule', [0, v0[i][0], dt, GetTurvEndDate(dt), 0, v0[i][4]]);
     if Q.QRowsAffected = 0 then Result:=-1;
     if res = -1 then Result:=-1;
     if Result =- 1 then Break;

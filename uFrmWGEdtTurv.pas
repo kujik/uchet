@@ -42,7 +42,7 @@ type
     FTurvCodes: TNamedArr;
     FTurvCodeWeekend: Integer;
     FArrTurv: array of array of array of Variant;
-    FEditInGrid1: Boolean;
+    FInEditMainGridMode: Boolean;
     FInEditMode: Boolean;
     FIsDetailGridUpdated: Boolean;
 
@@ -72,7 +72,7 @@ type
     procedure ExportToXlsxA7(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
     procedure SundaysToTurv;
     procedure SendEMailToHead;
-
+    procedure SetGridEditableMode;
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
@@ -83,6 +83,7 @@ type
     procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
     procedure Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+
   public
   end;
 
@@ -95,6 +96,7 @@ uses
   uTurv,
   uLabelColors2,
   uFrmBasicInput,
+  //TFrmWWsrvTurvComment,
   D_TURV_Comment,
   uExcel,
   uPrintReport
@@ -149,6 +151,7 @@ begin
   Result := False;
 
   Caption:='ТУРВ';
+  FOpt.RefreshParent := True;
 
   Q.QLoadFromQuery('select id, id_division, code, name, dt1, dt2, committxt, commit, editusers, status, name, id_schedule from v_turv_period where id = :id$i', [ID], va2);
   if Length(va2) = 0 then begin
@@ -176,10 +179,15 @@ begin
   FIsCommited:=va2[0][7];
 
   FDayColWidth := 40;
-
+  //возьмем блокировки, отдельно на изменение каждого вида времени
   SetLock;
   if Mode = fNone then
     Exit;
+  //если турв был открыт на реадктирование, то редактируемость установим = не закрыт, и блокировок не делаем, ту она уже взята при открытии турв
+  //если же был в режиме просмотра, то в режим редактирования не переходим
+  FInEditMode := (Mode = fEdit) and (not FIsCommited);
+  //если не редактирование, и не права на ввод времени руководителя - запретим режим ввода в основной сетке.
+  FInEditMainGridMode := FInEditMode and FRgsEdit1;
 
   //добавляем 16 колонок для дневных данных
   //заголовок соотвествует дню из даты
@@ -220,18 +228,18 @@ begin
   FLeftPartWidth := 200 + 150 + 50;
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
-    [mbtView, True, True, 'Итоговое время'],
-    [mbtEdit, True, False, 'Ввод времени руководителя'],
+    [mbtView, FInEditMainGridMode, True, 'Итоговое время'],
+    [mbtEdit, FInEditMainGridMode, False, 'Ввод времени руководителя'],
     [],
-    [-mbtDivisionScedule, True, True],
-    [-mbtWorkerScedule, True, True],
+    [-mbtDivisionScedule, FInEditMode, True],
+    [-mbtWorkerScedule, FInEditMode, True],
     [],
-    [-mbtPremiumForDay, True, True],
-    [-mbtFine, True, True],
-    [-mbtComment, True, True],
+    [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True],
+    [-mbtFine, FInEditMode and FRgsEdit1, True],
+    [-mbtComment, FInEditMode, True],
     [],
-    [mbtSendEMail, True, FRgsEdit2 and FInEditMode],
-    [mbtCustom_SundaysToTurv, True, FInEditMode],
+    [mbtSendEMail, FRgsEdit2 and FInEditMode],
+    [mbtCustom_SundaysToTurv, FInEditMode and FRgsEdit2, FInEditMode],
     [mbtLock, FRgsCommit and (FIsCommited or (Mode = fEdit)), True, S.IIFStr(FIsCommited, 'Отменить закрытие периода', 'Закрыть период')],
     [],
     [mbtPrint],
@@ -250,16 +258,16 @@ begin
   Frg2.Opt.SetButtons(1, [
     [mbtCtlPanel, True, FLeftPartWidth - 4],
     [],
-    [mbtPremiumForPeriod, True, False, 'Премия за период', 'edit'],
+    [mbtPremiumForPeriod, FInEditMode and FRgsEdit1, False, 'Премия за период', 'edit'],
     [mbtCtlPanel, True, 150],
     [],
-    [mbtCommentForWorker, True, False, 'Комментарий по работнику', 'edit'],
+    [mbtCommentForWorker, FInEditMode, False, 'Комментарий по работнику', 'edit'],
     [mbtCtlPanel, True, 500],
     [],
-    [-mbtPremiumForDay, True, True, 'Преимия за день'],
-    [-mbtFine, True, True, 'Штраф за день'],
-    [-ghtNightWork, True, True, 'Ночная смена'],
-    [-mbtComment, True, True, 'Комментарий'],
+    [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True, 'Преимия за день'],
+    [-mbtFine, True, FInEditMode and FRgsEdit1, 'Штраф за день'],
+    [-ghtNightWork, FInEditMode, True, 'Ночная смена'],
+    [-mbtComment, FInEditMode, True, 'Комментарий'],
     []
   ], cbttSSmall);
 
@@ -308,6 +316,7 @@ begin
   SetLblDivisionText;
   PushTurvToGrid;
   Frg1.MemTableEh1.First;
+  SetGridEditableMode;
 end;
 
 function TFrmWGEdtTurv.SetLock: Boolean;
@@ -558,7 +567,7 @@ begin
   end;
   FArrTurv[ARow][ADay][cColor] := color;
     //при редактировании в основном гриде будем отображать в нем время от мастеров/руководителя
-  if (FEditInGrid1) and (FInEditMode) then
+  if (FInEditMainGridMode) and (FInEditMode) then
     v0 := v1;
     //форматируем строку, если число
   if S.IsNumber(S.NSt(v0), 0, 24) then
@@ -674,21 +683,21 @@ end;
 var
   st, stc : string;
 begin
-  if (FInEditMode)and(FEditInGrid1) then begin
-    st:='Ввод времени руководителя';
-    stc:='$FF0060';
+  if (FInEditMode) and (FInEditMainGridMode) then begin
+    st := 'Ввод времени руководителя';
+    stc := '$FF0060';
   end
-  else if (FInEditMode)and(not FEditInGrid1) then begin
-    st:='Ввод данных';
-    stc:='$FF00FF';
+  else if (FInEditMode) and (not FInEditMainGridMode) then begin
+    st := 'Ввод данных';
+    stc := '$FF00FF';
   end
   else if FIsCommited then begin
-    st:='Только просмотр, период закрыт';
-    stc:='$0000FF';
+    st := 'Только просмотр, период закрыт';
+    stc := '$0000FF';
   end
   else begin
-    st:='Только просмотр';
-    stc:='$009000';
+    st := 'Только просмотр';
+    stc := '$009000';
   end;
   TLabelClr(Frg1.FindComponent('lblDivision')).SetCaptionAr2([
     '$000000', 'Подразделение: ', '$FF0000', FDivisionName,
@@ -891,6 +900,9 @@ begin
       n1 := Frg2.RecNo - 1
     else
       n1 := 1;
+    //!!! доделапть блокировку пунста меню
+    if not (((va3[n1] = cComPar) and FRgsEdit2) or ((va3[n1] = cComSogl) and FRgsEdit3) or FRgsEdit1) or not FInEditMode then
+      Exit;
     va1 := [S.NSt(FArrTurv[r][d][S.NInt(va3[n1])])];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntEdit, 'Комментарий:','0:400::T']],
@@ -969,6 +981,8 @@ begin
         Frg1.SetValue('schedule', i, False, FDivisionScehdule);
       end;
     SaveWorkerToDB(r);
+    if FPeriodEndDate >= Date then
+      Q.QExecSql('update ref_divisions set id_schedule = :id_schedule$i where id = :id$i', [va2[0], FIdDivision]);
   end
   else if Mode = mbtWorkerScedule then begin
     if d = -1 then
@@ -993,9 +1007,10 @@ begin
     FArrTitle.SetValue(r, 'schedule', st);
     Frg1.SetValue('schedule', r, False, st);
     SaveWorkerToDB(r);
+    if FPeriodEndDate >= Date then
+      Q.QExecSql('update ref_workers set id_schedule = :id_schedule$i where id = :id_worker$i', [va2[0], FArrTitle.G(r, 'id_worker')]);
   end;
   //отобразим данные в основной таблице
-  //(если это изменение в деатльной делается, то в основной значки комментов перерисуются при наведении мышки на ячейку!)
   PushTurvCellToGrid(r, d);
   //отобразим данные в детальной таблице
   PushTurvCellToDetailGrid(r, d);
@@ -1005,7 +1020,7 @@ begin
   else
     rd := 0;
   rsd := [cTRuk, cTPar, cTSogl, cTRuk, cTRuk];
-  SaveDayToDB(r, r, rsd[rd]);
+  SaveDayToDB(r, d, rsd[rd]);
 end;
 
 
@@ -1134,11 +1149,11 @@ begin
     if b then
       Rep.SetValue('#d' + IntToStr(j) + '#', IntToStr(DayOf(FPeriodStartDate + j - 1)));
   end;
-  for i := 0 to high(FArrTitle.V) do begin  //!!!
+  for i := 0 to FArrTitle.Count - 1 do begin
     Rep.PasteBand('TABLE');
     Rep.SetValue('#N#', i + 1);
-    Rep.SetValue('#FIO#', FArrTitle.V[i][2]);
-    Rep.SetValue('#JOB#', FArrTitle.V[i][3]);
+    Rep.SetValue('#FIO#', FArrTitle.G(i, 'workername'));
+    Rep.SetValue('#JOB#', FArrTitle.G(i, 'job'));
     sum := 0;
     for j := d1 to d2 do begin
       v := S.NSt(GetTurvCell(i, j, cTPar));
@@ -1299,6 +1314,13 @@ begin
   Module.MailSendWithThunderBird(S.NSt(Q.QSelectOneRow('select GetUsersEmail(:editusers$s) from dual', [FEditUsers])[0]), 'Необходимо поправить ТУРВ "' + FDivisionName + '"', st, '');
 end;
 
+procedure TFrmWGEdtTurv.SetGridEditableMode;
+begin
+  Frg1.DbGridEh1.ReadOnly := not FRgsEdit1 or not FInEditMode or not FInEditMainGridMode or FIsCommited;
+  Frg2.DbGridEh1.ReadOnly := not FInEditMode or FIsCommited;
+  Frg1.Invalidate;
+  Frg2.Invalidate;
+end;
 
 
 
@@ -1354,15 +1376,111 @@ begin
 end;
 
 procedure TFrmWGEdtTurv.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+var
+  rn, i, j: Integer;
+  dt: TDateTime;
+  b: Boolean;
+  va: TVarDynArray;
+  st, st1, st2, st3: string;
 begin
-  case Tag of
-    mbtComment, mbtPremiumForDay, mbtFine, mbtDivisionScedule, mbtWorkerScedule: InputDialog(Tag);
-  end;
   Handled := True;
+  if A.InArray(Tag, [mbtComment, mbtPremiumForDay, mbtFine, mbtDivisionScedule, mbtWorkerScedule]) then
+    InputDialog(Tag)
+  //кнопки ввода времни руководителя/ввода итогов
+  else if Tag in [mbtView, mbtEdit] then begin
+    if Tag = mbtEdit then
+      FInEditMainGridMode := True;
+    if Tag = mbtView then
+      FInEditMainGridMode := False;
+    Frg1.MemTableEh1.DisableControls;
+    for i := 0 to Frg1.GetCount(False) - 1 do
+      for j := 1 to 16 do
+        PushTurvCellToGrid(i, j);
+    Frg1.MemTableEh1.EnableControls;
+  end
+  //кнопка закрытия периода
+  else if Tag = mbtLock then begin
+    if not FIsCommited then
+      //если период не закрыть, то проверим, можно ли его закрыть
+      if Turv.GetStatus(FIdDivision, FPeriodStartDate) = -1 then begin
+        MyInfoMessage('В этом ТУРВ введены не все данные, закрыть его нельзя!');
+        Exit;
+      end;
+    if MyQuestionMessage(S.IIFStr(FIsCommited, 'Вы уверены, что хотите снять статус "Закрыт" с этого ТУРВ?', 'Вы уверены, что хотите отметить этот ТУРВ как "Закрыт"?'#13#10'В этом случае ввод данных в него будет невозможен!')) <> mrYes then
+      Exit;
+    //пробуем заблокировать турв для каждого типа доступа отдельно
+    st1 := Q.DBLock(True, FormDoc, VarToStr(id) + '-1', '', fNone)[1];
+    st2 := Q.DBLock(True, FormDoc, VarToStr(id) + '-2', '', fNone)[1];
+    st3 := Q.DBLock(True, FormDoc, VarToStr(id) + '-3', '', fNone)[1];
+    if (st1 = User.GetName) then
+      st1 := '';
+    if (st2 = User.GetName) then
+      st2 := '';
+    if (st3 = User.GetName) then
+      st3 := '';
+    st := A.ImplodeNotEmpty([st1, st2, st3], #13#10);
+    if st <> '' then begin
+      MyWarningMessage('Этот турв сейчас открыт на редактирование у'#13#10 + st + #13#10'Установка статуса невозможна!');
+      Exit;
+    end;
+    FIsCommited := not FIsCommited;
+    Q.QExecSql('update turv_period set commit = :commit$i where id = :id$i', [S.IIf(FIsCommited, 1, 0), ID]);
+    RefreshParentForm;
+    Exit;
+    if not FIsCommited then begin
+       //если период не закрыть, то проверим, можно ли его закрыть
+      b := True;
+      for j := 0 to High(FArrTurv) do begin
+        if not b then
+          Break;
+        for i := 1 to FDayColumnsCount do begin
+            //ячейки красные и желтые, или не введено время/код руководителя, и при этом не серые - не даем возможности закрыть турв
+          if (S.NNum(FArrTurv[j][i][cColor]) = 1) or (S.NNum(FArrTurv[j][i][cColor]) = 2) or ((FArrTurv[j][i][cExists] <> -1) and (FArrTurv[j][i][cTRuk] = null) and (FArrTurv[j][i][cCRuk] = null)) then begin
+            b := False;
+            Break;
+          end;
+        end;
+      end;
+      if not b then begin
+        MyInfoMessage('В этом ТУРВ введены не все данные, закрыть его нельзя!');
+        Exit;
+      end;
+    end;
+    if MyQuestionMessage(S.IIFStr(FIsCommited,
+      'Вы уверены, что хотите снять статус "Закрыт" с этого ТУРВ?',
+      'Вы уверены, что хотите отметить этот ТУРВ как "Закрыт"?'#13#10'В этом случае ввод данных в него будет невозможен!')
+    ) <> mrYes then
+      Exit;
+    FIsCommited := not FIsCommited;
+    Q.QExecSql('update turv_period set commit = :commit$i where id = :id$i', [S.IIf(FIsCommited, 1, 0), ID]);
+    RefreshParentForm;
+  end
+  else if Tag = mbtSendEmail then begin
+    SendEMailToHead;
+  end
+  else if Tag = mbtCustom_SundaysToTurv then begin
+    SundaysToTurv;
+  end
+  else if Tag = mbtPrint then begin
+    if FRgsEdit2 then begin
+      if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Экспорт в Excel', 270, 50, [
+        [cntComboLK,'Шаблон','1:500:0', 210],
+        [cntDTEdit,'Дата с','' + S.DateTimeToIntStr(FPeriodStartDate) + ':' + S.DateTimeToIntStr(FPeriodEndDate), 90],
+        [cntDTEdit,'по ','' + S.DateTimeToIntStr(FPeriodStartDate) + ':' + S.DateTimeToIntStr(FPeriodEndDate), 170, 90]],
+        [VarArrayOf(['0', VarArrayOf(['ТУРВ по Parsec']), VarArrayOf(['0'])]), FPeriodStartDate, FPeriodEndDate],
+        va, [['']],  nil
+      ) >=0
+      then ExportToXlsxA7(Integer(va[0]), va[1], va[2], True);
+    end;
+  end
+  else begin
+    Handled := False;
+    inherited;
+  end;
+  SetLblDivisionText;
+  SetLblWorkerText;
+  SetGridEditableMode;
 end;
-
-
-
 
 procedure TFrmWGEdtTurv.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
 //отрисуем ячейку
@@ -1381,10 +1499,13 @@ begin
   v4 := FArrTurv[Params.row - 1][Params.Col - 4][cNight];
   //если выйдем, то будет стандартная отрисовка
   //выйдем, если нет никакого комментария
-  if (((VarIsEmpty(v1)) or (S.NSt(v1) = '')) and ((VarIsEmpty(v2)) or (S.NSt(v2) = '')) and ((VarIsEmpty(v3)) or (S.NSt(v3) = '')) and ((VarIsEmpty(v4)) or (S.NNum(v4) = 0))) then
+  if (((VarIsEmpty(v1)) or (S.NSt(v1) = '')) and ((VarIsEmpty(v2)) or (S.NSt(v2) = '')) and ((VarIsEmpty(v3)) or (S.NSt(v3) = '')) and ((VarIsEmpty(v4)) or (S.NNum(v4) = 0))) and Frg1.DbGridEh1.ReadOnly then
     Exit;
   //стандартная отрисовка
   TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
+  TDBGridEh(Sender).Canvas.Brush.Color := Rgb(150, 255, 150);
+  TDBGridEh(Sender).Canvas.Pen.Color := Rgb(150, 255, 150);
+  TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Top, ARect.Left + 3, ARect.Bottom);
   if S.NSt(v1) + S.NSt(v2) + S.NSt(v3) <> '' then begin
     //и поверху квадратик комментария
     TDBGridEh(Sender).Canvas.Pen.Width := 1;
@@ -1492,10 +1613,16 @@ begin
     v2 := FArrTurv[Frg1.RecNo - 1][Params.Col - 1][cNight];
   //если выйдем, то будет стандартная отрисовка
   //выйдем, если нет никакого комментария
-  if (VarToStr(v1) = '') and (VarToStr(v2) = '') then
-    Exit;
+//  if (VarToStr(v1) = '') and (VarToStr(v2) = '') then
+//    Exit;
   //стандартная отрисовка
   TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
+  //зеленая полоса
+  if not(not FInEditMode or FIsCommited or (Params.Row > 3) or ((Params.Row= 1) and not FRgsEdit1) or ((Params.Row = 2) and not FRgsEdit2) or ((Params.Row = 3) and not FRgsEdit3)) then begin
+    TDBGridEh(Sender).Canvas.Brush.Color := Rgb(150, 255, 150);
+    TDBGridEh(Sender).Canvas.Pen.Color := Rgb(150, 255, 150);
+    TDBGridEh(Sender).Canvas.Rectangle(ARect.Left, ARect.Top, ARect.Left + 3, ARect.Bottom);
+  end;
   //и поверху квадратик комментария
   TDBGridEh(Sender).Canvas.Pen.Width := 1;
   if (VarToStr(v1) <> '') then begin
@@ -1568,6 +1695,8 @@ begin
     else
       Frg2.DBGridEh1.Columns[i].PickList.Clear;
   end;
+  if Frg2.MemTableEh1.Active then
+    Frg2.DbGridEh1.ReadOnly := not FInEditMode or FIsCommited or (Frg2.RecNo > 3) or ((Frg2.RecNo = 1) and not FRgsEdit1) or ((Frg2.RecNo = 2) and not FRgsEdit2) or ((Frg2.RecNo = 3) and not FRgsEdit3);
 end;
 
 procedure TFrmWGEdtTurv.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -1579,6 +1708,7 @@ begin
 end;
 
 {==============================================================================}
+
 
 procedure TFrmWGEdtTurv.FormClose(Sender: TObject; var Action: TCloseAction);
 begin

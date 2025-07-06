@@ -43,8 +43,10 @@ create table ref_workers(
   f varchar2(25),
   i varchar2(25),
   o varchar2(25),
+  id_schedule number(11),
   active number(1),
-  constraint pk_ref_workers primary key (id)
+  constraint pk_ref_workers primary key (id),
+  constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id) 
 );
 
 create unique index idx_ref_workers on ref_workers(lower(f),lower(i),lower(o)); 
@@ -169,15 +171,13 @@ create table j_worker_status(
   id_division number(11),
   id_job number(11),
   id_worker number(11),
-  id_schedule number(11),
   dt date,
   status number(1),             --1=принят, 2=переведен, 3=уволен
   comm varchar(100), 
   constraint pk_j_worker_status primary key (id),
   constraint fk_j_worker_status_div foreign key (id_division) references ref_divisions(id), 
   constraint fk_j_worker_status_job foreign key (id_job) references ref_jobs(id), 
-  constraint fk_j_worker_status_worker foreign key (id_worker) references ref_workers,
-  constraint fk_j_worker_status_schedule foreign key (id_schedule) references ref_work_schedules(id) 
+  constraint fk_j_worker_status_worker foreign key (id_worker) references ref_workers
 );
 
 create sequence sq_j_worker_status start with 1 nocache;
@@ -190,6 +190,7 @@ create or replace view v_j_worker_status as
 select
   s.*,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
+  w.id_schedule,            --график работы всегда последний, а не для данного периода!!!
   d.name as divisionname,
   d.editusers as editusers,
   j.name as job,
@@ -1380,8 +1381,9 @@ select * from turv_day where id_worker = 78 order by dt desc;
 ---------------------------
 ---------------------------
 
-alter table j_worker_status add id_schedule number(11);
-alter table j_worker_status add  constraint fk_j_worker_status_schedule foreign key (id_schedule) references ref_work_schedules(id);
+--alter table j_worker_status drop column id_schedule;
+alter table ref_workers add id_schedule number(11);
+alter table ref_workers add  constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id);
 alter table turv_worker add id_schedule number(11);
 alter table turv_worker add  constraint fk_turv_worker_schedule foreign key (id_schedule) references ref_work_schedules(id);
 alter table turv_period add id_schedule number(11);

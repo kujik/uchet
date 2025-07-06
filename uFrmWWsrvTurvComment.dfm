@@ -80,7 +80,7 @@ object FrmWWsrvTurvComment: TFrmWWsrvTurvComment
     ExplicitWidth = 138
   end
   object btnClose: TBitBtn
-    Left = 193
+    Left = 189
     Top = 102
     Width = 75
     Height = 25
@@ -90,8 +90,8 @@ object FrmWWsrvTurvComment: TFrmWWsrvTurvComment
     ModalResult = 1
     TabOrder = 0
     OnClick = btnCloseClick
-    ExplicitLeft = 198
-    ExplicitTop = 122
+    ExplicitLeft = 185
+    ExplicitTop = 101
   end
   object tmr1: TTimer
     Interval = 10000

@@ -2888,7 +2888,11 @@ begin
       end;
       ChangeSelectedData;
     end;
-  finally
+  except on E: Exception do begin
+    Errors.SetErrorCapt(Self.Name, 'Ошибка при обновлении грида ' + TFrmBasicMdi(Owner).FormDoc + '.' + Name);
+    Application.ShowException(E);
+    Errors.SetErrorCapt;
+    end;
   end;
 end;
 
@@ -2978,7 +2982,7 @@ begin
   DBGridEh1.FinishLoadingStatus(0);
   DBGridEh1.StartLoadingStatus('Завершено!', 0);
   DBGridEh1.FinishLoadingStatus(0);
-  finally
+  except
   end;
 end;
 
