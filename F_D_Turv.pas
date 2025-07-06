@@ -231,7 +231,7 @@ begin
   v:=[]; vs:=[]; v2:=[];
   ArrTitle:=[];
   ArrTurv:=[];
-  v:=Turv.GetTurvArrayFromDb(id_division, PeriodStartDate);
+  v:=Turv.GetTurvArrayFromDb(id_division, PeriodStartDate).V;
   Result:=Length(v) > 0;
   if not Result then Exit;
   //проходим по списку

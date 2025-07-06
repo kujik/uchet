@@ -198,7 +198,7 @@ select
     when s.status = 2 then 'переведен'
     when s.status = 3 then 'уволен'
     else ''
-   end) as statusname 
+   end) as statusname
 from
   j_worker_status s,
   ref_workers w,
@@ -293,16 +293,24 @@ select
   tw.*,
   rd.name as divisionname,
   F_FIO(rw.f, rw.i, rw.o) as workername,
-  rj.name as job
+  rj.name as job,
+  decode(tw.id_schedule, null, 0, 1) as worker_has_schedule,
+  decode(tw.id_schedule, null, s2.code, s1.code) as schedule
 from
   turv_worker tw,
   ref_workers rw,
   ref_divisions rd,
-  ref_jobs rj
+  ref_jobs rj,
+  turv_period tp,
+  ref_work_schedules s1,  
+  ref_work_schedules s2  
 where
   rw.id = tw.id_worker and
   rj.id = tw.id_job and
-  rd.id = tw.id_division   
+  rd.id = tw.id_division and
+  tw.id_turv = tp.id and
+  s1.id (+) = tw.id_schedule and    
+  s2.id (+) = rd.id_schedule     
 ; 
 
 select * from v_turv_workers where id_division = 1;

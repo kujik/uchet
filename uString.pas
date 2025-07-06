@@ -24,8 +24,10 @@ type
     FFull: TVarDynArray;
     F: TVarDynArray;
     V: TVarDynArray2;
+    function Col(Field: string): Integer;
     function G(RowNo: Integer; Field: string): Variant; overload;
     function G(Field: string): Variant; overload;
+    procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant);
     function Empty: Boolean;
     function Count: Integer;
     function FieldsCount: Integer;
@@ -2610,8 +2612,7 @@ begin
   for i:=0 to High(sa) do Result:=Result + [sa[i]];
 end;
 
-
-function TNamedArr.G(RowNo: Integer; Field: string): Variant;
+function TNamedArr.Col(Field: string): Integer;
 var
   i : Integer;
 begin
@@ -2620,9 +2621,17 @@ begin
     Field := Copy(Field, 1, i - 1);
   i := A.PosInArray(Field, F, True);
   if i < 0 then
-    raise Exception.Create('Поле не ' + Field + ' найдено в SelectArr');
-  if (RowNo < 0) or (RowNo > High(V))then
-    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в SelectArr');
+    raise Exception.Create('Поле не ' + Field + ' найдено в NamedArr');
+  Result := i;
+end;
+
+function TNamedArr.G(RowNo: Integer; Field: string): Variant;
+var
+  i : Integer;
+begin
+  i := Col(Field);
+  if (RowNo < 0) or (RowNo > High(V)) then
+    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
   Result := V[RowNo][i];
 end;
 
@@ -2632,6 +2641,17 @@ var
 begin
   Result := G(0, Field);
 end;
+
+procedure TNamedArr.SetValue(RowNo: Integer; Field: string; NewValue: Variant);
+var
+  i : Integer;
+begin
+  i := Col(Field);
+  if (RowNo < 0) or (RowNo > High(V)) then
+    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
+  V[RowNo][i] := NewValue;
+end;
+
 
 function TNamedArr.Empty: Boolean;
 begin

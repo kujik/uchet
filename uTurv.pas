@@ -22,7 +22,7 @@ type
     //возвращаем конец периода турв, в колтором находится дата
     function GetTurvEndDate(dt: TDateTime): TDateTime;
     function GetTurvArray(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TVarDynArray2;
-    function GetTurvArrayFromDB(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TVarDynArray2;
+    function GetTurvArrayFromDB(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TNamedArr;
     function GetcodeUV: Integer;
     function GetcodePER: Integer;
     function CreateTURV(DivisionId: Variant; AllDivisions: Integer; ActiveOnly: Boolean; dt: TDateTime; Silent: Boolean = True): Integer;
@@ -77,18 +77,18 @@ begin
     else Result:=IncDay(IncMonth(EncodeDate(YearOf(dt), MonthOf(dt), 1), 1), -1);
 end;
 
-function TTurv.GetTurvArrayFromDB(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TVarDynArray2;
+function TTurv.GetTurvArrayFromDB(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TNamedArr;
 //загрузим массив работников для турв в том же виде что и GetTurvArray, но напрямую из бд
-//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
+//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии,
 begin
-  Result:=[];
   dt:=Turv.GetTurvBegDate(dt);
   //запрос. сортировка принципиальна
-  Result:=Q.QLoadToVarDynArray2(
-    'select dt1p, dt2p, id_worker, workername, id_job, job, null '+
+  Q.QLoadFromQuery(
+    'select dt1p, dt2p, id_worker, workername, id_job, job, worker_has_schedule, id_schedule, schedule, premium, comm '+
     'from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d '+
     'order by ' + S.IIf(SortByJob, 'job', 'workername'),
-    [DivisionId, dt]
+    [DivisionId, dt],
+    Result
   );
 end;
 
@@ -97,7 +97,7 @@ end;
 //по строчке на каждого работника за подпериод в турв
 //(если работник преходил между разными должностями, увольнялся и опять принимался в пределах турв, даже если возврат на ту же должность,
 //для каждого периода работы отдельная строка в массиве)
-//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
+//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен, 7-айди графика, 8- название графика
 function TTurv.GetTurvArray(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TVarDynArray2;
 var
   i, j, k: Integer;
@@ -112,7 +112,7 @@ begin
   dt1:=Turv.GetTurvBegDate(dt);
   dt2:=Turv.GetTurvEndDate(dt);
   //запрос. сортировка принципиальна
-  v:=Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, dt from v_j_worker_status order by workername, dt, job, id_division',[]);
+  v:=Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, id_schedule, dt from v_j_worker_status order by workername, dt, job, id_division',[]);
   if Length(v) = 0 then Exit;
   w:=v[0][2];
   //v1 - массив по одному работнику
@@ -125,7 +125,7 @@ begin
       //скопируем в общий массив
       for j:=0 to High(v1) do begin
         SetLength(Result, Length(Result)+1);
-        Result[High(Result)]:=[v1[j][0], v1[j][1], v1[j][2], v1[j][3], v1[j][4], v1[j][5], v1[j][6]]
+        Result[High(Result)]:=[v1[j][0], v1[j][1], v1[j][2], v1[j][3], v1[j][4], v1[j][5], v1[j][6], v1[j][7]]
       end;
       if (i = High(v)+1) then Break;
       //очистим массив работника
@@ -235,10 +235,10 @@ begin
   st:=S.IIFStr(ActiveOnly, ' and active = 1', '');
   case AllDivisions of
     1: begin
-        v0:=Q.QLoadToVarDynArray2('select id, name, active, editusers from v_ref_divisions where 1 = 1' + st, []);
+        v0:=Q.QLoadToVarDynArray2('select id, name, active, id_schedule, editusers from v_ref_divisions where 1 = 1' + st, []);
        end;
     2: begin
-        v0:=Q.QLoadToVarDynArray2('select id, name, active from v_ref_divisions where IsStInCommaSt(:u$i, editusers) = 1' + st, [User.GetId]);
+        v0:=Q.QLoadToVarDynArray2('select id, name, active, id_schedule from v_ref_divisions where IsStInCommaSt(:u$i, editusers) = 1' + st, [User.GetId]);
        end;
     else
       begin
@@ -264,12 +264,12 @@ begin
       continue;
     end;
     Q.QBeginTrans;
-    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i', [0, v0[i][0], dt, GetTurvEndDate(dt), 0]);
+    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i;id_schedule', [0, v0[i][0], dt, GetTurvEndDate(dt), 0, v0[i][3]]);
     if Q.QRowsAffected = 0 then Result:=-1;
     if res = -1 then Result:=-1;
     if Result =- 1 then Break;
     for j:=0 to High(v2) do begin
-      res2:=Q.QIUD('i', 'turv_worker', '', 'id$i;id_turv$i;id_worker$i;id_division$i;id_job$i;dt1$d;dt2$d;dt1p$d;dt2p$d',
+      res2:=Q.QIUD('i', 'turv_worker', '', 'id$i;id_turv$i;id_worker$i;id_division$i;id_job$i;dt1$d;dt2$d;dt1p$d;dt2p$d;id_schedule',
         [
           0,
           res,            //айди турв период
@@ -279,7 +279,8 @@ begin
           dt,             //начало периода
           GetTurvEndDate(dt),      //конец
           v2[j][0],                //начало данных строки
-          v2[j][1]                 //конец
+          v2[j][1],                 //конец
+          v2[j][7]       //график работы
         ]
       );
       if res2 = -1 then

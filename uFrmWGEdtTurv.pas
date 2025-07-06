@@ -33,7 +33,7 @@ type
     FIsCommited: Boolean;
     FRgsCommit, FRgsEdit1, FRgsEdit2, FRgsEdit3: Boolean;  //права
 
-    FArrTitle: TVarDynArray2;
+    FArrTitle: TNamedArr;
     FTurvCodes: TNamedArr;
     FArrTurv: array of array of array of Variant;
     FEditInGrid1: Boolean;
@@ -117,6 +117,7 @@ const
   cTlPremium = 5;         //премия за отчетный период
   cTlComm = 6;            //комментатрий, общий для работника
   cTlSchedule = 7;
+  cTlScheduleCh = 8;
 
   cTmM = 1;               //время или код от мастеров
   cTmP = 2;               //время или код парсек
@@ -292,44 +293,45 @@ end;
 function TFrmWGEdtTurv.LoadTurv: Boolean;
 var
   i, j, k: Integer;
-  v, vs: TVarDynArray2;
+  vs: TVarDynArray2;
   v2: TVarDynArray;
   v1: Variant;
   dt, dt1, dtbeg, dtend: TDateTime;
   y, m: Integer;
   res: Integer;
   st: string;
+  TurwW: TNamedArr;
 begin
   //получим список работников для данного турв
-  FArrTitle := [];
   FArrTurv := [];
-  v := [];
   vs := [];
   v2 := [];
-  v := Turv.GetTurvArrayFromDb(FIdDivision, FPeriodStartDate);
-  Result := Length(v) > 0;
+  //dt1p, dt2p, id_worker, workername, id_job, job, worker_has_schedule, id_shedule, schedule
+  FArrTitle := Turv.GetTurvArrayFromDb(FIdDivision, FPeriodStartDate);
+  Result := FArrTitle.Count > 0;
   if not Result then
     Exit;
   //проходим по списку
-  for i := 0 to High(v) do begin
-   //v:  0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
+  for i := 0 to FArrTitle.Count - 1 do begin
+    SetLength(FArrTurv, i + 1, 31, cItog + 1);
+    {   //v:  0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
     SetLength(FArrTitle, i + 1, 8);
     SetLength(FArrTurv, i + 1, 31, cItog + 1);
     //массив заголовков (работник, должность...)
-    FArrTitle[i][cTlIdW] := v[i][2];  //id worker
-    FArrTitle[i][cTlIdJ] := v[i][4];  //id job
-    FArrTitle[i][cTlW] := v[i][3];    //workername
-    FArrTitle[i][cTlJ] := v[i][5];    //job
+    FArrTitle[i][cTlIdW] := TurwW.G(i, '');  //id worker
+    FArrTitle[i][cTlIdJ] := TurwW.G(i, '');  //id job
+    FArrTitle[i][cTlW] := vTurwW.G(i, '');    //workername
+    FArrTitle[i][cTlJ] := vTurwW.G(i, '');    //job
     FArrTitle[i][4] := '';            //ccegory
     FArrTitle[i][cTlPremium] := 0;    //премия за отчетный период
     FArrTitle[i][cTlComm] := '';      //комментатрий, общий для работника
-    FArrTitle[i][cTlSchedule] := '5/2';
+    FArrTitle[i][cTlSchedule] := '5/2';}
     //читаем турв_дей в для данного работника в промежутке, в котором он в этом ТУРВ, сортируем по дате
     vs := Q.QLoadToVarDynArray2(
       'select dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
       'null, null, comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
       'from turv_day where id_worker = :id_worker$i and dt >= :dtbeg$d and dt <= :dtend$d order by dt',
-       [FArrTitle[i][cTlIdW], v[i][0], v[i][1]]
+       [FArrTitle.G(i, 'id_worker'), FArrTitle.G(i, 'dt1p'), FArrTitle.G(i, 'dt2p')]
     );
     //проход по массиву турв
     for j := 1 to 16 do begin
@@ -337,7 +339,7 @@ begin
       for k := 0 to cItog do
         FArrTurv[i][j][k] := null;
       //если меньше начально или больше конечной даты, то признак что данной клетки в турв нет
-      if (IncDay(FPeriodStartDate, j - 1) < v[i][0]) or (IncDay(FPeriodStartDate, j - 1) > v[i][1]) then
+      if (IncDay(FPeriodStartDate, j - 1) < FArrTitle.G(i, 'dt1p')) or (IncDay(FPeriodStartDate, j - 1) > FArrTitle.G(i, 'dt2p')) then
         FArrTurv[i][j][0] := -1
       else begin
         FArrTurv[i][j][cExists] := 0;
@@ -367,14 +369,14 @@ begin
       end;
     end;
     //прочитаем из БД премии и штрафы
-    vs := Q.QLoadToVarDynArray2(
+{    vs := Q.QLoadToVarDynArray2(
       'select premium, comm from turv_worker where id_worker = :id_worker$i and id_division = :id_division$i and id_job = :id_job$i and dt1 = :dt1$d',
-      [FArrTitle[i][0], FIDDivision, FArrTitle[i][1], FPeriodStartDate]
+      [FArrTitle.G(i, 'id_worker'), FIDDivision, FArrTitle.G(i, 'id_job'), FPeriodStartDate]
     );
     if Length(vs) > 0 then begin
-      FArrTitle[i][cTlPremium] := vs[0][0];
-      FArrTitle[i][cTlComm] := vs[0][1];
-    end;
+      FArrTitle.G(i, 'premium') := vs[0][0];
+      FArrTitle.G(i, 'comm') := vs[0][1];
+    end;}
   end;
 end;
 
@@ -410,12 +412,12 @@ procedure TFrmWGEdtTurv.PushTurvToGrid;
 var
   i, j: Integer;
 begin
-  for i := 0 to High(FArrTitle) do begin
+  for i := 0 to FArrTitle.Count - 1 do begin
     Frg1.MemTableEh1.Last;
     Frg1.MemTableEh1.Insert;
-    Frg1.MemTableEh1.FieldByName('worker').Value := FArrTitle[i][cTlW];
-    Frg1.MemTableEh1.FieldByName('job').Value := FArrTitle[i][cTlJ];
-    Frg1.MemTableEh1.FieldByName('schedule').Value := FArrTitle[i][cTlSchedule];
+    Frg1.MemTableEh1.FieldByName('worker').Value := FArrTitle.G(i, 'workername');
+    Frg1.MemTableEh1.FieldByName('job').Value := FArrTitle.G(i, 'job');
+    Frg1.MemTableEh1.FieldByName('schedule').Value := FArrTitle.G(i, 'schedule');
     Frg1.MemTableEh1.Post;
     for j := 1 to 16 do begin
       PushTurvCellToGrid(i, j);
@@ -511,7 +513,7 @@ begin
   end;
   //заполним итоговые ячейки мемтейбл
   Frg1.SetValue('time', ARow, False, FormatFloat('0.00', S.NNum(sum[0])));
-  Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle[ARow][cTlPremium])));
+  Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle.G(ARow, 'premium'))));
   Frg1.SetValue('premium', ARow, False, FormatFloat('0.00', S.NNum(sum[1])));
   Frg1.SetValue('penalty', ARow, False, FormatFloat('0.00', S.NNum(sum[2])));
     //кнопка Закрыть период  //!!!
@@ -643,12 +645,12 @@ begin
     Exit;
   if (j < 0) or (FArrTurv[i][j][cExists] = -1) then
     //не колонки дней - только фио
-    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FArrTitle[i][cTlW]])
+    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FArrTitle.G(i, 'workername')])
   else
     //колонки дней - данные по текущей ячейке
     //два цвета не могут в лейбле сейчас идти подряд без промежутков!
     TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2([
-      '$000000Работник: $FF00FF', FArrTitle[i][cTlW],
+      '$000000Работник: $FF00FF', FArrTitle.G(i, 'workername'),
       '$000000', '   Дата: ', '$FF0000', DateToStr(IncDay(FPeriodStartDate, j-1)) +
       '$000000', '   Время: ', '$FF0000',
       FormatTurvCell(GetTurvCell(i, j, 1)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 2)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 3)),
@@ -667,11 +669,11 @@ procedure TFrmWGEdtTurv.SetLblsDetailText;
 begin
   if not Frg1.MemTableEh1.Active or (Frg1.RecNo < 1) or not Frg2.MemTableEh1.Active or (Frg2.RecNo < 1) or Frg2.InLoadData then
     Exit;
-  TLabelClr(Frg2.FindComponent('lblDWorker')).SetCaptionAr2(['$FF0000', FArrTitle[Frg1.RecNo - 1][2]]);
-  TLabelClr(Frg2.FindComponent('lblDComm')).SetCaptionAr2(['Комментарий:$FF0000 ', S.IIf(S.NSt(FArrTitle[Frg1.RecNo - 1][6]) <> '', FArrTitle[Frg1.RecNo - 1][6], 'нет')]);
-  TLabelClr(Frg2.FindComponent('lblDComm')).ShowHint := Length(VarToStr(FArrTitle[Frg1.RecNo - 1][6])) > 150;
-  TLabelClr(Frg2.FindComponent('lblDComm')).Hint := VarToStr(FArrTitle[Frg1.RecNo - 1][6]);
-  TLabelClr(Frg2.FindComponent('lblDPremium')).SetCaptionAr(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(FArrTitle[Frg1.RecNo - 1][5]))]);
+  TLabelClr(Frg2.FindComponent('lblDWorker')).SetCaptionAr2(['$FF0000', FArrTitle.G(Frg1.RecNo - 1, 'workername')]);
+  TLabelClr(Frg2.FindComponent('lblDComm')).SetCaptionAr2(['Комментарий:$FF0000 ', S.IIf(S.NSt(FArrTitle.G(Frg1.RecNo - 1, 'comm')) <> '', FArrTitle.G(Frg1.RecNo - 1, 'comm'), 'нет')]);
+  TLabelClr(Frg2.FindComponent('lblDComm')).ShowHint := Length(VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'))) > 150;
+  TLabelClr(Frg2.FindComponent('lblDComm')).Hint := VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'));
+  TLabelClr(Frg2.FindComponent('lblDPremium')).SetCaptionAr(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(FArrTitle.G(Frg1.RecNo - 1, 'comm')))]);
   Frg2.SetBtnNameEnabled(1001, null, FInEditMode and FRgsEdit1);
   Frg2.SetBtnNameEnabled(1002, null, FInEditMode);
 end;
@@ -1116,24 +1118,24 @@ begin
     FArrTurv[r][d][cComSct] := va2[1];
   end
   else if Mode = mbtPremiumForPeriod then begin
-    va1 := [S.NSt(FArrTitle[r][cTlPremium])];
+    va1 := [S.NSt(FArrTitle.G(r, 'premium'))];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 180, 60,
       [[cntNEdit, 'Сумма:','0:100000']],
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-    FArrTitle[r][cTlPremium] := va2[0];
+//!!!    FArrTitle.  .G(r, 'premium') := va2[0];
     SetLblsDetailText;
 //    SaveWorkerToDB(r);
   end
   else if Mode = mbtCommentForWorker then begin
-    va1 := [S.NSt(FArrTitle[r][cTlComm])];
+    va1 := [S.NSt(FArrTitle.G(r, 'comm'))];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntEdit, 'Комментарий:','0:400::T']],
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-    FArrTitle[r][cTlComm] := S.NSt(va2[0]);
+//    FArrTitle[r][cTlComm] := S.NSt(va2[0]);
     SetLblsDetailText;
   end
   else if Mode = mbtDivisionScedule then begin
@@ -1145,7 +1147,7 @@ begin
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-    FArrTitle[r][cTlComm] := va2[0];
+//    FArrTitle[r][cTlComm] := va2[0];
     SetLblsDetailText;
   end
   else if Mode = mbtWorkerScedule then begin
@@ -1157,7 +1159,7 @@ begin
       va1, va2, [['']], nil
     ) < 0 then
       Exit;
-    FArrTitle[r][cTlComm] := va2[0];
+//    FArrTitle[r][cTlComm] := va2[0];
     SetLblsDetailText;
   end;
   //отобразим данные в основной таблице
