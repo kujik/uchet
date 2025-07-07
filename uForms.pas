@@ -1468,6 +1468,9 @@ begin
   else if c is TMemo then begin
     TMemo(c).Text := VarToStr(v);
   end
+  else if c is TLabelClr then begin
+    TLabelClr(c).SetCaption2(VarToStr(v));
+  end
   else if c is TLabel then begin
     TLabel(c).Caption := VarToStr(v);
   end;
