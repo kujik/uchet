@@ -40,6 +40,7 @@ type
     FIsEditable: Boolean;
     FDeletedWorkers: TVarDynArray;
     FColWidth: Integer;
+    FIsWorkingHoursDefined: Boolean;
     function  PrepareForm: Boolean; override;
     function  CreatePayroll: Integer;
     function  GetDataFromDb: Integer;
@@ -167,6 +168,7 @@ begin
     [],
     [mbtCtlPanel]
   ]);
+  Frg1.Opt.ButtonsNoAutoState := [0];
 
 
   Frg1.CreateAddControls('1', cntLabelClr,
@@ -326,47 +328,36 @@ end;
 
 procedure TFrmWGedtPayroll.SetButtons;
 begin
-      Frg1.SetControlValue('lblInfo', '$000000Только просмотр.')
-(*  if Mode = fView
-    then begin
-      Frg1.SetControlValue('lblInfo', '$000000Только просмотр.')
-{      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, False);}
-    end
-    else if (Norma = null) or (CalcMode = null) then begin
-      lbl_Info.Caption:='Задайте параметры!';
-      lbl_Info.Font.Color:=clRed;
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, True);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, False);
-    end
-    else if Commit then begin
-      lbl_Info.Caption:='Ведомость закрыта, только просмотр.';
-      lbl_Info.Font.Color:=clGreen;
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, False);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, True);
-    end
-    else begin
-      lbl_Info.Caption:='Ввод данных.';
-      lbl_Info.Font.Color:=RGB(255, 0, 255);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtSettings, True);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Turv, True);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCustom_Payroll, Integer(CalcMode) in [13, 14]);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtCard, True);
-      Cth.SetBtnAndMenuEnabled(pnl_Left, nil, mbtLock, True);
-    end;
-  Cth.GetSpeedBtn(pnl_Left, mbtLock).Hint:=S.IIf(Commit, 'Отменить закрытие ведомости', 'Закрыть ведомость');
-  SetColumns;
-*)
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
+  if Mode = fView then begin
+    Frg1.SetControlValue('lblInfo', '$000000Только просмотр.');
+  end
+  else if FPayrollParams.G('id_method') = null then begin
+    Frg1.SetControlValue('lblInfo', '$0000FFЗадайте параметры!');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
+  end
+  else if FPayrollParams.G('commit') = 1 then begin
+    Frg1.SetControlValue('lblInfo', '$00FF00Ведомость закрыта, только просмотр.');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
+  end
+  else begin
+    Frg1.SetControlValue('lblInfo', '$FF00FFВвод данных.');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('id_method')) in [13, 14]);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
+  end;
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('commit') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);
+//!!!  SetColumns;
 end;
+
+
+
 
 
 
@@ -382,6 +373,7 @@ end;
 
 procedure TFrmWGedtPayroll.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
+//  SetButtons;
 end;
 
 procedure TFrmWGedtPayroll.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);

@@ -694,15 +694,16 @@ v:=True;
       ['id$i','_id','40'],
       ['code','Код','50'],
       ['divisionname','Подразделение','200'],
+      ['workername','Работник','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['committxt','Закрыта','60','pic=закрыт:13']
+      ['committxt','Закрыта','60','pic=закрыта;13']
     ]);
     Frg1.Opt.SetTable('v_payroll');
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtTest],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 100);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
       ['Журнал зарплатных ведомостей.'#13#10+

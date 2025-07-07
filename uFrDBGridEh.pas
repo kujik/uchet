@@ -228,6 +228,8 @@ type
     FButtons: TFrDBGridEhRecButtons;
     //јйƒи кнопок, которые доступны даже если таблица пуста
     FButtonsIfEmpty: TVarDynArray;
+    //јйƒи кнопок, статус которых не мен€етс€ автоматически. если задать [0] то никакие кнопки апвтоматически не управл€ютс€
+    FButtonsNoAutoState: TVarDynArray;
     //¬ью, таблица, запросы, первичное поределение полей
     FSql: TFrDBGridEhRecSql;
     //режим получени€ данных (— датадрайвором, из массива, или при открытии читает создаваемым на основе списка полей запросом, а далее работа с этим массивом)
@@ -265,6 +267,7 @@ type
     //свойства
     property Caption: string read FCaption write FCaption;
     property Buttons: TFrDBGridEhRecButtons read FButtons;
+    property ButtonsNoAutoState: TVarDynArray read FButtonsNoAutoState write FButtonsNoAutoState;
     property Sql: TFrDBGridEhRecSql read FSql;
     property DataMode: TFrDBGridDataMode read FDataMode;
     property AllowedOperations: TDBGridEhAllowedOperations read FAllowedOperations;
@@ -2943,7 +2946,8 @@ var
   i: Integer;
 begin
   for i := 0 to High(FBtnIds) do
-    SetBtnNameEnabled(FBtnIds[i], null, IsNotEmpty or A.InArray(FBtnIds[i], Opt.FButtonsIfEmpty));
+    if not (A.InArray(FBtnIds[i], Opt.FButtonsNoAutoState) or A.InArray(0, Opt.FButtonsNoAutoState)) then
+      SetBtnNameEnabled(FBtnIds[i], null, IsNotEmpty or A.InArray(FBtnIds[i], Opt.FButtonsIfEmpty));
 end;
 
 procedure TFrDBGridEh.SetBtnNameEnabled(ATag: Integer; AName: Variant; AEnabled: Variant);
