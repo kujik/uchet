@@ -136,12 +136,9 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-  F_D_Turv in 'F_D_Turv.pas' {Dlg_TURV},
   D_CreatePayroll in 'D_CreatePayroll.pas' {Dlg_CreatePayroll},
   F_Payroll in 'F_Payroll.pas' {Form_Payroll},
   D_PayrollSettings in 'D_PayrollSettings.pas' {Dlg_PayrollSettings},
-  D_TURV_Comment in 'D_TURV_Comment.pas' {Dlg_TURV_Comment},
-  D_Turv_FromParsec in 'D_Turv_FromParsec.pas' {Dlg_Turv_FromParsec},
   D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
   D_Vacancy in 'D_Vacancy.pas' {Dlg_Vacancy},
   D_Candidate in 'D_Candidate.pas' {Dlg_Candidate},
@@ -152,7 +149,8 @@ uses
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
   uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
-  uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment};
+  uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
+  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll};
 
 //!!!
 
@@ -312,7 +310,6 @@ begin
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
-  Application.CreateForm(TDlg_TURV_Comment, Dlg_TURV_Comment);
 
   Application.Run;
 

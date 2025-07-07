@@ -655,6 +655,9 @@ type
     function  IsColumnEditable(FieldName: string = ''): Boolean;
     //установить отметку в индикаторном столбце для переданных значений выбранного поля
     procedure SetIndicatorCheckBoxesByField(FieldName: string; Values: TVarDynArray);
+    //получить ширину таблицы, посчитав ширины видимых столбцов
+    function  GetTableWidth: Integer;
+
 
     {функции настройки фрейма, управления его свойствами во время выполнения}
 
@@ -2427,6 +2430,17 @@ begin
   end;
 end;
 
+function TFrDBGridEh.GetTableWidth: Integer;
+//получить ширину таблицы, посчитав ширины видимых столбцов
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to DBGridEh1.Columns.Count - 1 do
+    if DBGridEh1.Columns[i].Visible then
+      Result := Result + DBGridEh1.Columns[i].Width;
+end;
+
 
 {
 ФУНКЦИИ НАСТРОЙКИ ФРЕЙМА, УПРАВЛЕНИЯ ЕГО СВОЙСТВАМИ ВО ВРЕМЯ ВЫПОЛНЕНИЯ
@@ -2723,7 +2737,15 @@ begin
     col.Footer.DisplayFormat := '';
 
     //зададим заголовок столбца
-    col.Title.Caption := Opt.Sql.Fields[i].Caption;
+    if Pos('~', Opt.Sql.Fields[i].Caption) = 1 then begin
+      col.Title.Orientation := tohVertical;
+      col.Title.Caption := Copy(Opt.Sql.Fields[i].Caption, 2);
+    end
+    else begin
+      col.Title.Orientation := tohHorizontal;
+      col.Title.Caption := Opt.Sql.Fields[i].Caption;
+    end;
+
     //чекбокс в колонке
     if Opt.Sql.Fields[i].FChb then begin
       st := Opt.Sql.Fields[i].FChbPic;
@@ -3717,6 +3739,7 @@ begin
   //выставим статус; если таблицу проверяем не всегда, HasError:=False, чтобы был доступен баттон Ок и по нажатии провреилась таблица и вышло сообщение об ошибке.
   SetState(null, S.IIf(EditOptions.AlwaysVerifyAllTable, False, not Result), S.IIfStr(not Result, 'Некорректные значения в строках:'#13#10 + ERows));
 end;
+
 
 
 

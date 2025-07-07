@@ -96,8 +96,7 @@ uses
   uTurv,
   uLabelColors2,
   uFrmBasicInput,
-  //TFrmWWsrvTurvComment,
-  D_TURV_Comment,
+  uFrmWWsrvTurvComment,
   uExcel,
   uPrintReport
   ;
@@ -1546,9 +1545,9 @@ begin
   //если мышка в верхнем лефом углу, вызовем метод формы посказки, а он уже покажет форму, если комментарий непустой,
   //также передаются координаты чтобы форма была помещена в нужном месте.
   if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y <= 7)) then
-    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, v1, v2, v3, null);
+    FrmWWsrvTurvComment.ShowDialog(Self, CursorPos.X, CursorPos.Y, v1, v2, v3, null);
   if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y >= Frg1.DBGridEh1.CellRect(Cell.X, Cell.Y).Bottom - Frg1.DBGridEh1.CellRect(Cell.X, Cell.Y).Top - 7)) then
-    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
+    FrmWWsrvTurvComment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
 end;
 
 procedure TFrmWGEdtTurv.Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
@@ -1676,9 +1675,9 @@ begin
   //если мышка в верхнем лефом углу, вызовем метод формы посказки, а он уже покажет форму, если комментарий непустой,
   //также передаются координаты чтобы форма была помещена в нужном месте.
   if (InCellCursorPos.X <= 7) and (InCellCursorPos.Y <= 7) then
-    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y + Frg1.RecNo * Frg1.DBGridEh1.RowHeight, v1, v2, v3, null);
+    FrmWWsrvTurvComment.ShowDialog(Self, CursorPos.X, CursorPos.Y + Frg1.RecNo * Frg1.DBGridEh1.RowHeight, v1, v2, v3, null);
   if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y >= Frg2.DBGridEh1.CellRect(Cell.X, Cell.Y).Bottom - Frg2.DBGridEh1.CellRect(Cell.X, Cell.Y).Top - 7)) then
-    Dlg_TURV_Comment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
+    FrmWWsrvTurvComment.ShowDialog(Self, CursorPos.X, CursorPos.Y, null, null, null, v4);
 end;
 
 procedure TFrmWGEdtTurv.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);

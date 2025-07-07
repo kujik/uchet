@@ -2,17 +2,21 @@ inherited Form_Payroll: TForm_Payroll
   Caption = #1047#1072#1088#1087#1083#1072#1090#1085#1072#1103' '#1074#1077#1076#1086#1084#1086#1089#1090#1100
   ClientHeight = 383
   ClientWidth = 1284
-  ExplicitWidth = 1300
-  ExplicitHeight = 422
+  ExplicitWidth = 1296
+  ExplicitHeight = 421
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 364
     Width = 1284
-    ExplicitTop = 364
-    ExplicitWidth = 1284
+    ExplicitTop = 363
+    ExplicitWidth = 1280
     inherited lbl_StatusBar_Right: TLabel
-      Left = 1195
-      ExplicitLeft = 1195
+      Left = 1197
+      Height = 17
+      ExplicitLeft = 1197
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   object pnl_Top: TPanel [1]
@@ -23,6 +27,7 @@ inherited Form_Payroll: TForm_Payroll
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitWidth = 1280
     object pnl_Right: TPanel
       Left = 1221
       Top = 0
@@ -31,6 +36,7 @@ inherited Form_Payroll: TForm_Payroll
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitLeft = 1217
     end
     object pnl_Left: TPanel
       Left = 0
@@ -49,6 +55,7 @@ inherited Form_Payroll: TForm_Payroll
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 2
+      ExplicitWidth = 660
       object lbl_Caption1: TLabel
         Left = 6
         Top = 5

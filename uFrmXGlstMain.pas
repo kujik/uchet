@@ -96,7 +96,8 @@ uses
   uFrmOWPlannedOrder,
   uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
-  uFrmWGEdtTurv
+  uFrmWGEdtTurv,
+  uFrmWGedtPayroll
   ;
 
 
@@ -665,7 +666,7 @@ begin
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
 v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtTest],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -698,7 +699,7 @@ v:=True;
       ['committxt','Закрыта','60','pic=закрыт:13']
     ]);
     Frg1.Opt.SetTable('v_payroll');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtTest],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 100);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 100);
@@ -2031,8 +2032,8 @@ begin
       Fr.RefreshGrid;
     end;
   end
-  else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin
-    TFrmWGEdtTurv.Show(Application, '22222-----', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
+  else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
+    TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
   else inherited;
 

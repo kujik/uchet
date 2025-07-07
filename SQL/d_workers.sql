@@ -609,7 +609,7 @@ create table payroll_method(
 );  
 
 --нормы расчета (норма балов за период) за каждый отчетный период в часах, отдельно для цеха и офиса
---drop table payroll_norm cascade constraints;
+--drop table payroll_norm cascade constraints;  //!!! удалить
 create table payroll_norm(
   dt date,
   norm0 number(7,2),          --норма расчета цех 

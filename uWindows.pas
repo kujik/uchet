@@ -851,7 +851,7 @@ begin
     TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Payroll then begin
-//~    Form := TForm_Payroll.ShowDialog(AOwner, F, fMode, AId, MyFormOptions);
+    Form := TForm_Payroll.ShowDialog(AOwner, F, fMode, AId, MyFormOptions);
   end
   else if F = myfrm_Dlg_Candidate then begin
 //~    Form := TDlg_Candidate.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);
