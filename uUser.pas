@@ -139,20 +139,22 @@ var
   va2: TVarDynArray2;
 begin
   Q.QCallStoredProc('p_UserLogon', 'IdModule$i;IdUser$i', [cMainModule, User.GetId]);
-  va2:=Q.QLoadToVarDynArray2('select r.rights from adm_roles r, adm_user_roles ur where r.id = ur.id_role and ur.id_user = :id', [UserID]);
-  UserRights:=',';
-  for i:=0 to High(va2) do
-    UserRights:= UserRights + va2[i][0] + ',';
+  va2 := Q.QLoadToVarDynArray2('select r.rights from adm_roles r, adm_user_roles ur where r.id = ur.id_role and ur.id_user = :id', [UserID]);
+  UserRights := ',';
+  for i := 0 to High(va2) do
+    UserRights := UserRights + va2[i][0] + ',';
   Settings.Load;
   Settings.ReadInterfaceSettings;
   Settings.SetStyle;
 {  if Settings.InterfaceStyle = ''
     then Module.SetStyle('')
     else Module.SetStyle(Module.GetPath_Styles+'\'+Settings.InterfaceStyle);}
-  v:= Q.QSelectOneRow('select job, job_comm, idletime from adm_users where id = :id$i', [GetID]);
-  UserJob:=v[0];
+  v := Q.QSelectOneRow('select job, job_comm, idletime from adm_users where id = :id$i', [GetID]);
+  UserJob := v[0];
+  UserIdleTime := v[2];
   Errors.SetMadExcept;
-  if FrmMain<> nil then FrmMain.AfterUserLogged;
+  if FrmMain <> nil then
+    FrmMain.AfterUserLogged;
 end;
 
 //пытаемся войти в систему под пользователем системы (вход если логин на компьютере совпадает с логином в БД учета)
