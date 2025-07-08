@@ -264,7 +264,7 @@ begin
     [mbtCtlPanel, True, 500],
     [],
     [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True, 'Преимия за день'],
-    [-mbtFine, True, FInEditMode and FRgsEdit1, 'Штраф за день'],
+    [-mbtFine, FInEditMode and FRgsEdit1, True, 'Штраф за день'],
     [-ghtNightWork, FInEditMode, True, 'Ночная смена'],
     [-mbtComment, FInEditMode, True, 'Комментарий'],
     []
@@ -879,9 +879,10 @@ end;
 procedure TFrmWGEdtTurv.InputDialog(Mode : Integer);
 var
   va1, va2, va3, va4: TVarDynArray;
-  i, j, r, d, n, n1, n2, rd: Integer;
+  i, j, r, d, n, n1: Integer;
   st: string;
   rsd: TVarDynArray;
+  DataMode: Integer;
 begin
   for i := 0 to High(myDefaultBtns) do
     if myDefaultBtns[i].Bt = Mode then begin
@@ -894,12 +895,17 @@ begin
   if Mode = mbtComment then begin
     if d = -1 then
       Exit;
+    //какой тип данных вводится
     va3 := [cComRuk, cComPar, cComSogl, cComPr, cComSct];
     if Frg2.DbGridEh1.Focused then
       n1 := Frg2.RecNo - 1
     else
-      n1 := 1;
-    //!!! доделапть блокировку пунста меню
+      n1 := 0;
+    //тип данных - руководитель, парсек, согласование (1, 2, 3)
+    DataMode := n1 + 1;
+    if DataMode > 3 then
+      DataMode := 1;
+    //!!! доделапть блокировку пункта меню
     if not (((va3[n1] = cComPar) and FRgsEdit2) or ((va3[n1] = cComSogl) and FRgsEdit3) or FRgsEdit1) or not FInEditMode then
       Exit;
     va1 := [S.NSt(FArrTurv[r][d][S.NInt(va3[n1])])];
@@ -1014,12 +1020,7 @@ begin
   //отобразим данные в детальной таблице
   PushTurvCellToDetailGrid(r, d);
   //запишем в БД
-  if FIsDetailGridUpdated then
-    rd := Frg2.RecNo - 1
-  else
-    rd := 0;
-  rsd := [cTRuk, cTPar, cTSogl, cTRuk, cTRuk];
-  SaveDayToDB(r, d, rsd[rd]);
+  SaveDayToDB(r, d, DataMode);
 end;
 
 
