@@ -97,7 +97,8 @@ uses
   uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
   uFrmWGEdtTurv,
-  uFrmWGedtPayroll
+  uFrmWGedtPayroll,
+  uFrmWDedtCreatePayroll
   ;
 
 
@@ -700,7 +701,7 @@ v:=True;
       ['committxt','Закрыта','60','pic=закрыта;13']
     ]);
     Frg1.Opt.SetTable('v_payroll');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtTest],[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
@@ -1854,8 +1855,10 @@ begin
       if Turv.DeleteTURV(Fr.ID) then
         Refresh;
     if (FormDoc = myfrm_J_Payrolls) and (fMode in [fEdit, fView]) then
-      Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
+  //    Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
+      TFrmWGedtPayroll.Show(Self, myfrm_Dlg_Payroll, [myfoDialog, myfoSizeable], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
+      TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
       //~Dlg_CreatePayroll.ShowDialog(Self, 1);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
       if Q.DBLock(True, myfrm_Dlg_Payroll, Fr.ID)[0] <> True  then

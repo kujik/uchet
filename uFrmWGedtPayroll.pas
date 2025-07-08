@@ -150,7 +150,8 @@ begin
   Frg1.Opt.SetGridOperations('u');
   Frg1.DbGridEh1.ReadOnly := (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1);
   Frg1.Opt.SetButtons(1, [
-    [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],[mbtCard],[],[mbtExcel],
+    [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
+    [mbtCard, True, True, 'Загрузить НДФЛ и карты'],[],[mbtExcel],
     [mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtPrintLabels],[mbtDividorM],[],[mbtLock],
     [],
     [mbtCtlPanel]
@@ -422,7 +423,9 @@ begin
         if (e1 > 0) and (e2 > 0) then
            va[j][13] := e1 + e2;
         //график работы, текст
-        va[j][14] := va1[i][3] + ' (' + FloatToStr(va[j][12]) + ')';
+        va[j][14] := '';
+        if S.NSt(va[i][3]) <> '' then
+          va[j][14] := va1[i][3] + ' (' + FloatToStr(S.NNum(va[j][12])) + ')';
         Break;
       end;
     end;
@@ -780,17 +783,28 @@ begin
 end;
 
 procedure TFrmWGedtPayroll.SetButtons;
+var
+  i: Integer;
+  NoNorms: Boolean;
 begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
+  Frg1.DbGridEh1.ReadOnly := True;
+  NoNorms:= False;
+  for i := 0 to Frg1.GetCount(False) - 1 do
+    if (Frg1.GetValueF('norm') <= 0) or (Frg1.GetValueF('norm_m') <= 0) then
+      NoNorms:= True;
   if Mode = fView then begin
     Frg1.SetControlValue('lblInfo', '$000000Только просмотр.');
   end
+  else if NoNorms then begin
+    Frg1.SetControlValue('lblInfo', '$0000FFНе заданы нормы рабочего времени!');
+  end
   else if FPayrollParams.G('id_method') = null then begin
-    Frg1.SetControlValue('lblInfo', '$0000FFЗадайте параметры!');
+    Frg1.SetControlValue('lblInfo', '$0000FFЗадайте метод расчета!');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
   end
   else if FPayrollParams.G('commit') = 1 then begin
@@ -804,9 +818,11 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('id_method')) in [13, 14]);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
+    Frg1.DbGridEh1.ReadOnly := False;
   end;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('commit') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);
   SetColumns;
+  Frg1.DbGridEh1.Invalidate;
 end;
 
 procedure TFrmWGedtPayroll.SetColumns;
