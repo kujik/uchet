@@ -1368,7 +1368,7 @@ DbGridEh1.OptionsEh:=DbGridEh1.OptionsEh - [dghHighlightfocus, dghRowHighlight];
     Sender.DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
 exit;
 }
-  if IsColumnEditable(Column.FieldName) then begin
+  if IsColumnEditable(Column.FieldName) and not DbGridEh1.ReadOnly then begin
     //отрисуем зеленую полоску слева для редактируемого столбца
     Sender.DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
     if myogHiglightEditableColumns in Options then

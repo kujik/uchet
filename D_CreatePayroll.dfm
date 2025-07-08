@@ -3,9 +3,8 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
   Caption = #1057#1086#1079#1076#1072#1090#1100' '#1074#1077#1076#1086#1084#1086#1089#1090#1080
   ClientHeight = 182
   ClientWidth = 338
-  ExplicitWidth = 344
-  ExplicitHeight = 211
-  PixelsPerInch = 96
+  ExplicitWidth = 350
+  ExplicitHeight = 220
   TextHeight = 13
   object Bt_OK: TBitBtn
     Left = 181
@@ -31,15 +30,12 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
     Top = 0
     Width = 338
     Height = 145
-    ActivePage = ts_Divisions
+    ActivePage = ts_Worker
     Align = alTop
     TabOrder = 2
+    ExplicitWidth = 334
     object ts_Divisions: TTabSheet
       Caption = #1042#1089#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083#1077#1085#1080#1103
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lbl1: TLabel
         Left = 3
         Top = 8
@@ -86,10 +82,6 @@ inherited Dlg_CreatePayroll: TDlg_CreatePayroll
     object ts_Worker: TTabSheet
       Caption = #1056#1072#1073#1086#1090#1085#1080#1082
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lbl2: TLabel
         Left = 6
         Top = 11

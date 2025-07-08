@@ -150,7 +150,8 @@ uses
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
   uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
-  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll};
+  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
+  uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll};
 
 //!!!
 

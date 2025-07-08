@@ -664,18 +664,20 @@ where
 
     
 --данные зарплатной ведомости дл€ конкретного работника из ведомости
---alter table payroll_item add pvkarta number(7);
 create table payroll_item(
   id number(11),
   id_payroll number(11),          --айди зарплатной ведомости, в которую входит эта строка
   dt date,
   id_division number(11),         --айди подразделени€
   id_worker number(11),           --айди работника
-  id_job number(11),              --айди профессии
+  id_schedule number(11),         --график работы
+  id_job number(11),              --айди              
   blank number(7),                --номер бланка дл€ печати
   ball_m number(7),               --баллы за мес€ц (точнее, отчтетный период, полмес€ца)
-  turv number(7),                 --итоговое врем€ из турв 
+  turv number(7),                 --итоговое врем€ из турв
   ball number(7),                 --баллы расчетные
+  norm number(7),                 --норма в часах дл€ текущего периода     
+  norm_m number(7),               --норма в часах за данный календарный мес€ц 
   premium_m_src number(7),        --преми€ за отчетный период, вз€та€ из “”–¬
   premium_m number(7),            --преми€ за отчетный период, вычисл€етс€ по формуле или вводитс€ вручную в зарплатной ведомости
   premium number(7),              --преми€, сумма дневных премий из турв
@@ -693,7 +695,8 @@ create table payroll_item(
   constraint pk_payroll_item primary key (id),
   constraint fk_payroll_item_payroll foreign key (id_payroll) references payroll(id) on delete cascade,
   constraint fk_payroll_item_worker foreign key (id_worker) references ref_workers(id),
-  constraint fk_payroll_item_job foreign key (id_job) references ref_jobs(id)
+  constraint fk_payroll_item_job foreign key (id_job) references ref_jobs(id),
+  constraint fk_payroll_item_schedule foreign key (id_schedule) references ref_work_schedules(id)
 );  
   
 create sequence sq_payroll_item start with 100 nocache;
@@ -705,11 +708,13 @@ create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
 create or replace view v_payroll_item as 
 select
   i.*,
+  s.code,
+  s.code || ' (' || to_char(i.norm) || ')' as schedule,
   p.dt2 as dt2,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   d.name as divisionname,
   j.name as job,
-  decode(d.office, 1, n.norm1, 0, n.norm0) as norm,
+  --decode(d.office, 1, n.norm1, 0, n.norm0) as norm,
   p.id_method as id_method
 from
   payroll_item i,
@@ -718,14 +723,16 @@ from
   ref_divisions d,
   ref_jobs j,
   payroll_norm n,
-  payroll_method m
+  payroll_method m,
+  ref_work_schedules s
 where
   i.id_payroll = p.id and
   i.id_division = d.id and
   i.id_worker = w.id and 
   i.id_job = j.id and
   p.dt1 = n.dt (+) and
-  p.id_method = m.id (+)
+  p.id_method = m.id (+) and
+  i.id_schedule = s.id (+)
 ;     
 
 select * from v_payroll_item;
@@ -1390,10 +1397,11 @@ alter table turv_period add id_schedule number(11);
 alter table turv_period add  constraint fk_turv_period_schedule foreign key (id_schedule) references ref_work_schedules(id);
 alter table ref_divisions add id_schedule number(11);
 alter table ref_divisions add constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id);
+alter table payroll_item add norm number(7);
+alter table payroll_item add norm_m number(7);
+alter table payroll_item add id_schedule number(11);
+alter table payroll_item add constraint fk_payroll_item_schedule foreign key (id_schedule) references ref_work_schedules(id);
+
 update ref_divisions set id_schedule = 100;
 update turv_period set id_schedule = 100;
-
-
-
-   
 
