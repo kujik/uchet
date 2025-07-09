@@ -1229,6 +1229,24 @@ v:=True;
       ['Выбор номенклатуры bCAD.'#10#13'Выберите номенклатуру в таблице и нажмите кнопку "выбрать" или дважды кликните мышью на запись.'#10#13]
     ];
   end
+  else if FormDoc = myfrm_R_bCAD_Nomencl_SelMaterials then begin
+    //выбор из списка сметной позиции, в списке все что загружалось в учет из смет, артикул берется из базы ИТМ
+    Caption:='Выбор материала';
+    Frg1.Options := Frg1.Options + [myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['artikul','Артикул','120'],
+      ['name','Наименование','300;h'],
+      ['id_itm','_id_itm','40']
+    ]);
+    Frg1.Opt.SetTable('v_bcad_nomencl_add');
+    //группы не ПФ, готовый изделия, ДК
+    Frg1.Opt.SetWhere('where id_itm is not null and id_group not in (1, 2, 104)');
+    Frg1.Opt.SetButtons(1, 'lrs');
+    Frg1.InfoArray:=[
+      ['Выбор номенклатуры bCAD.'#10#13'Выберите номенклатуру в таблице и нажмите кнопку "выбрать" или дважды кликните мышью на запись.'#10#13]
+    ];
+  end
   else if FormDoc = myfrm_R_Itm_Schet then begin
     //счет от поставщика из итм
     Caption:='Счет от поставщика';
@@ -1421,6 +1439,16 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_or_std_items');
     Frg1.Opt.SetWhere('where id_or_format_estimates > 0');
+    Frg1.Opt.SetButtons(1, 'ls');
+  end
+  else if FormDoc = myfrm_R_OrderStdItems_SelSemiproduct then begin  //!!!
+    Caption:='Выбор полуфабриката';
+     Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['fullname','Наименование','']
+    ]);
+    Frg1.Opt.SetTable('v_or_std_items');
+    Frg1.Opt.SetWhere('where id_or_format_estimates > 0 and is_semiproduct = 1');
     Frg1.Opt.SetButtons(1, 'ls');
   end
 

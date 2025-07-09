@@ -598,7 +598,9 @@ begin
     myfrm_J_Devel,
     myfrm_R_Itm_Nomencl,
     myfrm_R_bCAD_Nomencl_SEL,
+    myfrm_R_bCAD_Nomencl_SelMaterials,
     myfrm_R_OrderStdItems_SEL,
+    myfrm_R_OrderStdItems_SelSemiproduct,
     myfrm_R_Itm_Schet,
     myfrm_R_Itm_InBill,
     myfrm_R_Itm_MoveBill,
@@ -923,8 +925,8 @@ begin
     Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
-      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!
-  //  TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+//      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!    32098
+    TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);    //!!!    32098
   end
   else if F = myfrm_Dlg_SupplierMinPart then begin
     Form := TDlg_SuppliersMinPart.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);

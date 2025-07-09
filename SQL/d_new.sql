@@ -40,6 +40,8 @@ where
   e.name = o.FULLNAME    
 ;
 
+
+--проставимя в сметах айди стандартных изделий
 update estimate_items t1
 set t1.id_or_std_item = (
 --    select max(t2.id)
@@ -54,8 +56,27 @@ where exists (
 );
 
 select * from estimate_items where id_or_std_item is not null;
---END обновление смет
 
+--проставим в сметах группы для изделий-полуфабрикатов
+--update estimate_items t1
+--set t1.id_group = 2 
+;
+select * from estimate_items t1
+where exists (
+select t2.fullname  
+    from v_or_std_items t2, bcad_nomencl b
+    where t1.id_name = b.id and b.name = t2.fullname and nvl(t2.is_semiproduct, 0) = 1
+);
+
+select id, is_semiproduct from v_or_std_items where fullname = :fullname$s;
+
+select *    
+    from v_or_std_items t2, bcad_nomencl b
+    where t1.id_name = b.id and b.name = t2.fullname and nvl(t2.is_semiproduct, 0) = 1;
+
+--END обновление смет
+select * from v_or_std_items where nvl(is_semiproduct, 0) = 1;
+select * from estimate_items where id_group = 2;
 --------------------------------------------------------------------------------
 /*
 не получается сделать без пробела в t.code || ', ', если его убрать, то при одинаковых конце одного участка и начале следующего будет неверно:

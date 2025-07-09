@@ -170,7 +170,8 @@ uses
   uFrmBasicEditabelGrid,
   uFrmOWOrder,
   uFrmOWSearchInEstimates,
-  uFrmWGEdtTurv
+  uFrmWGEdtTurv,
+  uFrmOGedtEstimate
   ;
 
 
@@ -1406,7 +1407,10 @@ var
   st: string;
   va2: tvardynarray2;
 begin
-  //ConvertNewOrStdItemRoutes; exit;
+    Orders.LoadEstimate(null, null, 1129); exit;
+
+   TFrmOGedtEstimate.Show(Application, '222221', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
+
 
   TFrmWGEdtTurv.Show(Application, '22222', [myfoDialog, myfoSizeable], fEdit, 2234, null); exit;
 

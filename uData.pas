@@ -823,6 +823,8 @@ const
   myfrm_J_Orders_SEL_1 = 'J_Orders_SEL_1';
   myfrm_R_Candidates_Ad_SELCH = 'R_Candidates_Ad_SELCH';
   myfrm_Adm_Db_Log='Adm_Db_Log';
+  myfrm_R_bCAD_Nomencl_SelMaterials='R_bCAD_Nomencl_SelMaterials';
+  myfrm_R_OrderStdItems_SelSemiproduct='R_OrderStdItems_SelSemiproduct';
 
   myfrm_R_Workers = 'myfrm_R_Workers';
   myfrm_R_Jobs = 'myfrm_R_Jobs';

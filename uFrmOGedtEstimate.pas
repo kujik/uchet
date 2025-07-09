@@ -22,9 +22,11 @@ type
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure btnClick(Sender: TObject); override;
+    procedure VerifyRow(Row: Integer);
     procedure VerifyBeforeSave; override;
     function  Save: Boolean; override;
     procedure LoadFromDB;
+    procedure LoadFromXls;
     procedure LoadItemFromDB(Row: Integer);
   protected
   public
@@ -47,7 +49,7 @@ var
   i: Integer;
 begin
   Caption:= 'Смета';
-  FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:'),  '$FF0000' + TVarDynArray(AddParam)[2]];
+  FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:'),  {'$FF0000' + }TVarDynArray(AddParam)[2]];
   pnlTop.Height := 50;
 
   Orders.LoadBcadGroups(True);
@@ -61,7 +63,6 @@ begin
     ['id$i','_id','40'],
     ['id_or_std_item$i','_id_or_std_item','40'],
     ['id_group$i','Группа','250;w;L','e=0:100000::TP'],
-    ['null as type$i','Тип','110;L','e=0:100000::TP'],
     ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать из справочника номенклатуры;Выбрать из справочника стандартных изделий'], //:dd
     ['id_unit$i','Ед.изм.','100;L','e=0:1000000::TP'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N'], {недопустимо пустое кол-во}
@@ -104,16 +105,23 @@ end;
 
 procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
+  Handled := True;
   if Tag = mbtLoad then
     Frg1.LoadData('*', [ID])
-{  else if Tag = mbtAdd then
+  else if Tag = mbtExcel then
+    LoadFromXls
+{
+
+  else if Tag = mbtAdd then
     Frg1.AddRow
   else if Tag = mbtInsert then
     Frg1.InsertRow
   else if Tag = mbtDelete then
     Frg1.DeleteRow}
-  else
+  else begin
+    Handled := False;
     inherited;
+  end;
 end;
 
 procedure TFrmOGedtEstimate.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
@@ -123,22 +131,25 @@ var
 begin
   Wh.SelectDialogResult := [];
   if TCellButtonEh(Sender).Hint = 'Выбрать из справочника номенклатуры' then begin
-    Wh.ExecReference(myfrm_R_bCAD_Nomencl_SEL, Self, [myfoDialog, myfoModal], null);
+    Wh.ExecReference(myfrm_R_bCAD_Nomencl_SelMaterials, Self, [myfoDialog, myfoModal], null);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[2]);
-    va := Q.QLoadToVarDynArrayOneRow('select max(id_group), max(id_unit) from v_bcad_nomencl_add where name = :name$s', [Frg1.GetValue('name')]);
+    LoadItemFromDB(Frg1.RecNo - 1);
+ {    va := Q.QLoadToVarDynArrayOneRow('select max(id_group), max(id_unit) from v_bcad_nomencl_add where name = :name$s', [Frg1.GetValue('name')]);
     if Length(va) <> 0 then begin
       Frg1.SetValue('id_group', va[0]);
       Frg1.SetValue('id_unit', va[1]);
-    end;
+    end;}
   end
   else begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SEL, Self, [myfoDialog, myfoModal], null);
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], null);
+//    Wh.ExecReference(myfrm_R_OrderStdItems_SEL, Self, [myfoDialog, myfoModal], null);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
-    for i := 0 to Frg1.DBGridEh1.FindFieldColumn('id_group').PickList.Count - 1 do
+    LoadItemFromDB(Frg1.RecNo - 1);
+{    for i := 0 to Frg1.DBGridEh1.FindFieldColumn('id_group').PickList.Count - 1 do
       if Frg1.DBGridEh1.FindFieldColumn('id_group').PickList[i] = 'Готовые изделия' then begin
         Frg1.MemTableEh1.FieldByName('id_group').Value := Frg1.DBGridEh1.FindFieldColumn('id_group').KeyList[i];
         Break;
@@ -147,7 +158,7 @@ begin
       if Frg1.DBGridEh1.FindFieldColumn('id_unit').PickList[i] = 'шт.' then begin
         Frg1.MemTableEh1.FieldByName('id_unit').Value := Frg1.DBGridEh1.FindFieldColumn('id_unit').KeyList[i];
         Break;
-      end;
+      end;}
   end;
 //  Mth.PostAndEdit(MemTableEh1);
 //  VerifyEstimateRow;
@@ -156,16 +167,14 @@ end;
 
 
 procedure TFrmOGedtEstimate.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
-var
-  st: string;
 begin
+  if Mode <> dbgvCell then
+    Exit;
   if (Fr.GetValue('id_group') = null) or (Fr.GetValue('name') = null) then
     Exit;
-  st := Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Fr.GetValue('id_group'), Fr.GetValue('name')])[0];
-  if High(Err2) < Row then
-    SetLength(Err2, Row + 1);
-  Err2[Row] := st;
-  LoadItemFromDB(Row - 1);
+  if A.InArray(FieldName, ['name', '--id_group']) then
+    LoadItemFromDB(Row - 1);
+  VerifyRow(Row - 1);
 end;
 
 procedure TFrmOGedtEstimate.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -184,11 +193,13 @@ end;
 
 procedure TFrmOGedtEstimate.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
-  if ((Fr.GetValueI('id_group') = IdProduct) or (Fr.GetValueI('id_group') = IdSemiproduct)) and ((Fr.CurrField = 'id_group') or (Fr.CurrField = 'id_unit')) then
+  //запретим менять ед.изм. у готовых изделий и пф
+  if ((Fr.GetValueI('id_group') = IdProduct) or (Fr.GetValueI('id_group') = IdSemiproduct)) and ({(Fr.CurrField = 'id_group') or }(Fr.CurrField = 'id_unit')) then
+    ReadOnly := True;
+  //заперетим ставить галку покупное, если это не ПФ
+  if (Fr.GetValueI('id_group') <> IdSemiproduct) and (Fr.CurrField =  'purchase') then
     ReadOnly := True;
 end;
-
-
 
 procedure TFrmOGedtEstimate.btnClick(Sender: TObject);
 var
@@ -197,24 +208,94 @@ begin
   Tag := TControl(Self).Tag;
 end;
 
+procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);
+var
+  st: string;
+begin
+  st := Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False)])[0];
+  if High(Err2) < Row then
+    SetLength(Err2, Row + 2);
+  Err2[Row + 1] := st;
+end;
+
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
+var
+  rn, i, j, k, m: Integer;
+  Names: TVarDynArray;
+  st: string;
+  b: Boolean;
 begin
-
+  Err := [];
+  Err2 := [];
+  Names := [];
+  b := True;
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //пропустим пустые строки
+    //проверяем по одному полю, поскольку если заполнены не полностью, то будет False еще в inherited
+    if Frg1.GetValueS('name', i, False) = '' then
+      Continue;
+    //--проверим правильность и новизну сметной позиции, вернем в строке
+    //--1й символ = 0 если нет такой позция в справочнике номенклатуры бкад
+    //--2й символ = 0 - ошибка для номенклатуры из группы Изделий - нет такого изделия в v_or_std_items
+    //--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе
+    st := Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False)])[0];
+    if st <> '111' then begin
+      if (st[2] = '0') or (st[3] = '0') then
+        b := False;  //были ошибки, с которыми сохранять смету нельзя.
+      Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + S.IIf(st[2] = '0', 'Нет такого изделия', S.IIf(st[3] = '0', 'Это изщделие, а должен быть материал', S.IIf(st[1] = '0', 'Новая позиция!', '')))];
+    end;
+    if A.PosInArray(Frg1.GetValueS('name', i, False), Names) >= 0 then begin
+      b := False;
+      Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - повторяется несколько раз!'];
+    end;
+    Names := Names + [Frg1.GetValueS('name', i, False)];
+  end;
+  FErrorMessage := S.IIFStr(Length(Err) > 0, S.IIFStr(b, '?' + A.Implode(Err, #13#10) + #10#13#10#13 + 'Записать смету?', A.Implode(Err, #13#10)));
+  Frg1.SetState(null, False, A.Implode(Err, #13#10));
 end;
 
 function  TFrmOGedtEstimate.Save: Boolean;
+var
+  i: Integer;
 begin
-
+  Result := False;
+  Wh.SelectDialogResult2 := [];
+  for i := 0 to Frg1.GetCount - 1 do begin
+    if Frg1.GetValueS('name', i, False) <> '' then
+      Wh.SelectDialogResult2 := Wh.SelectDialogResult2 + [[Frg1.GetValue('name'), Frg1.GetValue('id_group'), Frg1.GetValue('id_unit'), Frg1.GetValue('qnt1'), Frg1.GetValue('comm')]];
+  end;
+  Result := True;
 end;
 
 procedure TFrmOGedtEstimate.LoadFromDB;
 begin
   Frg1.SetInitData('*',[]);
-{  MemTableEh1.Edit;
-  Q.QLoadToMemTableEh('select id_group as idgroup, name, id_unit as idunit, qnt1, comm from v_estimate where id_estimate = :id$i order by groupname', [id], MemTableEh1);
+  VerifyBeforeSave;
+end;
+
+procedure TFrmOGedtEstimate.LoadFromXls;
+var
+  i, j: Integer;
+  Est: TVarDynArray2;
+  FileName: string;
+begin
+  FileName := '';
+  if not Orders.EstimateFromFile(FileName, Est) then
+    Exit;
+  Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');//, '3;2;4;5;7');
+  VerifyBeforeSave;
+
+  {  Frg1.SetInitData(Est, '');
+  Frg1.RefreshGrid;
+  VerifyBeforeSave;
+}
+{  MemTableEh1.EmptyTable;
+  InPrepare := True;
+  Mth.LoadGridFromVa2(DBGridEh1, Est, 'idgroup;name;idunit;qnt1;comm', '1;0;2;3;4');
   VerifyEstimateAfterLoad;
-  Mth.PostAndEdit(MemTableEh1);}
+  Mth.PostAndEdit(MemTableEh1);
+  InPrepare := False;}
 end;
 
 procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
@@ -234,6 +315,8 @@ begin
       Frg1.SetValue('id_unit', va[2]);
     end;
   end;
+  if Frg1.GetValue('id_group') <> Group_Semiproducts_Id then
+    Frg1.SetValue('purchase', 0);
 end;
 
 

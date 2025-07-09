@@ -192,9 +192,9 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
     ExplicitTop = 382
     ExplicitWidth = 672
     inherited lblStatusBarR: TLabel
-      Left = 584
+      Left = 603
       Height = 14
-      ExplicitLeft = 584
+      ExplicitLeft = 603
     end
     inherited lblStatusBarL: TLabel
       Height = 14

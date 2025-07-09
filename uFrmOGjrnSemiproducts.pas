@@ -514,7 +514,7 @@ begin
       Gh.SetGridIndicatorSelection(Frg1.DbGridEh1, -1);
   end;
   //загрузим массив в мемтейбл
-  Frg1.LoadSourceDataFromArray(va2, '', True);
+  Frg1.LoadSourceDataFromArray(va2, '', '', True);
   //получим номера заказов - уже обработанных, которые были изменены, и слеши, которые были изменены
   FOrdersProcessed := [];
   FOrdersModifyed := [];

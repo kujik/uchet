@@ -3792,7 +3792,7 @@ procedure TTableHelper.LoadGridFromVa2(DBGridEh1: TDBGridEh; AValues: TVarDynArr
 var
   i, j: Integer;
   f, p: TVarDynArray;
-  v : Variant;
+  v: Variant;
 begin
   TMemTableEh(DBGridEh1.DataSource.Dataset).Active := True;
   if AClearTable then
@@ -3801,7 +3801,7 @@ begin
     TMemTableEh(DBGridEh1.DataSource.Dataset).DisableControls;
     f := A.Explode(AMemTableFields, ';', True);
     p := A.Explode(AArrayColumns, ';', True);
-    if (Length(f) = 0) or (Length(p) = 0) then begin
+    if (Length(f) = 0) and (Length(p) = 0) then begin
       for i := 0 to High(AValues) do begin
         TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
         for j := 0 to min(TMemTableEh(DBGridEh1.DataSource.Dataset).FieldCount - 1, High(AValues[i])) do
@@ -3812,8 +3812,11 @@ begin
     else begin
       for i := 0 to High(AValues) do begin
         TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
-        for j := 0 to High(p) do
-          TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
+        for j := 0 to High(f) do
+          if AArrayColumns = '' then
+            TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, j]
+          else
+            TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
         TMemTableEh(DBGridEh1.DataSource.Dataset).Post;
       end;
     end;

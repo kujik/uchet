@@ -100,6 +100,8 @@ const
   Group_NomToDel_Id = 2671;
   Group_Production_Id = 3;
 
+  Group_Semiproducts_Id = 2;
+
   myOrFinalizePay = 0;
   myOrFinalizeFromSgp = 2;
   myOrFinalizeToSgp = 3;

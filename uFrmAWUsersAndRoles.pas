@@ -321,7 +321,7 @@ begin
   if not b then
     Exit;
   va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
-  FrgRoles.LoadSourceDataFromArray(va2, '', True);
+  FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
   FrgRoles.RePaint;
   FrgRoles.MemTableEh1.Locate('id', idr, []);
 end;
@@ -336,7 +336,7 @@ begin
     Exit;
   Q.QExecSql('update adm_roles set name = :name$s where id = :id$i', [Value, idr]);
   va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
-  FrgRoles.LoadSourceDataFromArray(va2, '', True);
+  FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
   FrgRoles.RePaint;
   FrgRoles.MemTableEh1.Locate('id', idr, []);
 end;
@@ -421,7 +421,7 @@ begin
   FrgUserRoles.Opt.SetDataMode(myogdmFromArray);
   FrgUserRoles.Prepare;
   va2 := Q.QLoadToVarDynArray2('select id, name, 0 as value from adm_roles order by name', []);
-  FrgUserRoles.LoadSourceDataFromArray(va2, '', True);
+  FrgUserRoles.LoadSourceDataFromArray(va2, '', '', True);
 
   pnlRTop.Height := FrgUsers.pnlTop.Height;
   Cth.CreateButtons(pnlRTop, [[mbtToAlRight],[mbtOk, True, False, 130, 'Сохранить'],[mbtCancel, True, False, 130, 'Отменить']], BtUserSaveClick);
@@ -444,7 +444,7 @@ begin
   FrgRoles.Opt.SetDataMode(myogdmFromArray);
   FrgRoles.Prepare;
   va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
-  FrgRoles.LoadSourceDataFromArray(va2, '', True);
+  FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
 
   FrgRights.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef + [myogGridLabels];
   FrgRights.OnButtonClick := FrgRightsButtonClick;
@@ -477,7 +477,7 @@ begin
     if URights[i][2]<>'' then g2:=URights[i][2];
     va2 := va2 + [[i, g1, g2, URights[i][3], 0, URights[i][0], i]];
   end;
-  FrgRights.LoadSourceDataFromArray(va2, '', True);
+  FrgRights.LoadSourceDataFromArray(va2, '', '', True);
 
   FrgRoles.MemTableEh1.First;
   LoadRole;

@@ -1,15 +1,13 @@
 inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
   Caption = 'FrmBasicEditabelGrid'
-  ExplicitWidth = 812
-  ExplicitHeight = 575
+  ExplicitWidth = 808
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -27,9 +25,8 @@ inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          ExplicitWidth = 780
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -51,10 +48,7 @@ inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
       Left = 727
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 727
     end
   end
 end

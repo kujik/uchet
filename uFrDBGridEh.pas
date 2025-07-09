@@ -672,7 +672,7 @@ type
     //загружаем в таблицу данные, получаемые sql-запросом на основе списка полей данных,
     procedure LoadSourceDataFromSql(ASqlParams: TVarDynArray; AEmptyBefore: Boolean = true);
     //загружаем в таблицу данные из массива (предварительно таблицу очистив)
-    procedure LoadSourceDataFromArray(AValues: TVarDynArray2; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
+    procedure LoadSourceDataFromArray(AValues: TVarDynArray2; AFieldNames: string = ''; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
     procedure LoadData(AParams: TVarDynArray); overload;
     procedure LoadData(ASql: string; AParams: TVarDynArray; AEmptyTable: Boolean = true); overload;
     procedure LoadData(AValues: TVarDynArray2; AArrayColumns: string; AEmptyTable: Boolean = true); overload;
@@ -2522,14 +2522,14 @@ begin
   ChangeSelectedData;
 end;
 
-procedure TFrDBGridEh.LoadSourceDataFromArray(AValues: TVarDynArray2; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
+procedure TFrDBGridEh.LoadSourceDataFromArray(AValues: TVarDynArray2; AFieldNames: string = ''; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
 //загружаем в таблицу данные из массива (предварительно таблицу очистив)
 var
   i, j:Integer;
 begin
   InLoadData := true;
   MemTableEh1.ReadOnly := False;
-  Mth.LoadGridFromVa2(DBGridEh1, AValues, Opt.Sql.FieldNames, AArrayColumns, AEmptyBefore);
+  Mth.LoadGridFromVa2(DBGridEh1, AValues, AFieldNames, AArrayColumns, AEmptyBefore);
   MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
