@@ -153,6 +153,24 @@ where
   n.id_nomencl (+) = m.id
 ;
 
+/*
+select
+--финансовый отчет по сырью на в производстве, складе, в резерве...
+  sum((nvl(n.qnt_inprod, 0) + nvl(m.rezerv, 0)) * nvl(m.price_last, 0) / 1.2) as sum_in_prod,
+  sum(m.qnt * nvl(m.price_last, 0) / 1.2) as sum_in_stock,
+  sum(m.qnt_onway * nvl(m.price_last, 0) / 1.2) as sum_onway,
+  sum(greatest(-nvl(m.rezerv,0) - nvl(m.qnt,0) - nvl(m.qnt_onway,0), 0) * nvl(m.price_last, 0) / 1.2) as sum_needcurr
+from  
+  v_nom_for_orders_in_prod n,
+  v_spl_minremains m
+where
+  n.id_nomencl (+) = m.id
+and m.supplierinfo = 'ДМ'  
+;
+*/
+
+
+
 --Сырье в резерве (кол-во) минус остаток этого сырья на складах минус кол-во этого же сырья в пути = Потребность текущая в кол-ве. Умножить на цену. 
 --Если Потребность текущая в кол-ве меньше 0, то исключаем ее из итоговой суммы
 

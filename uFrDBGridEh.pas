@@ -3719,6 +3719,7 @@ function TFrDBGridEh.IsTableCorrect: Boolean;
 var
   i, j, k, m: Integer;
   ERows: string;
+  Duplicates:  string;
 begin
   Result := True;
   for i := 0 to GetCount(False) - 1 do begin
@@ -3731,14 +3732,19 @@ begin
   end;
   //проверим повторяющиеся поля
   for j := 0 to High(FEditOptions.FieldsNoRepaeted) do begin
-    for k := 0 to GetCount(False) - 2 do
+    Duplicates := '';
+    for k := 0 to GetCount(False) - 2 do begin
       for m := k + 1 to GetCount(False) - 1 do
         if GetValue(FEditOptions.FieldsNoRepaeted[j], k, False) = GetValue(FEditOptions.FieldsNoRepaeted[j], m, False) then begin
           Result := False;
-          S.ConcatStP(ERows, 'Дублирующиеся значения в строках ' + InttoStr(k + 1) + ' и ' + InttoStr(m + 1) +
-            ' в колонке "' + DBGridEh1.FindFieldColumn(FEditOptions.FieldsNoRepaeted[j]).Title .Caption+ '"', #13#10);
-          break
+          if Duplicates = '' then
+            Duplicates := InttoStr(k + 1) + ' и ' + InttoStr(m + 1)
+          else
+            S.ConcatStP(Duplicates, InttoStr(m + 1), ',');
         end;
+    end;
+    if Duplicates <> '' then
+      S.ConcatStP(ERows, 'Дублирующиеся значения в строках ' + InttoStr(k + 1) + ' и ' + InttoStr(m + 1) + ' в колонке "' + DBGridEh1.FindFieldColumn(FEditOptions.FieldsNoRepaeted[j]).Title.Caption + '"', #13#10);
   end;
   //выставим статус; если таблицу проверяем не всегда, HasError:=False, чтобы был доступен баттон Ок и по нажатии провреилась таблица и вышло сообщение об ошибке.
   SetState(null, S.IIf(EditOptions.AlwaysVerifyAllTable, False, not Result), S.IIfStr(not Result, 'Некорректные значения в строках:'#13#10 + ERows));
