@@ -3,8 +3,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
   ClientHeight = 495
   ClientWidth = 620
   ExplicitWidth = 636
-  ExplicitHeight = 533
-  PixelsPerInch = 96
+  ExplicitHeight = 534
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 620
@@ -211,11 +210,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
     ExplicitWidth = 620
     inherited lblStatusBarR: TLabel
       Left = 528
-      Height = 14
       ExplicitLeft = 528
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

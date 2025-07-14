@@ -9,7 +9,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, uDBOra, uMessages, uData,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, EhLibVCL,
+  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
   Mask, uStringCalculator, V_Normal,
   DBCtrlsEh, ExtCtrls, uString, uForms;

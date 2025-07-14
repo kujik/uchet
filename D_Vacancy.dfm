@@ -4,13 +4,10 @@ inherited Dlg_Vacancy: TDlg_Vacancy
   ClientWidth = 878
   ExplicitWidth = 894
   ExplicitHeight = 460
-  PixelsPerInch = 96
   TextHeight = 13
-  inherited StatusBar: TStatusBar
+  inherited pnl_StatusBar: TPanel
     Top = 402
     Width = 878
-    ExplicitTop = 402
-    ExplicitWidth = 878
   end
   object pnl_Top: TPanel [1]
     Left = 0

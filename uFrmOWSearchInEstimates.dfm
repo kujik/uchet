@@ -53,11 +53,11 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             Left = 0
             Top = 0
             Width = 252
-            Height = 89
+            Height = 0
             Align = alClient
             TabOrder = 0
-            ExplicitWidth = 248
-            ExplicitHeight = 89
+            ExplicitWidth = 252
+            ExplicitHeight = 0
             inherited pnlGrid: TPanel
               Top = 22
               Width = 242
@@ -113,7 +113,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
               ExplicitHeight = 17
             end
             inherited pnlBottom: TPanel
-              Top = 89
+              Top = 0
               Width = 252
               ExplicitTop = 89
               ExplicitWidth = 248
@@ -124,7 +124,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32323030307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -141,11 +141,11 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             Left = 0
             Top = 0
             Width = 252
-            Height = 89
+            Height = 0
             Align = alClient
             TabOrder = 0
-            ExplicitWidth = 248
-            ExplicitHeight = 89
+            ExplicitWidth = 252
+            ExplicitHeight = 0
             inherited pnlGrid: TPanel
               Top = 22
               Width = 242
@@ -201,7 +201,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
               ExplicitHeight = 17
             end
             inherited pnlBottom: TPanel
-              Top = 89
+              Top = 0
               Width = 252
               ExplicitTop = 165
               ExplicitWidth = 756
@@ -212,7 +212,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32323030307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631

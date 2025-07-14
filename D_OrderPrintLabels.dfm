@@ -3,8 +3,7 @@ inherited Dlg_OrderPrintLabels: TDlg_OrderPrintLabels
   ClientHeight = 263
   ClientWidth = 394
   ExplicitWidth = 410
-  ExplicitHeight = 301
-  PixelsPerInch = 96
+  ExplicitHeight = 302
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0

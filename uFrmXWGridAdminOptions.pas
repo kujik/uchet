@@ -15,8 +15,8 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   F_MdiGridDialogTemplate, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
   DynVarsEh, MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
-  uFrDBGridEh, V_Normal
+  Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
+  uFrDBGridEh, V_Normal, EhLibVclUtils
   ;
 
 type
@@ -70,7 +70,7 @@ var
   c: TFrDBGridOption;
   Options: TFrDBGridOptions;
 begin
-  va2:=[];
+{  va2:=[];
   for c:= Low(TFrDBGridOption) to High(TFrDBGridOption) do begin
     va2:= va2 + [[GetEnumName(TypeInfo(TFrDBGridOption), ord(c)), FrDBGridOptionDesc[ord(c)], S.IIf(c in FrDBg.Options, 1, 0)]];
   end;
@@ -88,7 +88,7 @@ begin
       end;
     inc(i);
   end;
-  FrDBg.Options:= Options;
+  FrDBg.Options:= Options;                 }
 end;
 
 

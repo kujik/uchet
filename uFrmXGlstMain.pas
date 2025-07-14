@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
   uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
   ;
@@ -2498,6 +2498,7 @@ var
   v : Variant;
   va: TVarDynArray;
 begin
+ // Handled := False;
   if (FormDoc = myfrm_R_Itm_Nomencl)and(Fr.CurrField = 'price_check') and User.Role(rOr_Other_R_MinRemains_chPriceCheck) then begin
     va := Q.QSelectOneRow('select max(price_check) from spl_itm_nom_props where id = :id$i', [Fr.ID]);
     if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, 'Контрольная цена', 200, 100,

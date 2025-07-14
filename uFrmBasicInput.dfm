@@ -4,7 +4,6 @@ inherited FrmBasicInput: TFrmBasicInput
   ClientWidth = 174
   ExplicitWidth = 190
   ExplicitHeight = 198
-  PixelsPerInch = 96
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 174
@@ -45,10 +44,6 @@ inherited FrmBasicInput: TFrmBasicInput
           Left = -36
           ExplicitLeft = -36
         end
-        inherited pnlFrmBtnsC: TPanel
-          Width = 11
-          ExplicitWidth = 11
-        end
       end
     end
   end
@@ -59,11 +54,7 @@ inherited FrmBasicInput: TFrmBasicInput
     ExplicitWidth = 174
     inherited lblStatusBarR: TLabel
       Left = 82
-      Height = 13
       ExplicitLeft = 82
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 13
     end
   end
 end

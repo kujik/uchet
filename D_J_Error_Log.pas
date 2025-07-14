@@ -19,8 +19,8 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI,
   fs_synmemo, Vcl.ExtCtrls, Vcl.StdCtrls, MemTableDataEh, Data.DB,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.Mask,
-  DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh,
-  Vcl.ComCtrls, IoUtils, uString, uLabelColors;
+  DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh,
+  Vcl.ComCtrls, IoUtils, uString, uLabelColors, EhLibVclUtils;
 
 {(*}
 type
@@ -256,7 +256,7 @@ begin
     MyInfoMessage('Исходники для данной версии модуля не найдены!');
     Exit;
   end;
-  fname:=S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('unit').AsString) + '.pas';
+  fname:=S.NSt(TMemTableEh(DBGridEh2.DataSet).FieldByName('unit').AsString) + '.pas';
   st:=dir + '\' + fname;
   if not FileExists(st) then begin
     MyInfoMessage('Файл "' + fname + '" в исходниках не найден!');
@@ -266,15 +266,15 @@ begin
   lbl_FileName.SetCaption2('Файл:  $FF0000' + fname);
   lbl_SrcPath.SetCaption2('Путь:  $FF0000' + dir);
   lbl_ErrorInfo.SetCaption2('Место вызова:  Функция "$FF0000' +
-    S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('function').AsString) + '$000000" в строке $FF0000' +
-    S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').AsString) + '$000000   ($FF0000' +
-    S.NSt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('relf').AsString) + '$000000)');
+    S.NSt(TMemTableEh(DBGridEh2.DataSet).FieldByName('function').AsString) + '$000000" в строке $FF0000' +
+    S.NSt(TMemTableEh(DBGridEh2.DataSet).FieldByName('addressf').AsString) + '$000000   ($FF0000' +
+    S.NSt(TMemTableEh(DBGridEh2.DataSet).FieldByName('relf').AsString) + '$000000)');
   mem_SourceFile.Lines.Clear;
   mem_SourceFile.Lines.LoadFromFile(st);
-  strno:=S.VarToInt(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').Value);
+  strno:=S.VarToInt(TMemTableEh(DBGridEh2.DataSet).FieldByName('addressf').Value);
   if strno = -1 Then exit;
   try
-  mem_SourceFile.AddBookmark(TMemTableEh(DBGridEh2.DataSource.DataSet).FieldByName('addressf').AsInteger - 1, 1);
+  mem_SourceFile.AddBookmark(TMemTableEh(DBGridEh2.DataSet).FieldByName('addressf').AsInteger - 1, 1);
   mem_SourceFile.GotoBookmark(1);
   except
   end;

@@ -6,8 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Buttons, MemTableEh, Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh,
-  uData
+  Vcl.StdCtrls, Vcl.Buttons, MemTableEh, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  uData, EhLibVclUtils
   ;
 
 type

@@ -3,9 +3,8 @@ inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
   Caption = 'Dlg_CandidatesFromWorkerStatus'
   ClientHeight = 164
   ClientWidth = 663
-  ExplicitWidth = 669
-  ExplicitHeight = 193
-  PixelsPerInch = 96
+  ExplicitWidth = 679
+  ExplicitHeight = 203
   TextHeight = 13
   object lbl1: TLabel
     Left = 8

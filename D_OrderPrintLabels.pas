@@ -6,8 +6,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, MemTableEh,
-  Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh,
-  Vcl.Buttons, uString;
+  Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  Vcl.Buttons, uString, EhLibVclUtils;
 
 type
   TDlg_OrderPrintLabels = class(TForm_Normal)

@@ -5,7 +5,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DBCtrlsEh, DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, EhLibVCL, GridsEh,
+  DBGridEhToolCtrls, DBCtrlsEh, DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh,
   DBAxisGridsEh, DBGridEh, Math, Vcl.StdCtrls, Vcl.Mask, Buttons,
   uLabelColors, uData, uString,
   uFields

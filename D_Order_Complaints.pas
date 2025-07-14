@@ -6,7 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   DropDownFormEh, Dialogs, DynVarsEh, ToolCtrlsEh, DBGridEhGrouping,
   DBGridEhToolCtrls, MemTableDataEh, Data.DB, MemTableEh, Vcl.StdCtrls,
-  Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons;
+  Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
+  EhLibVclUtils;
 
 type
   TDlg_Order_Complaints = class(TCustomDropDownFormEh)

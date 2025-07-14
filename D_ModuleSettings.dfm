@@ -11,9 +11,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object pnl1: TPanel
     Left = 0
@@ -78,10 +76,6 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
     ExplicitWidth = 862
     object ts_SN: TTabSheet
       Caption = #1055#1083#1072#1090#1077#1078#1085#1099#1081' '#1082#1072#1083#1077#1085#1076#1072#1088#1100
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 854
-      ExplicitHeight = 0
       object nedt_Sum_AutoAgreed: TDBNumberEditEh
         Left = 3
         Top = 22
@@ -138,10 +132,6 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
     object ts_Workers: TTabSheet
       Caption = #1056#1072#1073#1086#1090#1085#1080#1082#1080
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 28
-      ExplicitWidth = 854
-      ExplicitHeight = 0
       object nedt_W_Time_AutoAggreed: TDBNumberEditEh
         Left = 9
         Top = 25

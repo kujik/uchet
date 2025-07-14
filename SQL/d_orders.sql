@@ -306,7 +306,7 @@ create table or_format_estimates (
   is_semiproduct number(1) default 0, --это группа полуфабрикатов
   active number(1),                   --признак активности
   constraint pk_or_format_estimates primary key (id),
-  constraint fk_or_format_estimates_f foreign key (id_format) references or_formats(id),
+  constraint fk_or_format_estimates_f foreign key (id_format) references or_formats(id)
 );
 
 create unique index idx_or_format_estimates_name on or_format_estimates(id_format, lower(name));
@@ -1022,6 +1022,7 @@ create table or_std_items (
   price_pp number(12,2),               --цена перепродажи, входит в итоговую цену, не больше ее (всегда равна в случае д/к)
   wo_estimate number(1) default 0,     --если 1, то смета не требуется (по факту требуется запись в estimates с полем isempty = 1)
   type_of_semiproduct number(11),      --тип полуфабриката, соотвествует одному из участков
+  barcode_c varchar2(100),             --штрих-код
 
   r0 number(1) default 0,              --если 1, то производдственный маршрут не задается
   

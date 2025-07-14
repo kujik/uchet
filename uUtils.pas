@@ -9,7 +9,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   MemTableDataEh, Db, ADODB, PropFilerEh, PropStorageEh, DataDriverEh,
-  ADODataDriverEh, MemTableEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh,
+  ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh,
   DBCtrls, StdCtrls, Buttons, ExtCtrls, Math, AppEvnts;
 
 //клвиша нажата

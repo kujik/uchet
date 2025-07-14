@@ -6,8 +6,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, MemTableDataEh, Data.DB,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.StdCtrls,
-  Vcl.Buttons, Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh,
-  MemTableEh, Data.Win.ADODB, DataDriverEh, ADODataDriverEh, DateUtils;
+  Vcl.Buttons, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  MemTableEh, Data.Win.ADODB, DataDriverEh, ADODataDriverEh, DateUtils,
+  EhLibVclUtils;
 
 type
   TForm_TestTree = class(TForm_Normal)

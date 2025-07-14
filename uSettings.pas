@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  MemTableDataEh, Db, MemTableEh, EhLibVCL, Math, ExtCtrls, Types,
+  MemTableDataEh, Db, MemTableEh, Math, ExtCtrls, Types,
   Registry, IniFiles,  GridToolCtrlsEh, SearchPanelsEh,
   DBLookupUtilsEh,
   PropFilerEh, MemTreeEh,

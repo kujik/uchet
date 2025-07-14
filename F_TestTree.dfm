@@ -4,7 +4,6 @@ inherited Form_TestTree: TForm_TestTree
   ClientWidth = 349
   ExplicitWidth = 365
   ExplicitHeight = 480
-  PixelsPerInch = 96
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 8

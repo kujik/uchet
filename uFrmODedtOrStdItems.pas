@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions, Vcl.Mask,
   uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2, uFrmBasicInput, uFields, uFrmBasicDbDialog
   ;
@@ -17,17 +17,19 @@ type
     nedt_Price: TDBNumberEditEh;
     nedt_Price_PP: TDBNumberEditEh;
     chb_by_sgp: TDBCheckBoxEh;
-    cmb_type_of_semiproduct: TDBComboBoxEh;
+    cmb_type_of_semiproduct_: TDBComboBoxEh;
     cmb_id_or_format_estimates: TDBComboBoxEh;
   private
     FRcount: Integer;
     FNameOld : string;
     FWoEstimateOld: Integer;
-    FIdEstimate: Variant;
+    FIdEstimateGroup: Variant;
     FPrefix: string ;
     FIsRouteChanged: Boolean;
-function  Prepare: Boolean; override;
+    FIsSemiproduct: Boolean;
+    function  Prepare: Boolean; override;
     function  Load: Boolean; override;
+    function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
     procedure ControlOnChange(Sender: TObject); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
@@ -66,14 +68,15 @@ begin
 
   va2 := [
     ['id$i'],
-    ['id_or_format_estimates$i'],
     ['name$s','V=1:400::T'],
     ['price$f','V=0:9999999:2:n'],
     ['price_pp$f','V=0:9999999:2:n'],
     ['wo_estimate$i'],
     ['r0$i'],
-    ['by_sgp$i']
-  ] ;//+ va2;
+    ['by_sgp$i'],
+    ['id_or_format_estimates$i','V=1:400:1'],
+    ['type_of_semiproduct$i','V=0:400']
+  ] ;
 
 
   F.DefineFields:=va2;
@@ -90,10 +93,13 @@ begin
   if Mode <> fDelete then begin
     FNameOld := S.NSt(F.GetPropB('name'));
     FWoEstimateOld:=S.NInt(F.GetPropB('wo_estimate'));
-    FIdEstimate := AddParam;;
-    FPrefix := S.NSt(Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0]);
+    FIdEstimateGroup := AddParam;
+    va := Q.QSelectOneRow('select prefix, is_semiproduct from or_format_estimates where id = :id$i', [FIdEstimateGroup]);
+    FPrefix := S.NSt(va[0]);
+    FIsSemiproduct := va[1] = 1;
   end;
   SetRoute;
+  i:=f.GetPropB('id_or_format_estimates');
 end;
 
 function  TFrmODedtOrStdItems.Load: Boolean;
@@ -102,12 +108,26 @@ var
   va2 : TVarDynArray2;
 begin
   Result := inherited;
-  if not Result then Exit;
-  va2:=Q.QLoadToVarDynArray2('select id_work_cell_type from or_std_item_route where id_or_std_item = :id$i', [ID]);
+  if not Result then
+    Exit;
+  va2 := Q.QLoadToVarDynArray2('select id_work_cell_type from or_std_item_route where id_or_std_item = :id$i', [ID]);
   FRcount := High(va2);
-  for i:=0 to High(va2) do
-    TDBCheckBoxEh(Self.FindComponent('chb_r_' + S.NSt(va2[i][0]))).Checked  := True;
+  for i := 0 to High(va2) do
+    TDBCheckBoxEh(Self.FindComponent('chb_r_' + S.NSt(va2[i][0]))).Checked := True;
+//  FIsSemiproduct = Q.QloadOneRow('select is_semiproduct from or_format_estimates where id = :id$i' [FIDEsti]);
 end;
+
+function TFrmODedtOrStdItems.LoadComboBoxes: Boolean;
+begin
+//exit;
+  Q.QLoadToDBComboBoxEh(
+    'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' +
+    'from or_formats f, or_format_estimates e ' +
+    'where e.id_format > 1 and e.id_format = f.id and e.active = 1 and (f.active = 1 or  e.id = :id$i) order by 1 asc'
+    ,[AddParam], cmb_id_or_format_estimates, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select code, id from work_cell_types where pos is not null order by pos', [], cmb_type_of_semiproduct_, cntComboLk);
+end;
+
 
 
 procedure TFrmODedtOrStdItems.ControlOnExit(Sender: TObject);
@@ -163,8 +183,8 @@ begin
     //если это редактирование и наименование изменилось - попробуем изменить его и в БД ИТМ (с учетом префикса)
     //получим префикс изедия
       prefix := '';
-      if FIdEstimate > 0 then
-        prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimate])[0];
+      if FIdEstimateGroup > 0 then
+        prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimateGroup])[0];
     //старое и новое имя
       name := S.IIFStr(prefix <> '', prefix + '_', '') + Trim(edt_name.Text);
       nameold := S.IIFStr(prefix <> '', prefix + '_', '') + FNameOld;
@@ -211,8 +231,8 @@ begin
   //проверим, нет ли такого наименования среди стандартных изделий того же типа паспорта
   //также наименование с преиксом не должно быть в базе сметных наименований учета    //!!!
   //и также и в базе итм с типом "материалы и комплектующие"
-  if (Mode <> fDelete) and (FIdEstimate > 1) and (edt_name.Text <> FNameOld) then begin
-    res1 := Q.QSelectOneRow('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, FIdEstimate, edt_name.Text])[0];
+  if (Mode <> fDelete) and (FIdEstimateGroup > 1) and (edt_name.Text <> FNameOld) then begin
+    res1 := Q.QSelectOneRow('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, FIdEstimateGroup, edt_name.Text])[0];
     //res2 := Q.QSelectOneRow('select count(1) from bcad_nomencl where name = :name$s', [Prefix + '_' + edt_name.Text])[0];
     res3 := Q.QSelectOneRow('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [FPrefix + '_' + edt_name.Text])[0];
     if res1 + res2 + res3 > 0 then begin
@@ -258,3 +278,5 @@ end;
 
 
 end.
+
+

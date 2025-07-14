@@ -4,8 +4,7 @@ inherited Dlg_LoadKBLog: TDlg_LoadKBLog
   ClientWidth = 628
   OnShow = nil
   ExplicitWidth = 644
-  ExplicitHeight = 333
-  PixelsPerInch = 96
+  ExplicitHeight = 334
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0

@@ -15,7 +15,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
   DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh,
-  MemTableEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Math, TypInfo, uData,
+  MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Math, TypInfo, uData,
   uString, uSys;
 
 type
@@ -131,7 +131,7 @@ uses
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
-  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost,
+  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -639,7 +639,7 @@ begin
     TFrmCWCash.Show(Application, F, MyFormOptions, fEdit, 0, null);
   end
   else if F = myfrm_Rep_SnCalendar_Orders_QntItems then begin
-    TFrmOGrepItemsInOrder.Show(Application, F, MyFormOptions, fEdit, 0, null);
+//1    TFrmOGrepItemsInOrder.Show(Application, F, MyFormOptions, fEdit, 0, null);
 //    Form := TForm_Rep_Orders_QntItems_2.Create(Application, F, MyFormOptions, FNone, 0, null);
   end
   else if F = myfrm_Adm_UserInterface then begin
@@ -922,7 +922,8 @@ begin
     TFrmOWrepOrdersPrimeCost.Show(AOwner, F, MyFormOptions, fNone, null, null);
   end
   else if F = myfrm_Dlg_R_OrderStdItems then begin
-    Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    //Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    TFrmODedtOrStdItems.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
 //      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!    32098

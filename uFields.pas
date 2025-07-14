@@ -255,6 +255,9 @@ begin
   FDefineFieldsAdd[FindProp(PropName)][Integer(PropValueType)] := Value;
   c := FSelf.FindComponent(FDefineFieldsAdd[FindProp(PropName)][Integer(fvtCtrl)]);
   if c <> nil then begin
+  // c.Name = 'cmb_id_or_format_estimates' then
+  //b := True;
+
     if (PropValueType = fvtVBeg) and not FInPrepare then
       Cth.SetControlValue(TControl(c), Value);
     if (PropValueType = fvtVCurr) then

@@ -3,9 +3,8 @@ inherited FrmXWGridAdminOptions: TFrmXWGridAdminOptions
   Caption = 'FrmXWGridAdminOptions'
   ClientHeight = 587
   ClientWidth = 1030
-  ExplicitWidth = 1036
-  ExplicitHeight = 616
-  PixelsPerInch = 96
+  ExplicitWidth = 1046
+  ExplicitHeight = 626
   TextHeight = 13
   object BitBtn1: TBitBtn
     Left = 954

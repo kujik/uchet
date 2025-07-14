@@ -1,16 +1,20 @@
 inherited FrmXWOracleError: TFrmXWOracleError
   Caption = 'FrmXWOracleError'
-  ClientHeight = 206
-  ClientWidth = 583
+  ClientHeight = 205
+  ClientWidth = 579
   ExplicitWidth = 595
   ExplicitHeight = 244
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 583
-    Height = 190
+    Width = 579
+    Height = 189
+    ExplicitWidth = 583
+    ExplicitHeight = 190
     inherited pnlFrmClient: TPanel
       Width = 573
       Height = 141
+      ExplicitWidth = 573
+      ExplicitHeight = 141
       object pnlCenter: TPanel
         Left = 73
         Top = 0
@@ -43,13 +47,12 @@ inherited FrmXWOracleError: TFrmXWOracleError
           TabOrder = 0
           Visible = True
           WantReturns = True
-          ExplicitHeight = 321
         end
         object MSql: TDBMemoEh
           Left = 185
           Top = 20
-          Width = 130
-          Height = 117
+          Width = 126
+          Height = 116
           Margins.Top = 30
           ControlLabel.Width = 72
           ControlLabel.Height = 13
@@ -64,14 +67,12 @@ inherited FrmXWOracleError: TFrmXWOracleError
           TabOrder = 1
           Visible = True
           WantReturns = True
-          ExplicitWidth = 395
-          ExplicitHeight = 321
         end
         object MParams: TDBMemoEh
-          Left = 315
+          Left = 311
           Top = 20
           Width = 185
-          Height = 117
+          Height = 116
           Margins.Top = 30
           ControlLabel.Width = 57
           ControlLabel.Height = 13
@@ -86,15 +87,13 @@ inherited FrmXWOracleError: TFrmXWOracleError
           TabOrder = 2
           Visible = True
           WantReturns = True
-          ExplicitLeft = 580
-          ExplicitHeight = 321
         end
       end
       object pnlLeft: TPanel
         Left = 0
         Top = 0
         Width = 73
-        Height = 141
+        Height = 140
         Align = alLeft
         BevelOuter = bvNone
         Padding.Top = 20
@@ -267,36 +266,48 @@ inherited FrmXWOracleError: TFrmXWOracleError
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 146
-      Width = 573
+      Top = 145
+      Width = 569
+      ExplicitTop = 146
+      ExplicitWidth = 573
       inherited bvlFrmBtnsTl: TBevel
         Width = 571
+        ExplicitWidth = 571
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 571
+        ExplicitWidth = 571
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 571
+        ExplicitWidth = 571
         inherited pnlFrmBtnsMain: TPanel
           Left = 472
+          ExplicitLeft = 472
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 244
+          ExplicitLeft = 244
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 373
+          ExplicitLeft = 373
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 104
+          ExplicitWidth = 104
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 190
-    Width = 583
+    Top = 189
+    Width = 579
+    ExplicitTop = 190
+    ExplicitWidth = 583
     inherited lblStatusBarR: TLabel
       Left = 491
+      ExplicitLeft = 491
     end
   end
   inherited tmrAfterCreate: TTimer

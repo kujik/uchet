@@ -2,8 +2,8 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   Caption = 'Form_MD'
   ClientHeight = 421
   ClientWidth = 656
-  ExplicitWidth = 668
-  ExplicitHeight = 459
+  ExplicitWidth = 672
+  ExplicitHeight = 460
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 402
@@ -12,11 +12,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     ExplicitWidth = 652
     inherited lbl_StatusBar_Right: TLabel
       Left = 567
-      Height = 17
       ExplicitLeft = 567
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
     end
   end
   object pnl_Top: TPanel [1]
@@ -33,28 +29,28 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     object lbl1: TLabel
       Left = 12
       Top = 8
-      Width = 32
+      Width = 16
       Height = 13
       Caption = 'lbl1'
     end
     object lbl2: TLabel
       Left = 12
       Top = 27
-      Width = 32
+      Width = 16
       Height = 13
       Caption = 'lbl1'
     end
     object lbl3: TLabel
       Left = 12
       Top = 46
-      Width = 32
+      Width = 16
       Height = 13
       Caption = 'lbl1'
     end
     object lbl4: TLabel
       Left = 12
       Top = 65
-      Width = 32
+      Width = 16
       Height = 13
       Caption = 'lbl1'
     end

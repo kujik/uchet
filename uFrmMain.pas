@@ -8,8 +8,8 @@ uses
 Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
 {$IFDEF EH_LIB_7} XPMan, {$ENDIF}
 StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns, ActnList,
-ToolWin, ImgList, DB, ADODB, EhLibMTE, DataDriverEh, DBGridEh, PrnDbgeh,
-ADODataDriverEh, PropFilerEh, PropStorageEh, EhLibADO, AppEvnts, uUtils,
+ToolWin, ImgList, DB, ADODB{, EhLibMTE}, DataDriverEh, DBGridEh, PrnDbgeh,
+ADODataDriverEh, PropFilerEh, PropStorageEh, {EhLibADO, }AppEvnts, uUtils,
 uErrors, psAPI, uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants,
 Vcl.Imaging.pngimage, System.ImageList, System.Actions, System.StrUtils,
 Vcl.ActnMan, Vcl.ActnCtrls, uTasks, uString, uSys, Vcl.DBActns;

@@ -5,7 +5,6 @@ inherited Dlg_Grid1: TDlg_Grid1
   OnKeyUp = FormKeyUp
   ExplicitWidth = 753
   ExplicitHeight = 156
-  PixelsPerInch = 96
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0

@@ -3,14 +3,13 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
   Caption = 'Dlg_Order_Stages_Otk2'
   ClientHeight = 266
   ClientWidth = 923
-  ExplicitWidth = 929
-  ExplicitHeight = 294
-  PixelsPerInch = 96
+  ExplicitWidth = 939
+  ExplicitHeight = 305
   TextHeight = 13
   object lbl_Caption: TLabel
     Left = 8
     Top = 5
-    Width = 54
+    Width = 53
     Height = 13
     Caption = 'lbl_Caption'
   end

@@ -54,7 +54,7 @@ var
   i: Integer;
 begin
   Result := False;
-  for i := 0 to F.Count do
+  for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
     end;
@@ -62,7 +62,7 @@ begin
   if Length(CtrlValues) = 0 then begin
     MsgRecordIsDeleted;
   end;
-  for i := 0 to F.Count do
+  for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       F.SetPropP(i, CtrlValues[0][i], fvtVBeg);
     end;

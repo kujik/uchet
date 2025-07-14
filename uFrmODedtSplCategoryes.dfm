@@ -1,13 +1,13 @@
 inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
   Caption = 'FrmODedtSplCategoryes'
-  ClientHeight = 126
-  ClientWidth = 585
+  ClientHeight = 125
+  ClientWidth = 581
   ExplicitWidth = 597
   ExplicitHeight = 164
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 585
-    Height = 110
+    Width = 581
+    Height = 109
     ExplicitWidth = 581
     ExplicitHeight = 109
     inherited pnlFrmClient: TPanel
@@ -88,17 +88,13 @@ inherited FrmODedtSplCategoryes: TFrmODedtSplCategoryes
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 110
-    Width = 585
+    Top = 109
+    Width = 581
     ExplicitTop = 109
     ExplicitWidth = 581
     inherited lblStatusBarR: TLabel
       Left = 512
-      Height = 14
       ExplicitLeft = 512
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

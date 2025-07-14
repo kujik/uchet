@@ -6,10 +6,10 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   MemTableDataEh, Data.DB, Data.Win.ADODB, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh,
+  DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
   DataDriverEh, ADODataDriverEh, MemTableEh, Math, PrnDbgEh, ClipBrd,
   ComCtrls, Buttons, Vcl.Menus, DBCtrlsEh, Vcl.Mask,
-  uData, uString, uLabelColors, Vcl.Imaging.pngimage
+  uData, uString, uLabelColors, Vcl.Imaging.pngimage, EhLibVclUtils
   ;
 
 const
@@ -1512,6 +1512,7 @@ begin
   if DBGridEh1.RowDetailPanel.Active and (MouseLeft < MouseLeftIgnore) then
     Exit;
   //вызовем событие
+  Handled := False;
   if Assigned(FOnDbClick) then
     FOnDbClick(Self, No, Sender, Handled);
   //выйдем, если обработано
@@ -1974,7 +1975,7 @@ begin
   else if Tag = mbtSelectFromList then begin
     if MemTableEh1.RecordCount > 0 then begin
       //кнопка выбора/закрытия окна, используется в таблицах в которых надо выбраьть запись/записи, как правило в модальном режиме
-      DbGridEh1.Datasource.DataSet.DisableControls;
+      DbGridEh1.DataSet.DisableControls;
       //заполним одномерный массив данными текущей строки
       SetLength(Wh.SelectDialogResult, MemTableEh1.Fields.Count);
       for i := 0 to MemTableEh1.Fields.Count - 1 do
@@ -1994,19 +1995,19 @@ begin
         end;
         //соберем все отмеченные записи, независимо от фильтрации
         for i := 0 to DBGridEh1.SelectedRows.Count - 1 do begin
-          if not DBGridEh1.DataSource.DataSet.BookmarkValid(DBGridEh1.SelectedRows[i]) then
+          if not DBGridEh1.DataSet.BookmarkValid(DBGridEh1.SelectedRows[i]) then
             Continue;
           try
-            DBGridEh1.DataSource.DataSet.Bookmark := DBGridEh1.SelectedRows[i];          //ошибка при фильтре здесь, BookmarkValid не помогает
+            DBGridEh1.DataSet.Bookmark := DBGridEh1.SelectedRows[i];          //ошибка при фильтре здесь, BookmarkValid не помогает
             SetLength(Wh.SelectDialogResult2, Length(Wh.SelectDialogResult2) + 1);
-            SetLength(Wh.SelectDialogResult2[i], DBGridEh1.DataSource.DataSet.Fields.Count);
-            for j := 0 to DBGridEh1.DataSource.DataSet.Fields.Count - 1 do
-              Wh.SelectDialogResult2[i][j] := DBGridEh1.DataSource.DataSet.Fields[j].AsVariant;
+            SetLength(Wh.SelectDialogResult2[i], DBGridEh1.DataSet.Fields.Count);
+            for j := 0 to DBGridEh1.DataSet.Fields.Count - 1 do
+              Wh.SelectDialogResult2[i][j] := DBGridEh1.DataSet.Fields[j].AsVariant;
           except
           end;
         end;
       end;
-      DbGridEh1.Datasource.DataSet.EnableControls;
+      DbGridEh1.DataSet.EnableControls;
     end;
     TForm(Owner).Close;
   end;

@@ -3,8 +3,8 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
   ClientHeight = 411
   ClientWidth = 729
   OnDestroy = FormDestroy
-  ExplicitWidth = 741
-  ExplicitHeight = 449
+  ExplicitWidth = 745
+  ExplicitHeight = 450
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 729
@@ -14,8 +14,8 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
     inherited pnlFrmClient: TPanel
       Width = 719
       Height = 346
-      ExplicitWidth = 715
-      ExplicitHeight = 345
+      ExplicitWidth = 719
+      ExplicitHeight = 346
       inherited pnlTop: TPanel
         Width = 719
         ExplicitWidth = 715
@@ -33,13 +33,13 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
       inherited pnlGrid1: TPanel
         Width = 709
         Height = 291
-        ExplicitWidth = 705
-        ExplicitHeight = 290
+        ExplicitWidth = 709
+        ExplicitHeight = 291
         inherited Frg1: TFrDBGridEh
           Width = 707
           Height = 289
-          ExplicitWidth = 703
-          ExplicitHeight = 288
+          ExplicitWidth = 707
+          ExplicitHeight = 289
           inherited pnlGrid: TPanel
             Width = 697
             Height = 235
@@ -84,7 +84,7 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -97,11 +97,11 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
       inherited pnlFrg2: TPanel
         Top = 305
         Width = 719
-        ExplicitTop = 304
-        ExplicitWidth = 715
+        ExplicitTop = 305
+        ExplicitWidth = 719
         inherited Frg2: TFrDBGridEh
           Width = 717
-          ExplicitWidth = 713
+          ExplicitWidth = 717
           inherited pnlGrid: TPanel
             Width = 707
             ExplicitWidth = 703
@@ -135,7 +135,7 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -194,11 +194,7 @@ inherited FrmXGsrvSqlMonitor: TFrmXGsrvSqlMonitor
     ExplicitWidth = 725
     inherited lblStatusBarR: TLabel
       Left = 656
-      Height = 14
       ExplicitLeft = 656
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

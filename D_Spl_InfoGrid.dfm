@@ -1,20 +1,11 @@
 inherited Dlg_Spl_InfoGrid: TDlg_Spl_InfoGrid
   Caption = 'Dlg_Spl_InfoGrid'
-  PixelsPerInch = 96
   TextHeight = 13
-  inherited pnl_StatusBar: TPanel
-    inherited lbl_StatusBar_Right: TLabel
-      Height = 17
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
-    end
-  end
   inherited pnl_Top: TPanel
     object lbl_Caption: TLabel
       Left = 8
       Top = 6
-      Width = 54
+      Width = 52
       Height = 13
       Caption = 'lbl_Caption'
     end

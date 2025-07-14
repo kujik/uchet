@@ -30,9 +30,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI, Vcl.ExtCtrls, Vcl.ComCtrls, uData,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh,
-  Data.DB, MemTableEh, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh,
+  Data.DB, MemTableEh, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, GridsEh,
   DBAxisGridsEh, DBGridEh, Vcl.Buttons, Menus, DateUtils,
-  uString, frxClass, PrnDbgEh, Math, IOUtils, Types
+  uString, frxClass, PrnDbgEh, Math, IOUtils, Types, EhLibVclUtils
   ;
 
 type

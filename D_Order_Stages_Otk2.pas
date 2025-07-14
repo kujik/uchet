@@ -6,9 +6,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, MemTableDataEh, Data.DB,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Buttons, Vcl.Mask, DBCtrlsEh, EhLibVCL, GridsEh,
+  Vcl.StdCtrls, Vcl.Buttons, Vcl.Mask, DBCtrlsEh, GridsEh,
   DBAxisGridsEh, DBGridEh, MemTableEh, uLabelColors, Math,
-  uData
+  uData, EhLibVclUtils
   ;
 
 type

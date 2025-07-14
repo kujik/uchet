@@ -1,15 +1,15 @@
 inherited Form_Adm_Installer: TForm_Adm_Installer
   Anchors = [akLeft, akTop, akBottom]
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 515
-  ClientWidth = 788
+  ClientHeight = 514
+  ClientWidth = 784
   ExplicitWidth = 800
   ExplicitHeight = 553
   TextHeight = 13
   object lbl_InstalledInfo: TLabel [0]
     Left = 8
     Top = 51
-    Width = 93
+    Width = 92
     Height = 16
     Caption = 'lbl_InstalledInfo'
     Font.Charset = DEFAULT_CHARSET
@@ -21,8 +21,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   end
   object lbl_FilesInfo: TLabel [1]
     Left = 8
-    Top = 451
-    Width = 93
+    Top = 450
+    Width = 92
     Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'lbl_InstalledInfo'
@@ -32,12 +32,12 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    ExplicitTop = 455
+    ExplicitTop = 451
   end
   object lbl_Status: TLabel [2]
     Left = 480
-    Top = 481
-    Width = 93
+    Top = 480
+    Width = 92
     Height = 16
     Anchors = [akLeft, akBottom]
     Caption = 'lbl_InstalledInfo'
@@ -47,7 +47,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Font.Name = 'MS Sans Serif'
     Font.Style = []
     ParentFont = False
-    ExplicitTop = 485
+    ExplicitTop = 481
   end
   object lbl_PrevInstall: TLabel [3]
     Left = 8
@@ -57,8 +57,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
   end
   inherited pnl_StatusBar: TPanel
-    Top = 514
-    Width = 788
+    Top = 513
+    Width = 784
     Height = 1
     Visible = False
     ExplicitTop = 517
@@ -195,8 +195,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 581
-    Top = 474
+    Left = 573
+    Top = 473
     Width = 195
     Height = 33
     Anchors = [akRight, akBottom]

@@ -1,13 +1,13 @@
 inherited FrmODedtItmUnits: TFrmODedtItmUnits
   Caption = 'FrmODedtItmUnits'
-  ClientHeight = 184
-  ClientWidth = 289
+  ClientHeight = 183
+  ClientWidth = 285
   ExplicitWidth = 301
   ExplicitHeight = 222
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 289
-    Height = 168
+    Width = 285
+    Height = 167
     ExplicitWidth = 848
     ExplicitHeight = 400
     inherited pnlFrmClient: TPanel
@@ -91,9 +91,11 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
       ExplicitWidth = 838
       inherited bvlFrmBtnsTl: TBevel
         Width = 277
+        ExplicitWidth = 277
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 277
+        ExplicitWidth = 277
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 277
@@ -118,16 +120,13 @@ inherited FrmODedtItmUnits: TFrmODedtItmUnits
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 168
-    Width = 289
+    Top = 167
+    Width = 285
     ExplicitTop = 400
     ExplicitWidth = 848
     inherited lblStatusBarR: TLabel
       Left = 197
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 197
     end
   end
   inherited tmrAfterCreate: TTimer

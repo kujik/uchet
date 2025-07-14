@@ -2,9 +2,8 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
   Caption = 'Dlg_SuppliersMinPart'
   ClientHeight = 247
   ClientWidth = 748
-  ExplicitWidth = 754
-  ExplicitHeight = 276
-  PixelsPerInch = 96
+  ExplicitWidth = 764
+  ExplicitHeight = 286
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 228
@@ -13,11 +12,7 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
     ExplicitWidth = 748
     inherited lbl_StatusBar_Right: TLabel
       Left = 659
-      Height = 17
       ExplicitLeft = 659
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
     end
   end
   inherited pnl_Buttons: TPanel
@@ -62,7 +57,7 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
     object lbl_Caption: TLabel
       Left = 8
       Top = 6
-      Width = 54
+      Width = 52
       Height = 13
       Caption = 'lbl_Caption'
     end

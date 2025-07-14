@@ -14,7 +14,6 @@ object Dlg_Order_Complaints: TDlg_Order_Complaints
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poDesigned
   OnCreate = CustomDropDownFormEhCreate
   DropDownMode = True
@@ -23,7 +22,6 @@ object Dlg_Order_Complaints: TDlg_Order_Complaints
   DesignSize = (
     428
     242)
-  PixelsPerInch = 96
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0

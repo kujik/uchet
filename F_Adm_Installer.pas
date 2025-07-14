@@ -38,7 +38,8 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI,
   Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, uLabelColors, IOUtils, Types,
   Vcl.Buttons, ShellApi, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls;
+  DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls,
+  EhLibVclUtils;
 
 type
   TForm_Adm_Installer = class(TForm_MDI)
@@ -216,15 +217,15 @@ begin
     ['comm', ftString, 4000, 'Комментарий', 70, False, False, False]],
     va2, '', ''
   );
-  Dbg_PrevInstall.DataSource.DataSet.AfterScroll:=Dbg_PrevInstallAfterScroll;
-  Dbg_PrevInstall.DataSource.DataSet.Last;
-  Dbg_PrevInstall.DataSource.DataSet.First;
+  Dbg_PrevInstall.DataSet.AfterScroll:=Dbg_PrevInstallAfterScroll;
+  Dbg_PrevInstall.DataSet.Last;
+  Dbg_PrevInstall.DataSet.First;
 end;
 
 procedure TForm_Adm_Installer.Dbg_PrevInstallAfterScroll(DataSet: TDataSet);
 begin
   inherited;
-  mem_PrevInstalllcomment.Text:=Dbg_PrevInstall.DataSource.DataSet.FieldByName('comm').AsString;
+//1  mem_PrevInstalllcomment.Text:=Dbg_PrevInstall.DataSource.DataSet.FieldByName('comm').AsString;
 end;
 
 function TForm_Adm_Installer.Prepare: Boolean;

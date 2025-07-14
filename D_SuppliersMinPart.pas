@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, F_MdiGridDialogTemplate,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh,
   Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh,
-  EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons;
+  GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons, EhLibVclUtils;
 
 type
   TDlg_SuppliersMinPart = class(TForm_MdiGridDialogTemplate)

@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, EhLibVCL,
+  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
   Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, ClipBrd, TypInfo,
   uLabelColors, uString, uData, uFrmBasicMdi, uFrDBGridEh

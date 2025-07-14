@@ -4,7 +4,6 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
   ClientWidth = 386
   ExplicitWidth = 402
   ExplicitHeight = 198
-  PixelsPerInch = 96
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 386
@@ -152,11 +151,7 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
     ExplicitWidth = 386
     inherited lblStatusBarR: TLabel
       Left = 294
-      Height = 13
       ExplicitLeft = 294
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 13
     end
   end
   inherited tmrAfterCreate: TTimer

@@ -6,7 +6,7 @@ program Uchet;
 {
 git:
 https://github.com/kujik/uchet.git
-kujik/psv116@ 1. - k..s - g
+kujik/psv116@ 1. - k .. s - g
 }
 
 uses

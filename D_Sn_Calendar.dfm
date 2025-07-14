@@ -13,13 +13,11 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   FormStyle = fsMDIChild
-  OldCreateOrder = False
   Position = poDefault
   Visible = True
   OnCanResize = FormCanResize
   OnClose = FormClose
   OnResize = FormResize
-  PixelsPerInch = 96
   TextHeight = 13
   object gb_Payments: TGroupBox
     Left = 0
@@ -708,7 +706,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object lbl_RequestFile: TLabel
       Left = 271
       Top = 47
-      Width = 74
+      Width = 72
       Height = 13
       Caption = 'lbl_AccountFile'
     end
@@ -869,7 +867,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object lbl_Payments: TLabel
       Left = 16
       Top = 6
-      Width = 64
+      Width = 62
       Height = 13
       Caption = 'lbl_Payments'
     end
@@ -878,7 +876,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Top = 30
       Width = 65
       Height = 21
-      ControlLabel.Width = 76
+      ControlLabel.Width = 83
       ControlLabel.Height = 13
       ControlLabel.Visible = True
       ControlLabelLocation.Position = lpLeftCenterEh

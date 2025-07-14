@@ -8,24 +8,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions, Vcl.Mask,
   uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2, uFrmBasicInput
   ;
 
-type
+{type
   TFrmOGrepItemsInOrder = class(TFrmBasicGrid2)
-    pnlLeft: TPanel;
-    lblAddOrders: TLabel;
-    cmbProekt: TDBComboBoxEh;
-    dedt1: TDBDateTimeEditEh;
-    dedt2: TDBDateTimeEditEh;
-    btnAddOrders: TBitBtn;
-    btnDelProekt: TBitBtn;
-    edtOrIds: TDBEditEh;
-    edtOrNum: TDBEditEh;
-    edtOrCnt: TDBEditEh;
-    cmbCustomer: TDBComboBoxEh;
     procedure btnAddOrdersClick(Sender: TObject);
     procedure lblAddOrdersClick(Sender: TObject);
     procedure btnDelProektClick(Sender: TObject);
@@ -40,14 +29,14 @@ type
   end;
 
 var
-  FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder;
+  FrmOGrepItemsInOrder: TFrmOGrepItemsInOrder;}
 
 implementation
 
 uses
   uWindows
   ;
-
+(*
 {$R *.dfm}
 
 function  TFrmOGrepItemsInOrder.PrepareForm: Boolean;
@@ -189,7 +178,7 @@ procedure TFrmOGrepItemsInOrder.ReadSettings;
 begin
   LoadProekts;
   Cth.SetControlValuesArr2(Self, Cth.DeSerializeControlValuesArr2(Settings.ReadProperty(FormDoc, 'Settings')));
-  Cth.SetBtn(btnDelProekt, mybtDelete, True, '');
+  //1Cth.SetBtn(btnDelProekt, mybtDelete, True, '');
   Cth.SetBtn(btnAddOrders, mybtAdd, False, 'Добавить заказы');
   SetLblAddOrders;
 end;
@@ -216,6 +205,6 @@ begin
     ' заказ' + S.GetEnding(StrtoIntDef(edtOrCnt.Text, 0),'','а','ов'));
 end;
 
-
+    *)
 
 end.

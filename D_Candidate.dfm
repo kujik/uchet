@@ -4,13 +4,10 @@ inherited Dlg_Candidate: TDlg_Candidate
   ClientWidth = 651
   ExplicitWidth = 667
   ExplicitHeight = 509
-  PixelsPerInch = 96
   TextHeight = 13
-  inherited StatusBar: TStatusBar
+  inherited pnl_StatusBar: TPanel
     Top = 451
     Width = 651
-    ExplicitTop = 451
-    ExplicitWidth = 651
   end
   object gb_Candidate: TGroupBox [1]
     Left = 0

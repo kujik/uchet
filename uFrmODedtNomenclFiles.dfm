@@ -2,8 +2,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
   Caption = 'FrmDlgDrawingAddAndView'
   ClientHeight = 476
   ClientWidth = 772
-  ExplicitWidth = 784
-  ExplicitHeight = 514
+  ExplicitWidth = 788
+  ExplicitHeight = 515
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 772
@@ -13,8 +13,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
     inherited pnlFrmClient: TPanel
       Width = 762
       Height = 411
-      ExplicitWidth = 758
-      ExplicitHeight = 410
+      ExplicitWidth = 762
+      ExplicitHeight = 411
       object pnlNomencl: TPanel
         Left = 0
         Top = 0
@@ -40,8 +40,6 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
         Align = alClient
         Caption = 'pnlGrid'
         TabOrder = 1
-        ExplicitWidth = 758
-        ExplicitHeight = 393
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 1
@@ -51,8 +49,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 756
-          ExplicitHeight = 391
+          ExplicitWidth = 760
+          ExplicitHeight = 392
           inherited pnlGrid: TPanel
             Top = 22
             Width = 750
@@ -116,7 +114,7 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -171,11 +169,7 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
     ExplicitWidth = 768
     inherited lblStatusBarR: TLabel
       Left = 699
-      Height = 14
       ExplicitLeft = 699
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

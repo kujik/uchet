@@ -8,7 +8,7 @@ uses
   Vcl.ExtCtrls, Vcl.ComCtrls, VclTee.TeeGDIPlus, Vcl.StdCtrls, Vcl.Buttons,
   VCLTee.TeEngine, VCLTee.Series, VCLTee.TeeProcs, VCLTee.Chart, Vcl.Mask,
   DBCtrlsEh, DateUtils, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB,
+  DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB,
   MemTableEh, Data.Win.ADODB, DataDriverEh, ADODataDriverEh, VCL.ClipBrd,
   PrnDbgEh, DBGridEhXMLSpreadsheetExp, ShellApi, XlsMemFilesEh,
   DBGridEhXlsMemFileExporters, DBGridEhImpExp, uString, uData;

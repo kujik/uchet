@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh,
-  Db, MemTableEh, EhLibVCL, Math, ExtCtrls, Vcl.Menus, Types, Registry, IniFiles,
+  Db, MemTableEh, Math, ExtCtrls, Vcl.Menus, Types, Registry, IniFiles,
   GridToolCtrlsEh, SearchPanelsEh, DBLookupUtilsEh, PropFilerEh, MemTreeEh,
   DataDriverEh, ADODataDriverEh, ImgList, StdActns, ActnList, Jpeg, PngImage,
   ShellApi, XlsMemFilesEh, DBGridEhXlsMemFileExporters, DBGridEhImpExp, TypInfo,
@@ -1077,7 +1077,7 @@ procedure TGridEhHelper.GridFilterClear(DbGridEh1: TDbGridEh; ColumnFilter: Bool
 var
   i, j: Integer;
 begin
-  DbGridEh1.Datasource.DataSet.DisableControls;
+  DbGridEh1.DataSet.DisableControls;
   if StFilter then
     if DbGridEh1.SearchPanel.SearchingText <> '' then begin
       DbGridEh1.SearchPanel.SearchingText := '';
@@ -1087,7 +1087,7 @@ begin
     for i := 0 to DbGridEh1.Columns.Count - 1 do begin
       DbGridEh1.Columns[i].StFilter.ExpressionStr := ''
     end;
-  DbGridEh1.Datasource.DataSet.EnableControls;
+  DbGridEh1.DataSet.EnableControls;
   DbGridEh1.DefaultApplyFilter;
 end;
 
@@ -1146,13 +1146,13 @@ var
   rn: Integer;
 begin
   try
-  if DbGridEh1.Datasource.DataSet.RecordCount = 0 then
+  if DbGridEh1.DataSet.RecordCount = 0 then
     Exit;
-  rn := DbGridEh1.Datasource.DataSet.RecNo;
-  DbGridEh1.Datasource.DataSet.DisableControls;
+  rn := DbGridEh1.DataSet.RecNo;
+  DbGridEh1.DataSet.DisableControls;
   if Mode = 1 then begin
     //отметим все ОТФИЛЬТРОВАННЫЕ строки, скрытые не трогаем
-    with DbGridEh1.Datasource.DataSet do begin
+    with DbGridEh1.DataSet do begin
       First;
       while not eof do begin
         if not DbGridEh1.SelectedRows.CurrentRowSelected then
@@ -1163,7 +1163,7 @@ begin
   end
   else if Mode = -1 then begin
 //    DBGridEh1.SelectedRows.Clear; //это снимет отметку не только на отфильтрованных, но и на всех строках
-    with DbGridEh1.Datasource.DataSet do begin
+    with DbGridEh1.DataSet do begin
       First;
       while not eof do begin
         if DbGridEh1.SelectedRows.CurrentRowSelected then
@@ -1173,7 +1173,7 @@ begin
     end;
   end
   else if Mode = 0 then begin
-    with DbGridEh1.Datasource.DataSet do begin
+    with DbGridEh1.DataSet do begin
       First;
       while not eof do begin
         DbGridEh1.SelectedRows.CurrentRowSelected := not DbGridEh1.SelectedRows.CurrentRowSelected;
@@ -1183,8 +1183,8 @@ begin
   end;
   except
   end;
-  DbGridEh1.Datasource.DataSet.RecNo := rn;
-  DbGridEh1.Datasource.DataSet.EnableControls;
+  DbGridEh1.DataSet.RecNo := rn;
+  DbGridEh1.DataSet.EnableControls;
 end;
 
 function TGridEhHelper.GetGridArrayOfChecked(DbGridEh1: TDbGridEh; FieldNo: Integer): TVarDynArray2;
@@ -1196,8 +1196,8 @@ var
   rn: Integer;
 begin
   Result := [];
-  DbGridEh1.Datasource.DataSet.DisableControls;
-  rn := TMemTableEh(DbGridEh1.Datasource.DataSet).RecNo;
+  DbGridEh1.DataSet.DisableControls;
+  rn := TMemTableEh(DbGridEh1.DataSet).RecNo;
   //фильтр в толбцах не мешает, и собираются и те строки которые не видны, но!!! при включенном фильтре ПАНЕЛИ происходит ошика
   //сбросим фильтр в панели если есть
   st := DbGridEh1.SearchPanel.SearchingText;
@@ -1207,18 +1207,18 @@ begin
   end;
   //соберем все отмеченные записи, независимо от фильтрации
   for i := 0 to DbGridEh1.SelectedRows.Count - 1 do begin
-    if not DbGridEh1.DataSource.DataSet.BookmarkValid(DbGridEh1.SelectedRows[i]) then
+    if not DbGridEh1.DataSet.BookmarkValid(DbGridEh1.SelectedRows[i]) then
       Continue;
     try
-      DbGridEh1.DataSource.DataSet.Bookmark := DbGridEh1.SelectedRows[i];          //ошибка при фильтре здесь, BookmarkValid не помогает
+      DbGridEh1.DataSet.Bookmark := DbGridEh1.SelectedRows[i];          //ошибка при фильтре здесь, BookmarkValid не помогает
       SetLength(Result, Length(Result) + 1);
       if FieldNo >= 0 then begin
-        Result[i] := [DbGridEh1.DataSource.DataSet.Fields[j].AsVariant];
+        Result[i] := [DbGridEh1.DataSet.Fields[j].AsVariant];
       end
       else begin
-        SetLength(Result[i], DbGridEh1.DataSource.DataSet.Fields.Count);
-        for j := 0 to DbGridEh1.DataSource.DataSet.Fields.Count - 1 do
-          Result[i][j] := DbGridEh1.DataSource.DataSet.Fields[j].AsVariant;
+        SetLength(Result[i], DbGridEh1.DataSet.Fields.Count);
+        for j := 0 to DbGridEh1.DataSet.Fields.Count - 1 do
+          Result[i][j] := DbGridEh1.DataSet.Fields[j].AsVariant;
       end;
     except
     end;
@@ -1227,8 +1227,8 @@ begin
     DbGridEh1.SearchPanel.SearchingText := st;
     DbGridEh1.SearchPanel.ApplySearchFilter;
   end;
-  TMemTableEh(DbGridEh1.Datasource.DataSet).RecNo := rn;
-  DbGridEh1.Datasource.DataSet.EnableControls;
+  TMemTableEh(DbGridEh1.DataSet).RecNo := rn;
+  DbGridEh1.DataSet.EnableControls;
 end;
 
 function TGridEhHelper.GetGridInfoStr(DbGridEh1: TDbGridEh): string; //
@@ -1240,10 +1240,10 @@ begin
   //Чтобы пройтись по отфильтрованному списку записей используете список MemTableEh1.RecordsView
   //Чтобы пройтись по полному списку записей используйте список MemTableEh1.RecordsView.MemTableData.RecordsList
   Result := '';
-  if not TMemTableEh(DbGridEh1.Datasource.DataSet).Active then
+  if not TMemTableEh(DbGridEh1.DataSet).Active then
     Exit;
-  qm := TMemTableEh(DbGridEh1.Datasource.DataSet).RecordCount;
-  qma := TMemTableEh(DbGridEh1.Datasource.DataSet).RecordsView.MemTableData.RecordsList.Count;
+  qm := TMemTableEh(DbGridEh1.DataSet).RecordCount;
+  qma := TMemTableEh(DbGridEh1.DataSet).RecordsView.MemTableData.RecordsList.Count;
   qmas := DbGridEh1.SelectedRows.Count;
   Result := IntToStr(qm) + ' запис' + S.GetEnding(qm, 'ь', 'и', 'ей') + '' + S.IIFStr(qma > qm, ' из ' + IntToStr(qma) + '', '') + S.IIf(qmas > 0, ' (отмечено ' + IntToStr(qmas) + ')', '') + '';
 end;
@@ -1268,21 +1268,21 @@ begin
   if not DBGridEh.DataGrouping.Active then
     Exit;
   //получим значение поля, соотвествующего корневой группе, в текущей записи
-  st := DBGridEh.DataSource.DataSet.FieldByName(TColumnEh(DBGridEh.DataGrouping.GroupLevels[0].Column).FieldName).AsString;
+  st := DBGridEh.DataSet.FieldByName(TColumnEh(DBGridEh.DataGrouping.GroupLevels[0].Column).FieldName).AsString;
   //пройдем по всем корневым нодам
   for i := 0 to DBGridEh.DataGrouping.GroupDataTree.Root.count - 1 do begin
     //получим для ноды номер записи в мемтейбле, начиная с 0, это будет номер ее первой строки - не группы
     j := DBGridEh.DataGrouping.GroupDataTree.Root[i].DataSetRecordViewNo;
 //    j := DBGridEh.DataGrouping.GroupDataTree.FlatVisibleItem[i].DataSetRecordViewNo;
     //если значение ключевого поля для этой строки совпадает со значением его в текеущей строке, то расхлопнем группу рекурсивно
-    st1 := TMemTableEh(DBGridEh.DataSource.DataSet).RecordsView[j].DataValues[TColumnEh(DBGridEh.DataGrouping.GroupLevels[0].Column).FieldName, dvvValueEh];
+    st1 := TMemTableEh(DBGridEh.DataSet).RecordsView[j].DataValues[TColumnEh(DBGridEh.DataGrouping.GroupLevels[0].Column).FieldName, dvvValueEh];
     if st = st1 then begin
       //полуучим режим (схлопнуть/расхлопнуть)
       Expand := S.Decode([AExpand, -1, False, 1, True, not DBGridEh.DataGrouping.GroupDataTree.Root[i].Expanded]);
-      TMemTableEh(DBGridEh.DataSource.DataSet).DisableControls;
+      TMemTableEh(DBGridEh.DataSet).DisableControls;
       //рекурсивно применим ко всем дочерним нодам
       ProcessNode(DBGridEh.DataGrouping.GroupDataTree.Root[i]);
-      TMemTableEh(DBGridEh.DataSource.DataSet).EnableControls;
+      TMemTableEh(DBGridEh.DataSet).EnableControls;
       Exit;
     end;
   end;
@@ -1303,12 +1303,12 @@ begin
       else DBGridEh.DataGrouping.GroupLevels[-Level].CollapseNodes;
     Exit;
   end;
-  TMemTableEh(DBGridEh.DataSource.DataSet).DisableControls;
+  TMemTableEh(DBGridEh.DataSet).DisableControls;
   for i := 0 to Min(Level, DBGridEh.DataGrouping.GroupLevels.Count - 1) do
     if Expand
       then DBGridEh.DataGrouping.GroupLevels[i].ExpandNodes
       else DBGridEh.DataGrouping.GroupLevels[i].CollapseNodes;
-  TMemTableEh(DBGridEh.DataSource.DataSet).EnableControls;
+  TMemTableEh(DBGridEh.DataSet).EnableControls;
 end;
 
 
@@ -1322,7 +1322,7 @@ begin
   KeyString := GetGridServiceFields(DBGridEh);
   if KeyString <> '' then
     DBGridEh.SaveVertPos(KeyString);
-  TMemTableEh(DBGridEh.DataSource.DataSet).Refresh;
+  TMemTableEh(DBGridEh.DataSet).Refresh;
   DBGridEh.DefaultApplySorting;
   DBGridEh.DefaultApplyFilter;
   if KeyString <> '' then
@@ -1356,7 +1356,7 @@ begin
        (MemTables[GridNo].FieldByName(Pr[GridNo].IdField).Value = S.IIf(GridNo = 1, id, id2)) then begin}
     if (not TDbGridEh(Sender).ReadOnly)and(not Column.ReadOnly)and
        (Column.Index = TDbGridEh(Sender).Col - 1)and
-       (TMemTableEh(TDbGridEh(Sender).DataSource.DataSet).RecNo = TDbGridEh(Sender).Row)
+       (TMemTableEh(TDbGridEh(Sender).DataSet).RecNo = TDbGridEh(Sender).Row)
       then begin
       if True then
       with Sender.Canvas, ARect do begin
@@ -1425,9 +1425,13 @@ end;
 
 procedure TControlsHelper.SetControlValue(c: TControl; v: Variant);
 //установим значения контролов из переменной вариант
+var
+  b: Boolean;
 begin
   if c = nil then
     Exit;
+  if c.Name = 'cmb_id_or_format_estimates' then
+    b := True;
   if c is TDbCheckBoxEh then begin
     TDbCheckBoxEh(c).Checked := (v = 1) or (v = True);
   end
@@ -3575,7 +3579,7 @@ var
   IDField: string;
 begin
 //  try
-  Mt := TMemTableEh(DBGridEh1.DataSource.DataSet);
+  Mt := TMemTableEh(DBGridEh1.DataSet);
   Dd := TADODataDriverEh(Mt.DataDriver);
   GetRecSQL := Dd.GetrecSQL.Text;
   UpdateSQL := Dd.UpdateSQL.Text;
@@ -3662,7 +3666,7 @@ var
   AColWidth: Integer;
 begin
   DBGridEh1.Columns.Add.Title.Caption;
-  TMemTableEh(DBGridEh1.DataSource.Dataset).FieldDefs.Add(aFieldName, aFieldType, aFieldSize, False);
+  TMemTableEh(DBGridEh1.Dataset).FieldDefs.Add(aFieldName, aFieldType, aFieldSize, False);
   aWidth := aWidth + 1;
   if Copy(aCaption, 1, 1) = ' ' then
     DBGridEh1.Columns[DBGridEh1.Columns.Count - 1].Title.Orientation := tohVertical;
@@ -3692,12 +3696,12 @@ begin
     DBGridEh1.DataSource := TDataSource.Create(DBGridEh1.Owner);
     DBGridEh1.DataSource.Name := 'DataSource_' + DBGridEh1.Name + '_autocreated';
   end;
-  if DBGridEh1.DataSource.DataSet = nil then begin
-    DBGridEh1.DataSource.DataSet := TMemTableEh.Create(DBGridEh1.Owner);
-    DBGridEh1.DataSource.Name := 'MemTableEh_' + DBGridEh1.Name + '_autocreated';
+  if DBGridEh1.DataSet = nil then begin
+ //1   DBGridEh1.DataSet := TMemTableEh.Create(DBGridEh1.Owner);
+//1    DBGridEh1.DataSource.Name := 'MemTableEh_' + DBGridEh1.Name + '_autocreated';
   end;
-  TMemTableEh(DBGridEh1.DataSource.Dataset).Close;
-  TMemTableEh(DBGridEh1.DataSource.Dataset).FieldDefs.Clear;
+  TMemTableEh(DBGridEh1.Dataset).Close;
+  TMemTableEh(DBGridEh1.Dataset).FieldDefs.Clear;
   DBGridEh1.AutoFitColWidths := False;
   DBGridEh1.OptionsEh := DBGridEh1.OptionsEh - [dghAutoFitRowHeight];
   for i := 0 to High(AColumns) do begin
@@ -3709,7 +3713,7 @@ begin
     if Pos('|', AColumns[i][3]) > 0 then
       b3 := True;
   end;
-  TMemTableEh(DBGridEh1.DataSource.Dataset).CreateDataset;
+  TMemTableEh(DBGridEh1.Dataset).CreateDataset;
   if b1 then
     DBGridEh1.AutoFitColWidths := True;
   if b2 then
@@ -3720,27 +3724,27 @@ begin
     Gh.SetGridOptionsDefault(DBGridEh1);
   Gh.SetGridOptionsMain(DBGridEh1, AFilter, ASTFilter, ASort);
   if Length(AValues) <> 0 then begin
-    TMemTableEh(DBGridEh1.DataSource.Dataset).DisableControls;
+    TMemTableEh(DBGridEh1.Dataset).DisableControls;
     f := A.Explode(AMemTableFields, ';', True);
     p := A.Explode(AArrayColumns, ';', True);
     if (Length(f) = 0) or (Length(p) = 0) then begin
       for i := 0 to High(AValues) do begin
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
-        for j := 0 to min(TMemTableEh(DBGridEh1.DataSource.Dataset).FieldCount - 1, High(AValues[i])) do
-          TMemTableEh(DBGridEh1.DataSource.Dataset).Fields[j].Value := AValues[i, j];
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Post;
+        TMemTableEh(DBGridEh1.Dataset).Append;
+        for j := 0 to min(TMemTableEh(DBGridEh1.Dataset).FieldCount - 1, High(AValues[i])) do
+          TMemTableEh(DBGridEh1.Dataset).Fields[j].Value := AValues[i, j];
+        TMemTableEh(DBGridEh1.Dataset).Post;
       end;
     end
     else begin
       for i := 0 to High(AValues) do begin
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
+        TMemTableEh(DBGridEh1.Dataset).Append;
         for j := 0 to High(p) do
-          TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Post;
+          TMemTableEh(DBGridEh1.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
+        TMemTableEh(DBGridEh1.Dataset).Post;
       end;
     end;
-    TMemTableEh(DBGridEh1.DataSource.Dataset).First;
-    TMemTableEh(DBGridEh1.DataSource.Dataset).EnableControls;
+    TMemTableEh(DBGridEh1.Dataset).First;
+    TMemTableEh(DBGridEh1.Dataset).EnableControls;
   end;
 end;
 
@@ -3779,9 +3783,9 @@ end;
 
 function TTableHelper.LoadGridFromNamedArray(DBGridEh1: TDBGridEh; Values: TNamedArr; ByFieldNames: Boolean = True; AClearTable: Boolean = True): Boolean;
 begin
-  TMemTableEh(DBGridEh1.DataSource.Dataset).DisableControls;
-  LoadMemTableFromNamedArray(TMemTableEh(DBGridEh1.DataSource.Dataset), Values, ByFieldNames, AClearTable);
-  TMemTableEh(DBGridEh1.DataSource.Dataset).EnableControls;
+  TMemTableEh(DBGridEh1.Dataset).DisableControls;
+  LoadMemTableFromNamedArray(TMemTableEh(DBGridEh1.Dataset), Values, ByFieldNames, AClearTable);
+  TMemTableEh(DBGridEh1.Dataset).EnableControls;
 end;
 
 procedure TTableHelper.LoadGridFromVa2(DBGridEh1: TDBGridEh; AValues: TVarDynArray2; AMemTableFields: string; AArrayColumns: string; AClearTable: Boolean = True);
@@ -3794,34 +3798,34 @@ var
   f, p: TVarDynArray;
   v: Variant;
 begin
-  TMemTableEh(DBGridEh1.DataSource.Dataset).Active := True;
+  TMemTableEh(DBGridEh1.Dataset).Active := True;
   if AClearTable then
-    TMemTableEh(DBGridEh1.DataSource.Dataset).EmptyTable;
+    TMemTableEh(DBGridEh1.Dataset).EmptyTable;
   if Length(AValues) <> 0 then begin
-    TMemTableEh(DBGridEh1.DataSource.Dataset).DisableControls;
+    TMemTableEh(DBGridEh1.Dataset).DisableControls;
     f := A.Explode(AMemTableFields, ';', True);
     p := A.Explode(AArrayColumns, ';', True);
     if (Length(f) = 0) and (Length(p) = 0) then begin
       for i := 0 to High(AValues) do begin
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
-        for j := 0 to min(TMemTableEh(DBGridEh1.DataSource.Dataset).FieldCount - 1, High(AValues[i])) do
-          TMemTableEh(DBGridEh1.DataSource.Dataset).Fields[j].Value := AValues[i, j];
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Post;
+        TMemTableEh(DBGridEh1.Dataset).Append;
+        for j := 0 to min(TMemTableEh(DBGridEh1.Dataset).FieldCount - 1, High(AValues[i])) do
+          TMemTableEh(DBGridEh1.Dataset).Fields[j].Value := AValues[i, j];
+        TMemTableEh(DBGridEh1.Dataset).Post;
       end;
     end
     else begin
       for i := 0 to High(AValues) do begin
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Append;
+        TMemTableEh(DBGridEh1.Dataset).Append;
         for j := 0 to High(f) do
           if AArrayColumns = '' then
-            TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, j]
+            TMemTableEh(DBGridEh1.Dataset).FieldByName(f[j]).Value := AValues[i, j]
           else
-            TMemTableEh(DBGridEh1.DataSource.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
-        TMemTableEh(DBGridEh1.DataSource.Dataset).Post;
+            TMemTableEh(DBGridEh1.Dataset).FieldByName(f[j]).Value := AValues[i, S.VarToInt(p[j])];
+        TMemTableEh(DBGridEh1.Dataset).Post;
       end;
     end;
-    TMemTableEh(DBGridEh1.DataSource.Dataset).First;
-    TMemTableEh(DBGridEh1.DataSource.Dataset).EnableControls;
+    TMemTableEh(DBGridEh1.Dataset).First;
+    TMemTableEh(DBGridEh1.Dataset).EnableControls;
   end;
 end;
 

@@ -3,17 +3,15 @@ object Dlg_SnOrder: TDlg_SnOrder
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Dlg_SnOrder'
-  ClientHeight = 64
-  ClientWidth = 345
+  ClientHeight = 63
+  ClientWidth = 341
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poOwnerFormCenter
-  PixelsPerInch = 96
   TextHeight = 13
   object dedtDate: TDBDateTimeEditEh
     Left = 40

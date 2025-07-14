@@ -1,13 +1,15 @@
 inherited FrmODedtDevel: TFrmODedtDevel
   Caption = 'FrmODedtDevel'
-  ClientHeight = 405
-  ClientWidth = 837
+  ClientHeight = 404
+  ClientWidth = 833
   ExplicitWidth = 849
   ExplicitHeight = 443
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 837
-    Height = 389
+    Width = 833
+    Height = 388
+    ExplicitWidth = 837
+    ExplicitHeight = 389
     inherited pnlFrmClient: TPanel
       Width = 827
       Height = 340
@@ -219,20 +221,26 @@ inherited FrmODedtDevel: TFrmODedtDevel
     inherited pnlFrmBtns: TPanel
       Top = 345
       Width = 827
+      ExplicitTop = 345
+      ExplicitWidth = 827
       inherited bvlFrmBtnsTl: TBevel
         Width = 825
+        ExplicitWidth = 825
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 825
+        ExplicitWidth = 825
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 825
+        ExplicitWidth = 825
         inherited pnlFrmBtnsMain: TPanel
           Left = 726
           ExplicitLeft = 741
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 498
+          ExplicitLeft = 498
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 627
@@ -246,16 +254,13 @@ inherited FrmODedtDevel: TFrmODedtDevel
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 389
-    Width = 837
+    Top = 388
+    Width = 833
     ExplicitTop = 401
     ExplicitWidth = 852
     inherited lblStatusBarR: TLabel
       Left = 745
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 745
     end
   end
   inherited tmrAfterCreate: TTimer

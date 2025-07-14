@@ -5,9 +5,9 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, EhLibVCL,
+  DBGridEhToolCtrls, DynVarsEh, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB, MemTableEh,
-  Vcl.Buttons
+  Vcl.Buttons, EhLibVclUtils
   ;
 
 type

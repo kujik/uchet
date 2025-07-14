@@ -4,9 +4,8 @@ inherited Dlg_Order: TDlg_Order
   ClientWidth = 1276
   OnCloseQuery = FormCloseQuery
   OnResize = FormResize
-  ExplicitWidth = 1282
-  ExplicitHeight = 701
-  PixelsPerInch = 96
+  ExplicitWidth = 1292
+  ExplicitHeight = 712
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 629
@@ -16,11 +15,7 @@ inherited Dlg_Order: TDlg_Order
     ExplicitWidth = 1276
     inherited lbl_StatusBar_Right: TLabel
       Left = 1187
-      Height = 17
       ExplicitLeft = 1187
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
     end
   end
   object pnl_Top: TPanel [1]
@@ -46,7 +41,7 @@ inherited Dlg_Order: TDlg_Order
     object lbl_ItmStatus: TLabel
       Left = 288
       Top = 14
-      Width = 62
+      Width = 60
       Height = 13
       Caption = 'lbl_ItmStatus'
     end
@@ -129,7 +124,7 @@ inherited Dlg_Order: TDlg_Order
     object lbl_OrderSaveStatus: TLabel
       Left = 8
       Top = 6
-      Width = 99
+      Width = 97
       Height = 13
       Caption = 'lbl_OrderSaveStatus'
     end
@@ -1093,7 +1088,7 @@ inherited Dlg_Order: TDlg_Order
         Top = 167
         Width = 77
         Height = 21
-        ControlLabel.Width = 84
+        ControlLabel.Width = 91
         ControlLabel.Height = 13
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
@@ -1128,7 +1123,7 @@ inherited Dlg_Order: TDlg_Order
     Left = 416
     Top = 549
     Bitmap = {
-      494C010103001400780110001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010103001400040010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -1331,7 +1326,7 @@ inherited Dlg_Order: TDlg_Order
     Left = 496
     Top = 549
     Bitmap = {
-      494C01010200CC009C0103001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C01010200CC00040003001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       00000000000036000000280000000C0000001000000001002000000000000003
       00000000000000000000000000000000000032CD320032CD320032CD3200FF00
       0000FF000000FF00000000000000000000000000000000000000000000000000

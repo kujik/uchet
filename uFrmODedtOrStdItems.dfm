@@ -95,7 +95,7 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         TabOrder = 5
       end
-      object cmb_type_of_semiproduct: TDBComboBoxEh
+      object cmb_type_of_semiproduct_: TDBComboBoxEh
         Left = 97
         Top = 135
         Width = 121
@@ -108,8 +108,8 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
         DynProps = <>
         EditButtons = <>
         TabOrder = 6
-        Text = 'cmb_type_of_semiproduct'
-        Visible = False
+        Text = 'cmb_type_of_semiproduct_'
+        Visible = True
       end
       object cmb_id_or_format_estimates: TDBComboBoxEh
         Left = 98
@@ -169,9 +169,9 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
     ExplicitTop = 237
     ExplicitWidth = 831
     inherited lblStatusBarR: TLabel
-      Left = 743
+      Left = 762
       Height = 14
-      ExplicitLeft = 743
+      ExplicitLeft = 762
     end
     inherited lblStatusBarL: TLabel
       Height = 14

@@ -7,8 +7,8 @@ uses
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, MemTableDataEh, Data.DB,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.Mask,
-  DBCtrlsEh, EhLibVCL, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh, uData,
-  uForms, uDBOra, uString, uMessages, V_MDI, uLabelColors;
+  DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh, uData,
+  uForms, uDBOra, uString, uMessages, V_MDI, uLabelColors, EhLibVclUtils;
 
 type
   TForm_MdiGridDialogTemplate = class(TForm_MDI)

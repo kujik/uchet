@@ -4,9 +4,8 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
   ClientHeight = 308
   ClientWidth = 274
   OnActivate = FormActivate
-  ExplicitWidth = 280
-  ExplicitHeight = 336
-  PixelsPerInch = 96
+  ExplicitWidth = 290
+  ExplicitHeight = 347
   TextHeight = 13
   object Img_Info: TImage
     Left = 7
@@ -19,7 +18,7 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
   object lbl_Caption: TLabel
     Left = 8
     Top = 5
-    Width = 54
+    Width = 53
     Height = 13
     Caption = 'lbl_Caption'
   end

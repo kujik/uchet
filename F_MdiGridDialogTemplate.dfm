@@ -2,9 +2,8 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
   Caption = 'Form_MdiGridDialogTemplate'
   ClientHeight = 433
   ClientWidth = 755
-  ExplicitWidth = 761
-  ExplicitHeight = 461
-  PixelsPerInch = 96
+  ExplicitWidth = 771
+  ExplicitHeight = 472
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 414
