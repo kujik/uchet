@@ -28,6 +28,9 @@ alter table estimate_items add id_or_std_item number(11);
 alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
 
 
+alter table bcad_groups add is_semiproduct number(1) default 0;
+
+
 --установить айди стандартного изделия в сметах по признаку совпадения наименований
 --запрос работает долго 4 мин
 select
@@ -92,5 +95,30 @@ select * from estimate_items where id_group = 2;
 
 --v_or_std_items
 --D ConvertNewOrStdItemRoutes
+--F_TestEstimateItem_New
 
 */
+
+
+select 
+  max(oi.slash),
+  max(oi.fullitemname),
+  count(ei.id)
+from
+  v_order_items oi,
+  estimates e,
+  estimate_items ei
+  --bcad_nomencl n1
+  --bcad_nomencl n2
+where
+  oi.id_organization <> -1
+  and nvl(oi.std, 0) = 1
+  and e.id_order_item = oi.id
+  and ei.id_estimate = e.id
+group by
+  ei.id_estimate
+having      
+  count(ei.id) > 1  
+  ;
+  --and count(
+    

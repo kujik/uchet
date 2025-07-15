@@ -8,11 +8,12 @@ alter session set nls_sort =  binary;
 --таблица групп материалов bCAD
 --данные должны вноситься вручную через справочник, при загрузке сметы несуществующая
 --группа вызовет ошибку
---alter table bcad_groups add is_production number(1) default 0; 
+--alter table bcad_groups add is_semiproduct number(1) default 0; 
 create table bcad_groups(
   id number(11),
   name varchar2(1000) unique not null,     --наименование
   is_production number(1) default 0,       --это группа, содержащая готовые изделия  
+  is_semiproduct number(1) default 0,       --это группа, содержащая полуфабрикаты  
   constraint pk_bcad_groups primary key (id)
 );
 
@@ -631,6 +632,57 @@ begin
   return isnew || isproderr || isbcaderr;
 end;
 /
+
+
+
+create or replace function F_TestEstimateItem_New(
+--проверим правильность и новизну сметной позиции, вернем в строке
+--1й символ = 0 если нет такой позция в справочнике номенклатуры бкад
+--2й символ = 0 - ошибка для номенклатуры из группы Изделий - нет такого изделия в v_or_std_items
+--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе 
+  GroupId number,                         --группа бкад
+  Pname varchar2                          --наименование бкад
+) 
+return varchar2
+is 
+  isprod number(1);            --это изделий (по признаку группы)
+  issem  number(1);            --это полуфабрикат  
+  isnew number(1);             --0, если это новая поззиция
+  isproderr number(1);         --если позиция в группе Изделия, и не найдена в списке изделий с учетом префикса
+  issemerr number(1);
+  isbcaderr number(1);         --если позиция в группе номенклатуры из бкад, и найдена в списке изделий с учетом префикса
+  cntprod number(1); 
+  cntsem number(1); 
+begin
+  --select count(*) into isnew from bcad_nomencl where name = Pname; 
+  select is_production, is_semiproduct into isprod, issem from bcad_groups where id = GroupId;
+  isproderr:=1;
+  isbcaderr:=1;
+  issemerr:=1;
+  select count(*) into cntprod from v_or_std_items where fullname = Pname and is_semiproduct = 0;
+  select count(*) into cntsem from v_or_std_items where fullname = Pname and is_semiproduct = 1;
+  --изделие обязательно должно быть в справочнике стандартных (а нестандартные там же) изделий
+  if isprod = 1 and cntprod <> 1 then 
+    isproderr := 0;
+  end if;
+  if issem = 1 and cntsem <> 1 then 
+    issemerr := 0;
+  end if;
+  if isprod = 0 and cntprod + cntsem <> 0 then 
+  --материал не может быть изделием 
+    isbcaderr :=0;
+  end if;
+  if isprod + issem = 1 then 
+    --проверяем изделия по базе Учета
+    select count(*) into isnew from bcad_nomencl where name = Pname; 
+  else 
+    --проверяем Материалы по базе ИТМ
+    select count(*) into isnew from dv.nomenclatura where name = Pname and id_nomencltype = 0; 
+  end if;
+  return isnew || isproderr || isbcaderr;
+end;
+/
+
 
 
 --------------------------------------------------------------------------------
