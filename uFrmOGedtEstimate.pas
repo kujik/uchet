@@ -21,6 +21,7 @@ type
     IsItemStd: Boolean;      //изделие сметы является стандартным
     function  PrepareForm: Boolean; override;
     function  PrepareFormAdd: Boolean; override;
+    procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
@@ -66,7 +67,7 @@ begin
   GroupOfItem := Q.QSelectOneRow('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
   TypeOfItem := Q.QSelectOneRow('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
 
-  FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:'),  {'$FF0000' + }TVarDynArray(AddParam)[2]];
+  FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета кизделию заказа:'),  {'$FF0000' + }TVarDynArray(AddParam)[2]];
   pnlTop.Height := 50;
 
   Orders.LoadBcadGroups(True);
@@ -121,7 +122,9 @@ begin
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
-    [mbtDividorA],[-4]],
+    [mbtDividorA],[-4],
+    [-1001, TypeOfItem <> 2, 'Создать полуфабрикат'],
+    [-1002, TypeOfItem <> 2, 'Редактировать смету полуфабриката']],
     cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
@@ -140,6 +143,13 @@ begin
     inherited;
   end;
 end;
+
+procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = IdSemiproduct);
+   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = IdSemiproduct);
+end;
+
 
 procedure TFrmOGedtEstimate.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 //обработка нажатий кнопок в таблице
@@ -260,7 +270,7 @@ begin
       st := Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False)])[0];
       Frg1.SetValue('flags', i, False, st);
     end;
-    if st <> '111' then begin
+    if (st <> '111')and(st <> '') then begin
       if (st[2] = '0') or (st[3] = '0') then
         b := False;  //были ошибки, с которыми сохранять смету нельзя.
       Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + S.IIf(st[2] = '0', 'Нет такого изделия', S.IIf(st[3] = '0', 'Это изщделие, а должен быть материал', S.IIf(st[1] = '0', 'Новая позиция!', '')))];

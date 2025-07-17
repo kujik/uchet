@@ -1460,7 +1460,7 @@ v:=True;
       ['fullname','Наименование','']
     ]);
     Frg1.Opt.SetTable('v_or_std_items');
-    Frg1.Opt.SetWhere('where type = 0 and id_format like ''' + VarToStr(AddParam) + '''');
+    Frg1.Opt.SetWhere('where type = 0 and and id_format <> 0 id_format like ''' + VarToStr(AddParam) + '''');  //производсьтвенное той же группы, но не нестандартное
     Frg1.Opt.SetButtons(1, 'ls');
   end
 

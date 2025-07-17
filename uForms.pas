@@ -269,6 +269,7 @@ procedure SetButtonsAndPopupMenuCaptionEnabled(AComponents: TComponentsArray; AT
 //(если задан тег то проверяет его в имени компонента)
 //чтобы не менять статус или текст заголовка, в данных полях ставить null!
 procedure SetButtonsAndPopupMenuCaptionEnabled(AOwner: TComponent; ATag: Integer; ACaption: Variant; AEnabled: Variant; ASuffix: string = ''); overload;
+procedure SetButtonState(AOwner: TComponent; ATag: Integer; ACaption: Variant; AEnabled: Variant; AVisible: Variant; ASuffix: string = '');
 //настраивает уже созданную МенюИтем по данным элемента массива кнопок
 //если заданы ANewCaption или ANewEnabled, то меняет их, но в этом случае если к кнопке кастомная картинка была при сощздании,
 //а здесь не задана, то она не станет серой при дисейблед меню, надо задавать явно здесь
@@ -2696,6 +2697,14 @@ procedure TControlsHelper.SetButtonsAndPopupMenuCaptionEnabled(AOwner: TComponen
 //меняет заголовок пункта ПКМ или кнопки (для SpeedButton меняет Hint), и свойство Enabled, для всех элементов этого типа принадлежащих AOwner
 //(если задан тег то проверяет его в имени компонента)
 //чтобы не менять статус или текст заголовка, в данных полях ставить null!
+begin
+  SetButtonState(AOwner, ATag, ACaption, AEnabled, null, ASuffix);
+end;
+
+procedure TControlsHelper.SetButtonState(AOwner: TComponent; ATag: Integer; ACaption: Variant; AEnabled: Variant; AVisible: Variant; ASuffix: string = '');
+//меняет заголовок пункта ПКМ или кнопки (для SpeedButton меняет Hint), свойство Enabled, и свойство Visible для всех элементов ПКМ и кнопок принадлежащих AOwner
+//тег проверяет в имени компонента
+//чтобы не менять статус или текст заголовка, в данных полях ставить null!
 var
   i, j: Integer;
   c: TComponent;
@@ -2707,7 +2716,7 @@ begin
     c := AOwner.Components[i];
     //если находим PopupMenu, то вызовем рекурсивно для него, тк для TMenuItem выладельцем является само меню а не форма/грид
     if c is TPopupMenu then
-      SetButtonsAndPopupMenuCaptionEnabled(c, ATag, ACaption, AEnabled, ASuffix);
+      SetButtonState(c, ATag, ACaption, AEnabled, AVisible, ASuffix);
     if (c.Tag <> ATag) then
       Continue;
     va := A.Explode(c.Name, '_');
@@ -2729,6 +2738,8 @@ begin
       if S.VarType(AEnabled) = varBoolean then
         en := byte(AEnabled);
       SetMenuItem(TMenuItem(c), [ATag], capt, en);
+      if S.VarType(AVisible) = varBoolean then
+        TMenuItem(c).Visible := AVisible = True;
     end
     else if (c is TBitBtn) or (c is TSpeedButton) then begin
       if S.VarType(ACaption) = varString then begin
@@ -2739,6 +2750,8 @@ begin
       end;
       if S.VarType(AEnabled) = varBoolean then
         TSpeedButton(c).Enabled := AEnabled;
+      if S.VarType(AVisible) = varBoolean then
+        TButton(c).Visible := AVisible = True;
     end;
   end;
 end;
