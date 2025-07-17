@@ -16,6 +16,11 @@ delete from or_std_item_route;
 
 alter table or_format_estimates add prefix_prod varchar2(20);           --префикс для итм, для производственного паспорта
 alter table or_format_estimates add is_semiproduct number(1) default 0; --это группа полуфабрикатов
+alter table or_format_estimates drop column prefix_prod;           --префикс для итм, для производственного паспорта
+alter table or_format_estimates drop column is_semiproduct; --это группа полуфабрикатов
+alter table or_format_estimates add type number(1) default 0;
+--v_or_format_estimates
+
 
 --create table or_std_items 
 alter table or_std_items drop column type_of_semiproduct cascade constraints;

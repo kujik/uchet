@@ -1112,13 +1112,15 @@ v:=True;
 
     Frg2.Opt.SetFields([
       ['id$i','_id','40'],
+      ['type$i','_type','40'],
       ['name','Наименование','200'],
-      ['prefix','Префикс для отгрузки','120'],
-      ['prefix_prod','Префикс для производства','120'],
-      ['is_semiproduct','Полуфабрикаты','80','pic'],
+      ['type_name', 'Тип', '150'],
+      ['prefix','Префикс','120'],
+//      ['prefix_prod','Префикс для производства','120'],
+//      ['is_semiproduct','Полуфабрикаты','80','pic'],
       ['active','Используется','80','pic']
     ]);
-    Frg2.Opt.SetTable('or_format_estimates');
+    Frg2.Opt.SetTable('v_or_format_estimates');
     Frg2.Opt.SetWhere('where id_format = :id_format$i order by name');
     Frg2.Opt.SetButtons(1, 'reacds',User.Role(rOr_R_StdPspFormats_Ch));
   end
@@ -2574,18 +2576,22 @@ begin
       if Frg1.ID <= 1 then
         Exit; //для общих и доп.компл. нельзя создавать / редактировать группы
       if Fr.IsNotEmpty and (fMode <> fAdd)
-        then va := [Fr.GetValueS('name'), Fr.GetValueS('prefix'), Fr.GetValueS('prefix_prod'), S.IIf(Fr.GetValueI('is_semiproduct') = 1 , True, False), S.IIf(Fr.GetValueI('active') = 1 , True, False)]
-        else va := ['', '', True];
+//        then va := [Fr.GetValueS('name'), Fr.GetValueS('prefix'), Fr.GetValueS('prefix_prod'), S.IIf(Fr.GetValueI('is_semiproduct') = 1 , True, False), S.IIf(Fr.GetValueI('active') = 1 , True, False)]
+//        else va := ['', '', True];
+        then va := [Fr.GetValueS('name'), VarArrayOf([Fr.GetValueI('type'), VarArrayOf(['производственное изделие','отгрузочное изделие','полуфабрикат']), VarArrayOf(['0','1','2'])]), Fr.GetValueS('prefix'), Fr.GetValueI('active')]
+        else va := ['', VarArrayOf([null, VarArrayOf(['производственное изделие','отгрузочное изделие','полуфабрикат']), VarArrayOf(['0','1','2'])]), '', 1];
       if TFrmBasicInput.ShowDialog(FrmMain, '', [], fMode, 'Параметры сметы', 300, 80, [
-        [cntEdit,'Наименование','1:400:0', 210],
-        [cntEdit,'Префикс для'#13#10'отгрузки','1:20:0', 100],
-        [cntEdit,'Префикс для'#13#10'производства','1:20:0', 100],
-        [cntCheck,'Поплоуфабрикаты','', 100],
+        [cntEdit,'Наименование','1:400:0:T', 210],
+        [cntComboLK,'Тип','1:400:0', 210],
+   //     [cntEdit,'Префикс для'#13#10'отгрузки','1:20:0', 100],
+  //      [cntEdit,'Префикс для'#13#10'производства','1:20:0', 100],
+//        [cntCheck,'Поплоуфабрикаты','', 100],
+        [cntEdit,'Префикс','1:20:0:T', 100],
         [cntCheckX,'Используется','', 100]
        ], va, va, [['']], nil) < 0
       then Exit;
-      if Q.QIUD(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;prefix$s;prefix_prod$s;is_semiproduct$i;active$i',
-        [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3], va[4]]) < 0 then
+      if Q.QIUD(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;type$i;prefix$s;active$i',
+        [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3]]) < 0 then
         MyWarningMessage('Не удалось изменить данные!');
       if fMode in [fAdd, fDelete]
         then Fr.RefreshGrid
