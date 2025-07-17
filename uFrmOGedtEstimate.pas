@@ -205,11 +205,13 @@ begin
   if Fr.GetValueS('flags') = '' then
     Exit;
   if Fr.GetValueS('flags')[1] = '0' then
-    Params.Background := RGB(255, 255, 150);
-  if Fr.GetValueS('flags')[2] = '0' then
-    Params.Background := RGB(255, 150, 150);
-  if Fr.GetValueS('flags')[3]= '0' then
-    Params.Background := RGB(255, 150, 150);
+    Params.Background := clYellow
+  else if Fr.GetValueS('flags')[1] = '1' then
+    Params.Background := clRed
+  else if Fr.GetValueS('flags')[1] = '2' then
+    Params.Background := RGB(255, 0, 255)
+  else if Fr.GetValueS('flags')[1] = '3' then
+    Params.Background := RGB(100, 0, 255);
 end;
 
 procedure TFrmOGedtEstimate.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
@@ -234,7 +236,7 @@ procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);
 var
   st: string;
 begin
-  Frg1.SetValue('flags', Row, False, Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False)])[0]);
+  Frg1.SetValue('flags', Row, False, S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), GroupOfItem])[0]));
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -267,13 +269,13 @@ begin
     //--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе
     st := Frg1.GetValueS('flags', i, False);
     if AReloadStatus then begin
-      st := Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False)])[0];
+      st := S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), GroupOfItem])[0]);
       Frg1.SetValue('flags', i, False, st);
     end;
-    if (st <> '111')and(st <> '') then begin
-      if (st[2] = '0') or (st[3] = '0') then
+    if st <> '' then begin
+      if st[1] <> '0' then
         b := False;  //были ошибки, с которыми сохранять смету нельзя.
-      Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + S.IIf(st[2] = '0', 'Нет такого изделия', S.IIf(st[3] = '0', 'Это изщделие, а должен быть материал', S.IIf(st[1] = '0', 'Новая позиция!', '')))];
+      Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + Copy(Frg1.GetValueS('flags', i, False), 3)];
     end;
   end;
   FErrorMessage := '';
@@ -293,6 +295,7 @@ var
   i: Integer;
 begin
   Result := False;
+Exit;
   Wh.SelectDialogResult2 := [];
   for i := 0 to Frg1.GetCount - 1 do begin
     if Frg1.GetValueS('name', i, False) <> '' then

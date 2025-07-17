@@ -640,46 +640,56 @@ create or replace function F_TestEstimateItem_New(
 --1й символ = 0 если нет такой позция в справочнике номенклатуры бкад
 --2й символ = 0 - ошибка для номенклатуры из группы Изделий - нет такого изделия в v_or_std_items
 --3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе 
-  GroupId number,                         --группа бкад
-  Pname varchar2                          --наименование бкад
+  AGroupId number,                         --группа бкад
+  Aname varchar2,                         --наименование бкад
+  AGroupStd number                         --группа самого изделия, по которому смета
 ) 
 return varchar2
 is 
-  isprod number(1);            --это изделий (по признаку группы)
-  issem  number(1);            --это полуфабрикат  
-  isnew number(1);             --0, если это новая поззиция
-  isproderr number(1);         --если позиция в группе Изделия, и не найдена в списке изделий с учетом префикса
-  issemerr number(1);
-  isbcaderr number(1);         --если позиция в группе номенклатуры из бкад, и найдена в списке изделий с учетом префикса
-  cntprod number(1); 
-  cntsem number(1); 
+  Fisprod number(1);            --это изделий (по признаку группы)
+  Fissem  number(1);            --это полуфабрикат  
+  FCnt number;
+  FCnt2 number;
+  FIdFormat number;
 begin
   --select count(*) into isnew from bcad_nomencl where name = Pname; 
-  select is_production, is_semiproduct into isprod, issem from bcad_groups where id = GroupId;
-  isproderr:=1;
-  isbcaderr:=1;
-  issemerr:=1;
-  select count(*) into cntprod from v_or_std_items where fullname = Pname and is_semiproduct = 0;
-  select count(*) into cntsem from v_or_std_items where fullname = Pname and is_semiproduct = 1;
-  --изделие обязательно должно быть в справочнике стандартных (а нестандартные там же) изделий
-  if isprod = 1 and cntprod <> 1 then 
-    isproderr := 0;
+  select is_production, is_semiproduct into Fisprod, Fissem from bcad_groups where id = AGroupId;
+  select count(*), nvl(max(id_format), -1) into FCnt, FIdFormat from v_or_std_items where fullname = Aname and type = 0 and id_format <> 0;
+  if Fcnt <> 0 and Fisprod = 0 then
+    return '1-Данная позиция является изделием!';
   end if;
-  if issem = 1 and cntsem <> 1 then 
-    issemerr := 0;
+  if Fcnt <> 0 and FIdFormat <> AGroupStd then
+    return '1-изделие из этой группы недопустимо в этой смете!';
   end if;
-  if isprod = 0 and cntprod + cntsem <> 0 then 
-  --материал не может быть изделием 
-    isbcaderr :=0;
+  select count(*) into FCnt from v_or_std_items where fullname = Aname and type = 2;
+  if Fcnt <> 0 and Fissem = 0 then
+    return '1-Данная позиция является полуфабрикатом!';
   end if;
-  if isprod + issem = 1 then 
-    --проверяем изделия по базе Учета
-    select count(*) into isnew from bcad_nomencl where name = Pname; 
-  else 
-    --проверяем Материалы по базе ИТМ
-    select count(*) into isnew from dv.nomenclatura where name = Pname and id_nomencltype = 0; 
+  if Fcnt <> 0 and not (FIdFormat = AGroupStd or FIdFormat = 1) then
+    return '1-полуфабрикат из этой группы недопустим в этой смете!';
   end if;
-  return isnew || isproderr || isbcaderr;
+  if (Fisprod = 1 or Fissem = 1) and FCnt = 0 then
+    return '2-эту позицию необходимо внести в справочник стандартных изделий!';
+  end if;
+  if Fisprod = 1 and FCnt <> 0 then
+    select count(*) into FCnt2 from estimates where id_std_item = (select id from v_or_std_items where fullname = Aname);
+    if FCnt2 = 0 then
+      return '3-К этому изделию должна быть подгружена смета!';
+    end if;
+  end if;
+  if Fissem = 1 and FCnt <> 0 then
+    select count(*) into FCnt2 from estimates where id_std_item = (select id from v_or_std_items where fullname = Aname);
+    if FCnt2 = 0 then
+      return '3-К этому полуфабрикату должна быть подгружена смета!';
+    end if;
+  end if;
+  if (Fisprod = 0 and Fissem = 0) then
+    select count(*) into FCnt2 from dv.nomenclatura where name = Aname and id_nomencltype = 0; 
+    if FCnt2 = 0 then
+      return '0-Внимание! Этой позиции еще нет в базе ИТМ!';
+    end if;
+  end if;
+  return '';
 end;
 /
 
