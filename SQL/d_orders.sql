@@ -1069,6 +1069,9 @@ create or replace view v_or_std_items as (
   select
     i.*,
     fi.prefix,
+    fi.id_format,
+    fi.type,
+    orf.NAME as or_format_name,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
     --F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
@@ -1085,9 +1088,11 @@ create or replace view v_or_std_items as (
     or_std_items i,
     estimates e,
     or_format_estimates fi,
+    or_formats orf,
     v_fin_stditem_raw_prices prc
   where
-   i.id = e.id_std_item (+) 
+   i.id = e.id_std_item (+)
+   and orf.id = fi.id_format 
    and i.id_or_format_estimates = fi.id
    and prc.id(+) = i.id
 );   

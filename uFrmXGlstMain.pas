@@ -1443,14 +1443,24 @@ v:=True;
     Frg1.Opt.SetWhere('where id_or_format_estimates > 0');
     Frg1.Opt.SetButtons(1, 'ls');
   end
-  else if FormDoc = myfrm_R_OrderStdItems_SelSemiproduct then begin  //!!!
+  else if FormDoc = myfrm_R_OrderStdItems_SelSemiproduct then begin
     Caption:='Выбор полуфабриката';
      Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['fullname','Наименование','']
     ]);
     Frg1.Opt.SetTable('v_or_std_items');
-    Frg1.Opt.SetWhere('where id_or_format_estimates > 0 and is_semiproduct = 1');
+    Frg1.Opt.SetWhere('where type = 2 and (id_format = 1 or id_format like ''' + VarToStr(AddParam) + ''')');
+    Frg1.Opt.SetButtons(1, 'ls');
+  end
+  else if FormDoc = myfrm_R_OrderStdItems_SelProdStdItem then begin
+    Caption:='Выбор производственного изделия';
+     Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['fullname','Наименование','']
+    ]);
+    Frg1.Opt.SetTable('v_or_std_items');
+    Frg1.Opt.SetWhere('where type = 0 and id_format like ''' + VarToStr(AddParam) + '''');
     Frg1.Opt.SetButtons(1, 'ls');
   end
 
@@ -2590,6 +2600,8 @@ begin
         [cntCheckX,'Используется','', 100]
        ], va, va, [['']], nil) < 0
       then Exit;
+      if Frg1.ID = 1 then
+        va[2] := 2;  //всегда полуфабрикат в группе п/ф
       if Q.QIUD(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;type$i;prefix$s;active$i',
         [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3]]) < 0 then
         MyWarningMessage('Не удалось изменить данные!');
@@ -2729,6 +2741,14 @@ end.
       //2 - соответствующие им индексы картинок
       //3 - если +, то выводитяяся и текст
       //если ничего не задано, то будет галка для значения "1", если задан только один параметр, то будет галка для него
+
+        //параметры кнопки через :
+        //заголовок
+        //тип кнопки, если пустой то эллипсе, если число то картинка, иначе по сокращениям ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud'], иначе это текст на кнопке
+        //если l то выравнивание по левому краю
+        //если h, то кнопка скрывается когда на нее не наведена мышка
+        //цвет RGB из трех цифр от 0 до 9 - интенсивность канала, если не задан - черный
+        //ширина кнопки, если не задана - 16
 
 
   //при изменениии контролов в событии, событие onChange не вызывается!

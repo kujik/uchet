@@ -14,6 +14,11 @@ type
   private
     Err, Err2: TVarDynArray;
     IdSemiproduct, IdProduct,  IdStuff: Integer;
+    IsOrderItem: Boolean;    //это смета к иизделию заказа, а не к стандартному
+    IdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
+    GroupOfItem: Integer;    //группа стандартных изделий, к которой относится изделие сметы
+    TypeOfItem: Integer;     //тип изделия, к которому относиттся смета (произв., отгр., п/ф)
+    IsItemStd: Boolean;      //изделие сметы является стандартным
     function  PrepareForm: Boolean; override;
     function  PrepareFormAdd: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
@@ -49,8 +54,18 @@ function TFrmOGedtEstimate.PrepareForm: Boolean;
 var
   i: Integer;
   o: TFrDBGridEditOptions;
+  va: TVarDynArray;
 begin
-  Caption:= 'Смета';
+  Caption := 'Смета';
+
+  va := Q.QSelectOneRow('select id_std_item, id_order_item from estimates where id = :id$i', [ID]);
+  if TVarDynArray(AddParam)[1] = 0 then
+    IdOfStdItem := va[0]
+  else
+    IdOfStdItem := Q.QSelectOneRow('select id_std_item from order_items where id = :id$i', [va[1]])[0];
+  GroupOfItem := Q.QSelectOneRow('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
+  TypeOfItem := Q.QSelectOneRow('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
+
   FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета к заказу:'),  {'$FF0000' + }TVarDynArray(AddParam)[2]];
   pnlTop.Height := 50;
 
@@ -65,7 +80,7 @@ begin
     ['id$i','_id','40'],
     ['id_or_std_item$i','_id_or_std_item','40'],
     ['id_group$i','Группа','250;w;L','e=1:100000::TP'],
-    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал;Выбрать полуфабрикат'],
+    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' + S.IIFStr(TypeOfItem <> 2, ';Выбрать полуфабрикат:П:::909') + S.IIFStr(TypeOfItem = 1, ';Выбрать производственное изделие:И:::009') ],
     ['id_unit$i','Ед.изм.','100;L','e=0:1000000::TP'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N'], {недопустимо пустое кол-во}
     ['null as purchase$i','Покупка','80','chb','e'],
@@ -140,8 +155,15 @@ begin
     Frg1.SetValue('name', Wh.SelectDialogResult[2]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
-  else begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], null);
+  else if TCellButtonEh(Sender).Hint = 'Выбрать полуфабрикат' then begin
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], GroupOfItem);
+    if Length(Wh.SelectDialogResult) = 0 then
+      Exit;
+    Frg1.SetValue('name', Wh.SelectDialogResult[1]);
+    LoadItemFromDB(Frg1.RecNo - 1);
+  end
+  else if TCellButtonEh(Sender).Hint = 'Выбрать производственное изделие' then begin
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelProdStdItem, Self, [myfoDialog, myfoModal], GroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);

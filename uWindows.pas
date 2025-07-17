@@ -601,6 +601,7 @@ begin
     myfrm_R_bCAD_Nomencl_SelMaterials,
     myfrm_R_OrderStdItems_SEL,
     myfrm_R_OrderStdItems_SelSemiproduct,
+    myfrm_R_OrderStdItems_SelProdStdItem,
     myfrm_R_Itm_Schet,
     myfrm_R_Itm_InBill,
     myfrm_R_Itm_MoveBill,

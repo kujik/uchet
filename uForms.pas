@@ -94,7 +94,8 @@ type
     //установка картинок в столбцах грида - упрощенна€ верси€
     procedure SetGridInCellImages(DBGridEh1: TDBGridEh; Fields: string; Image: TImageList; Keys: string; KeyOther: Integer = -1);
     //добавл€ет кнопки в €чейки грида
-    procedure SetGridInCellButtons(DBGridEh1: TDBGridEh; Fields: string; AHints: string; AButtonClickEventEh: TButtonClickEventEh; AHPosition: TEditButtonHorzPlacementEh = ebhpRightEh; AStyle: TEditButtonStyleEh = ebsEllipsisEh; AImageIndex: Integer = -1; ACaption: string = ''; AAutoFade: Boolean = True); //
+    procedure SetGridInCellButtons(DBGridEh1: TDBGridEh; Fields: string; AHints: string; AButtonClickEventEh: TButtonClickEventEh; AHPosition: TEditButtonHorzPlacementEh = ebhpRightEh;
+      AStyle: TEditButtonStyleEh = ebsEllipsisEh; AImageIndex: Integer = -1; ACaption: string = ''; AAutoFade: Boolean = True; AColor: string = ''; Awidth : Integer = 0);
     //создает кнопки в €чейках грида в виде чекбоксов
     procedure SetGridInCellButtonsChb(DBGridEh1: TDBGridEh; Fields: string; Hints: string; ButtonClickEventEh: TButtonClickEventEh; ButtonDrawEventEh: TDrawCellButtonEventEh);
     //установка в €чейках грида обычных чекбоксов
@@ -702,7 +703,8 @@ begin
       end;
 end;
 
-procedure TGridEhHelper.SetGridInCellButtons(DBGridEh1: TDBGridEh; Fields: string; AHints: string; AButtonClickEventEh: TButtonClickEventEh; AHPosition: TEditButtonHorzPlacementEh = ebhpRightEh; AStyle: TEditButtonStyleEh = ebsEllipsisEh; AImageIndex: Integer = -1; ACaption: string = ''; AAutoFade: Boolean = True);
+procedure TGridEhHelper.SetGridInCellButtons(DBGridEh1: TDBGridEh; Fields: string; AHints: string; AButtonClickEventEh: TButtonClickEventEh; AHPosition: TEditButtonHorzPlacementEh = ebhpRightEh;
+  AStyle: TEditButtonStyleEh = ebsEllipsisEh; AImageIndex: Integer = -1; ACaption: string = ''; AAutoFade: Boolean = True; AColor: string = ''; Awidth : Integer = 0);
 //не присваивает событи€ клика, никак его не передеать
 var
   i, j, m: Integer;
@@ -732,6 +734,12 @@ begin
           AutoFade := AAutoFade;
           Caption := ACaption;
           HorzPlacement := AHPosition;
+          if AWidth <> 0 then
+            Width := AWidth;
+          if (Length(AColor) = 3) or (Length(AColor) = 6) then
+            Font.Color := RGB(Round(255 / 9 * S.NNum(AColor[1])), Round(255 / 9 * S.NNum(AColor[2])), Round(255 / 9 * S.NNum(AColor[3])));
+//          if (Length(AColor) = 6) then
+//           Background  := RGB(Round(255 / 9 * S.NNum(AColor[1])), Round(255 / 9 * S.NNum(AColor[2])), Round(255 / 9 * S.NNum(AColor[3])));
         end;
 //        DBGridEh1.Columns[i].CellButtons[DBGridEh1.Columns[i]].Color
       end;

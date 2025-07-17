@@ -19,6 +19,8 @@ alter table or_format_estimates add is_semiproduct number(1) default 0; --это гр
 alter table or_format_estimates drop column prefix_prod;           --префикс для итм, для производственного паспорта
 alter table or_format_estimates drop column is_semiproduct; --это группа полуфабрикатов
 alter table or_format_estimates add type number(1) default 0;
+update or_formats set name = 'Полуфабрикаты' where id = 1;
+update or_format_estimates set name = 'Общие полуфабрикаты' where id = 1;
 --v_or_format_estimates
 
 
@@ -126,4 +128,7 @@ having
   count(ei.id) > 1  
   ;
   --and count(
+  
+select * from or_format_estimates where id_format = 1; 
+select * from or_std_items where id_or_format_estimates =1; --=Д/К
     

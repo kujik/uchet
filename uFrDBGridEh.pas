@@ -2780,14 +2780,16 @@ begin
       for j := 0 to High(va) do begin
         //параметры кнопки через :
         //заголовок
-        //тип кнопки, если пустой то эллипсе, если число то картинка, иначе по сокращениям ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud']
+        //тип кнопки, если пустой то эллипсе, если число то картинка, иначе по сокращениям ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud'], иначе это текст на кнопке
         //если l то выравнивание по левому краю
         //если h, то кнопка скрывается когда на нее не наведена мышка
-        //заголовок кнопки пустой, и ширина кнопки постоянно дефолтная
-        va1 := A.Explode(va[j], ':') + ['', '', '', '', ''];
+        //цвет RGB из трех цифр от 0 до 9 - интенсивность канала, если не задан - черный
+        //ширина кнопки, если не задана - 16
+        va1 := A.Explode(va[j], ':') + ['', '', '', '', '','',''];
 //        va11 := TVarDynArray(ebsn);
         k := A.PosInArray(va1[1], ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud']);
         ebt := ebsEllipsisEh;
+        st := '';
         if (k = -1) and S.IsInt(va1[1]) then begin
           ebt := ebsGlyphEh;
           k := va1[1];
@@ -2795,11 +2797,13 @@ begin
         else if k >= 0 then begin
           ebt := ebs[k];
           k := -1;
-        end;
+        end
+        else
+          st := va1[1];
         if va1[2] <> 'l'
           then ebtp := ebhpRightEh
           else ebtp := ebhpLeftEh;
-        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebtp, ebt, k ,'', va1[3] = 'h');
+        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebtp, ebt, k , st, va1[3] = 'h', va1[4], S.NInt(va1[5]));
 //        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebhpRightEh, ebsGlyphEh, 21 ,'', False);
       end;
     end;
