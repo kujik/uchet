@@ -33,6 +33,8 @@ alter table or_std_items add constraint fk_or_std_items_sem foreign key (type_of
 
 alter table estimate_items add id_or_std_item number(11);
 alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
+alter table estimate_items add contract number(1) default 0;
+
 
 
 alter table bcad_groups add is_semiproduct number(1) default 0;

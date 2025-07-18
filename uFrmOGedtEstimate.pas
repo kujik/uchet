@@ -36,6 +36,7 @@ type
     procedure VerifyTable(AReloadStatus: boolean = False);
     procedure LoadFromDB;
     procedure LoadFromXls;
+    procedure LoadFromBuffer;
     procedure LoadItemFromDB(Row: Integer);
     function  SaveEstimate: Boolean;
   protected
@@ -371,6 +372,19 @@ begin
   if st <> '' then
     MyInfoMessage(st, 1);
 end;
+
+procedure TFrmOGedtEstimate.LoadFromBuffer;
+//загрузим смету из буфера
+begin
+  if MyQuestionMessage('Вставить смету из буфера?') <> mrYes then
+    Exit;
+{  LoadSourceDataFromSql
+  MemTableEh1.Edit;
+  Q.QLoadToMemTableEh('select id_group as idgroup, name, id_unit as idunit, qnt1, comm from v_estimate where id_estimate = :id$i order by groupname', [-User.GetID], MemTableEh1);
+  VerifyEstimateAfterLoad;
+  Mth.PostAndEdit(MemTableEh1);}
+end;
+
 
 procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
 //загрузим из базы информацию по данному наименованию сметной позиции

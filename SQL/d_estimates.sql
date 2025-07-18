@@ -210,7 +210,7 @@ end;
 
 --позиция в смете
 --alter table estimate_items drop column id_name_resale_std;
---alter table estimate_items add id_or_std_item number(11);
+--alter table estimate_items add contract number(1) default 0;
 --alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
 create table estimate_items(
   id number(11),
@@ -220,6 +220,7 @@ create table estimate_items(
   id_name number(11),                          --наименование бкад
   id_unit number(11),                          --единица измерения
   id_comment number(11),                       --комментарий из сметы
+  contract number(1) default 0,                --подрядный полуфабрикат
   qnt1 number(15,5),                           --количество на одно изделие, по учету
   qnt number(15,5),                            --количество на все изделия, по учету 
   qnt1_itm number(15,5),                       --количество на одно изделие, по итм
@@ -696,9 +697,11 @@ end;
 
 
 --------------------------------------------------------------------------------
+/*
 create or replace view v_estimate as (
   select
     ei.*,
+    bn.name as bname,
     (case 
       when bn.name is not null then bn.name else si.name end
     ) as name,
@@ -723,6 +726,7 @@ create or replace view v_estimate as (
     bcad_comments bc,
     bcad_groups bg,
     or_std_items si,
+    or_std_items sii,
     or_format_estimates fe,
     v_fin_estitem_raw_prices prc,    
     estimates e
@@ -733,9 +737,63 @@ create or replace view v_estimate as (
     ei.id_comment = bc.id (+) and
     ei.id_group = bg.id (+) and
     si.id_or_format_estimates = fe.id (+) and
+    ei.id_or_std_item = sii.id (+) and
     ei.id = prc.id (+) and
     ei.id_estimate = e.id
 );
+*/
+
+create or replace view v_estimate as (
+  select
+    ei.*,
+    bn.name as bname,
+    (case 
+      when si.name is not null 
+        then decode(fe.prefix, '', '', fe.prefix || '_') || si.name
+        else bn.name
+      end 
+    ) as name,
+    decode(fe.type, null, bg.name, 2, (select name from bcad_groups t where t.id = 2), (select name from bcad_groups t where t.id = 104)) as groupname, 
+    --bg.name as groupname,
+    bu.name as unit,
+    bc.name as comm,
+    fe.prefix as prefix,
+    e.id_order_item,
+    e.id_std_item,
+    prc.price,
+    prc.sum as sum1,
+    2 as cidsemiproduct,
+    103 as cidkrep,    
+    104 as cidproduct,
+    1 as cidstuff
+  from
+    estimate_items ei,
+    bcad_nomencl bn,
+    bcad_units bu,
+    bcad_comments bc,
+    bcad_groups bg,
+    or_std_items si,
+    or_format_estimates fe,
+    v_fin_estitem_raw_prices prc,    
+    estimates e
+  where
+    ei.id_name = bn.id (+) and
+    ei.id_unit = bu.id (+) and
+    ei.id_comment = bc.id (+) and
+    ei.id_group = bg.id (+) and
+    si.id_or_format_estimates = fe.id (+) and
+    ei.id_or_std_item = si.id (+) and
+    ei.id = prc.id (+) and
+    ei.id_estimate = e.id
+);
+
+
+alter table estimate_items drop column id_name_resale;
+
+
+select * from v_estimate where bname is null;
+select * from v_estimate where id = 115201;
+delete from estimate_items t where t.ID_NAME is null;
 
 create or replace view v_estimate_prices as select
   e.*,
