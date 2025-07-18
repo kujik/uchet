@@ -16,8 +16,10 @@ type
 
     Err, Err2: TVarDynArray;
     FIdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
+    FIdOfOrder: Integer;      //айди заказа, в составе которого данное изделие
     FGroupOfItem: Integer;    //группа стандартных изделий, к которой относится изделие сметы
     FTypeOfItem: Integer;     //тип изделия, к которому относиттся смета (произв., отгр., п/ф)
+    FQntOfItem: Extended;     //количество единиц изделия заказа
     FName: string;
     function  PrepareForm: Boolean; override;
     function  PrepareFormAdd: Boolean; override;
@@ -75,7 +77,10 @@ begin
   else begin
     FIdOfStdItem := Q.QSelectOneRow('select id_std_item from order_items where id = :id$i', [ID])[0];
     FIdEstimate := Q.QSelectOneRow('select id from estimates where id_order_item = :id$i', [ID])[0];
-    FName := Q.QSelectOneRow('select slash || '' '' || name from v_order_items where id = :id$i', [ID])[0];
+    va := Q.QSelectOneRow('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID])[0];
+    FName := va[0];
+    FIdOfOrder := va[1];
+    FQntOfItem := va[2];
   end;
   //если сметы еще нет, то перейдем в режим добавления
   if  FIdEstimate = null then
@@ -403,16 +408,25 @@ begin
   Q.QIUD(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
    'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
    [FIdEstimate, S.IIf(AddParam = 1, ID, null), S.IIf(AddParam = 0, ID, null), False, Date]);
-  for i := 0 to Frg1.GetCount(False) do begin
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Length(Q.QCallStoredProc('p_createestimateitem',
       'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
-       [FIdEstimate, Frg1.GetValue('id_group', i, False), Frg1.GetValue('name', i, False), Frg1.GetValue('id_unit', i, False), Frg1.GetValue('comm', i, False), Frg1.GetValue('qnt1', i, False), Frg1.GetValue('qnt1', i, False)]
+       [FIdEstimate, Frg1.GetValue('id_group', i, False), Frg1.GetValue('name', i, False), Frg1.GetValue('id_unit', i, False),
+        Frg1.GetValue('comm', i, False), Frg1.GetValue('qnt1', i, False), Frg1.GetValue('qnt1', i, False) * S.IIf(AddParam = 0, FQntOfItem, 1)] //!!!округление
        )) = 0 then
       Break;
   end;
+  //скорректируем смету с учетом автозамены, проставим количества для итм
+  Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [FIdEstimate]);
+  //удалим смету, если в ней нет ни одного элемента
+  Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [FIdEstimate]);
+  //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
+  if AddParam = 0 then
+    Orders.SyncOrderWithITM(FIdOfOrder, [ID], False);
   Q.QCommitOrRollback(True);
   Result := Q.CommitSuccess;
 end;
+
 (*
 else begin
     //во всех остальных случаях
