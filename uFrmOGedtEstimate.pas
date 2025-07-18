@@ -307,6 +307,7 @@ function  TFrmOGedtEstimate.Save: Boolean;
 var
   i: Integer;
 begin
+  Result := SaveEstimate; Exit;
   Result := False;
 Exit;
   Wh.SelectDialogResult2 := [];
@@ -402,14 +403,15 @@ begin
   Q.QIUD(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
    'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
    [FIdEstimate, S.IIf(AddParam = 1, ID, null), S.IIf(AddParam = 0, ID, null), False, Date]);
-  for i := 0 to High(Est) do begin
+  for i := 0 to Frg1.GetCount(False) do begin
     if Length(Q.QCallStoredProc('p_createestimateitem',
       'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
-       [IdEstimate, Est[i][1], Est[i][0], Est[i][2], Est[i][4], Est[i][3], Est[i][3]]
-       )) then
+       [FIdEstimate, Frg1.GetValue('id_group', i, False), Frg1.GetValue('name', i, False), Frg1.GetValue('id_unit', i, False), Frg1.GetValue('comm', i, False), Frg1.GetValue('qnt1', i, False), Frg1.GetValue('qnt1', i, False)]
+       )) = 0 then
       Break;
   end;
   Q.QCommitOrRollback(True);
+  Result := Q.CommitSuccess;
 end;
 (*
 else begin
