@@ -928,7 +928,7 @@ begin
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
 //      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!    32098
-    TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);    //!!!    32098
+    TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, AAddParam);    //!!!    32098
   end
   else if F = myfrm_Dlg_SupplierMinPart then begin
     Form := TDlg_SuppliersMinPart.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);

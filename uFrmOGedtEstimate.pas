@@ -12,13 +12,13 @@ uses
 type
   TFrmOGedtEstimate = class(TFrmBasicEditabelGrid)
   private
+    FIdEstimate: Integer;
+
     Err, Err2: TVarDynArray;
-    IdSemiproduct, IdProduct,  IdStuff: Integer;
-    IsOrderItem: Boolean;    //это смета к иизделию заказа, а не к стандартному
-    IdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
-    GroupOfItem: Integer;    //группа стандартных изделий, к которой относится изделие сметы
-    TypeOfItem: Integer;     //тип изделия, к которому относиттся смета (произв., отгр., п/ф)
-    IsItemStd: Boolean;      //изделие сметы является стандартным
+    FIdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
+    FGroupOfItem: Integer;    //группа стандартных изделий, к которой относится изделие сметы
+    FTypeOfItem: Integer;     //тип изделия, к которому относиттся смета (произв., отгр., п/ф)
+    FName: string;
     function  PrepareForm: Boolean; override;
     function  PrepareFormAdd: Boolean; override;
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
@@ -35,6 +35,7 @@ type
     procedure LoadFromDB;
     procedure LoadFromXls;
     procedure LoadItemFromDB(Row: Integer);
+    function  SaveEstimate: Boolean;
   protected
   public
   end;
@@ -51,6 +52,13 @@ uses
 
 {$R *.dfm}
 
+const
+  cIdSemiproduct = 2;
+  cIdProduct = 104;
+  cIdStuff = 1;
+  cIdKrep = 103;
+
+
 function TFrmOGedtEstimate.PrepareForm: Boolean;
 var
   i: Integer;
@@ -58,30 +66,35 @@ var
   va: TVarDynArray;
 begin
   Caption := 'Смета';
-
-  va := Q.QSelectOneRow('select id_std_item, id_order_item from estimates where id = :id$i', [ID]);
-  if TVarDynArray(AddParam)[1] = 0 then
-    IdOfStdItem := va[0]
-  else
-    IdOfStdItem := Q.QSelectOneRow('select id_std_item from order_items where id = :id$i', [va[1]])[0];
-  GroupOfItem := Q.QSelectOneRow('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
-  TypeOfItem := Q.QSelectOneRow('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [IdOfStdItem])[0];
-
-  FTitleTexts := [S.IIf(TVarDynArray(AddParam)[1] = 0, 'Смета к стандартному изделию:', 'Смета кизделию заказа:'),  {'$FF0000' + }TVarDynArray(AddParam)[2]];
+  //получим айди сметы по айди стандартного изделия или заказа
+  if AddParam = 1 then begin
+    FIdOfStdItem := ID;
+    FIdEstimate := Q.QSelectOneRow('select id from estimates where id_std_item = :id$i', [ID])[0];
+    FName := Q.QSelectOneRow('select name from v_or_std_items where id = :id$i', [ID])[0];
+  end
+  else begin
+    FIdOfStdItem := Q.QSelectOneRow('select id_std_item from order_items where id = :id$i', [ID])[0];
+    FIdEstimate := Q.QSelectOneRow('select id from estimates where id_order_item = :id$i', [ID])[0];
+    FName := Q.QSelectOneRow('select slash || '' '' || name from v_order_items where id = :id$i', [ID])[0];
+  end;
+  //если сметы еще нет, то перейдем в режим добавления
+  if  FIdEstimate = null then
+    Mode := fAdd;
+  //получим айди группы (не подгруппыв!) стандартных изделий для данной позиции
+  FGroupOfItem := Q.QSelectOneRow('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem])[0];
+  //получим тип этой позиции - производсственное, отгрузочное, п/ф
+  FTypeOfItem := Q.QSelectOneRow('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem])[0];
+  //заголовочный лейбл
+  FTitleTexts := [S.IIf(AddParam = 1, 'Смета к стандартному изделию:', 'Смета кизделию заказа:'),  {'$FF0000' + } FName];
   pnlTop.Height := 50;
-
+  //прочитаем список групп и ед.изм.
   Orders.LoadBcadGroups(True);
-
-  IdSemiproduct := 2;
-  IdProduct := 104;
-  IdStuff := 1;
-
 
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_or_std_item$i','_id_or_std_item','40'],
     ['id_group$i','Группа','250;w;L','e=1:100000::TP'],
-    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' + S.IIFStr(TypeOfItem <> 2, ';Выбрать полуфабрикат:П:::909') + S.IIFStr(TypeOfItem = 1, ';Выбрать производственное изделие:И:::009') ],
+    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 2, ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 1, ';Выбрать производственное изделие:И:::009') ],
     ['id_unit$i','Ед.изм.','100;L','e=0:1000000::TP'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N'], {недопустимо пустое кол-во}
     ['null as purchase$i','Покупка','80','chb','e'],
@@ -91,7 +104,7 @@ begin
   Frg1.Opt.SetTable('v_estimate', 'estimate_items');
   Frg1.Opt.SetGridOperations('uaid');
   Frg1.Opt.SetWhere('where id_estimate = :id$i order by id_group');
-  Frg1.SetInitData('*', [ID]);
+  Frg1.SetInitData('*', [FIdEstimate]);
   Frg1.Opt.Caption := 'Сметные позиции';
 
   Frg1.Opt.SetPick('id_group', A.VarDynArray2ColToVD1(Orders.BcadGroups, 0), A.VarDynArray2ColToVD1(Orders.BcadGroups, 1), True);
@@ -123,8 +136,8 @@ begin
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
     [mbtDividorA],[-4],
-    [-1001, TypeOfItem <> 2, 'Создать полуфабрикат'],
-    [-1002, TypeOfItem <> 2, 'Редактировать смету полуфабриката']],
+    [-1001, FTypeOfItem <> 2, 'Создать полуфабрикат'],
+    [-1002, FTypeOfItem <> 2, 'Редактировать смету полуфабриката']],
     cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
@@ -135,7 +148,7 @@ procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integ
 begin
   Handled := True;
   if (Tag = mbtLoad) and (MyQuestionMessage('Загрузить текущую смету из базы данных?') = mrYes) then
-    Frg1.LoadData('*', [ID])
+    Frg1.LoadData('*', [FIdEstimate])
   else if Tag = mbtExcel then
     LoadFromXls
   else begin
@@ -146,8 +159,8 @@ end;
 
 procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = IdSemiproduct);
-   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = IdSemiproduct);
+   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
 end;
 
 
@@ -166,14 +179,14 @@ begin
     LoadItemFromDB(Frg1.RecNo - 1);
   end
   else if TCellButtonEh(Sender).Hint = 'Выбрать полуфабрикат' then begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], GroupOfItem);
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], FGroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
   else if TCellButtonEh(Sender).Hint = 'Выбрать производственное изделие' then begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SelProdStdItem, Self, [myfoDialog, myfoModal], GroupOfItem);
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelProdStdItem, Self, [myfoDialog, myfoModal], FGroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
@@ -217,10 +230,10 @@ end;
 procedure TFrmOGedtEstimate.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
   //запретим менять ед.изм. у готовых изделий и пф
-  if ((Fr.GetValueI('id_group') = IdProduct) or (Fr.GetValueI('id_group') = IdSemiproduct)) and ({(Fr.CurrField = 'id_group') or }(Fr.CurrField = 'id_unit')) then
+  if ((Fr.GetValueI('id_group') = cIdProduct) or (Fr.GetValueI('id_group') = cIdSemiproduct)) and ({(Fr.CurrField = 'id_group') or }(Fr.CurrField = 'id_unit')) then
     ReadOnly := True;
   //заперетим ставить галку покупное, если это не ПФ
-  if (Fr.GetValueI('id_group') <> IdSemiproduct) and (Fr.CurrField =  'purchase') then
+  if (Fr.GetValueI('id_group') <> cIdSemiproduct) and (Fr.CurrField =  'purchase') then
     ReadOnly := True;
 end;
 
@@ -236,7 +249,7 @@ procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);
 var
   st: string;
 begin
-  Frg1.SetValue('flags', Row, False, S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), GroupOfItem])[0]));
+  Frg1.SetValue('flags', Row, False, S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), FGroupOfItem])[0]));
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -269,7 +282,7 @@ begin
     //--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе
     st := Frg1.GetValueS('flags', i, False);
     if AReloadStatus then begin
-      st := S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), GroupOfItem])[0]);
+      st := S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), FGroupOfItem])[0]);
       Frg1.SetValue('flags', i, False, st);
     end;
     if st <> '' then begin
@@ -311,16 +324,46 @@ begin
 end;
 
 procedure TFrmOGedtEstimate.LoadFromXls;
+//загрузим смету из файла эксель
 var
   i, j: Integer;
   Est: TVarDynArray2;
   FileName: string;
+  va: TVarDynArray;
+  va1, va2: TVarDynArray2;
+  st : string;
 begin
   FileName := '';
+  //смету в массив
   if not Orders.EstimateFromFile(FileName, Est) then
     Exit;
-  Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');//, '3;2;4;5;7');
+  //массив в мемтейбл
+  Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');
+  st := '';
+  //пройдем по данным, проверим в группе Крепёж по короткому имени, нет ли совпадения с именем полуфабриката или изделия в группе изделий для данной сметы
+  //(такая ситуация будет при выгрузке из бкад, где в эту группу выгрузятся полуфабрикаты, но без префиксов)
+  //если найдено единственнная такая позиция, то поставим группу, соответсвующую типу изделия, если найдено нсколько - очистим группу
+  for i := 0 to Frg1.GetCount(False) do begin
+    if Frg1.GetValueI('id_group', i, False) = cIDKrep then begin  //Крепёж
+      va2 := Q.QLoadToVarDynArray2('select fullname, id_format from v_or_std_items where name = :name$s and type = 0 and id_format = :f$i', [Frg1.GetValue('name', i, False), FGroupOfItem]);
+      if Length(va2) > 0 then begin
+        S.ConcatStP(st, Frg1.GetValue('name', i, False) + ' - является изделием!', #13#10);
+        Frg1.SetValue('id_group', i, False, IIf(Length(va2) = 1, cIdProduct, null));
+      end;
+    end
+    else begin
+      va2 := Q.QLoadToVarDynArray2('select fullname, id_format from v_or_std_items where name = :name$s and type = 2 and (id_format = 0 or id_format = :f$i)', [Frg1.GetValue('name', i, False), FGroupOfItem]);
+      if Length(va2) > 0 then begin
+        S.ConcatStP(st, Frg1.GetValue('name', i, False) + ' - является полуфабрикатом!', #13#10);
+        Frg1.SetValue('id_group', i, False, IIf(Length(va2) = 1, cIdSemiproduct, null));
+      end;
+    end;
+  end;
+  //выполним проверку с чтением данных из БД
   VerifyBeforeSave;
+  //выдадим сообщение, если была подмена группы
+  if st <> '' then
+    MyInfoMessage(st, 1);
 end;
 
 procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
@@ -332,8 +375,8 @@ begin
   va := Q.QSelectOneRow('select id, is_semiproduct from v_or_std_items where fullname = :fullname$s', [Frg1.GetValue('name', Row, False)]);
   if va[0] <> null then begin
     //это изделие
-    Frg1.SetValue('id_group', S.IIf(va[1] = 1, IdSemiproduct, IdProduct));
-    Frg1.SetValue('id_unit', IdStuff);
+    Frg1.SetValue('id_group', S.IIf(va[1] = 1, cIdSemiproduct, cIdProduct));
+    Frg1.SetValue('id_unit', cIdStuff);
   end
   else begin
     //это материал
@@ -348,6 +391,97 @@ begin
     Frg1.SetValue('purchase', 0);
 end;
 
+
+function TFrmOGedtEstimate.SaveEstimate: Boolean;
+var
+  Res: Integer;
+  i, j: Integer;
+begin
+  Result := False;
+  Q.QBeginTrans(True);
+  Q.QIUD(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
+   'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
+   [FIdEstimate, S.IIf(AddParam = 1, ID, null), S.IIf(AddParam = 0, ID, null), False, Date]);
+  for i := 0 to High(Est) do begin
+    if Length(Q.QCallStoredProc('p_createestimateitem',
+      'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
+       [IdEstimate, Est[i][1], Est[i][0], Est[i][2], Est[i][4], Est[i][3], Est[i][3]]
+       )) then
+      Break;
+  end;
+  Q.QCommitOrRollback(True);
+end;
+(*
+else begin
+    //во всех остальных случаях
+    //создадим смету
+      Res := Q.QIUD(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
+       'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
+       [IdEstimate, IdStdItem, IdOrderItem, IsEstimateEmpty, Date]);
+      if Res = -1 then Break;
+      if IdEstimate = null then
+        IdEstimate := Res
+      else
+        //если создается пустая смета (признак заказа Без сметы), то удалим все позицци если они были
+        if IsEstimateEmpty
+          then Q.QExecSql('delete from estimate_items where id_estimate = :id_estimate$i', [IdEstimate]);
+        //если уже была ранее создана, то все позиции пометим на удаление
+        Res := Q.QExecSql('update estimate_items set deleted = 1 where id_estimate = :id_estimate$i', [IdEstimate]);
+      if Res = -1 then
+        Break;
+      if QntChanged then begin
+      //коррекция количества в смете, передается айди заказа, процедура сама находит количество в заказе
+        va1 := Q.QCallStoredProc('p_CorrectEstimateQnt', 'idorderitem$i', [IdOrderItem]);
+        if Length(va1) = 0 then
+          Res := -1;
+      end
+      else if IsOrItemStd then begin
+      //копируем из стандартной сметы
+        va1 := Q.QCallStoredProc('p_copyestimate', 'idestimate$i;idstdestimate$i;pqntinor$f', [IdEstimate, ParentIdEstimate, OrQnt]);
+        if Length(va1) = 0 then
+          Res := -1;
+      end
+      else begin
+      //создаем для нестандартной сметы
+        for i := 0 to High(Est) do begin
+          try
+            va1 := Q.QCallStoredProc('p_createestimateitem',
+            'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
+             [IdEstimate, Est[i][1], Est[i][0], Est[i][2], Est[i][4], Est[i][3], Est[i][3]]
+             );
+            if Length(va1) = 0 then
+              Res := -1;
+            if Res = -1 then
+              MyWarningMessage('Ошибка при загрузке позиции "' + VartoStr(Est[i][0]) + '"!');
+          except
+
+            Res := -1;
+          end;
+          if Res = -1 then
+            Break;
+          //Est:=[[va[i][cName], idgr, idunit, va[i][cQnt1], va[i][cComm]]]
+        end;
+      end;
+    //удалим позиции, которые остались отмечены на удаление
+      if Res = -1 then
+        Break;
+      Res := Q.QExecSql('delete from estimate_items where deleted = 1 and id_estimate = :id_estimate$i', [IdEstimate]);
+      if Res = -1 then
+        Break;
+    //++
+    //скорректируем смету с учетом автозамены, проставим количества для итм
+      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [IdEstimate])) = 0 then
+        Break;
+    //удалим смету, если в ней нет ни одного элемента
+      Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [IdEstimate]);
+    end;
+    //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
+    if (IdOrderItem <> null) and (OneItem)
+      then SyncOrderWithITM(OrderIdUchet, [IdOrderItem], False);
+  until True;
+  Q.QCommitOrRollback(Res <> -1);
+  if not Q.CommitSuccess then begin
+*)
 
 
 

@@ -557,16 +557,13 @@ begin
     if OpenEditEstimateDialog then begin
       //диалог-сетка для ввода сметы
       Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable],
-        fAdd,
-//        S.Decode([Orders.IsOrderFinalized(OrderIdUchet), 0, fAdd, fView]),
-        IdEstimate, VararrayOf([IdEstimate, S.IIf(IdStdItem <> null, 0, 1), OrName]));
+        fAdd, IdEstimate, VararrayOf([IdEstimate, S.IIf(IdStdItem <> null, 0, 1), OrName])
+      );
       //обязательно! иначе виснем на следующем диалоговом окне!
       Application.ProcessMessages;
-//      MyInfoMessage('!!!'); exit;
       if Length(Wh.SelectDialogResult2) = 0 then
         Exit;
       Est:=Wh.SelectDialogResult2;
-    //  Exit;
     end;
   end
   else if ((IsEstimateEmpty = 1) and not IsOrItemStd) then begin
@@ -634,10 +631,9 @@ begin
           end;
           if Res = -1 then
             Break;
-          //Est:=[[va[i][cName], idgr, idunit, va[i][cQnt1], va[i][cComm]]]
         end;
       end;
-    //удалим позиции, которые осталисьпомечены на удаление
+    //удалим позиции, которые остались отмечены на удаление
       if Res = -1 then
         Break;
       Res := Q.QExecSql('delete from estimate_items where deleted = 1 and id_estimate = :id_estimate$i', [IdEstimate]);
@@ -653,21 +649,6 @@ begin
     //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
     if (IdOrderItem <> null) and (OneItem)
       then SyncOrderWithITM(OrderIdUchet, [IdOrderItem], False);
-(*!!!!!
-    if SyncWithITM and (OrSyncWithITM = 1) and (IdOrderItem <> null) and (OrItemIdItm <> null) and (OrderIdItm <> null) then begin
-      va1 := Q.QCallStoredProc('p_SendEstimateToItm', 'idestimate$i;idzakaz$i;idparentizdel$i;count$i', [IdEstimate, OrderIdItm, OrItemIdItm, -1]);
-      Res := S.IIf(Length(va1) = 0, -1, 1);
-      if Res = -1 then
-        Break;
-      if OneItem and SyncWithITM then begin
-      //если грузим одну позицию, вызовем финишную процедуру - сформируем заявку поставщику
-        va1 := Q.QCallStoredProc('DV.p_SyncOrder_Finish', 'id_dv$i', [OrderIdUchet]);
-        Res := S.IIf(Length(va1) = 0, -1, 1);
-        if Res = -1 then
-          Break;
-        Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncOrder_Finish_OnePos', 'id_order ' + VarToStr(OrderIdUchet)]);
-      end;
-    end; *)
   until True;
   Q.QCommitOrRollback(Res <> -1);
   if not Q.CommitSuccess then begin

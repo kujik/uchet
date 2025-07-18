@@ -120,6 +120,9 @@ begin
   else if (Tag = mbtLoadEstimate) then begin
     //в справочнике стандартных изделий загрузим смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
+      Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, Self, [], fEdit, Fr.ID, 1); Exit; //!!!
+
+
       Orders.LoadBcadGroups(True);
       Orders.LoadEstimate(null, null, Fr.ID);
       Fr.RefreshGrid;

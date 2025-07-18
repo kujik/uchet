@@ -661,7 +661,7 @@ begin
   if Fcnt <> 0 and FIdFormat <> AGroupStd then
     return '1-изделие из этой группы недопустимо в этой смете!';
   end if;
-  select count(*) into FCnt from v_or_std_items where fullname = Aname and type = 2;
+  select count(*), nvl(max(id_format), -1) into FCnt, FIdFormat from v_or_std_items where fullname = Aname and type = 2;
   if Fcnt <> 0 and Fissem = 0 then
     return '1-Данная позиция является полуфабрикатом!';
   end if;
