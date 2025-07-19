@@ -1893,7 +1893,7 @@ begin
       Wh.ExecDialog(myfrm_Dlg_AddTurv, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Turv) and (fMode in [fDelete]) then
       if Turv.DeleteTURV(Fr.ID) then
-        Refresh;
+        Fr.RefreshGrid;
     if (FormDoc = myfrm_J_Payrolls) and (fMode in [fEdit, fView]) then
   //    Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
       TFrmWGedtPayroll.Show(Self, myfrm_Dlg_Payroll, [myfoDialog, myfoSizeable], fMode, Fr.ID, null);
@@ -1918,9 +1918,11 @@ begin
       ) = mrYes)
         then begin
           Q.QExecSql('delete from payroll where id = :id$i', [Fr.ID], True);
-          Refresh;
-        end;
-      Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
+          Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
+          Fr.RefreshGrid;
+        end
+        else
+          Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
     end;
 
 
@@ -1965,7 +1967,7 @@ begin
       Wh.ExecDialog(myfrm_Dlg_EditNomenclatura, Self, [], fMode, Fr.ID, null);
     if (formDoc = myfrm_R_Itm_Nomencl) and (fMode = fEdit) then
       if Orders.RenameNomenclGlobal(null, Fr.ID) then
-        Refresh;
+        Fr.RefreshGrid;
 
     if (FormDoc = myfrm_J_PlannedOrders) then
       TFrmOWPlannedOrder.Show(Self, myfrm_Dlg_PlannedOrder, [myfoSizeable, myfoMultiCopy], fMode, Fr.ID, null);
@@ -2716,7 +2718,7 @@ end.
     //если надо явно обработать контролы сразу, то перечитаем, можем установить их значения, и сделаем зависимые настройки полей
     //в простых случаях можно не делать, контролы прочитаются в Frg1.Prepare, ранее открытия датазета, после чего вызовется событие их изменения
     //(даже если значения контроловн е изменились), где реализуется логика
-    //(надо обработать Fr.InPrepare и в этом случае например не делать Refresh или SelcolumnsVisible
+    //(надо обработать Fr.InPrepare и в этом случае например не делать RefreshGrid или SelcolumnsVisible
     Frg1.ReadControlValues;
     if not (User.Role(rOr_J_Orders_Sum)or(User.Role(rOr_J_Orders_PrimeCost))) then begin
       Cth.SetControlValue(TDBCheckBoxEh(Frg1.FindComponent('ChbViewSum')), 0);
