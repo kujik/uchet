@@ -1,3 +1,7 @@
+        //!!!предусмотреть вариант, если норма не задана в справочнике графиков работы
+
+
+
 {
 зарплатна€ ведомость
 
@@ -181,6 +185,9 @@ begin
   //ширина окна по ширине грида
   Self.Width := Frg1.GetTableWidth + 75;
 
+  //если в данной ведомости нет ни одной записи, попробуем их создать
+  CreatePayroll;
+  //прочитаем из Ѕƒ ведомость
   GetDataFromDb;
   SetButtons;
   CheckEmpty;
@@ -267,9 +274,10 @@ begin
   //то будет ошибка уникальности, здесь ее не выводим
   //после создани€, ведомость все равно будет перечитана из Ѕƒ
   //убрал - но все-таки сделал проверку чтобы не создавались те по которым индивидуальные ведомости, хот€ это и не об€зательно
+  Q.QBeginTrans(True);
   for i := 0 to High(va) do begin
     if not A.PosInArray(va[i][2], vadel, 0) >=0 then
-      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id;id_payroll;id_division;id_worker;id_job;dt;blank$f;ball_m$f',
+      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d;blank$f;ball_m$f',
         [-1, ID, Integer(FPayrollParams.G('id_division')), Integer(va[i][2]), Integer(va[i][4]), FPayrollParams.G('dt1'), va[i][5], va[i][6]],
         False
       );
@@ -279,6 +287,7 @@ begin
       [FPayrollParams.G('id_division'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1)), ID]
     );
   end;
+  Q.QCommitOrRollback(True);
 end;
 
 function TFrmWGedtPayroll.GetDataFromDb: Integer;
@@ -411,6 +420,7 @@ begin
           if (norms[k][0] = va[j][11]) and (norms[k][1] = FPayrollParams.G('dt1')) then
             va[j][12] := norms[k][2];
         //норма на данный календарный мес€ц
+        //!!!предусмотреть вариант, если норма не задана в справочнике графиков работы
         va[j][13] := -1;
         e1 := -1;
         e2 := -1;
@@ -424,7 +434,7 @@ begin
            va[j][13] := e1 + e2;
         //график работы, текст
         va[j][14] := '';
-        if S.NSt(va[i][3]) <> '' then
+        if S.NSt(va1[i][3]) <> '' then
           va[j][14] := va1[i][3] + ' (' + FloatToStr(S.NNum(va[j][12])) + ')';
         Break;
       end;
@@ -802,6 +812,7 @@ begin
   end
   else if NoNorms then begin
     Frg1.SetControlValue('lblInfo', '$0000FFЌе заданы нормы рабочего времени!');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
   end
   else if FPayrollParams.G('id_method') = null then begin
     Frg1.SetControlValue('lblInfo', '$0000FF«адайте метод расчета!');
@@ -931,7 +942,7 @@ begin
   FPayrollParams.SetValue(0, 'commit', not FPayrollParams.G('commit'));
   SetButtons;
   //установим, как метку что ведомость была изменена, чтобы изменени€ при выходе записались в бд
-  Frg1.SetValue('changed', 0, False);
+  Frg1.SetValue('changed', 0, False, 1);
 end;
 
 procedure TFrmWGedtPayroll.PrintLabels;
@@ -1032,7 +1043,7 @@ begin
     Rep.ExcelFind('#d' + IntToStr(j) + '#', x, y, xlValues);
     if x >= 0 then
       Rep.TemplateSheet.Columns[x].Hidden := not Frg1.DBGridEh1.Columns[j + 1].Visible;
-    Rep.SetValue('#d' + IntToStr(j) + '#', Frg1.DBGridEh1.Columns[j + 1].Title.Caption);
+    Rep.SetValue('#d' + IntToStr(j) + '#', Frg1.DBGridEh1.Columns[j + 1].Title.Caption);          //!!!
   end;
   Rep.ExcelFind('  є бланка', x, y, xlValues);
   if x > -1 then
@@ -1098,25 +1109,10 @@ begin
     [VarArrayOf([FPayrollParams.G('id_method'), VarArrayOf(va1), VarArrayOf(va2)])] , va, [['']], nil
   ) < 0 then
     Exit;
-  FPayrollParams.SetValue(0, 'id_method', va[0]);
   //метод расчета сохран€етс€ при сохранении ведомости
-  //если хот€ бы что-то отличаетс€ (провер€м на случай если будет больше параметров в форме, и часть не будт затрагивать конкретный эту ведомостть)
-  //очистим баллы, премии и штрафы (кроме премии за период, котора€ вводитс€ только вручную)
-{  rn:=MemTableEh1.RecNo;
-  for i:=1 to MemTableEh1.RecordCount do begin
-    MemTableEh1.RecNo:=i;
-    MemTableEh1.Edit;
-    MemTableEh1.FieldByName('ball').Value:=null;
-    MemTableEh1.FieldByName('turv').Value:=null;
-    MemTableEh1.FieldByName('premium').Value:=null;
-    MemTableEh1.FieldByName('premium_m_src').Value:=null;
-    MemTableEh1.FieldByName('premium_p').Value:=null;
-    MemTableEh1.FieldByName('penalty').Value:=null;
-    MemTableEh1.FieldByName('changed').Value:=1;
-    MemTableEh1.Post;
-    MemTableEh1.Edit;
-  end;
-  MemTableEh1.RecNo:=rn;}
+  FPayrollParams.SetValue(0, 'id_method', va[0]);
+  //отметим изменЄнной первую строку, чтобы ведомость запросила сохранение
+  Frg1.SetValue('changed', 0, False, 1);
   //пересчитаем ведомость
   CalculateAll;
   SetButtons;
@@ -1208,6 +1204,7 @@ end;
 
 procedure TFrmWGedtPayroll.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
+  Frg1.SetValue('changed', 1);
 end;
 
 procedure TFrmWGedtPayroll.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
@@ -1241,7 +1238,10 @@ begin
       PrintLabels;
     mbtLock:
       CommitPayroll;
+    else Handled := False;
   end;
+  if Handled then
+    SetButtons;
 end;
 
 procedure TFrmWGedtPayroll.FormClose(Sender: TObject; var Action: TCloseAction);
