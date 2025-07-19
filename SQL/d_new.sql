@@ -34,11 +34,16 @@ alter table or_std_items add constraint fk_or_std_items_sem foreign key (type_of
 alter table estimate_items add id_or_std_item number(11);
 alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
 alter table estimate_items add contract number(1) default 0;
+--удалить id_bcad_nomencl у изделий, проставить им группы пф или ги, тк в бд есть неверные группы
 
 
 
 alter table bcad_groups add is_semiproduct number(1) default 0;
 
+
+
+
+--------------------------------------------------------------------------------
 
 --установить айди стандартного издели€ в сметах по признаку совпадени€ наименований
 --запрос работает долго 4 мин
@@ -53,23 +58,43 @@ where
   e.name = o.FULLNAME    
 ;
 
-
---проставим€ в сметах айди стандартных изделий
+--послке правки таблиц стд.изд. и вью v_estimate и простановки типов стд.изд. в справочнике!!!
+--проставим€ в сметах айди стандартных изделий и группу √отовые издели€
 update estimate_items t1
 set t1.id_or_std_item = (
---    select max(t2.id)
     select t2.id
     from v_or_std_items t2, bcad_nomencl b
     where t1.id_name = b.id and b.name = t2.fullname
 )
+,t1.id_group = 104
+--,t1.id_name = null
 where exists (
     select 1
     from v_or_std_items t2, bcad_nomencl b
-    where t1.id_name = b.id and b.name = t2.fullname
+    where t1.id_name = b.id and b.name = t2.fullname and type <> 2
 );
+
+update estimate_items t1
+set t1.id_or_std_item = (
+    select t2.id
+    from v_or_std_items t2, bcad_nomencl b
+    where t1.id_name = b.id and b.name = t2.fullname
+)
+,t1.id_group = 2
+--,t1.id_name = null
+where exists (
+    select 1
+    from v_or_std_items t2, bcad_nomencl b
+    where t1.id_name = b.id and b.name = t2.fullname and type = 2
+);
+
+
+
+
 
 select * from estimate_items where id_or_std_item is not null;
 
+/*
 --проставим в сметах группы дл€ изделий-полуфабрикатов
 --update estimate_items t1
 --set t1.id_group = 2 
@@ -85,9 +110,11 @@ select id, is_semiproduct from v_or_std_items where fullname = :fullname$s;
 
 select *    
     from v_or_std_items t2, bcad_nomencl b
-    where t1.id_name = b.id and b.name = t2.fullname and nvl(t2.is_semiproduct, 0) = 1;
+    where t1.id_name = b.id and b.name = t2.fullname and nvl(t2.is_semiproduct, 0) = 1;\
+*/    
 
 --END обновление смет
+
 select * from v_or_std_items where nvl(is_semiproduct, 0) = 1;
 select * from estimate_items where id_group = 2;
 --------------------------------------------------------------------------------

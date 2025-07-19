@@ -753,8 +753,8 @@ create or replace view v_estimate as (
         else bn.name
       end 
     ) as name,
-    decode(fe.type, null, bg.name, 2, (select name from bcad_groups t where t.id = 2), (select name from bcad_groups t where t.id = 104)) as groupname, 
-    --bg.name as groupname,
+    --!!!decode(fe.type, null, bg.name, 2, (select name from bcad_groups t where t.id = 2), (select name from bcad_groups t where t.id = 104)) as groupname, 
+    bg.name as groupname,
     bu.name as unit,
     bc.name as comm,
     fe.prefix as prefix,
