@@ -2,8 +2,8 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
   Caption = 'FrmWGEdtTurv'
   ClientHeight = 426
   ClientWidth = 753
-  ExplicitWidth = 769
-  ExplicitHeight = 465
+  ExplicitWidth = 765
+  ExplicitHeight = 464
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 753
@@ -13,8 +13,8 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
     inherited pnlFrmClient: TPanel
       Width = 743
       Height = 361
-      ExplicitWidth = 743
-      ExplicitHeight = 361
+      ExplicitWidth = 739
+      ExplicitHeight = 360
       inherited pnlTop: TPanel
         Width = 743
         ExplicitWidth = 739
@@ -32,13 +32,13 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
       inherited pnlGrid1: TPanel
         Width = 733
         Height = 306
-        ExplicitWidth = 733
-        ExplicitHeight = 306
+        ExplicitWidth = 729
+        ExplicitHeight = 305
         inherited Frg1: TFrDBGridEh
           Width = 731
           Height = 304
-          ExplicitWidth = 731
-          ExplicitHeight = 304
+          ExplicitWidth = 727
+          ExplicitHeight = 303
           inherited pnlGrid: TPanel
             Width = 721
             Height = 250
@@ -86,7 +86,7 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32323030307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -99,11 +99,11 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
       inherited pnlFrg2: TPanel
         Top = 320
         Width = 743
-        ExplicitTop = 320
-        ExplicitWidth = 743
+        ExplicitTop = 319
+        ExplicitWidth = 739
         inherited Frg2: TFrDBGridEh
           Width = 741
-          ExplicitWidth = 741
+          ExplicitWidth = 737
           inherited pnlGrid: TPanel
             Width = 731
             ExplicitWidth = 727
@@ -139,7 +139,7 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32323030307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -198,7 +198,11 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
     ExplicitWidth = 749
     inherited lblStatusBarR: TLabel
       Left = 680
+      Height = 14
       ExplicitLeft = 680
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

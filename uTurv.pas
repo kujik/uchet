@@ -79,7 +79,7 @@ end;
 
 function TTurv.GetTurvArrayFromDB(DivisionId: Integer; dt: TDateTime; SortByJob: Boolean = True): TNamedArr;
 //загрузим массив работников для турв в том же виде что и GetTurvArray, но напрямую из бд
-//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии,
+//0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-название профессии,
 begin
   dt:=Turv.GetTurvBegDate(dt);
   //запрос. сортировка принципиальна

@@ -399,18 +399,6 @@ begin
   //проходим по списку
   for i := 0 to FArrTitle.Count - 1 do begin
     SetLength(FArrTurv, i + 1, 31, cItog + 1);
-    {   //v:  0-дата1, 1-дата2, 2-айди работника, 3-имя работника, 4-фйди профессии, 5-назавание профессии, 6-после периода: 1=переведен 2=уволен
-    SetLength(FArrTitle, i + 1, 8);
-    SetLength(FArrTurv, i + 1, 31, cItog + 1);
-    //массив заголовков (работник, должность...)
-    FArrTitle[i][cTlIdW] := TurwW.G(i, '');  //id worker
-    FArrTitle[i][cTlIdJ] := TurwW.G(i, '');  //id job
-    FArrTitle[i][cTlW] := vTurwW.G(i, '');    //workername
-    FArrTitle[i][cTlJ] := vTurwW.G(i, '');    //job
-    FArrTitle[i][4] := '';            //ccegory
-    FArrTitle[i][cTlPremium] := 0;    //премия за отчетный период
-    FArrTitle[i][cTlComm] := '';      //комментатрий, общий для работника
-    FArrTitle[i][cTlSchedule] := '5/2';}
     //читаем турв_дей в для данного работника в промежутке, в котором он в этом ТУРВ, сортируем по дате
     vs := Q.QLoadToVarDynArray2(
       'select dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
@@ -453,15 +441,6 @@ begin
           end;
       end;
     end;
-    //прочитаем из БД премии и штрафы
-{    vs := Q.QLoadToVarDynArray2(
-      'select premium, comm from turv_worker where id_worker = :id_worker$i and id_division = :id_division$i and id_job = :id_job$i and dt1 = :dt1$d',
-      [FArrTitle.G(i, 'id_worker'), FIDDivision, FArrTitle.G(i, 'id_job'), FPeriodStartDate]
-    );
-    if Length(vs) > 0 then begin
-      FArrTitle.G(i, 'premium') := vs[0][0];
-      FArrTitle.G(i, 'comm') := vs[0][1];
-    end;}
   end;
 end;
 
@@ -601,6 +580,7 @@ begin
   Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle.G(ARow, 'premium'))));
   Frg1.SetValue('premium', ARow, False, FormatFloat('0.00', S.NNum(sum[1])));
   Frg1.SetValue('penalty', ARow, False, FormatFloat('0.00', S.NNum(sum[2])));
+  Frg1.SetValue('comm', ARow, False, FArrTitle.G(ARow, 'comm'));
   //кнопка Закрыть период
   FStatus := 1;
   for j := 0 to High(FArrTurv) do begin
