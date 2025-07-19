@@ -35,8 +35,8 @@ object FrmTest: TFrmTest
     Caption = 'lbl2'
   end
   object Image2: TImage
-    Left = 1008
-    Top = 310
+    Left = 801
+    Top = 292
     Width = 105
     Height = 105
   end
@@ -496,6 +496,26 @@ object FrmTest: TFrmTest
       end
     end
   end
+  object DBGridEh1: TDBGridEh
+    Left = 907
+    Top = 292
+    Width = 305
+    Height = 285
+    DataSource = MemTableEh1
+    DynProps = <>
+    TabOrder = 30
+    object RowDetailData: TRowDetailPanelControlEh
+    end
+  end
+  object BitBtn4: TBitBtn
+    Left = 1140
+    Top = 584
+    Width = 75
+    Height = 25
+    Caption = 'BitBtn4'
+    TabOrder = 31
+    OnClick = BitBtn4Click
+  end
   object OpenDialog1: TOpenDialog
     Left = 304
     Top = 416
@@ -527,7 +547,7 @@ object FrmTest: TFrmTest
     end
   end
   object PopupMenu2: TPopupMenu
-    Left = 1024
+    Left = 776
     Top = 440
     object asdasd1: TMenuItem
       Caption = 'asdasd'
@@ -794,5 +814,10 @@ object FrmTest: TFrmTest
         FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00}
       Caption = 'asdadasdsadasdsaf'
     end
+  end
+  object MemTableEh1: TMemTableEh
+    Params = <>
+    Left = 1136
+    Top = 536
   end
 end

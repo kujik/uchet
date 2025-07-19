@@ -100,6 +100,7 @@ uses
   uFrmADedtItmCopyRigths,
 
   uFrmTest,
+  uFrmTest2,
   madExcept
   ;
 
@@ -408,7 +409,8 @@ begin
         q.QExecSql('alter system flush shared_pool', []);
     end
     else if MenuCaption = 'Тест 1' then
-      TestProcedure1
+      TFrmTest2.Show(Self, 'test', [myfoSizeable], fNone, 0, null)
+//      TestProcedure1
 //      FrmTest.Create(Self);
     else if MenuCaption = 'Тест 2' then
       TestProcedure2

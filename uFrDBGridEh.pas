@@ -1428,6 +1428,7 @@ begin
   DBGridEh1.DefaultApplyFilter;
 end;
 
+
 procedure TFrDBGridEh.DbGridEh1CellClick(Column: TColumnEh);
 //событие по клике по столбцу
 begin
@@ -1610,6 +1611,10 @@ begin
     AddRow;
 {  if (Key = VK_INSERT)  then
     InsertRow;}
+  if (Key = VK_F8) then begin
+    DbGridEh1.DefaultApplySorting;
+    DbGridEh1.Invalidate;
+  end;
 end;
 
 procedure TFrDBGridEh.DbGridEh1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

@@ -2,8 +2,8 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   Caption = 'Form_MD'
   ClientHeight = 421
   ClientWidth = 656
-  ExplicitWidth = 672
-  ExplicitHeight = 460
+  ExplicitWidth = 668
+  ExplicitHeight = 459
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 402
@@ -11,8 +11,12 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     ExplicitTop = 401
     ExplicitWidth = 652
     inherited lbl_StatusBar_Right: TLabel
-      Left = 567
+      Left = 569
+      Height = 17
       ExplicitLeft = 567
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   object pnl_Top: TPanel [1]
@@ -55,7 +59,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
       Caption = 'lbl1'
     end
     object Bt_Go: TSpeedButton
-      Left = 616
+      Left = 612
       Top = 8
       Width = 32
       Height = 32
@@ -69,11 +73,9 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     Top = 89
     Width = 656
     Height = 313
-    ActivePage = ts_Artikul
+    ActivePage = ts_FromCAD
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 652
-    ExplicitHeight = 312
     object ts_Artikul: TTabSheet
       Caption = #1040#1088#1090#1080#1082#1091#1083#1099
       object DBGridEh1: TDBGridEh
@@ -155,8 +157,12 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
         DataSource = DataSource3
         DynProps = <>
         Options = [dgEditing, dgTitles, dgIndicator, dgColLines, dgRowLines, dgTabs, dgConfirmDelete, dgCancelOnExit]
-        OptionsEh = [dghFixed3D, dghHighlightFocus, dghClearSelection, dghDialogFind, dghExtendVertLines]
+        OptionsEh = [dghFixed3D, dghHighlightFocus, dghClearSelection, dghAutoSortMarking, dghDialogFind, dghExtendVertLines]
         RowDetailPanel.Height = 250
+        SortLocal = True
+        STFilter.Local = True
+        STFilter.Location = stflInTitleFilterEh
+        STFilter.Visible = True
         TabOrder = 0
         OnDblClick = DBGridEh3DblClick
         object RowDetailData: TRowDetailPanelControlEh

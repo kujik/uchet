@@ -110,6 +110,8 @@ object FrDBGridEh: TFrDBGridEh
     Height = 49
     Align = alTop
     TabOrder = 3
+    ExplicitLeft = 3
+    ExplicitTop = -24
   end
   object pnlBottom: TPanel
     Left = 0

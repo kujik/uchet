@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9746</VerInfo_Build>
+        <VerInfo_Build>9769</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
+        <DCC_Define>PC_;PICK_;ADMIN_;TURV_;SRV_;PROD_;OR;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9746;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.07.19 06:25:50;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9769;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.07.19 11:34:53;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -437,39 +437,30 @@
         </DCCReference>
         <DCCReference Include="uFrmXWOracleError.pas">
             <Form>FrmXWOracleError</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmOGedtEstimate.pas">
             <Form>FrmOGedtEstimate</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmXWndUserInterface.pas">
             <Form>FrmXWndUserInterface</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmODedtDevel.pas">
             <Form>FrmODedtDevel</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmODedtItmUnits.pas">
             <Form>FrmODedtItmUnits</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmODedtSplCategoryes.pas">
             <Form>FrmODedtSplCategoryes</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmOWSearchInEstimates.pas">
             <Form>FrmOWSearchInEstimates</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmOWrepItmInfo.pas">
             <Form>FrmOWrepItmInfo</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmOWrepOrdersPrimeCost.pas">
             <Form>FrmOWrepOrdersPrimeCost</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="D_CreatePayroll.pas">
             <Form>Dlg_CreatePayroll</Form>
@@ -494,39 +485,33 @@
         </DCCReference>
         <DCCReference Include="uFrmWDedtDivision.pas">
             <Form>FrmWDedtDivision</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWDAddTurv.pas">
             <Form>FrmWDAddTurv</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWDedtWorkerStatus.pas">
             <Form>FrmWDedtWorkerStatus</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmXDedtMailingCustomAddr.pas">
             <Form>FrmXDedtMailingCustomAddr</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmXGsesUsersChoice.pas">
             <Form>FrmXGsesUsersChoice</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWGEdtTurv.pas">
             <Form>FrmWGEdtTurv</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWWsrvTurvComment.pas">
             <Form>FrmWWsrvTurvComment</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWGedtPayroll.pas">
             <Form>FrmWGedtPayroll</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWDedtCreatePayroll.pas">
             <Form>FrmWDedtCreatePayroll</Form>
-            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="uFrmTest2.pas">
+            <Form>FrmTest2</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

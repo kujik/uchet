@@ -17,7 +17,8 @@ uses
   Data.DB, FireDAC.Comp.Client, FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait,
   FireDAC.Comp.UI,
   ADODb, Vcl.DBCtrls, Vcl.DBCGrids, Vcl.Menus, DBGridEh, DBLookupEh,
-  Vcl.ComCtrls
+  Vcl.ComCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  MemTableDataEh, MemTableEh, EhLibVclUtils, GridsEh, DBAxisGridsEh
 ;
 
 type
@@ -84,6 +85,9 @@ type
     CheckBox2: TCheckBox;
     Image2: TImage;
     SpeedButton2: TSpeedButton;
+    DBGridEh1: TDBGridEh;
+    MemTableEh1: TMemTableEh;
+    BitBtn4: TBitBtn;
     procedure BitBtn1Click(Sender: TObject);
     procedure FormActivate(Sender: TObject);
     procedure DBNumberEditEh1Change(Sender: TObject);
@@ -101,6 +105,7 @@ type
     procedure SpeedButton1Click(Sender: TObject);
     procedure Bt_TreeClick(Sender: TObject);
     procedure Bt_AlignClick(Sender: TObject);
+    procedure BitBtn4Click(Sender: TObject);
   private
     { Private declarations }
     procedure Change(Sender: TObject);
@@ -886,6 +891,11 @@ begin
   end;
 end;
 
+
+procedure TFrmTest.BitBtn4Click(Sender: TObject);
+begin
+//  Q.QLoad
+end;
 
 procedure TFrmTest.bt_fromxlsClick(Sender: TObject);
 begin
