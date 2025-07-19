@@ -885,7 +885,6 @@ begin
     DataMode := n1 + 1;
     if DataMode > 3 then
       DataMode := 1;
-    //!!! доделапть блокировку пункта меню
     if not (((va3[n1] = cComPar) and FRgsEdit2) or ((va3[n1] = cComSogl) and FRgsEdit3) or FRgsEdit1) or not FInEditMode then
       Exit;
     va1 := [S.NSt(FArrTurv[r][d][S.NInt(va3[n1])])];
@@ -1353,6 +1352,7 @@ begin
         Frg1.DBGridEh1.Columns[i].PickList.Add(FTurvCodes.G(j, 'code') + ' - ' + FTurvCodes.G(j, 'name'));
       end;
   end;
+  Cth.SetButtonState(Frg1, mbtComment, 'Комментарий руководителя', null, FInEditMode and FRgsEdit1);
 end;
 
 procedure TFrmWGEdtTurv.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -1675,8 +1675,16 @@ begin
     else
       Frg2.DBGridEh1.Columns[i].PickList.Clear;
   end;
-  if Frg2.MemTableEh1.Active then
+  if Frg2.MemTableEh1.Active then begin
     Frg2.DbGridEh1.ReadOnly := not FInEditMode or FIsCommited or (Frg2.RecNo > 3) or ((Frg2.RecNo = 1) and not FRgsEdit1) or ((Frg2.RecNo = 2) and not FRgsEdit2) or ((Frg2.RecNo = 3) and not FRgsEdit3);
+    case Frg2.RecNo of
+      1: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий руководителя', null, FInEditMode and FRgsEdit1);
+      2: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий отдела кадров', null, FInEditMode and FRgsEdit2);
+      3: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий согласовывающего', null, FInEditMode and FRgsEdit3);
+      4: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к премии', null, FInEditMode and FRgsEdit1);
+      5: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к штрафу', null, FInEditMode and FRgsEdit1);
+    end;
+  end;
 end;
 
 procedure TFrmWGEdtTurv.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
