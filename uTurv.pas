@@ -235,10 +235,10 @@ begin
   st:=S.IIFStr(ActiveOnly, ' and active = 1', '');
   case AllDivisions of
     1: begin
-        v0:=Q.QLoadToVarDynArray2('select id, name, active, id_schedule, editusers from v_ref_divisions where 1 = 1' + st, []);
+        v0:=Q.QLoadToVarDynArray2('select id, name, active, editusers, id_schedule from v_ref_divisions where 1 = 1' + st, []);
        end;
     2: begin
-        v0:=Q.QLoadToVarDynArray2('select id, name, active, id_schedule from v_ref_divisions where IsStInCommaSt(:u$i, editusers) = 1' + st, [User.GetId]);
+        v0:=Q.QLoadToVarDynArray2('select id, name, active, editusers, id_schedule from v_ref_divisions where IsStInCommaSt(:u$i, editusers) = 1' + st, [User.GetId]);
        end;
     else
       begin
@@ -264,7 +264,7 @@ begin
       continue;
     end;
     Q.QBeginTrans;
-    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i;id_schedule', [0, v0[i][0], dt, GetTurvEndDate(dt), 0, v0[i][4]]);
+    res:=Q.QIUD('i', 'turv_period', '', 'id$i;id_division$i;dt1$d;dt2$d;commit$i;id_schedule$i', [0, v0[i][0], dt, GetTurvEndDate(dt), 0, v0[i][4]]);
     if Q.QRowsAffected = 0 then Result:=-1;
     if res = -1 then Result:=-1;
     if Result =- 1 then Break;
