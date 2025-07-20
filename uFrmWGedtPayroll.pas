@@ -128,7 +128,7 @@ begin
     ['workername$s', 'ФИО', '200;h'],
     ['job$s', 'Должность', '150;h'],
     ['blank$i', '~  № бланка', wcol , 'e'],
-    ['ball_m$i', '~  Оклад', wcol, 'e'],
+    ['ball_m$i', '~  Оклад', wcol, 'e'],          //!!!видимость
     ['turv$f', '~  ТУРВ', wcol, fcol],
     ['id_schedule$i', '_id_schedule', wcol, fcol],
     ['schedule$s', '~  График', '55'],
@@ -396,7 +396,7 @@ begin
   end;
 
   //получим из ТУРВ премии за текущий период (для работника за весь турв, но в турве могут быть несколько строк на одного работника, тут получим суммарную)
-  //айди графика получит случайно из всех тех что были у работника в периоде!!!
+  //айди графика получит случайно из всех тех что были у работника в периоде//!!!
   va1 := Q.QLoadToVarDynArray2(
     'select id_worker, sum(premium), max(id_schedule_active), max(schedule) from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d group by id_worker',
     [FPayrollParams.G('id_division'), FPayrollParams.G('dt1')]
@@ -426,12 +426,17 @@ begin
         e2 := -1;
         for k := 0 to High(norms) do
           if (norms[k][0] = va[j][11]) and (norms[k][1] = EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)) then
-            e1 := norms[k][2];
+            e1 :=  S.NNum(norms[k][2]);
         for k := 0 to High(norms) do
           if (norms[k][0] = va[j][11]) and (norms[k][1] = EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 16)) then
-            e2 := norms[k][2];
+            e2 :=  S.NNum(norms[k][2]);
         if (e1 > 0) and (e2 > 0) then
-           va[j][13] := e1 + e2;
+           va[j][13] := e1 + e2
+        else begin
+          //если хотя бы одна из норма часов за месяц к используемому графику не установлена, сообщим и прекратим расчет!
+          MyWarningMessage('Норма рабочего времени не установлена! Заполните справочник "Графики работы".');
+          Exit;
+        end;
         //график работы, текст
         va[j][14] := '';
         if S.NSt(va1[i][3]) <> '' then
@@ -495,7 +500,7 @@ begin
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
           b := True;
         end;
-        if Frg1.MemTableEh1.FieldByName('id_schedule').AsInteger <> va[j][11] then begin
+        if (Frg1.MemTableEh1.FieldByName('id_schedule').AsInteger <> va[j][11]) or (Frg1.MemTableEh1.FieldByName('schedule').Value <> va[j][14]) then begin
           Frg1.MemTableEh1.FieldByName('id_schedule').Value := va[j][11];
           Frg1.MemTableEh1.FieldByName('schedule').Value := va[j][14];
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
@@ -842,13 +847,14 @@ begin
   Frg1.Opt.SetColFeature('ball_m', 'i', (S.NInt(FPayrollParams.G('id_method')) in [13, 14]), False);
   Frg1.Opt.SetColFeature('premium_m_src', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
   Frg1.Opt.SetColFeature('premium_p', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
+  Frg1.SetColumnsVisible;
 end;
 
 procedure TFrmWGedtPayroll.CalculateAll;
 var
   i: Integer;
 begin
-  for i := 1 to Frg1.GetCount(False) - 1 do
+  for i := 0 to Frg1.GetCount(False) - 1 do
     CalculateRow(i);
 end;
 
@@ -856,7 +862,6 @@ procedure TFrmWGedtPayroll.CalculateRow(row: Integer);
 var
   e1, e2, e3: extended;
   v1, v2, v3: Variant;
-  Norma, Norma_: Extended;
   r, CalcMode: Integer;
 begin
 {
@@ -876,31 +881,24 @@ premium_p - премия за переработку
   if r = -1 then
     r := Frg1.MemTableEh1.RecNo - 1;
   CalcMode := FPayrollParams.G('id_method');
-  Norma := Frg1.GetValueF('norm', r, False);
-  if Norma = null then
-    Norma_ := 80
-  else
-    Norma_ := extended(Norma); //!!!old
-  Norma_ := Norma;
   e1 := Frg1.GetValueF('ball_m', r, False);
   e2 := Frg1.GetValueF('turv', r, False);
-  //баллы, не больше нормы
+  //посчитаем поле Расчет оклада, как месячный_оклад / месячную_норму_ч * норму_периода_ч
+  //если нормы не загружены (грузятся при чтении из турв, обязательно обе), то приведем к 0
   if (CalcMode = 10) or (CalcMode = 12) then begin
-    if e2 > Norma_ then
-      e2 := Norma_;
-    e3 := e1 / Norma_ * e2;
+    //не больше нормы
+    e3 := S.IIf(Frg1.GetValueF('norm_m', r, False) = null, 0, e1 / Frg1.GetValueF('norm_m', r, False) * Min(Frg1.GetValueF('norm', r, False) ,e2));
   end;
-  //баллы, полностью
   if (CalcMode = 11) then begin
-    e3 := e1 / Norma_ * e2;
+    //полностью
+    e3 := S.IIf(Frg1.GetValueF('norm_m', r, False) = null, 0, e1 / Min(Frg1.GetValueF('norm_m', r, False), MaxInt) * Frg1.GetValueF('norm', r, False));
   end;
-  //баллы, выгрузка
   if (CalcMode = 13) or (CalcMode = 14) or (CalcMode = 15) then begin
+    //выгрузка из эксель
     e3 := Frg1.GetValueF('ball', r, False);
   end;
-  //установим баллы
+  //установим баллы (Рапсчет оклада)
   v3 := S.IIf(e3 = 0, null, round(e3));
-//~  MemTableEh1.FieldByName('ball').Value:=v3;
   Frg1.SetValue('ball', r, False, v3);
   //пермия за переработку
   if (CalcMode = 10) then begin
@@ -909,19 +907,11 @@ premium_p - премия за переработку
   end;
   //расчитаем левую часть, до итого начислено
   e3 := Frg1.GetValueF('ball', r, False) + Frg1.GetValueF('premium_m_src', r, False) + Frg1.GetValueF('premium_p', r, False) + Frg1.GetValueF('premium_m', r, False) + Frg1.GetValueF('premium', r, False) + Frg1.GetValueF('otpusk', r, False) + Frg1.GetValueF('bl', r, False) + Frg1.GetValueF('penalty', r, False);
-//    Frg1.GetValueF('', r, False) +
-
-//  MemTableEh1.FieldByName('ball').AsFloat + MemTableEh1.FieldByName('premium_m_src').AsFloat + MemTableEh1.FieldByName('premium_p').AsFloat  + MemTableEh1.FieldByName('premium_m').AsFloat +
-//  MemTableEh1.FieldByName('premium').AsFloat + MemTableEh1.FieldByName('otpusk').AsFloat + MemTableEh1.FieldByName('bl').AsFloat - MemTableEh1.FieldByName('penalty').AsFloat;
-  v3 := S.IIf(e3 = 0, null, round(e3));
-  Frg1.SetValue('itog1', r, False, v3);
+  Frg1.SetValue('itog1', r, False, S.IIf(e3 = 0, null, round(e3)));
   //расчитаем итог
   e3 := Frg1.GetValueF('itog1', r, False) - Frg1.GetValueF('ud', r, False) - Frg1.GetValueF('ndfl', r, False) - Frg1.GetValueF('fss', r, False) - Frg1.GetValueF('pvkarta', r, False) - Frg1.GetValueF('karta', r, False);
-
-//  MemTableEh1.FieldByName('itog1').AsFloat - MemTableEh1.FieldByName('ud').AsFloat - MemTableEh1.FieldByName('ndfl').AsFloat - MemTableEh1.FieldByName('fss').AsFloat - MemTableEh1.FieldByName('pvkarta').AsFloat - MemTableEh1.FieldByName('karta').AsFloat;
-  //итог - округлим до десятков (2024-03-11 округление до сотен)
-  v3 := S.IIf(e3 = 0, null, roundto(e3, 2));
-  Frg1.SetValue('itog', r, False, v3);
+  //итог - округлим до сотен
+  Frg1.SetValue('itog', r, False, S.IIf(e3 = 0, null, roundto(e3, 2)));
   Frg1.DbGridEh1.Invalidate;
   Mth.PostAndEdit(Frg1.MemTableEh1);
 end;
