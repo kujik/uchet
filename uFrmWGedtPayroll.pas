@@ -1036,7 +1036,7 @@ begin
     Rep.ExcelFind('#d' + IntToStr(j) + '#', x, y, xlValues);
     if x >= 0 then
       Rep.TemplateSheet.Columns[x].Hidden := not Frg1.DBGridEh1.FindFieldColumn(Frg1.MemTableEh1.Fields[j].FieldName).Visible;
-    Rep.SetValue('#d' + IntToStr(j) + '#', Frg1.DBGridEh1.Columns[j + 1].Title.Caption);
+    Rep.SetValue('#d' + IntToStr(j) + '#', Frg1.DBGridEh1.FindFieldColumn(Frg1.MemTableEh1.Fields[j].FieldName).Title.Caption);
   end;
   Rep.ExcelFind('  № бланка', x, y, xlValues);
   if x > -1 then
