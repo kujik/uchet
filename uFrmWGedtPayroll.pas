@@ -398,7 +398,7 @@ begin
   //получим из ТУРВ премии за текущий период (для работника за весь турв, но в турве могут быть несколько строк на одного работника, тут получим суммарную)
   //айди графика получит случайно из всех тех что были у работника в периоде//!!!
   va1 := Q.QLoadToVarDynArray2(
-    'select id_worker, sum(premium), max(id_schedule_active), max(schedule) from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d group by id_worker',
+    'select id_worker, nvl(sum(premium),0), max(id_schedule_active), max(schedule) from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d group by id_worker',
     [FPayrollParams.G('id_division'), FPayrollParams.G('dt1')]
   );
   //загрузим нормы по всенм графикам за оба периода месяца к данной ведомости
@@ -478,7 +478,7 @@ begin
         end;
         if Frg1.MemTableEh1.FieldByName('premium').AsVariant <> S.NullIf0(va[j][7] + va[j][9]) then begin
           if Frg1.MemTableEh1.FieldByName('premium').AsVariant <> null then
-            st := st + va[j][3] + ': Изменен столбец Текущая премия с ' + Frg1.MemTableEh1.FieldByName('premium').AsString + ' на ' + VarToStr(va[j][7]) + #13#10;
+            st := st + va[j][3] + ': Изменен столбец Текущая премия с ' + Frg1.MemTableEh1.FieldByName('premium').AsString + ' на ' + VarToStr(S.NullIf0(va[j][7] + va[j][9])) + #13#10;
           Frg1.MemTableEh1.FieldByName('premium').Value := S.NullIf0(va[j][7] + va[j][9]); //!!! +va[j][9]
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
           b := True;
@@ -531,7 +531,7 @@ begin
       inc(i)
     else begin
         //в список удаленных работников
-      st := st + Frg1.MemTableEh1.FieldByName('name').AsString + ': Работник удален из ведомости.'#13#10;
+      st := st + Frg1.MemTableEh1.FieldByName('workername').AsString + ': Работник удален из ведомости.'#13#10;
       FDeletedWorkers := FDeletedWorkers + [Frg1.MemTableEh1.FieldByName('id_worker').AsInteger];
       Frg1.MemTableEh1.Edit;
       Frg1.MemTableEh1.Delete;
@@ -649,7 +649,7 @@ begin
       //номер записи с единицы!!!
       while i <= Frg1.MemTableEh1.RecordCount do begin
         Frg1.MemTableEh1.RecNo := i;
-        fio := Frg1.MemTableEh1.FieldByName('name').AsString;
+        fio := Frg1.MemTableEh1.FieldByName('workername').AsString;
         emp := 0;
         j := 0;
         st1 := '';
@@ -733,7 +733,7 @@ begin
   rn := Frg1.MemTableEh1.RecNo;
   for i := 1 to Frg1.MemTableEh1.RecordCount do begin
     Frg1.MemTableEh1.RecNo := i;
-    ar[i] := [Frg1.MemTableEh1.FieldByName('name').AsString, 0, 0, 0];
+    ar[i] := [Frg1.MemTableEh1.FieldByName('workername').AsString, 0, 0, 0];
   end;
 
   for k := 0 to High(Files) do begin

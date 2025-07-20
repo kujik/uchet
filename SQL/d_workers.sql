@@ -311,7 +311,7 @@ where
   rj.id = tw.id_job and
   rd.id = tw.id_division and
   tw.id_turv = tp.id and
-  s1.id (+) = tw.id_schedule and    
+  s1.id (+) = nvl(tw.id_schedule,0) and    
   s2.id (+) = rd.id_schedule     
 ; 
 
