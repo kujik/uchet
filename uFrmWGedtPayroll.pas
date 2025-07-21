@@ -1,7 +1,3 @@
-        //!!!предусмотреть вариант, если норма не задана в справочнике графиков работы
-
-
-
 {
 зарплатная ведомость
 
@@ -55,6 +51,7 @@ type
     procedure GetNdflFromExcel;
     procedure SetButtons;
     procedure SetColumns;
+    function  GetCaption(Colored: Boolean = False): string;
     procedure CalculateAll;
     procedure CalculateRow(row:Integer);
     procedure ClearFilter;
@@ -150,7 +147,7 @@ begin
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
     ['karta$i', '~  Карта', wcol, fcol, 'e'],
     ['itog$i', '~  Итого к' + sLineBreak + '  получению', wcol, fcol],
-    ['null as banknotes$s', '~  Купюры', wcol],
+    ['banknotes$s', '~  Купюры', wcol],
     ['sign$i', '~  Подпись', '55', 'i']
   ]);
   Frg1.Opt.SetGridOperations('u');
@@ -164,14 +161,7 @@ begin
   ]);
   Frg1.Opt.ButtonsNoAutoState := [0];
 
-//  if (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1) or (A.InArray(TColumnEh(Sender).FieldName,
-//['pos', 'workername', 'job', 'itog1', 'itog', 'turv', S.IIf(FPayrollParams.G('id_method') <> 15, 'ball', ''), 'premium', 'premium_m_src', 'premium_p', 'penalty'])) or (not FIsEditable) then begin
-
-  Frg1.CreateAddControls('1', cntLabelClr,
-    '$FF0000' + S.IIf(FPayrollParams.G('workername') <> null, FPayrollParams.G('workername') + ' (' + FPayrollParams.G('divisionname') + ')', FPayrollParams.G('divisionname')) +
-    '$000000 с$FF00FF ' + DateToStr(FPayrollParams.G('dt1')) + ' $000000 по $FF00FF' + DateToStr(FPayrollParams.G('dt2')),
-    'lblDivision', '', 4, yrefT, 800
-  );
+  Frg1.CreateAddControls('1', cntLabelClr, GetCaption(True), 'lblDivision', '', 4, yrefT, 800);
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblInfo', '', 4, yrefB, 800);
   Frg1.SetInitData([], '');
 
@@ -184,6 +174,7 @@ begin
   for i:=0 to DbGridEh1.Columns.Count - 1 do
     DBGridEh1.Columns[i].STFilter.Visible:=False;
   Gh.GetGridColumn(DBGridEh1, 'blank').STFilter.Visible:=True;}
+
   //ширина окна по ширине грида
   Self.Width := Frg1.GetTableWidth + 75;
 
@@ -852,6 +843,13 @@ begin
   Frg1.SetColumnsVisible;
 end;
 
+function TFrmWGedtPayroll.GetCaption(Colored: Boolean = False): string;
+begin
+  Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('workername') <> null, FPayrollParams.G('workername') + ' (' + FPayrollParams.G('divisionname') + ')', FPayrollParams.G('divisionname')) +
+    S.IIFStr(Colored, '$000000') + ' с' + S.IIFStr(Colored, '$FF00FF') +' ' + DateToStr(FPayrollParams.G('dt1')) +
+    S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(FPayrollParams.G('dt2'));
+end;
+
 procedure TFrmWGedtPayroll.CalculateAll;
 var
   i: Integer;
@@ -1003,9 +1001,7 @@ begin
 //  i:=Gh.GetGridColumn(DBGridEh1, 'name').Width;
 //  Gh.GetGridColumn(DBGridEh1, 'name').Width:=1800;
 //  PrintDBGridEh1.Options:=PrintDBGridEh1.Options - [pghFitGridToPageWidth];
-   Frg1.PrintDBGridEh1.BeforeGridText[0] :=
-     S.IIf(FPayrollParams.G('workername') <> null, FPayrollParams.G('workername') + ' (' + FPayrollParams.G('divisionname') + ')', FPayrollParams.G('divisionname')) +
-     ' ' + DateToStr(FPayrollParams.G('dt1')) + ' по ' + DateToStr(FPayrollParams.G('dt2'));
+   Frg1.PrintDBGridEh1.BeforeGridText[0] :=  GetCaption;
   //альбомная ориентация
   PrinterPreview.Orientation := poLandscape;
   //масштабируем всю таблицу для умещения на стронице
@@ -1049,7 +1045,7 @@ begin
     Exit;
   end;
   Rep.PasteBand('HEADER');
-//!!!  Rep.SetValue('#TITLE#',lbl_Caption1.Caption);
+  Rep.SetValue('#TITLE#', GetCaption);
   rn := Frg1.MemTableEh1.RecNo;
   for j := 0 to Frg1.MemTableEh1.Fields.Count - 1 do begin
     Rep.ExcelFind('#d' + IntToStr(j) + '#', x, y, xlValues);

@@ -664,7 +664,6 @@ where
 
     
 --данные зарплатной ведомости для конкретного работника из ведомости
-alter table payroll_item add banknotes varchar2(40);
 create table payroll_item(
   id number(11),
   id_payroll number(11),          --айди зарплатной ведомости, в которую входит эта строка
@@ -1400,6 +1399,7 @@ alter table payroll_item add norm number(7);
 alter table payroll_item add norm_m number(7);
 alter table payroll_item add id_schedule number(11);
 alter table payroll_item add constraint fk_payroll_item_schedule foreign key (id_schedule) references ref_work_schedules(id);
+alter table payroll_item add banknotes varchar2(40);
 
 update ref_divisions set id_schedule = 100;
 update turv_period set id_schedule = 100;
