@@ -9,12 +9,12 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     Width = 672
     Height = 265
     ExplicitWidth = 668
-    ExplicitHeight = 235
+    ExplicitHeight = 264
     inherited pnlFrmClient: TPanel
       Width = 662
       Height = 216
       ExplicitWidth = 658
-      ExplicitHeight = 186
+      ExplicitHeight = 215
       object cmb_Office: TDBComboBoxEh
         Left = 104
         Top = 8
@@ -411,9 +411,9 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         Top = 143
         Width = 121
         Height = 21
-        ControlLabel.Width = 51
+        ControlLabel.Width = 79
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1062#1077#1093'/'#1054#1092#1080#1089
+        ControlLabel.Caption = #1043#1088#1072#1092#1080#1082' '#1088#1072#1073#1086#1090#1099
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
@@ -431,7 +431,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     inherited pnlFrmBtns: TPanel
       Top = 221
       Width = 662
-      ExplicitTop = 191
+      ExplicitTop = 220
       ExplicitWidth = 658
       inherited bvlFrmBtnsTl: TBevel
         Width = 660
@@ -466,7 +466,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
   inherited pnlStatusBar: TPanel
     Top = 265
     Width = 672
-    ExplicitTop = 235
+    ExplicitTop = 264
     ExplicitWidth = 668
     inherited lblStatusBarR: TLabel
       Left = 599

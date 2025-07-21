@@ -955,7 +955,7 @@ begin
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntComboLk, 'График:','1:50']],
-      va1, va2, [['']], nil
+      va1, va2, [['График подразделения (только для данного периода!). Но если это текущий период, то график работы поменяется и в справочнике подразделений.']], nil
     ) < 0 then
       Exit;
     FDivisionScehdule := Q.QSelectOneRow('select code from ref_work_schedules where id = :id', [va2[0]])[0];
@@ -964,7 +964,7 @@ begin
         FArrTitle.SetValue(i, 'schedule', FDivisionScehdule);
         Frg1.SetValue('schedule', i, False, FDivisionScehdule);
       end;
-    SaveWorkerToDB(r);
+    Q.QExecSql('update turv_period set id_schedule = :id_schedule$i where id = :id$i and dt1 = :dt1$d', [va2[0], FIdDivision, FPeriodStartDate]);
     if FPeriodEndDate >= Date then
       Q.QExecSql('update ref_divisions set id_schedule = :id_schedule$i where id = :id$i', [va2[0], FIdDivision]);
   end
@@ -976,7 +976,11 @@ begin
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntComboLk, 'График:','0:50']],
-      va1, va2, [['']], nil
+      va1, va2,
+        [['График работы для выбранного работника. Если он задан (даже такой же, как для подразделения!), то в дальнейшем будет привязан к данному работнику, '+
+         'даже при изменении графика подразделения или переводах работника. '+
+         'Чтобы привязать график к снова к подразделению, введите здесь пустое значение'
+        ]], nil
     ) < 0 then
       Exit;
     FArrTitle.SetValue(r, 'id_schedule', va2[0]);
@@ -992,7 +996,7 @@ begin
     Frg1.SetValue('schedule', r, False, st);
     SaveWorkerToDB(r);
     if FPeriodEndDate >= Date then
-      Q.QExecSql('update ref_workers set id_schedule = :id_schedule$i where id = :id_worker$i', [va2[0], FArrTitle.G(r, 'id_worker')]);
+      Q.QExecSql('update ref_workers set id_schedule = :id_schedule$i where id = :id_worker$i', [S.NullIfEmpty(va2[0]), FArrTitle.G(r, 'id_worker')]);
   end;
   //отобразим данные в основной таблице
   PushTurvCellToGrid(r, d);
