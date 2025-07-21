@@ -150,6 +150,7 @@ begin
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
     ['karta$i', '~  Карта', wcol, fcol, 'e'],
     ['itog$i', '~  Итого к' + sLineBreak + '  получению', wcol, fcol],
+    ['null as banknotes$s', '~  Купюры', wcol],
     ['sign$i', '~  Подпись', '55', 'i']
   ]);
   Frg1.Opt.SetGridOperations('u');
@@ -298,7 +299,7 @@ var
 begin
   Q.QLoadFromQuery(
     'select workername, job, id, id_worker, id_job, blank, ball_m, turv, ball, premium_m_src, premium, premium_p, premium_m, '+
-    'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m '+
+    'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes '+
     'from v_payroll_item where id_payroll = :id$i order by job, workername',
     [ID], na
   );
@@ -816,13 +817,13 @@ begin
   if Mode = fView then begin
     Frg1.SetControlValue('lblInfo', '$000000Только просмотр.');
   end
-  else if NoNorms then begin
-    Frg1.SetControlValue('lblInfo', '$0000FFНе заданы нормы рабочего времени!');
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
-  end
   else if FPayrollParams.G('id_method') = null then begin
     Frg1.SetControlValue('lblInfo', '$0000FFЗадайте метод расчета!');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
+  end
+  else if NoNorms then begin
+    Frg1.SetControlValue('lblInfo', '$0000FFНе заданы нормы рабочего времени!');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
   end
   else if FPayrollParams.G('commit') = 1 then begin
     Frg1.SetControlValue('lblInfo', '$00FF00Ведомость закрыта, только просмотр.');
@@ -864,6 +865,23 @@ var
   e1, e2, e3: extended;
   v1, v2, v3: Variant;
   r, CalcMode: Integer;
+function GetBanknotes: string;
+var
+  s, i, i1, i2, i3, i4 : Integer;
+begin
+  Result := '';
+  s := Frg1.GetValueI('itog', r, False);
+  if s = 0 then
+    Exit;
+  i1 := s div 5000;
+  i := s - i1 * 5000;
+  i2 := i div 1000;
+  i := i - i2 * 1000;
+  i3 := i div 500;
+  i := i - i3 * 500;
+  i4 :=  i div 100;
+  Result := IntToStr(i1) + ',' + IntToStr(i2) + ',' + IntToStr(i3) + ',' + IntToStr(i4);
+end;
 begin
 {
 14	Сборка/станки/реклама/покраска	оклада нет, баллы выгрузка, премии за период нет
@@ -913,6 +931,7 @@ premium_p - премия за переработку
   e3 := Frg1.GetValueF('itog1', r, False) - Frg1.GetValueF('ud', r, False) - Frg1.GetValueF('ndfl', r, False) - Frg1.GetValueF('fss', r, False) - Frg1.GetValueF('pvkarta', r, False) - Frg1.GetValueF('karta', r, False);
   //итог - округлим до сотен
   Frg1.SetValue('itog', r, False, S.IIf(e3 = 0, null, roundto(e3, 2)));
+  Frg1.SetValue('banknotes', r, False, GetBanknotes);
   Frg1.DbGridEh1.Invalidate;
   Mth.PostAndEdit(Frg1.MemTableEh1);
 end;
@@ -1146,7 +1165,7 @@ begin
     end;
     //lastgeneraateid
     Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
-      'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f',
+      'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s',
       [
         Frg1.MemTableEh1.FieldByName('id').AsInteger,
         Frg1.MemTableEh1.FieldByName('blank').AsVariant,
@@ -1169,7 +1188,8 @@ begin
         Frg1.MemTableEh1.FieldByName('itog').AsVariant,
         Frg1.MemTableEh1.FieldByName('id_schedule').AsVariant,
         Frg1.MemTableEh1.FieldByName('norm').AsVariant,
-        Frg1.MemTableEh1.FieldByName('norm_m').AsVariant
+        Frg1.MemTableEh1.FieldByName('norm_m').AsVariant,
+        Frg1.MemTableEh1.FieldByName('banknotes').AsVariant
       ], True
     );
   end;

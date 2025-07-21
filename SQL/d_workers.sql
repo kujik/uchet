@@ -664,6 +664,7 @@ where
 
     
 --данные зарплатной ведомости для конкретного работника из ведомости
+alter table payroll_item add banknotes varchar2(40);
 create table payroll_item(
   id number(11),
   id_payroll number(11),          --айди зарплатной ведомости, в которую входит эта строка
@@ -691,6 +692,7 @@ create table payroll_item(
   fss number(7),                  --фсс
   pvkarta number(7),              --промежуточные выплаты/карта
   karta number(7),                --карта
+  banknotes varchar2(40),         --расклад по купюрам
   itog number(7),                 --итого к выдаче
   constraint pk_payroll_item primary key (id),
   constraint fk_payroll_item_payroll foreign key (id_payroll) references payroll(id) on delete cascade,
@@ -714,7 +716,6 @@ select
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   d.name as divisionname,
   j.name as job,
-  --decode(d.office, 1, n.norm1, 0, n.norm0) as norm,
   p.id_method as id_method
 from
   payroll_item i,
@@ -722,7 +723,6 @@ from
   ref_workers w,
   ref_divisions d,
   ref_jobs j,
-  payroll_norm n,
   payroll_method m,
   ref_work_schedules s
 where
@@ -730,7 +730,6 @@ where
   i.id_division = d.id and
   i.id_worker = w.id and 
   i.id_job = j.id and
-  p.dt1 = n.dt (+) and
   p.id_method = m.id (+) and
   i.id_schedule = s.id (+)
 ;     
