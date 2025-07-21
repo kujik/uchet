@@ -2791,7 +2791,6 @@ begin
         //цвет RGB из трех цифр от 0 до 9 - интенсивность канала, если не задан - черный
         //ширина кнопки, если не задана - 16
         va1 := A.Explode(va[j], ':') + ['', '', '', '', '','',''];
-//        va11 := TVarDynArray(ebsn);
         k := A.PosInArray(va1[1], ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud']);
         ebt := ebsEllipsisEh;
         st := '';
@@ -2809,7 +2808,6 @@ begin
           then ebtp := ebhpRightEh
           else ebtp := ebhpLeftEh;
         Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebtp, ebt, k , st, va1[3] = 'h', va1[4], S.NInt(va1[5]));
-//        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebhpRightEh, ebsGlyphEh, 21 ,'', False);
       end;
     end;
     if Opt.Sql.Fields[i].FPic <> '' then begin
@@ -2829,12 +2827,16 @@ begin
       //если есть ":", то оно отдел€ет формат футера, если оно последнее в строке, то формат футера такой же как в €чейке
       //r - формат в рубл€х и копейках
       va := A.Explode(Opt.Sql.Fields[i].FFormat, ':') + ['', '', ''];
+      if va[0] = 't' then
+        va[0] := '';
       if va[0] = 'r' then
         va[0] := '###,###,##0.00';
       if va[0] = 'f' then
         va[0] := '###,###,###0.###';
       if va[1] = '' then
         va[1] := va[0];
+      if va[1] = 't' then
+        va[1] := '';
       if va[1] = 'r' then
         va[1] := '###,###,##0.00';
       if va[1] = 'f' then
@@ -2843,7 +2845,10 @@ begin
         va[1] := va[0];
       Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, col.FieldName, VarToStr(va[0]));
       if Pos(':', Opt.Sql.Fields[i].FFormat) > 0 then
-        Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, col.FieldName, VarToStr(va[1]));
+        if va[1] <> 't' then
+          Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, col.FieldName, VarToStr(va[1]))
+        else
+          col.Footer.ValueType := fvtStaticText;
     end;
     //сформируем выпадающие списки в столбцах
     for j := 0 to High(FOpt.PickLists) do

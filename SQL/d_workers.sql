@@ -1127,7 +1127,7 @@ group by id_job;
 --------------------------------------------------------------------------------
 
 --таблица графиков работы
-alter table ref_work_schedules add active number(1);
+--alter table ref_work_schedules add active number(1);
 create table ref_work_schedules(
   id number(11),
   code varchar2(50),
@@ -1401,6 +1401,6 @@ alter table payroll_item add id_schedule number(11);
 alter table payroll_item add constraint fk_payroll_item_schedule foreign key (id_schedule) references ref_work_schedules(id);
 alter table payroll_item add banknotes varchar2(40);
 
-update ref_divisions set id_schedule = 100;
-update turv_period set id_schedule = 100;
+--update ref_divisions set id_schedule = 100;
+--update turv_period set id_schedule = 100;
 
