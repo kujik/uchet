@@ -964,7 +964,7 @@ begin
         FArrTitle.SetValue(i, 'schedule', FDivisionScehdule);
         Frg1.SetValue('schedule', i, False, FDivisionScehdule);
       end;
-    Q.QExecSql('update turv_period set id_schedule = :id_schedule$i where id = :id$i and dt1 = :dt1$d', [va2[0], FIdDivision, FPeriodStartDate]);
+    Q.QExecSql('update turv_period set id_schedule = :id_schedule$i where id_division = :id_division$i and dt1 = :dt1$d', [va2[0], FIdDivision, FPeriodStartDate]);
     if FPeriodEndDate >= Date then
       Q.QExecSql('update ref_divisions set id_schedule = :id_schedule$i where id = :id$i', [va2[0], FIdDivision]);
   end
