@@ -77,9 +77,9 @@ end;
 //право пользовател€
 function TUser.Role(r: string): Boolean;
 begin
-  Result:=(Pos(r, UserRights) > 0)
-    and((r[1]='0')or(r[1]=InttoStr(cMainModule)));  //сбросим права, если они относ€тс€ к другим модул€м (кроме тех что дл€ јдминки)
-  if UserID = 0 then Result:=True;
+  Result := (Pos(r, UserRights) > 0) and ((r[1] = '0') or (r[1] = InttoStr(cMainModule)));  //сбросим права, если они относ€тс€ к другим модул€м (кроме тех что дл€ јдминки)
+  if UserID = 0 then
+    Result := True;
 end;
 
 //вернет по сочетанию прав - (если есть все в первом массиве) и (есть хот€ бы один во втором массиве) и (нет ни одного в третьем массиве)
@@ -88,21 +88,28 @@ var
   i: Integer;
   b1, b2, b3: Boolean;
 begin
-  if Length(RAnd) = 0
-    then b1:=True
-    else
-      for i:=0 to High(RAnd) do b1:=b1 and Role(RAnd[i]);
-  if Length(ROr) = 0
-    then b2:=True
-    else
-      for i:=0 to High(ROr) do b2:=b2 or Role(ROr[i]);
-  b3:= True;
-  if Length(RNot) = 0
-    then b3:=True
-    else
-      for i:=0 to High(RNot) do b3:=b3 and not Role(RNot[i]);
-  Result:=b1 and b2 and b3;
-  if UserID = 0 then Result:=True;
+  b1 := False;
+  b2 := False;
+  b3 := False;
+  if Length(RAnd) = 0 then
+    b1 := True
+  else
+    for i := 0 to High(RAnd) do
+      b1 := b1 and Role(RAnd[i]);
+  if Length(ROr) = 0 then
+    b2 := True
+  else
+    for i := 0 to High(ROr) do
+      b2 := b2 or Role(ROr[i]);
+  b3 := True;
+  if Length(RNot) = 0 then
+    b3 := True
+  else
+    for i := 0 to High(RNot) do
+      b3 := b3 and not Role(RNot[i]);
+  Result := b1 and b2 and b3;
+  if UserID = 0 then
+    Result := True;
 end;
 
 function  TUser.IsDeveloper: Boolean;

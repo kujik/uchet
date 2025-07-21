@@ -446,6 +446,7 @@ var
   st : string;
   MainMenuItem, SubMenuItem: TMenuItem;
   IsLatItemDividor: Boolean;
+  b: Boolean;
 
 function CreateMenuItem(const ACaption, AName: string; AOnClick: TNotifyEvent): TMenuItem;
 begin
@@ -583,7 +584,7 @@ begin
     ['Журналы'],
     ['Журнал ТУРВ', myfrm_J_Turv, User.Role(rW_J_Turv)],
     ['Статусы работников', myfrm_J_WorkerStatus, User.Role(rW_J_WorkerStatus_V)],
-    ['Зарплатные ведомости', myfrm_J_Payrolls, User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    ['Зарплатные ведомости', myfrm_J_Payrolls, User.Role(rW_J_Payroll_V)],//  User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Вакансии', myfrm_J_Vacancy, User.Roles([], [rW_J_Vacancy_V, rW_J_Vacancy_Ch])],
     ['Соискатели', myfrm_J_Candidates, User.Roles([], [rW_J_Candidates_V, rW_J_Candidates_Ch])],
     ['Журнал прихода/ухода работников', myfrm_J_Parsec, User.Roles([], [rW_J_Parsec_V, rW_J_Parsec_V_All])],

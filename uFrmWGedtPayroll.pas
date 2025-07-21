@@ -53,7 +53,7 @@ type
     procedure SetColumns;
     function  GetCaption(Colored: Boolean = False): string;
     procedure CalculateAll;
-    procedure CalculateRow(row:Integer);
+    procedure CalculateRow(Row:Integer);
     procedure ClearFilter;
     procedure CommitPayroll;
     procedure PrintLabels;
@@ -858,17 +858,17 @@ begin
     CalculateRow(i);
 end;
 
-procedure TFrmWGedtPayroll.CalculateRow(row: Integer);
+procedure TFrmWGedtPayroll.CalculateRow(Row: Integer);
 var
   e1, e2, e3: extended;
   v1, v2, v3: Variant;
-  r, CalcMode: Integer;
+  CalcMode: Integer;
 function GetBanknotes: string;
 var
   s, i, i1, i2, i3, i4 : Integer;
 begin
   Result := '';
-  s := Frg1.GetValueI('itog', r, False);
+  s := Frg1.GetValueI('itog', Row, False);
   if s = 0 then
     Exit;
   i1 := s div 5000;
@@ -895,46 +895,46 @@ premium_p - премия за переработку
 (премия за период из турв не грузится, точнее только для грузчиков, и так из нее получается расчетная)
 
 }
-  if r = -1 then
-    r := Frg1.MemTableEh1.RecNo - 1;
+  if Row = -1 then
+    Row := Frg1.MemTableEh1.RecNo - 1;
   CalcMode := FPayrollParams.G('id_method');
-  if (Frg1.GetValueF('norm', r, False) = 0) or (Frg1.GetValueF('norm_m', r, False) = 0) or (CalcMode = null) then
+  if (Frg1.GetValueF('norm', Row, False) = 0) or (Frg1.GetValueF('norm_m', Row, False) = 0) or (CalcMode = null) then
     Exit;
-  e1 := Frg1.GetValueF('ball_m', r, False);
-  e2 := Frg1.GetValueF('turv', r, False);
+  e1 := Frg1.GetValueF('ball_m', Row, False);
+  e2 := Frg1.GetValueF('turv', Row, False);
   //посчитаем поле Расчет оклада, как месячный_оклад / месячную_норму_ч * норму_периода_ч
   //если нормы не загружены (грузятся при чтении из турв, обязательно обе), то приведем к 0
   e3 := 0;
   if (CalcMode = 10) or (CalcMode = 12) then begin
     //не больше нормы
-    if Frg1.GetValueF('norm_m', r, False) > 0 then
-      e3 := e1 / Frg1.GetValueF('norm_m', r, False) * Min(Frg1.GetValueF('norm', r, False), e2);
+    if Frg1.GetValueF('norm_m', Row, False) > 0 then
+      e3 := e1 / Frg1.GetValueF('norm_m', Row, False) * Min(Frg1.GetValueF('norm', Row, False), e2);
   end;
   if (CalcMode = 11) then begin
     //полностью
-    if Frg1.GetValueF('norm_m', r, False) > 0 then
-      e3 := e1 / Min(Frg1.GetValueF('norm_m', r, False), MaxInt) * Frg1.GetValueF('norm', r, False);
+    if Frg1.GetValueF('norm_m', Row, False) > 0 then
+      e3 := e1 / Min(Frg1.GetValueF('norm_m', Row, False), MaxInt) * Frg1.GetValueF('norm', Row, False);
   end;
   if (CalcMode = 13) or (CalcMode = 14) or (CalcMode = 15) then begin
     //выгрузка из эксель
-    e3 := Frg1.GetValueF('ball', r, False);
+    e3 := Frg1.GetValueF('ball', Row, False);
   end;
   //установим баллы (Рапсчет оклада)
-  v3 := S.IIf(e3 = 0, null, round(e3));
-  Frg1.SetValue('ball', r, False, v3);
+  v3 := s.IIf(e3 = 0, null, round(e3));
+  Frg1.SetValue('ball', Row, False, v3);
   //пермия за переработку
   if (CalcMode = 10) then begin
      // Расчет должен быть такой:   Оклад (55000/2 + 27500) + переработки ( 96-80 + 16 часов)  55000/168*16*1,5 + 7857
-     Frg1.SetValue('premium_p', r, False, Round(Max(0, (e1) / S.NNum(Frg1.GetValueF('norm_m', r, False) / 2) * (Frg1.GetValueF('turv', r, False) - Frg1.GetValueF('norm', r, False)) * 1.5)));
+    Frg1.SetValue('premium_p', Row, False, Round(Max(0, (e1) / s.NNum(Frg1.GetValueF('norm_m', Row, False) / 2) * (Frg1.GetValueF('turv', Row, False) - Frg1.GetValueF('norm', Row, False)) * 1.5)));
   end;
   //расчитаем левую часть, до итого начислено
-  e3 := Frg1.GetValueF('ball', r, False) + Frg1.GetValueF('premium_m_src', r, False) + Frg1.GetValueF('premium_p', r, False) + Frg1.GetValueF('premium_m', r, False) + Frg1.GetValueF('premium', r, False) + Frg1.GetValueF('otpusk', r, False) + Frg1.GetValueF('bl', r, False) + Frg1.GetValueF('penalty', r, False);
-  Frg1.SetValue('itog1', r, False, S.IIf(e3 = 0, null, round(e3)));
+  e3 := Frg1.GetValueF('ball', Row, False) + Frg1.GetValueF('premium_m_src', Row, False) + Frg1.GetValueF('premium_p', Row, False) + Frg1.GetValueF('premium_m', Row, False) + Frg1.GetValueF('premium', Row, False) + Frg1.GetValueF('otpusk', Row, False) + Frg1.GetValueF('bl', Row, False) + Frg1.GetValueF('penalty', Row, False);
+  Frg1.SetValue('itog1', Row, False, s.IIf(e3 = 0, null, round(e3)));
   //расчитаем итог
-  e3 := Frg1.GetValueF('itog1', r, False) - Frg1.GetValueF('ud', r, False) - Frg1.GetValueF('ndfl', r, False) - Frg1.GetValueF('fss', r, False) - Frg1.GetValueF('pvkarta', r, False) - Frg1.GetValueF('karta', r, False);
+  e3 := Frg1.GetValueF('itog1', Row, False) - Frg1.GetValueF('ud', Row, False) - Frg1.GetValueF('ndfl', Row, False) - Frg1.GetValueF('fss', Row, False) - Frg1.GetValueF('pvkarta', Row, False) - Frg1.GetValueF('karta', Row, False);
   //итог - округлим до сотен
-  Frg1.SetValue('itog', r, False, S.IIf(e3 = 0, null, roundto(e3, 2)));
-  Frg1.SetValue('banknotes', r, False, GetBanknotes);
+  Frg1.SetValue('itog', Row, False, s.IIf(e3 = 0, null, roundto(e3, 2)));
+  Frg1.SetValue('banknotes', Row, False, GetBanknotes);
   Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := GetBanknotes;
   Frg1.DbGridEh1.Invalidate;
   Mth.PostAndEdit(Frg1.MemTableEh1);
