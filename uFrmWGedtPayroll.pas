@@ -147,7 +147,7 @@ begin
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
     ['karta$i', '~  Карта', wcol, fcol, 'e'],
     ['itog$i', '~  Итого к' + sLineBreak + '  получению', wcol, fcol],
-    ['banknotes$s', '~  Купюры', wcol],
+    ['banknotes$s', '~  Купюры', wcol, 'f=t:t'],
     ['sign$i', '~  Подпись', '55', 'i']
   ]);
   Frg1.Opt.SetGridOperations('u');
@@ -898,17 +898,22 @@ premium_p - премия за переработку
   if r = -1 then
     r := Frg1.MemTableEh1.RecNo - 1;
   CalcMode := FPayrollParams.G('id_method');
+  if (Frg1.GetValueF('norm', r, False) = 0) or (Frg1.GetValueF('norm_m', r, False) = 0) or (CalcMode = null) then
+    Exit;
   e1 := Frg1.GetValueF('ball_m', r, False);
   e2 := Frg1.GetValueF('turv', r, False);
   //посчитаем поле Расчет оклада, как месячный_оклад / месячную_норму_ч * норму_периода_ч
   //если нормы не загружены (грузятся при чтении из турв, обязательно обе), то приведем к 0
+  e3 := 0;
   if (CalcMode = 10) or (CalcMode = 12) then begin
     //не больше нормы
-    e3 := S.IIf(Frg1.GetValueF('norm_m', r, False) = null, 0, e1 / Frg1.GetValueF('norm_m', r, False) * Min(Frg1.GetValueF('norm', r, False) ,e2));
+    if Frg1.GetValueF('norm_m', r, False) > 0 then
+      e3 := e1 / Frg1.GetValueF('norm_m', r, False) * Min(Frg1.GetValueF('norm', r, False), e2);
   end;
   if (CalcMode = 11) then begin
     //полностью
-    e3 := S.IIf(Frg1.GetValueF('norm_m', r, False) = null, 0, e1 / Min(Frg1.GetValueF('norm_m', r, False), MaxInt) * Frg1.GetValueF('norm', r, False));
+    if Frg1.GetValueF('norm_m', r, False) > 0 then
+      e3 := e1 / Min(Frg1.GetValueF('norm_m', r, False), MaxInt) * Frg1.GetValueF('norm', r, False);
   end;
   if (CalcMode = 13) or (CalcMode = 14) or (CalcMode = 15) then begin
     //выгрузка из эксель
@@ -930,6 +935,7 @@ premium_p - премия за переработку
   //итог - округлим до сотен
   Frg1.SetValue('itog', r, False, S.IIf(e3 = 0, null, roundto(e3, 2)));
   Frg1.SetValue('banknotes', r, False, GetBanknotes);
+  Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := GetBanknotes;
   Frg1.DbGridEh1.Invalidate;
   Mth.PostAndEdit(Frg1.MemTableEh1);
 end;

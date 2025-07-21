@@ -2836,7 +2836,7 @@ begin
       if va[1] = '' then
         va[1] := va[0];
       if va[1] = 't' then
-        va[1] := '';
+        va[1] := 't';
       if va[1] = 'r' then
         va[1] := '###,###,##0.00';
       if va[1] = 'f' then
