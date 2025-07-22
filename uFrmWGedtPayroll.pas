@@ -9,8 +9,8 @@
 этой ведомости.
   при нажатии кнопки турв - корректируется список (добавляются записи, которых еще не было, если по ним нет индивидуальных ведомостей,
 удаляются из сетки, но не из БД, записи, для которых больше нет строки в турв). загружаются данные по рабочим часам, премиям, штрафам,
-и пересчитывается сетка.
-  данные в сетке (все) - целые, втч турв, а итог округляется до 10р
+графику работы и нормам за месц и текущий период для работника и пересчитывается сетка.
+  данные в сетке (все) - целые, втч турв, а итог округляется до 100р
   данные сохраняются при закрытии ведомости, включая и изменение настроек, и изменение списка работников в ведомости
 
 
@@ -37,6 +37,7 @@ type
   TFrmWGedtPayroll = class(TFrmBasicGrid2)
     PrintDBGridEh1: TPrintDBGridEh;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Frg1DbGridEh1ApplyFilter(Sender: TObject);
   private
     FPayrollParams: TNamedArr;
     FIsEditable: Boolean;
@@ -54,6 +55,7 @@ type
     function  GetCaption(Colored: Boolean = False): string;
     procedure CalculateAll;
     procedure CalculateRow(Row:Integer);
+    procedure CalculateBanknotes;
     procedure ClearFilter;
     procedure CommitPayroll;
     procedure PrintLabels;
@@ -117,7 +119,7 @@ begin
   FColWidth := 45;
   wcol := IntToStr(FColWidth) + ';r';
   fcol := 'f=###,###,###:';
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnFilter];
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
     ['id_worker$i', '_id_worker', wcol],
@@ -127,7 +129,7 @@ begin
     ['job$s', 'Должность', '150;h'],
     ['blank$i', '~  № бланка', wcol , 'e'],
     ['ball_m$i', '~  Оклад', wcol, 'e'],          //!!!видимость
-    ['turv$f', '~  ТУРВ', wcol, fcol],
+    ['turv$f', '~  ТУРВ', wcol],
     ['id_schedule$i', '_id_schedule', wcol, fcol],
     ['schedule$s', '~  График', '55'],
     ['norm$f', '_norm', wcol, fcol],
@@ -147,7 +149,7 @@ begin
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
     ['karta$i', '~  Карта', wcol, fcol, 'e'],
     ['itog$i', '~  Итого к' + sLineBreak + '  получению', wcol, fcol],
-    ['banknotes$s', '~  Купюры', wcol, 'f=t:t'],
+    ['banknotes$s', '~  Купюры', '65', 'f=t:t'],
     ['sign$i', '~  Подпись', '55', 'i']
   ]);
   Frg1.Opt.SetGridOperations('u');
@@ -165,15 +167,29 @@ begin
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblInfo', '', 4, yrefB, 800);
   Frg1.SetInitData([], '');
 
+  Frg1.InfoArray := [[
+    'Зарплатная ведомость.'#13#10#13#10+
+    'Просмотр и редактирование данных для расчета зарплаты работников подразделения.'#13#10+
+    'Набор полей может отличаться в зависимости от метода расчета, вводить данные можно в те из них, которые отмечены зеленой полосой.'#13#10+
+    'Для расчета заработной платы обязательно нужно выбрать метод расчета для подразделения, если он не был выбран ранее.'#13#10+
+    'После этого также в обязательном порядке необходимо загрузить данные из ТУРВ, при этом будут проставлены '#13#10+
+    'количества отработанных часов, графики работы, суммы премий. Если с момента редактирования ведомости ТУРВ был '#13#10+
+    'изменен, необходимо загрузить данные повторно (если изменения были, то при загрузке будет выдан список этих изменений).'#13#10+
+    'В части случаев, надо также загрузить расчет баллов из внешних файлов, что делается по нажатию соответствующей кнопки.'#13#10+
+    'Подобным же образом загружаются из файла данные по НДФЛ.'#13#10+
+    'После загрузки данные будут пересчитаны.'#13#10+
+    'Все поля ведомости сохраняются при закрытии окна (будет выдан запрос на сохранение).'#13#10+
+    'Ведомость можно распечатать или сохранить в формате эксель, при этом можно отфильтровать строки для печати по '#13#10+
+    'полям "ФИО" или "Бланк".'#13#10+
+    ''#13#10
+  ]];
   Result := inherited;
   if not Result then
     Exit;
-  //Frg1.DBGridEh1.TitleParams.RowHeight := 90;
-{  DBGridEh1.STFilter.Visible:=True;
-  DBGridEh1.STFilter.Location:=stflInTitleFilterEh;
-  for i:=0 to DbGridEh1.Columns.Count - 1 do
-    DBGridEh1.Columns[i].STFilter.Visible:=False;
-  Gh.GetGridColumn(DBGridEh1, 'blank').STFilter.Visible:=True;}
+
+  for i:=0 to Frg1.DbGridEh1.Columns.Count - 1 do
+    if not A.InArray(Frg1.DbGridEh1.Columns[i].FieldName, ['blank', 'workername']) then
+      Frg1.DBGridEh1.Columns[i].STFilter.Visible:=False;
 
   //ширина окна по ширине грида
   Self.Width := Frg1.GetTableWidth + 75;
@@ -182,6 +198,7 @@ begin
   CreatePayroll;
   //прочитаем из БД ведомость
   GetDataFromDb;
+  CalculateBanknotes;
   SetButtons;
   CheckEmpty;
 
@@ -661,6 +678,7 @@ begin
           if Frg1.MemTableEh1.FieldByName('ball').AsVariant <> e then begin
             if Frg1.MemTableEh1.FieldByName('ball').AsVariant <> null then
               st := st + fio + ': Изменен столбец Баллы с ' + Frg1.MemTableEh1.FieldByName('ball').AsString + ' на ' + VarToStr(e) + #13#10;
+            Frg1.MemTableEh1.Edit;
             Frg1.MemTableEh1.FieldByName('ball').Value := e;
             Frg1.MemTableEh1.FieldByName('changed').Value := 1;
             Frg1.MemTableEh1.Post;
@@ -675,8 +693,10 @@ begin
         end;
         inc(i);
       end;
-    except
-      Break;
+    except on E: Exception do begin
+        Application.ShowException(E);
+        Break;
+      end;
     end;
     sh.Free;
     sh1.Free;
@@ -756,6 +776,7 @@ begin
     Frg1.MemTableEh1.RecNo := i;
     Frg1.MemTableEh1.Edit;
     if ar[i][1] = 1 then begin
+      Frg1.MemTableEh1.Edit;
       if Frg1.MemTableEh1.FieldByName('ndfl').AsVariant <> S.NullIf0(ar[i][2]) then begin
         if Frg1.MemTableEh1.FieldByName('ndfl').AsVariant <> null then
           st := st + ar[i][0] + ': Изменен столбец НДФЛ с ' + Frg1.MemTableEh1.FieldByName('ndfl').AsString + ' на ' + VarToStr(S.NullIf0(ar[i][2])) + #13#10;
@@ -808,17 +829,17 @@ begin
   if Mode = fView then begin
     Frg1.SetControlValue('lblInfo', '$000000Только просмотр.');
   end
+  else if FPayrollParams.G('commit') = 1 then begin
+    Frg1.SetControlValue('lblInfo', '$00FF00Ведомость закрыта, только просмотр.');
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
+  end
   else if FPayrollParams.G('id_method') = null then begin
     Frg1.SetControlValue('lblInfo', '$0000FFЗадайте метод расчета!');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
   end
   else if NoNorms then begin
-    Frg1.SetControlValue('lblInfo', '$0000FFНе заданы нормы рабочего времени!');
+    Frg1.SetControlValue('lblInfo', '$0000FFНе заданы нормы рабочего времени, выполните загрузку ТУРВ!');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
-  end
-  else if FPayrollParams.G('commit') = 1 then begin
-    Frg1.SetControlValue('lblInfo', '$00FF00Ведомость закрыта, только просмотр.');
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
   end
   else begin
     Frg1.SetControlValue('lblInfo', '$FF00FFВвод данных.');
@@ -856,6 +877,7 @@ var
 begin
   for i := 0 to Frg1.GetCount(False) - 1 do
     CalculateRow(i);
+  CalculateBanknotes;
 end;
 
 procedure TFrmWGedtPayroll.CalculateRow(Row: Integer);
@@ -869,7 +891,7 @@ var
 begin
   Result := '';
   s := Frg1.GetValueI('itog', Row, False);
-  if s = 0 then
+  if s <= 0 then
     Exit;
   i1 := s div 5000;
   i := s - i1 * 5000;
@@ -935,11 +957,28 @@ premium_p - премия за переработку
   //итог - округлим до сотен
   Frg1.SetValue('itog', Row, False, s.IIf(e3 = 0, null, roundto(e3, 2)));
   Frg1.SetValue('banknotes', Row, False, GetBanknotes);
-  Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := GetBanknotes;
   Frg1.DbGridEh1.Invalidate;
   Mth.PostAndEdit(Frg1.MemTableEh1);
 end;
 
+procedure TFrmWGedtPayroll.CalculateBanknotes;
+//подсчет итогового количества банкнот (только по отфильтрованным строкам!)
+var
+  i: Integer;
+  va1, va2: TVarDynArray;
+begin
+  va2 := [0, 0, 0, 0];
+  for i := 0 to Frg1.GetCount(True) - 1 do begin
+    va1 := A.Explode(Frg1.GetValueS('banknotes', i, True), ',');
+    if Length(va1) <> 4 then
+      Continue;
+    va2[0] := va2[0] + Max(StrToInt(va1[0]), 0);
+    va2[1] := va2[1] + Max(StrToInt(va1[1]), 0);
+    va2[2] := va2[2] + Max(StrToInt(va1[2]), 0);
+    va2[3] := va2[3] + Max(StrToInt(va1[3]), 0);
+  end;
+  Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := A.Implode(va2, ',');
+end;
 
 procedure TFrmWGedtPayroll.ClearFilter;
 begin
@@ -947,7 +986,6 @@ begin
   Frg1.DBGridEh1.DefaultApplyFilter;
   Frg1.MemTableEh1.Edit;
 end;
-
 
 procedure TFrmWGedtPayroll.CommitPayroll;
 begin
@@ -1007,7 +1045,7 @@ begin
 //  i:=Gh.GetGridColumn(DBGridEh1, 'name').Width;
 //  Gh.GetGridColumn(DBGridEh1, 'name').Width:=1800;
 //  PrintDBGridEh1.Options:=PrintDBGridEh1.Options - [pghFitGridToPageWidth];
-   Frg1.PrintDBGridEh1.BeforeGridText[0] :=  GetCaption;
+  PrintDBGridEh1.BeforeGridText[0] :=  GetCaption;
   //альбомная ориентация
   PrinterPreview.Orientation := poLandscape;
   //масштабируем всю таблицу для умещения на стронице
@@ -1078,6 +1116,7 @@ begin
   if (y1 > -1) and (y2 > -1) then
     for j := 0 to Frg1.MemTableEh1.Fields.Count - 1 do
       Rep.SetSumFormula('#d' + IntToStr(j) + '#', y1, y2);
+  Rep.SetValue('#banknotes#', Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value);
   Rep.DeleteCol1;
   Rep.Show;
   Rep.Free;
@@ -1218,8 +1257,16 @@ begin
 end;
 
 procedure TFrmWGedtPayroll.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+//при ручном вводе в ячейке - проставим признак изменения строки
 begin
   Frg1.SetValue('changed', 1);
+end;
+
+procedure TFrmWGedtPayroll.Frg1DbGridEh1ApplyFilter(Sender: TObject);
+//применим фильтр в столбце и пересчитаем итог по банкнотам
+begin
+  Frg1.DbGridEh1.DefaultApplyFilter;
+  CalculateBanknotes;
 end;
 
 procedure TFrmWGedtPayroll.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
@@ -1227,6 +1274,7 @@ begin
   if Mode <> dbgvCell then
     Exit;
   CalculateRow(Row - 1);
+  CalculateBanknotes;
 end;
 
 
