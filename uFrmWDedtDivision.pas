@@ -53,6 +53,7 @@ begin
   ];
   View := 'v_ref_divisions';
   Table := 'ref_divisions';
+  Sequence := 'sq_ref_divisions';
   FOpt.UseChbNoClose := False;
   FOpt.InfoArray:= [[
     'Данные подразделения.'#13#10+
