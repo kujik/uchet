@@ -115,6 +115,7 @@ uses
   D_Candidate, D_Vacancy,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
+  uFrmOGrepPersonal1,
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
@@ -648,6 +649,7 @@ begin
     TFrmXWndUserInterface.Show(Application, F, [myfoDialog], fNone, 0, null);
   end
   else if F = myfrm_Rep_W_Personnel_1 then begin
+    TFrmOGrepPersonal1.Show(Application, F, MyFormOptions, fNone, 0, null);
 //!!!    Form := TForm_Rep_Personnel_1.Create(Application, F, MyFormOptions, FNone, 0, null);
   end
   else if F = myfrm_Rep_W_Personnel_2 then begin

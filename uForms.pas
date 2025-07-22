@@ -329,7 +329,7 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     //где в массивах обязателен только нулевой элемент
     procedure AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; v: TVarDynArray2; Append: Boolean = False);
     //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh
-    function DteValueIsDate(DBDateTimeEditEh1: TDBDateTimeEditEh): Boolean;
+    function DteValueIsDate(DBDateTimeEditEh1: TObject): Boolean;
     //отрисовать красную линию подчеркивания в указанном контроле для индикации ошибки
     procedure DotRedLine(Control: TControl; DrawLine: Boolean = True);
     //Устанавливает параметры кнопки типа TBitBtn
@@ -3180,10 +3180,14 @@ begin
     end;
 end;
 
-function TControlsHelper.DteValueIsDate(DBDateTimeEditEh1: TDBDateTimeEditEh): Boolean;
+function TControlsHelper.DteValueIsDate(DBDateTimeEditEh1: TObject): Boolean;
 //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh
 begin
-  result := (length(DBDateTimeEditEh1.Text) = 10) and (pos(' ', DBDateTimeEditEh1.Text) = 0) and (DBDateTimeEditEh1.Value <> null) and (S.IsDateTime(DBDateTimeEditEh1.Value, 'd'));
+  Result := False;
+  if not (DBDateTimeEditEh1 is TDBDateTimeEditEh) then
+    Exit;
+  Result := (length(TDBDateTimeEditEh(DBDateTimeEditEh1).Text) = 10) and (pos(' ', TDBDateTimeEditEh(DBDateTimeEditEh1).Text) = 0) and
+    (TDBDateTimeEditEh(DBDateTimeEditEh1).Value <> null) and (S.IsDateTime(TDBDateTimeEditEh(DBDateTimeEditEh1).Value, 'd'));
 end;
 
 procedure TControlsHelper.DotRedLine(Control: TControl; DrawLine: Boolean = True);

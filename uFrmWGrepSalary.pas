@@ -23,7 +23,6 @@ type
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
 //    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
-//    procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure CreateDatesList;
   public
   end;
@@ -152,26 +151,24 @@ end;
 procedure TFrmWGrepSalary.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
   Q.QExecSQL(
-    'update rep_salary set ' + FieldName + ' = :sum$i where dt = :dt$d and id_job = :job$i', [Value, Fr.GetValueI('dt'), Fr.GetValueI('id_job')]);
+    'update rep_salary set ' + FieldName + ' = :sum$i where dt = :dt$d and id_job = :job$i', [Value, Fr.GetValueI('dt'), Fr.GetValueI('id_job')]
+  );
 end;
 
 procedure TFrmWGrepSalary.CreateDatesList;
 var
-  i:Integer;
+  i: Integer;
   va: TVarDynArray2;
   dt: TDateTime;
 begin
   va := Q.QLoadToVarDynArray2('select distinct dt from rep_salary order by dt desc', []);
-  dt:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
-  if (High(va) = -1)
-    then va:=[[dt]]   //хотя бы одна дата должна быть
-    else while va[0][0] < dt do     //добавим в список все даты начала турв до предпоследнего, большие последней даты отчета
-      va:=[[Turv.GetTurvBegDate(IncDay(va[0][0], 19))]] + va;
+  dt := Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
+  if (High(va) = -1) then
+    va := [[dt]]   //хотя бы одна дата должна быть
+  else
+    while va[0][0] < dt do     //добавим в список все даты начала турв до предпоследнего, большие последней даты отчета
+      va := [[Turv.GetTurvBegDate(IncDay(va[0][0], 19))]] + va;
   Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbDates')), va);
-{  for i:=0 to High(va) do
-    cmb_Dt.Items.Add(VarToStr(va[i][0]));
-  cmb_Dt.ItemIndex:=0;
-  cmb_Dt.LimitTextToListValues:=True;}
 end;
 
 

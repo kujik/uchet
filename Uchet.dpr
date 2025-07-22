@@ -10,19 +10,15 @@ kujik/psv116@ 1. - k .. s - g
 }
 
 uses
-  //подключение madCollection для обработки ошибок
   madExcept,
   madLinkDisAsm,
   madListHardware,
   madListProcesses,
   madListModules,
-  //обеспечивает сортировку и фильтрацию данных в MemTable
   EhLibVclMTE,
-  //стандартные модули дельфи
   Forms,
   Windows,
   SysUtils,
-  //модули
   uDBParsec in 'uDBParsec.pas' {myDBParsec: TDataModule},
   uMessages in 'uMessages.pas',
   uFields in 'uFields.pas',
@@ -48,9 +44,7 @@ uses
   uExcel in 'uExcel.pas',
   uForms in 'uForms.pas',
   uMailingInterface in 'uMailingInterface.pas',
-  //главная форма
   uFrmMain in 'uFrmMain.pas' {FrmMain},
-  //остальные формы
   V_MDI in 'V_MDI.pas' {Form_MDI},
   V_Normal in 'V_Normal.pas' {Form_Normal},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
@@ -156,7 +150,8 @@ uses
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
   uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
   uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
-  uFrmTest2 in 'uFrmTest2.pas' {FrmTest2};
+  uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
+  uFrmOGrepPersonal1 in 'uFrmOGrepPersonal1.pas' {FrmOGrepPersonal1};
 
 //!!!
 

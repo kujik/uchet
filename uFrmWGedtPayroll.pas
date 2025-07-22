@@ -135,10 +135,10 @@ begin
     ['norm$f', '_norm', wcol, fcol],
     ['norm_m$f', '_norm_m', wcol, fcol],
     ['ball$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') <> 15],
-    ['premium_m_src$i', '~  Премия ' + sLineBreak + '  (грузчики)', wcol, fcol],            //премия за отчетный период, взятая из ТУРВ
+    ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol],            //премия за отчетный период, взятая из ТУРВ
     ['premium$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol],                      //премия, сумма дневных премий из турв
     ['premium_p$i', '~  Премия за' + sLineBreak + '  переработки', wcol, fcol],             //премия, за переработку, по формуле
-    ['premium_m$i', '~  Премия' + sLineBreak + '', wcol, fcol],                             //премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
+    ['premium_m$i', '~  Премия' + sLineBreak + '   дополнительная', wcol, fcol],                             //премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
     ['otpusk$i', '~  ОТ', wcol, fcol, 'e'],
     ['bl$i', '~  БЛ', wcol, fcol, 'e'],
     ['penalty$i', '~  Штрафы', wcol, fcol],
@@ -420,7 +420,7 @@ begin
   for i := 0 to High(va1) do begin
     for j := 0 to High(va) do begin
       if va[j][2] = va1[i][0] then begin
-        //премия
+        //премия за отчетный период
         va[j][9] := va1[i][1];
         //график работы  (id_shedule)
         va[j][11] := va1[i][2];
@@ -486,18 +486,18 @@ begin
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
           b := True;
         end;
-        if Frg1.MemTableEh1.FieldByName('premium').AsVariant <> S.NullIf0(va[j][7] + va[j][9]) then begin
+        if Frg1.MemTableEh1.FieldByName('premium').AsVariant <> S.NullIf0(va[j][7]) then begin  //премия текущая, сумма дневных премий из турв
           if Frg1.MemTableEh1.FieldByName('premium').AsVariant <> null then
-            st := st + va[j][3] + ': Изменен столбец Текущая премия с ' + Frg1.MemTableEh1.FieldByName('premium').AsString + ' на ' + VarToStr(S.NullIf0(va[j][7] + va[j][9])) + #13#10;
-          Frg1.MemTableEh1.FieldByName('premium').Value := S.NullIf0(va[j][7] + va[j][9]); //!!! +va[j][9]
+            st := st + va[j][3] + ': Изменен столбец Премия текущая с ' + Frg1.MemTableEh1.FieldByName('premium').AsString + ' на ' + VarToStr(S.NullIf0(va[j][7])) + #13#10;
+          Frg1.MemTableEh1.FieldByName('premium').Value := S.NullIf0(va[j][7]);
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
           b := True;
         end;
-        if (FPayrollParams.G('id_method') = 10) then begin
-          v2:=Round(S.NNum(va[j][9]) / S.NNum(va[j][12]) * Min(S.NNum(va[j][6]), S.NNum(va[j][12])));  //S.NNum(va[j][12] - норма за текущий период //!!!
+        if True {(FPayrollParams.G('id_method') = 10)} then begin //премия за отчетный период (премия фиксированная), взятая из ТУРВ  (va[9] = премия за отчетный период)
+          v2:=Round(S.NNum(va[j][9]) / S.NNum(va[j][12]) * Min(S.NNum(va[j][6]), S.NNum(va[j][12])));  //va[j][12] - норма за текущий период, va[j][6] - часы по турв
           if (Frg1.MemTableEh1.FieldByName('premium_m_src').AsVariant <> S.NullIf0(v2)) then begin
             if Frg1.MemTableEh1.FieldByName('premium_m_src').AsVariant <> null
-              then st:=st + va[j][3] + ': Изменен столбец Премия*  с ' + Frg1.MemTableEh1.FieldByName('premium_m_src').AsString + ' на ' + VarToStr(v2) + #13#10;
+              then st:=st + va[j][3] + ': Изменен столбец Премия фиксированная с ' + Frg1.MemTableEh1.FieldByName('premium_m_src').AsString + ' на ' + VarToStr(v2) + #13#10;
             Frg1.MemTableEh1.FieldByName('premium_m_src').Value:=S.NullIf0(v2);
             Frg1.MemTableEh1.FieldByName('changed').Value:=1;
             b:=True;
@@ -859,7 +859,7 @@ procedure TFrmWGedtPayroll.SetColumns;
 //покажем/скроем столбцы в зависимости от метода расчета
 begin
   Frg1.Opt.SetColFeature('ball_m', 'i', (S.NInt(FPayrollParams.G('id_method')) in [13, 14]), False);
-  Frg1.Opt.SetColFeature('premium_m_src', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
+  //!!!Frg1.Opt.SetColFeature('premium_m_src', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
   Frg1.Opt.SetColFeature('premium_p', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
   Frg1.SetColumnsVisible;
 end;
@@ -950,7 +950,7 @@ premium_p - премия за переработку
     Frg1.SetValue('premium_p', Row, False, Round(Max(0, (e1) / s.NNum(Frg1.GetValueF('norm_m', Row, False) / 2) * (Frg1.GetValueF('turv', Row, False) - Frg1.GetValueF('norm', Row, False)) * 1.5)));
   end;
   //расчитаем левую часть, до итого начислено
-  e3 := Frg1.GetValueF('ball', Row, False) + Frg1.GetValueF('premium_m_src', Row, False) + Frg1.GetValueF('premium_p', Row, False) + Frg1.GetValueF('premium_m', Row, False) + Frg1.GetValueF('premium', Row, False) + Frg1.GetValueF('otpusk', Row, False) + Frg1.GetValueF('bl', Row, False) + Frg1.GetValueF('penalty', Row, False);
+  e3 := Frg1.GetValueF('ball', Row, False) + Frg1.GetValueF('premium_m_src', Row, False) + Frg1.GetValueF('premium_p', Row, False) + Frg1.GetValueF('premium_m', Row, False) + Frg1.GetValueF('premium', Row, False) + Frg1.GetValueF('otpusk', Row, False) + Frg1.GetValueF('bl', Row, False) - Frg1.GetValueF('penalty', Row, False);
   Frg1.SetValue('itog1', Row, False, s.IIf(e3 = 0, null, round(e3)));
   //расчитаем итог
   e3 := Frg1.GetValueF('itog1', Row, False) - Frg1.GetValueF('ud', Row, False) - Frg1.GetValueF('ndfl', Row, False) - Frg1.GetValueF('fss', Row, False) - Frg1.GetValueF('pvkarta', Row, False) - Frg1.GetValueF('karta', Row, False);
@@ -1088,6 +1088,8 @@ begin
     Rep.Free;
     Exit;
   end;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := True;
   Rep.PasteBand('HEADER');
   Rep.SetValue('#TITLE#', GetCaption);
   rn := Frg1.MemTableEh1.RecNo;
@@ -1120,6 +1122,8 @@ begin
   Rep.DeleteCol1;
   Rep.Show;
   Rep.Free;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 
 function TFrmWGedtPayroll.IsChanged: Boolean;
