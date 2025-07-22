@@ -258,7 +258,9 @@ Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меняются и русские и латинс
     function IIf(Expr: Boolean; Par1, Par2: Variant): Variant;
     function IIfV(Expr: Boolean; Par1, Par2: Variant): Variant;
     function IIFStr(Expr: Boolean; Par1: string; Par2: string = ''): string; overload;  //второй параметр можно не задавать, если должен быть пустой
-    //заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
+    //если первый аргумент не пуст, возвращает его, иначе - второй
+    function IfEmptyStr(St: string; StIfEmpty: string): string;
+//заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
     function IfNotEmptyStr(St: string; Mask: string = #0): string;
     function IIfInt(Expr: Boolean; Par1, Par2: Integer): Integer;
     function IIfFloat(Expr: Boolean; Par1, Par2: extended): Extended;
@@ -1608,6 +1610,13 @@ begin
     Result := Par1
   else
     Result := Par2;
+end;
+
+function TMyStringHelper.IfEmptyStr(St: string; StIfEmpty: string): string;
+begin
+  Result := St;
+  if Result = '' then
+    Result := StIfEmpty;
 end;
 
 function TMyStringHelper.IfNotEmptyStr(St: string; Mask: string = #0): string;

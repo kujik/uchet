@@ -329,7 +329,7 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     //где в массивах обязателен только нулевой элемент
     procedure AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; v: TVarDynArray2; Append: Boolean = False);
     //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh
-    function DteValueIsDate(DBDateTimeEditEh1: TObject): Boolean;
+    function DteValueIsDate(DBDateTimeEditEh1: TComponent): Boolean;
     //отрисовать красную линию подчеркивания в указанном контроле для индикации ошибки
     procedure DotRedLine(Control: TControl; DrawLine: Boolean = True);
     //Устанавливает параметры кнопки типа TBitBtn
@@ -3180,7 +3180,7 @@ begin
     end;
 end;
 
-function TControlsHelper.DteValueIsDate(DBDateTimeEditEh1: TObject): Boolean;
+function TControlsHelper.DteValueIsDate(DBDateTimeEditEh1: TComponent): Boolean;
 //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh
 begin
   Result := False;

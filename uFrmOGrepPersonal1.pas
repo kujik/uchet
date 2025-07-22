@@ -13,6 +13,7 @@ type
   TFrmOGrepPersonal1 = class(TFrmBasicGrid2)
   private
     function  PrepareForm: Boolean; override;
+    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     function  GetData: TVarDynArray2;
   public
   end;
@@ -33,14 +34,15 @@ begin
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
-    ['job','Ќаименование должности','250;h'],
-    ['workersqnt',' оличество работников, человек','120','f=#,##0:'],
-    ['qnt1','ѕрин€то, чел.','80','f=#,##0:'],
-    ['qnt2','”волено, чел.','80','f=#,##0:'],
-    ['qntvac','ѕотребность, чел.','120','f=#,##0:'],
-    ['dtvac','ƒата размещени€ вакансии','120','f=#,##0:']
+    ['job$s','Ќаименование должности','250;h'],
+    ['workersqnt$i',' оличество работников, человек','120','f=#,##0:'],
+    ['qnt1$i','ѕрин€то, чел.','80','f=#,##0:'],
+    ['qnt2$i','”волено, чел.','80','f=#,##0:'],
+    ['qntvac$i','ѕотребность, чел.','120','f=#,##0:'],
+    ['dtvac$d','ƒата размещени€ вакансии','120']
   ]);
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.CreateAddControls('1', cntDTEdit, 'ѕериод с ', 'edtd1', ':', 70, yrefC, 85);
   Frg1.CreateAddControls('1', cntDTEdit, 'по ', 'edtd2', ':', 180, yrefC, 85);
   Frg1.InfoArray:=[[
@@ -52,7 +54,19 @@ begin
     'ƒоступна печать таблицы и выгрузка ее в Excel.'#13#10+
     ''
   ]];
+  //данные из массива
+  Frg1.SetInitData([]);
   Result := Inherited;
+end;
+
+procedure TFrmOGrepPersonal1.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  if Tag = mbtGo then begin
+    GetData;
+    Fr.RefreshGrid;
+  end
+  else
+    inherited;
 end;
 
 function TFrmOGrepPersonal1.GetData: TVarDynArray2;
@@ -66,80 +80,64 @@ var
   changed: Boolean;
   size: Integer;
 begin
-  Result:=[];
-(*
+  Result := [];
   //выйдем, если не введены обе даты, с пустой таблицей
-  if not(Cth.DteValueIsDate(Frg1.FindChildControl('edtd1')) and Cth.DteValueIsDate(Frg1.FindChildControl('edtd2')) and (Frg1.GetControlValue('edtd1') >= Frg1.GetControlValue('edtd2'))) then Exit;
-
-  dt1:=De_1.Value;
-  dt2:=De_2.Value;
-
+  if not (Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) and Cth.DteValueIsDate(Frg1.FindComponent('edtd2')) and (Frg1.GetControlValue('edtd2') >= Frg1.GetControlValue('edtd1'))) then begin
+    MyWarningMessage('«адайте корректный период дл€ отчета!');
+    Exit;
+  end;
+ dt1 := Frg1.GetControlValue('edtd1');
+  dt2 := Frg1.GetControlValue('edtd2');
   //профессии   0-айди, 1-наименование, 2-количество, 3-прин€ты, 4-уволены, 5-потребность, 6-дата размещени€€ за€вки
-  jobs:=Q.QLoadToVarDynArray2(
-    'select id, name, 0, 0, 0, 0, null from ref_jobs order by name',
-    []
-  );
+  jobs := Q.QLoadToVarDynArray2('select id, name, 0, 0, 0, 0, null from ref_jobs order by name', []);
   //запрос. сортировка принципиальна
-  v:=Q.QLoadToVarDynArray2(
-    'select id_division, id_worker, workername, id_job, job, status, dt from v_j_worker_status order by workername, dt, job, id_division',
-    []
-  );
+  v := Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, dt from v_j_worker_status order by workername, dt, job, id_division', []);
   //проходим по массиву статусов, отсортирован по работнику, потом по дате
-  for i:=0 to High(v) do begin
+  for i := 0 to High(v) do begin
     //только до второй даты - тк мы получаем состав подразделений на конечную дату, а движение кадров за период между датами
     if v[i][6] <= dt2 then begin
       //если прин€т или переведен
       if Integer(v[i][5]) in [1, 2] then begin
-{if v[i][3] = 24
-  then begin
-   st:=v[i][2];
-   k:=0;
-  end;}
         //найдем должность в массиве
-        for j:=0 to high(jobs) do
-          if jobs[j][0] = v[i,3] then begin
+        for j := 0 to high(jobs) do
+          if jobs[j][0] = v[i, 3] then begin
             //увеличим количество работающих по данной должности
             inc(jobs[j][2]);
             //если больше начальной даты, и это прием а не перевод то увеличим количество прин€тых
-            if (v[i][6] >= dt1)and(v[i][5] = 1) then inc(jobs[j][3]);
+            if (v[i][6] >= dt1) and (v[i][5] = 1) then
+              inc(jobs[j][3]);
             break;
           end;
       end;
       if Integer(v[i][5]) in [2, 3] then begin
-        for j:=0 to high(jobs) do
+        for j := 0 to high(jobs) do
           if jobs[j][0] = v[i - 1][3] then begin
             dec(jobs[j][2]);
-            if (v[i][6] >= dt1)and(v[i][5] = 3) then inc(jobs[j][4]);
+            if (v[i][6] >= dt1) and (v[i][5] = 3) then
+              inc(jobs[j][4]);
             break;
           end;
       end;
     end;
   end;
   //получим все вакансии
-  vac:=Q.QLoadToVarDynArray2(
-    'select id_job, qnt, dt_beg, dt_end from j_vacancy order by id_job, dt_beg',
-    []
-  );
-  for i:=0 to High(vac) do begin
+  vac := Q.QLoadToVarDynArray2('select id_job, qnt, dt_beg, dt_end from j_vacancy order by id_job, dt_beg', []);
+  for i := 0 to High(vac) do begin
     //не вносим, если конечна€ дата раньше начала периода, или же начальна€ после конца периода
-    if not((vac[i][2] > dt2) or (vac[i][3] <> null)and(vac[i][3] < dt1)) then begin
-      for j:=0 to High(jobs) do begin
+    if not ((vac[i][2] > dt2) or (vac[i][3] <> null) and (vac[i][3] < dt1)) then begin
+      for j := 0 to High(jobs) do begin
         if jobs[j][0] = vac[i][0] then begin
           //просцуммируем потребность, а дату поставим последнюю из найденнных
-          jobs[j][5] :=jobs[j][5] + vac[i][1];
-          jobs[j][6]:= vac[i][2];
+          jobs[j][5] := jobs[j][5] + vac[i][1];
+          jobs[j][6] := vac[i][2];
         end;
       end;
     end;
   end;
-
-
-
-
-
-
-
   //заполним пол€ из массива
+  Frg1.SetInitData(jobs);
+//  Frg1.LoadSourceDataFromArray(jobs, 'id;job;workersqnt;qnt1;qnt2;qntvac;dtvac');
+{
   MemTableEh1.Open;
   MemTableEh1.First;
   MemTableEh1.Edit;
@@ -164,7 +162,7 @@ begin
   MemTableEh1.First;
 
   MemTableEh1.ReadOnly:=True;
-  *)
+  }
 end;
 
 

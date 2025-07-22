@@ -327,6 +327,7 @@ type
     Params: TVarDynArray;
     Arr: TVarDynArray2;
     ArrFields: string;
+    ArrColumns: string;
     ArrN: TNamedArr;
   end;
 
@@ -625,7 +626,7 @@ type
     {публичные функции возврата/установки свойств и значений}
 
     procedure SetInitData(Sql: string; Params: TVarDynArray); overload;
-    procedure SetInitData(Arr: TVarDynArray2; ArrFields: string); overload;
+    procedure SetInitData(Arr: TVarDynArray2; ArrFields: string = ''; ArrColumns: string = ''); overload;
     procedure SetInitData(ArrN: TNamedArr); overload;
 
     //грид пуст (с учетом фитрации)
@@ -675,7 +676,7 @@ type
     procedure LoadSourceDataFromArray(AValues: TVarDynArray2; AFieldNames: string = ''; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
     procedure LoadData(AParams: TVarDynArray); overload;
     procedure LoadData(ASql: string; AParams: TVarDynArray; AEmptyTable: Boolean = true); overload;
-    procedure LoadData(AValues: TVarDynArray2; AArrayColumns: string; AEmptyTable: Boolean = true); overload;
+    procedure LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = true); overload;
     procedure LoadData(AValues: TNamedArr; AEmptyTable: Boolean = true); overload;
 
 
@@ -2265,12 +2266,13 @@ begin
   FInitData.Params := Params;
 end;
 
-procedure TFrDBGridEh.SetInitData(Arr: TVarDynArray2; ArrFields: string);
+procedure TFrDBGridEh.SetInitData(Arr: TVarDynArray2; ArrFields: string = ''; ArrColumns: string = '');
 begin
   FInitData.IsDefined := True;
   Opt.SetDataMode(myogdmFromArray);
   FInitData.Arr := Arr;
   FInitData.ArrFields := ArrFields;
+  FInitData.ArrColumns := ArrColumns;
 end;
 
 procedure TFrDBGridEh.SetInitData(ArrN: TNamedArr);
@@ -2563,11 +2565,11 @@ begin
   ChangeSelectedData;
 end;
 
-procedure TFrDBGridEh.LoadData(AValues: TVarDynArray2; AArrayColumns: string; AEmptyTable: Boolean = true);
+procedure TFrDBGridEh.LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = true);
 begin
   InLoadData := True;
   MemTableEh1.ReadOnly := False;
-  Mth.LoadGridFromVa2(DBGridEh1, AValues, Opt.Sql.FieldNames, AArrayColumns, AEmptyTable);
+  Mth.LoadGridFromVa2(DBGridEh1, AValues, S.IfEmptyStr(AArrayFields, Opt.Sql.FieldNames), AArrayColumns, AEmptyTable);
   MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
@@ -2902,7 +2904,7 @@ begin
       else if InitData.ArrN.FieldsCount > 0 then
         LoadData(InitData.ArrN)
       else
-        LoadData(InitData.Arr, InitData.ArrFields);
+        LoadData(InitData.Arr, InitData.ArrFields, InitData.ArrColumns);
       DBGridEh1.DefaultApplySorting;
       DBGridEh1.DefaultApplyFilter;
       if (KeyString <> '') and (MemTableEh1.Active) then
