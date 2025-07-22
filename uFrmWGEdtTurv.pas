@@ -1473,7 +1473,7 @@ begin
       if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Экспорт в Excel', 270, 50, [
         [cntComboLK,'Шаблон','1:500:0', 210],
         [cntDTEdit,'Дата с','' + S.DateTimeToIntStr(FPeriodStartDate) + ':' + S.DateTimeToIntStr(FPeriodEndDate), 90],
-        [cntDTEdit,'по ','' + S.DateTimeToIntStr(FPeriodStartDate) + ':' + S.DateTimeToIntStr(FPeriodEndDate), 170, 90]],
+        [cntDTEdit,'по ','' + S.DateTimeToIntStr(FPeriodStartDate) + ':' + S.DateTimeToIntStr(FPeriodEndDate), 90, 170]],
         [VarArrayOf(['0', VarArrayOf(['ТУРВ по Parsec']), VarArrayOf(['0'])]), FPeriodStartDate, FPeriodEndDate],
         va, [['']],  nil
       ) >=0

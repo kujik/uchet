@@ -123,11 +123,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>9836</VerInfo_Build>
+        <VerInfo_Build>9857</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9836;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.07.22 00:09:47;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.9857;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.07.22 06:00:02;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -461,15 +461,6 @@
         </DCCReference>
         <DCCReference Include="uFrmOWrepOrdersPrimeCost.pas">
             <Form>FrmOWrepOrdersPrimeCost</Form>
-        </DCCReference>
-        <DCCReference Include="D_CreatePayroll.pas">
-            <Form>Dlg_CreatePayroll</Form>
-        </DCCReference>
-        <DCCReference Include="F_Payroll.pas">
-            <Form>Form_Payroll</Form>
-        </DCCReference>
-        <DCCReference Include="D_PayrollSettings.pas">
-            <Form>Dlg_PayrollSettings</Form>
         </DCCReference>
         <DCCReference Include="D_Grid1.pas">
             <Form>Dlg_Grid1</Form>

@@ -1895,8 +1895,7 @@ begin
       if Turv.DeleteTURV(Fr.ID) then
         Fr.RefreshGrid;
     if (FormDoc = myfrm_J_Payrolls) and (fMode in [fEdit, fView]) then
-  //    Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
-      TFrmWGedtPayroll.Show(Self, myfrm_Dlg_Payroll, [myfoDialog, myfoSizeable], fMode, Fr.ID, null);
+      Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
       TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
       //~Dlg_CreatePayroll.ShowDialog(Self, 1);

@@ -143,9 +143,6 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-  D_CreatePayroll in 'D_CreatePayroll.pas' {Dlg_CreatePayroll},
-  F_Payroll in 'F_Payroll.pas' {Form_Payroll},
-  D_PayrollSettings in 'D_PayrollSettings.pas' {Dlg_PayrollSettings},
   D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
   D_Vacancy in 'D_Vacancy.pas' {Dlg_Vacancy},
   D_Candidate in 'D_Candidate.pas' {Dlg_Candidate},
@@ -326,10 +323,6 @@ begin
 
 end.
 {
-  Application.CreateForm(TDlg_CreatePayroll, Dlg_CreatePayroll);
-  Application.CreateForm(TDlg_PayrollSettings, Dlg_PayrollSettings);
-  Application.CreateForm(TDlg_TURV_Comment, Dlg_TURV_Comment);
-  Application.CreateForm(TDlg_Turv_FromParsec, Dlg_Turv_FromParsec);
   Application.CreateForm(TDlg_Grid1, Dlg_Grid1);
   Application.CreateForm(TDlg_CandidatesFromWorkerStatus, Dlg_CandidatesFromWorkerStatus);
 }

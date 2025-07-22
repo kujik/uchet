@@ -86,12 +86,12 @@ uses
   uExcel,
   uPrintReport,
   XlsMemFilesEh,
-  D_PayrollSettings,
   Printers,
   PrViewEH,
   uModule,
-  uSys
-  , uFrmMain;
+  uSys,
+  uFrmMain
+  ;
 
 
 {$R *.dfm}
@@ -1151,15 +1151,20 @@ end;
 
 procedure TFrmWGedtPayroll.SetPayrollMethod;
 var
-  va, va1, va2: TVarDynArray;
+  va, va1, va2, va3: TVarDynArray;
   n: Variant;
   rn, i: Integer;
+  st: string;
 begin
   va1 := Q.QLoadToVarDynArrayOneCol('select name from payroll_method order by name', []);
   va2 := Q.QLoadToVarDynArrayOneCol('select id from payroll_method order by name', []);
+  va3 := Q.QLoadToVarDynArrayOneCol('select comm from payroll_method order by name', []);
+  st := 'Выберите метод расчета заработной платы'#13#10'(выбранный метод сохранится и будет использоваться и в будущих ведомостях):'#13#10#13#10;
+  for i := 0 to High(va1) do
+    st := st + va1[i] + #13#10'  ' + va3[i] + #13#10#13#10;
   if TFrmBasicInput.ShowDialog(FrmMain, '', [], fEdit, '~Метод расчета з/п', 300, 60,
     [[cntComboLK,'Метод','1:400:0']],
-    [VarArrayOf([FPayrollParams.G('id_method'), VarArrayOf(va1), VarArrayOf(va2)])] , va, [['']], nil
+    [VarArrayOf([FPayrollParams.G('id_method'), VarArrayOf(va1), VarArrayOf(va2)])] , va, [[st]], nil
   ) < 0 then
     Exit;
   //метод расчета сохраняется при сохранении ведомости
