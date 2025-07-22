@@ -545,8 +545,7 @@ begin
       FDeletedWorkers := FDeletedWorkers + [Frg1.MemTableEh1.FieldByName('id_worker').AsInteger];
       Frg1.MemTableEh1.Edit;
       Frg1.MemTableEh1.Delete;
-      Frg1.MemTableEh1.Post;
-      Frg1.MemTableEh1.Edit;
+      Mth.PostAndEdit(Frg1.MemTableEh1);
       b := True;
     end;
   end;
@@ -860,6 +859,7 @@ procedure TFrmWGedtPayroll.SetColumns;
 begin
   Frg1.Opt.SetColFeature('ball_m', 'i', (S.NInt(FPayrollParams.G('id_method')) in [13, 14]), False);
   //!!!Frg1.Opt.SetColFeature('premium_m_src', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
+  Frg1.Opt.SetColFeature('ball', 'e', S.NInt(FPayrollParams.G('id_method')) in [15], False);
   Frg1.Opt.SetColFeature('premium_p', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
   Frg1.SetColumnsVisible;
 end;
@@ -991,9 +991,9 @@ end;
 
 procedure TFrmWGedtPayroll.CommitPayroll;
 begin
-  if MyQuestionMessage(S.IIf(FPayrollParams.G('commit'), 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
+  if MyQuestionMessage(S.IIf(S.NInt(FPayrollParams.G('commit')) = 1, 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
     Exit;
-  FPayrollParams.SetValue(0, 'commit', not FPayrollParams.G('commit'));
+  FPayrollParams.SetValue(0, 'commit', IIf(S.NInt(FPayrollParams.G('commit')) = 1, 0, 1));
   SetButtons;
   //установим, как метку что ведомость была изменена, чтобы изменения при выходе записались в бд
   Frg1.SetValue('changed', 0, False, 1);

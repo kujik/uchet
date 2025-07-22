@@ -1,22 +1,41 @@
 inherited FrmWGedtPayroll: TFrmWGedtPayroll
   Caption = 'FrmWGedtPayroll'
-  ExplicitWidth = 812
-  ExplicitHeight = 575
+  ClientWidth = 800
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Width = 800
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 786
-      ExplicitHeight = 471
+      Width = 790
+      ExplicitWidth = 790
+      inherited pnlTop: TPanel
+        Width = 790
+      end
+      inherited pnlBottom: TPanel
+        Width = 790
+      end
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 776
-        ExplicitHeight = 416
+        Width = 780
+        ExplicitWidth = 780
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
-          ExplicitHeight = 414
+          Width = 778
           inherited pnlGrid: TPanel
+            Width = 768
             inherited DbGridEh1: TDBGridEh
+              Height = 337
               OnApplyFilter = Frg1DbGridEh1ApplyFilter
             end
+            inherited pnlStatusBar: TPanel
+              Top = 338
+            end
+          end
+          inherited pnlTop: TPanel
+            Width = 778
+          end
+          inherited pnlContainer: TPanel
+            Width = 778
+          end
+          inherited pnlBottom: TPanel
+            Width = 778
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -35,10 +54,21 @@ inherited FrmWGedtPayroll: TFrmWGedtPayroll
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitTop = 430
-        ExplicitWidth = 786
+        Width = 790
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          Width = 788
+          inherited pnlGrid: TPanel
+            Width = 778
+          end
+          inherited pnlTop: TPanel
+            Width = 788
+          end
+          inherited pnlContainer: TPanel
+            Width = 788
+          end
+          inherited pnlBottom: TPanel
+            Width = 788
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -55,12 +85,14 @@ inherited FrmWGedtPayroll: TFrmWGedtPayroll
           end
         end
       end
+      inherited pnlRight: TPanel
+        Left = 785
+      end
     end
     inherited pnlFrmBtns: TPanel
+      Width = 790
       ExplicitTop = 476
-      ExplicitWidth = 786
       inherited pnlFrmBtnsContainer: TPanel
-        ExplicitWidth = 784
         inherited pnlFrmBtnsChb: TPanel
           ExplicitLeft = 457
         end
@@ -68,6 +100,7 @@ inherited FrmWGedtPayroll: TFrmWGedtPayroll
     end
   end
   inherited pnlStatusBar: TPanel
+    Width = 800
     inherited lblStatusBarR: TLabel
       Left = 727
       Height = 14
