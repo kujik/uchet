@@ -388,7 +388,7 @@ end;
 
 function TFields.Count: Integer;
 begin
-  Result := High(FDefineFieldsAdd);
+  Result := Length(FDefineFieldsAdd);
 end;
 
 function TFields.GetName(i: Integer): string;

@@ -395,7 +395,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         TabOrder = 4
         Visible = True
       end
-      object chb_Active: TDBCheckBoxEh
+      object chb_active: TDBCheckBoxEh
         Left = 104
         Top = 170
         Width = 97

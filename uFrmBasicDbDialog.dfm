@@ -1,13 +1,13 @@
 inherited FrmBasicDbDialog: TFrmBasicDbDialog
   Caption = 'FrmBasicDbDialog'
-  ClientHeight = 418
-  ClientWidth = 856
-  ExplicitWidth = 872
-  ExplicitHeight = 457
+  ClientHeight = 417
+  ClientWidth = 852
+  ExplicitWidth = 868
+  ExplicitHeight = 456
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 856
-    Height = 402
+    Width = 852
+    Height = 401
     ExplicitWidth = 856
     ExplicitHeight = 402
     inherited pnlFrmClient: TPanel
@@ -52,8 +52,8 @@ inherited FrmBasicDbDialog: TFrmBasicDbDialog
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 402
-    Width = 856
+    Top = 401
+    Width = 852
     ExplicitTop = 403
     ExplicitWidth = 860
     inherited lblStatusBarR: TLabel

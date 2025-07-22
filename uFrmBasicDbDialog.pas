@@ -81,7 +81,7 @@ begin
   FieldsSave2 := '';
   CtrlValues2 := [];
   //получим поля и их значения, по тем для которых указано сохранение
-  for i := 0 to F.Count do
+  for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameS) <> '' then begin
       S.ConcatStP(FieldsSave2, F.GetProp(i, fvtFNameS), ';');
       CtrlValues2 := CtrlValues2 + [S.NullIfEmpty(F.GetProp(i, fvtVCurr))];

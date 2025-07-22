@@ -54,7 +54,8 @@ begin
   ]);
   Frg1.SetInitData('select id, name, comm from v_users where id > 0 order by name',[]);
   Result := inherited;
-  Frg1.SetIndicatorCheckBoxesByField('id', A.Explode(AddParam[1], ','));
+  if Length(AddParam[1]) > 0 then
+    Frg1.SetIndicatorCheckBoxesByField('id', A.Explode(S.NSt(AddParam[1]), ','));
   SetButtonsState;
 end;
 

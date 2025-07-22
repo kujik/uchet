@@ -935,7 +935,7 @@ premium_p - преми€ за переработку
   if (CalcMode = 11) then begin
     //полностью
     if Frg1.GetValueF('norm_m', Row, False) > 0 then
-      e3 := e1 / Min(Frg1.GetValueF('norm_m', Row, False), MaxInt) * Frg1.GetValueF('norm', Row, False);
+      e3 := e1 / Frg1.GetValueF('norm_m', Row, False) * e2;
   end;
   if (CalcMode = 13) or (CalcMode = 14) or (CalcMode = 15) then begin
     //выгрузка из эксель
@@ -947,8 +947,10 @@ premium_p - преми€ за переработку
   //перми€ за переработку
   if (CalcMode = 10) then begin
      // –асчет должен быть такой:   ќклад (55000/2 + 27500) + переработки ( 96-80 + 16 часов)  55000/168*16*1,5 + 7857
-    Frg1.SetValue('premium_p', Row, False, Round(Max(0, (e1) / s.NNum(Frg1.GetValueF('norm_m', Row, False) / 2) * (Frg1.GetValueF('turv', Row, False) - Frg1.GetValueF('norm', Row, False)) * 1.5)));
-  end;
+    Frg1.SetValue('premium_p', Row, False, Round(Max(0, (e1) / Frg1.GetValueF('norm_m', Row, False) * Max(Frg1.GetValueF('turv', Row, False) - Frg1.GetValueF('norm', Row, False), 0) * 1.5)));
+  end
+  else
+    Frg1.SetValue('premium_p', Row, False, null);
   //расчитаем левую часть, до итого начислено
   e3 := Frg1.GetValueF('ball', Row, False) + Frg1.GetValueF('premium_m_src', Row, False) + Frg1.GetValueF('premium_p', Row, False) + Frg1.GetValueF('premium_m', Row, False) + Frg1.GetValueF('premium', Row, False) + Frg1.GetValueF('otpusk', Row, False) + Frg1.GetValueF('bl', Row, False) - Frg1.GetValueF('penalty', Row, False);
   Frg1.SetValue('itog1', Row, False, s.IIf(e3 = 0, null, round(e3)));

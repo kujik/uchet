@@ -16,7 +16,7 @@ type
     edt_name: TDBEditEh;
     cmb_id_head: TDBComboBoxEh;
     edt_editusernames: TDBEditEh;
-    chb_Active: TDBCheckBoxEh;
+    chb_active: TDBCheckBoxEh;
     cmb_id_schedule: TDBComboBoxEh;
     procedure edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
