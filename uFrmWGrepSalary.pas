@@ -44,7 +44,7 @@ begin
   Caption:='Отчет по заработной плате';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
-    ['to_char(rownum) as id','_id','40'],
+    ['rownum','_id','40'],
     ['dt$d','_dt','40'],
     ['id_job','_id_job','40'],
     ['job','Профессия','250;h'],

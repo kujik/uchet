@@ -316,7 +316,7 @@ var
   dt1: TDateTime;
   dayfields: string;
 begin
-  Result:= False;
+  Result := False;
   //найдем затрагиваемые периоды
   //это будут все периоды с конечной датой большей даты изменения статуса, содержащие любую запись для данного работника и
   //все периоды с ID_Division и также большей конечно датой, это независимо от режима изменения статуса
@@ -324,99 +324,91 @@ begin
   //ОШИБКА синхронизация подразделений с воркерстатус происходила по порядку, и если сначала идет подразделение в которой поступает работник,
   //то оно обрабатывалось первым и была попытка вставить запись работника, но это вызывает ошибку так как этот работник и с этой датой мог быть в другом подразделении
   //надо это подразделение обрабатывать последним
-  M:=Mode;
-  v0:=Q.QLoadToVarDynArray2(
-    'select distinct d.name, tp.commit, tp.dt1, tp.dt2, d.id from ref_divisions d, turv_period tp, turv_worker tw ' +
-    'where d.id = tp.id_division and tp.id = tw.id_turv and tp.dt2 >= :dt$d ' +
-    'and (tw.id_worker = :id_worker$i or d.id = :id_division$i) ' +
-    'order by tp.dt1, d.name',
-    [dt, Id_Worker, S.IIf(S.NSt(ID_Division) = '', -1, ID_Division)]
-    );
-  st:='';
-  dn:='';
+  m := Mode;
+  v0 := Q.QLoadToVarDynArray2('select distinct d.name, tp.commit, tp.dt1, tp.dt2, d.id from ref_divisions d, turv_period tp, turv_worker tw ' + 'where d.id = tp.id_division and tp.id = tw.id_turv and tp.dt2 >= :dt$d ' + 'and (tw.id_worker = :id_worker$i or d.id = :id_division$i) ' + 'order by tp.dt1, d.name', [Dt, Id_Worker, S.IIf(S.NSt(ID_Division) = '', -1, ID_Division)]);
+  st := '';
+  dn := '';
 //  v0:=v0 + v1;
-  j:=0; k:=0;
-  for i:=0 to High(v0) do
+  j := 0;
+  k := 0;
+  for i := 0 to High(v0) do
     if dn <> v0[i][0] then begin
-      if S.NNum(v0[i][1]) = 1 then inc(k);
-      if i < 10
-        then S.ConcatStP(st, v0[i][0] +
-          ' (с ' + VarToStr(v0[i][2]) + ' по ' + VarToStr(v0[i][3]) +  S.IIf(S.NNum(v0[i][1]) = 1, ' - Закрыт!', '') + ')', #13#10);
-      dn:= v0[i][1];
+      if S.NNum(v0[i][1]) = 1 then
+        inc(k);
+      if i < 10 then
+        S.ConcatStP(st, v0[i][0] + ' (с ' + VarToStr(v0[i][2]) + ' по ' + VarToStr(v0[i][3]) + S.IIf(S.NNum(v0[i][1]) = 1, ' - Закрыт!', '') + ')', #13#10);
+      dn := v0[i][1];
     end;
-  if (st <> '')and
-    (MyQuestionMessage(
-      'Будут внесены изменения в следующие ТУРВ:'#13#10#13#10 +
-      st +
-      S.IIf(High(v0) >= 10, #13#10'и еще ' + IntToStr(High(v0) - 10) + ' ТУРВ.'#13#10, '') +
-      S.IIf(k > 0, S.IIf(k = Length(v0), #13#10#13#10'Все ТУРВ закрыты!', #13#10#13#10'Часть ТУРВ закрыты!'),''))
-    <> mrYes)
-    then Exit;
+  if (st <> '') and (MyQuestionMessage('Будут внесены изменения в следующие ТУРВ:'#13#10#13#10 + st + S.IIf(High(v0) >= 10, #13#10'и еще ' + IntToStr(High(v0) - 10) + ' ТУРВ.'#13#10, '') + S.IIf(k > 0, S.IIf(k = Length(v0), #13#10#13#10'Все ТУРВ закрыты!', #13#10#13#10'Часть ТУРВ закрыты!'), '')) <> mrYes) then
+    Exit;
   //делаем изменения в таблицах турв
-  days:=[];
-  dayfields:=
-    'dt$d;dt1$d;worktime1$f;worktime2$f;worktime3$f;id_turvcode1$i;id_turvcode2$i;id_turvcode3$i;'+
-    'premium$i;premium_comm$s;penalty$i;penalty_comm$s;production$i;'+
-    'comm1$s;comm2$s;comm3$s;begtime$f;endtime$f;settime3$i';
+  days := [];
+  dayfields := 'dt$d;dt1$d;worktime1$f;worktime2$f;worktime3$f;id_turvcode1$i;id_turvcode2$i;id_turvcode3$i;' + 'premium$i;premium_comm$s;penalty$i;penalty_comm$s;production$i;' + 'comm1$s;comm2$s;comm3$s;begtime$f;endtime$f;settime3$i';
   //получим данные по временам, если у нас будет изменение и при этом работник останется, то данные восстановим
   if ID_Division <> null then begin
-    st:=Q.QSIUDSql('A', 'turv_day', dayfields) + ' where id_worker = :id_worker$i and dt >= :dt$d order by dt';
-    days:=Q.QLoadToVarDynArray2(st, [Id_Worker, dt]);
+    st := Q.QSIUDSql('A', 'turv_day', dayfields) + ' where id_worker = :id_worker$i and dt >= :dt$d order by dt';
+    days := Q.QLoadToVarDynArray2(st, [Id_Worker, Dt]);
   end;
-  Result:=True;
-  Result1:=False;
+  Result := True;
+  Result1 := False;
   //начнем транзакцию
   Q.QBeginTrans;
   try
-  repeat
+    repeat
     //изменим таблицу статусов, тк она понадобится для коррекции периодов
-    if Mode = -1
-      then begin
-        v3:=[ID_JStatus];
+      if Mode = -1 then begin
+        v3 := [ID_JStatus];
 //        Result:= (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i;name;office;id_head;editusers', v3) >= 0);
-        Result:= (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i', v3) >= 0);
+        Result := (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i', v3) >= 0);
       end
       else begin
-        v3:= [ID_JStatus, ID_Worker, ID_Division, ID_Job, Mode, dt];
-        Result:= (Q.QIUD('i', 'j_worker_status', 'sq_j_worker_status', 'id$i;id_worker$i;id_division$i;id_job$i;status$i;dt$d', v3) >= 0);
+        v3 := [ID_JStatus, Id_Worker, ID_Division, ID_Job, Mode, Dt];
+        Result := (Q.QIUD('i', 'j_worker_status', 'sq_j_worker_status', 'id$i;id_worker$i;id_division$i;id_job$i;status$i;dt$d', v3) >= 0);
       end;
-    if not Result then Break;
+      if not Result then
+        Break;
     //синхронизируем с журналом статусов все задействованные периоды
     //изм 2023-11-17
     //сначала синхронизируем старые для работника подразделения
-    for i:=0 to High(v0) do begin
-      if v0[i][4] <> S.NNum(ID_Division)
-        then Result:=Synchronize(v0[i][4], v0[i][2]);
-      if not Result then Break;
-    end;
-    if not Result then Break;
+      for i := 0 to High(v0) do begin
+        if v0[i][4] <> S.NNum(ID_Division) then
+          Result := Synchronize(v0[i][4], v0[i][2]);
+        if not Result then
+          Break;
+      end;
+      if not Result then
+        Break;
     //а потом новое подразделение
-    for i:=0 to High(v0) do begin
-      if v0[i][4] = S.NNum(ID_Division)
-        then Result:=Synchronize(v0[i][4], v0[i][2]);
-      if not Result then Break;
-    end;
-    if not Result then Break;
+      for i := 0 to High(v0) do begin
+        if v0[i][4] = S.NNum(ID_Division) then
+          Result := Synchronize(v0[i][4], v0[i][2]);
+        if not Result then
+          Break;
+      end;
+      if not Result then
+        Break;
     //снова проставим данные по дням работника, для нового айди и тех же дат
-    for i:=0 to High(days) do begin
-      v3:=[];
-      for j:=0 to High(days[i])
-        do v3:=v3 + [days[i, j]];
-      v:=VarArrayOf(v3 + [Id_Worker, days[i][0]]);
-      st:=Q.QSIUDSql('Q', 'turv_day', dayfields) + ' where id_worker = :id_worker$i and dt = :dt_day$d';
-      Result:=Q.QExecSQL(st, [v]) >= 0;
-      if not Result then Break;
-    end;
-    if not Result then Break;
-  until True;
-  Result1:=True;
+      for i := 0 to High(days) do begin
+        v3 := [];
+        for j := 0 to High(days[i]) do
+          v3 := v3 + [days[i, j]];
+        v := v3 + [Id_Worker, days[i][0]];
+        st := Q.QSIUDSql('Q', 'turv_day', dayfields) + ' where id_worker = :id_worker$i and dt = :dt_day$d';
+        Result := Q.QExecSQL(st, v) >= 0;
+        if not Result then
+          Break;
+      end;
+      if not Result then
+        Break;
+    until True;
+    Result1 := True;
   finally
   //фиксируем или отктываем транзакцию
   //для проверки можно вообще убрать и смотреть изменения до выхода из программы, завершить ее по стрл-ф2
-  Q.QCommitOrRollback(Result and Result1);
+    Q.QCommitOrRollback(Result and Result1);
   end;
-  if not Result
-    then MyWarningMessage('При сохранении данных возникла ошибка! Данные не изменены!');
+  if not Result then
+    MyWarningMessage('При сохранении данных возникла ошибка! Данные не изменены!');
 end;
 
 
