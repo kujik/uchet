@@ -1195,27 +1195,26 @@ begin
   ClearFilter;
   //запишем метод расчета
   Q.QBeginTrans(True);
-  Q.QExecSql('update payroll set id_method = :id_method$i, commit = :commit$i where id = :id$i', [FPayrollParams.G('id_method'), S.IIf(FPayrollParams.G('commit') = 1, 1, null), ID]);
+  Q.QExecSql('update payroll set id_method = :id_method$i, commit = :commit$i where id = :id$i', [FPayrollParams.G('id_method'), s.IIf(FPayrollParams.G('commit') = 1, 1, null), ID]);
   //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
   //может удалить лишних, если вперемешку формировались ведомости, включая по отдельным работникам, и менялись турв
-  for i:=0 to High(FDeletedWorkers) do begin
+  for i := 0 to High(FDeletedWorkers) do begin
     Q.QExecSql('delete from payroll_item where id_payroll = :id$i and id_worker = :id_worker$i', [id, FDeletedWorkers[i]], False);
   end;
-  rn:=Frg1.MemTableEh1.RecNo;
-  for i:=1 to Frg1.MemTableEh1.RecordCount do begin
-    Frg1.MemTableEh1.RecNo:=i;
-    id1:=S.NNum(Frg1.MemTableEh1.FieldByName('id').AsVariant);
+  rn := Frg1.MemTableEh1.RecNo;
+  for i := 1 to Frg1.MemTableEh1.RecordCount do begin
+    Frg1.MemTableEh1.RecNo := i;
+    id1 := s.NNum(Frg1.MemTableEh1.FieldByName('id').AsVariant);
     if id1 = 0 then begin
-      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id;id_payroll;id_division;id_worker;id_job;dt',
-        [-1, ID, FPayrollParams.G('id_division'), Frg1.MemTableEh1.FieldByName('id_worker').AsInteger, Frg1.MemTableEh1.FieldByName('id_job').AsInteger, FPayrollParams.G('dt1')],
-        False
+      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d',
+        [-1, ID, FPayrollParams.G('id_division'), Frg1.MemTableEh1.FieldByName('id_worker').AsInteger, Frg1.MemTableEh1.FieldByName('id_job').AsInteger, FPayrollParams.G('dt1')]
       );
       Frg1.MemTableEh1.Edit;
-      Frg1.MemTableEh1.FieldByName('id').Value:=Q.LastSequenceId;
+      Frg1.MemTableEh1.FieldByName('id').Value := Q.LastSequenceId;
       Frg1.MemTableEh1.Post;
       Frg1.MemTableEh1.Edit;
     end;
-    //lastgeneraateid
+        //lastgeneraateid
     Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
       'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s',
       [
