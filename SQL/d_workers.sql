@@ -1448,7 +1448,7 @@ select * from turv_day where id_worker = 78 order by dt desc;
 ---------------------------
 ---------------------------
 ---------------------------
-
+/*
 --alter table j_worker_status drop column id_schedule;
 alter table ref_workers add id_schedule number(11);
 alter table ref_workers add  constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id);
@@ -1466,4 +1466,18 @@ alter table payroll_item add banknotes varchar2(40);
 
 --update ref_divisions set id_schedule = 100;
 --update turv_period set id_schedule = 100;
+*/
+/*
+--select sum1 from rep_salary s1 where dt = :dt1$d and s0.id_job = s1.id_job), sum2 = (select sum2 from rep_salary s1 where dt = :dt2$d and s0.id_job = s1.id_job), sum3 = (select sum3 from rep_salary s1 where dt = :dt3$d and s0.id_job = s1.id_job)
 
+ select sum1 from rep_salary s1 where dt = '16/05/2025';
+select sum1 from rep_salary where sum1 is null and sum2 is null and sum3 is null and dt = '01/06/2025'; --:dtcurr$d;
+
+--update rep_salary s0 set sum0 = 
+
+select round(avg((itog1 - nvl(otpusk,0) - nvl(bl,0) - nvl(penalty,0)) / turv * norm) * 2) sumall from v_payroll_item pi where itog1 is not null and turv is not null and turv <> 0 and dt >= '01/04/2025' and dt <= '01/06/2025';
+select * from v_payroll_item pi where itog1 is not null and turv is not null and turv <> 0 and dt >= '01/04/2025' and dt <= '01/06/2025';
+
+
+ )-- where s0.dt = :dt$d 
+ */
