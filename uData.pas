@@ -918,6 +918,7 @@ const
   myfrm_R_Itm_PostPlus='R_Itm_PostPlus';
   myfrm_R_Itm_Act='R_Itm_Act';
   myfrm_R_Work_Chedules='R_Work_chedules';
+  myfrm_Rep_StaffSchedule='Rep_StaffSchedule';
 
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 
@@ -1516,6 +1517,8 @@ const
   rW_J_Parsec_V_All = '2-14';
   rW_R_Work_Chedules_V = '2-15';
   rW_R_Work_Chedules_Ch = '2-16';
+  rW_Rep_StaffSchedule_V = '2-17';
+  rW_Rep_StaffSchedule_Ch = '2-18';
 
   rProd_R_Materials_V = '5-01';
   rProd_J_Otk_V = '5-02';
@@ -1647,7 +1650,7 @@ const
   rOr_Rep_OrItemSInProd='6-126';
 
   const
-  URights : array [0..221] of array [0..3] of string = (
+  URights : array [0..223] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1749,6 +1752,8 @@ const
     (rW_Rep_Personnel_2,'Модуль "Работники"','Отчеты: Отчет по подбору персонала', 'Просмотр отчета'),
     (rW_Rep_Salary_V,'Модуль "Работники"','Отчеты: Отчет по заработной плате', 'Просмотр отчета'),
     (rW_Rep_Salary_Ch,'Модуль "Работники"','Отчеты: Отчет по заработной плате', 'Внесение данных'),
+    (rW_Rep_StaffSchedule_V,'Модуль "Работники"','Отчеты: Штатное расписание', 'Просмотр отчета'),
+    (rW_Rep_StaffSchedule_Ch,'Модуль "Работники"','Отчеты: Штатное расписание', 'Задание потребности в кадрах'),
     (rW_J_Parsec_V,'Модуль "Работники"','Журналы: Приход и уход работников', 'Просмотр данных по работникам из своих ТУРВ'),
     (rW_J_Parsec_V_All,'Модуль "Работники"','Журналы: Приход и уход работников', 'Просмотр данных по всем работникам'),
 

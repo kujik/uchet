@@ -1,5 +1,5 @@
-inherited FrmOGrepPersonal1: TFrmOGrepPersonal1
-  Caption = 'FrmOGrepPersonal1'
+inherited FrmWGrepPersonal1: TFrmWGrepPersonal1
+  Caption = 'FrmWGrepPersonal1'
   ExplicitWidth = 808
   ExplicitHeight = 574
   TextHeight = 13

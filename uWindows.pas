@@ -115,7 +115,7 @@ uses
   D_Candidate, D_Vacancy,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
-  uFrmOGrepPersonal1,
+  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule,
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
@@ -649,8 +649,7 @@ begin
     TFrmXWndUserInterface.Show(Application, F, [myfoDialog], fNone, 0, null);
   end
   else if F = myfrm_Rep_W_Personnel_1 then begin
-    TFrmOGrepPersonal1.Show(Application, F, MyFormOptions, fNone, 0, null);
-//!!!    Form := TForm_Rep_Personnel_1.Create(Application, F, MyFormOptions, FNone, 0, null);
+    TFrmWGrepPersonal1.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
   else if F = myfrm_Rep_W_Personnel_2 then begin
 //!!!    Form := TForm_Rep_Personnel_2.Create(Application, F, MyFormOptions, fNone, 0, null);
@@ -718,6 +717,9 @@ begin
   end
   else if F = myfrm_Dlg_Rep_FinByOrders then begin
     TFrmODrepFinByOrders.Show(AOwner, F,[myfoDialog], fNone, null, null);
+  end
+  else if F = myfrm_Rep_StaffSchedule then begin
+    TFrmWGrepStaffSchedule.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');

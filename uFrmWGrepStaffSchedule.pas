@@ -1,4 +1,8 @@
-unit uFrmOGrepPersonal1;
+{
+Отчет о кадровом составе и движении кадров за указанный период
+}
+
+unit uFrmWGrepStaffSchedule;
 
 interface
 
@@ -10,7 +14,7 @@ uses
   ;
 
 type
-  TFrmOGrepPersonal1 = class(TFrmBasicGrid2)
+  TFrmWGrepStaffSchedule = class(TFrmBasicGrid2)
   private
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
@@ -19,7 +23,7 @@ type
   end;
 
 var
-  FrmOGrepPersonal1: TFrmOGrepPersonal1;
+  FrmWGrepStaffSchedule: TFrmWGrepStaffSchedule;
 
 implementation
 
@@ -28,7 +32,7 @@ uses
 
 {$R *.dfm}
 
-function TFrmOGrepPersonal1.PrepareForm: Boolean;
+function TFrmWGrepStaffSchedule.PrepareForm: Boolean;
 begin
   Caption:='Отчет о кадровом составе';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
@@ -59,7 +63,7 @@ begin
   Result := Inherited;
 end;
 
-procedure TFrmOGrepPersonal1.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+procedure TFrmWGrepStaffSchedule.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   if Tag = mbtGo then begin
     GetData;
@@ -69,7 +73,7 @@ begin
     inherited;
 end;
 
-function TFrmOGrepPersonal1.GetData: TVarDynArray2;
+function TFrmWGrepStaffSchedule.GetData: TVarDynArray2;
 var
   dt: TDateTime;
   i, j, k: Integer;
@@ -136,33 +140,6 @@ begin
   end;
   //заполним поля из массива
   Frg1.SetInitData(jobs);
-//  Frg1.LoadSourceDataFromArray(jobs, 'id;job;workersqnt;qnt1;qnt2;qntvac;dtvac');
-{
-  MemTableEh1.Open;
-  MemTableEh1.First;
-  MemTableEh1.Edit;
-//  QLoadToMemTableEh('select id, name from v_j_candidates where id_vacancy is not null order by dt', ID, MemTableEh1);
-  for i:=0 to High(jobs) do begin
-    for j:=2 to 6 do begin
-      if (jobs[i][j] <> 0)and(jobs[i][j] <> null) then begin
-        MemTableEh1.Edit;
-        MemTableEh1.Append;
-        MemTableEh1.FieldByName('id').AsInteger:=jobs[i][0];
-        MemTableEh1.FieldByName('job').AsString:=jobs[i][1];
-        MemTableEh1.FieldByName('workersqnt').Value:=jobs[i][2];
-        MemTableEh1.FieldByName('qnt1').Value:=S.NullIf0(jobs[i][3]);
-        MemTableEh1.FieldByName('qnt2').Value:=S.NullIf0(jobs[i][4]);
-        MemTableEh1.FieldByName('qntvac').Value:=S.NullIf0(jobs[i][5]);
-        MemTableEh1.FieldByName('dtvac').Value:=jobs[i][6];
-        MemTableEh1.Post;
-        Break;
-      end;
-    end;
-  end;
-  MemTableEh1.First;
-
-  MemTableEh1.ReadOnly:=True;
-  }
 end;
 
 
@@ -170,44 +147,4 @@ end;
 
 end.
 
-  if FormDoc = myfrm_Rep_W_Personnel_1 then begin
-    Caption:='Отчет о кадровом составе';
-    Pr[1].Buttons:=[mybtRefreshGo, mybtDividor, mybtExcel, mybtPrintGrid, mybtDividor, mybtGridSettings];
-    Pr[1].ButtonsState:=[True,True,True,True,True,True];
-    InfoArr:=[[
-      'Отчет о кадровом составе за указанный период.'#13#10+
-      'Выводится информация о количестве работающих по каждой должности (на дату окончания период отчета),'#13#10+
-      'Количество принятых, уволенных за данный период в данной должности, а также'#13#10+
-      'потребность в кадрах (по вакансиям, которые были открыты хотя бы один день в рассматриваемый период),'#13#10+
-      'при этом если вакансий было несколько, то дата открытия проставляется последняя.'#13#10+
-      'Доступна печать таблицы и выгрузка ее в Excel.'#13#10+
-      ''
-    ]];
-  end;
-  if FormDoc = myfrm_Rep_W_Personnel_2 then begin
-    Caption:='Отчет по подбору персонала';
-    Pr[1].Buttons:=[mybtRefreshGo, mybtDividor, mybtExcel, mybtPrintGrid, mybtDividor, mybtGridSettings];
-    Pr[1].ButtonsState:=[True,True,True,True,True,True];
-    InfoArr:=[[
-      'Отчет по подбору персонала за указанный период.'#13#10+
-      'Выводится информация, сгруппированная по должностям,'#13#10+
-      'о том, сколько и кто пришел на собеседование, и/или вышел на работу, и с какой площадки получил информацию о вакансии.'#13#10+
-      'Вы можете распечатать таблицу или выгрузить ее в Excel.'#13#10+
-      ''
-    ]];
-  end;
 
-
-    Mth.AddTableColumn(DBGridEh1, 'id', ftInteger, 0, 'ID', 20, True);
-    Mth.AddTableColumn(DBGridEh1, 'job', ftString, 400, 'Наименование должности', 200, True);
-    Mth.AddTableColumn(DBGridEh1, 'workersqnt', ftInteger, 0, 'Количество работников, человек', 50, True);
-    Mth.AddTableColumn(DBGridEh1, 'qnt1', ftInteger, 0, 'Принято, чел.', 50, True);
-    Mth.AddTableColumn(DBGridEh1, 'qnt2', ftInteger, 0, 'Уволено, чел.', 50, True);
-    Mth.AddTableColumn(DBGridEh1, 'qntvac', ftInteger, 0, 'Потребность, чел.', 50, True);
-    Mth.AddTableColumn(DBGridEh1, 'dtvac', ftDate, 0, 'Дата размещения вакансии', 80, True);
-    //создаем датасет
-    MemTableEh1.CreateDataSet;
-//    FloatFields:='sumkm;sumidle;sumother;sum;basissum;pricekm';
-    Pr[1].FooterFields:='workersqnt;qnt1;qnt2;qntvac';
-//    Gh._SetDBGridEhSumFooter(DBGridEh1, Pr[1].FooterFields, '#,##0');
-    Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, Pr[1].FooterFields, '#,##0');

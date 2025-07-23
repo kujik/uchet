@@ -151,11 +151,9 @@ uses
   uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
   uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
   uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
-  uFrmOGrepPersonal1 in 'uFrmOGrepPersonal1.pas' {FrmOGrepPersonal1};
+  uFrmWGrepPersonal1 in 'uFrmWGrepPersonal1.pas' {FrmWGrepPersonal1},
+  uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule};
 
-//!!!
-
-                        
 var
   MT: Integer;
   NamedMutex: string;
@@ -311,8 +309,6 @@ begin
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
-
-//  Application.CreateForm(TFrmTest2, FrmTest2);
 
   Application.Run;
 
