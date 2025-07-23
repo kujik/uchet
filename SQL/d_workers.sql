@@ -1227,7 +1227,8 @@ from
   from 
     v_turv_workers
   where
-    dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    id_division > 3  --исключаем тестовые
+    and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
     and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
   group by
     rollup(id_job, id_division)

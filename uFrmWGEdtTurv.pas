@@ -186,7 +186,7 @@ begin
   //если же был в режиме просмотра, то в режим редактирования не переходим
   FInEditMode := (Mode = fEdit) and (not FIsCommited);
   //если не редактирование, и не права на ввод времени руководителя - запретим режим ввода в основной сетке.
-  FInEditMainGridMode := FInEditMode and FRgsEdit1;
+  FInEditMainGridMode := FInEditMode and FRgsEdit1 and not (FRgsEdit2 or FRgsEdit3);
 
   //добавляем 16 колонок для дневных данных
   //заголовок соотвествует дню из даты
@@ -227,8 +227,8 @@ begin
   FLeftPartWidth := 200 + 150 + 50;
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
-    [mbtView, FInEditMainGridMode, True, 'Итоговое время'],
-    [mbtEdit, FInEditMainGridMode, False, 'Ввод времени руководителя'],
+    [mbtView, FRgsEdit1, True, 'Итоговое время'],
+    [mbtEdit, FRgsEdit1, False, 'Ввод времени руководителя'],
     [],
     [-mbtDivisionScedule, FInEditMode, True],
     [-mbtWorkerScedule, FInEditMode, True],

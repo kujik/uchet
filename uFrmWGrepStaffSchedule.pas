@@ -18,6 +18,9 @@ type
   private
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
+    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure GetData;
   public
   end;
@@ -38,13 +41,14 @@ begin
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible] - [myogSorting];
   Frg1.Opt.SetFields([
     ['rownum$i','_id','40'],
+    ['is_title$i','_title','40'],
     ['id_job$i','_Должность','40'],
     ['id_division$i','_Подразделение','40'],
     ['office$s','офис /цех','50'],
     ['job$s','Должность','250;h'],
     ['division$s','Подразделение','250;h'],
     ['qnt$i','Количество работников','100'],
-    ['qnt_need$i','Потребность','100','f=f:','e=0:100:0',User.Role(rW_Rep_StaffSchedule_Ch)]
+    ['qnt_need$i','Потребность','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])]
   ]);
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
@@ -67,6 +71,27 @@ begin
     inherited;
 end;
 
+procedure TFrmWGrepStaffSchedule.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+begin
+  if Fr.GetValue('office') = 'Итого:' then
+    Params.Background := clmyYelow
+  else if (Fr.GetValue('id_division') = null) or (Fr.GetValue('is_title') = 1) then
+    Params.Background := clmyGray
+end;
+
+procedure TFrmWGrepStaffSchedule.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+begin
+  ReadOnly := (Fr.GetValue('id_division') = null) or
+    ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C)) or
+    ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C));
+end;
+
+procedure TFrmWGrepStaffSchedule.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+begin
+  Q.QExecSql('delete from ref_workers_needed where id_division = :id_division$i and id_job = :id_job$i', [Fr.GetValue('id_division'), Fr.GetValue('id_job')]);
+  Q.QExecSql('insert into ref_workers_needed (id_division, id_job, qnt) values (:id_division$i, :id_job$i, :qnt$i)', [Fr.GetValue('id_division'), Fr.GetValue('id_job'), S.NullIf0(Value)]);
+end;
+
 procedure TFrmWGrepStaffSchedule.GetData;
 var
   i, qc, qo: Integer;
@@ -75,7 +100,8 @@ begin
   if not Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) then
     Exit;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
-  Q.QLoadFromQuery('select rownum, id_job, id_division, office, job, division, qnt, qnt_need from v_staff_schedule', [], na);
+  Q.QLoadFromQuery('select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_need from v_staff_schedule', [], na);
+  //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
   for i := 0 to na.Count - 2 do
@@ -84,10 +110,21 @@ begin
         qc := qc + na.G(i, 'qnt')
       else
         qo := qo + na.G(i, 'qnt');
+  //удалим последнюю строку (вью там возвращает строку с общим итогом)
   Delete(na.V, na.Count - 1, 1);
-  na.V := na.V + [[100000, null, null, 'Итого:', '', 'офис', qo, null]];
-  na.V := na.V + [[100001, null, null, 'Итого:', '', 'цех', qc, null]];
-  na.V := na.V + [[100002, null, null, 'Итого:', '', 'всего', qc + qo, null]];
+  //добавим итоги
+  na.V := na.V + [[100000, null, null, null, 'Итого:', '', 'офис', qo, null]];
+  na.V := na.V + [[100001, null, null, null, 'Итого:', '', 'цех', qc, null]];
+  na.V := na.V + [[100002, null, null, null, 'Итого:', '', 'всего', qc + qo, null]];
+  //удалим итоги по тем профессиям по которым только одна запись (цифра в предыдущей строке совпадает с текущей)
+  i := 1;
+  while i <= na.Count - 4 do begin
+    if (na.G(i, 'qnt') = na.G(i - 1, 'qnt')) and (na.G(i, 'id_division') = null) then begin
+      Delete(na.V, i, 1);
+      na.SetValue(i - 1, 'is_title', 1);
+    end;
+    Inc(i);
+  end;
   Frg1.SetInitData(na);
 end;
 
