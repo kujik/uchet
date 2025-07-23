@@ -3717,13 +3717,13 @@ var
   b1, b2, b3: Boolean;
   f, p: TVarDynArray;
 begin
-  if DBGridEh1.DataSource = nil then begin
+{  if DBGridEh1.DataSource = nil then begin
     DBGridEh1.DataSource := TDataSource.Create(DBGridEh1.Owner);
     DBGridEh1.DataSource.Name := 'DataSource_' + DBGridEh1.Name + '_autocreated';
-  end;
+  end;}
   if DBGridEh1.DataSet = nil then begin
- //1   DBGridEh1.DataSet := TMemTableEh.Create(DBGridEh1.Owner);
-//1    DBGridEh1.DataSource.Name := 'MemTableEh_' + DBGridEh1.Name + '_autocreated';
+    DBGridEh1.DataSource:= TMemTableEh.Create(DBGridEh1.Owner);
+    DBGridEh1.DataSource.Name := 'MemTableEh_' + DBGridEh1.Name + '_autocreated';
   end;
   TMemTableEh(DBGridEh1.Dataset).Close;
   TMemTableEh(DBGridEh1.Dataset).FieldDefs.Clear;

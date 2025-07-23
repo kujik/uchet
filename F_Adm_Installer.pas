@@ -39,7 +39,7 @@ uses
   Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, uLabelColors, IOUtils, Types,
   Vcl.Buttons, ShellApi, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
   DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls,
-  EhLibVclUtils;
+  EhLibVclUtils, MemTableDataEh, MemTableEh;
 
 type
   TForm_Adm_Installer = class(TForm_MDI)

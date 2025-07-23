@@ -3,8 +3,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
   ClientHeight = 514
   ClientWidth = 784
-  ExplicitWidth = 800
-  ExplicitHeight = 553
+  ExplicitWidth = 796
+  ExplicitHeight = 552
   TextHeight = 13
   object lbl_InstalledInfo: TLabel [0]
     Left = 8
@@ -61,11 +61,11 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Width = 784
     Height = 1
     Visible = False
-    ExplicitTop = 517
-    ExplicitWidth = 791
+    ExplicitTop = 512
+    ExplicitWidth = 780
     ExplicitHeight = 1
     inherited lbl_StatusBar_Right: TLabel
-      Left = 699
+      Left = 697
       ExplicitLeft = 706
     end
     inherited lbl_StatusBar_Left: TLabel
@@ -195,7 +195,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 573
+    Left = 569
     Top = 473
     Width = 195
     Height = 33
@@ -203,8 +203,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
     TabOrder = 8
     OnClick = Bt_OkClick
-    ExplicitLeft = 584
-    ExplicitTop = 477
+    ExplicitLeft = 565
+    ExplicitTop = 472
   end
   object Dbg_PrevInstall: TDBGridEh [13]
     Left = 8
