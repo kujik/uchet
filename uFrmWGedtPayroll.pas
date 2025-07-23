@@ -134,7 +134,7 @@ begin
     ['schedule$s', '~  График', '55'],
     ['norm$f', '_norm', wcol, fcol],
     ['norm_m$f', '_norm_m', wcol, fcol],
-    ['ball$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') <> 15],
+    ['ball$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') = 15],
     ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol],            //премия за отчетный период, взятая из ТУРВ
     ['premium$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol],                      //премия, сумма дневных премий из турв
     ['premium_p$i', '~  Премия за' + sLineBreak + '  переработки', wcol, fcol],             //премия, за переработку, по формуле
@@ -540,7 +540,7 @@ begin
     if b2 then
       inc(i)
     else begin
-        //в список удаленных работников
+      //в список удаленных работников
       st := st + Frg1.MemTableEh1.FieldByName('workername').AsString + ': Работник удален из ведомости.'#13#10;
       FDeletedWorkers := FDeletedWorkers + [Frg1.MemTableEh1.FieldByName('id_worker').AsInteger];
       Frg1.MemTableEh1.Edit;

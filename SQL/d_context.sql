@@ -35,6 +35,15 @@ BEGIN
 END;
 /
 
+create or replace function get_context (
+  par in varchar2
+)
+return varchar2  
+as
+begin
+  return sys_context('context_uchet22', par);
+end;
+/  
 
 
 begin

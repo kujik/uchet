@@ -91,11 +91,9 @@ inherited FrmWGedtPayroll: TFrmWGedtPayroll
     end
     inherited pnlFrmBtns: TPanel
       Width = 790
-      ExplicitTop = 476
+      ExplicitWidth = 790
       inherited pnlFrmBtnsContainer: TPanel
-        inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = 457
-        end
+        ExplicitWidth = 788
       end
     end
   end

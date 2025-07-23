@@ -293,6 +293,7 @@ create or replace view v_turv_workers as
 select 
   tw.*,
   rd.name as divisionname,
+  rd.office,
   F_FIO(rw.f, rw.i, rw.o) as workername,
   rj.name as job,
   decode(tw.id_schedule, null, 0, 1) as worker_has_schedule,
@@ -1194,17 +1195,78 @@ where
   and h4.id_work_schedule(+) = s.id and h4.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
 ;  
 
-select * from v_ref_work_schedules;
-  
-  
-  
-  
-select to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd') from dual; 
+--потребность в работниках по конкретной профессии в конкретном подразделении  
+create table ref_workers_needed(
+  id_job number,
+  id_division number,
+  qnt number,
+  constraint pk_ref_workers_needed primary key (id_job, id_division),
+  constraint fk_ref_workers_needed_job foreign key (id_job) references ref_jobs(id),
+  constraint fk_ref_workers_needed_div foreign key (id_division) references ref_divisions(id)
+);  
+
+
+create or replace view v_staff_schedule as
+select
+  --штатное расписание на заданную дату:
+  --профессии, итоговое количестов работников данной профессии по отделам и всего (пуста стока division),
+  --текущая потребность по профессиии для каждого отдела
+  t.id_job, 
+  t.id_division,
+  j.name as job,
+  d.name as division,
+  decode(t.office, 1, 'офис', 'цех') as office,
+  t.qnt,
+  wn.qnt as qnt_need
+from  
+  (select 
+    id_job, 
+    id_division,
+    count(1)  as qnt,
+    max(office) as office
+  from 
+    v_turv_workers
+  where
+    dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
+  group by
+    rollup(id_job, id_division)
+  ) t,
+  ref_jobs j,
+  ref_divisions d,
+  ref_workers_needed wn
+where
+  t.id_job = j.id(+)
+  and t.id_division = d.id(+)
+  and t.id_job = wn.id_job(+)
+  and t.id_division = wn.id_division(+)  
+order by
+  j.name, d.name       
+;  
 
 
 
 
 
+
+
+
+
+
+select 
+  job, 
+  divisionname,
+  count(1)  as qnt
+from 
+  v_turv_workers
+where
+  dt1p <= sysdate
+  and dt2p >= sysdate  
+group by
+  rollup(job, divisionname)
+order by  
+  job, divisionname
+;  
 
 
 
