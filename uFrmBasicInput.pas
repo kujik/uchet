@@ -58,6 +58,8 @@ type
     Sequence: string;                       //секвенция, если нужна
     IdField: string;                        //имя поля первичного ключа
 
+    ComboboxesFieldsDef: TVarDynArray;
+
     FCaption: string;                       //заголовок формы
     FWidth: Integer;                        //переданная ширина формы
     FLeft: Integer;                         //передеанный левый отступ контролов
@@ -96,6 +98,10 @@ type
       AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
       ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AInfo: TVarDynArray2;
       ADlgFunction:TDlgFunction=nil): Integer;
+    class function ShowDialogDB3(
+      AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
+      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
+      ADlgFunction:TDlgFunction=nil): Integer;
     class function _TestFunction(): Integer;
     class function _TestFunctionDB(): Integer;
   end;
@@ -115,6 +121,7 @@ var
   //переменные для передачи параметров функции класса внутрь конструктора
   GFieldsDef: TVarDynArray2;
   GFieldsBegValues: TVarDynArray;
+  GComboboxesFieldsDef: TVarDynArray;
   GMyFormOptions: TDlgBasicInputOptions;
 
 //------------------------------------------------------------------------------
@@ -177,6 +184,7 @@ begin
   TFrmBasicInput(ASelf).FCaption := AControlValues[2];
   TFrmBasicInput(ASelf).FieldsDef := GFieldsDef;
   TFrmBasicInput(ASelf).FieldsBegValues := GFieldsBegValues;
+  TFrmBasicInput(ASelf).ComboboxesFieldsDef := [];
   TFrmBasicInput(ASelf).MyDlgFormOptions := GMyFormOptions;
   TFrmBasicInput(ASelf).FOpt.InfoArray := AControlValues[3];
   //получим из разделенной ; строки вью, таблицу, последовательность и поле айди (обязательно только первое значение)
@@ -202,6 +210,55 @@ begin
   AFieldsNewValues := TFrmBasicInput(F).FieldsNewValues;
   AfterFormClose(F);
 end;
+
+//------------------------------------------------------------------------------
+//функция вызова диалога (mdi или модального окна) с загрузкой исходных данных из БД и их записью в БД
+class function TFrmBasicInput.ShowDialogDB3(
+      AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
+      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
+      ADlgFunction:TDlgFunction=nil): Integer;
+var
+  i: Integer;
+  myFormOptions1: TMyFormOptions;
+  F: TForm;
+procedure PSetControlsProc(ASelf: TObject; AControlValues: TVarDynArray);
+//вспомогательная функция для передачи параметров функции вызова формы внутрь конструктора
+var
+  va: TVarDynArray;
+begin
+  TFrmBasicInput(ASelf).UseDB := True;
+  TFrmBasicInput(ASelf).FWidth := AControlValues[0];
+  TFrmBasicInput(ASelf).FLeft := AControlValues[1];
+  TFrmBasicInput(ASelf).FCaption := AControlValues[2];
+  TFrmBasicInput(ASelf).FieldsDef := GFieldsDef;
+  TFrmBasicInput(ASelf).FieldsBegValues := VarArrayOf([]);
+  TFrmBasicInput(ASelf).ComboboxesFieldsDef := GComboboxesFieldsDef;
+
+  TFrmBasicInput(ASelf).MyDlgFormOptions := GMyFormOptions;
+  TFrmBasicInput(ASelf).FOpt.InfoArray := AControlValues[3];
+  //получим из разделенной ; строки вью, таблицу, последовательность и поле айди (обязательно только первое значение)
+  va:=A.Explode(AControlValues[4], ';') + ['','',''];
+  TFrmBasicInput(ASelf).View:=va[0];
+  TFrmBasicInput(ASelf).Table:=S.IIf(va[1] = '', va[0], va[1]);
+  TFrmBasicInput(ASelf).Sequence:=S.IIf(va[2] = '', '', va[2]);
+  TFrmBasicInput(ASelf).IdField:=S.IIf(va[3] = '', 'id$i', va[3]);
+end;
+begin
+  GFieldsDef := AFieldsDef;
+  GComboboxesFieldsDef := AComboboxesFieldsDef;
+  GMyFormOptions := AMyFormOptions;
+  if dbioModal in AMyFormOptions then
+    myFormOptions1 := myFormOptions1 + [myfoModal];
+  if dbioSizeable in AMyFormOptions then
+    myFormOptions1 := myFormOptions1 + [myfoSizeable];
+  F := Create(AOwner, ADoc, [myfoDialog] + myFormOptions1, AMode, AID, null,
+    [AWidth, ALeft, ACaption, AInfo, ATAble],
+    @PSetControlsProc
+  );
+  Result := S.IIf(TFrmBasicMdi(F).ModalResult <> mrOk, -1, S.IIf(TFrmBasicMdi(F).IsDataChanged, 1, 0));
+  AfterFormClose(F);
+end;
+
 
 class function TFrmBasicInput.ShowDialogDB(
   AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
@@ -417,6 +474,16 @@ begin
   end;
   end
   else begin
+    //для работы с БД
+    //загрузим комбобоксы (текст запроса из массива, в массиве в порядке создания контролов)
+    //пока не поддерживается выражения типа (active = 1 or id = :id$i)!!!
+    j := 0;
+    for i := 0 to High(FieldsDefAdd) do begin
+      if TMyControlType(FieldsDefAdd[i][0]) in [cntComboL, cntComboLK, cntComboLK0, cntComboE, cntComboEK] then begin
+        Q.QLoadToDBComboBoxEh(ComboboxesFieldsDef[j], [], TDBComboboxEh(Ctrls[i]), FieldsDefAdd[i][0]);
+      end;
+    end;
+
     if Mode <> fAdd then begin
       Result := False;
       Fields:= IdField + ';' + Fields;

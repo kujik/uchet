@@ -2,7 +2,7 @@
 
 --свои организации для использования в и таблицах снабжения
 --alter table ref_sn_organizations drop column is_customer;
-alter table ref_sn_organizations add nds number(1);
+alter table ref_sn_organizations add is_employer number(1) default 0;
 create table ref_sn_organizations (
   id number(12),
   name varchar(30),        --наименование
@@ -13,6 +13,7 @@ create table ref_sn_organizations (
   prefix varchar(10),      --префикс для заказов
   or_cashless number(1),   --в заказах допускается только безналичный расчет (1)
   nds number(1),           --в заказах, выделать НДС
+  is_employer number(1) default 0,   --является работодателем (к ней могут прикрепляться работники)
   constraint pk_ref_sn_organizations primary key (id)
 );  
 

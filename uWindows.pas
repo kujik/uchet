@@ -813,8 +813,17 @@ begin
 //    Form := TDlg_Sn_Defectives_Act.Create(AOwner, F, MyFormOptions, fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Workers then begin
-    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100,
-     [['f$s', cntEdit, 'Фамилия','1:25::T'], ['i$s', cntEdit, 'Имя','1:25::T'], ['o$s', cntEdit, 'Отчество','1:25::T'], ['personnel_number$s', cntEdit, 'Табельный номер','1:10::T']], [['caption dlgedit']]);
+//    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100,
+//     [['f$s', cntEdit, 'Фамилия','1:25::T'], ['i$s', cntEdit, 'Имя','1:25::T'], ['o$s', cntEdit, 'Отчество','1:25::T'], ['personnel_number$s', cntEdit, 'Табельный номер','1:10::T']], [['caption dlgedit']]);
+    TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100, [
+      ['f$s', cntEdit, 'Фамилия','1:25::T'],
+      ['i$s', cntEdit, 'Имя','1:25::T'],
+      ['o$s', cntEdit, 'Отчество','1:25::T'],
+      ['id_organization$i', cntComboLK, 'Организация','0:400'],
+      ['personnel_number$s', cntEdit, 'Табельный номер','0:10::T']],
+      ['select name, id from ref_sn_organizations where is_employer = 1 order by name'],
+      [['caption dlgedit']]
+    );
   end
   else if F = myfrm_Dlg_R_Jobs then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_jobs;;sq_ref_jobs', 'Профессия', 400, 100,

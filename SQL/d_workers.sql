@@ -37,7 +37,8 @@ select dt as id, dt, typetxt, descr from v_ref_holidays where Year(dt) = 2023;
 
 
 --работники
---alter table ref_workers add personnel_number varchar2(10);
+--alter table ref_workers add id_organization number(11);
+--alter table ref_workers add constraint fk_ref_workers_org foreign key (id_organization) references ref_sn_organizations(id);
 create table ref_workers(
   id number(11),
   f varchar2(25),
@@ -45,12 +46,23 @@ create table ref_workers(
   o varchar2(25),
   id_schedule number(11),
   personnel_number varchar2(10),
+  id_organization number(11),
   active number(1),
   constraint pk_ref_workers primary key (id),
-  constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id) 
+  constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id), 
+  constraint fk_ref_workers_org foreign key (id_organization) references ref_sn_organizations(id) 
 );
 
 create unique index idx_ref_workers on ref_workers(lower(f),lower(i),lower(o)); 
+
+--уникальность по работодателю и табельному номеру, если оба значения заданы
+create unique index idx_ref_workers_number on ref_workers (
+    case 
+        when personnel_number is not null and id_organization is not null 
+        then id_organization || '|' || personnel_number 
+        else null 
+    end
+);
 
 create sequence sq_ref_workers start with 1 nocache;
 
@@ -61,6 +73,7 @@ select
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   d.name as divisionname,
   j.name as job,
+  o.name as orgname,
   (case 
     when s.status = 1 then 'принят'
     when s.status = 2 then 'переведен'
@@ -73,12 +86,14 @@ from
   (select max(id) as id, id_worker from j_worker_status group by id_worker) sm,
   j_worker_status s,
   ref_divisions d,
-  ref_jobs j
+  ref_jobs j,
+  ref_sn_organizations o
 where
   sm.id_worker (+) = w.id and
   s.id (+) = sm.id and
   s.id_division = d.id (+) and
-  s.id_job = j.id (+)
+  s.id_job = j.id (+) and
+  o.id (+) = w.id_organization
 ;     
 
 select * from v_ref_workers order by workername;
@@ -201,6 +216,7 @@ select
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   w.id_schedule,            --график работы всегда последний, а не для данного периода!!!
   w.personnel_number,
+  o.name as orgname,
   d.name as divisionname,
   d.editusers as editusers,
   j.name as job,
@@ -214,11 +230,13 @@ from
   j_worker_status s,
   ref_workers w,
   ref_divisions d,
-  ref_jobs j
+  ref_jobs j,
+  ref_sn_organizations o
 where
   s.id_worker = w.id (+) and
   s.id_division = d.id (+) and
-  s.id_job = j.id (+)
+  s.id_job = j.id (+) and
+  o.id = w.id_organization
 ;     
 
 
