@@ -1481,3 +1481,11 @@ select * from v_payroll_item pi where itog1 is not null and turv is not null and
 
  )-- where s0.dt = :dt$d 
  */
+ 
+ select divisionname, workername, karta, ndfl from v_payroll_item where dt = '01/07/2025' order by workername;
+ 
+ select i.workername, i.divisionname, i.karta, i.ndfl 
+ from v_payroll_item i, payroll p 
+ where 
+ dt = '01/07/2025' and p.id = i.id_payroll and p.id_worker is null
+ order by workername;
