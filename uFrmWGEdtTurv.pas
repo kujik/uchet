@@ -185,7 +185,7 @@ begin
   //если турв был открыт на реадктирование, то редактируемость установим = не закрыт, и блокировок не делаем, ту она уже взята при открытии турв
   //если же был в режиме просмотра, то в режим редактирования не переходим
   FInEditMode := (Mode = fEdit) and (not FIsCommited);
-  //если не редактирование, и не права на ввод времени руководителя - запретим режим ввода в основной сетке.
+  //режим ввода времени руководителя - если права на ввод этого времени, но не ввод парсек или согласованного
   FInEditMainGridMode := FInEditMode and FRgsEdit1 and not (FRgsEdit2 or FRgsEdit3);
 
   //добавляем 16 колонок для дневных данных
@@ -1345,14 +1345,14 @@ begin
     Exit;
   Row := Params.Row - 1;
   Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
-//if (Row < 0) or (Day > 16) then begin
-//  Params.Background := clBlue; exit; end;
   if Day <> -1 then begin
-    case FArrTurv[Row][Day][cColor] of
-      1 : Params.Background := clRed;
-      2 : Params.Background := clYellow;
-      -1: Params.Font.Color := clRed;
-    end;
+    if FArrTurv[Row][Day][cExists] <> -1 then
+      case FArrTurv[Row][Day][cColor] of
+        1 : Params.Background := clRed;
+        2 : Params.Background := clYellow;
+        -1: Params.Font.Color := clRed;
+      end
+    else Params.Background := clmyGray;
   end
   else Params.Background := clmyGray;
   if (FieldName = 'schedule') and (S.NNum(FArrTitle.G(Row, 'worker_has_schedule')) = 1) then
