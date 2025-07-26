@@ -37,13 +37,14 @@ select dt as id, dt, typetxt, descr from v_ref_holidays where Year(dt) = 2023;
 
 
 --работники
---drop table ref_workers cascade constraints;
+--alter table ref_workers add personnel_number varchar2(10);
 create table ref_workers(
   id number(11),
   f varchar2(25),
   i varchar2(25),
   o varchar2(25),
   id_schedule number(11),
+  personnel_number varchar2(10),
   active number(1),
   constraint pk_ref_workers primary key (id),
   constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id) 
@@ -199,6 +200,7 @@ select
   s.*,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   w.id_schedule,            --график работы всегда последний, а не для данного периода!!!
+  w.personnel_number,
   d.name as divisionname,
   d.editusers as editusers,
   j.name as job,

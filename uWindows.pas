@@ -814,7 +814,7 @@ begin
   end
   else if F = myfrm_Dlg_R_Workers then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100,
-     [['f$s', cntEdit, 'Фамилия','1:25'], ['i$s', cntEdit, 'Имя','1:25'], ['o$s', cntEdit, 'Отчество','1:25']], [['caption dlgedit']]);
+     [['f$s', cntEdit, 'Фамилия','1:25::T'], ['i$s', cntEdit, 'Имя','1:25::T'], ['o$s', cntEdit, 'Отчество','1:25::T'], ['personnel_number$s', cntEdit, 'Табельный номер','1:10::T']], [['caption dlgedit']]);
   end
   else if F = myfrm_Dlg_R_Jobs then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_jobs;;sq_ref_jobs', 'Профессия', 400, 100,
