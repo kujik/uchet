@@ -1,23 +1,23 @@
 inherited FrmWDedtDivision: TFrmWDedtDivision
   Caption = 'FrmWDedtDivision'
-  ClientHeight = 281
+  ClientHeight = 297
   ClientWidth = 672
   ExplicitWidth = 684
-  ExplicitHeight = 319
+  ExplicitHeight = 335
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 672
-    Height = 265
+    Height = 281
     ExplicitWidth = 668
     ExplicitHeight = 264
     inherited pnlFrmClient: TPanel
       Width = 662
-      Height = 216
+      Height = 232
       ExplicitWidth = 658
       ExplicitHeight = 215
       object cmb_Office: TDBComboBoxEh
         Left = 104
-        Top = 8
+        Top = 42
         Width = 121
         Height = 21
         ControlLabel.Width = 51
@@ -38,7 +38,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object edt_Code: TDBEditEh
         Left = 104
-        Top = 35
+        Top = 69
         Width = 121
         Height = 21
         ControlLabel.Width = 20
@@ -55,7 +55,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object edt_name: TDBEditEh
         Left = 104
-        Top = 62
+        Top = 96
         Width = 509
         Height = 21
         ControlLabel.Width = 73
@@ -71,7 +71,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object cmb_id_head: TDBComboBoxEh
         Left = 104
-        Top = 89
+        Top = 123
         Width = 508
         Height = 21
         ControlLabel.Width = 73
@@ -87,7 +87,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object edt_editusernames: TDBEditEh
         Left = 104
-        Top = 116
+        Top = 150
         Width = 508
         Height = 21
         ControlLabel.Width = 85
@@ -397,7 +397,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object chb_active: TDBCheckBoxEh
         Left = 104
-        Top = 170
+        Top = 204
         Width = 97
         Height = 17
         Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
@@ -408,7 +408,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
       object cmb_id_schedule: TDBComboBoxEh
         Left = 104
-        Top = 143
+        Top = 177
         Width = 121
         Height = 21
         ControlLabel.Width = 79
@@ -427,9 +427,30 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         TabOrder = 6
         Visible = True
       end
+      object cmb_id_prod_area: TDBComboBoxEh
+        Left = 104
+        Top = 15
+        Width = 121
+        Height = 21
+        ControlLabel.Width = 53
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1055#1083#1086#1097#1072#1076#1082#1072
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        Items.Strings = (
+          #1062#1077#1093
+          #1054#1092#1080#1089)
+        KeyItems.Strings = (
+          '0'
+          '1')
+        TabOrder = 7
+        Visible = True
+      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 221
+      Top = 237
       Width = 662
       ExplicitTop = 220
       ExplicitWidth = 658
@@ -464,7 +485,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 265
+    Top = 281
     Width = 672
     ExplicitTop = 264
     ExplicitWidth = 668

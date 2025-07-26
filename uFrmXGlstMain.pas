@@ -595,6 +595,7 @@ begin
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['code','Код','80'],
+      ['area_shortname','Площадка','80'],
       ['name','Наименование','150'],
       ['isoffice','Офис/Цех','80'],
       ['schedule_code','График','100'],

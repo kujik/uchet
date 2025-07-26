@@ -124,19 +124,23 @@ create sequence sq_ref_payroll_methods start with 1 nocache;
 
 
 --подразделения
---alter table ref_divisions add  active number(1);
+--alter table ref_divisions add id_prod_area number(11);
+--alter table ref_divisions add constraint fk_ref_divisions_area foreign key (id_prod_area) references ref_production_areas(id);
+--update ref_divisions set id_prod_area = 0;
 create table ref_divisions(
   id number(11),
   code varchar(5),
   id_head number(11),
   id_schedule number(11),
+  id_prod_area number(11),
   office number(1),
   name varchar2(400),
   editusers varchar2(4000),
   active number(1),
   constraint pk_ref_divisions primary key (id),
   constraint fk_ref_divisions_head foreign key (id_head) references ref_workers(id), 
-  constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id)
+  constraint fk_ref_divisions_schedule foreign key (id_schedule) references ref_work_schedules(id),
+  constraint fk_ref_divisions_area foreign key (id_prod_area) references ref_production_areas(id) 
 );
 
 
@@ -151,14 +155,18 @@ select
   w.f || ' ' || w.i  || ' ' || w.o as head,
   case when d.office = 1 then 'офис' else 'цех' end as isoffice,
   getusernames(d.editusers) as editusernames,
-  s.code as schedule_code  
+  s.code as schedule_code,
+  a.name as area_name,  
+  a.shortname as area_shortname  
 from
   ref_divisions d,
   ref_workers w,
-  ref_work_schedules s
+  ref_work_schedules s,
+  ref_production_areas a
 where
   d.id_head = w.id
   and s.id = d.id_schedule
+  and a.id = d.id_prod_area
 ;     
 
 
