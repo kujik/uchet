@@ -126,6 +126,8 @@ begin
     ['id_job$i', '_id_job', wcol],
     ['changed$i', '_changed', wcol],
     ['workername$s', 'ФИО', '200;h'],
+    ['org_name$s', 'Органиазция', '100'],
+    ['personnel_number$s', 'Табельный номер', '60'],
     ['job$s', 'Должность', '150;h'],
     ['blank$i', '~  № бланка', wcol , 'e'],
     ['ball_m$i', '~  Оклад', wcol, 'e'],          //!!!видимость
@@ -307,7 +309,7 @@ var
 begin
   Q.QLoadFromQuery(
     'select workername, job, id, id_worker, id_job, blank, ball_m, turv, ball, premium_m_src, premium, premium_p, premium_m, '+
-    'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes '+
+    'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes, org_name, personnel_number '+
     'from v_payroll_item where id_payroll = :id$i order by job, workername',
     [ID], na
   );
@@ -1015,6 +1017,8 @@ var
   ar: TVarDynArray;
 begin
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := False;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := True;
   rn := Frg1.MemTableEh1.RecNo;
   ar := [];
@@ -1069,6 +1073,8 @@ begin
       Frg1.DbGridEh1.Columns[i].Visible := True;
 //exit;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := True;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
   Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, True);
 end;
@@ -1091,6 +1097,8 @@ begin
     Exit;
   end;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := False;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := True;
   Rep.PasteBand('HEADER');
   Rep.SetValue('#TITLE#', GetCaption);
@@ -1125,6 +1133,8 @@ begin
   Rep.Show;
   Rep.Free;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := True;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 
@@ -1258,7 +1268,7 @@ end;
 
 procedure TFrmWGedtPayroll.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
-  if A.InArray(FieldName, ['pos', 'workername', 'job']) then
+  if A.InArray(FieldName, ['pos', 'workername', 'job', 'org_name', 'personnel_number']) then
       Params.Background := clmyGray;
   //подсветим отрицательные итоги
   if FieldName = 'itog' then

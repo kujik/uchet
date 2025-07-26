@@ -742,7 +742,12 @@ select
   s.code || ' (' || to_char(i.norm) || ')' as schedule,
   p.dt2 as dt2,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
+  w.personnel_number,
+  o.name as org_name,
   d.name as divisionname,
+  d.id_prod_area,
+  a.shortname as prod_area_shortname,
+  a.name as prod_area_name,
   j.name as job,
   p.id_method as id_method
 from
@@ -752,14 +757,18 @@ from
   ref_divisions d,
   ref_jobs j,
   payroll_method m,
-  ref_work_schedules s
+  ref_work_schedules s,
+  ref_sn_organizations o,
+  ref_production_areas a
 where
   i.id_payroll = p.id and
   i.id_division = d.id and
   i.id_worker = w.id and 
   i.id_job = j.id and
   p.id_method = m.id (+) and
-  i.id_schedule = s.id (+)
+  i.id_schedule = s.id (+) and
+  o.id (+) = w.id_organization and
+  a.id (+) = d.id_prod_area
 ;     
 
 select * from v_payroll_item;
