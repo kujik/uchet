@@ -793,7 +793,8 @@ begin
           else
             AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Direction := pdInput;
           AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Attributes := [paNullable];
-          AdoQuery.Parameters.ParamValues[ParamNamesA[i]] := ParamValues[i];
+          //пустую строку всегда преобразуем в null!!!  2025-07-28
+          AdoQuery.Parameters.ParamValues[ParamNamesA[i]] := S.NullIfEmpty(ParamValues[i]);
         end;
       except
         on E: Exception do begin

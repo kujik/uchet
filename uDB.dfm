@@ -1,5 +1,4 @@
 object myDB: TmyDB
-  OldCreateOrder = False
   Height = 204
   Width = 582
   object AdoStoredProc: TADOStoredProc

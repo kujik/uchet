@@ -359,11 +359,11 @@ begin
       if Mode = -1 then begin
         v3 := [ID_JStatus];
 //        Result:= (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i;name;office;id_head;editusers', v3) >= 0);
-        Result := (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i', v3) >= 0);
+        Result := (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i', [ID_JStatus]) >= 0);
       end
       else begin
         v3 := [ID_JStatus, Id_Worker, ID_Division, ID_Job, Mode, Dt];
-        Result := (Q.QIUD('i', 'j_worker_status', 'sq_j_worker_status', 'id$i;id_worker$i;id_division$i;id_job$i;status$i;dt$d', v3) >= 0);
+        Result := (Q.QIUD('i', 'j_worker_status', 'sq_j_worker_status', 'id$i;id_worker$i;id_division$i;id_job$i;status$i;dt$d', [ID_JStatus, Id_Worker, ID_Division, ID_Job, Mode, Dt]) >= 0);
       end;
       if not Result then
         Break;
