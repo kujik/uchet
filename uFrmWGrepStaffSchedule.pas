@@ -53,6 +53,8 @@ begin
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.CreateAddControls('1', cntDTEdit, 'Дата', 'edtd1', ':', 50, yrefC, 85);
+  Frg1.CreateAddControls('1', cntComboL, 'Площадка', 'cmbArea', ':', 50 + 85 + 80, yrefC, 100);
+  Q.QLoadToDBComboBoxEh('select ''Все'' from dual union select distinct area_shortname || '' - '' || isoffice from v_ref_divisions order by 1', [], TDBComboBoxEh(Frg1.FindComponent('cmbArea')), cntComboL);
   Frg1.InfoArray:=[[
     'Штатное расписание.'#13#10
   ]];
@@ -96,16 +98,26 @@ procedure TFrmWGrepStaffSchedule.GetData;
 var
   i, qc, qo: Integer;
   na : TNamedArr;
+  st: string;
 begin
-  if not Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) then
+  if (not Cth.DteValueIsDate(Frg1.FindComponent('edtd1'))) or (S.NSt(Frg1.GetControlValue('cmbArea')) = '') then
     Exit;
+  if Frg1.GetControlValue('cmbArea')  <> 'Все' then begin
+    i := Pos(' - ', Frg1.GetControlValue('cmbArea'));
+    Q.QSetContextValue('staff_schedule_office', S.IIf(Copy(Frg1.GetControlValue('cmbArea'), i + 3) = 'офис' , 1, 0));
+    Q.QSetContextValue('staff_schedule_area', Copy(Frg1.GetControlValue('cmbArea'), 1, i -1));
+  end
+  else begin
+    Q.QSetContextValue('staff_schedule_office', '');
+    Q.QSetContextValue('staff_schedule_area', '');
+  end;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
   Q.QLoadFromQuery('select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_need from v_staff_schedule', [], na);
   //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
   for i := 0 to na.Count - 2 do
-    if na.G(i, 'id_division') = null then
+    if na.G(i, 'id_division') <> null then
       if na.G(i, 'office') = 'цех' then
         qc := qc + na.G(i, 'qnt')
       else

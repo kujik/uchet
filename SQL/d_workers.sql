@@ -236,7 +236,7 @@ where
   s.id_worker = w.id (+) and
   s.id_division = d.id (+) and
   s.id_job = j.id (+) and
-  o.id = w.id_organization
+  o.id (+) = w.id_organization
 ;     
 
 
@@ -322,6 +322,8 @@ select
   tw.*,
   rd.name as divisionname,
   rd.office,
+  a.name as area_name,
+  a.shortname as area_shortname,
   F_FIO(rw.f, rw.i, rw.o) as workername,
   rj.name as job,
   decode(tw.id_schedule, null, 0, 1) as worker_has_schedule,
@@ -334,7 +336,8 @@ from
   ref_jobs rj,
   turv_period tp,
   ref_work_schedules s1,  
-  ref_work_schedules s2  
+  ref_work_schedules s2,  
+  ref_production_areas a
 where
   rw.id = tw.id_worker and
   rj.id = tw.id_job and
@@ -342,6 +345,7 @@ where
   tw.id_turv = tp.id and
   s1.id (+) = nvl(tw.id_schedule,0) and    
   s2.id (+) = tp.id_schedule     
+  and a.id (+) = rd.id_prod_area
 ; 
 
 select * from v_turv_workers where id_division = 1;
@@ -1252,7 +1256,10 @@ select
   t.id_division,
   j.name as job,
   d.name as division,
-  decode(t.office, 1, 'офис', 'цех') as office,
+  --t.area_name,
+  t.area_shortname,
+  --decode(t.office, 1, 'офис', 'цех') as office,
+  d.isoffice as office,
   t.qnt,
   wn.qnt as qnt_need
 from  
@@ -1260,18 +1267,21 @@ from
     id_job, 
     id_division,
     count(1)  as qnt,
-    max(office) as office
+    max(office) as office,
+    max(area_shortname) as area_shortname
   from 
     v_turv_workers
   where
     id_division > 3  --исключаем тестовые
     and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
     and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
   group by
     rollup(id_job, id_division)
   ) t,
   ref_jobs j,
-  ref_divisions d,
+  v_ref_divisions d,
   ref_workers_needed wn
 where
   t.id_job = j.id(+)
@@ -1280,7 +1290,9 @@ where
   and t.id_division = wn.id_division(+)  
 order by
   j.name, d.name       
-;  
+; 
+
+select * from v_staff_schedule; 
 
 
 
@@ -1526,3 +1538,8 @@ select * from v_payroll_item pi where itog1 is not null and turv is not null and
  where 
  dt = '01/07/2025' and p.id = i.id_payroll and p.id_worker is null
  order by workername;
+ 
+
+
+
+select distinct area_name || ' - ' || isoffice from v_ref_divisions;
