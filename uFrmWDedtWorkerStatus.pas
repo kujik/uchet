@@ -321,6 +321,7 @@ var
   i, j: Integer;
 begin
   Result := False;
+//exit;
   if Mode = fDelete then begin
     v := [id];
     Result := (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i;name$s;office$i;id_head$i;editusers$s', v) >= 0);

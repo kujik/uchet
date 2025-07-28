@@ -777,12 +777,13 @@ where
 
 select * from v_payroll_item;
 
+create or replace view v_payroll_sum as 
+select 
 --отчет по зарплатным ведомост€м
 --нужен только итоговый отчет за конкретный период, по нескольким периодам не нужно
 --также вывод€тс€ данные только по ведомост€м на подразделени€, ведомости на отдельных работников не учитываютс€
-create or replace view v_payroll_sum as 
-select 
-  id_d, max(divisioncode) as code, max(s.divisionname) as dn , dt1, sum(sitog1) as itog1, sum(sud) as ud, sum(sndfl) as ndfl, sum(sfss) as fss, sum(spvkarta) as pvkarta, sum(skarta) as karta, sum(sitog) as itog
+  id_d, max(divisioncode) as code, max(s.divisionname) as dn , dt1, max(area) as area, 
+  sum(sitog1) as itog1, sum(sud) as ud, sum(sndfl) as ndfl, sum(sfss) as fss, sum(spvkarta) as pvkarta, sum(skarta) as karta, sum(sitog) as itog
 from
 (
 select
@@ -790,11 +791,12 @@ select
   p.dt1 as dt1,
   p.dt2 as dt2,
   d.name as divisionname,
-  d.code as divisioncode
+  d.code as divisioncode,
+  d.area_shortname || ' - ' || d.isoffice as area
 from
   (select id_payroll, max(id_division) as id_d, sum(itog1) as sitog1, sum(ud) as sud, sum(ndfl) as sndfl, sum(fss) as sfss, sum(pvkarta) as spvkarta, sum(karta) as skarta, sum(itog) as sitog from payroll_item group by id_payroll) i,
-  (select id, dt1, dt2 from payroll where id_worker is null) p,
-  ref_divisions d
+  (select id, dt1, dt2 from payroll where nvl(get_context('rep_payroll_sum_full'),0) = 1 or id_worker is null) p,
+  v_ref_divisions d
 where
   i.id_payroll = p.id and
   i.id_d = d.id

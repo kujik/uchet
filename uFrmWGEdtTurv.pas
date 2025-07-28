@@ -855,6 +855,13 @@ begin
           else if frac(e)<0.76
           then e1:=trunc(e)+0.75
           else e1:=round(e);}
+      //допускаем только значения Х, Х.0 или Х.5
+      if frac(e) >= 0.5 then
+        e := trunc(e) + 0.5
+      else
+        e := trunc(e);
+      if e > 24 then
+        e := 24;
       e1 := e;
       //форматируем до двух знаков после запятой
       st := FormatFloat('0.00', e1);
@@ -1352,7 +1359,10 @@ begin
         2 : Params.Background := clYellow;
         -1: Params.Font.Color := clRed;
       end
-    else Params.Background := clmyGray;
+    else begin
+      Params.Background := clmyGray;
+      Params.ReadOnly := True;
+    end;
   end
   else Params.Background := clmyGray;
   if (FieldName = 'schedule') and (S.NNum(FArrTitle.G(Row, 'worker_has_schedule')) = 1) then
@@ -1579,23 +1589,25 @@ var
 begin
   Row := Params.Row - 1;
   Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
-  if Day <> -1 then begin
-{    case FArrTurv[Row][Day][cColor] of
-      1 : Params.Background := clRed;
-      2 : Params.Background := clYellow;
-      -1: Params.Font.Color := clRed;
-    end;}
-  end
-  else Params.Background := clmyGray;
+  if Day = -1 then begin
+    Params.Background := clmyGray;
+    Exit;
+  end;
+  if FArrTurv[Frg1.DBGridEh1.Row - 1][Day][cExists] = -1 then begin
+    Params.Background := clmyGray;
+    Params.ReadOnly := True;
+  end;
+  //весь шрифт черный, но вторую строку при флаге недостаточности данных парсек рисуем синим
+  if (FArrTurv[Frg1.DBGridEh1.Row - 1][Day][cSetTime] = 1) and (FRgsEdit2) and (Params.Row = 2) then
+    Params.Font.Color := clBlue
+  else
+    Params.Font.Color := clWindowText;
 end;
 
 procedure TFrmWGEdtTurv.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
   FrgsColumnsUpdateData(Fr, No, Sender, Text, Value, UseText, Handled);
 end;
-
-
-
 
 procedure TFrmWGEdtTurv.Frg2DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
 var

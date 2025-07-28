@@ -743,6 +743,7 @@ v:=True;
     Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
     Frg1.Opt.SetFields([
       ['rownum as id$i','_id','40'],
+      ['area','Площадка','70'],
       ['code','Код','60'],
       ['dn','Подразделение','250;h'],
       ['itog1','Начислено','80','f=r:'],
@@ -759,6 +760,7 @@ v:=True;
     Frg1.Opt.SetButtons(1,[[mbtGo, False],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
     Frg1.CreateAddControls('1', cntComboLK, 'Период:', 'CbPeriod', '', 60, yrefC, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Включить ведомости по работникам:', 'chbAddW', '', 60 + 150 + 5, yrefC, 250);
     Q.QLoadToDBComboBoxEh('select to_char(dt1, ''dd-mm-yyyy'') || '' - '' || to_char(max(dt2), ''dd-mm-yyyy'') as dt from v_payroll group by dt1 order by dt1 desc', [],
       TDBComboBoxEh(Frg1.FindComponent('CbPeriod')), cntComboL
     );
@@ -2400,6 +2402,11 @@ begin
       then Fr.RefreshGrid;
   end
 
+  else if FormDoc = myfrm_Rep_W_Payroll then begin
+    Q.QSetContextValue('rep_payroll_sum_full', Fr.GetControlValue('chbAddW'));
+    if Fr.IsPrepared then
+      Fr.RefreshGrid;
+  end
 
   else if FormDoc = myfrm_R_Bcad_Nomencl then begin
     if TControl(Sender).Name = 'ChbGrouping'
@@ -2440,7 +2447,7 @@ begin
     myfrm_J_Turv,
     myfrm_J_Payrolls,
     myfrm_R_Holideys,
-    myfrm_Rep_W_Payroll,
+//    myfrm_Rep_W_Payroll,
 
     myfrm_Rep_Sgp2,
     myfrm_J_Sgp_Acts,
