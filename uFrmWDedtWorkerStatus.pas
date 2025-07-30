@@ -316,12 +316,15 @@ begin
 end;
 
 function TFrmWDedtWorkerStatus.Save: Boolean;
+//запись в бд выполняется в функции VerifyWorker (а там в свою очередь в методе класса TURV), вызываемой из обработчика нажатия кнопки ОК!!!
 var
   v: TVarDynArray;
   i, j: Integer;
 begin
+  Result := True;
+  Exit;
+  (*
   Result := False;
-//exit;
   if Mode = fDelete then begin
     v := [id];
     Result := (Q.QIUD('d', 'j_worker_status', 'sq_j_worker_status', 'id$i;name$s;office$i;id_head$i;editusers$s', v) >= 0);
@@ -331,7 +334,7 @@ begin
     Result := (Q.QIUD('i', 'j_worker_status', 'sq_j_worker_status', 'id$i;id_worker$i;id_division$i;id_job$i;status$i;dt$d', v) >= 0);
  {   if Result then
       Dlg_CandidatesFromWorkerStatus.ShowDialog(v[1], v[4], v[5]);} //!!!
-  end;
+  end;*)
 end;
 
 end.

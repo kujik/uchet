@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uDbOra, ustring;
 
 type
   TFrmTest2 = class(TFrmBasicMdi)
@@ -28,4 +28,9 @@ begin
 end;
 
 
+var
+  v : variant;
+  i: integer;
+begin
+//  i := q.QSelectOneRow('select 2 from dual', [])[0].tointeger;
 end.

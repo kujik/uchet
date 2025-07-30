@@ -1,0 +1,611 @@
+date/time          : 2025-07-28, 17:43:04, 716ms
+computer name      : GLAVMONSTR-PC
+user name          : sprokopenko
+registered owner   : sprokopenko
+operating system   : Windows 11 x64 build 22000
+system language    : Russian
+system up time     : 6 days
+program up time    : 11 seconds
+processors         : 8x Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+physical memory    : 1136/16342 MB (free/total)
+free disk space    : (C:) 23.47 GB (R:) 9.06 GB
+display mode       : 3440x1440, 32 bit
+process id         : $447c
+allocated memory   : 103.57 MB
+largest free block : 1.15 GB
+command line       : "R:\Projects\Uchet\Uchet.exe" /test
+executable         : Uchet.exe
+exec. date/time    : 2025-07-28 17:42
+version            : 1.6.0.9985
+compiled with      : Delphi 11
+madExcept version  : 5.1.5
+callstack crc      : $352db062, $f307d142, $f307d142
+exception number   : 1
+exception class    : EAccessViolation
+exception message  : Access violation at address 000CFA10 in module 'Uchet.exe'. Read of address 000000D0.
+
+main thread ($5130):
+000cfa10 +00 Uchet.exe    System    4818 +0 @DynArrayClear
+00b87555 +59 Uchet.exe    uDB       1023 +2 TmyDB.QSelectOneRow
+010147f6 +3a Uchet.exe    uFrmTest2   35 +1 initialization
+000cb9e2 +42 Uchet.exe    System    4818 +0 InitUnits
+000cba4b +3f Uchet.exe    System    4818 +0 @StartExe
+000d45cc +4c Uchet.exe    SysInit           @InitExe
+01014a0b +13 Uchet.exe    Uchet      182 +0 initialization
+75ea6737 +17 KERNEL32.DLL                   BaseThreadInitThunk
+
+thread $4f18:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $35e4:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $4c04:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $5410:
+75c7ee59 +39 USER32.dll             MsgWaitForMultipleObjects
+0017c09d +0d Uchet.exe    madExcept CallThreadProcSafe
+0017c102 +32 Uchet.exe    madExcept ThreadExceptFrame
+0017c178 +a8 Uchet.exe    madExcept ThreadExceptFrame
+75ea6737 +17 KERNEL32.DLL           BaseThreadInitThunk
+>> created by main thread ($5130) at:
+70a05518 +00 gdiplus.dll
+
+thread $4774:
+75c7ee59 +39 USER32.dll             MsgWaitForMultipleObjects
+0017c09d +0d Uchet.exe    madExcept CallThreadProcSafe
+0017c102 +32 Uchet.exe    madExcept ThreadExceptFrame
+0017c178 +a8 Uchet.exe    madExcept ThreadExceptFrame
+75ea6737 +17 KERNEL32.DLL           BaseThreadInitThunk
+>> created by thread $5410 at:
+06543aa7 +00 aimemb.dll
+
+thread $43c8:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $4ccc:
+75b27f9d +12d KERNELBASE.dll           WaitForMultipleObjectsEx
+0017c09d +00d Uchet.exe      madExcept CallThreadProcSafe
+0017c102 +032 Uchet.exe      madExcept ThreadExceptFrame
+0017c178 +0a8 Uchet.exe      madExcept ThreadExceptFrame
+75ea6737 +017 KERNEL32.DLL             BaseThreadInitThunk
+>> created by thread $1540 at:
+7741e5ec +000 CRYPT32.dll
+
+thread $3b10:
+75b1f643 +93 KERNELBASE.dll           WaitForSingleObjectEx
+75b1f59d +0d KERNELBASE.dll           WaitForSingleObject
+0017c09d +0d Uchet.exe      madExcept CallThreadProcSafe
+0017c102 +32 Uchet.exe      madExcept ThreadExceptFrame
+0017c178 +a8 Uchet.exe      madExcept ThreadExceptFrame
+75ea6737 +17 KERNEL32.DLL             BaseThreadInitThunk
+>> created by thread $4774 at:
+06543aa7 +00 aimemb.dll
+
+thread $520c:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+thread $53d0:
+75ea6737 +17 KERNEL32.DLL  BaseThreadInitThunk
+
+modules:
+000c0000 Uchet.exe            1.6.0.9985          R:\Projects\Uchet
+06540000 aimemb.dll           8.14.6.1            C:\Program Files (x86)\Actual Window Manager
+07660000 security.dll         10.0.22000.1        C:\Windows\SYSTEM32
+10000000 libxl.DLL            3.8.4.0             R:\Projects\Uchet
+5a310000 Msftedit.DLL         10.0.22000.258      C:\Windows\SYSTEM32
+5e760000 SHFolder.dll         10.0.22000.1        C:\Windows\SYSTEM32
+6a890000 iertutil.dll         11.0.22000.348      C:\Windows\SYSTEM32
+6aac0000 urlmon.dll           11.0.22000.282      C:\Windows\SYSTEM32
+6ac80000 oleacc.dll           7.2.22000.1         C:\Windows\SYSTEM32
+6ace0000 AcGenral.DLL         10.0.22000.282      C:\Windows\SYSTEM32
+6b160000 apphelp.dll          10.0.22000.282      C:\Windows\SYSTEM32
+6bde0000 propsys.dll          7.0.22000.37        C:\Windows\system32
+6c900000 gpapi.dll            10.0.22000.282      C:\Windows\SYSTEM32
+6e880000 srvcli.dll           10.0.22000.434      C:\Windows\SYSTEM32
+6f5b0000 dwmapi.dll           10.0.22000.41       C:\Windows\SYSTEM32
+707a0000 MPR.dll              10.0.22000.1        C:\Windows\SYSTEM32
+70990000 gdiplus.dll          10.0.22000.434      C:\Windows\WinSxS\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.22000.434_none_1630a2eb2777c45d
+71060000 rsaenh.dll           10.0.22000.282      C:\Windows\system32
+71090000 CRYPTSP.dll          10.0.22000.1        C:\Windows\System32
+71980000 CRYPTBASE.dll        10.0.22000.1        C:\Windows\SYSTEM32
+72030000 MSACM32.dll          10.0.22000.1        C:\Windows\SYSTEM32
+72e90000 UxTheme.dll          10.0.22000.120      C:\Windows\SYSTEM32
+73430000 SspiCli.dll          10.0.22000.434      C:\Windows\SYSTEM32
+734d0000 SECUR32.DLL          10.0.22000.1        C:\Windows\SYSTEM32
+737d0000 CFGMGR32.dll         10.0.22000.1        C:\Windows\SYSTEM32
+73ae0000 wintypes.dll         10.0.22000.41       C:\Windows\SYSTEM32
+73d90000 windows.storage.dll  10.0.22000.469      C:\Windows\SYSTEM32
+74500000 netutils.dll         10.0.22000.434      C:\Windows\SYSTEM32
+74510000 samcli.dll           10.0.22000.1        C:\Windows\SYSTEM32
+74560000 WINMM.dll            10.0.22000.1        C:\Windows\SYSTEM32
+745f0000 MSASN1.dll           10.0.22000.1        C:\Windows\System32
+74600000 WINSTA.dll           10.0.22000.1        C:\Windows\SYSTEM32
+74650000 wsock32.dll          10.0.22000.1        C:\Windows\SYSTEM32
+74660000 WINSPOOL.DRV         10.0.22000.348      C:\Windows\SYSTEM32
+746e0000 kernel.appcore.dll   10.0.22000.71       C:\Windows\SYSTEM32
+74ad0000 bcrypt.dll           10.0.22000.1        C:\Windows\System32
+74af0000 comctl32.dll         6.10.22000.120      C:\Windows\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.22000.120_none_e541a94fcce8ed6d
+74db0000 ntmarta.dll          10.0.22000.1        C:\Windows\SYSTEM32
+74e10000 msimg32.dll          10.0.22000.1        C:\Windows\SYSTEM32
+752c0000 VERSION.dll          10.0.22000.1        C:\Windows\SYSTEM32
+752d0000 wtsapi32.dll         10.0.22000.1        C:\Windows\SYSTEM32
+752e0000 USERENV.dll          10.0.22000.1        C:\Windows\SYSTEM32
+75310000 MSCTF.dll            10.0.22000.434      C:\Windows\System32
+753f0000 clbcatq.dll          2001.12.10941.16384 C:\Windows\System32
+75480000 combase.dll          10.0.22000.282      C:\Windows\System32
+75710000 msvcrt.dll           7.0.22000.1         C:\Windows\System32
+757e0000 ucrtbase.dll         10.0.22000.1        C:\Windows\System32
+75900000 SHLWAPI.dll          10.0.22000.1        C:\Windows\System32
+75950000 OLEAUT32.dll         10.0.22000.1        C:\Windows\System32
+759f0000 KERNELBASE.dll       10.0.22000.434      C:\Windows\System32
+75c50000 USER32.dll           10.0.22000.282      C:\Windows\System32
+75e00000 GDI32.dll            10.0.22000.1        C:\Windows\System32
+75e30000 wintrust.dll         10.0.22000.469      C:\Windows\System32
+75e90000 KERNEL32.DLL         10.0.22000.434      C:\Windows\System32
+75f80000 ADVAPI32.dll         10.0.22000.434      C:\Windows\System32
+76000000 win32u.dll           10.0.22000.37       C:\Windows\System32
+76460000 IMM32.DLL            10.0.22000.1        C:\Windows\System32
+76490000 gdi32full.dll        10.0.22000.469      C:\Windows\System32
+76570000 SHELL32.dll          10.0.22000.469      C:\Windows\System32
+76c70000 RPCRT4.dll           10.0.22000.434      C:\Windows\System32
+76d40000 ole32.dll            10.0.22000.120      C:\Windows\System32
+76e90000 SHCORE.DLL           10.0.22000.71       C:\Windows\System32
+770d0000 sechost.dll          10.0.22000.434      C:\Windows\System32
+77160000 msvcp_win.dll        10.0.22000.1        C:\Windows\System32
+772b0000 bcryptPrimitives.dll 10.0.22000.376      C:\Windows\System32
+77320000 comdlg32.dll         10.0.22000.120      C:\Windows\System32
+773e0000 imagehlp.dll         10.0.22000.1        C:\Windows\System32
+77400000 CRYPT32.dll          10.0.22000.348      C:\Windows\System32
+77500000 WS2_32.dll           10.0.22000.1        C:\Windows\System32
+77580000 ntdll.dll            10.0.22000.469      C:\Windows\SYSTEM32
+795b0000 pshook.dll           4.4.5.539           C:\Program Files (x86)\Yandex\Punto Switcher
+7a900000 FaultRep.dll         10.0.22000.348      C:\Windows\SYSTEM32
+7b030000 HHCtrl.OCX           10.0.22000.1        C:\Windows\SYSTEM32
+7bfd0000 FontSub.dll          10.0.22000.71       C:\Windows\SYSTEM32
+
+processes:
+0000 Idle                                 0 0    0
+0004 System                               0 0    0
+00a0 Registry                             0 0    0
+0218 smss.exe                             0 0    0
+0314 csrss.exe                            0 0    0
+0368 wininit.exe                          0 0    0
+0370 csrss.exe                            1 0    0
+03b0 services.exe                         0 0    0
+03c4 lsass.exe                            0 0    0
+02f0 svchost.exe                          0 0    0
+02e4 fontdrvhost.exe                      0 0    0
+0410 winlogon.exe                         1 0    0
+0458 fontdrvhost.exe                      1 0    0
+0484 svchost.exe                          0 0    0
+04fc svchost.exe                          0 0    0
+0504 svchost.exe                          0 0    0
+0558 svchost.exe                          0 0    0
+0624 TeraCopyService.exe                  0 0    0
+0688 svchost.exe                          0 0    0
+06a4 NVDisplay.Container.exe              0 0    0
+0770 svchost.exe                          0 0    0
+0798 svchost.exe                          0 0    0
+07a0 svchost.exe                          0 0    0
+07a4 svchost.exe                          0 0    0
+07b0 svchost.exe                          0 0    0
+06d0 svchost.exe                          0 0    0
+081c svchost.exe                          0 0    0
+082c NVDisplay.Container.exe              1 0    0
+0860 igfxCUIService.exe                   0 0    0
+0944 dasHost.exe                          0 0    0
+09b0 svchost.exe                          0 0    0
+09c8 fsproflt2.exe                        0 0    0
+0a0c svchost.exe                          0 0    0
+0a64 svchost.exe                          0 0    0
+0a8c svchost.exe                          0 0    0
+0aac svchost.exe                          0 0    0
+0ab4 svchost.exe                          0 0    0
+0b4c svchost.exe                          0 0    0
+0bc4 svchost.exe                          0 0    0
+0be0 spoolsv.exe                          0 0    0
+0d24 wallpaperservice32_c.exe             0 0    0
+0d2c avp.exe                              0 0    0
+0d34 svchost.exe                          0 0    0
+0d40 AnyDesk.exe                          0 0    0
+0d48 LogonScreenService.exe               0 0    0
+0d5c OneApp.IGCC.WinService.exe           0 0    0
+0d64 openvpnserv2.exe                     0 0    0
+0d6c cron.exe                             0 0    0
+0d7c openvpnserv.exe                      0 0    0
+0d74 oravssw.exe                          0 0    0
+0d8c nvcontainer.exe                      0 0    0
+0d94 omtsreco.exe                         0 0    0
+0da4 ROMServer.exe                        0 0    0
+0dac kpm_service.exe                      0 0    0
+0db4 TNSLSNR.EXE                          0 0    0
+0dbc RtkAudUService64.exe                 0 0    0
+0dc4 GWCtlSrv.exe                         0 0    0
+0de0 NvTelemetryContainer.exe             0 0    0
+0df0 IntelCpHDCPSvc.exe                   0 0    0
+0e04 unchecky_svc.exe                     0 0    0
+0e8c wdService.exe                        0 0    0
+0eac RustDesk.exe                         0 0    0
+0fe4 oracle.exe                           0 0    0
+10f4 RustDesk.exe                         1 0    0
+12f8 ROMFUSClient.exe                     1 0    0
+1388 openvpn.exe                          0 0    0
+13b8 conhost.exe                          0 0    0
+0fb0 openvpn.exe                          0 0    0
+1080 conhost.exe                          0 0    0
+0cdc svchost.exe                          0 0    0
+16d0 svchost.exe                          0 0    0
+19a4 avp.exe                              0 0    0
+1a94 wallpaper32.exe                      1 16   36   normal       C:\Program Files (x86)\Wallpaper Engine
+1aa0 hf5.exe                              1 198  69   normal       C:\Program Files\Hide Folders
+1b48 unchecky_bg.exe                      1 15   18   normal       C:\Program Files (x86)\Unchecky\bin
+1bb4 nvcontainer.exe                      1 14   34   normal       C:\Program Files (x86)\NVIDIA Corporation\NvContainer
+1bc0 dllhost.exe                          1 0    3    normal       C:\Windows\System32
+1900 sihost.exe                           1 8    26   normal       C:\Windows\System32
+1c28 svchost.exe                          1 8    25   normal       C:\Windows\System32
+1c68 taskhostw.exe                        1 17   23   normal       C:\Windows\System32
+1d44 ctfmon.exe                           1 0    0
+1ec8 PresentationFontCache.exe            0 0    0
+1f20 EoAExperiences.exe                   1 0    0
+1fb8 explorer.exe                         1 601  741  normal       C:\Windows
+22ac svchost.exe                          1 8    27   normal       C:\Windows\System32
+2360 audiodg.exe                          0 0    0
+2244 avpui.exe                            1 58   57   normal       C:\Program Files (x86)\Kaspersky Lab\Kaspersky 21.21
+1444 ROMFUSClient.exe                     1 72   55   normal       C:\Program Files (x86)\LiteManager Pro - Server
+249c ShellExperienceHost.exe              1 48   131  normal       C:\Windows\SystemApps\ShellExperienceHost_cw5n1h2txyewy
+24b0 RtkAudUService64.exe                 1 11   16   normal       C:\Windows\System32
+2570 RuntimeBroker.exe                    1 8    24   normal       C:\Windows\System32
+26a0 rundll32.exe                         1 14   17   normal       C:\Windows\System32
+2788 clipdiary-portable.exe               1 188  105  normal       C:\MyAddons\Programs\clipdiary
+2650 openvpn-gui.exe                      1 20   21   normal       C:\Program Files\OpenVPN\bin
+27e4 nvtray.exe                           1 79   4    normal       C:\Program Files\NVIDIA Corporation\Display
+2438 ActualWindowManagerCenter.exe        1 1204 428  normal       C:\Program Files (x86)\Actual Window Manager
+274c ActualWindowManagerShellCenter64.exe 1 219  129  normal       C:\Program Files (x86)\Actual Window Manager
+2824 ActualWindowManagerCenter64.exe      1 0    0
+2b64 WebDrive.exe                         1 86   55   normal       C:\Program Files\WebDrive
+2618 kpm.exe                              1 0    0
+2434 proxy-sdk.exe                        1 20   63   normal       C:\Users\sprokopenko\AppData\Local\proxy-sdk
+20b8 proxy-sdk_crashpad_handler.exe       1 13   15   normal       C:\Users\sprokopenko\AppData\Local\proxy-sdk
+2d04 TextInputHost.exe                    1 8    84   high         C:\Windows\SystemApps\MicrosoftWindows.Client.CBS_cw5n1h2txyewy
+2e50 RuntimeBroker.exe                    1 0    1    normal       C:\Windows\System32
+2658 Everylang.exe                        1 0    0
+1780 EarTrumpet.exe                       1 53   45   normal       C:\Program Files (x86)\Ear Trumpet
+2d30 winampa.exe                          1 15   13   normal       C:\Program Files (x86)\Winamp
+2264 GetVideo.exe                         1 54   99   normal       C:\Users\sprokopenko\AppData\Local\GetVideo
+1b78 LightBulb.exe                        1 54   60   normal       C:\Program Files\LightBulb
+0b78 jusched.exe                          1 0    2    normal       C:\Program Files (x86)\Common Files\Java\Java Update
+2f90 ConEmu.exe                           1 233  108  normal       C:\FAR3-N3
+2cec ConEmuC.exe                          1 0    4    normal       C:\FAR3-N3\ConEmu
+2cf4 conhost.exe                          1 19   25   normal       C:\Windows\System32
+254c Far.exe                              1 131  138  normal       C:\FAR3-N3
+2a20 Laitis.exe                           1 0    0
+1af8 punto.exe                            1 106  89   normal       C:\Program Files (x86)\Yandex\Punto Switcher
+1104 ps64ldr.exe                          1 8    17   normal       C:\Program Files (x86)\Yandex\Punto Switcher
+2fa0 ShareX.exe                           1 75   53   normal       C:\Program Files\ShareX
+0ac8 Laitis.exe                           1 0    0
+3158 Laitis.exe                           1 0    0
+3204 NVIDIA Web Helper.exe                1 19   25   below normal C:\Program Files (x86)\NVIDIA Corporation\NvNode
+1c98 conhost.exe                          1 10   3    below normal C:\Windows\System32
+2678 bds.exe                              1 5790 2321 normal       C:\Program Files (x86)\Embarcadero\Studio\22.0\bin
+0530 browser.exe                          1 82   152  normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+0a78 browser.exe                          1 13   14   normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+0c28 browser.exe                          1 23   33   above normal C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3210 browser.exe                          1 8    22   normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+1ca8 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+18e0 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+07ec browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+1d88 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+17e4 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2680 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3174 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+319c browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+25c8 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2ea4 browser.exe                          1 0    1    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+09b8 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2bdc browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+23b8 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+1124 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+0fc0 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2128 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3264 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+08f8 cmd.exe                              1 0    0    normal       C:\Windows\System32
+18e4 conhost.exe                          1 24   22   normal       C:\Windows\System32
+0e30 cmd.exe                              1 0    0    normal       C:\Windows\System32
+1e90 conhost.exe                          1 24   22   normal       C:\Windows\System32
+2880 Laitis.exe                           1 8    15   normal       C:\Program Files (x86)\Laitis
+0694 plugin-nm-server-v2.exe              1 0    1    normal       C:\Program Files (x86)\Kaspersky Lab\Kaspersky Password Manager 25.0
+3404 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+282c browser.exe                          1 0    1    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2758 ApplicationFrameHost.exe             1 27   29   normal       C:\Windows\System32
+1aec svchost.exe                          1 0    1    normal       C:\Windows\System32
+2674 dwm.exe                              1 0    0
+3460 AnyDesk.exe                          1 192  52   normal       C:\Program Files (x86)\AnyDesk
+38cc WmiPrvSE.exe                         0 0    0
+0824 MoUsoCoreWorker.exe                  0 0    0
+32a4 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+084c browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+16dc browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+2238 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3664 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3d58 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+1338 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+0cf4 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+3580 Toad.exe                             1 1664 1008 normal       C:\Program Files (x86)\Quest Software\Toad for Oracle 2025 R1 Edition\Toad for Oracle 25.1
+0514 CertifiedVersionEngine.exe           1 0    1    normal       C:\Program Files (x86)\Quest Software\Toad for Oracle 2025 R1 Edition\Toad for Oracle 25.1\CertifiedVersionEngine
+2148 conhost.exe                          1 15   20   normal       C:\Windows\System32
+3c90 notepad.exe                          1 46   73   normal       C:\Windows\System32
+39d4 svchost.exe                          1 0    1    normal       C:\Windows\System32
+18fc ConEmuC.exe                          1 0    4    normal       C:\FAR3-N3\ConEmu
+0934 conhost.exe                          1 16   25   normal       C:\Windows\System32
+17d8 Far.exe                              1 122  119  normal       C:\FAR3-N3
+3b04 prevhost.exe                         1 25   39   normal       C:\Windows\System32
+0ba4 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+4374 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+33a0 MobaXterm.exe                        1 460  333  normal       C:\MyAddons\Programs\MobaXterm
+0e7c XWin_MobaX.exe                       1 17   34   normal       C:\MobaXterm\slash\bin
+1958 MoTTY.exe                            1 41   48   normal       C:\MobaXterm\slash\bin
+467c thunderbird.exe                      1 197  191  normal       C:\Program Files\Mozilla Thunderbird
+442c crashhelper.exe                      1 0    1    normal       C:\Program Files\Mozilla Thunderbird
+43bc thunderbird.exe                      1 16   64   normal       C:\Program Files\Mozilla Thunderbird
+4770 thunderbird.exe                      1 0    2    normal       C:\Program Files\Mozilla Thunderbird
+4504 RuntimeBroker.exe                    1 0    1    normal       C:\Windows\System32
+3d74 thunderbird.exe                      1 0    0    idle         C:\Program Files\Mozilla Thunderbird
+3ebc thunderbird.exe                      1 0    0    idle         C:\Program Files\Mozilla Thunderbird
+2adc service_update.exe                   0 0    0
+21e4 service_update.exe                   0 0    0
+3b80 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+1850 ROMViewer.exe                        1 249  174  normal       C:\Program Files (x86)\LiteManager Pro - Viewer
+4344 SystemSettingsBroker.exe             1 8    26   normal       C:\Windows\System32
+43f0 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+43a0 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+5704 browser.exe                          1 0    0    normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+00f0 DelphiLSP.exe                        1 7    15   normal       C:\Program Files (x86)\Embarcadero\Studio\22.0\bin
+4aa8 conhost.exe                          1 15   20   normal       C:\Windows\System32
+4610 DelphiLSP.exe                        1 0    3    normal       C:\Program Files (x86)\Embarcadero\Studio\22.0\bin
+4ff8 DelphiLSP.exe                        1 0    1    normal       C:\Program Files (x86)\Embarcadero\Studio\22.0\bin
+4fc0 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+54dc Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+17e0 dllhost.exe                          1 0    3    normal       C:\Windows\System32
+5730 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+4398 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+37c4 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+226c Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+403c Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+07f0 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+4edc ConEmuC.exe                          1 0    4    normal       C:\FAR3-N3\ConEmu
+47e0 conhost.exe                          1 16   20   normal       C:\Windows\System32
+4bc0 Far.exe                              1 121  118  normal       C:\FAR3-N3
+53b0 GitHubDesktop.exe                    1 39   99   normal       C:\Users\sprokopenko\AppData\Local\GitHubDesktop\app-3.5.2
+4ef8 GitHubDesktop.exe                    1 13   29   above normal C:\Users\sprokopenko\AppData\Local\GitHubDesktop\app-3.5.2
+53f8 GitHubDesktop.exe                    1 8    21   normal       C:\Users\sprokopenko\AppData\Local\GitHubDesktop\app-3.5.2
+56f0 GitHubDesktop.exe                    1 8    12   idle         C:\Users\sprokopenko\AppData\Local\GitHubDesktop\app-3.5.2
+3f68 MobaSCPRi.exe                        1 0    1    normal       C:\MobaXterm\slash\bin
+16f0 conhost.exe                          1 19   22   normal       C:\Windows\System32
+48c4 Fences.exe                           1 8    11   normal       C:\Program Files (x86)\Stardock\Fences
+28e0 MoNotificationUx.exe                 1 19   25   normal       C:\Windows\System32
+5584 browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+385c browser.exe                          1 0    0    idle         C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+530c webwallpaper32.exe                   1 13   50   normal       C:\Program Files (x86)\Wallpaper Engine\bin
+41fc webwallpaper32.exe                   1 12   26   above normal C:\Program Files (x86)\Wallpaper Engine\bin
+5244 webwallpaper32.exe                   1 7    10   normal       C:\Program Files (x86)\Wallpaper Engine\bin
+3e20 webwallpaper32.exe                   1 7    10   normal       C:\Program Files (x86)\Wallpaper Engine\bin
+5308 webwallpaper32.exe                   1 7    10   normal       C:\Program Files (x86)\Wallpaper Engine\bin
+2448 browser.exe                          1 8    16   normal       C:\Users\sprokopenko\AppData\Local\Yandex\YandexBrowser\Application
+447c Uchet.exe                            1 304  101  normal       R:\Projects\Uchet
+45ac dllhost.exe                          1 0    0
+
+hardware:
++ {1ed2bbf9-11f0-4084-b21f-ad83a8e6dcdc}
+  - 4BARCODE 4B-2054TF
+  - Bullzip PDF Printer
+  - Canon MF4400 Series UFRII LT
+  - Fax
+  - Microsoft Print to PDF
+  - Корневая очередь печати
++ {36fc9e60-c465-11cf-8056-444553540000}
+  - Корневой USB-концентратор (USB 3.0)
+  - Корневой USB-концентратор (USB 3.0)
+  - Поддержка USB принтера
+  - Расширяемый хост-контроллер Intel(R) USB 3.0 — 1.0 (Майкрософт)
+  - Расширяемый хост-контроллер VIA USB 3.0 — 1.0 (Майкрософт)
+  - Составное USB устройство
+  - Составное USB устройство
+  - Составное USB устройство
+  - Составное USB устройство
+  - Универсальный USB-концентратор
+  - Универсальный USB-концентратор
+  - Универсальный USB-концентратор
++ {4d36e966-e325-11ce-bfc1-08002be10318}
+  - Компьютер с ACPI на базе x64
++ {4d36e967-e325-11ce-bfc1-08002be10318}
+  - Apacer AS350 256GB
+  - HGST HUS726040ALE614
+  - HGST HUS726040ALE614
+  - HGST HUS726040ALE614
+  - Samsung SSD 883 DCT 480GB
++ {4d36e968-e325-11ce-bfc1-08002be10318}
+  - NVIDIA GeForce GT 730 (driver 22.21.13.8476)
++ {4d36e96a-e325-11ce-bfc1-08002be10318}
+  - Стандартный контроллер SATA AHCI
++ {4d36e96b-e325-11ce-bfc1-08002be10318}
+  - Клавиатура HID
++ {4d36e96c-e325-11ce-bfc1-08002be10318}
+  -  DEXP Intension (GH-310)
+  - NVIDIA High Definition Audio (driver 1.3.34.27)
+  - NVIDIA High Definition Audio (driver 1.3.34.27)
+  - NVIDIA High Definition Audio (driver 1.3.34.27)
+  - NVIDIA High Definition Audio (driver 1.3.34.27)
+  - NVIDIA Virtual Audio Device (Wave Extensible) (WDM) (driver 3.80.1.0)
+  - Realtek(R) Audio (driver 6.0.8703.1)
+  - Аудио устройства USB
++ {4d36e96e-e325-11ce-bfc1-08002be10318}
+  - Универсальный монитор PnP
+  - Универсальный монитор PnP
++ {4d36e96f-e325-11ce-bfc1-08002be10318}
+  - HID-совместимая мышь
++ {4d36e972-e325-11ce-bfc1-08002be10318}
+  - Microsoft Kernel Debug Network Adapter
+  - Realtek PCIe GbE Family Controller (driver 10.36.701.2019)
+  - TAP-Windows Adapter V9 (driver 9.24.2.601)
+  - WAN Miniport (IKEv2)
+  - WAN Miniport (IP)
+  - WAN Miniport (IPv6)
+  - WAN Miniport (L2TP)
+  - WAN Miniport (Network Monitor)
+  - WAN Miniport (PPPOE)
+  - WAN Miniport (PPTP)
+  - WAN Miniport (SSTP)
++ {4d36e978-e325-11ce-bfc1-08002be10318}
+  - Последовательный порт (COM1)
++ {4d36e979-e325-11ce-bfc1-08002be10318}
+  - Canon MF4400 Series UFRII LT (driver 20.31.0.0)
++ {4d36e97b-e325-11ce-bfc1-08002be10318}
+  - Контроллер дискового пространства (Майкрософт)
++ {4d36e97d-e325-11ce-bfc1-08002be10318}
+  - CMOS системы и часы реального времени
+  - Intel(R) 200 Series Chipset Family LPC Controller (Z270) - A2C5 (driver 10.1.11.4)
+  - Intel(R) Management Engine Interface  (driver 1914.12.0.1256)
+  - Intel(R) PCI Express Root Port #1 - A290 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #17 - A2E7 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #19 - A2E9 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #20 - A2EA (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #21 - A2EB (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #3 - A292 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #4 - A293 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #5 - A294 (driver 10.1.11.4)
+  - Intel(R) PCI Express Root Port #9 - A298 (driver 10.1.11.4)
+  - Intel(R) PMC - A2A1 (driver 10.1.11.4)
+  - Intel(R) SMBUS - A2A3 (driver 10.1.11.4)
+  - Microsoft ACPI-совместимая система
+  - NVVHCI Enumerator (driver 2.2.2151.6378)
+  - PCI Express Root Complex
+  - Remote Desktop USB Hub
+  - UMBus перечислитель
+  - UMBus перечислитель
+  - UMBus перечислитель
+  - UMBus перечислитель корневой шины
+  - Агрегатор процессора ACPI
+  - Арифметический сопроцессор
+  - Базовый видеодрайвер (Майкрософт)
+  - Базовый драйвер отрисовки (Майкрософт)
+  - Вентилятор ACPI
+  - Вентилятор ACPI
+  - Вентилятор ACPI
+  - Вентилятор ACPI
+  - Вентилятор ACPI
+  - Высокоточный таймер событий
+  - Диспетчер томов
+  - Драйвер Microsoft System Management BIOS
+  - Драйвер инфраструктуры виртуализации Microsoft Hyper-V
+  - Кнопка питания ACPI
+  - Кнопка спящего режима ACPI
+  - Контроллер High Definition Audio (Microsoft)
+  - Контроллер High Definition Audio (Microsoft)
+  - Перечислитель виртуальных дисков (Майкрософт)
+  - Перечислитель виртуальных сетевых адаптеров NDIS
+  - Перечислитель композитной шины
+  - Перечислитель программных устройств Plug and Play
+  - Подключаемый модуль управления питанием Intel(R)
+  - Программируемый контроллер прерываний
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Ресурсы системной платы
+  - Системный таймер
+  - Стандартный главный мост PCI — ЦП
+  - Термальная зона ACPI
+  - Термальная зона ACPI
+  - Устаревшее устройство
+  - Фиксированная функциональная кнопка ACPI
+  - Шина камеры удаленного рабочего стола
+  - Шина перенаправителя устройств удаленных рабочих столов
++ {50127dc3-0f36-415e-a6cc-4cb3be910b65}
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
+  - Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
++ {533c5b84-ec70-11d2-9505-00c04f79deaf}
+  - Универсальная теневая копия тома
+  - Универсальная теневая копия тома
+  - Универсальная теневая копия тома
++ {5c4c3332-344d-483c-8739-259e934c9cc8}
+  - Realtek Audio Effects Component (driver 11.0.6000.685)
+  - Realtek Audio Universal Service (driver 1.0.0.171)
+  - Realtek Hardware Support Application (driver 11.0.6000.180)
++ {62f9c741-b25a-46ce-b54c-9bccce08b6f2}
+  - Microsoft Device Association Root Enumerator
+  - Microsoft Radio Device Enumeration Bus
+  - Microsoft RRAS Root Enumerator
+  - Программный синтезатор звуковой таблицы Microsoft
++ {6bdd1fc6-810f-11d0-bec7-08002be2092f}
+  - Canon MF4400 Series (driver 11.3.0.1)
++ {745a17a0-74d3-11d0-b6fe-00a0c90f57da}
+  - HID-совместимое устройство управления
+  - HID-совместимое устройство управления
+  - HID-совместимый системный контроллер
+  - USB-устройство ввода
+  - USB-устройство ввода
+  - USB-устройство ввода
+  - USB-устройство ввода
++ {c166523c-fe0c-4a94-a586-f1a80cfbbf3e}
+  - Microphone (USB Audio Device)
+  - P40UG-14 (2- NVIDIA High Definition Audio)
+  - Realtek Digital Output (Realtek(R) Audio)
+  - Динамики ( DEXP Intension (GH-310))
+  - Микрофон ( DEXP Intension (GH-310))
++ {ca3e7ab9-b4c3-4ae6-8251-579ef933890f}
+  - Logi C270 HD WebCam (driver 2.3.7.5)
+
+cpu registers:
+eax = 000000d0
+ebx = 0000035a
+ecx = 01c1443a
+edx = 00facf44
+esi = 010147bc
+edi = 0000036a
+eip = 000cfa10
+esp = 019ff980
+ebp = 019ffa20
+
+stack dump:
+019ff980  5a 75 b8 00 34 fa 9f 01 - 80 b5 0c 00 20 fa 9f 01  Zu..4....... ...
+019ff990  6a 03 00 00 bc 47 01 01 - 5a 03 00 00 00 00 00 00  j....G..Z.......
+019ff9a0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ff9b0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ff9c0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ff9d0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ff9e0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ff9f0  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ffa00  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ffa10  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ffa20  60 fa 9f 01 fb 47 01 01 - 40 fa 9f 01 01 00 00 00  `....G..@.......
+019ffa30  00 00 00 00 68 fa 9f 01 - 80 b5 0c 00 60 fa 9f 01  ....h.......`...
+019ffa40  00 00 00 00 00 00 00 00 - 38 44 c1 01 00 00 00 00  ........8D......
+019ffa50  00 00 00 00 00 00 00 00 - 00 00 00 00 00 00 00 00  ................
+019ffa60  84 fa 9f 01 e4 b9 0c 00 - a0 fa 9f 01 5f b7 0c 00  ............_...
+019ffa70  84 fa 9f 01 f8 49 01 01 - f8 49 01 01 14 69 fb 00  .....I...I...i..
+019ffa80  2c 69 fb 00 b0 fa 9f 01 - 50 ba 0c 00 d1 45 0d 00  ,i......P....E..
+019ffa90  00 a0 6b 01 10 4a 01 01 - 00 00 00 00 00 00 00 00  ..k..J..........
+019ffaa0  08 fb 9f 01 50 b8 0c 00 - b0 fa 9f 01 00 00 00 00  ....P...........
+019ffab0  c0 fa 9f 01 39 67 ea 75 - 00 a0 6b 01 20 67 ea 75  ....9g.u..k. g.u
+
+disassembling:
+000cfa10      public System.@DynArrayClear:    ; function entry point
+000cfa10 4818 > mov     ecx, [eax]
+000cfa12        test    ecx, ecx
+000cfa14        jz      loc_cfa51
+000cfa16        mov     dword ptr [eax], 0
+000cfa1c        cmp     dword ptr [ecx-8], 0
+[...]
+

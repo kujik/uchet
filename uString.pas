@@ -7,7 +7,7 @@ unit uString;
 interface
 
 uses
-  Graphics, Classes, StrUtils, DateUtils, Variants, Types, IOUtils;
+  Graphics, Classes, StrUtils, DateUtils, Variants, Types, IOUtils, SysUtils;
 
 type
   TVarDynArray = array of Variant;
@@ -419,6 +419,20 @@ var
 var
   S: TMyStringHelper;
 
+
+type
+  TVariantHelper = record helper for Variant
+  public
+    function IsNull: Boolean;
+    function IsEmpty: Boolean;
+    function IsNumeric: Boolean;
+    function AsString: string;
+    function AsInteger: Integer;
+    function AsFloat: Extended;
+    function AsBoolean: Boolean;
+    function AsDateTime: TDatetime;
+  end;
+
 //НЕ разобрался пока что
 function WordPosition(const N: Integer; const S: string; WordDelims: TCharSet): Integer;
 //нужно для EhLib
@@ -444,7 +458,7 @@ procedure Txt2File(St: string; Fname: string);
 implementation
 
 uses
-  SysUtils, Math, uErrors;
+  Math, uErrors;
 
 
 
@@ -2700,6 +2714,71 @@ function TMyStringHelper.BadDate: TDateTime;
 begin
   Result := EncodeDate(1900, 12, 30);
 end;
+
+
+
+
+//==============================================================================
+function TVariantHelper.IsNull: Boolean;
+begin
+  Result := VarIsNull(Self);
+end;
+
+function TVariantHelper.IsEmpty: Boolean;
+begin
+  Result := VarIsEmpty(Self);
+end;
+
+function TVariantHelper.IsNumeric: Boolean;
+begin
+  case VarType(Self) of
+    varByte, varSmallint, varInteger, varShortInt,
+    varWord, varLongWord, varInt64,
+    varSingle, varDouble, varCurrency://, varDecimal:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
+function TVariantHelper.AsString: string;
+begin
+  if IsNull or IsEmpty then
+    Result := ''
+  else
+    Result := VarToStr(Self);
+end;
+
+function TVariantHelper.AsInteger: Integer;
+begin
+  if IsNumeric then
+    Result := S.VarToInt(Self)
+  else
+    Result := 0;
+end;
+
+function TVariantHelper.AsFloat: Extended;
+begin
+  if IsNumeric then
+    Result := Self
+  else
+    Result := 0;
+end;
+
+function TVariantHelper.AsBoolean: Boolean;
+begin
+  if IsNull or IsEmpty then
+    Result := False
+  else
+    Result := Self; //VarToBoolean(Self);
+end;
+
+function TVariantHelper.AsDateTime: TDatetime;
+begin
+  Result := Self
+end;
+
+
 
 procedure Txt2File(St: string; Fname: string);
 var
