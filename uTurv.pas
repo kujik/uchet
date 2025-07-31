@@ -27,7 +27,7 @@ type
     function GetcodePER: Integer;
     function CreateTURV(DivisionId: Variant; AllDivisions: Integer; ActiveOnly: Boolean; dt: TDateTime; Silent: Boolean = True): Integer;
     function Synchronize(ID_Division: Integer; dt: TDateTime): Boolean;
-    function ChangeWorkerInTURV(Id_Worker:Variant; ID_Division: Variant; ID_Job: Variant; Dt: TDateTime; ID_JStatus: Integer; Mode: Variant): Boolean;
+    function ChangeWorkerInTURV(Id_Worker:Variant; ID_Division: Variant; ID_Job: Variant; Dt: TDateTime; ID_JStatus: Variant; Mode: Variant): Boolean;
     function DeleteTURV(ID: Integer; Silent: Boolean = False): Boolean;
     function GetWorkersNotInParsec(Mailing: Boolean=False): TVarDynArray2;
     function GetActiveWorkers: TVarDynArray2;
@@ -297,7 +297,7 @@ begin
 end;
 
 
-function TTurv.ChangeWorkerInTURV(Id_Worker:Variant; ID_Division: Variant; ID_Job: Variant; Dt: TDateTime; ID_JStatus: Integer; Mode: Variant): Boolean;
+function TTurv.ChangeWorkerInTURV(Id_Worker:Variant; ID_Division: Variant; ID_Job: Variant; Dt: TDateTime; ID_JStatus: Variant; Mode: Variant): Boolean;
 //правит данные в таблицах для указанного работника, в соответствии с новыми параметрами начиная с указанной даты
 //проверяются все турв, передаются новые значения для работника, указание старых параметров не требуется
 //так как проверка согласованности выполняется еще по журналу статусов, то может быть изменена
