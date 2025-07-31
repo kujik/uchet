@@ -520,6 +520,8 @@ begin
     ['Свои организации', myfrm_R_Organizations, User.Role(rAdm_R_Organizations)],
     ['Свои адреса', myfrm_R_Locations, User.Role(rAdm_R_Locations)],
     ['Виды транспортных средств', myfrm_R_CarTypes, User.Role(rAdm_R_Cartypes)],
+    [],
+    ['Журнал задач', myfrm_J_Tasks, True],
 
     ['Пользователи и роли'],
     ['Пользователи и роли', myfrm_F_UsersAndRoles, True], //!!!
@@ -579,21 +581,30 @@ begin
     ['Обозначения ТУРВ', myfrm_R_TurvCodes, User.Role(rW_R_TurvCode_V)],
     ['Подразделения', myfrm_R_Divisions, User.Role(rW_R_Divisions_V)],
     ['Графики работы', myfrm_R_Work_Chedules, User.Roles([], [rW_R_Work_Chedules_V, rW_R_Work_Chedules_Ch])],
+    [],
     ['Производственный календарь', myfrm_R_Holideys, User.Role(rW_R_Holideys_V)],
 
     ['Журналы'],
     ['Журнал ТУРВ', myfrm_J_Turv, User.Role(rW_J_Turv)],
+    [],
     ['Статусы работников', myfrm_J_WorkerStatus, User.Role(rW_J_WorkerStatus_V)],
+    [],
     ['Зарплатные ведомости', myfrm_J_Payrolls, User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    [],
     ['Вакансии', myfrm_J_Vacancy, User.Roles([], [rW_J_Vacancy_V, rW_J_Vacancy_Ch])],
     ['Соискатели', myfrm_J_Candidates, User.Roles([], [rW_J_Candidates_V, rW_J_Candidates_Ch])],
+    [],
     ['Журнал прихода/ухода работников', myfrm_J_Parsec, User.Roles([], [rW_J_Parsec_V, rW_J_Parsec_V_All])],
 
     ['Отчеты'],
     ['Свод по зарплатным ведомостям', myfrm_Rep_W_Payroll, User.Role(rW_Rep_Payroll)],
+    ['Суммы по зарплатным ведомостям', myfrm_Rep_PayrollsSum, User.Role(rW_Rep_PayrollsSum)],
+    [],
     ['Штатное расписание', myfrm_Rep_StaffSchedule, User.Roles([], [rW_Rep_StaffSchedule_V, rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
+    [],
     ['Отчет о кадровом составе', myfrm_Rep_W_Personnel_1, User.Role(rW_Rep_Personnel_1)],
     ['Отчет по подбору персонала', myfrm_Rep_W_Personnel_2, User.Role(rW_Rep_Personnel_2)],
+    [],
     ['Отчет по заработной плате', myfrm_Rep_Salary, User.Roles([], [rW_Rep_Salary_V, rW_Rep_Salary_Ch])],
     []
     {$ENDIF}
