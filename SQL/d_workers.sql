@@ -745,6 +745,8 @@ select
   i.*,
   s.code,
   s.code || ' (' || to_char(i.norm) || ')' as schedule,
+  p.id_worker as id_worker_payroll,
+  p.dt1,
   p.dt2 as dt2,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   w.personnel_number,

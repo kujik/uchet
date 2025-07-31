@@ -789,6 +789,49 @@ v:=True;
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end']];
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_Vacancy;
   end
+  else if FormDoc = myfrm_Rep_PayrollsSum then begin
+    Caption:='Суммы по зарплатным ведомостям';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i', '_id','40'],
+      ['id_worker$i', '_id_worker', '40'],
+      ['id_job$i', '_id_job', '45'],
+      ['workername$s', 'ФИО', '200;h'],
+      ['org_name$s', 'Органиазция', '100'],
+      ['personnel_number$s', 'Табельный номер', '60'],
+      ['job$s', 'Должность', '150;h'],
+      ['ball_m$i', '~  Оклад', '45', 'f:'],
+      ['ball$i', '~  Расчет' + sLineBreak + '  оклада', '45', 'f:'],
+      ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', '45', 'f:'],
+      ['premium$i', '~  Премия' + sLineBreak + '  текущая', '45', 'f:'],
+      ['premium_p$i', '~  Премия за' + sLineBreak + '  переработки', '45', 'f:'],
+      ['premium_m$i', '~  Премия' + sLineBreak + '   дополнительная', '45', 'f:'],
+      ['otpusk$i', '~  ОТ', '45', 'f:'],
+      ['bl$i', '~  БЛ', '45', 'f:'],
+      ['penalty$i', '~  Штрафы', '45', 'f:'],
+      ['itog1$i', '~  Итого' + sLineBreak + '  начислено', '45', 'f:'],
+      ['ud$i', '~  Удержано/' + sLineBreak + 'Исп. лист', '45', 'f:'],
+      ['ndfl$i', '~  НДФЛ', '45', 'f:'],
+      ['fss$i', '~  Выплачено' + sLineBreak + '  ФСС', '45', 'f:'],
+      ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', '45', 'f:'],
+      ['karta$i', '~  Карта', '45', 'f:'],
+      ['itog$i', '~  Итого к' + sLineBreak + '  получению', '45', 'f:']
+    ]);
+    Frg1.Opt.SetTable('v_payroll_item');
+    Frg1.Opt.SetWhere('where dt1 = :dt1$d and id_worker_payroll is null');
+    Frg1.Opt.SetButtons(1,[[mbtGo, False],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
+    Frg1.CreateAddControls('1', cntComboLK, 'Период:', 'CbPeriod', '', 60, yrefC, 150);
+    Q.QLoadToDBComboBoxEh('select to_char(dt1, ''dd-mm-yyyy'') || '' - '' || to_char(max(dt2), ''dd-mm-yyyy'') as dt from v_payroll group by dt1 order by dt1 desc', [],
+      TDBComboBoxEh(Frg1.FindComponent('CbPeriod')), cntComboL
+    );
+    TDBComboBoxEh(Frg1.FindComponent('CbPeriod')).ItemIndex := 0;
+    Frg1.InfoArray:=[[Caption + '.'#13#10+
+      'Отображаются значения из зарплатных ведомостей за выбранный период по всем работникам.'#13#10+
+      'Ведомости, сформированные отдельно для работника, не учитываются.'#13#10+
+      ''#13#10
+    ]];
+  end
 
 
 
@@ -2054,6 +2097,8 @@ begin
   end
   else if (FormDoc = myfrm_Rep_W_Payroll) and (Tag = mbtGo) then
     Fr.RefreshGrid
+  else if (FormDoc = myfrm_Rep_PayrollsSum) and (Tag = mbtGo) then
+    Fr.RefreshGrid
 
 
   else if (FormDoc = myfrm_R_BCad_Nomencl) and (Tag = mbtCustom_FindInEstimates) then begin
@@ -2245,7 +2290,7 @@ begin
   end
   else if FormDoc = myfrm_R_Holideys then
     Fr.SetSqlParameters('year$i', [Cth.GetControlValue(Fr, 'CbYear')])
-  else if FormDoc = myfrm_Rep_W_Payroll then begin
+  else if (FormDoc = myfrm_Rep_W_Payroll) or (FormDoc = myfrm_Rep_PayrollsSum) then begin
     st := Fr.GetControlValue('CbPeriod');
     if st =''
       then dt := Date
@@ -2410,6 +2455,10 @@ begin
     if Fr.IsPrepared then
       Fr.RefreshGrid;
   end
+{  else if FormDoc = myfrm_Rep_PayrollsSum then begin
+    if Fr.IsPrepared then
+      Fr.RefreshGrid;
+  end}
 
   else if FormDoc = myfrm_R_Bcad_Nomencl then begin
     if TControl(Sender).Name = 'ChbGrouping'
@@ -2450,7 +2499,7 @@ begin
     myfrm_J_Turv,
     myfrm_J_Payrolls,
     myfrm_R_Holideys,
-//    myfrm_Rep_W_Payroll,
+    myfrm_Rep_PayrollsSum,
 
     myfrm_Rep_Sgp2,
     myfrm_J_Sgp_Acts,

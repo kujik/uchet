@@ -145,7 +145,7 @@ begin
     ['bl$i', '~  БЛ', wcol, fcol, 'e'],
     ['penalty$i', '~  Штрафы', wcol, fcol],
     ['itog1$i', '~  Итого' + sLineBreak + '  начислено', wcol, fcol],
-    ['ud$i', '~  Удержано', wcol, fcol, 'e'],
+    ['ud$i', '~  Удержано/' + sLineBreak + 'Исп. лист', wcol, fcol, 'e'],
     ['ndfl$i', '~  НДФЛ', wcol, fcol, 'e'],
     ['fss$i', '~  Выплачено' + sLineBreak + '  ФСС', wcol, fcol, 'e'],
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],

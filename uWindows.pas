@@ -572,6 +572,7 @@ begin
     myfrm_J_Payrolls,
     myfrm_R_Holideys,
     myfrm_Rep_W_Payroll,
+    myfrm_Rep_PayrollsSum,
     myfrm_J_Vacancy,
 
     {заказы}
