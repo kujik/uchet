@@ -37,7 +37,7 @@ select dt as id, dt, typetxt, descr from v_ref_holidays where Year(dt) = 2023;
 
 
 --работники
---alter table ref_workers add id_organization number(11);
+--alter table ref_workers add concurrent_employee number(1) default 0;
 --alter table ref_workers add constraint fk_ref_workers_org foreign key (id_organization) references ref_sn_organizations(id);
 create table ref_workers(
   id number(11),
@@ -45,8 +45,9 @@ create table ref_workers(
   i varchar2(25),
   o varchar2(25),
   id_schedule number(11),
-  personnel_number varchar2(10),
-  id_organization number(11),
+  personnel_number varchar2(10),  --табельный номер
+  id_organization number(11),     --организация, в которой числится работники
+  concurrent_employee number(1) default 0,  --совместитель (занимает несколько должностей в разных организациях)
   active number(1),
   constraint pk_ref_workers primary key (id),
   constraint fk_ref_workers_schedule foreign key (id_schedule) references ref_work_schedules(id), 

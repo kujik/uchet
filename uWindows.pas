@@ -820,7 +820,8 @@ begin
       ['i$s', cntEdit, 'Имя','1:25::T'],
       ['o$s', cntEdit, 'Отчество','1:25::T'],
       ['id_organization$i', cntComboLK, 'Организация','0:400'],
-      ['personnel_number$s', cntEdit, 'Табельный номер','0:10::T']],
+      ['personnel_number$s', cntEdit, 'Табельный номер','0:10::T'],
+      ['concurrent_employee$i', cntCheck, 'Совместитель','']],
       ['select name, id from ref_sn_organizations where is_employer = 1 order by name'],
       [['caption dlgedit']]
     );

@@ -215,6 +215,20 @@ where
   b.id = ei.id_name
   and n.name = b.name
   and s.id_nomencl = n.id_nomencl and s.rn = 1
-;  
+;
+
+
+--себестоимость заказов по площадке МТ, полностью принятых на СГП в заданный период
+select 
+  sum(sum0) 
+from
+  v_order_items i,
+  orders o
+where
+  o.id = i.id_order
+  and i.area = 3 and
+  o.dt_to_sgp >= '01/07/2025' and o.dt_to_sgp < '01/08/2025'
+;    
+  
   
 
