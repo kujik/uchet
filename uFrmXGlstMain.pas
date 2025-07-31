@@ -2226,7 +2226,9 @@ begin
         1])
 
   else if (FormDoc = myfrm_J_Turv) then begin
-    SqlWhere:= A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', editusers) = 1'),
+    SqlWhere:= A.ImplodeNotEmpty([SqlWhere,
+      S.IIfStr(not User.Role(rW_J_Turv_VAll), 'dt1 >= sysdate - 93'),  //турв за последние 3 мес€ца
+      S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', editusers) = 1'),
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
