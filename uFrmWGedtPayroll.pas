@@ -50,6 +50,7 @@ type
     function  GetDataFromTurv: Integer;
     procedure GetDataFromExcel;
     procedure GetNdflFromExcel;
+    procedure GetDeductionsFromExcel;
     procedure SetButtons;
     procedure SetColumns;
     function  GetCaption(Colored: Boolean = False): string;
@@ -92,6 +93,9 @@ uses
   uSys,
   uFrmMain
   ;
+
+const
+  cmbtDeduction = 1001;
 
 
 {$R *.dfm}
@@ -158,7 +162,9 @@ begin
   Frg1.DbGridEh1.ReadOnly := (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1);
   Frg1.Opt.SetButtons(1, [
     [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
-    [mbtCard, True, True, 'Загрузить НДФЛ и карты'],[],[mbtExcel],
+    [mbtCard, True, True, 'Загрузить НДФЛ и карты'],
+    [-cmbtDeduction, True, True, 'Загрузить удержания'],
+    [],[mbtExcel],
     [mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtPrintLabels],[mbtDividorM],[],[mbtLock],
     [],
     [mbtCtlPanel]
@@ -812,6 +818,12 @@ begin
   CheckEmpty;
 end;
 
+procedure TFrmWGedtPayroll.GetDeductionsFromExcel;
+begin
+
+end;
+
+
 procedure TFrmWGedtPayroll.SetButtons;
 var
   i: Integer;
@@ -821,6 +833,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
   NoNorms:= False;
@@ -848,6 +861,7 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('id_method')) in [13, 14]);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
@@ -1307,11 +1321,17 @@ begin
   Handled := True;
   case Tag of
     mbtCustom_Turv:
-      if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then GetDataFromTurv;
+      if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
+        GetDataFromTurv;
     mbtCustom_Payroll:
-      if MyQuestionMessage('Загрузить расчет баллов?') = mrYes then GetDataFromExcel;
+      if MyQuestionMessage('Загрузить расчет баллов?') = mrYes then
+        GetDataFromExcel;
     mbtCard:
-      if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then GetNdflFromExcel;
+      if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then
+        GetNdflFromExcel;
+    cmbtDeduction:
+      if MyQuestionMessage('Загрузить удержания?') = mrYes then
+        GetDeductionsFromExcel;
     mbtSettings:
       SetPayrollMethod;
     mbtExcel:
@@ -1322,7 +1342,8 @@ begin
       PrintLabels;
     mbtLock:
       CommitPayroll;
-    else Handled := False;
+  else
+    Handled := False;
   end;
   if Handled then
     SetButtons;

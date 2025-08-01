@@ -1859,6 +1859,12 @@ end;
 / 
 
 
+
+select max(id_zakaz) from dv.nomenclatura_in_izdel;  --32375
+select * from dv.nomenclatura_in_izdel where id_zakaz = 32375;
+
+select * from v_spl_minremains where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz = 32375);
+
 /*
 ================================================================================
 2025-02-14

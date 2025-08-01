@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, System.IoUtils,
   Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, ComObj, Vcl.Grids, V_Normal,
   IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, Types,
   IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase, IdSMTP//, EASendMailObjLib_TLB
@@ -1321,6 +1321,56 @@ begin
 end;
 
 
+procedure LoadPersonnelNumber;
+//загрузка из файла табельных номеров работника
+var
+  i, j, k, emp: Integer;
+  st, st1, st2, w, FileName, err, err2, fio: string;
+  v, v1, v2: Variant;
+  e, e1, e2, e3: extended;
+  rn: Integer;
+  b, b2, res: Boolean;
+  XlsFile: TXlsMemFileEh;
+  cr: IXlsFileCellsRangeEh;
+  sh, sh1: TXlsWorksheetEh;
+  Files: TStringDynArray;
+  ar, ar2: TVarDynArray2;
+  orgn, orgid: TVarDynArray;
+begin
+  MyData.FileOpenDialog1.Options := MyData.FileOpenDialog1.Options + [fdoPickFolders];
+  if not MyData.FileOpenDialog1.Execute then
+    Exit;
+  Files := TDirectory.GetFiles(MyData.FileOpenDialog1.FileName, '*.xlsx');
+  err := '';
+  for k := 0 to High(Files) do begin
+    if not CreateTXlsMemFileEhFromExists(Files[k], True, '$2', XlsFile, st) then
+      Continue;
+    sh := XlsFile.Workbook.Worksheets[0];
+    for i := 1 to 2000 do begin
+      if sh.Cells[1 - 1, i].Value = '' then
+        Break;
+      ar := ar + [[sh.Cells[1 - 1, i].Value, sh.Cells[2 - 1, i].Value, sh.Cells[3 - 1, i].Value]];
+    end;
+    sh.Free;
+    XlsFile.Free;
+  end;
+  orgn := ['ООО "МЕРКУРИЙ"','ООО "ОМЕГА"','ООО "Промсервис"'];
+  orgid := [1,3,6];
+  ar2 := Q.QLoadToVarDynArray2('select id, workername from v_ref_workers', []);
+  for i := 0 to High(ar) do begin
+    for j := 0 to High(ar2) do begin
+      if ar[i][0] = ar2[j][1] then begin
+        k := A.PosInArray(ar[i][2], orgn);
+        if Q.QExecSql('update ref_workers set personnel_number = :n$s, id_organization = :o$i where id = :id$i', [ar[i][1], orgid[k], ar2[j][0]], false) = -1 then
+          S.ConcatStP(err2, ar[i][0], #13#10);
+        Break;
+      end;
+    end;
+    if j > High(ar2) then
+      S.ConcatStP(err, ar[i][0], #13#10);
+  end;
+  MyInfoMessage('Не удалось загрузить:'#13#10#13#10 + err + #13#10'----------'#13#10 + err2, 1);
+end;
 
 
 procedure ConvertNewOrStdItemRoutes;
@@ -1417,6 +1467,8 @@ var
   st: string;
   va2: tvardynarray2;
 begin
+  //LoadPersonnelNumber; Exit;
+
     Orders.LoadEstimate(null, null, 1129); exit;
 
    TFrmOGedtEstimate.Show(Application, '222221', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;

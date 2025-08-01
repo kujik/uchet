@@ -16,6 +16,7 @@ type
     lblName: TLabel;
     Frg3: TFrDBGridEh;
     procedure tmrAfterCreateTimer(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FDays: TVarDynArray;
     FPeriodNames: TVarDynArray;
@@ -121,9 +122,9 @@ begin
     ['aprc_min_ost$f','_aprc_min_ost','40'],
     ['aprc_qnt$f','_aprc_qnt','40'],
     ['aprc_need_m$f','_aprc_need_m','40'],
-    ['edt_min_ostatok$i','_emo','40'],
-    ['edt_qnt_order_opt$i','_eoo','40'],
-    ['edt_qnt_order$i','_eqo','40'],
+    ['e_min_ostatok$i','_emo','40'],
+    ['e_qnt_order_opt$i','_eoo','40'],
+    ['e_qnt_order$i','_eqo','40'],
     ['onway_old$f','_onway_old','40'],
 
     ['id_category$i','Категория','80;L'],
@@ -183,11 +184,14 @@ begin
 
   //кнопки (формирование заявки только для тех у кого права на изменение)
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtParams, User.Role(rOr_Other_R_MinRemains_Ch)],[mbtGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
-    [-mbtCustom_SetCategory], [-mbtCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
+    [-mbtCustom_SetCategory],
+    [],[-1003,True,'Выбрать заказ'],[],
+    [-mbtCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
     [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-mbtCustom_SetOnWayPeriod],
     [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
     [],[mbtExcelView],[-1001, True,'Просмотреть историю'],[],[mbtGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[mbtCtlPanel]
   ]);
+  Frg1.Opt.SetButtonsIfEmpty([1003]);
 
   Frg1.CreateAddControls('1', cntCheck, 'Данные по периодам', 'ChbPeriods', '', 4, yrefC, 129);
   Frg1.CreateAddControls('1', cntCheck, 'Поставщик', 'ChbSupplier', '', -1, yrefC, 120);
@@ -437,6 +441,26 @@ begin
   else if Tag = 1002 then begin
     ClearInvalidReserve;
   end
+  else if Tag = 1003 then begin
+    va1 := Q.QLoadToVarDynArrayOneCol('select ornum from v_orders where id > 0 order by id', []);
+    va2 := Q.QLoadToVarDynArrayOneCol('select id from v_orders where id > 0 order by id', []);
+    if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~Заказ для фильтра', 50 + 100, 50,
+      [[cntComboLK, 'Заказ:','0:500']],
+      [VarArrayOf([null, VarArrayOf(va1), VarArrayOf(va2)])],
+      va2, [['']], nil
+    ) < 0 then
+      Exit;
+    if va2[0].AsString = '' then begin
+      Frg1.Opt.SetWhere('');
+      Frg1.Opt.Caption := Caption;
+    end
+    else begin
+      va1 := Q.QLoadToVarDynArrayOneRow('select id_itm, ornum from v_orders where id = :id$i', [va2[0]]);
+      Frg1.Opt.SetWhere(' where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz = ' + va1[0].AsString + ')');
+      Frg1.Opt.Caption := Caption + ' (' + va1[1].AsString + ')';
+    end;
+    Frg1.RefreshGrid;
+ end
   else if Tag = mbtParams then begin
     repeat
       va2:=[];
@@ -630,7 +654,7 @@ begin
       else begin
         Fr.MemTableEh1.FieldByName(Fr.CurrField).AsVariant := S.NullIfEmpty(Value);
         Fr.MemTableEh1.FieldByName('order_cost').AsVariant := S.NullIf0(Round(S.NNum(Value) * S.NNum(Fr.MemTableEh1.FieldByName('price_main').AsFloat)));
-        Fr.MemTableEh1.FieldByName('edt_qnt_order').AsInteger := 1;
+        Fr.MemTableEh1.FieldByName('e_qnt_order').AsInteger := 1;
         Mth.PostAndEdit(Fr.MemTableEh1);
 //        GoToNextEdit(1);    //для перемещения в ячекй внизу по Enter
       end;
@@ -673,19 +697,19 @@ begin
       Params.Background := clmyYelow;  //желтый
   end;
   if FieldName = 'qnt_order_opt' then begin
-    if Fr.GetValue('edt_qnt_order_opt') = 1 then begin
+    if Fr.GetValue('e_qnt_order_opt') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
   end;
   if FieldName = 'min_ostatok' then begin
-    if Fr.GetValue('edt_min_ostatok') = 1 then begin
+    if Fr.GetValue('e_min_ostatok') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
   end;
   if FieldName = 'qnt_order' then begin
-    if Fr.GetValue('edt_qnt_order') = 1 then begin
+    if Fr.GetValue('e_qnt_order') = 1 then begin
       Params.Font.Color := clBlue;
       Params.Font.Style := [fsUnderline];
     end;
@@ -1127,7 +1151,7 @@ begin
   FLockEdit:= not va1[0];
   if FLockEdit then begin
     //если заблокировано, то выдадим сообщение
-    MyWarningMessage('Пользователь "' + S.NSt(va1[1]) + '" сейчас редактирует таблицу по данной категории.'#13#10'Вы не моежете редактировать данные и формировать заявку!');
+    MyWarningMessage('Пользователь "' + S.NSt(va1[1]) + '" сейчас редактирует таблицу по данной категории.'#13#10'Вы не можете редактировать данные и формировать заявку!');
   end;
   //изменим список редактируемых полей (в случае блокровки, добави к ним спереди "_", а иначе - восстановим как были
   SetFieldsEditable;
@@ -1264,6 +1288,13 @@ begin
   //обновим грид
   Frg1.RefreshGrid;
   MyInfoMessage('Готово!');
+end;
+
+procedure TFrmOGedtSnMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  //очистим блокировку на прошлую выбранную категорию
+  Q.DBLock(False, FormDoc, VarToStr(FIdCategoryLock), '', fNone);
+  inherited;
 end;
 
 procedure TFrmOGedtSnMain.SetDetailInfo;
