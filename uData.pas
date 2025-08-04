@@ -920,7 +920,7 @@ const
   myfrm_R_Work_Chedules='R_Work_chedules';
   myfrm_Rep_StaffSchedule='Rep_StaffSchedule';
   myfrm_Rep_PayrollsSum='Rep_PayrollsSum';
-
+  myfrm_Adm_DomainUsers = 'Adm_DomainUsers';
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 
   //диалоги

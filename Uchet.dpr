@@ -152,7 +152,8 @@ uses
   uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
   uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
   uFrmWGrepPersonal1 in 'uFrmWGrepPersonal1.pas' {FrmWGrepPersonal1},
-  uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule};
+  uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
+  uFrmAGlstDomainUsers in 'uFrmAGlstDomainUsers.pas' {FrmAGlstDomainUsers};
 
 var
   MT: Integer;

@@ -536,6 +536,8 @@ begin
     ['Настройки модулей', '_', User.Role(rAdm_Settings_Modules)],
 
     ['Сервис'],
+    ['Пользователи домена', myfrm_Adm_DomainUsers, User.IsDeveloper],
+    [],
     ['Установщик модулей Учета', myfrm_Adm_Installer, User.IsDeveloper],
     [],
     ['Удаление файлов и папок на сервере', myfrm_Adm_DeleteOnServer, User.Role(rAdm_Other_DeleteOnServer)],

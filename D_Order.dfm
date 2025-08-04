@@ -1,15 +1,15 @@
 inherited Dlg_Order: TDlg_Order
   Caption = 'Dlg_Order'
-  ClientHeight = 673
-  ClientWidth = 1276
+  ClientHeight = 672
+  ClientWidth = 1272
   OnCloseQuery = FormCloseQuery
   OnResize = FormResize
-  ExplicitWidth = 1292
-  ExplicitHeight = 712
+  ExplicitWidth = 1288
+  ExplicitHeight = 711
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 629
-    Width = 1276
+    Top = 628
+    Width = 1272
     TabOrder = 4
     ExplicitTop = 629
     ExplicitWidth = 1276
@@ -21,10 +21,11 @@ inherited Dlg_Order: TDlg_Order
   object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
-    Width = 1276
+    Width = 1272
     Height = 41
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1276
     object lbl_ITM: TLabel
       Left = 228
       Top = 7
@@ -115,12 +116,14 @@ inherited Dlg_Order: TDlg_Order
   end
   object pnl_Bottom: TPanel [2]
     Left = 0
-    Top = 648
-    Width = 1276
+    Top = 647
+    Width = 1272
     Height = 25
     Align = alBottom
     TabOrder = 3
     Visible = False
+    ExplicitTop = 648
+    ExplicitWidth = 1276
     object lbl_OrderSaveStatus: TLabel
       Left = 8
       Top = 6
@@ -141,10 +144,12 @@ inherited Dlg_Order: TDlg_Order
   object pnl_Center: TPanel [3]
     Left = 0
     Top = 309
-    Width = 1276
-    Height = 320
+    Width = 1272
+    Height = 319
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 1276
+    ExplicitHeight = 320
     object DBGridEh1: TDBGridEh
       Left = 1
       Top = 1
@@ -167,11 +172,12 @@ inherited Dlg_Order: TDlg_Order
   object pnl_Header: TPanel [4]
     Left = 0
     Top = 41
-    Width = 1276
+    Width = 1272
     Height = 268
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
+    ExplicitWidth = 1276
     object pnl_Header_3: TPanel
       Left = 695
       Top = 1
@@ -277,12 +283,12 @@ inherited Dlg_Order: TDlg_Order
         Align = alClient
         TabOrder = 0
         DesignSize = (
-          693
+          689
           88)
         object mem_Comment: TDBMemoEh
           Left = 64
           Top = 32
-          Width = 623
+          Width = 619
           Height = 53
           ControlLabel.Width = 63
           ControlLabel.Height = 13
@@ -298,11 +304,12 @@ inherited Dlg_Order: TDlg_Order
           Visible = True
           WantReturns = True
           OnKeyDown = mem_CommentKeyDown
+          ExplicitWidth = 623
         end
         object edt_Complaints: TDBEditEh
           Left = 65
           Top = 5
-          Width = 622
+          Width = 618
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 62
@@ -320,6 +327,7 @@ inherited Dlg_Order: TDlg_Order
           Visible = True
           OnCloseDropDownForm = edt_ComplaintsCloseDropDownForm
           OnOpenDropDownForm = edt_ComplaintsOpenDropDownForm
+          ExplicitWidth = 622
         end
         object nedt_Attention: TDBNumberEditEh
           Left = 240
@@ -334,12 +342,13 @@ inherited Dlg_Order: TDlg_Order
         end
       end
       object pnl_Header_12: TPanel
-        Left = 694
+        Left = 690
         Top = 1
         Width = 579
         Height = 88
         Align = alRight
         TabOrder = 1
+        ExplicitLeft = 694
         DesignSize = (
           579
           88)
@@ -370,17 +379,18 @@ inherited Dlg_Order: TDlg_Order
     object pnl_Header_2: TPanel
       Left = 341
       Top = 1
-      Width = 354
+      Width = 350
       Height = 176
       Align = alClient
       TabOrder = 2
+      ExplicitWidth = 354
       DesignSize = (
-        354
+        350
         176)
       object cmb_CustomerName: TDBComboBoxEh
         Left = 86
         Top = 11
-        Width = 262
+        Width = 258
         Height = 21
         ControlLabel.Width = 48
         ControlLabel.Height = 13
@@ -394,11 +404,12 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 0
         Visible = True
         OnGetItemImageIndex = cmb_CustomerNameGetItemImageIndex
+        ExplicitWidth = 262
       end
       object cmb_CustomerMan: TDBComboBoxEh
         Left = 86
         Top = 38
-        Width = 262
+        Width = 258
         Height = 21
         ControlLabel.Width = 59
         ControlLabel.Height = 26
@@ -412,11 +423,12 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 1
         Visible = True
         OnGetItemImageIndex = cmb_CustomerManGetItemImageIndex
+        ExplicitWidth = 262
       end
       object edt_CustomerContacts: TDBEditEh
         Left = 86
         Top = 65
-        Width = 262
+        Width = 258
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 49
@@ -429,11 +441,12 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 2
         Visible = True
+        ExplicitWidth = 262
       end
       object cmb_CustomerLegalName: TDBComboBoxEh
         Left = 86
         Top = 92
-        Width = 186
+        Width = 182
         Height = 21
         ControlLabel.Width = 74
         ControlLabel.Height = 26
@@ -447,9 +460,10 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 3
         Visible = True
         OnGetItemImageIndex = cmb_CustomerLegalNameGetItemImageIndex
+        ExplicitWidth = 186
       end
       object edt_CustomerINN: TDBEditEh
-        Left = 269
+        Left = 265
         Top = 92
         Width = 79
         Height = 21
@@ -462,11 +476,12 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 4
         Text = '123456789023'
         Visible = True
+        ExplicitLeft = 269
       end
       object edt_Account: TDBEditEh
         Left = 232
         Top = 118
-        Width = 116
+        Width = 112
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 34
@@ -479,6 +494,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 6
         Visible = True
+        ExplicitWidth = 116
       end
       object cmb_CashType: TDBComboBoxEh
         Left = 88
@@ -499,7 +515,7 @@ inherited Dlg_Order: TDlg_Order
       object edt_Address: TDBEditEh
         Left = 88
         Top = 145
-        Width = 260
+        Width = 256
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 45
@@ -512,6 +528,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 7
         Visible = True
+        ExplicitWidth = 260
       end
     end
     object pnl_Header_1: TPanel
@@ -669,12 +686,13 @@ inherited Dlg_Order: TDlg_Order
       end
     end
     object pnl_Header_5: TPanel
-      Left = 888
+      Left = 884
       Top = 1
       Width = 387
       Height = 176
       Align = alRight
       TabOrder = 4
+      ExplicitLeft = 888
       object lbl1: TLabel
         Left = 64
         Top = 12

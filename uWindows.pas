@@ -109,13 +109,14 @@ uses
   V_MDI, V_Normal, uFrmBasicMdi,
   uFrmMain,
 
+  uFrmAGlstDomainUsers,
+
   D_Sn_Calendar,
   D_ExpenseItems,
 
-  D_Candidate, D_Vacancy,
-
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule,
+  D_Candidate, D_Vacancy,
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
@@ -712,6 +713,9 @@ begin
   end
   else if F = myfrm_Adm_Installer then begin
     TForm_Adm_Installer.Create(Application, F, [myfoOneCopy], fNone, 0, null);
+  end
+  else if F = myfrm_Adm_DomainUsers then begin
+    TFrmAGlstDomainUsers.Show(Application, F, [myfoSizeable], fNone, null, null);
   end
   else if F = myfrm_F_UsersAndRoles then begin
     TFrmAWUsersAndRoles.Show(Application, F, [myfoSizeable, myfoDialog], fNone, null, null);
