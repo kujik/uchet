@@ -38,7 +38,7 @@ begin
     ['last_login$s','Время последнего логина','120'],
     ['last_time$s','Последнее время активности', '120']
   ]);
-  Frg1.InfoArray:=[[]];
+  Frg1.InfoArray:=[['']];
   Frg1.SetInitData([]);
   GetData;
   Result := Inherited;

@@ -109,7 +109,7 @@ uses
   V_MDI, V_Normal, uFrmBasicMdi,
   uFrmMain,
 
-  uFrmAGlstDomainUsers,
+  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
 
   D_Sn_Calendar,
   D_ExpenseItems,
@@ -716,6 +716,9 @@ begin
   end
   else if F = myfrm_Adm_DomainUsers then begin
     TFrmAGlstDomainUsers.Show(Application, F, [myfoSizeable], fNone, null, null);
+  end
+  else if F = myfrm_Adm_LdapUsers then begin
+    TFrmAGlstLdapUsers.Show(Application, F, [myfoSizeable], fNone, null, null);
   end
   else if F = myfrm_F_UsersAndRoles then begin
     TFrmAWUsersAndRoles.Show(Application, F, [myfoSizeable, myfoDialog], fNone, null, null);

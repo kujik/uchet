@@ -536,7 +536,8 @@ begin
     ['Настройки модулей', '_', User.Role(rAdm_Settings_Modules)],
 
     ['Сервис'],
-    ['Пользователи домена', myfrm_Adm_DomainUsers, User.IsDeveloper],
+    ['Пользователи в AD', myfrm_Adm_LdapUsers, User.IsDeveloper],
+    ['Пользователи в сети', myfrm_Adm_DomainUsers, User.IsDeveloper],
     [],
     ['Установщик модулей Учета', myfrm_Adm_Installer, User.IsDeveloper],
     [],

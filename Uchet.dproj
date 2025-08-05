@@ -516,6 +516,10 @@
             <Form>FrmAGlstDomainUsers</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="uFrmAGLstLdapUsers.pas">
+            <Form>FrmAGLstLdapUsers</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

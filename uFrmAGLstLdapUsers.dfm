@@ -1,5 +1,5 @@
-inherited FrmAGlstDomainUsers: TFrmAGlstDomainUsers
-  Caption = 'FrmAGlstDomainUsers'
+inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
+  Caption = 'FrmAGLstLdapUsers'
   ExplicitWidth = 812
   ExplicitHeight = 575
   TextHeight = 13
@@ -82,11 +82,20 @@ inherited FrmAGlstDomainUsers: TFrmAGlstDomainUsers
     inherited lblStatusBarR: TLabel
       Left = 727
       Height = 14
-      ExplicitLeft = 727
     end
     inherited lblStatusBarL: TLabel
       Height = 14
     end
+  end
+  object ADOConnection1: TADOConnection
+    Left = 530
+    Top = 134
+  end
+  object ADOQuery1: TADOQuery
+    Connection = ADOConnection1
+    Parameters = <>
+    Left = 530
+    Top = 198
   end
   object cnSQLite: TSQLConnection
     DriverName = 'Sqlite'
@@ -100,15 +109,15 @@ inherited FrmAGlstDomainUsers: TFrmAGlstDomainUsers
         'MetaDataPackageLoader=TDBXSqliteMetaDataCommandFactory,DbxSqlite' +
         'Driver280.bpl'
       'FailIfMissing=True'
-      'Database=\\10.1.1.14\Scriptsw\Domain\freshagent.sqlite')
-    Left = 634
-    Top = 166
+      'Database=R:\Projects\FreshAgent\abook-1.sqlite')
+    Left = 386
+    Top = 134
   end
   object qrySQLite: TSQLQuery
     MaxBlobSize = -1
     Params = <>
     SQLConnection = cnSQLite
-    Left = 714
-    Top = 158
+    Left = 384
+    Top = 206
   end
 end

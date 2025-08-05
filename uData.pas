@@ -921,6 +921,7 @@ const
   myfrm_Rep_StaffSchedule='Rep_StaffSchedule';
   myfrm_Rep_PayrollsSum='Rep_PayrollsSum';
   myfrm_Adm_DomainUsers = 'Adm_DomainUsers';
+  myfrm_Adm_LdapUsers = 'Adm_LdapUsers';
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
 
   //диалоги

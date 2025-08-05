@@ -153,7 +153,8 @@ uses
   uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
   uFrmWGrepPersonal1 in 'uFrmWGrepPersonal1.pas' {FrmWGrepPersonal1},
   uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
-  uFrmAGlstDomainUsers in 'uFrmAGlstDomainUsers.pas' {FrmAGlstDomainUsers};
+  uFrmAGlstDomainUsers in 'uFrmAGlstDomainUsers.pas' {FrmAGlstDomainUsers},
+  uFrmAGLstLdapUsers in 'uFrmAGLstLdapUsers.pas' {FrmAGLstLdapUsers};
 
 var
   MT: Integer;
