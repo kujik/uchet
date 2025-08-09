@@ -9,12 +9,12 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     Width = 672
     Height = 281
     ExplicitWidth = 668
-    ExplicitHeight = 264
+    ExplicitHeight = 280
     inherited pnlFrmClient: TPanel
       Width = 662
       Height = 232
       ExplicitWidth = 658
-      ExplicitHeight = 215
+      ExplicitHeight = 231
       object cmb_Office: TDBComboBoxEh
         Left = 104
         Top = 42
@@ -452,7 +452,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     inherited pnlFrmBtns: TPanel
       Top = 237
       Width = 662
-      ExplicitTop = 220
+      ExplicitTop = 236
       ExplicitWidth = 658
       inherited bvlFrmBtnsTl: TBevel
         Width = 660
@@ -487,7 +487,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
   inherited pnlStatusBar: TPanel
     Top = 281
     Width = 672
-    ExplicitTop = 264
+    ExplicitTop = 280
     ExplicitWidth = 668
     inherited lblStatusBarR: TLabel
       Left = 599

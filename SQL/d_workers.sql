@@ -750,6 +750,7 @@ select
   p.dt2 as dt2,
   w.f || ' ' || w.i  || ' ' || w.o as workername,
   w.personnel_number,
+  w.concurrent_employee,
   o.name as org_name,
   d.name as divisionname,
   d.id_prod_area,

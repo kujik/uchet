@@ -133,7 +133,7 @@ begin
       w:=v[i][2];
     end;
     if  v[i][6] <= dt1 then begin
-      //дата меньше илиравна начала периода
+      //дата меньше или равна начала периода
       if (v[i][0] = DivisionId)and(Integer(v[i][5]) in [1, 2]) then begin
         //работник принял или переведен в это подразделение
         if Length(v1) = 0 Then SetLength(v1, 1);
@@ -164,7 +164,7 @@ begin
           v1[High(v1)][6]:=1;
         end;
       end
-      else begin
+      else if Integer(v[i][5]) in [3] then begin
         //уволен
         if (Length(v1) > 0)and(v1[High(v1)][1] >= v[i][6]) Then begin
           v1[High(v1)][1]:=IncDay(v[i][6], -1);

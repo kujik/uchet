@@ -83,7 +83,7 @@ begin
   Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], cmb_id_head, cntComboLK);
   Q.QLoadToDBComboBoxEh('select code, id from ref_work_schedules order by code', [], cmb_id_schedule, cntComboLK);
   //пока ограничим список первыми тремя площадками, так как там есть фиктивная МТ, по состоянию на 2025-07-26
-  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where id < 3 order by id', [], cmb_id_prod_area, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where id <> 3 order by id', [], cmb_id_prod_area, cntComboLK);
   Cth.AddToComboBoxEh(cmb_office, [['Цех',0], ['Офис',1]]);
   Result := True;
 end;

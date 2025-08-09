@@ -27,7 +27,7 @@ unit uFrmWGedtPayroll;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, Winapi.ShlObj,
   DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd,
   ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
   uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
@@ -96,6 +96,7 @@ uses
 
 const
   cmbtDeduction = 1001;
+  cmbtCard = 1002;
 
 
 {$R *.dfm}
@@ -149,7 +150,7 @@ begin
     ['bl$i', '~  БЛ', wcol, fcol, 'e'],
     ['penalty$i', '~  Штрафы', wcol, fcol],
     ['itog1$i', '~  Итого' + sLineBreak + '  начислено', wcol, fcol],
-    ['ud$i', '~  Удержано/' + sLineBreak + 'Исп. лист', wcol, fcol, 'e'],
+    ['ud$i', '~  Удержано/' + sLineBreak + '   Исп. лист', wcol, fcol, 'e'],
     ['ndfl$i', '~  НДФЛ', wcol, fcol, 'e'],
     ['fss$i', '~  Выплачено' + sLineBreak + '  ФСС', wcol, fcol, 'e'],
     ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
@@ -162,8 +163,11 @@ begin
   Frg1.DbGridEh1.ReadOnly := (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1);
   Frg1.Opt.SetButtons(1, [
     [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
-    [mbtCard, True, True, 'Загрузить НДФЛ и карты'],
-    [-cmbtDeduction, True, True, 'Загрузить удержания'],
+    [mbtDividorM],
+    [2000, True, True, 'Загрузка данных из 1С', '1c'],
+    [cmbtCard, True, True, 'Загрузить НДФЛ и карты', 'card'],
+    [cmbtDeduction, True, True, 'Загрузить удержания', 'r_minus'],
+    [mbtDividorM],
     [],[mbtExcel],
     [mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtPrintLabels],[mbtDividorM],[],[mbtLock],
     [],
@@ -724,7 +728,7 @@ begin
   CheckEmpty;
 end;
 
-procedure TFrmWGedtPayroll.GetNdflFromExcel;
+(*procedure TFrmWGedtPayroll.GetNdflFromExcel;
 //загрузка из файлов данных по ндфл и карте
 //в файле данные начинаются со второй строки, 1й столбец - фио, 2й - ндфл, терий - карта
 var
@@ -817,10 +821,203 @@ begin
     MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не все работники найдены!', '.') + #13#10#13#10 + S.IIFStr(not b and not b2, 'Изменений не было.', st));
   CheckEmpty;
 end;
+*)
+
+procedure TFrmWGedtPayroll.GetNdflFromExcel;
+var
+  i, j, k: Integer;
+  st, st1: string;
+  v, v1, v2: Variant;
+  b, b1, b2: Boolean;
+  XlsFile: TXlsMemFileEh;
+  sh, sh1: TXlsWorksheetEh;
+  ArXls: TVarDynArray2;
+  EmplCn: TVarDynArray;
+  e1, e2: Extended;
+begin
+  //выберем файл
+  MyData.OpenDialog1.Filter := 'файлы Excel (*.xlsx)|*.xlsx';
+  if not MyData.OpenDialog1.Execute then
+    Exit;
+  if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
+    Exit;
+  //получим список совместителей
+  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  //загрузим в массив данные из эксель со второй строки до первой пустой
+  ArXls := [];
+  sh := XlsFile.Workbook.Worksheets[0];
+  for i := 3 to 2000 do begin
+    if (sh.Cells[1 - 1, i].Value.AsString = '') and (sh.Cells[2 - 1, i].Value.AsString = '') then
+      Break;
+    if (sh.Cells[2 - 1, i].Value.AsString = '') then
+      Continue;
+    if (High(ArXls) > 0) and (sh.Cells[2 - 1, i].Value.AsString = ArXls[High(ArXls) - 1][0]) and ((sh.Cells[3 - 1, i].Value.AsString = '') or (ArXls[High(ArXls) - 1][1] = '')) then begin
+      if sh.Cells[3 - 1, i].Value.AsString <> '' then
+        ArXls[High(ArXls) - 1][1] := sh.Cells[3 - 1, i].Value.AsString;
+      if sh.Cells[5- 1, i].Value.AsString <> '' then
+        ArXls[High(ArXls) - 1][2] := sh.Cells[5- 1, i].Value.AsString;
+      if sh.Cells[6- 1, i].Value.AsString <> '' then
+        ArXls[High(ArXls) - 1][3] := sh.Cells[6- 1, i].Value.AsString;
+    end
+    else
+      ArXls := ArXls + [[sh.Cells[2 - 1, i].Value.AsString, sh.Cells[3 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat]];
+  end;
+  sh.Free;
+  XlsFile.Free;
+  //пройдем по списку работников в ведомости
+  b1 := False;
+  b2 := False;
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //проверим, не совместитель ли
+    b := A.InArray(Frg1.GetValueF('id_worker', i, False), EmplCn);
+    //пройдем по загруженным из файла даннм
+    j := 0;
+    while j <= High(ArXls) do begin
+      //проверим по свопадению имени и табельного номера, или же только по имени, если совместитель, организацию не учитываем
+      if (Frg1.GetValueS('workername', i, False) = ArXls[j][0]) and (b or (Frg1.GetValueS('personnel_number', i, False) = ArXls[j][1])) then begin
+        //посмотрим, нет ли заполненного значения для этого работника в других ведомостях за этот же период
+        if Q.QSelectOneRow(
+            'select count(*) from v_payroll_item where id_worker = :id_worker$i and id_division <> :id_division$i and dt1 = :dt1$d and (ndfl is not null or karta is not null)',
+            [Frg1.GetValueF('id_worker', i, False), FPayrollParams.G('id_division'), FPayrollParams.G('dt1')]
+          )[0] > 0
+        then begin
+          //сообщение если есть, и тогда данные не заполняем
+          st := st + Frg1.GetValueS('workername', i, False) + ': Найден в другом подпразделении, данные не внесены!' + #13#10;
+          b2 := True;
+        end
+        else begin
+          //если нет в других ведомостям, берем данные из файла
+          e1 := ArXls[j][2].AsFloat;
+          e2 := ArXls[j][3].AsFloat;
+          //и если совместитель то просуммируем все строки с таким фио
+          if b then
+            for k := j + 1 to High(ArXls) do
+              if Frg1.GetValueS('workername', i, False) = ArXls[k][0] then begin
+                e1 := e1+ ArXls[k][2].AsFloat;
+                e2 := e2 + ArXls[k][3].AsFloat;
+              end;
+          //проверим что полученные данные численно отличаются от того что уже в ведомости
+          if Frg1.GetValueF('ndfl', i, False) <> Round(e1) then begin
+            //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+            st := st + Frg1.GetValueS('workername', i, False) + ': Изменен столбец НДФЛ с ' + Frg1.GetValueS('ndfl', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e1))) + #13#10;
+            Frg1.SetValue('ndfl', i, False, S.NullIf0(e1));
+            Frg1.SetValue('changed', i, False, 1);
+            b1 := True;
+          end;
+          if Frg1.GetValueF('karta', i, False) <> Round(e2) then begin
+            //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+            st := st + Frg1.GetValueS('workername', i, False) + ': Изменен столбец Карта с ' + Frg1.GetValueS('karta', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e2))) + #13#10;
+            Frg1.SetValue('karta', i, False, S.NullIf0(e2));
+            Frg1.SetValue('changed', i, False, 1);
+            b1 := True;
+          end;
+        end;
+        Break;
+      end;
+      inc(j);
+    end;
+    //проверим, что работник в списке выгрузки не найден
+    if j > High(ArXls) then begin
+      st := st + Frg1.GetValueS('workername', i, False) + ': Не найден в файлах выгрузки!' + #13#10;
+      b2 := True;
+    end;
+  end;
+  //пересчитаем таблицу
+  CalculateAll;
+  //выведем сообщение
+  if b1 or b2 then
+    MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st))
+  else
+    MyInfoMessage('Данные загружены.');
+  CheckEmpty;                                                                     cHECKeMPTY;
+end;
 
 procedure TFrmWGedtPayroll.GetDeductionsFromExcel;
+var
+  i, j, k: Integer;
+  st, st1: string;
+  v, v1, v2: Variant;
+  b, b1, b2: Boolean;
+  XlsFile: TXlsMemFileEh;
+  sh, sh1: TXlsWorksheetEh;
+  ArXls: TVarDynArray2;
+  EmplCn: TVarDynArray;
+  e: Extended;
 begin
-
+  //выберем файл
+  MyData.OpenDialog1.Filter := 'файлы Excel (*.xlsx)|*.xlsx';
+  if not MyData.OpenDialog1.Execute then
+    Exit;
+  if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
+    Exit;
+  //получим список совместителей
+  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  //загрузим в массив данные из эксель со второй строки до первой пустой
+  ArXls := [];
+  sh := XlsFile.Workbook.Worksheets[0];
+  for i := 1 to 2000 do begin
+    if sh.Cells[1 - 1, i].Value.AsString = '' then
+      Break;
+    ArXls := ArXls + [[sh.Cells[1 - 1, i].Value.AsString, sh.Cells[2 - 1, i].Value.AsString, sh.Cells[4 - 1, i].Value.AsFloat]];
+  end;
+  sh.Free;
+  XlsFile.Free;
+  //пройдем по списку работников в ведомости
+  b1 := False;
+  b2 := False;
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //проверим, не совместитель ли
+    b := A.InArray(Frg1.GetValueF('id_worker', i, False), EmplCn);
+    //пройдем по загруженным из файла даннм
+    j := 0;
+    while j <= High(ArXls) do begin
+      //проверим по свопадению имени и табельного номера, или же только по имени, если совместитель, организацию не учитываем
+      if (Frg1.GetValueS('workername', i, False) = ArXls[j][0]) and (b or (Frg1.GetValueS('personnel_number', i, False) = ArXls[j][1])) then begin
+        //посмотрим, нет ли заполненного значения для этого работника в других ведомостях за этот же период
+        if Q.QSelectOneRow(
+            'select count(*) from v_payroll_item where id_worker = :id_worker$i and id_division <> :id_division$i and dt1 = :dt1$d and ud is not null',
+            [Frg1.GetValueF('id_worker', i, False), FPayrollParams.G('id_division'), FPayrollParams.G('dt1')]
+          )[0] > 0
+        then begin
+          //сообщение если есть, и тогда данные не заполняем
+          st := st + Frg1.GetValueS('workername', i, False) + ': Найден в другом подпразделении, данные не внесены!' + #13#10;
+          b2 := True;
+        end
+        else begin
+          //если нет в других ведомостям, берем данные из файла
+          e := ArXls[j][2].AsFloat;
+          //и если совместитель то просуммируем все строки с таким фио
+          if b then
+            for k := j + 1 to High(ArXls) do
+              if Frg1.GetValueS('workername', i, False) = ArXls[k][0] then
+                e := e + ArXls[k][2].AsFloat;
+          //проверим что полученные данные численно отличаются от того что уже в ведомости
+          if Frg1.GetValueF('ud', i, False) <> Round(e) then begin
+            //если отличаются - заполним ведомсть удержание, статус из менения, и выдадим сообщение
+            st := st + Frg1.GetValueS('workername', i, False) + ': Изменен столбец Удержано с ' + Frg1.GetValueS('ud', i, False) + ' на ' + VarToStr(S.NullIf0(e)) + #13#10;
+            Frg1.SetValue('ud', i, False, S.NullIf0(e));
+            Frg1.SetValue('changed', i, False, 1);
+            b1 := True;
+          end;
+        end;
+        Break;
+      end;
+      inc(j);
+    end;
+    //проверим, что работник в списке выгрузки не найден
+    if j > High(ArXls) then begin
+      st := st + Frg1.GetValueS('workername', i, False) + ': Не найден в файлах выгрузки!' + #13#10;
+      b2 := True;
+    end;
+  end;
+  //пересчитаем таблицу
+  CalculateAll;
+  //выведем сообщение
+  if b1 or b2 then
+    MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st))
+  else
+    MyInfoMessage('Данные загружены.');
+  CheckEmpty;                                                                     cHECKeMPTY;
 end;
 
 
@@ -832,7 +1029,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtCard, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
@@ -860,7 +1057,7 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('id_method')) in [13, 14]);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCard, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtCard, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
@@ -1326,7 +1523,7 @@ begin
     mbtCustom_Payroll:
       if MyQuestionMessage('Загрузить расчет баллов?') = mrYes then
         GetDataFromExcel;
-    mbtCard:
+    cmbtCard:
       if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then
         GetNdflFromExcel;
     cmbtDeduction:

@@ -5200,6 +5200,7 @@ object MyData: TMyData
   end
   object FileOpenDialog1: TFileOpenDialog
     FavoriteLinks = <>
+    FileName = 'R:\Projects\Uchet'
     FileTypes = <>
     Options = []
     Left = 32

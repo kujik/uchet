@@ -856,10 +856,11 @@ begin
           then e1:=trunc(e)+0.75
           else e1:=round(e);}
       //допускаем только значения Х, Х.0 или Х.5
-      if frac(e) >= 0.5 then
+{      if frac(e) >= 0.5 then
         e := trunc(e) + 0.5
       else
-        e := trunc(e);
+        e := trunc(e);}
+      e := RoundTo(e, -1);
       if e > 24 then
         e := 24;
       e1 := e;

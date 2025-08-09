@@ -427,7 +427,7 @@ begin
       ['comm$s','Примечание к заказу','200']
     ]);
     Frg1.Opt.SetTable('v_or_payments');
-    Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Показать закрытые', 'Closed', ';dt_end is null', True], ['Показать с нулевой суммой', 'NullSum', ',cost > 0', True]];
+    Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Показать закрытые', 'Closed', 'dt_end is null', True], ['Показать с нулевой суммой', 'NullSum', 'cost > 0', True]];
     Frg1.Opt.SetButtons(1, 'rafs', User.Roles([],[rOr_J_OrPayments_Ch, rPC_J_OrPayments_Ch]));
     Frg1.InfoArray:=[
       [Caption+ #13#10],

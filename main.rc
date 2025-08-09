@@ -143,3 +143,8 @@ to_clipboard BITMAP "R:\Buttons\NEW\to_clipboard_20.bmp"
 to_clipboard32 BITMAP "R:\Buttons\NEW\to_clipboard_32.bmp"
 test BITMAP "R:\Buttons\NEW\test_20.bmp" 
 test32 BITMAP "R:\Buttons\NEW\test_32.bmp"
+1c BITMAP "R:\Buttons\NEW\1c_20.bmp" 
+1c32 BITMAP "R:\Buttons\NEW\1c_32.bmp"
+r_minus BITMAP "R:\Buttons\NEW\r_minus_20.bmp" 
+r_minus32 BITMAP "R:\Buttons\NEW\r_minus_32.bmp" 
+
