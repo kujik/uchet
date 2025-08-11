@@ -1,7 +1,5 @@
 inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
   Caption = 'FrmAGLstLdapUsers'
-  ExplicitWidth = 812
-  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     inherited pnlFrmClient: TPanel
@@ -82,6 +80,7 @@ inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
     inherited lblStatusBarR: TLabel
       Left = 727
       Height = 14
+      ExplicitLeft = 727
     end
     inherited lblStatusBarL: TLabel
       Height = 14

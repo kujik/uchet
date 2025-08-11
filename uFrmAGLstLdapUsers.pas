@@ -35,6 +35,7 @@ begin
   Caption:='Пользователи AD';
   Frg1.Opt.SetFields([
    // ['login$s','Логин','120'],
+    ['ab$i','X','30', 'pic'],
     ['name$s','Отображаемое имя','120'],
     ['sn$s','Фамилия','120'],
     ['givenname$s','Имя','120'],
@@ -100,6 +101,7 @@ begin
   ADOQuery1.First;
   while not ADOQuery1.Eof do begin
     va2 := va2 + [[
+      S.IIf((ADOQuery1.FieldByName('mail').AsString <> '') and (ADOQuery1.FieldByName('physicalDeliveryOfficeName').AsString <> '-'), 1, 0),
       ADOQuery1.FieldByName('name').AsString,
       ADOQuery1.FieldByName('sn').AsString,
       ADOQuery1.FieldByName('givenName').AsString,
@@ -126,11 +128,13 @@ procedure TFrmAGLstLdapUsers.CreateABook;
 var
   i, j: Integer;
 begin
+  try
+  cnSqLite.Params.Values['Database'] := '\\10.1.1.14\Admin\scriptsr\Domain\abook\abook-tmp.sqlite';
   cnSqLite.Connected := True;
   qrySqLite.SQL.Text := 'delete from properties';
   qrySqLite.ExecSQL;
   for i := 0 to Frg1.GetCount(False) - 1 do begin
-    if Frg1.GetValueS('mail', i, False) = '' then
+    if (Frg1.GetValueS('mail', i, False) = '') or (Frg1.GetValueS('office', i, False) = '-') then
       Continue;
     qrySqLite.SQL.Text := 'insert into properties (card, name, value) values (' + IntToStr(i) + ','  + '''DisplayName''' + ',' + '''' + Frg1.GetValueS('name', i, False) + '''' + ')';
     qrySqLite.ExecSQL;
@@ -144,6 +148,12 @@ begin
     qrySqLite.ExecSQL;
   end;
   cnSqLite.Connected := False;
+  DeleteFile('\\10.1.1.14\Admin\scriptsr\Domain\abook\abook.sqlite');
+  CopyFile('\\10.1.1.14\Admin\scriptsr\Domain\abook\abook-tmp.sqlite', '\\10.1.1.14\Admin\scriptsr\Domain\abook\abook.sqlite', False);
+  MyInfoMessage('Адресная книга создана.');
+  except
+    MyWarningMessage('Ошибка создания адресно книги!');
+  end;
 end;
 
 
