@@ -1349,7 +1349,7 @@ var
   Row, Day: Integer;
   Color: Integer;
 begin
-  if Params.Row = 0 then
+  if (Params.Row = 0) or (FArrTitle.Count = 0) then
     Exit;
   Row := Params.Row - 1;
   Day := StrToIntDef(Copy(FieldName, 2, 2), -1);
@@ -1366,7 +1366,7 @@ begin
     end;
   end
   else Params.Background := clmyGray;
-  if (FieldName = 'schedule') and (S.NNum(FArrTitle.G(Row, 'worker_has_schedule')) = 1) then
+  if (FArrTitle.Count > 0) and (FieldName = 'schedule') and (S.NNum(FArrTitle.G(Row, 'worker_has_schedule')) = 1) then
     Params.Font.Color := clBlue;
 end;
 

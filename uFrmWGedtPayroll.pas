@@ -142,8 +142,8 @@ begin
     ['norm$f', '_norm', wcol, fcol],
     ['norm_m$f', '_norm_m', wcol, fcol],
     ['ball$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') = 15],
-    ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol],            //премия за отчетный период, взятая из ТУРВ
-    ['premium$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol],                      //премия, сумма дневных премий из турв
+    ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol, 'e'],            //премия за отчетный период, взятая из ТУРВ
+    ['premium$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol, 'e'],                      //премия, сумма дневных премий из турв
     ['premium_p$i', '~  Премия за' + sLineBreak + '  переработки', wcol, fcol],             //премия, за переработку, по формуле
     ['premium_m$i', '~  Премия' + sLineBreak + '   дополнительная', wcol, fcol],                             //премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
     ['otpusk$i', '~  ОТ', wcol, fcol, 'e'],
