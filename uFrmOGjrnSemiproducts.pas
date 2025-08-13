@@ -156,7 +156,7 @@ begin
   Frg1.Prepare;
 
   Frg1.Opt.SetColFeature('qnt_in_demand', 'e', Frg1.DbGridEh1.DataGrouping.Active, True);
-  TSpeedButton(TPanel(Frg1.FindComponent('PTopBtns')).Controls[0]).Down := Frg1.DbGridEh1.DataGrouping.Active;
+  TSpeedButton(TPanel(Frg1.FindComponent('pnlTopBtns')).Controls[0]).Down := Frg1.DbGridEh1.DataGrouping.Active;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, 1001, null, Frg1.DbGridEh1.DataGrouping.Active);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, 1002, null, Frg1.DbGridEh1.DataGrouping.Active);
 

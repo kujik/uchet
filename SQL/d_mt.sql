@@ -124,6 +124,8 @@ where
 --в таблице сохран€ютс€ данные по всему составу позиций пф-металла в отгрузочном заказе по 
 --создании завки на металл и производственного заказа по данному отгрузочному заказу заказу
 --drop  table j_semiproducts_src cascade constraints;
+--alter table j_semiproducts_src drop constraint pk_j_sem_orders_oritem;
+--alter table j_semiproducts_src add constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id);
 create table j_semiproducts_src(
   id_supplier number(11),           --айди поставщика полуфабрикатов
   id_order number(11),              --айди отгрузочного заказа
@@ -133,8 +135,11 @@ create table j_semiproducts_src(
   qnt_in_demand number(11,3),       --количество в за€вку 
   constraint pk_j_sem_orders primary key (id_supplier, id_order, id_order_item, id_nomencl),
   constraint pk_j_sem_orders_or foreign key (id_order) references orders(id),
-  constraint pk_j_sem_orders_oritem foreign key (id_order) references order_items(id)
+  constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id)
 );
+
+--insert into j_semiproducts_src (id_supplier, id_order, id_order_item, id_nomencl, qnt_in_order, qnt_in_demand) values (6212, 9785, 302382, 42089, 170, 1);
+
 
 create or replace view v_semiproducts_get_std_item as
 select
