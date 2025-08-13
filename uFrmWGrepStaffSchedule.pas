@@ -1,5 +1,6 @@
 {
 Штатное расписание
+ПЛАН - ФАКТ
 }
 
 unit uFrmWGrepStaffSchedule;
@@ -47,8 +48,9 @@ begin
     ['office$s','офис /цех','50'],
     ['job$s','Должность','250;h'],
     ['division$s','Подразделение','250;h'],
-    ['qnt$i','Количество работников','100'],
-    ['qnt_need$i','Потребность','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])]
+    ['qnt$i','Факт','100'],
+    ['qnt_plan$i','План','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
+    ['qnt_need$i','Потребность','100','f=f:']
   ]);
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
@@ -78,7 +80,13 @@ begin
   if Fr.GetValue('office') = 'Итого:' then
     Params.Background := clmyYelow
   else if (Fr.GetValue('id_division') = null) or (Fr.GetValue('is_title') = 1) then
-    Params.Background := clmyGray
+    Params.Background := clmyGray;
+  if (FieldName = 'qnt_need') and (Fr.GetValue('qnt_need') <> null) then begin
+    if Fr.GetValue('qnt_need') < 0 then
+      Params.Background := clmyPink
+    else
+      Params.Background := clmyGreen;
+  end;
 end;
 
 procedure TFrmWGrepStaffSchedule.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
@@ -96,7 +104,7 @@ end;
 
 procedure TFrmWGrepStaffSchedule.GetData;
 var
-  i, qc, qo: Integer;
+  i, qc, qo, qdp, qn, qnp, qnm: Integer;
   na : TNamedArr;
   st: string;
 begin
@@ -112,7 +120,7 @@ begin
     Q.QSetContextValue('staff_schedule_area', '');
   end;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
-  Q.QLoadFromQuery('select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_need from v_staff_schedule', [], na);
+  Q.QLoadFromQuery('select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_plan, qnt_need from v_staff_schedule', [], na);
   //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
@@ -125,9 +133,9 @@ begin
   //удалим последнюю строку (вью там возвращает строку с общим итогом)
   Delete(na.V, na.Count - 1, 1);
   //добавим итоги
-  na.V := na.V + [[100000, null, null, null, 'Итого:', '', 'офис', qo, null]];
-  na.V := na.V + [[100001, null, null, null, 'Итого:', '', 'цех', qc, null]];
-  na.V := na.V + [[100002, null, null, null, 'Итого:', '', 'всего', qc + qo, null]];
+  na.V := na.V + [[100000, null, null, null, 'Итого:', '', 'офис', qo, null, null]];
+  na.V := na.V + [[100001, null, null, null, 'Итого:', '', 'цех', qc, null, null]];
+  na.V := na.V + [[100002, null, null, null, 'Итого:', '', 'всего', qc + qo, null, null]];
   //удалим итоги по тем профессиям по которым только одна запись (цифра в предыдущей строке совпадает с текущей)
   i := 1;
   while i <= na.Count - 4 do begin
@@ -137,6 +145,26 @@ begin
     end;
     Inc(i);
   end;
+  i := 0;
+  qn := 0;
+  qnp := 0;
+  qnm := 0;
+  while i <= na.Count - 4 do begin
+    if na.G(i, 'id_division') = null then begin
+      na.SetValue(i, 'division', 'По всем подразделениям:');
+      na.SetValue(i, 'qnt_plan', qdp);
+      if na.G(i, 'qnt_plan').AsInteger <> 0 then
+        na.SetValue(i, 'qnt_need', qdp - na.G(i, 'qnt'));
+      qdp := 0;
+    end
+    else if na.G(i, 'qnt_plan') <> null then begin
+      qdp := qdp + na.G(i, 'qnt_plan').AsInteger;
+      qnp := qnp + Max(na.G(i, 'qnt_need').AsInteger, 0);
+      qnm := qnm + Min(na.G(i, 'qnt_need').AsInteger, 0);
+    end;
+    Inc(i);
+  end;
+  na.SetValue(na.Count - 1, 'qnt_need', qnp + qnm);
   Frg1.SetInitData(na);
 end;
 

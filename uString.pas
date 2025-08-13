@@ -2751,18 +2751,20 @@ end;
 
 function TVariantHelper.AsInteger: Integer;
 begin
-  if IsNumeric then
+  Result := S.NInt(Self);
+{  if IsNumeric then
     Result := S.VarToInt(Self)
   else
-    Result := 0;
+    Result := 0;}
 end;
 
 function TVariantHelper.AsFloat: Extended;
 begin
-  if IsNumeric then
+  Result := S.NNum(Self);
+{  if IsNumeric then
     Result := Self
   else
-    Result := 0;
+    Result := 0;}
 end;
 
 function TVariantHelper.AsBoolean: Boolean;

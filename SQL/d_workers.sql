@@ -1267,7 +1267,8 @@ select
   --decode(t.office, 1, 'офис', 'цех') as office,
   d.isoffice as office,
   t.qnt,
-  wn.qnt as qnt_need
+  wn.qnt as qnt_plan,
+  decode(wn.qnt, null, null, wn.qnt - t.qnt) as qnt_need
 from  
   (select 
     id_job, 
