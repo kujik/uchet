@@ -1250,7 +1250,29 @@ create table ref_workers_needed(
   constraint pk_ref_workers_needed primary key (id_job, id_division),
   constraint fk_ref_workers_needed_job foreign key (id_job) references ref_jobs(id),
   constraint fk_ref_workers_needed_div foreign key (id_division) references ref_divisions(id)
+);
+
+--drop  table ref_staff_schedule cascade constraints; 
+create table ref_staff_schedule(
+  id_job number,
+  id_division number,
+  dt date,
+  type number,
+  value number,
+  --constraint pk_ref_workers_needed primary key (id_job, id_division),
+  constraint fk_ref_staff_schedule_job foreign key (id_job) references ref_jobs(id),
+  constraint fk_ref_staff_schedule_div foreign key (id_division) references ref_divisions(id)
 );  
+
+select id_division, id_job, value from ref_staff_schedule where dt = ( 
+    select max(dt) from ref_staff_schedule 
+    where 
+    --dt < :dt$d and 
+    type = 2
+    group by id_division, id_job);
+
+--delete from ref_staff_schedule;
+  
 
 
 create or replace view v_staff_schedule as
@@ -1267,15 +1289,19 @@ select
   --decode(t.office, 1, 'офис', 'цех') as office,
   d.isoffice as office,
   t.qnt,
-  wn.qnt as qnt_plan,
-  decode(wn.qnt, null, null, wn.qnt - t.qnt) as qnt_need
+  qn.value as qnt_plan,
+  decode(qn.value, null, null, qn.value - t.qnt) as qnt_need,
+  t.schedule,
+  slp.value as salary_plan,
+  sls.value as salary_sity
 from  
   (select 
     id_job, 
     id_division,
     count(1)  as qnt,
     max(office) as office,
-    max(area_shortname) as area_shortname
+    max(area_shortname) as area_shortname,
+    max(schedule) as schedule
   from 
     v_turv_workers
   where
@@ -1289,19 +1315,41 @@ from
   ) t,
   ref_jobs j,
   v_ref_divisions d,
-  ref_workers_needed wn
+  ref_workers_needed wn,
+  (select id_division, id_job, value from ( 
+    select id_division, id_job, value, row_number() over (partition by id_division, id_job, type order by dt desc) as rn
+      from ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 1
+  ) where rn = 1) qn,
+  (select id_division, id_job, value from ( 
+    select id_division, id_job, value, row_number() over (partition by id_division, id_job, type order by dt desc) as rn
+      from ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 2
+  ) where rn = 1) slp,
+  (select id_division, id_job, value from ( 
+    select id_division, id_job, value, row_number() over (partition by id_division, id_job, type order by dt desc) as rn
+      from ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 3
+  ) where rn = 1) sls
 where
   t.id_job = j.id(+)
   and t.id_division = d.id(+)
   and t.id_job = wn.id_job(+)
-  and t.id_division = wn.id_division(+)  
+  and t.id_division = wn.id_division(+)
+  and qn.id_division (+) = t.id_division and qn.id_job (+) = t.id_job
+  and slp.id_job (+) = t.id_job  
+  and sls.id_job (+) = t.id_job  
 order by
   j.name, d.name       
 ; 
 
-select * from v_staff_schedule; 
+select * from v_staff_schedule order by id_job; 
 
 
+  (select id_division, id_job, value from ref_staff_schedule where dt = ( 
+    select max(dt) from ref_staff_schedule 
+    where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 1 group by id_division, id_job
+  ) group by id_division, id_job, value);
 
 
 

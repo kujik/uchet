@@ -23,6 +23,7 @@ type
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure GetData;
+    procedure FromExcel;
   public
   end;
 
@@ -32,14 +33,27 @@ var
 implementation
 
 uses
-  uTurv;
+  uTurv,
+  uLabelColors2,
+  uExcel,
+  uPrintReport,
+  XlsMemFilesEh,
+  Printers,
+  PrViewEH,
+  uModule,
+  uSys,
+  uFrmMain
+  ;
 
 {$R *.dfm}
 
 function TFrmWGrepStaffSchedule.PrepareForm: Boolean;
+var
+  NoSum: boolean;
 begin
   Caption:='Штатное расписание';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible] - [myogSorting];
+  NoSum := not A.InArray(User.GetLogin, ['sprokopenko','ostulihina','eteplyakova']);
   Frg1.Opt.SetFields([
     ['rownum$i','_id','40'],
     ['is_title$i','_title','40'],
@@ -48,9 +62,18 @@ begin
     ['office$s','офис /цех','50'],
     ['job$s','Должность','250;h'],
     ['division$s','Подразделение','250;h'],
-    ['qnt$i','Факт','100'],
-    ['qnt_plan$i','План','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
-    ['qnt_need$i','Потребность','100','f=f:']
+    ['qnt$i','Фактическая численность работников','100'],
+    ['qnt_plan$i','Плановая численность работников','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
+    ['qnt_need$i','Потребность в работниках','100','f=f:'],
+    ['schedule$s','График работы','100','f=f'],
+    ['salary_avg$i','Начисленная з/п (средняя)','100','f=f','i',NoSum],
+    ['salary_plan$i','Начисленная з/п (плановая)','100','f=f','e','i',NoSum],
+    ['salary_wo_ndfl$i','з/п после вычета НДФЛ','100','f=f','i',NoSum],
+    ['salary_sity$i','Рынок, начисл.','100','f=f','e','i',NoSum],
+    ['budget$i','Бюджет исходя из кол-во факт. занятых ставок','100','f=f','i',NoSum],
+    ['salary_diff$i','Отклонения от рынка по должности','100','f=f','i',NoSum],
+    ['budget_sity$i','Бюджет по рынку','100','f=f','i',NoSum],
+    ['budget_diff$i','Отклонения бюджета от рынка','100','f=f','i',NoSum]
   ]);
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
@@ -67,6 +90,7 @@ end;
 
 procedure TFrmWGrepStaffSchedule.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
+  //if Tag = mbtExcel then FromExcel else
   if Tag = mbtGo then begin
     GetData;
     Fr.RefreshGrid;
@@ -84,7 +108,7 @@ begin
   if (FieldName = 'qnt_need') and (Fr.GetValue('qnt_need') <> null) then begin
     if Fr.GetValue('qnt_need') < 0 then
       Params.Background := clmyPink
-    else
+    else if Fr.GetValue('qnt_need') > 0 then
       Params.Background := clmyGreen;
   end;
 end;
@@ -97,16 +121,23 @@ begin
 end;
 
 procedure TFrmWGrepStaffSchedule.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+var
+  t: Integer;
 begin
-  Q.QExecSql('delete from ref_workers_needed where id_division = :id_division$i and id_job = :id_job$i', [Fr.GetValue('id_division'), Fr.GetValue('id_job')]);
-  Q.QExecSql('insert into ref_workers_needed (id_division, id_job, qnt) values (:id_division$i, :id_job$i, :qnt$i)', [Fr.GetValue('id_division'), Fr.GetValue('id_job'), S.NullIf0(Value)]);
+  t := A.PosInArray(FieldName, ['','qnt_plan','salary_plan','salary_sity']);
+  if t > 0 then begin
+    Q.QExecSql('delete from ref_staff_schedule where id_division = :id_division$i and id_job = :id_job$i and dt = :dt$d and type = :t$i', [Fr.GetValue('id_division'), Fr.GetValue('id_job'), Date, t]);
+    Q.QExecSql('insert into ref_staff_schedule (id_division, id_job, dt, type, value) values (:id_division$i, :id_job$i, :dt$d, :t$i, :value$i)', [Fr.GetValue('id_division'), Fr.GetValue('id_job'), Date, t, S.NullIf0(Value)]);
+  end;
 end;
 
 procedure TFrmWGrepStaffSchedule.GetData;
 var
-  i, qc, qo, qdp, qn, qnp, qnm: Integer;
+  i, j, qc, qo, qdp, qn, qnp, qnm: Integer;
   na : TNamedArr;
   st: string;
+  ArSalary, ArSalaryPlan, ArSalarySity, ArQntPlan: TVarDynArray2;
+  v1: Variant;
 begin
   if (not Cth.DteValueIsDate(Frg1.FindComponent('edtd1'))) or (S.NSt(Frg1.GetControlValue('cmbArea')) = '') then
     Exit;
@@ -120,7 +151,30 @@ begin
     Q.QSetContextValue('staff_schedule_area', '');
   end;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
-  Q.QLoadFromQuery('select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_plan, qnt_need from v_staff_schedule', [], na);
+  Q.QLoadFromQuery(
+    'select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_plan, qnt_need, schedule, '+
+    'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
+    'from v_staff_schedule',
+  [], na);
+  ArSalary := Q.QLoadToVarDynArray2(
+    'select pi.id_job, round(avg((nvl(itog1, 0) - nvl(otpusk,0) - nvl(bl,0) - nvl(penalty,0)) / turv * norm) * 2) sumall ' +
+    'from v_payroll_item pi, v_staff_schedule ss ' +
+    'where ' +
+    'itog1 is not null and turv is not null and turv <> 0 ' +
+    'and ss.id_job = pi.id_job ' +
+    'and dt >= :dtbeg$d ' +
+    'and dt <= :dtend$d ' +
+    'group by pi.id_job',
+    [EncodeDate(2025, 5, 1), EncodeDate(2025, 7, 15)]
+  );
+
+  ArSalaryPlan := Q.QLoadToVarDynArray2(
+    'select id_division, id_job, value from ref_staff_schedule where dt = ( '+
+    'select max(dt) from ref_staff_schedule '+
+    'where dt < :dt$d and type = 2'+
+    'group by id_division, id_job)',
+    [Frg1.GetControlValue('edtd1')]
+  );
   //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
@@ -133,9 +187,9 @@ begin
   //удалим последнюю строку (вью там возвращает строку с общим итогом)
   Delete(na.V, na.Count - 1, 1);
   //добавим итоги
-  na.V := na.V + [[100000, null, null, null, 'Итого:', '', 'офис', qo, null, null]];
-  na.V := na.V + [[100001, null, null, null, 'Итого:', '', 'цех', qc, null, null]];
-  na.V := na.V + [[100002, null, null, null, 'Итого:', '', 'всего', qc + qo, null, null]];
+  na.V := na.V + [[100000, null, null, null, 'Итого:', '', 'офис', qo, null,null,null,null,null,null,null,null,null,null,null]];
+  na.V := na.V + [[100001, null, null, null, 'Итого:', '', 'цех', qc, null,null,null,null,null,null,null,null,null,null,null]];
+  na.V := na.V + [[100002, null, null, null, 'Итого:', '', 'всего', qc, null,null,null,null,null,null,null,null,null,null,null]];
   //удалим итоги по тем профессиям по которым только одна запись (цифра в предыдущей строке совпадает с текущей)
   i := 1;
   while i <= na.Count - 4 do begin
@@ -165,10 +219,75 @@ begin
     Inc(i);
   end;
   na.SetValue(na.Count - 1, 'qnt_need', qnp + qnm);
+  i := 0;
+  while i <= na.Count - 4 do begin
+    if na.G(i, 'id_division') = null then begin
+      na.SetValue(i, 'qnt_plan', null);
+      na.SetValue(i, 'qnt_need', null);
+    end;
+    if (na.G(i, 'is_title') = 1) or (na.G(i, 'id_division') = null) then begin
+      j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
+      if j >= 0 then
+        na.SetValue(i, 'salary_avg', ArSalary[j][1]);
+      j := A.PosInArray(na.G(i, 'id_job'), ArSalaryPlan, 0);
+      na.SetValue(i, 'salary_wo_ndfl', Round(na.G(i, 'salary_avg').AsInteger * 0.87));
+      na.SetValue(i, 'budget', na.G(i, 'salary_avg').AsInteger * na.G(i, 'qnt').AsInteger);
+      na.SetValue(i, 'salary_diff', na.G(i, 'salary_avg').AsInteger - na.G(i, 'salary_sity').AsInteger);
+      na.SetValue(i, 'budget_sity', na.G(i, 'salary_sity').AsInteger * na.G(i, 'qnt').AsInteger);
+      na.SetValue(i, 'budget_diff', na.G(i, 'budget').AsInteger - na.G(i, 'budget_sity').AsInteger);
+    end;
+    inc(i);
+  end;
   Frg1.SetInitData(na);
 end;
 
 
+procedure TFrmWGrepStaffSchedule.FromExcel;
+var
+  i, j, k: Integer;
+  st, st1: string;
+  v, v1, v2: Variant;
+  b, b1, b2: Boolean;
+  XlsFile: TXlsMemFileEh;
+  sh, sh1: TXlsWorksheetEh;
+  ArXls, va2: TVarDynArray2;
+  EmplCn: TVarDynArray;
+  e1, e2: Extended;
+begin
+  va2:=Q.QLoadToVarDynArray2('select id, name from ref_jobs', []);
+  //выберем файл
+  MyData.OpenDialog1.Filter := 'файлы Excel (*.xlsx)|*.xlsx';
+  if not MyData.OpenDialog1.Execute then
+    Exit;
+  if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
+    Exit;
+  //получим список совместителей
+  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  //загрузим в массив данные из эксель со второй строки до первой пустой
+  ArXls := [];
+  sh := XlsFile.Workbook.Worksheets[0];
+  for i := 3 to 2000 do begin
+    if (sh.Cells[0, i].Value.AsString = '') then
+      break;
+    j:=a.PosInArray(sh.Cells[0, i].Value.AsString, va2, 1);
+    if j >= 0 then begin
+      Q.QExecSql('insert into ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[16, i].Value.AsInteger]);
+    end;
+  end;
+  sh := XlsFile.Workbook.Worksheets[1];
+  for i := 3 to 2000 do begin
+    if (sh.Cells[0, i].Value.AsString = '') then
+      break;
+    j:=a.PosInArray(sh.Cells[0, i].Value.AsString, va2, 1);
+    if j >= 0 then begin
+      Q.QExecSql('insert into ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[13, i].Value.AsInteger]);
+    end;
+  end;
+  for i := 0 to Frg1.GetCount - 1 do
+   if Frg1.GetValue('id_division', i) <> null then
+     Q.QExecSql('insert into ref_staff_schedule (id_job, id_division, dt, type, value) values (:j$i, :d$i, :dt$d, 1, :v$i)',
+       [Frg1.GetValue('id_job',i), Frg1.GetValue('id_division',i), Date,Frg1.GetValue('qnt',i)]);
+end;
 
 
 end.

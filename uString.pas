@@ -2644,7 +2644,7 @@ begin
     Field := Copy(Field, 1, i - 1);
   i := A.PosInArray(Field, F, True);
   if i < 0 then
-    raise Exception.Create('Поле не ' + Field + ' найдено в NamedArr');
+    raise Exception.Create('Поле ' + Field + 'не найдено в NamedArr');
   Result := i;
 end;
 
