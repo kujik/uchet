@@ -102,11 +102,15 @@ select * from v_ref_workers order by workername;
 
 
 --профессии
+alter  table ref_jobs add active number(1);
 create table ref_jobs(
   id number(11),
   name varchar2(400),
   constraint pk_ref_jobs primary key (id)
 );
+
+--update ref_jobs set active = 1;
+
 
 create unique index idx_ref_jobs on ref_jobs(lower(name)); 
 
@@ -1301,7 +1305,7 @@ from
     count(1)  as qnt,
     max(office) as office,
     max(area_shortname) as area_shortname,
-    max(schedule) as schedule
+    max(nvl(schedule, ' ')) as schedule
   from 
     v_turv_workers
   where
@@ -1332,7 +1336,8 @@ from
       where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 3
   ) where rn = 1) sls
 where
-  t.id_job = j.id(+)
+  j.active = 1
+  and t.id_job = j.id  (+)
   and t.id_division = d.id(+)
   and t.id_job = wn.id_job(+)
   and t.id_division = wn.id_division(+)
@@ -1343,35 +1348,8 @@ order by
   j.name, d.name       
 ; 
 
-select * from v_staff_schedule order by id_job; 
+select * from v_staff_schedule order by job; 
 
-
-  (select id_division, id_job, value from ref_staff_schedule where dt = ( 
-    select max(dt) from ref_staff_schedule 
-    where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 1 group by id_division, id_job
-  ) group by id_division, id_job, value);
-
-
-
-
-
-
-
-
-select 
-  job, 
-  divisionname,
-  count(1)  as qnt
-from 
-  v_turv_workers
-where
-  dt1p <= sysdate
-  and dt2p >= sysdate  
-group by
-  rollup(job, divisionname)
-order by  
-  job, divisionname
-;  
 
 
 

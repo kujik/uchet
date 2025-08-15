@@ -836,11 +836,11 @@ begin
   end
   else if F = myfrm_Dlg_R_Jobs then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_jobs;;sq_ref_jobs', 'Профессия', 400, 100,
-     [['name$s', cntEdit, 'Профессия','1:400']{, ['active$i', cntCheckX, 'Используется']}], [['caption dlgedit ']]);
+     [['name$s', cntEdit, 'Профессия','1:400'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit ']]);
   end
   else if F = myfrm_Dlg_R_TurvCodes then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_turvcodes;;sq_ref_turvcodes', 'Обозначение ТУРВ', 450, 130,
-     [['code$s', cntEdit, 'Профессия','1:400'], ['name$s', cntEdit, 'Профессия','1:400']], [['caption dlgedit']]);
+     [['code$s', cntEdit, 'Профессия','1:400'], ['name$s', cntEdit, 'Профессия','1:400']], [['caption dlgedit dlgactive']]);
   end
   else if F = myfrm_Dlg_R_Organizations then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_sn_organizations;;sq_ref_sn_organizations', 'Свои организации', 400, 100,

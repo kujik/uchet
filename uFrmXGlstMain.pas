@@ -560,7 +560,8 @@ begin
     Caption:='Справочник профессий';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['name','Профессия','300']
+      ['name','Профессия','300'],
+      ['active$i','Используется','60','pic']
     ]);
     Frg1.Opt.SetTable('ref_jobs');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Jobs_Ch));

@@ -34,15 +34,8 @@ implementation
 
 uses
   uTurv,
-  uLabelColors2,
   uExcel,
-  uPrintReport,
-  XlsMemFilesEh,
-  Printers,
-  PrViewEH,
-  uModule,
-  uSys,
-  uFrmMain
+  XlsMemFilesEh
   ;
 
 {$R *.dfm}
@@ -53,7 +46,7 @@ var
 begin
   Caption:='Штатное расписание';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible] - [myogSorting];
-  NoSum := not A.InArray(User.GetLogin, ['sprokopenko','ostulihina','eteplyakova']);
+  //NoSum := not A.InArray(User.GetLogin, ['sprokopenko','ostulihina','eteplyakova']);
   Frg1.Opt.SetFields([
     ['rownum$i','_id','40'],
     ['is_title$i','_title','40'],
@@ -65,20 +58,24 @@ begin
     ['qnt$i','Фактическая численность работников','100'],
     ['qnt_plan$i','Плановая численность работников','100','f=f:','e=0:100:0',User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
     ['qnt_need$i','Потребность в работниках','100','f=f:'],
-    ['schedule$s','График работы','100','f=f'],
-    ['salary_avg$i','Начисленная з/п (средняя)','100','f=f','i',NoSum],
-    ['salary_plan$i','Начисленная з/п (плановая)','100','f=f','e','i',NoSum],
-    ['salary_wo_ndfl$i','з/п после вычета НДФЛ','100','f=f','i',NoSum],
-    ['salary_sity$i','Рынок, начисл.','100','f=f','e','i',NoSum],
-    ['budget$i','Бюджет исходя из кол-во факт. занятых ставок','100','f=f','i',NoSum],
-    ['salary_diff$i','Отклонения от рынка по должности','100','f=f','i',NoSum],
-    ['budget_sity$i','Бюджет по рынку','100','f=f','i',NoSum],
-    ['budget_diff$i','Отклонения бюджета от рынка','100','f=f','i',NoSum]
+    ['schedule$s','График работы','100'],
+    ['salary_avg$i','Начисленная з/п (средняя)','100','f=f','t=1'],
+    ['salary_plan$i','Начисленная з/п (плановая)','100','f=f','e','t=1'],
+    ['salary_wo_ndfl$i','з/п после вычета НДФЛ','100','f=f','t=1'],
+    ['salary_sity$i','Рынок, начисл.','100','f=f','e','t=1'],
+    ['budget$i','Бюджет исходя из кол-во факт. занятых ставок','100','f=f','t=1'],
+    ['salary_diff$i','Отклонения от рынка по должности','100','f=f','t=1'],
+    ['budget_sity$i','Бюджет по рынку','100','f=f','t=1'],
+    ['budget_diff$i','Отклонения бюджета от рынка','100','f=f','t=1']
   ]);
   Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
-  Frg1.CreateAddControls('1', cntDTEdit, 'Дата', 'edtd1', ':', 50, yrefC, 85);
-  Frg1.CreateAddControls('1', cntComboL, 'Площадка', 'cmbArea', ':', 50 + 85 + 80, yrefC, 100);
+  Frg1.CreateAddControls('1', cntDTEdit, 'Дата', 'edtd1', ':',30, yrefC, 85);
+  Frg1.CreateAddControls('1', cntComboL, 'Площадка', 'cmbArea', ':', 30 + 65 + 80, yrefC, 100);
+  if User.Roles([], [rW_Rep_StaffSchedule_V_S]) then
+    Frg1.CreateAddControls('1', cntCheck, 'Данные по з/п', 'chbSalary', '', -1, yrefC, 100);
+  if User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C, rW_Rep_StaffSchedule_Ch_SP, rW_Rep_StaffSchedule_Ch_SS]) then
+    Frg1.CreateAddControls('1', cntCheck, 'Ввод данных', 'chbEdit', '', -1, yrefC, 100);
   Q.QLoadToDBComboBoxEh('select ''Все'' from dual union select distinct area_shortname || '' - '' || isoffice from v_ref_divisions order by 1', [], TDBComboBoxEh(Frg1.FindComponent('cmbArea')), cntComboL);
   Frg1.InfoArray:=[[
     'Штатное расписание.'#13#10
@@ -86,6 +83,11 @@ begin
   //данные из массива
   Frg1.SetInitData([]);
   Result := Inherited;
+  Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
+  Frg1.Opt.SetColFeature('qnt_need', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), True);
+  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SP), True);
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SS), True);
+  Frg1.SetColumnsVisible;
 end;
 
 procedure TFrmWGrepStaffSchedule.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -224,6 +226,7 @@ begin
     if na.G(i, 'id_division') = null then begin
       na.SetValue(i, 'qnt_plan', null);
       na.SetValue(i, 'qnt_need', null);
+      na.SetValue(i, 'schedule', null);
     end;
     if (na.G(i, 'is_title') = 1) or (na.G(i, 'id_division') = null) then begin
       j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
