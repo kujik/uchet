@@ -15,6 +15,24 @@ inherited FrmTest2: TFrmTest2
       Height = 475
       ExplicitWidth = 818
       ExplicitHeight = 474
+      object Memo1: TMemo
+        Left = 0
+        Top = 168
+        Width = 377
+        Height = 89
+        Lines.Strings = (
+          'Memo1')
+        TabOrder = 0
+      end
+      object BitBtn1: TBitBtn
+        Left = 1
+        Top = 263
+        Width = 75
+        Height = 25
+        Caption = 'BitBtn1'
+        TabOrder = 1
+        OnClick = BitBtn1Click
+      end
     end
     inherited pnlFrmBtns: TPanel
       Top = 480
