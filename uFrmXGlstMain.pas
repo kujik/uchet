@@ -833,6 +833,17 @@ v:=True;
       ''#13#10
     ]];
   end
+  else if FormDoc = myfrm_Ref_JobsNeeded then begin
+    Caption:='Вакантные должности';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['job','Профессия','200'],
+      ['divisionname','Подразделение','200']
+    ]);
+    Frg1.Opt.SetTable('v_staff_schedule_add_jobs');
+    Frg1.Opt.SetButtons(1, 'reads', True);
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_Ref_JobsNeeded;
+  end
 
 
 

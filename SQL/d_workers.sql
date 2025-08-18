@@ -1246,15 +1246,26 @@ where
   and h4.id_work_schedule(+) = s.id and h4.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
 ;  
 
---потребность в работниках по конкретной профессии в конкретном подразделении  
+--потребность в работниках по конкретной профессии в конкретном подразделении
+--alter table ref_workers_needed add id number;  
 create table ref_workers_needed(
+  id number,
   id_job number,
   id_division number,
-  qnt number,
+  qnt number,  --no use
   constraint pk_ref_workers_needed primary key (id_job, id_division),
   constraint fk_ref_workers_needed_job foreign key (id_job) references ref_jobs(id),
   constraint fk_ref_workers_needed_div foreign key (id_division) references ref_divisions(id)
 );
+
+create sequence sq_ref_workers_needed start with 100 nocache;
+
+create or replace trigger trg_ref_workers_needed_bi_r before insert on ref_workers_needed for each row
+begin
+  select sq_ref_workers_needed.nextval into :new.id from dual;
+end;
+/
+
 
 --drop  table ref_staff_schedule cascade constraints; 
 create table ref_staff_schedule(
@@ -1299,7 +1310,7 @@ select
   slp.value as salary_plan,
   sls.value as salary_sity
 from  
-  (select 
+/*  (select 
     id_job, 
     id_division,
     count(1)  as qnt,
@@ -1314,6 +1325,18 @@ from
     and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
     and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
     and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
+  group by
+    rollup(id_job, id_division)
+  ) t,*/
+  (select 
+    id_job, 
+    id_division,
+    sum(qnt) as qnt,
+    max(office) as office,
+    max(area_shortname) as area_shortname,
+    max(nvl(schedule, ' ')) as schedule
+  from 
+    v_staff_schedule_add
   group by
     rollup(id_job, id_division)
   ) t,
@@ -1349,6 +1372,60 @@ order by
 ; 
 
 select * from v_staff_schedule order by job; 
+
+create or replace view v_staff_schedule_add as
+  select
+  --вспомогательное представление для штатного расписания
+  --возвращает данные по фактически работающему персоналу и данные по требуемым сспециальностям 
+    id_job, 
+    id_division,
+    office,
+    1 as qnt,
+    area_shortname,
+    (nvl(schedule, ' ')) as schedule
+  from 
+    v_turv_workers
+  where
+    id_division > 3  --исключаем тестовые
+    and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
+  union
+  select 
+    id_job, 
+    id_division,
+    d.office,
+    0 as qnt,
+    d.area_shortname,
+    d.code as schedule
+  from 
+    ref_workers_needed n,
+    v_ref_divisions d
+  where
+    d.id = n.id_division
+;    
+
+create or replace view v_staff_schedule_add_jobs as
+  select
+    n.id,
+    id_job, 
+    id_division,
+    j.name as job,
+    d.name as divisionname
+  from 
+    ref_workers_needed n,
+    v_ref_divisions d,
+    ref_jobs j
+  where
+    d.id = n.id_division
+    and j.id = n.id_job
+;    
+
+
+
+
+
 
 
 

@@ -157,8 +157,8 @@ begin
     then Module.SetStyle('')
     else Module.SetStyle(Module.GetPath_Styles+'\'+Settings.InterfaceStyle);}
   v := Q.QSelectOneRow('select job, job_comm, idletime from adm_users where id = :id$i', [GetID]);
-  UserJob := v[0];
-  UserIdleTime := v[2];
+  UserJob := v[0].AsInteger;
+  UserIdleTime := v[2].AsInteger;
   Errors.SetMadExcept;
   if FrmMain <> nil then
     FrmMain.AfterUserLogged;

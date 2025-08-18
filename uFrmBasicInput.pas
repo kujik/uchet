@@ -481,6 +481,7 @@ begin
     for i := 0 to High(FieldsDefAdd) do begin
       if TMyControlType(FieldsDefAdd[i][0]) in [cntComboL, cntComboLK, cntComboLK0, cntComboE, cntComboEK] then begin
         Q.QLoadToDBComboBoxEh(ComboboxesFieldsDef[j], [], TDBComboboxEh(Ctrls[i]), FieldsDefAdd[i][0]);
+        Inc(j);
       end;
     end;
 

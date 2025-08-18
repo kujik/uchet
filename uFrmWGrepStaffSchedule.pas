@@ -11,7 +11,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
   DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
-  uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2, uFrmBasicInput
+  uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2, uFrmBasicInput, uWindows
   ;
 
 type
@@ -22,6 +22,8 @@ type
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
+    procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
+    procedure SetMode;
     procedure GetData;
     procedure FromExcel;
   public
@@ -68,7 +70,7 @@ begin
     ['budget_sity$i','Бюджет по рынку','100','f=f','t=1'],
     ['budget_diff$i','Отклонения бюджета от рынка','100','f=f','t=1']
   ]);
-  Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  Frg1.Opt.SetButtons(1,[[mbtGo],[],[mbtExcel],[mbtPrintGrid],[],[-1001, User.Role(rW_Rep_StaffSchedule_Ch_O), 'Вакантные должности'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.CreateAddControls('1', cntDTEdit, 'Дата', 'edtd1', ':',30, yrefC, 85);
   Frg1.CreateAddControls('1', cntComboL, 'Площадка', 'cmbArea', ':', 30 + 65 + 80, yrefC, 100);
@@ -83,11 +85,7 @@ begin
   //данные из массива
   Frg1.SetInitData([]);
   Result := Inherited;
-  Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
-  Frg1.Opt.SetColFeature('qnt_need', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), True);
-  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SP), True);
-  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SS), True);
-  Frg1.SetColumnsVisible;
+  SetMode;
 end;
 
 procedure TFrmWGrepStaffSchedule.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -97,6 +95,8 @@ begin
     GetData;
     Fr.RefreshGrid;
   end
+  else if Tag = 1001 then
+    Wh.ExecReference(myfrm_Ref_JobsNeeded)
   else
     inherited;
 end;
@@ -133,9 +133,25 @@ begin
   end;
 end;
 
+procedure TFrmWGrepStaffSchedule.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
+begin
+  SetMode;
+end;
+
+procedure TFrmWGrepStaffSchedule.SetMode;
+begin
+  Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
+  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
+  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  Frg1.SetColumnsVisible;
+  Frg1.DbGridEh1.Invalidate;
+end;
+
+
 procedure TFrmWGrepStaffSchedule.GetData;
 var
-  i, j, qc, qo, qdp, qn, qnp, qnm: Integer;
+  i, j, qc, qo, qdp, qn, qnp, qnm, qdn: Integer;
   na : TNamedArr;
   st: string;
   ArSalary, ArSalaryPlan, ArSalarySity, ArQntPlan: TVarDynArray2;
@@ -205,18 +221,24 @@ begin
   qn := 0;
   qnp := 0;
   qnm := 0;
+  qdn := 0;
   while i <= na.Count - 4 do begin
     if na.G(i, 'id_division') = null then begin
       na.SetValue(i, 'division', 'По всем подразделениям:');
       na.SetValue(i, 'qnt_plan', qdp);
+      na.SetValue(i, 'qnt_need', qdn);
       if na.G(i, 'qnt_plan').AsInteger <> 0 then
         na.SetValue(i, 'qnt_need', qdp - na.G(i, 'qnt'));
-      qdp := 0;
     end
     else if na.G(i, 'qnt_plan') <> null then begin
       qdp := qdp + na.G(i, 'qnt_plan').AsInteger;
+      qdn := qdn + na.G(i, 'qnt_need').AsInteger;
       qnp := qnp + Max(na.G(i, 'qnt_need').AsInteger, 0);
       qnm := qnm + Min(na.G(i, 'qnt_need').AsInteger, 0);
+    end;
+    if na.G(i, 'is_title') = 1 then begin
+      qdp := 0;
+      qdn := 0;
     end;
     Inc(i);
   end;
@@ -224,8 +246,8 @@ begin
   i := 0;
   while i <= na.Count - 4 do begin
     if na.G(i, 'id_division') = null then begin
-      na.SetValue(i, 'qnt_plan', null);
-      na.SetValue(i, 'qnt_need', null);
+      //na.SetValue(i, 'qnt_plan', null);
+      //na.SetValue(i, 'qnt_need', null);
       na.SetValue(i, 'schedule', null);
     end;
     if (na.G(i, 'is_title') = 1) or (na.G(i, 'id_division') = null) then begin

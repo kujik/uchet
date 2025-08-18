@@ -575,6 +575,7 @@ begin
     myfrm_Rep_W_Payroll,
     myfrm_Rep_PayrollsSum,
     myfrm_J_Vacancy,
+    myfrm_Ref_JobsNeeded,
 
     {заказы}
     myfrm_R_StdProjects,
@@ -821,8 +822,6 @@ begin
 //    Form := TDlg_Sn_Defectives_Act.Create(AOwner, F, MyFormOptions, fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Workers then begin
-//    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100,
-//     [['f$s', cntEdit, 'Фамилия','1:25::T'], ['i$s', cntEdit, 'Имя','1:25::T'], ['o$s', cntEdit, 'Отчество','1:25::T'], ['personnel_number$s', cntEdit, 'Табельный номер','1:10::T']], [['caption dlgedit']]);
     TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100, [
       ['f$s', cntEdit, 'Фамилия','1:25::T'],
       ['i$s', cntEdit, 'Имя','1:25::T'],
@@ -831,6 +830,15 @@ begin
       ['personnel_number$s', cntEdit, 'Табельный номер','0:10::T'],
       ['concurrent_employee$i', cntCheck, 'Совместитель','']],
       ['select name, id from ref_sn_organizations where is_employer = 1 order by name'],
+      [['caption dlgedit']]
+    );
+  end
+  else if F = myfrm_Dlg_Ref_JobsNeeded then begin
+    TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers_needed', 'Работник', 400, 100, [
+      ['id_job$i', cntComboLK, 'Профессия','1:400'],
+      ['id_division$i', cntComboLK, 'Подразделение','1:400']],
+      ['select name, id from ref_jobs where active = 1 order by name',
+       'select name, id from ref_divisions where active = 1 order by name'],
       [['caption dlgedit']]
     );
   end

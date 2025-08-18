@@ -536,8 +536,8 @@ begin
     ['Настройки модулей', '_', User.Role(rAdm_Settings_Modules)],
 
     ['Сервис'],
-    ['Пользователи в AD', myfrm_Adm_LdapUsers, User.IsDeveloper],
-    ['Пользователи в сети', myfrm_Adm_DomainUsers, User.IsDeveloper],
+    ['Пользователи в AD', myfrm_Adm_LdapUsers, User.Role(rAdm_ActiveDirectoryUsers)],
+    ['Пользователи в сети', myfrm_Adm_DomainUsers,  User.Role(rAdm_LanUsers)],
     [],
     ['Установщик модулей Учета', myfrm_Adm_Installer, User.IsDeveloper],
     [],
@@ -609,6 +609,8 @@ begin
     ['Отчет по подбору персонала', myfrm_Rep_W_Personnel_2, User.Role(rW_Rep_Personnel_2)],
     [],
     ['Отчет по заработной плате', myfrm_Rep_Salary, User.Roles([], [rW_Rep_Salary_V, rW_Rep_Salary_Ch])],
+    [],
+    ['Пользователи в AD', myfrm_Adm_LdapUsers, User.Role(rW_ActiveDirectoryUsers)],
     []
     {$ENDIF}
 

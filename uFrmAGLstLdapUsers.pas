@@ -128,6 +128,7 @@ procedure TFrmAGLstLdapUsers.CreateABook;
 var
   i, j: Integer;
 begin
+  {$IFDEF  ADMIN}
   try
   cnSqLite.Params.Values['Database'] := '\\10.1.1.14\Admin\scriptsr\Domain\abook\abook-tmp.sqlite';
   cnSqLite.Connected := True;
@@ -154,6 +155,7 @@ begin
   except
     MyWarningMessage('Ошибка создания адресно книги!');
   end;
+  {$ENDIF}
 end;
 
 

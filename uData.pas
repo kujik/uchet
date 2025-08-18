@@ -923,6 +923,7 @@ const
   myfrm_Adm_DomainUsers = 'Adm_DomainUsers';
   myfrm_Adm_LdapUsers = 'Adm_LdapUsers';
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
+  myfrm_Ref_JobsNeeded = 'Ref_JobsNeeded';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1012,6 +1013,7 @@ const
   myfrm_Dlg_Test='Dlg_Test';
   myfrm_Dlg_UsersChoice='Dlg_UsersChoice';
   myfrm_Dlg_Work_Wchedules='Dlg_Work_chedules';
+  myfrm_Dlg_Ref_JobsNeeded = 'Dlg_Ref_JobsNeeded';
 
 
 const
@@ -1434,6 +1436,8 @@ const
   rAdm_Other_DeleteOnServer = '0-01';
   rAdm_Itm_CopyUserRights = '0-02';
   rAdm_Installer = '0-10';
+  rAdm_ActiveDirectoryUsers = '0-11';
+  rAdm_LanUsers = '0-12';
 
   rPC_R_Exp_Change = '1-01';
   rPC_R_Sp_Add = '1-02';
@@ -1527,6 +1531,7 @@ const
   rW_Rep_StaffSchedule_Ch_SS = '2-23';
   rW_Rep_PayrollsSum = '2-20';
   rW_J_Turv_VAll = '2-21';
+  rW_ActiveDirectoryUsers = '2-25';
 
   rProd_R_Materials_V = '5-01';
   rProd_J_Otk_V = '5-02';
@@ -1658,7 +1663,7 @@ const
   rOr_Rep_OrItemSInProd='6-126';
 
   const
-  URights : array [0..229] of array [0..3] of string = (
+  URights : array [0..232] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1674,6 +1679,8 @@ const
     (rAdm_Settings_Main,'','Настройки','Общие настройки приложения'),
     (rAdm_Settings_Modules,'','Настройки','Настройки модулей'),
     (rAdm_Installer,'','Разное','Установщик модулей Учета'),
+    (rAdm_ActiveDirectoryUsers,'','Разное','Пользователи AD'),
+    (rAdm_LanUsers,'','Разное','Пользователи компьютеров'),
 
 
     (rPC_R_Exp_Access,'Модуль "Платежный календарь"','Справочник: Статьи расходов','Доступ к справочнику'),
@@ -1743,6 +1750,7 @@ const
     (rW_R_Work_Chedules_Ch,'Модуль "Работники"','Справочник: Графики работы','Добавление, изменение, удаление'),
     (rW_R_Holideys_V,'Модуль "Работники"','Справочник: Производственный календарь','Доступ к справочнику'),
     (rW_R_Holideys_Ch,'Модуль "Работники"','Справочник: Производственный календарь','Добавление, изменение, удаление'),
+    (rW_ActiveDirectoryUsers,'Модуль "Работники"','Справочник: Пользователи AD','Доступ к справочнику'),
     (rW_J_WorkerStatus_V,'Модуль "Работники"','Журналы: Статусы работников','Просмотр журнала'),
     (rW_J_WorkerStatus_Ch,'Модуль "Работники"','Журналы: Статусы работников','Изменение'),
     (rW_J_Candidates_V,'Модуль "Работники"','Журналы: Соискатели','Просмотр журнала'),
