@@ -1342,7 +1342,7 @@ from
   ) t,
   ref_jobs j,
   v_ref_divisions d,
-  ref_workers_needed wn,
+  --ref_workers_needed wn,
   (select id_division, id_job, value from ( 
     select id_division, id_job, value, row_number() over (partition by id_division, id_job, type order by dt desc) as rn
       from ref_staff_schedule
@@ -1362,8 +1362,8 @@ where
   j.active = 1
   and t.id_job = j.id  (+)
   and t.id_division = d.id(+)
-  and t.id_job = wn.id_job(+)
-  and t.id_division = wn.id_division(+)
+  --and t.id_job = wn.id_job(+)
+  --and t.id_division = wn.id_division(+)
   and qn.id_division (+) = t.id_division and qn.id_job (+) = t.id_job
   and slp.id_job (+) = t.id_job  
   and sls.id_job (+) = t.id_job  
@@ -1371,12 +1371,12 @@ order by
   j.name, d.name       
 ; 
 
-select * from v_staff_schedule order by job; 
-
 create or replace view v_staff_schedule_add as
-  select
+select * from
+ ( select
   --вспомогательное представление для штатного расписания
   --возвращает данные по фактически работающему персоналу и данные по требуемым сспециальностям 
+    rownum as rn,
     id_job, 
     id_division,
     office,
@@ -1390,21 +1390,24 @@ create or replace view v_staff_schedule_add as
     and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
     and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
     and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
-    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
-  union
-  select 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) )
+union all
+  (select 
+    rownum as rn,
     id_job, 
     id_division,
     d.office,
     0 as qnt,
     d.area_shortname,
-    d.code as schedule
+    d.schedule_code as schedule
   from 
     ref_workers_needed n,
     v_ref_divisions d
   where
-    d.id = n.id_division
-;    
+    d.id = n.id_division)   
+;
+
+select * from v_staff_schedule_add where id_job = 22;
 
 create or replace view v_staff_schedule_add_jobs as
   select
@@ -1423,7 +1426,7 @@ create or replace view v_staff_schedule_add_jobs as
 ;    
 
 
-
+select * from v_staff_schedule_add_jobs;
 
 
 

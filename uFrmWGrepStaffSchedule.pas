@@ -117,9 +117,10 @@ end;
 
 procedure TFrmWGrepStaffSchedule.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
-  ReadOnly := (Fr.GetValue('id_division') = null) or
+  ReadOnly := (Fr.GetValue('id_division') = null) or (
+    (Fr.CurrField = 'qnt_plan') and (
     ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C)) or
-    ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C));
+    ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C))));
 end;
 
 procedure TFrmWGrepStaffSchedule.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
@@ -141,9 +142,9 @@ end;
 procedure TFrmWGrepStaffSchedule.SetMode;
 begin
   Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
-  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
-  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
-  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1)  and (Frg1.GetControlValue('edtd1') = Date) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
+  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and (Frg1.GetControlValue('edtd1') = Date) and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and (Frg1.GetControlValue('edtd1') = Date) and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
   Frg1.SetColumnsVisible;
   Frg1.DbGridEh1.Invalidate;
 end;
@@ -156,6 +157,7 @@ var
   st: string;
   ArSalary, ArSalaryPlan, ArSalarySity, ArQntPlan: TVarDynArray2;
   v1: Variant;
+  dt1, dt2: TDateTime;
 begin
   if (not Cth.DteValueIsDate(Frg1.FindComponent('edtd1'))) or (S.NSt(Frg1.GetControlValue('cmbArea')) = '') then
     Exit;
@@ -174,6 +176,7 @@ begin
     'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
     'from v_staff_schedule',
   [], na);
+  dt2 := Turv.GetTurvBegDate(Turv.GetTurvBegDate(Turv.GetTurvBegDate(Date)));
   ArSalary := Q.QLoadToVarDynArray2(
     'select pi.id_job, round(avg((nvl(itog1, 0) - nvl(otpusk,0) - nvl(bl,0) - nvl(penalty,0)) / turv * norm) * 2) sumall ' +
     'from v_payroll_item pi, v_staff_schedule ss ' +
@@ -185,14 +188,14 @@ begin
     'group by pi.id_job',
     [EncodeDate(2025, 5, 1), EncodeDate(2025, 7, 15)]
   );
-
+{
   ArSalaryPlan := Q.QLoadToVarDynArray2(
     'select id_division, id_job, value from ref_staff_schedule where dt = ( '+
     'select max(dt) from ref_staff_schedule '+
-    'where dt < :dt$d and type = 2'+
+    'where dt < :dt$d and type = 2 '+
     'group by id_division, id_job)',
     [Frg1.GetControlValue('edtd1')]
-  );
+  );}
   //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
@@ -254,9 +257,9 @@ begin
       j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
       if j >= 0 then
         na.SetValue(i, 'salary_avg', ArSalary[j][1]);
-      j := A.PosInArray(na.G(i, 'id_job'), ArSalaryPlan, 0);
+//      j := A.PosInArray(na.G(i, 'id_job'), ArSalaryPlan, 0);
       na.SetValue(i, 'salary_wo_ndfl', Round(na.G(i, 'salary_avg').AsInteger * 0.87));
-      na.SetValue(i, 'budget', na.G(i, 'salary_avg').AsInteger * na.G(i, 'qnt').AsInteger);
+      na.SetValue(i, 'budget', na.G(i, 'salary_plan').AsInteger * na.G(i, 'qnt').AsInteger);
       na.SetValue(i, 'salary_diff', na.G(i, 'salary_avg').AsInteger - na.G(i, 'salary_sity').AsInteger);
       na.SetValue(i, 'budget_sity', na.G(i, 'salary_sity').AsInteger * na.G(i, 'qnt').AsInteger);
       na.SetValue(i, 'budget_diff', na.G(i, 'budget').AsInteger - na.G(i, 'budget_sity').AsInteger);

@@ -332,8 +332,8 @@ begin
   ];
 
 
-  Result := inherited;
-  if not (Result and LoadTurvCodes and LoadTurv) then
+  Result := inherited and LoadTurvCodes and LoadTurv;
+  if not Result then
     Exit;
   SetLblDivisionText;
   PushTurvToGrid;

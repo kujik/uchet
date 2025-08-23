@@ -634,6 +634,10 @@ begin
 end;
 /
 
+--select * from or_std_items where name ='Стол кухонный_опора КБ.02.01.00_М01 RAL 9005';
+--delete from or_std_items where name ='Стол кухонный_опора КБ.02.01.00_М01 RAL 9005';
+
+
 
 
 create or replace function F_TestEstimateItem_New(
