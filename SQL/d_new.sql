@@ -14,11 +14,11 @@ delete from or_std_item_route;
 --alter table or_std_items add route varchar2(400);
 --alter table or_std_items drop column route;
 
-alter table or_format_estimates add prefix_prod varchar2(20);           --префикс для итм, для производственного паспорта
-alter table or_format_estimates add is_semiproduct number(1) default 0; --это группа полуфабрикатов
-alter table or_format_estimates drop column prefix_prod;           --префикс для итм, для производственного паспорта
-alter table or_format_estimates drop column is_semiproduct; --это группа полуфабрикатов
-alter table or_format_estimates add type number(1) default 0;
+--alter table or_format_estimates add prefix_prod varchar2(20);           --префикс для итм, для производственного паспорта
+--alter table or_format_estimates add is_semiproduct number(1) default 0; --это группа полуфабрикатов
+--alter table or_format_estimates drop column prefix_prod;           --префикс для итм, для производственного паспорта
+--alter table or_format_estimates drop column is_semiproduct; --это группа полуфабрикатов
+alter table or_format_estimates add type number(1) default 0; --ok
 update or_formats set name = 'Полуфабрикаты' where id = 1;
 update or_format_estimates set name = 'Общие полуфабрикаты' where id = 1;
 --v_or_format_estimates

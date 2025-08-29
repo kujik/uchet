@@ -1183,7 +1183,7 @@ v:=True;
 //      ['is_semiproduct','Полуфабрикаты','80','pic'],
       ['active','Используется','80','pic']
     ]);
-    Frg2.Opt.SetTable('v_or_format_estimates');
+    Frg2.Opt.SetTable('v_or_format_estimates');    //!!!es v_or_format_estimates type_name
     Frg2.Opt.SetWhere('where id_format = :id_format$i order by name');
     Frg2.Opt.SetButtons(1, 'reacds',User.Role(rOr_R_StdPspFormats_Ch));
   end

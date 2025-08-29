@@ -644,7 +644,7 @@ begin
     TFrmCWCash.Show(Application, F, MyFormOptions, fEdit, 0, null);
   end
   else if F = myfrm_Rep_SnCalendar_Orders_QntItems then begin
-//1    TFrmOGrepItemsInOrder.Show(Application, F, MyFormOptions, fEdit, 0, null);
+    TFrmOGrepItemsInOrder.Show(Application, F, MyFormOptions, fEdit, 0, null);
 //    Form := TForm_Rep_Orders_QntItems_2.Create(Application, F, MyFormOptions, FNone, 0, null);
   end
   else if F = myfrm_Adm_UserInterface then begin
@@ -953,12 +953,12 @@ begin
     TFrmOWrepOrdersPrimeCost.Show(AOwner, F, MyFormOptions, fNone, null, null);
   end
   else if F = myfrm_Dlg_R_OrderStdItems then begin
-    //Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
-    TFrmODedtOrStdItems.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    //!!!es TFrmODedtOrStdItems.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
-//      Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);  //!!!    32098
-    TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, AAddParam);    //!!!    32098
+    Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+//    TFrmOGedtEstimate.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, AAddParam);    //!!!e    32098
   end
   else if F = myfrm_Dlg_SupplierMinPart then begin
     Form := TDlg_SuppliersMinPart.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);

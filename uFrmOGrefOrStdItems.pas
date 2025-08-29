@@ -105,7 +105,7 @@ begin
 //    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
  // else
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
-  end
+   end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)
   end
@@ -113,6 +113,26 @@ begin
     Orders.CopyEstimateToBuffer(Fr.ID, null);
   end
   else if (Tag = mbtViewEstimate) then begin
+    //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
+    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then
+      Wh.ExecReference(myfrm_R_Estimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([null, Fr.ID]));
+  end
+  else if (Tag = mbtLoadEstimate) then begin
+    //в справочнике стандартных изделий загрузим смету (если это не группа общих изделий)
+    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
+      Orders.LoadBcadGroups(True);
+      Orders.LoadEstimate(null, null, Fr.ID);
+      Fr.RefreshGrid;
+    end;
+  end
+  else if (Tag = mbtDeleteEstimate) then begin
+    //в справочнике стандартных изделий удалим смету (если это не группа общих изделий)
+    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
+      Orders.RemoveEstimateForStdItem(Fr.ID);
+      Fr.RefreshGrid;
+    end;
+  end
+(*//!!!es else if (Tag = mbtViewEstimate) then begin
     //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then
       Wh.ExecReference(myfrm_R_Estimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([null, Fr.ID]));
@@ -134,7 +154,7 @@ begin
       Orders.RemoveEstimateForStdItem(Fr.ID);
       Fr.RefreshGrid;
     end;
-  end
+  end *)
   else if Tag = 1000 then begin
     CopyAllItems;
   end
