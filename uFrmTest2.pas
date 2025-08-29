@@ -36,7 +36,6 @@ begin
   begin
     // Регистрация ShowMessage
     Script.RegisterStdProc('ShowMessage', @AddOutput);
-
     // Выполнение
     if Script.Exec.Run then
       AddOutput('✅ Выполнено успешно')
@@ -83,6 +82,8 @@ var
    { TPSExec is the executer part of the scriptengine. It uses the output of
     the compiler to run a script. }
   Data: AnsiString;
+  ResultVar: PIFVariant;
+  v : variant;
 begin
   Compiler := TPSPascalCompiler.Create; // create an instance of the compiler.
   Compiler.OnUses := ScriptOnUses; // assign the OnUses event.
@@ -90,11 +91,15 @@ begin
   begin
     Compiler.Free;
      // You could raise an exception here.
+    //showmessage(Compiler.CompilerErrorToStr(0));
     Exit;
   end;
 
   Compiler.GetOutput(Data); // Save the output of the compiler in the string Data.
+  //Compiler.AddUsedVariableN('s', 'Longint');
   Compiler.Free; // After compiling the script, there is no need for the compiler anymore.
+
+  
 
   Exec := TPSExec.Create;  // Create an instance of the executer.
   if not  Exec.LoadData(Data) then // Load the data from the Data string.
@@ -107,11 +112,69 @@ begin
   end;
 
   Exec.RunScript; // Run the script.
+//  VGetInt(Compiler.GetVariable('MYVAR')).
+  v:=Exec.GetVar('s');
+  ResultVar:=Exec.GetVar2('s');
   Exec.Free; // Free the executer.
 end;
+(*
+procedure pppp;
+var
+  Script: TPSExec;
+  ResultVar: PIFVariant;
+  Value: Integer;
+begin
+  Script := TPSExec.Create(nil);
+  try
+    Script.Text := 
+      'var ResultValue: Integer; begin ResultValue := 100 + 50; end.';
+
+    if Script.Compile and Script.Exec.Run then
+    begin
+      // Получаем переменную ResultValue
+      ResultVar := Script.GetVar2('ResultValue');
+      if Assigned(ResultVar) then
+      begin
+        Value := @ResultVar.Data.ToInteger;
+        ShowMessage('Результат: ' + IntToStr(Value)); // 150
+      end;
+    end;
+  finally
+    Script.Free;
+  end;
+end;
+
+*)
+
+(*
+procedure pppp;
+var
+  Messages: string;
+  compiled: boolean;
+  ce: TPSScript;
+begin
+  ce.Script.Text := 'begin end.';
+  Compiled := Ce.Compile;
+  for i := 0 to ce.CompilerMessageCount -1 do
+    Messages := Messages +
+                ce.CompilerMessages[i].MessageToString +
+                #13#10;
+  if Compiled then
+    Messages := Messages + 'Succesfully compiled'#13#10;
+  ShowMessage('Compiled Script: '#13#10+Messages);
+  if Compiled then begin
+    if Ce.Execute then
+      ShowMessage('Succesfully Executed')
+    else
+      ShowMessage('Error while executing script: '+
+                  Ce.ExecErrorToString);
+  end;
+end;
+*)
 
 const
-  Script = 'var s: string; begin s := ''Test''; S := s + ''ing;''; end.';
+//  Script = 'var s: string; begin s := ''Test''; S := s + ''ing;''; end.';
+  Script = 'var s: integer; begin s := 5 + 10; end.';
 
 
 var
