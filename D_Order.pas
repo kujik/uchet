@@ -178,6 +178,7 @@ type
     OrSyncWithITM: Boolean;       //если False, то не синхронизируем заказ с ИТМ (даже если у еного есть id_itm и он есть в бд итм), и ограничиваем некоторые други функции
     ItemsToEstimateChange: TVarDynArray;  //айди записей в заказе, для которых после сохранения заказа надо изменить/перезагрузить смету. пападают все добавленнные или измененныые в любых полях записи
     NoChangeItems: Boolean;       //если установлено, то нельзя менять наименования изделий и количества, добавлять строки. устанавливается сейчас, если статус в ИТМ >= Выполнен
+    FOrderChanges, FOrderItemChanges: TVarDynArray2;
     function Prepare: Boolean; override;
     function GetFieldsArrPos(FieldName: string): Integer;
     function GetBegValueFromFieldsArr(FieldName: string): Variant;
@@ -264,8 +265,33 @@ const
 procedure TDlg_Order.BitBtn1Click(Sender: TObject);
 var
   v: Variant;
-  res: Integer;
+  res, i, j, RecNo: Integer;
 begin
+  FOrderChanges := [];
+    for i := 0 to High(FieldsArr) do
+      if FieldsArr[i][cControl] <> '' then begin
+        if FieldsArr[i][cControl] = 'dedt_Change' then
+          Continue;
+        if VarToStr(S.NullIfEmpty(Cth.GetControlValue(TControl(Self.FindComponent(FieldsArr[i][cControl]))))) = VarToStr(S.NullIfEmpty(FieldsArr[i][cBegValue])) then begin
+        end
+        else begin
+        end;
+        FOrderChanges := FOrderChanges + [[FieldsArr[i][cControl], TCustomDBEditEh(Self.FindComponent(FieldsArr[i][cControl])).ControlLabel.Caption, 0]];
+      end;
+  FOrderItemChanges := [['id', 'Добавлено изделие', 0], ['route', 'Производственный маршрут', 0], ['comm', 'Дополнение', 0],
+     ['std', 'Стандарт', 0], ['nstd', 'Нестандарт', 0], ['price_pp', 'Цена Д/К в цене изделия', 0]];
+  MemTableEh1.DisableControls;
+  for i := 0 to MemTableEh1.Fields.Count - 1 do begin
+    if Pos('_', Gh.GetGridColumn(DBGridEh1, MemTableEh1.Fields[i].fIELDName).Title.Caption) = 1 then Continue;
+    if Pos('r', MemTableEh1.Fields[i].FieldName) = 1 then Continue;
+    if A.InArray(MemTableEh1.Fields[i].FieldName, ['comm','std','nstd','price_pp']) then Continue;
+    FOrderItemChanges := FOrderItemChanges + [[MemTableEh1.Fields[i].FieldName, Gh.GetGridColumn(DBGridEh1, MemTableEh1.Fields[i].FieldName).Title.Caption, 0]];
+  end;
+  MyInfoMessage(A.Implode(A.VarDynArray2ColToVD1(FOrderChanges,1), #13#10) + '================'#13#10 + A.Implode(A.VarDynArray2ColToVD1(FOrderiTEMChanges,1), #13#10));
+
+  Exit;
+
+
   LoadKB;
   exit;
 
@@ -805,7 +831,7 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
   Result := True;
 
-  BitBtn1.Visible := False; //User.IsDeveloper;
+  BitBtn1.Visible := User.IsDeveloper;
 
 end;
 
@@ -1010,6 +1036,7 @@ var
 begin
   HeadDiff := False;
   Differences := '';
+  FOrderChanges := [];
   st := '';
   if (Mode = fEdit) then begin
   //and(not IsTemplate) then begin
@@ -1024,6 +1051,7 @@ begin
           TCustomDBEditEh(Self.FindComponent(FieldsArr[i][cControl])).ControlLabel.Font.Color := RGB(0, 0, 255);
           S.ConcatStP(st, FieldsArr[i][cControl], ',');
         end;
+        FOrderChanges := FOrderChanges + [[FieldsArr[i][cControl], TCustomDBEditEh(Self.FindComponent(FieldsArr[i][cControl])).ControlLabel.Caption, 0]];
       end;
   end;
   if IsAddFilesChanged then

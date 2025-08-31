@@ -442,8 +442,8 @@ begin
     ClearInvalidReserve;
   end
   else if Tag = 1003 then begin
-    va1 := Q.QLoadToVarDynArrayOneCol('select ornum from v_orders where id > 0 order by id', []);
-    va2 := Q.QLoadToVarDynArrayOneCol('select id from v_orders where id > 0 order by id', []);
+    va1 := Q.QLoadToVarDynArrayOneCol('select ornum from v_orders where id > 0 and id_itm is not null order by id', []);
+    va2 := Q.QLoadToVarDynArrayOneCol('select id from v_orders where id > 0 and id_itm is not null order by id', []);
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~Заказ для фильтра', 50 + 100, 50,
       [[cntComboLK, 'Заказ:','0:500']],
       [VarArrayOf([null, VarArrayOf(va1), VarArrayOf(va2)])],

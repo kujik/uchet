@@ -163,7 +163,7 @@ function TFrmDlgRItmSupplier.Prepare: Boolean;
 begin
   Caption:='Поставщик';
   F.DefineFields:=[
-    ['id_kontragent$i',#0,-1], ['name_org$s','V=1:255::T'], ['full_name$s','V=1:1000::T'], ['inn$s','V=0:12::T'], ['edt_mail$s','V=0:50::T']
+    ['id_kontragent$i',#0,-1], ['name_org$s','V=1:255::T'], ['full_name$s','V=1:1000::T'], ['inn$s','V=0:12::T'], ['e_mail$s','V=0:50::T']
   ];
   View:='v_itm_suppliers';
   Table:='dv.kontragent';

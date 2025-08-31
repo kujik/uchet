@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uDbOra, uString, uMessages
-  , uPSCompiler, uPSRuntime, uPSUtils, Vcl.Buttons
+  , uPSCompiler, uPSRuntime, uPSUtils, uPSComponent, Vcl.Buttons
   ;
 
 type
@@ -99,7 +99,7 @@ begin
   //Compiler.AddUsedVariableN('s', 'Longint');
   Compiler.Free; // After compiling the script, there is no need for the compiler anymore.
 
-  
+
 
   Exec := TPSExec.Create;  // Create an instance of the executer.
   if not  Exec.LoadData(Data) then // Load the data from the Data string.
@@ -126,7 +126,7 @@ var
 begin
   Script := TPSExec.Create(nil);
   try
-    Script.Text := 
+    Script.Text :=
       'var ResultValue: Integer; begin ResultValue := 100 + 50; end.';
 
     if Script.Compile and Script.Exec.Run then
@@ -176,7 +176,53 @@ const
 //  Script = 'var s: string; begin s := ''Test''; S := s + ''ing;''; end.';
   Script = 'var s: integer; begin s := 5 + 10; end.';
 
+  (*
 
+procedure QQQQQ;
+var
+  MyA, MyB: Integer;
+  MyName: string;
+  Exec: TPSExec;
+begin
+  MyA := 5;
+  MyB := 7;
+  MyName := 'Иван';
+
+  //Label1.Caption := Format('До: A=%d, B=%d, Name=%s', [MyA, MyB, MyName]);
+
+  // Создаём выполнитель
+  Exec := TPSExec.Create;
+  try
+    // Компилируем скрипт
+    if Exec.Compile(Script := Memo1.Text) then
+    begin
+      // Передаём переменные в скрипт
+      Exec.RegisterVar('A', 'Integer', @MyA);
+      Exec.Exec.RegisterVar('B', 'Integer', @MyB);
+      Exec.Exec.RegisterVar('Name', 'String', @MyName);
+
+      // Выполняем
+      if Exec.Exec.Run then
+      begin
+        // После выполнения значения изменены!
+        Label2.Caption := Format('После: A=%d, B=%d, Name=%s', [MyA, MyB, MyName]);
+        ShowMessage('Скрипт выполнен успешно!');
+      end
+      else
+      begin
+        ShowMessage('Ошибка выполнения: ' + Exec.Exec.ErrorMsg);
+      end;
+    end
+    else
+    begin
+      ShowMessage('Ошибка компиляции: ' + Exec.Comp.Errors.Text);
+    end;
+  finally
+    Exec.Free;
+  end;
+end;
+
+*)
 var
   v : variant;
   i: integer;

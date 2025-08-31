@@ -127,7 +127,7 @@ procedure TFrmOWInvoiceToSgp.LoadOrderList;
 begin
   //загружаем номера заказов по площадке », в которых есть хот€ бы один слеш, не прин€тый на —√ѕ в полном количестве
   Q.QLoadToDBComboBoxEh(
-    'select distinct(FOrNum) from (select FOrNum from v_invoice_to_sgp_getitems where qnt > qnt_sgp and area = :area$i) order by FOrNum',
+    'select distinct(ornum) from (select ornum from v_invoice_to_sgp_getitems where qnt > qnt_sgp and area = :area$i) order by ornum',
     [AddParam[1]], cmbOrder, cntComboL
   );
   Cth.SetControlValue(cmbOrder, null);
@@ -143,7 +143,7 @@ begin
   FNum:= Cth.GetControlValue(cmbOrder);
   if FNum = '' then Exit;
   //пол€ табличной части
-  va:=Q.QLoadToVarDynArray2('select id, FOrNum, FProject, dt_beg, dt_otgr from orders where FOrNum = :id$s', [FNum]);
+  va:=Q.QLoadToVarDynArray2('select id, ornum, project, dt_beg, dt_otgr from orders where ornum = :id$s', [FNum]);
   if Length(va) = 0 then
     Exit;
   FIdOrder:=va[0][0];
@@ -197,7 +197,7 @@ begin
     //при просмотре и редактировании загрузим из таблиц
     //заголовочна€ часть
     va:=Q.QLoadToVarDynArray2(
-      'select FNum, id_order, FOrNum, FProject, dt_beg, dt_otgr, dt_m, user_m, dt_s, user_s from v_invoice_to_sgp where id = :id$i',
+      'select num, id_order, ornum, project, dt_beg, dt_otgr, dt_m, user_m, dt_s, user_s from v_invoice_to_sgp where id = :id$i',
       [ID]
     );
     FNum := va[0][0];
@@ -249,7 +249,7 @@ begin
     Q.QBeginTrans(True);
     IdInvoice := Q.QIUD(
       'i', 'invoice_to_sgp', '',
-      'id$i;FNum$i;id_order$i;dt_m$d;id_user_m$s;FState$i;items$s',
+      'id$i;num$i;id_order$i;dt_m$d;id_user_m$s;state$i;items$s',
       [-1, FNum, FIdOrder, FDtM, User.GetId, 0, Copy(items, 1, 4000)]
     );
     for i := 0 to Frg1.GetCount - 1 do
@@ -273,7 +273,7 @@ begin
     else S.ConcatStP(items, Frg1.GetValue('slash', i) + '(ѕ)', ', ');
   end;
   Q.QIUD(
-    'u', 'invoice_to_sgp', '', 'id$i;dt_s$d;id_user_s$s;FState$i;items$s',
+    'u', 'invoice_to_sgp', '', 'id$i;dt_s$d;id_user_s$s;state$i;items$s',
     [ID, FDtS, User.GetId, FState, Copy(items, 1, 4000)]
   );
   for i := 0 to Frg1.GetCount - 1 do begin
