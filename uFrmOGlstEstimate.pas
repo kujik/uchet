@@ -393,7 +393,7 @@ begin
   end;
 
   Frg1.MemTableEh1.DisableControls; //иначе будет перемещение по гриду при печати
-  PrintReport.SetReportDataset('FCapt$s', [FCapt]);
+  PrintReport.SetReportDataset('capt$s', [FCapt]);
   PrintReport.pnl_Estimate(Frg1.MemTableEh1, S.IIf(FormDoc = myfrm_R_AggEstimate, 2, 1));
   Frg1.MemTableEh1.EnableControls;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'chb').STFilter.ExpressionStr := '';
