@@ -1546,6 +1546,7 @@ select * from v_spl_history where id = 13053;
 
 --================================================================================
 select count(*) from v_spl_minremains;
+select qnt, qnt3, qnt_suspended, qnt / qnt3 from v_spl_minremains where id = 13736;
 create or replace view v_spl_minremains as
 --вью для таблицы формирования заявок на снабжение (новый вариант) 
 select
@@ -1629,7 +1630,9 @@ select
   --сумма по номенклатуре "в пути"
   case when prc.price_main is null then null else round(prc.price_main * round(niv.qnt, 0)) end as onway_cost,
   --категория выгрузки (снабжение, канцтовары, интсрумент..)
-  np.id_category
+  np.id_category,
+  --подвисшие остатки
+  case when vn.qnt is not null and nvl(s1.qnt3,0) <> 0 then round(vn.qnt / s1.qnt3, 2) else null end as qnt_suspended
 from 
 --таблица номенклатуры
 dv.nomenclatura n
