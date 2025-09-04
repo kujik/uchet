@@ -1507,12 +1507,15 @@ select
 --выбираются все значения по данной номенклатуре, наиболее поздние по дате, но ранее дату в контексте
 --(так как хранятся только строки, в которых были изменения по срапвнению с последней по дате сохраненной информацией по номенклатуре)
   n.name,
+  u.name_unit,
   h.*
 from 
   (select h.*, row_number() over (partition by id order by dt desc) as rn from spl_history h where h.dt < sys_context('context_uchet22','spl_history_date') ) h,
-  dv.nomenclatura n 
+  dv.nomenclatura n, 
+  dv.unit u
 where
   n.id_nomencl = h.id
+  and n.id_unit = u.id_unit 
   and rn = 1
 ;
 

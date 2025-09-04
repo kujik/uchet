@@ -801,7 +801,7 @@ begin
   end;
   AddParamAr:= [Fr.GetValue('name'), Fr.GetValue('name_unit')];
   AddParamD:= VararrayOf(AddParamAr);
-  if Fr.CurrField = 'supplierinfO' then begin
+  if Fr.CurrField = 'supplierinfo' then begin
     Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, AddParamD);
     Fr.RefreshRecord;
   end;

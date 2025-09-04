@@ -133,7 +133,7 @@ uses
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
-  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems,
+  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems, uFrmOGrepSnHistory,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -620,8 +620,7 @@ begin
     myfrm_R_OrderTypes,
     myfrm_R_WorkCellTypes,
     myfrm_J_OrItemsInProd,
-    myfrm_J_ItmLog,
-    myfrm_J_SnHistory
+    myfrm_J_ItmLog
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);
@@ -630,6 +629,9 @@ begin
     myfrm_R_Suppliers_SELCH
   ]) then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [myfoModal], fNone, 0, AAddParam);
+  end
+  else if F = myfrm_J_SnHistory then begin
+    TFrmOGrepSnHistory.Show(AOwner, F, MyFormOptions + [myfoModal], fNone, 0, AAddParam);
   end
   else if F = myfrm_Srv_SqlMonitor then begin
     TFrmXGsrvSqlMonitor.Show(Application, F, MyFormOptions, FNone, 0, null);
