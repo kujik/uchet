@@ -1488,9 +1488,9 @@ begin
   select sysdate into FDate from dual;
   for v in c1 loop
     insert into spl_history
-      (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order)
+      (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order, need, need_p)
       values
-      (v.id, FDate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order)
+      (v.id, FDate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p)
       ;   
   end loop;
 end;

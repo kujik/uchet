@@ -37,6 +37,7 @@ uses
 function  TFrmOGrepSnHistory.PrepareForm: Boolean;
 begin
   Caption := 'Состояние СН на дату';
+  Frg1.Options := Frg1.Options + [myogGridLabels];
   var va2: TVarDynArray2 := [
     ['id$i','_id','40'],
     ['dt$d','Дата','120'],

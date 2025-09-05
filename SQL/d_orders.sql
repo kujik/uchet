@@ -678,9 +678,11 @@ create table order_items (
   r8 number(1),
   r9 number(1),
   ch varchar(4000),                  -- изменени€, сделанные к данному слешу, имена полей memtable через зап€тую
-  attention number(3) default 0,               -- признак внимани€ к €чеке строки (выделена цветом в паспорте)
+  attention number(3) default 0,     -- признак внимани€ к €чеке строки (выделена цветом в паспорте)
   dt_sn date,                        -- отметка по слешу, что заказ обработан снабжением   
-  dt_thn date,                       -- дата, когда по слэшу загружены документы технологов   
+  dt_thn date,                       -- дата, когда по слэшу загружены документы технологов
+  disassembled number default 0,     -- в разборе
+  control_assembly number default 0, -- контрольна€ сборка  
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),

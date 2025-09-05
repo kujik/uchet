@@ -115,6 +115,9 @@ begin
   Frg1.Opt.SetWhere('where id > 0');
   Frg1.CreateAddControls('1', cntCheck, 'Только незакрытые', 'ChbNoClosed', '', 4, yrefT, 200);
   Frg1.CreateAddControls('1', cntCheck, 'Показать суммы', 'ChbViewSum', '', 4, yrefB, 200);
+  //просроченные заказы - работают как радиобаттоны со снятием (-11)
+  Frg1.CreateAddControls('1', cntCheck, 'Просроченные заказы', 'ChbFilter1', '', 4 + 130 + 4, yrefT, 200, -11);
+  Frg1.CreateAddControls('1', cntCheck, 'Просроченные заказы + 7д', 'ChbFilter2', '', 4 + 130 + 4, yrefB, 200, -11);
 
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
@@ -288,6 +291,11 @@ end;
 
 procedure TFrmOGjrnOrders.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
+  if (Cth.GetControlValue(Fr, 'ChbFilter1') = 1) or (Cth.GetControlValue(Fr, 'ChbFilter2') = 1) then begin
+    //фильтр просроченных заказов - не учитываем остальные параметры фильтрации!
+    SqlWhere := 'dt_end is null and dt_to_sgp is null and dt_from_sgp is null and to_thn is not null and dt_otgr >= :dt1$d and dt_otgr <= :dt2$d';
+    Fr.SetSqlParameters('dt1$d;dt2$d', [IncMonth(Date, -2), IncDay(Date, S.IIf(Cth.GetControlValue(Fr, 'ChbFilter2') = 1, +7, +0))]);
+  end;
   //только незакрытые заказы
   //сформируем фильтр по факту завершения заказа, и по диапозону для даты оформления
   SqlWhere := A.ImplodeNotEmpty([
@@ -340,6 +348,11 @@ begin
     Frg1.SetColumnsVisible;
     Frg2.Opt.SetColFeature('1', 'i', Cth.GetControlValue(Fr, 'ChbViewSum') = 0, False);
     Frg2.SetColumnsVisible;
+  end
+  else if A.InArray(TControl(Sender).Name, ['ChbFilter1', 'ChbFilter2']) then begin
+    //для фильтра проспроченныз заказов снимем все фильтры в столбцах
+    Gh.GridFilterClear(Fr.DbGridEh1, true, False);
+    Frg1.RefreshGrid;
   end
   else Frg1.RefreshGrid;
 end;
