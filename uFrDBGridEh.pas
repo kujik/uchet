@@ -1883,6 +1883,7 @@ var
   Handled: Boolean;
   i, j: Integer;
   fMode: TDialogType;
+  DocCaption: TStringsEh;
 begin
   //здесь мы проверяем в том числе доступность действия в зависимости от текущих данных
   Tag:= -1;
@@ -1923,8 +1924,15 @@ begin
     Gh.ExportGridToXlsxNew(DBGridEh1, Module.RunSaveDialog(StringReplace(Caption + ' ' + DateTimeToStr(Now), ':', '-', [rfReplaceAll]), 'xlsx'), true, Caption + ' ' + DateTimeToStr(Now), '');
   end
   else if (Tag = mbtPrint) or (Tag = mbtPrintGrid) then begin
-    PrintDBGridEh1.SetSubstitutes(['%[Today]', DateTimeToStr(Now), '%[UserName]', User.GetName, '%[Document]', Caption]);
-    PrintDBGridEh1.Preview;
+    //DocCaption := TStringsEh.Create;
+    //PrintDBGridEh1.BeforeGridText := DocCaption;
+    //DocCaption.Append('---------%[Document] %[Today] %[UserName]');
+    {PrintDBGridEh1.SetSubstitutes(['%[Today]', DateTimeToStr(Now), '%[UserName]', User.GetName, '%[Document]', Caption]);
+    PrintDBGridEh1.Preview;}
+    //DocCaption.Destroy;
+    FrmMain.PrintDBGridEh1.DBGridEh := DbGridEh1;
+    FrmMain.PrintDBGridEh1.SetSubstitutes(['%[Today]', DateTimeToStr(Now), '%[UserName]', User.GetName, '%[Document]', {TForm(Self.Owner).Caption]}Opt.FCaption]);
+    FrmMain.PrintDBGridEh1.Preview;
   end
   else if Tag = mbtAddRow then begin
     AddRow;

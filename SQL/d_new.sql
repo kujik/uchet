@@ -171,6 +171,7 @@ order_item +поля
 v_ordert_items
 v_orders_list
 trg_order_item_stages_biud_r
+v_order_items
 
 */    
 --заполнить количество принятых на сгп в журнале заказов на основании журнала приемки на сгп
