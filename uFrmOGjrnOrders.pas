@@ -13,6 +13,7 @@ type
   TFrmOGjrnOrders = class(TFrmBasicGrid2)
   private
     function  OpenFromTemplate: Integer;
+    procedure ViewInfo1;
   protected
     function  PrepareForm: Boolean; override;
     //события первого (основного) фрейма грида
@@ -87,8 +88,11 @@ begin
     ['dt_estimate_max$d','Изменение сметы',''],
     ['dt_reserve$d','Дата резервирования'],
     ['dt_aggr_estimate$d','Общая смета',''],
-    ['days_aggr_estimate','СН','30'],
+    //['days_aggr_estimate','СН','30'],
     ['status_itm$s', 'Статус заказа','80'],
+    ['qnt_slashes$i', 'Кол-во слэшей', '80','f=:'],
+    ['qnt_items$f', 'Кол-во изделий', '80','f=:'],
+    ['qnt_in_prod$f', 'Кол-во изделий в производстве', '80','f=:'],
     ['dt_to_sgp$d','Принят на СГП',''],
     ['dt_from_sgp$d','Отгружен',''],
     ['dt_end_manager$d','Завершение менеджером','','chbt=+', 'e',User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA])],
@@ -114,10 +118,11 @@ begin
   Frg1.Opt.SetTable('v_orders_list');
   Frg1.Opt.SetWhere('where id > 0');
   Frg1.CreateAddControls('1', cntCheck, 'Только незакрытые', 'ChbNoClosed', '', 4, yrefT, 200);
-  Frg1.CreateAddControls('1', cntCheck, 'Показать суммы', 'ChbViewSum', '', 4, yrefB, 200);
+  Frg1.CreateAddControls('1', cntCheck, 'В производстве', 'ChbInProd', '', 4, yrefB, 200);
   //просроченные заказы - работают как радиобаттоны со снятием (-11)
   Frg1.CreateAddControls('1', cntCheck, 'Просроченные заказы', 'ChbFilter1', '', 4 + 130 + 4, yrefT, 200, -11);
   Frg1.CreateAddControls('1', cntCheck, 'Просроченные заказы + 7д', 'ChbFilter2', '', 4 + 130 + 4, yrefB, 200, -11);
+  Frg1.CreateAddControls('1', cntCheck, 'Показать суммы', 'ChbViewSum', '', 310, yrefC, 200);
 
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
@@ -142,6 +147,7 @@ begin
     ['slash','№','100'],
     ['fullitemname','Изделие','200'],
     ['qnt','Количество','80'],
+    ['qnt_in_prod$f', 'Кол-во изделий в производстве', '80','f=:'],
     ['route2','Маршрут','120'],
     ['kns','Конструктор','120'],
     ['thn','Технолог','120'],
@@ -300,6 +306,7 @@ begin
   //сформируем фильтр по факту завершения заказа, и по диапозону для даты оформления
   SqlWhere := A.ImplodeNotEmpty([
     S.IIfStr(Cth.GetControlValue(Fr, 'ChbNoClosed') = 1, 'dt_end is null'),
+    S.IIfStr(Cth.GetControlValue(Fr, 'ChbInProd') = 1, 'qnt_in_prod <> 0'),
     SqlWhere
     ]
     , ' and '
@@ -483,6 +490,12 @@ begin
   then Exit;
   Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fCopy, va[0], null);
 end;
+
+procedure TFrmOGjrnOrders.ViewInfo1;
+begin
+  var Ids: TVarDynArray2 := Gh.GetGridArrayOfChecked(Frg1.DBGridEh1, Frg1.DBGridEh1.FindFieldColumn(Frg1.Opt.Sql.IdField).Index);
+end;
+
 
 
 end.

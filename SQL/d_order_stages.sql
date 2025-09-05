@@ -341,21 +341,30 @@ declare
 begin
   begin
   if deleting then
-    select decode(:old.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :old.id_stage) into std from dual;
-    select slash into orslash from v_order_items where id = :old.id_order_item; 
-    insert into adm_db_log (itemname, comm, dt) values (std || ' -уд', orslash || ' = ' || :old.qnt || '  (i=' || :old.id_order_item || ')', sysdate);
+    --select decode(:old.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :old.id_stage) into std from dual;
+    --select slash into orslash from v_order_items where id = :old.id_order_item;
+    --insert into adm_db_log (itemname, comm, dt) values (std || ' -уд', orslash || ' = ' || :old.qnt || '  (i=' || :old.id_order_item || ')', sysdate);
+    if :old.id_stage = 2 then
+      update order_items set qnt_to_sgp = qnt_to_sgp - :old.qnt where id = :old.id_order_item;
+    end if;   
     P_ToUchetLog(:old.id_stage, null, :old.id_order_item, null, -:old.qnt, null, :old.dt, null, null, null);
   end if;
   if updating then
-    select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
-    select slash into orslash from v_order_items where id = :new.id_order_item; 
-    insert into adm_db_log (itemname, comm, dt) values (std || ' -изм', orslash || ' = ' || :new.qnt || '  (i=' || :new.id_order_item || ')', sysdate);
+    --select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
+    --select slash into orslash from v_order_items where id = :new.id_order_item; 
+    --insert into adm_db_log (itemname, comm, dt) values (std || ' -изм', orslash || ' = ' || :new.qnt || '  (i=' || :new.id_order_item || ')', sysdate);
+    if :new.id_stage = 2 then
+      update order_items set qnt_to_sgp = qnt_to_sgp - :old.qnt + :new.qnt where id = :new.id_order_item;
+    end if;   
     P_ToUchetLog(:new.id_stage, null, :new.id_order_item, null, nvl(:new.qnt,0) - nvl(:old.qnt,0), null, :new.dt, null, null, null);
   end if;
   if inserting then
-    select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
-    select slash into orslash from v_order_items where id = :new.id_order_item; 
-    insert into adm_db_log (itemname, comm, dt) values (std || ' -доб', orslash || ' = ' || :new.qnt || '  (i=' || :new.id_order_item || ')', sysdate);
+    --select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
+    --select slash into orslash from v_order_items where id = :new.id_order_item; 
+    --insert into adm_db_log (itemname, comm, dt) values (std || ' -доб', orslash || ' = ' || :new.qnt || '  (i=' || :new.id_order_item || ')', sysdate);
+    if :new.id_stage = 2 then
+      update order_items set qnt_to_sgp = qnt_to_sgp + :new.qnt where id = :new.id_order_item;
+    end if;   
     P_ToUchetLog(:new.id_stage, null, :new.id_order_item, null, :new.qnt, null, :new.dt, null, null, null);
   end if;
   exception

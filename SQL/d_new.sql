@@ -160,4 +160,23 @@ having
   
 select * from or_format_estimates where id_format = 1; 
 select * from or_std_items where id_or_format_estimates =1; --=Д/К
-    
+
+
+
+
+
+--------------------------------------------------------------------------------
+/*
+order_item +поля
+v_ordert_items
+v_orders_list
+trg_order_item_stages_biud_r
+
+*/    
+--заполнить количество принятых на сгп в журнале заказов на основании журнала приемки на сгп
+MERGE INTO order_items t1
+USING (select id_order_item, sum(qnt2) as qnt from v_order_item_stages1 group by id_order_item) t2
+ON (t1.id = t2.id_order_item)
+WHEN MATCHED THEN
+    UPDATE SET t1.qnt_to_sgp = t2.qnt;
+UPDATE order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;    

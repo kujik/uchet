@@ -547,8 +547,9 @@ create or replace view v_orders as (
     sz.id_status as id_status_itm,
     sz.statusname as status_itm,
     trunc(rsv.dt_reserve) as dt_reserve,
-    
-    
+    timemsqnt.qnt_slashes as qnt_slashes,
+    timemsqnt.qnt_items as qnt_items,
+    timemsqnt.qnt_in_prod as qnt_in_prod
     
   from
     orders o,
@@ -566,6 +567,7 @@ create or replace view v_orders as (
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
+    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
     (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv
@@ -586,6 +588,7 @@ create or replace view v_orders as (
     and z.id_zakaz (+) = o.id_itm
     and sz.id_status (+) = z.id_status
     and rsv.id_doc (+) = o.id_itm
+    and timemsqnt.id_order (+) = o.id
 );
 
 create or replace view v_orders_list as 
@@ -647,7 +650,11 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
---alter table order_items add attention number(3) default 0;
+alter table order_items add disassembled number default 0;
+alter table order_items add control_assembly number default 0;  
+alter table order_items add qnt_to_sgp number default 0; 
+
+
 --alter table order_items add constraint fk_order_items_std_item foreign key (id_std_item) references or_std_items(id);
 --alter table order_items drop column id_itm_group;
 ----drop table order_items cascade constraints;
@@ -683,6 +690,7 @@ create table order_items (
   dt_thn date,                       -- дата, когда по слэшу загружены документы технологов
   disassembled number default 0,     -- в разборе
   control_assembly number default 0, -- контрольная сборка  
+  qnt_to_sgp number default 0,       -- количество принятых на сгп изделий по слэшу 
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
@@ -752,7 +760,8 @@ create or replace view v_order_items as (
     F_GetCostOrderItemsFromItm(o.id, i.id) as sum0,
     (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
      round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
-    niz.cnt as has_itm_est 
+    niz.cnt as has_itm_est,
+    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod 
 --    1 as has_itm_est 
   from
     order_items i,
@@ -1878,6 +1887,50 @@ from v_orders where id = 7956;
 
 select * from v_orders where id = 7956;
 select pos, slash, fullitemname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, kns, thn, comm from v_order_items where id_order = 7956;
+
+
+
+
+
+
+
+
+select 
+  count(i.qnt) as qnt_slash,
+  sum(i.qnt) as qnt_items,
+  sum(case when i.sgp <> 1 then i.qnt - s.qnt end) as qnt_wo_otk,
+  count(distinct(i.id_order)) as qnt_orders
+from
+  order_items i,
+  orders o,
+  (select id_order_item, sum(qnt4) as qnt from v_order_item_stages1 group by id_order_item) s
+where
+  i.id_order > 0 and i.qnt > 0
+  and s.id_order_item (+) = i.id
+  and o.id = i.id_order
+  and o.dt_beg >= '01/01/2025'  
+--group by id_order  
+;    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
