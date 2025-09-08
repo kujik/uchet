@@ -1,5 +1,4 @@
 object PrintReport: TPrintReport
-  OldCreateOrder = False
   Height = 457
   Width = 116
   object frxReportTableObject1: TfrxReportTableObject
@@ -17,6 +16,7 @@ object PrintReport: TPrintReport
     CloseDataSource = False
     DataSet = frxQT
     BCDToCurrency = False
+    DataSetOptions = []
     Left = 44
     Top = 128
   end
@@ -31,6 +31,7 @@ object PrintReport: TPrintReport
     CloseDataSource = False
     DataSet = frxQB
     BCDToCurrency = False
+    DataSetOptions = []
     Left = 44
     Top = 356
   end
@@ -41,7 +42,7 @@ object PrintReport: TPrintReport
     Top = 304
   end
   object frxReport1: TfrxReport
-    Version = '6.9.15'
+    Version = '2022.1.3'
     DotMatrixReport = False
     IniFile = '\Software\Fast Reports'
     PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]

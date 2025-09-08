@@ -650,11 +650,9 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
-alter table order_items add disassembled number default 0;
-alter table order_items add control_assembly number default 0;  
-alter table order_items add qnt_to_sgp number default 0; 
-
-
+--alter table order_items add disassembled number default 0;
+--alter table order_items add control_assembly number default 0;  
+--alter table order_items add qnt_to_sgp number default 0; 
 --alter table order_items add constraint fk_order_items_std_item foreign key (id_std_item) references or_std_items(id);
 --alter table order_items drop column id_itm_group;
 ----drop table order_items cascade constraints;

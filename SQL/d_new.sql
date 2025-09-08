@@ -180,4 +180,5 @@ USING (select id_order_item, sum(qnt2) as qnt from v_order_item_stages1 group by
 ON (t1.id = t2.id_order_item)
 WHEN MATCHED THEN
     UPDATE SET t1.qnt_to_sgp = t2.qnt;
+    
 UPDATE order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;    

@@ -675,7 +675,7 @@ begin
 
 //  RouteFields:=
 //    ['КС','МТ','СТ','РК','ПГ','ЛК'];
-  CheckBoxFields := 'std;resale;sgp;nstd;wo_estimate';
+  CheckBoxFields := 'std;resale;sgp;nstd;wo_estimate;disassembled;control_assembly';
 
   if DBGridEh1.Columns.Count = 1 then begin
     Gh.SetGridOptionsDefault(DBGridEh1);
@@ -696,6 +696,8 @@ begin
     Mth.AddTableColumn(DBGridEh1, 'std', ftInteger, 0, 'Стд.', 30, True);
     Mth.AddTableColumn(DBGridEh1, 'nstd', ftInteger, 0, 'Н/стд.', 30, True);
     Mth.AddTableColumn(DBGridEh1, 'sgp', ftInteger, 0, 'С СГП', 30, True);
+    Mth.AddTableColumn(DBGridEh1, 'disassembled', ftInteger, 0, 'В разборе', 40, True);
+    Mth.AddTableColumn(DBGridEh1, 'control_assembly', ftInteger, 0, 'Контр. сборка', 30, True);
     for i := 0 to High(RouteFields) do begin
       Mth.AddTableColumn(DBGridEh1, 'r' + IntToStr(i + 1), ftInteger, 0, 'Производственный маршрут|' + RouteFields[i], 30, True);
       S.ConcatStP(CheckBoxFields, 'r' + IntToStr(i + 1), ';');
@@ -2475,8 +2477,8 @@ begin
 //  if Mode <> fEdit then Exit;
   //поля с СГП, НСТД и СТД не могут стоять одновременно из-за контроля ввода
   //слэш не сохраняется, он получается во вьюхе из позиции и номера заказа
-    Fdbs := ['id$i', 'id_order$i', 'id_std_item$i', 'id_itm$i', 'pos$i', 'ch$s', 'std$i', 'nstd$i', 'qnt$f', 'sgp$f', 'r0$i', 'wo_estimate', 'id_kns$i', 'id_thn$i', 'comm$s', 'price$f', 'price_pp$f', 'attention$i'];
-    Fmts := ['id', '', 'id_std', 'id_itm', '', 'chg', 'std', 'nstd', 'qnt', 'sgp', 'resale', 'wo_estimate', 'kns', 'thn', 'comm', 'price', 'price_pp', 'attention'];
+    Fdbs := ['id$i', 'id_order$i', 'id_std_item$i', 'id_itm$i', 'pos$i', 'ch$s', 'std$i', 'nstd$i', 'qnt$f', 'sgp$f', 'r0$i', 'wo_estimate', 'id_kns$i', 'id_thn$i', 'comm$s', 'price$f', 'price_pp$f', 'attention$i', 'disassembled$i', 'control_assembly$i'];
+    Fmts := ['id', '', 'id_std', 'id_itm', '', 'chg', 'std', 'nstd', 'qnt', 'sgp', 'resale', 'wo_estimate', 'kns', 'thn', 'comm', 'price', 'price_pp', 'attention', 'disassembled', 'control_assembly'];
   //дополним поля для маршрута, и там и там называются rxx
     for i := 0 to High(RouteFields) do begin
       Fdbs := Fdbs + ['r' + IntToStr(i + 1) + '$i'];
@@ -2649,12 +2651,14 @@ var
   i, j, k, m: Integer;
   st: string;
   IsStd, IsResale: Integer;
+  b : Boolean;
+  v: Variant;
 begin
   //if Mode <> fEdit then Exit;
   //поля в базе и таблице соответственно, чтобы записывалось в таблицу автоматом, должно быть непустое в обоих массивах
   //наименование читается расчетное, т.е. если изменилось в справочнике, то сразу прочитано будет измененное
-  Fdb := ['id', 'id_std_item', 'id_itm', 'slash', 'ch', 'std', 'nstd', 'itemname', 'qnt', 'sgp', 'r0', 'wo_estimate', 'id_kns', 'id_thn', 'comm', 'price', 'price_pp', 'attention'];
-  Fmt := ['id', 'id_std', 'id_itm', 'slash', 'chg', 'std', 'nstd', 'name', 'qnt', 'sgp', 'resale', 'wo_estimate', 'kns', 'thn', 'comm', 'price', 'price_pp', 'attention'];
+  Fdb := ['id', 'id_std_item', 'id_itm', 'slash', 'ch', 'std', 'nstd', 'itemname', 'qnt', 'sgp', 'r0', 'wo_estimate', 'id_kns', 'id_thn', 'comm', 'price', 'price_pp', 'disassembled', 'control_assembly', 'attention'];
+  Fmt := ['id', 'id_std', 'id_itm', 'slash', 'chg', 'std', 'nstd', 'name', 'qnt', 'sgp', 'resale', 'wo_estimate', 'kns', 'thn', 'comm', 'price', 'price_pp', 'disassembled', 'control_assembly', 'attention'];
   SetLength(OldTableValues, 0);
   //дополним поля для маршрута, и там и там называются rxx
   for i := 0 to High(RouteFields) do begin
@@ -2686,6 +2690,8 @@ begin
   //      then va1[i][j]:= S.IIf(va1[i][j] = 1, 0, 1);
       //поправим занчений нулл для чекбоксов в 0, оно работает и так, но просто если при загрузке нулл то, то при снятии чекбокса в таблице получится 0
       //может быть, ставить -1 для стандарт например, чтобы обозначить невыбранное значение?
+//      if fmt[j] = 'control_assembly' then
+//        V := va1[i][j];
       if (Gh.GetGridColumn(DBGridEh1, Fmt[j]).Checkboxes) and (va1[i][j] = null) then
         va1[i][j] := 0;
       //строку изменений для таблицы грузим только для режима просмотра
@@ -2694,6 +2700,7 @@ begin
       //присвоим значения из массива полям таблицы
       if (Fdb[j] <> '') and (Fmt[j] <> '') then
         MemTableEh1.FieldByName(Fmt[j]).Value := va1[i][j];
+       b := True;
       //присвоим значения массиву старых значений
       OldTableValues[i][j] := va1[i][j];
     end;
