@@ -175,10 +175,67 @@ v_order_items
 
 */    
 --заполнить количество принятых на сгп в журнале заказов на основании журнала приемки на сгп
-MERGE INTO order_items t1
-USING (select id_order_item, sum(qnt2) as qnt from v_order_item_stages1 group by id_order_item) t2
-ON (t1.id = t2.id_order_item)
-WHEN MATCHED THEN
-    UPDATE SET t1.qnt_to_sgp = t2.qnt;
+merge into order_items t1
+using (select id_order_item, sum(qnt2) as qnt from v_order_item_stages1 group by id_order_item) t2
+on (t1.id = t2.id_order_item)
+when matched then
+    update set t1.qnt_to_sgp = t2.qnt;
     
-UPDATE order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;    
+update order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;    
+
+
+--------------------------------------------------------------------------------
+
+create or replace view v_orders_send_to_prod as
+--заказы, по кторым есть НП на производство с выдачей плитных материалов
+--Материалы основы = 4
+select
+--  distinct id_zakaz,  
+  id_zakaz,
+  min(movebilldate) as dt
+from
+  dv.move_bill mb,
+  dv.move_bill_spec mbs,
+  dv.nomenclatura n,
+  dv.sklad s
+where
+  mb.id_movebill = mbs.id_movebill
+  and mb.id_docstate = 3
+  and mb.id_skladdest = s.id_sklad
+  and nvl(s.brigada, 0) = 1
+  and mbs.id_nomencl = n.id_nomencl
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (4)  
+    connect by prior id_group = id_parentgroup   
+)
+  group by id_zakaz
+  order by id_zakaz desc
+;  
+
+--первоначально заполним по старым заказам, даты проставим равной дате накладной  
+merge into orders t1
+using (select id_zakaz, dt from v_orders_send_to_prod) t2
+on (t1.id_itm = t2.id_zakaz)
+when matched then
+    update set t1.dt_to_prod = t2.dt;
+    
+
+select
+--список заказов ИТМ, в которых есть плитные материалы 
+  id_zakaz, count(n.name)
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (4)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+    

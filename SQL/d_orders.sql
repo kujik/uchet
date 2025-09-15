@@ -336,7 +336,7 @@ from
 
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
-alter table orders add area number(1) default 0;
+alter table orders add dt_to_prod date;
 --alter table orders add constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
@@ -405,6 +405,7 @@ create table orders (
   dt_end_manager date,               -- дата завершения заказа менеджером
   dt_aggr_estimate date,             -- дата создания общей сметы по заказу, для  снабжения 
   dt_complete_estimate date,         -- дата создания общей сметы по заказу, для кладовщиков
+  dt_to_prod date,                   -- дата поступлдения заказа в работу (выдача плитных материалов на склад пр-ва)
   dt_to_sgp date,                    -- дата поступления на сгп всего заказа (полные количества всех изделия) 
   dt_from_sgp date,                  -- дата отгрузки с сгп всего заказа  
   dt_upd_reg date,                   -- дата регистрации упд (внесение данныых по нему) 
@@ -549,8 +550,8 @@ create or replace view v_orders as (
     trunc(rsv.dt_reserve) as dt_reserve,
     timemsqnt.qnt_slashes as qnt_slashes,
     timemsqnt.qnt_items as qnt_items,
-    timemsqnt.qnt_in_prod as qnt_in_prod
-    
+    timemsqnt.qnt_in_prod as qnt_in_prod,
+    timemsqnt.qnt_to_sgp as qnt_to_sgp
   from
     orders o,
     ref_sn_organizations ro,
@@ -567,7 +568,7 @@ create or replace view v_orders as (
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
-    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod from order_items group by id_order) timemsqnt,
+    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
     (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv

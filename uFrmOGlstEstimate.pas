@@ -168,7 +168,7 @@ begin
   //inherited;
   //для общей сметы - посчитаем сумму по позициям, отмеченным чекбоксами
   //если отметка есть, то выведем эту сумму, а иначе выведем автосумму
-  if True and (FormDoc = myfrm_R_AggEstimate) then begin
+//  if True and (FormDoc = myfrm_R_AggEstimate) then begin
     e := 0;
     eall := 0;
     b := False;
@@ -195,7 +195,7 @@ begin
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clBlue;
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Value := FormatFloat('#,###.###', e);
     end;
-  end;
+//  end;
 end;
 
 
@@ -316,7 +316,7 @@ begin
   inherited;
   //для общей сметы - посчитаем сумму по позициям, отмеченным чекбоксами
   //если отметка есть, то выведем эту сумму, а иначе выведем автосумму
-  if True and (FormDoc = myfrm_R_AggEstimate) then begin
+//  if True and (FormDoc = myfrm_R_AggEstimate) then begin
     e := 0;
     eall := 0;
     b := False;
@@ -343,7 +343,7 @@ begin
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clBlue;
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Value := FormatFloat('#,###.###', e);
     end;
-  end;
+//  end;
 end;
 
 
