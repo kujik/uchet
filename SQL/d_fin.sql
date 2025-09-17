@@ -200,6 +200,13 @@ group by
   i.id  
 ;
 
+
+
+
+
+select* from v_fin_stditem_raw_prices where id = 308;
+select* from v_sgp_item_prices where id = 457;
+
 create or replace view v_fin_estitem_raw_prices as 
 select
 --получает закупочные цену по сметной номенклатуре

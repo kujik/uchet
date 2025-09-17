@@ -337,6 +337,10 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 alter table orders add dt_to_prod date;
+alter table orders add qnt_boards_m2 number;
+alter table orders add qnt_edges_m number;
+alter table orders add qnt_panels_w_drill number;
+alter table orders add has_prod number(1) default 0;
 --alter table orders add constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
@@ -415,6 +419,10 @@ create table orders (
   pay_n number(12,2),                -- суммарный промежуточный платеж по заказу (по заказам Н)
   dt_cancel date,                    -- дата останоки/отмены заказа 
   attention number(3)  default 0,    -- признак внимания к ячеке (пока только комментарий - выделена цветом в паспорте)
+  qnt_boards_m2 number,              -- метраж плитных материалов 
+  qnt_edges_m number,                -- метраж кромки
+  qnt_panels_w_drill number,         -- количество панелей со сверловкой 
+  has_prod number(1) default 0,      -- в составе заказа есть про изводственные материалы 
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
   constraint fk_orders_manager foreign key (id_manager) references adm_users(id),

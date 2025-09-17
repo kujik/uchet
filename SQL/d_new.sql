@@ -188,7 +188,7 @@ update order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;
 
 create or replace view v_orders_send_to_prod as
 --заказы, по кторым есть НП на производство с выдачей плитных материалов
---Материалы основы = 4
+--Материалы основы = 14, кромочные = 13
 select
 --  distinct id_zakaz,  
   id_zakaz,
@@ -207,7 +207,7 @@ where
   and n.id_group in ( 
     select id_group
     from dv.groups
-    start with id_group in (4)  
+    start with id_group in (14)  
     connect by prior id_group = id_parentgroup   
 )
   group by id_zakaz
@@ -222,9 +222,11 @@ when matched then
     update set t1.dt_to_prod = t2.dt;
     
 
+create or replace view v_orders_has_prod as
 select
 --список заказов ИТМ, в которых есть плитные материалы 
-  id_zakaz, count(n.name)
+  id_zakaz
+  --, count(n.name)
 from 
   dv.nomenclatura_in_izdel niz,dv.nomenclatura n
 where
@@ -233,9 +235,115 @@ where
   and n.id_group in ( 
     select id_group
     from dv.groups
-    start with id_group in (4)  
+    start with id_group in (14)  
     connect by prior id_group = id_parentgroup   
   )
   group by id_zakaz
 ;
-    
+
+/*
+select
+  max(o.id) as id_order,
+  max(o.ornum) as ornum,
+  id_zakaz, 
+  count(n.name) as qnt_n,
+  sum(niz.count_nomencl) as qnt
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n,orders o
+where
+  niz.id_nomencl = n.id_nomencl 
+  and o.id_itm = niz.id_zakaz
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+*/
+
+create or replace view v_orders_boards_m2 as
+select
+--количество плитных материалов (на пильные центры) по заказам
+  id_zakaz, 
+  count(n.name) as qnt_n,
+  sum(niz.count_nomencl) as qnt
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+
+create or replace view v_orders_edges_m as
+select
+--количество кромочных материалов,м.пог.
+  id_zakaz, 
+  count(n.name) as qnt_n,
+  sum(niz.count_nomencl) as qnt
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (13)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+
+
+
+
+create or replace procedure P_SetOrdersProdData is
+begin
+  --устанавливает в таблице заказов проиизводственные статусы и данные, взятые из ИТМ
+  --(является ли заказ производственныым, дата выдачи в производство, количество плитных и кромочных материалов по смете) 
+
+  update orders set dt_to_prod = null;
+  merge into orders t1
+  using (select id_zakaz, dt from v_orders_send_to_prod) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.dt_to_prod = t2.dt;
+
+  update orders set has_prod = 0;
+  merge into orders t1
+  using (select id_zakaz from v_orders_has_prod) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.has_prod = 1;
+
+  update orders set qnt_boards_m2 = null;
+  merge into orders t1
+  using (select id_zakaz, qnt from v_orders_boards_m2) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+
+  update orders set qnt_edges_m = null;
+  merge into orders t1
+  using (select id_zakaz, qnt from v_orders_edges_m) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
+end;
+/
+
+
+begin
+  P_SetOrdersProdData;
+end;
+/    
