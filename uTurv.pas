@@ -325,7 +325,13 @@ begin
   //то оно обрабатывалось первым и была попытка вставить запись работника, но это вызывает ошибку так как этот работник и с этой датой мог быть в другом подразделении
   //надо это подразделение обрабатывать последним
   m := Mode;
-  v0 := Q.QLoadToVarDynArray2('select distinct d.name, tp.commit, tp.dt1, tp.dt2, d.id from ref_divisions d, turv_period tp, turv_worker tw ' + 'where d.id = tp.id_division and tp.id = tw.id_turv and tp.dt2 >= :dt$d ' + 'and (tw.id_worker = :id_worker$i or d.id = :id_division$i) ' + 'order by tp.dt1, d.name', [Dt, Id_Worker, S.IIf(S.NSt(ID_Division) = '', -1, ID_Division)]);
+  v0 := Q.QLoadToVarDynArray2(
+    'select distinct d.name, tp.commit, tp.dt1, tp.dt2, d.id from ref_divisions d, turv_period tp, turv_worker tw ' +
+    'where d.id = tp.id_division and tp.id = tw.id_turv and tp.dt2 >= :dt$d ' +
+    'and (tw.id_worker = :id_worker$i or d.id = :id_division$i) ' +
+    'order by tp.dt1, d.name',
+     [Dt, Id_Worker, S.IIf(S.NSt(ID_Division) = '', -1, ID_Division)]
+  );
   st := '';
   dn := '';
 //  v0:=v0 + v1;

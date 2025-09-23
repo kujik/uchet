@@ -77,8 +77,8 @@ begin
       st := 'Для этого работника допустим только статус "Принят"';
     if (st = '') and (high(a) >= 0) then begin
       //по работнику есть уже записи в журнале статусов
-      if a[0][0] >= dedtDate.Value then    //!!! >= нужно сделать для > только!
-        st := 'Изменить статус этого работника можно только на дату позднее ' + DateToStr(a[0][0])
+      if a[0][0] > dedtDate.Value then    //!!! >= нужно сделать для > только!
+        st := 'Изменить статус этого работника можно только на дату не ранее ' + DateToStr(a[0][0])
       else if (a[0][1] = 3) and (cmbStatus.Value <> '1') then
         st := 'Для этого работника допустим только статус "Принят"'
       else if ((a[0][1] = 1) or (a[0][1] = 2)) and (cmbStatus.Value = '1') then
@@ -109,7 +109,8 @@ begin
       //v:=QSelectOneRow('select nvl(max(id), -1) from j_worker_status where id_worker = :id$i', idw)[0];
       if (Abs(DaysBetween(Cth.GetControlValue(dedtDate), Date)) > 31) and (MyQuestionMessage('Дата изменения статуса сильно отличается от текущей! Все равно продолжить?') <> mrYes) then
         Exit;
-      v := Q.QSelectOneRow('select id, id_worker, id_division, id_job, status, dt from v_j_worker_status ' + 'where id_worker = :idw$i and id < :id and rownum = 1', [Cth.GetControlValue(cmbWorker), ID]);
+      //во вью записи сортируются по убыванию айди записи статуса!
+      v := Q.QSelectOneRow('select id, id_worker, id_division, id_job, status, dt from v_j_worker_status where id_worker = :idw$i and id < :id and rownum = 1', [Cth.GetControlValue(cmbWorker), ID]);
       Result := Turv.ChangeWorkerInTURV(Cth.GetControlValue(cmbWorker), v[2], v[3], Cth.GetControlValue(dedtDate), ID, -1);
       if not Result then
         Exit;

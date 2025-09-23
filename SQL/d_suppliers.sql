@@ -846,9 +846,9 @@ from (
     id_nomencl, 
     id_sklad,
     --общее, кроме складов производства (ПЩ, И, ДМ)
-    sum(decode(id_sklad, null, 0, 842, 0, 922, 0, 982, 0, quantity)) as qnt,
+    sum(decode(id_sklad, null, 0, 842, 0, 922, 0, 982, 0, 1022, 0, quantity)) as qnt,
     --ПЩ, кроме складов производства и "сгп и", "склад сырья и" ,сгп дм", "склад сырья дм"    
-    sum(decode(id_sklad, null, 0, 842, 0, 922, 0, 982, 0, 862, 0, 902, 0, 983, 0, 962, 0, quantity)) as qnt0,
+    sum(decode(id_sklad, null, 0, 842, 0, 922, 0, 982, 0, 862, 0, 902, 0, 983, 0, 962, 0, 1022, 0, quantity)) as qnt0,
     --И - "сгп и", "склад сырья и" 
     sum(decode(id_sklad, null, 0, 862, quantity, 902, quantity, 0)) as qnt1,   
     --ДМ - "сгп дм", "склад сырья дм" 

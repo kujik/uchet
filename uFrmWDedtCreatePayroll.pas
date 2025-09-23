@@ -83,12 +83,12 @@ begin
           Break;
         end;
       //если не нашли в созданных, то проверим закрыт ли турв
-      if b then
-        if va1[i, 2] <> 1 then begin
+{      if b then
+       if va1[i, 2] <> 1 then begin
           if not User.IsDeveloper then
             b := False;                   //не создаем для незакрытого турв
           st := st + va1[i, 1] + #13#10;  //в собщение
-        end;
+        end;  }
       if b then begin
   //      if QIUD('i', 'payroll', 'sq_payroll', 'id;id_division$i;dt1$d;dt2$d', [0, va1[i,0], dedt_Dt1.Value, dedt_Dt2.Value], False) <> -1
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим

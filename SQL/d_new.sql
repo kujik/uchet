@@ -346,4 +346,23 @@ end;
 begin
   P_SetOrdersProdData;
 end;
-/    
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+alter table payroll_item add salary_plan_m number;    
+alter table payroll_item add salary_const_m number;    
+alter table payroll_item add salary_incentive_m number;    
+alter table payroll_item add ors_sum number;    
+alter table payroll_item add ors number;    

@@ -369,6 +369,18 @@ from
 ; 
 
 
+--дерево групп итм
+select 
+    ltrim(sys_connect_by_path(groupname, ' > '), ' > ') as full_path,
+    id_group as leaf_id
+from dv.groups
+--where connect_by_isleaf = 1  --если раскомментарить, в которых есть дочерние (будут только крайние группы)
+start with id_group = 4
+connect by prior id_group = id_parentgroup
+order by full_path;
+
+--дерево групп итм
+select sys_connect_by_path(groupname, '/') from dv.groups start with id_group = 4 connect by prior id_group=id_parentgroup order by 1;
 
 
 

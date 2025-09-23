@@ -242,6 +242,8 @@ where
   s.id_division = d.id (+) and
   s.id_job = j.id (+) and
   o.id (+) = w.id_organization
+order by
+  s.id desc  
 ;     
 
 
@@ -731,6 +733,14 @@ create table payroll_item(
   karta number(7),                --карта
   banknotes varchar2(40),         --расклад по купюрам
   itog number(7),                 --итого к выдаче
+  ---
+  salary_plan_m number,           --плановое начисление, мес€ц
+  salary_const_m number,          --посто€нна€ часть, мес€ц
+  salary_incentive_m number,      --стимулирующа€ часть з/п
+  ors number,                     --оценка оработы сотрудника, в % (120.5)
+  ors_sum number,    
+
+  
   constraint pk_payroll_item primary key (id),
   constraint fk_payroll_item_payroll foreign key (id_payroll) references payroll(id) on delete cascade,
   constraint fk_payroll_item_worker foreign key (id_worker) references ref_workers(id),
