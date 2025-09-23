@@ -215,12 +215,12 @@ where
 ;  
 
 --первоначально заполним по старым заказам, даты проставим равной дате накладной  
-merge into orders t1
+/*merge into orders t1
 using (select id_zakaz, dt from v_orders_send_to_prod) t2
 on (t1.id_itm = t2.id_zakaz)
 when matched then
     update set t1.dt_to_prod = t2.dt;
-    
+*/    
 
 create or replace view v_orders_has_prod as
 select
@@ -264,6 +264,7 @@ where
 ;
 */
 
+/*
 create or replace view v_orders_boards_m2 as
 select
 --количество плитных материалов (на пильные центры) по заказам
@@ -304,7 +305,7 @@ where
   group by id_zakaz
 ;
 
-
+*/
 
 
 create or replace procedure P_SetOrdersProdData is
@@ -319,6 +320,7 @@ begin
   when matched then
       update set t1.dt_to_prod = t2.dt;
 
+/*
   update orders set has_prod = 0;
   merge into orders t1
   using (select id_zakaz from v_orders_has_prod) t2
@@ -339,8 +341,23 @@ begin
   on (t1.id_itm = t2.id_zakaz)
   when matched then
       update set t1.qnt_edges_m = t2.qnt;
+  */
+  update order_items set qnt_boards_m2 = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_boards_m2) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
 end;
 /
+
+
+  merge into order_items t1
+  using (select id, qnt from v_orders_boards_m2) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+
 
 
 begin
@@ -360,9 +377,65 @@ end;
 
 
 
-
+/*
 alter table payroll_item add salary_plan_m number;    
 alter table payroll_item add salary_const_m number;    
 alter table payroll_item add salary_incentive_m number;    
 alter table payroll_item add ors_sum number;    
 alter table payroll_item add ors number;    
+*/
+
+
+create or replace view v_orders_edges_m as
+select
+--количество кромочных материалов,м.пог.
+  oi.id,
+--  max(oi.slash) as slash,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (/*13*/ 2308 /*меламин*/, 2297 /*пвх*/, 2309 /*шпон*/) --кромка 
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+create or replace view v_orders_boards_m2 as
+select
+--количество плитных материалов (на пильные центры) по заказам
+  oi.id,
+--  max(oi.slash) as slash,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (/*14*/ 2284 /*массив щит*/, 2276 /*мдф*/, 18 /*лдсп*/, 2288 /* Пластик HPL*/, 2287 /*Пластик рекламный*/, 2275 /*ХДФ\ДВП*/, 2295 /*Фанера*/, 2283 /*Шпон*/) --плитные 
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+

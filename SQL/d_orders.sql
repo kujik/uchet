@@ -336,11 +336,14 @@ from
 
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
+
 alter table orders add dt_to_prod date;
-alter table orders add qnt_boards_m2 number;
+--alter table orders add has_prod number(1) default 0;
+/*alter table orders add qnt_boards_m2 number;
 alter table orders add qnt_edges_m number;
 alter table orders add qnt_panels_w_drill number;
 alter table orders add has_prod number(1) default 0;
+*/
 --alter table orders add constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
@@ -419,9 +422,9 @@ create table orders (
   pay_n number(12,2),                -- суммарный промежуточный платеж по заказу (по заказам Н)
   dt_cancel date,                    -- дата останоки/отмены заказа 
   attention number(3)  default 0,    -- признак внимания к ячеке (пока только комментарий - выделена цветом в паспорте)
-  qnt_boards_m2 number,              -- метраж плитных материалов 
-  qnt_edges_m number,                -- метраж кромки
-  qnt_panels_w_drill number,         -- количество панелей со сверловкой 
+  --qnt_boards_m2 number,              -- метраж плитных материалов 
+  --qnt_edges_m number,                -- метраж кромки
+  --qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   has_prod number(1) default 0,      -- в составе заказа есть про изводственные материалы 
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
@@ -664,6 +667,10 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 --alter table order_items add qnt_to_sgp number default 0; 
 --alter table order_items add constraint fk_order_items_std_item foreign key (id_std_item) references or_std_items(id);
 --alter table order_items drop column id_itm_group;
+alter table order_items add qnt_boards_m2 number;
+alter table order_items add qnt_edges_m number;
+alter table order_items add qnt_panels_w_drill number;
+
 ----drop table order_items cascade constraints;
 create table order_items (
   id number(11),
@@ -698,6 +705,9 @@ create table order_items (
   disassembled number default 0,     -- в разборе
   control_assembly number default 0, -- контрольная сборка  
   qnt_to_sgp number default 0,       -- количество принятых на сгп изделий по слэшу 
+  qnt_boards_m2 number,              -- метраж плитных материалов 
+  qnt_edges_m number,                -- метраж кромки
+  qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
