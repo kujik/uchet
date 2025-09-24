@@ -66,7 +66,7 @@ type
     function CreateAggregateEstimate(IdOrder: Integer; Mode: Integer): Boolean;
     procedure TaskForSendEstimate(IdOrder, IdOrItem: Variant; FileName: string; AddFiles: TStringDynArray; MailTo: Boolean = True; TextToSend: string = '');
     function TaskForSendSnDocuments(IdOrder, IdOrItem: Variant): Boolean;
-    function TaskForSendThnDocuments(IdOrItem: Variant): Boolean;
+    function TaskForSendThnDocuments(IdOrItem: Variant; SenderIsThn: Boolean = True): Boolean;
     function GetSubject(Subject: string; OrderName: string; IdOrder, IdOrderItem: Variant): string;
     function OrderItemsToDevel(IdOrder, IdOrItem: Variant): Boolean;
     function FinalizeOrder(IdOrder: Variant; OpMode: Integer; Mode: Integer = 1; Silent: Boolean = True): Integer;
@@ -1601,7 +1601,7 @@ begin
   Result := Subject + S.IfEl(Area, '',  ' (' + Area + ')')  + ' - ' + OrderName;
 end;
 
-function TOrders.TaskForSendThnDocuments(IdOrItem: Variant): Boolean;
+function TOrders.TaskForSendThnDocuments(IdOrItem: Variant; SenderIsThn: Boolean = True): Boolean;
 var
   st, st1, filesadd, filesdelete, TaskDir, Slashes, Addr, Subj, Dir: string;
   i, j, RecNo: Integer;
@@ -1639,8 +1639,12 @@ begin
       Free;
     end
   else}
-  va1 := Q.QLoadToVarDynArray2('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn in_archive from v_order_items where id = :id$i', [IdOrItem]);
-  if (va1[0][6] = null) or (va1[0][6] = -100) or (S.NNum(va1[0][7]) = 0) then
+  va1 := Q.QLoadToVarDynArray2('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem]);
+  if (S.NNum(va1[0][7]) = 0) then
+    Exit;
+  if SenderIsThn and ((va1[0][6] = null) or (va1[0][6] = -100)) then
+    Exit;
+  if not SenderIsThn and ((va1[0][10] = null) or (va1[0][10] = -100)) then
     Exit;
   if DirectoryExists(LastThnDocsDirectory) then
     Dir := LastThnDocsDirectory;
@@ -1697,31 +1701,44 @@ begin
       Exit;
   end
   else begin
-    if MyQuestionMessage('Прикрепить документацию технологов к изделию?'#13#10 + '(' + FloatToStr(RoundTo(FilesSize / 1024 / 1024, -1)) + 'Mb в ' + IntToStr(FilesCount) + ' файл' + S.GetEnding(FilesCount, 'е', 'ах', 'ах') + ')') <> mrYes then
+    if MyQuestionMessage('Прикрепить документацию ' + S.IIf(SenderIsThn, 'технологов', 'конструкторов') + ' к изделию?'#13#10 +
+      '(' + FloatToStr(RoundTo(FilesSize / 1024 / 1024, -1)) + 'Mb в ' + IntToStr(FilesCount) + ' файл' + S.GetEnding(FilesCount, 'е', 'ах', 'ах') + ')'
+    ) <> mrYes then
       Exit;
   end;
 //  TDirectory.Copy(Dir, 'R:\111');
   try
 // pos, slash, path, dt_beg, dt_end, fullname
-    Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [5])[0]);
-    Subj := GetSubject('Добавлены документы ТХН', '', null, IdOrItem);
-    TaskDir := Tasks.CreateTaskRoot(mytskopToThnDocuments, [
-      ['directory', va1[0][2]],
-      ['year', YearOf(va1[0][3])],
-      ['in_archive', VarToStr(va1[0][8])],
-      ['slash', RightStr('0000' + IntToStr(va1[0][0]), 3) + ' ' + S.CorrectFileName(va1[0][5])],
-      ['subject', Subj],
-      ['to', Addr],
-      ['body', Subj]
-      ], False, False
-    );
+    if SenderIsThn then begin
+      Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [5])[0]);
+      Subj := GetSubject('Добавлены документы ТХН', '', null, IdOrItem);
+      TaskDir := Tasks.CreateTaskRoot(mytskopToThnDocuments, [
+        ['directory', va1[0][2]],
+        ['year', YearOf(va1[0][3])],
+        ['in_archive', VarToStr(va1[0][8])],
+        ['slash', RightStr('0000' + IntToStr(va1[0][0]), 3) + ' ' + S.CorrectFileName(va1[0][5])],
+        ['subject', Subj],
+        ['to', Addr],
+        ['body', Subj]
+        ], False, False
+      );
+    end
+    else begin
+      TaskDir := Tasks.CreateTaskRoot(mytskopToKnsDocuments, [
+        ['directory', va1[0][2]],
+        ['slash', RightStr('0000' + IntToStr(va1[0][0]), 3) + ' ' + S.CorrectFileName(va1[0][5])]
+        ], False, False
+      );
+    end;
   //скопируем файлы в каталог задачи
     TDirectory.Copy(Dir, Module.GetPath_Tasks + '\' + TaskDir + '\FOLDER');
   //отправим задачу на выполнение
     Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
   //если еще не було даты отправки докуентов тхн для слеша, то пропишем там текущую дату
-    if va1[0][8] = null then
+    if SenderIsThn and (va1[0][8] = null) then
       Q.QExecSql('update order_items set dt_thn = :dt$d where id = :id$i', [Date, IdOrItem]);
+    if not SenderIsThn and (va1[0][11] = null) then
+      Q.QExecSql('update order_items set dt_kns = :dt$d where id = :id$i', [Date, IdOrItem]);
     MyInfoMessage('Данные отправлены на сервер.');
     Result := True;
   except

@@ -36,7 +36,7 @@ type
   TMyTskOpTypes = (
     mytskopMail, mytskopMoveToArchive, mytskopDeleteFromArchive, mytskopMoveToCurrent, mytskopSmetaReport, mytskopDeleteAllFromAccounts,
     mytskopGetFileListByMask, mytskopDeleteDirectoriesFromList, mytskopDeleteFilesFromList, mytskopToPassportChange,
-    mytskopToSnDocuments, mytskopToEstimates, mytskopToThnDocuments, mytskopLinkMontage
+    mytskopToSnDocuments, mytskopToEstimates, mytskopToThnDocuments, mytskopLinkMontage, mytskopToKnsDocuments
   );
 
 type
@@ -132,6 +132,7 @@ begin
     mytskopToSnDocuments: op:='to_sn_documents';
     mytskopToEstimates: op:='to_estimates';
     mytskopToThnDocuments: op:='to_thn_documents';
+    mytskopToKnsDocuments: op:='to_kns_documents';
     mytskopLinkMontage: op:='to_link_montage';
 //    mytskSmetaReport: op:='';
   end;

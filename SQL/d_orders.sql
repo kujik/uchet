@@ -615,6 +615,8 @@ where
   itmest.id_order (+) = o.id
 ;
 
+select qnt_to_sgp from v_orders_list;  
+
 
 create or replace view v_order_itm_has_est as
 select
@@ -670,6 +672,7 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 alter table order_items add qnt_boards_m2 number;
 alter table order_items add qnt_edges_m number;
 alter table order_items add qnt_panels_w_drill number;
+alter table order_items add dt_kns date;
 
 ----drop table order_items cascade constraints;
 create table order_items (
@@ -701,7 +704,8 @@ create table order_items (
   ch varchar(4000),                  -- изменени€, сделанные к данному слешу, имена полей memtable через зап€тую
   attention number(3) default 0,     -- признак внимани€ к €чеке строки (выделена цветом в паспорте)
   dt_sn date,                        -- отметка по слешу, что заказ обработан снабжением   
-  dt_thn date,                       -- дата, когда по слэшу загружены документы технологов
+  dt_thn date,                       -- дата, когда по слэшу загружены документы технологов (при перезагрузке остаетс€ стара€)
+  dt_kns date,                       -- дата, когда по слэшу загружены документы конструкторов (при перезагрузке остаетс€ стара€)
   disassembled number default 0,     -- в разборе
   control_assembly number default 0, -- контрольна€ сборка  
   qnt_to_sgp number default 0,       -- количество прин€тых на сгп изделий по слэшу 

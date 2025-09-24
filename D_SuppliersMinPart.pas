@@ -99,7 +99,7 @@ begin
     );
     if qmode <> '' then
       Q.QIUD(qmode, 'dv.namenom_supplier', '',
-        'id_pos_supplier;id_nomencl;id_supplier;name_pos;artikul_sp;id_base_unit;base_unit_k;is_default;addcomment;httplink',
+        'id_pos_supplier$i;id_nomencl$i;id_supplier$i;name_pos$s;artikul_sp$s;id_base_unit$i;base_unit_k$f;is_default$i;addcomment$s;httplink$s',
         [ MemTableEh1.FieldByName('id').Value,
           id,
           MemTableEh1.FieldByName('id_supplier').Value,

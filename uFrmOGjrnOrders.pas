@@ -159,6 +159,7 @@ begin
     ['nstd','Нестандарт','40','pic'],
     ['disassembled','В разборе','40','pic'],
     ['control_assembly','Контр. сборка','40','pic'],
+    ['dt_kns','Документы КНС','80'],
     ['dt_thn','Документы ТХН','80'],
     ['cost_wo_nds$f','Сумма','80','f=r:','t=1'],
     ['sum0$f','Себестоимость','80','f=r:','t=2','null'],
@@ -168,7 +169,9 @@ begin
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
     [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
-    [-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)], [-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], [],
+    [-1002, (User.GetJobID = 2) or (User.GetJobID = 3) or User.IsDeveloper, 'Прикрепить документы КНС'],
+    [-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
+     {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
     [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
@@ -434,6 +437,15 @@ begin
         if Orders.IsOrderFinalized(Frg1.ID, True, cOrItmStatus_Completed) >= cOrItmStatus_Completed then
           Exit;
         if Orders.TaskForSendThnDocuments(Fr.ID) then begin
+          Fr.RefreshRecord;
+          Fr.SetState(True, null, null);
+        end;
+      end;
+    1002:
+      begin
+        if Orders.IsOrderFinalized(Frg1.ID, True, cOrItmStatus_Completed) >= cOrItmStatus_Completed then
+          Exit;
+        if Orders.TaskForSendThnDocuments(Fr.ID, False) then begin
           Fr.RefreshRecord;
           Fr.SetState(True, null, null);
         end;
