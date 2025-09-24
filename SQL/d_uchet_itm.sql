@@ -963,6 +963,7 @@ is
 begin
   select id_itm into FIdZakaz from orders where id = AIdOrder;
   if FIdZakaz is not null then 
+    dbms_output.put_line(FIdZakaz);
     delete from dv.stock s where s.doctype=27 and s.id_doc=FIdZakaz;
     update dv.nomenclatura_in_izdel niz set niz.rezerv_id=0 where niz.rezerv_id=1 and niz.id_zakaz=FIdZakaz;
   end if;
@@ -989,7 +990,7 @@ end;
 /
 
 begin
-  --P_Itm_DelRezervForCompleted;
+  P_Itm_DelRezervForCompleted;
 end;
 /  
 

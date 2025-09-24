@@ -516,7 +516,7 @@ begin
           Frg1.MemTableEh1.FieldByName('changed').Value := 1;
           b := True;
         end;
-        if (FPayrollParams.G('id_method') = 16) then begin  //не используется для методов с учетом ОРС!
+        if (FPayrollParams.G('id_method') <> 16) then begin  //не используется для методов с учетом ОРС!
           //премия за отчетный период (премия фиксированная), взятая из ТУРВ  (va[9] = премия за отчетный период)
           v2:=Round(S.NNum(va[j][9]) / S.NNum(va[j][12]) * Min(S.NNum(va[j][6]), S.NNum(va[j][12])));  //va[j][12] - норма за текущий период, va[j][6] - часы по турв
           if (Frg1.MemTableEh1.FieldByName('premium_m_src').AsVariant <> S.NullIf0(v2)) then begin
@@ -526,7 +526,8 @@ begin
             Frg1.MemTableEh1.FieldByName('changed').Value:=1;
             b:=True;
           end;
-        end;
+        end
+        else  Frg1.MemTableEh1.FieldByName('premium_m_src').Value := null;
         if Frg1.MemTableEh1.FieldByName('penalty').AsVariant <> S.NullIf0(va[j][8]) then begin
           if Frg1.MemTableEh1.FieldByName('penalty').AsVariant <> null then
             st := st + va[j][3] + ': Изменен столбец Депремирование с ' + Frg1.MemTableEh1.FieldByName('penalty').AsString + ' на ' + VarToStr(va[j][8]) + #13#10;
@@ -1177,26 +1178,25 @@ premium_p - премия за переработку
     //орс
     Frg1.SetValue('salary_incentive_m', Row, False, null);
     Frg1.SetValue('ors_sum', Row, False, null);
-    if (Frg1.GetValueF('salary_plan_m', Row, False) <> null) and (Frg1.GetValueF('salary_const_m', Row, False) <> null) then
+    if (Frg1.GetValueF('salary_plan_m', Row, False) <> null) and (Frg1.GetValueF('salary_const_m', Row, False) <> null) then begin
       Frg1.SetValue('salary_incentive_m', Row, False, Frg1.GetValueF('salary_plan_m', Row, False) - Frg1.GetValueF('salary_const_m', Row, False));
-//    if Frg1.GetValueF('norm_m', Row, False) > 0 then
-//      e3 := e1 / Frg1.GetValueF('norm_m', Row, False) * e2;
-    e4 := Frg1.GetValueF('norm_m', Row, False);
-    e5 := RoundTo(Frg1.GetValueF('ors', Row, False), -2);
-    if (e5 < 95) then
-      e5 := e5
-    else if (e5 >= 95) and (e5 <= 100) then
-      e5 := 100
-    else if (e5 >= 100) and (e5 <= 105) then
-      e5 := 105
-    else if (e5 >= 105) and (e5 <= 110) then
-      e5 := 110
-    else if (e5 > 110) then
-      e5 := 120;
-    e5 := e5 / 100;
-    if (Frg1.GetValueF('ors', Row, False) <> null) then begin
-      e3 := Frg1.GetValueF('salary_const_m', Row, False) / e4 * e2 +  Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2;
-      Frg1.SetValue('ors_sum', Row, False, Round(Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2));
+      e4 := Frg1.GetValueF('norm_m', Row, False);
+      e5 := RoundTo(Frg1.GetValueF('ors', Row, False), -2);
+      if (e5 < 95) then
+        e5 := e5
+      else if (e5 >= 95) and (e5 <= 100) then
+        e5 := 100
+      else if (e5 >= 100) and (e5 <= 105) then
+        e5 := 105
+      else if (e5 >= 105) and (e5 <= 110) then
+        e5 := 110
+      else if (e5 > 110) then
+        e5 := 120;
+      e5 := e5 / 100;
+      if (Frg1.GetValueF('ors', Row, False) <> null) then begin
+        e3 := Frg1.GetValueF('salary_const_m', Row, False) / e4 * e2 +  Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2;
+        Frg1.SetValue('ors_sum', Row, False, Round(Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * Min(Frg1.GetValueF('norm', Row, False), e2)));
+      end;
     end;
   end;
   //установим баллы (Рапсчет оклада)
@@ -1355,6 +1355,7 @@ begin
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := False;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := False;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'ors_sum').Visible := S.NInt(FPayrollParams.G('id_method')) in [16];
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := True;
   Rep.PasteBand('HEADER');
   Rep.SetValue('#TITLE#', GetCaption);
@@ -1391,6 +1392,7 @@ begin
   Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := True;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := True;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'ors_sum').Visible := False;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 

@@ -1382,12 +1382,16 @@ begin
         on E: Exception do begin
           Errors.SetParam('', 'Ошибка установки параметра запроса (' + ParamNamesA[i] + ' = "' + ParamValuesA[i] + '")'#13#10'*', myerrTypeDB);
           Application.ShowException(E);
+          if (PackageMode = 1) then
+            FPackageMode := -1;
         end;
       end;
     end
     else begin
       Errors.SetParam('', 'Ошибка установки параметров запроса (не совпадают количество переданных и запрошенных параметров)', myerrTypeDB);
       raise Exception.Create('Ошибка установки параметров запроса (не совпадают количество переданных и запрошенных параметров)');
+      if (PackageMode = 1) then
+        FPackageMode := -1;
       Exit;
     end;
     AdoStoredProc.ExecProc;
@@ -1397,10 +1401,12 @@ begin
     on E: Exception do begin
       Errors.SetParam('', '', myerrTypeDB);
       Application.ShowException(E);
+      if (PackageMode = 1) then
+        FPackageMode := -1;
     end;
   end;
-  if (PackageMode = 1) and (Length(Result) = 0) then
-    FPackageMode := -1;
+//  if (PackageMode = 1) and (Length(Result) = 0) then
+//    FPackageMode := -1;
 end;
 
 
