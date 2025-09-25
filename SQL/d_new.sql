@@ -311,7 +311,7 @@ where
 create or replace procedure P_SetOrdersProdData is
 begin
   --устанавливает в таблице заказов проиизводственные статусы и данные, вз€тые из »“ћ
-  --(€вл€етс€ ли заказ производственныым, дата выдачи в производство, количество плитных и кромочных материалов по смете) 
+  --(€вл€етс€ ли заказ производственныым, дата выдачи в производство, количество плитных и кромочных материалов по смете в издели€х заказа) 
 
   update orders set dt_to_prod = null;
   merge into orders t1
@@ -348,6 +348,14 @@ begin
   on (t1.id = t2.id)
   when matched then
       update set t1.qnt_boards_m2 = t2.qnt;
+
+  update order_items set qnt_edges_m = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_edges_m) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
+
 end;
 /
 
