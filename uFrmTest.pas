@@ -1466,7 +1466,12 @@ var
   i: Integer;
   st: string;
   va2: tvardynarray2;
+  v: TVarDynArray;
 begin
+  v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);
+  exit;
+
+
   //LoadPersonnelNumber; Exit;
 
     Orders.LoadEstimate(null, null, 1129); exit;

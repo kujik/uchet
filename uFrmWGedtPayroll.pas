@@ -1486,7 +1486,7 @@ begin
     Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
       'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;'+
       'itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s;'+
-      'salary_plan_m;salary_const_m;salary_incentive_m;ors;ors_sum',
+      'salary_plan_m$f;salary_const_m$f;salary_incentive_m$f;ors;ors_sum$f',
       [
         Frg1.MemTableEh1.FieldByName('id').AsInteger,
         Frg1.MemTableEh1.FieldByName('blank').AsVariant,

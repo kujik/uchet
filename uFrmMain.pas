@@ -171,7 +171,10 @@ begin
 end;
 
 procedure TFrmMain.FormDestroy(Sender: TObject);
+var
+  v: TVarDynArray;
 begin
+//  v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);
   try
   //сохраним пользовательские настройки в БД
   //вызываем здесь, т.к. запись настроек фрейма грида в конфиг происходит при его разрушении, и если вызвать запись в бд при

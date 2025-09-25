@@ -307,8 +307,10 @@ begin
 end;
 
 procedure TUser.SaveCfgToDB(st: string; ToDef: Boolean = False);
+//процедура вызываетс€ в событии разрушени€ главной формы, так как конфиги фреймов сохран€ютс€ при их разрушении, то есть непосредственно перед этим событием
+//в результате на данном этапе не работают запросы типа select - всегда разу получает признак EOF !!!
 var
-  v: Variant;
+  v: TVardynArray;
   id: Integer;
 begin
   {$IFDEF SRV}
@@ -316,8 +318,15 @@ begin
   {$ENDIF}
   try
   if ToDef then id:= -1 else id:= GetId;
-  v:=Q.QSelectOneRow('select count(*) from adm_user_cfg where id_user = :id_user and id_module = :id_module', [ID, cMainModule]);
-  if v[0] = 0 then Q.QExecSql('insert into adm_user_cfg (id_user, id_module, cfg) values (:id_user, :id_module, :cfg)', [ID, cMainModule, ''], False);
+//  v:=Q.QSelectOneRow('select id_user from adm_user_cfg where id_user = :id_user$i and id_module = :id_module$i', [ID, cMainModule]);
+//  v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);
+//  v:=Q.QSelectOneRow('select count(*) from orders', []);
+//  if v[0] = 0 then
+//    Q.QExecSql('insert into adm_user_cfg (id_user, id_module, cfg) values (:id_user, :id_module, :cfg)', [ID, cMainModule, ''], True);
+  Q.QExecSql('insert into adm_user_cfg (id_user, id_module) select '+ IntToStr(ID) + ', ' + InttoStr(cMainModule) + ' from dual '+
+    'where not exists (select id_user from adm_user_cfg where id_user = :id_user$i and id_module = :id_module$i)',
+    [ID, cMainModule]
+  );
   Q.QExecSql('update adm_user_cfg set cfg = :cfg where id_user = :id_user and id_module = :id_module', [st, ID, cMainModule], False);
   except
   end;

@@ -26,6 +26,7 @@ create table ref_holidays(
   constraint pk_ref_holideys primary key (dt)
 );
 
+
 create or replace view v_ref_holidays as select
   h.*,
   decode(h.type, 1, 'в', 2, 'с', 3, 'р') as typetxt
@@ -702,7 +703,15 @@ where
   p.id_worker = w.id (+) 
 ;
 
-    
+/*
+alter table payroll_item add turv1 number;
+update payroll_item set turv1 = turv; 
+alter table payroll_item drop column turv;
+alter table payroll_item add turv number;
+update payroll_item set turv = turv1; 
+alter table payroll_item drop column turv1;
+*/
+     
 --данные зарплатной ведомости для конкретного работника из ведомости
 create table payroll_item(
   id number(11),
@@ -714,7 +723,7 @@ create table payroll_item(
   id_job number(11),              --айди              
   blank number(7),                --номер бланка для печати
   ball_m number(7),               --баллы за месяц (точнее, отчтетный период, полмесяца)
-  turv number(7),                 --итоговое время из турв
+  turv number,                    --итоговое время из турв
   ball number(7),                 --баллы расчетные
   norm number(7),                 --норма в часах для текущего периода     
   norm_m number(7),               --норма в часах за данный календарный месяц 
