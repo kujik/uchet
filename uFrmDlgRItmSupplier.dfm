@@ -1,24 +1,24 @@
 inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
   Caption = 'FrmDlgRItmSupplier'
-  ClientHeight = 177
-  ClientWidth = 539
-  ExplicitWidth = 551
-  ExplicitHeight = 215
+  ClientHeight = 272
+  ClientWidth = 547
+  ExplicitWidth = 559
+  ExplicitHeight = 310
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 539
-    Height = 161
+    Width = 547
+    Height = 256
     ExplicitWidth = 535
     ExplicitHeight = 160
     inherited pnlFrmClient: TPanel
-      Width = 529
-      Height = 112
+      Width = 537
+      Height = 207
       ExplicitWidth = 525
       ExplicitHeight = 111
       object edt_name_org: TDBEditEh
         Left = 84
         Top = 3
-        Width = 441
+        Width = 449
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 73
@@ -37,7 +37,7 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
       object edt_full_name: TDBEditEh
         Left = 84
         Top = 30
-        Width = 441
+        Width = 449
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 72
@@ -56,7 +56,7 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
       object edt_e_mail: TDBEditEh
         Left = 84
         Top = 57
-        Width = 441
+        Width = 449
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 24
@@ -89,49 +89,69 @@ inherited FrmDlgRItmSupplier: TFrmDlgRItmSupplier
         Text = 'edt_Name_E_Mail'
         Visible = True
       end
+      object mem_comments: TDBMemoEh
+        Left = 84
+        Top = 113
+        Width = 449
+        Height = 89
+        ControlLabel.Width = 67
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        Lines.Strings = (
+          'mem_comments')
+        Anchors = [akLeft, akTop, akRight]
+        AutoSize = False
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 4
+        Visible = True
+        WantReturns = True
+      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 117
-      Width = 529
+      Top = 212
+      Width = 537
       ExplicitTop = 116
       ExplicitWidth = 525
       inherited bvlFrmBtnsTl: TBevel
-        Width = 527
+        Width = 535
         ExplicitWidth = 527
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 527
+        Width = 535
         ExplicitWidth = 527
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 527
+        Width = 535
         ExplicitWidth = 523
         inherited pnlFrmBtnsMain: TPanel
-          Left = 428
+          Left = 436
           ExplicitLeft = 424
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 200
+          Left = 208
           ExplicitLeft = 196
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 329
+          Left = 337
           ExplicitLeft = 325
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 60
+          Width = 68
           ExplicitWidth = 56
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 161
-    Width = 539
+    Top = 256
+    Width = 547
     ExplicitTop = 160
     ExplicitWidth = 535
     inherited lblStatusBarR: TLabel
-      Left = 466
+      Left = 474
       Height = 14
       ExplicitLeft = 466
     end

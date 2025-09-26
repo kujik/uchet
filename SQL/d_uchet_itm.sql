@@ -1022,7 +1022,8 @@ select
   k.name_org,
   k.full_name,
   k.inn,
-  k.e_mail
+  k.e_mail,
+  k.comments
 from
   dv.kontragent k, 
   dv.kontragent_pri_kon_post kp
