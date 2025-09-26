@@ -239,7 +239,7 @@ begin
   //  if (MT=0)and not((ParamCount >= 1)and(ParamStr(1) = '/multicopy')) then begin
   if (MT = 0) and not Sys.GetDevFile then begin
     {$IFDEF SRV}
-    Halt;                                                                                                                                                                                                      mau
+    Halt;
     {$ENDIF}
     MessageBox(0, pWideChar('Приложение "' + string(ModuleRecArr[cMainModule].Caption) + '" уже запущено'), 'Ошибка', 0);
     Halt;

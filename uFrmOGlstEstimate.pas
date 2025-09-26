@@ -395,7 +395,11 @@ begin
   Frg1.MemTableEh1.DisableControls; //иначе будет перемещение по гриду при печати
   PrintReport.SetReportDataset('capt$s', [FCapt]);
   PrintReport.pnl_Estimate(Frg1.MemTableEh1, S.IIf(FormDoc = myfrm_R_AggEstimate, 2, 1));
+  try
+  //здесь по данным журнала ошибок возникает Access violation
   Frg1.MemTableEh1.EnableControls;
+  except
+  end;
   Gh.GetGridColumn(Frg1.DBGridEh1, 'chb').STFilter.ExpressionStr := '';
   Frg1.DBGridEh1.DefaultApplyFilter;
   Frg1.MemTableEh1.DisableControls;

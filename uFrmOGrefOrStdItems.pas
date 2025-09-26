@@ -96,6 +96,20 @@ end;
 
 procedure TFrmOGrefOrStdItems.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
+  if Fr.GetControlValue('CbEstimate') = 0 then begin
+    //для нестандартных изделий только удаление позиции и обновление грида
+    if Tag in [mbtRefresh, mbtGridSettings, mbtExcelGrid] then
+      inherited
+    else if Tag = mbtDelete then begin
+      if MyQuestionMessage('Удалить изделие "' + Fr.GetValueS('name') + '"?') <> mrYes then
+        Exit;
+      if Q.QExecSql('delete from or_std_items where id = :id$i', [Fr.ID], False) = -1 then
+        MsgDefDlgError(fDelete)
+      else
+        Fr.RefreshGrid;
+    end;
+    Exit;
+  end;
   if fMode <> fNone then begin
     if (S.NNum(Fr.GetControlValue('CbEstimate')) < 0)  then
       Exit;
@@ -105,7 +119,7 @@ begin
 //    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
  // else
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
-   end
+  end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)
   end

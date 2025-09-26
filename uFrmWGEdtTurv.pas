@@ -220,7 +220,7 @@ begin
     ['time$f', 'Итоги|Время', '50'] ,
     ['premium_p$f', 'Итоги|Премия за период', '50'],
     ['premium$f', 'Итоги|Премии', '50'],
-    ['penalty$f', 'Итоги|Штрафы', '50'],
+    ['penalty$f', 'Итоги|Депреми' + sLineBreak + 'рование', '50'],
     ['comm$s', 'Итоги|Комментарий', '100']
   ]);
   //ширина столбцов описания работника
@@ -264,7 +264,7 @@ begin
     [mbtCtlPanel, True, 500],
     [],
     [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True, 'Преимия за день'],
-    [-mbtFine, FInEditMode and FRgsEdit1, True, 'Штраф за день'],
+    [-mbtFine, FInEditMode and FRgsEdit1, True, 'Депремирование за день'],
     [-ghtNightWork, FInEditMode, True, 'Ночная смена'],
     [-mbtComment, FInEditMode, True, 'Комментарий'],
     []
@@ -274,7 +274,7 @@ begin
   Frg2.CreateAddControls('2', cntLabelClr, 'Премия:', 'lblDPremium', '', 4, yrefC, 200);
   Frg2.CreateAddControls('3', cntLabelClr, 'Комментарий:', 'lblDComm', '', 4, yrefC, 500);
 
-  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Штраф'];
+  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Депремирование'];
   for i := 0 to High(Captions2) do
     values2 := values2 + [[Captions2[i], null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]];
   Frg2.SetInitData(values2, '');
@@ -282,7 +282,7 @@ begin
   Frg1.InfoArray := [
   ['Табель учета рабочего времени.'#13#10#13#10+
   'Здесь отображается список работников подразделения, их должности, графики работы, итоговое время работы за каждый день периода с точностью до получаса '#13#10+
-  '(в часах и десятых долях часа), а в правой части - суммарное отработанное время за период, сумма дневных премий и штрафов работника, '#13#10+
+  '(в часах и десятых долях часа), а в правой части - суммарное отработанное время за период, сумма дневных премий и депремирование работника, '#13#10+
   'отдельно премия за весь период, а также комментарий.'#13#10+
   'Над таблицей отображается общая информация о подразделении, а также о выбранном работнике (включая время прихода и ухода работника по системе объективного контроля).'#13#10+
   ''#13#10
@@ -309,7 +309,7 @@ begin
   [
   'Вы можете нажать "+" слева от имени работника, и открыть таблицу со всеми данными '#13#10+
   '(времена от руководителя, парксек, согласованное, премии), и редактировать данные уже в ней, в соответствии со своим доступом.'#13#10+
-  'Нажмите (в любой таблице) правую кнопку мыши для ввода премии, штрафа или комментария.'#13#10+
+  'Нажмите (в любой таблице) правую кнопку мыши для ввода премии, депремирование или комментария.'#13#10+
   '(комментарий вводится к той строке таблицы, которая сейчас выбрана, то есть к примеру это время руководитея, согласованное, или премия).'#13#10+
   'Подведите мышку к синему квадратику, для того чтобы увидеть комментарий.'#13#10+
   'Если Вы руководитель подразделения, то можете ввести также комментарий к строке таблицы и премию работника за период, нажав кнопку сверху.'#13#10+
@@ -747,7 +747,7 @@ begin
       '$000000', '   Время: ', '$FF0000',
       FormatTurvCell(GetTurvCell(i, j, 1)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 2)), ' $000000/$FF0000', FormatTurvCell(GetTurvCell(i, j, 3)),
       S.IIf(FArrTurv[i][j][cSumPr] > 0, ' $000000   Премия: $FF0000 ' + VarToStr(FArrTurv[i][j][cSumPr]), ''),
-      S.IIf(FArrTurv[i][j][cSumSct] > 0, ' $000000   Штраф: $FF0000 ' + VarToStr(FArrTurv[i][j][cSumSct]), ''),
+      S.IIf(FArrTurv[i][j][cSumSct] > 0, ' $000000   Депремирование: $FF0000 ' + VarToStr(FArrTurv[i][j][cSumSct]), ''),
       S.IIf(S.NSt(FArrTurv[i][j][cBegTime]) = '', '', ' $000000   Приход: $FF0000 ' + S.IIf(FArrTurv[i][j][cBegTime] = '-1', '-',
         StringReplace(FormatFloat('00.00', S.VarToFloat(FArrTurv[i][j][cBegTime])), FormatSettings.DecimalSeparator, ':', []))),
       S.IIf(S.NSt(FArrTurv[i][j][cEndTime]) = '', '', ' $000000   Уход: $FF0000 ' + S.IIf(FArrTurv[i][j][cEndTime] = '-1', '-',
@@ -1722,7 +1722,7 @@ begin
       2: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий отдела кадров', null, FInEditMode and FRgsEdit2);
       3: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий согласовывающего', null, FInEditMode and FRgsEdit3);
       4: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к премии', null, FInEditMode and FRgsEdit1);
-      5: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к штрафу', null, FInEditMode and FRgsEdit1);
+      5: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к депремированию', null, FInEditMode and FRgsEdit1);
     end;
   end;
 end;

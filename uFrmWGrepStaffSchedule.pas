@@ -140,11 +140,14 @@ begin
 end;
 
 procedure TFrmWGrepStaffSchedule.SetMode;
+var
+  b : Boolean;
 begin
+  b := Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) and (Frg1.GetControlValue('edtd1') = Date);
   Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
-  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1)  and (Frg1.GetControlValue('edtd1') = Date) and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
-  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and (Frg1.GetControlValue('edtd1') = Date) and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
-  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and (Frg1.GetControlValue('edtd1') = Date) and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1)  and b and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
+  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
   Frg1.SetColumnsVisible;
   Frg1.DbGridEh1.Invalidate;
 end;

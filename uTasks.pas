@@ -54,6 +54,7 @@ type
     procedure DeleteOldData;
     procedure CalcPlannedOrders;
     procedure CloSEItmPeriod;
+    procedure HourlyTasks;
     procedure Run_TestTurvDifferences;
     procedure Run;
   end;
@@ -571,7 +572,10 @@ begin
       CalcPlannedOrders;
     end;
     if ParamStr(1) = '/closeitmperiod' then begin
-      CloSEItmPeriod
+      CloseItmPeriod
+    end;
+    if ParamStr(1) = '/hourly' then begin
+      HourlyTasks;
     end;
     if ParamStr(1) = '/test' then begin
       IscorrectTask:=True;
@@ -805,6 +809,13 @@ begin
   );
 end;
 
+procedure TTasks.HourlyTasks;
+begin
+  CalcPlannedOrders;
+  Q.QBeginTrans(True);
+  Q.QCallStoredProc('P_SetOrdersProdData', '', []);
+  Q.QCommitOrRollback(True);
+end;
 
 
 

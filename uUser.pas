@@ -325,7 +325,7 @@ begin
 //    Q.QExecSql('insert into adm_user_cfg (id_user, id_module, cfg) values (:id_user, :id_module, :cfg)', [ID, cMainModule, ''], True);
   Q.QExecSql('insert into adm_user_cfg (id_user, id_module) select '+ IntToStr(ID) + ', ' + InttoStr(cMainModule) + ' from dual '+
     'where not exists (select id_user from adm_user_cfg where id_user = :id_user$i and id_module = :id_module$i)',
-    [ID, cMainModule]
+    [ID, cMainModule], False
   );
   Q.QExecSql('update adm_user_cfg set cfg = :cfg where id_user = :id_user and id_module = :id_module', [st, ID, cMainModule], False);
   except

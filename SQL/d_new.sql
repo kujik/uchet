@@ -373,6 +373,8 @@ begin
 end;
 /
 
+ update order_items set qnt_boards_m2 = null;
+
 
 
 

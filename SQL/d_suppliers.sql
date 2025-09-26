@@ -1076,8 +1076,9 @@ select
   --ibs.ibprice,        --цена позиции (так будет неправильно при различии ibquantity и fact_quantity) 
   ibs.ibsum,            --сумма итоговая без ндс (по fact_quantity) 
   ibs.itogo,             --сумма итоговая с ндс (по fact_quantity)
-  round(ibs.ibsum / ibs.fact_quantity, 2) as price, --цена итоговая без ндс  
-  round(ibs.itogo / ibs.fact_quantity, 2) as price_itogo --цена итоговая c ндс  
+  case when nvl(ibs.fact_quantity, 0) = 0 then 0 else round(ibs.ibsum / ibs.fact_quantity, 2) end as price, --цена итоговая без ндс  
+  case when nvl(ibs.fact_quantity, 0) = 0 then 0 else round(ibs.itogo / ibs.fact_quantity, 2) end as price_itogo --цена итоговая с ндс  
+--  round(ibs.itogo / ibs.fact_quantity, 2) as price_itogo --цена итоговая c ндс  
 from
   dv.v_in_bills ib,
   dv.v_inbillspec_inner ibs
