@@ -13,6 +13,7 @@ type
   TDlg_SuppliersMinPart = class(TForm_MdiGridDialogTemplate)
     lbl_Caption: TLabel;
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure DBGridEh1DblClick(Sender: TObject);
   private
     { Private declarations }
     BaseUnit: string;                                //ед. изм. основной номенклатуры (которая в базе nomenclatura)
@@ -36,7 +37,7 @@ var
 implementation
 
 uses
-  DateUtils, uSettings, uForms, uDBOra, uString, uMessages, uData, uWindows, ShellApi
+  DateUtils, uSettings, uForms, uDBOra, uString, uMessages, uData, uWindows, ShellApi, uFrmDlgRItmSupplier
   ;
 
 {$R *.dfm}
@@ -139,6 +140,14 @@ begin
   MemTableEh1.RecordsView.MemTableData.RecordsList[MemTableEh1.RecNo-1].DataValues['baseunit', dvvValueEh] := AddParam[1];
 end;
 
+
+procedure TDlg_SuppliersMinPart.DBGridEh1DblClick(Sender: TObject);
+begin
+  if (DBGridEh1.Columns[DBGridEh1.Col - 1].Field.FieldName = 'id_supplier') and (MemTableEh1.RecordCount > 0) and (MemTableEh1.FieldByName('id_supplier').Value <> null) then
+    TFrmDlgRItmSupplier.Show(Self, myfrm_Dlg_R_Itm_Suppliers, [myfoMultiCopy, myfoDialog, myfoSizeable], fView, MemTableEh1.FieldByName('id_supplier').Value, null)
+  else
+    inherited;
+end;
 
 function TDlg_SuppliersMinPart.SetPickLists: Boolean;
 begin

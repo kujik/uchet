@@ -161,7 +161,7 @@ begin
     ['control_assembly','Контр. сборка','40','pic'],
     ['dt_kns','Документы КНС','80'],
     ['dt_thn','Документы ТХН','80'],
-    ['qnt_boards_m2$f','Плплитные, м2','80', 'f=f:'],
+    ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
     ['cost_wo_nds$f','Сумма','80','f=r:','t=1'],
     ['sum0$f','Себестоимость','80','f=r:','t=2','null'],
@@ -171,10 +171,10 @@ begin
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
     [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
-    [-1002, (User.GetJobID = 2) or (User.GetJobID = 3) or User.IsDeveloper, 'Прикрепить документы КНС'],
-    [-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
+    [],[-1002, (User.GetJobID = 2) or (User.GetJobID = 3) or User.IsDeveloper, 'Прикрепить документы КНС'],
+    [],[-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
      {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
-    [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
+    [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
 

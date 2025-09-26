@@ -25,28 +25,28 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
     ExplicitTop = 194
     ExplicitWidth = 744
     inherited Bev_Buttons: TBevel
-      Left = 568
+      Left = 564
       ExplicitLeft = 572
     end
     inherited Bt_OK: TBitBtn
-      Left = 577
-      ExplicitLeft = 573
+      Left = 573
+      ExplicitLeft = 569
     end
     inherited Bt_Cancel: TBitBtn
-      Left = 658
-      ExplicitLeft = 654
+      Left = 654
+      ExplicitLeft = 650
     end
     inherited chb_NoClose: TCheckBox
-      Left = 362
-      ExplicitLeft = 358
+      Left = 358
+      ExplicitLeft = 354
     end
     inherited Bt_Add: TBitBtn
-      Left = 506
-      ExplicitLeft = 502
+      Left = 502
+      ExplicitLeft = 498
     end
     inherited Bt_Del: TBitBtn
-      Left = 537
-      ExplicitLeft = 533
+      Left = 533
+      ExplicitLeft = 529
     end
   end
   inherited pnl_Bottom: TPanel
@@ -74,6 +74,7 @@ inherited Dlg_SuppliersMinPart: TDlg_SuppliersMinPart
     inherited DBGridEh1: TDBGridEh
       Width = 748
       Height = 145
+      OnDblClick = DBGridEh1DblClick
       OnKeyDown = DBGridEh1KeyDown
     end
   end
