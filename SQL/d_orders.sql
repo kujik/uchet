@@ -562,7 +562,10 @@ create or replace view v_orders as (
     timemsqnt.qnt_slashes as qnt_slashes,
     timemsqnt.qnt_items as qnt_items,
     timemsqnt.qnt_in_prod as qnt_in_prod,
-    timemsqnt.qnt_to_sgp as qnt_to_sgp
+    timemsqnt.qnt_to_sgp as qnt_to_sgp,
+    timemsqnt.qnt_boards_m2,
+    timemsqnt.qnt_edges_m,
+    timemsqnt.qnt_panels_w_drill
   from
     orders o,
     ref_sn_organizations ro,
@@ -579,7 +582,9 @@ create or replace view v_orders as (
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
-    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp from order_items group by id_order) timemsqnt,
+    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp,
+     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_panels_w_drill,0)) as qnt_panels_w_drill 
+     from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
     (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv
@@ -1894,6 +1899,236 @@ begin
   P_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
 end;
 /   
+
+
+---------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+-- данные по заказам и изделиям заказов о количестве плитных материалов и кромки, времени выдачи в производство
+-- (на основании данных итм и смет, разделение происходит по айди групп итм, прописано жестко,
+-- скрипт выполняется раз в час в серверном процессе и обновляет данные в таблицах заказов)
+
+create or replace view v_orders_send_to_prod as
+--заказы, по кторым есть НП на производство с выдачей плитных материалов
+--Материалы основы = 14, кромочные = 13
+select
+--  distinct id_zakaz,  
+  id_zakaz,
+  min(movebilldate) as dt
+from
+  dv.move_bill mb,
+  dv.move_bill_spec mbs,
+  dv.nomenclatura n,
+  dv.sklad s
+where
+  mb.id_movebill = mbs.id_movebill
+  and mb.id_docstate = 3
+  and mb.id_skladdest = s.id_sklad
+  and nvl(s.brigada, 0) = 1
+  and mbs.id_nomencl = n.id_nomencl
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+)
+  group by id_zakaz
+  order by id_zakaz desc
+;  
+
+create or replace view v_orders_has_prod as
+select
+--список заказов ИТМ, в которых есть плитные материалы 
+  id_zakaz
+  --, count(n.name)
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+
+create or replace view v_orders_edges_m as
+select
+--количество кромочных материалов,м.пог.
+  oi.id,
+--  max(oi.slash) as slash,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (/*13*/ 2308 /*меламин*/, 2297 /*пвх*/, 2309 /*шпон*/) --кромка 
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+create or replace view v_orders_boards_m2 as
+select
+--количество плитных материалов (на пильные центры) по заказам
+  oi.id,
+--  max(oi.slash) as slash,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (/*14*/ 2284 /*массив щит*/, 2276 /*мдф*/, 18 /*лдсп*/, 2288 /* Пластик HPL*/, 2287 /*Пластик рекламный*/, 2275 /*ХДФ\ДВП*/, 2295 /*Фанера*/, 2283 /*Шпон*/) --плитные 
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+/*
+create or replace view v_orders_boards_m2 as
+select
+--количество плитных материалов (на пильные центры) по заказам
+  id_zakaz, 
+  count(n.name) as qnt_n,
+  sum(niz.count_nomencl) as qnt
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+
+create or replace view v_orders_edges_m as
+select
+--количество кромочных материалов,м.пог.
+  id_zakaz, 
+  count(n.name) as qnt_n,
+  sum(niz.count_nomencl) as qnt
+from 
+  dv.nomenclatura_in_izdel niz,dv.nomenclatura n
+where
+  niz.id_nomencl = n.id_nomencl 
+  and niz.id_nomizdel_parent_t is not null
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (13)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by id_zakaz
+;
+
+*/
+
+
+create or replace procedure P_SetOrdersProdData is
+begin
+  --устанавливает в таблице заказов проиизводственные статусы и данные, взятые из ИТМ
+  --(является ли заказ производственныым, дата выдачи в производство, количество плитных и кромочных материалов по смете в изделиях заказа) 
+
+  update orders set dt_to_prod = null;
+  merge into orders t1
+  using (select id_zakaz, dt from v_orders_send_to_prod) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.dt_to_prod = t2.dt;
+
+/*
+  update orders set has_prod = 0;
+  merge into orders t1
+  using (select id_zakaz from v_orders_has_prod) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.has_prod = 1;
+
+  update orders set qnt_boards_m2 = null;
+  merge into orders t1
+  using (select id_zakaz, qnt from v_orders_boards_m2) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+
+  update orders set qnt_edges_m = null;
+  merge into orders t1
+  using (select id_zakaz, qnt from v_orders_edges_m) t2
+  on (t1.id_itm = t2.id_zakaz)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
+  */
+  update order_items set qnt_boards_m2 = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_boards_m2) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+
+  update order_items set qnt_edges_m = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_edges_m) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
+
+end;
+/
+
+---------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 delete from orders where id = 7843;
 

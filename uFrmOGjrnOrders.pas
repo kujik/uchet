@@ -100,6 +100,8 @@ begin
     ['dt_end_manager$d','Завершение менеджером','','chbt=+', 'e',User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA])],
     ['cancel$i','Заказ отменен','80','chb=6;0','f=#:#0','e', User.Role(rOr_D_Order_SetCanceled)],
     ['dt_end$d','Заказ закрыт','','chbt=+','e', User.Role(rOr_D_Order_SetCompleted) or User.Role(rOr_D_Order_SetUnCompleted)],
+    ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
+    ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
     ['dt_upd_reg','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
     ['dt_upd','Дата УПД',''],
     ['upd','Номер УПД','80'],

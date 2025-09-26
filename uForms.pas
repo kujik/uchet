@@ -1331,7 +1331,10 @@ begin
   KeyString := GetGridServiceFields(DBGridEh);
   if KeyString <> '' then
     DBGridEh.SaveVertPos(KeyString);
+//  try
   TMemTableEh(DBGridEh.DataSet).Refresh;
+//  except
+//  end;
   DBGridEh.DefaultApplySorting;
   DBGridEh.DefaultApplyFilter;
   if KeyString <> '' then

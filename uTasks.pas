@@ -572,9 +572,11 @@ begin
       CalcPlannedOrders;
     end;
     if ParamStr(1) = '/closeitmperiod' then begin
+      IscorrectTask:=True;
       CloseItmPeriod
     end;
     if ParamStr(1) = '/hourly' then begin
+      IscorrectTask:=True;
       HourlyTasks;
     end;
     if ParamStr(1) = '/test' then begin
