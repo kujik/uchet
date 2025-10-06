@@ -176,8 +176,70 @@ when matched then
     update set t1.qnt_to_sgp = t2.qnt;
     
 update order_items set qnt_to_sgp = 0 where qnt_to_sgp is null;
-*/    
+*/
 
+drop table or_planned_stages cascade constraints;
+create table or_planned_stages (
+  id number(11),
+  dt_estimate_p date,
+  dt_kns_p date,
+  dt_thn_p date,
+  dt_machines_p date,
+  dt_machines date,
+  dt_assembly_p date,
+  dt_assembly date,
+  dt_painting_p date,
+  dt_painting date,
+  dt_final_assembly_p date,
+  dt_final_assembly date,
+  dt_otk_p date,
+  dt_sgp_p date,
+  dt_packaging_p date,
+  dt_packaging date,
+  constraint pk_or_planned_stages primary key (id),
+  constraint fk_or_planned_stages_oi foreign key (id) references order_items(id) on delete cascade
+);   
+    
+create or replace procedure p_or_planned_stages_set (
+  AId number,
+  AMode number,
+  AEst date,
+  AKns date,
+  AThn date,
+  AMachines date,
+  AAssembly date,
+  APainting date,
+  AFinalAssembly date,
+  AOtk date,
+  ASgp date,
+  APackaging date
+) is
+  i number;
+begin
+  if AMode = -1 then
+    delete from or_planned_stages where id = AId;
+    return;
+  end if;
+  select count(*) into i from or_planned_stages where id = AId;
+  if i = 0 then
+    insert into or_planned_stages (id) values (AId);
+  end if;
+  update or_planned_stages set
+    dt_estimate_p = AEst,
+    dt_kns_p = AKns,
+    dt_thn_p = AThn,
+    dt_machines_p = AMachines,
+    dt_assembly_p = AAssembly,
+    dt_painting_p = APainting,
+    dt_final_assembly_p = AFinalAssembly,
+    dt_otk_p = AOtk,
+    dt_sgp_p = ASgp,
+    dt_packaging_p = APackaging
+   where id = AId; 
+null;
+end;
+/
+  
 
 
 
