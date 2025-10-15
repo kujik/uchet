@@ -799,7 +799,7 @@ begin
     Q.QExecSql('insert into spl_itm_nom_props (id) select :id1$i from dual where not exists (select null from spl_itm_nom_props where id = :id2$i)', [Fr.ID, Fr.ID]);    Q.QExecSql('update spl_itm_nom_props set ' + Fr.CurrField + '=:prc$i where id = :id$i', [va[0], id]);
     Fr.RefreshRecord;
   end;
-  AddParamAr:= [Fr.GetValue('name'), Fr.GetValue('name_unit')];
+  AddParamAr:= [Fr.GetValueS('name'), Fr.GetValueS('name_unit')];
   AddParamD:= VararrayOf(AddParamAr);
   if Fr.CurrField = 'supplierinfo' then begin
     Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, AddParamD);
