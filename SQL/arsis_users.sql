@@ -51,4 +51,32 @@ grant create view to ADM;
 grant create materialized view to ADM;
 grant unlimited tablespace to ADM;
 
-exit;
+--------------------------------------------------------------------------------
+
+create user WHS identified by WHS25 default tablespace users temporary tablespace temp;
+grant connect, resources to WHS;
+alter user WHS default role all;
+grant create procedure to WHS;
+grant create sequence to WHS;
+grant create session to WHS;
+grant create synonym to WHS;
+grant create table to WHS;
+grant create trigger to WHS;
+grant create view to WHS;
+grant create materialized view to WHS;
+grant unlimited tablespace to WHS;
+
+create user M identified by M25 default tablespace users temporary tablespace temp;
+grant connect, resources to M;
+alter user M default role all;
+grant create procedure to M;
+grant create sequence to M;
+grant create session to M;
+grant create synonym to M;
+grant create table to M;
+grant create trigger to M;
+grant create view to M;
+grant create materialized view to M;
+grant unlimited tablespace to M;
+grant select any table to M;
+grant execute any procedure to M;
