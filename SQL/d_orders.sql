@@ -550,6 +550,7 @@ create or replace view v_orders as (
     osn.qnt_sn_no,
     decode(nvl(osn.qnt_sn_no, 0), 0, '+', '-') as sn_status,
     decode(othndt.dt_thn_cnt, othndt.cnt, othndt.dt_thn_max, null) as dt_thn_max,
+    decode(oknsdt.dt_kns_cnt, oknsdt.cnt, oknsdt.dt_kns_max, null) as dt_kns_max,
     trunc(dt_aggr_estimate - dt_beg) as days_aggr_estimate,
     --opc.sum0
     --0 as sum0
@@ -579,6 +580,8 @@ create or replace view v_orders as (
     --v_order_primecost_itm opc,
     (select max(id_order) as id_order, count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) okns, 
     (select max(id_order) as id_order, count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othn,
+    (select max(id_order) as id_order, max(dt_kns) as dt_kns_max, sum(decode(dt_kns, null, 0, 1)) as dt_kns_cnt, 
+       count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) oknsdt,
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
@@ -600,6 +603,7 @@ create or replace view v_orders as (
     he.id_order (+) = o.id
     and okns.id_order (+) = o.id
     and othn.id_order (+) = o.id
+    and oknsdt.id_order (+) = o.id
     and othndt.id_order (+) = o.id
     and osn.id_order (+) = o.id
     and z.id_zakaz (+) = o.id_itm
