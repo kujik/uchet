@@ -1143,12 +1143,13 @@ v:=True;
     Frg1.Opt.SetFields([
       ['id_order as id$i','_id','40'],
       ['path','_File','40'],
-      ['ordernum','№ заказа','120','pic=Показать паспорт заказа'],
+      ['ordernum','№ заказа','120','bt=Показать паспорт заказа'],
       ['year','Год','40'],
       ['dt_beg','Дата оформления','80'],
       ['dt_end','Дата сдачи','80'],
       ['customer','Заказчик','180'],
-      ['project'+S.IIfStr(Length(AddParam[2]) > 2, ';'+AddParam[2]),'Проект'+S.IIfStr(Length(AddParam[2]) > 2, ';'+AddParam[3]),'200']
+      ['project'+S.IIfStr(Length(AddParam[2]) > 2, ';'+AddParam[2]),'Проект'+S.IIfStr(Length(AddParam[2]) > 2, ';'+AddParam[3]),'200'],
+      ['id_itm$i','_id_itm','40']
     ]);
     Frg1.Opt.SetTable('v_sn_orders');
     Frg1.Opt.SetWhere('where upper(project) like :proekt and id > 0');
