@@ -10,11 +10,6 @@ kujik/psv116@ 1. - k .. s - g
 }
 
 uses
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   EhLibVclMTE,
   Forms,
   Windows,
