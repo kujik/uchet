@@ -697,7 +697,7 @@ v:=True;
   end
   else if FormDoc = myfrm_J_Payrolls then begin
     Caption:='Журнал зарплатных ведомостей';
-    Frg1.Options := Frg1.Options + [myogGridLabels];
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['code','Код','50'],
@@ -708,7 +708,7 @@ v:=True;
       ['committxt','Закрыта','60','pic=закрыта;13']
     ]);
     Frg1.Opt.SetTable('v_payroll');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit],[mbtAdd, 1],[mbtDelete, 1],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
@@ -2055,6 +2055,19 @@ begin
       //обновим.
       Fr.RefreshGrid;
     end;
+  end
+  else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtLock) then begin
+    //просмотр общей сметы по одному или нескольким (отмеченным чекбоксами в индикаторе) заказам
+    va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
+    if (Length(va) > 0) then begin
+      if MyQuestionMessage('Проставить для ' + S.GetEndingFull(Length(va), ' ведомост', 'и', 'ей', 'ей' ) + ' статус "Закрыта" ?') <> mrYes then
+        Exit;
+      for i := 0 to High(va) do
+        Q.QExecSql('update payroll set commit = 1 where id = :id$i', [va[i]]);
+        Fr.RefreshGrid;
+    end
+    else
+      MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
   end
   else if (FormDoc = myfrm_R_Holideys) and (Tag = mbtCustom_LoadFromInet) and (S.Nst(Fr.GetControlValue('CbYear')) <> '') and
     (MyQuestionMessage('Загрузить производственный календарь из сети Интернет'#13#10'(с сайта http://xmlcalendar.ru)?'#13#10'При этом данные будут заменены.') = mrYes) then begin
