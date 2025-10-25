@@ -566,7 +566,14 @@ create or replace view v_orders as (
     timemsqnt.qnt_to_sgp as qnt_to_sgp,
     timemsqnt.qnt_boards_m2,
     timemsqnt.qnt_edges_m,
-    timemsqnt.qnt_panels_w_drill
+    timemsqnt.qnt_panels_w_drill,
+    --опережение или просрочка, по принятию на сгп по отношению к плановой дате отгрузки, в том случае если для заказа есть технолог
+    case when nvl(othn.cnt, 0) = 0 
+      then null
+      else 
+        decode (o.dt_to_sgp, null, trunc(sysdate) - o.dt_otgr, o.dt_to_sgp - o.dt_otgr)
+    end as early_or_late 
+
   from
     orders o,
     ref_sn_organizations ro,
@@ -2105,6 +2112,37 @@ begin
 
 end;
 /
+
+
+---------------------------- test ----------------------------------------------
+select * from v_orders_send_to_prod where id_zakaz = 36648;
+
+
+select
+  id_zakaz,
+  min(movebilldate) as dt
+from
+  dv.move_bill mb,
+  dv.move_bill_spec mbs,
+  dv.nomenclatura n,
+  dv.sklad s
+where
+id_zakaz = 36648 and
+mb.id_movebill = mbs.id_movebill
+  --and mb.id_docstate = 3
+  and mb.id_skladdest = s.id_sklad
+  --and nvl(s.brigada, 0) = 1
+  and mbs.id_nomencl = n.id_nomencl
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+) 
+group by id_zakaz
+  order by id_zakaz desc
+;  
+
 
 ---------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------

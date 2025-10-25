@@ -89,7 +89,6 @@ begin
     ['dt_estimate_max$d','Изменение сметы',''],
     ['dt_reserve$d','Дата резервирования'],
     ['dt_aggr_estimate$d','Общая смета',''],
-    //['days_aggr_estimate','СН','30'],
     ['status_itm$s', 'Статус заказа','80'],
     ['qnt_slashes$i', 'Кол-во слэшей', '80','f=:'],
     ['qnt_items$f', 'Кол-во изделий', '80','f=:'],
@@ -101,6 +100,7 @@ begin
     ['dt_end_manager$d','Завершение менеджером','','chbt=+', 'e',User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA])],
     ['cancel$i','Заказ отменен','80','chb=6;0','f=#:#0','e', User.Role(rOr_D_Order_SetCanceled)],
     ['dt_end$d','Заказ закрыт','','chbt=+','e', User.Role(rOr_D_Order_SetCompleted) or User.Role(rOr_D_Order_SetUnCompleted)],
+    ['early_or_late$i','Опережение / просрочка','70'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
     ['dt_upd_reg','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
@@ -394,6 +394,14 @@ begin
   //(если отдельное изделие не должно попадать в ИТМ, то это должно правильно обрабатываться и подсветки из-за него не будет)
   if (FieldName = 'estimates') and (Fr.GetValue('estimates') = '+') and (VarToDateTime(Fr.GetValue('dt_beg')) >= EncodeDate(2025, 01, 01)) and (Fr.GetValue('has_itm_est') = 0)
     then Params.Background:=clmyPink;
+  //подсветим опережение производственных заказов зеленым, а просрочку розовым.
+  if (FieldName = 'early_or_late') then
+    if (Fr.GetValueI('early_or_late') > 0)
+      then Params.Background:=clmyPink
+      else if (Fr.GetValueI('early_or_late') < 0)
+        then Params.Background:=clmyGreen
+          else if (Fr.GetValue('early_or_late') = 0)
+          then Params.Background:=clmyBlue;
 end;
 
 procedure TFrmOGjrnOrders.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
