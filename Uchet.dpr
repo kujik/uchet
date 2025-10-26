@@ -150,7 +150,9 @@ uses
   uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
   uFrmAGlstDomainUsers in 'uFrmAGlstDomainUsers.pas' {FrmAGlstDomainUsers},
   uFrmAGLstLdapUsers in 'uFrmAGLstLdapUsers.pas' {FrmAGLstLdapUsers},
-  uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory};
+  uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory},
+  uFrmCDedtAccount in 'uFrmCDedtAccount.pas' {FrmCDedtAccount},
+  uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame};
 
 var
   MT: Integer;
