@@ -38,9 +38,9 @@ procedure TFrMyPanelCaption.SetParameters(AVisible: Boolean; ACaption: Variant; 
 //создаем информационную иконку в верхней панели кнопок, если таковая есть
 begin
   lblCaption.Caption := ' ' + ACaption + ' ';
-  pnlCaption.AutoSize := False;
+{  pnlCaption.AutoSize := False;
   pnlCaption.Refresh;
-  pnlCaption.AutoSize := True;
+  pnlCaption.AutoSize := True;}
   pnlCaption.Width := lblCaption.Width;
   pnlInfo.Visible := Length(AInfo) > 0;
   pnlInfo.Left := pnlCaption.Left + pnlCaption.Width + 8;

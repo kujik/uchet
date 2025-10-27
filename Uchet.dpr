@@ -7,9 +7,22 @@ program Uchet;
 git:
 https://github.com/kujik/uchet.git
 kujik/psv116@ 1. - k .. s - g
+
+madwexcept:
+в настройках ставить галку включени€.
+загрузить иконку дл€ кнопки печать query1_16.bmp
+
+cnpack:
+в информации о версии - установть сохранение даты сборки и автоинкремент веорсии при компил€ции
+
 }
 
 uses
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   EhLibVclMTE,
   Forms,
   Windows,
