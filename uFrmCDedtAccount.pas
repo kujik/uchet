@@ -4,14 +4,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh,
-  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uData
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Math,
+  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uData, uFrDBGridEh,
+  Data.Bind.EngExt, Vcl.Bind.DBEngExt, Data.Bind.Components
   ;
 
 type
   TFrmCDedtAccount = class(TFrmBasicDbDialog)
     pnlGeneral: TPanel;
-    pnlPayments: TPanel;
     pnlGeneralM: TPanel;
     cmb_Cash: TDBComboBoxEh;
     edt_Account: TDBEditEh;
@@ -24,10 +24,28 @@ type
     nedt_SumWoNds: TDBNumberEditEh;
     frmpcGeneral: TFrMyPanelCaption;
     cmb_Nds: TDBComboBoxEh;
-    frmpcPayments: TFrMyPanelCaption;
-    pnlPaymentsM: TPanel;
+    pnlRoute: TPanel;
+    frmpcRoute: TFrMyPanelCaption;
+    pnl_Route: TPanel;
+    cmb_CarType: TDBComboBoxEh;
+    cmb_Flight: TDBComboBoxEh;
+    nedt_Kilometrage: TDBNumberEditEh;
+    dedt_FlightDt: TDBDateTimeEditEh;
+    nedt_Idle: TDBNumberEditEh;
+    nedt_PriceKm: TDBNumberEditEh;
+    nedt_PriceIdle: TDBNumberEditEh;
+    nedt_SumOther: TDBNumberEditEh;
+    FrgRoute: TFrDBGridEh;
+    pnlBasis: TPanel;
+    frmpcBasis: TFrMyPanelCaption;
+    FrgBasis: TFrDBGridEh;
+    BindingsList1: TBindingsList;
+    pnlPayments: TPanel;
+    scrlbxPaymentsM: TScrollBox;
+    pnlPaymentsD: TPanel;
     dedt_1: TDBDateTimeEditEh;
     nedt_1: TDBNumberEditEh;
+    frmpcPayments: TFrMyPanelCaption;
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -65,12 +83,12 @@ var
   nedt1: TDBNumberEditEh;
   w: Integer;
 begin
-  pnlPaymentsM.Visible := False;
+  pnlPaymentsD.Visible := False;
   w := nedt_1.Left + nedt_1.Width + 25;
   for i := 1 to 10 do
     for j := S.IIf(i = 1, 2, 1) to 3 do begin
       dedt1 := TDBDateTimeEditEh.Create(Self);
-      dedt1.Parent := pnlPaymentsM;
+      dedt1.Parent := pnlPaymentsD;
       dedt1.Name := 'dedt_' + IntToStr((i - 1) * 3 + j);
       dedt1.Visible := (i = 1) and (j = 1);
       dedt1.Left := (j - 1) * w  + dedt_1.Left;
@@ -80,14 +98,14 @@ begin
       dedt1.ControlLabel.Visible := True;
       dedt1.ControlLabel.Caption := IntToStr((i - 1) * 3 + j);
       nedt1 := TDBNumberEditEh.Create(Self);
-      nedt1.Parent := pnlPaymentsM;
+      nedt1.Parent := pnlPaymentsD;
       nedt1.Name := 'nedt_' + IntToStr((i - 1) * 3 + j);
       nedt1.Visible := (i = 1) and (j = 1);
       nedt1.Left := (j - 1) * w  + nedt_1.Left;
       nedt1.Width := nedt_1.Width;
       nedt1.Top := dedt1.Top;
     end;
-  pnlPaymentsM.Visible := True;
+  pnlPaymentsD.Visible := True;
 end;
 
 procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
@@ -108,6 +126,12 @@ begin
     TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
     TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
   end;
+  i := 30;
+  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
+    dec(i);
+  pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i))).Top + TControl(FindComponent('nedt_' + IntToStr(i))).Height + 8;
+  scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);
+  pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
 end;
 
 
