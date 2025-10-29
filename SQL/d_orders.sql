@@ -2315,7 +2315,29 @@ end;
 /
 
 
+--таблица доступных свойств для всех типов заказов
+create table order_properties_for_type (
+  id_type number(11),
+  id_property number(11),
+  use_property number(1), 
+  constraint pk_order_properties_for_type primary key (id_type, id_property),
+  constraint fk_order_properties_for_type_t foreign key (id_type) references order_types(id) on delete cascade, 
+  constraint fk_order_properties_for_type_p foreign key (id_type) references order_properties(id) on delete cascade 
+);   
 
+create or replace view v_order_properties_for_type as
+select
+--выведем используемые свойства для всех типов заказов
+  t.id as id_type,
+  p.*,
+  case when pt.id_type is not null then 1 else 0 end as used
+from 
+  order_types t
+  cross join order_properties p
+  left join order_properties_for_type pt on pt.id_type = t.id and pt.id_property = p.id
+;
+
+select * from v_order_properties_for_type;
 
 
 
