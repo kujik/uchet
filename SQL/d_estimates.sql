@@ -791,6 +791,27 @@ create or replace view v_estimate as (
     ei.id_estimate = e.id
 );
 
+create or replace view v_estimate_add as 
+select
+  e.*,
+  n.artikul
+from
+  v_estimate e,
+  dv.nomenclatura n
+where
+  e.name = n.name (+) 
+;
+
+create or replace view vv_aggregate_estimate_add as 
+select
+  e.*,
+  n.artikul
+from
+  v_aggregate_estimate e,
+  dv.nomenclatura n
+where
+  e.name = n.name (+) 
+;
 
 alter table estimate_items drop column id_name_resale;
 
@@ -865,12 +886,13 @@ create or replace view v_aggregate_estimate as (
 select
   max(o.id) as id_order,
   e.name, 
+  max(e.artikul) as artikul,
   max(e.groupname) as groupname, 
   max(e.unit) as unit, 
   sum(e.qnt) as qnt,
   sum(e.qnt_itm) as qnt_itm
 from
-  v_estimate e,
+  v_estimate_add e,
   v_orders o,
   v_order_items i
 where
@@ -886,6 +908,7 @@ create or replace view v_aggregate_estimate_or1 as (
 select
   i.id_order,
   e.name, 
+  e.artikul,
   e.id_order_item,
   i.pos,
   e.groupname as groupname, 
@@ -893,7 +916,7 @@ select
   e.qnt as qnt,
   e.qnt_itm as qnt_itm
 from
-  v_estimate e,
+  v_estimate_add e,
   v_orders o,
   v_order_items i
 where
