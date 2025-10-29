@@ -7,14 +7,6 @@ program Uchet;
 git:
 https://github.com/kujik/uchet.git
 kujik/psv116@ 1. - k .. s - g
-
-madwexcept:
-в настройках ставить галку включени€.
-загрузить иконку дл€ кнопки печать query1_16.bmp
-
-cnpack:
-в информации о версии - установть сохранение даты сборки и автоинкремент веорсии при компил€ции
-
 }
 
 uses
@@ -163,9 +155,7 @@ uses
   uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
   uFrmAGlstDomainUsers in 'uFrmAGlstDomainUsers.pas' {FrmAGlstDomainUsers},
   uFrmAGLstLdapUsers in 'uFrmAGLstLdapUsers.pas' {FrmAGLstLdapUsers},
-  uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory},
-  uFrmCDedtAccount in 'uFrmCDedtAccount.pas' {FrmCDedtAccount},
-  uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame};
+  uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory};
 
 var
   MT: Integer;

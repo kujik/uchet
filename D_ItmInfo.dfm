@@ -13,7 +13,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     inherited lbl_StatusBar_Right: TLabel
       Left = 569
       Height = 17
-      ExplicitLeft = 569
+      ExplicitLeft = 567
     end
     inherited lbl_StatusBar_Left: TLabel
       Height = 17
@@ -59,7 +59,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
       Caption = 'lbl1'
     end
     object Bt_Go: TSpeedButton
-      Left = 608
+      Left = 612
       Top = 8
       Width = 32
       Height = 32
@@ -76,8 +76,6 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
     ActivePage = ts_FromCAD
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 652
-    ExplicitHeight = 312
     object ts_Artikul: TTabSheet
       Caption = #1040#1088#1090#1080#1082#1091#1083#1099
       object DBGridEh1: TDBGridEh

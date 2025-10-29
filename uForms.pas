@@ -404,7 +404,6 @@ function clmyPink: Cardinal;
 function clmyYelow: Cardinal;
 function clmyGreen: Cardinal;
 function clmyGray: Cardinal;
-function clmyBlue: Cardinal;
 
 
 var
@@ -431,10 +430,6 @@ end;
 function clmyGray: Cardinal;
 begin
   Result := RGB(200, 200, 200);  //серый
-end;
-function clmyBlue: Cardinal;
-begin
-  Result := RGB(180, 180, 255);  //голубой
 end;
 
 

@@ -42,7 +42,6 @@ type
     FAdminEditMode: Boolean;
     InAddControlChangeEvent: Boolean;
     FLockEdit: Boolean;
-    FOrIds: string;
     function  PrepareForm: Boolean; override;
     procedure SetDetailGrid;
     procedure SetCategoryes;
@@ -187,7 +186,7 @@ begin
   //кнопки (формирование заявки только для тех у кого права на изменение)
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtParams, User.Role(rOr_Other_R_MinRemains_Ch)],[mbtGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
     [-mbtCustom_SetCategory],
-    [],[-1003,True,'Выбрать заказы'],[],
+    [],[-1003,True,'Выбрать заказ'],[],
     [-mbtCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
     [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-mbtCustom_SetOnWayPeriod],
     [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
@@ -410,7 +409,6 @@ var
   i, j: Integer;
   va1, va2: TVarDynArray;
   b: Boolean;
-  st: string;
 begin
   if Tag = mbtGo then begin
     CreateDemand;
@@ -445,7 +443,7 @@ begin
   else if Tag = 1002 then begin
     ClearInvalidReserve;
   end
- {  else if Tag = 1003 then begin
+  else if Tag = 1003 then begin
     va1 := Q.QLoadToVarDynArrayOneCol('select ornum from v_orders where id > 0 and id_itm is not null order by id', []);
     va2 := Q.QLoadToVarDynArrayOneCol('select id from v_orders where id > 0 and id_itm is not null order by id', []);
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~Заказ для фильтра', 50 + 100, 50,
@@ -464,39 +462,7 @@ begin
       Frg1.Opt.Caption := Caption + ' (' + va1[1].AsString + ')';
     end;
     Frg1.RefreshGrid;
-  end }
-  else if Tag = 1003 then begin
-    //выбор заказов, по которым сформируется таблица.
-    //при повторном вызове диалога выбранные ранее заказы не будут проставлены в таблице!
-    //для отмены режима фильтрации по заказа - в диалоге заказов не выбирать, но форму закрыть по кнопке выбора, а не крестиком.
-    Wh.SelectDialogResult := [-100];
-    Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal, myfoSizeable], VarArrayOf(['%', '',{FOrIds,} '', '']));
-    if (Length(Wh.SelectDialogResult) = 1) and (Wh.SelectDialogResult[0] = -100) then
-      Exit;
-    if Length(Wh.SelectDialogResult2) = 0 then begin
-      Frg1.Opt.SetWhere('');
-      Frg1.Opt.Caption := Caption;
-      FOrIds := '';
-      Frg1.RefreshGrid;
-      Exit;
-    end;
-    if Length(Wh.SelectDialogResult2) > 1000 then begin
-      MyWarningMessage('Выбрано слишшком много заказов!');
-      Frg1.Opt.SetWhere('');
-      Frg1.Opt.Caption := Caption;
-      FOrIds := '';
-      Frg1.RefreshGrid;
-    Exit;
-    end;
-    FOrIds := A.Implode(A.VarDynArray2ColToVD1(Wh.SelectDialogResult2, 0), ',');  //ids
-    st := A.Implode(A.VarDynArray2ColToVD1(Wh.SelectDialogResult2, 2), ',');  //ornum
-    if Length(st) > 6 * 20 then
-      st := Copy(st, 1 ,6 * 20) + '...';
-    Frg1.Opt.Caption := Caption + ' (' + st + ')';
-    st := A.Implode(A.VarDynArray2ColToVD1(Wh.SelectDialogResult2, 8), ',');  //id_itm
-    Frg1.Opt.SetWhere(' where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz in (' + st + '))');
-    Frg1.RefreshGrid;
-  end
+ end
   else if Tag = mbtParams then begin
     repeat
       va2:=[];

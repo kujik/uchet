@@ -92,7 +92,6 @@ uses
   uOrders,
   D_SuppliersMinPart,
   uFrmBasicInput,
-  uFrmODedtNomenclFiles,
   F_TestTree
   ;
 
@@ -222,9 +221,6 @@ begin
       MemTableEh3.FieldByName('id_nomencl').Value,
       VararrayOf([MemTableEh3.FieldByName('name').AsString, ''])
     );
-  end
-  else if TMenuItem(Sender).Tag = mbtAttach then begin
-    TFrmODedtNomenclFiles.ShowDialog(Self, MemTableEh3.FieldByName('id_nomencl').Value);
   end
   else if TMenuItem(Sender).Tag = mbtCustom_PriceCheck then begin
     //зададим контрольную цену номенклатуры
@@ -406,8 +402,8 @@ begin
   Gh.SetGridOptionsDefault(DbGridEh3);
   Gh.SetGridOptionsMain(DbGridEh3, True, True, True);
   Cth.CreateGridMenu(Self, Pm_3,
-    [mybtCustom_MoveToGroup, mybtCustom_SupplierNom, mybtCustom_PriceCheck, mybtAttach],
-    [True, True, User.Role(rOr_Other_R_MinRemains_chPriceCheck), True],
+    [mybtCustom_MoveToGroup, mybtCustom_SupplierNom, mybtCustom_PriceCheck],
+    [True, True, User.Role(rOr_Other_R_MinRemains_chPriceCheck)],
     MenuClick ,'3');
   DbGridEh3.PopupMenu:=Pm_3;
 

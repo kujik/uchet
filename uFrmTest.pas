@@ -176,8 +176,7 @@ uses
   uFrmOWOrder,
   uFrmOWSearchInEstimates,
   uFrmWGEdtTurv,
-  uFrmOGedtEstimate,
-  uFrmCDedtAccount
+  uFrmOGedtEstimate
   ;
 
 
@@ -1469,11 +1468,6 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
-  //q.QExecSql('select 2 / 0 from dual', []); Exit;
-
-  TFrmCDedtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
-
-
   v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);
   exit;
 

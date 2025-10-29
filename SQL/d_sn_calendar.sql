@@ -569,7 +569,6 @@ create or replace view v_sn_orders as (
   select
     o.id, 
     o.id as id_order,
-    o.id_itm,
     o.id_organization as id_organization,
     o.organization,
     o.organization as org,

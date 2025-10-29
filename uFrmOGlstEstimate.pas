@@ -53,7 +53,6 @@ begin
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['groupname','Группа','200'],
-      ['artikul','Артикул','120'],
       ['name','Наименование','300;h'],
       ['unit','Ед.изм','70'],
       ['qnt1+0 as qnt1$f','Кол-во на ед.','70'],
@@ -63,7 +62,7 @@ begin
       ['sum1$f','Сумма за ед.','80','f=r:'],
       ['0 as chb','_chb','60']
     ]);
-    Frg1.Opt.SetTable('v_estimate_add');  //v_estimate_prices
+    Frg1.Opt.SetTable('v_estimate');  //v_estimate_prices
     if AddParam[0] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
       FCapt := Q.QSelectOneRow('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]])[0];
@@ -86,7 +85,6 @@ begin
     Frg1.Opt.SetFields([
       ['to_char(rownum) as id$i','_id','40'],
       ['groupname','Группа','200'],
-      ['artikul','Артикул','120'],
       ['name','Наименование','300;h'],
       ['unit','Ед.изм','70'],
       ['qnt+0 as qnt$f','Кол-во','70','f=f:'],
@@ -233,11 +231,11 @@ begin
     TDBEditEh(Fr.FindComponent('ENums')).Text := S.IIf(b, '-', '') + st;
     if st = '' then begin
     //это по всему заказу
-      Fr.Opt.SetSql('select to_char(1) as id, groupname, artikul, name, unit, qnt+0 as qnt, 0 as chb ' + 'from v_aggregate_estimate where id_order = :id_order$i');
+      Fr.Opt.SetSql('select to_char(1) as id, groupname, name, unit, qnt+0 as qnt, 0 as chb ' + 'from v_aggregate_estimate where id_order = :id_order$i');
     end
     else begin
     //это по слешам заказа
-      Fr.Opt.SetSql('select to_char(1) as id, max(groupname) as groupname, max(artikul) as artikul, max(name) as name, max(unit) as unit, sum(qnt+0) as qnt, 0 as chb ' + 'from v_aggregate_estimate_or1 where pos ' + S.IIf(b, 'not', '') + ' in (' + st + ') and id_order = :id_order$i group by name');
+      Fr.Opt.SetSql('select to_char(1) as id, max(groupname) as groupname, max(name) as name, max(unit) as unit, sum(qnt+0) as qnt, 0 as chb ' + 'from v_aggregate_estimate_or1 where pos ' + S.IIf(b, 'not', '') + ' in (' + st + ') and id_order = :id_order$i group by name');
     end;
   end;
 

@@ -80,9 +80,3 @@ grant create materialized view to M;
 grant unlimited tablespace to M;
 grant select any table to M;
 grant execute any procedure to M;
-
-ALTER USER WHS ACCOUNT UNLOCK;
-
-SELECT username, account_status, expiry_date, profile
-FROM dba_users
-WHERE username = 'M';
