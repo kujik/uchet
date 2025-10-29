@@ -924,6 +924,7 @@ const
   myfrm_Adm_LdapUsers = 'Adm_LdapUsers';
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
   myfrm_Ref_JobsNeeded = 'Ref_JobsNeeded';
+  myfrm_R_OrderProperties='R_OrderProperties';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1014,6 +1015,7 @@ const
   myfrm_Dlg_UsersChoice='Dlg_UsersChoice';
   myfrm_Dlg_Work_Wchedules='Dlg_Work_chedules';
   myfrm_Dlg_Ref_JobsNeeded = 'Dlg_Ref_JobsNeeded';
+  myfrm_Dlg_R_OrderProperties = 'Dlg_R_OrderProperties';
 
 
 const

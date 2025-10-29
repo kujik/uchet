@@ -2236,7 +2236,7 @@ where
 
 
 --------------------------------------------------------------------------------
-
+--OK
 
 --таблица по типам заказов (рекламация, дозаказ...)
 alter table order_types add posstd number(4);
@@ -2264,6 +2264,7 @@ begin
 end;
 /
 
+/*
 begin
 insert into order_types (id, name, posstd, need_ref, active) values (1, 'Новый на СГП', 1, 0, 1);
 insert into order_types (id, name, posstd, need_ref, active) values (2, 'Дозаказ', 2, 1, 1);
@@ -2272,6 +2273,7 @@ insert into order_types (id, name, posstd, need_ref, active) values (4, 'Экспери
 --insert into order_types (id, name, posstd, need_ref, active) values (1, '', 1, 0, 1);
 end;
 /
+*/
 
 create or replace view v_order_types as
   select 
@@ -2284,6 +2286,36 @@ create or replace view v_order_types as
   from 
     order_types ot
 ;  
+
+
+
+--таблица свойств заказа, влияющих на сроки его прохождения по участкам
+--alter table order_properties add 
+create table order_properties (
+  id number(11),
+  name varchar(100),
+  active number(1),
+  grp number(2), 
+  pos number(3),
+  constraint pk_order_properties primary key (id)
+);   
+
+create unique index idx_order_properties_name on order_properties lower(name);
+  
+create sequence sq_order_properties nocache start with 100;
+
+create or replace trigger trg_order_properties_bi_r
+  before insert on order_properties for each row
+begin
+  if :new.id is null then 
+    select sq_order_properties.nextval into :new.id from dual;
+    :new.pos := :new.id;
+  end if;
+end;
+/
+
+
+
 
 
 

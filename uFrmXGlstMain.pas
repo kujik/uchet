@@ -1722,6 +1722,23 @@ v:=True;
     Frg1.InfoArray:=[
     ];
   end
+  else if FormDoc = myfrm_R_OrderProperties then begin
+    Caption:='Свойства заказов';
+    Frg1.Options := Frg1.Options - [myogSorting];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['pos$i','№','40'],
+      ['name$s','Наименование','200'],
+      ['grp$i','Группа','60'],
+      ['active$i','Используется','95','pic']
+    ]);
+    Frg1.Opt.SetWhere('order by pos');
+    Frg1.Opt.SetTable('order_properties');
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderProperties;
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.InfoArray:=[
+    ];
+  end
   else if FormDoc = myfrm_R_WorkCellTypes then begin
     Caption:='Типы производственных участков';
     Frg1.Options := Frg1.Options - [myogSorting];
@@ -2107,7 +2124,7 @@ begin
     Orders.CrealeEstimateOnPlannesOrders(Fr.GetControlValue('DeBeg'));
     Fr.RefreshGrid;
   end
-  else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_WorkCellTypes]) then begin
+  else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_OrderProperties, myfrm_R_WorkCellTypes]) then begin
     if (Tag = 1001) or (Tag = 1002) then begin
 //      if (FormDoc = myfrm_R_WorkCellTypes) and (Fr.GetValue('posstd') <> null) then
 //        Exit;

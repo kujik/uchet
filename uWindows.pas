@@ -587,6 +587,7 @@ begin
     myfrm_R_DelayedInprodReasons,
     myfrm_R_RejectionOtkReasons,
     myfrm_R_OrderTypes,
+    myfrm_R_OrderProperties,
     myfrm_J_PlannedOrders,
     myfrm_J_InvoiceToSgp,
     myfrm_R_Or_ItmExtNomencl,
@@ -999,6 +1000,11 @@ begin
   else if F = myfrm_Dlg_R_WorkCellTypes then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'work_cell_types', 'Типы производственных участков', 400, 100,
       [['code$s', cntEdit, 'Код','1:4::TU'], ['name$s', cntEdit, 'Наименование','1:100::T'], ['active$i', cntCheckX, 'Используется']],
+      [['caption dlgedit dlgactive']]);
+  end
+  else if F = myfrm_Dlg_R_OrderProperties then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'order_properties', 'Свойства заказов', 400, 100,
+      [['name$s', cntEdit, 'Наименование','1:100'], ['grp$i', cntNEdit, 'Группа', '1:99:0'], ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']]);
   end
 
