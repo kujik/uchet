@@ -550,6 +550,7 @@ create or replace view v_orders as (
     osn.qnt_sn_no,
     decode(nvl(osn.qnt_sn_no, 0), 0, '+', '-') as sn_status,
     decode(othndt.dt_thn_cnt, othndt.cnt, othndt.dt_thn_max, null) as dt_thn_max,
+    decode(oknsdt.dt_kns_cnt, oknsdt.cnt, oknsdt.dt_kns_max, null) as dt_kns_max,
     trunc(dt_aggr_estimate - dt_beg) as days_aggr_estimate,
     --opc.sum0
     --0 as sum0
@@ -565,7 +566,14 @@ create or replace view v_orders as (
     timemsqnt.qnt_to_sgp as qnt_to_sgp,
     timemsqnt.qnt_boards_m2,
     timemsqnt.qnt_edges_m,
-    timemsqnt.qnt_panels_w_drill
+    timemsqnt.qnt_panels_w_drill,
+    --опережение или просрочка, по принятию на сгп по отношению к плановой дате отгрузки, в том случае если для заказа есть технолог
+    case when nvl(othn.cnt, 0) = 0 
+      then null
+      else 
+        decode (o.dt_to_sgp, null, trunc(sysdate) - o.dt_otgr, o.dt_to_sgp - o.dt_otgr)
+    end as early_or_late 
+
   from
     orders o,
     ref_sn_organizations ro,
@@ -579,6 +587,8 @@ create or replace view v_orders as (
     --v_order_primecost_itm opc,
     (select max(id_order) as id_order, count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) okns, 
     (select max(id_order) as id_order, count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othn,
+    (select max(id_order) as id_order, max(dt_kns) as dt_kns_max, sum(decode(dt_kns, null, 0, 1)) as dt_kns_cnt, 
+       count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) oknsdt,
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
@@ -600,6 +610,7 @@ create or replace view v_orders as (
     he.id_order (+) = o.id
     and okns.id_order (+) = o.id
     and othn.id_order (+) = o.id
+    and oknsdt.id_order (+) = o.id
     and othndt.id_order (+) = o.id
     and osn.id_order (+) = o.id
     and z.id_zakaz (+) = o.id_itm
@@ -2101,6 +2112,37 @@ begin
 
 end;
 /
+
+
+---------------------------- test ----------------------------------------------
+select * from v_orders_send_to_prod where id_zakaz = 36648;
+
+
+select
+  id_zakaz,
+  min(movebilldate) as dt
+from
+  dv.move_bill mb,
+  dv.move_bill_spec mbs,
+  dv.nomenclatura n,
+  dv.sklad s
+where
+id_zakaz = 36648 and
+mb.id_movebill = mbs.id_movebill
+  --and mb.id_docstate = 3
+  and mb.id_skladdest = s.id_sklad
+  --and nvl(s.brigada, 0) = 1
+  and mbs.id_nomencl = n.id_nomencl
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (14)  
+    connect by prior id_group = id_parentgroup   
+) 
+group by id_zakaz
+  order by id_zakaz desc
+;  
+
 
 ---------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------
