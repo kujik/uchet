@@ -1625,6 +1625,13 @@ select
   np.price_check,
   --цена последнего прихода по любому поставщику за нашу единицу измерения
   case when prc.price_main is null then null else round(prc.price_main, 2) end as price_main,
+  --признак изменения цены (сравнивается рублевая часть, копейки отсекаются а не округляются!)
+  case 
+    when prc.price_main is null or np.price_check is null then null 
+    when trunc(prc.price_main) = trunc(np.price_check) then '=' 
+    when trunc(prc.price_main) > trunc(np.price_check) then '+' 
+    when trunc(prc.price_main) < trunc(np.price_check) then '-' 
+  end as price_diff,
   --цена последнего прихода по номенклатуре, независимо от поставщика
   round(prclast.price_last,2) as price_last,
   --соответствующая сумма для введенной пртии к заказу
