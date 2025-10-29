@@ -32,6 +32,7 @@ type
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
     procedure ControlOnChange(Sender: TObject); override;
+    function  Save: Boolean; override;
   public
   end;
 
@@ -45,7 +46,8 @@ uses
   uDBOra,
   uString,
   uMessages,
-  uFields
+  uFields,
+  uTasks
 ;
 
 {$R *.dfm}
@@ -213,5 +215,30 @@ begin
   FOldOrder := cmb_id_order.Text;
 end;
 
+function  TFrmODedtTasks.Save: Boolean;
+var
+  st, st1: string;
+begin
+  Result := inherited;
+  if (Mode <> fAdd) or (Result = False) then
+    Exit;
+  st:=S.NSt(Q.QSelectOneRow('select emailaddr from v_users where id = :id$i', [Cth.GetControlValue(Self, 'cmb_id_user2')])[0]);
+  if st = '' then Exit;
+  st1 :=
+    'Иниинциатор: ' + Cth.GetControlValue(Self, 'edt_user1').AsString + #13#10 +
+    'Задача: ' + Cth.GetControlValue(Self, 'edt_name').AsString + #13#10
+  ;
+  Tasks.CreateTaskRoot(mytskopmail, [
+    ['to', st],
+    ['subject', 'Для Вас есть новая задача.'],
+    ['body', st1],
+    ['user-name', 'Учёт']]
+  );
+end;
+
+
 
 end.
+
+
+

@@ -506,7 +506,7 @@ begin
   InfoArr := [];
   pnl_Top.Visible := True;
   pnl_Bottom.Visible := False;
-  lbl_Caption.Caption := AddParam[0];
+  lbl_Caption.Caption := AddParam[0].AsString;
   //lbl_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
   Result := True;
 end;
