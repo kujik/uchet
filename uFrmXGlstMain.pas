@@ -1719,6 +1719,13 @@ v:=True;
     Frg1.Opt.SetTable('order_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderTypes;
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg2.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['name$d','Свойство заказа','200'],
+      ['used$i','Доступно','80','chb','e']
+    ]);
+    Frg2.Opt.SetTable('v_order_properties_for_type');
+    Frg2.Opt.SetWhere('where id_type = :id_type$i and active = 1 order by pos');
     Frg1.InfoArray:=[
     ];
   end
@@ -2703,6 +2710,10 @@ begin
     Fr.SetSqlParameters('id_format$i', [Frg1.ID]);
   if (FormDoc =  myfrm_J_Sgp_Acts) then
     Fr.SetSqlParameters('id$i;doctype$s', [Frg1.ID, Frg1.GetValueS('doctype')]);
+  if FormDoc = myfrm_R_OrderTypes then begin
+    Fr.SetSqlParameters('id_type$i', [Frg1.ID]);
+    Fr.Opt.Caption := 'Доступные свойства для типа "' + Frg1.GetValueS('name') + '"';
+  end;
 end;
 
 procedure TFrmXGlstMain.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -2710,6 +2721,12 @@ var
   ReadOnly: Boolean;
 begin
   if (FormDoc = myfrm_R_Test) then begin
+  end;
+  if FormDoc = myfrm_R_OrderTypes then begin
+    Q.QExecSql('delete from order_properties_for_type where id_type = :id_type$i and id_property = :id_property$i', [Frg1.ID, Fr.ID]);
+    if Value = 1 then
+      Q.QExecSql('insert into order_properties_for_type (id_type, id_property) values (:id_type$i, :id_property$i)', [Frg1.ID, Fr.ID]);
+    Fr.RefreshRecord;
   end;
 end;
 
