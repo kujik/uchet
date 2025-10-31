@@ -630,6 +630,7 @@ begin
     ['Стандартные форматы паспортов', myfrm_R_StdPspFormats, User.Roles([], [rOr_R_StdPspFormats_V, rOr_R_StdPspFormats_Ch])],
     ['Типы заказов', myfrm_R_OrderTypes, User.Role(rOr_R_OrderTypes_Ch)],
     ['Свойства заказов', myfrm_R_OrderProperties, User.Role(rOr_R_OrderTypes_Ch{//!!!})],
+    ['Регламенты заказов', myfrm_R_OrderReglament, User.Role(rOr_R_OrderTypes_Ch{//!!!})],
 
     ['Типы производственных участков', myfrm_R_WorkCellTypes, User.Role(rOr_R_WorkCellTypes_Ch)],
     [],

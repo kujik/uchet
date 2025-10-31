@@ -134,6 +134,7 @@ uses
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems, uFrmOGrepSnHistory,
+  uFrmOWedtOrReglament,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -621,7 +622,8 @@ begin
     myfrm_R_OrderTypes,
     myfrm_R_WorkCellTypes,
     myfrm_J_OrItemsInProd,
-    myfrm_J_ItmLog
+    myfrm_J_ItmLog,
+    myfrm_R_OrderReglament
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);
@@ -1006,6 +1008,9 @@ begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'order_properties', 'Свойства заказов', 400, 100,
       [['name$s', cntEdit, 'Наименование','1:100'], ['grp$i', cntNEdit, 'Группа', '1:99:0'], ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']]);
+  end
+  else if F = myfrm_Dlg_R_OrderReglament then begin
+    TFrmOWedtOrReglament.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopy, myfoDialog], fMode, AId, AAddParam);
   end
 
   else if F = myfrm_Dlg_Test then begin

@@ -3244,8 +3244,6 @@ object FrmMain: TFrmMain
         Alignment = taRightJustify
         Width = 200
       end>
-    ExplicitTop = 573
-    ExplicitWidth = 980
   end
   object TlbMain: TToolBar
     Left = 0
@@ -3266,7 +3264,6 @@ object FrmMain: TFrmMain
     TabOrder = 1
     Visible = False
     Wrapable = False
-    ExplicitWidth = 980
   end
   object FormsList: TToolBar
     Left = 0
@@ -3283,8 +3280,6 @@ object FrmMain: TFrmMain
     AllowTextButtons = True
     TabOrder = 2
     Transparent = False
-    ExplicitTop = 541
-    ExplicitWidth = 980
   end
   object MainMenu: TMainMenu
     Left = 808

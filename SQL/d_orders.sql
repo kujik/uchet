@@ -2340,6 +2340,39 @@ from
 select * from v_order_properties_for_type;
 
 
+--регламенты заказов (список решламентов)
+create table order_reglaments (
+  id number(11),
+  name varchar2(4000),
+  ids_types varchar2(4000),   
+  ids_properties varchar2(4000),   
+  types varchar2(4000),   
+  properties varchar2(4000),   
+  deadline number,
+  active number(1),
+  constraint pk_order_reglaments primary key (id)
+);   
+
+create unique index idx_order_reglaments_name on order_reglaments lower(name);
+  
+create sequence sq_order_reglaments nocache start with 100;
+
+create or replace trigger trg_order_reglaments_bi_r
+  before insert on order_reglaments for each row
+begin
+  select sq_order_properties.nextval into :new.id from dual;
+end;
+/
+
+
+
+
+
+
+
+
+
+
 
 
 --таблица по типам материалов в зказов (например, покупной металл), от

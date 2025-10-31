@@ -1707,7 +1707,7 @@ v:=True;
   end
   else if FormDoc = myfrm_R_OrderTypes then begin
     Caption:='Типы заказов';
-    Frg1.Options := Frg1.Options - [myogSorting];
+    Frg1.Options := Frg1.Options - [myogSorting] + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['pos$i','№','40'],
@@ -1731,7 +1731,7 @@ v:=True;
   end
   else if FormDoc = myfrm_R_OrderProperties then begin
     Caption:='Свойства заказов';
-    Frg1.Options := Frg1.Options - [myogSorting];
+    Frg1.Options := Frg1.Options - [myogSorting] + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['pos$i','№','40'],
@@ -1748,7 +1748,7 @@ v:=True;
   end
   else if FormDoc = myfrm_R_WorkCellTypes then begin
     Caption:='Типы производственных участков';
-    Frg1.Options := Frg1.Options - [myogSorting];
+    Frg1.Options := Frg1.Options - [myogSorting] + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['pos$i','№','40'],
@@ -1760,6 +1760,23 @@ v:=True;
     Frg1.Opt.SetTable('work_cell_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_WorkCellTypes;
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.InfoArray:=[
+    ];
+  end
+  else if FormDoc = myfrm_R_OrderReglament then begin
+    Caption:='Регламенты заказов';
+    Frg1.Options := Frg1.Options + [myogGridLabels];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['name$s','Наименование','200'],
+      ['types$s','Типы заказов','400'],
+      ['properties$s','Свойства заказов','400'],
+      ['deadline$i','Срок','60'],
+      ['active$i','Используется','80','pic']
+    ]);
+    Frg1.Opt.SetTable('order_reglaments');
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderReglament;
+    Frg1.Opt.SetButtons(1, 'ravecids');
     Frg1.InfoArray:=[
     ];
   end

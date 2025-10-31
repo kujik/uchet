@@ -165,7 +165,8 @@ uses
   uFrmAGLstLdapUsers in 'uFrmAGLstLdapUsers.pas' {FrmAGLstLdapUsers},
   uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory},
   uFrmCDedtAccount in 'uFrmCDedtAccount.pas' {FrmCDedtAccount},
-  uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame};
+  uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame},
+  uFrmOWedtOrReglament in 'uFrmOWedtOrReglament.pas' {FrmOWedtOrReglament};
 
 var
   MT: Integer;
