@@ -2360,7 +2360,26 @@ create sequence sq_order_reglaments nocache start with 100;
 create or replace trigger trg_order_reglaments_bi_r
   before insert on order_reglaments for each row
 begin
-  select sq_order_properties.nextval into :new.id from dual;
+  select sq_order_reglaments.nextval into :new.id from dual;
+end;
+/
+
+
+--регламенты заказов, строки регламента
+create table order_reglament_items (
+  id number(11),
+  id_work_cell_type number(11),
+  day_beg number(3),
+  day_end number(3),
+  constraint pk_order_reglament_items primary key (id)
+);   
+
+create sequence sq_order_reglament_items nocache start with 100;
+
+create or replace trigger trg_order_reglament_items_bi_r
+  before insert on order_reglament_items for each row
+begin
+  select sq_order_reglament_items.nextval into :new.id from dual;
 end;
 /
 
@@ -2373,6 +2392,8 @@ end;
 
 
 
+/*
+ОТМЕНИЛ!!!
 
 
 --таблица по типам материалов в зказов (например, покупной металл), от
@@ -2436,3 +2457,4 @@ begin
 end;
 /
 
+*/
