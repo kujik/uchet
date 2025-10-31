@@ -6,8 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils,
-  uLabelColors, uFrmBasicMdi, uFrDBGridEh, uFrMyPanelCaption, Vcl.ComCtrls
+  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, Vcl.ComCtrls,
+  uLabelColors, uFrmBasicMdi, uFrDBGridEh, uFrMyPanelCaption, uString
   ;
 
 type
@@ -26,7 +26,11 @@ type
     edt_name: TDBEditEh;
     nedtDeadline: TDBNumberEditEh;
   private
+    FAllProperties: TVarDynArray2;
     function  Prepare: Boolean; override;
+    procedure LoadData;
+    procedure LoadProperties;
+    procedure FrgTypesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
   public
   end;
 
@@ -37,7 +41,6 @@ implementation
 
 uses
   uWindows,
-  uString,
   uForms,
   uDBOra,
   uMessages,
@@ -62,6 +65,37 @@ begin
 //  FWHBounds.Y := 500;
 //  FWHBounds.X := 500;
   Caption := 'Регламент заказа';
+
+
+  FrgTypes.Opt.SetFields([
+    ['id$i','_id','100'],
+    ['pos$i','№','80'],
+    ['name$s','Тип заказа','300;w;h'],
+    ['used$i','X','40','chb','e']
+  ]);
+  FrgTypes.Opt.SetGridOperations('u');
+  //FrgTypes.Opt.SetCaption
+  FrgTypes.OnColumnsUpdateData := FrgTypesColumnsUpdateData;
+
+  FrgTypes.SetInitData('select id, pos, name, 0 as used from v_order_types order by pos',[]);
+  FrgTypes.Prepare;
+  FrgTypes.RefreshGrid;
+
+  FrgProperties.Opt.SetFields([
+    ['id$i','_id','100'],
+    ['pos$i','№','80'],
+    ['name$s','Свойство заказа','300;w;h'],
+    ['used$i','X','40','chb','e']
+  ]);
+  FrgProperties.Opt.SetGridOperations('u');
+  FrgProperties.SetInitData([]);
+  FrgProperties.Prepare;
+  FrgProperties.RefreshGrid;
+  LoadProperties;
+
+
+
+
   Result := True;
 (*
 
@@ -112,6 +146,44 @@ begin
     ['Заполнение накладной передачи на СГП (мастером)'#13#10]
   ];
   Result := True;*)
+end;
+
+procedure TFrmOWedtOrReglament.LoadProperties;
+var
+  i, j: Integer;
+  st: string;
+begin
+  st := '';
+  j := 0;
+  for i := 0 to FrgTypes.GetCount(False) - 1 do
+    if FrgTypes.GetValueI('used', i, False) = 1 then begin
+      S.ConcatStP(st, FrgTypes.GetValueS('id', i, False), ',');
+      Inc(j);
+    end;
+  if j = 0 then
+    FrgProperties.SetInitData([])
+  else
+    FrgProperties.SetInitData(
+      'select id, max(pos) as pos, max(name) as name, 0 as used '+
+      'from v_order_properties_for_type '+
+      'where id_type in ('+ st + ') and used = 1 ' +
+      'group by id '+
+      'having count(distinct id_type) = ' + IntToStr(j) + ' '+
+      'order by pos',
+      []
+    );
+  FrgProperties.RefreshGrid;
+end;
+
+procedure TFrmOWedtOrReglament.LoadData;
+begin
+  //FAllProperties := Q.QLoadToVarDynArray2('select ')
+end;
+
+procedure TFrmOWedtOrReglament.FrgTypesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+begin
+  Fr.SetValue('', Value, True);
+  LoadProperties;
 end;
 
 end.

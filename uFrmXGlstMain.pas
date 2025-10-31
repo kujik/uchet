@@ -2741,9 +2741,10 @@ begin
   end;
   if FormDoc = myfrm_R_OrderTypes then begin
     Q.QExecSql('delete from order_properties_for_type where id_type = :id_type$i and id_property = :id_property$i', [Frg1.ID, Fr.ID]);
-    if Value = 1 then
+    if Value.AsInteger = 1 then   //.AsInteger - обязательно, тут может быть текст!
       Q.QExecSql('insert into order_properties_for_type (id_type, id_property) values (:id_type$i, :id_property$i)', [Frg1.ID, Fr.ID]);
-    Fr.RefreshRecord;
+    Frg2.RefreshGrid;  //так как id не уникально в пределах запроса! - но можно переделать вью
+    Handled := True;
   end;
 end;
 

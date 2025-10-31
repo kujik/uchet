@@ -2329,6 +2329,7 @@ create or replace view v_order_properties_for_type as
 select
 --выведем используемые свойства для всех типов заказов
   t.id as id_type,
+--  p.id as id_property,
   p.*,
   case when pt.id_type is not null then 1 else 0 end as used
 from 
