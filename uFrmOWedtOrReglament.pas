@@ -7,11 +7,11 @@ uses
   Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
   Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, Vcl.ComCtrls,
-  uLabelColors, uFrmBasicMdi, uFrDBGridEh, uFrMyPanelCaption, uString
+  uLabelColors, uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uFrMyPanelCaption, uString
   ;
 
 type
-  TFrmOWedtOrReglament = class(TFrmBasicMdi)
+  TFrmOWedtOrReglament = class(TFrmBasicDbDialog)
     pnlTop: TPanel;
     pgcMain: TPageControl;
     tsPrioperties: TTabSheet;
@@ -24,13 +24,17 @@ type
     FrgProperties: TFrDBGridEh;
     FrgDays: TFrDBGridEh;
     edt_name: TDBEditEh;
-    nedtDeadline: TDBNumberEditEh;
+    nedt_deadline: TDBNumberEditEh;
+    procedure nedt_deadlineButtonClick(Sender: TObject; var Handled: Boolean);
   private
     FAllProperties: TVarDynArray2;
     function  Prepare: Boolean; override;
-    procedure LoadData;
+    procedure SetGridValues;
     procedure LoadProperties;
+    procedure GetPropertiesResult;
+    function  Save: Boolean;
     procedure FrgTypesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+    procedure FrgPropertiesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
   public
   end;
 
@@ -47,7 +51,8 @@ uses
   uData,
   uErrors,
   uPrintReport,
-  uOrders
+  uOrders,
+  uFrmBasicInput
   ;
 
 {$R *.dfm}
@@ -65,6 +70,25 @@ begin
 //  FWHBounds.Y := 500;
 //  FWHBounds.X := 500;
   Caption := 'Регламент заказа';
+  F.DefineFields:=[
+    ['id$i'],
+    ['name$s','V=1:4000::T'],
+    ['deadline$i','V=1:365:0:N'],
+    ['ids_types$s'],
+    ['ids_properties$s'],
+    ['types$s'],
+    ['properties$s']
+  ];
+
+  View := 'order_reglaments';
+  Table := 'order_reglaments';
+
+  Result := inherited;
+  if not Result then
+    Exit;
+  nedt_deadline.ReadOnly := True;
+  //SetControlsEditable([], True);
+
 
 
   FrgTypes.Opt.SetFields([
@@ -88,11 +112,11 @@ begin
     ['used$i','X','40','chb','e']
   ]);
   FrgProperties.Opt.SetGridOperations('u');
+  FrgProperties.OnColumnsUpdateData := FrgPropertiesColumnsUpdateData;
   FrgProperties.SetInitData([]);
   FrgProperties.Prepare;
   FrgProperties.RefreshGrid;
-  LoadProperties;
-
+  SetGridValues;
 
 
 
@@ -151,13 +175,15 @@ end;
 procedure TFrmOWedtOrReglament.LoadProperties;
 var
   i, j: Integer;
-  st: string;
+  st, st2: string;
 begin
   st := '';
+  st2 := '';
   j := 0;
   for i := 0 to FrgTypes.GetCount(False) - 1 do
     if FrgTypes.GetValueI('used', i, False) = 1 then begin
       S.ConcatStP(st, FrgTypes.GetValueS('id', i, False), ',');
+      S.ConcatStP(st2, FrgTypes.GetValueS('name', i, False), '; ');
       Inc(j);
     end;
   if j = 0 then
@@ -173,17 +199,79 @@ begin
       []
     );
   FrgProperties.RefreshGrid;
+  F.SetProp('ids_types', st);
+  F.SetProp('types', st2);
 end;
 
-procedure TFrmOWedtOrReglament.LoadData;
+procedure TFrmOWedtOrReglament.nedt_deadlineButtonClick(Sender: TObject; var Handled: Boolean);
+var
+  va: TVarDynArray;
 begin
-  //FAllProperties := Q.QLoadToVarDynArray2('select ')
+  va := [nedt_deadline.Value];
+  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Дней по регламенту', 150, 80,
+   [[cntNEdit, 'Дней:', '1:365:0:N', 50]], va, va, [['']], nil) >= 0 then begin
+    nedt_deadline.Value := va[0].AsInteger;
+  end;
 end;
+
+procedure TFrmOWedtOrReglament.GetPropertiesResult;
+var
+  i, j: Integer;
+  st, st2: string;
+begin
+  st := '';
+  st2 := '';
+  j := 0;
+  for i := 0 to FrgProperties.GetCount(False) - 1 do
+    if FrgProperties.GetValueI('used', i, False) = 1 then begin
+      S.ConcatStP(st, FrgProperties.GetValueS('id', i, False), ',');
+      S.ConcatStP(st2, FrgProperties.GetValueS('name', i, False), '; ');
+      Inc(j);
+    end;
+  F.SetProp('ids_properties', st);
+  F.SetProp('properties', st2);
+end;
+
+
+procedure TFrmOWedtOrReglament.SetGridValues;
+var
+  i: Integer;
+  va: TVarDynArray;
+begin
+  va := A.Explode(F.GetProp('ids_types'), ',', True);
+  for i := 0 to FrgTypes.GetCount(False) - 1 do
+    if A.InArray(FrgTypes.GetValueI('id', i, False), va) then
+      FrgTypes.SetValue('used', i, False, 1);
+  FrgTypes.Invalidate;
+  LoadProperties;
+  va := A.Explode(F.GetProp('ids_properties'), ',', True);
+  for i := 0 to FrgProperties.GetCount(False) - 1 do
+    if A.InArray(FrgProperties.GetValueI('id', i, False), va) then
+      FrgProperties.SetValue('used', i, False, 1);
+  FrgProperties.Invalidate;
+end;
+
+function TFrmOWedtOrReglament.Save: Boolean;
+var
+  st, st1: string;
+begin
+  Result := inherited;
+  if (Mode = fDelete) then
+    Exit;
+end;
+
 
 procedure TFrmOWedtOrReglament.FrgTypesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
   Fr.SetValue('', Value, True);
   LoadProperties;
 end;
+
+procedure TFrmOWedtOrReglament.FrgPropertiesColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+begin
+  Fr.SetValue('', Value, True);
+  GetPropertiesResult;
+end;
+
 
 end.

@@ -2335,7 +2335,7 @@ select
 from 
   order_types t
   cross join order_properties p
-  left join order_properties_for_type pt on pt.id_type = t.id and pt.id_property = p.id
+  left join order_properties_for_type pt on pt.id_type = t.id and pt.id_property = p.id and p.active = 1
 ;
 
 select * from v_order_properties_for_type;
@@ -2459,3 +2459,10 @@ end;
 /
 
 */
+
+
+
+select id, max(pos) as pos, max(name) as name, 0, count(id_type) as used from v_order_properties_for_type where id_type in (100,102) and used = 1 group by id having count(distinct id_type) = 2 order by pos;
+select id, pos, name,id_type as used from v_order_properties_for_type where id_type in (100,102) order by pos;-- group by id;-- having count(distinct id_type) = 5 order by pos;
+
+

@@ -73,6 +73,7 @@ begin
     [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],[],
     [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[mbtTest]]
   );
+  Frg1.Opt.SetButtonsIfEmpty([1000]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
   SetCbEstimate;
   Frg1.InfoArray:=[
