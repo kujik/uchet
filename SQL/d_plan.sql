@@ -31,6 +31,7 @@ begin
 end;
 /
 
+/*
 begin
 insert into work_cell_types (id, name, code, posstd, refers_to_prod_area, active) values (1, 'Конструктора', 'КНС', 1, 0, 1);
 insert into work_cell_types (id, name, code, posstd, refers_to_prod_area, active) values (2, 'Технологи', 'ТХН', 2, 0, 1);
@@ -39,18 +40,19 @@ insert into work_cell_types (id, name, code, posstd, refers_to_prod_area, active
 insert into work_cell_types (id, name, code, posstd, refers_to_prod_area, active) values (5, 'СГП', 'СГП', -2, 0, 1);
 end;
 /
+*/
 
 
 create or replace view v_work_cell_types as
   select 
-    id, code, posstd, refers_to_prod_area,
+    t.*,
     case 
       when posstd is null then pos
       when nvl(posstd, 0) > 0 then posstd
       when nvl(posstd, 0) < 0 then 10000 - posstd
     end as posall
   from 
-    work_cell_types 
+    work_cell_types t
 ;  
 
 select * from v_work_cell_types;
@@ -76,5 +78,5 @@ create or replace trigger trg_work_cells_bi_r
 begin
   select sq_work_cells.nextval into :new.id from dual;
 end;
-/
+/ 
 

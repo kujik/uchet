@@ -622,7 +622,7 @@ create or replace view v_orders as (
     and z.id_zakaz (+) = o.id_itm
     and sz.id_status (+) = z.id_status
     and rsv.id_doc (+) = o.id_itm
-    and timemsqnt.id_order (+) = o.id
+    and timemsqnt.id_order (+) = o.id 
     and ot.id (+) = o.id_type2
 );
 

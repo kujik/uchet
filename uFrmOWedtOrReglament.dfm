@@ -30,7 +30,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
         object edt_name: TDBEditEh
           Left = 57
           Top = 14
-          Width = 720
+          Width = 733
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 49
@@ -43,6 +43,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
+          ExplicitWidth = 729
         end
         object nedt_deadline: TDBNumberEditEh
           Left = 992
@@ -69,13 +70,15 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
           ExplicitLeft = 988
         end
         object chb_active: TDBCheckBoxEh
-          Left = 792
-          Top = 13
+          Left = 796
+          Top = 18
           Width = 97
           Height = 17
+          Anchors = [akTop, akRight]
           Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
           DynProps = <>
           TabOrder = 2
+          ExplicitLeft = 792
         end
       end
       object pgcMain: TPageControl
@@ -83,7 +86,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
         Top = 41
         Width = 1046
         Height = 429
-        ActivePage = tsDays
+        ActivePage = tsPrioperties
         Align = alClient
         TabOrder = 1
         ExplicitWidth = 1042
@@ -129,7 +132,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                 Width = 317
                 Height = 327
                 ExplicitWidth = 317
-                ExplicitHeight = 327
+                ExplicitHeight = 326
                 inherited DbGridEh1: TDBGridEh
                   Width = 315
                   Height = 304
@@ -155,7 +158,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                 inherited pnlStatusBar: TPanel
                   Top = 305
                   Width = 315
-                  ExplicitTop = 305
+                  ExplicitTop = 304
                   ExplicitWidth = 315
                   inherited lblStatusBarL: TLabel
                     Height = 13
@@ -169,7 +172,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
               end
               inherited pnlLeft: TPanel
                 Height = 327
-                ExplicitHeight = 327
+                ExplicitHeight = 326
               end
               inherited pnlTop: TPanel
                 Width = 327
@@ -182,7 +185,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
               inherited pnlBottom: TPanel
                 Top = 381
                 Width = 327
-                ExplicitTop = 381
+                ExplicitTop = 380
                 ExplicitWidth = 327
               end
               inherited PrintDBGridEh1: TPrintDBGridEh
@@ -220,7 +223,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
               TabOrder = 0
               ExplicitLeft = 1
               ExplicitTop = 1
-              ExplicitWidth = 707
+              ExplicitWidth = 703
               inherited bvl1: TBevel
                 Width = 707
                 ExplicitWidth = 707
@@ -240,8 +243,8 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
               inherited pnlGrid: TPanel
                 Width = 697
                 Height = 327
-                ExplicitWidth = 697
-                ExplicitHeight = 327
+                ExplicitWidth = 693
+                ExplicitHeight = 326
                 inherited DbGridEh1: TDBGridEh
                   Width = 695
                   Height = 304
@@ -267,8 +270,8 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                 inherited pnlStatusBar: TPanel
                   Top = 305
                   Width = 695
-                  ExplicitTop = 305
-                  ExplicitWidth = 695
+                  ExplicitTop = 304
+                  ExplicitWidth = 691
                   inherited lblStatusBarL: TLabel
                     Height = 13
                     ExplicitHeight = 13
@@ -281,21 +284,21 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
               end
               inherited pnlLeft: TPanel
                 Height = 327
-                ExplicitHeight = 327
+                ExplicitHeight = 326
               end
               inherited pnlTop: TPanel
                 Width = 707
-                ExplicitWidth = 707
+                ExplicitWidth = 703
               end
               inherited pnlContainer: TPanel
                 Width = 707
-                ExplicitWidth = 707
+                ExplicitWidth = 703
               end
               inherited pnlBottom: TPanel
                 Top = 381
                 Width = 707
-                ExplicitTop = 381
-                ExplicitWidth = 707
+                ExplicitTop = 380
+                ExplicitWidth = 703
               end
               inherited PrintDBGridEh1: TPrintDBGridEh
                 BeforeGridText_Data = {
@@ -324,17 +327,17 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
             Height = 383
             Align = alClient
             TabOrder = 0
-            ExplicitTop = 101
-            ExplicitWidth = 1038
-            ExplicitHeight = 300
+            ExplicitTop = 18
+            ExplicitWidth = 1034
+            ExplicitHeight = 382
             inherited pnlGrid: TPanel
               Width = 1028
               Height = 329
-              ExplicitWidth = 1024
-              ExplicitHeight = 346
+              ExplicitWidth = 560
+              ExplicitHeight = 164
               inherited DbGridEh1: TDBGridEh
-                Width = 1026
-                Height = 306
+                Width = 558
+                Height = 141
                 OnCellClick = FrgDaysDbGridEh1CellClick
                 Columns = <
                   item
@@ -348,18 +351,20 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                   ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
-                  ExplicitHeight = 120
+                  ExplicitHeight = 102
                   inherited PRowDetailPanel: TPanel
                     Width = 44
+                    Height = 100
                     ExplicitWidth = 44
+                    ExplicitHeight = 100
                   end
                 end
               end
               inherited pnlStatusBar: TPanel
-                Top = 307
-                Width = 1026
-                ExplicitTop = 324
-                ExplicitWidth = 1022
+                Top = 142
+                Width = 558
+                ExplicitTop = 142
+                ExplicitWidth = 558
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -372,21 +377,21 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
             end
             inherited pnlLeft: TPanel
               Height = 329
-              ExplicitHeight = 346
+              ExplicitHeight = 164
             end
             inherited pnlTop: TPanel
               Width = 1038
-              ExplicitWidth = 1034
+              ExplicitWidth = 570
             end
             inherited pnlContainer: TPanel
               Width = 1038
-              ExplicitWidth = 1034
+              ExplicitWidth = 570
             end
             inherited pnlBottom: TPanel
               Top = 383
               Width = 1038
-              ExplicitTop = 400
-              ExplicitWidth = 1034
+              ExplicitTop = 218
+              ExplicitWidth = 570
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -410,10 +415,9 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
             Height = 18
             Align = alTop
             TabOrder = 1
-            ExplicitTop = 8
-            ExplicitWidth = 1038
+            ExplicitWidth = 570
             inherited bvl1: TBevel
-              Width = 1038
+              Width = 570
               ExplicitWidth = 707
             end
           end
@@ -462,11 +466,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
     ExplicitWidth = 1052
     inherited lblStatusBarR: TLabel
       Left = 983
-      Height = 14
       ExplicitLeft = 983
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer
