@@ -337,14 +337,14 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 
-alter table orders add dt_to_prod date;
+--alter table orders add id_type2 number;
 --alter table orders add has_prod number(1) default 0;
 /*alter table orders add qnt_boards_m2 number;
 alter table orders add qnt_edges_m number;
 alter table orders add qnt_panels_w_drill number;
 alter table orders add has_prod number(1) default 0;
 */
---alter table orders add constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id);
+alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
   id number(11),
@@ -368,6 +368,7 @@ create table orders (
   id_target number(11),
   target varchar2(40),               -- подпапка в стандартных проектах итм (П - производство, остальные берутся из справочника стандартных форматов) 
   id_type number(1),                 -- 1 - новый, 2 рекламация, 3 эксперимент 
+  id_type2 number,                   -- тип заказа из справочника "типы заказов" 
   or_reference varchar(16),          -- номер заказа, по которому рекламация, в виде текста 
   id_manager number(11),             -- айди человека, оформившего заказ
   dt_beg date,                       -- дата создания паспорта
@@ -425,7 +426,8 @@ create table orders (
   --qnt_boards_m2 number,              -- метраж плитных материалов 
   --qnt_edges_m number,                -- метраж кромки
   --qnt_panels_w_drill number,         -- количество панелей со сверловкой 
-  has_prod number(1) default 0,      -- в составе заказа есть про изводственные материалы 
+  has_prod number(1) default 0,      -- в составе заказа есть про изводственные материалы
+  ids_order_properties varchar2(4000),  --айди свойств заказа через "," 
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
   constraint fk_orders_manager foreign key (id_manager) references adm_users(id),
@@ -433,7 +435,8 @@ create table orders (
   constraint fk_orders_customer foreign key (id_customer) references ref_customers(id),
   constraint fk_orders_customer_contact foreign key (id_customer_contact) references ref_customer_contact(id),
   constraint fk_orders_customer_org foreign key (id_customer_org) references ref_customer_legal(id),
-  constraint fk_orders_estimates foreign key (id_or_format_estimates) references or_format_estimates(id)
+  constraint fk_orders_estimates foreign key (id_or_format_estimates) references or_format_estimates(id),
+  constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id)
   --constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id) 
 );
 
@@ -502,11 +505,13 @@ create or replace view v_orders as (
     rcl.legalname as customerlegal,
     rcl.inn as customerinn,
     au.name as managername,
-    (case 
-      when o.id_type = 1 then 'новый'
-      when o.id_type = 2 then 'рекламация'
-      when o.id_type = 3 then 'эксперимент'
-      else ''
+    (case when o.id_type2 is not null then ot.name else
+        (case 
+          when o.id_type = 1 then 'новый'
+          when o.id_type = 2 then 'рекламация'
+          when o.id_type = 3 then 'эксперимент'
+          else ''
+         end)
     end) as typename,
     pa.shortname as area_short,
     decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
@@ -597,7 +602,8 @@ create or replace view v_orders as (
      from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
-    (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv
+    (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv,
+    order_types ot
   where
     ro.id(+) = o.id_organization and
     rc.id(+) = o.id_customer and  
@@ -617,6 +623,7 @@ create or replace view v_orders as (
     and sz.id_status (+) = z.id_status
     and rsv.id_doc (+) = o.id_itm
     and timemsqnt.id_order (+) = o.id
+    and ot.id (+) = o.id_type2
 );
 
 create or replace view v_orders_list as 
@@ -1866,7 +1873,12 @@ begin
       insert into estimates (id_std_item, id_order_item, isempty, dt) values 
         (null, COrderItems.id, 0, trunc(sysdate))
         returning id into FIdEst;
-      select id into i from estimates where id_std_item = COrderItems.id_std_item; 
+      begin  
+        select id into i from estimates where id_std_item = COrderItems.id_std_item;
+      exception
+        when  no_data_found then
+        i := null;
+      end; 
       if i is not null then
         p_copyestimate(FIdEst, i, FQnt);
       end if;
@@ -2342,6 +2354,7 @@ select * from v_order_properties_for_type;
 
 
 --регламенты заказов (список решламентов)
+alter table order_reglaments add sn_4 number; 
 create table order_reglaments (
   id number(11),
   name varchar2(4000),
@@ -2349,6 +2362,10 @@ create table order_reglaments (
   ids_properties varchar2(4000),   
   types varchar2(4000),   
   properties varchar2(4000),   
+  sn_1 number,
+  sn_2 number,
+  sn_3 number,
+  sn_4 number,
   deadline number,
   active number(1),
   constraint pk_order_reglaments primary key (id)
@@ -2367,12 +2384,17 @@ end;
 
 
 --регламенты заказов, строки регламента
+drop table order_reglament_items cascade constraints;
+--alter table order_reglament_items  add color number;
 create table order_reglament_items (
   id number(11),
+  id_reglament number(11),
   id_work_cell_type number(11),
   day_beg number(3),
   day_end number(3),
-  constraint pk_order_reglament_items primary key (id)
+  color number,
+  constraint pk_order_reglament_items primary key (id),
+  constraint fk_order_reglament_items_r foreign key (id_reglament) references order_reglaments(id) on delete cascade 
 );   
 
 create sequence sq_order_reglament_items nocache start with 100;
@@ -2459,10 +2481,5 @@ end;
 /
 
 */
-
-
-
-select id, max(pos) as pos, max(name) as name, 0, count(id_type) as used from v_order_properties_for_type where id_type in (100,102) and used = 1 group by id having count(distinct id_type) = 2 order by pos;
-select id, pos, name,id_type as used from v_order_properties_for_type where id_type in (100,102) order by pos;-- group by id;-- having count(distinct id_type) = 5 order by pos;
 
 
