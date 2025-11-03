@@ -166,7 +166,8 @@ uses
   uFrmOGrepSnHistory in 'uFrmOGrepSnHistory.pas' {FrmOGrepSnHistory},
   uFrmCDedtAccount in 'uFrmCDedtAccount.pas' {FrmCDedtAccount},
   uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame},
-  uFrmOWedtOrReglament in 'uFrmOWedtOrReglament.pas' {FrmOWedtOrReglament};
+  uFrmOWedtOrReglament in 'uFrmOWedtOrReglament.pas' {FrmOWedtOrReglament},
+  uFrmOGrepEstimatePrices in 'uFrmOGrepEstimatePrices.pas' {FrmOGrepEstimatePrices};
 
 var
   MT: Integer;

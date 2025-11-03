@@ -629,9 +629,8 @@ begin
     ['Типовые проекты', myfrm_R_StdProjects, User.Roles([], [rOr_R_StdProjects_V, rOr_R_StdProjects_Ch])],
     ['Стандартные форматы паспортов', myfrm_R_StdPspFormats, User.Roles([], [rOr_R_StdPspFormats_V, rOr_R_StdPspFormats_Ch])],
     ['Типы заказов', myfrm_R_OrderTypes, User.Role(rOr_R_OrderTypes_Ch)],
-    ['Свойства заказов', myfrm_R_OrderProperties, User.Role(rOr_R_OrderTypes_Ch{//!!!})],
-    ['Регламенты заказов', myfrm_R_OrderReglament, User.IsDeveloper{//!!!}],
-
+    ['Свойства заказов', myfrm_R_OrderProperties, User.Role(rOr_R_OrderProperties_Ch)],
+    ['Регламенты заказов', myfrm_R_OrderReglament, User.Roles([], [rOr_R_OrderReglaments_V, rOr_R_OrderReglaments_Ch])],
     ['Типы производственных участков', myfrm_R_WorkCellTypes, User.Role(rOr_R_WorkCellTypes_Ch)],
     [],
     ['Стандартные изделия', myfrm_R_OrderStdItems, User.Roles([], [rOr_R_StdItems_V, rOr_R_StdItems_Ch, rOr_R_StdItems_Estimate])],
@@ -687,6 +686,7 @@ begin
     ['Номенклатура, выданная сверх смет', myfrm_Rep_ItmNomOverEstimate, User.Roles([], [rOr_Rep_ItmNomOverEstimate])],
     [],
     ['Поиск сметной позиции', '_', User.Role(rOr_Other_Order_FindEstimate)],
+    ['Загрузка цен по смете', myfrm_Dlg_Rep_EstimatePrices, User.Role(rOr_Rep_EstimatePrices)],
     ['Информация по ИТМ', '_', User.Role(rOr_Other_ItmInfo)],
     ['Журнал действий пользователей ИТМ', myfrm_J_ItmLog, User.Role(rOr_Other_J_ItmLog)],
     ['Расширенный справочник номенклатуры ITM', myfrm_R_Or_ItmExtNomencl, User.Role(rOr_Other_ItmExtNomencl)]

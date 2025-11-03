@@ -134,7 +134,7 @@ uses
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems, uFrmOGrepSnHistory,
-  uFrmOWedtOrReglament,
+  uFrmOWedtOrReglament, uFrmOGrepEstimatePrices,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -734,6 +734,9 @@ begin
   end
   else if F = myfrm_Rep_StaffSchedule then begin
     TFrmWGrepStaffSchedule.Show(Application, F, MyFormOptions, fNone, 0, null);
+  end
+  else if F = myfrm_Dlg_Rep_EstimatePrices then begin
+    TFrmOGrepEstimatePrices.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
   end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
