@@ -521,6 +521,7 @@ create or replace view v_orders as (
       when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
       when o.cashtype = 1 and o.account is not null then 'безнал'
       else ''
+
     end) as cashtypename,
     (case 
       when o.cashtype = 1 and o.account is null then 0
@@ -2251,11 +2252,12 @@ where
 --OK
 
 --таблица по типам заказов (рекламация, дозаказ...)
-alter table order_types add posstd number(4);
+alter table order_types add is_complaint number(1);
 create table order_types (
   id number(11),
   name varchar(100),
   need_ref number(1),
+  is_complaint number(1),
   active number(1), 
   pos number(3),
   posstd number(4),

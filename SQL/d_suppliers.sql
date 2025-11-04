@@ -1830,7 +1830,7 @@ select price_main , price_last from v_spl_minremains;
 
 
 
-
+--select p.price_last from dv.nomenclatura n, v_spl_nom_lastibprice p where n.id_nomencl = p.id_nomencl (+) and n.name = :name$s and p.rn = 1;
 
 
 

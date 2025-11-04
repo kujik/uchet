@@ -182,7 +182,6 @@ inherited Dlg_Order: TDlg_Order
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
-    ExplicitWidth = 1268
     object pnl_Header_3: TPanel
       Left = 691
       Top = 1
@@ -584,12 +583,17 @@ inherited Dlg_Order: TDlg_Order
       object cmb_OrderType: TDBComboBoxEh
         Left = 136
         Top = 38
-        Width = 85
+        Width = 108
         Height = 21
         ControlLabel.Caption = #1042#1080#1076' '#1079#1072#1082#1072#1079#1072
         ControlLabelLocation.Position = lpLeftCenterEh
+        Anchors = [akLeft, akTop, akRight]
         DynProps = <>
-        EditButtons = <>
+        EditButtons = <
+          item
+            Style = ebsEllipsisEh
+            OnClick = cmb_OrderTypeEditButtons0Click
+          end>
         TabOrder = 3
         Visible = True
       end
@@ -663,13 +667,13 @@ inherited Dlg_Order: TDlg_Order
         Visible = True
       end
       object cmb_OrderReference: TDBComboBoxEh
-        Left = 221
+        Left = 241
         Top = 38
-        Width = 113
+        Width = 93
         Height = 21
         ControlLabel.Caption = #1056#1077#1082#1083#1072#1084#1072#1094#1080#1103' '#1085#1072
         ControlLabelLocation.Position = lpLeftCenterEh
-        Anchors = [akLeft, akTop, akRight]
+        Anchors = [akTop, akRight]
         DynProps = <>
         EditButtons = <>
         MaxLength = 400

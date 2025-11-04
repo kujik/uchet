@@ -111,6 +111,13 @@ const
   myOrFinalizeUpd = 7;
   myOrFinalizeMontage = 8;
 
+  cOrderNewTypeID = 100000;
+
+  cOrderReglamentSnTypes: array[1..4] of string = (
+    'Плитные/кромка','Фурнитура','ЛКМ','Заказн. Поз'
+  );
+
+
 implementation
 
 uses

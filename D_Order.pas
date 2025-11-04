@@ -140,6 +140,8 @@ type
     procedure cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
     procedure mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure cmb_OrderTypeEditButtons0Click(Sender: TObject;
+      var Handled: Boolean);
   private
     { Private declarations }
     IDOld: Variant;
@@ -179,6 +181,8 @@ type
     ItemsToEstimateChange: TVarDynArray;  //айди записей в заказе, для которых после сохранения заказа надо изменить/перезагрузить смету. пападают все добавленнные или измененныые в любых полях записи
     NoChangeItems: Boolean;       //если установлено, то нельзя менять наименования изделий и количества, добавлять строки. устанавливается сейчас, если статус в ИТМ >= Выполнен
     FOrderChanges, FOrderItemChanges: TVarDynArray2;
+    FOrderTypes: TVarDynArray2;
+    FNewOrderType: Integer;       //1 - новый формат заказа (использует список типов заказа, выбор своййств для расчета даты отгрузки)
     function Prepare: Boolean; override;
     function GetFieldsArrPos(FieldName: string): Integer;
     function GetBegValueFromFieldsArr(FieldName: string): Variant;
@@ -231,6 +235,7 @@ type
     procedure SetOrderSaveStatusText(Text: string);
     procedure HideEmptyItems;
     function VerifyItm: Boolean;
+    function  GetOrderTypeOldValue: Variant;
   public
     { Public declarations }
     constructor ShowDialog(aOwner: TComponent; aFormDoc: string; aMode: TDialogType; aID: Variant; AMyFormOptions: TMyFormOptions; aV: Variant);
@@ -459,6 +464,13 @@ begin
   //показывать ли цены/суммы
   ShowPrices := (Mode <> fView) or (User.Role(rOr_J_Orders_V));
 
+  //новывй формат данных заказа №1
+  FNewOrderType := 0;
+  if (cOrderNewTypeID > 0) then begin
+    if (Mode in [fAdd, fCopy]) or IsTemplate or (ID >= cOrderNewTypeID) then
+      FNewOrderType := 1;
+  end;
+
   //массив
   //имя контрола, соответствующего полю, может быть пустым
   //начальное значение
@@ -538,11 +550,18 @@ begin
 
   FieldsL := '';
   HasWarn := False;
+  if (FNewOrderType = 1) then begin
+    //подменим поле для типа заказа
+    FieldsArr[GetFieldsArrPos('id_type'), cFieldName] := 'id_type2';
+    FieldsArr[GetFieldsArrPos('id_type2'), cFieldNameId] := 'id_type2$i';
+  end;
+
   if Mode in [fEdit, fCopy, fDelete, fView] then begin
     //создадим запрос
-    for i := 0 to High(FieldsArr) do
+    for i := 0 to High(FieldsArr) do  begin
       if FieldsArr[i][cFieldName] <> '' then
         S.ConcatStP(FieldsL, FieldsArr[i][cFieldName], ', ');
+    end;
     //получим данные из основной таблицы
     va1 := Q.QLoadToVarDynArray2('select ' + FieldsL + ' from v_orders where id = :id$i', [ID]);
     //заполним начальные значения полей
@@ -630,11 +649,14 @@ begin
 
   Id_Org_Old := FieldsArr[GetFieldsArrPos('id_organization')][cBegValue];
 
-//  va2:=Orders.GetAreasArray;
-//  va2[0][0]:='ПЩ';
-//  Cth.AddToComboBoxEh(cmb_Area, va2);
-//  Cth.AddToComboBoxEh(cmb_Area, [['ПЩ', '0'], ['И', '1']]);
-  Cth.AddToComboBoxEh(cmb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  if FNewOrderType = 1 then begin
+    FOrderTypes := Q.QLoadToVarDynArray2('select id, need_ref, is_complaint from v_order_types where (active = 1 or id = :id$i) order by posall', [FieldsArr[GetFieldsArrPos('id_type2'), cBegValue]]);
+    Q.QLoadToDBComboBoxEh('select name, id from v_order_types where (active = 1 or id = :id$i) order by posall', [FieldsArr[GetFieldsArrPos('id_type2'), cBegValue]], cmb_OrderType, cntComboLK);
+  end
+  else begin
+    FOrderTypes := [[1, 0, 0], [2, 1, 1], [3, 0, 0]];
+    Cth.AddToComboBoxEh(cmb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
+  end;
   Cth.AddToComboBoxEh(cmb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
   Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], cmb_Format, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
@@ -1266,7 +1288,7 @@ begin
     end;
 *)
   //сохраним данные по причинам рекламаций
-    if Cth.GetControlValue(cmb_OrderType) = '2' then begin
+    if GetOrderTypeOldValue = '2' then begin
       for i := 0 to High(Complaints) do begin
         if (S.NNum(Complaints[i][3]) <> 0) and (S.NNum(Complaints[i][2]) = 0)        //вставим если она добавлена
           then
@@ -1374,7 +1396,7 @@ begin
   end;
   if (Sender = cmb_OrderType) then begin
     SetComplaints;
-    if (cmb_OrderType.Value = '1') or (cmb_OrderType.Value = '3') then begin
+    if (GetOrderTypeOldValue= '1') or (GetOrderTypeOldValue = '3') then begin
       cmb_OrderReference.Text := '';
     end;
   end;
@@ -1460,11 +1482,11 @@ begin
       SetInvalidIfEmpty(c, (FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (cmb_Organization.Value = '-1')));
       if c = cmb_OrderType  //тип заказа не может быть пустым, не может рекламация для производства, не может эксперимент не для производства
         then
-        Cth.SetErrorMarker(c, (cmb_OrderType.Text = '') or ((cmb_OrderType.Value = '2') and (cmb_Organization.Value = '-1')) or ((cmb_OrderType.Value = '3') and (cmb_Organization.Value <> '-1')));
+        Cth.SetErrorMarker(c, (GetOrderTypeOldValue.AsString = '') or ((GetOrderTypeOldValue = '2') and (cmb_Organization.Value = '-1')) or ((GetOrderTypeOldValue = '3') and (cmb_Organization.Value <> '-1')));
       if c = cmb_OrderReference then
-        Cth.SetErrorMarker(c, (cmb_OrderType.Value = '1') and (cmb_OrderReference.Text <> '') or (cmb_OrderType.Value = '2') and (cmb_OrderReference.Text = ''));
+        Cth.SetErrorMarker(c, (GetOrderTypeOldValue = '1') and (cmb_OrderReference.Text <> '') or (GetOrderTypeOldValue = '2') and (cmb_OrderReference.Text = ''));
       if c = edt_Complaints then
-        Cth.SetErrorMarker(c, (cmb_OrderType.Value = '2') and (edt_Complaints.Text = ''));
+        Cth.SetErrorMarker(c, (GetOrderTypeOldValue = '2') and (edt_Complaints.Text = ''));
       if c = edt_CustomerINN then
         SetInvalidIfEmpty(c, cmb_CustomerLegalName.Text = '');
       //для сметы - должен быть в списке
@@ -1506,7 +1528,7 @@ procedure TDlg_Order.SetComplaints;
 var
   i: Integer;
 begin
-  if S.NSt(Cth.GetControlValue(cmb_OrderType)) = '2' then begin
+  if S.NSt(GetOrderTypeOldValue) = '2' then begin
   //это рекламация
     //покажем строку причин рекламации
     edt_Complaints.Visible := True;
@@ -2048,6 +2070,14 @@ begin
   if ItemIndex >= 0 then begin
     ImageIndex := 0;
   end;
+end;
+
+procedure TDlg_Order.cmb_OrderTypeEditButtons0Click(Sender: TObject; var Handled: Boolean);
+begin
+  inherited;
+  if FNewOrderType <> 1 then
+    Exit;
+  MyInfoMessage('!!!');
 end;
 
 procedure TDlg_Order.chb_ViewEmptyItemsClick(Sender: TObject);
@@ -3568,6 +3598,27 @@ begin
 
 //}
 end;
+
+
+
+{==============================================================================}
+function TDlg_Order.GetOrderTypeOldValue: Variant;
+//вернем результат типа заказа в старом формате
+//(если для типа признак Рекламация, то "2", иначе "1")
+var
+  i: Integer;
+begin
+  Result := Cth.GetControlValue(cmb_OrderType);
+  if (FNewOrderType = 0) or (Result.AsString = '') then
+    Exit;
+  for i := 0 to High(FOrderTypes) do
+    if (FOrderTypes[i][0].AsString = Result.AsString) and (FOrderTypes[i][2] = 1) then begin
+      Result := '2';
+      Exit;
+    end;
+  Result := '1';
+end;
+
 
 end.
 
