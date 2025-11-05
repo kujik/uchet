@@ -286,6 +286,7 @@ var
   va2: TVarDynArray2;
   st, st2: string;
 begin
+  FrgDays.Options := [myogNoTextEditing];
   //пол€
   va2 := [
     ['id$i','_id','100'],
@@ -309,15 +310,15 @@ begin
   //строка дл€   вставки в запрос дл€ загрузки через юнион значений по снабжению, наименовани€ сохранены в массиве-константе в коде, значени€ последнего дн€ дл€ них хран€тс€ в основной таблице регламента
   for i := 1 to High(cOrderReglamentSnTypes) do
     st2 := st2 + ' union all select 100000' + IntToStr(i) + ', 0, 100000' + IntToStr(i) + ' as posall, null,''' +  cOrderReglamentSnTypes[i] + '''' + st +  ' from dual ';
-  FrgDays.SetInitData('select id, posstd, posall, null as color, name' + st + ' from v_work_cell_types where active = 1 ' + st2 + ' order by posall',[]);
+  FrgDays.SetInitData('select id, posstd, posall, color, name' + st + ' from v_work_cell_types where active = 1 ' + st2 + ' order by posall',[]);
   FrgDays.MemTableEh1.FieldDefs.Clear;  //!!! иначе ошибка, веро€тно это должно быть в FrgDays.Prepare
   //переинициализируем грид
   //!!! скорее всего тут есть утечки пам€ти! нестандартныый режим повторной инициализации!!!
   FrgDays.MemTableEh1.Close;
   FrgDays.Prepare;
   //сбросим вызов редактолорна в €чейке по клику - надо добавить в параметры фркейма!!!
-  for i := 0 to FrgDays.DbGridEh1.Columns.Count - 1 do
-    FrgDays.DbGridEh1.Columns[i].TextEditing := False;
+  //for i := 0 to FrgDays.DbGridEh1.Columns.Count - 1 do
+  //  FrgDays.DbGridEh1.Columns[i].TextEditing := False;
   FrgDays.RefreshGrid;
 end;
 

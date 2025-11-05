@@ -30,7 +30,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
         object edt_name: TDBEditEh
           Left = 57
           Top = 14
-          Width = 733
+          Width = 729
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 49
@@ -43,10 +43,10 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
-          ExplicitWidth = 729
+          ExplicitWidth = 725
         end
         object nedt_deadline: TDBNumberEditEh
-          Left = 992
+          Left = 988
           Top = 14
           Width = 49
           Height = 21
@@ -67,10 +67,10 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
           TabOrder = 1
           Visible = True
           OnButtonClick = nedt_deadlineButtonClick
-          ExplicitLeft = 988
+          ExplicitLeft = 984
         end
         object chb_active: TDBCheckBoxEh
-          Left = 796
+          Left = 792
           Top = 18
           Width = 97
           Height = 17
@@ -78,7 +78,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
           Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
           DynProps = <>
           TabOrder = 2
-          ExplicitLeft = 792
+          ExplicitLeft = 788
         end
       end
       object pgcMain: TPageControl
@@ -145,10 +145,8 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                       Footers = <>
                     end>
                   inherited RowDetailData: TRowDetailPanelControlEh
-                    ExplicitLeft = 30
                     ExplicitTop = 35
                     ExplicitWidth = 46
-                    ExplicitHeight = 120
                     inherited PRowDetailPanel: TPanel
                       Width = 44
                       ExplicitWidth = 44
@@ -194,7 +192,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                   7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                   305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                   666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                  6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                  6E657261746F722052696368656432302031302E302E31393034317D5C766965
                   776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                   66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                   720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -257,10 +255,8 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                       Footers = <>
                     end>
                   inherited RowDetailData: TRowDetailPanelControlEh
-                    ExplicitLeft = 30
                     ExplicitTop = 35
                     ExplicitWidth = 46
-                    ExplicitHeight = 120
                     inherited PRowDetailPanel: TPanel
                       Width = 44
                       ExplicitWidth = 44
@@ -306,7 +302,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                   7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                   305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                   666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                  6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                  6E657261746F722052696368656432302031302E302E31393034317D5C766965
                   776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                   66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                   720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -348,7 +344,6 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
                   ExplicitHeight = 102
@@ -399,7 +394,7 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -466,7 +461,11 @@ inherited FrmOWedtOrReglament: TFrmOWedtOrReglament
     ExplicitWidth = 1052
     inherited lblStatusBarR: TLabel
       Left = 983
+      Height = 14
       ExplicitLeft = 983
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

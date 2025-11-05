@@ -111,8 +111,8 @@ const
   myOrFinalizeUpd = 7;
   myOrFinalizeMontage = 8;
 
-  //айди, начиная с которого обновленный формат заказов (добавлены регламенты)
-  cOrderNewTypeID = 100000000;
+  //айди, начиная с которого обновленный формат заказов (добавлены регламенты), не использовать новый формат - 0
+  cOrderNewTypeID = 11674;//100000000;
 
   cOrderReglamentSnTypes: array[1..4] of string = (
     'Плитные/кромка','Фурнитура','ЛКМ','Заказн. Поз'
@@ -123,7 +123,10 @@ implementation
 
 uses
   uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
-  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo;
+  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo
+//  Xml.XMLDoc, Xml.XMLIntf
+//  OmniXML, OmniXMLUtils
+  ;
 
 constructor TOrders.Create;
 begin
@@ -2612,9 +2615,92 @@ begin
     Wh.ExecReference(DocType, AParent, [myfoDialog, myfoSizeable, myfoEnableMaximize], DocId);
 end;
 
+{
+procedure ParseXMLWithOmni(const FileName: string);
+//  OmniXML, OmniXMLUtils
+var
+  XML: IXMLDocument;
+  Users, User: IXMLNode;
+  i: Integer;
+begin
+  XML := CreateXMLDoc;
+  if not XML.Load(FileName) then
+    raise Exception.Create('Не удалось загрузить XML');
 
+  Users := XML.DocumentElement;
+  for i := 0 to Users.ChildNodes.Count - 1 do
+  begin
+    User := Users.ChildNodes[i];
+    Writeln('ID: ', GetNodeAttr(User, 'id', ''));
+    Writeln('Имя: ', GetNodeText(User, 'name'));
+    Writeln('Email: ', GetNodeText(User, 'email'));
+    Writeln('---');
+  end;
+end;
+}
+
+
+procedure ParseXMLFile(const FileName: string);
+//uses  Xml.XMLDoc, Xml.XMLIntf;
+{
+<?xml version="1.0" encoding="UTF-8"?>
+<users>
+  <user id="1">
+    <name>Иван</name>
+    <email>ivan@example.com</email>
+  </user>
+  <user id="2">
+    <name>Мария</name>
+    <email>maria@example.com</email>
+  </user>
+</users>
+}
+//ChildNodes['name'] — работает только если имя узла уникально в пределах родителя. В противном случае лучше использовать индекс или цикл.
+var
+  XMLDoc: IXMLDocument;
+  UsersNode, UserNode: IXMLNode;
+  i, j, k: Integer;
+  st : string;
+  v : Variant;
+procedure ParseBoardType(Node: IXMLNode);
+var
+  i, j: Integer;
+begin
+  for i := 0 to Node.ChildNodes.Count - 1 do
+    if Node.ChildNodes[i].NodeName = 'BOARDSMP' then begin
+
+    end;
+end;
 
 
 begin
+  XMLDoc := TXMLDocument.Create(nil);
+  XMLDoc.LoadFromFile(FileName);
+  XMLDoc.Active := True;
+
+  UsersNode := XMLDoc.DocumentElement; // <users>
+//  UsersNode := UserNode.  ChildNodes['boardrootnode'];
+
+  v := UsersNode.ChildNodes['BOARDROOTNODE'].ChildNodes['SMPBOARDS'].ChildNodes['QTY'].NodeValue;
+//  for i := 0 to UsersNode.ChildNodes.Count - 1 do
+  begin
+    UserNode := UsersNode.ChildNodes[i]; // <user>
+    st := UserNode.NodeName;
+    if st = 'BOARDROOTNODE' then begin
+      st := '';
+    end;
+{
+    // Получаем атрибут
+    Writeln('ID: ', UserNode.Attributes['id']);
+
+    // Получаем дочерние узлы
+    Writeln('Имя: ', UserNode.ChildNodes['name'].Text);
+    Writeln('Email: ', UserNode.ChildNodes['email'].Text);
+    Writeln('---');        }
+  end;
+end;
+
+begin
   Orders := TOrders.Create;
+  //ParseXMLFile('r:\projects\uchet\test\drill.xml');
 end.

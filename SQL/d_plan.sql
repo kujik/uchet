@@ -2,7 +2,7 @@ alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
 --таблица по типам производственных участков
---alter  table work_cell_types add active number(1);
+--alter  table work_cell_types add color number;
 --drop table work_cell_types cascade constraints; 
 create table work_cell_types (
   id number(11),
@@ -12,6 +12,7 @@ create table work_cell_types (
   posstd number(4),   --позиция, для стандартных участков, заданных вручную (не нулл является их признаком; отрицательная - после производственных, -1 сразу, -2 дальше)
   refers_to_prod_area number(1) default 0,
   active number(1), 
+  color number,
   constraint pk_work_cell_types primary key (id)
 );   
 
@@ -30,6 +31,12 @@ begin
   end if;
 end;
 /
+
+--времменный запрос, возьмем цвета из регламента
+--update work_cell_types t set color = (select max(color) from order_reglament_items r where r.id_work_cell_type = t.id);
+update order_reglament_items t set color = (select color from work_cell_types r where t.id_work_cell_type = r.id) where color = 0;
+
+
 
 /*
 begin

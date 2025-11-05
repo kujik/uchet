@@ -2489,3 +2489,8 @@ end;
 */
 
 
+select id, need_ref, is_complaint, (select count(*) from order_reglaments where instr(',' || ids_types || ',',  ',' || t.id || ',') > 0 and active = 1) from v_order_types t;
+
+select * from v_order_items where id_order = 11674;
+select * from v_orders_list where id_order = 11674;
+

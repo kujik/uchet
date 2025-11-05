@@ -497,7 +497,7 @@ begin
     ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
     ['', null, 'id_status_itm', '', -1, null, -1],
     ['', null, 'status_itm', '', -1, null, -1],
-    ['', null, 'ids_order_properties', 'ids_order_properties$i', -1, null, -1],
+    ['', null, 'ids_order_properties', 'ids_order_properties$s', -1, null, -1],
     ['', null, 'id_reglament', 'id_reglament$i', -1, null, -1],
     ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
     ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
@@ -657,7 +657,12 @@ begin
   Id_Org_Old := FieldsArr[GetFieldsArrPos('id_organization')][cBegValue];
 
   if FNewOrderType = 1 then begin
-    FOrderTypes := Q.QLoadToVarDynArray2('select id, need_ref, is_complaint from v_order_types where (active = 1 or id = :id$i) order by posall', [FieldsArr[GetFieldsArrPos('id_type2'), cBegValue]]);
+    FOrderTypes := Q.QLoadToVarDynArray2(
+      'select id, need_ref, is_complaint, (select count(*) from order_reglaments where instr('','' || ids_types || '','',  '','' || t.id || '','') > 0 and active = 1) '+
+      'from v_order_types t '+
+      'where (active = 1 or id = :id$i) order by posall',
+      [FieldsArr[GetFieldsArrPos('id_type2'), cBegValue]]
+    );
     Q.QLoadToDBComboBoxEh('select name, id from v_order_types where (active = 1 or id = :id$i) order by posall', [FieldsArr[GetFieldsArrPos('id_type2'), cBegValue]], cmb_OrderType, cntComboLK);
   end
   else begin
@@ -1352,6 +1357,7 @@ var
   st: string;
   Canvas: TControlCanvas;
   i, j: Integer;
+  b: Boolean;
 begin
   if InLoadData then
     Exit;
@@ -1410,6 +1416,9 @@ begin
       FieldsArr[GetFieldsArrPos('id_type2'), cNewValue] := GetOrderTypeOldValue;
       FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
       dedt_Otgr.Value := null;
+      //дата отгрузки разрешена для  старого режима, а для нового - если нет регламента для данного типа заказа
+      dedt_Otgr.Enabled := (not (Mode in [fView, fDelete])) and (S.NSt(cmb_OrderType.Value) <> '') and
+        (FNewOrderType = 0) or User.Role(rOr_D_Order_EditDtOtgr) or (FOrderTypes[cmb_OrderType.ItemIndex][3].AsInteger = 0);
     end;
   end;
   if (Sender = cmb_Organization) or (Sender = cmb_OrderType) then
