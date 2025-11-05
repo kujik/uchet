@@ -57,7 +57,8 @@ type
     myogLoadAfterVisible,                     //показать грид, не дожидайсь загрузки данных
     myogPrintGrid,                            //разрешить печать и экспорт грида, показать этот пункт в меню
     myogHideColumns,                          //разрешать прятать столбцы через окно настроек
-    myogFroozeColumn                          //разрешать заморозить столбцы через окно настроек
+    myogFroozeColumn,                         //разрешать заморозить столбцы через окно настроек
+    myogNoTextEditing                         //запретить открытие InplaceEditor
   );
 
   TFrDBGridOptions = set of TFrDBGridOption;
@@ -2717,6 +2718,8 @@ begin
       //настройки по умолчанию, прописанные в коде. только после первого открытия грида
       col.AutoFitColWidth := False;
       col.WordWrap := False;
+      if myogNoTextEditing in FOptions then
+        col.TextEditing := False;
       va := A.Explode(Opt.Sql.Fields[i].DefOptions, ';');
       for j := 0 to High(va) do begin
         if UpperCase(va[j]) = 'H' then begin
@@ -2733,7 +2736,9 @@ begin
           col.Alignment:= taRightJustify;
         if UpperCase(va[j]) = 'C' then
           col.Alignment:= taCenter;
-        w := StrToIntDef(va[j], -1);
+        if UpperCase(va[j]) = 'E' then
+         col.TextEditing := not col.TextEditing;
+       w := StrToIntDef(va[j], -1);
         if w > -1 then begin
           col.Width := w;
         end;

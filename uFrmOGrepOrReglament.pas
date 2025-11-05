@@ -71,7 +71,7 @@ var
   va2: TVarDynArray2;
   st, st2: string;
 begin
-  Frg1.Options := [];
+  Frg1.Options := [myogNoTextEditing];
   va2 := [
     ['id$i','_id','100'],
     ['posstd$i','_posstd','100'],
@@ -122,8 +122,8 @@ begin
       Frg1.SetValue('color', i, False, 10354687);
     end;
   //обновим
-  for i := 0 to Frg1.DbGridEh1.Columns.Count - 1 do
-    Frg1.DbGridEh1.Columns[i].TextEditing := False;
+//  for i := 0 to Frg1.DbGridEh1.Columns.Count - 1 do
+//    Frg1.DbGridEh1.Columns[i].TextEditing := False;
   Frg1.Invalidate;
 end;
 
