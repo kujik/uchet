@@ -2104,7 +2104,7 @@ begin
   else begin
     FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := res.DataA[0][0];
     FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := res.DataA[0][1];
-    dedt_Otgr.Value := IncDay(dedt_Beg.Value, res.DataA[0][2]);
+    dedt_Otgr.Value := IncDay(dedt_Beg.Value, res.DataA[0][2] - 1);
   end;
 end;
 

@@ -134,7 +134,7 @@ uses
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems, uFrmOGrepSnHistory,
-  uFrmOWedtOrReglament, uFrmOGrepEstimatePrices,
+  uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
 
   uFrmOGinfSgp,
   uFrmXGlstMain,
@@ -1015,7 +1015,9 @@ begin
   else if F = myfrm_Dlg_R_OrderReglament then begin
     TFrmOWedtOrReglament.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopy, myfoDialog], fMode, AId, AAddParam);
   end
-
+  else if F = myfrm_Dlg_Rep_OrderReglament then begin
+    TFrmOGrepOrReglament.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopy, myfoDialog], fNone, AId, null);
+  end
   else if F = myfrm_Dlg_Test then begin
   end
 

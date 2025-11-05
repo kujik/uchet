@@ -73,7 +73,7 @@ begin
     ['path$s','_path','40'],
     ['in_archive$i','_in_archive','20','pic='],
     ['dt_beg$d','Дата создания',''],
-    ['ornum$s','№ заказа','80','bt=Открыть папку заказа:4'],
+    ['ornum$s','№ заказа','80','bt=Открыть папку заказа:4;Регламент:36'],
     ['area_short$s','Площадка','20'],
     ['typename$s','Вид заказа','80'],
     ['organization$s','Организация','100'],
@@ -294,8 +294,11 @@ begin
       then Fr.RefreshRecord;
   end
   else if Fr.CurrField = 'ornum' then begin
-    //откроем папку заказа
-    Sys.ExecFile(Module.GetPath_Order(IntToStr(YearOf(Fr.GetValue('dt_beg'))), Fr.GetValue('in_archive')) + '\' + Fr.GetValue('path'));
+    if TCellButtonEh(Sender).Hint = 'Регламент' then
+      Wh.ExecDialog(myfrm_Dlg_Rep_OrderReglament, Self, [], fNone, Fr.ID, null)
+    else
+      //откроем папку заказа
+      Sys.ExecFile(Module.GetPath_Order(IntToStr(YearOf(Fr.GetValue('dt_beg'))), Fr.GetValue('in_archive')) + '\' + Fr.GetValue('path'));
   end
   else inherited;
 end;

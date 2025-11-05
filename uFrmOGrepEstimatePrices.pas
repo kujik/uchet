@@ -69,8 +69,8 @@ end;
 
 function TFrmOGrepEstimatePrices.PrepareFormAdd: Boolean;
 begin
-  Frg1.Opt.SetButtons(4, [[mbtExcel, True, 'Загрузить смету из файла']],  cbttBSmall, pnlFrmBtnsR);
-  Frg1.Opt.SetButtonsIfEmpty([mbtExcel]);
+  Frg1.Opt.SetButtons(4, [[1000, True, 'Загрузить смету из файла', 'excel']],  cbttBSmall, pnlFrmBtnsR);
+  Frg1.Opt.SetButtonsIfEmpty([1000]);
   Result := True;
 end;
 
@@ -78,7 +78,7 @@ procedure TFrmOGrepEstimatePrices.Frg1ButtonClick(var Fr: TFrDBGridEh; const No:
 //обработка нажатий кнопок фрейма
 begin
   Handled := True;
-  if Tag = mbtExcel then
+  if Tag = 1000 then
     LoadFromXls
   else begin
     Handled := False;

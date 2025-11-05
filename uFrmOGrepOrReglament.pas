@@ -38,8 +38,7 @@ uses
 
 function TFrmOGrepOrReglament.PrepareForm: Boolean;
 begin
-ID := 11574;
-Mode := fNone;
+  Mode := fNone;
   Result := False;
   Caption := '–егламент';
   LoadReglament;
@@ -50,12 +49,15 @@ Mode := fNone;
   if not Result then
     Exit;
   LoadDaysGrid;
+  pnlTop.Height := 35;
 end;
 
 procedure TFrmOGrepOrReglament.LoadReglament;
 begin
-  Q.QLoadFromQuery('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg from order_reglaments r, v_orders o where r.id = o.id_reglament', [ID], FReglament);
-  lblOrder.Caption := FReglament.G(0, 'ornum').AsString;
+  Q.QLoadFromQuery('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg, o.dt_otgr from order_reglaments r, v_orders o where r.id = o.id_reglament and o.id = :id$i', [ID], FReglament);
+  if FReglament.Count = 0 then
+    Exit;
+  lblOrder.Caption := FReglament.G(0, 'ornum').AsString + ' (' + FReglament.G(0, 'dt_beg').AsString + ' - ' + FReglament.G(0, 'dt_otgr').AsString + ')';
   lblName.Caption := FReglament.G(0, 'name').AsString;
   lblDeadline.Caption := FReglament.G(0, 'deadline').AsString;
 end;
@@ -79,7 +81,7 @@ begin
   ];
   //добавим пол€ дл€ €чеек дней (центрируем)
   for i := 1 to  FReglament.G(0, 'deadline').AsInteger do
-    va2 := va2 + [['d' + InttoStr(i) + '$i', InttoStr(i), '25;c']];
+    va2 := va2 + [['d' + InttoStr(i) + '$i', InttoStr(DayOf(IncDay(FReglament.G(0, 'dt_beg'), i - 1))), '25;c']];
   Frg1.Opt.SetFields(va2);
   Frg1.Opt.SetGridOperations('');
   //строка дл€ вставки в запрос дл€ инициализацтт пустыми значени€ми €чеек по дн€м
@@ -101,13 +103,13 @@ var
   va2: TVarDynArray2;
 begin
   //читаем всю таблицу по участкам дл€ данного регламента
-  va2 := Q.QLoadToVarDynArray2('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [100]);
+  va2 := Q.QLoadToVarDynArray2('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [FReglament.G(0, 'id')]);
   //установим дни и цвета дл€ участков
   for i := 0 to High(va2) do
     for j := 0 to Frg1.GetCount(False) - 1 do
       if (Frg1.GetValue('id', j, False) < 1000000) and (va2[i][0] = Frg1.GetValue('id', j, False)) then begin
         for k := va2[i][1] to Min(FReglament.G(0, 'deadline').AsInteger, va2[i][2].AsInteger) do
-          Frg1.SetValue('d' + IntToStr(k), j, False, k);
+          Frg1.SetValue('d' + IntToStr(k), j, False, InttoStr(DayOf(IncDay(FReglament.G(0, 'dt_beg'), k - 1))));
         Frg1.SetValue('color', j, False, va2[i][3]);
         Break;
       end;
@@ -115,7 +117,7 @@ begin
   for i := 0 to Frg1.GetCount(False) - 1 do
     if (Frg1.GetValue('id', i, False) >= 1000000) then begin
       for j := 1 to Min(FReglament.G(0, 'deadline').AsInteger, FReglament.G(0, 'sn_' + IntToStr(Frg1.GetValue('id', i, False) - 1000000)).AsInteger) do
-        Frg1.SetValue('d' + IntToStr(j), i, False, j);
+        Frg1.SetValue('d' + IntToStr(j), i, False, InttoStr(DayOf(IncDay(FReglament.G(0, 'dt_beg'), j - 1))));
         //светло-жельтый цвет дл€ заполненных €чеек снабжени€
       Frg1.SetValue('color', i, False, 10354687);
     end;
@@ -138,7 +140,7 @@ begin
   if (Pos('d', FieldName) = 1) then begin
     if (Fr.GetValueI('color') <> 0) and (Fr.GetValueI(FieldName) <> 0) then
       Params.Background := Fr.GetValueI('color');
-    if DaysBetween(Date, FReglament.G(0, 'dt_beg')) = StrtoInt(Copy(FieldName, 2)) then
+    if DaysBetween(Date, FReglament.G(0, 'dt_beg')) + 1 = StrtoInt(Copy(FieldName, 2)) then
       Params.Background := clFuchsia;
   end;
 end;

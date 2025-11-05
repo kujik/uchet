@@ -1019,6 +1019,7 @@ const
   myfrm_Dlg_R_OrderProperties = 'Dlg_R_OrderProperties';
   myfrm_Dlg_R_OrderReglament = 'Dlg_R_OrderReglament';
   myfrm_Dlg_Rep_EstimatePrices = 'Dlg_Rep_EstimatePrices';
+  myfrm_Dlg_Rep_OrderReglament = 'Dlg_Rep_OrderReglament';
 
 
 const

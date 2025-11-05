@@ -182,6 +182,7 @@ inherited Dlg_Order: TDlg_Order
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
+    ExplicitWidth = 1268
     object pnl_Header_3: TPanel
       Left = 691
       Top = 1
