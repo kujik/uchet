@@ -337,7 +337,8 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 
---alter table orders add id_type2 number;
+alter table orders add id_reglament number(11);
+--alter table orders add ids_order_properties varchar2(4000);
 --alter table orders add has_prod number(1) default 0;
 /*alter table orders add qnt_boards_m2 number;
 alter table orders add qnt_edges_m number;
@@ -345,6 +346,7 @@ alter table orders add qnt_panels_w_drill number;
 alter table orders add has_prod number(1) default 0;
 */
 alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
+alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
   id number(11),
@@ -368,7 +370,8 @@ create table orders (
   id_target number(11),
   target varchar2(40),               -- подпапка в стандартных проектах итм (П - производство, остальные берутся из справочника стандартных форматов) 
   id_type number(1),                 -- 1 - новый, 2 рекламация, 3 эксперимент 
-  id_type2 number,                   -- тип заказа из справочника "типы заказов" 
+  id_type2 number,                   -- тип заказа из справочника "типы заказов"
+  id_reglament number(11), 
   or_reference varchar(16),          -- номер заказа, по которому рекламация, в виде текста 
   id_manager number(11),             -- айди человека, оформившего заказ
   dt_beg date,                       -- дата создания паспорта
@@ -436,7 +439,8 @@ create table orders (
   constraint fk_orders_customer_contact foreign key (id_customer_contact) references ref_customer_contact(id),
   constraint fk_orders_customer_org foreign key (id_customer_org) references ref_customer_legal(id),
   constraint fk_orders_estimates foreign key (id_or_format_estimates) references or_format_estimates(id),
-  constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id)
+  constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id),
+  constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id)
   --constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id) 
 );
 

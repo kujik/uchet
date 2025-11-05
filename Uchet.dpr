@@ -167,7 +167,9 @@ uses
   uFrmCDedtAccount in 'uFrmCDedtAccount.pas' {FrmCDedtAccount},
   uFrMyPanelCaption in 'uFrMyPanelCaption.pas' {FrMyPanelCaption: TFrame},
   uFrmOWedtOrReglament in 'uFrmOWedtOrReglament.pas' {FrmOWedtOrReglament},
-  uFrmOGrepEstimatePrices in 'uFrmOGrepEstimatePrices.pas' {FrmOGrepEstimatePrices};
+  uFrmOGrepEstimatePrices in 'uFrmOGrepEstimatePrices.pas' {FrmOGrepEstimatePrices},
+  uFrmOGselOrReglament in 'uFrmOGselOrReglament.pas' {FrmOGselOrReglament},
+  uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament};
 
 var
   MT: Integer;

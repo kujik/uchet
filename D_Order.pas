@@ -248,7 +248,7 @@ implementation
 
 uses
   RegularExpressions, StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2,
-  uWindows, D_LoadKBLog, uSys, uOrders;
+  uFrmOGselOrReglament, uWindows, D_LoadKBLog, uSys, uOrders, uFrmBasicMdi;
 
 const
   cControl = 0;
@@ -497,6 +497,8 @@ begin
     ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
     ['', null, 'id_status_itm', '', -1, null, -1],
     ['', null, 'status_itm', '', -1, null, -1],
+    ['', null, 'ids_order_properties', 'ids_order_properties$i', -1, null, -1],
+    ['', null, 'id_reglament', 'id_reglament$i', -1, null, -1],
     ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
     ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
     ['edt_OrderNum', null, 'ornum', '', 1, null, 0],
@@ -513,9 +515,9 @@ begin
     ['cmb_OrderType', null, 'id_type', 'id_type$i', 1, null, 0],
     ['edt_Address', null, 'address', 'address$s', 2, null, 1],
     ['dedt_Beg', Date, 'dt_beg', 'dt_beg$d', 1, null, -1],
-    ['dedt_Otgr', null, 'dt_otgr', 'dt_otgr$d', 1, null, 0],
+    ['dedt_Otgr', null, 'dt_otgr', 'dt_otgr$d', S.IIf(User.Role(rOr_D_Order_EditDtOtgr) or (FNewOrderType = 0), 1, -1), null, 0],
     ['dedt_MontageBeg', null, 'dt_montage_beg', 'dt_montage_beg$d', 2, null, 1],
-    ['dedt_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],//    ['dedt_Change', S.IIfV(Mode = fEdit, Now, null),  S.IIfV(Mode = fEdit, '', 'dt_change'), 'dt_change$d', 0, null, -1],
+    ['dedt_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],
     ['dedt_Change', null, 'dt_change', 'dt_change$d', 0, null, -1],
     ['cmb_Project', null, 'project', 'project$s', 1, null, 0],
     ['nedt_Items_0', null, 'cost_i_0', 'cost_i_0$f', 0, null, -1],
@@ -554,6 +556,7 @@ begin
     //подменим поле для типа заказа
     FieldsArr[GetFieldsArrPos('id_type'), cFieldName] := 'id_type2';
     FieldsArr[GetFieldsArrPos('id_type2'), cFieldNameId] := 'id_type2$i';
+    FieldsArr := FieldsArr + [['', null, 'id_type', 'id_type$i', -1, null, -1]];
   end;
 
   if Mode in [fEdit, fCopy, fDelete, fView] then begin
@@ -613,6 +616,10 @@ begin
         inc(j);
       end;
   end;
+
+  //!!! не разобрался как устанавливаются текущие значения, если были прочитаны начальные, но не было изменения, и это не контролы, сделал так
+  FieldsArr[GetFieldsArrPos('id_reglament')][cNewValue] := FieldsArr[GetFieldsArrPos('id_reglament')][cBegValue];
+  FieldsArr[GetFieldsArrPos('ids_order_properties')][cNewValue] := FieldsArr[GetFieldsArrPos('ids_order_properties')][cBegValue];
 
   //Синхронизируем ли заказа с ИТМ
   //для шаблона - всегда нет, для нового заказа или копии - по значению глобальной переменной, при редактировании - как было ранее,
@@ -1399,6 +1406,11 @@ begin
     if (GetOrderTypeOldValue= '1') or (GetOrderTypeOldValue = '3') then begin
       cmb_OrderReference.Text := '';
     end;
+    if FNewOrderType = 1 then begin
+      FieldsArr[GetFieldsArrPos('id_type2'), cNewValue] := GetOrderTypeOldValue;
+      FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
+      dedt_Otgr.Value := null;
+    end;
   end;
   if (Sender = cmb_Organization) or (Sender = cmb_OrderType) then
     Verify(nil)
@@ -2073,11 +2085,27 @@ begin
 end;
 
 procedure TDlg_Order.cmb_OrderTypeEditButtons0Click(Sender: TObject; var Handled: Boolean);
+var
+  res: TMDIResult;
 begin
   inherited;
   if FNewOrderType <> 1 then
     Exit;
-  MyInfoMessage('!!!');
+  res := TFrmOGselOrReglament.Show(
+    Self, '', MyFormOptions + [myfoDialog, myfoSizeable, myfoModal], S.IIf(not (Mode in [fView, fDelete]), fEdit, fView), Cth.GetControlValue(cmb_OrderType), FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue]
+  );
+  if res.ModalResult <> mrOk then
+    Exit;
+  if res.DataA[0][0] = -1 then begin
+    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := null;
+    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
+    dedt_Otgr.Value := null;
+  end
+  else begin
+    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := res.DataA[0][0];
+    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := res.DataA[0][1];
+    dedt_Otgr.Value := IncDay(dedt_Beg.Value, res.DataA[0][2]);
+  end;
 end;
 
 procedure TDlg_Order.chb_ViewEmptyItemsClick(Sender: TObject);

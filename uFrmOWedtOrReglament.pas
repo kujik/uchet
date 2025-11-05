@@ -239,7 +239,7 @@ begin
 end;
 
 procedure TFrmOWedtOrReglament.GetPropertiesResult;
-//запишем в поля формы    айди и наименования выбранных в грида свойств заказа позиций
+//запишем в поля формы айди и наименования выбранных в грида свойств заказа позиций
 var
   i, j: Integer;
   st, st2: string;

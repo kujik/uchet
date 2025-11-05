@@ -126,7 +126,6 @@ type
     FInSetStatusBar: Boolean;
     FPreventShow: Boolean;
     FToLoadData: Boolean;
-    FFormResult: TMDIResult;
     FDlgPanelMinWidth: Integer;
     FWinSizeCorrected: Boolean;
     FCtrlBegValuesStr, FCtrlCurrValuesStr: string;
@@ -178,6 +177,7 @@ type
     FAllreadyCreated: Boolean;
     F: TFields;
     FFormNotCreatedByApplication: Boolean;
+    FFormResult: TMDIResult;
     //статус ошибки в данных. должен устанавливаться в потомках. если установлен, кнопка Ок становится недоступной
     property HasError: Boolean read FHasError write SetError;
     //возвращаемые данные для формы, могут быть установлены в любом месте в коде, вернутся функцией класса Show
@@ -331,7 +331,7 @@ type
      }
 
     //вызывает форму с указанными параметрами,
-    //возвращает результат типа Vavariant из свойтва формы, устанавливаемый в произвольном месте в коде при ее работе (имеет смысл как правило в режиме ShowModal)
+    //возвращает результат типа Variant из свойтва формы, устанавливаемый в произвольном месте в коде при ее работе (имеет смысл как правило в режиме ShowModal)
     class function Show(AOwner: TComponent; ADoc: string; AMyFormOptions: TMyFormOptions; AMode: TDialogType; AID: Variant; AAddParam: Variant): TMDIResult; virtual;
     //вызывает форму с указанными параметрами, но всегда в модальном режиме, возвращает MadalResult
     class function ShowModal2(AOwner: TComponent; ADoc: string; AMyFormOptions: TMyFormOptions; AMode: TDialogType; AID: Variant; AAddParam: Variant): TMDIResult; virtual;

@@ -198,7 +198,6 @@ object FrmBasicMdi: TFrmBasicMdi
       Height = 14
       Align = alRight
       Caption = 'lblStatusBarR'
-      ExplicitLeft = 186
       ExplicitHeight = 13
     end
     object lblStatusBarL: TLabel
