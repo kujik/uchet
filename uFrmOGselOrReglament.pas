@@ -79,7 +79,7 @@ begin
     for j := 0 to Frg1.GetCount(False) - 1 do
       if (Frg1.GetValueI('used', j, False) = 1) then begin
         S.ConcatStP(FProperties, Frg1.GetValueS('id', j, False), ',');
-        if (FReglament = -1) and S.InCommaStr(Frg1.GetValueS('id', j, False), FReglaments[i][2]) and S.InCommaStr(ID, FReglaments[i][4]) then begin
+        if (FReglament = -1) and S.InCommaStr(Frg1.GetValueS('id', j, False), FReglaments[i][2].AsString) and S.InCommaStr(ID, FReglaments[i][4].AsString) then begin
           FReglament := i;
           Break;
         end;

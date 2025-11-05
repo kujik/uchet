@@ -3,19 +3,19 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
   Caption = 'FrmOGselOrReglament'
   ClientHeight = 505
   ClientWidth = 349
-  ExplicitWidth = 361
-  ExplicitHeight = 543
+  ExplicitWidth = 365
+  ExplicitHeight = 544
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 349
     Height = 499
-    ExplicitWidth = 796
-    ExplicitHeight = 520
+    ExplicitWidth = 349
+    ExplicitHeight = 499
     inherited pnlFrmClient: TPanel
       Width = 339
       Height = 450
-      ExplicitWidth = 782
-      ExplicitHeight = 470
+      ExplicitWidth = 339
+      ExplicitHeight = 450
       inherited pnlTop: TPanel
         Width = 339
         Height = 35
@@ -54,19 +54,21 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
       inherited pnlLeft: TPanel
         Top = 35
         Height = 369
+        ExplicitTop = 35
         ExplicitHeight = 415
       end
       inherited pnlGrid1: TPanel
         Top = 35
         Width = 329
         Height = 369
-        ExplicitWidth = 772
-        ExplicitHeight = 415
+        ExplicitTop = 35
+        ExplicitWidth = 329
+        ExplicitHeight = 369
         inherited Frg1: TFrDBGridEh
           Width = 327
           Height = 367
-          ExplicitWidth = 770
-          ExplicitHeight = 413
+          ExplicitWidth = 327
+          ExplicitHeight = 367
           inherited pnlGrid: TPanel
             Width = 317
             Height = 313
@@ -119,7 +121,7 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32363130307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -132,11 +134,11 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
       inherited pnlFrg2: TPanel
         Top = 409
         Width = 339
-        ExplicitTop = 429
-        ExplicitWidth = 782
+        ExplicitTop = 409
+        ExplicitWidth = 339
         inherited Frg2: TFrDBGridEh
           Width = 337
-          ExplicitWidth = 780
+          ExplicitWidth = 337
           inherited pnlGrid: TPanel
             Width = 327
             ExplicitWidth = 770
@@ -170,7 +172,7 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32363130307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -185,6 +187,7 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
         Top = 35
         Height = 369
         ExplicitLeft = 777
+        ExplicitTop = 35
         ExplicitHeight = 415
       end
     end
@@ -195,9 +198,11 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
       ExplicitWidth = 782
       inherited bvlFrmBtnsTl: TBevel
         Width = 337
+        ExplicitWidth = 337
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 337
+        ExplicitWidth = 337
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 337
@@ -226,13 +231,11 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
     Width = 349
     Height = 6
     ExplicitTop = 530
+    ExplicitWidth = 349
     ExplicitHeight = 6
     inherited lblStatusBarR: TLabel
       Left = 276
-      Height = 4
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 4
+      ExplicitLeft = 276
     end
   end
 end
