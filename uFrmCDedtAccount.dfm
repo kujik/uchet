@@ -371,9 +371,9 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 2
           ExplicitWidth = 915
           object cmb_CarType: TDBComboBoxEh
-            Left = 85
-            Top = 4
-            Width = 178
+            Left = 104
+            Top = 3
+            Width = 156
             Height = 21
             ControlLabel.Width = 53
             ControlLabel.Height = 13
@@ -731,52 +731,35 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             919
             94)
           object lbl1: TLabel
-            Left = 670
-            Top = 46
+            Left = 659
+            Top = 62
             Width = 63
             Height = 13
             Anchors = [akRight]
             Caption = #1057#1086#1075#1083#1072#1089#1086#1074#1072#1085':'
-            ExplicitLeft = 598
-          end
-          object lbl_RequestFile: TLabel
-            Left = 271
-            Top = 47
-            Width = 71
-            Height = 13
-            Caption = 'lbl_AccountFile'
-          end
-          object lbl_AccountFile: TLabel
-            Left = 71
-            Top = 47
-            Width = 58
-            Height = 13
-            Caption = #1060#1072#1081#1083' '#1089#1095#1077#1090#1072
           end
           object chb_Agreed2: TDBCheckBoxEh
-            Left = 833
-            Top = 45
-            Width = 82
+            Left = 836
+            Top = 48
+            Width = 73
             Height = 17
             Anchors = [akRight]
             Caption = #1044#1080#1088#1077#1082#1090#1086#1088
             DynProps = <>
             TabOrder = 0
-            ExplicitLeft = 829
           end
           object chb_Agreed1: TDBCheckBoxEh
-            Left = 750
-            Top = 45
-            Width = 159
+            Left = 736
+            Top = 48
+            Width = 94
             Height = 17
             Anchors = [akRight]
             Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
             DynProps = <>
             TabOrder = 1
-            ExplicitLeft = 746
           end
           object btnReqestFileOpen: TBitBtn
-            Left = 240
+            Left = 264
             Top = 40
             Width = 25
             Height = 25
@@ -786,7 +769,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 2
           end
           object btnReqestFileAttach: TBitBtn
-            Left = 209
+            Left = 233
             Top = 40
             Width = 25
             Height = 25
@@ -815,10 +798,10 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             ShowHint = True
             TabOrder = 5
           end
-          object edtComm: TDBEditEh
-            Left = 30
+          object edt_comm: TDBEditEh
+            Left = 71
             Top = 13
-            Width = 879
+            Width = 838
             Height = 21
             Anchors = [akLeft, akRight]
             ControlLabel.Width = 61
@@ -831,7 +814,27 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 6
             Text = 'DBEditEh1'
             Visible = True
-            ExplicitWidth = 875
+            ExplicitWidth = 834
+          end
+          object chb_AccountFile: TDBCheckBoxEh
+            Left = 71
+            Top = 46
+            Width = 156
+            Height = 17
+            Anchors = [akLeft]
+            Caption = #1060#1072#1081#1083
+            DynProps = <>
+            TabOrder = 7
+          end
+          object chb_RequestFile: TDBCheckBoxEh
+            Left = 295
+            Top = 46
+            Width = 154
+            Height = 17
+            Anchors = [akLeft]
+            Caption = #1060#1072#1081#1083
+            DynProps = <>
+            TabOrder = 8
           end
         end
       end

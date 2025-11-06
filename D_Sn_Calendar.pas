@@ -110,6 +110,7 @@ type
     nedt_SumOther: TDBNumberEditEh;
     cmb_Nds: TDBComboBoxEh;
     nedt_SumWoNds: TDBNumberEditEh;
+    chbAccountFile: TDBCheckBoxEh;
     procedure Bt_OKClick(Sender: TObject);
     procedure nedt_1Change(Sender: TObject);
     procedure Dt1_KeyPress(Sender: TObject; var Key: Char);

@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Math,
-  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uData, uFrDBGridEh,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Math, Types,
+  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uData, uFrDBGridEh, uSys,
   Data.Bind.EngExt, Vcl.Bind.DBEngExt, Data.Bind.Components, Vcl.Buttons
   ;
 
@@ -43,13 +43,11 @@ type
     chb_Agreed2: TDBCheckBoxEh;
     chb_Agreed1: TDBCheckBoxEh;
     lbl1: TLabel;
-    lbl_RequestFile: TLabel;
     btnReqestFileOpen: TBitBtn;
     btnReqestFileAttach: TBitBtn;
-    lbl_AccountFile: TLabel;
     btnFileOpen: TBitBtn;
     btnFileAttach: TBitBtn;
-    edtComm: TDBEditEh;
+    edt_comm: TDBEditEh;
     pnlRouteM: TPanel;
     cmb_CarType: TDBComboBoxEh;
     cmb_Flight: TDBComboBoxEh;
@@ -59,6 +57,8 @@ type
     nedt_PriceKm: TDBNumberEditEh;
     nedt_PriceIdle: TDBNumberEditEh;
     nedt_SumOther: TDBNumberEditEh;
+    chb_AccountFile: TDBCheckBoxEh;
+    chb_RequestFile: TDBCheckBoxEh;
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -67,6 +67,7 @@ type
     procedure ControlOnChange(Sender: TObject); override;
     procedure EdtPaymentOnChaange(Sender: TObject);
     function  Save: Boolean; override;
+    function IsFilesLoaded: Boolean;
 
     procedure CreatePaymentsEdts;
   public
@@ -175,9 +176,16 @@ begin
   CreatePaymentsEdts;
 
   frmpcAdd.SetParameters(True, 'Дополнительно', [], False);
-  Cth.AlignControls(pnlAddM, FOpt.ControlsWoAligment, True);
+  Cth.AlignControls(pnlAddM, FOpt.ControlsWoAligment, False);
 
-//  FieldNames:='id$i;type$i;account$s;id_supplier$i;id_org$i;id_expenseitem$i;id_user$i;sum$f;comm$s;filename$s;agreed1$i;agreed2$i;accountdt$d;dt$d;accounttype$d;id_whoagreed1$i;nds$f';
+  Cth.SetBtn(btnFileAttach, mybtAttach, True, 'Прикрепить файл счета');
+  Cth.SetBtn(btnReqestFileAttach, mybtAttach, True, 'Прикрепить файл заявки');
+  Cth.SetBtn(btnFileOpen, mybtView, True, 'Просмотреть файл счета');
+  Cth.SetBtn(btnReqestFileOpen, mybtView, True, 'Просмотреть файл заявки');
+//  Cth.SetBtn(Bt_RefreshSuppliers, mybtRefresh, True, 'Обновить список поставщиков');
+//  Cth.SetBtn(Bt_SelectSupplier, mybtSelectFromList, True, 'Выбрать поставщика из списка');
+
+
   F.DefineFields:=[
     ['id$i'],
     ['type$i'],
@@ -192,10 +200,11 @@ begin
     ['sum$f','V=0:10000000000:2:N'],
     ['nds$f','V=0:99:2:N'],
     ['comm$s','V:0:4000'],
-    ['filename$s',''],
+    ['filename$s','',#0,FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now)],
     ['agreed1$i',''],
     ['agreed2$i',''],
-    ['id_whoagreed1$i','']
+    ['id_whoagreed1$i',''],
+    ['accountfile;0;0','V=1:1']
   ];
 
   View := 'sn_calendar_accounts';
@@ -224,7 +233,8 @@ begin
   F.SetPropsControls;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);      }
   Result := Inherited;
-  SetControlsEditable([cmb_id_user], False);
+  IsFilesLoaded;
+  SetControlsEditable([cmb_id_user{, chb_AccountFile, chb_RequestFile}], False);
 end;
 
 function TFrmCDedtAccount.LoadComboBoxes: Boolean;
@@ -269,10 +279,11 @@ procedure TFrmCDedtAccount.ControlOnChange(Sender: TObject);
 var
   Name: string;
 begin
-  Name := TControl(Sender).Name;
+  Name := LowerCase(TControl(Sender).Name);
   if ((Pos('dedt_', Name) = 1) or (Pos('nedt_', Name) = 1)) and  S.IsNumber(Copy(Name, 6, 2), 1, 99)  then
     EdtPaymentOnChaange(Sender);
-
+  if (Name = 'chb_accountfile') or  (Name = 'chb_requestfile') then
+    TDBCheckBoxEh(Sender).Checked := Pos(' не ', TDBCheckBoxEh(Sender).Caption) = 0;
 end;
 
 function TFrmCDedtAccount.Save: Boolean;
@@ -280,6 +291,21 @@ begin
 
 end;
 
+function TFrmCDedtAccount.IsFilesLoaded: Boolean;
+var
+  a: TStringDynArray;
+  b1, b2: Boolean;
+begin
+  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_A(F.GetProp('filename')));
+  chb_AccountFile.Checked := Length(a) > 0;
+  chb_AccountFile.Caption := 'Файл счета ' + S.IIf(chb_AccountFile.Checked, 'загружен', 'не загружен');
+  Cth.SetErrorMarker(chb_AccountFile, not chb_AccountFile.Checked);
+  a:=Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_Z(F.GetProp('filename')));
+  chb_RequestFile.Checked := Length(a) > 0;
+  chb_RequestFile.Caption := 'Файл заявки ' + S.IIf(chb_AccountFile.Checked, 'загружен', 'не загружен');
+//      if (cmb_id_expenseitem.ItemIndex = -1) //or(cmb_RecReceipt.Items[cmb_ExpenseItem.ItemIndex] = '1')
+  Cth.SetErrorMarker(chb_RequestFile, (not chb_AccountFile.Checked) and (nedt_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req)));
+end;
 
 
 end.
