@@ -22,6 +22,7 @@ type
     procedure LoadReglament;
     procedure SetDaysGrid;
     procedure LoadDaysGrid;
+    procedure GetWindowSize;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
   public
   end;
@@ -50,14 +51,31 @@ begin
     Exit;
   LoadDaysGrid;
   pnlTop.Height := 35;
+  GetWindowSize;
 end;
+
+procedure TFrmOGrepOrReglament.GetWindowSize;
+var
+  w, h: Integer;
+begin
+  Frg1.DbGridEh1.Align:= alNone;
+  Frg1.GetGridDimensions(w, h);
+  Frg1.DbGridEh1.Width := w;
+  Frg1.DbGridEh1.Height := h;
+  FWHBounds.X := w + 3;
+  FWHBounds.Y := h + 35 + 5;
+  FWHBounds.X2 := FWHBounds.X;
+  FWHBounds.Y2 := FWHBounds.Y;
+  FWHCorrected := FWHBounds;
+end;
+
 
 procedure TFrmOGrepOrReglament.LoadReglament;
 begin
-  Q.QLoadFromQuery('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg, o.dt_otgr from order_reglaments r, v_orders o where r.id = o.id_reglament and o.id = :id$i', [ID], FReglament);
+  Q.QLoadFromQuery('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg, o.dt_otgr, o.project from order_reglaments r, v_orders o where r.id = o.id_reglament and o.id = :id$i', [ID], FReglament);
   if FReglament.Count = 0 then
     Exit;
-  lblOrder.Caption := FReglament.G(0, 'ornum').AsString + ' (' + FReglament.G(0, 'dt_beg').AsString + ' - ' + FReglament.G(0, 'dt_otgr').AsString + ')';
+  lblOrder.Caption := FReglament.G(0, 'ornum').AsString + FReglament.G(0, 'project').AsString + ' (' + FReglament.G(0, 'dt_beg').AsString + ' - ' + FReglament.G(0, 'dt_otgr').AsString + ')';
   lblName.Caption := FReglament.G(0, 'name').AsString;
   lblDeadline.Caption := FReglament.G(0, 'deadline').AsString;
 end;
@@ -77,7 +95,7 @@ begin
     ['posstd$i','_posstd','100'],
     ['posall$i','_posall','100'],
     ['color$i','_color','60'],
-    ['name$s','”часток','300;w;h;r']
+    ['name$s','”часток','200;_w;h;r']
   ];
   //добавим пол€ дл€ €чеек дней (центрируем)
   for i := 1 to  FReglament.G(0, 'deadline').AsInteger do
@@ -93,7 +111,7 @@ begin
   for i := 1 to High(cOrderReglamentSnTypes) do
     if  FReglament.G(0, 'sn_' + IntToStr(i)).AsInteger > 0 then
       st2 := st2 + ' union all select 100000' + IntToStr(i) + ', 0, 100000' + IntToStr(i) + ' as posall, null,''' +  cOrderReglamentSnTypes[i] + '''' + st +  ' from dual ';
-  Frg1.SetInitData('select t.id, t.posstd, t.posall, r.color, t.name' + st + ' from v_work_cell_types t, order_reglament_items r where r.id_reglament = :id$i and t.id = r.id_work_cell_type' + st2 + ' order by posall',[100]);
+  Frg1.SetInitData('select t.id, t.posstd, t.posall, r.color, t.name' + st + ' from v_work_cell_types t, order_reglament_items r where r.id_reglament = :id$i and t.id = r.id_work_cell_type' + st2 + ' order by posall',[FReglament.G(0, 'id')]);
 end;
 
 procedure TFrmOGrepOrReglament.LoadDaysGrid;

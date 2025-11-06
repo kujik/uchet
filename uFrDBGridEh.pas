@@ -748,6 +748,8 @@ type
     function IsTableEmpty: Boolean;
     //проверка корректности всей таблицы
     function IsTableCorrect: Boolean;
+    //зщдгчить размеры грида
+    procedure GetGridDimensions(var AWidth, AHeight: Integer);
     //тестовая процедура
     procedure Test;
 
@@ -3783,6 +3785,31 @@ begin
 end;
 
 
+procedure TFrDBGridEh.GetGridDimensions(var AWidth, AHeight: Integer);
+//получим размер грида (нужно если например надо подогнать панель так чтобы весь грид был виден)
+//!!! не учитывал индикаторный столбец
+var
+  i, j, k, rn, rh, fh, cl: Integer;
+function IsHorzScrollBarVisible(hWnd: HWND): Boolean;
+var
+  style: Integer;
+begin
+  style := GetWindowLong(hWnd, GWL_STYLE);
+  Result := (style and WS_HSCROLL) <> 0;
+end;
+begin
+  rh := 0; fh := 0;
+  for i := 0 to TDBGridEhMy(DBGridEh1).RowCount - 1 do
+    rh := rh + TDBGridEhMy(DBGridEh1).RowHeights[i];
+  for i := 0 to TDBGridEhMy(DBGridEh1).FooterRowCount - 1 do
+    fh := fh + mydefGridRowHeight;
+  AHeight := rh + fh + 5 + S.IIf((myogPanelFilter in Options) or (myogPanelFind in Options), 30, 0) + S.IIf(DBGridEh1.HorzScrollBar.Visible, 23 , 0);
+  cl := 0;
+  for i := 0 to DBGridEh1.Columns.Count - 1 do
+    if DBGridEh1.Columns[i].Visible then
+      cl := cl + DBGridEh1.Columns[i].Width + 1;
+  AWidth := cl + 5 + S.IIf(DBGridEh1.VertScrollBar.Visible, 23 , 0);
+end;
 
 
 end.
