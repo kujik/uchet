@@ -724,6 +724,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Width = 919
           Height = 94
           Align = alTop
+          Anchors = [akTop]
           Caption = 'pnlAddM'
           TabOrder = 1
           ExplicitWidth = 915
@@ -735,28 +736,30 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Top = 62
             Width = 63
             Height = 13
-            Anchors = [akRight]
+            Anchors = [akTop]
             Caption = #1057#1086#1075#1083#1072#1089#1086#1074#1072#1085':'
           end
           object chb_Agreed2: TDBCheckBoxEh
-            Left = 836
+            Left = 832
             Top = 48
             Width = 73
             Height = 17
-            Anchors = [akRight]
+            Anchors = [akTop]
             Caption = #1044#1080#1088#1077#1082#1090#1086#1088
             DynProps = <>
             TabOrder = 0
+            ExplicitLeft = 828
           end
           object chb_Agreed1: TDBCheckBoxEh
-            Left = 736
+            Left = 732
             Top = 48
             Width = 94
             Height = 17
-            Anchors = [akRight]
+            Anchors = [akTop]
             Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
             DynProps = <>
             TabOrder = 1
+            ExplicitLeft = 729
           end
           object btnReqestFileOpen: TBitBtn
             Left = 264
@@ -818,20 +821,18 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           end
           object chb_AccountFile: TDBCheckBoxEh
             Left = 71
-            Top = 46
+            Top = 54
             Width = 156
             Height = 17
-            Anchors = [akLeft]
             Caption = #1060#1072#1081#1083
             DynProps = <>
             TabOrder = 7
           end
           object chb_RequestFile: TDBCheckBoxEh
             Left = 295
-            Top = 46
+            Top = 54
             Width = 154
             Height = 17
-            Anchors = [akLeft]
             Caption = #1060#1072#1081#1083
             DynProps = <>
             TabOrder = 8

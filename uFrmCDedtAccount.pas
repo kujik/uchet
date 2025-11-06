@@ -60,6 +60,7 @@ type
     chb_AccountFile: TDBCheckBoxEh;
     chb_RequestFile: TDBCheckBoxEh;
   private
+    FAccountType: Integer;
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
@@ -67,8 +68,9 @@ type
     procedure ControlOnChange(Sender: TObject); override;
     procedure EdtPaymentOnChaange(Sender: TObject);
     function  Save: Boolean; override;
-    function IsFilesLoaded: Boolean;
-
+    function  IsFilesLoaded: Boolean;
+    procedure LoadPayments;
+    procedure SetFormAppearance;
     procedure CreatePaymentsEdts;
   public
   end;
@@ -90,69 +92,13 @@ uses
 
 {$R *.dfm}
 
-procedure TFrmCDedtAccount.CreatePaymentsEdts;
-var
-  i, j: Integer;
-  dedt1: TDBDateTimeEditEh;
-  nedt1: TDBNumberEditEh;
-  w: Integer;
-begin
-  pnlPaymentsD.Visible := False;
-  w := nedt_1.Left + nedt_1.Width + 25;
-  for i := 1 to 10 do
-    for j := S.IIf(i = 1, 2, 1) to 3 do begin
-      dedt1 := TDBDateTimeEditEh.Create(Self);
-      dedt1.Parent := pnlPaymentsD;
-      dedt1.Name := 'dedt_' + IntToStr((i - 1) * 3 + j);
-      dedt1.Visible := (i = 1) and (j = 1);
-      dedt1.Left := (j - 1) * w  + dedt_1.Left;
-      dedt1.Width := dedt_1.Width;
-      dedt1.Top := (i - 1) * (dedt_1.Height + 4) + dedt_1.Top;
-      dedt1.ControlLabelLocation.Position := lpLeftCenterEh;
-      dedt1.ControlLabel.Visible := True;
-      dedt1.ControlLabel.Caption := IntToStr((i - 1) * 3 + j);
-      nedt1 := TDBNumberEditEh.Create(Self);
-      nedt1.Parent := pnlPaymentsD;
-      nedt1.Name := 'nedt_' + IntToStr((i - 1) * 3 + j);
-      nedt1.Visible := (i = 1) and (j = 1);
-      nedt1.Left := (j - 1) * w  + nedt_1.Left;
-      nedt1.Width := nedt_1.Width;
-      nedt1.Top := dedt1.Top;
-    end;
-  pnlPaymentsD.Visible := True;
-end;
-
-procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
-var
-  i, j: Integer;
-  b: Boolean;
-begin
-  i := 30;
-  while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
-    dec(i);
-  b := False;
-  for j := i downto 1 do
-    if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
-       b := True;
-       Break;
-    end;
-  if (not b) and (i < 30) then begin
-    TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
-    TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
-  end;
-  i := 30;
-  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
-    dec(i);
-  pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i))).Top + TControl(FindComponent('nedt_' + IntToStr(i))).Height + 8;
-  scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);
-  pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
-end;
-
 
 
 function TFrmCDedtAccount.Prepare: Boolean;
 begin
   Result := False;
+
+  FAccountType := AddParam.AsInteger;
 
   Caption := 'Счет';
   FOpt.RefreshParent := True;
@@ -163,7 +109,7 @@ begin
 
   //FWHCorrected := Cth.AlignControls(pnlFrmClient, FOpt.ControlsWoAligment, False);
 
-  frmpcGeneral.SetParameters(True, 'Основное', [['Данные счета.']], True);
+  frmpcGeneral.SetParameters(True, 'Основное', [['Данные счета.']], False);
   Cth.AlignControls(pnlGeneralM, FOpt.ControlsWoAligment, True);
   pnlGeneral.Height := frmpcGeneral.Height + pnlGeneralM.Height;
 
@@ -177,6 +123,8 @@ begin
 
   frmpcAdd.SetParameters(True, 'Дополнительно', [], False);
   Cth.AlignControls(pnlAddM, FOpt.ControlsWoAligment, False);
+  pnlAddM.Height := btnFileOpen.Top + btnFileOpen.Height + 4;
+  pnlAdd.Height :=  frmpcAdd.Height + pnlAddM.Height;
 
   Cth.SetBtn(btnFileAttach, mybtAttach, True, 'Прикрепить файл счета');
   Cth.SetBtn(btnReqestFileAttach, mybtAttach, True, 'Прикрепить файл заявки');
@@ -189,7 +137,7 @@ begin
   F.DefineFields:=[
     ['id$i'],
     ['type$i'],
-    ['accounttype$i','V=1:400'],
+    ['accounttype$i','V=1:400',#0,AddParam],
     ['account$s','V=1:400::T'],
     ['accountdt$d','V=:'],
     ['dt$d','V=:',#0,Date],
@@ -233,8 +181,12 @@ begin
   F.SetPropsControls;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);      }
   Result := Inherited;
+  if Mode <> fAdd then
+    FAccountType := F.GetPropB('accounttype').AsInteger;
+  LoadPayments;
   IsFilesLoaded;
-  SetControlsEditable([cmb_id_user{, chb_AccountFile, chb_RequestFile}], False);
+  SetControlsEditable([cmb_id_user], False);
+  SetFormAppearance;
 end;
 
 function TFrmCDedtAccount.LoadComboBoxes: Boolean;
@@ -306,6 +258,95 @@ begin
 //      if (cmb_id_expenseitem.ItemIndex = -1) //or(cmb_RecReceipt.Items[cmb_ExpenseItem.ItemIndex] = '1')
   Cth.SetErrorMarker(chb_RequestFile, (not chb_AccountFile.Checked) and (nedt_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req)));
 end;
+
+procedure TFrmCDedtAccount.LoadPayments;
+var
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  EdtPaymentOnChaange(nil);
+  if Mode in [fAdd, fCopy] then
+    Exit;
+  va2 := Q.QLoadToVarDynArray2('select id, dt, sum, status from sn_calendar_payments where id_account = :id$i order by status desc, dt, sum', [ID]);
+  for i := 0 to High(va2) do begin
+    Cth.SetControlValue(Self, 'dedt_' + IntToStr(i + 1), va2[i][1]);
+    Cth.SetControlValue(Self, 'nedt_' + IntToStr(i + 1), va2[i][2]);
+    if (Mode in [fEdit]) and (va2[i][3] = 1) then begin
+      SetControlsEditable([TControl(FindComponent('dedt_' + IntToStr(i + 1))), TControl(FindComponent('nedt_' + IntToStr(i + 1)))], False);
+    end;
+  end;
+  EdtPaymentOnChaange(nil);
+end;
+
+procedure TFrmCDedtAccount.SetFormAppearance;
+begin
+  pnlRoute.Visible:=A.InArray(FAccountType, [1,2]);      //маршрут, для транспортных
+  pnlBasis.Visible:=A.InArray(FAccountType, [1,2,3]);    //основания, для транспортных и монтажа
+  Self.ClientHeight:=pnlAdd.Top + pnlAdd.Height;
+{ //возьмем размеры формы из настроек
+  Self.Width:= StrtoInt(Settings.ReadProperty(FormDoc, 'Width_' + IntToStr(AccMode), '0'));
+  Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));
+  Self.Resize;}
+end;
+
+procedure TFrmCDedtAccount.CreatePaymentsEdts;
+var
+  i, j: Integer;
+  dedt1: TDBDateTimeEditEh;
+  nedt1: TDBNumberEditEh;
+  w: Integer;
+begin
+  pnlPaymentsD.Visible := False;
+  w := nedt_1.Left + nedt_1.Width + 25;
+  for i := 1 to 10 do
+    for j := S.IIf(i = 1, 2, 1) to 3 do begin
+      dedt1 := TDBDateTimeEditEh.Create(Self);
+      dedt1.Parent := pnlPaymentsD;
+      dedt1.Name := 'dedt_' + IntToStr((i - 1) * 3 + j);
+      dedt1.Visible := (i = 1) and (j = 1);
+      dedt1.Left := (j - 1) * w  + dedt_1.Left;
+      dedt1.Width := dedt_1.Width;
+      dedt1.Top := (i - 1) * (dedt_1.Height + 4) + dedt_1.Top;
+      dedt1.ControlLabelLocation.Position := lpLeftCenterEh;
+      dedt1.ControlLabel.Visible := True;
+      dedt1.ControlLabel.Caption := IntToStr((i - 1) * 3 + j);
+      nedt1 := TDBNumberEditEh.Create(Self);
+      nedt1.Parent := pnlPaymentsD;
+      nedt1.Name := 'nedt_' + IntToStr((i - 1) * 3 + j);
+      nedt1.Visible := (i = 1) and (j = 1);
+      nedt1.Left := (j - 1) * w  + nedt_1.Left;
+      nedt1.Width := nedt_1.Width;
+      nedt1.Top := dedt1.Top;
+    end;
+  pnlPaymentsD.Visible := True;
+end;
+
+procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
+var
+  i, j: Integer;
+  b: Boolean;
+begin
+  i := 30;
+  while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
+    dec(i);
+  b := False;
+  for j := i downto 1 do
+    if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
+       b := True;
+       Break;
+    end;
+  if (not b) and (i < 30) then begin
+    TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
+    TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
+  end;
+  i := 30;
+  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
+    dec(i);
+  pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i))).Top + TControl(FindComponent('nedt_' + IntToStr(i))).Height + 8;
+  scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);
+  pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
+end;
+
 
 
 end.
