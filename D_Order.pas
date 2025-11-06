@@ -2926,6 +2926,8 @@ begin
   Rep.PasteBand('HEADER');
   for j := 0 to High(FieldsArr) do begin
     st := FieldsArr[j][cFieldName];
+    if (st = 'id_type2') and (FNewOrderType = 1) then
+      st := 'id_type';
     Rep.ExcelFind('#' + st + '#', x, y, xlValues);
     if x = -1 then
       Continue;
