@@ -1473,7 +1473,7 @@ var
 begin
   //q.QExecSql('select 2 / 0 from dual', []); Exit;
 
-  TFrmOGrepOrReglament.Show(Application, '22222129', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
+  TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
 
 
   v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);

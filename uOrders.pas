@@ -2642,65 +2642,35 @@ end;
 
 procedure ParseXMLFile(const FileName: string);
 //uses  Xml.XMLDoc, Xml.XMLIntf;
-{
-<?xml version="1.0" encoding="UTF-8"?>
-<users>
-  <user id="1">
-    <name>Иван</name>
-    <email>ivan@example.com</email>
-  </user>
-  <user id="2">
-    <name>Мария</name>
-    <email>maria@example.com</email>
-  </user>
-</users>
-}
 //ChildNodes['name'] — работает только если имя узла уникально в пределах родителя. В противном случае лучше использовать индекс или цикл.
 var
   XMLDoc: IXMLDocument;
-  UsersNode, UserNode: IXMLNode;
-  i, j, k: Integer;
-  st : string;
-  v : Variant;
-procedure ParseBoardType(Node: IXMLNode);
+  i, j: Integer;
+function ParseBoardType(ANode: IXMLNode): Integer;
 var
   i, j: Integer;
 begin
-  for i := 0 to Node.ChildNodes.Count - 1 do
-    if Node.ChildNodes[i].NodeName = 'BOARDSMP' then begin
-
+  Result := 0;
+  for i := 0 to ANode.ChildNodes.Count - 1 do
+    if ANode.ChildNodes[i].NodeName = 'BOARDSMP' then begin
+      if ANode.ChildNodes[i].ChildNodes['DRILLING'].ChildNodes.Count > 0 then
+        Result := Result + ANode.ChildNodes[i].ChildNodes['QTY'].NodeValue;
     end;
 end;
-
 
 begin
   XMLDoc := TXMLDocument.Create(nil);
   XMLDoc.LoadFromFile(FileName);
   XMLDoc.Active := True;
-
-  UsersNode := XMLDoc.DocumentElement; // <users>
-//  UsersNode := UserNode.  ChildNodes['boardrootnode'];
-
-  v := UsersNode.ChildNodes['BOARDROOTNODE'].ChildNodes['SMPBOARDS'].ChildNodes['QTY'].NodeValue;
-//  for i := 0 to UsersNode.ChildNodes.Count - 1 do
-  begin
-    UserNode := UsersNode.ChildNodes[i]; // <user>
-    st := UserNode.NodeName;
-    if st = 'BOARDROOTNODE' then begin
-      st := '';
-    end;
-{
-    // Получаем атрибут
-    Writeln('ID: ', UserNode.Attributes['id']);
-
-    // Получаем дочерние узлы
-    Writeln('Имя: ', UserNode.ChildNodes['name'].Text);
-    Writeln('Email: ', UserNode.ChildNodes['email'].Text);
-    Writeln('---');        }
-  end;
+  i :=
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['SMPBOARDS']) +
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['FIGBOARDS']) +
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['BENTBOARDS'])
+  ;
 end;
 
 begin
   Orders := TOrders.Create;
-  //ParseXMLFile('r:\projects\uchet\test\drill.xml');
+//  ParseXMLFile('r:\projects\uchet\test\Шкаф табачный, 1250х400х2100мм, 144SKU, ЛДСП RAL 7035 M02.xml');
+//  ParseXMLFile('r:\projects\uchet\test\drill.xml');
 end.

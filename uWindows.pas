@@ -111,7 +111,8 @@ uses
 
   uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
 
-  D_Sn_Calendar,
+//  D_Sn_Calendar,
+  uFrmCDedtAccount,
   D_ExpenseItems,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
@@ -818,7 +819,8 @@ begin
 //    Form := TDlg_Pick_Item.ShowDialog(AOwner, F, fMode, AId);
   end
   else if F = myfrm_Dlg_SnCalendar then begin
-    Form := TDlg_Sn_Calendar.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);
+    TFrmCDedtAccount.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMultiCopy], fMode, AId, AAddParam);
+    //Form := TDlg_Sn_Calendar.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);
   end
   else if F = myfrm_Dlg_RefExpenseItems then begin
     Form := TDlg_ExpenseItems.Create(AOwner, F, MyFormOptions, fMode, AId, null);

@@ -13,28 +13,19 @@ type
   TFrmCDedtAccount = class(TFrmBasicDbDialog)
     pnlGeneral: TPanel;
     pnlGeneralM: TPanel;
-    cmb_Cash: TDBComboBoxEh;
-    edt_Account: TDBEditEh;
-    cmb_Supplier: TDBComboBoxEh;
-    Dt_Account: TDBDateTimeEditEh;
-    cmb_Org: TDBComboBoxEh;
-    cmb_User: TDBComboBoxEh;
-    cmb_ExpenseItem: TDBComboBoxEh;
-    nedt_Sum: TDBNumberEditEh;
+    cmb_type: TDBComboBoxEh;
+    edt_account: TDBEditEh;
+    cmb_id_supplier: TDBComboBoxEh;
+    dedt_accountdt: TDBDateTimeEditEh;
+    cmb_id_org: TDBComboBoxEh;
+    cmb_id_user: TDBComboBoxEh;
+    cmb_id_expenseitem: TDBComboBoxEh;
+    nedt_sum: TDBNumberEditEh;
     nedt_SumWoNds: TDBNumberEditEh;
     frmpcGeneral: TFrMyPanelCaption;
-    cmb_Nds: TDBComboBoxEh;
+    cmb_nds: TDBComboBoxEh;
     pnlRoute: TPanel;
     frmpcRoute: TFrMyPanelCaption;
-    pnl_Route: TPanel;
-    cmb_CarType: TDBComboBoxEh;
-    cmb_Flight: TDBComboBoxEh;
-    nedt_Kilometrage: TDBNumberEditEh;
-    dedt_FlightDt: TDBDateTimeEditEh;
-    nedt_Idle: TDBNumberEditEh;
-    nedt_PriceKm: TDBNumberEditEh;
-    nedt_PriceIdle: TDBNumberEditEh;
-    nedt_SumOther: TDBNumberEditEh;
     FrgRoute: TFrDBGridEh;
     pnlBasis: TPanel;
     frmpcBasis: TFrMyPanelCaption;
@@ -59,6 +50,15 @@ type
     btnFileOpen: TBitBtn;
     btnFileAttach: TBitBtn;
     edtComm: TDBEditEh;
+    pnlRouteM: TPanel;
+    cmb_CarType: TDBComboBoxEh;
+    cmb_Flight: TDBComboBoxEh;
+    nedt_Kilometrage: TDBNumberEditEh;
+    dedt_FlightDt: TDBDateTimeEditEh;
+    nedt_Idle: TDBNumberEditEh;
+    nedt_PriceKm: TDBNumberEditEh;
+    nedt_PriceIdle: TDBNumberEditEh;
+    nedt_SumOther: TDBNumberEditEh;
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -162,12 +162,12 @@ begin
 
   //FWHCorrected := Cth.AlignControls(pnlFrmClient, FOpt.ControlsWoAligment, False);
 
-  frmpcGeneral.SetParameters(True, 'Основное', [['Данные счета.']], False);
+  frmpcGeneral.SetParameters(True, 'Основное', [['Данные счета.']], True);
   Cth.AlignControls(pnlGeneralM, FOpt.ControlsWoAligment, True);
   pnlGeneral.Height := frmpcGeneral.Height + pnlGeneralM.Height;
 
   frmpcRoute.SetParameters(True, 'Транспорт', [['1']], False);
-  Cth.AlignControls(pnlRoute, FOpt.ControlsWoAligment, True);
+  Cth.AlignControls(pnlRouteM, FOpt.ControlsWoAligment, True);
 
   frmpcBasis.SetParameters(True, 'Основание', [['1']], False);
 
@@ -177,6 +177,29 @@ begin
   frmpcAdd.SetParameters(True, 'Дополнительно', [], False);
   Cth.AlignControls(pnlAddM, FOpt.ControlsWoAligment, True);
 
+//  FieldNames:='id$i;type$i;account$s;id_supplier$i;id_org$i;id_expenseitem$i;id_user$i;sum$f;comm$s;filename$s;agreed1$i;agreed2$i;accountdt$d;dt$d;accounttype$d;id_whoagreed1$i;nds$f';
+  F.DefineFields:=[
+    ['id$i'],
+    ['type$i'],
+    ['accounttype$i','V=1:400'],
+    ['account$s','V=1:400::T'],
+    ['accountdt$d','V=:'],
+    ['dt$d','V=:',#0,Date],
+    ['id_supplier$i','V=1:400'],
+    ['id_org$i','V=1:400'],
+    ['id_expenseitem$i','V=1:400'],
+    ['id_user$i','V=1:400',#0,User.GetId],
+    ['sum$f','V=0:10000000000:2:N'],
+    ['nds$f','V=0:99:2:N'],
+    ['comm$s','V:0:4000'],
+    ['filename$s',''],
+    ['agreed1$i',''],
+    ['agreed2$i',''],
+    ['id_whoagreed1$i','']
+  ];
+
+  View := 'sn_calendar_accounts';
+  Table := 'sn_calendar_accounts';
 
 
   //pnlGeneralT.BevelEdges := [beTop];
@@ -200,12 +223,36 @@ begin
 //    Exit;
   F.SetPropsControls;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);      }
-  Result := True;
+  Result := Inherited;
+  SetControlsEditable([cmb_id_user], False);
 end;
 
 function TFrmCDedtAccount.LoadComboBoxes: Boolean;
 begin
-
+  Result := False;
+  Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id$i order by legalname', [F.GetPropB('id_supplier')], cmb_id_supplier, cntComboLK);
+  //Q.QLoadToTStringList('select agreed, id from ref_expenseitems', [], ExpAgreed);
+  if User.Role(rPC_A_ChAll)
+    then begin
+      Q.QLoadToDBComboBoxEh('select name, id from ref_expenseitems where (accounttype = :accmode$i and active = 1) or id = :id_expenseitem$i order by name',
+        [F.GetPropB('accounttype'), F.GetPropB('id_expenseitem')], cmb_id_expenseitem, cntComboLK);
+{      Q.QLoadToDBComboBoxEh('select recvreceipt, id from ref_expenseitems where (accounttype = :accmode$i and active = 1) or id = :id_expenseitem$i order by name',
+        [F.GetPropB('accounttype'), F.GetPropB('id_expenseitem'], cmb_RecReceipt, cntComboLK);}
+    end
+    else begin
+      //загрузим только статьи расходов, по которым можно редактировать (в итоге если открыть на редактирование счет не  по своей статье, то его не сохранить тк стаья будет пустая)
+      Q.QLoadToDBComboBoxEh('select name, id from ref_expenseitems where (anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i) or id = :id_expenseitem$i order by name',
+        [User.GetId ,F.GetPropB('accounttype'), F.GetPropB('id_expenseitem')], cmb_id_expenseitem, cntComboLK);
+{      Q.QLoadToDBComboBoxEh('select recvreceipt, id from ref_expenseitems where (anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i) or id = :id_expenseitem$i order by name',
+        [User.GetId, AccMode, v[5]], cmb_RecReceipt, cntComboLK);}
+    end;
+  Q.QLoadToDBComboBoxEh(
+    'select name, id from ref_sn_organizations where (active = 1 and is_buyer = 1) or id = :id$i order by name',
+    [F.GetPropB('id_org')], cmb_id_org, cntComboLK
+  );
+  Q.QLoadToDBComboBoxEh('select name, id from adm_users order by name', [], cmb_id_user, cntComboLK);
+  Cth.AddToComboBoxEh(cmb_nds, [['без НДС', '0'], ['5%','5'], ['7%','7'], ['10%','10'], ['20%','20'], ['22%','22']]);
+  Result := True;
 end;
 
 procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
