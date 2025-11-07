@@ -1987,6 +1987,7 @@ create or replace view v_orders_edges_m as
 select
 --количество кромочных материалов,м.пог.
   oi.id,
+  max(oi.id_order) as id_order,
 --  max(oi.slash) as slash,
   sum(ei.qnt_itm) as qnt
 from 
@@ -2013,6 +2014,7 @@ create or replace view v_orders_boards_m2 as
 select
 --количество плитных материалов (на пильные центры) по заказам
   oi.id,
+  max(oi.id_order) as id_order,
 --  max(oi.slash) as slash,
   sum(ei.qnt_itm) as qnt
 from 
@@ -2127,6 +2129,28 @@ begin
   when matched then
       update set t1.qnt_edges_m = t2.qnt;
 
+end;
+/
+
+
+create or replace procedure P_SetOrderProdData(
+  AIdOrder number
+)
+is
+begin
+  update order_items set qnt_boards_m2 = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_boards_m2 where id_order = AIdOrder) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+
+  update order_items set qnt_edges_m = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_edges_m where id_order = AIdOrder) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
 end;
 /
 

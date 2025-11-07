@@ -2,6 +2,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
   Caption = 'FrmCDedtAccount'
   ClientHeight = 819
   ClientWidth = 931
+  OnResize = FormResize
   ExplicitWidth = 943
   ExplicitHeight = 857
   TextHeight = 13
@@ -299,6 +300,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                 ExplicitLeft = 18
                 ExplicitTop = 17
                 ExplicitWidth = 58
+                ExplicitHeight = 0
                 inherited PRowDetailPanel: TPanel
                   Width = 56
                   Height = 0
@@ -556,9 +558,9 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
+                ExplicitHeight = 0
                 inherited PRowDetailPanel: TPanel
                   Width = 44
                   Height = 0

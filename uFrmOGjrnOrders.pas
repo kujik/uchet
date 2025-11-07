@@ -132,7 +132,7 @@ begin
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
    [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
-   [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [],
+   [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [-1001, True, 'Пересчитать данные для производства'], [],
    [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [], [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)], [],
    [mbtTest, User.IsDeveloper],
    [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [],
@@ -269,6 +269,12 @@ begin
   end
   else if (Tag = mbtCustom_CreateCompleteEstimate) then begin
     Orders.CreateAggregateEstimate(Fr.ID, 1);
+  end
+  else if (Tag = 1001) then begin
+    Q.QBeginTrans(True);
+    Q.QCallStoredProc('P_SetOrderProdData', ':id$i', [Fr.ID]);
+    Q.QCommitOrRollback(True);
+    Fr.RefreshRecord;
   end
   else if Fmode <> fNone then begin
     //диалог ввода заказа

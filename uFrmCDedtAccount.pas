@@ -59,6 +59,7 @@ type
     nedt_SumOther: TDBNumberEditEh;
     chb_AccountFile: TDBCheckBoxEh;
     chb_RequestFile: TDBCheckBoxEh;
+    procedure FormResize(Sender: TObject);
   private
     FAccountType: Integer;
     function  Prepare: Boolean; override;
@@ -92,7 +93,8 @@ uses
 
 {$R *.dfm}
 
-
+const
+  cMaxPaymentsCnt = 5 * 12;
 
 function TFrmCDedtAccount.Prepare: Boolean;
 begin
@@ -145,7 +147,7 @@ begin
     ['id_org$i','V=1:400'],
     ['id_expenseitem$i','V=1:400'],
     ['id_user$i','V=1:400',#0,User.GetId],
-    ['sum$f','V=0:10000000000:2:N'],
+    ['sum$f','V=0:100000000:2'],       //!!! допутим ли 0
     ['nds$f','V=0:99:2:N'],
     ['comm$s','V:0:4000'],
     ['filename$s','',#0,FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now)],
@@ -236,6 +238,8 @@ begin
     EdtPaymentOnChaange(Sender);
   if (Name = 'chb_accountfile') or  (Name = 'chb_requestfile') then
     TDBCheckBoxEh(Sender).Checked := Pos(' не ', TDBCheckBoxEh(Sender).Caption) = 0;
+  if Name = 'nedt_sum' then
+    EdtPaymentOnChaange(nil);
 end;
 
 function TFrmCDedtAccount.Save: Boolean;
@@ -279,10 +283,15 @@ begin
 end;
 
 procedure TFrmCDedtAccount.SetFormAppearance;
+var
+  h : Integer;
 begin
-  pnlRoute.Visible:=A.InArray(FAccountType, [1,2]);      //маршрут, для транспортных
-  pnlBasis.Visible:=A.InArray(FAccountType, [1,2,3]);    //основания, для транспортных и монтажа
-  Self.ClientHeight:=pnlAdd.Top + pnlAdd.Height;
+  pnlRoute.Visible := a.InArray(FAccountType, [1, 2]);      //маршрут, для транспортных
+  pnlBasis.Visible := a.InArray(FAccountType, [1, 2, 3]);    //основания, для транспортных и монтажа
+  h := pnlAdd.Top + pnlAdd.Height;
+  FWHCorrected.Y := h;
+  FWHCorrected.Y2 := h;
+  //FWHBounds := FWHCorrected;   //ведет к блокировке изменения размера и неверному размеру
 { //возьмем размеры формы из настроек
   Self.Width:= StrtoInt(Settings.ReadProperty(FormDoc, 'Width_' + IntToStr(AccMode), '0'));
   Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));
@@ -298,7 +307,7 @@ var
 begin
   pnlPaymentsD.Visible := False;
   w := nedt_1.Left + nedt_1.Width + 25;
-  for i := 1 to 10 do
+  for i := 1 to cMaxPaymentsCnt div 3  do
     for j := S.IIf(i = 1, 2, 1) to 3 do begin
       dedt1 := TDBDateTimeEditEh.Create(Self);
       dedt1.Parent := pnlPaymentsD;
@@ -323,30 +332,88 @@ end;
 
 procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
 var
-  i, j: Integer;
+  i, j, t: Integer;
   b: Boolean;
+  sum: Extended;
 begin
-  i := 30;
+  //if not FInPrepare then
+    //Perform(WM_SETREDRAW, 0, 0);
+  try
+  i := cMaxPaymentsCnt;
+  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
+    dec(i);
+  t := TControl(FindComponent('dedt_' + IntToStr(i))).Top;
+  sum:= 0;
+  for i := 1 to cMaxPaymentsCnt do begin
+    Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(i))), False);
+    Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(i))), False);
+  end;
+  i := cMaxPaymentsCnt;
   while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
     dec(i);
   b := False;
-  for j := i downto 1 do
+  for j := i downto 1 do  begin
+    sum := sum + GetControlValue('nedt_' + IntToStr(j)).AsFloat;
     if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
        b := True;
-       Break;
+    end
+    else if (GetControlValue('dedt_' + IntToStr(j), True) <> null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
+      Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
+    end
+    else if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) <> null) then begin
+      Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
     end;
-  if (not b) and (i < 30) then begin
+  end;
+//Exit;
+  if (not b) and (i < cMaxPaymentsCnt) then begin
     TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
     TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
   end;
-  i := 30;
+  i := cMaxPaymentsCnt;
   while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
     dec(i);
-  pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i))).Top + TControl(FindComponent('nedt_' + IntToStr(i))).Height + 8;
-  scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);
-  pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
+  if sum <> GetControlValue('nedt_sum').AsFloat then
+    for j := i downto 1 do
+      if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
+        Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
+        Break;
+      end;
+  finally
+    if not FInPrepare then begin
+      //Perform(WM_SETREDRAW, 1, 0);
+    //  Invalidate;
+    end;
+  end;
+  if (t <> TControl(FindComponent('dedt_' + IntToStr(i))).Top) or (FInPrepare) then begin
+    t := TControl(FindComponent('dedt_' + IntToStr(i))).Top + TControl(FindComponent('dedt_' + IntToStr(i))).Height + 8;
+    pnlPaymentsD.Height := t;
+    scrlbxPaymentsM.Height := t + 4;
+{
+    if pnlPaymentsD.Height <> TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8 then
+      pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8;
+    scrlbxPaymentsM.Height := pnlPaymentsD.Height + 4;
+
+    if scrlbxPaymentsM.Height <> Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4) then
+      scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);}
+    if pnlPayments.Height <> frmpcPayments.Height + scrlbxPaymentsM.Height then
+    begin
+      pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
+      FormResize(nil);
+    end;
+  end;
 end;
 
 
+
+procedure TFrmCDedtAccount.FormResize(Sender: TObject);
+begin
+  {Perform(WM_SETREDRAW, 0, 0);
+  inherited;
+  ClientHeight := FWHCorrected.Y + 35;
+  Perform(WM_SETREDRAW, 1, 0);
+  Invalidate;
+  Repaint;}
+  ClientHeight := pnlAdd.Top + pnlAdd.Height + pnlFrmBtnsMain.Height + 30;
+end;
 
 end.
