@@ -172,7 +172,8 @@ uses
   uFrmOWedtOrReglament in 'uFrmOWedtOrReglament.pas' {FrmOWedtOrReglament},
   uFrmOGrepEstimatePrices in 'uFrmOGrepEstimatePrices.pas' {FrmOGrepEstimatePrices},
   uFrmOGselOrReglament in 'uFrmOGselOrReglament.pas' {FrmOGselOrReglament},
-  uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament};
+  uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament},
+  uFrmWGjrnEmployees in 'uFrmWGjrnEmployees.pas' {FrmWGjrnEmployees};
 
 var
   MT: Integer;
@@ -269,6 +270,7 @@ begin
   //создаем форму данных (разныые объекты данных программы)
   Application.CreateForm(TMyData, MyData);
   Application.CreateForm(TmyDBParsec, myDBParsec);
+  Application.CreateForm(TFrmWGjrnEmployees, FrmWGjrnEmployees);
   //!!!!
   //создаем форму работы с отчетами fr3
   Application.CreateForm(TPrintReport, PrintReport);

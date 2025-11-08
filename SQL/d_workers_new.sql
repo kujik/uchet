@@ -206,77 +206,163 @@ where
 --!!!
 insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours;
 
-
-
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 
 --статусы работников (когда и куда принят/переведен/уволен)
-create table w_worker_status(
+drop table w_worker_status cascade constraints;
+create table w_employee_properties(
   id number(11),
   dt date,
   dt_beg date,
   dt_end date,  
-  hired number(1) default 0,
-  fired number(1) default 0,
-  id_worker number(11),
-  id_organization,
-  id_division number(11),
+  id_employee number(11),
+  is_hired number(1) default 0,
+  is_terminated  number(1) default 0,
+  id_organization number(11),               --организация, в которой числится работники
+  personnel_number varchar2(10),            --табельный номер (уникален для организации, номер уволенного не повторится, номер вновь принятого будет другой чем ранее
+  id_departament number(11),
   id_job number(11),
   id_schedule number(11),
+  is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   is_foreman number(1) default 0,
-  is_concurrent number(1) default 0,
-  --status number(1),             
   comm varchar(4000), 
   id_manager number(1),
-  deleted number(1) default 0,
-  constraint pk_w_worker_status primary key (id),
-  constraint fk_w_worker_status_worker foreign key (id_worker) references ref_workers,
-  constraint fk_w_wworker_status_div foreign key (id_division) references ref_divisions(id), 
-  constraint fk_w_worker_status_job foreign key (id_job) references ref_jobs(id), 
-  constraint fk_w_worker_status_manager foreign key (id_manager) references adm_users(id),
-  constraint fk_w_worker_status_schedule foreign key (id_schedule) references ref_work_schedules(id)
+  --deleted number(1) default 0,              
+  constraint pk_w_employee_properties primary key (id),
+  constraint fk_w_employee_properties_emp foreign key (id_employee) references w_employees,
+  constraint fk_w_employee_properties_org foreign key (id_organization) references ref_sn_organizations(id), 
+  constraint fk_w_employee_properties_div foreign key (id_departament) references w_departaments(id), 
+  constraint fk_w_employee_properties_job foreign key (id_job) references w_jobs(id), 
+  constraint fk_w_employee_properties_mgr foreign key (id_manager) references adm_users(id),
+  constraint fk_w_employee_properties_sch foreign key (id_schedule) references w_schedules(id)
 );
 
-create sequence sq_w_worker_status start with 100000 nocache;
+create sequence sq_w_employee_properties start with 100000 nocache;
 
-create index idx_w_worker_status_div on w_worker_status(id_division); 
-create index idx_w_worker_status_job on w_worker_status(id_job); 
-create index idx_w_worker_status_worker on w_worker_status(id_worker); 
+create index idx_w_employee_properties_div on w_employee_properties(id_departament); 
+create index idx_w_employee_properties_job on w_employee_properties(id_job); 
+create index idx_w_employee_properties_emp on w_employee_properties(id_employee); 
 
-create or replace trigger trg_w_worker_status_bi_r before insert on w_worker_status for each row
+create or replace trigger trg_w_employee_properties_bi_r before insert on w_employee_properties for each row
 begin
-  if :new.id is null then
-    select sq_w_worker_status.nextval into :new.id from dual;
-   end if;
+  select nvl(:new.id, sq_w_employee_properties.nextval) into :new.id from dual;
 end;
 /
 
---create or replace view V_EMPLOYEE_STATUS as
-select
-    id_worker,
-    case
-        when last_hired_id > nvl(last_fired_id, 0) then 'y'
-        else 'n'
-    end as is_working_now,
-    last_hired,
-    last_fired
-from (
+
+select * from w_employee_properties order by id_employee, dt_beg;
+
+create or replace view v_employees as
+with
+--последнее событие приёма  
+last_hired as (
     select
-        id_worker,
-        max(case when hired = 1 then hired end)
-            keep (dense_rank last order by case when hired = 1 then id end) as last_hired,
-        max(case when fired = 1 then fired end)
-            keep (dense_rank last order by case when fired = 1 then id end) as last_fired,
-        max(case when hired = 1 then id end) as last_hired_id,
-        max(case when fired = 1 then id end) as last_fired_id
-    from w_worker_status
-    group by id_worker
-);
+        id_employee,
+        is_hired,
+        is_terminated,
+        dt_beg,
+        row_number() over (partition by id_employee order by id desc) as rn
+    from w_employee_properties
+    where is_hired = 1
+),
+--последнее событие увольнения 
+last_terminated as (
+    select
+        id_employee,
+        is_hired,
+        is_terminated,
+        dt_beg,
+        row_number() over (partition by id_employee order by id desc) as rn
+    from w_employee_properties
+    where is_terminated = 1
+),
+--первая запись вообще
+first_any_event as (
+    select
+        dt_beg,
+        id_employee,
+        id_departament,
+        id_job,
+        row_number() over (partition by id_employee order by id asc) as rn
+    from w_employee_properties
+),
+--последняя запись вообще, за исключением увольнения
+last_any_event as (
+    select
+        dt_beg,
+        id_employee,
+        id_departament,
+        id_job,
+        row_number() over (partition by id_employee order by id desc) as rn
+    from w_employee_properties
+    where is_terminated <> 1
+),
+--Дата последнего изменения отдела/должности (исключая увольнения)
+last_transfer as (
+    select
+        id_employee,
+        max(dt_beg) as dt_beg
+    from (
+        select
+            id_employee,
+            dt_beg,
+            id_departament,
+            id_job,
+            lag(id_departament) over (partition by id_employee order by id) as prev_dept,
+            lag(id_job) over (partition by id_employee order by id) as prev_job
+        from w_employee_properties
+        where is_terminated = 0 --исключаем увольнения
+    )
+    where
+      (id_departament <> prev_dept or nvl(id_departament, -999) <> nvl(prev_dept, -999))
+      or ((id_job <> prev_job) or nvl(id_job, -999) <> nvl(prev_job, -999))
+      or prev_dept is null --первая запись (не увольнение) считается как "изменение" (приём)
+    group by id_employee
+)
+--сам запрос получения данных
+select
+  e.id,
+  f_fio(e.f, e.i, e.o) as name,
+  f.dt_beg as dt_reg,
+  h.dt_beg as last_hired,
+  case when t.dt_beg > h.dt_beg then t.dt_beg else null end as last_terminated,
+  case when t.dt_beg > h.dt_beg then 'уволен' when h.dt_beg is not null then 'работет' else null end as is_working_now,
+  lt.dt_beg as dt_last_transfer,
+  d.name as departament,
+  j.name as job,
+  e.comm
+from w_employees e
+left join last_hired h on e.id = h.id_employee and h.rn = 1
+left join last_terminated t on e.id = t.id_employee and t.rn = 1
+left join first_any_event f on e.id = f.id_employee and f.rn = 1
+left join last_any_event a on e.id = a.id_employee and a.rn = 1
+left outer join last_transfer lt on e.id = lt.id_employee
+left outer join w_departaments d on a.id_departament = d.id and a.rn = 1
+left outer join w_jobs j on a.id_job = j.id and a.rn = 1
+;
+   
+
+  
+
+
+  e.id,
+    -- статус: работает ли сейчас?
+    case
+        when s.is_hired = 1 then 'y'
+        when s.is_terminated = 1 then 'n'
+        else 'n' -- если нет значимых событий
+    end as is_working_now,
+    -- дата последнего приёма (только если последнее значимое событие — приём)
+    case when s.is_hired = 1 then s.dt_beg end as last_hired,
+    -- дата последнего увольнения (только если последнее значимое событие — увольнение)
+    case when s.is_terminated = 1 then s.dt_beg end as last_terminated
+    -- комментарий из последней записи вообще
+    --a.comm as last_comment
+from w_employees e
+left join last_significant_event s on e.id = s.id_employee and s.rn = 1
+left join last_any_event a on e.id = a.id_employee and a.rn = 1;
+
+
 
 --create or replace view v_w_worker_status as  
 select
@@ -310,8 +396,9 @@ where
   sh.id (+) = s.id_schedule
 ;     
 
-insert into w_worker_status(id, id_worker, id_job, id_division, hired, fired, dt_beg) 
-  select id, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,1 , 1, 0), dt from j_worker_status;
+delete from w_employee_properties;
+insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
+  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
 
 
 
@@ -327,8 +414,7 @@ alter table ref_production_areas add constraint pk_ref_production_areas primary 
 
 
 /*
-оракл. есть таблица employee_state(id, state_type, comm, id_user, hired, fired, dt). создать вью, в котором выводится список уникальных пользователей, а также работает ли работник на текущую дату, когда принят последний раз, и если последним статусом было увольнение то когда уволен последний раз.  статусы работников могут содержать не только события приема и увольнения, но и другие. признаком что это событие приема, является hired=1, иначе hired будет 0, для увольнения аналогично. также нужно вывести комментарий для последнего по id события для данного работника
-
+оракл. есть таблица w_employee_properties(id, state_type, comm, id_employee, is_hired, is_terminated, dt_beg, id_departament, id_job). создать вью, в котором выводится список уникальных пользователей, а также работает ли работник на текущую дату, когда принят последний раз, и если последним статусом было увольнение то когда уволен последний раз.  статусы работников могут содержать не только события приема и увольнения, но и другие. признаком что это событие приема, является hired=1, иначе hired будет 0, для увольнения аналогично. также нужно вывести комментарий для последнего по id события для данного работника. также вывести дату события, когда для работника последний раз изменились отдел или должность, считать изменением событие последнего приема но не считать событие последнего увольнения
 CREATE OR REPLACE VIEW v_employee_status AS
 WITH
 -- 1. Все уникальные пользователи
@@ -372,6 +458,8 @@ FROM all_users u
 LEFT JOIN last_significant_event s ON u.id_user = s.id_user AND s.rn = 1
 LEFT JOIN last_any_event a ON u.id_user = a.id_user AND a.rn = 1;
 */
+
+
 
 
  
