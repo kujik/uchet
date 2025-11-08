@@ -17,8 +17,8 @@ type
     cmb_id_head: TDBComboBoxEh;
     edt_editusernames: TDBEditEh;
     chb_active: TDBCheckBoxEh;
-    cmb_id_schedule: TDBComboBoxEh;
     cmb_id_prod_area: TDBComboBoxEh;
+    chb_has_foreman: TDBCheckBoxEh;
     procedure edt_usersEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     FNewIds: string;
@@ -44,18 +44,17 @@ begin
   F.DefineFields:=[
     ['id$i'],
     ['id_prod_area$i','v=1:400'],
-    ['office$i','v=1:400'],
+    ['is_office$i','v=1:400'],
     ['name$s','v=1:400:0:T'],
     ['id_head$i','v=1:40000'],
-    ['editusers$s',''],
+    ['ids_editusers$s',''],
     ['editusernames$s;0','v=1:4000:0', True],
-    ['code$s','v=0:5:0:T'],
-    ['id_schedule$i','v=1:50'],
+    ['code$s','v=0:5:0::T'],
+    ['has_foreman$i',''],
     ['active$i','']
   ];
-  View := 'v_ref_divisions';
-  Table := 'ref_divisions';
-  Sequence := 'sq_ref_divisions';
+  View := 'v_w_departaments';
+  Table := 'w_departaments';
   FOpt.UseChbNoClose := False;
   FOpt.InfoArray:= [[
     'Данные подразделения.'#13#10+
@@ -64,7 +63,8 @@ begin
     'Введите код подразделения (используется в бухгалтерии).'#13#10+
     'Выберите одного или нескольких пользователей, которые будут заполнять ТУРВ'#13#10+
     'для данного подразделения, нажав на кнопку спава в поле ввода и отметив нужные фамилии.'#13#10+
-    'Также задайте график работы подразделения (с этим графиком будут создаваться ТУРВ).'#13#10+
+    'Укажите, используется ли в данном подразделении должность бригадира.'#13#10+
+//    'Также задайте график работы подразделения (с этим графиком будут создаваться ТУРВ).'#13#10+
     'Если подразделение существуует сейчас и в него требуется прием работников '#13#10+
     'и учет рабочего времени, то отметьте галку "Используется"'#13#10
     ,not (Mode in [fView, fDelete])
@@ -72,7 +72,7 @@ begin
   Result:=inherited;
   if not Result then
     Exit;
-  FNewIds := S.NSt(F.GetProp('editusers'));
+  FNewIds := S.NSt(F.GetProp('ids_editusers'));
   edt_editusernames.ReadOnly := True;
   Cth.SetEditButtonPictures(edt_editusernames.EditButtons[0], 30);
 end;
@@ -80,8 +80,8 @@ end;
 
 function TFrmWDedtDivision.LoadComboBoxes: Boolean;
 begin
-  Q.QLoadToDBComboBoxEh('select w.f || '' '' || w.i || ''  '' || w.o as name, id from ref_workers w order by name', [], cmb_id_head, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select code, id from ref_work_schedules order by code', [], cmb_id_schedule, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select f_fio(f,i,o) as name, id from w_employees order by name', [], cmb_id_head, cntComboLK);
+//  Q.QLoadToDBComboBoxEh('select code, id from w_schedules order by code', [], cmb_id_schedule, cntComboLK);
   //пока ограничим список первыми тремя площадками, так как там есть фиктивная МТ, по состоянию на 2025-07-26
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where id <> 3 order by id', [], cmb_id_prod_area, cntComboLK);
   Cth.AddToComboBoxEh(cmb_office, [['Цех',0], ['Офис',1]]);
@@ -95,7 +95,7 @@ begin
   if TFrmXGsesUsersChoice.ShowDialog(Application, True, FNewIDs, NewNames) <> mrOk then
     exit;
   edt_editusernames.Value := NewNames;
-  F.SetProp('editusers', FNewIds);
+  F.SetProp('ids_editusers', FNewIds);
 end;
 
 

@@ -361,7 +361,8 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     //если текст разделен ___ то что до этого разделителя выводится в подсказке, а что после - в окне
     //если тект разделен ... то в хинте выводится с начала текста, включая ..., в окне выводится полностью, многоточие вырезается
     //если без разделителей то выводится все и в хинте и в окне
-    function SetInfoIconText(Form: TForm; Info: TVarDynArray2): string;
+    function SetInfoIconText(Form: TForm; Info: TVarDynArray2): string; overload;
+    function SetInfoIconText(Form: TForm; Info: TVarDynArray): string; overload;
     procedure SetInfoIcon(Pict: TImage; Info: string; Width: Integer = 20);
     //устанавливает или сбрасывае курсов в  виде песочныч часво
     procedure SetWaitCursor(Wait: Boolean = True);
@@ -3557,7 +3558,7 @@ begin
     else
       Result := StringReplace(Result, 'caption', '', []);
     Result := StringReplace(Result, 'refview', 'Вы можете только просматривать данные в этом документе.', []);
-    Result := StringReplace(Result, 'refedit', 'Используйте кнопки над таблицей для операций с записями. Также Вы можеть выбрать дейтвие в меню по правому клику мыши.'#13#10, []);
+    Result := StringReplace(Result, 'refedit', 'Используйте кнопки над таблицей для операций с данными. Также Вы можеть выбрать действие в меню по правому клику мыши в таблице.'#13#10, []);
     Result := StringReplace(Result, 'refoptions', 'Настройте внешний вид и функционал таблицы для удобства работы, нажав на кнопку "Настроить вид"'#13#10, []);
     Result := StringReplace(Result, 'reffilter', 'Используйте кнопку "фильтр" для настройки загрузки только нужных данных, что также может ускорить работу.'#13#10, []);
     if fMode in [fAdd, fCopy, fEdit] then begin
@@ -3568,6 +3569,43 @@ begin
   finally
   end;
 end;
+
+function TControlsHelper.SetInfoIconText(Form: TForm; Info: TVarDynArray): string;
+//задается текст подсказки
+//исходные данные передаются в массиве вида [[text, active],[text2],[text3,active3]]
+//также заменяются дефолтные подстроки
+//передается форма для взятия заголовка
+var
+  i: Integer;
+  fMode: TDialogType;
+begin
+ { try
+    fMode := fNone;
+    Result := '';
+    for i := 0 to High(Info) do begin
+      if (High(Info[i]) = 0) or (Info[i][1] = True) then
+        Result := Result + Info[i][0];
+    end;
+    if Form <> nil then begin
+      Result := StringReplace(Result, 'caption', Form.Caption + #13#10, []);
+      if Form is TFrmBasicMdi then
+        fMode := TFrmBasicMdi(Form).Mode;
+    end
+    else
+      Result := StringReplace(Result, '~', '', []);
+    Result := StringReplace(Result, 'refview', 'Вы можете только просматривать данные в этом документе.', []);
+    Result := StringReplace(Result, 'refedit', 'Используйте кнопки над таблицей для операций с данными. Также Вы можеть выбрать действие в меню по правому клику мыши в таблице.'#13#10, []);
+    Result := StringReplace(Result, 'refoptions', 'Настройте внешний вид и функционал таблицы для удобства работы, нажав на кнопку "Настроить вид"'#13#10, []);
+    Result := StringReplace(Result, 'reffilter', 'Используйте кнопку "фильтр" для настройки загрузки только нужных данных, что также может ускорить работу.'#13#10, []);
+    if fMode in [fAdd, fCopy, fEdit] then begin
+      Result := StringReplace(Result, 'dlgedit', 'Введите или откорректируйте требуемые данные. В случае недопустимых значений, поля ввода будут отмечены красным.'#13#10, []);
+      Result := StringReplace(Result, 'dlgactive', 'Поставьте галочку "Используется", чтобы эта запись была доступна при создании новых документов.'#13#10, []);
+    end;
+    Result := StringReplace(Result, '`', ''#13#10, []);
+  finally
+  end;   }
+end;
+
 
 procedure TControlsHelper.SetInfoIcon(Pict: TImage; Info: string; Width: Integer = 20);
 //подготавливает картинку-хелп

@@ -406,27 +406,6 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         ParentColor = False
         TabOrder = 5
       end
-      object cmb_id_schedule: TDBComboBoxEh
-        Left = 104
-        Top = 177
-        Width = 121
-        Height = 21
-        ControlLabel.Width = 79
-        ControlLabel.Height = 13
-        ControlLabel.Caption = #1043#1088#1072#1092#1080#1082' '#1088#1072#1073#1086#1090#1099
-        ControlLabel.Visible = True
-        ControlLabelLocation.Position = lpLeftCenterEh
-        DynProps = <>
-        EditButtons = <>
-        Items.Strings = (
-          #1062#1077#1093
-          #1054#1092#1080#1089)
-        KeyItems.Strings = (
-          '0'
-          '1')
-        TabOrder = 6
-        Visible = True
-      end
       object cmb_id_prod_area: TDBComboBoxEh
         Left = 104
         Top = 15
@@ -445,8 +424,19 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
         KeyItems.Strings = (
           '0'
           '1')
-        TabOrder = 7
+        TabOrder = 6
         Visible = True
+      end
+      object chb_has_foreman: TDBCheckBoxEh
+        Left = 104
+        Top = 180
+        Width = 97
+        Height = 17
+        Caption = #1045#1089#1090#1100' '#1073#1088#1080#1075#1072#1076#1080#1088
+        Color = clRed
+        DynProps = <>
+        ParentColor = False
+        TabOrder = 7
       end
     end
     inherited pnlFrmBtns: TPanel

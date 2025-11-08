@@ -758,7 +758,27 @@ begin
     MyFormOptions := [myfoDialog, myfoRefreshParent, myfoMultiCopy]; //, myfoModal
   if IsModalFormOpen then
     Include(MyFormOptions, myfoModal);
-  if F = myfrm_Dlg_R_StdProjects then begin
+
+  {РАБОТНИКИ}
+
+  if F = myfrm_Dlg_R_Jobs then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_jobs', 'Профессия', 400, 100,
+      [['name$s', cntEdit, 'Профессия','1:400::T'], ['comm$s', cntEdit, 'Комментарий','0:400::T'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]
+    );
+  end
+  else if F = myfrm_Dlg_R_TurvCodes then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_turvcodes', 'Обозначение ТУРВ', 450, 130,
+     [['code$s', cntEdit, 'Код','1:25::T'], ['name$s', cntEdit, 'Расшифровка','1:400::T']], [['caption dlgedit']]);
+  end
+  else if F = myfrm_Dlg_R_Divisions then begin
+    TFrmWDedtDivision.Show(AOwner, F, [myfoDialog], fMode, AId, null);
+  end
+
+
+
+
+
+  else if F = myfrm_Dlg_R_StdProjects then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'or_projects', 'Типовой проект', 400, 100,
      [['name$s', cntEdit, 'Наименование','1:400'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]);
 //    Form := TForm_BasicInput.ShowDialog(AOwner, F, 'Типовой проект', 400, 100, fMode, AId,
@@ -852,14 +872,6 @@ begin
       [['caption dlgedit']]
     );
   end
-  else if F = myfrm_Dlg_R_Jobs then begin
-    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_jobs;;sq_ref_jobs', 'Профессия', 400, 100,
-     [['name$s', cntEdit, 'Профессия','1:400'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit ']]);
-  end
-  else if F = myfrm_Dlg_R_TurvCodes then begin
-    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_turvcodes;;sq_ref_turvcodes', 'Обозначение ТУРВ', 450, 130,
-     [['code$s', cntEdit, 'Профессия','1:400'], ['name$s', cntEdit, 'Профессия','1:400']], [['caption dlgedit dlgactive']]);
-  end
   else if F = myfrm_Dlg_R_Organizations then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_sn_organizations;;sq_ref_sn_organizations', 'Свои организации', 400, 100,
      [['name$s', cntEdit, 'Наименование','1:30'], ['name$s', cntEdit, 'Реквизиты','0:100:0:N'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]);
@@ -874,10 +886,6 @@ begin
   end
   else if F = myfrm_Dlg_R_PayrollMethods then begin
 //      Form:=TDlg_PayrollMethod.ShowDialog(AOwner, F, fMode, AId);
-  end
-  else if F = myfrm_Dlg_R_Divisions then begin
-//~    Form := TDlg_Division.ShowDialog(AOwner, F, fMode, AId, null);
-    TFrmWDedtDivision.Show(AOwner, F, [myfoDialog], fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_DivisionMembers then begin
 //      Form:=TDlg_DivisionMembers.ShowDialog(AOwner, F, fMode, AId);
