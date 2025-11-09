@@ -582,18 +582,17 @@ begin
 
     {$IFDEF  TURV}
     ['Справочники'],
-    ['Работники', myfrm_R_Workers, User.Role(rW_R_Workers_V)],
     ['Профессии', myfrm_R_Jobs, User.Role(rW_R_Jobs_V)],
-    ['Обозначения ТУРВ', myfrm_R_TurvCodes, User.Role(rW_R_TurvCode_V)],
     ['Подразделения', myfrm_R_Divisions, User.Role(rW_R_Divisions_V)],
     ['Графики работы', myfrm_R_Work_Chedules, User.Roles([], [rW_R_Work_Chedules_V, rW_R_Work_Chedules_Ch])],
+    ['Обозначения ТУРВ', myfrm_R_TurvCodes, User.Role(rW_R_TurvCode_V)],
     [],
     ['Производственный календарь', myfrm_R_Holideys, User.Role(rW_R_Holideys_V)],
 
     ['Журналы'],
-    ['Журнал ТУРВ', myfrm_J_Turv, User.Role(rW_J_Turv)],
+    ['Работники', myfrm_R_Workers, User.Role(rW_R_Workers_V)],
     [],
-    ['Статусы работников', myfrm_J_WorkerStatus, User.Role(rW_J_WorkerStatus_V)],
+    ['Табели учёта рабочего времени', myfrm_J_Turv, User.Role(rW_J_Turv)],
     [],
     ['Зарплатные ведомости', myfrm_J_Payrolls, User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     [],

@@ -270,7 +270,6 @@ begin
   //создаем форму данных (разныые объекты данных программы)
   Application.CreateForm(TMyData, MyData);
   Application.CreateForm(TmyDBParsec, myDBParsec);
-  Application.CreateForm(TFrmWGjrnEmployees, FrmWGjrnEmployees);
   //!!!!
   //создаем форму работы с отчетами fr3
   Application.CreateForm(TPrintReport, PrintReport);

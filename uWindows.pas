@@ -116,7 +116,7 @@ uses
   D_ExpenseItems,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
-  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule,
+  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
   D_Candidate, D_Vacancy,
 
   D_Order, D_LoadKB,
@@ -563,7 +563,7 @@ begin
     myfrm_Rep_SnCalendar_AccMontage,
 
     {работники}
-    myfrm_R_Workers,
+//    myfrm_R_Workers,
     myfrm_R_TurvCodes,
     myfrm_R_Jobs,
     myfrm_R_Work_Chedules,
@@ -739,6 +739,9 @@ begin
   else if F = myfrm_Dlg_Rep_EstimatePrices then begin
     TFrmOGrepEstimatePrices.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
   end
+  else if F = myfrm_R_Workers then begin
+    TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
+  end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
 end;
@@ -773,6 +776,17 @@ begin
   else if F = myfrm_Dlg_R_Divisions then begin
     TFrmWDedtDivision.Show(AOwner, F, [myfoDialog], fMode, AId, null);
   end
+  else if F = myfrm_Dlg_R_Workers then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_employees', 'Работник', 600, 70, [
+      ['f$s', cntEdit, 'Фамилия','1:25::T'],
+      ['i$s', cntEdit, 'Имя','1:25::T'],
+      ['o$s', cntEdit, 'Отчество','0:25::T'],
+      ['birthday$d', cntDEdit, 'Дата'#13#10'рождение',''],
+      ['comm$s', cntEdit, 'Комментарий','0:400::T']],
+      [['caption dlgedit']]
+    );
+  end
+
 
 
 
@@ -850,18 +864,6 @@ begin
   end
   else if F = myfrm_Dlg_Sn_Defectives_Act then begin
 //    Form := TDlg_Sn_Defectives_Act.Create(AOwner, F, MyFormOptions, fMode, AId, null);
-  end
-  else if F = myfrm_Dlg_R_Workers then begin
-    TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers;;sq_ref_workers', 'Работник', 400, 100, [
-      ['f$s', cntEdit, 'Фамилия','1:25::T'],
-      ['i$s', cntEdit, 'Имя','1:25::T'],
-      ['o$s', cntEdit, 'Отчество','1:25::T'],
-      ['id_organization$i', cntComboLK, 'Организация','0:400'],
-      ['personnel_number$s', cntEdit, 'Табельный номер','0:10::T'],
-      ['concurrent_employee$i', cntCheck, 'Совместитель','']],
-      ['select name, id from ref_sn_organizations where is_employer = 1 order by name'],
-      [['caption dlgedit']]
-    );
   end
   else if F = myfrm_Dlg_Ref_JobsNeeded then begin
     TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers_needed', 'Работник', 400, 100, [

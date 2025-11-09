@@ -1,3 +1,11 @@
+{
+нужен ли табельный номер в осн. табл.?
+должность или профессия?
+надо ли признак Самозанятый?
+сделать в классе грида с подстановками   Fr.Opt.Caption := 'Работник: ' + Frg1.GetValueS('name');
+}
+
+
 unit uFrmWGjrnEmployees;
 
 interface
@@ -12,6 +20,10 @@ uses
 type
   TFrmWGjrnEmployees = class(TFrmBasicGrid2)
   private
+    function  PrepareForm: Boolean; override;
+    procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
+    procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
+    procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
   public
   end;
 
@@ -25,6 +37,85 @@ implementation
 uses
   uTurv
   ;
+
+function TFrmWGjrnEmployees.PrepareForm: Boolean;
+var
+  c : TComponent;
+  st1, st2: string;
+begin
+  Caption:='Работники';
+  Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+  Frg1.Opt.SetFields([
+    ['id$i','_id','40'],
+    ['name$s','ФИО','250;h'],
+    ['birthday$d','Дата рождения','90'],
+    ['age$i','Возраст','70'],
+    ['dt_reg$d','Дата первого приема','100'],
+    ['is_working_now$s','Статус','100','pic=работает;уволен:1;6:+'],
+    ['last_hired$d','Дата последнего приема','100'],
+    ['last_terminated$d','Дата последнего увольнения','100'],
+    ['dt_last_transfer$d','Последняя должность|Дата перевода','90'],
+    ['departament$s','~Подразделение','200;h'],
+    ['job$s','~Должность','200;h'],
+    ['comm$s','Комментарий','200;h']
+  ]);
+  Frg1.Opt.SetTable('v_w_employees');
+  Frg1.CreateAddControls('1', cntCheck, 'Только работающие', 'chbActive', '', 4, yrefC, 200);
+  Frg1.Opt.SetButtons(1, 'rveads', User.Role(rW_R_Workers_Ch));
+  Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Workers;
+
+  Frg2.Opt.Caption:='Работники';
+  Frg2.Options := Frg2.Options + [myogGridLabels];
+
+  Frg2.Opt.SetFields([
+    ['id$i','_id','40'],
+    ['id_dep$i','_id_dep','40'],
+    ['id_job$i','_id_job','40'],
+    ['id_shed$i','_id_shed','40'],
+    ['rn$i','Событие|№','40'],
+    ['dt$d','~Дата события','80'],
+    ['managername$s','~Менеджер','100'],
+    ['status$s','Значения|Статус','100'],
+    ['dt_beg$d','~С','80'],
+    ['dt_end$d','~По','80'],
+    ['departament$s','~Подразделение','200;h'],
+    ['job$s','~Должность','200;h'],
+    ['shedulecode$s','~График','70'],
+    ['foreman$s','~Бригадир','90'],
+    ['concurrent$s','~Совместитель','90'],
+    ['organization$s','~Организация','100'],
+    ['personnel_number$s','~Табельный номер','90'],
+    ['comm$s','Событие|Комментарий','200;h']
+  ]);
+  Frg2.Opt.SetTable('w_employee_properties');
+  Frg2.Opt.SetWhere('where id_employee = :id_employee$i order by rn');
+  Frg2.Opt.SetButtons(1, [
+   [mbtRefresh], [], [mbtView], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить новое собьтие'], [mbtDelete, 1, 'Удалить последнее побытие'], [], [mbtGridSettings]
+  ]);
+
+  Result := inherited;
+end;
+
+procedure TFrmWGjrnEmployees.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
+begin
+end;
+
+procedure TFrmWGjrnEmployees.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
+begin
+  //выполним и до загрузки грида
+  if TControl(Sender).Name = 'chbActive' then begin
+    Frg1.Opt.SetWhere(S.IIfStr(Frg1.GetControlValue('chbActive').AsInteger = 1, 'where is_working_now = ''работает'''));
+    Frg1.RefreshGrid;
+  end;
+end;
+
+procedure TFrmWGjrnEmployees.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
+begin
+  Fr.SetSqlParameters('id_employee$i', [Frg1.ID]);
+  Fr.Opt.Caption := 'Работник: ' + Frg1.GetValueS('name');
+end;
+
+
 
 
 end.

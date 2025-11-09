@@ -521,7 +521,7 @@ begin
 
   {РАБОТНИКИ}
 
-  else if FormDoc = myfrm_R_Workers then begin
+{  else if FormDoc = myfrm_R_Workers then begin
     Caption:='Справочник работников';
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
@@ -555,7 +555,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_j_worker_status');
     Frg1.Opt.SetButtons(1, 'rads', User.Role(rW_J_WorkerStatus_Ch));
-  end
+  end               }
   else if FormDoc = myfrm_R_Jobs then begin
     Caption:='Справочник профессий';
     Frg1.Opt.SetFields([
@@ -629,6 +629,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_w_departaments');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
+    Frg1.Opt.DialogFormDoc := myfrm_R_Divisions;
   end
   else if FormDoc = myfrm_R_Candidates_Ad_SELCH then begin      //!!!
     Caption:='Справочник - источники информации по вакансиям';
@@ -1951,12 +1952,12 @@ begin
 
 
 
-    if FormDoc = myfrm_R_Workers then
+{    if FormDoc = myfrm_R_Workers then
       Wh.ExecDialog(myfrm_Dlg_R_Workers, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_J_WorkerStatus then
-      Wh.ExecDialog(myfrm_Dlg_WorkerStatus, Self, [], fMode, Fr.ID, VarArrayOf([Fr.GetValueS('workername'), '', '', null]));
-    if FormDoc = myfrm_R_Divisions then
-      Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);
+      Wh.ExecDialog(myfrm_Dlg_WorkerStatus, Self, [], fMode, Fr.ID, VarArrayOf([Fr.GetValueS('workername'), '', '', null]));}
+ {   if FormDoc = myfrm_R_Divisions then
+      Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);}
     if FormDoc = myfrm_R_Work_Chedules then begin
       if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
         Fr.RefreshGrid;

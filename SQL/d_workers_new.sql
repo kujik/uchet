@@ -252,7 +252,7 @@ end;
 
 select * from w_employee_properties order by id_employee, dt_beg;
 
-create or replace view v_employees as
+create or replace view v_w_employees as
 with
 --последнее событие приёма  
 last_hired as (
@@ -322,11 +322,13 @@ last_transfer as (
 --сам запрос получения данных
 select
   e.id,
+  e.birthday,
+  floor(months_between(sysdate, e.birthday) / 12) as age,
   f_fio(e.f, e.i, e.o) as name,
   f.dt_beg as dt_reg,
   h.dt_beg as last_hired,
   case when t.dt_beg > h.dt_beg then t.dt_beg else null end as last_terminated,
-  case when t.dt_beg > h.dt_beg then 'уволен' when h.dt_beg is not null then 'работет' else null end as is_working_now,
+  case when t.dt_beg > h.dt_beg then 'уволен' when h.dt_beg is not null then 'работает' else null end as is_working_now,
   lt.dt_beg as dt_last_transfer,
   d.name as departament,
   j.name as job,
@@ -340,60 +342,38 @@ left outer join last_transfer lt on e.id = lt.id_employee
 left outer join w_departaments d on a.id_departament = d.id and a.rn = 1
 left outer join w_jobs j on a.id_job = j.id and a.rn = 1
 ;
+
+select * from v_w_employees;
    
 
-  
-
-
-  e.id,
-    -- статус: работает ли сейчас?
-    case
-        when s.is_hired = 1 then 'y'
-        when s.is_terminated = 1 then 'n'
-        else 'n' -- если нет значимых событий
-    end as is_working_now,
-    -- дата последнего приёма (только если последнее значимое событие — приём)
-    case when s.is_hired = 1 then s.dt_beg end as last_hired,
-    -- дата последнего увольнения (только если последнее значимое событие — увольнение)
-    case when s.is_terminated = 1 then s.dt_beg end as last_terminated
-    -- комментарий из последней записи вообще
-    --a.comm as last_comment
-from w_employees e
-left join last_significant_event s on e.id = s.id_employee and s.rn = 1
-left join last_any_event a on e.id = a.id_employee and a.rn = 1;
-
-
-
---create or replace view v_w_worker_status as  
+create or replace view v_w_employee_properties as  
 select
-  w.id as id_w,
-  s.*,
-  row_number() over (partition by s.id_worker order by s.id) as worker_row,
-  w.f || ' ' || w.i  || ' ' || w.o as workername,
-  w.personnel_number,
-  o.name as orgname,
-  d.name as divisionname,
-  d.editusers as editusers,
+  ep.*,
+  row_number() over (partition by ep.id_employee order by ep.id) as rn,
+  case when is_hired = 1 then 'принят' when is_terminated = 1 then 'уволен' else 'переведен' end as status,
+  f_fio(e.f, e.i, e.o) as name,
+  o.name as organization,
+  d.name as departament,
   j.name as job,
-  case
-      when lag(s.id_job) over (partition by id_worker order by s.id) is null then 'y'
-      when lag(s.id_job) over (partition by id_worker order by s.id) <> s.id_job then 'y'
-      else 'n'
-  end as job_ch,  
-  sh.code as shedulecode
+  s.code as shedulecode,
+  decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
+  decode(ep.is_concurrent, 1, 'совместитель', null) as concurrent,
+  u.name as managername 
 from
-  ref_workers w,
-  w_worker_status s,
-  ref_divisions d,
-  ref_jobs j,
+  w_employees e,
+  w_employee_properties ep,
+  w_departaments d,
+  w_jobs j,
   ref_sn_organizations o,
-  ref_work_schedules sh
+  w_schedules s,
+  adm_users u
 where
-  s.id_worker (+) = w.id and
-  s.id_division = d.id (+) and
-  s.id_job = j.id (+) and
-  o.id (+) = w.id_organization and
-  sh.id (+) = s.id_schedule
+  ep.id_employee = e.id and
+  ep.id_departament = d.id (+) and
+  ep.id_job = j.id (+) and
+  ep.id_organization = o.id (+) and
+  ep.id_schedule = s.id (+) and
+  ep.id_manager = u.id (+)
 ;     
 
 delete from w_employee_properties;

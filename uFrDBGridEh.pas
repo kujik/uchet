@@ -830,6 +830,7 @@ var
   i, j, k: Integer;
   st, st1: string;
   va1, va2, va3: TVarDynArray;
+  CaptPref: string;
   fr: TFrDBGridRecFieldsList;
 
 function GetNext: Boolean;
@@ -866,15 +867,23 @@ begin
       if VarIsClear(FSql.FieldsDef[i][j]) then FSql.FieldsDef[i][j]:= '';
     if VarIsClear(FSql.FieldsDef[i][3]) then FSql.FieldsDef[i][3]:= true;
   end;}
+  CaptPref := '';
   for i:= 0 to High(FSql.FieldsDef) do begin
     //первый элемент массива всегда определение поля, разбиваем его на составляющие
     fr.FullName := FSql.FieldsDef[i][0];
     Q.ParseFieldNameFull(FSql.FieldsDef[i][0], st, fr.Name, fr.NameDb, st, fr.DataType, fr.FieldSize);
     //второй элемент всегда заголовок
-    fr.Caption:= FSql.FieldsDef[i][1];
+    //если начинается с ~, то заменим ее на предыдущий заголовок группы
+    st := Copy(FSql.FieldsDef[i][1], 1, Pos('|', FSql.FieldsDef[i][1]));
+    if st <> CaptPref then
+      CaptPref := st;
+    st := FSql.FieldsDef[i][1];
+    if Copy(st, 1, 1) = '~' then
+      st := CaptPref + Copy(st, 2);
+    fr.Caption := st;
     //если начинается с подчеркивание - это служебное поле
-    fr.Invisible:=Pos('_', fr.Caption) = 1;
-    //если третий элемент (после имя поля и заголовка) булевый, и он False, то поле не будет учтено
+    fr.Invisible := Pos('_', fr.Caption) = 1;
+        //если третий элемент (после имя поля и заголовка) булевый, и он False, то поле не будет учтено
     if (High(FSql.FieldsDef[i]) >= 2) and (uString.S.VarType(FSql.FieldsDef[i][2]) = varBoolean) and (FSql.FieldsDef[i][2] = False) then begin
       Continue;
     end;
