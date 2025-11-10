@@ -1404,29 +1404,54 @@ end;
 
 procedure TTurv.ConvertEmployees202511;
 var
-  i, j, e: Integer;
-  w : TVarDynArray2;
+  i, j, k, e: Integer;
+  w ,sh : TVarDynArray2;
   es: TNamedArr;
+  b1, b2, b3 : Boolean;
 begin
   if MyQuestionMessage('Импортировать данные?') <> mrYes then
     Exit;
-{  Q.QExecSql('delete from w_employee_properties', []);
+  Q.QExecSql('delete from w_employee_properties', []);
   Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
-    'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []  );}  Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
+    'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []
+  );
+  Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
   w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
+  sh := Q.QloadToVarDynArray2('select * from (select id_worker, id_schedule_active, dt1, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1' ,[]);
+//Exit;
   //графики из v_turv_workers
   e := 0;
   for i := 0 to es.Count - 1 do begin
-    if es.G(i, 'id_employee') <> e then
-      e := es.G(i, 'id');
-    es.SetValue(i, 'f', 1);
+    if es.G(i, 'id_employee') <> e then begin
+      e := es.G(i, 'id_employee');
+      b1 := True;
+    end;
     j := A.PosInArray(e, w, 0);
-    if j >= 0 then begin
+    if (j >= 0) and b1 then begin
+      es.SetValue(i, 'f', 1);
       es.SetValue(i, 'id_organization', w[j][2]);
       es.SetValue(i, 'personnel_number', w[j][1]);
       es.SetValue(i, 'is_concurrent', w[j][3]);
     end;
+    k := A.PosInArray(e, sh, 0);
+    if (k >= 0) and b1 then begin
+      es.SetValue(i, 'f', 1);
+      es.SetValue(i, 'id_schedule', sh[k][1]);
+    end;
+    if b1 and es.G(i, 'is_hired') = 1 then
+      b1 := False;
+    if (es.G(i, 'is_terminated') = 1) and (e = es.G(i - 1, 'id_employee')) then begin
+        es.SetValue(i, 'id_job'), es.G(i - 1, 'id_job');
+        es.SetValue(i, 'id_departament'), es.G(i - 1, 'id_departament');
+        //es.G(i, 'personnel_number') es.G(i, 'id_organization')         es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
+    end;
   end;
+  for i := 0 to es.Count - 1 do
+    if es.G(i, 'f') = 1 then
+      Q.QIUD('u', 'w_employee_properties', '', 'id$i;id_employee$i;id_job$i;id_departament$i;is_hired$i;is_terminated$i;dt_beg$d;dt_end$d;personnel_number$s;id_organization$i;is_concurrent$i;id_schedule$i',[
+        es.G(i, 'id'), es.G(i, 'id_employee'), es.G(i, 'id_job'), es.G(i, 'id_departament'), es.G(i, 'is_hired'), es.G(i, 'is_terminated'), es.G(i, 'dt_beg'),
+        es.G(i, 'dt_end'), es.G(i, 'personnel_number'), es.G(i, 'id_organization'), es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
+      ]);
 end;
 
 begin

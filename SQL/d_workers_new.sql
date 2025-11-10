@@ -346,7 +346,7 @@ left outer join w_jobs j on a.id_job = j.id and a.rn = 1
 select * from v_w_employees;
    
 
-create or replace view v_w_employee_properties as  
+--create or replace view v_w_employee_properties as  
 select
   ep.*,
   row_number() over (partition by ep.id_employee order by ep.id) as rn,
@@ -381,6 +381,11 @@ insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, i
   select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
 
 
+
+select * from v_turv_workers;
+
+select * from (
+select dt1, id_worker, id_schedule_active, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1;
 
 
 
