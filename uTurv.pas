@@ -37,6 +37,7 @@ type
     function GetDaysFromCalendar_Next(DtBeg: TDateTime; CntOfWork: Integer): TDateTime;
     //диалог ввода графика работы и норм рабочего времени по нему
     function ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+    procedure ConvertEmployees202511;
   end;
 
 var
@@ -1401,7 +1402,32 @@ begin
 end;
 
 
-
+procedure TTurv.ConvertEmployees202511;
+var
+  i, j, e: Integer;
+  w : TVarDynArray2;
+  es: TNamedArr;
+begin
+  if MyQuestionMessage('Импортировать данные?') <> mrYes then
+    Exit;
+{  Q.QExecSql('delete from w_employee_properties', []);
+  Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
+    'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []  );}  Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
+  w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
+  //графики из v_turv_workers
+  e := 0;
+  for i := 0 to es.Count - 1 do begin
+    if es.G(i, 'id_employee') <> e then
+      e := es.G(i, 'id');
+    es.SetValue(i, 'f', 1);
+    j := A.PosInArray(e, w, 0);
+    if j >= 0 then begin
+      es.SetValue(i, 'id_organization', w[j][2]);
+      es.SetValue(i, 'personnel_number', w[j][1]);
+      es.SetValue(i, 'is_concurrent', w[j][3]);
+    end;
+  end;
+end;
 
 begin
   Turv:=TTurv.Create;

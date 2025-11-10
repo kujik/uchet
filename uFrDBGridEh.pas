@@ -58,7 +58,9 @@ type
     myogPrintGrid,                            //разрешить печать и экспорт грида, показать этот пункт в меню
     myogHideColumns,                          //разрешать прятать столбцы через окно настроек
     myogFroozeColumn,                         //разрешать заморозить столбцы через окно настроек
-    myogNoTextEditing                         //запретить открытие InplaceEditor
+    myogNoTextEditing,                        //запретить открытие InplaceEditor
+    myogToNextRowAfterDeleting,               //переход к следующей строке после удаления строки (иначе окажется на той, что была перед удаленной; работает при обновлении из TFrmBasicMDI или в вызове RefreshGrit(fDelete)
+    myogfastrefresh                           //быстрое обновление грида (добавлением/удалениеем/апдейтом записи). если вызывает потомок tfrmbasicmdi, то он должен обновлять id (как tfrmbasicinput). Если ади не числовое, сработает обычное обновление.
   );
 
   TFrDBGridOptions = set of TFrDBGridOption;
@@ -635,7 +637,13 @@ type
     //грид не пуст
     function  IsNotEmpty: Boolean;
     //получить количество строк таблицы (отфильрованных или нет)
-    function  GetCount(Filtered: Boolean = true): Integer;
+    function  GetCount(Filtered: Boolean = True): Integer;
+    //получить признак первой или последней записи с учетом фильтра
+    function  IsFirstRecord: Boolean;
+    function  IsLastRecord: Boolean;
+    //перемещение к следующей/предыдущей позиции
+    procedure Next;
+    procedure Prior;
     //получить значение поля в текущей строке грида
     function  GetValue(FieldName: string = ''): Variant; overload;
     function  GetValueI(FieldName: string = ''): Integer; overload;
@@ -699,7 +707,7 @@ type
     //функция удалит и пересоздаст элементы, которые нельзя перенастроить
     procedure SetColumnsPropertyes;
     //обновим данные всей таблицы
-    procedure RefreshGrid;
+    procedure RefreshGrid(AfMode: TDialogType = fView; AFastMode: Integer = -1; AID: Integer = MaxInt);
     //обновляем текущую строку грида, при ошибке выдаем сообщение об отсутсвии записи
     //вернем False в случае отстутствия записи в БД, или если она ушла из отфильтрованного грида после обновления
     function  RefreshRecord: Boolean;
@@ -875,7 +883,7 @@ begin
     //второй элемент всегда заголовок
     //если начинается с ~, то заменим ее на предыдущий заголовок группы
     st := Copy(FSql.FieldsDef[i][1], 1, Pos('|', FSql.FieldsDef[i][1]));
-    if st <> CaptPref then
+    if (st <> CaptPref) and (Copy(FSql.FieldsDef[i][1], 1, 1) <> '~') then
       CaptPref := st;
     st := FSql.FieldsDef[i][1];
     if Copy(st, 1, 1) = '~' then
@@ -2324,6 +2332,28 @@ begin
     else Result:= MemTableEh1.RecordsView.MemTableData.RecordsList.Count;
 end;
 
+//получить признак первой или последней записи
+function TFrDBGridEh.IsFirstRecord: Boolean;
+begin
+  Result := (MemTableEh1.RecNo = 1) or (MemTableEh1.RecordCount = 0);
+end;
+
+function TFrDBGridEh.IsLastRecord: Boolean;
+begin
+  Result := (MemTableEh1.RecNo = MemTableEh1.RecordCount) or (MemTableEh1.RecordCount = 0);
+end;
+
+//перемещение к следующей/предыдущей позиции
+procedure TFrDBGridEh.Next;
+begin
+  MemTableEh1.Next;
+end;
+
+procedure TFrDBGridEh.Prior;
+begin
+  MemTableEh1.Prior;
+end;
+
 function TFrDBGridEh.GetValue(FieldName: string = ''): Variant;
 //получить значение поля в текущей строке грида
 begin
@@ -2904,11 +2934,12 @@ begin
   DataGrouping;
 end;
 
-procedure TFrDBGridEh.RefreshGrid;
+procedure TFrDBGridEh.RefreshGrid(AfMode: TDialogType = fView; AFastMode: Integer = -1; AID: Integer = MaxInt);
 //обновление основной таблицы, вызываемое по кнопке, либо же ее первая загрузка
 var
   charr: TVarDynArray2;
   KeyString: string;
+  FastUpdated: Boolean;
 begin
   try
     //прочитаем из бд и установим значения дополнительных контролов (если ранее не было уже вызова данной функции)
@@ -2946,7 +2977,51 @@ begin
           charr := Gh.GetGridArrayOfChecked(DBGridEh1, DBGridEh1.FindFieldColumn(Opt.Sql.IdField).Index);
           DBGridEh1.SelectedRows.Clear;
         end;
-        Gh.GridRefresh(DBGridEh1, myogGrayedWhenRefresh in Options);
+{        //в режиме удаления передуем к предыдущей (по умолчанию) или следующей записи
+        if (AfMode = fDelete) and (MemTableEh1.Active) then begin
+          if myogToNextRowAfterDeleting in FOptions then
+            if not IsLastRecord then
+              Next
+            else
+              Prior;
+          if not (myogToNextRowAfterDeleting in FOptions) then
+            if not IsFirstRecord then
+              Prior
+            else
+              Next;
+        end;}
+     {   KeyString := Gh.GetGridServiceFields(DBGridEh1);
+        if (KeyString <> '') and (MemTableEh1.Active) then
+          DBGridEh1.SaveVertPos(KeyString);
+          DBGridEh1.SaveVertPos(KeyString);
+        FastUpdated := False;
+        if (myogFastRefresh in FOptions) and (AID <> MaxInt) then begin
+          FastUpdated := not (AfMode in [fEdit, fDelete]) or MemTableEh1.Locate(FOpt.Sql.IdField, AID, []);
+          if FastUpdated then
+            case AfMode of
+              fEdit:
+                begin
+                  SetValue(FOpt.Sql.IdField, AID);
+                  RefreshRecord;
+                end;
+              fAdd, fCopy:
+                begin
+                  MemTableEh1.Append;
+                  SetValue(FOpt.Sql.IdField, AID);
+                  RefreshRecord;
+                end;
+              fDelete:
+                begin
+                  MemTableEh1.Delete;
+                end;
+            end;
+        end;
+        if not FastUpdated then
+          Gh.GridRefresh(DBGridEh1, myogGrayedWhenRefresh in Options)
+        else
+          DBGridEh1.RestoreVertPos(KeyString);}
+        Gh.GridRefresh(DBGridEh1, myogGrayedWhenRefresh in Options, AfMode, (AFastMode = 1) or (AFastMode = 0) and (myogFastRefresh in FOptions), FOpt.Sql.IdField, AID, myogToNextRowAfterDeleting in FOptions);
+//exit;
         if myogIndicatorCheckBoxes in Options then
           SetIndicatorCheckBoxesByField(Opt.Sql.IdField, A.VarDynArray2ColToVD1(charr, 0));
       end
@@ -2956,10 +3031,11 @@ begin
       end;
       ChangeSelectedData;
     end;
-  except on E: Exception do begin
-    Errors.SetErrorCapt(Self.Name, 'Ошибка при обновлении грида ' + TFrmBasicMdi(Owner).FormDoc + '.' + Name);
-    Application.ShowException(E);
-    Errors.SetErrorCapt;
+  except
+    on E: Exception do begin
+      Errors.SetErrorCapt(Self.Name, 'Ошибка при обновлении грида ' + TFrmBasicMdi(Owner).FormDoc + '.' + Name);
+      Application.ShowException(E);
+      Errors.SetErrorCapt;
     end;
   end;
 end;

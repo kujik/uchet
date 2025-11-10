@@ -557,6 +557,7 @@ begin
     Frg1.Opt.SetButtons(1, 'rads', User.Role(rW_J_WorkerStatus_Ch));
   end               }
   else if FormDoc = myfrm_R_Jobs then begin
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogFastRefresh];
     Caption:='Справочник профессий';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],

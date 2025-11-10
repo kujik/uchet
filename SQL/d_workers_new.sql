@@ -355,7 +355,7 @@ select
   o.name as organization,
   d.name as departament,
   j.name as job,
-  s.code as shedulecode,
+  s.code as schedulecode,
   decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
   decode(ep.is_concurrent, 1, 'совместитель', null) as concurrent,
   u.name as managername 

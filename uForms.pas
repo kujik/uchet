@@ -125,11 +125,7 @@ type
     function GetGridArrayOfChecked(DbGridEh1: TDbGridEh; FieldNo: Integer): TVarDynArray2;
     //вернем тектовую инфу о количестве записей в гриде (всего, выделено, отфильтровано)
     function GetGridInfoStr(DbGridEh1: TDbGridEh): string;
-    //задаетс€ текст подсказки
-    //исходные данные передаютс€ в массиве вида [[text, active],[text2],[text3,active3]]
-    //также замен€ютс€ дефолтные подстроки
-    //передаетс€ форма дл€ вз€ти€ заголовка
-    procedure GridRefresh(DBGridEh: TDbGridEh; Grayed: Boolean = False);
+    procedure GridRefresh(ADBGridEh: TDbGridEh; AGrayed: Boolean = False; AfMode: TDialogType = fView; AFastMode: Boolean = False; AIDField: string = ''; AID: Integer = MaxInt; AGoToNext: Boolean = False);
     procedure DBGridEhAdvDrawDataCellDefault(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
     //экспортирует грид в формат Excel, использую встроенные средства EhLib
     procedure ExportGridToXlsxNew(DBGridEh1: TDBGridEh; FileName: string; AutoOpen: Boolean; Header: string = ''; Footer: string = ''; FontFormat: Boolean = False; CreateAutoFilter: Boolean = False);
@@ -1327,26 +1323,89 @@ begin
 end;
 
 
-procedure TGridEhHelper.GridRefresh(DBGridEh: TDbGridEh; Grayed: Boolean = False);
+procedure TGridEhHelper.GridRefresh(ADBGridEh: TDbGridEh; AGrayed: Boolean = False; AfMode: TDialogType = fView; AFastMode: Boolean = False; AIDField: string = ''; AID: Integer = MaxInt; AGoToNext: Boolean = False);
 //обновление грида с применением сортировки и фильтра
 var
   KeyString: string;
+  FastUpdated: Boolean;
+  LId: Variant;
 begin
-  if Grayed then
-    DBGridEh.StartLoadingStatus(GLoadingCaption, GLoadingBlackout);
-  KeyString := GetGridServiceFields(DBGridEh);
+{  if AGrayed then
+    ADBGridEh.StartLoadingStatus(GLoadingCaption, GLoadingBlackout);
+  KeyString := GetGridServiceFields(ADBGridEh);
   if KeyString <> '' then
-    DBGridEh.SaveVertPos(KeyString);
-//  try
-  TMemTableEh(DBGridEh.DataSet).Refresh;
-//  except
-//  end;
-  DBGridEh.DefaultApplySorting;
-  DBGridEh.DefaultApplyFilter;
+    ADBGridEh.SaveVertPos(KeyString);
+  TMemTableEh(ADBGridEh.DataSet).Refresh;
+  ADBGridEh.DefaultApplySorting;
+ ADBGridEh.DefaultApplyFilter;
   if KeyString <> '' then
-    DBGridEh.RestoreVertPos(KeyString);
-  if Grayed then
-    DBGridEh.FinishLoadingStatus(GLoadingBlackout);
+    ADBGridEh.RestoreVertPos(KeyString);
+  if AGrayed then
+    ADBGridEh.FinishLoadingStatus(GLoadingBlackout);
+Exit;
+}
+
+
+  FastUpdated := False;
+
+  //в режиме удалени€ передуем к предыдущей (по умолчанию) или следующей записи
+  if (AfMode = fDelete) and (TMemTableEh(ADBGridEh.DataSet).FindRec(AIDField, AID, []){с 0 !!!} = TMemTableEh(ADBGridEh.DataSet).RecNo - 1) then begin
+    if AGoToNext then
+      if not (TMemTableEh(ADBGridEh.DataSet).RecNo = TMemTableEh(ADBGridEh.DataSet).RecordCount) then
+        TMemTableEh(ADBGridEh.DataSet).Next
+      else
+        TMemTableEh(ADBGridEh.DataSet).Prior;
+    if not AGoToNext then
+      if not (TMemTableEh(ADBGridEh.DataSet).RecNo = 1) then
+        TMemTableEh(ADBGridEh.DataSet).Prior
+      else
+        TMemTableEh(ADBGridEh.DataSet).Next;
+  end;
+  KeyString := GetGridServiceFields(ADBGridEh);
+  if KeyString <> '' then
+    ADBGridEh.SaveVertPos(KeyString);
+  if (AFastMode) and (AID <> MaxInt) and (AIDField <> '') then begin
+    FastUpdated := not (AfMode in [fEdit, fDelete]) or TMemTableEh(ADBGridEh.DataSet).Locate(AIDField, AID, []);
+    if FastUpdated then
+      case AfMode of
+        fEdit:
+          begin
+            TMemTableEh(ADBGridEh.DataSet).Edit;
+            TMemTableEh(ADBGridEh.DataSet).FieldByName(AIDField).Value := AID;
+            TMemTableEh(ADBGridEh.DataSet).RefreshRecord;
+            Mth.PostAndEdit(TMemTableEh(ADBGridEh.DataSet));
+          end;
+        fAdd, fCopy:
+          begin
+            TMemTableEh(ADBGridEh.DataSet).Append;
+            TMemTableEh(ADBGridEh.DataSet).Edit;
+            TMemTableEh(ADBGridEh.DataSet).FieldByName(AIDField).Value := AID;
+            Mth.PostAndEdit(TMemTableEh(ADBGridEh.DataSet));
+            TMemTableEh(ADBGridEh.DataSet).RefreshRecord;
+          end;
+        fDelete:
+          begin
+            TMemTableEh(ADBGridEh.DataSet).Edit;
+            TMemTableEh(ADBGridEh.DataSet).Delete;
+            Mth.PostAndEdit(TMemTableEh(ADBGridEh.DataSet));
+          end;
+      end;
+  end;
+  if not FastUpdated then begin
+    if AGrayed then
+      ADBGridEh.StartLoadingStatus(GLoadingCaption, GLoadingBlackout);
+    TMemTableEh(ADBGridEh.DataSet).Refresh;
+    ADBGridEh.DefaultApplySorting;
+    ADBGridEh.DefaultApplyFilter;
+    if AGrayed then
+      ADBGridEh.FinishLoadingStatus(GLoadingBlackout);
+  end
+  else begin
+    ADBGridEh.DefaultApplySorting;
+    ADBGridEh.DefaultApplyFilter;
+  end;
+  if KeyString <> '' then
+    ADBGridEh.RestoreVertPos(KeyString);
 end;
 
 procedure TGridEhHelper.DBGridEhAdvDrawDataCellDefault(Sender: TCustomDBGridEh;

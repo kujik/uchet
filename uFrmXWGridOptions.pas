@@ -192,7 +192,8 @@ begin
         FFrDbGrid.DBGridEh1.Columns[i].Title.Caption,
         S.IIf(FFrDbGrid.DBGridEh1.Columns[i].Visible, 1, 0),
         S.IIf(FFrDbGrid.DBGridEh1.Columns[i].WordWrap, 1, 0),
-        S.IIf(FFrDbGrid.DBGridEh1.Columns[i].AutoFitColWidth, 1, 0)
+        S.IIf(FFrDbGrid.DBGridEh1.Columns[i].AutoFitColWidth, 1, 0),
+        FFrDbGrid.DBGridEh1.Columns[i].Width
       ]];
     end;
   Frg1.LoadSourceDataFromArray(va2);
@@ -324,7 +325,8 @@ begin
     ['name$s', 'Столбец', '200;W'],
     ['visible$s', 'Показать', '70', 'chb', 'e'],
     ['wordwrap$s', 'Переносить по словам', '70', 'chb', 'e'],
-    ['autofit$s', 'Подгонять ширину', '70', 'chb', 'e']
+    ['autofit$s', 'Подгонять ширину', '70', 'chb', 'e'],
+    ['w$i','_Ширина','40']
   ]);
   Frg1.Opt.SetButtons(1, [[-1000, True, 'Закрепить столбец']]);
   Frg1.Prepare;

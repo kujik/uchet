@@ -933,18 +933,17 @@ end;
 
 
 function TFrmBasicMdi.RefreshParentForm: Boolean;
-var
-  i: Integer;
-  Form: TForm;
+//обновление грида, из которого форма была вызвана (должна быть установлена опция, и режимы fEdit,fAdd,fCopy,fDelete и ID <> 0)
 begin
   if not FOpt.RefreshParent then
     Exit;
-  if ParentForm <> nil then
   try
-    if (ParentForm is TFrmBasicMdi) then begin
-      if TFrmBasicMdi(ParentForm).FindComponent('Frg1') <> nil then
-        TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid;
-    end;
+    //если в вызов .Show передан фрейм грида в родителе
+    if (ParentControl <> nil) and (ParentControl is TFrDbGridEh) then
+      TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid(Mode, 0, StrToUIntDef(ID.AsString, MaxInt))
+    //если передана форма
+    else if (ParentForm <> nil) and (ParentForm is TFrmBasicMdi) and (TFrmBasicMdi(ParentForm).FindComponent('Frg1') <> nil) then
+      TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid(Mode, 0, StrToUIntDef(ID.AsString, MaxInt));
   except
   end;
 end;

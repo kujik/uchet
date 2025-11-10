@@ -3,6 +3,9 @@
 должность или профессия?
 надо ли признак Самозанятый?
 сделать в классе грида с подстановками   Fr.Opt.Caption := 'Работник: ' + Frg1.GetValueS('name');
+быстрое обновление после редактирования, в опции
+при удалении на текущую строку, в опции
+TGridEhHelper.GridRefresh добавить опционально переход к созданной/измененной, если не поменялась позиция
 }
 
 
@@ -23,7 +26,9 @@ type
     function  PrepareForm: Boolean; override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
+    procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
+    procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
   public
   end;
 
@@ -55,8 +60,8 @@ begin
     ['last_hired$d','Дата последнего приема','100'],
     ['last_terminated$d','Дата последнего увольнения','100'],
     ['dt_last_transfer$d','Последняя должность|Дата перевода','90'],
-    ['departament$s','~Подразделение','200;h'],
-    ['job$s','~Должность','200;h'],
+    ['departament$s','~Подразделение','240;h'],
+    ['job$s','~Должность','240;h'],
     ['comm$s','Комментарий','200;h']
   ]);
   Frg1.Opt.SetTable('v_w_employees');
@@ -69,28 +74,28 @@ begin
 
   Frg2.Opt.SetFields([
     ['id$i','_id','40'],
-    ['id_dep$i','_id_dep','40'],
+    ['id_departament$i','_id_dep','40'],
     ['id_job$i','_id_job','40'],
-    ['id_shed$i','_id_shed','40'],
+    ['id_schedule$i','_id_shed','40'],
     ['rn$i','Событие|№','40'],
     ['dt$d','~Дата события','80'],
     ['managername$s','~Менеджер','100'],
-    ['status$s','Значения|Статус','100'],
+    ['status$s','Значения|Статус','120','pic=принят;уволен;переведен:7;6;1:+'],
     ['dt_beg$d','~С','80'],
     ['dt_end$d','~По','80'],
     ['departament$s','~Подразделение','200;h'],
     ['job$s','~Должность','200;h'],
-    ['shedulecode$s','~График','70'],
+    ['schedulecode$s','~График','70'],
     ['foreman$s','~Бригадир','90'],
     ['concurrent$s','~Совместитель','90'],
     ['organization$s','~Организация','100'],
     ['personnel_number$s','~Табельный номер','90'],
     ['comm$s','Событие|Комментарий','200;h']
   ]);
-  Frg2.Opt.SetTable('w_employee_properties');
+  Frg2.Opt.SetTable('v_w_employee_properties');
   Frg2.Opt.SetWhere('where id_employee = :id_employee$i order by rn');
   Frg2.Opt.SetButtons(1, [
-   [mbtRefresh], [], [mbtView], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить новое собьтие'], [mbtDelete, 1, 'Удалить последнее побытие'], [], [mbtGridSettings]
+   [mbtRefresh], [], [mbtView], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить новое собьтие'], [mbtDelete, 1, 'Удалить последнее побытие'], [], [mbtGridSettings], [mbtTest]
   ]);
 
   Result := inherited;
@@ -113,6 +118,23 @@ procedure TFrmWGjrnEmployees.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: I
 begin
   Fr.SetSqlParameters('id_employee$i', [Frg1.ID]);
   Fr.Opt.Caption := 'Работник: ' + Frg1.GetValueS('name');
+end;
+
+procedure TFrmWGjrnEmployees.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  Handled := True;
+  if Tag = mbtTest then begin
+    Turv.ConvertEmployees202511;
+  end
+  else begin
+    Handled := False;
+    inherited;
+  end;
+end;
+
+procedure TFrmWGjrnEmployees.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+begin
+
 end;
 
 

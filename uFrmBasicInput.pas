@@ -547,6 +547,9 @@ begin
   FieldsSaveNew:= A.Implode(FieldsSave2, ';');
   res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSaveNew, CtrlValues2);
   Result := res <> -1;
+  //обновим айди
+  if Result and (Mode in [fAdd, fCopy]) then
+    ID := res;
 end;
 
 function TFrmBasicInput.Prepare: Boolean;
