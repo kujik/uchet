@@ -1421,11 +1421,13 @@ begin
 //Exit;
   //графики из v_turv_workers
   e := 0;
+//  0 = 5  1 = 4...
   for i := 0 to es.Count - 1 do begin
     if es.G(i, 'id_employee') <> e then begin
       e := es.G(i, 'id_employee');
       b1 := True;
     end;
+    //if e <> 1 then Continue;
     j := A.PosInArray(e, w, 0);
     if (j >= 0) and b1 then begin
       es.SetValue(i, 'f', 1);
@@ -1440,10 +1442,18 @@ begin
     end;
     if b1 and es.G(i, 'is_hired') = 1 then
       b1 := False;
-    if (es.G(i, 'is_terminated') = 1) and (e = es.G(i - 1, 'id_employee')) then begin
-        es.SetValue(i, 'id_job'), es.G(i - 1, 'id_job');
-        es.SetValue(i, 'id_departament'), es.G(i - 1, 'id_departament');
-        //es.G(i, 'personnel_number') es.G(i, 'id_organization')         es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
+
+    //данные из статуса Увольнение из более ранней строки
+    if (i < es.Count - 1) and (es.G(i, 'is_terminated') = 1) and (e = es.G(i + 1, 'id_employee').AsInteger) then begin
+      es.SetValue(i, 'f', 1);
+      es.SetValue(i, 'id_job', es.G(i + 1, 'id_job'));
+      es.SetValue(i, 'id_departament', es.G(i + 1, 'id_departament'));
+    end;
+    //дата завершения статуса = дата начала следующего, из следующей строки - 1 (если следующий = увольнение, то равно ему!)
+    if (i > 0) and (es.G(i, 'is_terminated') <> 1) and (e = es.G(i - 1, 'id_employee').AsInteger) then begin
+      es.SetValue(i, 'f', 1);
+      if es.G(i - 1, 'is_terminated') <> 1 then
+        es.SetValue(i, 'dt_end', IncDay(es.G(i - 1, 'dt_beg'), - 1)) else es.SetValue(i, 'dt_end', es.G(i - 1, 'dt_beg'));
     end;
   end;
   for i := 0 to es.Count - 1 do
