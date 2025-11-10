@@ -209,7 +209,8 @@ insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule
 --------------------------------------------------------------------------------
 
 --статусы работников (когда и куда принят/переведен/уволен)
-drop table w_worker_status cascade constraints;
+--drop table w_worker_status cascade constraints;
+alter table w_employee_properties add is_trainee number(1) default 0;
 create table w_employee_properties(
   id number(11),
   dt date,
@@ -225,6 +226,7 @@ create table w_employee_properties(
   id_schedule number(11),
   is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   is_foreman number(1) default 0,
+  is_trainee number(1) default 0,           --ученик
   comm varchar(4000), 
   id_manager number(1),
   --deleted number(1) default 0,              
@@ -346,7 +348,7 @@ left outer join w_jobs j on a.id_job = j.id and a.rn = 1
 select * from v_w_employees;
    
 
---create or replace view v_w_employee_properties as  
+create or replace view v_w_employee_properties as  
 select
   ep.*,
   row_number() over (partition by ep.id_employee order by ep.id) as rn,
@@ -358,6 +360,7 @@ select
   s.code as schedulecode,
   decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
   decode(ep.is_concurrent, 1, 'совместитель', null) as concurrent,
+  decode(ep.is_trainee, 1, 'ученик', null) as trainee,
   u.name as managername 
 from
   w_employees e,

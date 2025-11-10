@@ -6,6 +6,7 @@
 быстрое обновление после редактирования, в опции
 при удалении на текущую строку, в опции
 TGridEhHelper.GridRefresh добавить опционально переход к созданной/измененной, если не поменялась позиция
+сделать Fr.FindValueS(FieldName, i, False) -> Pos
 }
 
 
@@ -86,6 +87,7 @@ begin
     ['departament$s','~Подразделение','200;h'],
     ['job$s','~Должность','200;h'],
     ['schedulecode$s','~График','70'],
+    ['trainee$s','~Ученик','90'],
     ['foreman$s','~Бригадир','90'],
     ['concurrent$s','~Совместитель','90'],
     ['organization$s','~Организация','100'],
@@ -133,8 +135,21 @@ begin
 end;
 
 procedure TFrmWGjrnEmployees.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+var
+  i ,j, p: Integer;
 begin
-
+  if A.InArray(FieldName, ['job', 'organization', 'departament', 'schedulecode', 'foreman', 'concurrent', 'trainee']) then begin
+    p := Fr.GetValue('rn');
+    if (p > 1) and (Fr.GetValueS('status') = 'переведен') then begin
+      for i := 0 to Fr.GetCount(False) - 1 do
+        if p = Fr.GetValue('rn', i, False) + 1 then
+          if Fr.GetValueS(FieldName, i, False) <> Fr.GetValueS(FieldName) then begin
+            Params.Background := RGB(220, 220, 255);
+            //Fr.SetValue('trainee', i ,False, '111');
+            Break;
+          end;
+    end;
+  end;
 end;
 
 
