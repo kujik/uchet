@@ -42,9 +42,10 @@ implementation
 {$R *.dfm}
 
 uses
-  SysUtils, Variants, Types, Math, Clipbrd,    //basic
+  System.Variants,
   uForms, uMessages, uWindows, uFrmBasicMdi,   //my basic
-  uTurv
+  uTurv,
+  uFrmWDedtEmployeeProperties
   ;
 
 function TFrmWGjrnEmployees.PrepareForm: Boolean;
@@ -128,14 +129,16 @@ end;
 procedure TFrmWGjrnEmployees.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   Handled := True;
-  if Tag = mbtTest then begin
-    Turv.ConvertEmployees202511;
-  end
+  if Tag = mbtTest then
+    Turv.ConvertEmployees202511
+  else if Tag = mbtView then
+    TFrmWDedtEmployeeProperties.Show(Frg2, '*' , [myfoDialog, myfoSizeable], fView, Fr.ID, null)
   else begin
     Handled := False;
     inherited;
   end;
 end;
+
 
 procedure TFrmWGjrnEmployees.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 var

@@ -700,6 +700,7 @@ begin
   FFormNotCreatedByApplication := True;
   if APSetControls <> nil then
     PSetControlsProc;
+
   //(пере)покажем форму
   //вызов не может быть вынесен из конструктора в фуункции класса
   if not PrepareCreatedForm(AOwner, ADoc, '', AMode, Aid, AMyFormOptions, False) then

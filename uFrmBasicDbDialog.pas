@@ -51,7 +51,7 @@ function TFrmBasicDbDialog.Load(): Boolean;
 var
   FieldsSt: string;
   CtrlValues: TVarDynArray2;
-  i: Integer;
+  i, j: Integer;
 begin
   Result := False;
   for i := 0 to F.Count - 1 do
@@ -62,9 +62,11 @@ begin
   if Length(CtrlValues) = 0 then begin
     MsgRecordIsDeleted;
   end;
+  j := -1;
   for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameL) <> '' then begin
-      F.SetPropP(i, CtrlValues[0][i], fvtVBeg);
+      inc(j);
+      F.SetPropP(i, CtrlValues[0][j], fvtVBeg);
     end;
   Result := True;
 end;
