@@ -1109,6 +1109,7 @@ begin
   if Pos('=', AValue) = k + 1 then
     Inc(k);
   st1 := Copy(AValue, k + 1);
+  fr.FVerify := '';
   if (st = 'D') then
     if ASet
       then fr.DefOptions := st1
@@ -2151,12 +2152,17 @@ begin
     IsTableCorrect
   else
     IsRowCorrect;
+  EvSaveHandled := False;
   if Assigned(FOnCellValueSave) then
     FOnCellValueSave(Self, No, S.ToLower(TColumnEh(Sender).FieldName), S.IIf(Text = '', null, Value), EvSaveHandled);
-  //если не обновлять, не изменятся зависимые поля
-  if (FOpt.FDataMode = myogdmWithAdoDriver) then
+  if (FOpt.FDataMode = myogdmWithAdoDriver) then begin
+    //сохраним значение текущего поля, должна быть определена таблица, поле айди и тип изменеемого поля (напр dt$d), последнее не обязательно но может вызывать ошибку в ряде случаев.
+    if (not EvSaveHandled) and (FOpt.Sql.Table <> '') then
+      Q.QExecSql('update ' + FOpt.Sql.Table + ' set ' + FRec.Name + ' = :' + FRec.NameDb + ' where ' + FOpt.Sql.IdField + ' = :id', [Value, ID]);
+    //если не обновлять, не изменятся зависимые поля
     if FOpt.Sql.RefreshAfterSave
       then RefreshRecord;
+  end;
   if Assigned(FOnVeryfyAndCorrectValues) then
     FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RecNo, S.ToLower(TColumnEh(Sender).FieldName), Value, Msg);
   //обязательно

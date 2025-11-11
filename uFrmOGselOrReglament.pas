@@ -1,4 +1,21 @@
 {
+
+uses
+  Windows, Messages, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basic
+  Db, ADODB, //db
+  Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, StdCtrls, Buttons, Menus, //vcl basic
+  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, DynVarsEh, MemTableDataEh, DataDriverEh, ADODataDriverEh, MemTableEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
+  uData, uSettings, uSys, uForms, uDBOra, uString, uMessages, uWindows, uPrintReport, uLabelColors, uFrmBasicInput, uFrDBGridEh, uFrMyPanelCaption, uFrmBasicMdi, //my
+  uFrmBasicEditabelGrid //parentform
+  ;
+
+
+}
+
+
+
+
+{
 јвтоматический выбора регламента зазака дл€ данного типа заказа.
 ¬ гриде отображаютс€ свойства, доступные дл€ данного типа, они выбираютс€ отметкой чекбоксами,
 на основании выбранных свойств подбираетс€ регламент с наибольшим сроком выполнени€.
@@ -11,12 +28,10 @@ unit uFrmOGselOrReglament;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, Vcl.ComCtrls,
-  uLabelColors, uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uFrMyPanelCaption, uString,
-  uFrmBasicEditabelGrid
+  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, StdCtrls, Buttons, Menus, //basic
+  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, DynVarsEh, MemTableDataEh, DataDriverEh, ADODataDriverEh, MemTableEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
+  uData, uString, uLabelColors, uFrDBGridEh, uFrMyPanelCaption,  //my
+  uFrmBasicEditabelGrid //parentform
   ;
 
 type
@@ -40,7 +55,9 @@ var
 implementation
 
 uses
-  uDBOra;
+  SysUtils, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
+  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
+  ;
 
 {$R *.dfm}
 

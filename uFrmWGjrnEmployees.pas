@@ -30,6 +30,7 @@ type
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg2CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
   public
   end;
 
@@ -92,9 +93,9 @@ begin
     ['concurrent$s','~Совместитель','90'],
     ['organization$s','~Организация','100'],
     ['personnel_number$s','~Табельный номер','90'],
-    ['comm$s','Событие|Комментарий','200;h']
+    ['comm$s','Событие|Комментарий','200;h','e=1',rW_J_WorkerStatus_Ch]
   ]);
-  Frg2.Opt.SetTable('v_w_employee_properties');
+  Frg2.Opt.SetTable('v_w_employee_properties', 'w_employee_properties');
   Frg2.Opt.SetWhere('where id_employee = :id_employee$i order by rn');
   Frg2.Opt.SetButtons(1, [
    [mbtRefresh], [], [mbtView], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить новое собьтие'], [mbtDelete, 1, 'Удалить последнее побытие'], [], [mbtGridSettings], [mbtTest]
@@ -151,6 +152,15 @@ begin
     end;
   end;
 end;
+
+procedure TFrmWGjrnEmployees.Frg2CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+begin
+{  if FieldName <> 'comm' then
+    Exit;
+  Q.QExecSql('update w_employee_properties set comm = :comm$s where id = :id', [Value]);
+  Handled := True;}
+end;
+
 
 
 

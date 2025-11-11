@@ -18,6 +18,21 @@ madwexcept:
 cnpack:
 в информации о версии - установть сохранение даты сборки и автоинкремент веорсии при компил€ции
 
+модули
+interface
+uses
+  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, StdCtrls, Buttons, Menus, //basic
+  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, DynVarsEh, MemTableDataEh, DataDriverEh, ADODataDriverEh, MemTableEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
+  uData, uString, uLabelColors, uFrDBGridEh, uFrMyPanelCaption,  //my
+  uFrmBasicEditabelGrid //parentform
+  ;
+implementation
+uses
+  SysUtils, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
+  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
+  ;
+Refactoring - Remove Unused Units
+
 }
 
 uses
@@ -173,7 +188,8 @@ uses
   uFrmOGrepEstimatePrices in 'uFrmOGrepEstimatePrices.pas' {FrmOGrepEstimatePrices},
   uFrmOGselOrReglament in 'uFrmOGselOrReglament.pas' {FrmOGselOrReglament},
   uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament},
-  uFrmWGjrnEmployees in 'uFrmWGjrnEmployees.pas' {FrmWGjrnEmployees};
+  uFrmWGjrnEmployees in 'uFrmWGjrnEmployees.pas' {FrmWGjrnEmployees},
+  uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties};
 
 var
   MT: Integer;
