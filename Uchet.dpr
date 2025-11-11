@@ -26,12 +26,18 @@ uses
   uData, uString, uLabelColors, uFrDBGridEh, uFrMyPanelCaption,  //my
   uFrmBasicEditabelGrid //parentform
   ;
+  //для гридов на базе фрейма
+  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, StdCtrls, ComCtrls, Buttons, Menus, //basic
+  DBGridEh,  //ehlib
+  uData, uString, uFrDBGridEh,  //my
+
+
 implementation
 uses
   SysUtils, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
   uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
   ;
-Refactoring - Remove Unused Units
+CnPack - Модули - Очистка модулей
 
 }
 

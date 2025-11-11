@@ -3,9 +3,10 @@ unit D_NewEstimateInput;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, F_MdiGridDialogTemplate, DBGridEhGrouping,
-  ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
-  Vcl.Buttons, uLabelColors, uString, EhLibVclUtils;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, F_MdiGridDialogTemplate,
+  ToolCtrlsEh, DBGridEhToolCtrls, MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  Vcl.Buttons, uLabelColors, uString, EhLibVclUtils, DBGridEhGrouping,
+  DynVarsEh, Vcl.Mask;
 
 {
 в AddParam передаем:
@@ -50,7 +51,7 @@ var
 implementation
 
 uses
-  DateUtils, uSettings, uForms, uDBOra, uMessages, uData, uOrders, uWindows;
+  uForms, uDBOra, uMessages, uData, uOrders, uWindows;
 
 
 {$R *.dfm}

@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, Vcl.ExtCtrls, Vcl.ComCtrls,
-  uData, uForms, uDBOra, uString, uMessages, V_MDI, uLabelColors;
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Vcl.ExtCtrls, Vcl.ComCtrls,
+  uData, uForms, uDBOra, uString, uMessages, V_MDI;
 
 type
   TForm_MdiDialogTemplate = class(TForm_MDI)

@@ -2,40 +2,25 @@ inherited FrmOGrepEstimatePrices: TFrmOGrepEstimatePrices
   Caption = 'FrmOGrepEstimatePrices'
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
       ExplicitWidth = 786
-      inherited pnlBottom: TPanel
-        ExplicitTop = 426
-      end
-      inherited pnlLeft: TPanel
-        ExplicitHeight = 417
-      end
       inherited pnlGrid1: TPanel
         ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
           ExplicitWidth = 774
           inherited pnlGrid: TPanel
-            ExplicitHeight = 361
             inherited DbGridEh1: TDBGridEh
               Width = 766
-              Height = 339
+              Height = 338
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 340
+              Top = 339
               Width = 766
-              ExplicitTop = 340
             end
-          end
-          inherited pnlLeft: TPanel
-            ExplicitHeight = 361
-          end
-          inherited pnlBottom: TPanel
-            ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -43,7 +28,7 @@ inherited FrmOGrepEstimatePrices: TFrmOGrepEstimatePrices
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -74,7 +59,7 @@ inherited FrmOGrepEstimatePrices: TFrmOGrepEstimatePrices
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -84,12 +69,8 @@ inherited FrmOGrepEstimatePrices: TFrmOGrepEstimatePrices
           end
         end
       end
-      inherited pnlRight: TPanel
-        ExplicitHeight = 417
-      end
     end
     inherited pnlFrmBtns: TPanel
-      ExplicitTop = 477
       ExplicitWidth = 786
       inherited pnlFrmBtnsContainer: TPanel
         ExplicitWidth = 784
@@ -100,10 +81,10 @@ inherited FrmOGrepEstimatePrices: TFrmOGrepEstimatePrices
     end
   end
   inherited pnlStatusBar: TPanel
-    ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 727
       Height = 14
+      ExplicitLeft = 727
     end
     inherited lblStatusBarL: TLabel
       Height = 14

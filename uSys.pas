@@ -5,13 +5,13 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, Jpeg, MemTableDataEh, Db,
-  ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh, DBGridEh, PropStorageEh, DBAxisGridsEh,
-  ImgList, PngImage, uString, IniFiles, DBCtrlsEh, ShellApi, IOUtils, Types,
-  System.ImageList, frxClass, frxDesgn, Vcl.Themes, Vcl.Styles, IdBaseComponent,
-  IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, Xml.xmldom, Xml.XMLIntf,
-  Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase, IdSMTP, iDMessage,
-  IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
-  Data.DBXOracle, Data.SqlExpr, frxTableObject, frxDBSet, Menus, System.TypInfo,
+  ADODB, DataDriverEh, GridsEh, DBGridEh, PropStorageEh, DBAxisGridsEh,
+  PngImage, uString, IniFiles, DBCtrlsEh, ShellApi, IOUtils, Types,
+  frxClass, frxDesgn, Vcl.Styles,
+  IdHTTP, Xml.xmldom,
+
+  IdIOHandler, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
+  Data.DBXOracle, Menus, System.TypInfo,
   ShlObj, ClipBrd
   ;
 
@@ -104,12 +104,12 @@ var
 implementation
 
 uses
-  uDBOra,
+
   uMessages,
   uForms,
-  uSettings,
-  uFrmMain,
-  uErrors,
+
+
+
   uModule,
   uData
   ;

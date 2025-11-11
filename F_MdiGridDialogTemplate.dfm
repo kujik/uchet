@@ -1,13 +1,13 @@
 inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
   Caption = 'Form_MdiGridDialogTemplate'
-  ClientHeight = 433
-  ClientWidth = 755
-  ExplicitWidth = 771
-  ExplicitHeight = 472
+  ClientHeight = 431
+  ClientWidth = 747
+  ExplicitWidth = 763
+  ExplicitHeight = 470
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 414
-    Width = 755
+    Top = 412
+    Width = 747
     ExplicitTop = 414
     ExplicitWidth = 755
     inherited lbl_StatusBar_Right: TLabel
@@ -17,14 +17,14 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
   end
   object pnl_Buttons: TPanel [1]
     Left = 0
-    Top = 381
-    Width = 755
+    Top = 379
+    Width = 747
     Height = 33
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
     DesignSize = (
-      755
+      747
       33)
     object Img_Info: TImage
       Left = 8
@@ -35,7 +35,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       ExplicitTop = 3
     end
     object Bev_Buttons: TBevel
-      Left = 579
+      Left = 563
       Top = 2
       Width = 3
       Height = 25
@@ -44,7 +44,7 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       ExplicitTop = -1
     end
     object Bt_OK: TBitBtn
-      Left = 588
+      Left = 572
       Top = 2
       Width = 75
       Height = 25
@@ -52,9 +52,10 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       Caption = 'Bt_OK'
       TabOrder = 0
       OnClick = Bt_OKClick
+      ExplicitLeft = 588
     end
     object Bt_Cancel: TBitBtn
-      Left = 669
+      Left = 653
       Top = 2
       Width = 75
       Height = 25
@@ -64,18 +65,20 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       ModalResult = 2
       TabOrder = 1
       OnClick = Bt_CancelClick
+      ExplicitLeft = 669
     end
     object chb_NoClose: TCheckBox
-      Left = 373
+      Left = 357
       Top = 3
       Width = 121
       Height = 16
       Anchors = [akRight, akBottom]
       Caption = #1053#1077' '#1079#1072#1082#1088#1099#1074#1072#1090#1100' '#1086#1082#1085#1086
       TabOrder = 2
+      ExplicitLeft = 373
     end
     object Bt_Add: TBitBtn
-      Left = 517
+      Left = 501
       Top = 2
       Width = 25
       Height = 25
@@ -83,9 +86,10 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       Caption = 'Bt_Add'
       TabOrder = 3
       OnClick = Bt_AddClick
+      ExplicitLeft = 517
     end
     object Bt_Del: TBitBtn
-      Left = 548
+      Left = 532
       Top = 2
       Width = 25
       Height = 25
@@ -93,34 +97,40 @@ inherited Form_MdiGridDialogTemplate: TForm_MdiGridDialogTemplate
       Caption = 'Bt_Add'
       TabOrder = 4
       OnClick = Bt_DelClick
+      ExplicitLeft = 548
     end
   end
   object pnl_Bottom: TPanel [2]
     Left = 0
-    Top = 356
-    Width = 755
+    Top = 354
+    Width = 747
     Height = 25
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitTop = 356
+    ExplicitWidth = 755
   end
   object pnl_Top: TPanel [3]
     Left = 0
     Top = 0
-    Width = 755
+    Width = 747
     Height = 25
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitWidth = 755
   end
   object pnl_Client: TPanel [4]
     Left = 0
     Top = 25
-    Width = 755
-    Height = 331
+    Width = 747
+    Height = 329
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 4
+    ExplicitWidth = 755
+    ExplicitHeight = 331
     object DBGridEh1: TDBGridEh
       Left = 0
       Top = 0

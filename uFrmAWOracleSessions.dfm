@@ -1,41 +1,44 @@
 inherited FrmAWOracleSessions: TFrmAWOracleSessions
   Caption = 'FrmAWOracleSessions'
-  ClientWidth = 800
+  ClientWidth = 796
+  ExplicitWidth = 812
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 800
-    Height = 535
-    ExplicitHeight = 536
+    Width = 796
+    Height = 536
+    ExplicitHeight = 537
     inherited pnlFrmClient: TPanel
-      Width = 790
-      Height = 528
-      ExplicitHeight = 528
+      Width = 786
+      Height = 529
+      ExplicitWidth = 786
+      ExplicitHeight = 529
       inherited pnlTop: TPanel
-        Width = 790
+        Width = 786
       end
       inherited pnlBottom: TPanel
-        Top = 522
-        Width = 790
-        ExplicitTop = 522
+        Top = 523
+        Width = 786
+        ExplicitTop = 523
       end
       inherited pnlLeft: TPanel
         Width = 193
-        Height = 513
+        Height = 514
         ExplicitWidth = 193
-        ExplicitHeight = 513
+        ExplicitHeight = 514
         object btnCloseModules: TBitBtn
           Left = 6
-          Top = 482
+          Top = 483
           Width = 181
           Height = 25
           Anchors = [akLeft, akRight, akBottom]
           Caption = 'btnCloseModules'
           TabOrder = 0
           OnClick = btnCloseModulesClick
+          ExplicitTop = 482
         end
         object nedtIdle: TDBNumberEditEh
           Left = 4
-          Top = 455
+          Top = 456
           Width = 97
           Height = 21
           ControlLabel.Width = 103
@@ -50,52 +53,53 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
           MinValue = 5.000000000000000000
           TabOrder = 1
           Visible = True
+          ExplicitTop = 455
         end
       end
       inherited pnlGrid1: TPanel
         Left = 193
-        Width = 592
-        Height = 513
+        Width = 588
+        Height = 514
         ExplicitLeft = 193
         ExplicitWidth = 588
-        ExplicitHeight = 513
+        ExplicitHeight = 514
         inherited Frg1: TFrDBGridEh
-          Width = 590
-          Height = 511
+          Width = 586
+          Height = 512
           ExplicitWidth = 586
-          ExplicitHeight = 511
+          ExplicitHeight = 512
           inherited pnlGrid: TPanel
-            Width = 580
-            Height = 457
+            Width = 576
+            Height = 458
             ExplicitWidth = 576
-            ExplicitHeight = 457
+            ExplicitHeight = 458
             inherited DbGridEh1: TDBGridEh
               Width = 578
-              Height = 434
+              Height = 436
             end
             inherited pnlStatusBar: TPanel
-              Top = 435
+              Top = 437
               Width = 578
-              ExplicitTop = 435
+              ExplicitTop = 436
               ExplicitWidth = 574
             end
           end
           inherited pnlLeft: TPanel
-            Height = 457
-            ExplicitHeight = 457
+            Height = 458
+            ExplicitHeight = 458
           end
           inherited pnlTop: TPanel
-            Width = 590
+            Width = 586
             ExplicitWidth = 586
           end
           inherited pnlContainer: TPanel
-            Width = 590
+            Width = 586
             ExplicitWidth = 586
           end
           inherited pnlBottom: TPanel
-            Top = 511
-            Width = 590
-            ExplicitTop = 511
+            Top = 512
+            Width = 586
+            ExplicitTop = 512
             ExplicitWidth = 586
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -104,7 +108,7 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -115,24 +119,26 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 527
-        Width = 790
+        Top = 528
+        Width = 786
         Height = 1
-        ExplicitTop = 527
+        ExplicitTop = 528
+        ExplicitWidth = 786
         ExplicitHeight = 1
         inherited Frg2: TFrDBGridEh
-          Width = 788
+          Width = 784
+          ExplicitWidth = 784
           inherited pnlGrid: TPanel
-            Width = 778
+            Width = 774
           end
           inherited pnlTop: TPanel
-            Width = 788
+            Width = 784
           end
           inherited pnlContainer: TPanel
-            Width = 788
+            Width = 784
           end
           inherited pnlBottom: TPanel
-            Width = 788
+            Width = 784
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -140,7 +146,7 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32323030307D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -151,16 +157,16 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
         end
       end
       inherited pnlRight: TPanel
-        Left = 785
-        Height = 513
-        ExplicitHeight = 513
+        Left = 781
+        Height = 514
+        ExplicitHeight = 514
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 533
-      Width = 790
+      Top = 534
+      Width = 786
       Height = 1
-      ExplicitTop = 533
+      ExplicitTop = 534
       ExplicitHeight = 1
       inherited bvlFrmBtnsB: TBevel
         Top = -3
@@ -174,14 +180,11 @@ inherited FrmAWOracleSessions: TFrmAWOracleSessions
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 535
-    Width = 800
+    Top = 536
+    Width = 796
     Height = 1
-    ExplicitTop = 535
+    ExplicitTop = 536
     ExplicitHeight = 1
-    inherited lblStatusBarR: TLabel
-      Left = 727
-    end
   end
   object tmr1: TTimer
     Interval = 5000

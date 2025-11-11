@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
-  uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
   ;
 
 type
@@ -72,19 +72,19 @@ uses
   uFrmMain,
   uSys,
   uTasks,
-  uErrors,
+
   uFrmBasicInput,
-  uPrintReport,
-  uLabelColors2,
+
+
   uWindows,
   uOrders,
   uTurv,
 
-  D_Sn_Calendar,
-  D_ExpenseItems,
-  D_SnOrder,
-  D_Order,
-  D_OrderPrintLabels,
+
+
+
+
+
   D_R_EstimateReplace,
   D_J_Error_Log,
   D_Spl_InfoGrid,
@@ -94,9 +94,9 @@ uses
   uFrmDlgRItmSupplier,
   uFrmODedtNomenclFiles,
   uFrmOWPlannedOrder,
-  uFrmXWGridAdminOptions,
+
   uFrmOGinfSgp,
-  uFrmWGEdtTurv,
+
   uFrmWGedtPayroll,
   uFrmWDedtCreatePayroll
   ;

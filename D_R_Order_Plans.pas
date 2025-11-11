@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.Buttons, Vcl.Mask, DBCtrlsEh, Math, uString;
+  Vcl.Buttons, DBCtrlsEh, Math, uString, Vcl.Mask;
 
 type
   TDlg_R_Order_Plans = class(TForm_Normal)
@@ -67,7 +67,7 @@ implementation
 
 uses
   DateUtils,
-  uSettings,
+
   uForms,
   uDBOra,
   uData,

@@ -7,9 +7,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, ToolCtrlsEh, DBGridEhToolCtrls,
   MemTableDataEh, Db, ADODB, PropFilerEh, PropStorageEh, DataDriverEh,
-  ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  GridsEh, DBAxisGridsEh, DBGridEh,
   DBCtrls, StdCtrls, Buttons, ExtCtrls, Math, AppEvnts;
 
 //клвиша нажата

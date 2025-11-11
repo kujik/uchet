@@ -1,19 +1,19 @@
 inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
   BorderStyle = bsDialog
   Caption = 'Dlg_R_Order_Plans'
-  ClientHeight = 255
-  ClientWidth = 630
+  ClientHeight = 253
+  ClientWidth = 622
   OnActivate = FormActivate
-  ExplicitWidth = 636
-  ExplicitHeight = 283
-  PixelsPerInch = 96
+  ExplicitWidth = 638
+  ExplicitHeight = 292
   TextHeight = 13
   object Img_Info: TImage
     Left = 8
-    Top = 227
+    Top = 225
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
+    ExplicitTop = 227
   end
   object lbl11: TLabel
     Left = 96
@@ -44,8 +44,8 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     Caption = #1054#1090#1075#1088#1091#1079#1082#1072', '#1086#1087#1090
   end
   object lbl_Caption: TLabel
-    Left = 101
-    Top = 224
+    Left = 85
+    Top = 222
     Width = 116
     Height = 23
     Anchors = [akRight]
@@ -56,6 +56,8 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ExplicitLeft = 101
+    ExplicitTop = 224
   end
   object lbl4: TLabel
     Left = 96
@@ -72,8 +74,8 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     Caption = #1055#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1086', '#1076#1086#1087'. '#1082#1086#1084#1087#1083#1077#1082#1090#1072#1094#1080#1103
   end
   object Bt_Cancel: TBitBtn
-    Left = 547
-    Top = 222
+    Left = 531
+    Top = 220
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -83,8 +85,8 @@ inherited Dlg_R_Order_Plans: TDlg_R_Order_Plans
     TabOrder = 0
   end
   object Bt_Ok: TBitBtn
-    Left = 466
-    Top = 222
+    Left = 450
+    Top = 220
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

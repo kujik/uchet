@@ -50,8 +50,8 @@ unit uErrors;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, ExtCtrls, uData, Jpeg, uString, PngImage, madExcept, madLinkDisAsm,
-  madListHardware, madListProcesses, madListModules, AdoDB, DB;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, ExtCtrls, uData, Jpeg, uString, PngImage, madExcept,
+  AdoDB, DB;
 
 const
   //тип ошибки

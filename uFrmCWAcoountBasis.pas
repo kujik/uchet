@@ -10,8 +10,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.ComCtrls, Vcl.Buttons, Vcl.Mask, DBCtrlsEh, DateUtils, Math,
-  uData, D_Sn_Calendar, uFrDBGridEh
+  Vcl.ComCtrls, Vcl.Buttons, DBCtrlsEh, DateUtils, Math,
+  uData, D_Sn_Calendar, uFrDBGridEh, Vcl.Mask
   ;
 
 type

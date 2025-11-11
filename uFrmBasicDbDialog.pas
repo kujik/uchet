@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, Vcl.ExtCtrls, Vcl.ComCtrls,
-  uData, uForms, uDBOra, uString, uMessages, V_MDI, uLabelColors, uFrmBasicMdi
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Vcl.ExtCtrls, Vcl.ComCtrls,
+  uData, uForms, uDBOra, uString, uMessages, V_MDI, uFrmBasicMdi
   ;
 
 type
@@ -30,7 +30,7 @@ var
 implementation
 
 Uses
-  uErrors,
+
   ufields
   ;
 

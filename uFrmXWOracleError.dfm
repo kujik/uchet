@@ -1,38 +1,38 @@
 inherited FrmXWOracleError: TFrmXWOracleError
   Caption = 'FrmXWOracleError'
-  ClientHeight = 205
-  ClientWidth = 579
-  ExplicitWidth = 595
-  ExplicitHeight = 244
+  ClientHeight = 203
+  ClientWidth = 571
+  ExplicitWidth = 587
+  ExplicitHeight = 242
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 579
-    Height = 189
-    ExplicitWidth = 583
-    ExplicitHeight = 190
+    Width = 571
+    Height = 187
+    ExplicitWidth = 571
+    ExplicitHeight = 187
     inherited pnlFrmClient: TPanel
-      Width = 573
-      Height = 141
-      ExplicitWidth = 573
-      ExplicitHeight = 141
+      Width = 565
+      Height = 139
+      ExplicitWidth = 561
+      ExplicitHeight = 138
       object pnlCenter: TPanel
         Left = 73
         Top = 0
-        Width = 500
-        Height = 141
+        Width = 492
+        Height = 139
         Align = alClient
         BevelOuter = bvNone
         Caption = 'pnlCenter'
         Padding.Top = 20
         Padding.Bottom = 4
         TabOrder = 0
-        ExplicitWidth = 765
-        ExplicitHeight = 345
+        ExplicitWidth = 488
+        ExplicitHeight = 138
         object MError: TDBMemoEh
           Left = 0
           Top = 20
           Width = 185
-          Height = 117
+          Height = 115
           Margins.Top = 30
           ControlLabel.Width = 70
           ControlLabel.Height = 13
@@ -51,8 +51,8 @@ inherited FrmXWOracleError: TFrmXWOracleError
         object MSql: TDBMemoEh
           Left = 185
           Top = 20
-          Width = 126
-          Height = 116
+          Width = 118
+          Height = 114
           Margins.Top = 30
           ControlLabel.Width = 72
           ControlLabel.Height = 13
@@ -69,10 +69,10 @@ inherited FrmXWOracleError: TFrmXWOracleError
           WantReturns = True
         end
         object MParams: TDBMemoEh
-          Left = 311
+          Left = 303
           Top = 20
           Width = 185
-          Height = 116
+          Height = 114
           Margins.Top = 30
           ControlLabel.Width = 57
           ControlLabel.Height = 13
@@ -93,18 +93,17 @@ inherited FrmXWOracleError: TFrmXWOracleError
         Left = 0
         Top = 0
         Width = 73
-        Height = 140
+        Height = 138
         Align = alLeft
         BevelOuter = bvNone
         Padding.Top = 20
         Padding.Bottom = 4
         TabOrder = 1
-        ExplicitHeight = 345
         object Image1: TImage
           Left = 0
           Top = 20
           Width = 73
-          Height = 117
+          Height = 115
           Align = alLeft
           Picture.Data = {
             0954506E67496D61676589504E470D0A1A0A0000000D49484452000000400000
@@ -266,48 +265,48 @@ inherited FrmXWOracleError: TFrmXWOracleError
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 145
-      Width = 569
-      ExplicitTop = 146
-      ExplicitWidth = 573
+      Top = 143
+      Width = 561
+      ExplicitTop = 143
+      ExplicitWidth = 561
       inherited bvlFrmBtnsTl: TBevel
-        Width = 571
+        Width = 563
         ExplicitWidth = 571
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 571
+        Width = 563
         ExplicitWidth = 571
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 571
-        ExplicitWidth = 571
+        Width = 563
+        ExplicitWidth = 559
         inherited pnlFrmBtnsMain: TPanel
-          Left = 472
-          ExplicitLeft = 472
+          Left = 464
+          ExplicitLeft = 460
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 244
-          ExplicitLeft = 244
+          Left = 236
+          ExplicitLeft = 232
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 373
-          ExplicitLeft = 373
+          Left = 365
+          ExplicitLeft = 361
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 104
-          ExplicitWidth = 104
+          Width = 96
+          ExplicitWidth = 92
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 189
-    Width = 579
-    ExplicitTop = 190
-    ExplicitWidth = 583
+    Top = 187
+    Width = 571
+    ExplicitTop = 187
+    ExplicitWidth = 571
     inherited lblStatusBarR: TLabel
-      Left = 491
-      ExplicitLeft = 491
+      Left = 502
+      ExplicitLeft = 502
     end
   end
   inherited tmrAfterCreate: TTimer

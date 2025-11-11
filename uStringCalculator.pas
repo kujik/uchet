@@ -4,10 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, uDBOra, uMessages, uData,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask;
+  Dialogs, StdCtrls, Buttons, uMessages, uData,
+  ToolCtrlsEh, DBGridEhToolCtrls,
+  GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math;
 
 
 function CalculateStr (Line1: string): real;

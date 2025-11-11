@@ -794,14 +794,14 @@ type
 implementation
 
 uses
-  madExcept,
+
   uErrors,
   uForms,
   uDBOra,
   uSettings,
   uWindows,
   uMessages,
-  uSys,
+
   uLabelColors2,
   uFrmMain,
   uFrmBasicMdi,

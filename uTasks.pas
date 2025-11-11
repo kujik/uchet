@@ -28,7 +28,7 @@ unit uTasks;
 interface
 
 uses
- Graphics, Classes, StrUtils, DateUtils, Variants, SysUtils, Types, uString,LibXL, Windows
+ Graphics, Classes, DateUtils, Variants, SysUtils, Types, uString,Windows
  ;
 
 
@@ -77,11 +77,9 @@ uses
   Dialogs,
   XmlDoc,
   Xml.XMLIntf,
-  iDMessage,
-  ShellApi,
-  uOrders,
 
-  D_Order
+
+  uOrders
 
   ;
 

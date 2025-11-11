@@ -1,29 +1,28 @@
 inherited FrmXWGridOptions: TFrmXWGridOptions
   Caption = 'FrmXWGridOptions'
-  ClientHeight = 306
-  ClientWidth = 885
+  ClientHeight = 305
+  ClientWidth = 881
   ExplicitWidth = 897
   ExplicitHeight = 344
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 885
-    Height = 290
+    Width = 881
+    Height = 289
     ExplicitWidth = 885
     ExplicitHeight = 290
     inherited pnlFrmClient: TPanel
-      Width = 875
-      Height = 241
+      Width = 871
+      Height = 240
       ExplicitWidth = 871
       ExplicitHeight = 240
       object pnlLeft: TPanel
         Left = 0
         Top = 0
         Width = 225
-        Height = 241
+        Height = 240
         Align = alLeft
         Caption = 'pnlLeft'
         TabOrder = 0
-        ExplicitHeight = 240
         object pnlLeftTop: TPanel
           Left = 1
           Top = 1
@@ -49,21 +48,18 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
       object pnlRight: TPanel
         Left = 225
         Top = 0
-        Width = 650
-        Height = 241
+        Width = 646
+        Height = 240
         Align = alClient
         Caption = 'pnlRight'
         TabOrder = 1
-        ExplicitWidth = 646
-        ExplicitHeight = 240
         object pnlRightTop: TPanel
           Left = 1
           Top = 1
-          Width = 648
+          Width = 644
           Height = 25
           Align = alTop
           TabOrder = 0
-          ExplicitWidth = 644
           object lbl2: TLabel
             Left = 4
             Top = 4
@@ -81,8 +77,8 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 26
-          Width = 648
-          Height = 214
+          Width = 644
+          Height = 213
           Align = alClient
           TabOrder = 1
           ExplicitLeft = 1
@@ -90,8 +86,8 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
           ExplicitWidth = 644
           ExplicitHeight = 213
           inherited pnlGrid: TPanel
-            Width = 638
-            Height = 160
+            Width = 634
+            Height = 159
             ExplicitWidth = 634
             ExplicitHeight = 159
             inherited DbGridEh1: TDBGridEh
@@ -105,7 +101,9 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
+                ExplicitWidth = 32
                 ExplicitHeight = 97
                 inherited PRowDetailPanel: TPanel
                   Align = alNone
@@ -128,20 +126,20 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
             end
           end
           inherited pnlLeft: TPanel
-            Height = 160
+            Height = 159
             ExplicitHeight = 159
           end
           inherited pnlTop: TPanel
-            Width = 648
+            Width = 644
             ExplicitWidth = 644
           end
           inherited pnlContainer: TPanel
-            Width = 648
+            Width = 644
             ExplicitWidth = 644
           end
           inherited pnlBottom: TPanel
-            Top = 214
-            Width = 648
+            Top = 213
+            Width = 644
             ExplicitTop = 213
             ExplicitWidth = 644
           end
@@ -163,8 +161,8 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 246
-      Width = 875
+      Top = 245
+      Width = 871
       ExplicitTop = 245
       ExplicitWidth = 871
       inherited bvlFrmBtnsTl: TBevel
@@ -198,17 +196,13 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 290
-    Width = 885
+    Top = 289
+    Width = 881
     ExplicitTop = 289
     ExplicitWidth = 881
     inherited lblStatusBarR: TLabel
       Left = 812
-      Height = 14
       ExplicitLeft = 812
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

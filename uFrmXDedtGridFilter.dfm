@@ -1,20 +1,20 @@
 inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
   Caption = 'FrmXDedtGridFilter'
-  ClientHeight = 159
-  ClientWidth = 386
-  ExplicitWidth = 402
-  ExplicitHeight = 198
+  ClientHeight = 157
+  ClientWidth = 378
+  ExplicitWidth = 394
+  ExplicitHeight = 196
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 386
-    Height = 143
-    ExplicitWidth = 386
-    ExplicitHeight = 143
+    Width = 378
+    Height = 141
+    ExplicitWidth = 378
+    ExplicitHeight = 141
     inherited pnlFrmClient: TPanel
-      Width = 376
-      Height = 94
-      ExplicitWidth = 376
-      ExplicitHeight = 94
+      Width = 372
+      Height = 93
+      ExplicitWidth = 368
+      ExplicitHeight = 92
       object bvl1: TBevel
         Left = 8
         Top = 84
@@ -110,32 +110,32 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 99
-      Width = 376
-      ExplicitTop = 99
-      ExplicitWidth = 376
+      Top = 98
+      Width = 372
+      ExplicitTop = 97
+      ExplicitWidth = 368
       inherited bvlFrmBtnsTl: TBevel
-        Width = 374
+        Width = 370
         ExplicitWidth = 370
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 374
+        Width = 370
         ExplicitWidth = 370
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 374
-        ExplicitWidth = 374
+        Width = 370
+        ExplicitWidth = 366
         inherited pnlFrmBtnsMain: TPanel
-          Left = 275
-          ExplicitLeft = 275
+          Left = 271
+          ExplicitLeft = 267
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 47
-          ExplicitLeft = 47
+          Left = 43
+          ExplicitLeft = 39
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 176
-          ExplicitLeft = 176
+          Left = 172
+          ExplicitLeft = 168
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 28
@@ -145,13 +145,13 @@ inherited FrmXDedtGridFilter: TFrmXDedtGridFilter
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 143
-    Width = 386
-    ExplicitTop = 143
-    ExplicitWidth = 386
+    Top = 141
+    Width = 378
+    ExplicitTop = 141
+    ExplicitWidth = 378
     inherited lblStatusBarR: TLabel
-      Left = 294
-      ExplicitLeft = 294
+      Left = 309
+      ExplicitLeft = 309
     end
   end
   inherited tmrAfterCreate: TTimer

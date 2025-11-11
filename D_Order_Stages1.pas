@@ -5,11 +5,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, MemTableDataEh, Data.DB,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Buttons, Vcl.Mask, DBCtrlsEh, GridsEh,
+  ToolCtrlsEh, DBGridEhToolCtrls, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Buttons, DBCtrlsEh, GridsEh,
   DBAxisGridsEh, DBGridEh, MemTableEh, uLabelColors, Math,
-  uDBOra, uData, EhLibVclUtils
-  ;
+  uDBOra, uData, EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask  ;
 
 type
   TDlg_Order_Stages1 = class(TForm_Normal)
@@ -60,8 +59,8 @@ implementation
 {$R *.dfm}
 
 uses
-  DateUtils,
-  uSettings,
+
+
   uForms,
   uString,
   uMessages

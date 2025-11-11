@@ -552,11 +552,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, ExtCtrls, Jpeg, MemTableDataEh, Db,
-  ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh, DBGridEh, PropStorageEh, DBAxisGridsEh, ImgList, PngImage, uString, IniFiles,
-  DBCtrlsEh, ShellApi, IOUtils, Types, System.ImageList, frxClass, frxDesgn, Vcl.Themes, Vcl.Styles, IdBaseComponent, IdComponent,
-  IdTCPConnection, IdTCPClient, IdHTTP, Xml.xmldom, Xml.XMLIntf, Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
-  IdSMTP, iDMessage, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle, Data.SqlExpr, frxTableObject,
-  frxDBSet, Menus, madExcept, uModule, uUser, uLabelColors2;
+  ADODB, DataDriverEh, ADODataDriverEh, GridsEh, DBGridEh, PropStorageEh, DBAxisGridsEh, ImgList, PngImage, IniFiles,
+  DBCtrlsEh, Types, System.ImageList, frxClass, frxDesgn, Vcl.Styles, IdBaseComponent, IdComponent,
+  IdTCPConnection, IdTCPClient, IdHTTP, Xml.xmldom, Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
+  IdSMTP, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle,
+  Menus, uModule, uUser, Xml.XMLIntf;
 
 var
   Module: TModule;
@@ -1984,7 +1984,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uDBOra, uMessages, uForms, uSettings, uFrmMain, uErrors;
+  uMessages, uForms, uSettings;
 
 initialization
   DefFontData.Name := 'Calibri'; //'Tahoma';

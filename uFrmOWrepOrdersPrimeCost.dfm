@@ -1,40 +1,38 @@
 inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
   Caption = 'FrmOWrepOrdersPrimeCost'
-  ClientHeight = 219
-  ClientWidth = 635
-  ExplicitWidth = 647
-  ExplicitHeight = 257
+  ClientHeight = 218
+  ClientWidth = 631
+  ExplicitWidth = 643
+  ExplicitHeight = 256
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 635
-    Height = 203
-    ExplicitWidth = 270
-    ExplicitHeight = 82
+    Width = 631
+    Height = 202
+    ExplicitWidth = 627
+    ExplicitHeight = 201
     inherited pnlFrmClient: TPanel
-      Width = 625
-      Height = 145
-      ExplicitWidth = 260
-      ExplicitHeight = 33
+      Width = 621
+      Height = 144
+      ExplicitWidth = 617
+      ExplicitHeight = 143
       object lbl_1_Caption: TLabel
         Left = 0
         Top = 0
-        Width = 625
+        Width = 621
         Height = 13
         Align = alTop
         Caption = 'lbl_1_Caption'
-        ExplicitWidth = 66
+        ExplicitWidth = 65
       end
       object pnl_Main: TPanel
         Left = 0
         Top = 13
-        Width = 625
-        Height = 132
+        Width = 621
+        Height = 131
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = -4
-        ExplicitTop = 22
-        ExplicitWidth = 631
+        ExplicitWidth = 617
         ExplicitHeight = 130
         object lbl_1: TLabel
           Left = 16
@@ -213,48 +211,56 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 150
-      Width = 625
+      Top = 149
+      Width = 621
       Height = 52
-      ExplicitTop = 240
-      ExplicitWidth = 858
+      ExplicitTop = 148
+      ExplicitWidth = 617
       ExplicitHeight = 52
       inherited bvlFrmBtnsTl: TBevel
-        Width = 623
+        Width = 619
+        ExplicitWidth = 623
       end
       inherited bvlFrmBtnsB: TBevel
         Top = 48
-        Width = 623
+        Width = 619
+        ExplicitTop = 48
+        ExplicitWidth = 623
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 623
+        Width = 619
         Height = 44
-        ExplicitWidth = 258
+        ExplicitWidth = 615
+        ExplicitHeight = 44
         inherited pnlFrmBtnsMain: TPanel
-          Left = 591
+          Left = 587
           Width = 32
           Height = 36
-          ExplicitLeft = 824
+          ExplicitLeft = 583
           ExplicitWidth = 32
+          ExplicitHeight = 36
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 386
+          Left = 382
           Height = 36
-          ExplicitLeft = -69
+          ExplicitLeft = 378
+          ExplicitHeight = 36
           inherited chbNoclose: TCheckBox
             Top = -51
+            ExplicitTop = -51
           end
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 515
+          Left = 511
           Width = 76
           Height = 36
-          ExplicitLeft = 1152
+          ExplicitLeft = 507
           ExplicitWidth = 76
           ExplicitHeight = 36
         end
         inherited pnlFrmBtnsInfo: TPanel
           Height = 36
+          ExplicitHeight = 36
         end
         inherited pnlFrmBtnsL: TPanel
           Width = 368
@@ -265,7 +271,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
             Left = 57
             Top = 6
             Width = 130
-            Height = 21
+            Height = 19
             ControlLabel.Width = 43
             ControlLabel.Height = 26
             ControlLabel.Caption = #1053#1072#1095#1072#1083#1086#13#10#1087#1077#1088#1080#1086#1076#1072
@@ -281,7 +287,7 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
             Left = 238
             Top = 6
             Width = 130
-            Height = 21
+            Height = 19
             ControlLabel.Width = 43
             ControlLabel.Height = 26
             ControlLabel.Caption = #1050#1086#1085#1077#1094#13#10#1087#1077#1088#1080#1086#1076#1072
@@ -298,18 +304,22 @@ inherited FrmOWrepOrdersPrimeCost: TFrmOWrepOrdersPrimeCost
           Left = 409
           Width = 2
           Height = 36
+          ExplicitLeft = 409
+          ExplicitWidth = 2
+          ExplicitHeight = 36
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 203
-    Width = 635
-    ExplicitTop = 82
-    ExplicitWidth = 270
+    Top = 202
+    Width = 631
+    ExplicitTop = 201
+    ExplicitWidth = 627
     inherited lblStatusBarR: TLabel
-      Left = 543
+      Left = 558
       Height = 14
+      ExplicitLeft = 558
     end
     inherited lblStatusBarL: TLabel
       Height = 14

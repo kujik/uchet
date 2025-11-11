@@ -1,77 +1,77 @@
 inherited FrmOGedtOrderStageTimes: TFrmOGedtOrderStageTimes
   Caption = 'FrmOGedtOrderStageTimes'
-  ClientHeight = 374
-  ClientWidth = 711
-  ExplicitWidth = 727
-  ExplicitHeight = 413
+  ClientHeight = 372
+  ClientWidth = 703
+  ExplicitWidth = 719
+  ExplicitHeight = 411
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 711
-    Height = 358
-    ExplicitWidth = 715
-    ExplicitHeight = 359
+    Width = 703
+    Height = 356
+    ExplicitWidth = 707
+    ExplicitHeight = 357
     inherited pnlFrmClient: TPanel
-      Width = 701
-      Height = 309
-      ExplicitWidth = 701
-      ExplicitHeight = 309
+      Width = 693
+      Height = 307
+      ExplicitWidth = 693
+      ExplicitHeight = 307
       inherited pnlTop: TPanel
-        Width = 701
-        ExplicitWidth = 705
+        Width = 693
+        ExplicitWidth = 693
       end
       inherited pnlBottom: TPanel
-        Top = 263
-        Width = 701
-        ExplicitTop = 264
-        ExplicitWidth = 705
+        Top = 261
+        Width = 693
+        ExplicitTop = 261
+        ExplicitWidth = 693
       end
       inherited pnlLeft: TPanel
-        Height = 254
-        ExplicitHeight = 255
+        Height = 252
+        ExplicitHeight = 252
       end
       inherited pnlGrid1: TPanel
-        Width = 691
-        Height = 254
-        ExplicitWidth = 691
-        ExplicitHeight = 254
+        Width = 683
+        Height = 252
+        ExplicitWidth = 683
+        ExplicitHeight = 252
         inherited Frg1: TFrDBGridEh
-          Width = 689
-          Height = 252
-          ExplicitWidth = 689
-          ExplicitHeight = 252
+          Width = 681
+          Height = 250
+          ExplicitWidth = 681
+          ExplicitHeight = 250
           inherited pnlGrid: TPanel
-            Width = 679
-            Height = 198
-            ExplicitWidth = 683
-            ExplicitHeight = 199
+            Width = 671
+            Height = 196
+            ExplicitWidth = 671
+            ExplicitHeight = 196
             inherited DbGridEh1: TDBGridEh
-              Width = 681
-              Height = 176
+              Width = 673
+              Height = 174
             end
             inherited pnlStatusBar: TPanel
-              Top = 177
-              Width = 681
-              ExplicitTop = 177
-              ExplicitWidth = 681
+              Top = 175
+              Width = 673
+              ExplicitTop = 174
+              ExplicitWidth = 669
             end
           end
           inherited pnlLeft: TPanel
-            Height = 198
-            ExplicitHeight = 199
+            Height = 196
+            ExplicitHeight = 196
           end
           inherited pnlTop: TPanel
-            Width = 689
-            ExplicitWidth = 693
+            Width = 681
+            ExplicitWidth = 681
           end
           inherited pnlContainer: TPanel
-            Width = 689
-            ExplicitWidth = 693
+            Width = 681
+            ExplicitWidth = 681
           end
           inherited pnlBottom: TPanel
-            Top = 252
-            Width = 689
-            ExplicitTop = 253
-            ExplicitWidth = 693
+            Top = 250
+            Width = 681
+            ExplicitTop = 250
+            ExplicitWidth = 681
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -79,7 +79,7 @@ inherited FrmOGedtOrderStageTimes: TFrmOGedtOrderStageTimes
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -90,35 +90,35 @@ inherited FrmOGedtOrderStageTimes: TFrmOGedtOrderStageTimes
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 268
-        Width = 701
-        ExplicitTop = 268
-        ExplicitWidth = 701
+        Top = 266
+        Width = 693
+        ExplicitTop = 266
+        ExplicitWidth = 693
         inherited Frg2: TFrDBGridEh
-          Width = 699
-          ExplicitWidth = 699
+          Width = 691
+          ExplicitWidth = 691
           inherited pnlGrid: TPanel
-            Width = 689
-            ExplicitWidth = 693
+            Width = 681
+            ExplicitWidth = 681
             inherited DbGridEh1: TDBGridEh
-              Width = 691
+              Width = 683
             end
             inherited pnlStatusBar: TPanel
-              Width = 691
-              ExplicitWidth = 691
+              Width = 683
+              ExplicitWidth = 679
             end
           end
           inherited pnlTop: TPanel
-            Width = 699
-            ExplicitWidth = 703
+            Width = 691
+            ExplicitWidth = 691
           end
           inherited pnlContainer: TPanel
-            Width = 699
-            ExplicitWidth = 703
+            Width = 691
+            ExplicitWidth = 691
           end
           inherited pnlBottom: TPanel
-            Width = 699
-            ExplicitWidth = 703
+            Width = 691
+            ExplicitWidth = 691
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -126,7 +126,7 @@ inherited FrmOGedtOrderStageTimes: TFrmOGedtOrderStageTimes
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -137,55 +137,55 @@ inherited FrmOGedtOrderStageTimes: TFrmOGedtOrderStageTimes
         end
       end
       inherited pnlRight: TPanel
-        Left = 696
-        Height = 254
-        ExplicitLeft = 700
-        ExplicitHeight = 255
+        Left = 688
+        Height = 252
+        ExplicitLeft = 688
+        ExplicitHeight = 252
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 314
-      Width = 701
-      ExplicitTop = 315
-      ExplicitWidth = 705
+      Top = 312
+      Width = 693
+      ExplicitTop = 312
+      ExplicitWidth = 693
       inherited bvlFrmBtnsTl: TBevel
-        Width = 703
+        Width = 695
         ExplicitWidth = 703
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 703
+        Width = 695
         ExplicitWidth = 703
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 703
-        ExplicitWidth = 703
+        Width = 695
+        ExplicitWidth = 691
         inherited pnlFrmBtnsMain: TPanel
-          Left = 604
-          ExplicitLeft = 604
+          Left = 596
+          ExplicitLeft = 592
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 376
-          ExplicitLeft = 376
+          Left = 368
+          ExplicitLeft = 364
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 505
-          ExplicitLeft = 505
+          Left = 497
+          ExplicitLeft = 493
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 236
-          ExplicitWidth = 236
+          Width = 228
+          ExplicitWidth = 224
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 358
-    Width = 711
-    ExplicitTop = 359
-    ExplicitWidth = 715
+    Top = 356
+    Width = 703
+    ExplicitTop = 356
+    ExplicitWidth = 703
     inherited lblStatusBarR: TLabel
-      Left = 623
-      ExplicitLeft = 623
+      Left = 634
+      ExplicitLeft = 634
     end
   end
 end

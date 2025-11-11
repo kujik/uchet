@@ -61,8 +61,8 @@ unit V_MDI;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Math, uData, Vcl.StdCtrls, uLabelColors;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, Db, ADODB, DataDriverEh, GridsEh, DBAxisGridsEh, DBGridEh, Math, uData, Vcl.StdCtrls, uLabelColors;
 
 const
   mycHiddenFormLeft = -10000;

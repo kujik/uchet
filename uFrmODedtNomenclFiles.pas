@@ -20,9 +20,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, StdCtrls, Buttons, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, ClipBrd,
+  Types, DBCtrlsEh, ExtCtrls, ClipBrd,
   uLabelColors, uFrmBasicMdi, uFrDBGridEh
   ;
 
@@ -57,7 +57,7 @@ uses
   uForms,
   uMessages,
   uData,
-  uErrors,
+
   uSys,
   uDBOra,
   uWindows

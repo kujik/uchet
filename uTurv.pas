@@ -38,10 +38,10 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  MemTableDataEh, Db, MemTableEh, Math, ExtCtrls,
-  Registry, IniFiles, GridToolCtrlsEh, SearchPanelsEh, DBLookupUtilsEh,
-  PropFilerEh, MemTreeEh, ImgList, StdActns, ActnList, Jpeg, uString, PngImage, DateUtils,
+  ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, Db, Math, ExtCtrls,
+  IniFiles, SearchPanelsEh,
+  PropFilerEh, ActnList, Jpeg, uString, PngImage, DateUtils,
   uData, uForms;
 
 type
@@ -82,7 +82,7 @@ uses
   uDBOra,
   uMessages,
   uTasks,
-  uSys,
+
   uDBParsec,
   uFrmBasicInput
   ;

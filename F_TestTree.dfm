@@ -1,15 +1,15 @@
 inherited Form_TestTree: TForm_TestTree
   Caption = 'Form_TestTree'
-  ClientHeight = 441
-  ClientWidth = 349
-  ExplicitWidth = 365
-  ExplicitHeight = 480
+  ClientHeight = 439
+  ClientWidth = 341
+  ExplicitWidth = 357
+  ExplicitHeight = 478
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 8
     Top = 8
-    Width = 343
-    Height = 385
+    Width = 327
+    Height = 383
     AllowedOperations = [alopUpdateEh]
     Anchors = [akLeft, akTop, akRight, akBottom]
     DataSource = DataSource1
@@ -39,8 +39,8 @@ inherited Form_TestTree: TForm_TestTree
     end
   end
   object Bt_Ok: TBitBtn
-    Left = 266
-    Top = 408
+    Left = 250
+    Top = 406
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -50,7 +50,7 @@ inherited Form_TestTree: TForm_TestTree
   end
   object Bt_Collapse: TBitBtn
     Left = 8
-    Top = 408
+    Top = 406
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -60,7 +60,7 @@ inherited Form_TestTree: TForm_TestTree
   end
   object Bt_Expand: TBitBtn
     Left = 89
-    Top = 408
+    Top = 406
     Width = 75
     Height = 25
     Anchors = [akLeft, akBottom]
@@ -70,7 +70,7 @@ inherited Form_TestTree: TForm_TestTree
   end
   object chb_Materials: TDBCheckBoxEh
     Left = 170
-    Top = 412
+    Top = 410
     Width = 97
     Height = 17
     Anchors = [akLeft, akBottom]

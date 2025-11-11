@@ -4,8 +4,8 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
   Caption = 'Dlg_ExpenseItems'
-  ClientHeight = 220
-  ClientWidth = 638
+  ClientHeight = 218
+  ClientWidth = 630
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,15 +17,16 @@ object Dlg_ExpenseItems: TDlg_ExpenseItems
   Visible = True
   OnClose = FormClose
   DesignSize = (
-    638
-    220)
+    630
+    218)
   TextHeight = 13
   object Img_Info: TImage
     Left = 8
-    Top = 187
+    Top = 185
     Width = 23
     Height = 25
     Anchors = [akLeft, akBottom]
+    ExplicitTop = 187
   end
   object edt_name: TDBEditEh
     Left = 88

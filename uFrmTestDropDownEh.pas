@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  DropDownFormEh, Dialogs, DynVarsEh, ToolCtrlsEh, Vcl.StdCtrls, Vcl.Buttons,
-  Vcl.Mask, DBCtrlsEh;
+  DropDownFormEh, Dialogs, ToolCtrlsEh, Vcl.StdCtrls, Vcl.Buttons,
+  DBCtrlsEh, Vcl.Mask;
 
 type
   TFrmTestDropDownEh = class(TCustomDropDownFormEh)

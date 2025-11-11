@@ -13,10 +13,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  F_MdiGridDialogTemplate, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
-  uFrDBGridEh, V_Normal, EhLibVclUtils
+  ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, Data.DB, Vcl.ExtCtrls, Vcl.StdCtrls,
+  DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
+  uFrDBGridEh, V_Normal, EhLibVclUtils, DBGridEhGrouping, DynVarsEh
   ;
 
 type
@@ -39,7 +39,7 @@ var
 implementation
 
 uses
-  TypInfo,
+
   uString,
   uForms
   ,uData

@@ -4,9 +4,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh,
   uFrmBasicMdi, uFrmBasicDbDialog,
-  uData, uForms, uDBOra, uString, uMessages, uFields
+  uData, uForms, uDBOra, uString, uMessages, uFields, Vcl.Mask
   ;
 
 type

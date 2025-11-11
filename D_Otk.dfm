@@ -1,16 +1,16 @@
 inherited Dlg_Otk: TDlg_Otk
   BorderStyle = bsDialog
   Caption = 'Dlg_Otk'
-  ClientHeight = 270
-  ClientWidth = 186
+  ClientHeight = 268
+  ClientWidth = 178
   OnActivate = FormActivate
   OnKeyPress = FormKeyPress
-  ExplicitWidth = 202
-  ExplicitHeight = 309
+  ExplicitWidth = 194
+  ExplicitHeight = 307
   TextHeight = 13
   object Img_Info: TImage
     Left = 0
-    Top = 237
+    Top = 235
     Width = 21
     Height = 20
     Anchors = []
@@ -26,8 +26,8 @@ inherited Dlg_Otk: TDlg_Otk
   object DBGridEh1: TDBGridEh
     Left = 0
     Top = 24
-    Width = 182
-    Height = 207
+    Width = 166
+    Height = 205
     Anchors = [akLeft, akTop, akRight, akBottom]
     DataSource = DataSource1
     DynProps = <>
@@ -55,8 +55,8 @@ inherited Dlg_Otk: TDlg_Otk
     end
   end
   object Bt_Ok: TBitBtn
-    Left = 19
-    Top = 237
+    Left = 3
+    Top = 235
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -64,12 +64,10 @@ inherited Dlg_Otk: TDlg_Otk
     ModalResult = 1
     TabOrder = 1
     OnClick = Bt_OkClick
-    ExplicitLeft = 30
-    ExplicitTop = 238
   end
   object Bt_Cancel: TBitBtn
-    Left = 100
-    Top = 237
+    Left = 84
+    Top = 235
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -77,8 +75,6 @@ inherited Dlg_Otk: TDlg_Otk
     Caption = 'BitBtn1'
     ModalResult = 2
     TabOrder = 2
-    ExplicitLeft = 111
-    ExplicitTop = 238
   end
   object MemTableEh1: TMemTableEh
     Params = <>

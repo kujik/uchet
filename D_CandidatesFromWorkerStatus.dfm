@@ -1,14 +1,14 @@
 inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
   BorderStyle = bsDialog
   Caption = 'Dlg_CandidatesFromWorkerStatus'
-  ClientHeight = 164
-  ClientWidth = 663
-  ExplicitWidth = 679
-  ExplicitHeight = 203
+  ClientHeight = 162
+  ClientWidth = 655
+  ExplicitWidth = 671
+  ExplicitHeight = 201
   TextHeight = 13
   object lbl1: TLabel
     Left = 8
-    Top = 143
+    Top = 141
     Width = 167
     Height = 13
     Anchors = [akLeft, akBottom]
@@ -26,7 +26,7 @@ inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
   object DBGridEh1: TDBGridEh
     Left = 0
     Top = 0
-    Width = 663
+    Width = 655
     Height = 130
     Align = alTop
     DataSource = DataSource1
@@ -56,8 +56,8 @@ inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
     end
   end
   object Bt_Cancel: TBitBtn
-    Left = 580
-    Top = 136
+    Left = 564
+    Top = 134
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -66,12 +66,10 @@ inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
     ModalResult = 2
     TabOrder = 1
     OnClick = Bt_CancelClick
-    ExplicitLeft = 903
-    ExplicitTop = 88
   end
   object Bt_Ok: TBitBtn
-    Left = 504
-    Top = 136
+    Left = 488
+    Top = 134
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -79,8 +77,6 @@ inherited Dlg_CandidatesFromWorkerStatus: TDlg_CandidatesFromWorkerStatus
     ModalResult = 1
     TabOrder = 2
     OnClick = Bt_OkClick
-    ExplicitLeft = 827
-    ExplicitTop = 88
   end
   object MemTableEh1: TMemTableEh
     Params = <>

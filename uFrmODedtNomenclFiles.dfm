@@ -1,29 +1,28 @@
 inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
   Caption = 'FrmDlgDrawingAddAndView'
-  ClientHeight = 476
-  ClientWidth = 772
-  ExplicitWidth = 788
-  ExplicitHeight = 515
+  ClientHeight = 475
+  ClientWidth = 768
+  ExplicitWidth = 784
+  ExplicitHeight = 514
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 772
-    Height = 460
+    Width = 768
+    Height = 459
     ExplicitWidth = 772
     ExplicitHeight = 460
     inherited pnlFrmClient: TPanel
-      Width = 762
-      Height = 411
-      ExplicitWidth = 762
-      ExplicitHeight = 411
+      Width = 758
+      Height = 410
+      ExplicitWidth = 758
+      ExplicitHeight = 410
       object pnlNomencl: TPanel
         Left = 0
         Top = 0
-        Width = 762
+        Width = 758
         Height = 17
         Align = alTop
         Caption = 'pnlNomencl'
         TabOrder = 0
-        ExplicitWidth = 758
         object lblNomencl: TLabel
           Left = 4
           Top = -2
@@ -35,26 +34,26 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
       object pnlGrid: TPanel
         Left = 0
         Top = 17
-        Width = 762
-        Height = 394
+        Width = 758
+        Height = 393
         Align = alClient
         Caption = 'pnlGrid'
         TabOrder = 1
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 1
-          Width = 760
-          Height = 392
+          Width = 756
+          Height = 391
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 760
-          ExplicitHeight = 392
+          ExplicitWidth = 756
+          ExplicitHeight = 391
           inherited pnlGrid: TPanel
             Top = 22
-            Width = 750
-            Height = 370
+            Width = 746
+            Height = 369
             ExplicitTop = 22
             ExplicitWidth = 746
             ExplicitHeight = 369
@@ -86,25 +85,25 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
           end
           inherited pnlLeft: TPanel
             Top = 22
-            Height = 370
+            Height = 369
             ExplicitTop = 22
             ExplicitHeight = 369
           end
           inherited pnlTop: TPanel
             Top = 17
-            Width = 760
+            Width = 756
             ExplicitTop = 17
             ExplicitWidth = 756
           end
           inherited pnlContainer: TPanel
-            Width = 760
+            Width = 756
             Height = 17
             ExplicitWidth = 756
             ExplicitHeight = 17
           end
           inherited pnlBottom: TPanel
-            Top = 392
-            Width = 760
+            Top = 391
+            Width = 756
             ExplicitTop = 391
             ExplicitWidth = 756
           end
@@ -114,7 +113,7 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -126,8 +125,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 416
-      Width = 762
+      Top = 415
+      Width = 758
       ExplicitTop = 415
       ExplicitWidth = 758
       inherited bvlFrmBtnsTl: TBevel
@@ -163,8 +162,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 460
-    Width = 772
+    Top = 459
+    Width = 768
     ExplicitTop = 459
     ExplicitWidth = 768
     inherited lblStatusBarR: TLabel

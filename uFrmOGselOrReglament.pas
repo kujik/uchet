@@ -29,8 +29,8 @@ interface
 
 uses
   Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, StdCtrls, Buttons, Menus, //basic
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, DynVarsEh, MemTableDataEh, DataDriverEh, ADODataDriverEh, MemTableEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
-  uData, uString, uLabelColors, uFrDBGridEh, uFrMyPanelCaption,  //my
+  ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, MemTableDataEh, DataDriverEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
+  uData, uString, uLabelColors, uFrDBGridEh,  //my
   uFrmBasicEditabelGrid //parentform
   ;
 
@@ -55,8 +55,8 @@ var
 implementation
 
 uses
-  SysUtils, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
-  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
+  SysUtils, Variants, Types, Math, Clipbrd,   //basi
+  uForms, uDBOra, uMessages, uWindows, uFrmBasicMdi   //my basic
   ;
 
 {$R *.dfm}

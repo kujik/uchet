@@ -1,10 +1,10 @@
 inherited Form_Adm_Installer: TForm_Adm_Installer
   Anchors = [akLeft, akTop, akBottom]
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 514
-  ClientWidth = 784
-  ExplicitWidth = 796
-  ExplicitHeight = 552
+  ClientHeight = 512
+  ClientWidth = 776
+  ExplicitWidth = 792
+  ExplicitHeight = 551
   TextHeight = 13
   object lbl_InstalledInfo: TLabel [0]
     Left = 8
@@ -21,7 +21,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   end
   object lbl_FilesInfo: TLabel [1]
     Left = 8
-    Top = 450
+    Top = 448
     Width = 92
     Height = 16
     Anchors = [akLeft, akBottom]
@@ -36,7 +36,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   end
   object lbl_Status: TLabel [2]
     Left = 480
-    Top = 480
+    Top = 478
     Width = 92
     Height = 16
     Anchors = [akLeft, akBottom]
@@ -57,15 +57,15 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
   end
   inherited pnl_StatusBar: TPanel
-    Top = 513
-    Width = 784
+    Top = 511
+    Width = 776
     Height = 1
     Visible = False
-    ExplicitTop = 512
-    ExplicitWidth = 780
+    ExplicitTop = 511
+    ExplicitWidth = 776
     ExplicitHeight = 1
     inherited lbl_StatusBar_Right: TLabel
-      Left = 697
+      Left = 693
       ExplicitLeft = 706
     end
     inherited lbl_StatusBar_Left: TLabel
@@ -195,16 +195,14 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 569
-    Top = 473
+    Left = 553
+    Top = 471
     Width = 195
     Height = 33
     Anchors = [akRight, akBottom]
     Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
     TabOrder = 8
     OnClick = Bt_OkClick
-    ExplicitLeft = 565
-    ExplicitTop = 472
   end
   object Dbg_PrevInstall: TDBGridEh [13]
     Left = 8

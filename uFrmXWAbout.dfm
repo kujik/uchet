@@ -4,8 +4,8 @@ object FrmXWAbout: TFrmXWAbout
   ActiveControl = btnOk
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-  ClientHeight = 375
-  ClientWidth = 215
+  ClientHeight = 374
+  ClientWidth = 211
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBlack
@@ -13,15 +13,13 @@ object FrmXWAbout: TFrmXWAbout
   Font.Name = 'MS Sans Serif'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
   OnKeyPress = FormKeyPress
   OnShow = FormShow
   DesignSize = (
-    215
-    375)
-  PixelsPerInch = 96
+    211
+    374)
   TextHeight = 13
   object pnlMain: TPanel
     Left = 8
@@ -2214,7 +2212,7 @@ object FrmXWAbout: TFrmXWAbout
     object lblVersion: TLabel
       Left = 0
       Top = 275
-      Width = 67
+      Width = 66
       Height = 16
       Caption = 'lbl_Module'
       Font.Charset = DEFAULT_CHARSET
@@ -2227,7 +2225,7 @@ object FrmXWAbout: TFrmXWAbout
     object lblDate: TLabel
       Left = 0
       Top = 297
-      Width = 35
+      Width = 33
       Height = 13
       Caption = 'lblDate'
       Font.Charset = DEFAULT_CHARSET
@@ -2252,8 +2250,8 @@ object FrmXWAbout: TFrmXWAbout
   object pnlLinks: TPanel
     Left = 0
     Top = 324
-    Width = 136
-    Height = 51
+    Width = 128
+    Height = 50
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 2

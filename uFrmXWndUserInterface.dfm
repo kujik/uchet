@@ -1,25 +1,25 @@
 inherited FrmXWndUserInterface: TFrmXWndUserInterface
   Caption = 'FrmXWndUserInterface'
-  ClientHeight = 271
-  ClientWidth = 800
-  ExplicitWidth = 816
-  ExplicitHeight = 310
+  ClientHeight = 269
+  ClientWidth = 792
+  ExplicitWidth = 808
+  ExplicitHeight = 308
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 800
-    Height = 271
-    ExplicitWidth = 804
-    ExplicitHeight = 272
+    Width = 792
+    Height = 269
+    ExplicitWidth = 796
+    ExplicitHeight = 270
     inherited pnlFrmClient: TPanel
-      Width = 790
-      Height = 265
-      ExplicitWidth = 790
-      ExplicitHeight = 265
+      Width = 782
+      Height = 263
+      ExplicitWidth = 782
+      ExplicitHeight = 263
       object bvl1: TBevel
         Left = 241
         Top = 0
         Width = 3
-        Height = 265
+        Height = 263
         Align = alLeft
         ExplicitLeft = 281
         ExplicitHeight = 345
@@ -48,10 +48,9 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
         Left = 0
         Top = 0
         Width = 241
-        Height = 265
+        Height = 263
         Align = alLeft
         TabOrder = 0
-        ExplicitHeight = 403
         object btnDef: TBitBtn
           Left = 8
           Top = 228
@@ -202,6 +201,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
                 Footers = <>
               end>
             inherited RowDetailData: TRowDetailPanelControlEh
+              ExplicitLeft = 30
               ExplicitTop = 35
               ExplicitWidth = 46
               ExplicitHeight = 74
@@ -252,7 +252,7 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
             7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
             305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
             666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-            6E657261746F722052696368656432302031302E302E31393034317D5C766965
+            6E657261746F722052696368656432302031302E302E32363130307D5C766965
             776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
             66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
             720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -263,53 +263,53 @@ inherited FrmXWndUserInterface: TFrmXWndUserInterface
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 270
-      Width = 790
+      Top = 268
+      Width = 782
       Height = 0
-      ExplicitTop = 408
-      ExplicitWidth = 794
+      ExplicitTop = 268
+      ExplicitWidth = 782
       ExplicitHeight = 0
       inherited bvlFrmBtnsTl: TBevel
-        Width = 792
+        Width = 784
         ExplicitWidth = 792
       end
       inherited bvlFrmBtnsB: TBevel
         Top = -4
-        Width = 792
+        Width = 784
         ExplicitTop = -4
         ExplicitWidth = 792
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 792
-        ExplicitWidth = 792
+        Width = 784
+        ExplicitWidth = 780
         inherited pnlFrmBtnsMain: TPanel
-          Left = 693
-          ExplicitLeft = 693
+          Left = 685
+          ExplicitLeft = 681
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 465
-          ExplicitLeft = 465
+          Left = 457
+          ExplicitLeft = 453
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 594
-          ExplicitLeft = 594
+          Left = 586
+          ExplicitLeft = 582
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 325
-          ExplicitWidth = 325
+          Width = 317
+          ExplicitWidth = 313
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 271
-    Width = 800
+    Top = 269
+    Width = 792
     Height = 0
-    ExplicitTop = 409
-    ExplicitWidth = 804
+    ExplicitTop = 269
+    ExplicitWidth = 792
     ExplicitHeight = 0
     inherited lblStatusBarR: TLabel
-      Left = 712
+      Left = 723
       ExplicitLeft = 712
     end
   end

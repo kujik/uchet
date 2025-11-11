@@ -6,13 +6,13 @@ interface
 
 uses
 Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
-{$IFDEF EH_LIB_7} XPMan, {$ENDIF}
+{$IFDEF EH_LIB_7} {$ENDIF}
 StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns, ActnList,
-ToolWin, ImgList, DB, ADODB{, EhLibMTE}, DataDriverEh, DBGridEh, PrnDbgeh,
-ADODataDriverEh, PropFilerEh, PropStorageEh, {EhLibADO, }AppEvnts, uUtils,
-uErrors, psAPI, uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants,
-Vcl.Imaging.pngimage, System.ImageList, System.Actions, System.StrUtils,
-Vcl.ActnMan, Vcl.ActnCtrls, uTasks, uString, uSys, Vcl.DBActns;
+DB, ADODB{, EhLibMTE}, DataDriverEh, DBGridEh, PrnDbgeh,
+PropFilerEh, PropStorageEh, {EhLibADO, }AppEvnts, uUtils,
+psAPI, uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants,
+Vcl.Imaging.pngimage, System.Actions,
+Vcl.ActnMan, uString, Vcl.DBActns, Vcl.ToolWin;
 
 type
   TFrmMain = class(TForm)
@@ -92,16 +92,15 @@ implementation
 
 uses
   uFrmXWAbout, uData, uDBOra, V_MDI,
-  uFrmXDmsgNoConnection,
+
   uWindows, D_SetPassword,
   D_MainSettings, D_ModuleSettings, D_Rep_Smeta,
-  F_Adm_Installer,
+
 
   uFrmADedtItmCopyRigths,
 
   uFrmTest,
-  uFrmTest2,
-  madExcept
+  uFrmTest2
   ;
 
 var

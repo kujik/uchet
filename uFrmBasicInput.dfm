@@ -1,60 +1,64 @@
 inherited FrmBasicInput: TFrmBasicInput
   Caption = 'FrmBasicInput'
-  ClientHeight = 156
-  ClientWidth = 162
-  ExplicitWidth = 178
-  ExplicitHeight = 195
+  ClientHeight = 155
+  ClientWidth = 158
+  ExplicitWidth = 174
+  ExplicitHeight = 194
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 162
-    Height = 140
-    ExplicitWidth = 174
-    ExplicitHeight = 143
+    Width = 158
+    Height = 139
+    ExplicitWidth = 158
+    ExplicitHeight = 139
     inherited pnlFrmClient: TPanel
-      Width = 164
-      Height = 94
-      ExplicitWidth = 164
-      ExplicitHeight = 94
+      Width = 152
+      Height = 91
+      ExplicitWidth = 148
+      ExplicitHeight = 90
     end
     inherited pnlFrmBtns: TPanel
-      Top = 99
-      Width = 164
-      ExplicitTop = 99
-      ExplicitWidth = 164
+      Top = 96
+      Width = 152
+      ExplicitTop = 95
+      ExplicitWidth = 148
       inherited bvlFrmBtnsTl: TBevel
-        Width = 162
+        Width = 150
         ExplicitWidth = 389
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 162
+        Width = 150
         ExplicitWidth = 389
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 162
-        ExplicitWidth = 162
+        Width = 150
+        ExplicitWidth = 146
         inherited pnlFrmBtnsMain: TPanel
-          Left = 63
-          ExplicitLeft = 63
+          Left = 51
+          ExplicitLeft = 47
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = -165
-          ExplicitLeft = -165
+          Left = -177
+          ExplicitLeft = -181
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = -36
-          ExplicitLeft = -36
+          Left = -48
+          ExplicitLeft = -52
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 140
-    Width = 162
-    ExplicitTop = 143
-    ExplicitWidth = 174
+    Top = 139
+    Width = 158
+    ExplicitTop = 139
+    ExplicitWidth = 158
     inherited lblStatusBarR: TLabel
-      Left = 82
+      Left = 89
+      Height = 14
       ExplicitLeft = 82
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

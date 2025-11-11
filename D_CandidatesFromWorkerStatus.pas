@@ -4,11 +4,10 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, ToolCtrlsEh,
+  DBGridEhToolCtrls, Vcl.StdCtrls, DBCtrlsEh,
   GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB, MemTableEh,
-  Vcl.Buttons, EhLibVclUtils
-  ;
+  Vcl.Buttons, EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask  ;
 
 type
   TDlg_CandidatesFromWorkerStatus = class(TForm_Normal)
@@ -40,7 +39,7 @@ var
 implementation
 
 uses
-  uSettings,
+
   uForms,
   uDBOra,
   uString,

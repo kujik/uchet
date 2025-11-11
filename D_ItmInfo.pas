@@ -17,10 +17,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI, Vcl.ExtCtrls, Vcl.ComCtrls, System.Types,
-  Vcl.Buttons, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, MemTableEh,
+  Vcl.Buttons, Vcl.StdCtrls, DBCtrlsEh, ToolCtrlsEh,
+  DBGridEhToolCtrls, MemTableDataEh, Data.DB, MemTableEh,
   GridsEh, DBAxisGridsEh, DBGridEh, Data.Win.ADODB, DataDriverEh,
-  ADODataDriverEh, Vcl.Menus, EhLibVclUtils;
+  ADODataDriverEh, Vcl.Menus, EhLibVclUtils, DBGridEhGrouping, DynVarsEh,
+  Vcl.Mask;
 
 type
   TDlg_ItmInfo = class(TForm_MDI)
@@ -81,7 +82,7 @@ implementation
 {$R *.dfm}
 
 uses
-  DateUtils,
+
   uSettings,
   uForms,
   uDBOra,
@@ -90,7 +91,7 @@ uses
   uMessages,
   uWindows,
   uOrders,
-  D_SuppliersMinPart,
+
   uFrmBasicInput,
   uFrmODedtNomenclFiles,
   F_TestTree

@@ -1,10 +1,10 @@
 inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
   BorderStyle = bsDialog
   Caption = 'Dlg_Order_Stages_Otk2'
-  ClientHeight = 266
-  ClientWidth = 923
-  ExplicitWidth = 939
-  ExplicitHeight = 305
+  ClientHeight = 264
+  ClientWidth = 915
+  ExplicitWidth = 931
+  ExplicitHeight = 303
   TextHeight = 13
   object lbl_Caption: TLabel
     Left = 8
@@ -15,23 +15,26 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
   end
   object Img_Info: TImage
     Left = 8
-    Top = 238
+    Top = 236
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
+    ExplicitTop = 238
   end
   object bvl1: TBevel
-    Left = 748
-    Top = 231
+    Left = 732
+    Top = 229
     Width = 3
     Height = 25
     Anchors = [akRight, akBottom]
+    ExplicitLeft = 748
+    ExplicitTop = 231
   end
   object DBGridEh1: TDBGridEh
     Left = 8
     Top = 24
-    Width = 907
-    Height = 201
+    Width = 891
+    Height = 199
     AllowedOperations = [alopUpdateEh]
     Anchors = [akLeft, akTop, akRight, akBottom]
     DataSource = DataSource1
@@ -62,8 +65,8 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     end
   end
   object Bt_Cancel: TBitBtn
-    Left = 840
-    Top = 233
+    Left = 824
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -73,8 +76,8 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     TabOrder = 1
   end
   object Bt_Ok: TBitBtn
-    Left = 759
-    Top = 233
+    Left = 743
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -84,8 +87,8 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     OnClick = Bt_OkClick
   end
   object Bt_Add: TBitBtn
-    Left = 684
-    Top = 233
+    Left = 668
+    Top = 231
     Width = 25
     Height = 25
     Anchors = [akRight, akBottom]
@@ -94,8 +97,8 @@ inherited Dlg_Order_Stages_Otk2: TDlg_Order_Stages_Otk2
     OnClick = Bt_AddClick
   end
   object Bt_Del: TBitBtn
-    Left = 715
-    Top = 233
+    Left = 699
+    Top = 231
     Width = 25
     Height = 25
     Anchors = [akRight, akBottom]

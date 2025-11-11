@@ -1,33 +1,32 @@
 inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
   Caption = 'FrmOWInvoiceToSgp'
-  ClientHeight = 446
-  ClientWidth = 687
-  ExplicitWidth = 699
-  ExplicitHeight = 484
+  ClientHeight = 444
+  ClientWidth = 679
+  ExplicitWidth = 695
+  ExplicitHeight = 483
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 687
-    Height = 430
-    ExplicitWidth = 687
-    ExplicitHeight = 430
+    Width = 679
+    Height = 428
+    ExplicitWidth = 683
+    ExplicitHeight = 429
     inherited pnlFrmClient: TPanel
-      Width = 677
-      Height = 381
-      ExplicitWidth = 673
-      ExplicitHeight = 380
+      Width = 669
+      Height = 379
+      ExplicitWidth = 669
+      ExplicitHeight = 379
       object pnlSelectOrder: TPanel
         Left = 0
         Top = 0
-        Width = 677
+        Width = 669
         Height = 41
         Align = alTop
         Caption = 'pnlSelectOrder'
         TabOrder = 0
-        ExplicitWidth = 673
         object bvl1: TBevel
           Left = 1
           Top = 38
-          Width = 675
+          Width = 671
           Height = 2
           Align = alBottom
           ExplicitLeft = 416
@@ -38,12 +37,11 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
       object pnlTitle: TPanel
         Left = 0
         Top = 41
-        Width = 677
+        Width = 669
         Height = 80
         Align = alTop
         Caption = 'pnlTitle'
         TabOrder = 1
-        ExplicitWidth = 673
         object lblInvoice: TLabel
           Left = 10
           Top = 6
@@ -76,32 +74,30 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
       object pnlGrid: TPanel
         Left = 0
         Top = 121
-        Width = 677
-        Height = 260
+        Width = 669
+        Height = 258
         Align = alClient
         Caption = 'pnlGrid'
         TabOrder = 2
-        ExplicitWidth = 673
-        ExplicitHeight = 259
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 1
-          Width = 675
-          Height = 258
+          Width = 667
+          Height = 256
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 671
-          ExplicitHeight = 257
+          ExplicitWidth = 667
+          ExplicitHeight = 256
           inherited pnlGrid: TPanel
-            Width = 665
-            Height = 204
-            ExplicitWidth = 661
-            ExplicitHeight = 203
+            Width = 657
+            Height = 202
+            ExplicitWidth = 657
+            ExplicitHeight = 202
             inherited DbGridEh1: TDBGridEh
-              Width = 663
-              Height = 181
+              Width = 659
+              Height = 180
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitTop = 35
@@ -110,10 +106,10 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 182
-              Width = 663
-              ExplicitTop = 181
-              ExplicitWidth = 659
+              Top = 181
+              Width = 659
+              ExplicitTop = 180
+              ExplicitWidth = 655
               inherited lblStatusBarL: TLabel
                 Height = 13
                 ExplicitHeight = 13
@@ -125,22 +121,22 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
             end
           end
           inherited pnlLeft: TPanel
-            Height = 204
-            ExplicitHeight = 203
+            Height = 202
+            ExplicitHeight = 202
           end
           inherited pnlTop: TPanel
-            Width = 675
-            ExplicitWidth = 671
+            Width = 667
+            ExplicitWidth = 667
           end
           inherited pnlContainer: TPanel
-            Width = 675
-            ExplicitWidth = 671
+            Width = 667
+            ExplicitWidth = 667
           end
           inherited pnlBottom: TPanel
-            Top = 258
-            Width = 675
-            ExplicitTop = 257
-            ExplicitWidth = 671
+            Top = 256
+            Width = 667
+            ExplicitTop = 256
+            ExplicitWidth = 667
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -148,7 +144,7 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -160,32 +156,32 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 386
-      Width = 677
-      ExplicitTop = 385
-      ExplicitWidth = 673
+      Top = 384
+      Width = 669
+      ExplicitTop = 384
+      ExplicitWidth = 669
       inherited bvlFrmBtnsTl: TBevel
-        Width = 675
+        Width = 671
         ExplicitWidth = 675
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 675
+        Width = 671
         ExplicitWidth = 675
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 675
-        ExplicitWidth = 671
+        Width = 671
+        ExplicitWidth = 667
         inherited pnlFrmBtnsMain: TPanel
-          Left = 576
-          ExplicitLeft = 572
+          Left = 572
+          ExplicitLeft = 568
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 348
-          ExplicitLeft = 344
+          Left = 344
+          ExplicitLeft = 340
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 477
-          ExplicitLeft = 473
+          Left = 473
+          ExplicitLeft = 469
         end
         inherited pnlFrmBtnsL: TPanel
           Width = 272
@@ -219,25 +215,21 @@ inherited FrmOWInvoiceToSgp: TFrmOWInvoiceToSgp
         end
         inherited pnlFrmBtnsC: TPanel
           Left = 313
-          Width = 35
+          Width = 31
           ExplicitLeft = 313
-          ExplicitWidth = 31
+          ExplicitWidth = 27
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 430
-    Width = 687
-    ExplicitTop = 429
-    ExplicitWidth = 683
+    Top = 428
+    Width = 679
+    ExplicitTop = 428
+    ExplicitWidth = 679
     inherited lblStatusBarR: TLabel
-      Left = 614
-      Height = 14
-      ExplicitLeft = 614
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      Left = 610
+      ExplicitLeft = 610
     end
   end
   inherited tmrAfterCreate: TTimer

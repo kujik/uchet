@@ -23,9 +23,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh, Vcl.Mask,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh,
   DBGridEh, DBAxisGridsEh, DateUtils, Math,
-  uFrmBasicMdi, uFrDBGridEh, uFrmBasicDbDialog
+  uFrmBasicMdi, uFrDBGridEh, uFrmBasicDbDialog, Vcl.Mask
   ;
 
 type
@@ -87,9 +87,9 @@ uses
   uDBOra,
   uMessages,
   uData,
-  uErrors,
-  uPrintReport,
-  uOrders,
+
+
+
   ufields
   ;
 

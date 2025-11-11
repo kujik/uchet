@@ -41,7 +41,7 @@ var
 implementation
 
 uses
-  uFrmMain, uData, uErrors;
+  uData;
 
 {$R *.dfm}
 

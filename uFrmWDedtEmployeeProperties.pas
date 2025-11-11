@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicDbDialog, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh;
+  Vcl.StdCtrls, DBCtrlsEh, Vcl.Mask;
 
 type
   TFrmWDedtEmployeeProperties = class(TFrmBasicDbDialog)

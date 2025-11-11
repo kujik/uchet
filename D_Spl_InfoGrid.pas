@@ -5,10 +5,10 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
-  F_MdiGridDialogTemplate, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls,
-  Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
-  EhLibVclUtils;
+  F_MdiGridDialogTemplate, ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, Data.DB, MemTableEh, Vcl.ExtCtrls, Vcl.StdCtrls,
+  DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
+  EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask;
 
 type
   TDlg_Spl_InfoGrid = class(TForm_MdiGridDialogTemplate)
@@ -37,7 +37,7 @@ var
 implementation
 
 uses
-  DateUtils, uSettings, uForms, uDBOra, uString, uMessages, uData, uSys, uWindows, uFrmOWPlannedOrder;
+  uForms, uDBOra, uString, uMessages, uData, uSys, uWindows, uFrmOWPlannedOrder;
 
 
 {$R *.dfm}

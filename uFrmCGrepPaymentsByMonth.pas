@@ -10,15 +10,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicGrid2, Vcl.ExtCtrls, Vcl.StdCtrls,
-  uFrDBGridEh, VclTee.TeeGDIPlus, VCLTee.Series, VCLTee.TeEngine, MemTableDataEh,
-  VCLTee.TeeProcs, VCLTee.Chart, Vcl.Mask, DBCtrlsEh, uData, DateUtils;
+  uFrDBGridEh, VCLTee.Series, VCLTee.TeEngine, MemTableDataEh,
+  VCLTee.Chart, DBCtrlsEh, uData, VclTee.TeeGDIPlus, Vcl.Mask, VCLTee.TeeProcs;
 
 type
   TFrmCGrepPaymentsByMonth = class(TFrmBasicGrid2)
     Chart1: TChart;
     Series1: TLineSeries;
     Series2: TPieSeries;
-    cmb1: TDBComboBoxEh;
     procedure Frg1DbGridEh1ColEnter(Sender: TObject);
   private
     function  PrepareForm: Boolean; override;
@@ -34,7 +33,7 @@ var
 
 implementation
 uses
-  uLabelColors2,
+
   uWindows,
   uString,
   uDBOra

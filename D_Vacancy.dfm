@@ -1,18 +1,20 @@
 inherited Dlg_Vacancy: TDlg_Vacancy
   Caption = 'Dlg_Vacancy'
-  ClientHeight = 421
-  ClientWidth = 878
-  ExplicitWidth = 894
-  ExplicitHeight = 460
+  ClientHeight = 419
+  ClientWidth = 870
+  ExplicitWidth = 886
+  ExplicitHeight = 458
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 402
-    Width = 878
+    Top = 400
+    Width = 870
+    ExplicitTop = 400
+    ExplicitWidth = 870
   end
   object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
-    Width = 878
+    Width = 870
     Height = 94
     Align = alTop
     BevelOuter = bvNone
@@ -137,7 +139,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
   object pnl_Grid: TPanel [2]
     Left = 0
     Top = 94
-    Width = 878
+    Width = 870
     Height = 222
     Align = alTop
     BevelOuter = bvNone
@@ -211,7 +213,7 @@ inherited Dlg_Vacancy: TDlg_Vacancy
   object pnl_Bottom: TPanel [3]
     Left = 0
     Top = 316
-    Width = 878
+    Width = 870
     Height = 75
     Align = alTop
     BevelOuter = bvNone
@@ -277,13 +279,13 @@ inherited Dlg_Vacancy: TDlg_Vacancy
   object pnl_Buttons: TPanel [4]
     Left = 0
     Top = 391
-    Width = 878
+    Width = 870
     Height = 30
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 4
     DesignSize = (
-      878
+      870
       30)
     object Img_Info: TImage
       Left = 3

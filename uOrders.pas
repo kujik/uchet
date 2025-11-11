@@ -9,14 +9,14 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ExtCtrls, Jpeg, MemTableDataEh, Db, ADODB,
-  DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh, DBGridEh, PropStorageEh,
-  DBAxisGridsEh, ImgList, PngImage, uString, IniFiles, DBCtrlsEh, ShellApi,
-  IOUtils, Types, System.ImageList, frxClass, frxDesgn, Vcl.Themes, Vcl.Styles,
-  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, IdHTTP, Xml.xmldom,
-  Xml.XMLIntf, Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient,
-  IdSMTPBase, IdSMTP, iDMessage, IdIOHandler, IdIOHandlerSocket,
-  IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle, Data.SqlExpr, ComObj,
-  Math, DateUtils, ShlObj, FileCtrl, StrUtils;
+  DataDriverEh, GridsEh, DBGridEh, PropStorageEh,
+  DBAxisGridsEh, PngImage, uString, IniFiles, DBCtrlsEh,
+  IOUtils, Types, frxClass, frxDesgn, Vcl.Styles,
+  Xml.xmldom,
+  Xml.XMLIntf, Xml.XMLDoc,
+  IdIOHandler,
+  IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle, ComObj,
+  Math, DateUtils, FileCtrl, StrUtils;
 
 const
   cOrItmStatus_Completed = 30;
@@ -122,7 +122,7 @@ const
 implementation
 
 uses
-  uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
+  uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
   LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo
 //  Xml.XMLDoc, Xml.XMLIntf
 //  OmniXML, OmniXMLUtils

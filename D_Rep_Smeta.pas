@@ -43,9 +43,9 @@ var
 implementation
 
 uses
-  uSettings,
+
   uForms,
-  uDBOra,
+
   uData,
   uWindows,
   uMessages,

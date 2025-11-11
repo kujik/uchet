@@ -6,7 +6,7 @@ unit uExcel2;
 interface
 
 uses
-  Graphics, Classes, StrUtils, DateUtils, Variants, SysUtils, uString, LibXL, ShellApi, Windows
+  Graphics, Classes, Variants, SysUtils, uString, LibXL, Windows
   ;
 
 

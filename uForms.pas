@@ -6,11 +6,11 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
   DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, MemTableDataEh,
-  Db, MemTableEh, Math, ExtCtrls, Vcl.Menus, Types, Registry, IniFiles,
-  GridToolCtrlsEh, SearchPanelsEh, DBLookupUtilsEh, PropFilerEh, MemTreeEh,
-  DataDriverEh, ADODataDriverEh, ImgList, StdActns, ActnList, Jpeg, PngImage,
-  ShellApi, XlsMemFilesEh, DBGridEhXlsMemFileExporters, DBGridEhImpExp, TypInfo,
-  uData, uString, uSettings, uExcel, uDBOra, uSys;
+  Db, MemTableEh, Math, ExtCtrls, Vcl.Menus, Types, IniFiles,
+  SearchPanelsEh, PropFilerEh, MemTreeEh,
+  DataDriverEh, ADODataDriverEh, ImgList, ActnList, Jpeg, PngImage,
+  ShellApi, DBGridEhXlsMemFileExporters, DBGridEhImpExp, TypInfo,
+  uData, uString, uDBOra, uSys;
 
 type
   TmyCustomDBEditEh = class(TCustomDBEditEh)
@@ -410,7 +410,7 @@ var
 implementation
 
 uses
-  uFrmMain, uMessages, V_Normal, uLabelColors2, uFrDBGridEh, uFrmBasicMdi;
+  uFrmMain, uMessages, uLabelColors2, uFrDBGridEh, uFrmBasicMdi;
 
 
 function clmyPink: Cardinal;

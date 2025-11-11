@@ -4,9 +4,9 @@ unit uFrmBasicMdi;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DBCtrlsEh, DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh, MemTableEh, GridsEh,
-  DBAxisGridsEh, DBGridEh, Math, Vcl.StdCtrls, Vcl.Mask, Buttons,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh,
+  DBGridEhToolCtrls, DBCtrlsEh, MemTableDataEh, Db, ADODB, DataDriverEh, GridsEh,
+  DBAxisGridsEh, DBGridEh, Math, Vcl.StdCtrls, Buttons,
   uLabelColors, uData, uString,
   uFields
   ;

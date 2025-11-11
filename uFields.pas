@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Vcl.ExtCtrls, Vcl.ComCtrls,
   uData, uForms, uDBOra, uString, uMessages
   ;
 
@@ -87,8 +87,7 @@ type
 implementation
 
 uses
-  uErrors,
-  uFrmBasicMdi
+  uErrors
   ;
 
 

@@ -1,18 +1,20 @@
 inherited Dlg_Candidate: TDlg_Candidate
   Caption = 'Dlg_Candidate'
-  ClientHeight = 470
-  ClientWidth = 651
-  ExplicitWidth = 667
-  ExplicitHeight = 509
+  ClientHeight = 468
+  ClientWidth = 643
+  ExplicitWidth = 659
+  ExplicitHeight = 507
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 451
-    Width = 651
+    Top = 449
+    Width = 643
+    ExplicitTop = 449
+    ExplicitWidth = 643
   end
   object gb_Candidate: TGroupBox [1]
     Left = 0
     Top = 0
-    Width = 651
+    Width = 643
     Height = 94
     Align = alTop
     Caption = #1057#1086#1080#1089#1082#1072#1090#1077#1083#1100
@@ -110,7 +112,7 @@ inherited Dlg_Candidate: TDlg_Candidate
   object gb_Vacancy: TGroupBox [2]
     Left = 0
     Top = 94
-    Width = 651
+    Width = 643
     Height = 148
     Align = alTop
     Caption = #1042#1072#1082#1072#1085#1089#1080#1103
@@ -118,11 +120,12 @@ inherited Dlg_Candidate: TDlg_Candidate
     object pnl_Vacancy: TPanel
       Left = 2
       Top = 46
-      Width = 647
+      Width = 643
       Height = 100
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 0
+      ExplicitWidth = 639
       object cmb_Division: TDBComboBoxEh
         Left = 91
         Top = 7
@@ -193,7 +196,7 @@ inherited Dlg_Candidate: TDlg_Candidate
   object gb_Status: TGroupBox [3]
     Left = 0
     Top = 242
-    Width = 651
+    Width = 643
     Height = 78
     Align = alTop
     Caption = #1057#1090#1072#1090#1091#1089
@@ -287,18 +290,18 @@ inherited Dlg_Candidate: TDlg_Candidate
   object gb_Comment: TGroupBox [4]
     Left = 0
     Top = 320
-    Width = 651
+    Width = 643
     Height = 114
     Align = alTop
     Caption = #1055#1088#1080#1084#1077#1095#1072#1085#1080#1077
     TabOrder = 4
     DesignSize = (
-      651
+      643
       114)
     object pnl_Comment: TPanel
       Left = 11
       Top = 18
-      Width = 626
+      Width = 610
       Height = 61
       Anchors = [akLeft, akTop, akRight, akBottom]
       BevelOuter = bvNone
@@ -306,7 +309,7 @@ inherited Dlg_Candidate: TDlg_Candidate
       object mem_Comment: TMemo
         Left = 0
         Top = 0
-        Width = 626
+        Width = 614
         Height = 61
         Align = alClient
         Lines.Strings = (
@@ -346,15 +349,13 @@ inherited Dlg_Candidate: TDlg_Candidate
   object pnl_Buttons: TPanel [5]
     Left = 0
     Top = 434
-    Width = 651
+    Width = 643
     Height = 37
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 5
-    ExplicitLeft = -2
-    ExplicitTop = 436
     DesignSize = (
-      651
+      643
       37)
     object Img_Info: TImage
       Left = 2

@@ -9,7 +9,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls,
-  DBCtrlsEh, Vcl.Mask, uData, uMessages, uString, uDBOra, uForms;
+  DBCtrlsEh, uData, uMessages, uString, uDBOra, uForms, Vcl.Mask;
 
 type
   TFrmCDedtCashRevision = class(TFrmBasicMdi)

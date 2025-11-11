@@ -1,16 +1,16 @@
 inherited Dlg_Grid1: TDlg_Grid1
   Caption = 'Dlg_Grid1'
-  ClientHeight = 117
-  ClientWidth = 737
+  ClientHeight = 115
+  ClientWidth = 729
   OnKeyUp = FormKeyUp
-  ExplicitWidth = 753
-  ExplicitHeight = 156
+  ExplicitWidth = 745
+  ExplicitHeight = 154
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0
     Top = 0
-    Width = 737
-    Height = 117
+    Width = 729
+    Height = 115
     Align = alClient
     DataSource = DataSource1
     DynProps = <>

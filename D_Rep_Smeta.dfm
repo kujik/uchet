@@ -1,12 +1,11 @@
 inherited Dlg_Rep_Smeta: TDlg_Rep_Smeta
   BorderStyle = bsDialog
   Caption = #1054#1073#1097#1072#1103' '#1089#1084#1077#1090#1072' '#1087#1086' '#1079#1072#1082#1072#1079#1072#1084
-  ClientHeight = 365
-  ClientWidth = 414
+  ClientHeight = 364
+  ClientWidth = 410
   OnActivate = FormActivate
-  ExplicitWidth = 420
-  ExplicitHeight = 394
-  PixelsPerInch = 96
+  ExplicitWidth = 426
+  ExplicitHeight = 403
   TextHeight = 13
   object lbl_AddOrders: TLabel
     Left = 8

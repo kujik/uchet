@@ -1,16 +1,16 @@
 inherited Dlg_LoadKBLog: TDlg_LoadKBLog
   Caption = 'Dlg_LoadKBLog'
-  ClientHeight = 295
-  ClientWidth = 628
+  ClientHeight = 293
+  ClientWidth = 620
   OnShow = nil
-  ExplicitWidth = 644
-  ExplicitHeight = 334
+  ExplicitWidth = 636
+  ExplicitHeight = 332
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0
     Top = 0
-    Width = 628
-    Height = 295
+    Width = 620
+    Height = 293
     Align = alClient
     DataSource = DataSource1
     DynProps = <>

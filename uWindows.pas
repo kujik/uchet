@@ -13,9 +13,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, ADODataDriverEh,
-  MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Math, TypInfo, uData,
+  Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, Db, ADODB, DataDriverEh,
+  GridsEh, DBAxisGridsEh, DBGridEh, Math, TypInfo, uData,
   uString, uSys;
 
 type
@@ -117,7 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
-  D_Candidate, D_Vacancy,
+
 
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
@@ -134,10 +134,10 @@ uses
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
-  uFrmOGedtEstimate, uFrmOWrepOrdersPrimeCost, uFrmODedtOrStdItems, uFrmOGrepSnHistory,
+  uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
 
-  uFrmOGinfSgp,
+
   uFrmXGlstMain,
   uFrmBasicInput
   ;

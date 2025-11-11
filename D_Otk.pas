@@ -4,11 +4,10 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Buttons, MemTableEh, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
-  uData, EhLibVclUtils
-  ;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, ToolCtrlsEh,
+  DBGridEhToolCtrls, MemTableDataEh, Data.DB, Vcl.ExtCtrls,
+  Vcl.StdCtrls, Vcl.Buttons, MemTableEh, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  uData, EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask  ;
 
 type
   TDlg_Otk = class(TForm_Normal)
@@ -43,8 +42,8 @@ implementation
 {$R *.dfm}
 
 uses
-  DateUtils,
-  uSettings,
+
+
   uForms,
   uDBOra,
   uString,

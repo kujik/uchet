@@ -1,20 +1,20 @@
 inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
   Caption = 'FrmWDedtWorkerStatus'
-  ClientHeight = 213
-  ClientWidth = 607
-  ExplicitWidth = 619
-  ExplicitHeight = 251
+  ClientHeight = 211
+  ClientWidth = 599
+  ExplicitWidth = 615
+  ExplicitHeight = 250
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 607
-    Height = 197
-    ExplicitWidth = 603
-    ExplicitHeight = 196
+    Width = 599
+    Height = 195
+    ExplicitWidth = 599
+    ExplicitHeight = 195
     inherited pnlFrmClient: TPanel
-      Width = 597
-      Height = 148
-      ExplicitWidth = 593
-      ExplicitHeight = 147
+      Width = 593
+      Height = 147
+      ExplicitWidth = 589
+      ExplicitHeight = 146
       object cmbJob: TDBComboBoxEh
         Left = 87
         Top = 122
@@ -94,52 +94,48 @@ inherited FrmWDedtWorkerStatus: TFrmWDedtWorkerStatus
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 153
-      Width = 597
-      ExplicitTop = 152
-      ExplicitWidth = 593
+      Top = 152
+      Width = 593
+      ExplicitTop = 151
+      ExplicitWidth = 589
       inherited bvlFrmBtnsTl: TBevel
-        Width = 595
+        Width = 591
         ExplicitWidth = 595
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 595
+        Width = 591
         ExplicitWidth = 595
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 595
-        ExplicitWidth = 591
+        Width = 591
+        ExplicitWidth = 587
         inherited pnlFrmBtnsMain: TPanel
-          Left = 496
-          ExplicitLeft = 492
+          Left = 492
+          ExplicitLeft = 488
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 268
-          ExplicitLeft = 264
+          Left = 264
+          ExplicitLeft = 260
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 397
-          ExplicitLeft = 393
+          Left = 393
+          ExplicitLeft = 389
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 128
-          ExplicitWidth = 124
+          Width = 124
+          ExplicitWidth = 120
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 197
-    Width = 607
-    ExplicitTop = 196
-    ExplicitWidth = 603
+    Top = 195
+    Width = 599
+    ExplicitTop = 195
+    ExplicitWidth = 599
     inherited lblStatusBarR: TLabel
-      Left = 534
-      Height = 14
-      ExplicitLeft = 534
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      Left = 530
+      ExplicitLeft = 530
     end
   end
 end

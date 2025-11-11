@@ -4,10 +4,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  DropDownFormEh, Dialogs, DynVarsEh, ToolCtrlsEh, DBGridEhGrouping,
+  DropDownFormEh, Dialogs, DynVarsEh, ToolCtrlsEh,
   DBGridEhToolCtrls, MemTableDataEh, Data.DB, MemTableEh, Vcl.StdCtrls,
-  Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
-  EhLibVclUtils;
+  DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, Vcl.Buttons,
+  EhLibVclUtils, DBGridEhGrouping, Vcl.Mask;
 
 type
   TDlg_Order_Complaints = class(TCustomDropDownFormEh)
@@ -38,14 +38,13 @@ var
 implementation
 
 uses
-  uSettings,
+
   uForms,
-  uDBOra,
+
   uString,
   uData,
   uWindows,
-  uMessages,
-  D_Order
+  uMessages
   ;
 
 

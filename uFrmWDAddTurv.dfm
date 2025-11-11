@@ -1,20 +1,20 @@
 inherited FrmWDAddTurv: TFrmWDAddTurv
   Caption = 'FrmWDAddTurv'
-  ClientHeight = 148
-  ClientWidth = 476
-  ExplicitWidth = 488
-  ExplicitHeight = 186
+  ClientHeight = 146
+  ClientWidth = 468
+  ExplicitWidth = 484
+  ExplicitHeight = 185
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 476
-    Height = 132
-    ExplicitWidth = 472
-    ExplicitHeight = 131
+    Width = 468
+    Height = 130
+    ExplicitWidth = 468
+    ExplicitHeight = 130
     inherited pnlFrmClient: TPanel
-      Width = 466
-      Height = 83
-      ExplicitWidth = 462
-      ExplicitHeight = 82
+      Width = 462
+      Height = 82
+      ExplicitWidth = 458
+      ExplicitHeight = 81
       object lbl_AllCreated: TLabel
         Left = 92
         Top = 62
@@ -61,32 +61,32 @@ inherited FrmWDAddTurv: TFrmWDAddTurv
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 88
-      Width = 466
-      ExplicitTop = 87
-      ExplicitWidth = 462
+      Top = 87
+      Width = 462
+      ExplicitTop = 86
+      ExplicitWidth = 458
       inherited bvlFrmBtnsTl: TBevel
-        Width = 464
+        Width = 460
         ExplicitWidth = 464
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 464
+        Width = 460
         ExplicitWidth = 464
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 464
-        ExplicitWidth = 460
+        Width = 460
+        ExplicitWidth = 456
         inherited pnlFrmBtnsMain: TPanel
-          Left = 365
-          ExplicitLeft = 361
+          Left = 361
+          ExplicitLeft = 357
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 137
-          ExplicitLeft = 133
+          Left = 133
+          ExplicitLeft = 129
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 266
-          ExplicitLeft = 262
+          Left = 262
+          ExplicitLeft = 258
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 0
@@ -96,17 +96,13 @@ inherited FrmWDAddTurv: TFrmWDAddTurv
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 132
-    Width = 476
-    ExplicitTop = 131
-    ExplicitWidth = 472
+    Top = 130
+    Width = 468
+    ExplicitTop = 130
+    ExplicitWidth = 468
     inherited lblStatusBarR: TLabel
-      Left = 384
-      Height = 14
-      ExplicitLeft = 384
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      Left = 399
+      ExplicitLeft = 399
     end
   end
   inherited tmrAfterCreate: TTimer

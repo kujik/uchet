@@ -8,7 +8,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages,
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uString, uMessages,
   Vcl.Imaging.pngimage, Vcl.ExtCtrls, V_Normal;
 
   type

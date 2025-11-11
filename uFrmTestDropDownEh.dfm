@@ -14,13 +14,11 @@ object FrmTestDropDownEh: TFrmTestDropDownEh
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poDesigned
   DropDownMode = True
   DesignSize = (
     320
     240)
-  PixelsPerInch = 96
   TextHeight = 13
   object DBEditEh1: TDBEditEh
     Left = 8

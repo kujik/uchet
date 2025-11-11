@@ -1,10 +1,9 @@
 inherited Dlg_J_Montage: TDlg_J_Montage
   Caption = 'Dlg_J_Montage'
-  ClientHeight = 317
-  ClientWidth = 407
-  ExplicitWidth = 423
-  ExplicitHeight = 355
-  PixelsPerInch = 96
+  ClientHeight = 315
+  ClientWidth = 399
+  ExplicitWidth = 415
+  ExplicitHeight = 354
   TextHeight = 13
   object lbl_Act: TLabel [0]
     Left = 36
@@ -22,7 +21,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
   end
   object Img_Info: TImage [2]
     Left = 8
-    Top = 284
+    Top = 282
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
@@ -31,7 +30,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
   object lbl_Caption: TLabel [3]
     Left = 8
     Top = 8
-    Width = 65
+    Width = 64
     Height = 13
     Caption = 'lbl_Caption'
     Font.Charset = DEFAULT_CHARSET
@@ -42,14 +41,14 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     ParentFont = False
   end
   inherited pnl_StatusBar: TPanel
-    Top = 298
-    Width = 407
-    ExplicitTop = 298
-    ExplicitWidth = 407
+    Top = 296
+    Width = 399
+    ExplicitTop = 296
+    ExplicitWidth = 399
   end
   object Bt_OK: TBitBtn [5]
-    Left = 243
-    Top = 282
+    Left = 227
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -58,8 +57,8 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     OnClick = Bt_OKClick
   end
   object Bt_Cancel: TBitBtn [6]
-    Left = 324
-    Top = 282
+    Left = 308
+    Top = 280
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]

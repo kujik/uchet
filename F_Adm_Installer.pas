@@ -37,9 +37,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI,
   Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, uLabelColors, IOUtils, Types,
-  Vcl.Buttons, ShellApi, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls,
-  DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls,
-  EhLibVclUtils, MemTableDataEh, MemTableEh;
+  Vcl.Buttons, ShellApi, ToolCtrlsEh, DBGridEhToolCtrls,
+  GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls,
+  EhLibVclUtils, MemTableDataEh, DBGridEhGrouping, DynVarsEh;
 
 type
   TForm_Adm_Installer = class(TForm_MDI)

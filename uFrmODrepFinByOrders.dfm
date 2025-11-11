@@ -1,38 +1,32 @@
 inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
   Caption = 'FrmODrepFinByOrders'
-  ClientHeight = 405
-  ClientWidth = 1048
-  ExplicitWidth = 1064
-  ExplicitHeight = 444
-  PixelsPerInch = 96
+  ClientHeight = 403
+  ClientWidth = 1040
+  ExplicitWidth = 1056
+  ExplicitHeight = 442
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 1048
-    Height = 389
+    Width = 1040
+    Height = 387
     ExplicitWidth = 1040
-    ExplicitHeight = 361
+    ExplicitHeight = 387
     inherited pnlFrmClient: TPanel
-      Width = 1038
-      Height = 340
+      Width = 1034
+      Height = 339
       ExplicitWidth = 1030
-      ExplicitHeight = 312
+      ExplicitHeight = 338
       object pgc_1: TPageControl
         Left = 0
         Top = 25
-        Width = 1038
-        Height = 315
+        Width = 1034
+        Height = 314
         ActivePage = ts_5
         Align = alClient
         TabOrder = 0
-        ExplicitTop = 24
         ExplicitWidth = 1030
         ExplicitHeight = 313
         object ts_1: TTabSheet
           Caption = #1055#1088#1086#1076#1072#1078#1072
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 1022
-          ExplicitHeight = 284
           object pnl_1_Top: TPanel
             Left = 0
             Top = 0
@@ -628,10 +622,6 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         object ts_2: TTabSheet
           Caption = #1054#1090#1075#1088#1091#1079#1082#1072
           ImageIndex = 1
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 1022
-          ExplicitHeight = 284
           object pnl_2_Top: TPanel
             Left = 0
             Top = 0
@@ -1227,10 +1217,6 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         object ts_4: TTabSheet
           Caption = #1056#1077#1072#1083#1080#1079#1072#1094#1080#1103
           ImageIndex = 3
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 1022
-          ExplicitHeight = 284
           object pnl1: TPanel
             Left = 0
             Top = 0
@@ -1826,10 +1812,6 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         object ts_3: TTabSheet
           Caption = #1042#1099#1087#1091#1089#1082' '#1087#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1072
           ImageIndex = 2
-          ExplicitLeft = 0
-          ExplicitTop = 0
-          ExplicitWidth = 1022
-          ExplicitHeight = 284
           object pnl_3_Top: TPanel
             Left = 0
             Top = 0
@@ -2131,10 +2113,6 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         object ts_5: TTabSheet
           Caption = #1042' '#1087#1088#1086#1080#1079#1074#1086#1076#1089#1090#1074#1077
           ImageIndex = 4
-          ExplicitLeft = 0
-          ExplicitTop = 23
-          ExplicitWidth = 0
-          ExplicitHeight = 0
           object Ne5Selling: TDBNumberEditEh
             Left = 133
             Top = 15
@@ -2292,43 +2270,45 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
       object Panel2: TPanel
         Left = 0
         Top = 0
-        Width = 1038
+        Width = 1034
         Height = 25
         Align = alTop
         Caption = 'Panel2'
         TabOrder = 1
+        ExplicitWidth = 1030
         object lblCaption: TLabel
           Left = 1
           Top = 1
-          Width = 48
+          Width = 1032
           Height = 13
           Align = alTop
           Caption = 'lblCaption'
+          ExplicitWidth = 47
         end
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 345
-      Width = 1038
-      ExplicitTop = 317
+      Top = 344
+      Width = 1034
+      ExplicitTop = 343
       ExplicitWidth = 1030
       inherited bvlFrmBtnsTl: TBevel
-        Width = 1036
+        Width = 1032
         ExplicitWidth = 1028
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 1036
+        Width = 1032
         ExplicitWidth = 1028
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 1036
+        Width = 1032
         ExplicitWidth = 1028
         inherited pnlFrmBtnsMain: TPanel
-          Left = 937
+          Left = 933
           ExplicitLeft = 929
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 690
+          Left = 686
           Width = 18
           ExplicitLeft = 682
           ExplicitWidth = 18
@@ -2338,7 +2318,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
           end
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 708
+          Left = 704
           Width = 229
           ExplicitLeft = 700
           ExplicitWidth = 229
@@ -2381,7 +2361,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         end
         inherited pnlFrmBtnsC: TPanel
           Left = 428
-          Width = 262
+          Width = 258
           ExplicitLeft = 428
           ExplicitWidth = 254
         end
@@ -2389,17 +2369,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 389
-    Width = 1048
-    ExplicitTop = 361
+    Top = 387
+    Width = 1040
+    ExplicitTop = 387
     ExplicitWidth = 1040
     inherited lblStatusBarR: TLabel
-      Left = 956
-      Height = 13
-      ExplicitLeft = 956
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 13
+      Left = 971
+      ExplicitLeft = 971
     end
   end
 end

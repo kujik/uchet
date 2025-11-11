@@ -1,17 +1,20 @@
 inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
   Caption = 'FrmADedtItmCopyRigths'
-  ClientHeight = 141
-  ClientWidth = 314
-  ExplicitWidth = 330
-  ExplicitHeight = 180
-  PixelsPerInch = 96
+  ClientHeight = 139
+  ClientWidth = 306
+  ExplicitWidth = 322
+  ExplicitHeight = 178
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 314
-    Height = 125
+    Width = 306
+    Height = 123
+    ExplicitWidth = 306
+    ExplicitHeight = 123
     inherited pnlFrmClient: TPanel
-      Width = 304
-      Height = 76
+      Width = 300
+      Height = 75
+      ExplicitWidth = 296
+      ExplicitHeight = 74
       object cmbSrc: TDBComboBoxEh
         Left = 8
         Top = 16
@@ -46,36 +49,48 @@ inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 81
-      Width = 304
+      Top = 80
+      Width = 300
+      ExplicitTop = 79
+      ExplicitWidth = 296
       inherited bvlFrmBtnsTl: TBevel
-        Width = 302
+        Width = 298
+        ExplicitWidth = 302
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 302
+        Width = 298
+        ExplicitWidth = 302
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 302
+        Width = 298
+        ExplicitWidth = 294
         inherited pnlFrmBtnsMain: TPanel
-          Left = 203
+          Left = 199
+          ExplicitLeft = 195
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = -25
+          Left = -29
+          ExplicitLeft = -33
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 104
+          Left = 100
+          ExplicitLeft = 96
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 37
+          ExplicitWidth = 37
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 125
-    Width = 314
+    Top = 123
+    Width = 306
+    ExplicitTop = 123
+    ExplicitWidth = 306
     inherited lblStatusBarR: TLabel
-      Left = 222
+      Left = 237
+      ExplicitLeft = 237
     end
   end
 end

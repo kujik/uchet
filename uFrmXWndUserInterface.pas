@@ -4,11 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Math,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages, System.Types,
-  Vcl.ExtCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, MemTableEh,
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uString, uMessages, System.Types,
+  Vcl.ExtCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
+  GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh,
   Data.DB, Vcl.Menus, Vcl.Imaging.pngimage, Vcl.ComCtrls,
-  uSettings, uFrmBasicMdi, uFrDBGridEh
+  uSettings, uFrmBasicMdi, uFrDBGridEh, Vcl.Mask
   ;
 
 type

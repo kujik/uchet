@@ -3,8 +3,8 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
   Top = 0
   BorderStyle = bsDialog
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1080' '#1084#1086#1076#1091#1083#1077#1081
-  ClientHeight = 421
-  ClientWidth = 898
+  ClientHeight = 419
+  ClientWidth = 890
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -15,15 +15,14 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
   TextHeight = 13
   object pnl1: TPanel
     Left = 0
-    Top = 386
-    Width = 898
+    Top = 384
+    Width = 890
     Height = 35
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 862
     DesignSize = (
-      898
+      890
       35)
     object lbl_Warning: TLabel
       Left = 4
@@ -41,7 +40,7 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
       ParentFont = False
     end
     object Bt_Ok: TBitBtn
-      Left = 738
+      Left = 722
       Top = 6
       Width = 75
       Height = 25
@@ -50,10 +49,9 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
       Default = True
       TabOrder = 0
       OnClick = Bt_OkClick
-      ExplicitLeft = 702
     end
     object Bt_Cancel: TBitBtn
-      Left = 819
+      Left = 803
       Top = 6
       Width = 75
       Height = 25
@@ -62,18 +60,16 @@ object Dlg_ModuleSettings: TDlg_ModuleSettings
       Caption = 'Bt_Cancel'
       ModalResult = 2
       TabOrder = 1
-      ExplicitLeft = 783
     end
   end
   object pgc_1: TPageControl
     Left = 0
     Top = 0
-    Width = 898
-    Height = 386
+    Width = 890
+    Height = 384
     ActivePage = ts_Workers
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 862
     object ts_SN: TTabSheet
       Caption = #1055#1083#1072#1090#1077#1078#1085#1099#1081' '#1082#1072#1083#1077#1085#1076#1072#1088#1100
       object nedt_Sum_AutoAgreed: TDBNumberEditEh

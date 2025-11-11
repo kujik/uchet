@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, Vcl.StdCtrls, Vcl.Mask,
-  DBCtrlsEh, Vcl.Buttons, Vcl.ExtCtrls, Types, uFrmBasicMdi;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  DBCtrlsEh, Vcl.Buttons, Vcl.ExtCtrls, Types, uFrmBasicMdi, Vcl.Mask;
 
 type
   TFrmXDedtMailingCustomAddr = class(TFrmBasicMdi)

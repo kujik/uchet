@@ -6,9 +6,9 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, MemTableDataEh, Data.DB,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.Mask,
+  ToolCtrlsEh, DBGridEhToolCtrls, Vcl.Mask,
   DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh, uData,
-  uForms, uDBOra, uString, uMessages, V_MDI, uLabelColors, EhLibVclUtils;
+  uForms, uString, uMessages, V_MDI, EhLibVclUtils, DBGridEhGrouping, DynVarsEh;
 
 type
   TForm_MdiGridDialogTemplate = class(TForm_MDI)

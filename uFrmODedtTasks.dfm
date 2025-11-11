@@ -1,13 +1,13 @@
 inherited FrmODedtTasks: TFrmODedtTasks
   Caption = 'FrmDlgJTasks'
-  ClientHeight = 491
-  ClientWidth = 847
+  ClientHeight = 490
+  ClientWidth = 843
   ExplicitWidth = 859
   ExplicitHeight = 529
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 847
-    Height = 475
+    Width = 843
+    Height = 474
     ExplicitWidth = 843
     ExplicitHeight = 474
     inherited pnlFrmClient: TPanel
@@ -242,8 +242,8 @@ inherited FrmODedtTasks: TFrmODedtTasks
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 431
-      Width = 837
+      Top = 430
+      Width = 833
       ExplicitTop = 430
       ExplicitWidth = 833
       inherited bvlFrmBtnsTl: TBevel
@@ -277,17 +277,13 @@ inherited FrmODedtTasks: TFrmODedtTasks
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 475
-    Width = 847
+    Top = 474
+    Width = 843
     ExplicitTop = 474
     ExplicitWidth = 843
     inherited lblStatusBarR: TLabel
       Left = 774
-      Height = 14
       ExplicitLeft = 774
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

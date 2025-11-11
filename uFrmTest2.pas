@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uDbOra, uString, uMessages
-  , uPSCompiler, uPSRuntime, uPSUtils, uPSComponent, Vcl.Buttons
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uString, uMessages
+  , uPSCompiler, uPSRuntime, Vcl.Buttons
   ;
 
 type

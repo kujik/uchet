@@ -18,9 +18,10 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI,
   fs_synmemo, Vcl.ExtCtrls, Vcl.StdCtrls, MemTableDataEh, Data.DB,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, Vcl.Mask,
+  ToolCtrlsEh, DBGridEhToolCtrls,
   DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh, MemTableEh,
-  Vcl.ComCtrls, IoUtils, uString, uLabelColors, EhLibVclUtils;
+  Vcl.ComCtrls, IoUtils, uString, uLabelColors, EhLibVclUtils, DBGridEhGrouping,
+  DynVarsEh, Vcl.Mask;
 
 {(*}
 type

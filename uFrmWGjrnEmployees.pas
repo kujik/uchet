@@ -15,10 +15,10 @@ unit uFrmWGjrnEmployees;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
-  Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
-  uData, uSettings, uSys, uForms, uDBOra, uString, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrDBGridEh, uFrmBasicMdi, uFrmBasicGrid2
+  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, StdCtrls, ComCtrls, Buttons, Menus, //basic
+  DBGridEh,  //ehlib
+  uData, uString, uFrDBGridEh,  //my
+  uFrmBasicGrid2
   ;
 
 type
@@ -42,6 +42,8 @@ implementation
 {$R *.dfm}
 
 uses
+  SysUtils, Variants, Types, Math, Clipbrd,    //basic
+  uForms, uMessages, uWindows, uFrmBasicMdi,   //my basic
   uTurv
   ;
 

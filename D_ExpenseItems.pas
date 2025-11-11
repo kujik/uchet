@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages, V_MDI,
-  Vcl.ExtCtrls;
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uDBOra, uString, uMessages, V_MDI,
+  Vcl.ExtCtrls, Vcl.Mask;
 
 type
   TDlg_ExpenseItems = class(TForm_MDI)

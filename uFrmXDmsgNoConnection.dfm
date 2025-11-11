@@ -3,19 +3,17 @@ object FrmXDmsgNoConnection: TFrmXDmsgNoConnection
   Top = 409
   BorderStyle = bsDialog
   Caption = #1059#1095#1105#1090
-  ClientHeight = 109
-  ClientWidth = 442
+  ClientHeight = 108
+  ClientWidth = 438
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnActivate = FormActivate
   OnClose = FormClose
-  PixelsPerInch = 96
   TextHeight = 13
   object imgError: TImage
     Left = 8

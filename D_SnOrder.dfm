@@ -3,8 +3,8 @@ object Dlg_SnOrder: TDlg_SnOrder
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Dlg_SnOrder'
-  ClientHeight = 63
-  ClientWidth = 341
+  ClientHeight = 61
+  ClientWidth = 333
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText

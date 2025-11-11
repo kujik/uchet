@@ -7,7 +7,7 @@ unit uString;
 interface
 
 uses
-  Graphics, Classes, StrUtils, DateUtils, Variants, Types, IOUtils, SysUtils;
+  Graphics, Classes, DateUtils, Variants, Types, SysUtils;
 
 type
   TVarDynArray = array of Variant;

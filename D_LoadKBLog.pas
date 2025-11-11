@@ -4,11 +4,10 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, DBGridEhGrouping, ToolCtrlsEh,
-  DBGridEhToolCtrls, DynVarsEh, MemTableDataEh, Data.DB, MemTableEh,
-  Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
-  uString, EhLibVclUtils
-  ;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_Normal, ToolCtrlsEh,
+  DBGridEhToolCtrls, MemTableDataEh, Data.DB, MemTableEh,
+  Vcl.StdCtrls, DBCtrlsEh, GridsEh, DBAxisGridsEh, DBGridEh,
+  uString, EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask  ;
 
 type
   TDlg_LoadKBLog = class(TForm_Normal)
@@ -30,13 +29,12 @@ var
 implementation
 
 uses
-  uSettings,
+
   uForms,
-  uDBOra,
+
   uData,
   uWindows,
-  uMessages,
-  D_Order
+  uMessages
   ;
 
 {$R *.dfm}

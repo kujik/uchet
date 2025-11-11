@@ -4,12 +4,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Math,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages, System.Types,
-  Vcl.ExtCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uDBOra, uString, uMessages, System.Types,
+  Vcl.ExtCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, MemTableEh,
-  Data.DB, Vcl.Menus, uSettings, Vcl.Imaging.pngimage, V_MDI, Vcl.ComCtrls,
-  EhLibVclUtils
-  ;
+  Data.DB, Vcl.Menus, Vcl.Imaging.pngimage, V_MDI, Vcl.ComCtrls,
+  EhLibVclUtils, DBGridEhGrouping, DynVarsEh, Vcl.Mask  ;
 
 type
   TDlg_Vacancy = class(TForm_MDI)
@@ -74,8 +73,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uWindows,
-  D_Grid1
+  uWindows
   ;
 
 

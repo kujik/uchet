@@ -8,8 +8,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Vcl.Buttons,
-  uFrDBGridEh, uData, uDBOra, uMessages, uForms, uString, uFrmBasicGrid2
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh, Vcl.Buttons,
+  uFrDBGridEh, uData, uDBOra, uMessages, uForms, uString, uFrmBasicGrid2,
+  Vcl.Mask
   ;
 
 type

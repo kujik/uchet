@@ -5,12 +5,12 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
   MemTableDataEh, Db, MemTableEh, Math, ExtCtrls, Types,
-  Registry, IniFiles,  GridToolCtrlsEh, SearchPanelsEh,
-  DBLookupUtilsEh,
-  PropFilerEh, MemTreeEh,
-  ImgList, StdActns, ActnList,
+  IniFiles,  SearchPanelsEh,
+
+  PropFilerEh,
+  ActnList,
   uData, Jpeg, uString, PngImage,
   uFrDBGridEh
   ;
@@ -65,7 +65,7 @@ implementation
 uses
   VCL.Themes,
   uSys,
-  uFrmBasicMdi,
+
   uFrmMain
   ;
 

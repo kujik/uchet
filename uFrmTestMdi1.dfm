@@ -1,20 +1,20 @@
 inherited FrmTestMdi1: TFrmTestMdi1
   Caption = 'FrmTestMdi1'
-  ClientHeight = 495
-  ClientWidth = 620
-  ExplicitWidth = 636
-  ExplicitHeight = 534
+  ClientHeight = 493
+  ClientWidth = 612
+  ExplicitWidth = 628
+  ExplicitHeight = 532
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 620
-    Height = 479
-    ExplicitWidth = 620
-    ExplicitHeight = 479
+    Width = 612
+    Height = 477
+    ExplicitWidth = 612
+    ExplicitHeight = 477
     inherited pnlFrmClient: TPanel
-      Width = 610
-      Height = 433
-      ExplicitWidth = 610
-      ExplicitHeight = 433
+      Width = 606
+      Height = 432
+      ExplicitWidth = 602
+      ExplicitHeight = 431
       object l1: TLabel
         Left = 176
         Top = 26
@@ -85,7 +85,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
       object DBEditEh1: TDBEditEh
         Left = 169
         Top = 129
-        Width = 189
+        Width = 181
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         DynProps = <>
@@ -93,6 +93,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
         TabOrder = 4
         Text = 'top'
         Visible = True
+        ExplicitWidth = 177
       end
       object DBEditEh2: TDBEditEh
         Left = 25
@@ -113,7 +114,7 @@ inherited FrmTestMdi1: TFrmTestMdi1
       object DBMemoEh1: TDBMemoEh
         Left = 25
         Top = 225
-        Width = 189
+        Width = 181
         Height = 38
         ControlLabel.Width = 59
         ControlLabel.Height = 26
@@ -143,37 +144,37 @@ inherited FrmTestMdi1: TFrmTestMdi1
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 438
-      Width = 610
+      Top = 436
+      Width = 602
       Height = 40
-      ExplicitTop = 438
-      ExplicitWidth = 610
+      ExplicitTop = 436
+      ExplicitWidth = 602
       ExplicitHeight = 40
       inherited bvlFrmBtnsTl: TBevel
-        Width = 608
+        Width = 604
         ExplicitWidth = 419
       end
       inherited bvlFrmBtnsB: TBevel
         Top = 36
-        Width = 608
+        Width = 604
         ExplicitTop = 36
         ExplicitWidth = 419
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 608
+        Width = 604
         Height = 32
-        ExplicitWidth = 608
+        ExplicitWidth = 600
         ExplicitHeight = 32
         inherited pnlFrmBtnsMain: TPanel
-          Left = 509
+          Left = 505
           Height = 24
-          ExplicitLeft = 509
+          ExplicitLeft = 501
           ExplicitHeight = 24
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 281
+          Left = 277
           Height = 24
-          ExplicitLeft = 281
+          ExplicitLeft = 273
           ExplicitHeight = 24
           inherited chbNoclose: TCheckBox
             Top = -63
@@ -181,9 +182,9 @@ inherited FrmTestMdi1: TFrmTestMdi1
           end
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 410
+          Left = 406
           Height = 24
-          ExplicitLeft = 410
+          ExplicitLeft = 402
           ExplicitHeight = 24
         end
         inherited pnlFrmBtnsInfo: TPanel
@@ -195,22 +196,22 @@ inherited FrmTestMdi1: TFrmTestMdi1
           ExplicitHeight = 24
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 141
+          Width = 137
           Height = 24
-          ExplicitWidth = 141
+          ExplicitWidth = 133
           ExplicitHeight = 24
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 479
-    Width = 620
-    ExplicitTop = 479
-    ExplicitWidth = 620
+    Top = 477
+    Width = 612
+    ExplicitTop = 477
+    ExplicitWidth = 612
     inherited lblStatusBarR: TLabel
-      Left = 528
-      ExplicitLeft = 528
+      Left = 543
+      ExplicitLeft = 543
     end
   end
   inherited tmrAfterCreate: TTimer

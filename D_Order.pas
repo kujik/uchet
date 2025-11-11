@@ -4,12 +4,13 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Math, Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra,
-  uString, uMessages, System.Types, Vcl.ExtCtrls, DBGridEhGrouping, ToolCtrlsEh,
+  Math, Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uDBOra,
+  uString, uMessages, System.Types, Vcl.ExtCtrls, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
-  MemTableDataEh, MemTableEh, Data.DB, Vcl.Menus, uSettings,
+  MemTableDataEh, MemTableEh, Data.DB, Vcl.Menus,
   Vcl.Imaging.pngimage, V_MDI, DateUtils, Vcl.ComCtrls, Data.Win.ADODB,
-  System.ImageList, Vcl.ImgList, IOUtils, EhLibVclUtils;
+  System.ImageList, Vcl.ImgList, IOUtils, EhLibVclUtils, DBGridEhGrouping,
+  Vcl.Mask;
 
 type
   TDlg_Order = class(TForm_MDI)
@@ -247,7 +248,7 @@ var
 implementation
 
 uses
-  RegularExpressions, StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2,
+  StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2,
   uFrmOGselOrReglament, uWindows, D_LoadKBLog, uSys, uOrders, uFrmBasicMdi;
 
 const

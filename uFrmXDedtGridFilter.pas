@@ -35,10 +35,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, StdCtrls, Buttons, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, ClipBrd,
-  uLabelColors, uString, uFrmBasicMdi, uFrDBGridEh, Vcl.Menus
+  Types, DBCtrlsEh, ExtCtrls, DateUtils, ClipBrd,
+  uString, uFrmBasicMdi, uFrDBGridEh, Vcl.Menus, Vcl.Mask
   ;
 
 type
@@ -86,11 +86,10 @@ uses
   uForms,
   uMessages,
   uData,
-  uErrors,
-  uSys,
-  uDBOra,
-  uWindows,
-  uSettings
+
+
+
+  uWindows
   ;
 
 

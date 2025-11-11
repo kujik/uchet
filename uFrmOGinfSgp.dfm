@@ -1,8 +1,12 @@
 inherited FrmOGinfSgp: TFrmOGinfSgp
   Caption = 'FrmOGinfSgp'
+  ClientHeight = 538
+  ExplicitWidth = 812
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Height = 522
     inherited pnlFrmClient: TPanel
+      Height = 473
       inherited pnlTop: TPanel
         Height = 25
         ExplicitHeight = 25
@@ -14,22 +18,27 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
           Caption = 'lblCaption'
         end
       end
+      inherited pnlBottom: TPanel
+        Top = 427
+      end
       inherited pnlLeft: TPanel
         Top = 25
-        Height = 401
+        Height = 402
         ExplicitTop = 25
         ExplicitHeight = 400
       end
       inherited pnlGrid1: TPanel
         Top = 25
-        Height = 401
+        Height = 402
         ExplicitTop = 25
-        ExplicitHeight = 401
+        ExplicitWidth = 776
+        ExplicitHeight = 400
         inherited Frg1: TFrDBGridEh
-          Height = 399
-          ExplicitHeight = 399
+          Height = 400
+          ExplicitWidth = 774
+          ExplicitHeight = 398
           inherited pnlGrid: TPanel
-            Height = 345
+            Height = 346
             ExplicitHeight = 344
             inherited DbGridEh1: TDBGridEh
               Height = 322
@@ -40,11 +49,11 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
             end
           end
           inherited pnlLeft: TPanel
-            Height = 345
+            Height = 346
             ExplicitHeight = 344
           end
           inherited pnlBottom: TPanel
-            Top = 399
+            Top = 400
             ExplicitTop = 398
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -53,7 +62,7 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -64,14 +73,16 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
         end
       end
       inherited pnlFrg2: TPanel
+        Top = 432
         inherited Frg2: TFrDBGridEh
+          ExplicitWidth = 784
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -83,16 +94,16 @@ inherited FrmOGinfSgp: TFrmOGinfSgp
       end
       inherited pnlRight: TPanel
         Top = 25
-        Height = 401
+        Height = 402
         ExplicitTop = 25
         ExplicitHeight = 400
       end
     end
+    inherited pnlFrmBtns: TPanel
+      Top = 478
+    end
   end
   inherited pnlStatusBar: TPanel
-    inherited lblStatusBarR: TLabel
-      Left = 727
-      ExplicitLeft = 727
-    end
+    Top = 522
   end
 end

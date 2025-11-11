@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages, V_MDI,
-  Vcl.ExtCtrls, Vcl.ComCtrls, DateUtils, Types, Math, IOUtils;
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uDBOra, uString, uMessages, V_MDI,
+  Vcl.ExtCtrls, Vcl.ComCtrls, DateUtils, Types, Math, IOUtils, Vcl.Mask;
 
 type
   TDlg_J_Montage = class(TForm_MDI)
@@ -60,8 +60,8 @@ var
 implementation
 
 uses
-  StrUtils,
-  uSettings,
+
+
   uTasks,
   uSys
   ;

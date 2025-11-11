@@ -4,8 +4,8 @@ interface
 
 uses
   System.SysUtils, System.Classes, MemTableDataEh, Data.DB,
-  Data.Win.ADODB, DataDriverEh, ADODataDriverEh, MemTableEh,
-  uString, uDB
+  Data.Win.ADODB, DataDriverEh,
+  uString, uDB, ADODataDriverEh, MemTableEh
   ;
 
 type

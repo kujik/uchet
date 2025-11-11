@@ -9,10 +9,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, StdCtrls, Buttons, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils, ClipBrd, Vcl.ComCtrls, MemTableEh,
-  uLabelColors, uFrmBasicMdi, uFrDBGridEh, uData, uForms, uString
+  Types, DBCtrlsEh, ExtCtrls, ClipBrd, Vcl.ComCtrls,
+  uFrmBasicMdi, uFrDBGridEh, uData, uForms, uString, Vcl.Mask
   ;
 
 type

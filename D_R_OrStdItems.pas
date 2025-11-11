@@ -86,7 +86,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   F_MdiDialogTemplate, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Buttons, DBCtrlsEh,
-  Vcl.Mask, uData, uLabelColors;
+  uData, uLabelColors, Vcl.Mask;
 
 type
   TDlg_R_OrStdItems = class(TForm_MdiDialogTemplate)
@@ -128,7 +128,7 @@ implementation
 
 {$R *.dfm}
 uses
-  DateUtils, uSettings, uForms, uDBOra, uString, uMessages, uOrders;
+  uForms, uDBOra, uString, uMessages, uOrders;
 
 
 {$R *.dfm}

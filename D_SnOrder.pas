@@ -9,10 +9,10 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, uDBOra, uMessages, uData,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, uStringCalculator, V_Normal,
-  DBCtrlsEh, ExtCtrls, uString, uForms;
+  V_Normal,
+  DBCtrlsEh, ExtCtrls, uString, uForms, Vcl.Mask;
 
 type
   TDlg_SnOrder = class(TForm_Normal)

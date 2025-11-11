@@ -5,15 +5,15 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI, Vcl.ExtCtrls, Vcl.ComCtrls,
-  VclTee.TeeGDIPlus, Vcl.StdCtrls, Vcl.Buttons, VCLTee.TeEngine, VCLTee.Series,
-  VCLTee.TeeProcs, VCLTee.Chart, Vcl.Mask, DBCtrlsEh, DateUtils,
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB, MemTableEh,
-  Data.Win.ADODB, DataDriverEh, ADODataDriverEh, VCL.ClipBrd, PrnDbgEh, DBGridEhXMLSpreadsheetExp,
-  ShellApi,
-  XlsMemFilesEh,
-  DBGridEhXlsMemFileExporters,
-  DBGridEhImpExp, V_Normal, uString
+  Vcl.StdCtrls, Vcl.Buttons,
+  DBCtrlsEh, DateUtils,
+  ToolCtrlsEh, DBGridEhToolCtrls,
+  GridsEh, DBAxisGridsEh, DBGridEh, MemTableDataEh, Data.DB,
+  Data.Win.ADODB, DataDriverEh, VCL.ClipBrd, PrnDbgEh,
+
+
+
+  DBGridEhImpExp, V_Normal, uString, Vcl.Mask
 ;
 
 type

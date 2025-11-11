@@ -8,10 +8,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Buttons, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  Dialogs, StdCtrls, Buttons, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Mask, Types, DBCtrlsEh, ExtCtrls, DateUtils,
-  uLabelColors, uFrmBasicMdi, uFrDBGridEh
+  Types, DBCtrlsEh, ExtCtrls, DateUtils,
+  uLabelColors, uFrmBasicMdi, uFrDBGridEh, Vcl.Mask
   ;
 
 type
@@ -72,7 +72,7 @@ uses
   uDBOra,
   uMessages,
   uData,
-  uErrors,
+
   uPrintReport,
   uOrders
   ;

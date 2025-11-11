@@ -1,15 +1,15 @@
 inherited Dlg_OrderPrintLabels: TDlg_OrderPrintLabels
   Caption = 'Dlg_OrderPrintLabels'
-  ClientHeight = 263
-  ClientWidth = 394
-  ExplicitWidth = 406
-  ExplicitHeight = 301
+  ClientHeight = 261
+  ClientWidth = 386
+  ExplicitWidth = 402
+  ExplicitHeight = 300
   TextHeight = 13
   object DBGridEh1: TDBGridEh
     Left = 0
     Top = 0
-    Width = 390
-    Height = 225
+    Width = 374
+    Height = 223
     Anchors = [akLeft, akTop, akRight, akBottom]
     DataSource = DataSource1
     DynProps = <>
@@ -37,16 +37,14 @@ inherited Dlg_OrderPrintLabels: TDlg_OrderPrintLabels
     end
   end
   object Bt_Print: TBitBtn
-    Left = 307
-    Top = 231
+    Left = 291
+    Top = 229
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Bt_Print'
     TabOrder = 1
     OnClick = Bt_PrintClick
-    ExplicitLeft = 303
-    ExplicitTop = 230
   end
   object MemTableEh1: TMemTableEh
     Params = <>

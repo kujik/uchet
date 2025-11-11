@@ -88,8 +88,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Math,
-  Dialogs, StdCtrls, Buttons, DBCtrlsEh, Mask, uData, uForms, uDBOra, uString, uMessages, System.Types,
-  frxClass, frxDesgn, frxPrinter, frxPrintDialog, frxUnicodeUtils, frxCtrls, frxPreviewPageSettings, frxBarcode, frxBarcod,
+  Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uDBOra, uString, uMessages, System.Types,
+  frxClass, frxDesgn, frxPrinter, frxBarcode,
   MemTableEh, MemTableDataEh, StrUtils, Data.DB, Data.Win.ADODB, frxDBSet,
   frxTableObject
   ;
@@ -153,11 +153,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses
-  uErrors
-  //,
-  //Data.DB
-  ;
+
 
 {$R *.dfm}
 

@@ -1,20 +1,20 @@
 inherited FrmXDedtMailingCustomAddr: TFrmXDedtMailingCustomAddr
   Caption = 'FrmXDedtMailingCustomAddr'
-  ClientHeight = 122
-  ClientWidth = 636
+  ClientHeight = 121
+  ClientWidth = 632
   ExplicitWidth = 648
   ExplicitHeight = 160
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 636
-    Height = 106
-    ExplicitWidth = 270
-    ExplicitHeight = 82
+    Width = 632
+    Height = 105
+    ExplicitWidth = 632
+    ExplicitHeight = 105
     inherited pnlFrmClient: TPanel
       Width = 626
       Height = 57
-      ExplicitWidth = 260
-      ExplicitHeight = 33
+      ExplicitWidth = 622
+      ExplicitHeight = 56
       object edtAddr: TDBEditEh
         Left = 8
         Top = 24
@@ -30,51 +30,52 @@ inherited FrmXDedtMailingCustomAddr: TFrmXDedtMailingCustomAddr
         TabOrder = 0
         Text = 'edtAddr'
         Visible = True
+        ExplicitWidth = 607
       end
     end
     inherited pnlFrmBtns: TPanel
       Top = 62
       Width = 626
-      ExplicitTop = 38
-      ExplicitWidth = 260
+      ExplicitTop = 61
+      ExplicitWidth = 622
       inherited bvlFrmBtnsTl: TBevel
         Width = 624
+        ExplicitWidth = 624
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 624
+        ExplicitWidth = 624
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 624
-        ExplicitWidth = 258
+        ExplicitWidth = 620
         inherited pnlFrmBtnsMain: TPanel
           Left = 525
-          ExplicitLeft = 159
+          ExplicitLeft = 521
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 297
-          ExplicitLeft = -69
+          ExplicitLeft = 293
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 426
-          ExplicitLeft = 60
+          ExplicitLeft = 422
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 157
+          ExplicitWidth = 153
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 106
-    Width = 636
-    ExplicitTop = 82
-    ExplicitWidth = 270
+    Top = 105
+    Width = 632
+    ExplicitTop = 105
+    ExplicitWidth = 632
     inherited lblStatusBarR: TLabel
       Left = 563
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 563
     end
   end
 end

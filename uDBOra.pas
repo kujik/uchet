@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Types,
-  Dialogs, StdCtrls, DBCtrlsEh, uData, DB, AdoDB, uString, Variants, MemTableEh, uErrors, IniFiles, ADODataDriverEh,
-  uFrmXDmsgNoConnection, MemTableDataEh, DataDriverEh, uDB
+  Dialogs, StdCtrls, DBCtrlsEh, uData, DB, AdoDB, uString, Variants, MemTableEh, IniFiles, ADODataDriverEh,
+  MemTableDataEh, DataDriverEh, uDB
   ;
 
 const

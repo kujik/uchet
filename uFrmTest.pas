@@ -5,21 +5,22 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Buttons, System.IoUtils,
-  Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, ComObj, Vcl.Grids, V_Normal,
-  IdBaseComponent, IdComponent, IdTCPConnection, IdTCPClient, Types,
-  IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase, IdSMTP//, EASendMailObjLib_TLB
+  DBCtrlsEh, Vcl.ExtCtrls, ComObj, Vcl.Grids,
+  IdBaseComponent, IdTCPConnection, IdTCPClient, Types,
+  IdSMTP//, EASendMailObjLib_TLB
   ,uLabelColors
   ,XlsMemFilesEh
   ,data.sqlexpr, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
-  FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
+  FireDAC.Stan.Error, FireDAC.DatS,
   FireDAC.Stan.Async, FireDAC.DApt, FireDAC.UI.Intf, FireDAC.Stan.Def,
-  FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.Oracle, FireDAC.Phys.OracleDef,
-  Data.DB, FireDAC.Comp.Client, FireDAC.Comp.DataSet, FireDAC.VCLUI.Wait,
-  FireDAC.Comp.UI,
-  ADODb, Vcl.DBCtrls, Vcl.DBCGrids, Vcl.Menus, DBGridEh, DBLookupEh,
-  Vcl.ComCtrls, DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
-  MemTableDataEh, MemTableEh, EhLibVclUtils, GridsEh, DBAxisGridsEh
-;
+  FireDAC.Stan.Pool, FireDAC.Phys, FireDAC.Phys.Oracle,
+  Data.DB, FireDAC.Comp.Client, FireDAC.VCLUI.Wait,
+
+  ADODb, Vcl.DBCtrls, Vcl.Menus, DBGridEh, DBLookupEh,
+  Vcl.ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
+  MemTableDataEh, MemTableEh, EhLibVclUtils, GridsEh, DBAxisGridsEh,
+  DBGridEhGrouping, DynVarsEh, IdComponent, IdExplicitTLSClientServerBase,
+  IdMessageClient, IdSMTPBase, Vcl.Mask;
 
 type
   TFrmTest = class(TForm)
@@ -139,46 +140,45 @@ uses
   ZLib,
   uTasks,
   uOrders,
-  D_Order,
-  uExcel2,
-  uPrintReport,
-  DateUtils,
+
+
+
+
   F_TestTree,
   uSys,
   uErrors,
-  uDBParsec,
+
   uFrmCWAcoountBasis,
-  uFrmOGjrnOrderStages,
-  uFrmADedtItmCopyRigths,
+
+
   uFrmXDedtMemo,
 
   idmessage,
 
   uFrmXWAbout, V_MDI,
-  uFrmXDmsgNoConnection,
-  D_SetPassword,
-  D_MainSettings, D_ModuleSettings, D_Rep_Smeta,
+
+
+
   F_Adm_Installer,
-  uFrmAWUsersAndRoles,
+
   //uFrmRepSgp,
   uFrmTestMdi1,
   //uFrmDlgFindNameInEstimates,
-  uFrmOWInvoiceToSgp,
-  uFrmDlgRItmSupplier,
-  uFrmODedtNomenclFiles,
+
+
+
   uFrmBasicInput,
-  uFrmOGjrnOrders,
-  uFrmXWGridOptions,
+
+
   uFrmOGedtSnMain,
-  uFrmCWCash,
+
   uFrmCDedtCashRevision,
   uFrmBasicEditabelGrid,
   uFrmOWOrder,
-  uFrmOWSearchInEstimates,
+
   uFrmWGEdtTurv,
   uFrmOGedtEstimate,
-  uFrmCDedtAccount,
-  uFrmOGrepOrReglament
+  uFrmCDedtAccount
   ;
 
 
