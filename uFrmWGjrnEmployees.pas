@@ -1,4 +1,7 @@
 {
+
+названия: работник, должность, статус работника
+
 нужен ли табельный номер в осн. табл.?
 должность или профессия?
 надо ли признак Самозанятый?
@@ -7,6 +10,12 @@
 при удалении на текущую строку, в опции
 TGridEhHelper.GridRefresh добавить опционально переход к созданной/измененной, если не поменялась позиция
 сделать Fr.FindValueS(FieldName, i, False) -> Pos
+ошибка в создании ведомости пор одному работнику на увольнение - пытается создать две один раз по крайней мере //шляхтов а.а.
+    drop index idx_payroll_unique;
+    create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
+    select * from payroll where id_worker = 100 order by dt1 desc;
+    delete from payroll where id = 2848;
+закрывается детальная панель при обновлении формой мдибасик, если в нее передан фрейм грида детальной. обновлется основной?
 }
 
 
@@ -15,10 +24,9 @@ unit uFrmWGjrnEmployees;
 interface
 
 uses
-  Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, StdCtrls, ComCtrls, Buttons, Menus, //basic
+  Windows, Messages, Classes, Graphics, Controls, Forms, ExtCtrls, StdCtrls, //обязательно
   DBGridEh,  //ehlib
-  uData, uString, uFrDBGridEh,  //my
-  uFrmBasicGrid2
+  uData, uString, uFrDBGridEh, uFrmBasicGrid2
   ;
 
 type
@@ -53,6 +61,7 @@ var
   c : TComponent;
   st1, st2: string;
 begin
+  Result := False;
   Caption:='Работники';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
@@ -90,6 +99,7 @@ begin
     ['dt_end$d','~По','80'],
     ['departament$s','~Подразделение','200;h'],
     ['job$s','~Должность','200;h'],
+    ['grade$f','~Разряд','60'],
     ['schedulecode$s','~График','70'],
     ['trainee$s','~Ученик','90'],
     ['foreman$s','~Бригадир','90'],
@@ -101,7 +111,8 @@ begin
   Frg2.Opt.SetTable('v_w_employee_properties', 'w_employee_properties');
   Frg2.Opt.SetWhere('where id_employee = :id_employee$i order by rn');
   Frg2.Opt.SetButtons(1, [
-   [mbtRefresh], [], [mbtView], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить новое собьтие'], [mbtDelete, 1, 'Удалить последнее побытие'], [], [mbtGridSettings], [mbtTest]
+   [mbtRefresh], [], [mbtView, True, 'Просмотреть выбранный статус работника'], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить статус работника'],
+   [mbtDelete, 1, 'Удалить последний статус работника'], [], [mbtGridSettings], [mbtTest, User.IsDeveloper]
   ]);
 
   Result := inherited;
@@ -131,8 +142,8 @@ begin
   Handled := True;
   if Tag = mbtTest then
     Turv.ConvertEmployees202511
-  else if Tag = mbtView then
-    TFrmWDedtEmployeeProperties.Show(Frg2, '*' , [myfoDialog, myfoSizeable], fView, Fr.ID, null)
+  else if fMode <> fNone then
+    TFrmWDedtEmployeeProperties.Show(Frg2, '*' , [myfoDialog, myfoSizeable], fMode, Fr.ID, Frg1.ID)
   else begin
     Handled := False;
     inherited;
@@ -144,7 +155,7 @@ procedure TFrmWGjrnEmployees.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const
 var
   i ,j, p: Integer;
 begin
-  if A.InArray(FieldName, ['job', 'organization', 'departament', 'schedulecode', 'foreman', 'concurrent', 'trainee']) then begin
+  if A.InArray(FieldName, ['job', 'grade', 'organization', 'departament', 'schedulecode', 'foreman', 'concurrent', 'trainee']) then begin
     p := Fr.GetValue('rn');
     if (p > 1) and (Fr.GetValueS('status') = 'переведен') then begin
       for i := 0 to Fr.GetCount(False) - 1 do

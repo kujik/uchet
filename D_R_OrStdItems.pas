@@ -104,6 +104,7 @@ type
     lbl_Route: TLabel;
     chb_by_sgp: TDBCheckBoxEh;
     chb_R7: TDBCheckBoxEh;
+    chb_R8: TDBCheckBoxEh;
     procedure ControlOnChange(Sender: TObject); override;
   private
     { Private declarations }
@@ -410,10 +411,10 @@ begin
       if Result then
       Result:= Q.QExecSql(
         'update order_items set '+
-        'r0 = :r0$i, r1 = :r1$i, r2 = :r2$i, r3 = :r3$i, r4 = :r4$i, r5 = :r5$i, r6 = :r6$i, r7 = :r7$i '+
+        'r0 = :r0$i, r1 = :r1$i, r2 = :r2$i, r3 = :r3$i, r4 = :r4$i, r5 = :r5$i, r6 = :r6$i, r7 = :r7$i, r8 = :r8$i '+
         'where id_order < 0 and id_std_item = :id_std_item$i and nvl(sgp, 0) <> 1',
         [Cth.GetControlValue(chb_R0),Cth.GetControlValue(chb_R1),Cth.GetControlValue(chb_R2),Cth.GetControlValue(chb_R3),
-         Cth.GetControlValue(chb_R4),Cth.GetControlValue(chb_R5),Cth.GetControlValue(chb_R6),Cth.GetControlValue(chb_R7),
+         Cth.GetControlValue(chb_R4),Cth.GetControlValue(chb_R5),Cth.GetControlValue(chb_R6),Cth.GetControlValue(chb_R7),Cth.GetControlValue(chb_R8),
          ID
         ]
       ) >= 0;
@@ -516,11 +517,11 @@ var
   i: Integer;
 begin
   Caption := 'Стандартное изделие';
-  Fields := 'id$i;id_or_format_estimates$i;name$s;price$f;price_pp$f;wo_estimate$i;r0$i;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;by_sgp$i';
+  Fields := 'id$i;id_or_format_estimates$i;name$s;price$f;price_pp$f;wo_estimate$i;r0$i;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;by_sgp$i';
   View := 'or_std_items';
   Table := 'or_std_items';
-  CtrlVerifications := ['', '', '1:400:0:T', '0:9999999:2:n', '0:9999999:2:n', '', '', '', '', '', '', '', '', '', ''];
-  CtrlValuesDefault := [0, AddParam, '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  CtrlVerifications := ['', '', '1:400:0:T', '0:9999999:2:n', '0:9999999:2:n', '', '', '', '', '', '', '', '', '', '', ''];
+  CtrlValuesDefault := [0, AddParam, '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
   Info := 'Задание свойств стандартного изделия.'#13#10;
   DefFocusedControl := edt_name;
   NoCloseIfAdd := True;

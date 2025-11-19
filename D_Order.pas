@@ -2988,7 +2988,7 @@ begin
               st1 := Gh.GetGridColumn(DBGridEh1, 'thn').PickList[k];
               Break;
             end;
-      if A.InArray(st, ['std', 'nstd', 'sgp', 'resale', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7']) then
+      if A.InArray(st, ['std', 'nstd', 'sgp', 'resale', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9']) then
         if (st1 = '0') or (st1 = '') then
           st1 := ''
         else

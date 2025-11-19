@@ -1,9 +1,9 @@
 inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   Caption = #1057#1090#1072#1085#1076#1072#1088#1090#1085#1086#1077' '#1080#1079#1076#1077#1083#1080#1077
   ClientHeight = 158
-  ClientWidth = 663
-  ExplicitWidth = 679
-  ExplicitHeight = 197
+  ClientWidth = 731
+  ExplicitWidth = 743
+  ExplicitHeight = 196
   TextHeight = 13
   object lbl_Route: TLabel [0]
     Left = 4
@@ -14,43 +14,47 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   end
   inherited pnl_StatusBar: TPanel
     Top = 139
-    Width = 663
-    ExplicitTop = 139
-    ExplicitWidth = 663
+    Width = 731
+    ExplicitTop = 138
+    ExplicitWidth = 659
     inherited lbl_StatusBar_Right: TLabel
-      Left = 580
+      Left = 644
+      Height = 17
       ExplicitLeft = 580
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   inherited pnl_Bottom: TPanel
     Top = 108
-    Width = 663
-    ExplicitTop = 108
-    ExplicitWidth = 663
+    Width = 731
+    ExplicitTop = 107
+    ExplicitWidth = 659
     inherited bvl1: TBevel
-      Width = 667
+      Width = 731
       ExplicitWidth = 672
     end
     inherited Bt_OK: TBitBtn
-      Left = 492
-      ExplicitLeft = 488
+      Left = 556
+      ExplicitLeft = 484
       ExplicitTop = 4
     end
     inherited Bt_Cancel: TBitBtn
-      Left = 573
-      ExplicitLeft = 569
+      Left = 637
+      ExplicitLeft = 565
       ExplicitTop = 4
     end
     inherited chb_NoClose: TCheckBox
-      Left = 365
-      ExplicitLeft = 361
+      Left = 429
+      ExplicitLeft = 357
       ExplicitTop = 9
     end
   end
   object edt_name: TDBEditEh [3]
     Left = 97
     Top = 7
-    Width = 568
+    Width = 633
     Height = 21
     ControlLabel.Width = 76
     ControlLabel.Height = 13
@@ -119,8 +123,8 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     TabOrder = 8
   end
   object chb_R0: TDBCheckBoxEh [10]
-    Left = 481
-    Top = 33
+    Left = 540
+    Top = 34
     Width = 95
     Height = 17
     Caption = #1041#1077#1079' '#1084#1072#1088#1096#1088#1091#1090#1072
@@ -128,8 +132,8 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     TabOrder = 10
   end
   object chb_Wo_Estimate: TDBCheckBoxEh [11]
-    Left = 590
-    Top = 33
+    Left = 649
+    Top = 34
     Width = 82
     Height = 17
     Caption = #1041#1077#1079' '#1089#1084#1077#1090#1099
@@ -189,6 +193,15 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     Caption = #1057#1043#1055
     DynProps = <>
     TabOrder = 9
+  end
+  object chb_R8: TDBCheckBoxEh [16]
+    Left = 481
+    Top = 34
+    Width = 49
+    Height = 17
+    Caption = #1057#1043#1055
+    DynProps = <>
+    TabOrder = 15
   end
   inherited tmrAfterCreate: TTimer
     Left = 160

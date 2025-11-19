@@ -46,7 +46,23 @@ end;
 --!
 insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes;
 
+--------------------------------------------------------------------------------
+--допустимые разряды
+create table w_grades(
+  grade number not null unique,    --разряд, в конечных единицах (1, 1.1, 1.3...)
+  active number(1) default 1
+);
 
+
+begin
+--!
+insert into w_grades (grade) values (1);
+insert into w_grades (grade) values (1.15);
+insert into w_grades (grade) values (1.3);
+end;
+
+
+--------------------------------------------------------------------------------
 --сотрудники
 --alter table w_employees drop column i;
 --alter table w_employees add i varchar2(25) not null; 
@@ -210,7 +226,7 @@ insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule
 
 --статусы работников (когда и куда принят/переведен/уволен)
 --drop table w_worker_status cascade constraints;
-alter table w_employee_properties add is_trainee number(1) default 0;
+alter table w_employee_properties add grade number default 1;
 create table w_employee_properties(
   id number(11),
   dt date,
@@ -227,6 +243,7 @@ create table w_employee_properties(
   is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   is_foreman number(1) default 0,
   is_trainee number(1) default 0,           --ученик
+  grade nuber default 1,                    --разряд
   comm varchar(4000), 
   id_manager number(1),
   --deleted number(1) default 0,              
@@ -378,22 +395,150 @@ where
   ep.id_schedule = s.id (+) and
   ep.id_manager = u.id (+)
 ;     
-
+--!
 delete from w_employee_properties;
 insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
   select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
+  
+  
+--------------------------------------------------------------------------------
+
+--таблица турв по подразделению за период
+create table w_turv_period(  
+  id number(11),                   
+  id_departament number(11),        --подразделение
+  dt1 date,                         --дата начала периода ТУРВ
+  dt2 date,                         --дата конца периода ТУРВ
+  commit number(1),                 --период закрыт
+  status number(1),                 --статус заполенности данных
+  constraint pk_w_turv_period  primary key (id),
+  constraint fk_w_turv_period_dep foreign key (id_departament) references ref_divisions(id)
+);
+
+create unique index idx_w_turv_period_1 on w_turv_period(id_departament, dt1);
+
+create sequence sq_w_turv_period start with 10000 nocache;
+
+create or replace trigger trg_w_turv_period_bi_r before insert on w_turv_period for each row
+begin
+  select nvl(:new.id, sq_w_turv_period.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_turv_period as  
+select
+  p.*,
+  d.name,
+  case when d.is_office = 1 then 'офис' else 'цех' end as isoffice,
+  case when p.commit = 1 then 'закрыт' else '' end as committxt,
+  getusernames(d.ids_editusers) as editusernames,
+  d.ids_editusers,
+  d.code 
+from
+  w_turv_period p,
+  w_departaments d
+where
+  d.id = p.id_departament
+;   
+
+--!
+delete from w_turv_period;
+insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
 
 
+--------------------------------------------------------------------------------
 
-select * from v_turv_workers;
+--alter  table _wturv_day add nighttime number(4,2);
+--alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
+--таблица турв для конкретного работника за конкретный день
+create table w_turv_day(
+  id number(11),        
+  id_employee_properties number(11),             --
+  id_employee number(11),             --
+  dt date,                          --дата ТУРВ (день)
+  id_turvcode1 number(11),          --код турв по мастерам
+  worktime1 number(4,2),            --время работы по мастерам 
+  comm1 varchar2(400),              --примечание руководителя 
+  id_turvcode2 number(11),          --код турв по парсеку
+  worktime2 number(4,2),            --время работы по парсеку
+  comm2 varchar2(400),              --примечание ОК 
+  id_turvcode3 number(11),          --код согласованный 
+  worktime3 number(4,2),            --время работы согласованное 
+  comm3 varchar2(400),              --примечание по согласованному  
+  premium number(5),                --сумма премии за день
+  premium_comm varchar2(400),       --примечание к премии 
+  penalty number(5),                --сумма штрафа
+  penalty_comm varchar2(400),       --примечание к штрафу 
+  production number(1),             --выработка (сдана, нет)
+  begtime number(4,2),              --время прихода по парсеку  
+  endtime number(4,2),              --время ухода по парсеку
+  nighttime number(4,2),            --время работы в ночную смену
+  settime3 number(1),               --1, когда время по парсеку worktime2 установлено 
+  constraint pk_w_turv_day primary key (id),
+  constraint fk_w_turv_day_employee foreign key (id_employee) references w_employees(id),
+  constraint fk_w_turv_day_emp_prop foreign key (id_employee_properties) references W_employee_properties(id), 
+  constraint fk_W_turv_day_turvcode1 foreign key (id_turvcode1) references w_turvcodes(id),
+  constraint fk_w_turv_day_turvcode2 foreign key (id_turvcode2) references w_turvcodes(id),
+  constraint fk_w_turv_day_turvcode3 foreign key (id_turvcode3) references w_turvcodes(id)
+);
 
-select * from (
-select dt1, id_worker, id_schedule_active, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1;
+create unique index idx_w_turv_day_e on w_turv_day(id_employee, dt);
+drop index idx_w_turv_day_ep;
+create unique index idx_w_turv_day_ep on w_turv_day(id_employee_properties, dt);
 
+create sequence sq_w_turv_day start with 1 nocache;
+
+create or replace trigger trg_w_turv_day_bi_r before insert on w_turv_day for each row
+begin
+  select nvl(:new.id, sq_w_turv_day.nextval) into :new.id from dual;
+end;
+
+update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE('15.11.2027', 'DD.MM.YYYY'))); 
 
 
 --================================================================================
 alter table ref_production_areas add constraint pk_ref_production_areas primary key (id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

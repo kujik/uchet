@@ -1,20 +1,20 @@
 inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
   Caption = 'FrmWDedtEmployeeProperties'
-  ClientHeight = 360
+  ClientHeight = 425
   ClientWidth = 498
   ExplicitWidth = 510
-  ExplicitHeight = 398
+  ExplicitHeight = 463
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 498
-    Height = 344
-    ExplicitWidth = 498
-    ExplicitHeight = 323
+    Height = 409
+    ExplicitWidth = 494
+    ExplicitHeight = 408
     inherited pnlFrmClient: TPanel
       Width = 488
-      Height = 295
+      Height = 360
       ExplicitWidth = 484
-      ExplicitHeight = 273
+      ExplicitHeight = 359
       object cmb_id_mode: TDBComboBoxEh
         Left = 90
         Top = 8
@@ -83,27 +83,25 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         Visible = True
         ExplicitWidth = 393
       end
-      object cmb_id_sxhedule: TDBComboBoxEh
-        Left = 90
-        Top = 116
-        Width = 397
+      object cmb_id_schedule: TDBComboBoxEh
+        Left = 91
+        Top = 209
+        Width = 113
         Height = 21
         ControlLabel.Width = 79
         ControlLabel.Height = 13
         ControlLabel.Caption = #1043#1088#1072#1092#1080#1082' '#1088#1072#1073#1086#1090#1099
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
-        Anchors = [akLeft, akTop, akRight]
         DynProps = <>
         EditButtons = <>
         TabOrder = 4
         Text = 'cmb_id_job'
         Visible = True
-        ExplicitWidth = 393
       end
       object edt_comm: TDBEditEh
-        Left = 90
-        Top = 262
+        Left = 89
+        Top = 286
         Width = 395
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -147,8 +145,8 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 8
       end
       object cmb_id_organization: TDBComboBoxEh
-        Left = 92
-        Top = 212
+        Left = 91
+        Top = 236
         Width = 392
         Height = 21
         ControlLabel.Width = 66
@@ -165,8 +163,8 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         ExplicitWidth = 388
       end
       object edt_personnel_number: TDBEditEh
-        Left = 92
-        Top = 239
+        Left = 91
+        Top = 263
         Width = 113
         Height = 21
         ControlLabel.Width = 89
@@ -180,11 +178,27 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         Text = 'edt_personnel_number'
         Visible = True
       end
+      object cmb_grade: TDBComboBoxEh
+        Left = 92
+        Top = 116
+        Width = 113
+        Height = 21
+        ControlLabel.Width = 36
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1056#1072#1079#1088#1103#1076
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        DynProps = <>
+        EditButtons = <>
+        TabOrder = 11
+        Text = 'cmb_id_job'
+        Visible = True
+      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 300
+      Top = 365
       Width = 488
-      ExplicitTop = 278
+      ExplicitTop = 364
       ExplicitWidth = 484
       inherited bvlFrmBtnsTl: TBevel
         Width = 486
@@ -217,9 +231,9 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 344
+    Top = 409
     Width = 498
-    ExplicitTop = 322
+    ExplicitTop = 408
     ExplicitWidth = 494
     inherited lblStatusBarR: TLabel
       Left = 425

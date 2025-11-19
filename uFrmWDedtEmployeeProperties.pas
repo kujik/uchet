@@ -1,9 +1,5 @@
 {
-//!!!ERROR
-где-то в TFrmBasicDbDialog или uFields
-если встречается определение ['id_mode$i;0;0','V=1:400',#0,1] не после списка всех остальных, то съезжают значения в контролах !!!!!!!!
-
-
+при выборе Уволить - заблокировать все поля, и установить их из гетпропб!!!
 }
 
 unit uFrmWDedtEmployeeProperties;
@@ -24,16 +20,24 @@ type
     dedt_dt_beg: TDBDateTimeEditEh;
     cmb_id_departament: TDBComboBoxEh;
     cmb_id_job: TDBComboBoxEh;
-    cmb_id_sxhedule: TDBComboBoxEh;
+    cmb_id_schedule: TDBComboBoxEh;
     edt_comm: TDBEditEh;
     chb_is_trainee: TDBCheckBoxEh;
     chb_is_foreman: TDBCheckBoxEh;
     chb_is_concurrent: TDBCheckBoxEh;
     cmb_id_organization: TDBComboBoxEh;
     edt_personnel_number: TDBEditEh;
+    cmb_grade: TDBComboBoxEh;
   private
+    FIdMode: Variant;
+    FIdEmp: Integer;
+    FIdLast: Variant;
+    FLastRec: TNamedArr;
     function Prepare: Boolean; override;
+    function LoadComboBoxes: Boolean; override;
     function Save: Boolean; override;
+    procedure ControlOnChange(Sender: TObject); override;
+    procedure SetControlsState;
   public
   end;
 
@@ -44,23 +48,58 @@ implementation
 
 uses
   Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
-  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
+  uSettings, uSys, uForms, uFields, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
   ;
 
 {$R *.dfm}
 
 function TFrmWDedtEmployeeProperties.Prepare: Boolean;
+var
+  v: Variant;
+  DtVer: string;
 begin
-  Caption := 'Задача';
+  Result := False;
+  FIdEmp := AddParam;
+  if Mode <> fView then begin
+    //получим айди последней по работнику записи
+    FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id$i order by id desc', [FIdEmp])[0];
+    //получим все поля этой записи
+    if FIdLast <> null then
+      Q.QLoadFromQuery('select * from w_employee_properties where id = :id$i', [FIdLast], FLastRec);
+  end;
+  if (Mode = fAdd) and (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
+    //в режиме создания нового статуса, если он не первый для работника и последний не есть увольнение, поставим режим копирования и айди послдедней записи
+    ID := FIdLast;
+    Mode := fCopy;
+  end
+  else if (Mode = fDelete) then begin
+    //в случае удаления статуса - выйдем если нет записей, иначе возьмем айди последней
+    if FIdLast = null then
+      Exit;
+    ID := FIdLast;
+  end;
+  //первоначальнай режим прием/перевод/увольнение (только прием при первом или после увольения, какой есть для просмотра или удаления, в противном случае не выбран)
+  FIdMode := null;
+  if Mode in [fView, fDelete] then
+    FIdMode := S.IIf(FLastRec.G('is_terminated') = 1, 3, S.IIf(FLastRec.G('is_hired') = 1, 1, 2))
+  else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
+    FIdMode := 1;
+  DtVer :='*:*';
+  if (Mode in [fAdd, fCopy]) then begin
+     DtVer := DateToStr(IncDay(Date, -62));
+     if (FIdLast <> null) then if FLastRec.G('is_terminated')=1 then DtVer := DateToStr(IncDay(FLastRec.G('dt_beg'), 1)) else DtVer := DateToStr(IncDay(FLastRec.G('dt_beg'), 0));
+  end;
+  Caption := S.Decode([Mode, fCopy, 'Добавить статус работника', fAdd, 'Добавить статус работника', fDelete, 'Удалить статус работника', 'Статус работника']);
   F.DefineFields:=[
     ['id$i'],
     ['dt$d',#0,Date],
-    ['id_mode$i;0;0','V=1:400',#0,1],
+    ['id_mode$i;0;0','V=1:400',#0,FIdMode],
     ['id_manager$i',#0,User.GetId],
     ['dt_beg$d','V=:'],
     ['id_employee$i','V=1:400'],
     ['id_departament$i','V=1:400'],
     ['id_job$i','V=1:400'],
+    ['grade$f','V=1:400'],
     ['id_schedule$i','V=1:400'],
     ['is_concurrent$i'],
     ['is_foreman$i'],
@@ -86,34 +125,85 @@ begin
     ,A.InArray(Mode, [fView, fDelete])]
   ];
   FWHBounds.Y2 := -1;
+  //выполним метод родителя
   Result := inherited;
   if not Result then
     Exit;
-{  SetControlsEditable([], True);
-  //даты и инициаора никогда не редактируем
-  SetControlsEditable([edt_user1, dedt_dt, dedt_dt_beg, dedt_dt_end], False);
-  //согласование редактирет инициатор при статусе Готово
-  SetControlsEditable([chb_confirmed], (User.GetId = S.NInt(F.GetPropB('id_user1'))) and (S.NInt(F.GetPropB('id_state')) = 99));
-  if (Mode in [fCopy, fAdd, fEdit]) and not ((User.GetId = S.NNum(F.GetPropB('id_user2'))) or (User.GetId = S.NInt(F.GetPropB('id_user1')))) then begin
-    //закроем поля исполнителя, если открывает не исполнитель (или не инициатор, ему все открыто!)
-    SetControlsEditable([cmb_id_state, mem_comm2], False);
-  end
-  else if (Mode in [fEdit]) and (User.GetId <> S.NInt(F.GetPropB('id_user1'))) then begin
-    //закроем поля инициатора, если открывает не инициатор (при редактировании)
-    SetControlsEditable([cmb_type, edt_name, cmb_id_user2, cmb_id_order, cmb_id_order_item, mem_comm1, dedt_dt_planned, chb_confirmed], False);
-  end
-  else if Mode in [fDelete, fView] then
-    SetControlsEditable([], False);
-  Cth.SetControlVerification(dedt_dt_planned, S.DateTimeToIntStr(F.GetPropB('dt')));
-  FOldState := cmb_id_state.Value;
-  FOldOrder := cmb_id_order.Text;         }
+  SetControlsState;
 end;
+
+function TFrmWDedtEmployeeProperties.LoadComboBoxes: Boolean;
+var
+  va2: TVarDynArray2;
+begin
+  //загружаем комбобоксы
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where active = 1 and id > 0 or id = :id_old$i order by name asc', [F.GetPropB('id_organization')], cmb_id_organization, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from w_jobs where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_job')], cmb_id_job, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from w_departaments where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_departament')], cmb_id_departament, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select code, id from w_schedules where active = 1 or id = :id_old$i order by code asc', [F.GetPropB('id_schedule')], cmb_id_schedule, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select grade, grade as key from w_grades where active = 1 or grade = :grade_old$i order by grade asc', [F.GetPropB('grade')], cmb_grade, cntComboLK);
+  if Mode in [fView, fDelete] then
+    va2 := [['принят', '1'], ['переведен', '2'], ['уволен', '3']]
+  else if (FIdLast = null) or (FLastRec.G('is_terminated') = 1) then
+    va2 := [['принять', '1']]
+  else
+    va2 := [['перевести', '2'], ['уволить', '3']];
+  Cth.AddToComboBoxEh(cmb_id_mode, va2);
+  Result := True;
+end;
+
 
 function TFrmWDedtEmployeeProperties.Save: Boolean;
 var
   st, st1: string;
+  dt: TDateTime;
 begin
+  Q.QBeginTrans(True);
+  //вызовем родительскую процедуру (поле FID будет обновлено)
   Result := inherited;
+  if Result then begin
+    //проставим дату окончания прошлого статуса, если он не является увольнением (у увольнения нет конечно даты)
+    if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then
+      if Mode = fDelete then begin
+      //при удалении очистим конечную дату прошлого статуса
+        Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [null, FIdLast]);
+      end
+      else begin
+      //при добавлении конечную дату прошлого поставим на день раньше начала созданного статуса,
+      //но если увольнение - поставим днем начала (днем увольнения, так по тк)
+        Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
+      //если дата окончания прошлого периода оказалась меньше даты его начала, то удалим его
+        Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
+      end;
+  end;
+  Q.QCommitOrRollback(Result);
+end;
+
+procedure TFrmWDedtEmployeeProperties.ControlOnChange(Sender: TObject);
+begin
+  if FInPrepare then
+    Exit;
+  if Sender = cmb_id_mode then
+    SetControlsState;
+  inherited;
+end;
+
+procedure TFrmWDedtEmployeeProperties.SetControlsState;
+begin
+  if Mode in [fView, fDelete] then
+    Exit;
+  //заблокируем все если выбрали режим Увольнение
+  SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number], GetControlValue('cmb_id_mode').AsString <> '3');
+  //заблокирем изменение организации и табльного номера, если это не прием, или если они уже введены
+  if FIdMode <> 1 then begin
+    if (FIdLast <> null) and (FLastRec.G('id_organization') <> null) then
+      SetControlsEditable([cmb_id_organization], False);
+    if (FIdLast <> null) and (FLastRec.G('personnel_number') <> null) then
+      SetControlsEditable([edt_personnel_number], False);
+  end;
+  if GetControlValue('cmb_id_mode').AsString <> '3' then
+    Exit;
+  F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);
 end;
 
 

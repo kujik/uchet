@@ -678,7 +678,10 @@ create table payroll(
 );
 
 --уникальный индекс по подразделению/работнику/дате начала
+drop index idx_payroll_unique;
 create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
+select * from payroll where id_worker = 100 order by dt1 desc;
+delete from payroll where id = 2848;
 
 create sequence sq_payroll start with 100 nocache;
 

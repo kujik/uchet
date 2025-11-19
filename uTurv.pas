@@ -1448,9 +1448,17 @@ begin
   Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
     'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []
   );
+  //увольнения ранее делались на день позже, тк неправильно была релализована логика (день увольнения д.б. последним рабочим)
+  Q.QExecSql('update w_employee_properties set dt_beg = dt_beg - 1 where is_terminated = 1',[]);
   Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
   w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
   sh := Q.QloadToVarDynArray2('select * from (select id_worker, id_schedule_active, dt1, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1' ,[]);
+  Q.QExecSql('delete from w_turv_day', []);
+  Q.QExecSql('insert into w_turv_day (dt, id_employee, '+
+    'id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3) '+
+    'select dt, id_worker, id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3 '+
+    'from turv_day', []
+  );
 //Exit;
   //графики из v_turv_workers
   e := 0;

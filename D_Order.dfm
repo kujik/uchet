@@ -4,18 +4,22 @@ inherited Dlg_Order: TDlg_Order
   ClientWidth = 1264
   OnCloseQuery = FormCloseQuery
   OnResize = FormResize
-  ExplicitWidth = 1280
-  ExplicitHeight = 709
+  ExplicitWidth = 1276
+  ExplicitHeight = 708
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 626
     Width = 1264
     TabOrder = 4
-    ExplicitTop = 626
-    ExplicitWidth = 1264
+    ExplicitTop = 625
+    ExplicitWidth = 1260
     inherited lbl_StatusBar_Right: TLabel
-      Left = 1181
-      ExplicitLeft = 1181
+      Left = 1177
+      Height = 17
+      ExplicitLeft = 1177
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   object pnl_Top: TPanel [1]
@@ -25,6 +29,7 @@ inherited Dlg_Order: TDlg_Order
     Height = 41
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1260
     object lbl_ITM: TLabel
       Left = 228
       Top = 7
@@ -64,14 +69,14 @@ inherited Dlg_Order: TDlg_Order
       OnClick = Bt_CancelClick
     end
     object pnl_Top_1: TPanel
-      Left = 663
+      Left = 659
       Top = 1
       Width = 604
       Height = 39
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 4
-      ExplicitLeft = 659
+      ExplicitLeft = 655
       DesignSize = (
         604
         39)
@@ -122,6 +127,8 @@ inherited Dlg_Order: TDlg_Order
     Align = alBottom
     TabOrder = 3
     Visible = False
+    ExplicitTop = 644
+    ExplicitWidth = 1260
     object lbl_OrderSaveStatus: TLabel
       Left = 8
       Top = 6
@@ -146,11 +153,13 @@ inherited Dlg_Order: TDlg_Order
     Height = 317
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 1260
+    ExplicitHeight = 316
     object DBGridEh1: TDBGridEh
       Left = 1
       Top = 1
-      Width = 1266
-      Height = 316
+      Width = 1262
+      Height = 315
       Align = alClient
       DataSource = DataSource1
       DynProps = <>
@@ -173,14 +182,15 @@ inherited Dlg_Order: TDlg_Order
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
+    ExplicitWidth = 1260
     object pnl_Header_3: TPanel
-      Left = 687
+      Left = 683
       Top = 1
       Width = 193
       Height = 176
       Align = alRight
       TabOrder = 0
-      ExplicitLeft = 683
+      ExplicitLeft = 679
       object dedt_Beg: TDBDateTimeEditEh
         Left = 72
         Top = 9
@@ -267,26 +277,26 @@ inherited Dlg_Order: TDlg_Order
     object pnl_Header_Bottom: TPanel
       Left = 1
       Top = 177
-      Width = 1266
+      Width = 1262
       Height = 90
       Align = alBottom
       TabOrder = 1
-      ExplicitWidth = 1262
+      ExplicitWidth = 1258
       object pnl_Header_11: TPanel
         Left = 1
         Top = 1
-        Width = 685
+        Width = 681
         Height = 88
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 681
+        ExplicitWidth = 677
         DesignSize = (
           681
           88)
         object mem_Comment: TDBMemoEh
           Left = 64
           Top = 32
-          Width = 603
+          Width = 599
           Height = 53
           ControlLabel.Width = 63
           ControlLabel.Height = 13
@@ -302,11 +312,12 @@ inherited Dlg_Order: TDlg_Order
           Visible = True
           WantReturns = True
           OnKeyDown = mem_CommentKeyDown
+          ExplicitWidth = 595
         end
         object edt_Complaints: TDBEditEh
           Left = 65
           Top = 5
-          Width = 602
+          Width = 598
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 62
@@ -324,6 +335,7 @@ inherited Dlg_Order: TDlg_Order
           Visible = True
           OnCloseDropDownForm = edt_ComplaintsCloseDropDownForm
           OnOpenDropDownForm = edt_ComplaintsOpenDropDownForm
+          ExplicitWidth = 594
         end
         object nedt_Attention: TDBNumberEditEh
           Left = 240
@@ -344,6 +356,7 @@ inherited Dlg_Order: TDlg_Order
         Height = 88
         Align = alRight
         TabOrder = 1
+        ExplicitLeft = 678
         DesignSize = (
           579
           88)
@@ -378,6 +391,7 @@ inherited Dlg_Order: TDlg_Order
       Height = 176
       Align = alClient
       TabOrder = 2
+      ExplicitWidth = 338
       DesignSize = (
         342
         176)
@@ -398,6 +412,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 0
         Visible = True
         OnGetItemImageIndex = cmb_CustomerNameGetItemImageIndex
+        ExplicitWidth = 246
       end
       object cmb_CustomerMan: TDBComboBoxEh
         Left = 86
@@ -416,6 +431,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 1
         Visible = True
         OnGetItemImageIndex = cmb_CustomerManGetItemImageIndex
+        ExplicitWidth = 246
       end
       object edt_CustomerContacts: TDBEditEh
         Left = 86
@@ -433,6 +449,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 2
         Visible = True
+        ExplicitWidth = 246
       end
       object cmb_CustomerLegalName: TDBComboBoxEh
         Left = 86
@@ -451,6 +468,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 3
         Visible = True
         OnGetItemImageIndex = cmb_CustomerLegalNameGetItemImageIndex
+        ExplicitWidth = 170
       end
       object edt_CustomerINN: TDBEditEh
         Left = 257
@@ -466,6 +484,7 @@ inherited Dlg_Order: TDlg_Order
         TabOrder = 4
         Text = '123456789023'
         Visible = True
+        ExplicitLeft = 253
       end
       object edt_Account: TDBEditEh
         Left = 232
@@ -483,6 +502,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 6
         Visible = True
+        ExplicitWidth = 100
       end
       object cmb_CashType: TDBComboBoxEh
         Left = 88
@@ -516,6 +536,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 7
         Visible = True
+        ExplicitWidth = 244
       end
     end
     object pnl_Header_1: TPanel
@@ -684,6 +705,7 @@ inherited Dlg_Order: TDlg_Order
       Height = 176
       Align = alRight
       TabOrder = 4
+      ExplicitLeft = 872
       object lbl1: TLabel
         Left = 64
         Top = 12

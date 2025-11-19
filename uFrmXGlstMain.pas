@@ -690,7 +690,7 @@ begin
       ['committxt','Закрыта','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
-    Frg1.Opt.SetTable('v_turv_period');
+    Frg1.Opt.SetTable('v_w_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
 v:=True;

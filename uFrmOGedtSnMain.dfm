@@ -5,8 +5,10 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Height = 522
+    ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
       Height = 473
+      ExplicitWidth = 786
       inherited pnlTop: TPanel
         Height = 73
         ExplicitHeight = 73
@@ -115,45 +117,46 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
       end
       inherited pnlBottom: TPanel
         Top = 427
+        ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
         Top = 73
         Height = 354
         ExplicitTop = 73
-        ExplicitHeight = 352
+        ExplicitHeight = 353
       end
       inherited pnlGrid1: TPanel
         Top = 73
         Height = 354
         ExplicitTop = 73
         ExplicitWidth = 776
-        ExplicitHeight = 352
+        ExplicitHeight = 353
         inherited Frg1: TFrDBGridEh
           Height = 352
           ExplicitWidth = 774
-          ExplicitHeight = 350
+          ExplicitHeight = 351
           inherited pnlGrid: TPanel
             Height = 298
-            ExplicitHeight = 296
+            ExplicitHeight = 297
             inherited DbGridEh1: TDBGridEh
-              Height = 274
+              Height = 275
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 275
-              ExplicitTop = 274
+              Top = 276
+              ExplicitTop = 275
             end
           end
           inherited pnlLeft: TPanel
             Height = 298
-            ExplicitHeight = 296
+            ExplicitHeight = 297
           end
           inherited pnlBottom: TPanel
             Top = 352
-            ExplicitTop = 350
+            ExplicitTop = 351
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -173,6 +176,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
       end
       inherited pnlFrg2: TPanel
         Top = 432
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 784
           inherited pnlGrid: TPanel
@@ -203,7 +207,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         Top = 73
         Height = 354
         ExplicitTop = 73
-        ExplicitHeight = 352
+        ExplicitHeight = 353
       end
     end
     inherited pnlFrmBtns: TPanel
@@ -218,6 +222,13 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
   end
   inherited pnlStatusBar: TPanel
     Top = 522
+    ExplicitTop = 521
+    inherited lblStatusBarR: TLabel
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
   end
   inherited tmrAfterCreate: TTimer
     OnTimer = tmrAfterCreateTimer

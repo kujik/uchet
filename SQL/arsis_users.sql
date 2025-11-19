@@ -82,7 +82,47 @@ grant select any table to M;
 grant execute any procedure to M;
 
 ALTER USER WHS ACCOUNT UNLOCK;
+ALTER USER M ACCOUNT UNLOCK;
+ALTER USER MTR ACCOUNT UNLOCK;
 
-SELECT username, account_status, expiry_date, profile
-FROM dba_users
-WHERE username = 'M';
+select username, account_status, expiry_date, profile
+from dba_users
+where username in ('MTR','WHS','M', 'MMM');
+--26
+
+
+create user MMM identified by MMM25 default tablespace users temporary tablespace temp;
+grant connect, resources to MMM;
+alter user MMM default role all;
+/*
+ant create procedure to MMM;
+grant create sequence to MMM;
+grant create session to MMM;
+grant create synonym to MMM;
+grant create table to MMM;
+grant create trigger to MMM;
+grant create view to MMM;
+grant create materialized view to MMM;
+grant unlimited tablespace to MMM;
+grant select any table to MMM;
+grant execute any procedure to MMM;
+*/
+
+SELECT resource_name, limit
+FROM dba_profiles
+WHERE profile = 'DEFAULT'      -- например, 'DEFAULT'
+  AND resource_name = 'FAILED_LOGIN_ATTEMPTS';
+  
+
+--от sysdba  
+ALTER PROFILE DEFAULT LIMIT FAILED_LOGIN_ATTEMPTS UNLIMITED;  
+
+--просмотр аудита, в данном случае логинов с ошибочным паролем
+SELECT
+--* 
+    --timestamp,
+    ntimestamp#, userid,  userhost,    comment$text
+FROM sys.aud$
+WHERE returncode != 0
+ORDER BY ntimestamp# DESC
+;

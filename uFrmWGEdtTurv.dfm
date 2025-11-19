@@ -1,47 +1,47 @@
 inherited FrmWGEdtTurv: TFrmWGEdtTurv
   Caption = 'FrmWGEdtTurv'
-  ClientHeight = 426
-  ClientWidth = 753
+  ClientHeight = 425
+  ClientWidth = 749
   ExplicitWidth = 765
   ExplicitHeight = 464
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 753
-    Height = 410
+    Width = 749
+    Height = 409
     ExplicitWidth = 753
     ExplicitHeight = 410
     inherited pnlFrmClient: TPanel
-      Width = 743
-      Height = 361
+      Width = 739
+      Height = 360
       ExplicitWidth = 739
       ExplicitHeight = 360
       inherited pnlTop: TPanel
-        Width = 743
+        Width = 739
         ExplicitWidth = 739
       end
       inherited pnlBottom: TPanel
-        Top = 315
-        Width = 743
+        Top = 314
+        Width = 739
         ExplicitTop = 314
         ExplicitWidth = 739
       end
       inherited pnlLeft: TPanel
-        Height = 306
+        Height = 305
         ExplicitHeight = 305
       end
       inherited pnlGrid1: TPanel
-        Width = 733
-        Height = 306
+        Width = 729
+        Height = 305
         ExplicitWidth = 729
         ExplicitHeight = 305
         inherited Frg1: TFrDBGridEh
-          Width = 731
-          Height = 304
+          Width = 727
+          Height = 303
           ExplicitWidth = 727
           ExplicitHeight = 303
           inherited pnlGrid: TPanel
-            Width = 721
-            Height = 250
+            Width = 717
+            Height = 249
             ExplicitWidth = 717
             ExplicitHeight = 249
             inherited DbGridEh1: TDBGridEh
@@ -59,20 +59,20 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
             end
           end
           inherited pnlLeft: TPanel
-            Height = 250
+            Height = 249
             ExplicitHeight = 249
           end
           inherited pnlTop: TPanel
-            Width = 731
+            Width = 727
             ExplicitWidth = 727
           end
           inherited pnlContainer: TPanel
-            Width = 731
+            Width = 727
             ExplicitWidth = 727
           end
           inherited pnlBottom: TPanel
-            Top = 304
-            Width = 731
+            Top = 303
+            Width = 727
             ExplicitTop = 303
             ExplicitWidth = 727
           end
@@ -93,15 +93,15 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 320
-        Width = 743
+        Top = 319
+        Width = 739
         ExplicitTop = 319
         ExplicitWidth = 739
         inherited Frg2: TFrDBGridEh
-          Width = 741
+          Width = 737
           ExplicitWidth = 737
           inherited pnlGrid: TPanel
-            Width = 731
+            Width = 727
             ExplicitWidth = 727
             inherited DbGridEh1: TDBGridEh
               Width = 729
@@ -114,15 +114,15 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
             end
           end
           inherited pnlTop: TPanel
-            Width = 741
+            Width = 737
             ExplicitWidth = 737
           end
           inherited pnlContainer: TPanel
-            Width = 741
+            Width = 737
             ExplicitWidth = 737
           end
           inherited pnlBottom: TPanel
-            Width = 741
+            Width = 737
             ExplicitWidth = 737
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -142,15 +142,15 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
         end
       end
       inherited pnlRight: TPanel
-        Left = 738
-        Height = 306
+        Left = 734
+        Height = 305
         ExplicitLeft = 734
         ExplicitHeight = 305
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 366
-      Width = 743
+      Top = 365
+      Width = 739
       ExplicitTop = 365
       ExplicitWidth = 739
       inherited bvlFrmBtnsTl: TBevel
@@ -184,17 +184,13 @@ inherited FrmWGEdtTurv: TFrmWGEdtTurv
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 410
-    Width = 753
+    Top = 409
+    Width = 749
     ExplicitTop = 409
     ExplicitWidth = 749
     inherited lblStatusBarR: TLabel
       Left = 680
-      Height = 14
       ExplicitLeft = 680
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end
