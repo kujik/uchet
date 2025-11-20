@@ -34,7 +34,8 @@ type
     function  LoadTurv: Boolean;
     function  LoadTurvCodes: Boolean;
     procedure PushTurvToGrid;
-public
+    procedure PushTurvCellToGrid(ARow, ADay: Integer);
+  public
   end;
 
 var
@@ -63,6 +64,7 @@ begin
   Caption:='ТУРВ';
   FTurv.Create(ID);
   FTurv.LoadList;
+  FTurv.LoadDays;
 
 //  FDayColumnsCount := DaysBetween(FPeriodEndDate, FPeriodStartDate) + 1;
 
@@ -132,6 +134,9 @@ begin
     ['x$s', '*','20'],
     ['name$s','Работник|ФИО','200'],
     ['job$s','Работник|Должность','150'],
+    ['is_foreman$s','Работник|Бригадир','40','pic'],
+    ['is_trainee$s','Работник|Ученик','40','pic'],
+    ['grade$f','Работник|Разряд','40'],
     ['schedulecode$s','Работник|График','50']
     ] + flds1 + [
     ['time$f', 'Итоги|Время', '50'] ,
@@ -347,13 +352,133 @@ begin
     Frg1.MemTableEh1.Insert;
     Frg1.MemTableEh1.FieldByName('name').Value := FTurv.GetListTitleString(i, 'name');
     Frg1.MemTableEh1.FieldByName('job').Value := FTurv.GetListTitleString(i, 'job');
+    Frg1.MemTableEh1.FieldByName('is_foreman').Value := FTurv.GetListTitleString(i, 'is_foreman');
+    Frg1.MemTableEh1.FieldByName('is_trainee').Value := FTurv.GetListTitleString(i, 'is_trainee');
+    Frg1.MemTableEh1.FieldByName('grade').Value := FTurv.GetListTitleString(i, 'grade');
     Frg1.MemTableEh1.FieldByName('schedulecode').Value := FTurv.GetListTitleString(i, 'schedulecode');
     Frg1.MemTableEh1.Post;
     for j := 1 to 16 do begin
-//      PushTurvCellToGrid(i, j);
+      PushTurvCellToGrid(i, j);
     end;
   end;
 end;
+
+procedure TFrmWGEdtTurvN.PushTurvCellToGrid(ARow, ADay: Integer);
+//отобразим ячейку в общем гриде на основании массива данных
+var
+  st: string;
+  v, v0, v1, v2: Variant;
+  color: Integer;
+  i, j, pos: Integer;
+  sum: TVarDynArray;
+  e: extended;
+  b: Boolean;
+{
+   если протавлено любое значение в проверенных, то выводится оно, независимо от значения и наличия данных от мастера и парсек
+   в противном случае, значение от мастера обязательно должно быть проставлено
+   при этом, если не проставлено значение парсек, выводится значение от мастера и жетый фон
+   если проставлено время парсек, и разница во времени парсек и мастера менее часа, то выводится время парсек
+   если проставлен код парсек, то выводится код парсек, перекрывая значение мастера
+   но если протавлены данные и мастера и парсек, при этом одно из них время а другое код, или оба времена, но отличаются болле часа,
+   то хоть выводится парсек, но цвет красный, требует согласования
+}
+begin
+
+//  v := FArrTurv[ARow][ADay][0];
+  //получим автоматически номер активной строки грида
+  if ARow = -1 then
+    ARow := Frg1.MemTableEh1.RecNo - 1;
+//arow:=1;
+  pos := FTurv.GetPosInDays(ARow, ADay);
+  Frg1.SetValue('d' + IntToStr(ADay), ARow, False, IntToStr(pos));
+  Frg1.DbGridEh1.Invalidate;
+  (*
+
+  v0 := GetTurvCell(ARow, ADay, cTmV);  //проверенное время или код
+  v1 := GetTurvCell(ARow, ADay, cTmM);  //время или код от мастеров
+  v2 := GetTurvCell(ARow, ADay, cTmP);  //время или код парсек
+  color := 0;
+    //если задано проверенное время/код, то выводим его, иначе выводим от мастеров
+  if v0 = null then begin
+    if (v1 = null) and (v2 = null) then begin
+      color := 0;
+    end
+    else if (v1 <> null) and (v2 = null) then begin
+      color := 2;   //жетлтый
+      v0 := v1;
+    end
+    else if (v1 = null) and (v2 <> null) then begin
+      color := 1;   //красный
+      v0 := v2;
+    end
+    else if (not S.IsNumber(S.NSt(v1), 0, 24)) and (not S.IsNumber(S.NSt(v2), 0, 24)) then begin
+      v0 := v2;
+    end
+    else if S.IsNumber(S.NSt(v1), 0, 24) and S.IsNumber(S.NSt(v2), 0, 24) and (abs(StrToFloat(S.NSt(v1)) - StrToFloat(S.NSt(v2))) <= Module.GetCfgVar(mycfgWtime_autoagreed)) then begin
+      v0 := v2;
+      if v1 <> v2 then
+        color := -1; //красный цвет шрифта
+    end
+    else begin
+      v0 := v2;
+      color := 1;
+    end;
+  end;
+  FArrTurv[ARow][ADay][cColor] := color;
+    //при редактировании в основном гриде будем отображать в нем время от мастеров/руководителя
+  if (FInEditMainGridMode) and (FInEditMode) then
+    v0 := v1;
+    //форматируем строку, если число
+  if S.IsNumber(S.NSt(v0), 0, 24) then
+    st := FormatFloat('0.00', S.VarToFloat(v0))
+  else
+    st := S.NSt(v0);
+    //изменим напрямую во внутреннем массиве данных
+    //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
+  Frg1.SetValue('d' + IntToStr(ADay), ARow, False, st);
+  Frg1.DbGridEh1.Invalidate;
+
+  //итоги в правой части таблицы
+  Setlength(sum, 3);
+  b := True;
+  //цикл по дням
+  for i := 1 to FDayColumnsCount do begin
+      //время - от мастеров, если установлено парсек то парсек, если установлено согласованное то оно
+    e := S.NNum(FArrTurv[ARow][i][1]);
+    if (FArrTurv[ARow][i][2] <> null) or (FArrTurv[ARow][i][5] <> null) then
+      e := S.NNum(FArrTurv[ARow][i][2]);
+    if (FArrTurv[ARow][i][3] <> null) or (FArrTurv[ARow][i][6] <> null) then
+      e := S.NNum(FArrTurv[ARow][i][3]);
+    sum[0] := sum[0] + e;
+    sum[1] := sum[1] + S.NNum(FArrTurv[ARow][i][7]);
+    sum[2] := sum[2] + S.NNum(FArrTurv[ARow][i][9]);
+      //ячейки красные и желтые, или пустые итоговые и при этом не серые - не даем возможности закрыть турв
+    if (S.NNum(FArrTurv[ARow][i][12]) = 1) or (S.NNum(FArrTurv[ARow][i][12]) = 2) or ((FArrTurv[ARow][i][0] <> -1) and (FArrTurv[ARow][i][1]) = null) then
+      b := False;
+  end;
+  //заполним итоговые ячейки мемтейбл
+  Frg1.SetValue('time', ARow, False, FormatFloat('0.00', S.NNum(sum[0])));
+  Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle.G(ARow, 'premium'))));
+  Frg1.SetValue('premium', ARow, False, FormatFloat('0.00', S.NNum(sum[1])));
+  Frg1.SetValue('penalty', ARow, False, FormatFloat('0.00', S.NNum(sum[2])));
+  Frg1.SetValue('comm', ARow, False, FArrTitle.G(ARow, 'comm'));
+  //кнопка Закрыть период
+  FStatus := 1;
+  for j := 0 to High(FArrTurv) do begin
+    for i := 1 to FDayColumnsCount do begin
+      if (FArrTurv[j][i][cColor] = -1) and (FStatus = 1) then
+        FStatus := 2;
+      if FArrTurv[j][i][cColor] = 1 then
+        FStatus := 3;
+      if FStatus = 3 then
+        break
+    end;
+    if FStatus = 3 then
+      break
+  end;
+  *)
+end;
+
 
 
 

@@ -84,6 +84,7 @@ type
     FIsCommited: Boolean;
     FTitle: TNamedArr;
     FList: TNamedArr;
+    FDays: TNamedArr;
     function GetCount: Integer;
   public
     property Departament: Variant read FDepartament;
@@ -93,10 +94,13 @@ type
     property DaysCount: Integer read FDaysCount;
     property IsCommited: Boolean read FIsCommited;
     property Count: Integer read GetCount;
+    property Days: TNamedArr read FDays;
     procedure Create(AId: Variant); overload;
     procedure Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime); overload;
     procedure LoadList;
     function GetListTitleString(APos: Integer; AProp: string): string;
+    procedure LoadDays;
+    function GetPosInDays(ARow, ADay: Integer): Integer;
 end;
 
 
@@ -138,7 +142,7 @@ var
   i: Integer;
 begin
   Q.QLoadFromQuery(
-    'select null as pos1, 0 as pos2, id, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
+    'select id, null as pos1, 0 as pos2, dt_beg, dt_end, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
     'name, departament, job, schedulecode ' +
     'from v_w_employee_properties ' +
     'where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) ' +
@@ -165,7 +169,7 @@ begin
   A.VarDynArraySort(va, 0);
   v := '';
   for i := 0 to High(va) do
-    if va[i][1] <> v then begin
+    if va[i][1].AsString <> v.AsString then begin
       S.ConcatStP(Result, va[i][1].AsString, '; ');
       v := va[i][1];
     end;
@@ -179,7 +183,38 @@ begin
   Inc(Result);
 end;
 
+procedure TTurvData.LoadDays;
+begin
+  Q.QLoadFromQuery(
+    'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
+    'comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
+    'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
+    'order by dt',
+     [FDtBeg, FDtEnd],
+     FDays
+  );
+end;
 
+function TTurvData.GetPosInDays(ARow, ADay: Integer): Integer;
+var
+  i, j, k: Integer;
+  v: Variant;
+begin
+//v:=FList.V[0][0];
+  Result := -1;
+  for i := 0 to FList.Count - 1 do begin
+    if FList.G(i, 'pos1') = ARow then begin
+      if (FList.G(i, 'dt_beg') <= IncDay(FDtBeg, ADay - 1)) and ((FList.G(i, 'dt_end') = null) or (FList.G(i, 'dt_end') >= IncDay(FDtBeg, ADay - 1))) then begin
+        Result := -2;
+        for j := 0 to FDays.Count - 1 do
+          if (FDays.G(j, 'dt') = IncDay(FDtBeg, ADay - 1)) and  (FDays.G(j, 'id_employee_properties') = FList.G(i, 'id')) then begin
+            Result := j;
+            Exit;
+          end;
+      end;
+    end;
+  end;
+end;
 
 
 
