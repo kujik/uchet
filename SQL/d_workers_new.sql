@@ -445,6 +445,9 @@ delete from w_turv_period;
 insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
 
 
+select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = 2799;
+
+
 --------------------------------------------------------------------------------
 
 --alter  table _wturv_day add nighttime number(4,2);
@@ -591,6 +594,10 @@ FROM all_users u
 LEFT JOIN last_significant_event s ON u.id_user = s.id_user AND s.rn = 1
 LEFT JOIN last_any_event a ON u.id_user = a.id_user AND a.rn = 1;
 */
+
+
+
+select null as pos1, 0 as pos2, id, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, name, departament, job, schedulecode from v_w_employee_properties where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or (dt_end >= :dt_end2$d and dt_end >= :dt_beg$d)) and id_departament = 5 order by name, dt_beg, job;
 
 
 

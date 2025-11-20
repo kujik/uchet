@@ -98,7 +98,9 @@ uses
   uFrmOGinfSgp,
 
   uFrmWGedtPayroll,
-  uFrmWDedtCreatePayroll
+  uFrmWDedtCreatePayroll,
+
+  uFrmWGEdtTurvN
   ;
 
 
@@ -682,7 +684,7 @@ begin
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['commit','_Commit','40'],
-      ['editusers','_EditUsers','40'],
+      ['ids_editusers','_EditUsers','40'],
       ['code','Код','50'],
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
@@ -694,7 +696,7 @@ begin
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
 v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -2175,6 +2177,12 @@ begin
   else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
     TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
+  else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin  //!T
+      Wh.ExecDialog(myfrm_Dlg_Turv, Self, [], fMode, Fr.ID, null);
+    TFrmWGEdtTurvN.Show(Self, 'qwert8', [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, Fr.ID, null);
+  end
+
+
   else inherited;
 
 end;

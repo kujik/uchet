@@ -195,7 +195,8 @@ uses
   uFrmOGselOrReglament in 'uFrmOGselOrReglament.pas' {FrmOGselOrReglament},
   uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament},
   uFrmWGjrnEmployees in 'uFrmWGjrnEmployees.pas' {FrmWGjrnEmployees},
-  uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties};
+  uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties},
+  uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN};
 
 var
   MT: Integer;

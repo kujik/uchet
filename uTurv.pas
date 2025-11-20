@@ -73,6 +73,33 @@ type
     procedure ConvertEmployees202511;
   end;
 
+  TTurvData = record //class(TObject)
+  private
+    FId: Variant;
+    FDepartament: Variant;
+    FEmployee: Variant;
+    FDtBeg: TDateTime;
+    FDtEnd: TDateTime;
+    FDaysCount: Integer;
+    FIsCommited: Boolean;
+    FTitle: TNamedArr;
+    FList: TNamedArr;
+    function GetCount: Integer;
+  public
+    property Departament: Variant read FDepartament;
+    property Employee: Variant read FEmployee;
+    property DtBeg: TDateTime read FDtBeg;
+    property DtEnd: TDateTime read FDtEnd;
+    property DaysCount: Integer read FDaysCount;
+    property IsCommited: Boolean read FIsCommited;
+    property Count: Integer read GetCount;
+    procedure Create(AId: Variant); overload;
+    procedure Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime); overload;
+    procedure LoadList;
+    function GetListTitleString(APos: Integer; AProp: string): string;
+end;
+
+
 var
   Turv: TTurv;
 
@@ -86,6 +113,78 @@ uses
   uDBParsec,
   uFrmBasicInput
   ;
+
+procedure TTurvData.Create(AId: Variant);
+begin
+  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = :id$i', [AId], FTitle);
+  FDepartament := FTitle.G('id_departament');
+  FEmployee := null;
+  FDtBeg := FTitle.G('dt1');
+  FDtEnd := FTitle.G('dt2');
+  FDaysCount := DaysBetween(FDtEnd, FDtBeg) + 1;
+end;
+
+procedure TTurvData.Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime);
+begin
+  FDepartament := ADepartament;
+  FEmployee := AEmployee;
+  FDtBeg := Turv.GetTurvBegDate(ADt);
+  FDtEnd := Turv.GetTurvEndDate(ADt);
+  FDaysCount := DaysBetween(FDtEnd, FDtBeg) + 1;
+end;
+
+procedure TTurvData.LoadList;
+var
+  i: Integer;
+begin
+  Q.QLoadFromQuery(
+    'select null as pos1, 0 as pos2, id, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
+    'name, departament, job, schedulecode ' +
+    'from v_w_employee_properties ' +
+    'where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) ' +
+    'and id_departament = :id_dep$i ' +
+    'order by name, dt_beg, job',
+    [FDtEnd, FDtBeg, FDepartament],
+    FList
+  );
+  for i := 0 to FList.Count - 1 do
+    FList.SetValue(i, 'pos1', i);
+end;
+
+function TTurvData.GetListTitleString(APos: Integer; AProp: string): string;
+var
+  i, p: Integer;
+  va: TVarDynArray2;
+  v: Variant;
+begin
+  Result := '';
+  va := [];
+  for i := 0 to FList.Count - 1 do
+    if FList.G(i, 'pos1') = APos then
+      va := va + [[FList.G(i, 'pos2'), FList.G(i, AProp)]];
+  A.VarDynArraySort(va, 0);
+  v := '';
+  for i := 0 to High(va) do
+    if va[i][1] <> v then begin
+      S.ConcatStP(Result, va[i][1].AsString, '; ');
+      v := va[i][1];
+    end;
+end;
+
+function TTurvData.GetCount: Integer;
+begin
+  Result := -1;
+  for var i: Integer := 0 to FList.Count- 1 do
+    Result := Max(Result, FList.G(i, 'pos1'));
+  Inc(Result);
+end;
+
+
+
+
+
+
+
 
 constructor TTurv.Create;
 begin
