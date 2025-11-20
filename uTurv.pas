@@ -85,6 +85,8 @@ type
     FTitle: TNamedArr;
     FList: TNamedArr;
     FDays: TNamedArr;
+    FTurvCodes: TNamedArr;
+    FTurvCodeWeekend: Integer;
     function GetCount: Integer;
   public
     property Departament: Variant read FDepartament;
@@ -94,14 +96,23 @@ type
     property DaysCount: Integer read FDaysCount;
     property IsCommited: Boolean read FIsCommited;
     property Count: Integer read GetCount;
+    property Title: TNamedArr read FTitle;
+    property List: TNamedArr read FList;
     property Days: TNamedArr read FDays;
+    property TurvCodes: TNamedArr read FTurvCodes;
+    property TurvCodeWeekend: Integer read FTurvCodeWeekend;
     procedure Create(AId: Variant); overload;
     procedure Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime); overload;
     procedure LoadList;
-    function GetListTitleString(APos: Integer; AProp: string): string;
+    function  GetListTitleString(APos: Integer; AProp: string): string;
     procedure LoadDays;
-    function GetPosInDays(ARow, ADay: Integer): Integer;
-end;
+    procedure LoadTurvCodes;
+    function  GetTurvCode(AValue: Variant): Variant;
+    function  GetPosInList(ARow, ADay: Integer): Integer;
+    function  GetPosInDays(ARow, ADay: Integer): Integer;
+    function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+  end;
 
 
 var
@@ -120,7 +131,7 @@ uses
 
 procedure TTurvData.Create(AId: Variant);
 begin
-  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = :id$i', [AId], FTitle);
+  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
   FDepartament := FTitle.G('id_departament');
   FEmployee := null;
   FDtBeg := FTitle.G('dt1');
@@ -195,12 +206,44 @@ begin
   );
 end;
 
+procedure TTurvData.LoadTurvCodes;
+//загрузим справочник кодов турв
+begin
+  FTurvCodeWeekend := -1;
+  Q.QLoadFromQuery('select id, code, name from ref_turvcodes order by code', [], FTurvCodes);
+  for var j: Integer := 0 to FTurvCodes.Count - 1 do
+    if FTurvCodes.G(j, 'code') = '¬' then
+      FTurvCodeWeekend := FTurvCodes.G(j, 'id');
+end;
+
+function TTurvData.GetTurvCode(AValue: Variant): Variant;
+//получим код турв по айди этого кода
+var
+  i: Integer;
+begin
+  Result := null;
+  i := A.PosInArray(AValue, FTurvCodes.V, 0);
+  if i >= 0 then
+    Result := FTurvCodes.V[i][1];
+end;
+
+function TTurvData.GetPosInList(ARow, ADay: Integer): Integer;
+begin
+  Result := -1;
+  for var i: Integer := 0 to FList.Count - 1 do begin
+    if FList.G(i, 'pos1') = ARow then begin
+      if (FList.G(i, 'dt_beg') <= IncDay(FDtBeg, ADay - 1)) and ((FList.G(i, 'dt_end') = null) or (FList.G(i, 'dt_end') >= IncDay(FDtBeg, ADay - 1))) then begin
+        Result := i;
+        Exit;
+      end;
+    end;
+  end;
+end;
+
 function TTurvData.GetPosInDays(ARow, ADay: Integer): Integer;
 var
   i, j, k: Integer;
-  v: Variant;
 begin
-//v:=FList.V[0][0];
   Result := -1;
   for i := 0 to FList.Count - 1 do begin
     if FList.G(i, 'pos1') = ARow then begin
@@ -216,6 +259,67 @@ begin
   end;
 end;
 
+function TTurvData.GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+var
+  pos: Integer;
+begin
+  Result := '';
+  AColor := -1;
+  pos := GetPosInDays(ARow, ADay);
+  if pos = -1 then
+    Exit;
+  AColor := 0;
+  if pos = -2 then
+    Exit;
+  if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
+    Result := FDays.G(pos, 'worktime' + IntToStr(ANum))
+  else
+    Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));
+end;
+
+
+function TTurvData.GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+var
+  pos: Integer;
+  v0, v1, v2: Variant;
+begin
+  Result := '';
+  AColor := -1;
+  pos := GetPosInDays(ARow, ADay);
+  if pos = -1 then
+    Exit;
+  v0 := GetDayCell(ARow, ADay, 3, AColor);  //проверенное врем€ или код
+  v1 := GetDayCell(ARow, ADay, 1, AColor);  //врем€ или код от мастеров
+  v2 := GetDayCell(ARow, ADay, 2, AColor);  //врем€ или код парсек
+  AColor := 0;
+    //если задано проверенное врем€/код, то выводим его, иначе выводим от мастеров
+  if v0 = null then begin
+    if (v1 = null) and (v2 = null) then begin
+      AColor := 0;
+    end
+    else if (v1 <> null) and (v2 = null) then begin
+      AColor := 2;   //жетлтый
+      v0 := v1;
+    end
+    else if (v1 = null) and (v2 <> null) then begin
+      AColor := 1;   //красный
+      v0 := v2;
+    end
+    else if (not S.IsNumber(S.NSt(v1), 0, 24)) and (not S.IsNumber(S.NSt(v2), 0, 24)) then begin
+      v0 := v2;
+    end
+    else if S.IsNumber(S.NSt(v1), 0, 24) and S.IsNumber(S.NSt(v2), 0, 24) and (abs(StrToFloat(S.NSt(v1)) - StrToFloat(S.NSt(v2))) <= Module.GetCfgVar(mycfgWtime_autoagreed)) then begin
+      v0 := v2;
+      if v1 <> v2 then
+        AColor := 4; //красный цвет шрифта
+    end
+    else begin
+      v0 := v2;
+      AColor := 1;
+    end;
+  end;
+  Result := v0;
+end;
 
 
 

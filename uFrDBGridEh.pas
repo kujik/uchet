@@ -670,6 +670,8 @@ type
     procedure SetIndicatorCheckBoxesByField(FieldName: string; Values: TVarDynArray);
     //получить ширину таблицы, посчитав ширины видимых столбцов
     function  GetTableWidth: Integer;
+    //обновить данные грида
+    procedure InvalidateGrid;
 
 
     {функции настройки фрейма, управления его свойствами во время выполнения}
@@ -2509,6 +2511,13 @@ begin
     if DBGridEh1.Columns[i].Visible then
       Result := Result + DBGridEh1.Columns[i].Width;
 end;
+
+procedure TFrDBGridEh.InvalidateGrid;
+begin
+  DbGridEh1.Invalidate;
+end;
+
+
 
 
 {

@@ -39,10 +39,7 @@ inherited FrmWGedtTurvN: TFrmWGedtTurvN
             inherited DbGridEh1: TDBGridEh
               Width = 632
               Height = 150
-              inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
-                ExplicitHeight = 120
-              end
+              OnAdvDrawDataCell = Frg1DbGridEh1AdvDrawDataCell
             end
             inherited pnlStatusBar: TPanel
               Top = 151
@@ -88,10 +85,6 @@ inherited FrmWGedtTurvN: TFrmWGedtTurvN
             Width = 644
             inherited DbGridEh1: TDBGridEh
               Width = 642
-              inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
-                ExplicitWidth = 32
-              end
             end
             inherited pnlStatusBar: TPanel
               Width = 642

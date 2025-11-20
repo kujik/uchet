@@ -100,7 +100,7 @@ uses
   uFrmWGedtPayroll,
   uFrmWDedtCreatePayroll,
 
-  uFrmWGEdtTurvN
+  uFrmWGEdtTurv
   ;
 
 
@@ -2178,8 +2178,7 @@ begin
     TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
   else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin  //!T
-      Wh.ExecDialog(myfrm_Dlg_Turv, Self, [], fMode, Fr.ID, null);
-    TFrmWGEdtTurvN.Show(Self, 'qwert8', [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, Fr.ID, null);
+    TFrmWGEdtTurv.Show(Self, 'OLD-TURV', [myfoDialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
   end
 
 

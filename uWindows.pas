@@ -116,7 +116,7 @@ uses
   D_ExpenseItems,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
-  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
+  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
 
 
   D_Order, D_LoadKB,
@@ -897,7 +897,7 @@ begin
     TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_Turv then begin
-    TFrmWGEdtTurv.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, AID, null);
+    TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, AID, null);
   end
   else if F = myfrm_Dlg_AddTurv then begin
 //~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);
