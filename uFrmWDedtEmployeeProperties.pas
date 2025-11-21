@@ -57,12 +57,21 @@ function TFrmWDedtEmployeeProperties.Prepare: Boolean;
 var
   v: Variant;
   DtVer: string;
+  va: TVarDynArray;
 begin
   Result := False;
   FIdEmp := AddParam;
   if Mode <> fView then begin
     //получим айди последней по работнику записи
-    FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id$i order by id desc', [FIdEmp])[0];
+    FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [FIdEmp])[0];
+    if (Mode = fDelete) then begin
+      //в случае удаления статуса - выйдем если нет записей, иначе возьмем айди последней
+      if FIdLast = null then
+        Exit;
+      ID := FIdLast;
+      //и найдем запись, предшествующую последней
+      FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id_e$i and id <> :id$i order by id desc', [FIdEmp, ID])[0];
+    end;
     //получим все поля этой записи
     if FIdLast <> null then
       Q.QLoadFromQuery('select * from w_employee_properties where id = :id$i', [FIdLast], FLastRec);
@@ -71,17 +80,13 @@ begin
     //в режиме создания нового статуса, если он не первый для работника и последний не есть увольнение, поставим режим копирования и айди послдедней записи
     ID := FIdLast;
     Mode := fCopy;
-  end
-  else if (Mode = fDelete) then begin
-    //в случае удаления статуса - выйдем если нет записей, иначе возьмем айди последней
-    if FIdLast = null then
-      Exit;
-    ID := FIdLast;
   end;
   //первоначальнай режим прием/перевод/увольнение (только прием при первом или после увольения, какой есть для просмотра или удаления, в противном случае не выбран)
   FIdMode := null;
-  if Mode in [fView, fDelete] then
-    FIdMode := S.IIf(FLastRec.G('is_terminated') = 1, 3, S.IIf(FLastRec.G('is_hired') = 1, 1, 2))
+  if Mode in [fView, fDelete] then begin
+    va := Q.QSelectOneRow('select is_terminated, is_hired from w_employee_properties where id = :id$i', [ID]);
+    FIdMode := S.IIf(va[0] = 1, 3, S.IIf(va[1] = 1, 1, 2));
+  end
   else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
     FIdMode := 1;
   DtVer :='*:*';
@@ -158,24 +163,38 @@ var
   st, st1: string;
   dt: TDateTime;
 begin
+  Result := True;
   Q.QBeginTrans(True);
-  //вызовем родительскую процедуру (поле FID будет обновлено)
-  Result := inherited;
-  if Result then begin
     //проставим дату окончания прошлого статуса, если он не является увольнением (у увольнения нет конечно даты)
-    if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then
-      if Mode = fDelete then begin
-      //при удалении очистим конечную дату прошлого статуса
-        Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [null, FIdLast]);
-      end
-      else begin
+  if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
+    if Mode = fDelete then begin
+      //при удалении стутуса конечную дату прошлого статуса
+      Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [null, FIdLast]);
+      //и присвоим всем дням с удаленным id_employee_properties айди того, к которому откатились
+      Q.QExecSql('update w_turv_day set id_employee_properties = :id_last$i where id_employee_properties = :id$i', [FIdLast, ID]);
+      //вызовем родительскую процедуру (поле FID будет обновлено)
+      Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
+      //!!! ЕСЛИ ДЕЛАТЬ ТАК - СТРАННАЯ ОШИБКА ПРИ УДАЛЕНИИ, НАДО РАЗБИРАТЬСЯ - В ЛОГАХ ДРУГОЙ АЙДИ!!!
+ //     Result := inherited;
+    end
+    else begin
+      //вызовем родительскую процедуру (поле FID будет обновлено)
+      Result := inherited;
       //при добавлении конечную дату прошлого поставим на день раньше начала созданного статуса,
       //но если увольнение - поставим днем начала (днем увольнения, так по тк)
-        Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
+      Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
       //если дата окончания прошлого периода оказалась меньше даты его начала, то удалим его
-        Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
-      end;
-  end;
+      Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
+      if GetcontrolValue('cmb_id_mode').AsInteger = 3 then
+        //если увольнение, то удалим безвозвратно данные по дням для этого работника после и в дату увольнения
+        Q.QExecSql('delete from w_turv_day where id_employee = :id_e$i and dt >= :dt_beg$d', [FIdEmp, GetcontrolValue('dedt_dt_beg')])
+      else
+        //при переводе поправим в данных по дням айди статуса для работника после начала действия созданного статуса на его айди
+        Q.QExecSql('update w_turv_day set id_employee_properties = :id$i where id_employee = :id_e$i and dt >= :dt_beg$d', [ID, FIdEmp, GetcontrolValue('dedt_dt_beg')]);
+    end;
+  end
+  else
+    Result := inherited;
   Q.QCommitOrRollback(Result);
 end;
 
