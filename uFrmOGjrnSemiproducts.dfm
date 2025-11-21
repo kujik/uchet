@@ -5,33 +5,46 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Height = 522
+    ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
       Height = 473
+      ExplicitWidth = 786
       inherited pnlBottom: TPanel
         Top = 427
+        ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
         Height = 418
+        ExplicitHeight = 417
       end
       inherited pnlGrid1: TPanel
         Height = 418
+        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
           Height = 416
+          ExplicitWidth = 774
           inherited pnlGrid: TPanel
             Height = 362
+            ExplicitHeight = 361
             inherited DbGridEh1: TDBGridEh
+              Height = 339
               OnApplyFilter = Frg1DbGridEh1ApplyFilter
               OnDataGroupGetRowText = Frg1DbGridEh1DataGroupGetRowText
               OnDataGroupGetRowParams = Frg1DbGridEh1DataGroupGetRowParams
               OnDrawDataCell = Frg1DbGridEh1DrawDataCell
               OnKeyDown = Frg1DbGridEh1KeyDown
             end
+            inherited pnlStatusBar: TPanel
+              Top = 340
+            end
           end
           inherited pnlLeft: TPanel
             Height = 362
+            ExplicitHeight = 361
           end
           inherited pnlBottom: TPanel
             Top = 416
+            ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -51,6 +64,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
       end
       inherited pnlFrg2: TPanel
         Top = 432
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 784
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -71,6 +85,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
       end
       inherited pnlRight: TPanel
         Height = 418
+        ExplicitHeight = 417
       end
     end
     inherited pnlFrmBtns: TPanel
@@ -79,5 +94,12 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
   end
   inherited pnlStatusBar: TPanel
     Top = 522
+    ExplicitTop = 521
+    inherited lblStatusBarR: TLabel
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
   end
 end

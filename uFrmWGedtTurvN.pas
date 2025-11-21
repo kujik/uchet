@@ -118,7 +118,7 @@ begin
   //если турв был открыт на реадктирование, то редактируемость установим = не закрыт, и блокировок не делаем, ту она уже вз€та при открытии турв
   //если же был в режиме просмотра, то в режим редактировани€ не переходим
 }
-  FInEditMode := (Mode = fEdit) and (not FTurv.Title.G('commit'));
+  FInEditMode := (Mode = fEdit) and (not FTurv.Title.G('is_finalized'));
   //режим ввода времени руководител€ - если права на ввод этого времени, но не ввод парсек или согласованного
   FInEditMainGridMode := FInEditMode and FRgsEdit1 and not (FRgsEdit2 or FRgsEdit3);
 
@@ -176,7 +176,7 @@ begin
     [],
     [mbtSendEMail, FRgsEdit2 and FInEditMode],
     [mbtCustom_SundaysToTurv, FInEditMode and FRgsEdit2, FInEditMode],
-    [mbtLock, FRgsCommit and (FTurv.IsCommited or (Mode = fEdit)), True, S.IIFStr(FTurv.IsCommited, 'ќтменить закрытие периода', '«акрыть период')],
+    [mbtLock, FRgsCommit and (FTurv.IsFinalized or (Mode = fEdit)), True, S.IIFStr(FTurv.IsFinalized, 'ќтменить закрытие периода', '«акрыть период')],
     [],
     [mbtPrint],
     [],
@@ -284,7 +284,7 @@ var
 begin
   //блокировки
   //нужны только в режиме редактировани€ и если период еще не закрыт
-  if not ((Mode = fEdit) and not FTurv.IsCommited) then
+  if not ((Mode = fEdit) and not FTurv.IsFinalized) then
     Exit;
   st := '';
   st1 := '';
@@ -520,7 +520,7 @@ begin
     st := '¬вод данных';
     stc := '$FF00FF';
   end
-  else if (FTurv.Title.G('commit').AsInteger = 1) then begin
+  else if (FTurv.Title.G('is_finalized').AsInteger = 1) then begin
     st := '“олько просмотр, период закрыт';
     stc := '$0000FF';
   end
@@ -604,8 +604,8 @@ end;
 
 procedure TFrmWGEdtTurvN.SetGridEditableMode;
 begin
-  Frg1.DbGridEh1.ReadOnly := not FRgsEdit1 or not FInEditMode or not FInEditMainGridMode or (FTurv.Title.G('commit').AsInteger = 1);
-  Frg2.DbGridEh1.ReadOnly := not FInEditMode or (FTurv.Title.G('commit').AsInteger = 1);
+  Frg1.DbGridEh1.ReadOnly := not FRgsEdit1 or not FInEditMode or not FInEditMainGridMode or (FTurv.Title.G('is_finalized').AsInteger = 1);
+  Frg2.DbGridEh1.ReadOnly := not FInEditMode or (FTurv.Title.G('is_finalized').AsInteger = 1);
   Frg1.Invalidate;
   Frg2.Invalidate;
 end;

@@ -3226,7 +3226,6 @@ object FrmMain: TFrmMain
     Color = clAppWorkSpace
     ParentColor = False
     Visible = False
-    ExplicitTop = 560
     ExplicitWidth = 74
   end
   object StatusBar: TStatusBar
@@ -3245,6 +3244,8 @@ object FrmMain: TFrmMain
         Alignment = taRightJustify
         Width = 200
       end>
+    ExplicitTop = 571
+    ExplicitWidth = 972
   end
   object TlbMain: TToolBar
     Left = 0
@@ -3265,6 +3266,7 @@ object FrmMain: TFrmMain
     TabOrder = 1
     Visible = False
     Wrapable = False
+    ExplicitWidth = 972
   end
   object FormsList: TToolBar
     Left = 0
@@ -3281,6 +3283,8 @@ object FrmMain: TFrmMain
     AllowTextButtons = True
     TabOrder = 2
     Transparent = False
+    ExplicitTop = 539
+    ExplicitWidth = 972
   end
   object MainMenu: TMainMenu
     Left = 808

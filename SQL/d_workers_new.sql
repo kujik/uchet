@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 --профессии
-drop table w_jobs cascade constraints;
+--drop table w_jobs cascade constraints;
 create table w_jobs(
   id number(11),
   name varchar2(400),
@@ -97,7 +97,7 @@ insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers;
 
 --------------------------------------------------------------------------------
 --подразделения
-drop table w_departments cascade constraints;
+--drop table w_departments cascade constraints;
 create table w_departaments(
   id number(11),
   code varchar(5),
@@ -147,6 +147,7 @@ where
   and a.id = d.id_prod_area
 ;     
 
+select * from v_w_departaments; 
 
 --------------------------------------------------------------------------------
 --таблица графиков работы
@@ -243,7 +244,7 @@ create table w_employee_properties(
   is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   is_foreman number(1) default 0,
   is_trainee number(1) default 0,           --ученик
-  grade nuber default 1,                    --разряд
+  grade number default 1,                   --разряд
   comm varchar(4000), 
   id_manager number(1),
   --deleted number(1) default 0,              
@@ -409,7 +410,7 @@ create table w_turv_period(
   id_departament number(11),        --подразделение
   dt1 date,                         --дата начала периода ТУРВ
   dt2 date,                         --дата конца периода ТУРВ
-  commit number(1),                 --период закрыт
+  is_finalized number(1),           --период закрыт
   status number(1),                 --статус заполенности данных
   constraint pk_w_turv_period  primary key (id),
   constraint fk_w_turv_period_dep foreign key (id_departament) references ref_divisions(id)
@@ -429,7 +430,7 @@ select
   p.*,
   d.name,
   case when d.is_office = 1 then 'офис' else 'цех' end as isoffice,
-  case when p.commit = 1 then 'закрыт' else '' end as committxt,
+  case when p.is_finalized = 1 then 'закрыт' else '' end as finalized,
   getusernames(d.ids_editusers) as editusernames,
   d.ids_editusers,
   d.code 
@@ -441,8 +442,8 @@ where
 ;   
 
 --!
-delete from w_turv_period;
-insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
+select * from w_turv_period;
+insert into w_turv_period (id, id_departament, dt1, dt2, is_finalized, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
 
 
 select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = 2799;
@@ -598,6 +599,10 @@ LEFT JOIN last_any_event a ON u.id_user = a.id_user AND a.rn = 1;
 
 
 select null as pos1, 0 as pos2, id, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, name, departament, job, schedulecode from v_w_employee_properties where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or (dt_end >= :dt_end2$d and dt_end >= :dt_beg$d)) and id_departament = 5 order by name, dt_beg, job;
+
+
+
+select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, comm1, comm2, comm3, begtime, endtime, settime3, nighttime from w_turv_day where  id_employee_properties in (979,17) order by dt;
 
 
 

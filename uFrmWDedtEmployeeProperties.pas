@@ -1,5 +1,8 @@
 {
-при выборе Уволить - заблокировать все поля, и установить их из гетпропб!!!
+проверка что были изменения при добавлении статуса по сравнению с прошлым статусом
+диапозон дат начала статуса
+блокировки, уведомления
+режим редактирования для разработчика
 }
 
 unit uFrmWDedtEmployeeProperties;
@@ -89,17 +92,19 @@ begin
   end
   else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
     FIdMode := 1;
+  //проверка начальной даты
+  //при добавлении статуса, дата позднее начальной даты прошлого статуса, если это ббыли прием или увольнение, или дата его начала, если это перевод (перевод можно перекрыть)
   DtVer := '*:*';
   if (Mode in [fAdd, fCopy]) then begin
     DtVer := DateToStr(IncDay(Date, -62));
     if (FIdLast <> null) then
-      if FLastRec.G('is_terminated') = 1 then
+      if (FLastRec.G('is_terminated') = 1) or (FLastRec.G('is_hired') = 1) then
         DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 1))
       else
         DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
     DtVer := 'V=' + DtVer + ':' +  S.DateTimeToIntStr(IncDay(Date, +16));
   end;
-  Caption := S.Decode([Mode, fCopy, 'Добавить статус работника', fAdd, 'Добавить статус работника', fDelete, 'Удалить статус работника', 'Статус работника']);
+  Caption := '~' + S.Decode([Mode, fCopy, 'Статус работника - Добавить', fAdd, 'Статус работника - Добавить', fDelete, 'Статус работника - Удалить', 'Статус работника - Просмотреть']);
   F.DefineFields:=[
     ['id$i'],
     ['dt$d',#0,Date],
@@ -128,10 +133,9 @@ begin
      ,not A.InArray(Mode, [fView, fDelete]) {and (User.GetId = S.NInt(CtrlValues[3]))}
     ],
     [
-     'Если вы исполнитель, поставьте текущий статус задачи, и, если нужно, комментарий к ней.'#13#10+
      ''#13#10
     ,not A.InArray(Mode, [fView, fDelete])],
-    ['Данные задачи'
+    [''
     ,A.InArray(Mode, [fView, fDelete])]
   ];
   FWHBounds.Y2 := -1;
@@ -180,9 +184,9 @@ begin
       //и присвоим всем дням с удаленным id_employee_properties айди того, к которому откатились
       Q.QExecSql('update w_turv_day set id_employee_properties = :id_last$i where id_employee_properties = :id$i', [FIdLast, ID]);
       //вызовем родительскую процедуру (поле FID будет обновлено)
-      Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
+ //     Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
       //!!! ЕСЛИ ДЕЛАТЬ ТАК - СТРАННАЯ ОШИБКА ПРИ УДАЛЕНИИ, НАДО РАЗБИРАТЬСЯ - В ЛОГАХ ДРУГОЙ АЙДИ!!!
- //     Result := inherited;
+      Result := inherited;
     end
     else begin
       //вызовем родительскую процедуру (поле FID будет обновлено)
@@ -190,20 +194,20 @@ begin
       //при добавлении конечную дату прошлого поставим на день раньше начала созданного статуса,
       //но если увольнение - поставим днем начала (днем увольнения, так по тк)
       Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
-      //если дата окончания прошлого периода оказалась меньше даты его начала, то удалим его
-      Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
       if GetcontrolValue('cmb_id_mode').AsInteger = 3 then
         //если увольнение, то удалим безвозвратно данные по дням для этого работника после и в дату увольнения
         Q.QExecSql('delete from w_turv_day where id_employee = :id_e$i and dt >= :dt_beg$d', [FIdEmp, GetcontrolValue('dedt_dt_beg')])
       else
         //при переводе поправим в данных по дням айди статуса для работника после начала действия созданного статуса на его айди
         Q.QExecSql('update w_turv_day set id_employee_properties = :id$i where id_employee = :id_e$i and dt >= :dt_beg$d', [ID, FIdEmp, GetcontrolValue('dedt_dt_beg')]);
+      //если дата окончания прошлого периода оказалась меньше даты его начала, то удалим его
+      Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
     end;
   end
   else
     //если нет предыдущего статуса, или же предыдущий есть увольнение - просто обработаем текущую строку
     //(это либо удаление последнего статуса, либо приём на работу)
-    //для увольнения не нужно корректировать дату    и править таблицу дней
+    //для увольнения не нужно корректировать дату и править таблицу дней
     Result := inherited;
   Q.QCommitOrRollback(Result);
 end;

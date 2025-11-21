@@ -81,7 +81,7 @@ type
     FDtBeg: TDateTime;
     FDtEnd: TDateTime;
     FDaysCount: Integer;
-    FIsCommited: Boolean;
+    FIsFinalized: Boolean;
     FTitle: TNamedArr;
     FList: TNamedArr;
     FDays: TNamedArr;
@@ -94,7 +94,7 @@ type
     property DtBeg: TDateTime read FDtBeg;
     property DtEnd: TDateTime read FDtEnd;
     property DaysCount: Integer read FDaysCount;
-    property IsCommited: Boolean read FIsCommited;
+    property IsFinalized: Boolean read FIsFinalized;
     property Count: Integer read GetCount;
     property Title: TNamedArr read FTitle;
     property List: TNamedArr read FList;
@@ -131,7 +131,7 @@ uses
 
 procedure TTurvData.Create(AId: Variant);
 begin
-  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
+  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
   FDepartament := FTitle.G('id_departament');
   FEmployee := null;
   FDtBeg := FTitle.G('dt1');

@@ -560,10 +560,10 @@ begin
   end               }
   else if FormDoc = myfrm_R_Jobs then begin
     Frg1.Options := Frg1.Options + [myogGridLabels, myogFastRefresh];
-    Caption:='Справочник профессий';
+    Caption:='Справочник должностей';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['name','Профессия','300'],
+      ['name','Должность','300'],
       ['comm','Комментарий','200;h'],
       ['active$i','Используется','75','pic']
     ]);
@@ -571,7 +571,7 @@ begin
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Jobs_Ch));
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Jobs;
     Frg1.InfoArray:=[[Caption + #13#10 +
-      'Профессии из этого списка будут доступны для назначения работникам.'#13#10 +
+      'Должности из этого списка будут доступны для назначения работникам.'#13#10 +
       'Используйте кнопки в заголовке таблицы для действий с данными и настрокйи вида таблицы.'#13#10 +
       'Те же и, возможно, дополнительные действия доступны по нажатию правой кнопки мыши.'#13#10 +
       'Если запись больше не планируется использовать, снимите галочку "используется".'#13#10 +
@@ -683,18 +683,18 @@ begin
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['commit','_Commit','40'],
+      ['is_finalized','_Commit','40'],
       ['ids_editusers','_EditUsers','40'],
       ['code','Код','50'],
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['committxt','Закрыта','60','pic=закрыт:13'],
+      ['finalized','Закрыта','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
     Frg1.Opt.SetTable('v_w_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
-    v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
+    v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
 v:=True;
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
@@ -2272,7 +2272,7 @@ begin
   if (FormDoc = myfrm_J_Turv) and Fr.IsNotEmpty then
     //для турв, на редактирование только указанным пользователям и только если период не закрыт
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtEdit, null,
-      (Fr.GetValueI('commit') <> 1) and (User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]) or S.InCommaStr(IntToStr(User.GetId), Fr.GetValueS('editusers')))
+      (Fr.GetValueI('is_finalized') <> 1) and (User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]) or S.InCommaStr(IntToStr(User.GetId), Fr.GetValueS('ids_editusers')))
     );
 
   if FormDoc = myfrm_J_Tasks then begin

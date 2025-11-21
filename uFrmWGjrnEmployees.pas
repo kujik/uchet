@@ -114,6 +114,7 @@ begin
    [mbtRefresh], [], [mbtView, True, 'ѕросмотреть выбранный статус работника'], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'ƒобавить статус работника'],
    [mbtDelete, 1, '”далить последний статус работника'], [], [mbtGridSettings], [mbtTest, User.IsDeveloper]
   ]);
+  Frg2.Opt.SetButtonsIfEmpty([mbtTest]);
 
   Result := inherited;
 end;
@@ -155,6 +156,8 @@ procedure TFrmWGjrnEmployees.Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const
 var
   i ,j, p: Integer;
 begin
+  if Fr.GetCount = 0 then
+    Exit;
   if A.InArray(FieldName, ['job', 'grade', 'organization', 'departament', 'schedulecode', 'foreman', 'concurrent', 'trainee']) then begin
     p := Fr.GetValue('rn');
     if (p > 1) and (Fr.GetValueS('status') = 'переведен') then begin

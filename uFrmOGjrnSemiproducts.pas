@@ -794,7 +794,7 @@ function TFrmOGjrnSemiproducts.GetDataForSemiproducts: Boolean;
 //получаем для всех номенклатурных позиций во всех заказах, назначенных к обработке,
 //данные по номенклатуре - айди соотвествующенго стд изделия, айди щаблона, есть ли смета
 var
-  i, j, k, tmpl: Integer;
+  i, j, k, p, tmpl: Integer;
   va2: TVarDynArray2;
   nm, msg, msg1: string;
   b: Boolean;
@@ -812,19 +812,24 @@ begin
     if S.NNum(Frg1.GetValue('qnt_in_demand', i, False)) = 0 then
       Continue;
     //попытаемся найти такое же наименование в ранее пройденных и уже по которым получена информация
-    for k := 0 to i - 1 do
+    b := False;
+    p := 0;
+    for k := 0 to i - 1 do begin
       if (nm = Frg1.GetValue('name', k, False)) and (S.NSt(Frg1.GetValue('id_std_item', k, False)) <> '') then begin
         //если нашли, возьмем данные из него
         Frg1.SetValue('id_std_item', i, False, Frg1.GetValue('id_std_item', k, False));
         Frg1.SetValue('id_template', i, False, Frg1.GetValue('id_template', k, False));
         Frg1.SetValue('has_estimate', i, False, Frg1.GetValue('has_estimate', k, False));
+        b := True;
         Break;
       end;
-    if (i = 0) or (k = i) then begin
+      p := k;
+    end;
+    if (i = 0) or not b {or (k = i)} then begin
       //если не нашли, делаем запрос для проверки
       va2 := Q.QLoadToVarDynArray2(
         'select id_std_item, id_template, dt_estimate from v_semiproducts_get_std_item where name = :name$s',
-        [Frg1.GetValue('name', k, False)]
+        [Frg1.GetValue('name', p, False)]
       );
       if Length(va2) = 0
         then va2 := [[0, null, null]]
