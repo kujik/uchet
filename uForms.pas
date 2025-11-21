@@ -2049,7 +2049,8 @@ var
   i, j: Integer;
   ver: TVarDynArray;
 begin
-  if Control = nil then Exit;
+  if Control = nil then
+    Exit;
   ver := A.ExplodeV(S.IIFStr(Verify = '', ':::::::::', Verify + ':::::::::'), ':');
   if Control is TDbEditEh then begin
     TDbEditEh(Control).MaxLength := StrToIntDef(ver[1], DefEditMaxLength);
@@ -2069,8 +2070,12 @@ begin
     if pos('L', S.ChangeCaseStr(ver[3], True)) > 0 then
       TDbComboboxEh(Control).CharCase := ecLowerCase;
   end;
-  if Control is TDBCheckBoxEh then Exit;
-  if Control is TCheckBox then Exit;
+  if Control is TDBCheckBoxEh then
+    Exit;
+  if Control is TCheckBox then
+    Exit;
+  if Control is TDBDateTimeEditEh then
+    i := 1;
   SetDynProps(Control, [[dpVerify, S.IIFStr(Verify <> '', Verify + ':::::::::')]]); //!!!
 end;
 

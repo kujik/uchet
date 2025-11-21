@@ -78,6 +78,7 @@ var
   i, res: Integer;
   CtrlValues2: TVarDynArray;
   FieldsSave2: string;
+  UseTransaction: Boolean;
 begin
   Result := False;
   FieldsSave2 := '';
@@ -89,12 +90,16 @@ begin
       CtrlValues2 := CtrlValues2 + [S.NullIfEmpty(F.GetProp(i, fvtVCurr))];
     end;
   //сохраняем заголовочную часть
-  Q.QBeginTrans(True);
+  UseTransaction := not Q.AdoConnection.InTransaction;
+  if UseTransaction then
+    Q.QBeginTrans(True);
   res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSave2, CtrlValues2);
   IdAfterInsert:= res;
   if not (Mode in [fEdit, fDelete]) then
     ID := res;
-  Result := Q.QCommitOrRollback;
+  Result := res <> - 1;
+  if UseTransaction then
+    Result := Q.QCommitOrRollback;
 end;
 
 function TFrmBasicDbDialog.LoadComboBoxes: Boolean;

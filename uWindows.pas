@@ -91,12 +91,12 @@ type
     function IsModalFormOpen: Boolean;
     //открываем фолрму TForm_Reference или ее потомков
     procedure ExecReference(F: string); overload;
-    procedure ExecReference(F: string; AOwner: TForm; AMyFormOptions: TMyFormOptions; AAddParam: Variant); overload;
+    procedure ExecReference(F: string; AOwner: TComponent; AMyFormOptions: TMyFormOptions; AAddParam: Variant); overload;
 //    procedure ExecReferenceAdd(F: string; AOwner: TForm; fMode: TDialogType; AId: Variant; AMyFormOptions: TMyFormOptions; AAddParam: Variant; ShowModal: Boolean = False; TDlgFunction: TDlgFunction = nil);
     //вызывает открытие mdi-формы в режиме диалога
     //если AMyFormOptions передано пустым, то заполняется по дефолту для диалога
-    procedure ExecDialog(F: string; AOwner: TForm; AMyFormOptions: TMyFormOptions; fMode: TDialogType; AId: Variant; AAddParam: Variant);
-    procedure ExecAdd(F: string; AOwner: TForm; fMode: TDialogType; AId: Variant; AMyFormOptions: TMyFormOptions; AAddParam: Variant; ShowModal: Boolean = False; TDlgFunction: TDlgFunction = nil);
+    procedure ExecDialog(F: string; AOwner: TComponent; AMyFormOptions: TMyFormOptions; fMode: TDialogType; AId: Variant; AAddParam: Variant);
+    procedure ExecAdd(F: string; AOwner: TComponent; fMode: TDialogType; AId: Variant; AMyFormOptions: TMyFormOptions; AAddParam: Variant; ShowModal: Boolean = False; TDlgFunction: TDlgFunction = nil);
   end;
 
 var
@@ -529,7 +529,7 @@ begin
   ExecReference(F, FrmMain, MyFormOptions, null);
 end;
 
-procedure TWindowsHelper.ExecReference(F: string; AOwner: TForm; AMyFormOptions: TMyFormOptions; AAddParam: Variant);
+procedure TWindowsHelper.ExecReference(F: string; AOwner: TComponent; AMyFormOptions: TMyFormOptions; AAddParam: Variant);
 var
   Form: TForm;
   N: Integer;
@@ -746,7 +746,7 @@ begin
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
 end;
 
-procedure TWindowsHelper.ExecDialog(F: string; AOwner: TForm; AMyFormOptions: TMyFormOptions; fMode: TDialogType; AId: Variant; AAddParam: Variant);
+procedure TWindowsHelper.ExecDialog(F: string; AOwner: TComponent; AMyFormOptions: TMyFormOptions; fMode: TDialogType; AId: Variant; AAddParam: Variant);
 //вызывает открытие mdi-формы в режиме диалога
 //если AMyFormOptions передано пустым, то заполняется по дефолту для диалога
 var
@@ -1038,7 +1038,7 @@ begin
     raise Exception.Create('Вызвана функция "ExecDialog", однако тип "' + F + '" в ней не зарегистрирован!');
 end;
 
-procedure TWindowsHelper.ExecAdd(F: string; AOwner: TForm; fMode: TDialogType; AId: Variant; AMyFormOptions: TMyFormOptions; AAddParam: Variant; ShowModal: Boolean = False; TDlgFunction: TDlgFunction = nil);
+procedure TWindowsHelper.ExecAdd(F: string; AOwner: TComponent; fMode: TDialogType; AId: Variant; AMyFormOptions: TMyFormOptions; AAddParam: Variant; ShowModal: Boolean = False; TDlgFunction: TDlgFunction = nil);
 //!!! провериьть везде вызов этой функции!!!
 var
   i, j, fc, fp, l: Integer;

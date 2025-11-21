@@ -941,7 +941,7 @@ begin
   try
     //если в вызов .Show передан фрейм грида в родителе
     if (ParentControl <> nil) and (ParentControl is TFrDbGridEh) then
-      TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid(Mode, 0, StrToUIntDef(ID.AsString, MaxInt))
+      TFrDbGridEh(ParentControl).RefreshGrid(Mode, 0, StrToUIntDef(ID.AsString, MaxInt))
     //если передана форма
     else if (ParentForm <> nil) and (ParentForm is TFrmBasicMdi) and (TFrmBasicMdi(ParentForm).FindComponent('Frg1') <> nil) then
       TFrDbGridEh(TFrmBasicMdi(ParentForm).FindComponent('Frg1')).RefreshGrid(Mode, 0, StrToUIntDef(ID.AsString, MaxInt));

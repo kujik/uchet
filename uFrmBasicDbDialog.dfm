@@ -1,47 +1,47 @@
 inherited FrmBasicDbDialog: TFrmBasicDbDialog
   Caption = 'FrmBasicDbDialog'
-  ClientHeight = 116
-  ClientWidth = 241
-  ExplicitWidth = 257
-  ExplicitHeight = 155
+  ClientHeight = 115
+  ClientWidth = 237
+  ExplicitWidth = 253
+  ExplicitHeight = 154
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 241
-    Height = 100
-    ExplicitWidth = 245
-    ExplicitHeight = 101
+    Width = 237
+    Height = 99
+    ExplicitWidth = 241
+    ExplicitHeight = 100
     inherited pnlFrmClient: TPanel
-      Width = 235
-      Height = 52
+      Width = 231
+      Height = 51
       ExplicitWidth = 838
       ExplicitHeight = 351
     end
     inherited pnlFrmBtns: TPanel
-      Top = 57
-      Width = 235
-      ExplicitTop = 57
-      ExplicitWidth = 235
+      Top = 56
+      Width = 231
+      ExplicitTop = 56
+      ExplicitWidth = 231
       inherited bvlFrmBtnsTl: TBevel
-        Width = 233
+        Width = 229
         ExplicitWidth = 848
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 233
+        Width = 229
         ExplicitWidth = 848
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 233
-        ExplicitWidth = 233
+        Width = 229
+        ExplicitWidth = 229
         inherited pnlFrmBtnsMain: TPanel
-          Left = 134
+          Left = 130
           ExplicitLeft = 737
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = -94
-          ExplicitLeft = -94
+          Left = -98
+          ExplicitLeft = -98
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 35
+          Left = 31
           ExplicitLeft = 638
         end
         inherited pnlFrmBtnsC: TPanel
@@ -52,8 +52,8 @@ inherited FrmBasicDbDialog: TFrmBasicDbDialog
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 100
-    Width = 241
+    Top = 99
+    Width = 237
     ExplicitTop = 400
     ExplicitWidth = 848
     inherited lblStatusBarR: TLabel

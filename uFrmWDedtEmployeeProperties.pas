@@ -89,10 +89,15 @@ begin
   end
   else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
     FIdMode := 1;
-  DtVer :='*:*';
+  DtVer := '*:*';
   if (Mode in [fAdd, fCopy]) then begin
-     DtVer := DateToStr(IncDay(Date, -62));
-     if (FIdLast <> null) then if FLastRec.G('is_terminated')=1 then DtVer := DateToStr(IncDay(FLastRec.G('dt_beg'), 1)) else DtVer := DateToStr(IncDay(FLastRec.G('dt_beg'), 0));
+    DtVer := DateToStr(IncDay(Date, -62));
+    if (FIdLast <> null) then
+      if FLastRec.G('is_terminated') = 1 then
+        DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 1))
+      else
+        DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
+    DtVer := 'V=' + DtVer + ':' +  S.DateTimeToIntStr(IncDay(Date, +16));
   end;
   Caption := S.Decode([Mode, fCopy, 'Добавить статус работника', fAdd, 'Добавить статус работника', fDelete, 'Удалить статус работника', 'Статус работника']);
   F.DefineFields:=[
@@ -100,7 +105,7 @@ begin
     ['dt$d',#0,Date],
     ['id_mode$i;0;0','V=1:400',#0,FIdMode],
     ['id_manager$i',#0,User.GetId],
-    ['dt_beg$d','V=:'],
+    ['dt_beg$d',DtVer],
     ['id_employee$i','V=1:400'],
     ['id_departament$i','V=1:400'],
     ['id_job$i','V=1:400'],
@@ -165,10 +170,12 @@ var
 begin
   Result := True;
   Q.QBeginTrans(True);
-    //проставим дату окончания прошлого статуса, если он не является увольнением (у увольнения нет конечно даты)
+  //проставим дату окончания прошлого статуса, поправим айди статусов в таблице дней турв, при увольнении дни после него удалим
   if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
+    //есть предыдущий статус и это не увольнение
+    //(у увольнения нет конечноq даты, и нет дней, которым назначен этот статус)
     if Mode = fDelete then begin
-      //при удалении стутуса конечную дату прошлого статуса
+      //при удалении статуса сбросим конечную дату прошлого статуса
       Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [null, FIdLast]);
       //и присвоим всем дням с удаленным id_employee_properties айди того, к которому откатились
       Q.QExecSql('update w_turv_day set id_employee_properties = :id_last$i where id_employee_properties = :id$i', [FIdLast, ID]);
@@ -194,6 +201,9 @@ begin
     end;
   end
   else
+    //если нет предыдущего статуса, или же предыдущий есть увольнение - просто обработаем текущую строку
+    //(это либо удаление последнего статуса, либо приём на работу)
+    //для увольнения не нужно корректировать дату    и править таблицу дней
     Result := inherited;
   Q.QCommitOrRollback(Result);
 end;
