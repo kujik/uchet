@@ -104,11 +104,11 @@ begin
         DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
     DtVer := 'V=' + DtVer + ':' +  S.DateTimeToIntStr(IncDay(Date, +16));
   end;
-  Caption := '~' + S.Decode([Mode, fCopy, 'Статус работника - Добавить', fAdd, 'Статус работника - Добавить', fDelete, 'Статус работника - Удалить', 'Статус работника - Просмотреть']);
+  Caption := '~' + S.Decode([Mode, fCopy, 'Статус работника - Добавить', fAdd, 'Статус работника - Добавить', fDelete, 'Статус работника - Удалить', fEdit, 'Статус работника - Изменить', 'Статус работника - Просмотреть']);
   F.DefineFields:=[
     ['id$i'],
     ['dt$d',#0,Date],
-    ['id_mode$i;0;0','V=1:400',#0,FIdMode],
+    ['id_mode$i;0;0','V='+S.IIf(Mode = fEdit, '0', '1')+':400',#0,FIdMode],
     ['id_manager$i',#0,User.GetId],
     ['dt_beg$d',DtVer],
     ['id_employee$i','V=1:400'],
@@ -121,7 +121,8 @@ begin
     ['is_trainee$i'],
     ['id_organization$i','V=0:400'],
     ['personnel_number$s','V=0:400'],
-    ['comm$s','V=0:400']
+    ['comm$s','V=0:400'],
+    ['is_terminated$i;0']
   ];
 
   View := 'w_employee_properties';
@@ -174,8 +175,10 @@ var
 begin
   Result := True;
   Q.QBeginTrans(True);
+  if Mode = fEdit then
+    Result := inherited
   //проставим дату окончания прошлого статуса, поправим айди статусов в таблице дней турв, при увольнении дни после него удалим
-  if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
+  else if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
     //есть предыдущий статус и это не увольнение
     //(у увольнения нет конечноq даты, и нет дней, которым назначен этот статус)
     if Mode = fDelete then begin
@@ -224,9 +227,16 @@ end;
 procedure TFrmWDedtEmployeeProperties.SetControlsState;
 begin
   if Mode in [fView, fDelete] then
-    Exit;
+    Exit
+  else if Mode = fEdit then
+    SetControlsEditable([cmb_id_mode, dedt_dt_beg], False);
   //заблокируем все если выбрали режим Увольнение
-  SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number], GetControlValue('cmb_id_mode').AsString <> '3');
+  SetControlsEditable(
+    [cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number],
+    (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1))
+  );
+  if Mode = fEdit then
+    Exit;
   //заблокирем изменение организации и табльного номера, если это не прием, или если они уже введены
   if FIdMode <> 1 then begin
     if (FIdLast <> null) and (FLastRec.G('id_organization') <> null) then

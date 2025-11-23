@@ -25,7 +25,7 @@ from
   dv.nomenclatura n
 where
   ns.id_nomencl = n.id_nomencl
-  --and ns.id_supplier = 6212
+--  and ns.id_supplier = 6212
   and ns.id_supplier = sys_context('context_uchet22','semiproduct_supplier')
 ;      
 
@@ -167,6 +167,11 @@ select * from dv.demand order by id_demand desc;
 select * from v_semiproducts_get_std_item
 where name = 'Барный стол 1650 островной - подстолье ПРКР.04.01.00_М01 RAL 7022'
 ;
+
+select * from bcad_nomencl where name like '%' || chr(13) || '%' ;
+select * from or_std_items where name like '%' || chr(10) || '%' ;
+select * from v_semiproducts_nomencl where name like '%' || chr(10) || '%' ;
+
 
 
 

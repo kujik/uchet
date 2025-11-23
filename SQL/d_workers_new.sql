@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 --профессии
---drop table w_jobs cascade constraints;
+drop table w_jobs cascade constraints;
 create table w_jobs(
   id number(11),
   name varchar2(400),
@@ -97,7 +97,7 @@ insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers;
 
 --------------------------------------------------------------------------------
 --подразделения
---drop table w_departments cascade constraints;
+drop table w_departments cascade constraints;
 create table w_departaments(
   id number(11),
   code varchar(5),
@@ -147,7 +147,6 @@ where
   and a.id = d.id_prod_area
 ;     
 
-select * from v_w_departaments; 
 
 --------------------------------------------------------------------------------
 --таблица графиков работы
@@ -244,7 +243,7 @@ create table w_employee_properties(
   is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   is_foreman number(1) default 0,
   is_trainee number(1) default 0,           --ученик
-  grade number default 1,                   --разряд
+  grade number default 1,                    --разряд
   comm varchar(4000), 
   id_manager number(1),
   --deleted number(1) default 0,              
@@ -410,7 +409,7 @@ create table w_turv_period(
   id_departament number(11),        --подразделение
   dt1 date,                         --дата начала периода ТУРВ
   dt2 date,                         --дата конца периода ТУРВ
-  is_finalized number(1),           --период закрыт
+  is_finalized number(1),                 --период закрыт
   status number(1),                 --статус заполенности данных
   constraint pk_w_turv_period  primary key (id),
   constraint fk_w_turv_period_dep foreign key (id_departament) references ref_divisions(id)
@@ -430,7 +429,7 @@ select
   p.*,
   d.name,
   case when d.is_office = 1 then 'офис' else 'цех' end as isoffice,
-  case when p.is_finalized = 1 then 'закрыт' else '' end as finalized,
+  case when p.commit = 1 then 'закрыт' else '' end as committxt,
   getusernames(d.ids_editusers) as editusernames,
   d.ids_editusers,
   d.code 
@@ -442,8 +441,8 @@ where
 ;   
 
 --!
-select * from w_turv_period;
-insert into w_turv_period (id, id_departament, dt1, dt2, is_finalized, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
+delete from w_turv_period;
+insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
 
 
 select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = 2799;
@@ -501,6 +500,7 @@ update w_turv_day d set id_employee_properties = (select id from w_employee_prop
 
 --================================================================================
 alter table ref_production_areas add constraint pk_ref_production_areas primary key (id);
+
 
 
 

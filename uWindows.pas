@@ -740,7 +740,7 @@ begin
     TFrmOGrepEstimatePrices.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
   end
   else if F = myfrm_R_Workers then begin
-    TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
+    TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fView, null, null);
   end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');

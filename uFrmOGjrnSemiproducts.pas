@@ -815,6 +815,7 @@ begin
     b := False;
     p := 0;
     for k := 0 to i - 1 do begin
+      p := k;
       if (nm = Frg1.GetValue('name', k, False)) and (S.NSt(Frg1.GetValue('id_std_item', k, False)) <> '') then begin
         //если нашли, возьмем данные из него
         Frg1.SetValue('id_std_item', i, False, Frg1.GetValue('id_std_item', k, False));
@@ -823,13 +824,12 @@ begin
         b := True;
         Break;
       end;
-      p := k;
     end;
     if (i = 0) or not b {or (k = i)} then begin
       //если не нашли, делаем запрос для проверки
       va2 := Q.QLoadToVarDynArray2(
         'select id_std_item, id_template, dt_estimate from v_semiproducts_get_std_item where name = :name$s',
-        [Frg1.GetValue('name', p, False)]
+        [Frg1.GetValue('name', i, False)]  //было k!
       );
       if Length(va2) = 0
         then va2 := [[0, null, null]]

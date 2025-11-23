@@ -162,7 +162,10 @@ begin
   Errors.SetMadExcept;
   if FrmMain <> nil then
     FrmMain.AfterUserLogged;
-//if not A.InArray(User.GetLogin, ['sprokopenko', 'eteplyakova', 'kadry1', 'kadry2', 'kadry3', 'eveselova', 'ostulihina']) then Halt;  //!T!!! //!!!
+    {$IFDEF  TURV}
+  if not A.InArray(User.GetLogin, ['sprokopenko', 'eteplyakova', 'kadry1', 'kadry2', 'kadry3', 'eveselova', 'ostulihina']) then Halt;  //!T!!! //!!!
+    {$ENDIF}
+
 end;
 
 //пытаемся войти в систему под пользователем системы (вход если логин на компьютере совпадает с логином в БД учета)

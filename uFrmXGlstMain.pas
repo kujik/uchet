@@ -632,7 +632,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_w_departaments');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
-    Frg1.Opt.DialogFormDoc := myfrm_R_Divisions;
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Divisions;
   end
   else if FormDoc = myfrm_R_Candidates_Ad_SELCH then begin      //!!!
     Caption:='Справочник - источники информации по вакансиям';
