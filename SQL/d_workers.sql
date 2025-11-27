@@ -678,7 +678,10 @@ create table payroll(
 );
 
 --уникальный индекс по подразделению/работнику/дате начала
+drop index idx_payroll_unique;
 create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
+select * from payroll where id_worker = 100 order by dt1 desc;
+delete from payroll where id = 2848;
 
 create sequence sq_payroll start with 100 nocache;
 
@@ -713,6 +716,8 @@ alter table payroll_item drop column turv1;
 */
      
 --данные зарплатной ведомости для конкретного работника из ведомости
+alter table payroll_item add ball_add number;
+
 create table payroll_item(
   id number(11),
   id_payroll number(11),          --айди зарплатной ведомости, в которую входит эта строка
@@ -748,7 +753,7 @@ create table payroll_item(
   salary_incentive_m number,      --стимулирующая часть з/п
   ors number,                     --оценка оработы сотрудника, в % (120.5)
   ors_sum number,    
-
+ball_add number,
   
   constraint pk_payroll_item primary key (id),
   constraint fk_payroll_item_payroll foreign key (id_payroll) references payroll(id) on delete cascade,

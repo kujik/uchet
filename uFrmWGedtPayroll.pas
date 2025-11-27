@@ -146,6 +146,7 @@ begin
     ['salary_incentive_m$i', '~  Стимулирующая' + sLineBreak + '  часть', wcol, 'e'],
     ['ors$f', '~  ОРС', wcol, 'e'],
     ['ors_sum$f', '~  ОРС сумма', wcol, 'i'],
+    ['ball_add$i', '~  Корректировка', wcol, fcol, 'e'],
     ['ball$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') = 15],
     ['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol, 'e'],            //премия за отчетный период, взятая из ТУРВ
     ['premium$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol, 'e'],                      //премия, сумма дневных премий из турв
@@ -330,7 +331,7 @@ begin
   Q.QLoadFromQuery(
     'select workername, job, id, id_worker, id_job, blank, ball_m, turv, ball, premium_m_src, premium, premium_p, premium_m, '+
     'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes, org_name, personnel_number, '+
-    'salary_plan_m, salary_const_m, salary_incentive_m, ors, ors_sum '+
+    'salary_plan_m, salary_const_m, salary_incentive_m, ors, ors_sum, ball_add '+
     'from v_payroll_item where id_payroll = :id$i order by job, workername',
     [ID], na
   );
@@ -1086,7 +1087,7 @@ begin
   Frg1.Opt.SetColFeature('ball_m', 'i', (S.NInt(FPayrollParams.G('id_method')) in [13, 14, 16]), False);
   //!!!Frg1.Opt.SetColFeature('premium_m_src', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
   Frg1.Opt.SetColFeature('ball', 'e', S.NInt(FPayrollParams.G('id_method')) in [15], False);
-  Frg1.Opt.SetColFeature('premium_p', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10]), False);
+  Frg1.Opt.SetColFeature('premium_p', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [10{, 16}]), False);
   Frg1.Opt.SetColFeature('premium_m', 'i', S.NInt(FPayrollParams.G('id_method')) in [16], False);
   Frg1.Opt.SetColFeature('premium_m_src', 'i', S.NInt(FPayrollParams.G('id_method')) in [16], False);
   Frg1.Opt.SetColFeature('salary_plan_m', 'i', not (S.NInt(FPayrollParams.G('id_method')) in [16]), False);
@@ -1114,7 +1115,7 @@ end;
 
 procedure TFrmWGedtPayroll.CalculateRow(Row: Integer);
 var
-  e1, e2, e3, e4, e5: extended;
+  e1, e2, e3, e4, e5, e6: extended;
   v1, v2, v3: Variant;
   CalcMode: Integer;
 function GetBanknotes: string;
@@ -1146,7 +1147,7 @@ begin
 premium - текущая премия, из турв - сумма дневных премий
 premium_m - премия за период, вводится вруччную
 premium_m_src - премия грузчиков
-premium_p - премия за переработку
+premium_p - премия за переработку    //10,16
 (премия за период из турв не грузится, точнее только для грузчиков, и так из нее получается расчетная)
 
 }
@@ -1200,10 +1201,11 @@ premium_p - премия за переработку
     end;
   end;
   //установим баллы (Рапсчет оклада)
-  v3 := s.IIf(e3 = 0, null, round(e3));
+  e6:=Frg1.GetValueF('ball_add', Row, False);       //!!!ИСПР
+  v3 := s.IIf(e3 + e6 = 0, null, round(e3 + e6));
   Frg1.SetValue('ball', Row, False, v3);
   //пермия за переработку
-  if (CalcMode = 10) then begin
+  if (CalcMode in [10{, 16}]) then begin
      // Расчет должен быть такой:   Оклад (55000/2 + 27500) + переработки ( 96-80 + 16 часов)  55000/168*16*1,5 + 7857
     Frg1.SetValue('premium_p', Row, False, Round(Max(0, (e1) / Frg1.GetValueF('norm_m', Row, False) * Max(Frg1.GetValueF('turv', Row, False) - Frg1.GetValueF('norm', Row, False), 0) * 1.5)));
   end
@@ -1486,7 +1488,7 @@ begin
     Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
       'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;'+
       'itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s;'+
-      'salary_plan_m$f;salary_const_m$f;salary_incentive_m$f;ors;ors_sum$f',
+      'salary_plan_m$f;salary_const_m$f;salary_incentive_m$f;ors;ors_sum$f;ball_add$f',
       [
         Frg1.MemTableEh1.FieldByName('id').AsInteger,
         Frg1.MemTableEh1.FieldByName('blank').AsVariant,
@@ -1515,7 +1517,8 @@ begin
         Frg1.MemTableEh1.FieldByName('salary_const_m').AsVariant,
         Frg1.MemTableEh1.FieldByName('salary_incentive_m').AsVariant,
         Frg1.MemTableEh1.FieldByName('ors').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ors_sum').AsVariant
+        Frg1.MemTableEh1.FieldByName('ors_sum').AsVariant,
+        Frg1.MemTableEh1.FieldByName('ball_add').AsVariant
       ], True
     );
   end;
