@@ -511,9 +511,9 @@ create or replace view v_orders as (
     au.name as managername,
     (case when o.id_type2 is not null then ot.name else
         (case 
-          when o.id_type = 1 then 'Новый'
-          when o.id_type = 2 then 'Рекламация'
-          when o.id_type = 3 then 'Эксперимент'
+          when o.id_type = 1 then 'новый'
+          when o.id_type = 2 then 'рекламация'
+          when o.id_type = 3 then 'эксперимент'
           else ''
          end)
     end) as typename,
@@ -1207,7 +1207,6 @@ begin
   if r5 = 1 then st := st || 'ПГ, '; end if;
   if r6 = 1 then st := st || 'ЛК, '; end if;
   if r7 = 1 then st := st || 'КМ, '; end if;
-  if r8 = 1 then st := st || 'ЭЛ, '; end if;
   if length(st) > 0 then st := substr(st, 1, length(st) - 2); end if; 
   return st;
 end;

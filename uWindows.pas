@@ -563,7 +563,6 @@ begin
     myfrm_Rep_SnCalendar_AccMontage,
 
     {работники}
-//    myfrm_R_Workers,
     myfrm_R_TurvCodes,
     myfrm_R_Jobs,
     myfrm_R_Work_Chedules,
@@ -578,6 +577,7 @@ begin
     myfrm_Rep_PayrollsSum,
     myfrm_J_Vacancy,
     myfrm_Ref_JobsNeeded,
+    myfrm_J_PayrollCalculations,
 
     {заказы}
     myfrm_R_StdProjects,

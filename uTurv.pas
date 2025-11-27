@@ -70,6 +70,7 @@ type
     function GetDaysFromCalendar_Next(DtBeg: TDateTime; CntOfWork: Integer): TDateTime;
     //диалог ввода графика работы и норм рабочего времени по нему
     function ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+    function DeletePayrollCalculations(AId: Variant): Boolean;
     procedure ConvertEmployees202511;
   end;
 
@@ -1639,6 +1640,28 @@ begin
     end;
   Result:=va2[i][0];
 end;
+
+function TTurv.DeletePayrollCalculations(AId: Variant): Boolean;
+begin
+  Result := False;
+  var va: TVarDynArray := Q.QSelectOneRow('select departament, employee, dt1, dt2 from v_w_payroll_calculations where id = :id$i', [AId]);
+  if va[0] = null then
+    Exit;
+  if Q.DBLock(True, myfrm_Dlg_Payroll, AID)[0] <> True then
+    Exit;
+  if (MyQuestionMessage(
+     'Будет удалена ведомость расчета заработной платы'#13#10 +
+      S.IIFStr(va[1].AsString = '', 'по подразделению "' + va[0] + '"'#13#10, 'по работнику "' + va[1] + '"'#13#10 + '(подразделение "' + va[0] + '"'#13#10) +
+      'за период с ' + va[2].AsDate + ' по ' + va[3].AsDate + #13#10 + #13#10 + '.' + 'Продолжить?'
+     ) = mrYes) and (MyQuestionMessage('Удалить ведомость?') = mrYes) then begin
+    Q.QExecSql('delete from payroll where id = :id$i', [AID], True);
+    Q.DBLock(False, myfrm_Dlg_Payroll, AID);
+    Result := True;
+  end
+  else
+    Q.DBLock(False, myfrm_Dlg_Payroll, AID);
+end;
+
 
 function TTurv.ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
 //диалог ввода графика работы и норм рабочего времени по нему

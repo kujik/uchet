@@ -196,7 +196,9 @@ uses
   uFrmOGrepOrReglament in 'uFrmOGrepOrReglament.pas' {FrmOGrepOrReglament},
   uFrmWGjrnEmployees in 'uFrmWGjrnEmployees.pas' {FrmWGjrnEmployees},
   uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties},
-  uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN};
+  uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN},
+  uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
+  uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN};
 
 var
   MT: Integer;

@@ -716,6 +716,8 @@ alter table payroll_item drop column turv1;
 */
      
 --данные зарплатной ведомости для конкретного работника из ведомости
+alter table payroll_item add ball_add number;
+
 create table payroll_item(
   id number(11),
   id_payroll number(11),          --айди зарплатной ведомости, в которую входит эта строка
@@ -751,7 +753,7 @@ create table payroll_item(
   salary_incentive_m number,      --стимулирующая часть з/п
   ors number,                     --оценка оработы сотрудника, в % (120.5)
   ors_sum number,    
-
+ball_add number,
   
   constraint pk_payroll_item primary key (id),
   constraint fk_payroll_item_payroll foreign key (id_payroll) references payroll(id) on delete cascade,

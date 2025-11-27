@@ -25,7 +25,7 @@ from
   dv.nomenclatura n
 where
   ns.id_nomencl = n.id_nomencl
---  and ns.id_supplier = 6212
+  --and ns.id_supplier = 6212
   and ns.id_supplier = sys_context('context_uchet22','semiproduct_supplier')
 ;      
 
@@ -126,6 +126,8 @@ where
 --drop  table j_semiproducts_src cascade constraints;
 --alter table j_semiproducts_src drop constraint pk_j_sem_orders_oritem;
 --alter table j_semiproducts_src add constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id);
+alter table j_semiproducts_src drop constraint fk_j_sem_orders_oritem;
+alter table j_semiproducts_src add constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id) on delete cascade;  
 create table j_semiproducts_src(
   id_supplier number(11),           --айди поставщика полуфабрикатов
   id_order number(11),              --айди отгрузочного заказа
@@ -134,8 +136,8 @@ create table j_semiproducts_src(
   qnt_in_order number(11,3),        --количество номенлатуры в отгрузочном заказе всего, которое было на момент создания заявки  
   qnt_in_demand number(11,3),       --количество в заявку 
   constraint pk_j_sem_orders primary key (id_supplier, id_order, id_order_item, id_nomencl),
-  constraint pk_j_sem_orders_or foreign key (id_order) references orders(id),
-  constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id)
+  constraint fk_j_sem_orders_or foreign key (id_order) references orders(id) on delete cascade,
+  constraint fk_j_sem_orders_oritem foreign key (id_order_item) references order_items(id) on delete cascade
 );
 
 --insert into j_semiproducts_src (id_supplier, id_order, id_order_item, id_nomencl, qnt_in_order, qnt_in_demand) values (6212, 9785, 302382, 42089, 170, 1);
@@ -167,11 +169,6 @@ select * from dv.demand order by id_demand desc;
 select * from v_semiproducts_get_std_item
 where name = 'Барный стол 1650 островной - подстолье ПРКР.04.01.00_М01 RAL 7022'
 ;
-
-select * from bcad_nomencl where name like '%' || chr(13) || '%' ;
-select * from or_std_items where name like '%' || chr(10) || '%' ;
-select * from v_semiproducts_nomencl where name like '%' || chr(10) || '%' ;
-
 
 
 

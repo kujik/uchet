@@ -99,6 +99,7 @@ uses
 
   uFrmWGedtPayroll,
   uFrmWDedtCreatePayroll,
+  uFrmWDedtCreatePayrollN,
 
   uFrmWGEdtTurv
   ;
@@ -737,6 +738,33 @@ v:=True;
     Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
       ['Журнал зарплатных ведомостей.'#13#10+
+      'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
+      'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
+      ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
+      'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
+      ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
+    ];
+  end
+  else if FormDoc = myfrm_J_PayrollCalculations then begin
+    Caption:='Ведомости расчета заработной платы';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['code','Код','50'],
+      ['departament','Подразделение','200'],
+      ['employee','Работник','200'],
+      ['dt1','Нач. дата','75'],
+      ['dt2','Кон. дата','75'],
+      ['finalized','Закрыта','60','pic=Закрыта;13']
+    ]);
+    Frg1.Opt.SetTable('v_w_payroll_calculations');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch) AND FALSE, 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.FilterRules := [[], ['dt1']];
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10+
       'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
       'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
@@ -1980,7 +2008,11 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
       TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
-      //~Dlg_CreatePayroll.ShowDialog(Self, 1);
+    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
+      TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
+    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
+      if Turv.DeletePayrollCalculations(Fr.ID) then
+        Fr.RefreshGrid();
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
       if Q.DBLock(True, myfrm_Dlg_Payroll, Fr.ID)[0] <> True  then
         Exit;

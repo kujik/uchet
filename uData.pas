@@ -836,6 +836,7 @@ const
   myfrm_J_WorkerStatus ='J_WorkerStatus';
   myfrm_J_Turv ='J_Turv';
   myfrm_J_Payrolls ='J_Payrolls';
+  myfrm_J_PayrollCalculations ='J_PayrollCalculations';
   myfrm_J_Candidates='J_Candidates';
   myfrm_J_Vacancy='J_Vacancy';
   myfrm_Rep_W_Payroll = 'Rep_W_Payroll';

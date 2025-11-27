@@ -895,8 +895,7 @@ begin
    close cv;
    if qntcum > nvl(Qnt, 0) + nvl(OnWay, 0) then
      --вернем номер заказы и дату отгрузки, на котором бло преышено значение Остаток + В пути
---     res := orname || ' ' || to_char(dtotgr, 'DD.MM.YYYY');
-     res := to_char(dtotgr, 'YYYY.MM.DD') || ' ' || orname;
+     res := orname || ' ' || to_char(dtotgr, 'DD.MM.YYYY');
    end if;
    return res;
 end;

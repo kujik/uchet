@@ -20,7 +20,7 @@ end;
 /
 
 --!
-insert into w_jobs (id, name, active) select id,name,active from ref_jobs;
+--insert into w_jobs (id, name, active) select id,name,active from ref_jobs;
 
 --------------------------------------------------------------------------------
 --обозначения в турв
@@ -44,7 +44,7 @@ end;
 /
 
 --!
-insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes;
+--insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes;
 
 --------------------------------------------------------------------------------
 --допустимые разряды
@@ -93,7 +93,7 @@ end;
 
 --!!!
 --delete from w_employees;
-insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers;
+--insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers;
 
 --------------------------------------------------------------------------------
 --подразделения
@@ -126,8 +126,8 @@ end;
 /
 
 --!
-delete from w_departaments;
-insert into w_departaments (id,code,name,id_head,id_prod_area,is_office,ids_editusers,active) select id,code,name,id_head,id_prod_area,office,editusers,active from ref_divisions; 
+--delete from w_departaments;
+--insert into w_departaments (id,code,name,id_head,id_prod_area,is_office,ids_editusers,active) select id,code,name,id_head,id_prod_area,office,editusers,active from ref_divisions; 
 
 create or replace view v_w_departaments as  
 select
@@ -172,7 +172,7 @@ end;
 /
 
 --!!!
-insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules;
+--insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules;
 
 --------------------------------------------------------------------------------
 --таблица норма рабочего времени, по графикам и по периодам
@@ -220,7 +220,7 @@ where
 ;  
 
 --!!!
-insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours;
+--insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours;
 
 --------------------------------------------------------------------------------
 
@@ -362,8 +362,6 @@ left outer join w_departaments d on a.id_departament = d.id and a.rn = 1
 left outer join w_jobs j on a.id_job = j.id and a.rn = 1
 ;
 
-select * from v_w_employees;
-   
 
 create or replace view v_w_employee_properties as  
 select
@@ -396,20 +394,23 @@ where
   ep.id_manager = u.id (+)
 ;     
 --!
-delete from w_employee_properties;
-insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
-  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
+--delete from w_employee_properties;
+--insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
+--  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
   
   
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
+alter table w_turv_period add foreman_allowance_comm varchar2(400);
 create table w_turv_period(  
   id number(11),                   
   id_departament number(11),        --подразделение
   dt1 date,                         --дата начала периода ТУРВ
   dt2 date,                         --дата конца периода ТУРВ
-  is_finalized number(1),                 --период закрыт
+  is_finalized number(1),           --период закрыт
+  foreman_allowance number,              --доплата бригадиру, сумма в месяц
+  foreman_allowance_comm varchar2(400),  --комментарий по данной доплате
   status number(1),                 --статус заполенности данных
   constraint pk_w_turv_period  primary key (id),
   constraint fk_w_turv_period_dep foreign key (id_departament) references ref_divisions(id)
@@ -428,8 +429,9 @@ create or replace view v_w_turv_period as
 select
   p.*,
   d.name,
+  d.name as departament,
   case when d.is_office = 1 then 'офис' else 'цех' end as isoffice,
-  case when p.commit = 1 then 'закрыт' else '' end as committxt,
+  case when p.is_finalized = 1 then 'закрыт' else '' end as finalized,
   getusernames(d.ids_editusers) as editusernames,
   d.ids_editusers,
   d.code 
@@ -441,11 +443,8 @@ where
 ;   
 
 --!
-delete from w_turv_period;
-insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
-
-
-select id, id_departament, code, name, dt1, dt2, committxt, commit, ids_editusers, status, name from v_w_turv_period where id = 2799;
+--delete from w_turv_period;
+--insert into w_turv_period (id, id_departament, dt1, dt2, commit, status) select id, id_division, dt1, dt2, commit, status from turv_period;  
 
 
 --------------------------------------------------------------------------------
@@ -495,11 +494,232 @@ begin
   select nvl(:new.id, sq_w_turv_day.nextval) into :new.id from dual;
 end;
 
-update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE('15.11.2027', 'DD.MM.YYYY'))); 
+--update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE('15.11.2027', 'DD.MM.YYYY')));
+
+
+
+--------------------------------------------------------------------------------
+--методы расчета З/П
+--пока определяются просто значением АйДи
+create table w_payroll_calculation_methods(
+  id number(11),
+  name varchar2(400),
+  comm varchar2(4000),
+  constraint pk_w_payroll_calculation_mtds primary key (id)
+);  
+
+insert into w_payroll_calculation_methods select * from payroll_method;
+
+--------------------------------------------------------------------------------
+drop table w_payroll_calculations cascade constraints;
+create table w_payroll_calculations ( 
+  id number(11),
+  id_departament number(11), --айди подразделения
+  id_employee number(11),    --айди раболтника 
+  id_method number(11),      --метод расчета   
+  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
+  dt2 date,                  --дата конца ведомости
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_payroll_calculations primary key (id),
+  constraint fk_w_payroll_calculations_div foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_payroll_calculations_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_payroll_calculations_mtd foreign key (id_method) references w_payroll_calculation_methods(id)
+);
+
+--уникальный индекс по подразделению/работнику/дате начала
+--create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
+
+create sequence sq_w_payroll_calculations start with 1000 nocache;
+
+create or replace trigger trg_w_payroll_calc_bi_r before insert on w_payroll_calculations for each row
+begin
+  select nvl(:new.id, sq_w_payroll_calculations.nextval) into :new.id from dual;
+end;
+
+/*
+  id_job number(11),         --айди должности 
+  id_shedule number(11),     --айди графика
+  is_foreman number(1),      --является бригадиром 
+  constraint fk_w_payroll_calculations_job foreign key (id_job) references w_jobs(id),
+  constraint fk_w_payroll_calculations_sch foreign key (id_shedule) references w_schedules(id),
+  form_number                --номер бланка для печати
+*/
+
+
+
+--вью для журнала зарплатных ведомостей
+create or replace view v_w_payroll_calculations as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  f_fio(e.f, e.i, e.o) as employee,
+  d.name as departament,
+  d.is_office,
+  d.code
+from
+  w_payroll_calculations p,
+  w_employees e,
+  w_departaments d
+where
+  p.id_departament = d.id and
+  p.id_employee = e.id (+) 
+;
+
+/*
+назвать поля оклад, плановое начисление зп, постоянная часть зп, стимулирующая часть заработной платы, итого начислено за период, надбавка за работу бригадиром, суммарная ежедневная премия, дополнительная премия, надбавка за вредность на покупку молока, ручная корректировка зарплаты, депремирование, начисление за отпуск, начисление за больничный, итого начислено
+*/
+
+
+--данные зарплатной ведомости для конкретного работника из ведомости
+drop table w_payroll_calculations_item cascade constraints;
+create table w_payroll_calculations_item(
+  id number(11),
+  id_payroll_calculation number(11), --айди зарплатной ведомости, в которую входит эта строка
+  dt date,
+  id_departament number(11), --айди подразделения
+  id_employee number(11),    --айди раболтника 
+  id_job number(11),         --айди должности 
+  id_schedule number(11),    --айди графика
+  hours_worked number,
+  monthly_work_hours_norm number,
+  period_work_hours_norm number,
+  base_salary number,
+  planned_monthly_payroll number,
+  fixed_compensation number,
+  variable_compensation number,
+  performance_coefficient number,
+  performance_bonus number,
+  core_earnings number,  --Начислено за период  (либо по окладной части, либо на основе выработки
+/*  
+  blank number(7),                --номер бланка для печати
+  ball_m number(7),               --баллы за месяц (точнее, отчтетный период, полмесяца)
+  turv number,                    --итоговое время из турв
+  ball number(7),                 --баллы расчетные
+  norm number(7),                 --норма в часах для текущего периода     
+  norm_m number(7),               --норма в часах за данный календарный месяц 
+  premium_m_src number(7),        --премия за отчетный период, взятая из ТУРВ
+  premium_m number(7),            --премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
+  premium number(7),              --премия, сумма дневных премий из турв
+  premium_p number(7),            --премия, за переработку, по формуле
+  otpusk number(7),               --отпуск
+  bl number(7),                   --больничные
+  penalty number(7),              --штрафы, из турв
+  itog1 number(7),                --итого начислено
+  ud number(7),                   --удержано
+  ndfl number(7),                 --ндфл 
+  fss number(7),                  --фсс
+  pvkarta number(7),              --промежуточные выплаты/карта
+  karta number(7),                --карта
+  banknotes varchar2(40),         --расклад по купюрам
+  itog number(7),                 --итого к выдаче
+  ---
+  salary_plan_m number,           --плановое начисление, месяц
+  salary_const_m number,          --постоянная часть, месяц
+  salary_incentive_m number,      --стимулирующая часть з/п
+  ors number,                     --оценка оработы сотрудника, в % (120.5)
+  ors_sum number,
+  
+*/ 
+  foreman_allowance number,       --брмигадирские
+  hazard_pay number,              --доплата за вредность 
+  daily_premium_total number,     --сумма дневных премий за период  
+  holiday_work_premium number,    --доплата за работу в выходные и праздничные дни
+  к number,      --премия, вручную выставляемая в расчетных ведомостях
+  vacation_pay number,            --оплата отпуска
+  sick_leave_pay number,          --оплата болльничных 
+  gross_pay number,               --итого начислено до удержаний
+  total_accrued number,
+
+  
+  constraint pk_w_payroll_calc_item primary key (id),
+  constraint fk_w_payroll_calc_i_own foreign key (id_payroll_calculation) references w_payroll_calculations(id) on delete cascade,
+  constraint fk_w_payroll_calc_i_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_payroll_calc_i_job foreign key (id_job) references w_jobs(id),
+  constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id)
+);  
+  
+create sequence sq_payroll_item start with 100 nocache;
+
+create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
+create index idx_payroll_item_dt_job on payroll_item(dt, id_job);   
+
+--вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
+create or replace view v_payroll_item as 
+select
+  i.*,
+  s.code,
+  s.code || ' (' || to_char(i.norm) || ')' as schedule,
+  p.id_worker as id_worker_payroll,
+  p.dt1,
+  p.dt2 as dt2,
+  w.f || ' ' || w.i  || ' ' || w.o as workername,
+  w.personnel_number,
+  w.concurrent_employee,
+  o.name as org_name,
+  d.name as divisionname,
+  d.id_prod_area,
+  a.shortname as prod_area_shortname,
+  a.name as prod_area_name,
+  j.name as job,
+  p.id_method as id_method
+from
+  payroll_item i,
+  payroll p,
+  ref_workers w,
+  ref_divisions d,
+  ref_jobs j,
+  payroll_method m,
+  ref_work_schedules s,
+  ref_sn_organizations o,
+  ref_production_areas a
+where
+  i.id_payroll = p.id and
+  i.id_division = d.id and
+  i.id_worker = w.id and 
+  i.id_job = j.id and
+  p.id_method = m.id (+) and
+  i.id_schedule = s.id (+) and
+  o.id (+) = w.id_organization and
+  a.id (+) = d.id_prod_area
+;     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 --================================================================================
-alter table ref_production_areas add constraint pk_ref_production_areas primary key (id);
+--alter table ref_production_areas add constraint pk_ref_production_areas primary key (id);
 
 
 
