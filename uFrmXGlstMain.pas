@@ -4,9 +4,9 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
-  MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
   Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
+  uSettings, uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
   ;
 
 type
@@ -72,19 +72,19 @@ uses
   uFrmMain,
   uSys,
   uTasks,
-
+  uErrors,
   uFrmBasicInput,
-
-
+  uPrintReport,
+  uLabelColors2,
   uWindows,
   uOrders,
   uTurv,
 
-
-
-
-
-
+  D_Sn_Calendar,
+  D_ExpenseItems,
+  D_SnOrder,
+  D_Order,
+  D_OrderPrintLabels,
   D_R_EstimateReplace,
   D_J_Error_Log,
   D_Spl_InfoGrid,
@@ -94,14 +94,11 @@ uses
   uFrmDlgRItmSupplier,
   uFrmODedtNomenclFiles,
   uFrmOWPlannedOrder,
-
+  uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
-
+  uFrmWGEdtTurv,
   uFrmWGedtPayroll,
-  uFrmWDedtCreatePayroll,
-  uFrmWDedtCreatePayrollN,
-
-  uFrmWGEdtTurv
+  uFrmWDedtCreatePayroll
   ;
 
 
@@ -524,7 +521,7 @@ begin
 
   {РАБОТНИКИ}
 
-{  else if FormDoc = myfrm_R_Workers then begin
+  else if FormDoc = myfrm_R_Workers then begin
     Caption:='Справочник работников';
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
@@ -558,37 +555,26 @@ begin
     ]);
     Frg1.Opt.SetTable('v_j_worker_status');
     Frg1.Opt.SetButtons(1, 'rads', User.Role(rW_J_WorkerStatus_Ch));
-  end               }
+  end
   else if FormDoc = myfrm_R_Jobs then begin
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogFastRefresh];
-    Caption:='Справочник должностей';
+    Caption:='Справочник профессий';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['name','Должность','300'],
-      ['comm','Комментарий','200;h'],
-      ['active$i','Используется','75','pic']
+      ['name','Профессия','300'],
+      ['active$i','Используется','60','pic']
     ]);
-    Frg1.Opt.SetTable('w_jobs');
+    Frg1.Opt.SetTable('ref_jobs');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Jobs_Ch));
-    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Jobs;
-    Frg1.InfoArray:=[[Caption + #13#10 +
-      'Должности из этого списка будут доступны для назначения работникам.'#13#10 +
-      'Используйте кнопки в заголовке таблицы для действий с данными и настрокйи вида таблицы.'#13#10 +
-      'Те же и, возможно, дополнительные действия доступны по нажатию правой кнопки мыши.'#13#10 +
-      'Если запись больше не планируется использовать, снимите галочку "используется".'#13#10 +
-      'Удалить можно только ту запись, которая не используется более нигде в данных.'#13#10
-    ]];
   end
   else if FormDoc = myfrm_R_TurvCodes then begin
     Caption:='Обозначения ТУРВ';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['code','Код','60'],
-      ['name','Расшифровка','300']
+      ['name','Расшифровка','150']
     ]);
-    Frg1.Opt.SetTable('w_turvcodes');
+    Frg1.Opt.SetTable('ref_turvcodes');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_TurvCode_Ch));
-    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_TurvCodes;
   end
   else if FormDoc = myfrm_R_Work_Chedules then begin
     Caption:='Графики работы';
@@ -600,23 +586,15 @@ begin
       ['hours2','Нормы|Дата 2','100'],
       ['hours3','Нормы|Дата 3','100'],
       ['hours4','Нормы|Дата 4','100'],
-      ['comm','Комментарий','200;h'],
       ['active','Используется','90','pic']
     ]);
-    Frg1.Opt.SetTable('v_w_schedules');
-    va := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
+    Frg1.Opt.SetTable('v_ref_work_schedules');
+    va := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_ref_work_schedules where rownum = 1', []);
     Frg1.Opt.SetColFeature('hours1', 'c=Нормы|' + DateToStr(va[0]));
     Frg1.Opt.SetColFeature('hours2', 'c=Нормы|' + DateToStr(va[1]));
     Frg1.Opt.SetColFeature('hours3', 'c=Нормы|' + DateToStr(va[2]));
     Frg1.Opt.SetColFeature('hours4', 'c=Нормы|' + DateToStr(va[3]));
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
-    Frg1.InfoArray:=[[Caption + #13#10#13#10 +
-      'Графики работы, доступные для работников предприятия.'#13#10 +
-      'Также в таблице отображаются (и могут быть введены в диалоге) нормы для графиков за ближайшие 4 периода.'#13#10 +
-      'При добавлении графика все нормы вводить не обязательно, однако заработная плвата в дальнейшем '#13#10 +
-      'не сможет быть рассчитана, если не введены обе нормы по используемым графикам за данный период расчёта!'#13#10 +
-      ''#13#10
-    ]];
   end
   else if FormDoc = myfrm_R_Divisions then begin
     Caption:='Справочник подразделений';
@@ -625,15 +603,14 @@ begin
       ['code','Код','80'],
       ['area_shortname','Площадка','80'],
       ['name','Наименование','150'],
-      ['office','Офис/Цех','80'],
+      ['isoffice','Офис/Цех','80'],
+      ['schedule_code','График','100'],
       ['head','Руководитель','150'],
-      ['st_foreman','Бригадир','150'],
-      ['editusernames','Заполняют ТУРВ','300;h'],
-      ['active','Используется','77','pic']
+      ['editusernames','Заполняют ТУРВ','300'],
+      ['active','Используется','70','pic']
     ]);
-    Frg1.Opt.SetTable('v_w_departaments');
+    Frg1.Opt.SetTable('v_ref_divisions');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
-    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Divisions;
   end
   else if FormDoc = myfrm_R_Candidates_Ad_SELCH then begin      //!!!
     Caption:='Справочник - источники информации по вакансиям';
@@ -684,20 +661,20 @@ begin
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['is_finalized','_Commit','40'],
-      ['ids_editusers','_EditUsers','40'],
+      ['commit','_Commit','40'],
+      ['editusers','_EditUsers','40'],
       ['code','Код','50'],
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=закрыт:13'],
+      ['committxt','Закрыта','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
-    Frg1.Opt.SetTable('v_w_turv_period');
+    Frg1.Opt.SetTable('v_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
-    v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
+    v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, editusers)) from ref_divisions', [User.GetId])[0] = 1);
 v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -738,33 +715,6 @@ v:=True;
     Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
       ['Журнал зарплатных ведомостей.'#13#10+
-      'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
-      'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
-      ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
-      'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
-      ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
-    ];
-  end
-  else if FormDoc = myfrm_J_PayrollCalculations then begin
-    Caption:='Ведомости расчета заработной платы';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
-    Frg1.Opt.SetFields([
-      ['id$i','_id','40'],
-      ['code','Код','50'],
-      ['departament','Подразделение','200'],
-      ['employee','Работник','200'],
-      ['dt1','Нач. дата','75'],
-      ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13']
-    ]);
-    Frg1.Opt.SetTable('v_w_payroll_calculations');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch) AND FALSE, 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
-    Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
-    Frg1.InfoArray:=[
-      [Caption + '.'#13#10+
       'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
       'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
@@ -1983,12 +1933,16 @@ begin
 
 
 
-{    if FormDoc = myfrm_R_Workers then
+    if FormDoc = myfrm_R_Workers then
       Wh.ExecDialog(myfrm_Dlg_R_Workers, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_J_WorkerStatus then
-      Wh.ExecDialog(myfrm_Dlg_WorkerStatus, Self, [], fMode, Fr.ID, VarArrayOf([Fr.GetValueS('workername'), '', '', null]));}
- {   if FormDoc = myfrm_R_Divisions then
-      Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);}
+      Wh.ExecDialog(myfrm_Dlg_WorkerStatus, Self, [], fMode, Fr.ID, VarArrayOf([Fr.GetValueS('workername'), '', '', null]));
+    if FormDoc = myfrm_R_Jobs then
+      Wh.ExecDialog(myfrm_Dlg_R_Jobs, Self, [], fMode, Fr.ID, null);
+    if FormDoc = myfrm_R_TurvCodes then
+      Wh.ExecDialog(myfrm_Dlg_R_TurvCodes, Self, [], fMode, Fr.ID, null);
+    if FormDoc = myfrm_R_Divisions then
+      Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Work_Chedules then begin
       if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
         Fr.RefreshGrid;
@@ -2008,11 +1962,7 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
       TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
-    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
-      TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
-    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
-      if Turv.DeletePayrollCalculations(Fr.ID) then
-        Fr.RefreshGrid();
+      //~Dlg_CreatePayroll.ShowDialog(Self, 1);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
       if Q.DBLock(True, myfrm_Dlg_Payroll, Fr.ID)[0] <> True  then
         Exit;
@@ -2209,11 +2159,6 @@ begin
   else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
     TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end
-  else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin  //!T
-    TFrmWGEdtTurv.Show(Self, 'OLD-TURV', [myfoDialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
-  end
-
-
   else inherited;
 
 end;
@@ -2304,7 +2249,7 @@ begin
   if (FormDoc = myfrm_J_Turv) and Fr.IsNotEmpty then
     //для турв, на редактирование только указанным пользователям и только если период не закрыт
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtEdit, null,
-      (Fr.GetValueI('is_finalized') <> 1) and (User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]) or S.InCommaStr(IntToStr(User.GetId), Fr.GetValueS('ids_editusers')))
+      (Fr.GetValueI('commit') <> 1) and (User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]) or S.InCommaStr(IntToStr(User.GetId), Fr.GetValueS('editusers')))
     );
 
   if FormDoc = myfrm_J_Tasks then begin
@@ -2384,7 +2329,7 @@ begin
   else if FormDoc = myfrm_R_Bcad_Nomencl then
     SqlWhere := S.IIfStr(Cth.GetControlValue(Fr, 'ChbFromItm') = 1, 'id_itm is not null')
   else if FormDoc = myfrm_Rep_Order_Complaints then
-    SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'id_type = 2', 'id > 0'], ' and ')
+    SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'is_complaint = 1', 'id > 0'], ' and ')
   else if FormDoc = myfrm_J_InvoiceToSgp then
     Fr.SetSqlParameters('area$i', [S.NNum(Fr.GetControlValue('CbArea'))])
   else if FormDoc = myfrm_R_Itm_InGroup_Nomencl then
