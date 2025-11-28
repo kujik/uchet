@@ -511,12 +511,13 @@ create or replace view v_orders as (
     au.name as managername,
     (case when o.id_type2 is not null then ot.name else
         (case 
-          when o.id_type = 1 then 'новый'
-          when o.id_type = 2 then 'рекламация'
-          when o.id_type = 3 then 'эксперимент'
+          when o.id_type = 1 then 'Новый'
+          when o.id_type = 2 then 'Рекламация'
+          when o.id_type = 3 then 'Эксперимент'
           else ''
          end)
     end) as typename,
+    (case when (o.id_type = 2) or (ot.name like 'Рекламация%') then 1 else 0 end) as is_complaint,
     pa.shortname as area_short,
     decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
     f.name as format,

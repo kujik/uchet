@@ -2329,7 +2329,7 @@ begin
   else if FormDoc = myfrm_R_Bcad_Nomencl then
     SqlWhere := S.IIfStr(Cth.GetControlValue(Fr, 'ChbFromItm') = 1, 'id_itm is not null')
   else if FormDoc = myfrm_Rep_Order_Complaints then
-    SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'id_type = 2', 'id > 0'], ' and ')
+    SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'is_complaint = 1', 'id > 0'], ' and ')
   else if FormDoc = myfrm_J_InvoiceToSgp then
     Fr.SetSqlParameters('area$i', [S.NNum(Fr.GetControlValue('CbArea'))])
   else if FormDoc = myfrm_R_Itm_InGroup_Nomencl then

@@ -1807,7 +1807,7 @@ begin
   Result := -2;
   if not User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]) then
     Exit;
-  va2 := Q.QSelectOneRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager from orders where id = :id$i', [IdOrder]);
+  va2 := Q.QSelectOneRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint from orders where id = :id$i', [IdOrder]);
   //позволим менять статутс закрытия менеджера только сотрудникам, оформившим заказа,
   //или с соотвествующим правом, или с правами администратора данных
   if (User.GetId <> va2[11]) and not User.IsDataEditor and not User.Role(rOr_D_Order_SetCompletedMA) then
@@ -1815,7 +1815,7 @@ begin
   //нельзя менять статус у уже закрытого заказа
   //можно менять у заказов, 'М','О','Ф' (одинаково), и 'Н' (если отгружен полностью)
   //П по рекламации менедежерам вообще нельзя закрыть
-  if (va2[0] = null) or (va2[4] <> null) or not (A.InArray(va2[1], ['М', 'О', 'Ф']) or ((va2[1] = 'Н') and (va2[10] = 2))) then
+  if (va2[0] = null) or (va2[4] <> null) or not (A.InArray(va2[1], ['М', 'О', 'Ф']) or ((va2[1] = 'Н') and (va2[12] = 1))) then
     Exit;
   //режим
   Mode := va2[8] = null;
@@ -1830,12 +1830,12 @@ begin
     end;
     //нет упд, не даем установить завершенным, но можно снять
     //но для рекламаций это не проверяем
-    if Mode and (va2[7] = null) and (va2[10] <> 2) then begin
+    if Mode and (va2[7] = null) and (va2[12] <> 1) then begin
       MyWarningMessage('По этому заказу еще не получен УПД!'#13#10'Завершение невозможно!');
       Exit;
     end;
     //предупреждение, если не окончен монтаж
-    if Mode and (va2[9] <> null) and (va2[10] <> 2) then begin
+    if Mode and (va2[9] <> null) and (va2[12] <> 1) then begin
       va3 := Q.QSelectOneRow('select dt_end from or_montage where id = :id$i', [IdOrder]);
       if (va3[0] = null) then begin
         MyWarningMessage('Монтаж этого заказа еще не завершен!'#13#10'Завершение невозможно!');
@@ -1875,7 +1875,7 @@ begin
   to_complete := False;
   va2 := Q.QSelectOneRow('select ' + 'o.id, o.prefix, o.ornum, o.dt_beg, o.dt_end, o.dt_to_sgp, o.dt_from_sgp, o.dt_upd, ' +  //до 7
     'o.dt_end_manager, o.dt_end_copy, o.cost, o.pay, o.dt_montage_end, m.dt_end as dt_montage_end_fact, ' +  //от 8 до 13
-    'o.dt_cancel, o.id_type ' + 'from ' + 'orders o, or_montage m ' + 'where ' + 'o.id = :id$i and m.id(+) = o.id', [IdOrder]);  //от 14          id_type 2-рекламация 3-эксперимент
+    'o.dt_cancel, o.id_type, o.is_complaint ' + 'from ' + 'v_orders o, or_montage m ' + 'where ' + 'o.id = :id$i and m.id(+) = o.id', [IdOrder]);  //от 14          id_type 2-рекламация 3-эксперимент
   if va2[0] = null then
     Exit;
   //дата для проверки условий закрытия (отгрузка, введенной упд и тп) -
@@ -1885,7 +1885,7 @@ begin
   EncodeDate(2024, 01, 01);
   dtp := EncodeDate(2040, 01, 01);
   //это рекламация
-  IsRecl := (va2[15] = 2);
+  IsRecl := (va2[16] = 1);
   if not (Silent or User.IsDeveloper) then
     dtp := va2[3];
   Result := 0;
