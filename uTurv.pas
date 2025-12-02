@@ -112,6 +112,7 @@ type
     function  GetPosInList(ARow, ADay: Integer): Integer;
     function  GetPosInDays(ARow, ADay: Integer): Integer;
     function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
+    procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
 //    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
     procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
   end;
@@ -339,8 +340,20 @@ begin
   end
   else if ANum = 6 then begin
     Result := FDays.G(pos, 'nighttime');
-    AComm := FDays.G(pos, 'nighttime').AsString;
+    AComm := 'работа в ночную смену'; FDays.G(pos, 'nighttime').AsString;
   end;
+end;
+
+procedure TTurvData.SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
+var
+  pos: Integer;
+begin
+  pos := GetPosInDays(ARow, ADay);
+  if pos < 0 then begin
+    SetLength(FDays.V, Length(FDays.V) + 1);
+    pos := High(FDays.V);
+  end;
+  FDays.SetValue(pos, AField, ANewValue);
 end;
 
 (*
