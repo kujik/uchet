@@ -111,8 +111,9 @@ type
     function  GetTurvCode(AValue: Variant): Variant;
     function  GetPosInList(ARow, ADay: Integer): Integer;
     function  GetPosInDays(ARow, ADay: Integer): Integer;
-    function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
-    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+    function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
+//    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+    procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
   end;
 
 
@@ -242,6 +243,9 @@ begin
 end;
 
 function TTurvData.GetPosInDays(ARow, ADay: Integer): Integer;
+//вернет позицию данных дл€ €чейки в массиве данных по дн€м
+//если эта €чейка не может иметь данных по работнику, вернет -1
+//епсли €чейка попадает в диапазон данныых по работнику, но данные еще не введены, вернет -2
 var
   i, j, k: Integer;
 begin
@@ -260,25 +264,86 @@ begin
   end;
 end;
 
-function TTurvData.GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+function TTurvData.GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
 var
   pos: Integer;
+  res: array[0..3] of Variant;
+
+  function GetDayValue(ANum: Integer): Variant;
+  begin
+    if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
+      Result := FDays.G(pos, 'worktime' + IntToStr(ANum))
+    else
+      Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));
+  end;
+
 begin
   Result := '';
   AColor := -1;
-  pos := GetPosInDays(ARow, ADay);
+  if ARow >= 0 then
+    pos := GetPosInDays(ARow, ADay)
+  else
+    pos := -ARow;
   if pos = -1 then
     Exit;
   AColor := 0;
   if pos = -2 then
     Exit;
-  if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
-    Result := FDays.G(pos, 'worktime' + IntToStr(ANum))
-  else
-    Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));
+  if ANum in [0..3] then begin
+    res[1] := GetDayValue(1);  //врем€ или код от мастеров
+    res[2] := GetDayValue(2);  //врем€ или код парсек
+    res[3] := GetDayValue(3);  //проверенное врем€ или код
+    res[0] := res[3];
+    if res[0] = null then begin
+      if (res[1] = null) and (res[2] = null) then begin
+        AColor := 0;
+      end
+      else if (res[1] <> null) and (res[2] = null) then begin
+        AColor := 2;   //жетлтый
+        res[0] := res[1];
+      end
+      else if (res[1] = null) and (res[2] <> null) then begin
+        AColor := 1;   //красный
+        res[0] := res[2];
+      end
+      else if (not S.IsNumber(S.NSt(res[1]), 0, 24)) and (not S.IsNumber(S.NSt(res[2]), 0, 24)) then begin
+        res[0] := res[2];
+      end
+      else if S.IsNumber(S.NSt(res[1]), 0, 24) and S.IsNumber(S.NSt(res[2]), 0, 24) and (abs(StrToFloat(S.NSt(res[1])) - StrToFloat(S.NSt(res[2]))) <= Module.GetCfgVar(mycfgWtime_autoagreed)) then begin
+        res[0] := res[2];
+        if res[1] <> res[2] then
+          AColor := 4; //красный цвет шрифта
+      end
+      else begin
+        res[0] := res[2];
+        AColor := 1;
+      end;
+    end;
+    Result := res[ANum];
+    if AFormatTime then begin
+      if S.IsNumber(S.NSt(Result), 0, 24) then
+        Result := FormatFloat('0.00', S.VarToFloat(Result))
+      else
+        Result := S.NSt(Result);
+    end;
+    if ANum <> 0 then
+      AComm := FDays.G(pos, 'comm' + IntToStr(ANum)).AsString;
+  end
+  else if ANum = 4 then begin
+    Result := FDays.G(pos, 'premium');
+    AComm := FDays.G(pos, 'premium_comm').AsString;
+  end
+  else if ANum = 5 then begin
+    Result := FDays.G(pos, 'penalty');
+    AComm := FDays.G(pos, 'penalty_comm').AsString;
+  end
+  else if ANum = 6 then begin
+    Result := FDays.G(pos, 'nighttime');
+    AComm := FDays.G(pos, 'nighttime').AsString;
+  end;
 end;
 
-
+(*
 function TTurvData.GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
 var
   pos: Integer;
@@ -321,6 +386,28 @@ begin
   end;
   Result := v0;
 end;
+     *)
+
+procedure TTurvData.CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
+//итоги по строке “”–¬
+//врем€ - если енсть согласованное то оно, иначе по парсеку, врем€ руководител€ не учитываетс€
+//премии, депремирование - сумма дневных значений
+var
+  i, j, pos: Integer;
+begin
+  AWorktime := 0;
+  APremium := 0;
+  APenalty := 0;
+  for i := 1 to FDaysCount do begin
+    pos := GetPosInList(ARow, i);
+    if pos < 0 then
+      Continue;
+    AWorktime := AWorktime + S.IIf(FDays.G(pos, 'worktime3') = null, FDays.G(pos, 'worktime2').AsFloat, FDays.G(pos, 'worktime3').AsFloat);
+    APremium := APremium + FDays.G(pos, 'premium').AsFloat;
+    APenalty := APenalty + FDays.G(pos, 'penalty').AsFloat;
+  end;
+end;
+
 
 
 

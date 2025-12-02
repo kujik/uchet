@@ -1807,7 +1807,7 @@ begin
   Result := -2;
   if not User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]) then
     Exit;
-  va2 := Q.QSelectOneRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint from orders where id = :id$i', [IdOrder]);
+  va2 := Q.QSelectOneRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint from v_orders where id = :id$i', [IdOrder]);
   //позволим менять статутс закрытия менеджера только сотрудникам, оформившим заказа,
   //или с соотвествующим правом, или с правами администратора данных
   if (User.GetId <> va2[11]) and not User.IsDataEditor and not User.Role(rOr_D_Order_SetCompletedMA) then
