@@ -1023,7 +1023,10 @@ select
   k.full_name,
   k.inn,
   k.e_mail,
-  k.comments
+  k.comments,
+  k.add_phone,
+  k.add_address,
+  k.add_contact_name
 from
   dv.kontragent k, 
   dv.kontragent_pri_kon_post kp
@@ -1192,6 +1195,14 @@ create or replace view v_itm_log as
      ;
 
 select count(*) from v_itm_log;
+
+--------------------------------------------------------------------------------
+-- модификация тадицы контрагентов
+--------------------------------------------------------------------------------
+
+alter table dv.kontragent add add_phone varchar2(400);
+alter table dv.kontragent add add_address varchar2(400);
+alter table dv.kontragent add add_contact_name varchar2(400);
 
 
 --------------------------------------------------------------------------------

@@ -15,6 +15,9 @@ type
     edt_e_mail: TDBEditEh;
     edt_inn: TDBEditEh;
     mem_comments: TDBMemoEh;
+    edt_add_address: TDBEditEh;
+    edt_add_contact_name: TDBEditEh;
+    edt_add_phone: TDBEditEh;
   private
     { Private declarations }
     FFullName: string;
@@ -164,7 +167,15 @@ function TFrmDlgRItmSupplier.Prepare: Boolean;
 begin
   Caption:='Поставщик';
   F.DefineFields:=[
-    ['id_kontragent$i',#0,-1], ['name_org$s','V=1:255::T'], ['full_name$s','V=1:1000::T'], ['inn$s','V=0:12::T'], ['e_mail$s','V=0:50::T'], ['comments$s','V=0:2000::T']
+    ['id_kontragent$i',#0,-1],
+    ['name_org$s','V=1:255::T'],
+    ['full_name$s','V=1:1000::T'],
+    ['inn$s','V=0:12::T'],
+    ['e_mail$s','V=0:50::T'],
+    ['add_phone$s','V=0:400::T'],
+    ['add_address$s','V=0:400::T'],
+    ['add_contact_name$s','V=0:400::T'],
+    ['comments$s','V=0:2000::T']
   ];
   View:='v_itm_suppliers';
   Table:='dv.kontragent';

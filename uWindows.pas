@@ -554,6 +554,7 @@ begin
     myfrm_R_GrExpenseItems,
     myfrm_R_ExpenseItems,
     myfrm_R_Suppliers,
+    myfrm_R_Suppliers_SELCH,
     myfrm_J_Accounts,
     myfrm_J_Payments,
     myfrm_J_Accounts_SEL,

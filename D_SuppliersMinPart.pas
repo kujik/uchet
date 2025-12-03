@@ -145,7 +145,7 @@ end;
 procedure TDlg_SuppliersMinPart.DBGridEh1DblClick(Sender: TObject);
 begin
   if (DBGridEh1.Columns[DBGridEh1.Col - 1].Field.FieldName = 'id_supplier') and (MemTableEh1.RecordCount > 0) and (MemTableEh1.FieldByName('id_supplier').Value <> null) then
-    TFrmDlgRItmSupplier.Show(Self, myfrm_Dlg_R_Itm_Suppliers, [myfoMultiCopy, myfoDialog, myfoSizeable], fView, MemTableEh1.FieldByName('id_supplier').Value, null)
+    TFrmDlgRItmSupplier.Show(Self, myfrm_Dlg_R_Itm_Suppliers, [myfoMultiCopy, myfoDialog, myfoSizeable], S.IIf(User.Role(rOr_R_Itm_Suppliers_Ch), fEdit, fView), MemTableEh1.FieldByName('id_supplier').Value, null)
   else
     inherited;
 end;

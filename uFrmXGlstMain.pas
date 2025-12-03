@@ -1114,13 +1114,17 @@ v:=True;
   end
   else if FormDoc = myfrm_R_Itm_Suppliers then begin
     Caption:='Справочник поставщиков';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];  //!!!
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
     Frg1.Opt.SetFields([
       ['id_kontragent$i','_id','40'],
       ['name_org','Наименование','200'],
       ['full_name','Полное наименование','200'],
+      ['inn','ИНН','100'],
+      ['add_address','Адрес','200;h'],
+      ['add_contact_name','Контактное лицо','200;h'],
+      ['add_phone','Телефон','200'],
       ['e_mail','EMail','120'],
-      ['inn','ИНН','100']
+      ['comments','Комментарий','200;h']
     ]);
     Frg1.Opt.SetTable('v_itm_suppliers', '', 'id_kontragent');
     Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtRefresh],[],[mbtEdit,User.Role(rOr_R_Itm_Suppliers_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_R_Itm_Suppliers_Del)],[],[mbtGridSettings]]);
