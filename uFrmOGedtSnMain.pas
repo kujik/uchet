@@ -487,7 +487,7 @@ begin
       Frg1.Opt.Caption := Caption;
       FOrIds := '';
       Frg1.RefreshGrid;
-    Exit;
+      Exit;
     end;
     FOrIds := A.Implode(A.VarDynArray2ColToVD1(Wh.SelectDialogResult2, 0), ',');  //ids
     st := A.Implode(A.VarDynArray2ColToVD1(Wh.SelectDialogResult2, 2), ',');  //ornum

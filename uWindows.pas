@@ -767,7 +767,7 @@ begin
 
   if F = myfrm_Dlg_R_Jobs then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_jobs', 'Профессия', 400, 100,
-      [['name$s', cntEdit, 'Профессия','1:400::T'], ['comm$s', cntEdit, 'Комментарий','0:400::T'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]
+      [['name$s', cntEdit, 'Профессия','1:400::T'], ['comm$s', cntEdit, 'Комментарий','0:400::T'], ['has_hazard_comp$i', cntCheck, 'Компенсация'#13#10'за вредность'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]
     );
   end
   else if F = myfrm_Dlg_R_TurvCodes then begin
