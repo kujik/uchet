@@ -564,6 +564,7 @@ begin
       ['id$i','_id','40'],
       ['name','Должность','300'],
       ['comm','Комментарий','200;h'],
+      ['has_hazard_comp$i', 'Компенсация за вредность', '80', 'pic'],
       ['active$i','Используется','75','pic']
     ]);
     Frg1.Opt.SetTable('w_jobs');
@@ -2076,14 +2077,11 @@ begin
         else
           Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
     end;
-   if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
+    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
       TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
       if Turv.DeletePayrollCalculations(Fr.ID) then
-        Fr.RefreshGrid();    if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
-
-
-
+        Fr.RefreshGrid();
     if FormDoc = myfrm_R_StdProjects then
       Wh.ExecDialog(myfrm_Dlg_R_StdProjects, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Groups then

@@ -88,20 +88,23 @@ type
     FDays: TNamedArr;
     FTurvCodes: TNamedArr;
     FTurvCodeWeekend: Integer;
+    FEmptyDay: TNamedArr;
     function GetCount: Integer;
+    function GetFinalized: Boolean;
   public
     property Departament: Variant read FDepartament;
     property Employee: Variant read FEmployee;
     property DtBeg: TDateTime read FDtBeg;
     property DtEnd: TDateTime read FDtEnd;
     property DaysCount: Integer read FDaysCount;
-    property IsFinalized: Boolean read FIsFinalized;
+    property IsFinalized: Boolean read GetFinalized;
     property Count: Integer read GetCount;
     property Title: TNamedArr read FTitle;
     property List: TNamedArr read FList;
     property Days: TNamedArr read FDays;
     property TurvCodes: TNamedArr read FTurvCodes;
     property TurvCodeWeekend: Integer read FTurvCodeWeekend;
+    property EmptyDay: TNamedArr read FEmptyDay;
     procedure Create(AId: Variant); overload;
     procedure Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime); overload;
     procedure LoadList;
@@ -197,6 +200,11 @@ begin
   Inc(Result);
 end;
 
+function TTurvData.GetFinalized: Boolean;
+begin
+  Result := FTitle.G('is_finalized').AsInteger = 1;
+end;
+
 procedure TTurvData.LoadDays;
 begin
   Q.QLoadFromQuery(
@@ -207,6 +215,12 @@ begin
      [FDtBeg, FDtEnd],
      FDays
   );
+  FEmptyDay.FFull := FDays.FFull;
+  FEmptyDay.F := FDays.F;
+  SetLength(FEmptyDay.V, 1);
+  SetLength(FEmptyDay.V[0], Length(FDays.F));
+  for var i := 0 to High(FDays.F) do
+    FEmptyDay.V[0][i] := null;
 end;
 
 procedure TTurvData.LoadTurvCodes;
@@ -412,7 +426,7 @@ begin
   APremium := 0;
   APenalty := 0;
   for i := 1 to FDaysCount do begin
-    pos := GetPosInList(ARow, i);
+    pos := GetPosInDays(ARow, i);
     if pos < 0 then
       Continue;
     AWorktime := AWorktime + S.IIf(FDays.G(pos, 'worktime3') = null, FDays.G(pos, 'worktime2').AsFloat, FDays.G(pos, 'worktime3').AsFloat);

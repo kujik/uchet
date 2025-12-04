@@ -78,6 +78,8 @@ type
     NoSerializeCtrls: Boolean;
     //обновлять данные в вызвавшей форме при нажатии Ок
     RefreshParent: Boolean;
+    //никогда не устанавливать авто матически блокировку в БД
+    NoDbLock: Boolean;
     //информация, выводима по клику на соответствующей иконке
     InfoArray: TVarDynArray2;
   end;
@@ -888,7 +890,8 @@ function TFrmBasicMdi.FormDbLock(msg: string = '*|*'): TDialogType;
 begin
   FLockInDB := FMode;
   Result := FMode;
-  if (FFormDoc = '')or(FID = null) then Exit;
+  if (FFormDoc = '') or (FID = null) or (FOpt.NoDbLock) then
+    Exit;
   FMode := Q.DBLock(True, FFormDoc, VarToStr(FID), msg, FMode)[3];
   FLockInDB := FMode;
   Result := FMode;
@@ -1475,7 +1478,8 @@ begin
   if (not FFormNotCreatedByApplication) and (FormStyle = fsNormal) then begin
     Settings.SaveWindowPos(Self, FormDoc);
     if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
-      Q.DBLock(False, FormDoc, VarToStr(id));
+      if not FOpt.NoDbLock then
+        Q.DBLock(False, FormDoc, VarToStr(id));
     Wh.ChildFormDestroy(Sender);
     Exit;
   end;

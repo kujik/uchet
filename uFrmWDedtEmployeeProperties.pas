@@ -187,9 +187,9 @@ begin
       //и присвоим всем дням с удаленным id_employee_properties айди того, к которому откатились
       Q.QExecSql('update w_turv_day set id_employee_properties = :id_last$i where id_employee_properties = :id$i', [FIdLast, ID]);
       //вызовем родительскую процедуру (поле FID будет обновлено)
- //     Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
+      Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
       //!!! ЕСЛИ ДЕЛАТЬ ТАК - СТРАННАЯ ОШИБКА ПРИ УДАЛЕНИИ, НАДО РАЗБИРАТЬСЯ - В ЛОГАХ ДРУГОЙ АЙДИ!!!
-      Result := inherited;
+ //     Result := inherited;
     end
     else begin
       //вызовем родительскую процедуру (поле FID будет обновлено)
@@ -248,6 +248,32 @@ begin
     Exit;
   F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);
 end;
+
+(*
+//вернет сообщение, на какие из затрагиваемых периодов установлена блокировка, и какие закрыты
+//если сообщение не пустое, то продолжать действие нельзя
+function TFrmWDedtWorkerStatus.VerifyTurvPeriods: string;
+var
+  i, j: Integer;
+  id, st: string;
+  dt01, dt02: TDatetime;
+  b: Boolean;
+  v, v1: Variant;
+begin
+  Result := '';
+  for i := 0 to High(FDep) do begin
+    id := VarToStr(FDep[i][0]) + ' ' + FormatDateTime('yyyymmdd', TDateTime(FDep[i][1])) + ' ' + FormatDateTime('yyyymmdd', TDateTime(FDep[i][2]));
+    v := Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add = :documadd$s', [myfrm_Dlg_Turv, id]);
+    if v[0] <> null then begin
+      v1 := Q.QSelectOneRow('select name from ref_divisions where id = :id$i', [FDep[i][0]]);
+      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v1[0]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' заблокирован ' + VarToStr(v[1]) + '.';
+    end;
+    v := Q.QSelectOneRow('select id_division, name from v_turv_period where id = :id$s and commit = :commit$i', [id, 1]);
+    if v[0] <> null then
+      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v[1]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' завершен и не может быть изменен!'
+  end;
+end;
+*)
 
 
 end.

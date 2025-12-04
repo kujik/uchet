@@ -24,13 +24,16 @@ type
     FFull: TVarDynArray;
     F: TVarDynArray;
     V: TVarDynArray2;
-    function Col(Field: string): Integer;
-    function G(RowNo: Integer; Field: string): Variant; overload;
-    function G(Field: string): Variant; overload;
+    function  Col(Field: string): Integer;
+    function  G(RowNo: Integer; Field: string): Variant; overload;
+    function  G(Field: string): Variant; overload;
+    function  GetValue(RowNo: Integer; Field: string): Variant; overload;
+    function  GetValue(Field: string): Variant; overload;
+    function  GetRow(RowNo: Integer): TVarDynArray;
     procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant);
-    function Empty: Boolean;
-    function Count: Integer;
-    function FieldsCount: Integer;
+    function  Empty: Boolean;
+    function  Count: Integer;
+    function  FieldsCount: Integer;
     procedure Clear;
   end;
 
@@ -2635,6 +2638,10 @@ begin
   for i:=0 to High(sa) do Result:=Result + [sa[i]];
 end;
 
+
+
+
+
 function TNamedArr.Col(Field: string): Integer;
 var
   i : Integer;
@@ -2649,6 +2656,18 @@ begin
 end;
 
 function TNamedArr.G(RowNo: Integer; Field: string): Variant;
+begin
+  Result := GetValue(RowNo, Field);
+end;
+
+function TNamedArr.G(Field: string): Variant;
+var
+  i : Integer;
+begin
+  Result := GetValue(0, Field);
+end;
+
+function TNamedArr.GetValue(RowNo: Integer; Field: string): Variant;
 var
   i : Integer;
 begin
@@ -2658,11 +2677,18 @@ begin
   Result := V[RowNo][i];
 end;
 
-function TNamedArr.G(Field: string): Variant;
+function TNamedArr.GetValue(Field: string): Variant;
 var
   i : Integer;
 begin
-  Result := G(0, Field);
+  Result := GetValue(0, Field);
+end;
+
+function TNamedArr.GetRow(RowNo: Integer): TVarDynArray;
+begin
+  if (RowNo < 0) or (RowNo > High(V)) then
+    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' вне диапозона в NamedArr');
+  Result := A.VarDynArray2RowToVD1(V, RowNo);
 end;
 
 procedure TNamedArr.SetValue(RowNo: Integer; Field: string; NewValue: Variant);
@@ -2674,7 +2700,6 @@ begin
     raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
   V[RowNo][i] := NewValue;
 end;
-
 
 function TNamedArr.Empty: Boolean;
 begin
