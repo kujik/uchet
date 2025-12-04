@@ -1,8 +1,10 @@
 {
 проверка что были изменения при добавлении статуса по сравнению с прошлым статусом
 диапозон дат начала статуса
-блокировки, уведомления
+блокировки, уведомления - пока только блокировка на редактирование любого турв с текущим и ппрошлым подразделением!
 режим редактирования для разработчика
+нужно обеспечить блокировку оденовременного открытия окна статуса!
+
 }
 
 unit uFrmWDedtEmployeeProperties;
@@ -36,9 +38,11 @@ type
     FIdEmp: Integer;
     FIdLast: Variant;
     FLastRec: TNamedArr;
-    function Prepare: Boolean; override;
-    function LoadComboBoxes: Boolean; override;
-    function Save: Boolean; override;
+    FDep: TVarDynArray;
+    function  Prepare: Boolean; override;
+    function  LoadComboBoxes: Boolean; override;
+    procedure VerifyBeforeSave; override;
+    function  Save: Boolean; override;
     procedure ControlOnChange(Sender: TObject); override;
     procedure SetControlsState;
   public
@@ -167,12 +171,39 @@ begin
   Result := True;
 end;
 
+procedure TFrmWDedtEmployeeProperties.VerifyBeforeSave;
+var
+  i, j: Integer;
+  st: string;
+  ids, lock, users: TVarDynArray;
+begin
+  FErrorMessage := '';
+  FDep := [GetcontrolValue('cmb_id_departament'), GetcontrolValue('cmb_id_departament')];
+  if (FIdLast <> null) and (FLastRec.G('id_departament') <> FDep[0]) then
+    FDep[1] := FLastRec.G('id_departament');
+  ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where id_departament in (:id1$i, :id2$i)', FDep);
+  users := [];
+  for i := 0 to High(ids) do begin
+    lock := Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add like :documadd$s', [myfrm_Dlg_Turv, ids[i].AsString + '-%']);
+    if lock[0] <> null then
+      users := users + [lock[1]];
+  end;
+{    if lock[0] <> null then begin
+      v1 := Q.QSelectOneRow('select name from ref_divisions where id = :id$i', [FDep[i][0]]);
+      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v1[0]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' заблокирован ' + VarToStr(v[1]) + '.';
+    end;}
+  if Length(users) = 0 then
+    Exit;
+  users := A.RemoveDuplicates(users);
+  FErrorMessage := 'ТУРВ открыты у следующих пользователей:'#13#10 + A.Implode(users, #13#10) + #13#10 + 'Их необходимо закрыть, чтобы продолжить!';
+end;
 
 function TFrmWDedtEmployeeProperties.Save: Boolean;
 var
   st, st1: string;
   dt: TDateTime;
 begin
+  Result := False; Exit;
   Result := True;
   Q.QBeginTrans(True);
   if Mode = fEdit then

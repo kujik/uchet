@@ -169,7 +169,7 @@ begin
     [-mbtFine, FInEditMode and FRgsEdit1, True],
     [-mbtComment, FInEditMode, True],
     [],
-    [mbtSendEMail, FRgsEdit2 and FInEditMode],
+    //[mbtSendEMail, FRgsEdit2 and FInEditMode],
     [mbtCustom_SundaysToTurv, FInEditMode and FRgsEdit2, FInEditMode],
     [mbtLock, FRgsCommit and (FTurv.IsFinalized or (Mode = fEdit)), True, S.IIFStr(FTurv.IsFinalized, 'Отменить закрытие периода', 'Закрыть период')],
     [],

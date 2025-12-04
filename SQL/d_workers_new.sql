@@ -1,10 +1,11 @@
 --------------------------------------------------------------------------------
 --профессии
-drop table w_jobs cascade constraints;
+alter table w_jobs add has_hazard_comp number(1) default 0;
 create table w_jobs(
   id number(11),
   name varchar2(400),
   comm varchar2(400),
+  has_hazard_comp number(1) default 0,
   active number(1),
   constraint pk_w_jobs primary key (id)
 );
@@ -452,7 +453,7 @@ where
 --alter  table _wturv_day add nighttime number(4,2);
 --alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
 --таблица турв для конкретного работника за конкретный день
-create table w_turv_day(
+create table period(
   id number(11),        
   id_employee_properties number(11),             --
   id_employee number(11),             --
@@ -823,6 +824,12 @@ select null as pos1, 0 as pos2, id, id_job, grade, id_schedule, id_departament, 
 
 
 select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, comm1, comm2, comm3, begtime, endtime, settime3, nighttime from w_turv_day where  id_employee_properties in (979,17) order by dt;
+
+
+
+drop index idx_w_turv_day_ep;
+create unique index idx_w_turv_day_e on w_turv_day(id_employee, dt);
+
 
 
 

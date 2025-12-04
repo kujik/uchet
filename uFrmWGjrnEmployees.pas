@@ -141,9 +141,9 @@ end;
 procedure TFrmWGjrnEmployees.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   Handled := True;
-  {if Tag = mbtTest then
+  if Tag = mbtTest then
     Turv.ConvertEmployees202511
-  else}
+  else
   if fMode <> fNone then
     TFrmWDedtEmployeeProperties.Show(Frg2, '*' , [myfoDialog, myfoSizeable], fMode, Fr.ID, Frg1.ID)
   else begin

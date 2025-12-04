@@ -775,7 +775,7 @@ begin
      [['code$s', cntEdit, 'Код','1:25::T'], ['name$s', cntEdit, 'Расшифровка','1:400::T']], [['caption dlgedit']]);
   end
   else if F = myfrm_Dlg_R_Divisions then begin
-    TFrmWDedtDivision.Show(AOwner, F, [myfoDialog], fMode, AId, null);
+    TFrmWDedtDivision.Show(AOwner, F, MyFormOptions, fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Workers then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_employees', 'Работник', 600, 70, [
@@ -895,7 +895,7 @@ begin
   end
   else if F = myfrm_Dlg_WorkerStatus then begin
 //~    Form := TDlg_WorkerStatus.ShowDialog(AOwner, F, fMode, AId, AAddParam);
-    TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);
+    TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);  //нужно обеспечить блокировку оденовременного открытия окна статуса!
   end
   else if F = myfrm_Dlg_Turv then begin
     TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, AID, null);

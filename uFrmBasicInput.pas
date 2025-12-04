@@ -153,7 +153,7 @@ begin
   GMyFormOptions := AMyFormOptions;
   if dbioSizeable in AMyFormOptions then
     myFormOptions1 := myFormOptions1 + [myfoSizeable];
-  F := Create(AOwner, ADoc, [myfoModal, myfoDialog] + myFormOptions1, AMode, null, null,
+  F := Create(AOwner, ADoc, [myfoModal, myfoDialog, myfoMultiCopy] + myFormOptions1, AMode, null, null,
     [AWidth, ALeft, ACaption, AInfo],
     @PSetControlsProc
   );
@@ -202,7 +202,7 @@ begin
     myFormOptions1 := myFormOptions1 + [myfoModal];
   if dbioSizeable in AMyFormOptions then
     myFormOptions1 := myFormOptions1 + [myfoSizeable];
-  F := Create(AOwner, ADoc, [myfoDialog] + myFormOptions1, AMode, AID, null,
+  F := Create(AOwner, ADoc, [myfoDialog, myfoMultiCopy] + myFormOptions1, AMode, AID, null,
     [AWidth, ALeft, ACaption, AInfo, ATAble],
     @PSetControlsProc
   );
@@ -251,7 +251,7 @@ begin
     myFormOptions1 := myFormOptions1 + [myfoModal];
   if dbioSizeable in AMyFormOptions then
     myFormOptions1 := myFormOptions1 + [myfoSizeable];
-  F := Create(AOwner, ADoc, [myfoDialog] + myFormOptions1, AMode, AID, null,
+  F := Create(AOwner, ADoc, [myfoDialog, myfoMulticopy] + myFormOptions1, AMode, AID, null,
     [AWidth, ALeft, ACaption, AInfo, ATAble],
     @PSetControlsProc
   );
@@ -295,7 +295,7 @@ begin
     myFormOptions1 := myFormOptions1 + [myfoModal];
   if dbioSizeable in AMyFormOptions then
     myFormOptions1 := myFormOptions1 + [myfoSizeable];
-  F := Create(AOwner, ADoc, [myfoDialog] + myFormOptions1, AMode, AID, null,
+  F := Create(AOwner, ADoc, [myfoDialog, myfoMultiCopy] + myFormOptions1, AMode, AID, null,
     [AWidth, ALeft, ACaption, AInfo, ATAble],
     @PSetControlsProc
   );

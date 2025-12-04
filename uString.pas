@@ -414,6 +414,8 @@ procedure VarDynArray2InsertArr(var arr2: TVarDynArray2; arr1: TVarDynArray; Pos
     function VarIntToArray(v: Variant): TVarDynArray;
     //получает массив строк, возвращает вариантный массив
     function StringDynArrayToVarDynArray(sa: TStringDynArray): TVarDynArray;
+    //удаляем дублирующиеся знаения из массива
+    function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
   end;
 
 var
@@ -2636,6 +2638,35 @@ var
 begin
   Result:=[];
   for i:=0 to High(sa) do Result:=Result + [sa[i]];
+end;
+
+
+function TMyArrayHelper.RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
+//удаляем дублирующиеся знаения из массива
+var
+  i, j: Integer;
+  isDuplicate: Boolean;
+  resultArray: TVarDynArray;
+begin
+  SetLength(resultArray, 0);
+  for i := 0 to High(AValues) do
+  begin
+    isDuplicate := False;
+    for j := 0 to High(resultArray) do
+    begin
+      if VarCompareValue(AValues[i], resultArray[j]) = vrEqual then
+      begin
+        isDuplicate := True;
+        Break;
+      end;
+    end;
+    if not isDuplicate then
+    begin
+      SetLength(resultArray, Length(resultArray) + 1);
+      resultArray[High(resultArray)] := AValues[i];
+    end;
+  end;
+  Result := resultArray;
 end;
 
 

@@ -1819,7 +1819,23 @@ var
 begin
   if MyQuestionMessage('Импортировать данные?') <> mrYes then
     Exit;
+  Q.QBeginTrans(True);
+  Q.QExecSql('delete from w_turv_day', []);
   Q.QExecSql('delete from w_employee_properties', []);
+  Q.QExecSql('delete from w_departaments', []);
+  Q.QExecSql('delete from w_employees', []);
+  Q.QExecSql('delete from w_jobs', []);
+  Q.QExecSql('delete from w_schedule_hours', []);
+  Q.QExecSql('delete from w_schedules', []);
+  Q.QExecSql('insert into w_jobs (id, name, active) select id,name,active from ref_jobs', []);
+  Q.QExecSql('delete from w_turvcodes', []);
+  Q.QExecSql('insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes', []);
+  Q.QExecSql('insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers', []);
+  Q.QExecSql('insert into w_departaments (id,code,name,id_head,id_prod_area,is_office,ids_editusers,active) select id,code,name,id_head,id_prod_area,office,editusers,active from ref_divisions', []);
+  Q.QExecSql('insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules', []);
+  Q.QExecSql('insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours', []);
+  Q.QExecSql('delete from w_turv_period', []);
+  Q.QExecSql('insert into w_turv_period (id, id_departament, dt1, dt2, is_finalized, status) select id, id_division, dt1, dt2, commit, status from turv_period', []);
   Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
     'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []
   );
@@ -1828,7 +1844,6 @@ begin
   Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
   w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
   sh := Q.QloadToVarDynArray2('select * from (select id_worker, id_schedule_active, dt1, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1' ,[]);
-  Q.QExecSql('delete from w_turv_day', []);
   Q.QExecSql('insert into w_turv_day (dt, id_employee, '+
     'id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3) '+
     'select dt, id_worker, id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3 '+
@@ -1878,6 +1893,8 @@ begin
         es.G(i, 'id'), es.G(i, 'id_employee'), es.G(i, 'id_job'), es.G(i, 'id_departament'), es.G(i, 'is_hired'), es.G(i, 'is_terminated'), es.G(i, 'dt_beg'),
         es.G(i, 'dt_end'), es.G(i, 'personnel_number'), es.G(i, 'id_organization'), es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
       ]);
+  Q.QExecSql('update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE(''15.11.2027'', ''DD.MM.YYYY'')))', []);
+  Q.QCommitOrRollback(True);
 end;
 
 begin
