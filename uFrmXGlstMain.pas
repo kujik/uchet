@@ -99,7 +99,8 @@ uses
   uFrmWGEdtTurv,
   uFrmWGedtPayroll,
   uFrmWDedtCreatePayroll,
-  uFrmWDedtCreatePayrollN
+  uFrmWDedtCreatePayrollN,
+  uFrmWGedtPayrollN
   ;
 
 
@@ -2082,6 +2083,8 @@ begin
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
       if Turv.DeletePayrollCalculations(Fr.ID) then
         Fr.RefreshGrid();
+    if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
+      TFrmWGedtPayrollN.Show(Application, '22222333------', [myfoDialog, myfoSizeable, myfoMulticopy], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_StdProjects then
       Wh.ExecDialog(myfrm_Dlg_R_StdProjects, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Groups then

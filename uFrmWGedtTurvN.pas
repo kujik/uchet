@@ -686,8 +686,9 @@ begin
   if (r < 0) then
     Exit;
   posl := FTurv.GetPosInList(r, d);
+  if posl < 0 then
+    Exit;
   pos := FTurv.GetPosInDays(r, d);
-
   if (d < 0) then
     //не колонки дней - только фио
     TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FTurv.List.G(posl, 'name')])

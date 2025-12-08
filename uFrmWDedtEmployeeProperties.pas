@@ -12,12 +12,11 @@ unit uFrmWDedtEmployeeProperties;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Mask, Vcl.StdCtrls,
-  DBCtrlsEh, DBGridEh,  //ehlib
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+  Vcl.ExtCtrls, Vcl.Mask, Vcl.StdCtrls, DBCtrlsEh, DBGridEh,  //ehlib
   uData, uString, uFrDBGridEh,  //my
-  uFrmBasicDbDialog
-  ;
+  uFrmBasicDbDialog;
 
 type
   TFrmWDedtEmployeeProperties = class(TFrmBasicDbDialog)
@@ -39,10 +38,10 @@ type
     FIdLast: Variant;
     FLastRec: TNamedArr;
     FDep: TVarDynArray;
-    function  Prepare: Boolean; override;
-    function  LoadComboBoxes: Boolean; override;
+    function Prepare: Boolean; override;
+    function LoadComboBoxes: Boolean; override;
     procedure VerifyBeforeSave; override;
-    function  Save: Boolean; override;
+    function Save: Boolean; override;
     procedure ControlOnChange(Sender: TObject); override;
     procedure SetControlsState;
   public
@@ -55,8 +54,9 @@ implementation
 
 uses
   Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
-  uSettings, uSys, uForms, uFields, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
-  ;
+  uSettings, uSys, uForms, uFields, uDBOra, uMessages, uWindows, uPrintReport,
+  uFrmBasicInput, uFrmBasicMdi   //my basic
+;
 
 {$R *.dfm}
 
@@ -103,51 +103,44 @@ begin
     DtVer := DateToStr(IncDay(Date, -62));
     if (FIdLast <> null) then
       if (FLastRec.G('is_terminated') = 1) or (FLastRec.G('is_hired') = 1) then
-        DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 1))
+        DtVer := S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 1))
       else
-        DtVer :=  S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
-    DtVer := 'V=' + DtVer + ':' +  S.DateTimeToIntStr(IncDay(Date, +16));
+        DtVer := S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
+    DtVer := 'V=' + DtVer + ':' + S.DateTimeToIntStr(IncDay(Date, +16));
   end;
   Caption := '~' + S.Decode([Mode, fCopy, 'Статус работника - Добавить', fAdd, 'Статус работника - Добавить', fDelete, 'Статус работника - Удалить', fEdit, 'Статус работника - Изменить', 'Статус работника - Просмотреть']);
-  F.DefineFields:=[
+  F.DefineFields := [
     ['id$i'],
-    ['dt$d',#0,Date],
-    ['id_mode$i;0;0','V='+S.IIf(Mode = fEdit, '0', '1')+':400',#0,FIdMode],
-    ['id_manager$i',#0,User.GetId],
-    ['dt_beg$d',DtVer],
-    ['id_employee$i','V=1:400'],
-    ['id_departament$i','V=1:400'],
-    ['id_job$i','V=1:400'],
-    ['grade$f','V=1:400'],
-    ['id_schedule$i','V=1:400'],
+    ['dt$d', #0, Date],
+    ['id_mode$i;0;0', 'V=' + S.IIf(Mode = fEdit, '0', '1') + ':400', #0, FIdMode],
+//    ['id_mode$i;0;0', 'V=0:400', #0, FIdMode],
+    ['id_manager$i', #0, User.GetId],
+    ['dt_beg$d', DtVer],
+    ['id_employee$i', 'V=1:400'],
+    ['id_departament$i', 'V=1:400'],
+    ['id_job$i', 'V=1:400'],
+    ['grade$f', 'V=1:400'],
+    ['id_schedule$i', 'V=1:400'],
     ['is_concurrent$i'],
     ['is_foreman$i'],
     ['is_trainee$i'],
-    ['id_organization$i','V=0:400'],
-    ['personnel_number$s','V=0:400'],
-    ['comm$s','V=0:400'],
-    ['is_terminated$i;0']
+    ['id_organization$i', 'V=0:400'],
+    ['personnel_number$s', 'V=0:400'],
+    ['comm$s', 'V=0:400'],
+    ['is_hired$i'],
+    ['is_terminated$i']
   ];
 
   View := 'w_employee_properties';
   Table := 'w_employee_properties';
-  FOpt.InfoArray:= [
-    ['Ввод данных.'#13#10+
-     ''#13#10+
-     ''#13#10
-     ,not A.InArray(Mode, [fView, fDelete]) {and (User.GetId = S.NInt(CtrlValues[3]))}
-    ],
-    [
-     ''#13#10
-    ,not A.InArray(Mode, [fView, fDelete])],
-    [''
-    ,A.InArray(Mode, [fView, fDelete])]
-  ];
+  FOpt.InfoArray := [['Ввод данных.'#13#10 + ''#13#10 + ''#13#10, not A.InArray(Mode, [fView, fDelete]) {and (User.GetId = S.NInt(CtrlValues[3]))}
+    ], [''#13#10, not A.InArray(Mode, [fView, fDelete])], ['', A.InArray(Mode, [fView, fDelete])]];
   FWHBounds.Y2 := -1;
   //выполним метод родителя
   Result := inherited;
   if not Result then
     Exit;
+  F.SetProp('id_employee', FIdEmp);
   SetControlsState;
 end;
 
@@ -202,9 +195,17 @@ function TFrmWDedtEmployeeProperties.Save: Boolean;
 var
   st, st1: string;
   dt: TDateTime;
+  status: Integer;
 begin
-  Result := False; Exit;
+  //Result := False; Exit;
   Result := True;
+  status := GetcontrolValue('cmb_id_mode').AsInteger;
+  F.SetProp('is_hired', 0);
+  F.SetProp('is_terminated', 0);
+  if status = 1 then
+    F.SetProp('is_hired', 1);
+  if status = 3 then
+    F.SetProp('is_terminated', 1);
   Q.QBeginTrans(True);
   if Mode = fEdit then
     Result := inherited
@@ -238,11 +239,18 @@ begin
       Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
     end;
   end
+  else if (FIdLast <> null) and (FLastRec.G('is_terminated') = 1) and (Mode = fDelete) then begin
+    //при удалени статуса, если предыдущий является увольнением
+    //удалим данные турв по удаляемому статусу и удалим сам статус
+    Q.QExecSql('delete from w_turv_day where id_employee_properties = :id$i', [ID]);
+    Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
+  end
   else
     //если нет предыдущего статуса, или же предыдущий есть увольнение - просто обработаем текущую строку
     //(это либо удаление последнего статуса, либо приём на работу)
     //для увольнения не нужно корректировать дату и править таблицу дней
     Result := inherited;
+  //Q.QRollbackTrans;
   Q.QCommitOrRollback(Result);
 end;
 
@@ -262,10 +270,7 @@ begin
   else if Mode = fEdit then
     SetControlsEditable([cmb_id_mode, dedt_dt_beg], False);
   //заблокируем все если выбрали режим Увольнение
-  SetControlsEditable(
-    [cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number],
-    (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1))
-  );
+  SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
   if Mode = fEdit then
     Exit;
   //заблокирем изменение организации и табльного номера, если это не прием, или если они уже введены
@@ -277,7 +282,8 @@ begin
   end;
   if GetControlValue('cmb_id_mode').AsString <> '3' then
     Exit;
-  F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);
+Exit;
+  F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);  //!!! работает неправильно, сбрасывается комбобокс выбора режима!!!
 end;
 
 (*
@@ -306,5 +312,5 @@ begin
 end;
 *)
 
-
 end.
+

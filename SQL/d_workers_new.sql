@@ -246,7 +246,7 @@ create table w_employee_properties(
   is_trainee number(1) default 0,           --ученик
   grade number default 1,                    --разряд
   comm varchar(4000), 
-  id_manager number(1),
+  id_manager number(11),
   --deleted number(1) default 0,              
   constraint pk_w_employee_properties primary key (id),
   constraint fk_w_employee_properties_emp foreign key (id_employee) references w_employees,
@@ -370,6 +370,7 @@ select
   row_number() over (partition by ep.id_employee order by ep.id) as rn,
   case when is_hired = 1 then 'принят' when is_terminated = 1 then 'уволен' else 'переведен' end as status,
   f_fio(e.f, e.i, e.o) as name,
+  f_fio(e.f, e.i, e.o) as employee,
   o.name as organization,
   d.name as departament,
   j.name as job,
@@ -385,15 +386,28 @@ from
   w_jobs j,
   ref_sn_organizations o,
   w_schedules s,
+  --w_schedule_hours h,
   adm_users u
-where
+where  
   ep.id_employee = e.id and
   ep.id_departament = d.id (+) and
   ep.id_job = j.id (+) and
   ep.id_organization = o.id (+) and
   ep.id_schedule = s.id (+) and
   ep.id_manager = u.id (+)
-;     
+  ;
+/*  
+and h.id = s.id
+    AND h.dt = (
+        CASE
+            WHEN EXTRACT(DAY FROM ep.dt) >= 16 THEN
+                TRUNC(ep.dt, 'MM') + 15  -- 16-е число текущего месяца
+            ELSE
+                TRUNC(ep.dt, 'MM')       -- 1-е число текущего месяца
+        END
+    )
+;
+*/         
 --!
 --delete from w_employee_properties;
 --insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
@@ -453,7 +467,7 @@ where
 --alter  table _wturv_day add nighttime number(4,2);
 --alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
 --таблица турв для конкретного работника за конкретный день
-create table period(
+create table w_turv_period(
   id number(11),        
   id_employee_properties number(11),             --
   id_employee number(11),             --
@@ -581,6 +595,8 @@ create table w_payroll_calculations_item(
   id_employee number(11),    --айди раболтника 
   id_job number(11),         --айди должности 
   id_schedule number(11),    --айди графика
+  is_foreman number(1),
+  days_worked number,
   hours_worked number,
   monthly_work_hours_norm number,
   period_work_hours_norm number,
@@ -625,11 +641,12 @@ create table w_payroll_calculations_item(
   hazard_pay number,              --доплата за вредность 
   daily_premium_total number,     --сумма дневных премий за период  
   holiday_work_premium number,    --доплата за работу в выходные и праздничные дни
-  к number,      --премия, вручную выставляемая в расчетных ведомостях
+  additional_premium number,      --премия, вручную выставляемая в расчетных ведомостях
   vacation_pay number,            --оплата отпуска
   sick_leave_pay number,          --оплата болльничных 
   gross_pay number,               --итого начислено до удержаний
   total_accrued number,
+  blank number,
 
   
   constraint pk_w_payroll_calc_item primary key (id),
@@ -639,48 +656,54 @@ create table w_payroll_calculations_item(
   constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id)
 );  
   
-create sequence sq_payroll_item start with 100 nocache;
+create sequence sq_w_payroll_calculations_item start with 100000 nocache;
 
 create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
-create index idx_payroll_item_dt_job on payroll_item(dt, id_job);   
+create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
+
+create or replace trigger trg_w_payroll_calc_item_bi_r before insert on w_payroll_calculations_item for each row
+begin
+  select nvl(:new.id, sq_w_payroll_calculations_item.nextval) into :new.id from dual;
+end;
+   
 
 --вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
-create or replace view v_payroll_item as 
+create or replace view v_w_payroll_calculations_item as 
 select
   i.*,
   s.code,
-  s.code || ' (' || to_char(i.norm) || ')' as schedule,
-  p.id_worker as id_worker_payroll,
+  s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
+  p.id_employee as id_target_employee,
   p.dt1,
   p.dt2 as dt2,
-  w.f || ' ' || w.i  || ' ' || w.o as workername,
-  w.personnel_number,
-  w.concurrent_employee,
-  o.name as org_name,
-  d.name as divisionname,
+  f_fio(w.f, w.i, w.o) as employee,
+  --w.personnel_number,
+  --w.concurrent_employee,
+  --o.name as org_name,
+  d.name as departament,
   d.id_prod_area,
   a.shortname as prod_area_shortname,
   a.name as prod_area_name,
   j.name as job,
   p.id_method as id_method
 from
-  payroll_item i,
-  payroll p,
-  ref_workers w,
-  ref_divisions d,
-  ref_jobs j,
-  payroll_method m,
-  ref_work_schedules s,
-  ref_sn_organizations o,
+  w_payroll_calculations_item i,
+  w_payroll_calculations p,
+  w_employees w,
+  w_departaments d,
+  w_jobs j,
+  w_payroll_calculation_methods m,
+  w_schedules s,
+  --ref_sn_organizations o,
   ref_production_areas a
 where
-  i.id_payroll = p.id and
-  i.id_division = d.id and
-  i.id_worker = w.id and 
+  i.id_payroll_calculation = p.id and
+  i.id_departament = d.id and
+  i.id_employee = w.id and 
   i.id_job = j.id and
   p.id_method = m.id (+) and
   i.id_schedule = s.id (+) and
-  o.id (+) = w.id_organization and
+  --o.id (+) = w.id_organization and
   a.id (+) = d.id_prod_area
 ;     
 
