@@ -92,7 +92,7 @@ begin
       if b then begin
   //      if QIUD('i', 'payroll', 'sq_payroll', 'id;id_division$i;dt1$d;dt2$d', [0, va1[i,0], dedt_Dt1.Value, dedt_Dt2.Value], False) <> -1
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
-if Integer(va1[i, 0]) = 5 then  //!!! ИТ
+if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ
         if Q.QIUD('i', 'w_payroll_calculations', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dedtDt1.Value, dedtDt2.Value], False) <> -1 then
           inc(cnt);  //увеличим количество созданных
       end;
