@@ -365,13 +365,20 @@ end;
 
 procedure TTurvData.SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
 var
-  pos: Integer;
+  pos, id, i: Integer;
 begin
   pos := GetPosInDays(ARow, ADay);
   if pos < 0 then begin
     SetLength(FDays.V, Length(FDays.V) + 1);
     pos := High(FDays.V);
+    SetLength(FDays.V[pos], FDays.FieldsCount);
+    for i := 0 to FList.Count - 1 do
+      if FList.G(i, 'pos1') = ARow then begin
+        FDays.SetValue(pos, 'id_employee_properties', FList.G(i, 'id'));
+        Break;
+      end;
   end;
+  FDays.SetValue(i, 'dt', IncDay(FDtBeg, ADay - 1));
   FDays.SetValue(pos, AField, ANewValue);
 end;
 

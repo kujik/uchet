@@ -24,6 +24,7 @@ type
     FFull: TVarDynArray;
     F: TVarDynArray;
     V: TVarDynArray2;
+    procedure Create(Fields: TVarDynArray; Len: Integer);
     function  Col(Field: string): Integer;
     function  G(RowNo: Integer; Field: string): Variant; overload;
     function  G(Field: string): Variant; overload;
@@ -2669,9 +2670,21 @@ begin
   Result := resultArray;
 end;
 
-
-
-
+procedure TNamedArr.Create(Fields: TVarDynArray; Len: Integer);
+var
+  i, j: Integer;
+begin
+  FFull := Copy(Fields);
+  F := Copy(Fields);
+  for j := 0 to High(F) do begin
+    i := Pos('$', F[j]);
+    if i > 0 then
+      F[j] := Copy(F[j], 1, i - 1);
+  end;
+  SetLength(V, Len);
+  for i := 0 to Len do
+    SetLength(V[i], Length(F));
+end;
 
 function TNamedArr.Col(Field: string): Integer;
 var

@@ -417,7 +417,7 @@ and h.id = s.id
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
-alter table w_turv_period add foreman_allowance_comm varchar2(400);
+alter table w_turv_period add foreman_allowance number;
 create table w_turv_period(  
   id number(11),                   
   id_departament number(11),        --подразделение

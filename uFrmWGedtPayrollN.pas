@@ -137,6 +137,7 @@ begin
     ['personnel_number$s', 'Табельный номер', '60'],
     ['job$s', 'Должность', '150;h'],
     ['is_foreman$i', '~Бригадир', '25', 'pic'],
+    ['days_worked$i', '~Отработано, дней', '25'],
     ['blank$i', '~  № бланка', wcol , 'e'],
     ['base_salarym$i', '~  Оклад', wcol, 'e'],          //!!!видимость  //ball_m
     ['planned_monthly_payroll$i', '~  Плановое' + sLineBreak + '  начисление', wcol, 'e'],  //salary_plan_m
@@ -387,7 +388,7 @@ begin
   ClearFilter;
   //загрузим айди работников, по которым созданя за этот период отдельные ведомости
   vadel := Q.QLoadToVarDynArray2(
-    'select id_worker from v_payroll where id_worker is not null and dt1 = :dt1$d',
+    'select id_employee from w_payroll_calculations where id_employee is not null and dt1 = :dt1$d',
     [FPayrollParams.G('dt1')]
   );
   //получим массив ТУРВ по отделу, отсортированную по фио, затем по дате

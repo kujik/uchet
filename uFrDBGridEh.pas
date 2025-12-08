@@ -883,12 +883,12 @@ begin
     fr.FullName := FSql.FieldsDef[i][0];
     Q.ParseFieldNameFull(FSql.FieldsDef[i][0], st, fr.Name, fr.NameDb, st, fr.DataType, fr.FieldSize);
     //второй элемент всегда заголовок
-    //если начинается с ~, то заменим ее на предыдущий заголовок группы
+    //если начинается с !, то заменим ее на предыдущий заголовок группы
     st := Copy(FSql.FieldsDef[i][1], 1, Pos('|', FSql.FieldsDef[i][1]));
-    if (st <> CaptPref) and (Copy(FSql.FieldsDef[i][1], 1, 1) <> '~') then
+    if (st <> CaptPref) and (Copy(FSql.FieldsDef[i][1], 1, 1) <> '!') then
       CaptPref := st;
     st := FSql.FieldsDef[i][1];
-    if Copy(st, 1, 1) = '~' then
+    if Copy(st, 1, 1) = '!' then
       st := CaptPref + Copy(st, 2);
     fr.Caption := st;
     //если начинается с подчеркивание - это служебное поле
