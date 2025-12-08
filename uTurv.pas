@@ -378,7 +378,7 @@ begin
         Break;
       end;
   end;
-  FDays.SetValue(i, 'dt', IncDay(FDtBeg, ADay - 1));
+  FDays.SetValue(pos, 'dt', IncDay(FDtBeg, ADay - 1));
   FDays.SetValue(pos, AField, ANewValue);
 end;
 
