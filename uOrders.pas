@@ -1636,20 +1636,6 @@ begin
   Result := False;
   Dir := '';
 
-  {if Win32MajorVersion >= 6 then
-  with TFileOpenDialog.Create(nil) do
-    try
-      Title := 'Select Directory';
-      Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem]; // YMMV
-      OkButtonLabel := 'Select';
-  //    DefaultFolder := FDir;
-  //    FileName := FDir;
-      if Execute then
-        Dir:=FileName;
-    finally
-      Free;
-    end
-  else}
   va1 := Q.QLoadToVarDynArray2('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem]);
   if (S.NNum(va1[0][7]) = 0) then
     Exit;
@@ -1657,14 +1643,35 @@ begin
     Exit;
   if not SenderIsThn and ((va1[0][10] = null) or (va1[0][10] = -100)) then
     Exit;
-  if DirectoryExists(LastThnDocsDirectory) then
-    Dir := LastThnDocsDirectory;
-  if not SelectDirectory('Выберите папку', ''{ExtractFileDrive(Dir)}, Dir, [])   //sdNewFolder  sdNewUI
-    then
+  with TFileOpenDialog.Create(nil) do
+    try
+      Title := 'Выберите папку';
+      Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem]; // YMMV
+      OkButtonLabel := 'Выбрать';
+      if DirectoryExists(LastThnDocsDirectory) then
+        DefaultFolder := LastThnDocsDirectory;
+  //    DefaultFolder := FDir;
+  //    FileName := FDir;
+      if Execute then begin
+        Dir := FileName;
+        LastThnDocsDirectory := Dir;
+      end;
+    finally
+      Free;
+    end;
+  if Dir = '' then
     Exit;
+//  if DirectoryExists(LastThnDocsDirectory) then
+//    Dir := LastThnDocsDirectory;
+//MyInfoMessage(dir);  Exit;
+
+
+//  if not SelectDirectory('Выберите папку', ''{ExtractFileDrive(Dir)}, Dir, [])   //sdNewFolder  sdNewUI
+//    then
+//    Exit;
 //  i:=Max(Pos('\\', Dir), Pos(':\', Dir));
 //  i:=Pos('\', Copy(Dir, i + 2));
-  LastThnDocsDirectory := Dir;
+//  LastThnDocsDirectory := Dir;
 {  i:=Pos('\', Copy(Dir, Length(TDirectory.GetDirectoryRoot(Dir)) + 1));
   if i = 0 then begin
     MyWarningMessage('Нельзя выбрать каталог верхнего уровня!');

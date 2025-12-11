@@ -933,7 +933,7 @@ begin
     TFrmOWSearchInEstimates.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Or_ItmInfo then begin
-    Form := TDlg_ItmInfo.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+    Form := TDlg_ItmInfo.Create(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_LoadKB then begin
     Form := TDlg_LoadKB.Create(AOwner, F, MyFormOptions, fMode, AId, null);

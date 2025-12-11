@@ -76,7 +76,7 @@ insert into spl_categoryes (name) values ('снабжение');
 update spl_categoryes set id = 1 where name = 'снабжение';
 
 --доп параметры номенклатуры ИТМ для снабжения
---alter table spl_itm_nom_props add planned_need_days number(2);
+alter table spl_itm_nom_props add monitor_price number(1) default 0;
 --alter table spl_itm_nom_props add planned_need_qnt number(11,3);
 --alter table spl_itm_nom_props add constraint fk_spl_itm_nom_props_category foreign key (id_category) references spl_categoryes(id);
 create table spl_itm_nom_props(
@@ -91,6 +91,7 @@ create table spl_itm_nom_props(
   prc_qnt number(5),                --процент предупреждения по факт остатку
   prc_need_m number(5),             --процент предупреждения по потребности с учетом мин остатка
   price_check number(11,2),         --контрольная цена, устанавливают конструктора  
+  monitor_price number(1) default 0,--котролировать цену в итм
   has_files number(1) default 0,    --по номенклатуре загружены дополнительные файлы    
   planned_need_days number(2),      --количество дней относительно текущего, по которому считается плановая потребность
   --planned_need_qnt number(11,3),              --
@@ -625,6 +626,7 @@ create or replace procedure P_SetSplDemandValue(
 --7 - контрольная цена
 --8 - признак наличия привязанных файлов к номенклатуре
 --9 - количество дней для закупки по плановой потребности
+--10 - флаг мониторирования цены
   IdNomencl in number,
   PMode in number,
   PValue in number 
@@ -668,6 +670,9 @@ begin
   end if;  
   if PMode = 9 then 
     update spl_itm_nom_props set planned_need_days = PValue where id = IdNomencl;
+  end if;  
+  if PMode = 10 then 
+    update spl_itm_nom_props set monitor_price = PValue where id = IdNomencl;
   end if;  
 end;
 /  
@@ -1550,7 +1555,7 @@ select * from v_spl_history where id = 13053;
 
 --================================================================================
 select count(*) from v_spl_minremains;
-select qnt, qnt3, qnt_suspended, qnt / qnt3 from v_spl_minremains where id = 13736;
+--select qnt, qnt3, qnt_suspended, qnt / qnt3 from v_spl_minremains where id = 13736;
 create or replace view v_spl_minremains as
 --вью для таблицы формирования заявок на снабжение (новый вариант) 
 select
@@ -1623,6 +1628,8 @@ select
   round(nvl(vn.qnt, 0) + nvl(rz.rezerv, 0) + nvl(niv.qnt, 0) - nvl(n.min_ostatok, 0), 1) as need_m,
   --контрольная цена
   np.price_check,
+  --флаг мониторирования цены по данной номенклатуре
+  np.monitor_price,
   --цена последнего прихода по любому поставщику за нашу единицу измерения
   case when prc.price_main is null then null else round(prc.price_main, 2) end as price_main,
   --признак изменения цены (сравнивается рублевая часть, копейки отсекаются а не округляются!)
@@ -1879,11 +1886,43 @@ select * from dv.nomenclatura_in_izdel where id_zakaz = 32375;
 
 select * from v_spl_minremains where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz = 32375);
 
+
+
+
+select
+  n.name,
+  s.control_date,
+  s.num,
+  round(ss.price / ss.kp_unit_sp, 2) as price,
+  ss.kp_unit_sp,
+  p.price_check,
+  ss.price as price_sp,
+  round(ss.price / ss.kp_unit_sp, 2) - p.price_check as price_diff  
+from
+  spl_itm_nom_props p,
+  dv.sp_schet s,
+  dv.sp_schet_spec ss,
+  dv.nomenclatura n
+where  
+  p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_schet = ss.id_sp_schet
+  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 10  
+order by
+  s.id_schet desc
+;   
+    
+
+
+
 /*
 ================================================================================
 2025-02-14
 v_spl_nom_onway_agg
 */
+
+
+
 
 
 

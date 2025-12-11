@@ -809,10 +809,10 @@ begin
     Exit;
   end
   else begin
-    v := FTurv.GetPosInList(Frg1.Recno, Day);
+    v := FTurv.GetPosInList(Frg1.RecNo - 1, Day);
     if v = -1 then begin
       Params.Background := clmyGray;
-      EditMode := False;
+      Params.ReadOnly := True;
     end;
   end;
 end;
@@ -1313,7 +1313,6 @@ begin
   if FTurv.Days.G(pos, 'dt').AsString = ''
     then FTurv.Days.SetValue(pos, 'dt', IncDay(FTurv.DtBeg, d - 1));
   //занесем данные
-  Fields := ['id$i'];
   Fields := [];
   if FRgsEdit1 then
     Fields := Fields + ['worktime1$f', 'id_turvcode1$i', 'comm1$s', 'premium$f', 'premium_comm$s', 'penalty$f', 'penalty_comm$s'];
