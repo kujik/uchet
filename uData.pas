@@ -1021,6 +1021,7 @@ const
   myfrm_Dlg_R_OrderReglament = 'Dlg_R_OrderReglament';
   myfrm_Dlg_Rep_EstimatePrices = 'Dlg_Rep_EstimatePrices';
   myfrm_Dlg_Rep_OrderReglament = 'Dlg_Rep_OrderReglament';
+  myfrm_Dlg_ForemanAllowance = 'Dlg_ForemanAllowance';
 
 
 const

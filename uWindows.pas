@@ -787,6 +787,10 @@ begin
       [['caption dlgedit']]
     );
   end
+  else if F = myfrm_Dlg_ForemanAllowance then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_turv_period', 'Бригадирские', 400, 100,
+     [['foreman_allowance$i', cntNEdit, 'Сумма', '0:10000'], ['foreman_allowance_comm$s', cntEdit, 'Комментарий','0:400::T']], [['caption dlgedit ']]);
+  end
 
 
 

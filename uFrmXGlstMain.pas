@@ -729,14 +729,15 @@ v:=True;
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
+      ['foreman_allowance','Брига- дирские','75'],
       ['finalized','Закрыта','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
     Frg1.Opt.SetTable('v_w_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
-v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
+//v:=True;
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[-1000, User.IsDeveloper, 'Задать бригадирские'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -2253,6 +2254,9 @@ begin
   end
   else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
     TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
+  end
+  else if (FormDoc = myfrm_J_Turv) and (Tag = 1000) then begin
+    Wh.ExecDialog(myfrm_Dlg_ForemanAllowance, Self, [], fEdit, Fr.ID, null);
   end
   else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin  //!T
     TFrmWGEdtTurv.Show(Self, 'OLD-TURV', [myfoDialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);

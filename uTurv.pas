@@ -71,6 +71,8 @@ type
     //диалог ввода графика работы и норм рабочего времени по нему
     function ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
+//    function SetForemanAllowance(AId: Integer): Boolean;
+
     procedure ConvertEmployees202511;
   end;
 
@@ -1820,6 +1822,7 @@ begin
   end;
   Result := True;
 end;
+
 
 
 procedure TTurv.ConvertEmployees202511;

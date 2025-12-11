@@ -801,12 +801,19 @@ var
   v: Variant;
   st: string;
 begin
-  if (Params.Row = 0) then
-    Exit;
+  //if (Params.Row = 0) then
+  //  Exit;
   Day := GetDay(FieldName, 1);
   if Day < 1 then begin
     Params.Background := clmyGray;
     Exit;
+  end
+  else begin
+    v := FTurv.GetPosInList(Frg1.Recno, Day);
+    if v = -1 then begin
+      Params.Background := clmyGray;
+      EditMode := False;
+    end;
   end;
 end;
 
