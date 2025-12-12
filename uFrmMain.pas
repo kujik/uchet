@@ -93,7 +93,8 @@ implementation
 uses
   uFrmXWAbout, uData, uDBOra, V_MDI,
 
-  uWindows, D_SetPassword,
+  uWindows, uTasks,
+  D_SetPassword,
   D_MainSettings, D_ModuleSettings, D_Rep_Smeta,
 
 

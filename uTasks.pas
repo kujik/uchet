@@ -50,6 +50,7 @@ type
     function GetProductionCalendar(Year: Variant): Integer;
     function TestTurvComplete: Integer;
     function TestTurvDifferences: Integer;
+    function  SplMonitorPrices: Integer;
     procedure SmetaReport;
     procedure DeleteOldData;
     procedure CalcPlannedOrders;
@@ -809,11 +810,40 @@ begin
   );
 end;
 
+
+function TTasks.SplMonitorPrices: Integer;
+var
+  i,j: Integer;
+  IdSch, IdSchN: Integer;
+  na: TNamedArr;
+  st: string;
+begin
+  IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
+  Q.QLoadFromQuery('select name, price_check, price, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
+  IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
+  Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
+  if na.Count = 0 then
+    Exit;
+  st := '';
+  for i:=0 to na.Count- 1 do begin
+    S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
+  end;
+  CreateTaskRoot(mytskopmail, [
+//    ['to', 'psv116@mail.ru,sprokopenko@fr-mix.ru'],  //адреса через запятую
+    ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru'],  //адреса через запятую
+    ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
+    ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
+    ['user-name', 'Учёт']]
+  );
+end;
+
+
 procedure TTasks.HourlyTasks;
 begin
   CalcPlannedOrders;
   Q.QBeginTrans(True);
   Q.QCallStoredProc('P_SetOrdersProdData', '', []);
+  SplMonitorPrices;
   Q.QCommitOrRollback(True);
 end;
 

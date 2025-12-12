@@ -171,7 +171,7 @@ begin
     ['need_m$f','Потребность|С остатком','60'],
     ['prc_need_m$f','Потребность|%','40'],
     ['price_check$f','Стоимость|Контрольная цена','60'],
-    ['monitor_price$f','Стоимость|Мониторинг цены','60'],
+    ['monitor_price$i','Стоимость|Мониторинг цены','60','chb','t=3'],
     ['price_main$f','Стоимость|Цена','60'],
     ['price_diff$s','Стоимость|Цена, +/-','40'],
     ['order_cost$f','Стоимость|Заказ','60','f=r:'],
@@ -712,6 +712,11 @@ begin
         Break;
       Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 9, S.NullIfEmpty(Value)]));
       Orders.CalcSplNeedPlanned(Fr.ID);
+      Fr.RefreshRecord;
+    end;
+    if (Fr.CurrField = 'monitor_price') then begin
+      i := S.Iif(Fr.MemTableEh1.FieldByName(Fr.CurrField).AsInteger = 0, 1, 0);
+      Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 10, i]));
       Fr.RefreshRecord;
     end;
     //!!!обязательно!!!

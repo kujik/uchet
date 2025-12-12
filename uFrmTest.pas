@@ -1471,6 +1471,7 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
+  Tasks.SplMonitorPrices; Exit;
   //q.QExecSql('select 2 / 0 from dual', []); Exit;
 
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;

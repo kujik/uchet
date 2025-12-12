@@ -1872,13 +1872,6 @@ select * from dv.sp_schet where id_schet = 21767;
 select * from dv.sp_schet where states = '3-Оплачен';
 select * from dv.sp_schet where states = '3-Получен товар' and id_docstate <> 4;
 
-begin
-  for cur in (select id from v_spl_minremains) loop
-    --P_SetSplDemandValue(cur.id, 9, 15);
-  end loop; 
-end;
-/ 
-
 
 
 select max(id_zakaz) from dv.nomenclatura_in_izdel;  --32375
@@ -1888,16 +1881,19 @@ select * from v_spl_minremains where id in (select id_nomencl from dv.nomenclatu
 
 
 
-
+create or replace view v_prices_from_sp_schet as
 select
+--выборка номенклатуры по счетам, цены (в наших единицах) на которые больше, чем контрольная цена
   n.name,
-  s.control_date,
+  s.id_schet,
+  s.control_date as dt,
   s.num,
   round(ss.price / ss.kp_unit_sp, 2) as price,
   ss.kp_unit_sp,
   p.price_check,
   ss.price as price_sp,
-  round(ss.price / ss.kp_unit_sp, 2) - p.price_check as price_diff  
+  round(ss.price / ss.kp_unit_sp, 2) - p.price_check as price_diff,
+  p.monitor_price  
 from
   spl_itm_nom_props p,
   dv.sp_schet s,
@@ -1907,11 +1903,39 @@ where
   p.id = n.id_nomencl
   and p.id = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
-  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 10  
-order by
-  s.id_schet desc
+  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
+--order by s.id_schet desc
 ;   
     
+--update spl_itm_nom_props set monitor_price = 1;
+
+
+
+select
+--выборка номенклатуры по счетам, цены (в наших единицах) на которые больше, чем контрольная цена
+  n.name,
+  s.id_inbill,
+  s.inbilldate as dt,
+  s.inbillnum,
+  p.price_check,
+  ss.ibprice as price,
+  ss.fact_quantity as qnt,
+  p.monitor_price,
+  case when ss.ibprice > p.price_check then -ss.ibprice * ss.fact_quantity else ss.ibprice * ss.fact_quantity end as sum,   
+  ss.fact_quantity  
+from
+  spl_itm_nom_props p,
+  dv.in_bill s,
+  dv.in_bill_spec ss,
+  dv.nomenclatura n
+where  
+  p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_inbill = ss.id_inbill
+  and lower(n.name) <> 'доставка'
+  and round(ss.ibprice) <> round(p.price_check)  
+--order by s.id_schet desc
+;   
 
 
 
