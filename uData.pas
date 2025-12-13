@@ -927,6 +927,7 @@ const
   myfrm_Ref_JobsNeeded = 'Ref_JobsNeeded';
   myfrm_R_OrderProperties='R_OrderProperties';
   myfrm_R_OrderReglament = 'R_OrderReglament';
+  myfrm_J_SplDealsMonitoring = 'J_SplDealsMonitoring';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1674,9 +1675,10 @@ const
   rOr_R_OrderReglaments_V='6-129';
   rOr_R_OrderReglaments_Ch='6-130';
   rOr_D_Order_EditDtOtgr='6-131';
+  rOr_J_SplDealsMonitoring='6-132';
 
   const
-  URights : array [0..237] of array [0..3] of string = (
+  URights : array [0..238] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1910,6 +1912,7 @@ const
     (rOr_Rep_Order_Primecost1,'Модуль "Заказы"','Отчеты','Отчет по себестоимости заказов'),
     (rOr_Rep_PlannedMaterials_V,'Модуль "Заказы"','Отчеты','Отчет "Годовая потребность в материалах", просмотр'),
     (rOr_Rep_PlannedMaterials_Calc,'Модуль "Заказы"','Отчеты','Отчет "Годовая потребность в материалах", перерасчет данных'),
+    (rOr_J_SplDealsMonitoring,'Модуль "Заказы"','Отчеты','Мониторинг сделок снабжения'),
     (rOr_Other_Order_FindEstimate,'Модуль "Заказы"','Сервис: Поиск сметы по сметной позиции', 'Доступ'),
     (rOr_Other_ItmInfo,'Модуль "Заказы"','Сервис: Информация по ИТМ', 'Доступ'),
     (rOr_Other_ItmExtNomencl,'Модуль "Заказы"','Сервис: Расширенный справочник номенклатуры ИТМ', 'Доступ'),

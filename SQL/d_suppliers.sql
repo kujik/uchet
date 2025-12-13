@@ -77,6 +77,7 @@ update spl_categoryes set id = 1 where name = 'снабжение';
 
 --доп параметры номенклатуры ИТМ для снабжения
 alter table spl_itm_nom_props add monitor_price number(1) default 0;
+alter table spl_itm_nom_props add price_check_upd number(1) default 1;
 --alter table spl_itm_nom_props add planned_need_qnt number(11,3);
 --alter table spl_itm_nom_props add constraint fk_spl_itm_nom_props_category foreign key (id_category) references spl_categoryes(id);
 create table spl_itm_nom_props(
@@ -90,7 +91,8 @@ create table spl_itm_nom_props(
   prc_min_ost number(5),            --процент предупреждения по мин. остатку
   prc_qnt number(5),                --процент предупреждения по факт остатку
   prc_need_m number(5),             --процент предупреждения по потребности с учетом мин остатка
-  price_check number(11,2),         --контрольная цена, устанавливают конструктора  
+  price_check number(11,2),         --контрольная цена, устанавливают конструктора
+  price_check_upd number(1) default 1,--обновлять контрольную цену по данным ПН в ИТМ, если цена в ПН окажется ниже; также учитывать эту цену в мониторинге сделок СН  
   monitor_price number(1) default 0,--котролировать цену в итм
   has_files number(1) default 0,    --по номенклатуре загружены дополнительные файлы    
   planned_need_days number(2),      --количество дней относительно текущего, по которому считается плановая потребность
@@ -1880,6 +1882,28 @@ select * from dv.nomenclatura_in_izdel where id_zakaz = 32375;
 select * from v_spl_minremains where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz = 32375);
 
 
+--------------------------------------------------------------------------------
+-- КОНТРОЛЬ РАБОТЫ СНАБЖЕНИЯ (мониторинг цен в счетах и сделок                --
+--------------------------------------------------------------------------------
+
+/*
+серверным процессом выполняется раз в час задача по мониторингу снабжения:
+
+- выборка из v_prices_from_sp_schet, и отчет на почту по номенклатуре, цена которой в счете больше контрольной цены.
+номенклатура должна иметь признак мониторинг цены (ставится в таблице СН)
+адреса почты прописаны жестко в коде uTasks
+- выборка из v_spl_deals_monitoring_get и запись в таблицу spl_deals_monitoring
+номенклатура дорлжна иметь признак price_check_upd (Автообновление контрольной цены, посравляется в справочнике номенклатуры ИТМ)
+здесь выбирается номенклатура, цена которой, округленная до рубля, меньше или больше округленной до рубля контрольной цены.
+в Заказах просмтаривается в отчете "Мониторинг сделок снабжения"
+вью предоставляет сумму сделки с плюсом или минусом в зависимости от того, дешевле или дороже номенклатура была куплена.
+хотя данные в таблицу попадают по крону, тк хранится айди номенклатуры и айди накладной, то данные будут актуальные на момент просмотра,
+включая цены и суммы, но цконтрольная цена будет на момент внресения строки, 
+также вью построена так, что если данные в итм будут удалены, то строки из таблицы исчезнут
+
+везде данные выбираются из документов, айди которых больше айди последнего обработанного, эти данные хранятся
+в общей тааблице properties и обновляются в дельфи при выполнении запроса.
+*/
 
 create or replace view v_prices_from_sp_schet as
 select
@@ -1904,38 +1928,94 @@ where
   and p.id = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
   and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
---order by s.id_schet desc
 ;   
     
 --update spl_itm_nom_props set monitor_price = 1;
 
-
-
+create or replace view v_spl_deals_monitoring_get as
 select
---выборка номенклатуры по счетам, цены (в наших единицах) на которые больше, чем контрольная цена
-  n.name,
+--выборка номенклатуры по ПН ИТМ, которая различается с контрольной ценой более чем на рубль (цены округляются)
+  n.id_nomencl, 
   s.id_inbill,
-  s.inbilldate as dt,
-  s.inbillnum,
   p.price_check,
-  ss.ibprice as price,
-  ss.fact_quantity as qnt,
-  p.monitor_price,
-  case when ss.ibprice > p.price_check then -ss.ibprice * ss.fact_quantity else ss.ibprice * ss.fact_quantity end as sum,   
-  ss.fact_quantity  
+  p.price_check_upd
 from
   spl_itm_nom_props p,
   dv.in_bill s,
   dv.in_bill_spec ss,
   dv.nomenclatura n
 where  
-  p.id = n.id_nomencl
+  p.price_check_upd = 1
+  and p.id = n.id_nomencl
   and p.id = ss.id_nomencl
   and s.id_inbill = ss.id_inbill
-  and lower(n.name) <> 'доставка'
   and round(ss.ibprice) <> round(p.price_check)  
---order by s.id_schet desc
 ;   
+
+
+drop table spl_deals_monitoring cascade constraints;
+create table spl_deals_monitoring(
+  id number(11),
+  dt date,
+  id_nomencl number,
+  price_check number,
+  id_inbill number,
+  constraint pk_sspl_deals_monitoring primary key (id)
+);
+
+create sequence sq_spl_deals_monitoring start with 1 nocache;
+
+create or replace trigger trg_spl_deals_monitoring_bi_r
+  before insert on spl_deals_monitoring for each row
+begin
+  select sq_spl_deals_monitoring.nextval into :new.id from dual;
+end;
+/
+
+
+/*
+insert into spl_deals_monitoring 
+  (dt, id_nomencl, id_inbill, price_check)
+  (select trunc(sysdate), id_nomencl, id_inbill, price_check
+    from v_spl_deals_monitoring_get
+    where id_inbill > 113100
+  )
+; 
+*/    
+
+--update spl_itm_nom_props set price_check_upd = 1;
+select * from v_spl_deals_monitoring_get;
+select * from spl_deals_monitoring;
+select * from v_spl_deals_monitoring;
+
+create or replace view v_spl_deals_monitoring as
+select
+  t.*,
+  n.name,
+  s.inbilldate as dt_inbill,
+  s.inbillnum,
+  ss.ibprice as price,
+  ss.fact_quantity as qnt,
+  p.price_check_upd,
+  case when ss.ibprice > t.price_check then round(-ss.ibprice * ss.fact_quantity) else round(ss.ibprice * ss.fact_quantity) end as deal_sum,   
+  case when ss.ibprice > t.price_check then round(-ss.ibprice * ss.fact_quantity) else null end as deal_sum_n,   
+  case when ss.ibprice > t.price_check then null else round(ss.ibprice * ss.fact_quantity) end as deal_sum_p,   
+  ss.fact_quantity  
+from
+  spl_deals_monitoring t,
+  dv.nomenclatura n,
+  dv.in_bill s,
+  dv.in_bill_spec ss,
+  spl_itm_nom_props p
+where
+  t.id_nomencl = n.id_nomencl
+  and t.id_nomencl = p.id
+  and s.id_inbill = t.id_inbill
+  and t.id_nomencl = ss.id_nomencl
+  and s.id_inbill = ss.id_inbill
+  and p.price_check_upd = 1
+;      
+
 
 
 

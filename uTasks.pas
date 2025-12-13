@@ -814,27 +814,40 @@ end;
 function TTasks.SplMonitorPrices: Integer;
 var
   i,j: Integer;
-  IdSch, IdSchN: Integer;
+  IdSch, IdSchN, IdIb, IdIbN: Integer;
   na: TNamedArr;
   st: string;
 begin
+  //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
   IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
   Q.QLoadFromQuery('select name, price_check, price, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
   IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
-  if na.Count = 0 then
-    Exit;
-  st := '';
-  for i:=0 to na.Count- 1 do begin
-    S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
+  if na.Count > 0 then begin
+    st := '';
+    for i:=0 to na.Count- 1 do begin
+      S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
+    end;
+    CreateTaskRoot(mytskopmail, [
+      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru'],  //адреса через запятую
+      ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
+      ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
+      ['user-name', 'Учёт']]
+    );
   end;
-  CreateTaskRoot(mytskopmail, [
-//    ['to', 'psv116@mail.ru,sprokopenko@fr-mix.ru'],  //адреса через запятую
-    ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru'],  //адреса через запятую
-    ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
-    ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
-    ['user-name', 'Учёт']]
+  //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
+  IdIb := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', [])[0], 113205);
+  Q.QExecSql(
+    'insert into spl_deals_monitoring '+
+      '(dt, id_nomencl, id_inbill, price_check) '+
+      '(select trunc(sysdate), id_nomencl, id_inbill, price_check '+
+        'from v_spl_deals_monitoring_get '+
+        'where id_inbill > :id$i'+
+      ')',
+    [IdIb]
   );
+  IdIbN := Q.QSelectOneRow('select max(id_inbill) from dv.in_bill', [])[0];
+  Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
 end;
 
 

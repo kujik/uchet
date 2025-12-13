@@ -338,6 +338,7 @@ create or replace view v_itm_nomencl_1 as
 select
 --справочник номенклатуры ИТМ в модуле Заказы
   n.id_nomencl,
+  n.id_nomencl as id,
   g.groupname,                --группа
   n.artikul,                  --артикул
   n.name,                     --наименование
@@ -345,6 +346,7 @@ select
   k.name_org as supplier,     --наименование основного поставщика 
   prc.price_main,             --последняя цена из ПН по основному поставщику
   np.price_check,             --контрольная цена, из таблицы Учета
+  np.price_check_upd,         --разрешить автообновление контрольной цены
   np.has_files,               --к номенклатуре прикреплены файлы   
   ns.name_pos                 --номенклатура дефолтного (или единственного) поставщика  
 from  

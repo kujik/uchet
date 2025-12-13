@@ -679,6 +679,8 @@ begin
     ['Отчет по изделиям в производстве', myfrm_J_OrItemSInProd, User.Role(rOr_Rep_OrItemSInProd)],
     ['Отчет по изделиям в заказах', myfrm_Rep_SnCalendar_Orders_QntItems, User.Roles([], [rOr_Rep_Orders_QntItems])],
     ['Общая смета по выбранным заказам', User.Roles([], [rOr_Rep_Orders_QntItems])],
+    [],
+    ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

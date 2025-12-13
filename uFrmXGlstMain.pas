@@ -1342,6 +1342,7 @@ v:=True;
     Caption:='Справочник номенклатуры ИТМ';
     Frg1.Options := Frg1.Options + [myogLoadAfterVisible];
     Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
       ['id_nomencl$i','_id_nomencl','40'],
       ['groupname','Группа','100'],
       ['artikul','Артикул','100'],
@@ -1351,6 +1352,7 @@ v:=True;
       ['name_pos','Номенклатура основного поставщика','300;h'],
       ['price_main','Последняя цена','80','f=r','bt=Приходные накладные'],
       ['price_check','Контрольная цена','80','f=r'],
+      ['price_check_upd','Обновлять контрольную цену','80','chb','e', User.IsDeveloper],
       ['has_files','Файлы','50','pic','bt=Файлы']
     ]);
     Frg1.Opt.SetTable('v_itm_nomencl_1');
@@ -1897,6 +1899,33 @@ v:=True;
       Caption+''#13#10+
       'Все изделия, которые запущены в производство, не не приняты на СГП в полном составе.'#13#10
     ]];
+  end
+  else if FormDoc = myfrm_J_SplDealsMonitoring then begin
+    Caption:='Мониторинг сделок снабжения';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_inbill','_id_inbill','40'],
+      ['id_nomencl','_id_nomencl','40'],
+      ['dt$d','Дата','70'],
+      ['name','Номенклатура','300;h'],
+      ['fact_quantity','Кол-во в накладной','80'],
+      ['price_check','Контрольная цена','80','f=r'],
+      ['price','Цена в накладной','80','f=r'],
+      ['dt_inbill','Дата накладной','80'],
+      ['inbillnum','№ накладной','150'],
+      ['deal_sum_p','Сумма, купили дешевле','100','f=r:r'],
+      ['deal_sum_n','Сумма, купили дороже','100','f=r:r'],
+      ['deal_sum','Сумма','100','f=r:r']
+    ]);
+    Frg1.Opt.SetTable('v_spl_deals_monitoring');
+    Frg1.Opt.SetWhere('where (dt >= :dt1$d and dt < :dt2$d)');
+    //! для dt2 используется TndOfTheMonth, значение параметра почему-то оказывается первое число следующего месяца
+    Frg1.Opt.SetButtons(1, 'rfsp');
+    Frg1.Opt.FilterRules := [[], ['dt']];
+    Frg1.CreateAddControls('1', cntCheck, 'Все', 'chbAll', '', -1, yrefC, 45, -1);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый месяц', 'chbPrev', '', -1, yrefC, 110, -1);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий месяц', 'chbCurr', '', -1, yrefC, 110, -1);
   end
   else if FormDoc = myfrm_J_ItmLog then begin
     Caption:='Журнал действий пользователей ИТМ';
@@ -2453,6 +2482,14 @@ begin
     );
     Fr.SetSqlParameters('id_user1$i;id_user2$i', [User.GetId, User.GetId]);
   end
+  else if FormDoc = myfrm_J_SplDealsMonitoring then begin
+    if Cth.GetControlValue(Fr, 'chbPrev') = 1 then
+      Fr.SetSqlParameters('dt1$d;dt2$d', [StartOfTheMonth(IncMonth(Date, -1)), EndOfTheMonth(IncMonth(Date, -1))])
+    else if Cth.GetControlValue(Fr, 'chbCurr') = 1 then
+      Fr.SetSqlParameters('dt1$d;dt2$d', [StartOfTheMonth(Date), EndOfTheMonth(Date)])
+    else
+      Fr.SetSqlParameters('dt1$d;dt2$d', [IncYear(Date, -10), IncYear(Date, 10)]);
+  end
   else if FormDoc = myfrm_R_Itm_Schet then
     Fr.SetSqlParameters('id_schet$i', [AddParam])
   else if FormDoc = myfrm_R_Itm_InBill then
@@ -2632,7 +2669,8 @@ begin
     myfrm_Rep_Sgp2,
     myfrm_J_Sgp_Acts,
     myfrm_J_InvoiceToSgp,
-    myfrm_J_Tasks
+    myfrm_J_Tasks,
+    myfrm_J_SplDealsMonitoring
     ])
   then Fr.RefreshGrid;
   except on E: Exception do Application.ShowException(E);
@@ -2693,6 +2731,9 @@ procedure TFrmXGlstMain.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer
 begin
   if (FormDoc = myfrm_J_OrPayments) and (FieldName = 'account') then begin
     Q.QExecSQL('update orders set account = :account where id = :id$i', [Value, Fr.ID]);
+  end
+  else if (FormDoc = myfrm_R_Itm_Nomencl) and (FieldName = 'price_check_upd') then begin
+    Q.QExecSQL('update spl_itm_nom_props set price_check_upd = :price_check_upd where id = :id$i', [Value, Fr.ID]);
   end;
 end;
 
