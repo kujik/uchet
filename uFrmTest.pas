@@ -178,7 +178,8 @@ uses
 
   uFrmWGEdtTurv,
   uFrmOGedtEstimate,
-  uFrmCDedtAccount
+  uFrmCDedtAccount,
+  uFrmWWedtWorkSchedule
   ;
 
 
@@ -1471,8 +1472,9 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
-  Tasks.SplMonitorPrices; Exit;
+  ///Tasks.SplMonitorPrices; Exit;
   //q.QExecSql('select 2 / 0 from dual', []); Exit;
+  TFrmWWedtWorkSchedule.Show(Application, '22222127', [myfoDialog, myfoSizeable], fAdd, 32098, null); exit;
 
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
 

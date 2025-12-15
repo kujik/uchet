@@ -198,7 +198,8 @@ uses
   uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties},
   uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN},
   uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
-  uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN};
+  uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN},
+  uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule};
 
 var
   MT: Integer;

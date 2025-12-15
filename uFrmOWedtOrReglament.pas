@@ -6,9 +6,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, ToolCtrlsEh, DBGridEhToolCtrls,
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
-  Types, DBCtrlsEh, ExtCtrls, Vcl.ComCtrls,
-  uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uFrMyPanelCaption, uString,
-  Vcl.Mask
+  Types, DBCtrlsEh, ExtCtrls, Vcl.ComCtrls, Vcl.Mask,
+  uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uFrMyPanelCaption, uString
   ;
 
 type
@@ -24,11 +23,11 @@ type
     FrgTypes: TFrDBGridEh;
     FrgProperties: TFrDBGridEh;
     FrgDays: TFrDBGridEh;
-    edt_name: TDBEditEh;
     nedt_deadline: TDBNumberEditEh;
     dlgColor1: TColorDialog;
-    chb_active: TDBCheckBoxEh;
     frmpcDays: TFrMyPanelCaption;
+    edt_name: TDBEditEh;
+    chb_active: TDBCheckBoxEh;
     procedure nedt_deadlineButtonClick(Sender: TObject; var Handled: Boolean);
     procedure FrgDaysDbGridEh1CellClick(Column: TColumnEh);
   private
