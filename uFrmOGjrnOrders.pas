@@ -16,6 +16,7 @@ type
     procedure ViewInfo1;
   protected
     function  PrepareForm: Boolean; override;
+    procedure LoadKnsAndThnList;
     //события первого (основного) фрейма грида
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
@@ -27,6 +28,7 @@ type
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
+    procedure Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean); override;
     //события второго (детального) фрейма грида
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
@@ -63,6 +65,7 @@ uses
 function TFrmOGjrnOrders.PrepareForm: Boolean;
 var
   c : TComponent;
+  va2: TVarDynArray2;
 begin
   Caption:='Журнал заказов';
   Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogRowDetailPanel, myogLoadAfterVisible];
@@ -157,6 +160,7 @@ begin
     ['qnt_to_sgp$f', 'Кол-во изделий, принятых на СГП', '80','f=:'],
     ['route2','Маршрут','120'],
     ['kns','Конструктор','120'],
+    ['id_kns','Конструктор','120;L'],
     ['thn','Технолог','120'],
     ['dt_estimate','Смета','80'],
     ['sgp','С СГП','40','pic'],
@@ -181,6 +185,7 @@ begin
     [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
+
 
   Frg1.ReadControlValues;
   if not (User.Role(rOr_J_Orders_Sum)or(User.Role(rOr_J_Orders_PrimeCost))) then begin
@@ -422,6 +427,12 @@ procedure TFrmOGjrnOrders.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Int
 begin
 end;
 
+procedure TFrmOGjrnOrders.Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean);
+begin
+  LoadKnsAndThnList;
+end;
+
+
 
 {детальный грид}
 
@@ -535,6 +546,15 @@ procedure TFrmOGjrnOrders.ViewInfo1;
 begin
   var Ids: TVarDynArray2 := Gh.GetGridArrayOfChecked(Frg1.DBGridEh1, Frg1.DBGridEh1.FindFieldColumn(Frg1.Opt.Sql.IdField).Index);
 end;
+
+procedure TFrmOGjrnOrders.LoadKnsAndThnList;
+var
+  va2: TVarDynArray2;
+begin
+  Q.QLoadToVarDynArray2('select name, id from adm_users where active = 1 order by name', []);
+  Frg1.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
+end;
+
 
 
 
