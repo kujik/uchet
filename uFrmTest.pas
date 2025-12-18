@@ -1474,7 +1474,7 @@ var
 begin
   ///Tasks.SplMonitorPrices; Exit;
   //q.QExecSql('select 2 / 0 from dual', []); Exit;
-  TFrmWWedtWorkSchedule.Show(Application, '22222127', [myfoDialog, myfoSizeable], fAdd, 32098, null); exit;
+  TFrmWWedtWorkSchedule.Show(Application, myfrm_Dlg_Work_Schedule, [myfoDialog], fAdd, 32098, null); exit;
 
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
 

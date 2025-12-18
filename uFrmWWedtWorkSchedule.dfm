@@ -1,49 +1,57 @@
 inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
   Caption = 'FrmWWedtWorkSchedule'
-  ExplicitWidth = 245
-  ExplicitHeight = 152
+  ClientHeight = 444
+  ClientWidth = 709
+  ExplicitWidth = 721
+  ExplicitHeight = 482
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Width = 709
+    Height = 428
+    ExplicitWidth = 709
+    ExplicitHeight = 428
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 219
-      ExplicitHeight = 48
+      Width = 699
+      Height = 379
+      ExplicitWidth = 695
+      ExplicitHeight = 378
       object pnlPropertiesC: TPanel
         Left = 0
         Top = 0
-        Width = 223
+        Width = 699
         Height = 135
         Align = alTop
         Caption = 'pnlPropertiesC'
         TabOrder = 0
-        ExplicitWidth = 219
+        ExplicitWidth = 695
         inline frmpcProperties: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 221
+          Width = 697
           Height = 18
           Align = alTop
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 217
+          ExplicitWidth = 693
           inherited bvl1: TBevel
-            Width = 221
+            Width = 697
             ExplicitWidth = 707
           end
         end
         object pnlProperties: TPanel
           Left = 1
           Top = 19
-          Width = 221
+          Width = 697
           Height = 114
           Align = alTop
           Caption = 'pnlProperties'
           TabOrder = 1
-          ExplicitWidth = 217
+          ExplicitWidth = 693
           object edt_name: TDBEditEh
             Left = 304
             Top = 10
-            Width = 529
+            Width = 385
             Height = 21
             ControlLabel.Width = 79
             ControlLabel.Height = 13
@@ -84,7 +92,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           object edt_comm: TDBEditEh
             Left = 74
             Top = 37
-            Width = 759
+            Width = 615
             Height = 21
             ControlLabel.Width = 67
             ControlLabel.Height = 13
@@ -111,25 +119,25 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
       object pnlHoursC: TPanel
         Left = 0
         Top = 247
-        Width = 223
+        Width = 699
         Height = 358
         Align = alTop
         Caption = 'pnlHoursC'
         TabOrder = 1
-        ExplicitWidth = 219
+        ExplicitWidth = 695
         inline frmpcHours: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 221
+          Width = 697
           Height = 18
           Align = alTop
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 217
+          ExplicitWidth = 693
           inherited bvl1: TBevel
             Top = 6
-            Width = 221
+            Width = 697
             ExplicitTop = 6
             ExplicitWidth = 1030
           end
@@ -137,12 +145,12 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
         object pnlHours: TPanel
           Left = 1
           Top = 19
-          Width = 221
+          Width = 697
           Height = 286
           Align = alTop
           Caption = 'pnlHours'
           TabOrder = 1
-          ExplicitWidth = 217
+          ExplicitWidth = 693
           object cbb_year: TDBComboBoxEh
             Left = 36
             Top = 7
@@ -162,21 +170,21 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           inline FrgHours: TFrDBGridEh
             Left = 1
             Top = 34
-            Width = 219
+            Width = 695
             Height = 251
             Align = alBottom
             TabOrder = 1
             ExplicitLeft = 1
             ExplicitTop = 34
-            ExplicitWidth = 215
+            ExplicitWidth = 691
             ExplicitHeight = 251
             inherited pnlGrid: TPanel
-              Width = 209
+              Width = 685
               Height = 197
-              ExplicitWidth = 205
+              ExplicitWidth = 681
               ExplicitHeight = 197
               inherited DbGridEh1: TDBGridEh
-                Width = 207
+                Width = 683
                 Height = 174
                 Columns = <
                   item
@@ -199,9 +207,9 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               end
               inherited pnlStatusBar: TPanel
                 Top = 175
-                Width = 207
+                Width = 683
                 ExplicitTop = 175
-                ExplicitWidth = 203
+                ExplicitWidth = 679
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -217,18 +225,18 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               ExplicitHeight = 197
             end
             inherited pnlTop: TPanel
-              Width = 219
-              ExplicitWidth = 215
+              Width = 695
+              ExplicitWidth = 691
             end
             inherited pnlContainer: TPanel
-              Width = 219
-              ExplicitWidth = 215
+              Width = 695
+              ExplicitWidth = 691
             end
             inherited pnlBottom: TPanel
               Top = 251
-              Width = 219
+              Width = 695
               ExplicitTop = 251
-              ExplicitWidth = 215
+              ExplicitWidth = 691
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -236,7 +244,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -250,39 +258,39 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
       object pnlTemplateC: TPanel
         Left = 0
         Top = 135
-        Width = 223
+        Width = 699
         Height = 112
         Align = alTop
         Caption = 'pnlTemplateC'
         TabOrder = 2
-        ExplicitWidth = 219
+        ExplicitWidth = 695
         object pnlTemplate: TPanel
           Left = 1
           Top = 19
-          Width = 221
+          Width = 697
           Height = 78
           Align = alTop
           Caption = 'pnlTemplate'
           TabOrder = 0
-          ExplicitWidth = 217
-          inline FrgProperties: TFrDBGridEh
+          ExplicitWidth = 693
+          inline FrgTemplate: TFrDBGridEh
             Left = 1
             Top = 32
-            Width = 219
+            Width = 695
             Height = 45
             Align = alBottom
             TabOrder = 0
             ExplicitLeft = 1
             ExplicitTop = 32
-            ExplicitWidth = 215
+            ExplicitWidth = 691
             ExplicitHeight = 45
             inherited pnlGrid: TPanel
-              Width = 209
+              Width = 685
               Height = 22
-              ExplicitWidth = 205
+              ExplicitWidth = 681
               ExplicitHeight = 22
               inherited DbGridEh1: TDBGridEh
-                Width = 207
+                Width = 683
                 Height = 303
                 Columns = <
                   item
@@ -305,9 +313,9 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               end
               inherited pnlStatusBar: TPanel
                 Top = 0
-                Width = 207
+                Width = 683
                 ExplicitTop = 0
-                ExplicitWidth = 203
+                ExplicitWidth = 679
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -323,18 +331,18 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               ExplicitHeight = 22
             end
             inherited pnlTop: TPanel
-              Width = 219
-              ExplicitWidth = 215
+              Width = 695
+              ExplicitWidth = 691
             end
             inherited pnlContainer: TPanel
-              Width = 219
-              ExplicitWidth = 215
+              Width = 695
+              ExplicitWidth = 691
             end
             inherited pnlBottom: TPanel
               Top = 45
-              Width = 219
+              Width = 695
               ExplicitTop = 45
-              ExplicitWidth = 215
+              ExplicitWidth = 691
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -342,7 +350,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -376,16 +384,16 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
         inline frmpcTemplate: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 221
+          Width = 697
           Height = 18
           Align = alTop
           TabOrder = 1
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 217
+          ExplicitWidth = 693
           inherited bvl1: TBevel
             Top = 6
-            Width = 221
+            Width = 697
             ExplicitTop = 6
             ExplicitWidth = 1030
           end
@@ -393,32 +401,49 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
       end
     end
     inherited pnlFrmBtns: TPanel
-      ExplicitTop = 53
-      ExplicitWidth = 219
+      Top = 384
+      Width = 699
+      ExplicitTop = 383
+      ExplicitWidth = 695
+      inherited bvlFrmBtnsTl: TBevel
+        Width = 697
+        ExplicitWidth = 697
+      end
+      inherited bvlFrmBtnsB: TBevel
+        Width = 697
+        ExplicitWidth = 697
+      end
       inherited pnlFrmBtnsContainer: TPanel
-        ExplicitWidth = 217
+        Width = 697
+        ExplicitWidth = 693
         inherited pnlFrmBtnsMain: TPanel
-          ExplicitLeft = 118
+          Left = 598
+          ExplicitLeft = 594
         end
         inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = -110
+          Left = 370
+          ExplicitLeft = 366
         end
         inherited pnlFrmBtnsR: TPanel
-          ExplicitLeft = 19
+          Left = 499
+          ExplicitLeft = 495
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 435
-          ExplicitWidth = 435
+          Width = 230
+          ExplicitWidth = 226
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    ExplicitTop = 97
-    ExplicitWidth = 229
+    Top = 428
+    Width = 709
+    ExplicitTop = 427
+    ExplicitWidth = 705
     inherited lblStatusBarR: TLabel
-      Left = 160
+      Left = 636
       Height = 14
+      ExplicitLeft = 636
     end
     inherited lblStatusBarL: TLabel
       Height = 14

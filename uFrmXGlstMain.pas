@@ -596,6 +596,15 @@ begin
       ['id$i','_id','40'],
       ['code','Код','80'],
       ['name','Наименование','150'],
+      ['comm','Комментарий','200;h'],
+      ['active','Используется','90','pic']
+    ]);
+    Frg1.Opt.SetTable('w_schedules');
+    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
+{    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['code','Код','80'],
+      ['name','Наименование','150'],
       ['hours1','Нормы|Дата 1','100'],
       ['hours2','Нормы|Дата 2','100'],
       ['hours3','Нормы|Дата 3','100'],
@@ -616,7 +625,7 @@ begin
       'При добавлении графика все нормы вводить не обязательно, однако заработная плвата в дальнейшем '#13#10 +
       'не сможет быть рассчитана, если не введены обе нормы по используемым графикам за данный период расчёта!'#13#10 +
       ''#13#10
-    ]];
+    ]];}
   end
   else if FormDoc = myfrm_R_Divisions then begin
     Caption:='Справочник подразделений';
@@ -1914,9 +1923,9 @@ v:=True;
       ['price','Цена в накладной','80','f=r'],
       ['dt_inbill','Дата накладной','80'],
       ['inbillnum','№ накладной','150'],
-      ['deal_sum_p','Сумма, купили дешевле','100','f=r:r'],
-      ['deal_sum_n','Сумма, купили дороже','100','f=r:r'],
-      ['deal_sum','Сумма','100','f=r:r']
+      ['deal_sum_check','Сумма, контрольная','100','f=r:r'],
+      ['deal_sum_fact','Сумма, фактическая','100','f=r:r'],
+      ['deal_sum_np','Разница','100','f=r:r']
     ]);
     Frg1.Opt.SetTable('v_spl_deals_monitoring');
     Frg1.Opt.SetWhere('where (dt >= :dt1$d and dt < :dt2$d)');
@@ -2065,8 +2074,9 @@ begin
     if FormDoc = myfrm_R_Divisions then
       Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);}
     if FormDoc = myfrm_R_Work_Chedules then begin
-      if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
-        Fr.RefreshGrid;
+      //if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
+        //Fr.RefreshGrid;
+      Wh.ExecDialog(myfrm_Dlg_Work_Schedule, Self, [], fMode, Fr.ID, null);
     end;
     if FormDoc = myfrm_R_Candidates_Ad_SELCH then
       Wh.ExecDialog(myfrm_Dlg_R_Candidates_Ad, Self, [], fMode, Fr.ID, null);

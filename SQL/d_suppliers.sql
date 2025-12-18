@@ -1997,7 +1997,10 @@ select
   ss.ibprice as price,
   ss.fact_quantity as qnt,
   p.price_check_upd,
-  case when ss.ibprice > t.price_check then round((p.price_check - ss.ibprice) * ss.fact_quantity) else round(- p.price_check + ss.ibprice * ss.fact_quantity) end as deal_sum,   
+--  case when ss.ibprice > t.price_check then round((p.price_check - ss.ibprice) * ss.fact_quantity) else round(- p.price_check + ss.ibprice * ss.fact_quantity) end as deal_sum,   
+  round((ss.ibprice - p.price_check) * ss.fact_quantity) as deal_sum_np,   
+  round(ss.ibprice * ss.fact_quantity) as deal_sum_fact,   
+  round(p.price_check * ss.fact_quantity) as deal_sum_check,   
   case when ss.ibprice > t.price_check then round((p.price_check - ss.ibprice) * ss.fact_quantity) else null end as deal_sum_n,   
   case when ss.ibprice > t.price_check then null else round((- p.price_check + ss.ibprice) * ss.fact_quantity) end as deal_sum_p,   
   ss.fact_quantity  

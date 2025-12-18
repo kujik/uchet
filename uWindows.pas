@@ -117,6 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
+  uFrmWWedtWorkSchedule,
 
 
   D_Order, D_LoadKB,
@@ -791,6 +792,9 @@ begin
   else if F = myfrm_Dlg_ForemanAllowance then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_turv_period', 'Бригадирские', 400, 100,
      [['foreman_allowance$i', cntNEdit, 'Сумма', '0:10000'], ['foreman_allowance_comm$s', cntEdit, 'Комментарий','0:400::T']], [['caption dlgedit ']]);
+  end
+  else if F = myfrm_Dlg_Work_Schedule then begin
+    TFrmWWedtWorkSchedule.Show(Application, F, [myfoDialog, myfoMultiCopy], fMode, AId, null);
   end
 
 

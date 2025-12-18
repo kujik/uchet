@@ -2,14 +2,6 @@ Alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
 --------------------------------------------------------------------------------
---найти все пропуски позиции в заказе
-SELECT pos - 1 AS missing_number
-FROM (
-    SELECT pos,
-           LAG(pos) OVER (ORDER BY pos) AS prev_pos
-    FROM order_items where id_order = -90
-)
-WHERE pos - prev_pos > 1;
 
 
 
@@ -1769,26 +1761,55 @@ select  sync_with_itm, id_itm, ornum , dt_beg, dt_otgr, decode(FWholeSale, 1, FC
     
 
 /*==============================================================================
-  проверка рассогласования позиций в специикации заказа с общим количеством
-  (максимальная позиция не соотвествует количеству позиций)
-*/
-select 
-  id_order,
-  max(pos),
-  count(*) 
-from 
-  order_items i 
-where
-  id_order < 0
-  or 1 = 1 
-group by
-  id_order
-having   
-  count(*) <> max(pos)
-; 
+  проверка рассогласования позиций в специикации заказа
+  выдает пропущенные значения pos (может быить несколько в одном заказе) для всех заказов
 
---поправить так
-update order_items set pos = pos - 1 where id_order = -999989 and pos > 10;
+order_max — находит MAX(pos) для каждого id_order.
+expected_pos — генерирует все ожидаемые значения pos от 1 до max_pos для каждого заказа.
+Трюк PRIOR SYS_GUID() IS NOT NULL нужен в Oracle 11g, чтобы CONNECT BY правильно работал внутри каждой группы id_order.
+LEFT JOIN order_items — показывает, каких позиций не хватает (oi.id_order IS NULL).
+JOIN orders — добавляет templatename (предполагается, что все id_order из order_items существуют в orders — иначе используйте LEFT JOIN).
+*/
+With
+  -- 1. определяем для каждого заказа максимальную позицию
+  order_max as (
+    select 
+      id_order,
+      max(pos) as max_pos
+    from order_items
+    group by id_order
+  ),
+  -- 2. генерируем полную последовательность pos от 1 до max_pos для каждого id_order
+  expected_pos as (
+    select 
+      om.id_order,
+      level as pos
+    from order_max om
+    connect by 
+      prior om.id_order = om.id_order
+      and prior sys_guid() is not null
+      and level <= om.max_pos
+  )
+-- 3. находим отсутствующие pos и подключаем templatename
+select 
+  ep.id_order,
+  ep.pos,
+  o.templatename
+from expected_pos ep
+left join order_items oi 
+  on ep.id_order = oi.id_order 
+ and ep.pos = oi.pos
+join orders o 
+  on o.id = ep.id_order
+where oi.id_order is null
+order by ep.id_order, ep.pos
+;
+
+
+
+select pos from order_items where id_order = -105;
+--поправить так (подстваить айди шаблона и pos из запроса выше)
+update order_items set pos = pos - 1 where id_order = -154 and pos > 1;
 
 
 --==============================================================================

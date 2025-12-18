@@ -4015,8 +4015,37 @@ begin
   Cth.SetDynProps(C, [[dpVerify, S.IIFStr(CVerify <> '', CVerify + ':::::::::')]]);
 end;
 
+{
+function SaveGridToVa2(MemTable: TMemTableEh): TVarDynArray2;
+var
+  RowCount, ColCount, i, j: Integer;
+begin
+  // Убеждаемся, что таблица открыта
+  if not MemTable.Active then
+    MemTable.Open;
 
+  RowCount := MemTable.RecordCount;
+  ColCount := MemTable.FieldCount;
 
+  SetLength(Result, RowCount, ColCount);
+
+  if RowCount = 0 then
+    Exit;
+
+  MemTable.First;
+  i := 0;
+  while not MemTable.Eof do
+  begin
+    for j := 0 to ColCount - 1 do
+    begin
+      // Используем FieldByNumber для прямого доступа (FieldIndex = j)
+      Result[i, j] := MemTable.Fields[j].Value;
+    end;
+    MemTable.Next;
+    Inc(i);
+  end;
+end;
+}
 
 
 

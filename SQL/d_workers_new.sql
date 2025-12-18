@@ -152,11 +152,13 @@ where
 --------------------------------------------------------------------------------
 --таблица графиков работы
 drop table w_schedules cascade constraints;
+alter table w_schedules add duration number;
 create table w_schedules(
   id number(11),
   code varchar2(50),
   name varchar2(400),
   comm varchar2(400),
+  duration number,
   active number(1),
   constraint pk_w_schedules primary key (id)
 );  
@@ -173,10 +175,118 @@ end;
 /
 
 --!!!
---insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules;
+insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules;
+
+--таблица шаблона графикав
+--drop table w_schedule_templates cascade constraints;
+create table w_schedule_templates(
+  id_schedule number(11),      --айди графика работы 
+  pos number,                  --номер дня циклва
+  hours number,                --рабочее время в часах
+  constraint pk_w_schedule_templates primary key (id_schedule, pos),
+  constraint fk_w_schedule_templates_sсh foreign key (id_schedule) references w_schedules(id) on delete cascade
+);
+
+create table w_schedule_periods(
+  id_schedule number(11),      --айди графика работы 
+  dt date,                     --дата начала периода
+  pos_beg number,              --позиция в шаблоне, на которую выпадает первое число месяца  
+  approved number,             --график согласован
+  hours number,                --рабочее время в часах
+  constraint pk_w_schedule_periods primary key (id_schedule, dt),
+  constraint fk_w_schedule_periods_sсh foreign key (id_schedule) references w_schedules(id) on delete cascade 
+);  
+
+--таблица норма рабочего времени, по графикам и по периодам
+--drop table w_schedule_hours cascade constraints;
+  create table w_schedule_hours(
+    id number(11),
+    id_schedule number(11),      --айди графика работы 
+    dt date,                     --дата начала периода
+    hours number,                --норма, в часах
+    constraint pk_w_schedule_hours primary key (id_schedule, dt),
+    constraint fk_w_schedule_hours_sсhedule foreign key (id_schedule) references w_schedules(id) on delete cascade 
+  );  
+  
+  
+CREATE OR REPLACE PROCEDURE P_SaveScheduleHours(
+  AIdSchedule NUMBER,
+  AYear       NUMBER,
+  AHours      VARCHAR2
+)
+AS
+  l_date      DATE;
+  l_pair      VARCHAR2(100);
+  l_idx       PLS_INTEGER := 1;
+  l_comma_pos PLS_INTEGER;
+  l_dash_pos  PLS_INTEGER;
+  l_day_num   NUMBER;
+  l_hours_val NUMBER;
+BEGIN
+  -- 1. Удаляем все записи для указанного графика и заданного года
+  DELETE FROM w_schedule_hours
+   WHERE id_schedule = AIdSchedule
+     AND dt >= TO_DATE(AYear || '-01-01', 'YYYY-MM-DD')
+     AND dt <  TO_DATE(AYear || '-12-31', 'YYYY-MM-DD');
+  -- 2. Если строка пустая — завершаем
+  IF AHours IS NULL OR TRIM(AHours) = '' THEN
+    RETURN;
+  END IF;
+  -- 3. Разбираем строку вида '1-0,9-8,200-6.5'
+  WHILE l_idx <= LENGTH(AHours) LOOP
+    -- Найдём позицию следующей запятой
+    l_comma_pos := INSTR(AHours, ',', l_idx);
+    IF l_comma_pos = 0 THEN
+      l_pair := TRIM(SUBSTR(AHours, l_idx));
+      l_idx := LENGTH(AHours) + 1;
+    ELSE
+      l_pair := TRIM(SUBSTR(AHours, l_idx, l_comma_pos - l_idx));
+      l_idx := l_comma_pos + 1;
+    END IF;
+    -- Пропускаем пустые фрагменты
+    CONTINUE WHEN l_pair IS NULL OR l_pair = '';
+    -- Найдём дефис
+    l_dash_pos := INSTR(l_pair, '-');
+    IF l_dash_pos = 0 THEN
+      RAISE_APPLICATION_ERROR(-20001, 'Неверный формат пары: ' || l_pair);
+    END IF;
+    -- Извлекаем день и часы
+    l_day_num := TO_NUMBER(SUBSTR(l_pair, 1, l_dash_pos - 1));
+    l_hours_val := TO_NUMBER(SUBSTR(l_pair, l_dash_pos + 1));
+    -- Проверяем корректность дня года (1–366)
+    IF l_day_num < 1 OR l_day_num > 366 THEN
+      RAISE_APPLICATION_ERROR(-20002, 'Недопустимый день года: ' || l_day_num);
+    END IF;
+    -- Формируем дату: 1 января AYear + (l_day_num - 1) дней
+    BEGIN
+      --l_date := TO_DATE(TO_CHAR(AYear, 'FM0000'), 'YYYY') + (l_day_num - 1);
+      l_date := TO_DATE(AYear || '-01-01', 'YYYY-MM-DD') + (l_day_num - 1);
+      -- Убедимся, что дата действительно в том же году (защита от 366 в невисокосный год)
+      IF EXTRACT(YEAR FROM l_date) != AYear THEN
+        RAISE_APPLICATION_ERROR(-20003, 'День ' || l_day_num || ' не существует в году ' || AYear);
+      END IF;
+    EXCEPTION
+      WHEN OTHERS THEN
+        RAISE_APPLICATION_ERROR(-20004, 'Ошибка при создании даты для года ' || AYear || ' и дня ' || l_day_num);
+    END;
+    -- 4. Вставляем запись (поле ID может быть NULL, так как не используется в PK)
+    INSERT INTO w_schedule_hours (id_schedule, dt, hours)
+    VALUES (AIdSchedule, l_date, l_hours_val);
+  END LOOP;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE;
+END P_SaveScheduleHours;
+/  
+
+select TO_DATE(TO_CHAR(2025, 'FM0000'), 'YYYY') from dual;
+  
+
+/*
 
 --------------------------------------------------------------------------------
 --таблица норма рабочего времени, по графикам и по периодам
+drop table w_schedule_hours cascade constraints;
 create table w_schedule_hours(
   id number(11),
   id_schedule number(11),      --айди графика работы 
@@ -222,7 +332,7 @@ where
 
 --!!!
 --insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours;
-
+*/
 --------------------------------------------------------------------------------
 
 --статусы работников (когда и куда принят/переведен/уволен)

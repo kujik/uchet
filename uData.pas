@@ -1016,7 +1016,7 @@ const
   myfrm_Dlg_OracleError='Dlg_OracleError';
   myfrm_Dlg_Test='Dlg_Test';
   myfrm_Dlg_UsersChoice='Dlg_UsersChoice';
-  myfrm_Dlg_Work_Wchedules='Dlg_Work_chedules';
+  myfrm_Dlg_Work_Schedule='Dlg_Work_Schedule';
   myfrm_Dlg_Ref_JobsNeeded = 'Dlg_Ref_JobsNeeded';
   myfrm_Dlg_R_OrderProperties = 'Dlg_R_OrderProperties';
   myfrm_Dlg_R_OrderReglament = 'Dlg_R_OrderReglament';

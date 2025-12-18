@@ -662,6 +662,8 @@ type
     procedure SetValue(FieldName: string; Pos: Integer; Filtered: Boolean; NewValue: Variant); overload;
     //получить имя поля переданного столбца в нижнем регистре; если столбец не передан, то возвращается текущее поле
     function  GetColumnFieldName(Column: TObject = nil): string;
+    //получить массив имен всех столбцов таблицы
+    function  GetFieldNames: TVarDynArray;
     //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X
     function  GetCol(Col: Integer = -1): Integer;
     //получим, является ли данный столбец реадактируемыи
@@ -758,7 +760,7 @@ type
     function IsTableEmpty: Boolean;
     //проверка корректности всей таблицы
     function IsTableCorrect: Boolean;
-    //зщдгчить размеры грида
+    //получить размеры грида
     procedure GetGridDimensions(var AWidth, AHeight: Integer);
     //тестовая процедура
     procedure Test;
@@ -790,6 +792,9 @@ type
     //настраивает и включает или отключает группировку по данным настроек; вызывается в SetColumnsPropertyes
     //просто включить или отключить можно свойством грида
     procedure DataGrouping;
+
+    //выгрузить данные в массив TVarDynArray2
+    function ExportToVa2(AFields: string = ''; AFiltered: Boolean = True): TVarDynArray2;
  end;
 
 
@@ -2446,6 +2451,14 @@ begin
     else Result := LowerCase(TColumnEh(Column).FieldName);
 end;
 
+function TFrDBGridEh.GetFieldNames: TVarDynArray;
+//получить массив имен всех столбцов таблицы
+begin
+  Result := [];
+  for var i: Integer := 0 to MemTableEh1.FieldCount - 1 do
+    Result := Result + [LowerCase(MemTableEh1.Fields[i].FieldName)];
+end;
+
 function TFrDBGridEh.GetCol(Col: Integer = -1): Integer;
 //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X
 begin
@@ -3665,6 +3678,53 @@ begin
   end;
   DbGridEh1.DataGrouping.Active := Opt.DataGrouping.Active;
 end;
+
+
+function TFrDBGridEh.ExportToVa2(AFields: string = ''; AFiltered: Boolean = True): TVarDynArray2;
+//выгрузить данные в массив TVarDynArray2
+var
+  va: TVarDynArray;
+begin
+  SetLength(Result, GetCount(AFiltered));
+  if AFields <> '' then
+    va := A.Explode(AFields, ';')
+  else
+    va := GetFieldNames;
+  for var i := 0 to GetCount(AFiltered) - 1 do begin
+    SetLength(Result[i], Length(va));
+    for var j := 0 to High(va) do
+      Result[i][j] := GetValue(va[j], i, AFiltered);
+  end;
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
