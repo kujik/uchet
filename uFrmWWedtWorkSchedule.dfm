@@ -66,7 +66,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           end
           object chb_active: TDBCheckBoxEh
             Left = 74
-            Top = 87
+            Top = 64
             Width = 97
             Height = 17
             Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
@@ -105,15 +105,6 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
             Text = 'edt_name'
             Visible = True
           end
-          object chb_is_individual: TDBCheckBoxEh
-            Left = 74
-            Top = 64
-            Width = 159
-            Height = 17
-            Caption = #1048#1085#1076#1080#1074#1080#1076#1091#1072#1083#1100#1085#1099#1081' '#1075#1088#1072#1092#1080#1082
-            DynProps = <>
-            TabOrder = 4
-          end
         end
       end
       object pnlHoursC: TPanel
@@ -151,41 +142,25 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           Caption = 'pnlHours'
           TabOrder = 1
           ExplicitWidth = 693
-          object cbb_year: TDBComboBoxEh
-            Left = 36
-            Top = 7
-            Width = 49
-            Height = 21
-            ControlLabel.Width = 19
-            ControlLabel.Height = 13
-            ControlLabel.Caption = #1043#1086#1076
-            ControlLabel.Visible = True
-            ControlLabelLocation.Position = lpLeftCenterEh
-            DynProps = <>
-            EditButtons = <>
-            TabOrder = 0
-            Text = 'DBComboBoxEh1'
-            Visible = True
-          end
           inline FrgHours: TFrDBGridEh
             Left = 1
-            Top = 34
+            Top = 26
             Width = 695
-            Height = 251
+            Height = 259
             Align = alBottom
-            TabOrder = 1
+            TabOrder = 0
             ExplicitLeft = 1
-            ExplicitTop = 34
+            ExplicitTop = 26
             ExplicitWidth = 691
-            ExplicitHeight = 251
+            ExplicitHeight = 259
             inherited pnlGrid: TPanel
               Width = 685
-              Height = 197
+              Height = 205
               ExplicitWidth = 681
-              ExplicitHeight = 197
+              ExplicitHeight = 205
               inherited DbGridEh1: TDBGridEh
                 Width = 683
-                Height = 174
+                Height = 182
                 Columns = <
                   item
                     CellButtons = <>
@@ -206,9 +181,9 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 end
               end
               inherited pnlStatusBar: TPanel
-                Top = 175
+                Top = 183
                 Width = 683
-                ExplicitTop = 175
+                ExplicitTop = 183
                 ExplicitWidth = 679
                 inherited lblStatusBarL: TLabel
                   Height = 13
@@ -221,8 +196,8 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               end
             end
             inherited pnlLeft: TPanel
-              Height = 197
-              ExplicitHeight = 197
+              Height = 205
+              ExplicitHeight = 205
             end
             inherited pnlTop: TPanel
               Width = 695
@@ -233,9 +208,9 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               ExplicitWidth = 691
             end
             inherited pnlBottom: TPanel
-              Top = 251
+              Top = 259
               Width = 695
-              ExplicitTop = 251
+              ExplicitTop = 259
               ExplicitWidth = 691
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
@@ -244,7 +219,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -252,6 +227,21 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
                 305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
             end
+          end
+          object tbcYear: TTabControl
+            Left = 1
+            Top = 1
+            Width = 695
+            Height = 19
+            Align = alTop
+            TabOrder = 1
+            Tabs.Strings = (
+              '2025'
+              '2026')
+            TabIndex = 0
+            OnChange = tbcYearChange
+            OnChanging = tbcYearChanging
+            ExplicitWidth = 691
           end
         end
       end
@@ -350,7 +340,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631

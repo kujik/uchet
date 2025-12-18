@@ -194,8 +194,8 @@ create table w_schedule_periods(
   approved number,             --график согласован
   hours number,                --рабочее время в часах
   constraint pk_w_schedule_periods primary key (id_schedule, dt),
-  constraint fk_w_schedule_periods_sсh foreign key (id_schedule) references w_schedules(id) on delete cascade 
-);  
+  constraint fk_w_schedule_periods_sсh foreign key (id_schedule) references w_schedule(id) on delete cascade 
+); 
 
 --таблица норма рабочего времени, по графикам и по периодам
 --drop table w_schedule_hours cascade constraints;
@@ -227,7 +227,7 @@ BEGIN
   DELETE FROM w_schedule_hours
    WHERE id_schedule = AIdSchedule
      AND dt >= TO_DATE(AYear || '-01-01', 'YYYY-MM-DD')
-     AND dt <  TO_DATE(AYear || '-12-31', 'YYYY-MM-DD');
+     AND dt <=  TO_DATE(AYear || '-12-31', 'YYYY-MM-DD');
   -- 2. Если строка пустая — завершаем
   IF AHours IS NULL OR TRIM(AHours) = '' THEN
     RETURN;
@@ -279,8 +279,6 @@ EXCEPTION
 END P_SaveScheduleHours;
 /  
 
-select TO_DATE(TO_CHAR(2025, 'FM0000'), 'YYYY') from dual;
-  
 
 /*
 

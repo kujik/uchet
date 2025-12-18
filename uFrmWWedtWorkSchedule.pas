@@ -22,22 +22,39 @@ type
     pnlHoursC: TPanel;
     frmpcHours: TFrMyPanelCaption;
     pnlHours: TPanel;
-    cbb_year: TDBComboBoxEh;
     FrgHours: TFrDBGridEh;
     pnlTemplateC: TPanel;
     pnlTemplate: TPanel;
     FrgTemplate: TFrDBGridEh;
     frmpcTemplate: TFrMyPanelCaption;
     nedt_duration: TDBNumberEditEh;
-    chb_is_individual: TDBCheckBoxEh;
+    tbcYear: TTabControl;
+    procedure tbcYearChange(Sender: TObject);
+    procedure tbcYearChanging(Sender: TObject; var AllowChange: Boolean);
   private
-    FHolydays: TVarDynArray2;
+    //данные по периодам
+    FData: array [0..1] of record
+      //год
+      Year: Integer;
+      //выходные, праздники, сокращенные, за концом месяца
+      Holydays: TVarDynArray2;
+      //весь массив грида (все столбцы, не только часы), полученные при загрузке
+      Hours: TVarDynArray2;
+      //весь массив грида, полученный при сохранении по Ок или переходу к другому году
+      HoursN: TVarDynArray2;
+    end;
+    //массив грида для грида шаблонов
     FTemplate: TVarDynArray2;
-    FHours: TVarDynArray2;
+    //режим редактирования всех данных для администратора
     FAdminMode: Boolean;
+    function  GetY: Integer;
+    property  Y: Integer read GetY;
+    function  GetYn: Integer;
+    property  Yn: Integer read GetYn;
     function  Prepare: Boolean; override;
     procedure ControlOnChangeEvent(Sender: TObject); override;
     procedure ControlOnExit(Sender: TObject); override;
+    procedure VerifyBeforeSave; override;
     function  Save: Boolean; override;
     procedure FrgTemplateColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
     procedure FrgTemplateColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -52,6 +69,7 @@ type
     procedure SaveHours;
     function  IsTemplateCorrect: Boolean;
     procedure FillHoursFromTemplate;
+    procedure SetControlsEditableState;
   public
   end;
 
@@ -80,6 +98,10 @@ const
   w = 30;
 begin
   Result := False;
+
+  if Mode = fAdd then
+    ID := null;
+
   Caption := 'График работы';
   //поля
   F.DefineFields := [
@@ -98,6 +120,7 @@ begin
   pnlTemplate.Height := FrgTemplate.Top + FrgTemplate.Height;
   pnlTemplateC.Height := pnlTemplate.Height + frmpcTemplate.Height;
   FrgHours.Height :=247;
+  //FrgHours.Top := 23;
   pnlHours.Height := FrgHours.Top + FrgHours.Height;
   pnlHoursC.Height := pnlHours.Height + frmpcHours.Height;
   FWHBounds.Y := pnlHoursC.Top + pnlHoursC.Height;
@@ -155,15 +178,17 @@ begin
     va2 := va2 + [['d' + IntToStr(i) + '$s', IntToStr(i), IntToStr(w) + ';c', 'e']];
   FrgHours.Opt.SetFields(va2 + [['total$s', 'Итого', '50;c']]);
   FrgHours.Opt.SetGridOperations('u');
-  FrgHours.Opt.SetButtons(1,[[-1000, True, 'Разрешить ввод данных', 'arrow_up'],[],[-1001, 'Заполнить из шаблона', 'arrow_up']]);  //!!! не отображаются картинки в меню (вверху в кнопке - отображаются)
+  FrgHours.Opt.SetButtons(1,[[-1000, User.IsDeveloper and (Mode in [fAdd, fEdit]) , 'Разрешить ввод данных', 'arrow_up'],[],[-1001, Mode in [fAdd, fEdit], 'Заполнить из шаблона', 'arrow_up']]);  //!!! не отображаются картинки в меню (вверху в кнопке - отображаются)
   FrgHours.OnColumnsGetCellParams := FrgHoursColumnsGetCellParams;
   FrgHours.OnColumnsUpdateData := FrgHoursColumnsUpdateData;
   FrgHours.OnButtonClick := FrgHoursButtonClick;
   LoadHours;
-  FrgHours.SetInitData(FHours);
+  FrgHours.SetInitData(FData[Yn].Hours);
   FrgHours.Opt.SetGridOperations('u');
   FrgHours.Prepare;
   FrgHours.RefreshGrid;
+
+  SetControlsEditableState;
 
   //общая подсказка
   FOpt.InfoArray:=[[
@@ -214,6 +239,11 @@ begin
   end;
 end;
 
+procedure TFrmWWedtWorkSchedule.VerifyBeforeSave;
+begin
+  FErrorMessage := S.IIFStr(not IsTemplateCorrect, 'Не заполнен шаблон графика!');
+end;
+
 function TFrmWWedtWorkSchedule.Save: Boolean;
 begin
   Result := inherited;
@@ -245,7 +275,7 @@ begin
     Params.Background := clSkyBlue;
   end
   else begin
-    case FHolydays[Fr.RecNo - 1][TColumnEh(Sender).Index].AsInteger of
+    case FData[Yn].Holydays[Fr.RecNo - 1][TColumnEh(Sender).Index].AsInteger of
       -1:
         Params.Background := clmyGray;
       1:
@@ -253,7 +283,7 @@ begin
       2:
         Params.Background := clYellow;
     end;
-    Params.ReadOnly := (FHolydays[Fr.RecNo - 1][TColumnEh(Sender).Index] = -1) or (Fr.GetValueI('approved', Fr.RecNo - 1) = 1);
+    Params.ReadOnly := (FData[Yn].Holydays[Fr.RecNo - 1][TColumnEh(Sender).Index] = -1) or (Fr.GetValueI('approved', Fr.RecNo - 1) = 1);
     if Params.Text = '0' then
       Params.Text := 'В';
     if Params.Text = 'В' then
@@ -282,6 +312,7 @@ begin
   if Tag = 1000 then begin
     if MyQuestionMessage(S.IIf(FAdminMode, 'Выключить', 'Включить') + ' режим редактирования всех данных?') = mrYes then
       FAdminMode := not FAdminMode;
+    SetControlsEditableState;
   end
   else if Tag = 1001 then begin
     FillHoursFromTemplate;
@@ -301,13 +332,13 @@ begin
   end;
 end;
 
-function TFrmWWedtWorkSchedule.IsHoursRowCorrect(ARow: Integer): Boolean;
+function TFrmWWedtWorkSchedule.IsHoursRowCorrect(ARow: Integer): Boolean;  //!!!
 begin
   Result := True;
   var LTotal := 0;
   for var i := 1 to 31 do begin
     LTotal := LTotal + FrgHours.GetValueI('d' + IntToStr(i), ARow, False);
-    if (FHolydays[ARow][i + 1] <> -1) and (FrgHours.GetValue('d' + IntToStr(i), ARow, False) = null) then
+    if (FData[Yn].Holydays[ARow][i + 1] <> -1) and (FrgHours.GetValue('d' + IntToStr(i), ARow, False) = null) then
       Result := False;
   end;
   FrgHours.SetValue('total', ARow, False, S.IIf(Result, LTotal, null));
@@ -324,8 +355,8 @@ begin
   FTemplate[0][0] := 'Время работы:';
   for i := 0 to High(va) do
     FTemplate[0][i + 1] := va[i];
-  for i := High(va) + 1 to High(FTemplate[0]) do
-    FTemplate[0][i + 1] := null;
+  for i := High(va) + 2 to High(FTemplate[0]) do
+    FTemplate[0][i] := null;
 end;
 
 procedure TFrmWWedtWorkSchedule.SaveTemplate;
@@ -343,90 +374,109 @@ end;
 
 procedure TFrmWWedtWorkSchedule.LoadHours;
 var
-  i, j, k, m, y: Integer;
+  i, j, k, m, Yn, y: Integer;
   h: Variant;
   va1, va2, va3: TVarDynArray2;
 begin
-  y := 2025;
-  //часы за каждый день года
-  va1:= Q.QLoadToVarDynArray2('select dt, hours from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
-  //согласования и итоговые часы за каждый месяц
-  va2 := Q.QLoadToVarDynArray2('select dt, hours, approved from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
-  //получим календарь за этот месяц  (1-выходной, 2-сокращенный, 3-рабочий)
-  va3:= Q.QLoadToVarDynArray2('select dt, type, descr from ref_holidays where extract(year from dt) = :year$i', [y]);
-
-  SetLength(FHours, 0);
-  SetLength(FHours, 12);
-  SetLength(FHolydays, 12);
-  k := 0;
-  m := 0;
-  for i := 0 to 11 do begin
-    SetLength(FHours[i], 34);
-    FHours[i][0] := MonthsRu[i + 1];
-    SetLength(FHolydays[i], 33);
-    for j := 1 to 31 do begin
-      FHolydays[i][j + 1] := 0;
-      FHours[i][j + 1] := null;
-      if j > DayOf(EndOfTheMonth(EncodeDate(y, i + 1, 1))) then begin
-        FHolydays[i][j+ 1] := -1;
-      end
-      else begin
+  FData[0].Year := YearOf(Date);
+  FData[1].Year := YearOf(IncYear(Date, 1));
+  for Yn := 0 to 1 do begin
+    y := FData[Yn].Year;
+    tbcYear.Tabs[Yn] := IntToStr(y);
+    //часы за каждый день года
+    va1 := Q.QLoadToVarDynArray2('select dt, hours from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
+    //согласования и итоговые часы за каждый месяц
+    va2 := Q.QLoadToVarDynArray2('select dt, hours, approved from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
+    //получим календарь за этот месяц  (1-выходной, 2-сокращенный, 3-рабочий)
+    va3 := Q.QLoadToVarDynArray2('select dt, type, descr from ref_holidays where extract(year from dt) = :year$i', [y]);
+    SetLength(FData[Yn].Hours, 0);
+    SetLength(FData[Yn].Hours, 12);
+    SetLength(FData[Yn].Holydays, 12);
+    k := 0;
+    m := 0;
+    for i := 0 to 11 do begin
+      SetLength(FData[Yn].Hours[i], 34);
+      FData[Yn].Hours[i][0] := MonthsRu[i + 1];
+      SetLength(FData[Yn].Holydays[i], 33);
+      for j := 1 to 31 do begin
+        FData[Yn].Holydays[i][j + 1] := 0;
+        FData[Yn].Hours[i][j + 1] := null;
+        if j > DayOf(EndOfTheMonth(EncodeDate(y, i + 1, 1))) then begin
+          FData[Yn].Holydays[i][j + 1] := -1;
+        end
+        else begin
         //получим тип дня из календаря
-        h := A.FindValueInArray2(EncodeDate(y, i + 1, j), 0, 1, va3).AsFloat;
+          h := A.FindValueInArray2(EncodeDate(y, i + 1, j), 0, 1, va3).AsFloat;
         //отметим выходным, если праздник, или (сб,вс и при это не проставлен сокращенным или рабочим)
-        if (h = 1) or ((DayOfTheWeek(EncodeDate(y, i + 1, j)) >= 6) and (h <> 2) and (h <> 3)) then
-          FHolydays[i][j + 1] := 1
-        else if h = 2 then
-          FHolydays[i][j + 1] := 2;
-        FHours[i][j + 1] := A.FindValueInArray2(EncodeDate(y, i + 1, j), 0, 1, va1);
+          if (h = 1) or ((DayOfTheWeek(EncodeDate(y, i + 1, j)) >= 6) and (h <> 2) and (h <> 3)) then
+            FData[Yn].Holydays[i][j + 1] := 1
+          else if h = 2 then
+            FData[Yn].Holydays[i][j + 1] := 2;
+          FData[Yn].Hours[i][j + 1] := A.FindValueInArray2(EncodeDate(y, i + 1, j), 0, 1, va1);
+        end;
       end;
-    end;
     //итоговое время за месяц, или нулл если нет в таблице
-    FHours[i][33] := A.FindValueInArray2(EncodeDate(y, i + 1, 1), 0, 1, va2);
+      FData[Yn].Hours[i][33] := A.FindValueInArray2(EncodeDate(y, i + 1, 1), 0, 1, va2);
     //признак согласования, или нулл
-    FHours[i][1] := A.FindValueInArray2(EncodeDate(y, i + 1, 1), 0, 1, va2);
+      FData[Yn].Hours[i][1] := A.FindValueInArray2(EncodeDate(y, i + 1, 1), 0, 2, va2);
+    end;
   end;
 end;
 
 procedure TFrmWWedtWorkSchedule.SaveHours;
 var
-  i, j, k, y, Changed: Integer;
-  LHours: TVarDynArray2;
+  i, j, k, y, Yn, Changed: Integer;
   st: string;
+  b: Boolean;
 begin
-  y := 2025;
-  LHours := FrgHours.ExportToVa2;
-  if A.IsArraysEqual(LHours, FHours) then
-    Exit;
-  Changed := 0;
-  for i := 1 to 12 do
-    for j := 1 to 31 do
-      if LHours[i - 1][j + 1] <> FHours[i - 1][j + 1] then
-        Inc(Changed);
-  if Changed < 6 then begin
+  FData[tbcYear.TabIndex].HoursN := FrgHours.ExportToVa2;
+  for Yn := 0 to 1 do begin
+    y := FData[Yn].Year;
+    if A.IsArraysEqual(FData[Yn].HoursN, FData[Yn].Hours) then
+      Break;
+    Changed := 0;
+    for i := 1 to 12 do
+      for j := 1 to 31 do
+        if FData[Yn].HoursN[i - 1][j + 1] <> FData[Yn].Hours[i - 1][j + 1] then
+          Inc(Changed);
+    if Changed < 5 then begin
+      for i := 1 to 12 do begin
+        for j := 1 to 31 do begin
+          if FData[Yn].HoursN[i - 1][j + 1] = FData[Yn].Hours[i - 1][j + 1] then
+            Continue;
+          Q.QExecSql('delete from w_schedule_hours where id_schedule = :id$i and dt = :dt1$d', [ID, EncodeDate(y, i, j)]);
+          if FData[Yn].HoursN[i - 1][j + 1] <> null then
+            Q.QExecSql('insert into w_schedule_hours (id_schedule, dt, hours) values (:id$i, :dt1$d, :hours$f)', [ID, EncodeDate(y, i, j), FData[Yn].HoursN[i - 1][j + 1]]);
+        end;
+      end;
+    end
+    else begin
+      st := '';
+      k := 0;
+      for i := 1 to 12 do begin
+        for j := 1 to 31 do
+          if j <= DayOf(EndOfTheMonth(EncodeDate(y, i, 1))) then begin
+            Inc(k);
+            if FData[Yn].HoursN[i - 1][j + 1] = null then
+              Continue;
+            S.ConcatStP(st, IntToStr(k) + '-' + S.FormatNumberWithComma(FData[Yn].HoursN[i - 1][j + 1].AsFloat, False), ',');
+          end;
+      end;
+      Q.QCallStoredProc('P_SaveScheduleHours', 'Id$i;y$i;h$s', [ID, y, st]);
+    end;
+    b := False;
+    if Q.QSelectOneRow('select count(*) from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)])[0] = 0 then begin
+      for i := 1 to 12 do
+        Q.QExecSql('insert into w_schedule_periods (id_schedule, dt) values (:id$i, :dt1$d)', [ID, EncodeDate(y, i, 1)]);
+      b := True;
+    end;
     for i := 1 to 12 do begin
       for j := 1 to 31 do begin
-        if LHours[i - 1][j + 1] = FHours[i - 1][j + 1] then
+        if (not b) and ((FData[Yn].HoursN[i - 1][1] = FData[Yn].Hours[i - 1][1]) and (FData[Yn].HoursN[i - 1][33] = FData[Yn].Hours[i - 1][33])) then
           Continue;
-        Q.QExecSql('delete from w_schedule_hours where id_schedule = :id$i and dt = :dt1$d', [ID, EncodeDate(y, i, j)]);
-        if LHours[i - 1][j + 1] <> null then
-          Q.QExecSql('insert into w_schedule_hours (id_schedule, dt, hours) values (:id$i, :dt1$d, :hours$f)', [ID, EncodeDate(y, i, j), LHours[i - 1][j + 1]]);
+        Q.QExecSql('update w_schedule_periods set approved = :approved$i, hours = :hours$i where id_schedule = :id$i and dt = :dt$d', [FData[Yn].HoursN[i - 1][1], FData[Yn].HoursN[i - 1][33], ID, EncodeDate(y, i, 1)]);
       end;
     end;
-  end
-  else begin
-    st := '';
-    k := 0;
-    for i := 1 to 12 do begin
-      for j := 1 to 31 do
-        if j <= DayOf(EndOfTheMonth(EncodeDate(y, i, 1))) then begin
-          Inc(k);
-          if LHours[i - 1][j + 1] = null then
-            Continue;
-          S.ConcatStP(st, IntToStr(k) + '-' + S.FormatNumberWithComma(LHours[i - 1][j + 1].AsFloat, False), ',');
-        end;
-    end;
-    Q.QCallStoredProc('P_SaveScheduleHours', 'Id$i;y$i;h$s', [ID, y, st]);
   end;
 end;
 
@@ -453,7 +503,7 @@ begin
   d := StrToIntDef(Copy(FrgHours.CurrField, 2, 2), -1);
   if d  = -1 then
     Exit;
-  if FHolydays[FrgHours.RecNo - 1][d + 1] = -1 then
+  if FData[Yn].Holydays[FrgHours.RecNo - 1][d + 1] = -1 then
     Exit;
   msg := '';
   if not IsTemplateCorrect then
@@ -486,7 +536,7 @@ begin
   while i <= 31 * 12 do begin
     FrgHours.SetValue('d' + IntToStr(j), r, False, FrgTemplate.GetValue('d' + IntToStr((i mod nedt_duration.Value) + 1), 0, False));
     //достигли 31го числа или день за концом месяца
-    if (j = 31) or (FHolydays[r][j + 2] = -1) then begin
+    if (j = 31) or (FData[Yn].Holydays[r][j + 2] = -1) then begin
       IsHoursRowCorrect(r);
       //увеличим строку и сбросим номер дня
       r := r + 1;
@@ -500,6 +550,38 @@ begin
     Inc(i);
   end;
   FrgHours.InvalidateGrid;
+end;
+
+procedure TFrmWWedtWorkSchedule.SetControlsEditableState;
+begin
+  if Mode in [fView, fDelete] then
+    Exit;
+  //SetControlsEditable([chb_active, edt_code, edt_name, edt_comm, nedt_duration], False);
+  SetControlsEditable([nedt_duration], (Mode = fAdd) or FAdminMode);
+  FrgTemplate.DbGridEh1.ReadOnly := not ((Mode = fAdd) or FAdminMode);
+end;
+
+function TFrmWWedtWorkSchedule.GetYn: Integer;
+begin
+  Result := tbcYear.TabIndex;
+end;
+
+function TFrmWWedtWorkSchedule.GetY: Integer;
+begin
+  Result := FData[tbcYear.TabIndex].Year;
+end;
+
+procedure TFrmWWedtWorkSchedule.tbcYearChange(Sender: TObject);
+begin
+  inherited;
+  FrgHours.SetInitData(FData[Yn].Hours);
+  FrgHours.RefreshGrid;
+end;
+
+procedure TFrmWWedtWorkSchedule.tbcYearChanging(Sender: TObject; var AllowChange: Boolean);
+begin
+  inherited;
+  FData[Yn].HoursN := FrgHours.ExportToVa2;
 end;
 
 end.

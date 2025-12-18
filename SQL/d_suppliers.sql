@@ -908,8 +908,8 @@ begin
 end;
 / 
 
-/*select rashod, ornum, dt_otgr from v_spl_rezerv_detail where id_nomencl = '31691' order by dt_otgr asc, ornum asc;
-select F_GetOrdersWhereNoQnt(31691, qnt, null) from dual; 
+select rashod, ornum, dt_otgr from v_spl_rezerv_detail where id_nomencl = '31691' order by dt_otgr asc, ornum asc;
+/*select F_GetOrdersWhereNoQnt(31691, qnt, null) from dual; 
 select id, qnt, ornumwoqnt from v_spl_minremains where id = 31691;*/
 
   
