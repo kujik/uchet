@@ -397,6 +397,8 @@ type
   //позволяет отменить операцию, выдать сообщение (можно с вопросом), либо выполнить действия после операции (зафиксировать строку, ввести значения)
   //также вызывается при сопуствующих им проверке строки и таблицы
   TFrDBGridEhRowOperationEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridRowOperationMode; Row: Integer; var Handled: Boolean; var Cancel: Boolean; var Msg: string) of object;
+  //вызывается при открытии детальной панели. Если установлено Hnadled, дальнейший код в событии фрейма не выполняется. Если CanShow = False, панель не откроется
+  TFrDBGridEhRowDetailPanelShowEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean) of object;
 
 
   {
@@ -535,6 +537,8 @@ type
     FOnVeryfyAndCorrectValues: TFrDBGridEhVeryfyAndCorrectValuesEvent;
     FOnCellValueSave: TFrDBGridEhCellValueSaveEvent;
     FOnRowOperation: TFrDBGridEhRowOperationEvent;
+    FOnRowDetailPanelShow: TFrDBGridEhRowDetailPanelShowEvent;
+
   protected
     {функции и процедуры для получения и установки свойств поля которых определеня в разделе Private}
 
@@ -584,6 +588,7 @@ type
     property OnVeryfyAndCorrectValues: TFrDBGridEhVeryfyAndCorrectValuesEvent read FOnVeryfyAndCorrectValues write FOnVeryfyAndCorrectValues;
     property OnCellValueSave: TFrDBGridEhCellValueSaveEvent read FOnCellValueSave write FOnCellValueSave;
     property OnRowOperation: TFrDBGridEhRowOperationEvent read FOnRowOperation write FOnRowOperation;
+    property OnRowDetailPanelShow: TFrDBGridEhRowDetailPanelShowEvent read FOnRowDetailPanelShow write FOnRowDetailPanelShow;
 
     {публичные свойства фрейма}
 
@@ -1662,6 +1667,14 @@ end;
 procedure TFrDBGridEh.DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
 //раскрытие детальной панели
 begin
+  //вызовем событие
+  var Handled := False;
+  if Assigned(FOnDbClick) then
+    FOnRowDetailPanelShow(Self, No, Handled, CanShow);
+  if Handled then
+    Exit;
+  if not CanShow then
+    Exit;
   if FGrid2 = nil then
     Exit;
   //активирем датасет детального грида и связанные с открытием события (установка столбцов, виде)
