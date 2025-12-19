@@ -33,6 +33,9 @@ type
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
+    procedure Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
+
   public
   end;
 
@@ -160,7 +163,7 @@ begin
     ['qnt_to_sgp$f', 'Кол-во изделий, принятых на СГП', '80','f=:'],
     ['route2','Маршрут','120'],
     ['kns','Конструктор','120'],
-    ['id_kns','Конструктор','120;L'],
+    ['id_kns','Конструктор','120;L','e'],
     ['thn','Технолог','120'],
     ['dt_estimate','Смета','80'],
     ['sgp','С СГП','40','pic'],
@@ -511,6 +514,22 @@ begin
         then Params.Background := clmyPink;
   end;
 end;
+
+procedure TFrmOGjrnOrders.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+begin
+  if Value.AsString = '' then
+    Exit;
+  Fr.SetValue('id_kns', Value);
+  Q.QExecSql('update order_items set id_kns = :id_kns$i where id = :id$i', [Value, Fr.ID]);
+end;
+
+procedure TFrmOGjrnOrders.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := Fr.RecNo <> 1;
+end;
+
+
+
 {
 дополнительные функции
 }
@@ -551,8 +570,9 @@ procedure TFrmOGjrnOrders.LoadKnsAndThnList;
 var
   va2: TVarDynArray2;
 begin
-  Q.QLoadToVarDynArray2('select name, id from adm_users where active = 1 order by name', []);
-  Frg1.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
+  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where active = 1 order by name', []);
+  Frg2.Opt.SetPick('id_kns', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
+  Frg2.SetColumnsPropertyes;
 end;
 
 
