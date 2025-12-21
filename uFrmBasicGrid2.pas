@@ -52,6 +52,7 @@ type
     //dbgvCell - после записи введенного значения и обновления строки, передеется отфильтрованная строка в мемтейбл с 1
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
+    procedure Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean); virtual;
 
 
     //события второго (в rorowDetailPanel) фрейма грида
@@ -161,6 +162,10 @@ procedure TFrmBasicGrid2.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Intege
 begin
 end;
 
+procedure TFrmBasicGrid2.Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean);
+begin
+end;
+
 procedure TFrmBasicGrid2.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 begin
 end;
@@ -251,6 +256,7 @@ begin
     AFrg.OnGetCellReadOnly := Frg1GetCellReadOnly;
     AFrg.OnVeryfyAndCorrectValues := Frg1VeryfyAndCorrect;
     AFrg.OnCellValueSave := Frg1CellValueSave;
+    AFrg.OnRowDetailPanelShow := Frg1RowDetailPanelShow;
   end;
 
   if AFrg = Frg2 then begin

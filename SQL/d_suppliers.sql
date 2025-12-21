@@ -78,6 +78,7 @@ update spl_categoryes set id = 1 where name = 'снабжение';
 --доп параметры номенклатуры ИТМ для снабжения
 alter table spl_itm_nom_props add monitor_price number(1) default 0;
 alter table spl_itm_nom_props add price_check_upd number(1) default 1;
+alter table spl_itm_nom_props add price_check_test number(11,2);
 --alter table spl_itm_nom_props add planned_need_qnt number(11,3);
 --alter table spl_itm_nom_props add constraint fk_spl_itm_nom_props_category foreign key (id_category) references spl_categoryes(id);
 create table spl_itm_nom_props(
@@ -2019,7 +2020,46 @@ where
   and p.price_check_upd = 1
 ;      
 
+--update spl_itm_nom_props set price_check_test = price_check;
 
+
+create or replace view v_spl_prices_check_get as
+--выборка номенклатуры по ПН ИТМ, по которой цена меньше контрольной
+select
+  id_nomencl,
+  min(price_new) as price_new
+from (  
+select
+  n.id_nomencl, 
+  s.id_inbill,
+  p.price_check,
+  ss.ibprice as price_new,
+  p.price_check_upd
+from
+  spl_itm_nom_props p,
+  dv.in_bill s,
+  dv.in_bill_spec ss,
+  dv.nomenclatura n,
+  properties pp
+where  
+  p.price_check_upd = 1
+  and pp.prop = 'spl_deals_monitoring' and pp.subprop = 'id_inbill'
+  and s.id_inbill > pp.i --1000
+  and p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_inbill = ss.id_inbill
+  and ss.ibprice <> 0
+  and ss.ibprice < p.price_check
+)
+group by id_nomencl    
+;   
+
+select * from spl_itm_nom_props;
+select * from v_spl_prices_check_get;
+
+--update spl_itm_nom_props set price_check_test = price_check;
+--update spl_itm_nom_props set price_check = price_check_test;
+--update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check);
 
 
 /*

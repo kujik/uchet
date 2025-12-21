@@ -822,6 +822,7 @@ begin
   IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
   Q.QLoadFromQuery('select name, price_check, price, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
   IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
+  //сохраним айди обработанного счета
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
   if na.Count > 0 then begin
     st := '';
@@ -846,6 +847,9 @@ begin
       ')',
     [IdIb]
   );
+  //обновим контрольную цену, если найдена в накладных, старше айди из properties, цена меньше контрольной
+  Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
+  //получим и сохраним айди последней накладной
   IdIbN := Q.QSelectOneRow('select max(id_inbill) from dv.in_bill', [])[0];
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
 end;
