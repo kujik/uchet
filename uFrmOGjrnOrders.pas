@@ -517,6 +517,7 @@ end;
 
 procedure TFrmOGjrnOrders.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
+Exit;
   if Value.AsString = '' then
     Exit;
   Fr.SetValue('id_kns', Value);
@@ -525,7 +526,7 @@ end;
 
 procedure TFrmOGjrnOrders.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := Fr.RecNo <> 1;
+//  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := Fr.RecNo <> 1;
 end;
 
 

@@ -1545,7 +1545,7 @@ begin
   Ok := Cth.VerifyVisualise(Self);
   //проверим выбран ли регламент
   //если это не шаблон и не тип заказа Отгрузочный с СГП
-  if (not IsTemplate) and Ok and (cmb_OrderType.Value <> '111') and (Cth.GetControlValue(dedt_beg) >= EncodeDate(2025,12,22))) then
+  if (not IsTemplate) and Ok and (cmb_OrderType.Value <> '111') and (Cth.GetControlValue(dedt_beg) >= EncodeDate(2025,12,22)) then
     Ok := FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] <> null;
 end;
 
