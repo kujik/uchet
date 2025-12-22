@@ -1543,6 +1543,10 @@ begin
 //      Cth.DotRedLine(nedt_Trans_0);
 //      if b then dedt_Otgr.Color:=RGB(255,0,0) else dedt_Otgr.Color:=RGB(255,255,255);
   Ok := Cth.VerifyVisualise(Self);
+  //проверим выбран ли регламент
+  //если это не шаблон и не тип заказа Отгрузочный с СГП
+  if (not IsTemplate) and Ok and (cmb_OrderType.Value <> '111') and (Cth.GetControlValue(dedt_beg) >= EncodeDate(2025,12,22))) then
+    Ok := FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] <> null;
 end;
 
 procedure TDlg_Order.SetComplaints;

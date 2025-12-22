@@ -163,7 +163,7 @@ begin
     ['qnt_to_sgp$f', 'Кол-во изделий, принятых на СГП', '80','f=:'],
     ['route2','Маршрут','120'],
     ['kns','Конструктор','120'],
-    ['id_kns','Конструктор','120;L','e'],
+    //['id_kns','Конструктор','120;L','e'],
     ['thn','Технолог','120'],
     ['dt_estimate','Смета','80'],
     ['sgp','С СГП','40','pic'],
@@ -570,6 +570,7 @@ procedure TFrmOGjrnOrders.LoadKnsAndThnList;
 var
   va2: TVarDynArray2;
 begin
+Exit;
   va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where active = 1 order by name', []);
   Frg2.Opt.SetPick('id_kns', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
   Frg2.SetColumnsPropertyes;
