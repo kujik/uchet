@@ -1075,7 +1075,7 @@ end;
 -- справочник стандартных изделий
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
---alter table or_std_items add by_sgp number(1) default 0;
+alter table or_std_items add qnt_panels_w_drill number;
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы (КБ/Производство)
@@ -1087,6 +1087,7 @@ create table or_std_items (
   barcode_c varchar2(100),             --штрих-код
   r0 number(1) default 0,              --если 1, то производдственный маршрут не задается
   by_sgp number(1) default 0,          --для данного изделия ведется учет СГП по стандартным изделиям 
+  qnt_panels_w_drill number,
   
   r1 number(1),                        --производственный маршрут
   r2 number(1),

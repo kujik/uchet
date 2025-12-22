@@ -131,6 +131,8 @@ type
     function GetPath_OrMontage_Act(Path: string = ''): string;
     function GetPath_OrMontage_Photos(Path: string = ''): string;
     function GetPath_Nomencl_Drawings(ID: Integer = 0): string;
+    function GetPath_OrItems_Xml(ID: Integer): string;
+    function GetPath_StdItems_Xml(ID: Integer): string;
     function GetPath_Demand_Created: string;
     function GetPath_ErrorLog(Login: string; Dt: TDateTime): string;
     function GetPath_OrderArchive(Year:string): string;
@@ -488,6 +490,16 @@ begin
     then st := IntToStr(ID)
     else st := GetPathNewDir;
   Result:=FilesPath + '\Files\Номенклатура\' + st + '\Чертежи';
+end;
+
+function TModule.GetPath_OrItems_Xml(ID: Integer): string;
+begin
+  Result := FilesPath + '\Files\Заказы\Изделия\' + IntToStr(ID) + '\XML';
+end;
+
+function TModule.GetPath_StdItems_Xml(ID: Integer): string;
+begin
+  Result := FilesPath + '\Files\Стандартные изделия\' + IntToStr(ID) + '\XML';
 end;
 
 function TModule.GetPath_Demand_Created: string;

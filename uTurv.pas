@@ -1232,7 +1232,7 @@ begin
   id_vyh:=Q.QSelectOneRow('select id from ref_turvcodes where code = ''В''', [])[0];
   if id_vyh = null then id_vyh:=-1;
   id_otp:=Q.QSelectOneRow('select id from ref_turvcodes where code = ''ОТ''', [])[0];
-  if id_otp = null then id_vyh:=-1;
+  if id_otp = null then id_otp:=-1;
   //бухгалтерия=4, кпп=27, станки = 16
   vt:=Q.QLoadToVarDynArray2(
     'select dt, id_worker, begtime, endtime, id_turvcode2, worktime2, nighttime, 0, null, settime3, id_division, 0, null from turv_day '+
@@ -1531,7 +1531,7 @@ exit;
     b:=(vt[i][7] = 1) or ((i < High(vt)) and (vt[i][1] = vt[i+1][1]) and
       (DaysBetween(vt[i+1][0], vt[i][0]) = 1) and (vt[i+1][7] = 1));
     //если время и код по парсеку еще не заданы, или же задан выходной но при этом в этот или следующий день были изменения времени прихода/ухода
-    if ((vt[i][4] = null)and(vt[i][5] = null))or(((vt[i][4] = id_vyh)or(vt[i][4] = id_otp)) and b) then begin
+    if ((vt[i][4] = null)and(vt[i][5] = null))or(((vt[i][4] = id_vyh){or(vt[i][4] = id_otp)}) and b) then begin  //2025-12 убран id_otp
       //если сменился айди подразделения, узнаем офис ли это
       if vt[i][10]<> idd then begin
         idd:=vt[i][10];

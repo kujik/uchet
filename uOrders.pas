@@ -87,7 +87,9 @@ type
     function ExportPassportToXLSX(AIdOrder: Integer; OrderPath: string; Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
     procedure CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
     procedure ViewItmDocumentFromLog(AParent: TForm; AId: Variant);
-  end;
+    procedure AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant);
+    procedure ParseOrItemXML(const FileName: string);
+end;
 
 var
   Orders: TOrders;
@@ -2621,6 +2623,63 @@ begin
   else
     Wh.ExecReference(DocType, AParent, [myfoDialog, myfoSizeable, myfoEnableMaximize], DocId);
 end;
+
+procedure TOrders.AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant);
+var
+  i: Integer;
+  Path: string;
+  State : TKeyboardState;
+  b: Boolean;
+begin
+  try
+    MyData.OpenDialog1.Options := [ofFileMustExist];
+    if not MyData.OpenDialog1.Execute then
+      Exit;
+    if AIdStdItem <> null then
+      Path := Module.GetPath_StdItems_Xml(AIdStdItem);
+    if AIdOrItem <> null then
+      Path := Module.GetPath_OrItems_Xml(AIdOrItem);
+    ForceDirectories(Path);
+      if FileExists(MyData.OpenDialog1.Files[0]) then
+        CopyFile(PChar(MyData.OpenDialog1.Files[0]), PChar(Path + '\data.xml'), False)  //False - перезаписывать файл, True - будет ошибка если существует
+      else
+        myMessageDlg('Файл не найден!', mtWarning, [mbOk]);
+  except
+    MyWarningMessage('Произошла ошибка! Файл не сохранен!');
+//    GetExistFiles;
+  end;
+end;
+
+procedure TOrders.ParseOrItemXML(const FileName: string);
+//uses  Xml.XMLDoc, Xml.XMLIntf;
+//ChildNodes['name'] — работает только если имя узла уникально в пределах родителя. В противном случае лучше использовать индекс или цикл.
+var
+  XMLDoc: IXMLDocument;
+  i, j: Integer;
+function ParseBoardType(ANode: IXMLNode): Integer;
+var
+  i, j: Integer;
+begin
+  Result := 0;
+  for i := 0 to ANode.ChildNodes.Count - 1 do
+    if ANode.ChildNodes[i].NodeName = 'BOARDSMP' then begin
+      if ANode.ChildNodes[i].ChildNodes['DRILLING'].ChildNodes.Count > 0 then
+        Result := Result + ANode.ChildNodes[i].ChildNodes['QTY'].NodeValue;
+    end;
+end;
+
+begin
+  XMLDoc := TXMLDocument.Create(nil);
+  XMLDoc.LoadFromFile(FileName);
+  XMLDoc.Active := True;
+  i :=
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['SMPBOARDS']) +
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['FIGBOARDS']) +
+    ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['BENTBOARDS'])
+  ;
+end;
+
+
 
 {
 procedure ParseXMLWithOmni(const FileName: string);
