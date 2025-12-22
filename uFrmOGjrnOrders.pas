@@ -111,6 +111,7 @@ begin
     ['early_or_late$i','Опережение / просрочка','70'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
+    ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
     ['dt_upd_reg','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
     ['dt_upd','Дата УПД',''],
     ['upd','Номер УПД','80'],
@@ -176,6 +177,7 @@ begin
     ['dt_thn','Документы ТХН','80'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
+    ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
     ['cost_wo_nds$f','Сумма','80','f=r:','t=1'],
     ['sum0$f','Себестоимость','80','f=r:','t=2','null'],
     ['comm$s','Дополнение','200']
@@ -186,6 +188,7 @@ begin
     [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
     [],[-1002, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Прикрепить документы КНС'],
     [],[-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
+    [],[-1003, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Загрузить XML'],
      {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
     [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
@@ -492,6 +495,13 @@ begin
     1001:
       begin
         TFrmOGrefOrStdItems.GoToItem(Fr.GetValue('id_std_item'));
+      end;
+    1003:
+      begin
+        if Orders.AddOrItemXMLFile(Self, null, Fr.ID) then begin
+          Fr.RefreshRecord;
+          Fr.SetState(True, null, null);
+        end;
       end
     else inherited;
   end;

@@ -569,7 +569,7 @@ create or replace view v_orders as (
     timemsqnt.qnt_to_sgp as qnt_to_sgp,
     timemsqnt.qnt_boards_m2,
     timemsqnt.qnt_edges_m,
-    timemsqnt.qnt_panels_w_drill,
+    timemsqnt.qnt_panels_w_drill_all,
     --опережение или просрочка, по принятию на сгп по отношению к плановой дате отгрузки, в том случае если для заказа есть технолог
     case when nvl(othn.cnt, 0) = 0 
       then null
@@ -596,7 +596,7 @@ create or replace view v_orders as (
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
     (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp,
-     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_panels_w_drill,0)) as qnt_panels_w_drill 
+     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_panels_w_drill,0) * qnt) as qnt_panels_w_drill_all 
      from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
@@ -803,7 +803,8 @@ create or replace view v_order_items as (
     (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
      round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
     niz.cnt as has_itm_est,
-    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod 
+    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
+    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all
 --    1 as has_itm_est 
   from
     order_items i,
@@ -828,7 +829,9 @@ create or replace view v_order_items as (
    i.id_itm = niz.id_nomizdel_parent_t (+)
 );
 
-select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY');   
+select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY'); 
+
+--update order_items i set qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill) where i.id_order = 10;  
 
 create or replace function F_TestOrderEstimatesInItm(
 --вернем количество изделий в заказе в ИТМ, к которым нет смет

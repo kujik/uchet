@@ -87,8 +87,8 @@ type
     function ExportPassportToXLSX(AIdOrder: Integer; OrderPath: string; Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
     procedure CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
     procedure ViewItmDocumentFromLog(AParent: TForm; AId: Variant);
-    procedure AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant);
-    procedure ParseOrItemXML(const FileName: string);
+    function  AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
+    procedure ParseOrItemXML(const FileName: string; var PanelsWDrilling: Integer);
 end;
 
 var
@@ -391,6 +391,10 @@ begin
       else  LoadEstimate(null, va1[i][0], null, False, False, True);
     HasestimateUpload := True;
   end;
+  //обновим данные по панелям со сверловкой
+  Q.QExecSql('update order_items i set qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill) where i.id_order = :id_order$i', [IdOrder]);
+
+
 (*
   //удалим из БД помеченные на удаление, и сформируем заявки СН
   //передается айди в схеме учет, если заказа через итм не проведен (еще нет айди_итм, или уситановлено что он не синхронизируется), то и не закрываем его финишной процедурой ИТМ
@@ -2624,18 +2628,27 @@ begin
     Wh.ExecReference(DocType, AParent, [myfoDialog, myfoSizeable, myfoEnableMaximize], DocId);
 end;
 
-procedure TOrders.AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant);
+function TOrders.AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
 var
   i: Integer;
   Path: string;
-  State : TKeyboardState;
-  b: Boolean;
+  PanelsWDrilling: Integer;
+  va: TVarDynArray;
 begin
+  Result := False;
+  if AIdOrItem <> null then begin
+    va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
+    if (va[0].AsInteger = 1) or (va[1] <> null) then begin
+      MyInfoMessage('Нельзя загрузить данные из XML для этого изделия!');
+      Exit;
+    end;
+  end;
   try
     MyData.OpenDialog1.Options := [ofFileMustExist];
+    MyData.OpenDialog1.Filter := 'Файлы XML (*.xml)|*.xml';
     if not MyData.OpenDialog1.Execute then
       Exit;
-    if AIdStdItem <> null then
+{    if AIdStdItem <> null then
       Path := Module.GetPath_StdItems_Xml(AIdStdItem);
     if AIdOrItem <> null then
       Path := Module.GetPath_OrItems_Xml(AIdOrItem);
@@ -2643,14 +2656,20 @@ begin
       if FileExists(MyData.OpenDialog1.Files[0]) then
         CopyFile(PChar(MyData.OpenDialog1.Files[0]), PChar(Path + '\data.xml'), False)  //False - перезаписывать файл, True - будет ошибка если существует
       else
-        myMessageDlg('Файл не найден!', mtWarning, [mbOk]);
+        myMessageDlg('Файл не найден!', mtWarning, [mbOk]);}
+    ParseOrItemXML(MyData.OpenDialog1.Files[0], PanelsWDrilling);
+    MyInfoMessage('Панелей со сверловкой - ' + IntToStr(PanelsWDrilling));
+    if AIdOrItem <> null then
+      Q.QExecSql('update order_items set qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+    if AIdStdItem <> null then
+      Q.QExecSql('update or_std_items set qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+    Result := True;
   except
-    MyWarningMessage('Произошла ошибка! Файл не сохранен!');
-//    GetExistFiles;
+    myMessageDlg('Ошибка открытия файла!', mtWarning, [mbOk]);
   end;
 end;
 
-procedure TOrders.ParseOrItemXML(const FileName: string);
+procedure TOrders.ParseOrItemXML(const FileName: string; var PanelsWDrilling: Integer);
 //uses  Xml.XMLDoc, Xml.XMLIntf;
 //ChildNodes['name'] — работает только если имя узла уникально в пределах родителя. В противном случае лучше использовать индекс или цикл.
 var
@@ -2672,7 +2691,7 @@ begin
   XMLDoc := TXMLDocument.Create(nil);
   XMLDoc.LoadFromFile(FileName);
   XMLDoc.Active := True;
-  i :=
+  PanelsWDrilling :=
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['SMPBOARDS']) +
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['FIGBOARDS']) +
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['BENTBOARDS'])

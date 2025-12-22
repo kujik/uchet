@@ -63,13 +63,15 @@ begin
     ['priceraw$f','Цена по смете','70','f=r'],
     ['route2','Производственный маршрут','120'],
 //    ['route','Производственный маршрут','120'],
+    ['qnt_panels_w_drill','Сверловка, панелей','80', 'f'],
     ['dt_estimate','Смета','75'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
   Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
-    [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],[],
+    [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+    [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
     [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[mbtTest]]
   );
   Frg1.Opt.SetButtonsIfEmpty([1000]);
@@ -145,6 +147,10 @@ begin
       Orders.RemoveEstimateForStdItem(Fr.ID);
       Fr.RefreshGrid;
     end;
+  end
+  else if (Tag = 1001) then begin
+    if Orders.AddOrItemXMLFile(Self, Fr.ID, null) then
+      Fr.RefreshRecord;
   end
 (*//!!!es else if (Tag = mbtViewEstimate) then begin
     //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)

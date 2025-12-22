@@ -150,6 +150,29 @@ where
 
 
 --------------------------------------------------------------------------------
+--справочник персональных надбавок
+drop table w_personal_allowances cascade constraints;
+create table w_personal_allowances(
+  id number(11),
+  name varchar2(400),
+  comm varchar2(4000),
+  active number(1),
+  constraint pk_w_personal_allowances primary key (id)
+);  
+
+create unique index idx_w_personal_allowances_name on w_personal_allowances(lower(name)); 
+
+create sequence sq_w_personal_allowances start with 1 nocache;
+
+create or replace trigger trg_w_personal_allowances_bi_r before insert on w_personal_allowances for each row
+begin
+  select nvl(:new.id, sq_w_personal_allowances.nextval) into :new.id from dual;
+end;
+/
+
+
+
+--------------------------------------------------------------------------------
 --таблица графиков работы
 drop table w_schedules cascade constraints;
 alter table w_schedules add duration number;
