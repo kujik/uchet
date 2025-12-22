@@ -35,6 +35,7 @@ type
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
     procedure Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
+    procedure Frg2GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
 
   public
   end;
@@ -162,9 +163,10 @@ begin
     ['qnt_in_prod$f', 'Кол-во изделий в производстве', '80','f=:'],
     ['qnt_to_sgp$f', 'Кол-во изделий, принятых на СГП', '80','f=:'],
     ['route2','Маршрут','120'],
-    ['kns','Конструктор','120'],
-    //['id_kns','Конструктор','120;L','e'],
-    ['thn','Технолог','120'],
+    //['kns','Конструктор','120'],
+    ['id_kns','Конструктор','120;L','e',(User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper],
+    //['thn','Технолог','120'],
+    ['id_thn','Технолог','120;L','e',(User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper],
     ['dt_estimate','Смета','80'],
     ['sgp','С СГП','40','pic'],
     ['nstd','Нестандарт','40','pic'],
@@ -182,7 +184,7 @@ begin
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
     [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
-    [],[-1002, (User.GetJobID = 2) or (User.GetJobID = 3) or User.IsDeveloper, 'Прикрепить документы КНС'],
+    [],[-1002, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Прикрепить документы КНС'],
     [],[-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
      {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
     [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
@@ -517,17 +519,35 @@ end;
 
 procedure TFrmOGjrnOrders.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
-Exit;
-  if Value.AsString = '' then
-    Exit;
-  Fr.SetValue('id_kns', Value);
-  Q.QExecSql('update order_items set id_kns = :id_kns$i where id = :id$i', [Value, Fr.ID]);
+//Exit;
+  if (Fr.CurrField = 'id_kns') then begin
+    if Value.AsString = '' then
+      Exit;
+    Fr.SetValue('id_kns', Value);
+    Q.QExecSql('update order_items set id_kns = :id_kns$i where id = :id$i', [Value, Fr.ID]);
+  end
+  else if (Fr.CurrField = 'id_thn') then begin
+    if Value.AsString = '' then
+      Exit;
+    Fr.SetValue('id_thn', Value);
+    Q.QExecSql('update order_items set id_thn = :id_thn$i where id = :id$i', [Value, Fr.ID]);
+  end;
 end;
 
 procedure TFrmOGjrnOrders.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-//  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := Fr.RecNo <> 1;
+  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_kns') <> null)) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
+  Fr.DbGridEh1.FindFieldColumn('id_thn').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_thn') <> null)) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
 end;
+
+procedure TFrmOGjrnOrders.Frg2GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+begin
+  if (Fr.CurrField = 'id_kns') then
+    ReadOnly := (Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_kns') <> null);
+  if (Fr.CurrField = 'id_thn') then
+    ReadOnly := (Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_thn') <> null);
+end;
+
 
 
 
@@ -571,9 +591,10 @@ procedure TFrmOGjrnOrders.LoadKnsAndThnList;
 var
   va2: TVarDynArray2;
 begin
-Exit;
-  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where active = 1 order by name', []);
+  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -101 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobKNS, Frg1.ID]);
   Frg2.Opt.SetPick('id_kns', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
+  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -102 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobTHN, Frg1.ID]);
+  Frg2.Opt.SetPick('id_thn', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
   Frg2.SetColumnsPropertyes;
 end;
 

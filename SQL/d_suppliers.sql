@@ -873,7 +873,8 @@ from (
 ;
 
 create or replace function F_GetOrdersWhereNoQnt (
---выдает номер и дату самого раннего по отгрузке заказа, на который не хватает остака плисл резерва
+--выдает номер и дату самого раннего по отгрузке заказа, на который не хватает остака плюс резерва
+--2025-12-22 - резерв болеене учитывается
 IdNom number,
 Qnt number, 
 OnWay number 
@@ -898,10 +899,10 @@ begin
       fetch cv into qntor, orname, dtotgr;
       exit when cv%notfound;
       qntcum := qntcum + abs(qntor); --rashod всегда отрицательный!
-      exit when qntcum > nvl(Qnt, 0) + nvl(OnWay, 0);
+      exit when qntcum > nvl(Qnt, 0) /*+ nvl(OnWay, 0)*/;
    end loop;
    close cv;
-   if qntcum > nvl(Qnt, 0) + nvl(OnWay, 0) then
+   if qntcum > nvl(Qnt, 0) /*+ nvl(OnWay, 0)*/ then
      --вернем номер заказы и дату отгрузки, на котором бло преышено значение Остаток + В пути
      res := orname || ' ' || to_char(dtotgr, 'DD.MM.YYYY');
    end if;

@@ -2718,6 +2718,13 @@ begin
     if (FieldName ='dt_planned') and (Fr.GetValue('dt_planned') <> null) and
       (((Fr.GetValue('dt_end') = null) and (Date > Fr.GetValue('dt_planned'))) or ((Fr.GetValue('dt_end') > Fr.GetValue('dt_planned')))) then
     Params.Background := clmyPink;
+  end
+  else if FormDoc = myfrm_J_SplDealsMonitoring then begin
+    if (FieldName = 'deal_sum_np') then
+      if (Fr.GetValueF('deal_sum_np') > 0) then
+        Params.Background := clmyPink
+      else if (Fr.GetValueF('deal_sum_np') < 0) then
+        Params.Background := clmyGreen;
   end;
 end;
 
