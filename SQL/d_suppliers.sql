@@ -1991,18 +1991,25 @@ select * from spl_deals_monitoring;
 select * from v_spl_deals_monitoring;
 
 create or replace view v_spl_deals_monitoring as
+/*select
+  t.*,
+  round(t.price_check * t.qnt) as deal_sum_check,
+  round((t.price - t.price_check) * t.qnt) as deal_sum_np   
+from   
+(*/
 select
   t.*,
   n.name,
   s.inbilldate as dt_inbill,
   s.inbillnum,
+  ss.ibprice,
   ss.ibprice as price,
   ss.fact_quantity as qnt,
   p.price_check_upd,
 --  case when ss.ibprice > t.price_check then round((p.price_check - ss.ibprice) * ss.fact_quantity) else round(- p.price_check + ss.ibprice * ss.fact_quantity) end as deal_sum,   
-  round((ss.ibprice - p.price_check) * ss.fact_quantity) as deal_sum_np,   
+  round((ss.ibprice - t.price_check) * ss.fact_quantity) as deal_sum_np,    
   round(ss.ibprice * ss.fact_quantity) as deal_sum_fact,   
-  round(p.price_check * ss.fact_quantity) as deal_sum_check,   
+  round(t.price_check * ss.fact_quantity) as deal_sum_check,                 
   case when ss.ibprice > t.price_check then round((p.price_check - ss.ibprice) * ss.fact_quantity) else null end as deal_sum_n,   
   case when ss.ibprice > t.price_check then null else round((- p.price_check + ss.ibprice) * ss.fact_quantity) end as deal_sum_p,   
   ss.fact_quantity  
@@ -2019,6 +2026,7 @@ where
   and t.id_nomencl = ss.id_nomencl
   and s.id_inbill = ss.id_inbill
   and p.price_check_upd = 1
+--) t  
 ;      
 
 --update spl_itm_nom_props set price_check_test = price_check;
@@ -2045,7 +2053,8 @@ from
 where  
   p.price_check_upd = 1
   and pp.prop = 'spl_deals_monitoring' and pp.subprop = 'id_inbill'
-  and s.id_inbill > pp.i --1000
+  and s.id_inbill > pp.i 
+--  and s.id_inbill >= 58379  --начало 25 года
   and p.id = n.id_nomencl
   and p.id = ss.id_nomencl
   and s.id_inbill = ss.id_inbill

@@ -552,6 +552,7 @@ create or replace view v_orders as (
     he.dt_estimate_max,
     osn.qnt_sn_no,
     decode(nvl(osn.qnt_sn_no, 0), 0, '+', '-') as sn_status,
+    decode(nvl(oxml.qnt_xml_no, 0), 0, '+', '-') as xml_status,
     decode(othndt.dt_thn_cnt, othndt.cnt, othndt.dt_thn_max, null) as dt_thn_max,
     decode(oknsdt.dt_kns_cnt, oknsdt.cnt, oknsdt.dt_kns_max, null) as dt_kns_max,
     trunc(dt_aggr_estimate - dt_beg) as days_aggr_estimate,
@@ -595,6 +596,7 @@ create or replace view v_orders as (
     (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
        count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
+    (select max(id_order) as id_order, count(*) as qnt_xml_no from order_items where is_xml_loaded <> 1 and qnt <> 0 group by id_order) oxml,
     (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp,
      sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_panels_w_drill,0) * qnt) as qnt_panels_w_drill_all 
      from order_items group by id_order) timemsqnt,
@@ -617,6 +619,7 @@ create or replace view v_orders as (
     and oknsdt.id_order (+) = o.id
     and othndt.id_order (+) = o.id
     and osn.id_order (+) = o.id
+    and oxml.id_order (+) = o.id
     and z.id_zakaz (+) = o.id_itm
     and sz.id_status (+) = z.id_status
     and rsv.id_doc (+) = o.id_itm
@@ -693,7 +696,7 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 alter table order_items add qnt_boards_m2 number;
 alter table order_items add qnt_edges_m number;
 alter table order_items add qnt_panels_w_drill number;
-alter table order_items add dt_kns date;
+alter table order_items add is_xml_loaded number default 0;
 
 ----drop table order_items cascade constraints;
 create table order_items (
@@ -733,6 +736,7 @@ create table order_items (
   qnt_boards_m2 number,              -- метраж плитных материалов 
   qnt_edges_m number,                -- метраж кромки
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
+  is_xml_loaded number default 0,      --загружен xml
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
@@ -1078,7 +1082,7 @@ end;
 -- справочник стандартных изделий
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
-alter table or_std_items add qnt_panels_w_drill number;
+alter table or_std_items add is_xml_loaded number default 0;      --загружен xml
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы (КБ/Производство)
@@ -1091,6 +1095,7 @@ create table or_std_items (
   r0 number(1) default 0,              --если 1, то производдственный маршрут не задается
   by_sgp number(1) default 0,          --для данного изделия ведется учет СГП по стандартным изделиям 
   qnt_panels_w_drill number,
+  is_xml_loaded number default 0,      --загружен xml
   
   r1 number(1),                        --производственный маршрут
   r2 number(1),

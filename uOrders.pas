@@ -392,7 +392,13 @@ begin
     HasestimateUpload := True;
   end;
   //обновим данные по панелям со сверловкой
-  Q.QExecSql('update order_items i set qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill) where i.id_order = :id_order$i', [IdOrder]);
+  Q.QExecSql(
+    'update order_items i set '+
+    'qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill), '+
+    'is_xml_loaded = nvl((select is_xml_loaded from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.is_xml_loaded) '+
+    'where i.id_order = :id_order$i',
+    [IdOrder]
+  );
 
 
 (*
@@ -2660,9 +2666,9 @@ begin
     ParseOrItemXML(MyData.OpenDialog1.Files[0], PanelsWDrilling);
     MyInfoMessage('Панелей со сверловкой - ' + IntToStr(PanelsWDrilling));
     if AIdOrItem <> null then
-      Q.QExecSql('update order_items set qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+      Q.QExecSql('update order_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
     if AIdStdItem <> null then
-      Q.QExecSql('update or_std_items set qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+      Q.QExecSql('update or_std_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
     Result := True;
   except
     myMessageDlg('Ошибка открытия файла!', mtWarning, [mbOk]);

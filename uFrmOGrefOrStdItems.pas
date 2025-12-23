@@ -65,6 +65,7 @@ begin
 //    ['route','Производственный маршрут','120'],
     ['qnt_panels_w_drill','Сверловка, панелей','80', 'f'],
     ['dt_estimate','Смета','75'],
+    ['is_xml_loaded','XML','40','pic=0;1:6;7'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
