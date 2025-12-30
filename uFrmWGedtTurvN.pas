@@ -685,13 +685,13 @@ begin
   r := Frg1.RecNo - 1;
   if (r < 0) then
     Exit;
-  posl := FTurv.GetPosInList(r, d);
+  posl := FTurv.Rows[r].Seg.G(0, 'r');
   if posl < 0 then
     Exit;
-  pos := FTurv.GetPosInDays(r, d);
+  pos := FTurv.R(r, d);
   if (d < 0) then
     //не колонки дней - только фио
-    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FTurv.List.G(posl, 'name')])
+    TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2(['$000000Работник: $FF00FF', FTurv.List.G(posl, 'name')])       //!!!T2!!!
   else
     //колонки дней - данные по текущей ячейке
     //два цвета не могут в лейбле сейчас идти подряд без промежутков!
@@ -700,14 +700,14 @@ begin
       va := [
         '$000000', '   Время: ', '$FF0000' +
         FTurv.GetDayCell(-pos, 0, 1, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, 0, 2, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, 0, 3, i, st, True),
-        S.IIfStr(FTurv.Days.G(pos, 'premium').AsInteger > 0, ' $000000   Премия: $FF0000 ' + FTurv.Days.G(pos, 'premium').AsString),
-        S.IIfStr(FTurv.Days.G(pos, 'penalty').AsInteger > 0, ' $000000   Депремирование: $FF0000 ' + FTurv.Days.G(pos, 'penalty').AsString),
-        S.IIfStr(FTurv.Days.G(pos, 'begtime').AsString <> '', ' $000000   Приход: $FF0000 ' + S.IIfStr(FTurv.Days.G(pos, 'begtime').AsFloat = -1, '-',
-          StringReplace(FormatFloat('00.00', FTurv.Days.G(pos, 'begtime').AsFloat), FormatSettings.DecimalSeparator, ':', []))),
-        S.IIfStr(FTurv.Days.G(pos, 'endtime').AsString <> '', ' $000000   Уход: $FF0000 ' + S.IIfStr(FTurv.Days.G(pos, 'endtime').AsFloat = -1, '-',
-          StringReplace(FormatFloat('00.00', FTurv.Days.G(pos, 'endtime').AsFloat), FormatSettings.DecimalSeparator, ':', []))),
-        S.IIfStr(FTurv.Days.G(pos, 'nighttime').AsString <> '', ' $000000   Ночью: $FF0000 ' + S.IIfStr(FTurv.Days.G(pos, 'nighttime').AsFloat = -1, '-',
-          StringReplace(FormatFloat('00.00', FTurv.Days.G(pos, 'nighttime').AsFloat), FormatSettings.DecimalSeparator, ':', [])))
+        S.IIfStr(FTurv.Cells[pos].G(d, 'premium').AsInteger > 0, ' $000000   Премия: $FF0000 ' + FTurv.Cells[pos].G(d, 'premium').AsString),
+        S.IIfStr(FTurv.Cells[pos].G(d, 'penalty').AsInteger > 0, ' $000000   Депремирование: $FF0000 ' + FTurv.Cells[pos].G(d, 'penalty').AsString),
+        S.IIfStr(FTurv.Cells[pos].G(d, 'begtime').AsString <> '', ' $000000   Приход: $FF0000 ' + S.IIfStr(FTurv.Cells[pos].G(d, 'begtime').AsFloat = -1, '-',
+          StringReplace(FormatFloat('00.00', FTurv.Cells[pos].G(d, 'begtime').AsFloat), FormatSettings.DecimalSeparator, ':', []))),
+        S.IIfStr(FTurv.Cells[pos].G(d, 'endtime').AsString <> '', ' $000000   Уход: $FF0000 ' + S.IIfStr(FTurv.Cells[pos].G(d, 'endtime').AsFloat = -1, '-',
+          StringReplace(FormatFloat('00.00', FTurv.Cells[pos].G(d, 'endtime').AsFloat), FormatSettings.DecimalSeparator, ':', []))),
+        S.IIfStr(FTurv.Cells[pos].G(d, 'nighttime').AsString <> '', ' $000000   Ночью: $FF0000 ' + S.IIfStr(FTurv.Cells[pos].G(d, 'nighttime').AsFloat = -1, '-',
+          StringReplace(FormatFloat('00.00', FTurv.Cells[pos].G(d, 'nighttime').AsFloat), FormatSettings.DecimalSeparator, ':', [])))
       ];
     end;
     TLabelClr(Frg1.FindComponent('lblWorker')).SetCaptionAr2([
@@ -801,15 +801,15 @@ var
   v: Variant;
   st: string;
 begin
-  //if (Params.Row = 0) then
-  //  Exit;
+  if (Params.Row = 0) then
+    Exit;
   Day := GetDay(FieldName, 1);
   if Day < 1 then begin
     Params.Background := clmyGray;
     Exit;
   end
   else begin
-    v := FTurv.GetPosInList(Frg1.RecNo - 1, Day);
+    v := FTurv.R(Frg1.RecNo - 1, Day);
     if v = -1 then begin
       Params.Background := clmyGray;
       Params.ReadOnly := True;
@@ -912,7 +912,8 @@ begin
   if Day < 1 then
     Exit;
   //получим комментарии
-  v1 := '';                                                                                                                                                                                        FTurv.GetDayCell(Frg1.RecNo - 1, Day, 2, color, v2);
+  v1 := '';
+  //FTurv.GetDayCell(Frg1.RecNo - 1, Day, 2, color, v2);
   v2 := '';
   v3 := '';
   v4 := '';
@@ -1067,7 +1068,7 @@ begin
   d := GetDay;
   if d = -1 then
     Exit;
-  pos := FTurv.GetPosInDays(r, d);
+  pos := FTurv.GetPosInDays(r, d);              //!!!
   if Mode = mbtComment then begin
     //какой тип данных вводится
     if Frg2.DbGridEh1.Focused then
@@ -1232,7 +1233,7 @@ begin
     end;
     if not S.IsNumber(st, 0.01, 24, 2) then begin
       //не число, пытаемся вытащить код
-      FTurv.SetDayValues(r, d, 'worktime' + IntToStr(rd), null);
+      FTurv.SetDayValues(r, d, 'worktime' + IntToStr(rd), null);                  //!!!T
       FTurv.SetDayValues(r, d, 'id_turvcode' + IntToStr(rd), null);
       i := pos(' - ', st);
       if i > 0 then
@@ -1303,7 +1304,7 @@ var
   dt: TDateTime;
   st: string;
 begin
-  posl := FTurv.GetPosInList(r, d);
+  posl := FTurv.GetPosInList(r, d);                                //!!!T
   pos := FTurv.GetPosInDays(r, d);
   //ячейки нет в этом турв - выход
   if pos < 0 then
@@ -1382,7 +1383,7 @@ begin
     Rep.PasteBand('TABLE');
     Rep.SetValue('#N#', i + 1);
     Rep.SetValue('#FIO#', FTurv.List.G(i, 'name'));
-    Rep.SetValue('#JOB#', FTurv.List.G(i, 'job'));
+    Rep.SetValue('#JOB#', FTurv.List.G(i, 'job'));             //T!!!
     sum := 0;
     for j := d1 to d2 do begin
       v := FTurv.GetDayCell(i, j, 2, color, st, False).AsString;

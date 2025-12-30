@@ -76,7 +76,13 @@ type
     procedure ConvertEmployees202511;
   end;
 
-  TTurvData = record //class(TObject)
+  TTurvDataRows = array of record
+    Seg: TNamedArr;
+    Totals: TNamedArr;
+  end;
+  TTurvDataCells = array of TNamedArr;
+
+  TTurvData = record
   private
     FId: Variant;
     FDepartament: Variant;
@@ -88,6 +94,8 @@ type
     FTitle: TNamedArr;
     FList: TNamedArr;
     FDays: TNamedArr;
+    FRows: TTurvDataRows;
+    FCells: TTurvDataCells;
     FTurvCodes: TNamedArr;
     FTurvCodeWeekend: Integer;
     FEmptyDay: TNamedArr;
@@ -102,6 +110,9 @@ type
     property IsFinalized: Boolean read GetFinalized;
     property Count: Integer read GetCount;
     property Title: TNamedArr read FTitle;
+    property Rows: TTurvDataRows read FRows;
+    property Cells: TTurvDataCells read FCells;
+
     property List: TNamedArr read FList;
     property Days: TNamedArr read FDays;
     property TurvCodes: TNamedArr read FTurvCodes;
@@ -114,11 +125,13 @@ type
     procedure LoadDays;
     procedure LoadTurvCodes;
     function  GetTurvCode(AValue: Variant): Variant;
+    function  R(ARow, ADay: Integer): Integer;
     function  GetPosInList(ARow, ADay: Integer): Integer;
     function  GetPosInDays(ARow, ADay: Integer): Integer;
     function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
     procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
 //    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
+    procedure SortAndGroup(ASort, AGroup : TVarDynArray);
     procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
   end;
 
@@ -163,7 +176,7 @@ end;
 
 procedure TTurvData.LoadList;
 var
-  i: Integer;
+  i, j: Integer;
 begin
   Q.QLoadFromQuery(
     'select id, null as pos1, 0 as pos2, dt_beg, dt_end, id_employee, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
@@ -177,6 +190,23 @@ begin
   );
   for i := 0 to FList.Count - 1 do
     FList.SetValue(i, 'pos1', i);
+
+  SetLength(FRows, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    FRows[i].Seg.Create(['c1$i', 'c2$i', 'r$i'], 1);
+    FRows[i].Seg.SetValue(0, 'r', i);
+    FRows[i].Seg.SetValue(0, 'c1', Max(1, DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1));
+    if FList.GetValue(i, 'dt_beg') < DtBeg then
+      j := 1
+    else
+      j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
+    FRows[i].Seg.SetValue(0, 'c1', j);
+    if FList.GetValue(i, 'dt_end') = null then
+      j := 16
+    else
+      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
+    FRows[i].Seg.SetValue(0, 'c2', j);
+  end;
 end;
 
 function TTurvData.GetListTitleString(APos: Integer; AProp: string): string;
@@ -213,6 +243,9 @@ begin
 end;
 
 procedure TTurvData.LoadDays;
+var
+  na: TNamedArr;
+  i, j, k: Integer;
 begin
   Q.QLoadFromQuery(
     'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
@@ -222,12 +255,37 @@ begin
      [FDtBeg, FDtEnd],
      FDays
   );
+  Q.QLoadFromQuery(
+    'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
+    'comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
+    'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
+    'order by id_employee_properties, dt',
+     [FDtBeg, FDtEnd],
+     na
+  );
   FEmptyDay.FFull := FDays.FFull;
   FEmptyDay.F := FDays.F;
   SetLength(FEmptyDay.V, 1);
   SetLength(FEmptyDay.V[0], Length(FDays.F));
-  for var i := 0 to High(FDays.F) do
+  for i := 0 to High(FDays.F) do
     FEmptyDay.V[0][i] := null;
+  //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
+  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
+  Setlength(FCells, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    FCells[i].Create(FDays.FFull, 17);
+    for k := 0 to High(FCells[i].V[0]) do
+      FCells[i].V[i][k] := null;
+    for j := 0 to na.Count - 1 do
+      if na.G(j, 'id_employee_properties') = FList.G(i, 'id') then
+        for k := 0 to High(na.V[0]) do
+          FCells[i].V[DaysBetween(na.G(j, 'dt'), DtBeg) + 1][k] := na.v[j][k];
+  end;
+Exit;
+
+  for i := 0 to na.Count - 1 do begin
+    k := A.PosInArray(na.G(i, 'id_employee_properties'), FList.V, 0);
+  end;
 end;
 
 procedure TTurvData.LoadTurvCodes;
@@ -249,6 +307,17 @@ begin
   i := A.PosInArray(AValue, FTurvCodes.V, 0);
   if i >= 0 then
     Result := FTurvCodes.V[i][1];
+end;
+
+function TTurvData.R(ARow, ADay: Integer): Integer;
+begin
+  Result := -1;
+  for var i := 0 to FRows[ARow].Seg.Count - 1 do begin
+    if (FRows[ARow].Seg.G(i, 'c1') <= ADay) and (FRows[ARow].Seg.G(i, 'c2') >= ADay) then begin
+      Result := FRows[ARow].Seg.G(i, 'r');
+      Exit;
+    end;
+  end;
 end;
 
 function TTurvData.GetPosInList(ARow, ADay: Integer): Integer;
@@ -293,17 +362,22 @@ var
 
   function GetDayValue(ANum: Integer): Variant;
   begin
-    if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
+{    if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
       Result := FDays.G(pos, 'worktime' + IntToStr(ANum))
     else
-      Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));
+      Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));}
+    if FCells[pos].G(ADay, 'worktime' + IntToStr(ANum)) <> null then
+      Result := FCells[pos].G(ADay, 'worktime' + IntToStr(ANum))
+    else
+      Result := GetTurvCode(FCells[pos].G(ADay, 'id_turvcode' + IntToStr(ANum)));
   end;
 
 begin
   Result := '';
   AColor := -1;
   if ARow >= 0 then
-    pos := GetPosInDays(ARow, ADay)
+//    pos := GetPosInDays(ARow, ADay)
+    pos := R(ARow, ADay)
   else
     pos := -ARow;
   if pos = -1 then
@@ -348,10 +422,10 @@ begin
       else
         Result := S.NSt(Result);
     end;
-    if ANum <> 0 then
-      AComm := FDays.G(pos, 'comm' + IntToStr(ANum)).AsString;
+//    if ANum <> 0 then
+//      AComm := FDays.G(pos, 'comm' + IntToStr(ANum)).AsString;
   end
-  else if ANum = 4 then begin
+{  else if ANum = 4 then begin
     Result := FDays.G(pos, 'premium');
     AComm := FDays.G(pos, 'premium_comm').AsString;
   end
@@ -362,7 +436,7 @@ begin
   else if ANum = 6 then begin
     Result := FDays.G(pos, 'nighttime');
     AComm := 'работа в ночную смену'; FDays.G(pos, 'nighttime').AsString;
-  end;
+  end;                                                                   }
 end;
 
 procedure TTurvData.SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
@@ -429,6 +503,12 @@ begin
 end;
      *)
 
+procedure TTurvData.SortAndGroup(ASort, AGroup : TVarDynArray);
+begin
+
+end;
+
+
 procedure TTurvData.CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
 //итоги по строке ТУРВ
 //время - если енсть согласованное то оно, иначе по парсеку, время руководителя не учитывается
@@ -448,6 +528,13 @@ begin
     APenalty := APenalty + FDays.G(pos, 'penalty').AsFloat;
   end;
 end;
+
+
+
+
+
+
+
 
 
 

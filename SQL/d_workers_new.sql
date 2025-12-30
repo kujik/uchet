@@ -215,9 +215,11 @@ create table w_schedule_periods(
   dt date,                     --дата начала периода
   pos_beg number,              --позици€ в шаблоне, на которую выпадает первое число мес€ца  
   approved number,             --график согласован
-  hours number,                --рабочее врем€ в часах
+  hours number,                --рабочее врем€ в часах за мес€ц
+  hours1 number,               --рабочее врем€ в часах, 1й пмериод
+  hours2 number,               --рабочее врем€ в часах, 2йф период
   constraint pk_w_schedule_periods primary key (id_schedule, dt),
-  constraint fk_w_schedule_periods_sсh foreign key (id_schedule) references w_schedule(id) on delete cascade 
+  constraint fk_w_schedule_periods_sсh foreign key (id_schedule) references w_schedules(id) on delete cascade 
 ); 
 
 --таблица норма рабочего времени, по графикам и по периодам
@@ -983,6 +985,26 @@ select id, id_employee_properties, id_employee, dt, worktime1, worktime2, workti
 
 drop index idx_w_turv_day_ep;
 create unique index idx_w_turv_day_e on w_turv_day(id_employee, dt);
+
+
+
+
+select 
+  id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, comm1, comm2, comm3, begtime, endtime, settime3, nighttime
+from 
+  w_employee_properties ep,
+  w_turv_day d
+  w_schedule_hours h
+where
+  ep.id = d.id_employee_properties
+  and  
+;   
+  
+  
+  
+  
+  --where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
+
 
 
 

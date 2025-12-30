@@ -830,7 +830,7 @@ begin
       S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
     end;
     CreateTaskRoot(mytskopmail, [
-      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru'],  //адреса через запятую
+      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
       ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
       ['user-name', 'Учёт']]

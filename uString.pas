@@ -463,6 +463,12 @@ function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
 
 //-------------- РАЗНОЕ -------------------------------------------------------
 procedure Txt2File(St: string; Fname: string);
+function VTxt(var v: Variant; name: string = ''): string; overload;
+function VTxt(var va2: TVarDynArray2; name: string = ''): string; overload;
+function VTxt(var va: TVarDynArray; name: string = ''): string; overload;
+function VTxt(var na: TNamedArr; name: string = ''): string; overload;
+procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
+
 
 
 {-------------------------------------------------------------------}
@@ -470,7 +476,7 @@ procedure Txt2File(St: string; Fname: string);
 implementation
 
 uses
-  Math, uErrors;
+  Math, uErrors, uMessages, uFrmMain;
 
 
 
@@ -2780,7 +2786,7 @@ begin
       F[j] := Copy(F[j], 1, i - 1);
   end;
   SetLength(V, Len);
-  for i := 0 to Len do
+  for i := 0 to Len - 1 do
     SetLength(V[i], Length(F));
 end;
 
@@ -2947,7 +2953,59 @@ begin
   Result := Self
 end;
 
+function VTxt(var v: Variant; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':  ' + VarToStr(v);
+end;
 
+function VTxt(var va2: TVarDynArray2; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to High(va2) do begin
+    for j := 0 to High(va2[i]) do
+      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + IntToStr(j) + '] => ' + VarToStr(va2[i][j])), '   ');
+  end;
+end;
+
+function VTxt(var va: TVarDynArray; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to High(va) do begin
+    s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + '] => ' + VarToStr(va[i])), '   ');
+  end;
+end;
+
+function VTxt(var na: TNamedArr; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to na.Count - 1 do begin
+    for j := 0 to na.FieldsCount - 1 do
+      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + na.F[j] + '] => ' + VarToStr(na.V[i][j])), '   ');
+  end;
+end;
+
+procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
+var
+  i: Integer;
+  st: string;
+begin
+  if Skip and not FrmMain.DeveloperMode then
+    Exit;
+  st := '';
+  if Name <> '' then
+    st := '<' + Name + '>'#13#10#13#10;
+  for i := 0 to High(Values) do
+    S.ConcatStP(st, Values[i], '---------------------------'#13#10#13#10);
+  MyInfoMessage(st);
+end;
 
 procedure Txt2File(St: string; Fname: string);
 var

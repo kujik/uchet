@@ -311,7 +311,7 @@ begin
     if not A.PosInArray(va[i][2], vadel, 0) >=0 then
       Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d;blank$f;ball_m$f;salary_plan_m$f;salary_const_m$f',
         [-1, ID, Integer(FPayrollParams.G('id_division')), Integer(va[i][2]), Integer(va[i][4]), FPayrollParams.G('dt1'), va[i][5], va[i][6], va[i][7], va[i][8]],
-        False
+        True
       );
   end;
   if Length(va) > 0 then begin
@@ -1031,7 +1031,7 @@ begin
     MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st))
   else
     MyInfoMessage('Данные загружены.');
-  CheckEmpty;                                                                     cHECKeMPTY;
+  CheckEmpty;
 end;
 
 

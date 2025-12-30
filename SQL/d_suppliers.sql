@@ -1991,12 +1991,6 @@ select * from spl_deals_monitoring;
 select * from v_spl_deals_monitoring;
 
 create or replace view v_spl_deals_monitoring as
-/*select
-  t.*,
-  round(t.price_check * t.qnt) as deal_sum_check,
-  round((t.price - t.price_check) * t.qnt) as deal_sum_np   
-from   
-(*/
 select
   t.*,
   n.name,
@@ -2026,7 +2020,6 @@ where
   and t.id_nomencl = ss.id_nomencl
   and s.id_inbill = ss.id_inbill
   and p.price_check_upd = 1
---) t  
 ;      
 
 --update spl_itm_nom_props set price_check_test = price_check;
@@ -2070,6 +2063,38 @@ select * from v_spl_prices_check_get;
 --update spl_itm_nom_props set price_check_test = price_check;
 --update spl_itm_nom_props set price_check = price_check_test;
 --update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check);
+
+
+
+select
+  --n.id_nomencl,
+  n.name as "Номенклатура", 
+  --s.id_inbill,
+  s.inbilldate as "Дата",
+  s.inbillnum as "№ накладной",
+  p.price_check as "Контрольная цена",
+  ss.ibprice as "Цена в накладной",
+  round(p.price_check * ss.fact_quantity) as "Сумма, контрольная",                 
+  round(ss.ibprice * ss.fact_quantity) as "Сумма, фактическая",   
+  round((ss.ibprice - p.price_check) * ss.fact_quantity) as "Разница"    
+from
+  spl_itm_nom_props p,
+  dv.in_bill s,
+  dv.in_bill_spec ss,
+  dv.nomenclatura n
+where  
+  p.price_check_upd = 1
+  and s.inbilldate >= date '2025-01-01'
+  and p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_inbill = ss.id_inbill
+  and ss.ibprice <> 0
+  and round(ss.ibprice) <> round(p.price_check)
+order by
+  s.inbilldate  
+;   
+
+
 
 
 /*

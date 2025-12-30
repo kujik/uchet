@@ -738,7 +738,7 @@ v:=True;
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['foreman_allowance','Брига- дирские','75'],
+ //     ['foreman_allowance','Брига- дирские','75'],
       ['finalized','Закрыта','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
@@ -746,7 +746,7 @@ v:=True;
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
 //v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[-1000, User.IsDeveloper, 'Задать бригадирские'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[-1000, False and User.IsDeveloper, 'Задать бригадирские'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);

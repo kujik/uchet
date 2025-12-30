@@ -432,6 +432,8 @@ begin
   FData[tbcYear.TabIndex].HoursN := FrgHours.ExportToVa2;
   for Yn := 0 to 1 do begin
     y := FData[Yn].Year;
+    if Length(FData[Yn].HoursN) = 0 then
+      Continue;  //сюда попадет, если не переходили на вторую вкладку
     if A.IsArraysEqual(FData[Yn].HoursN, FData[Yn].Hours) then
       Break;
     Changed := 0;
@@ -471,11 +473,9 @@ begin
       b := True;
     end;
     for i := 1 to 12 do begin
-      for j := 1 to 31 do begin
-        if (not b) and ((FData[Yn].HoursN[i - 1][1] = FData[Yn].Hours[i - 1][1]) and (FData[Yn].HoursN[i - 1][33] = FData[Yn].Hours[i - 1][33])) then
-          Continue;
-        Q.QExecSql('update w_schedule_periods set approved = :approved$i, hours = :hours$i where id_schedule = :id$i and dt = :dt$d', [FData[Yn].HoursN[i - 1][1], FData[Yn].HoursN[i - 1][33], ID, EncodeDate(y, i, 1)]);
-      end;
+      if (not b) and ((FData[Yn].HoursN[i - 1][1] = FData[Yn].Hours[i - 1][1]) and (FData[Yn].HoursN[i - 1][33] = FData[Yn].Hours[i - 1][33])) then
+        Continue;
+      Q.QExecSql('update w_schedule_periods set approved = :approved$i, hours = :hours$i where id_schedule = :id$i and dt = :dt$d', [FData[Yn].HoursN[i - 1][1], FData[Yn].HoursN[i - 1][33], ID, EncodeDate(y, i, 1)]);
     end;
   end;
 end;
@@ -495,11 +495,10 @@ end;
 
 procedure TFrmWWedtWorkSchedule.FillHoursFromTemplate;
 var
-  i, j, y, d, r: Integer;
+  i, j, d, r: Integer;
   va: TVarDynArray;
   msg: string;
 begin
-  y := 2025;
   d := StrToIntDef(Copy(FrgHours.CurrField, 2, 2), -1);
   if d  = -1 then
     Exit;
@@ -516,7 +515,7 @@ begin
   end;
   //выдадим запрос, на сколько мес€цев заполн€ть, и сообщим дату начала графика (текуща€ €чейка)
   if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~', 380, 330,
-    [[cntNEdit, '«аполнить график с даты "' + DateToStr(EncodeDate(y, FrgHours.RecNo, d)) + '" вперед на (мес€цев):  ', '1:' + InttoStr(12 - FrgHours.RecNo) + ':0:N']],
+    [[cntNEdit, '«аполнить график с даты "' + DateToStr(EncodeDate(y, FrgHours.RecNo, d)) + '" вперед на (мес€цев):  ', '1:' + InttoStr(12 - FrgHours.RecNo + 1) + ':0:N']],
     [1],
     va, [['']], nil
   ) < 0 then Exit;
@@ -534,6 +533,7 @@ begin
   r := FrgHours.RecNo - 1;
   //цикл по максимально возможному количеству днейй
   while i <= 31 * 12 do begin
+//    if r > 11 then      Break;
     FrgHours.SetValue('d' + IntToStr(j), r, False, FrgTemplate.GetValue('d' + IntToStr((i mod nedt_duration.Value) + 1), 0, False));
     //достигли 31го числа или день за концом мес€ца
     if (j = 31) or (FData[Yn].Holydays[r][j + 2] = -1) then begin
@@ -542,7 +542,7 @@ begin
       r := r + 1;
       j := 0;
       //если заполнили за декабрь, или заполнили целевое количество строка, то выход
-      if (r > 12) or (r > FrgHours.RecNo - 1 + va[0]) then
+      if (r > 11) or (r > FrgHours.RecNo - 1 + va[0]) then
         Break;
     end;
     //увеличим счетчики

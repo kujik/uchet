@@ -296,6 +296,7 @@ begin
     //переключим режим дополнительных возможностей (возможности девелопера при запуске под любым пользователем)
     //по Ctrl+Shift+Alt+F3
     if (Byte(msg.wParam) = VK_F3) and CtrlAlShift then begin
+      Beep;
       FrmMain.DeveloperMode := not FrmMain.DeveloperMode;
       Handled := True;
     end
