@@ -34,9 +34,13 @@ type
     procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant);
     function  Empty: Boolean;
     function  Count: Integer;
+    procedure IncLength;
     function  FieldsCount: Integer;
     procedure Clear;
+    procedure SetNull;
   end;
+
+  TNamedArr2 = array of TNamedArr;
 
 
 type
@@ -423,6 +427,10 @@ procedure VarDynArray2InsertArr(var arr2: TVarDynArray2; arr1: TVarDynArray; Pos
     //сравнение двух двумерных массивов (или одной их строки)
     //будут одинаковы, если совпадают размерности массивов и все их значения
     function IsArraysEqual(const A, B: TVarDynArray2; ARow: Integer = -1): Boolean;
+    procedure SetNull(var Arr: TVarDynArray); overload;
+    procedure SetNull(var Arr: TVarDynArray2; Row: Integer = -1); overload;
+    procedure IncLength(var Arr: TVarDynArray); overload;
+    procedure IncLength(var Arr: TVarDynArray2); overload;
 end;
 
 var
@@ -2760,7 +2768,33 @@ begin
   Result := True;
 end;
 
+procedure TMyArrayHelper.SetNull(var Arr: TVarDynArray);
+begin
+  for var i := 0 to High(Arr) do
+      Arr[i] := null;
+end;
 
+procedure TMyArrayHelper.SetNull(var Arr: TVarDynArray2; Row: Integer = -1);
+begin
+  if Row = -1 then
+    for var i := 0 to High(Arr) do
+      for var j := 0 to High(Arr[i]) do
+        Arr[i][j] := null
+  else
+    for var i := 0 to High(Arr[Row]) do
+      Arr[Row][i] := null;
+end;
+
+procedure TMyArrayHelper.IncLength(var Arr: TVarDynArray);
+begin
+  SetLength(Arr, Length(Arr) + 1);
+end;
+
+procedure TMyArrayHelper.IncLength(var Arr: TVarDynArray2);
+begin
+  SetLength(Arr, Length(Arr) + 1);
+  SetLength(Arr[High(Arr)], Length(Arr[0]));
+end;
 
 
 
@@ -2859,6 +2893,12 @@ begin
   Result := Length(V);
 end;
 
+procedure TNamedArr.IncLength;
+begin
+  SetLength(V, Length(V) + 1);
+  SetLength(V[High(V)], Length(F));
+end;
+
 function TNamedArr.FieldsCount: Integer;
 begin
   Result := Length(F);
@@ -2871,6 +2911,12 @@ begin
   V := [];
 end;
 
+procedure TNamedArr.SetNull;
+begin
+  for var i := 0 to High(V) do
+    for var j := 0 to High(V[i]) do
+      V[i][j] := null;
+end;
 
 
 //==============================================================================

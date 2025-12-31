@@ -39,6 +39,7 @@ type
     procedure PushTurvCellToGrid(ARow, ADay: Integer);
     procedure PushTurvCellToDetailGrid(ARow, ADay: Integer);
     function  GetDay(AFieldName: string = ''; AGridNo: Integer = 0): Integer;
+    procedure PrintRowsTitle;
 
     procedure SetLblDivisionText;
     procedure SetLblWorkerText;
@@ -95,10 +96,19 @@ begin
   FTurv.LoadTurvCodes;
   FTurv.LoadList;
   FTurv.LoadDays;
+  FTurv.SortAndGroup(['job','employee'], ['job']);
+//  FTurv.SortAndGroup(['job'], []);
+//  FTurv.SortAndGroup([], []);
+  FTurv.LoadSchedules;
+
 
   if FTurv.Count = 0 then begin
     MyInfoMessage('В этом табеле нет ни одной записи!');
     Exit;
+  end;
+  if FTurv.ScheduleNotApproved then begin
+    MyInfoMessage('Не согласованы плановые графики работы!');
+//    Exit;
   end;
 
   FOpt.RefreshParent := True;
@@ -619,6 +629,29 @@ begin
   end;*)
 end;
 
+procedure TFrmWGEdtTurvN.PrintRowsTitle;
+//скорректируем заголовочную часть основной таблицы (напр профессию, график), если есть группировка
+//процедура вызывается при перемещении по гриду
+var
+  i, j, d: Integer;
+  f: TVarDynArray;
+  v: Variant;
+  b: Boolean;
+begin
+  d := GetDay;
+  f := ['name', 'job', 'is_foreman', 'grade', 'schedulecode'];
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    for j := 0 to High(f) do begin
+      v := FTurv.GetListTitleString(i, f[j], d);
+      if Frg1.GetValue(f[j], i, False) <> v then begin
+        Frg1.SetValue(f[j], i, False, v);
+        b := True;
+      end;
+    end;
+  end;
+  if b then
+    Frg1.InvalidateGrid;
+end;
 
 function TFrmWGEdtTurvN.GetDay(AFieldName: string = ''; AGridNo: Integer = 0): Integer;
 var
@@ -699,7 +732,7 @@ begin
     if pos >= 0 then begin
       va := [
         '$000000', '   Время: ', '$FF0000' +
-        FTurv.GetDayCell(-pos, 0, 1, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, 0, 2, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, 0, 3, i, st, True),
+        FTurv.GetDayCell(-pos, d, 1, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, d, 2, i, st, True), ' $000000/$FF0000', FTurv.GetDayCell(-pos, d, 3, i, st, True),
         S.IIfStr(FTurv.Cells[pos].G(d, 'premium').AsInteger > 0, ' $000000   Премия: $FF0000 ' + FTurv.Cells[pos].G(d, 'premium').AsString),
         S.IIfStr(FTurv.Cells[pos].G(d, 'penalty').AsInteger > 0, ' $000000   Депремирование: $FF0000 ' + FTurv.Cells[pos].G(d, 'penalty').AsString),
         S.IIfStr(FTurv.Cells[pos].G(d, 'begtime').AsString <> '', ' $000000   Приход: $FF0000 ' + S.IIfStr(FTurv.Cells[pos].G(d, 'begtime').AsFloat = -1, '-',
@@ -757,7 +790,7 @@ begin
   Row := Params.Row - 1;
   Day := GetDay(FieldName, 1);
   if Day < 1 then begin
-    Params.Background := clmyGray;
+    Params.Background := clSkyBlue;
     Exit;
   end;
   v := FTurv.GetDayCell(Row, Day, 1, Color, st);
@@ -786,6 +819,7 @@ var
   i, j: Integer;
 begin
   SetLblWorkerText;
+  PrintRowsTitle;
   for i := 1 to Frg1.DBGridEh1.Columns.Count - 1 do
     if GetDay(Frg1.DBGridEh1.Columns[i].FieldName, 1) > 0 then
       if Frg1.DBGridEh1.Columns[i].PickList.Count = 0 then
@@ -805,7 +839,7 @@ begin
     Exit;
   Day := GetDay(FieldName, 1);
   if Day < 1 then begin
-    Params.Background := clmyGray;
+    Params.Background := clSkyBlue;
     Exit;
   end
   else begin
@@ -827,6 +861,7 @@ var
   i, j: Integer;
 begin
   SetLblWorkerText;
+  PrintRowsTitle;
   for i := 1 to 16 do begin
     if (Frg2.RecNo in [1, 2, 3]) then begin
       if Frg2.DBGridEh1.Columns[i].PickList.Count = 0 then
@@ -1068,7 +1103,7 @@ begin
   d := GetDay;
   if d = -1 then
     Exit;
-  pos := FTurv.GetPosInDays(r, d);              //!!!
+  pos := FTurv.R(r, d);
   if Mode = mbtComment then begin
     //какой тип данных вводится
     if Frg2.DbGridEh1.Focused then
@@ -1300,19 +1335,18 @@ procedure TFrmWGEdtTurvN.SaveDayToDB(r, d: Integer);
 //сохраняем в бд переданную ячейку
 var
   Fields, Values: TVarDynArray;
-  res, pos, posl, i: Integer;
+  res, pos, i: Integer;
   dt: TDateTime;
   st: string;
 begin
-  posl := FTurv.GetPosInList(r, d);                                //!!!T
-  pos := FTurv.GetPosInDays(r, d);
+  pos := FTurv.R(r, d);
   //ячейки нет в этом турв - выход
   if pos < 0 then
     Exit;
-  if FTurv.Days.G(pos, 'id_employee_properties').AsString = ''
-    then FTurv.Days.SetValue(pos, 'id_employee_properties', FTurv.List.G(posl, 'id_employee_properties'));
-  if FTurv.Days.G(pos, 'dt').AsString = ''
-    then FTurv.Days.SetValue(pos, 'dt', IncDay(FTurv.DtBeg, d - 1));
+  if FTurv.Cells[pos].G(d, 'id_employee_properties').AsString = ''
+    then FTurv.Cells[pos].SetValue(d, 'id_employee_properties', FTurv.List.G(pos, 'id_employee_properties'));
+  if FTurv.Cells[pos].G(d, 'dt').AsString = ''
+    then FTurv.Cells[pos].SetValue(d, 'dt', IncDay(FTurv.DtBeg, d - 1));
   //занесем данные
   Fields := [];
   if FRgsEdit1 then
@@ -1327,14 +1361,14 @@ begin
     'select :ide$i, :dt$d from dual '+
     'where not exists '+
     '(select 1 from w_turv_day where id_employee_properties = :ide2$i and dt = :dt2$d)',
-    [FTurv.Days.G(pos, 'id_employee_properties'), FTurv.Days.G(pos, 'dt'), FTurv.Days.G(pos, 'id_employee_properties'), FTurv.Days.G(pos, 'dt')]
+    [FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt'), FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt')]
   );
   //запишем данные в основную таблицу
   st := Q.QSIUDSql('Q', 'w_turv_day', A.Implode(Fields, ';')) + ' where id_employee_properties = :ide$i and dt = :dt$d';
   Fields := Fields + ['id_employee_properties$i', 'dt$d'];
   Values := [];
   for i := 0 to High(Fields) do
-    Values := Values + [FTurv.Days.G(pos, Fields[i])];
+    Values := Values + [FTurv.Cells[pos].G(d, Fields[i])];
   Q.QExecSQL(st, Values);
   Q.QCommitOrRollback(True);
 end;

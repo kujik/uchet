@@ -305,57 +305,55 @@ END P_SaveScheduleHours;
 /  
 
 
-/*
-
 --------------------------------------------------------------------------------
---таблица норма рабочего времени, по графикам и по периодам
-drop table w_schedule_hours cascade constraints;
-create table w_schedule_hours(
+--таблица - справочник персональных надбавок
+alter table w_pers_bonus add active number(1);
+create table w_pers_bonus(
   id number(11),
-  id_schedule number(11),      --айди графика работы 
-  dt date,                     --дата начала периода
-  hours number,                --норма, в часах
-  constraint pk_w_schedule_hours primary key (id),
-  constraint fk_w_schedule_hours_sсhedule foreign key (id_schedule) references w_schedules(id) 
+  name varchar2(400),
+  comm varchar2(4000),
+  active number(1),
+  constraint pk_w_pers_bonus primary key (id)
 );  
 
-create unique index idx_w_schedule_hours_uq on w_schedule_hours(id_schedule, dt);
+create unique index idx_w_pers_bonus_uq on w_pers_bonus(lower(name));
 
-create sequence sq_w_schedule_hours start with 1000 nocache;
+create sequence sq_w_pers_bonus start with 1 nocache;
 
-create or replace trigger trg_w_schedule_hours_bi_r before insert on w_schedule_hours for each row
+create or replace trigger trg_w_pers_bonus_bi_r before insert on w_pers_bonus for each row
 begin
-  select nvl(:new.id, sq_w_schedule_hours.nextval) into :new.id from dual;
+  select nvl(:new.id, sq_w_pers_bonus.nextval) into :new.id from dual;
 end;
 /
 
-create or replace view v_w_schedules as
+create table w_pers_bonus_sum(
+  id_pers_bonus number(11),
+  dt date,                     --дата начала мес€ца
+  sum number,                  --сумма надбавки за мес€ц                    
+  constraint pk_w_pers_bonus_sum primary key (id_pers_bonus, dt),
+  constraint fk_w_pers_bonus_sum foreign key (id_pers_bonus) references w_pers_bonus(id) on delete cascade
+);  
+
+create or replace view v_w_pers_bonus as
 select
-  s.*,
-  to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd') as dt1,
-  h1.hours as hours1,
+  b.*,
+  to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt1,
+  s1.sum as sum1,
   to_date(to_char(sysdate, 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt2,
-  h2.hours as hours2,
-  to_date(to_char(sysdate, 'yyyy-mm') || '-16', 'yyyy-mm-dd') as dt3,
-  h3.hours as hours3,
-  to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt4,
-  h4.hours as hours4
+  s2.sum as sum2,
+  to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd') as dt3,
+  s3.sum as sum3
 from  
-  w_schedules s,
-  w_schedule_hours h1,
-  w_schedule_hours h2,
-  w_schedule_hours h3,
-  w_schedule_hours h4
+  w_pers_bonus b,
+  w_pers_bonus_sum s1,
+  w_pers_bonus_sum s2,
+  w_pers_bonus_sum s3
 where  
-  h1.id_schedule(+) = s.id and h1.dt(+) = to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-16', 'yyyy-mm-dd')
-  and h2.id_schedule(+) = s.id and h2.dt(+) = to_date(to_char(sysdate, 'yyyy-mm') || '-01', 'yyyy-mm-dd')
-  and h3.id_schedule(+) = s.id and h3.dt(+) = to_date(to_char(sysdate, 'yyyy-mm') || '-16', 'yyyy-mm-dd')
-  and h4.id_schedule(+) = s.id and h4.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  s1.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  and s2.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, 0), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  and s3.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
 ;  
 
---!!!
---insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours;
-*/
 --------------------------------------------------------------------------------
 
 --статусы работников (когда и куда прин€т/переведен/уволен)
@@ -990,14 +988,17 @@ create unique index idx_w_turv_day_e on w_turv_day(id_employee, dt);
 
 
 select 
-  id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, comm1, comm2, comm3, begtime, endtime, settime3, nighttime
+  d.id, d.id_employee_properties, d.id_employee, d.dt, d.worktime1, d.worktime2, d.worktime3, d.id_turvcode1, d.id_turvcode2, d.id_turvcode3, d.premium, d.premium_comm, d.penalty, d.penalty_comm, d.production, d.comm1, d.comm2, d.comm3, d.begtime, d.endtime, d.settime3, d.nighttime,
+  h.hours
 from 
   w_employee_properties ep,
-  w_turv_day d
+  w_turv_day d,
   w_schedule_hours h
 where
-  ep.id = d.id_employee_properties
-  and  
+  ep.id = d.id_employee_properties (+)
+  and h.id_schedule = ep.id_schedule
+  and d.dt (+) = h.dt
+  and h.hours <> null   
 ;   
   
   

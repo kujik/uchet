@@ -580,6 +580,7 @@ begin
     myfrm_J_Vacancy,
     myfrm_Ref_JobsNeeded,
     myfrm_J_PayrollCalculations,
+    myfrm_R_PersBonus,
 
     {заказы}
     myfrm_R_StdProjects,

@@ -80,30 +80,38 @@ type
     Seg: TNamedArr;
     Totals: TNamedArr;
   end;
-  TTurvDataCells = array of TNamedArr;
+
+  TTurvDataSchedules = array of record
+    Title: TNamedArr;
+    Hours: TVarDynArray;
+  end;
 
   TTurvData = record
   private
-    FId: Variant;
+    FId: Variant;                                       //айди табеля
     FDepartament: Variant;
     FEmployee: Variant;
-    FDtBeg: TDateTime;
-    FDtEnd: TDateTime;
-    FDaysCount: Integer;
-    FIsFinalized: Boolean;
-    FTitle: TNamedArr;
-    FList: TNamedArr;
-    FDays: TNamedArr;
-    FRows: TTurvDataRows;
-    FCells: TTurvDataCells;
-    FTurvCodes: TNamedArr;
-    FTurvCodeWeekend: Integer;
+    FDtMonth: TDateTime;                                //1е число месяца турв
+    FDtBeg: TDateTime;                                  //дата начала период турв
+    FDtEnd: TDateTime;                                  //дата окончания периода
+    FDaysCount: Integer;                                //количество дней в периоде
+    FIsFinalized: Boolean;                              //флаг, что ведомость закрыта
+    FTitle: TNamedArr;                                  //заголовочная запись табеля
+    FRows: TTurvDataRows;                               //массив сгруппированных строк (как отображаются в турв), содержит информацию по сегментам строки, с 0
+    FList: TNamedArr;                                   //записи, ссоотвествующие каждой записи статуса работника, попавшей в турв
+    FCells: TNamedArr2;                                 //массив записей (индекс соотвествует позиции в FList), содержашие TNamedArr[16] для данных по отработанным дням по этому статусу работника
+    FTurvCodes: TNamedArr;                              //коды турв
+    FTurvCodeWeekend: Integer;                          //код для "В"
+    FSchedules: TTurvDataSchedules;                     //данные по графикам работы, которые используются в данном турв
+    FScheduleNotApproved : Boolean;                     //флаг, что есть несогласованныые графики работы
     FEmptyDay: TNamedArr;
+    FDays: TNamedArr;
     function GetCount: Integer;
     function GetFinalized: Boolean;
   public
     property Departament: Variant read FDepartament;
     property Employee: Variant read FEmployee;
+    property DtMonth: TDateTime read FDtMonth;
     property DtBeg: TDateTime read FDtBeg;
     property DtEnd: TDateTime read FDtEnd;
     property DaysCount: Integer read FDaysCount;
@@ -111,26 +119,24 @@ type
     property Count: Integer read GetCount;
     property Title: TNamedArr read FTitle;
     property Rows: TTurvDataRows read FRows;
-    property Cells: TTurvDataCells read FCells;
-
+    property Cells: TNamedArr2 read FCells;
     property List: TNamedArr read FList;
-    property Days: TNamedArr read FDays;
     property TurvCodes: TNamedArr read FTurvCodes;
     property TurvCodeWeekend: Integer read FTurvCodeWeekend;
+    property Schedules: TTurvDataSchedules read FSchedules;
+    property ScheduleNotApproved : Boolean read FScheduleNotApproved;
     property EmptyDay: TNamedArr read FEmptyDay;
     procedure Create(AId: Variant); overload;
     procedure Create(ADepartament: Variant; AEmployee: Variant; ADt: TDateTime); overload;
     procedure LoadList;
-    function  GetListTitleString(APos: Integer; AProp: string): string;
+    function  GetListTitleString(ARow: Integer; AProp: string; ADay: Integer = -1): string;
     procedure LoadDays;
+    procedure LoadSchedules;
     procedure LoadTurvCodes;
     function  GetTurvCode(AValue: Variant): Variant;
     function  R(ARow, ADay: Integer): Integer;
-    function  GetPosInList(ARow, ADay: Integer): Integer;
-    function  GetPosInDays(ARow, ADay: Integer): Integer;
     function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
     procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
-//    function  GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
     procedure SortAndGroup(ASort, AGroup : TVarDynArray);
     procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
   end;
@@ -157,6 +163,7 @@ begin
   FEmployee := null;
   FDtBeg := FTitle.G('dt1');
   FDtEnd := FTitle.G('dt2');
+  FDtMonth := EncodeDate(YearOf(DtBeg), MonthOf(DtBeg), 1);
   FDaysCount := DaysBetween(FDtEnd, FDtBeg) + 1;
 end;
 
@@ -175,11 +182,9 @@ begin
 end;
 
 procedure TTurvData.LoadList;
-var
-  i, j: Integer;
 begin
   Q.QLoadFromQuery(
-    'select id, null as pos1, 0 as pos2, dt_beg, dt_end, id_employee, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
+    'select id, dt_beg, dt_end, id_employee, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
     'name, name as employee, departament, job, schedulecode ' +
     'from v_w_employee_properties ' +
     'where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) ' +
@@ -188,53 +193,34 @@ begin
     [FDtEnd, FDtBeg, FDepartament],
     FList
   );
-  for i := 0 to FList.Count - 1 do
-    FList.SetValue(i, 'pos1', i);
-
-  SetLength(FRows, FList.Count);
-  for i := 0 to FList.Count - 1 do begin
-    FRows[i].Seg.Create(['c1$i', 'c2$i', 'r$i'], 1);
-    FRows[i].Seg.SetValue(0, 'r', i);
-    FRows[i].Seg.SetValue(0, 'c1', Max(1, DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1));
-    if FList.GetValue(i, 'dt_beg') < DtBeg then
-      j := 1
-    else
-      j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
-    FRows[i].Seg.SetValue(0, 'c1', j);
-    if FList.GetValue(i, 'dt_end') = null then
-      j := 16
-    else
-      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
-    FRows[i].Seg.SetValue(0, 'c2', j);
-  end;
 end;
 
-function TTurvData.GetListTitleString(APos: Integer; AProp: string): string;
+function TTurvData.GetListTitleString(ARow: Integer; AProp: string; ADay: Integer = -1): string;
 var
   i, p: Integer;
-  va: TVarDynArray2;
+  va: TVarDynArray;
   v: Variant;
 begin
   Result := '';
-  va := [];
-  for i := 0 to FList.Count - 1 do
-    if FList.G(i, 'pos1') = APos then
-      va := va + [[FList.G(i, 'pos2'), FList.G(i, AProp)]];
-  A.VarDynArraySort(va, 0);
-  v := '';
-  for i := 0 to High(va) do
-    if va[i][1].AsString <> v.AsString then begin
-      S.ConcatStP(Result, va[i][1].AsString, '; ');
-      v := va[i][1];
-    end;
+  if ADay = -1 then begin
+    va := [];
+    for i := 0 to FRows[ARow].Seg.Count - 1 do
+      va := va + [FList.G(FRows[ARow].Seg.G(i, 'r'), AProp)];
+    v := '';
+    for i := 0 to High(va) do
+      if va[i].AsString <> v.AsString then begin
+        S.ConcatStP(Result, va[i].AsString, '; ');
+        v := va[i];
+      end;
+  end
+  else begin
+    Result := FList.G(R(ARow, ADay), AProp).AsString;
+  end;
 end;
 
 function TTurvData.GetCount: Integer;
 begin
-  Result := -1;
-  for var i: Integer := 0 to FList.Count- 1 do
-    Result := Max(Result, FList.G(i, 'pos1'));
-  Inc(Result);
+  Result := Length(FRows);
 end;
 
 function TTurvData.GetFinalized: Boolean;
@@ -244,7 +230,6 @@ end;
 
 procedure TTurvData.LoadDays;
 var
-  na: TNamedArr;
   i, j, k: Integer;
 begin
   Q.QLoadFromQuery(
@@ -255,36 +240,42 @@ begin
      [FDtBeg, FDtEnd],
      FDays
   );
-  Q.QLoadFromQuery(
-    'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
-    'comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
-    'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
-    'order by id_employee_properties, dt',
-     [FDtBeg, FDtEnd],
-     na
-  );
   FEmptyDay.FFull := FDays.FFull;
   FEmptyDay.F := FDays.F;
   SetLength(FEmptyDay.V, 1);
   SetLength(FEmptyDay.V[0], Length(FDays.F));
   for i := 0 to High(FDays.F) do
     FEmptyDay.V[0][i] := null;
-  //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
-  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
-  Setlength(FCells, FList.Count);
-  for i := 0 to FList.Count - 1 do begin
-    FCells[i].Create(FDays.FFull, 17);
-    for k := 0 to High(FCells[i].V[0]) do
-      FCells[i].V[i][k] := null;
-    for j := 0 to na.Count - 1 do
-      if na.G(j, 'id_employee_properties') = FList.G(i, 'id') then
-        for k := 0 to High(na.V[0]) do
-          FCells[i].V[DaysBetween(na.G(j, 'dt'), DtBeg) + 1][k] := na.v[j][k];
-  end;
-Exit;
+end;
 
-  for i := 0 to na.Count - 1 do begin
-    k := A.PosInArray(na.G(i, 'id_employee_properties'), FList.V, 0);
+procedure TTurvData.LoadSchedules;
+//загрузим все плановые графики работы, которые есть в этом турв, в промежуточную переменную
+//установим статус, обозначающий наличие несогласованных графиков
+var
+  i, j: Integer;
+  va: TVarDynArray;
+  va2: TVarDynArray2;
+  st: string;
+  b: Boolean;
+begin
+  va := [];
+  FScheduleNotApproved := False;
+  //получим айди всех графиков, которые присуствуют
+  for i := 0 to FList.Count - 1 do
+    if not A.InArray(FList.G(i, 'id_schedule'), va) then
+      va := va + [FList.G(i, 'id_schedule')];
+  SetLength(FSchedules, Length(va));
+  for i := 0 to High(va) do begin
+    //загружаем график (дата на начало месяца!)
+    Q.QLoadFromQuery('select id_schedule, hours, hours1, hours2, approved from w_schedule_periods where id_schedule = :id$i and dt = :dt$d', [va[i], FDtMonth], FSchedules[i].Title);
+    b := FSchedules[i].Title.Count > 0;
+    if b then b := FSchedules[i].Title.G('approved') = 1;
+    if b then
+      //если график найден и согласован, то загружаем по нему рабочее время
+      FSchedules[i].Hours := Q.QSelectOneRow('select hours, dt from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt <= :dt2$d order by dt', [va[i], FDtBeg, FDtEnd])
+    else
+      //иначе поставим флаг
+      FScheduleNotApproved := True;
   end;
 end;
 
@@ -310,8 +301,10 @@ begin
 end;
 
 function TTurvData.R(ARow, ADay: Integer): Integer;
+//получиим позицию в List и Cells (она одинакова) по номеру строки ТУРВ (т.е. по номуру сгруппированной строки) и колонки (номеру дня)
 begin
   Result := -1;
+  //пройдем оп сегментам
   for var i := 0 to FRows[ARow].Seg.Count - 1 do begin
     if (FRows[ARow].Seg.G(i, 'c1') <= ADay) and (FRows[ARow].Seg.G(i, 'c2') >= ADay) then begin
       Result := FRows[ARow].Seg.G(i, 'r');
@@ -320,40 +313,6 @@ begin
   end;
 end;
 
-function TTurvData.GetPosInList(ARow, ADay: Integer): Integer;
-begin
-  Result := -1;
-  for var i: Integer := 0 to FList.Count - 1 do begin
-    if FList.G(i, 'pos1') = ARow then begin
-      if (FList.G(i, 'dt_beg') <= IncDay(FDtBeg, ADay - 1)) and ((FList.G(i, 'dt_end') = null) or (FList.G(i, 'dt_end') >= IncDay(FDtBeg, ADay - 1))) then begin
-        Result := i;
-        Exit;
-      end;
-    end;
-  end;
-end;
-
-function TTurvData.GetPosInDays(ARow, ADay: Integer): Integer;
-//вернет позицию данных для ячейки в массиве данных по дням
-//если эта ячейка не может иметь данных по работнику, вернет -1
-//епсли ячейка попадает в диапазон данныых по работнику, но данные еще не введены, вернет -2
-var
-  i, j, k: Integer;
-begin
-  Result := -1;
-  for i := 0 to FList.Count - 1 do begin
-    if FList.G(i, 'pos1') = ARow then begin
-      if (FList.G(i, 'dt_beg') <= IncDay(FDtBeg, ADay - 1)) and ((FList.G(i, 'dt_end') = null) or (FList.G(i, 'dt_end') >= IncDay(FDtBeg, ADay - 1))) then begin
-        Result := -2;
-        for j := 0 to FDays.Count - 1 do
-          if (FDays.G(j, 'dt') = IncDay(FDtBeg, ADay - 1)) and  (FDays.G(j, 'id_employee_properties') = FList.G(i, 'id')) then begin
-            Result := j;
-            Exit;
-          end;
-      end;
-    end;
-  end;
-end;
 
 function TTurvData.GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
 var
@@ -362,10 +321,6 @@ var
 
   function GetDayValue(ANum: Integer): Variant;
   begin
-{    if FDays.G(pos, 'worktime' + IntToStr(ANum)) <> null then
-      Result := FDays.G(pos, 'worktime' + IntToStr(ANum))
-    else
-      Result := GetTurvCode(FDays.G(pos, 'id_turvcode' + IntToStr(ANum)));}
     if FCells[pos].G(ADay, 'worktime' + IntToStr(ANum)) <> null then
       Result := FCells[pos].G(ADay, 'worktime' + IntToStr(ANum))
     else
@@ -376,7 +331,6 @@ begin
   Result := '';
   AColor := -1;
   if ARow >= 0 then
-//    pos := GetPosInDays(ARow, ADay)
     pos := R(ARow, ADay)
   else
     pos := -ARow;
@@ -422,90 +376,131 @@ begin
       else
         Result := S.NSt(Result);
     end;
-//    if ANum <> 0 then
-//      AComm := FDays.G(pos, 'comm' + IntToStr(ANum)).AsString;
+    if ANum <> 0 then
+      AComm := FCells[pos].G(ADay, 'comm' + IntToStr(ANum)).AsString;
   end
-{  else if ANum = 4 then begin
-    Result := FDays.G(pos, 'premium');
-    AComm := FDays.G(pos, 'premium_comm').AsString;
+  else if ANum = 4 then begin
+    Result := FCells[pos].G(ADay, 'premium');
+    AComm := FCells[pos].G(ADay, 'premium_comm').AsString;
   end
   else if ANum = 5 then begin
-    Result := FDays.G(pos, 'penalty');
-    AComm := FDays.G(pos, 'penalty_comm').AsString;
+    Result := FCells[pos].G(ADay, 'penalty');
+    AComm := FCells[pos].G(ADay, 'penalty_comm').AsString;
   end
   else if ANum = 6 then begin
-    Result := FDays.G(pos, 'nighttime');
-    AComm := 'работа в ночную смену'; FDays.G(pos, 'nighttime').AsString;
-  end;                                                                   }
+    Result := FCells[pos].G(ADay, 'nighttime');
+    AComm := 'работа в ночную смену'; FCells[pos].G(ADay, 'nighttime').AsString;
+  end;
 end;
 
 procedure TTurvData.SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
 var
   pos, id, i: Integer;
 begin
-  pos := GetPosInDays(ARow, ADay);
-  if pos < 0 then begin
-    SetLength(FDays.V, Length(FDays.V) + 1);
-    pos := High(FDays.V);
-    SetLength(FDays.V[pos], FDays.FieldsCount);
-    for i := 0 to FList.Count - 1 do
-      if FList.G(i, 'pos1') = ARow then begin
-        FDays.SetValue(pos, 'id_employee_properties', FList.G(i, 'id'));
-        Break;
-      end;
-  end;
-  FDays.SetValue(pos, 'dt', IncDay(FDtBeg, ADay - 1));
-  FDays.SetValue(pos, AField, ANewValue);
+  pos := R(ARow, ADay);
+  FCells[pos].SetValue(ADay, 'id_employee_properties', FList.G(pos, 'id'));
+  FCells[pos].SetValue(ADay, 'dt', IncDay(FDtBeg, ADay - 1));
+  FCells[pos].SetValue(ADay, AField, ANewValue);
 end;
 
-(*
-function TTurvData.GetDayCellAdd(ARow, ADay, ANum: Integer; var AColor: Integer): Variant;
-var
-  pos: Integer;
-  v0, v1, v2: Variant;
-begin
-  Result := '';
-  AColor := -1;
-  pos := GetPosInDays(ARow, ADay);
-  if pos = -1 then
-    Exit;
-  v0 := GetDayCell(ARow, ADay, 3, AColor);  //проверенное время или код
-  v1 := GetDayCell(ARow, ADay, 1, AColor);  //время или код от мастеров
-  v2 := GetDayCell(ARow, ADay, 2, AColor);  //время или код парсек
-  AColor := 0;
-    //если задано проверенное время/код, то выводим его, иначе выводим от мастеров
-  if v0 = null then begin
-    if (v1 = null) and (v2 = null) then begin
-      AColor := 0;
-    end
-    else if (v1 <> null) and (v2 = null) then begin
-      AColor := 2;   //жетлтый
-      v0 := v1;
-    end
-    else if (v1 = null) and (v2 <> null) then begin
-      AColor := 1;   //красный
-      v0 := v2;
-    end
-    else if (not S.IsNumber(S.NSt(v1), 0, 24)) and (not S.IsNumber(S.NSt(v2), 0, 24)) then begin
-      v0 := v2;
-    end
-    else if S.IsNumber(S.NSt(v1), 0, 24) and S.IsNumber(S.NSt(v2), 0, 24) and (abs(StrToFloat(S.NSt(v1)) - StrToFloat(S.NSt(v2))) <= Module.GetCfgVar(mycfgWtime_autoagreed)) then begin
-      v0 := v2;
-      if v1 <> v2 then
-        AColor := 4; //красный цвет шрифта
-    end
-    else begin
-      v0 := v2;
-      AColor := 1;
-    end;
-  end;
-  Result := v0;
-end;
-     *)
 
 procedure TTurvData.SortAndGroup(ASort, AGroup : TVarDynArray);
+var
+  i, j, k, p, p2: Integer;
+  b: Boolean;
 begin
+  //сортируем массив строк, при этом сначала отсортируем по начальной дате статуса в любом случае
+  ASort := ASort + ['dt_beg'];
+  for i := High(ASort) downto 0 do
+    A.VarDynArray2Sort(FList.V, FList.Col(ASort[i]) + 1);
 
+  SetLength(FRows, 0);
+  //SetLength(FRows, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    //проверим, есть ли сруди уже созданных записей такая, в которой все поля группировки совпадают с текущей
+    b := False;
+    if Length(AGroup) > 0 then
+      for j := 0 to High(FRows) do begin
+        b := True;
+        for k := 0 to High(AGroup) do begin
+          if FList.G(i, AGroup[k]) <> FList.G(FRows[j].Seg.G('r'), AGroup[k]) then begin
+            b := False;
+            Break;
+          end;
+          if b then
+            Break;
+        end;
+        if b then begin
+          p := j;
+          Break;
+        end;
+      end;
+    if b then begin
+      FRows[p].Seg.IncLength;
+    end
+    else begin
+      SetLength(FRows, Length(FRows) + 1);
+      FRows[High(FRows)].Seg.Create(['c1$i', 'c2$i', 'r$i'], 1);
+      p := High(FRows);
+    end;
+    p2 := FRows[p].Seg.Count - 1;
+    FRows[p].Seg.SetValue(p2, 'r', i);
+    FRows[p].Seg.SetValue(p2, 'c1', Max(1, DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1));
+    if FList.GetValue(i, 'dt_beg') < DtBeg then
+      j := 1
+    else
+      j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
+    FRows[p].Seg.SetValue(p2, 'c1', j);
+    if FList.GetValue(i, 'dt_end') = null then
+      j := 16
+    else
+      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
+    FRows[p].Seg.SetValue(p2, 'c2', j);
+  end;
+    //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
+  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
+  Setlength(FCells, 0);
+  Setlength(FCells, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    FCells[i].Create(FDays.FFull, 17);
+    FCells[i].SetNull;
+    for j := 0 to FDays.Count - 1 do begin
+      if FDays.G(j, 'id_employee_properties') = FList.G(i, 'id') then
+        for k := 0 to High(FDays.V[0]) do
+          FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.v[j][k];
+    end;
+  end;
+
+{  SetLength(FRows, 0);
+  SetLength(FRows, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    FRows[i].Seg.Create(['c1$i', 'c2$i', 'r$i'], 1);
+    FRows[i].Seg.SetValue(0, 'r', i);
+    FRows[i].Seg.SetValue(0, 'c1', Max(1, DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1));
+    if FList.GetValue(i, 'dt_beg') < DtBeg then
+      j := 1
+    else
+      j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
+    FRows[i].Seg.SetValue(0, 'c1', j);
+    if FList.GetValue(i, 'dt_end') = null then
+      j := 16
+    else
+      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
+    FRows[i].Seg.SetValue(0, 'c2', j);
+  end;
+  //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
+  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
+  Setlength(FCells, 0);
+  Setlength(FCells, FList.Count);
+  for i := 0 to FList.Count - 1 do begin
+    FCells[i].Create(FDays.FFull, 17);
+    FCells[i].SetNull;
+    for j := 0 to FDays.Count - 1 do begin
+      if FDays.G(j, 'id_employee_properties') = FList.G(i, 'id') then
+        for k := 0 to High(FDays.V[0]) do
+          FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.v[j][k];
+    end;
+  end;}
 end;
 
 
@@ -520,12 +515,12 @@ begin
   APremium := 0;
   APenalty := 0;
   for i := 1 to FDaysCount do begin
-    pos := GetPosInDays(ARow, i);
+    pos := R(ARow, i);
     if pos < 0 then
       Continue;
-    AWorktime := AWorktime + S.IIf(FDays.G(pos, 'worktime3') = null, FDays.G(pos, 'worktime2').AsFloat, FDays.G(pos, 'worktime3').AsFloat);
-    APremium := APremium + FDays.G(pos, 'premium').AsFloat;
-    APenalty := APenalty + FDays.G(pos, 'penalty').AsFloat;
+    AWorktime := AWorktime + S.IIf(FCells[pos].G(i, 'worktime3') = null, FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat);
+    APremium := APremium + FCells[pos].G(i, 'premium').AsFloat;
+    APenalty := APenalty + FCells[pos].G(i, 'penalty').AsFloat;
   end;
 end;
 

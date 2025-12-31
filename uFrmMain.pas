@@ -586,6 +586,7 @@ begin
     ['Должности', myfrm_R_Jobs, User.Role(rW_R_Jobs_V)],
     ['Подразделения', myfrm_R_Divisions, User.Role(rW_R_Divisions_V)],
     ['Графики работы', myfrm_R_Work_Chedules, User.Roles([], [rW_R_Work_Chedules_V, rW_R_Work_Chedules_Ch])],
+    ['Персональные надбавки', myfrm_R_PersBonus, User.Roles([], [rW_R_PersBonus_V, rW_R_PersBonus_Ch]) or User.IsDeveloper],
     ['Обозначения ТУРВ', myfrm_R_TurvCodes, User.Role(rW_R_TurvCode_V)],
     [],
     ['Производственный календарь', myfrm_R_Holideys, User.Role(rW_R_Holideys_V)],

@@ -601,31 +601,29 @@ begin
     ]);
     Frg1.Opt.SetTable('w_schedules');
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
-{    Frg1.Opt.SetFields([
+  end
+  else if FormDoc = myfrm_R_PersBonus then begin
+    Caption := 'Персональные надбавки';
+    Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['code','Код','80'],
       ['name','Наименование','150'],
-      ['hours1','Нормы|Дата 1','100'],
-      ['hours2','Нормы|Дата 2','100'],
-      ['hours3','Нормы|Дата 3','100'],
-      ['hours4','Нормы|Дата 4','100'],
-      ['comm','Комментарий','200;h'],
+      ['sum1','Сумма|Дата 1','100'],
+      ['sum2','Сумма|Дата 2','100'],
+      ['sum3','Сумма|Дата 2','100'],
+      ['comm','Комментарий','300;h'],
       ['active','Используется','90','pic']
     ]);
-    Frg1.Opt.SetTable('v_w_schedules');
-    va := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
-    Frg1.Opt.SetColFeature('hours1', 'c=Нормы|' + DateToStr(va[0]));
-    Frg1.Opt.SetColFeature('hours2', 'c=Нормы|' + DateToStr(va[1]));
-    Frg1.Opt.SetColFeature('hours3', 'c=Нормы|' + DateToStr(va[2]));
-    Frg1.Opt.SetColFeature('hours4', 'c=Нормы|' + DateToStr(va[3]));
-    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
+    Frg1.Opt.SetTable('v_w_pers_bonus');
+    //va := Q.QSelectOneRow('select dt1, dt2, dt3 from v_w_pers_bonus where rownum = 1', []);
+    va := [EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1), EncodeDate(YearOf(IncMonth(Date, 0)), MonthOf(IncMonth(Date, 0)), 1), EncodeDate(YearOf(IncMonth(Date, +1)), MonthOf(IncMonth(Date, +1)), 1) ];
+    Frg1.Opt.SetColFeature('sum1', 'c=Сумма|' + DateToStr(va[0]));
+    Frg1.Opt.SetColFeature('sum2', 'c=Сумма|' + DateToStr(va[1]));
+    Frg1.Opt.SetColFeature('sum3', 'c=Сумма|' + DateToStr(va[2]));
+    Frg1.Opt.SetButtons(1, 'rveads', User.Role(rW_R_PersBonus_Ch));
     Frg1.InfoArray:=[[Caption + #13#10#13#10 +
-      'Графики работы, доступные для работников предприятия.'#13#10 +
-      'Также в таблице отображаются (и могут быть введены в диалоге) нормы для графиков за ближайшие 4 периода.'#13#10 +
-      'При добавлении графика все нормы вводить не обязательно, однако заработная плвата в дальнейшем '#13#10 +
-      'не сможет быть рассчитана, если не введены обе нормы по используемым графикам за данный период расчёта!'#13#10 +
+      '.'#13#10 +
       ''#13#10
-    ]];}
+    ]];
   end
   else if FormDoc = myfrm_R_Divisions then begin
     Caption:='Справочник подразделений';
