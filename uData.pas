@@ -929,7 +929,7 @@ const
   myfrm_R_OrderReglament = 'R_OrderReglament';
   myfrm_J_SplDealsMonitoring = 'J_SplDealsMonitoring';
   myfrm_R_PersBonus='R_PersBonus';
-  myfrm_J_PersBonus='R_PersBonus';
+  myfrm_J_PersBonus='J_PersBonus';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1025,6 +1025,7 @@ const
   myfrm_Dlg_Rep_EstimatePrices = 'Dlg_Rep_EstimatePrices';
   myfrm_Dlg_Rep_OrderReglament = 'Dlg_Rep_OrderReglament';
   myfrm_Dlg_ForemanAllowance = 'Dlg_ForemanAllowance';
+  myfrm_Dlg_J_PersBonus='Dlg_J_PersBonus';
 
 
 const

@@ -2095,6 +2095,48 @@ order by
 ;   
 
 
+select 
+  --max(id_nomencl),
+  max(name) as "Номенклатура", 
+  sum(ib_cnt) as "Кол-во сделок",   
+  max(price_check )as "Контрольная цена",
+  max(name_unit) as "Ед. изм.",
+  round(sum(fact_quantity)) as "Кол-во",
+  round(sum(summ)) as "Сумма, фактическая"
+from (  
+select
+  n.id_nomencl,
+  n.name, 
+  p.price_check,
+  ss.fact_quantity,
+  round(ss.ibprice * ss.fact_quantity) as summ,   
+  round((ss.ibprice - p.price_check) * ss.fact_quantity) as "Разница",
+  u.name_unit,
+  1 as ib_cnt    
+from
+  spl_itm_nom_props p,
+  dv.in_bill s,
+  dv.in_bill_spec ss,
+  dv.nomenclatura n,
+  dv.unit u
+where  
+  p.price_check_upd = 1
+  and s.inbilldate >= date '2025-01-01'
+  and p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_inbill = ss.id_inbill
+  and n.id_unit = u.id_unit
+  and ss.ibprice <> 0
+) t
+group by
+  t.name  
+order by
+  t.name  
+;   
+
+
+--37013
+
 
 
 /*

@@ -66,10 +66,16 @@ type
     function GetActiveWorkers: TVarDynArray2;
     function GetStatus(ID_Division: Integer; dt: TDateTime): Integer;
     function LoadParsecData: Boolean;
+    function LoadParsecDataNew: Boolean;
     function GetDaysFromCalendar(DtBeg, DtEnd: TDateTime): TVarDynArray2;
     function GetDaysFromCalendar_Next(DtBeg: TDateTime; CntOfWork: Integer): TDateTime;
     //диалог ввода графика работы и норм рабочего времени по нему
-    function ExecureWorkCheduledialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+    function ExecureWorkCheduleDialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+    //диалог ввода для справочника первоняльных надбавок
+    //данные надбавки и суммы за текущий и следующий месяц
+    function ExecureRefPersBonusDialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+    function ExecureJPersBonusDialog(AOwner: TComponent; AId: Variant; AIdEmpl: Variant; AMode: TDialogType): Boolean;
+    function CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
 //    function SetForemanAllowance(AId: Integer): Boolean;
 
@@ -106,6 +112,7 @@ type
     FScheduleNotApproved : Boolean;                     //флаг, что есть несогласованныые графики работы
     FEmptyDay: TNamedArr;
     FDays: TNamedArr;
+    FParsec: TNamedArr;
     function GetCount: Integer;
     function GetFinalized: Boolean;
   public
@@ -139,6 +146,7 @@ type
     procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
     procedure SortAndGroup(ASort, AGroup : TVarDynArray);
     procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended);
+    procedure LoadFromParsec;
   end;
 
 
@@ -158,7 +166,7 @@ uses
 
 procedure TTurvData.Create(AId: Variant);
 begin
-  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
+  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, is_office, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
   FDepartament := FTitle.G('id_departament');
   FEmployee := null;
   FDtBeg := FTitle.G('dt1');
@@ -301,7 +309,7 @@ begin
 end;
 
 function TTurvData.R(ARow, ADay: Integer): Integer;
-//получиим позицию в List и Cells (она одинакова) по номеру строки ТУРВ (т.е. по номуру сгруппированной строки) и колонки (номеру дня)
+//получиим позицию в List и Cells (она одинакова) по номеру строки ТУРВ (т.е. по номеру сгруппированной строки) и колонки (номеру дня)
 begin
   Result := -1;
   //пройдем оп сегментам
@@ -523,6 +531,355 @@ begin
     APenalty := APenalty + FCells[pos].G(i, 'penalty').AsFloat;
   end;
 end;
+
+procedure TTurvData.LoadFromParsec;
+//переделан запрос данных из парсека, по новым кодам данных, и с использованием объекта БД myDBParsec
+var
+  i, j, k, p, d: Integer;
+  id_vyh: Integer;
+  st: string;
+  dt, dt1, dt2: TDateTime;
+  ParsecEvents, va2, vp, vpb, vpe: TVarDynArray2;
+  vab, vae: TVarDynArray;
+  tbegday, tbegkontr, tobc, tobo, t1, t2, tp: Extended;
+begin
+  //первая дата - за 3 дня до начала текущего периода ТУРВ (можно бы за 3 дня до последнего успешного выполнения этой задачи)
+  dt1:=IncDay(FDtBeg, -3);
+  //вторая дата - конец текущих суток
+  if Date > FDtEnd then dt2:= FDtEnd else dt2 := Date;
+  dt2:=IncMilliSecond(IncDay(Date, 1), -1);
+  //массивы данных по входу и уходу работников
+  vpb:=[];
+  vpe:=[];
+  {
+  Такие коды транзакций в БД Парсека
+
+  на проходной ПЩ:
+  590152 Фактический вход
+  590153 Фактический выход
+
+  в остальных случаях
+  590144 Нормальный вход по ключу
+  590145 Нормальный выход по ключу
+  }
+
+  //айди операций входа и выхода (есть по два события)
+  ParsecEvents := [[590144, 590152], [590145, 590153]];
+  //пытаемся подключиться к парсеку, выходим если не удалось (без диалога ошибки)
+  //!!!на 2025-02-27 выдается окно ошибки, через минуту закроется
+  if not myDBParsec.Connect(False) then
+    Exit;
+    //два запроса к БД, по событиям входа и выхода
+  //время в БД UTC, приводим к Московскому!
+  st := '';
+  for i := 0 to FList.Count - 1 do
+    S.ConcatStP(st, '''' + FList.G(i, 'name') + '''', ',');
+  for i := 0 to 1 do begin
+    vp := [];
+    vp := myDBParsec.QLoadToVarDynArray2(
+      'select '+
+      'format(dateadd(hour, 3, t.tran_date), ''dd.MM.yyyy HH:mm'') as dt, '+
+      'case '+
+      'when tt.trantype_desc = ''Нормальный вход по ключу'' then ''Приход'' '+
+      'when tt.trantype_desc = ''Фактический вход'' then ''Приход'' '+
+      'when tt.trantype_desc = ''Нормальный выход по ключу'' then ''Уход'' '+
+      'when tt.trantype_desc = ''Фактический выход'' then ''Уход'' '+
+      'end as event, '+
+      'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) as name '+
+      'from '+
+      '  parsec3trans.dbo.translog as t '+
+      '  left outer join '+
+      '  parsec3.dbo.person as p '+
+      '  on t.usr_id = p.pers_id '+
+      '  left outer join '+
+      '  parsec3.dbo.trantypes_desc tt '+
+      '  on t.trantype_id = tt.trantype_id '+
+      'where '+
+      '  ((t.trantype_id = :trantype1$i)or '+
+      '  (t.trantype_id = :trantype2$i)) '+
+      '  and '+
+      '  (tt.locale = ''RU'') '+
+      '  and '+
+      '  t.tran_date >= :dt1$d ' +
+      '  and '+
+      '  t.tran_date <= :dt2$d ' +
+      '  and '+
+      'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) in (' + st + ') '+
+      'order by concat(p.last_name, '' '', p.first_name, '' '', p.middle_name), tran_date asc '
+      ,
+      [ParsecEvents[i][0], ParsecEvents[i][1], IncHour(dt1, -3), IncHour(dt2, -3)]
+    );
+    if i = 0 then
+      vpb := copy(vp)
+    else
+      vpe := copy(vp);
+  end;
+  //MsgDbg([VTxt(vpb), VTxt(vpe)]);
+  //пройдем по списку строк турв
+  for i := 0 to High(FRows) do begin
+    //пройдем по всему диапозону дней турв
+    for d := 1 to 16 do begin
+      p := R(i, d);
+      st := FList.G(p, 'name');
+      //пропускаем ячейки, в которых нет данных
+      if p = -1 then
+        Continue;
+      //дата для данного номера дня
+      dt := IncDay(DtBeg, d - 1);
+      //первая позици работника в данных парсека
+      j := A.PosInArray(st, vpb, 2);
+      //соберем все приходы за день в массив
+      vab := [];
+      while (j > -1) and (vpb[j, 2] = st) do begin
+        if (Trunc(StrToDateTime(vpb[j][0])) = dt) then
+          vab := vab + [vpb[j][0]];
+        inc(j);
+      end;
+      //соберем все уходы за день в массив
+      j := A.PosInArray(st, vpe, 2);
+      vae := [];
+      while (j > -1) and (vpe[j, 2] = st) do begin
+        if (Trunc(StrToDateTime(vpe[j][0])) = dt) then
+          vae := vae + [vpe[j][0]];
+        inc(j);
+      end;
+      //сохраним самое ранне время прихода
+      if Length(vab) > 0 then
+        FCells[p].SetValue(d, 'begtime', HourOf(StrToDateTime(vab[0])) + (MinuteOf(StrToDateTime(vab[0])) / 100));
+      //сохраним самое позднее время ухода (за текущий день не проставляем вообще)
+      if (Length(vae) > 0) and (dt <> Date) then
+        FCells[p].SetValue(d, 'endtime', HourOf(StrToDateTime(vae[High(vae)])) + (MinuteOf(StrToDateTime(vae[High(vae)])) / 100));
+      //проставляем флаг для подсмветки ячейки в детально таблице турв (если только одно из времен есть, либо есть повторные отметки прихода или ухода)
+      if (dt <> Date) and ((Length(vab) = 0) or (Length(vab) > 1) or (Length(vae) = 0) or (Length(vae) > 1)) and not ((Length(vab) = 0) and (Length(vae) = 0)) then
+        FCells[p].SetValue(d, 'settime3', 1);
+    end;
+  end;
+
+  //время прихода и ухода в БД в часах и минутах (они в дробной части)
+  //время работы в бд в часах и десятых часа!
+  //времена t_xx в часах и десятых часа!
+
+  //время начала рабочего дня, из настроек модуля, там оно в часах и минутах - целые это часы, а дробная часть минута, напр 8.30!
+  tbegday := trunc(Module.GetCfgVar(mycfgWtime_beg_2)) + frac(Module.GetCfgVar(mycfgWtime_beg_2)) / 60 * 100;
+  //время, если раньше него началась работа, подсветим  ..то учитываем весь период и подсветим
+  tbegkontr := Max(tbegday - S.VarToFloat(Module.GetCfgVar(mycfgWtime_beg_diff_2)), 0);
+  //время окончания обеда по офису, 12ч + время перерыва, в часах и десятых часа
+  tobo := 12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1));
+  //время окончания обеда по цеху, 12ч + время перерыва, в часах и десятых часа
+  tobc := 12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2));
+  id_vyh:=Q.QSelectOneRow('select id from w_turvcodes where code = ''В''', [])[0];
+
+  //пройдем по списку строк турв
+  for i := 0 to High(FRows) do begin
+    //пройдем по всему диапозону дней турв
+    for d := 1 to 16 do begin
+      p := R(i, d);
+      if p = -1 then
+        Continue;
+      if (FCells[p].G(d, 'worktime2') <> null) or (FCells[p].G(d, 'id_turvcode2') <> null) then
+        Continue;
+      //дата для данного номера дня
+      dt := IncDay(DtBeg, d - 1);
+      if dt = Date then
+        Continue;
+      t1 := -1;
+      if FCells[p].G(d, 'begtime') <> null then
+        t1 := trunc(FCells[p].G(d, 'begtime')) + frac(FCells[p].G(d, 'begtime')) / 60 * 100;
+      t2 := -1;
+      if FCells[p].G(d, 'endtime') <> null then
+        t2 := trunc(FCells[p].G(d, 'endtime')) + frac(FCells[p].G(d, 'endtime')) / 60 * 100;
+      if FTitle.G('is_office') = 1 then begin
+        //обработка для офиса, попроще
+        if (t1 = -1) and (t2 = -1) then begin
+          //нет ни прихода ни ухода - поставим выходной
+          //если не было никакого кода, тк может быть еще отпуск
+          if FCells[p].G(d, 'id_turvcode2') = null then
+            FCells[p].SetValue(d, 'id_turvcode2', id_vyh);
+          //vt[i][7]:=1;
+        end
+        else if (t1 = -1) or (t2 = -1) then begin
+          //нет одного времени - поставим 8.00 и подсветим
+          FCells[p].SetValue(d, 'id_turvcode2', null);
+          FCells[p].SetValue(d, 'worktime2', 8);
+        end
+        else if (t1 > -1) and (t2 > -1) then begin
+          //время начала рабочего дня возьмем максимальное от фактического или 8:00
+          t1 := Max(t1, tbegday);
+          tp := abs(t2 - t1);
+          //вычтем обед, если время ухода ранее окончания обеда, и время прихода ранее его начала
+          tp := Max(0.01, tp - S.IIf((t2 < tobo) or (t1 > tobo - 1), 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1))));
+          //округляем
+          if frac(tp) <= 0.33 then
+            tp := trunc(tp)
+          else if frac(tp) <= 0.83 then
+            tp := trunc(tp) + 0.5
+          else
+            tp := trunc(tp) + 1;
+          FCells[p].SetValue(d, 'id_turvcode2', null);
+          FCells[p].SetValue(d, 'worktime2', tp);
+//          vt[i][7]:=1;
+        end;
+      end
+      else begin
+
+      end;
+    end;
+  end;
+
+
+
+  (*  //время начала рабочего дня, из настроек модуля, там оно в часах и минутах - целые это часы, а дробная часть минута, напр 8.30!
+  t3:=trunc(Module.GetCfgVar(mycfgWtime_beg_2)) + frac(Module.GetCfgVar(mycfgWtime_beg_2))/60*100;
+  //время, если раньше него началась работа, подсветим  ..то учитываем весь период и подсветим
+  t4:=Max(t3 - S.VarToFloat(Module.GetCfgVar(mycfgWtime_beg_diff_2)), 0);
+//    'select dt, id_worker, begtime, endtime, id_turvcode3, worktime3, nighttime, 0, null, settime3, id_division from turv_day where begtime is null or endtime is null and id_division = 4 and dt >= :dt1$d and dt <= :dt2$d order by id_worker',
+  //время окончания обеда по офису, 12ч + время перерыва, в часах и десятых часа
+  tob1:=12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1));
+  //время окончания обеда по цеху, 12ч + время перерыва, в часах и десятых часа
+  tob1:=12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2));
+
+  for i:=0 to High(vt) do begin
+    //обрабатываем только те ячейки, где нет ни кода ни времени парсек или же код = В
+    //если ранее было изменено время, или если это не последняя в выгрузке, и следующая запись на того же работника, и при этом это следующий день, и при этом было изменено время
+    b:=(vt[i][7] = 1) or ((i < High(vt)) and (vt[i][1] = vt[i+1][1]) and
+      (DaysBetween(vt[i+1][0], vt[i][0]) = 1) and (vt[i+1][7] = 1));
+    //если время и код по парсеку еще не заданы, или же задан выходной но при этом в этот или следующий день были изменения времени прихода/ухода
+    if ((vt[i][4] = null)and(vt[i][5] = null))or(((vt[i][4] = id_vyh){or(vt[i][4] = id_otp)}) and b) then begin  //2025-12 убран id_otp
+      //если сменился айди подразделения, узнаем офис ли это
+      if vt[i][10]<> idd then begin
+        idd:=vt[i][10];
+        isoffice:=A.PosInArray(idd, vdiv, 0) >= 0;
+      end;
+      //если хотя бы одно время из парсек не получено, то не считаем по данной ячеке
+      //это значит что ЕЩЕ не получено, если прото не будет времени за данный день но оно уже опрашивалось, то будет -1 в данном времени!!!
+      if (vt[i][2] = null)or(vt[i][3] = null) then continue;
+      //здесь ранее внесенные в базу, в часах и минутах
+      //переведем в часы и десятые часа
+      t1:=-1;
+      if vt[i][2]<>null then t1:=trunc(vt[i][2]) + frac(vt[i][2])/60*100;
+      t2:=-1;
+      if vt[i][3]<>null then t2:=trunc(vt[i][3]) + frac(vt[i][3])/60*100;
+      //обработка для офиса, попроще
+      if isoffice then begin
+        if (t1 = -1)and(t2 = -1) then begin
+          //нет ни прихода ни ухода - поставим выходной
+          //если не было никакого кода, тк может быть еще отпуск
+          if vt[i][4] = null then vt[i][4]:=id_vyh;
+          vt[i][7]:=1;
+        end
+        else if (t1 = -1)or(t2 = -1) then begin
+          //нет одного времени - поставим 8.00 и подсветим
+          vt[i][4]:=null;
+          vt[i][5]:=8;
+          vt[i][9]:=1;
+          vt[i][7]:=1;
+        end
+        else if (t1 > -1)and(t2 > -1) then begin
+          //время начала рабочего дня возьмем максимальное от фактического или 8:00
+          t1:=Max(t1, t3);
+          //вычтем обед, если время ухода ранее окончания обеда
+          tp:=abs(t2-t1);
+//tp:=tp - S.IIf(t2 < tob1, 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1)));
+          tp:=Max(0.01, tp - S.IIf(t2 < tob1, 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1))));
+          //округляем
+          if frac(tp) <= 0.33
+            then tp:=trunc(tp)
+            else if frac(tp) <= 0.83
+            then tp:=trunc(tp) + 0.5
+              else tp:=trunc(tp) + 1;
+          vt[i][4]:=null;
+          vt[i][5]:=tp;
+          vt[i][7]:=1;
+        end;
+      end
+*)
+
+ (*
+
+  //найдем времена прихода и ухода работников по данным парсек
+//    'select dt, id_worker, begtime, endtime, id_turvcode3, worktime3, nighttime, 0, null from turv_day where begtime is null or endtime is null and id_division = 4 and dt >= :dt1$d and dt <= :dt2$d order by id_worker',
+  j:=-1; st:='';
+  for i:=0 to High(vt) do begin
+//vt[i][2] := null;vt[i][3] := null; //!!! test
+      if vt[i][1] <> j then begin
+        //если айди работника изменился, то найдем фио этого работника
+        st:='';
+        for k:=0 to High(vw) do begin
+          if vw[k][0] = vt[i][1] then begin
+            st:=vw[k][1];
+            j:=vw[k][0];
+            Break;
+          end;
+        end;
+      end;
+      vt[i][8]:=st;
+    //для текущего дня не проставляем
+    //надо проставлять, тк бывает требууются данные ужде за предыдущий или текущий день!!!
+    //if vt[i][0] = Date then Continue;
+    //если нет еще данных по времени прихода или ухода
+    if (vt[i][2] = null)or(vt[i][3] = null) then begin
+      vtp:=[];
+      //время прихода
+      if (vt[i][2] = null) then begin
+        m:=0;
+        //найдем время по данным парсек
+        for k:=0 to High(vpb) do begin
+          if (vpb[k][2] = st)and(Trunc(StrToDateTime(vpb[k][0])) = StrToDate(vt[i][0])) then begin
+            inc(m);
+            if m = 1 then begin
+              //это первое найденное время, его сохраним для турв
+              vt[i][2]:=HourOf(StrToDateTime(vpb[k][0]))+(MinuteOf(StrToDateTime(vpb[k][0])) / 100);
+              vt[i][7]:=1;
+            end;
+            //времен больше чем одно, нас интересует только этот факт, выйдем
+            //if m > 1 then Break;
+            vtp:=vtp + [Copy(vpb[k][0], 12, 5) + 'П'];
+          end;
+        end;
+        //не найдено времени, и это не текущий день, проставим для времени -1
+        if (m = 0)and(vt[i][0] < Date) then begin
+          vt[i][2]:=-1;
+          vt[i][7]:=1;
+        end;
+        //найдено времен больше 1, и это не тукущий день, проставим зеттиме, чтобы была подсветка
+        if (m > 1)and(vt[i][0] < Date) then begin
+          vt[i][9]:=1;    //settime3
+          vt[i][7]:=1;    //признак изменения ячейки
+        end;
+      end;
+      if (vt[i][3] = null) then begin
+        m:=0;
+        for k:=0 to High(vpe) do begin
+          if (vpe[k][2] = st)and(Trunc(StrToDateTime(vpe[k][0])) = StrToDate(vt[i][0])) then begin
+            inc(m);
+            if m = 1 then begin
+              vt[i][3]:=HourOf(StrToDateTime(vpe[k][0]))+(MinuteOf(StrToDateTime(vpe[k][0])) / 100);
+              vt[i][7]:=1;
+            end;
+//            if m > 1 then Break;
+            vtp:=vtp + [Copy(vpb[k][0], 12, 5) + 'У'];
+          end;
+        end;
+        if (m = 0)and(vt[i][0] < Date) then begin
+          vt[i][3]:=-1;
+          vt[i][7]:=1;
+        end;
+        if (m > 1)and(vt[i][0] < Date) then begin
+          vt[i][9]:=1;
+          vt[i][7]:=1;
+        end;
+      end;
+{     if Length(vtp) > 0 then begin
+        A.VarDynArraySort(vtp, True);
+        vt[i][12]:=A.Implode(vtp, #13#10);
+        vt[i][7]:=1;
+      end;}
+    end;
+  end;
+
+*)
+end;
+
 
 
 
@@ -1900,10 +2257,110 @@ begin
     AId := Id;
   for i := 0 to 3 do begin
     IdH := Q.QSelectOneRow('select id from w_schedule_hours where id_schedule = :id$i and dt = :dt$d', [AId, va11[i]])[0];
-    Id := Q.QIUD(S.IIf(IdH = null, 'i', 'u'), 'w_schedule_hours', '', 'id$i;id_schedule$i;dt$d;hours$f', [IdH, AId, va11[i], va13[2 + i]]);
+    Id := Q.QIUD(S.IIf(IdH = null, 'i', 'u'), 'w_schedule_hours', '', 'id$i;id_schedule$i;dt$d;hours$f', [IdH, AId, va11[i], va13[1 + i]]);
   end;
   Result := True;
 end;
+
+function TTurv.ExecureJPersBonusDialog(AOwner: TComponent; AId: Variant; AIdEmpl: Variant; AMode: TDialogType): Boolean;
+//диалог ввода персональной надбавки для работника
+//!!! нужно обрабатывать сообщения об ошибках ORA-20000/20999, это генерация raise_application_error
+var
+  i, j: Integer;
+  va11, va12, va13: TVarDynArray;
+  va2: TVarDynArray2;
+  Id, IdH: Variant;
+  res: Integer;
+begin
+  Result := False;
+  try
+    TFrmBasicInput.ShowDialogDB3(AOwner, '', [dbioModal, dbioStatusBar], AMode, AId, 'w_employee_pers_bonus', 'Персональная надбавка', 600, 70, [
+      ['id_pers_bonus$i', cntComboLK, 'Вид надбавки','1:400'],
+      ['dt_beg$d', cntDEdit, 'C',':'],
+      ['dt_end$d', cntDEdit, 'По',':']],
+      ['select name, id from w_pers_bonus where active = 1 order by name'],
+      [['caption dlgedit']]
+    );
+    if AMode = fAdd then
+      res := Q.QExecSql('update w_employee_pers_bonus set id_employee = :ide$i where id_employee is null', [AIdEmpl]);
+  except
+    Q.QExecSql('delete from w_employee_pers_bonus where id_employee is null', [AIdEmpl], False);
+    Result := res <> -1;
+    MyWarningMessage('Диапазон дат перекрывается с существующей записью для данного работника и вида надбавки.'#13#10'Данные не изменены!');
+    Exit;
+  end;
+  Q.QExecSql('delete from w_employee_pers_bonus where id_employee is null', [AIdEmpl]);
+  Result := AMode <> fView;
+end;
+
+function TTurv.CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
+var
+  va1, va2, va3: TVarDynArray;
+  i, j: Integer;
+  LDate: TDateTime;
+begin
+  Result := False;
+  LDate := Date;
+  if User.IsDeveloper then begin
+    if TFrmBasicInput.ShowDialog(AOwner, '', [], fEdit, '~Дата для создаваемых ТУРВ', 370, 80,
+      [[cntDtEdit, 'Дата', '*:*']], [Date], va3, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
+    ) < 0 then Exit;
+    LDate := va3[0];
+  end;
+  if MyQuestionMessage('Создать все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' ?') <> mrYes then
+    Exit;
+  va1 := Q.QSelectOneRow('select id_departament from w_employee_properties where dt_beg <= :dte$d and (dt_end is null or dt_end >= :dtb$d)', [Turv.GetTurvEndDate(LDate), Turv.GetTurvBegDate(LDate)]);
+  va2 := Q.QSelectOneRow('select id_departament from w_turv_period where dt1 = :dt$d', [Turv.GetTurvBegDate(LDate)]);
+  j := 0;
+  for i := 0 to High(va1) do
+    if not A.InArray(va1[i], va2) then begin
+      Q.QExecSql('insert into w_turv_period (id_departament, dt1, dt2, is_finalized, status) values (:idd$i, :dtb$d, :dte$d, 0, 0)', [va1[i], Turv.GetTurvBegDate(LDate), Turv.GetTurvEndDate(LDate)]);
+      inc(j);
+    end;
+  if j = 0 then
+    MyInfoMessage('Ни один ТУРВ не создан!')
+  else begin
+    MyInfoMessage('Создан ' + IntToStr(j) + ' ТУРВ.');
+    Result := True;
+  end;
+end;
+
+
+
+function TTurv.ExecureRefPersBonusDialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
+//диалог ввода для справочника первоняльных надбавок
+//данные надбавки и суммы за текущий и следующий месяц
+var
+  i, j: Integer;
+  va11, va12, va13: TVarDynArray;
+  va2: TVarDynArray2;
+  Id, IdH: Variant;
+begin
+  Result := False;
+  va11 := [{EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1), }EncodeDate(YearOf(IncMonth(Date, 0)), MonthOf(IncMonth(Date, 0)), 1), EncodeDate(YearOf(IncMonth(Date, +1)), MonthOf(IncMonth(Date, +1)), 1) ];
+//  va11 := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
+  va12 := Q.QSelectOneRow('select name, sum2, sum3, comm, active from v_w_pers_bonus where id = :id$i', [AId]);
+  if va12[0] = null then
+    va12 := ['', null, null, null, 1];
+  for i := 0 to 1 do
+    va2 := va2 + [[cntNEdit, 'С ' + DateToStr(va11[i]), '1:100000:2']];
+    if TFrmBasicInput.ShowDialog(AOwner, '', [], AMode, 'Надбавка', 370, 80,
+      [[cntEdit, 'Наименование', '1:400::T']] + va2 +  [[cntEdit, 'Комментарий', '0:4000::T'], [cntCheckX, 'Используется', '']],
+      va12,
+      va13, [['Добавьте или отредактируйте запись для вида персональной надбавки.'#13#10'Задайте суммы надбаки для текущего и следующего месяца.']], nil
+    ) < 0 then Exit;
+  Id := Q.QIUD(Q.QFModeToIUD(AMode), 'w_pers_bonus', '', 'id$i;name$s;comm;active$i', [AId, va13[0], va13[3], va13[4]]);
+  if Id = -1 then
+    Exit;
+  if AMode = fAdd then
+    AId := Id;
+  for i := 0 to 1 do begin
+    Q.QExecSql('delete from w_pers_bonus_sum where id_pers_bonus = :id$i and dt = :dt$d', [AId, va11[i]]);
+    Q.QExecSql('insert into w_pers_bonus_sum (id_pers_bonus, dt, sum) values (:id$i, :dt$d, :sum$f)', [AId, va11[i], va13[1 + i]]);
+  end;
+  Result := True;
+end;
+
 
 
 
@@ -1993,6 +2450,443 @@ begin
   Q.QExecSql('update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE(''15.11.2027'', ''DD.MM.YYYY'')))', []);
   Q.QCommitOrRollback(True);
 end;
+
+
+function TTurv.LoadParsecDataNew: Boolean;
+//переделан запрос данных из парсека, по новым кодам данных, и с использованием объекта БД myDBParsec
+var
+  vt, vr, vp, vpb, vpe, vw, vdiv, vpops: TVarDynArray2;
+  vtp: TVarDynArray;
+  i, j, k, m, idd: Integer;
+  st, st1: string;
+  dt1, dt2, dt: TDateTime;
+  f1, f2: Extended;
+  v: Variant;
+  t1, t2, t3, t4, tp, tn, tob1, tob2: extended;
+  id_vyh, id_otp: Variant;
+  b, isoffice: Boolean;
+  setprev: Boolean;
+
+  f: TIniFile;
+
+  EmplProps: TNamedArr;
+begin
+  //первая дата - за 3 дня до начала текущего периода ТУРВ (можно бы за 3 дня до последнего успешного выполнения этой задачи)
+  dt1:=IncDay(GetTurvBegDate(Date), -3);
+  //вторая дата - конец текущих суток
+  dt2:=IncMilliSecond(IncDay(Date, 1), -1);
+  vdiv:=Q.QLoadToVarDynArray2('select id from w_departaments where is_office = 1', []);
+  id_vyh:=Q.QSelectOneRow('select id from w_turvcodes where code = ''В''', [])[0];
+  if id_vyh = null then id_vyh:=-1;
+  id_otp:=Q.QSelectOneRow('select id from w_turvcodes where code = ''ОТ''', [])[0];
+  if id_otp = null then id_otp:=-1;
+
+  Q.QLoadFromQuery(
+    'select id, dt_beg, dt_end, id_employee, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
+    'name, name as employee, departament, job, schedulecode ' +
+    'from v_w_employee_properties ' +
+    'where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) ' +
+    //'and id_departament = :id_dep$i ' +
+    'order by id_employee, dt_beg, job',
+    [dt2, dt1],
+    EmplProps
+  );
+
+  for i := 0 to EmplProps.Count - 1 do begin
+
+  end;
+
+  Exit;
+
+
+
+  //бухгалтерия=4, кпп=27, станки = 16
+  vt:=Q.QLoadToVarDynArray2(
+    'select dt, id_worker, begtime, endtime, id_turvcode2, worktime2, nighttime, 0, null, settime3, id_division, 0, null from turv_day '+
+    'where '+
+//    '(begtime is null or endtime is null) and '+
+    'id_division >= 0 and dt >= :dt1$d and dt <= :dt2$d '+
+    'order by id_worker, dt',
+    [dt1, Date]
+  );
+  vw:=Q.QLoadToVarDynArray2('select id, workername from v_ref_workers order by id', []);
+  //массивы данных по входу и уходу работников
+  vpb:=[];
+  vpe:=[];
+
+  {
+  Такие коды транзакций в БД Парсека
+
+  на проходной ПЩ:
+  590152 Фактический вход
+  590153 Фактический выход
+
+  в остальных случаях
+  590144 Нормальный вход по ключу
+  590145 Нормальный выход по ключу
+  }
+
+  //айди операций входа и выхода (есть по два события)
+  vpops := [[590144, 590152], [590145, 590153]];
+
+  //пытаемся подключиться к парсеку, выходим если не удалось (без диалога ошибки)
+  //!!!на 2025-02-27 выдается окно ошибки, через минуту закроется
+  if not myDBParsec.Connect(False) then Exit;;
+
+  //два запроса к БД, по событиям входа и выхода
+  //время в БД UTC, приводим к Московскому!
+  for i:=0 to 1 do begin
+    vp:=[];
+    vp := myDBParsec.QLoadToVarDynArray2(
+    'select '+
+    'format(dateadd(hour, 3, t.tran_date), ''dd.MM.yyyy HH:mm'') as dt, '+
+    'case '+
+    'when tt.trantype_desc = ''Нормальный вход по ключу'' then ''Приход'' '+
+    'when tt.trantype_desc = ''Фактический вход'' then ''Приход'' '+
+    'when tt.trantype_desc = ''Нормальный выход по ключу'' then ''Уход'' '+
+    'when tt.trantype_desc = ''Фактический выход'' then ''Уход'' '+
+    'end as event, '+
+    'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) as name '+
+    'from '+
+    '  parsec3trans.dbo.translog as t '+
+    '  left outer join '+
+    '  parsec3.dbo.person as p '+
+    '  on t.usr_id = p.pers_id '+
+    '  left outer join '+
+    '  parsec3.dbo.trantypes_desc tt '+
+    '  on t.trantype_id = tt.trantype_id '+
+    'where '+
+    '  ((t.trantype_id = :trantype1$i)or '+
+    '  (t.trantype_id = :trantype2$i)) '+
+    '  and '+
+    '  (tt.locale = ''RU'') '+
+    '  and '+
+    '  t.tran_date >= :dt1$d ' +
+    '  and '+
+    '  t.tran_date <= :dt2$d ' +
+    'order by tran_date asc '
+    ,
+    [vpops[i][0], vpops[i][1], IncHour(dt1, -3), IncHour(dt2, -3)]
+    );
+    if i=0 then vpb:=copy(vp) else vpe:=copy(vp)
+  end;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //найдем времена прихода и ухода работников по данным парсек
+//    'select dt, id_worker, begtime, endtime, id_turvcode3, worktime3, nighttime, 0, null from turv_day where begtime is null or endtime is null and id_division = 4 and dt >= :dt1$d and dt <= :dt2$d order by id_worker',
+  j:=-1; st:='';
+  for i:=0 to High(vt) do begin
+//vt[i][2] := null;vt[i][3] := null; //!!! test
+      if vt[i][1] <> j then begin
+        //если айди работника изменился, то найдем фио этого работника
+        st:='';
+        for k:=0 to High(vw) do begin
+          if vw[k][0] = vt[i][1] then begin
+            st:=vw[k][1];
+            j:=vw[k][0];
+            Break;
+          end;
+        end;
+      end;
+      vt[i][8]:=st;
+    //для текущего дня не проставляем
+    //надо проставлять, тк бывает требууются данные ужде за предыдущий или текущий день!!!
+    //if vt[i][0] = Date then Continue;
+    //если нет еще данных по времени прихода или ухода
+    if (vt[i][2] = null)or(vt[i][3] = null) then begin
+      vtp:=[];
+      //время прихода
+      if (vt[i][2] = null) then begin
+        m:=0;
+        //найдем время по данным парсек
+        for k:=0 to High(vpb) do begin
+          if (vpb[k][2] = st)and(Trunc(StrToDateTime(vpb[k][0])) = StrToDate(vt[i][0])) then begin
+            inc(m);
+            if m = 1 then begin
+              //это первое найденное время, его сохраним для турв
+              vt[i][2]:=HourOf(StrToDateTime(vpb[k][0]))+(MinuteOf(StrToDateTime(vpb[k][0])) / 100);
+              vt[i][7]:=1;
+            end;
+            //времен больше чем одно, нас интересует только этот факт, выйдем
+            //if m > 1 then Break;
+            vtp:=vtp + [Copy(vpb[k][0], 12, 5) + 'П'];
+          end;
+        end;
+        //не найдено времени, и это не текущий день, проставим для времени -1
+        if (m = 0)and(vt[i][0] < Date) then begin
+          vt[i][2]:=-1;
+          vt[i][7]:=1;
+        end;
+        //найдено времен больше 1, и это не тукущий день, проставим зеттиме, чтобы была подсветка
+        if (m > 1)and(vt[i][0] < Date) then begin
+          vt[i][9]:=1;    //settime3
+          vt[i][7]:=1;    //признак изменения ячейки
+        end;
+      end;
+      if (vt[i][3] = null) then begin
+        m:=0;
+        for k:=0 to High(vpe) do begin
+          if (vpe[k][2] = st)and(Trunc(StrToDateTime(vpe[k][0])) = StrToDate(vt[i][0])) then begin
+            inc(m);
+            if m = 1 then begin
+              vt[i][3]:=HourOf(StrToDateTime(vpe[k][0]))+(MinuteOf(StrToDateTime(vpe[k][0])) / 100);
+              vt[i][7]:=1;
+            end;
+//            if m > 1 then Break;
+            vtp:=vtp + [Copy(vpb[k][0], 12, 5) + 'У'];
+          end;
+        end;
+        if (m = 0)and(vt[i][0] < Date) then begin
+          vt[i][3]:=-1;
+          vt[i][7]:=1;
+        end;
+        if (m > 1)and(vt[i][0] < Date) then begin
+          vt[i][9]:=1;
+          vt[i][7]:=1;
+        end;
+      end;
+{     if Length(vtp) > 0 then begin
+        A.VarDynArraySort(vtp, True);
+        vt[i][12]:=A.Implode(vtp, #13#10);
+        vt[i][7]:=1;
+      end;}
+    end;
+  end;
+
+
+  SetLength(vp, 0);
+  for i:=0 to High(vt) do begin
+    if vt[i][7] = 1 then begin
+      SetLength(vp, Length(vp) + 1);
+      SetLength(vp[Length(vp)-1], High(vt[i]) + 1);
+      for k:=0 to High(vt[i]) do
+        vp[Length(vp)-1][k]:=vt[i][k];
+    end;
+  end;
+//  Sys.SaveArray2ToFile(vp, 'r:\1');
+//  exit;
+
+
+
+  //время прихода и ухода в БД в часах и минутах (они в дробной части)
+  //время работы в бд в часах и десятых часа!!!
+  //времена t_xx в часах ()и десятых часа!
+  //время начала рабочего дня, из настроек модуля, там оно в часах и минутах - целые это часы, а дробная часть минута, напр 8.30!
+//  t3:=trunc(S.VarToFloat(S.IIf(IsOffice, 0, Module.W_Dinner_Time_Beg_2))) + frac(S.VarToFloat(S.IIf(IsOffice, 0, Module.W_Dinner_Time_Beg_Diff_2)))/60*100;
+  t3:=trunc(Module.GetCfgVar(mycfgWtime_beg_2)) + frac(Module.GetCfgVar(mycfgWtime_beg_2))/60*100;
+  //время, если раньше него началась работа, подсветим  ..то учитываем весь период и подсветим
+  t4:=Max(t3 - S.VarToFloat(Module.GetCfgVar(mycfgWtime_beg_diff_2)), 0);
+//    'select dt, id_worker, begtime, endtime, id_turvcode3, worktime3, nighttime, 0, null, settime3, id_division from turv_day where begtime is null or endtime is null and id_division = 4 and dt >= :dt1$d and dt <= :dt2$d order by id_worker',
+  //время окончания обеда по офису, 12ч + время перерыва, в часах и десятых часа
+  tob1:=12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1));
+  //время окончания обеда по цеху, 12ч + время перерыва, в часах и десятых часа
+  tob1:=12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2));
+  idd:=-1;
+  for i:=0 to High(vt) do begin
+    //обрабатываем только те ячейки, где нет ни кода ни времени парсек или же код = В
+    //если ранее было изменено время, или если это не последняя в выгрузке, и следующая запись на того же работника, и при этом это следующий день, и при этом было изменено время
+    b:=(vt[i][7] = 1) or ((i < High(vt)) and (vt[i][1] = vt[i+1][1]) and
+      (DaysBetween(vt[i+1][0], vt[i][0]) = 1) and (vt[i+1][7] = 1));
+    //если время и код по парсеку еще не заданы, или же задан выходной но при этом в этот или следующий день были изменения времени прихода/ухода
+    if ((vt[i][4] = null)and(vt[i][5] = null))or(((vt[i][4] = id_vyh){or(vt[i][4] = id_otp)}) and b) then begin  //2025-12 убран id_otp
+      //если сменился айди подразделения, узнаем офис ли это
+      if vt[i][10]<> idd then begin
+        idd:=vt[i][10];
+        isoffice:=A.PosInArray(idd, vdiv, 0) >= 0;
+      end;
+      //если хотя бы одно время из парсек не получено, то не считаем по данной ячеке
+      //это значит что ЕЩЕ не получено, если прото не будет времени за данный день но оно уже опрашивалось, то будет -1 в данном времени!!!
+      if (vt[i][2] = null)or(vt[i][3] = null) then continue;
+      //здесь ранее внесенные в базу, в часах и минутах
+      //переведем в часы и десятые часа
+      t1:=-1;
+      if vt[i][2]<>null then t1:=trunc(vt[i][2]) + frac(vt[i][2])/60*100;
+      t2:=-1;
+      if vt[i][3]<>null then t2:=trunc(vt[i][3]) + frac(vt[i][3])/60*100;
+      //обработка для офиса, попроще
+      if isoffice then begin
+        if (t1 = -1)and(t2 = -1) then begin
+          //нет ни прихода ни ухода - поставим выходной
+          //если не было никакого кода, тк может быть еще отпуск
+          if vt[i][4] = null then vt[i][4]:=id_vyh;
+          vt[i][7]:=1;
+        end
+        else if (t1 = -1)or(t2 = -1) then begin
+          //нет одного времени - поставим 8.00 и подсветим
+          vt[i][4]:=null;
+          vt[i][5]:=8;
+          vt[i][9]:=1;
+          vt[i][7]:=1;
+        end
+        else if (t1 > -1)and(t2 > -1) then begin
+          //время начала рабочего дня возьмем максимальное от фактического или 8:00
+          t1:=Max(t1, t3);
+          //вычтем обед, если время ухода ранее окончания обеда
+          tp:=abs(t2-t1);
+//tp:=tp - S.IIf(t2 < tob1, 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1)));
+          tp:=Max(0.01, tp - S.IIf(t2 < tob1, 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1))));
+          //округляем
+          if frac(tp) <= 0.33
+            then tp:=trunc(tp)
+            else if frac(tp) <= 0.83
+            then tp:=trunc(tp) + 0.5
+              else tp:=trunc(tp) + 1;
+          vt[i][4]:=null;
+          vt[i][5]:=tp;
+          vt[i][7]:=1;
+        end;
+      end
+      //для цеха
+      else begin
+        tp:=0;
+        //предыдущая запись это прошлый день того же работника, и это ночная или суточная смена, пометим, так как это используется для вычисления времени
+        if (i > 0) and (vt[i][1] = vt[i-1][1]) and (DaysBetween(vt[i-1][0], vt[i][0]) = 1) and ((vt[i-1][6] <> null) or (vt[i-1][5] >=20))
+          then vt[i-1][11] := 1;
+        //setprev:=False;
+        if (t1 = -1)and(t2 = -1) then begin
+          //нет ни прихода ни ухода - поставим выходной, или оставим код, там мог быть отпуск
+          if vt[i][4] = null then vt[i][4]:=id_vyh;
+          vt[i][7]:=1;
+        end
+        //есть приход, но нет ухода с работы, или уход раньше прихоода
+        //(это будет если каждые сутки работает в ночную смену)
+        else if (t1 > -1)and((t2 = -1)or(t2 < t1)) then begin
+          //если это не последняя в выгрузке, и следующая запись на того же работника, и при этом это следующий день
+          if (i < High(vt)) and (vt[i][1] = vt[i+1][1]) and (DaysBetween(vt[i+1][0], vt[i][0]) = 1) then begin
+            if (vt[i+1][3]<>null)and(vt[i+1][3]<>-1) then begin
+              t2:=trunc(vt[i+1][3]) + frac(vt[i+1][3])/60*100;
+              t2:=t2 + 24;
+              //суточная смена, обед не учитываем, не ставим больше 24 часов
+              if (t2 - t1 >= 20)and(t2 - t1 <= 26) then begin
+                tp:=Min(24, t2 - t1);
+                vt[i][11]:=1;
+              end
+              //ночная смена, обед учитываем
+              else if (t2 - t1 <= 14) then begin
+                tp:=max(0.01, t2 - t1 - S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2)));
+                t1:=max(t1, 22);
+                //посчитаем время работы ночью (с 22ч до 6ч), обед в нее не ставится
+                tn:=max(t2 - t1, 0);
+                //не может быть больше продолжительности всей смены
+                tn:=min(tn, tp);
+                //округлим
+                if frac(tn) <= 0.33
+                  then tn:=trunc(tn)
+                  else if frac(tn) <= 0.83
+                  then tn:=trunc(tn) + 0.5
+                    else tn:=trunc(tn) + 1;
+                vt[i][6]:=tn;
+                vt[i][11]:=1;
+              end
+              //не вложились по временам - поставим 8 с выделением
+              else tp:=-8;
+            end
+            else if (vt[i+1][3] = -1) then begin
+              //на следующий день ухода не было
+              tp:=-8;
+            end;
+          end  //енд тот же работник завтра
+          else tp:= -8;
+        end  //енд есть приход а уход раньше или нет ухода
+        else if (t1 = -1)and(t2 > -1) then begin
+          if not((i > 0)and(vt[i-1][11] = 1))
+            then tp:=-8
+            else begin
+              vt[i][4]:=id_vyh;
+              vt[i][7]:=1;
+            end;
+        end
+        else if (t1 > -1)and(t2 > -1) then begin
+          //есть и приход и уход
+          //время начала рабочего дня возьмем максимальное от фактического или 8:00
+          t1:=Max(t1, t3);
+          //вычтем обед
+          tp:=abs(t2-t1);
+          tp:=Max(0.01, tp - S.IIf(t2 < tob2, 0, S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2))));
+        end;
+        if tp > 0 then begin
+          if frac(tp) <= 0.33
+            then tp:=trunc(tp)
+            else if frac(tp) <= 0.83
+            then tp:=trunc(tp) + 0.5
+              else tp:=trunc(tp) + 1;
+          vt[i][4]:=null;
+          vt[i][5]:=tp;
+          vt[i][7]:=1;
+        end
+        else if tp = -8 then begin
+          vt[i][4]:=null;
+          vt[i][5]:=8;
+          vt[i][9]:=1;
+          vt[i][7]:=1;
+        end;
+      end;  //енд цех
+    end;
+  end;
+//ночный и суточный только цеха
+//есть сегодня приход, завтра уход
+//смены по суткам и ночные только по цеху
+//если разница 20-26ч то суточная смена 24ч или меньше, обед не вычитаем (меня за первый день)
+//если разница до 14 часов, то смена, ночью у 22 до 6, вычитаем обед
+//если не вписывается вэти промежутки то ставим 8ч
+//с 8утра (макс 8ч - по парсеку) все, независимо от схемы  Не будет
+//округление рабочего времени, и ночной смены до 0.5ч
+//подсвечивать несколько входов или выходов, или отсутствие входа и выхода
+
+  //создадим массив, где только измененные данные
+  SetLength(vp, 0);
+  for i:=0 to High(vt) do begin
+    if vt[i][7] = 1 then begin
+      SetLength(vp, Length(vp) + 1);
+      SetLength(vp[Length(vp)-1], High(vt[i]) + 1);
+      for k:=0 to High(vt[i]) do
+        vp[Length(vp)-1][k]:=vt[i][k];
+    end;
+  end;
+
+//  Sys.SaveArray2ToFile(vp, 'r:\111');
+//exit;
+
+  //запишем в бд
+  Q.QBeginTrans;
+  b:=False;
+  try
+  for i:=0 to High(vp) do begin
+//    'select dt, id_worker, begtime, endtime, id_turvcode3, worktime3, nighttime, 0, null, settime3, id_division, 0 from turv_day '+
+    Q.QExecSql(
+    'update turv_day set begtime = :begtime$f, endtime = :endtime$f, '+
+    'id_turvcode2 = :id_turvcode2$i, worktime2 = :worktime2$f, nighttime = :nighttime$f, settime3 = :settime3$i '+
+    'where id_worker = :id_worker$i and dt = :dt$d',
+    [
+      vp[i][2], vp[i][3], vp[i][4], vp[i][5], vp[i][6], vp[i][9],
+      vp[i][1], vp[i][0]
+    ]
+    );
+  end;
+  b:=True;
+  finally
+  Q.QCommitOrRollback(b);
+  end;
+end;
+
+
+
+
+
 
 begin
   Turv:=TTurv.Create;

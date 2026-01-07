@@ -603,7 +603,7 @@ begin
     Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_Divisions_Ch));
   end
   else if FormDoc = myfrm_R_PersBonus then begin
-    Caption := 'Персональные надбавки';
+    Caption := 'Виды персональных надбавок';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['name','Наименование','150'],
@@ -620,6 +620,26 @@ begin
     Frg1.Opt.SetColFeature('sum2', 'c=Сумма|' + DateToStr(va[1]));
     Frg1.Opt.SetColFeature('sum3', 'c=Сумма|' + DateToStr(va[2]));
     Frg1.Opt.SetButtons(1, 'rveads', User.Role(rW_R_PersBonus_Ch));
+    Frg1.InfoArray:=[[Caption + #13#10#13#10 +
+      '.'#13#10 +
+      ''#13#10
+    ]];
+  end
+  else if FormDoc = myfrm_J_PersBonus then begin
+    Caption := 'Персональные надбавки';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_empl_bonus$i','_id_empl_bonus','40'],
+      ['id_employee$i','_id_employee','40'],
+      ['employee','Работник|ФИО','200'],
+      ['personnel_number','!Табельный номер','90'],
+      ['bonus_name','Наименование','200'],
+      ['dt_beg','Действует|С','80'],
+      ['dt_end','!По','80'],
+      ['comm','Комментарий','300;h']
+    ]);
+    Frg1.Opt.SetTable('v_w_employee_pers_bonus');
+    Frg1.Opt.SetButtons(1, 'rveads', User.Role(rW_J_PersBonus_Ch));
     Frg1.InfoArray:=[[Caption + #13#10#13#10 +
       '.'#13#10 +
       ''#13#10
@@ -2072,9 +2092,15 @@ begin
     if FormDoc = myfrm_R_Divisions then
       Wh.ExecDialog(myfrm_Dlg_R_Divisions, Self, [], fMode, Fr.ID, null);}
     if FormDoc = myfrm_R_Work_Chedules then begin
-      //if Turv.ExecureWorkCheduledialog(Self, Fr.ID, fMode) then
-        //Fr.RefreshGrid;
       Wh.ExecDialog(myfrm_Dlg_Work_Schedule, Self, [], fMode, Fr.ID, null);
+    end;
+    if FormDoc = myfrm_R_PersBonus then begin
+      if Turv.ExecureRefPersBonusDialog(Self, Fr.ID, fMode) then
+        Fr.RefreshGrid;
+    end;
+    if FormDoc = myfrm_J_PersBonus then begin
+      if Turv.ExecureJPersBonusDialog(Self, Fr.GetValue('id_empl_bonus'), Fr.GetValue('id_employee'), fMode) then
+        Fr.RefreshGrid;
     end;
     if FormDoc = myfrm_R_Candidates_Ad_SELCH then
       Wh.ExecDialog(myfrm_Dlg_R_Candidates_Ad, Self, [], fMode, Fr.ID, null);

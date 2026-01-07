@@ -95,11 +95,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>11354</VerInfo_Build>
+        <VerInfo_Build>11401</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.11354;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2025.12.30 18:09:09;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.11401;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.01.06 23:43:20;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>

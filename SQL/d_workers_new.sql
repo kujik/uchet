@@ -350,9 +350,93 @@ from
   w_pers_bonus_sum s3
 where  
   s1.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, -1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
-  and s2.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, 0), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
-  and s3.id_pers_bonus(+) = b.id and s1.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  and s2.id_pers_bonus(+) = b.id and s2.dt(+) = to_date(to_char(add_months(sysdate, 0), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
+  and s3.id_pers_bonus(+) = b.id and s3.dt(+) = to_date(to_char(add_months(sysdate, 1), 'yyyy-mm') || '-01', 'yyyy-mm-dd')
 ;  
+
+select * from v_w_pers_bonus;
+
+create table w_employee_pers_bonus(
+  id number(11),
+  id_employee number(11),
+  id_pers_bonus number(11),
+  dt_beg date,                     
+  dt_end date,                     
+  constraint pk_w_employee_pers_bonus primary key (id),
+  constraint fk_w_employee_pers_bonus_b foreign key (id_pers_bonus) references w_pers_bonus(id),
+  constraint fk_w_employee_pers_bonus_e foreign key (id_employee) references w_employees(id)
+);
+
+create sequence sq_w_employee_pers_bonus start with 1 nocache;
+
+create or replace trigger trg_w_employee_pers_bonus_bi_r before insert on w_employee_pers_bonus for each row
+begin
+  select nvl(:new.id, sq_w_employee_pers_bonus.nextval) into :new.id from dual;
+end;
+/
+  
+create or replace function F_Check_w_employee_pers_bonus(
+  p_id            in number,
+  p_id_employee   in number,
+  p_id_pers_bonus in number,
+  p_dt_beg        in date,
+  p_dt_end        in date
+) return boolean
+is
+  pragma autonomous_transaction;  --так как в триггере for each row
+  l_count pls_integer;
+  c_max_date constant date := date '9999-12-31';
+begin
+  if (p_dt_beg is null) or (nvl(p_dt_end, c_max_date) < p_dt_beg) then
+    return false;
+  end if;
+  select count(*)
+  into l_count
+  from w_employee_pers_bonus
+  where id_employee = p_id_employee
+    and id_pers_bonus = p_id_pers_bonus
+    and id != nvl(p_id, -1)  -- исключаем саму себя при update
+    and ( 
+            (p_dt_end is null and p_dt_beg <= dt_end) or           -- новая запись бессрочная: старая не должна начинаться до или в p_dt_beg
+            (p_dt_end is not null and dt_end is null and p_dt_end >= dt_beg) or  --новая с датой окончания, старая бессрочная
+            (p_dt_end is null and p_dt_end is null) or                           --обе бессрочные 
+            (p_dt_end is not null and dt_end is not null and 
+             p_dt_beg <= dt_end and dt_beg <= p_dt_end)            -- обе записи срочные: стандартное пересечение
+    );      
+  return (l_count = 0);
+end;
+/
+
+create or replace trigger trg_w_employee_pers_b_biu_r before insert or update on w_employee_pers_bonus for each row
+begin
+  if not F_Check_w_employee_pers_bonus(:new.id, :new.id_employee, :new.id_pers_bonus, :new.dt_beg, :new.dt_end) then
+    raise_application_error(-20002, 'Диапазон дат перекрывается с существующей записью для данного работника и типа бонуса.');
+  end if;
+end;
+/
+
+create or replace view v_w_employee_pers_bonus as
+select 
+  e.id || '-' || b.id as id, 
+  t.name as bonus_name,
+  t.comm,
+  b.id as id_empl_bonus,
+  b.dt_beg,
+  b.dt_end,
+  e.name as employee,
+  e.personnel_number,
+  e.birthday,
+  e.id as id_employee
+from  
+  w_pers_bonus t,
+  w_employee_pers_bonus b,
+  v_w_employees e
+where
+  b.id_pers_bonus = t.id (+)
+  and b.id_employee (+) = e.id
+  and e.is_working_now = 'работает'
+;    
+
 
 --------------------------------------------------------------------------------
 
@@ -444,6 +528,7 @@ last_any_event as (
         id_employee,
         id_departament,
         id_job,
+        personnel_number,
         row_number() over (partition by id_employee order by id desc) as rn
     from w_employee_properties
     where is_terminated <> 1
@@ -483,6 +568,7 @@ select
   lt.dt_beg as dt_last_transfer,
   d.name as departament,
   j.name as job,
+  a.personnel_number,
   e.comm
 from w_employees e
 left join last_hired h on e.id = h.id_employee and h.rn = 1
@@ -576,6 +662,7 @@ select
   p.*,
   d.name,
   d.name as departament,
+  d.is_office,
   case when d.is_office = 1 then 'офис' else 'цех' end as isoffice,
   case when p.is_finalized = 1 then 'закрыт' else '' end as finalized,
   getusernames(d.ids_editusers) as editusernames,
@@ -587,6 +674,7 @@ from
 where
   d.id = p.id_departament
 ;   
+
 
 --!
 --delete from w_turv_period;

@@ -99,6 +99,7 @@ begin
   FTurv.SortAndGroup(['job','employee'], ['job']);
 //  FTurv.SortAndGroup(['job'], []);
 //  FTurv.SortAndGroup([], []);
+  FTurv.LoadFromParsec;
   FTurv.LoadSchedules;
 
 
@@ -843,10 +844,14 @@ begin
     Exit;
   end
   else begin
-    v := FTurv.R(Frg1.RecNo - 1, Day);
-    if v = -1 then begin
+    Row := FTurv.R(Frg1.RecNo - 1, Day);
+    if Row = -1 then begin
       Params.Background := clmyGray;
       Params.ReadOnly := True;
+    end
+    else if (Params.Row = 2) and FRgsEdit2 then begin
+       if FTurv.Cells[Row].G(Day, 'settime3') = 1 then
+         Params.Font.Color := clBlue;
     end;
   end;
 end;
