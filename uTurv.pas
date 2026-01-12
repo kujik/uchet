@@ -89,7 +89,7 @@ type
 
   TTurvDataSchedules = array of record
     Title: TNamedArr;
-    Hours: TVarDynArray;
+    Hours: TVarDynArray2;
   end;
 
   TTurvData = record
@@ -242,7 +242,8 @@ var
 begin
   Q.QLoadFromQuery(
     'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
-    'comm1, comm2, comm3, begtime, endtime, settime3, nighttime ' +
+    'comm1, comm2, comm3, begtime, endtime, settime3, nighttime, ' +
+    'null as scheduled_hours, null as changed ' +
     'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
     'order by dt',
      [FDtBeg, FDtEnd],
@@ -277,10 +278,11 @@ begin
     //загружаем график (дата на начало месяца!)
     Q.QLoadFromQuery('select id_schedule, hours, hours1, hours2, approved from w_schedule_periods where id_schedule = :id$i and dt = :dt$d', [va[i], FDtMonth], FSchedules[i].Title);
     b := FSchedules[i].Title.Count > 0;
+    FSchedules[i].Hours := [];
     if b then b := FSchedules[i].Title.G('approved') = 1;
     if b then
       //если график найден и согласован, то загружаем по нему рабочее время
-      FSchedules[i].Hours := Q.QSelectOneRow('select hours, dt from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt <= :dt2$d order by dt', [va[i], FDtBeg, FDtEnd])
+      FSchedules[i].Hours := Q.QLoadToVarDynArray2('select hours, dt from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt <= :dt2$d order by dt', [va[i], FDtBeg, FDtEnd])
     else
       //иначе поставим флаг
       FScheduleNotApproved := True;
@@ -398,6 +400,10 @@ begin
   else if ANum = 6 then begin
     Result := FCells[pos].G(ADay, 'nighttime');
     AComm := 'работа в ночную смену'; FCells[pos].G(ADay, 'nighttime').AsString;
+  end
+  else if ANum = 7 then begin
+    Result := FCells[pos].G(ADay, 'scheduled_hours');
+    AComm := '';
   end;
 end;
 
@@ -414,7 +420,7 @@ end;
 
 procedure TTurvData.SortAndGroup(ASort, AGroup : TVarDynArray);
 var
-  i, j, k, p, p2: Integer;
+  i, j, k, m, n, p, p2, ep, sh: Integer;
   b: Boolean;
 begin
   //сортируем массив строк, при этом сначала отсортируем по начальной дате статуса в любом случае
@@ -465,17 +471,34 @@ begin
       j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
     FRows[p].Seg.SetValue(p2, 'c2', j);
   end;
-    //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
-  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
+  //загрузим в данные в массив ячеек (дней), где номер строки соотвествует строке в FList,
+  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FCells[Row].G(3, 'dt')
   Setlength(FCells, 0);
   Setlength(FCells, FList.Count);
   for i := 0 to FList.Count - 1 do begin
+    m := -1;
+    for k := 0 to High(FSchedules) do
+      if FSchedules[k].Title.G('id_schedule') = FList.G(i, 'id_schedule') then begin
+        m := k;
+        Break;
+      end;
     FCells[i].Create(FDays.FFull, 17);
     FCells[i].SetNull;
     for j := 0 to FDays.Count - 1 do begin
-      if FDays.G(j, 'id_employee_properties') = FList.G(i, 'id') then
+      ep := FDays.G(j, 'id_employee_properties');
+      if ep = FList.G(i, 'id') then begin
+        //копируем все поля из исходного сплошного массива дней в ячейку целевого массива,  при условии по айди статуса
         for k := 0 to High(FDays.V[0]) do
-          FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.v[j][k];
+          FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.V[j][k];
+        FCells[i].SetValue(DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1, 'scheduled_hours', -1);
+        if m <> -1 then begin
+          for k := 0 to High(FSchedules[m].Hours) do
+            if FSchedules[m].Hours[k, 1] = FDays.G(j, 'dt') then begin
+              FCells[i].SetValue(DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1, 'scheduled_hours', FSchedules[m].Hours[k, 0]);
+              Break;
+            end;
+        end;
+      end;
     end;
   end;
 

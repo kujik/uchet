@@ -1911,10 +1911,13 @@ create or replace view v_prices_from_sp_schet as
 select
 --выборка номенклатуры по счетам, цены (в наших единицах) на которые больше, чем контрольная цена
   n.name,
+  u.name_unit,
   s.id_schet,
   s.control_date as dt,
   s.num,
+  round(ss.quantity / ss.kp_unit_sp, 2) as qnt,
   round(ss.price / ss.kp_unit_sp, 2) as price,
+  (round(ss.price / ss.kp_unit_sp, 2) - p.price_check) * round(ss.quantity / ss.kp_unit_sp, 2) as sum_diff, 
   ss.kp_unit_sp,
   p.price_check,
   ss.price as price_sp,
@@ -1924,13 +1927,17 @@ from
   spl_itm_nom_props p,
   dv.sp_schet s,
   dv.sp_schet_spec ss,
-  dv.nomenclatura n
+  dv.nomenclatura n,
+  dv.unit u
 where  
   p.id = n.id_nomencl
   and p.id = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
+  and u.id_unit = n.id_unit
   and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
-;   
+; 
+
+select * from dv.sp_schet_spec;  
     
 --update spl_itm_nom_props set monitor_price = 1;
 

@@ -96,11 +96,11 @@ begin
   FTurv.LoadTurvCodes;
   FTurv.LoadList;
   FTurv.LoadDays;
+  FTurv.LoadSchedules;
   FTurv.SortAndGroup(['job','employee'], ['job']);
 //  FTurv.SortAndGroup(['job'], []);
 //  FTurv.SortAndGroup([], []);
   FTurv.LoadFromParsec;
-  FTurv.LoadSchedules;
 
 
   if FTurv.Count = 0 then begin
@@ -217,7 +217,7 @@ begin
   Frg2.CreateAddControls('2', cntLabelClr, 'Премия:', 'lblDPremium', '', 4, yrefC, 200);
   Frg2.CreateAddControls('3', cntLabelClr, 'Комментарий:', 'lblDComm', '', 4, yrefC, 500);
 
-  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Депремирование'];
+  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Депремирование', 'Время по графику'];
   for i := 0 to High(Captions2) do
     values2 := values2 + [[Captions2[i], null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]];
   Frg2.SetInitData(values2, '');
@@ -576,58 +576,9 @@ begin
     v := FTurv.GetDayCell(ARow, ADay, i, color, st, True);
     Frg2.SetValue('d' + IntToStr(ADay), i - 1, False, v);
   end;
+  v := FTurv.GetDayCell(ARow, ADay, 7, color, st, True);
+  Frg2.SetValue('d' + IntToStr(ADay), 5, False, v);
   Frg2.InvalidateGrid;
-
-  (*
-
-
-
-  //клетка не входит в данный турв
-//  if VarType(ArrTurv[ARow][ADay][0]) <> varInteger then exit;
-  if FArrTurv[ARow][ADay][0] = -1 then begin
-    //сделаем все пустые и выйдем
-    for i := 0 to 4 do
-      Frg2.SetValue('d' + IntToStr(ADay), i, False, null);
-    exit;
-  end;
-  //изменим напрямую во внутреннем массиве данных
-  //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
-  v1 := GetTurvCell(ARow, ADay, cTmM);
-  v2 := GetTurvCell(ARow, ADay, cTmP);
-  v3 := GetTurvCell(ARow, ADay, cTmV);
-  //форматируем строку, если число
-  if S.IsNumber(S.NSt(v1), 0, 24) then
-    st := FormatFloat('0.00', S.VarToFloat(v1))
-  else
-    st := S.NSt(v1);
-  Frg2.SetValue('d' + IntToStr(ADay), 0, False, st);
-  if S.IsNumber(S.NSt(v2), 0, 24) then
-    st := FormatFloat('0.00', S.VarToFloat(v2))
-  else
-    st := S.NSt(v2);
-  Frg2.SetValue('d' + IntToStr(ADay), 1, False, st);
-  if S.IsNumber(S.NSt(v3), 0, 24) then
-    st := FormatFloat('0.00', S.VarToFloat(v3))
-  else
-    st := S.NSt(v3);
-  Frg2.SetValue('d' + IntToStr(ADay), 2, False, st);
-  //премии и штрафы
-  if (FArrTurv[ARow][ADay][cSumPr] <> null) then begin
-    st := FormatFloat('0', S.NNum(FArrTurv[ARow][ADay][cSumPr]));
-    Frg2.SetValue('d' + IntToStr(ADay), 3, False, st);
-  end
-  else
-    Frg2.SetValue('d' + IntToStr(ADay), 3, False, null);
-  if (FArrTurv[ARow][ADay][cSumSct] <> null) then begin
-    st := FormatFloat('0', S.NNum(FArrTurv[ARow][ADay][cSumSct]));
-    Frg2.SetValue('d' + IntToStr(ADay), 4, False, st);
-  end
-  else
-    Frg2.SetValue('d' + IntToStr(ADay), 4, False, null);
-  Frg2.DbGridEh1.Invalidate;
-  except on E: Exception do
-    Application.ShowException(E);
-  end;*)
 end;
 
 procedure TFrmWGEdtTurvN.PrintRowsTitle;

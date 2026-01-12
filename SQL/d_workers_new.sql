@@ -735,6 +735,8 @@ end;
 --------------------------------------------------------------------------------
 --методы расчета З/П
 --пока определяются просто значением АйДи
+/*
+drop table w_payroll_calculation_methods cascade constraints;
 create table w_payroll_calculation_methods(
   id number(11),
   name varchar2(400),
@@ -743,31 +745,32 @@ create table w_payroll_calculation_methods(
 );  
 
 insert into w_payroll_calculation_methods select * from payroll_method;
+*/
 
 --------------------------------------------------------------------------------
-drop table w_payroll_calculations cascade constraints;
-create table w_payroll_calculations ( 
+drop table w_payroll_calc cascade constraints;
+create table w_payroll_calc ( 
   id number(11),
   id_departament number(11), --айди подразделения
   id_employee number(11),    --айди раболтника 
-  id_method number(11),      --метод расчета   
+  calc_method number(11),    --общий метод расчета   
+  overtime_method number(11),--метод учета переработки    
   dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
   dt2 date,                  --дата конца ведомости
   is_finalized number(1),    --период закрыт
-  constraint pk_w_payroll_calculations primary key (id),
-  constraint fk_w_payroll_calculations_div foreign key (id_departament) references w_departaments(id),
-  constraint fk_w_payroll_calculations_emp foreign key (id_employee) references w_employees(id),
-  constraint fk_w_payroll_calculations_mtd foreign key (id_method) references w_payroll_calculation_methods(id)
+  constraint pk_w_payroll_calc primary key (id),
+  constraint fk_w_payroll_calc_div foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_payroll_calc_emp foreign key (id_employee) references w_employees(id)
 );
 
 --уникальный индекс по подразделению/работнику/дате начала
 --create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
 
-create sequence sq_w_payroll_calculations start with 1000 nocache;
+create sequence sq_w_payroll_calc start with 1000 nocache;
 
-create or replace trigger trg_w_payroll_calc_bi_r before insert on w_payroll_calculations for each row
+create or replace trigger trg_w_payroll_calc_bi_r before insert on w_payroll_calc for each row
 begin
-  select nvl(:new.id, sq_w_payroll_calculations.nextval) into :new.id from dual;
+  select nvl(:new.id, sq_w_payroll_calc.nextval) into :new.id from dual;
 end;
 
 /*
@@ -782,7 +785,7 @@ end;
 
 
 --вью для журнала зарплатных ведомостей
-create or replace view v_w_payroll_calculations as 
+create or replace view v_w_payroll_calc as 
 select
   p.*,
   case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
@@ -805,74 +808,41 @@ where
 
 
 --данные зарплатной ведомости для конкретного работника из ведомости
-drop table w_payroll_calculations_item cascade constraints;
-create table w_payroll_calculations_item(
+drop table w_payroll_calc_item cascade constraints;
+create table w_payroll_calc_item(
   id number(11),
-  id_payroll_calculation number(11), --айди зарплатной ведомости, в которую входит эта строка
-  dt date,
-  id_departament number(11), --айди подразделения
-  id_employee number(11),    --айди раболтника 
-  id_job number(11),         --айди должности 
-  id_schedule number(11),    --айди графика
-  is_foreman number(1),
-  days_worked number,
-  hours_worked number,
-  monthly_work_hours_norm number,
-  period_work_hours_norm number,
-  base_salary number,
-  planned_monthly_payroll number,
-  fixed_compensation number,
-  variable_compensation number,
-  performance_coefficient number,
-  performance_bonus number,
-  core_earnings number,  --Начислено за период  (либо по окладной части, либо на основе выработки
-/*  
-  blank number(7),                --номер бланка для печати
-  ball_m number(7),               --баллы за месяц (точнее, отчтетный период, полмесяца)
-  turv number,                    --итоговое время из турв
-  ball number(7),                 --баллы расчетные
-  norm number(7),                 --норма в часах для текущего периода     
-  norm_m number(7),               --норма в часах за данный календарный месяц 
-  premium_m_src number(7),        --премия за отчетный период, взятая из ТУРВ
-  premium_m number(7),            --премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
-  premium number(7),              --премия, сумма дневных премий из турв
-  premium_p number(7),            --премия, за переработку, по формуле
-  otpusk number(7),               --отпуск
-  bl number(7),                   --больничные
-  penalty number(7),              --штрафы, из турв
-  itog1 number(7),                --итого начислено
-  ud number(7),                   --удержано
-  ndfl number(7),                 --ндфл 
-  fss number(7),                  --фсс
-  pvkarta number(7),              --промежуточные выплаты/карта
-  karta number(7),                --карта
-  banknotes varchar2(40),         --расклад по купюрам
-  itog number(7),                 --итого к выдаче
-  ---
-  salary_plan_m number,           --плановое начисление, месяц
-  salary_const_m number,          --постоянная часть, месяц
-  salary_incentive_m number,      --стимулирующая часть з/п
-  ors number,                     --оценка оработы сотрудника, в % (120.5)
-  ors_sum number,
-  
-*/ 
-  foreman_allowance number,       --брмигадирские
-  hazard_pay number,              --доплата за вредность 
-  daily_premium_total number,     --сумма дневных премий за период  
-  holiday_work_premium number,    --доплата за работу в выходные и праздничные дни
-  additional_premium number,      --премия, вручную выставляемая в расчетных ведомостях
-  vacation_pay number,            --оплата отпуска
-  sick_leave_pay number,          --оплата болльничных 
-  gross_pay number,               --итого начислено до удержаний
-  total_accrued number,
-  blank number,
-
-  
+  id_payroll_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  id_job number(11),              --айди должности 
+  id_schedule number(11),         --айди графика
+  id_organization number(11),     --айди организации, в которой числится работник
+  personnel_number number,        --табельный номер 
+  monthly_hours_norm number,      --норма за месяц, по данной строке табеля для работника
+  period_hours_norm number,       --норма за период ведомости, по данной строке табеля для работника     
+  hours_worked number,            --отработано по турв
+  overtime number,                --количество часов переработки (приведенное)
+  planned_pay number,             --плановое начисление
+  fixed_pay number,               --постоянная часть
+  variable_pay number,            --стимулирующая часть
+  ors number,                     --оценка работы сотрудника, %
+  base_pay number,                --итого рассчитано
+  ext_pay number,                 --загружено из внешнего источника (рассчет сделки)
+  overtime_pay number,            --выплаты за переработки 
+  personal_pay number,            --персональная выплата
+  daily_bonus number,             --ежедневные премии (не депремирование!) из турв
+  extra_bonus number,             --дополнительная премия, вводится в ведомости
+  night_pay number,               --выплата за ночные часы, вводится в ведомости
+  milk_compensation number,       --выплата за молоко  
+  non_work_pay number,            --оплата неотработанного вермени (ОТ/БЛ)
+  penalty number,                 --депремирование
+  correction number,              --ручная корректировка начисления, вводится в ведомости
+  total_pay number,               --итого начислено 
   constraint pk_w_payroll_calc_item primary key (id),
-  constraint fk_w_payroll_calc_i_own foreign key (id_payroll_calculation) references w_payroll_calculations(id) on delete cascade,
+  constraint fk_w_payroll_calc_i_own foreign key (id_payroll_calc) references w_payroll_calc(id) on delete cascade,
   constraint fk_w_payroll_calc_i_emp foreign key (id_employee) references w_employees(id),
   constraint fk_w_payroll_calc_i_job foreign key (id_job) references w_jobs(id),
-  constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id)
+  constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id),
+  constraint fk_w_payroll_calc_i_sch foreign key (id_organization) references ref_sn_organizations(id)
 );  
   
 create sequence sq_w_payroll_calculations_item start with 100000 nocache;
@@ -1089,6 +1059,64 @@ where
   and h.hours <> null   
 ;   
   
+  
+/*  
+  is_foreman number(1),
+  days_worked number,
+  hours_worked number,
+  monthly_work_hours_norm number,
+  period_work_hours_norm number,
+  base_salary number,
+  planned_monthly_payroll number,
+  fixed_compensation number,
+  variable_compensation number,
+  performance_coefficient number,
+  performance_bonus number,
+  core_earnings number,  --Начислено за период  (либо по окладной части, либо на основе выработки
+  
+*/  
+/*  
+  blank number(7),                --номер бланка для печати
+  ball_m number(7),               --баллы за месяц (точнее, отчтетный период, полмесяца)
+  turv number,                    --итоговое время из турв
+  ball number(7),                 --баллы расчетные
+  norm number(7),                 --норма в часах для текущего периода     
+  norm_m number(7),               --норма в часах за данный календарный месяц 
+  premium_m_src number(7),        --премия за отчетный период, взятая из ТУРВ
+  premium_m number(7),            --премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
+  premium number(7),              --премия, сумма дневных премий из турв
+  premium_p number(7),            --премия, за переработку, по формуле
+  otpusk number(7),               --отпуск
+  bl number(7),                   --больничные
+  penalty number(7),              --штрафы, из турв
+  itog1 number(7),                --итого начислено
+  ud number(7),                   --удержано
+  ndfl number(7),                 --ндфл 
+  fss number(7),                  --фсс
+  pvkarta number(7),              --промежуточные выплаты/карта
+  karta number(7),                --карта
+  banknotes varchar2(40),         --расклад по купюрам
+  itog number(7),                 --итого к выдаче
+  ---
+  salary_plan_m number,           --плановое начисление, месяц
+  salary_const_m number,          --постоянная часть, месяц
+  salary_incentive_m number,      --стимулирующая часть з/п
+  ors number,                     --оценка оработы сотрудника, в % (120.5)
+  ors_sum number,
+  
+*/ 
+/*
+  foreman_allowance number,       --брмигадирские
+  hazard_pay number,              --доплата за вредность 
+  daily_premium_total number,     --сумма дневных премий за период  
+  holiday_work_premium number,    --доплата за работу в выходные и праздничные дни
+  additional_premium number,      --премия, вручную выставляемая в расчетных ведомостях
+  vacation_pay number,            --оплата отпуска
+  sick_leave_pay number,          --оплата болльничных 
+  gross_pay number,               --итого начислено до удержаний
+  total_accrued number,
+  blank number,
+*/
   
   
   

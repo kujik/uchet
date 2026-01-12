@@ -34,7 +34,7 @@ uses
 
 type
   TMyTskOpTypes = (
-    mytskopMail, mytskopMoveToArchive, mytskopDeleteFromArchive, mytskopMoveToCurrent, mytskopSmetaReport, mytskopDeleteAllFromAccounts,
+    mytskopMail, mytskopMailHtml, mytskopMoveToArchive, mytskopDeleteFromArchive, mytskopMoveToCurrent, mytskopSmetaReport, mytskopDeleteAllFromAccounts,
     mytskopGetFileListByMask, mytskopDeleteDirectoriesFromList, mytskopDeleteFilesFromList, mytskopToPassportChange,
     mytskopToSnDocuments, mytskopToEstimates, mytskopToThnDocuments, mytskopLinkMontage, mytskopToKnsDocuments
   );
@@ -121,6 +121,7 @@ begin
   if TaskDir = '' then Exit;
   case Operation of
     myTskOpMail: op:= 'message';
+    myTskOpMailHtml: op:= 'messagehtml';
     mytskopMoveToArchive: op:='to_move_in_archive';
     mytskopDeleteFromArchive: op:='to_delete_from_archive';
     mytskopMoveToCurrent: op:='to_move_in_current';
@@ -816,26 +817,38 @@ var
   i,j: Integer;
   IdSch, IdSchN, IdIb, IdIbN: Integer;
   na: TNamedArr;
-  st: string;
+  st, css: string;
 begin
   //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
   IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
-  Q.QLoadFromQuery('select name, price_check, price, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
+  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
   IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
   //сохраним айди обработанного счета
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
   if na.Count > 0 then begin
     st := '';
     for i:=0 to na.Count- 1 do begin
-      S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
+//      S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
+     // style="border-width: 1px; border-style: solid; border-color: #000000; padding: 6px;">
+      st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString + '</td><td>' + na.G(i,'name_unit').AsString +
+        '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum_diff').AsString + '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
     end;
-    CreateTaskRoot(mytskopmail, [
+    //письмо в html с целью отображания таблицы!
+    //в варианте '<table><thead><tbody>' никакими способами не удалось заставить отображать границу таблицы (атрибут бордер, ксс, инлайн ксс)!
+    //css := '<style>th, td {border: 1px solid black;padding: 8px; }</style> ';
+    // border="1" cellpadding="6" cellspacing="0" style="border-width: 1px; border-style: solid; border-color: #000000;
+//    st :='<table>'+'<thead><tr><th>Наименование</th><th>Цена</th><th>Контрольная цена</th><th>Ед. изм.</th><th>Кол-во</th><th>Разница с контрольной</th><th>Счет</th></tr></thead><tbody>' + st + '</tbody></table>';
+//    st :='<table border = "1">'+'<thead><tr><th>Наименование</th><th>Цена</th><th>Контрольная цена</th><th>Ед. изм.</th><th>Кол-во</th><th>Разница с контрольной</th><th>Счет</th></tr></thead><tbody>' + st + '</tbody></table>';
+    st :='<table border = "1">'+'<tr><td>Наименование</td><td>Цена</td><td>Контрольная цена</td><td>Ед. изм.</td><td>Кол-во</td><td>Разница с контрольной</td><td>Счет</td></tr>' + st + '</table>';
+    CreateTaskRoot(myTskOpMailHtml, [
       ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+//      ['to', 'sprokopenko@fr-mix.ru'],
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
       ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
       ['user-name', 'Учёт']]
     );
   end;
+//Exit;
   //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
   IdIb := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', [])[0], 113205);
   Q.QExecSql(

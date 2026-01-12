@@ -33,6 +33,7 @@ __recovery
 !*.txt
 !*.inc
 !*.dll
+!*.xlsx
 !.gitignore
 
 
