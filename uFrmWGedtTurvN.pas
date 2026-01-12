@@ -97,9 +97,8 @@ begin
   FTurv.LoadList;
   FTurv.LoadDays;
   FTurv.LoadSchedules;
-  FTurv.SortAndGroup(['job','employee'], ['job']);
-//  FTurv.SortAndGroup(['job'], []);
-//  FTurv.SortAndGroup([], []);
+//  FTurv.SortAndGroup(['job','employee'], ['job']);
+  FTurv.SortAndGroup(['job'], []);  //сортировка по должности
   FTurv.LoadFromParsec;
 
 

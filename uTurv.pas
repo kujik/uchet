@@ -399,7 +399,7 @@ begin
   end
   else if ANum = 6 then begin
     Result := FCells[pos].G(ADay, 'nighttime');
-    AComm := 'работа в ночную смену'; FCells[pos].G(ADay, 'nighttime').AsString;
+    AComm := 'работа в ночную смену'; //FCells[pos].G(ADay, 'nighttime').AsString; //!!!
   end
   else if ANum = 7 then begin
     Result := FCells[pos].G(ADay, 'scheduled_hours');
@@ -431,7 +431,7 @@ begin
   SetLength(FRows, 0);
   //SetLength(FRows, FList.Count);
   for i := 0 to FList.Count - 1 do begin
-    //проверим, есть ли сруди уже созданных записей такая, в которой все поля группировки совпадают с текущей
+    //проверим, есть ли среди уже созданных записей такая, в которой все поля группировки совпадают с текущей
     b := False;
     if Length(AGroup) > 0 then
       for j := 0 to High(FRows) do begin

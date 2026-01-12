@@ -1,5 +1,7 @@
 inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
   Caption = 'FrmWGedtPayrollN'
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     inherited pnlFrmClient: TPanel

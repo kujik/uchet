@@ -50,6 +50,7 @@ var
   i, j, periods: Integer;
   v, v1, v2: Variant;
   va1, va2: TVarDynArray2;
+  va: TVarDynArray;
   cnt: Integer;
   b, b1: Boolean;
   st: string;
@@ -64,36 +65,25 @@ begin
     //дата начала периода должна быть корректной датой, но произвольной, по ней высчитываем начало турв
     if not Cth.DteValueIsDate(dedtDt1) then
       Exit;
-    if MyQuestionMessage('Создать ведомости расчета заработной платы?') <> mrYes then
-      Exit;
     //поставим дату начала и конца периода турв исходя из даты начала
     //используется для отладки, в реальном режиме даты изменять нельзя
     dedtDt1.Value := Turv.GetTurvBegDate(dedtDt1.Value);
     dedtDt2.Value := Turv.GetTurvEndDate(dedtDt1.Value);
+    if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dedtDt1.Value) + ' - ' + DateToStr(dedtDt2.Value) + '?') <> mrYes then
+      Exit;
     //получим список созданных турв за период
     va1 := Q.QLoadToVarDynArray2('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dedtDt1.Value]);
     //получим список ведомостей по зп, по полным подразделениям за этот период
-    va2 := Q.QLoadToVarDynArray2('select id_departament from v_w_payroll_calculations where dt1 = :dt1$d and id_employee is null',  //and id_division = :id_division$i
-      [dedtDt1.Value]);
+    va2 := Q.QLoadToVarDynArray2('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dedtDt1.Value]);
     for i := 0 to High(va1) do begin
-      b := True;
-      for j := 0 to High(va2) do
-        if va1[i, 0] = va2[j, 0] then begin
-          b := False;
-          Break;
-        end;
-      //если не нашли в созданных, то проверим закрыт ли турв
-{      if b then
-       if va1[i, 2] <> 1 then begin
-          if not User.IsDeveloper then
-            b := False;                   //не создаем для незакрытого турв
-          st := st + va1[i, 1] + #13#10;  //в собщение
-        end;  }
-      if b then begin
-  //      if QIUD('i', 'payroll', 'sq_payroll', 'id;id_division$i;dt1$d;dt2$d', [0, va1[i,0], dedt_Dt1.Value, dedt_Dt2.Value], False) <> -1
+      if A.PosInArray(va1[i][0], va2, 0) = -1 then begin
+        //если ведомость еще не создана
+        if va1[i][2] = 1 then
+          //уведомление о незакрытых ТУРВ
+          S.ConcatStP(st, va1[i][1], #13#10);
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
-if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ
-        if Q.QIUD('i', 'w_payroll_calculations', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dedtDt1.Value, dedtDt2.Value], False) <> -1 then
+        if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ, бухгалтерия
+        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dedtDt1.Value, dedtDt2.Value], False) <> -1 then
           inc(cnt);  //увеличим количество созданных
       end;
     end;
@@ -169,7 +159,7 @@ if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ
     st := 'Ни одна ведомость не создана!' + st
   else
     st := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' + st;
-  MyInfoMessage(st);
+  MyInfoMessage(st, 1);
   //обновим форму журнала
   if cnt > 0 then
     RefreshParentForm;

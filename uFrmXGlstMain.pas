@@ -786,7 +786,7 @@ v:=True;
     ];
   end
   else if FormDoc = myfrm_J_Payrolls then begin
-    Caption:='Журнал зарплатных ведомостей';
+    Caption:='Зарплатные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -804,7 +804,7 @@ v:=True;
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
     Frg1.InfoArray:=[
-      ['Журнал зарплатных ведомостей.'#13#10+
+      ['Зарплатные ведомости.'#13#10+
       'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
       'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
@@ -813,7 +813,7 @@ v:=True;
     ];
   end
   else if FormDoc = myfrm_J_PayrollCalculations then begin
-    Caption:='Ведомости расчета заработной платы';
+    Caption:='Расчетные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -824,7 +824,7 @@ v:=True;
       ['dt2','Кон. дата','75'],
       ['finalized','Закрыта','60','pic=Закрыта;13']
     ]);
-    Frg1.Opt.SetTable('v_w_payroll_calculations');
+    Frg1.Opt.SetTable('v_w_payroll_calc');
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch) AND FALSE, 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);

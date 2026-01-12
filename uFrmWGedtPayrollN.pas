@@ -99,8 +99,12 @@ const
   cmbtDeduction = 1001;
   cmbtCard = 1002;
 
-
-{$R *.dfm}
+  cFieldsS =
+    'id$i;id_employee$i;id_job$i;id_schedule$i;personnel_number$s;' +
+    'monthly_hours_norm;period_hours_norm;hours_worked;overtime;planned_pay;fixed_pay;variable_pay;ors;base_pay;ext_pay;overtime_pay;' +
+    'personal_pay;daily_bonus;extra_bonus;night_pay;milk_compensation;non_work_pay;penalty;correction;total_pay';
+  cFieldsL =
+    'employee$s;organization$s;job$s;schedule_code$s;changed$i';
 
 function TFrmWGedtPayrollN.PrepareForm: Boolean;
 var
@@ -115,7 +119,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_departament, id_employee, dt1, dt2, departament, employee, is_office, id_method, is_finalized from v_w_payroll_calculations where id = :id$i', [ID], FPayrollParams);
+  Q.QLoadFromQuery('select id, id_departament, id_employee, dt1, dt2, departament, employee, is_office, calc_method, overtime_method, is_finalized from v_w_payroll_calc where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -125,50 +129,46 @@ begin
   FColWidth := 45;
   wcol := IntToStr(FColWidth) + ';r';
   fcol := 'f=###,###,###:';
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind] - [myogColumnFilter];
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
     ['id_employee$i', '_id_employee', wcol],
     ['id_job$i', '_id_job', wcol],
     ['id_schedule$i', '_id_schedule', wcol, fcol],
+    ['id_organization$i', '_id_org', wcol],
     ['changed$i', '_changed', wcol],
-    ['employee$s', 'ФИО', '200;h'],
-    ['org_name$s', 'Органиазция', '100'],
-    ['personnel_number$s', 'Табельный номер', '60'],
-    ['job$s', 'Должность', '150;h'],
-    ['is_foreman$i', '~Бригадир', '25', 'pic'],
-    ['days_worked$i', '~Отработано, дней', '25'],
-    ['blank$i', '~  № бланка', wcol , 'e'],
-    ['base_salarym$i', '~  Оклад', wcol, 'e'],          //!!!видимость  //ball_m
-    ['planned_monthly_payroll$i', '~  Плановое' + sLineBreak + '  начисление', wcol, 'e'],  //salary_plan_m
-    ['turv$f', '~  ТУРВ', wcol, 'e'],  //turv
-    ['schedule$s', '~  График', '55'],
-    ['norm$f', '_norm', wcol, fcol],  //norm
-    ['norm_m$f', '_norm_m', wcol, fcol],  //norm_m
-    ['fixed_compensation$i', '~  Постоянная' + sLineBreak + '  часть', wcol, 'e'],  //salary_const_m
-    ['variable_compensation$i', '~  Стимулирующая' + sLineBreak + '  часть', wcol, 'e'],  //salary_incentive_m
-    ['performance_coefficient$f', '~  ОРС', wcol, 'e'],  //ors
-    ['performance_bonus$f', '~  ОРС сумма', wcol, 'i'],  //ors_sum
-    ['core_earnings$i', '~  Расчет' + sLineBreak + '  оклада', wcol, fcol, 'e', FPayrollParams.G('id_method') = 15],      //ball
-    //['premium_m_src$i', '~  Премия ' + sLineBreak + '  фиксированная', wcol, fcol, 'e'],            //УБРАЛИ премия за отчетный период, взятая из ТУРВ
-    ['daily_premium_total$i', '~  Премия' + sLineBreak + '  текущая', wcol, fcol, 'e'],                      //премия, сумма дневных премий из турв
-    ['extra_hours_bonus$i', '~  Премия за' + sLineBreak + '  переработки', wcol, fcol],             //premium_p  премия, за переработку, по формуле
-    ['additional_premium$i', '~  Премия' + sLineBreak + '   дополнительная', wcol, fcol],                             //premium_m премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
-    ['otpusk$i', '~  ОТ', wcol, fcol, 'e'],
-    ['bl$i', '~  БЛ', wcol, fcol, 'e'],
-    ['penalty$i', '~  Депремирование', wcol, fcol],
-    ['itog1$i', '~  Итого' + sLineBreak + '  начислено', wcol, fcol],
-    ['ud$i', '~  Удержано/' + sLineBreak + '   Исп. лист', wcol, fcol, 'e'],
-    ['ndfl$i', '~  НДФЛ', wcol, fcol, 'e'],
-    ['fss$i', '~  Выплачено' + sLineBreak + '  ФСС', wcol, fcol, 'e'],
-    ['pvkarta$i', '~  Промежуточная' + sLineBreak + '  выплата - карта', wcol, fcol, 'e'],
-    ['karta$i', '~  Карта', wcol, fcol, 'e'],
-    ['itog$i', '~  Итого к' + sLineBreak + '  получению', wcol, fcol],
-    ['banknotes$s', '~  Купюры', '65', 'f=t:t'],
-    ['sign$i', '~  Подпись', '55', 'i']
+
+    ['employee$s', 'Работник|ФИО', '200;h'],
+    ['organization$s', '!Органиазция', '100'],
+    ['personnel_number$s', '!Табельный номер', '60'],
+    ['job$s', '!Должность', '150;h'],
+    ['schedule_code$s', '!График', '70'],
+
+    ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90, fcol],
+    ['period_hours_norm$f', '!Норма отработанных часов за период', 90, fcol],
+    ['hours_worked$f', '!Отработано за период', 90, fcol],
+    ['overtime$f', '!Из них переработка', 90, fcol],
+
+    ['planned_pay$f', '~Плановое' + sLineBreak + 'начисление', wcol, fcol, 'e'],
+    ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 'e'],
+    ['variable_pay$f', '~Стимулирующая', wcol, fcol, 'e'],
+    ['ors$f', '~ОРС', wcol, fcol, 'e'],
+    ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol, 'e'],
+    ['ext_pay$f', '~Загрузка' + sLineBreak + ' сделки', wcol, fcol],
+    ['overtime_pay$f', '~Переработка', wcol, fcol, 'e'],
+    ['personal_pay$f', '~Персональная' + sLineBreak + ' надбавка', wcol, fcol, 'e'],
+    ['daily_bonus$f', '~Премия ТУРВ', wcol, fcol, 'e'],
+    ['extra_bonus$f', '~Премия' + sLineBreak + ' дополнительная', wcol, fcol, 'e'],
+    ['night_pay$f', '~Ночные' + sLineBreak + ' часы', wcol, fcol, 'e'],
+    ['milk_compensation$f', '~Надбавка' + sLineBreak + ' за молоко', wcol, fcol, 'e'],
+    ['non_work_pay$f', '~ОТ/БЛ', wcol, fcol, 'e'],
+    ['penalty$f', '~Депремирование', wcol, fcol, 'e'],
+    ['correction$f', '~Корректировка', wcol, fcol, 'e'],
+    ['total_pay$f', '~Итого' + sLineBreak + ' начислено', wcol, fcol]
+//    ['$f', '', wcol, fcol],
   ]);
   Frg1.Opt.SetGridOperations('u');
-  Frg1.DbGridEh1.ReadOnly := (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1);
+//  Frg1.DbGridEh1.ReadOnly := (Mode = fView) or (FPayrollParams.G('id_method') = null) or (FPayrollParams.G('commit') = 1);
   Frg1.Opt.SetButtons(1, [
     [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
     [mbtDividorM],
@@ -207,15 +207,12 @@ begin
   if not Result then
     Exit;
 
-  for i:=0 to Frg1.DbGridEh1.Columns.Count - 1 do
-    if not A.InArray(Frg1.DbGridEh1.Columns[i].FieldName, ['blank', 'workername']) then
-      Frg1.DBGridEh1.Columns[i].STFilter.Visible:=False;
 
   //ширина окна по ширине грида
   Self.Width := Frg1.GetTableWidth + 75;
 
   //если в данной ведомости нет ни одной записи, попробуем их создать
-  CreatePayroll;
+  //CreatePayroll;
   //прочитаем из БД ведомость
   GetDataFromDb;
 {  CalculateBanknotes;
@@ -359,13 +356,7 @@ function TFrmWGedtPayrollN.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(
-    'select id, id_employee, id_job, id_schedule, employee, job, is_foreman ' +
-    'from v_w_payroll_calculations_item where id_payroll_calculation = :id$i order by job, employee, id_schedule, is_foreman',
-{    'select employee, job, id, id_employee, id_job, blank, ball_m, turv, ball, premium_m_src, premium, extra_hours_bonus, premium_m, '+
-    'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes, org_name, personnel_number, '+
-    'salary_plan_m, fixed_compensation, variable_compensation, ors, ors_sum '+
-    'from v_payroll_item where id_payroll = :id$i order by job, workername',}
+  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i order by job, employee, id_schedule, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);

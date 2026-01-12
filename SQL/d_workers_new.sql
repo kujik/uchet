@@ -529,6 +529,7 @@ last_any_event as (
         id_departament,
         id_job,
         personnel_number,
+        id_organization,
         row_number() over (partition by id_employee order by id desc) as rn
     from w_employee_properties
     where is_terminated <> 1
@@ -569,6 +570,8 @@ select
   d.name as departament,
   j.name as job,
   a.personnel_number,
+  a.id_organization,
+  o.name as organization,
   e.comm
 from w_employees e
 left join last_hired h on e.id = h.id_employee and h.rn = 1
@@ -578,6 +581,7 @@ left join last_any_event a on e.id = a.id_employee and a.rn = 1
 left outer join last_transfer lt on e.id = lt.id_employee
 left outer join w_departaments d on a.id_departament = d.id and a.rn = 1
 left outer join w_jobs j on a.id_job = j.id and a.rn = 1
+left outer join ref_sn_organizations o on a.id_organization = o.id and a.rn = 1
 ;
 
 
@@ -764,7 +768,7 @@ create table w_payroll_calc (
 );
 
 --уникальный индекс по подразделению/работнику/дате начала
---create unique index idx_payroll_unique on payroll(id_division, id_worker, dt1);
+create unique index idx_w_payroll_calc_uq on w_payroll_calc(id_departament, id_employee, dt1);
 
 create sequence sq_w_payroll_calc start with 1000 nocache;
 
@@ -772,17 +776,6 @@ create or replace trigger trg_w_payroll_calc_bi_r before insert on w_payroll_cal
 begin
   select nvl(:new.id, sq_w_payroll_calc.nextval) into :new.id from dual;
 end;
-
-/*
-  id_job number(11),         --айди должности 
-  id_shedule number(11),     --айди графика
-  is_foreman number(1),      --является бригадиром 
-  constraint fk_w_payroll_calculations_job foreign key (id_job) references w_jobs(id),
-  constraint fk_w_payroll_calculations_sch foreign key (id_shedule) references w_schedules(id),
-  form_number                --номер бланка для печати
-*/
-
-
 
 --вью для журнала зарплатных ведомостей
 create or replace view v_w_payroll_calc as 
@@ -794,7 +787,7 @@ select
   d.is_office,
   d.code
 from
-  w_payroll_calculations p,
+  w_payroll_calc p,
   w_employees e,
   w_departaments d
 where
@@ -808,6 +801,7 @@ where
 
 
 --данные зарплатной ведомости для конкретного работника из ведомости
+--данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
 drop table w_payroll_calc_item cascade constraints;
 create table w_payroll_calc_item(
   id number(11),
@@ -842,58 +836,62 @@ create table w_payroll_calc_item(
   constraint fk_w_payroll_calc_i_emp foreign key (id_employee) references w_employees(id),
   constraint fk_w_payroll_calc_i_job foreign key (id_job) references w_jobs(id),
   constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id),
-  constraint fk_w_payroll_calc_i_sch foreign key (id_organization) references ref_sn_organizations(id)
+  constraint fk_w_payroll_calc_i_org foreign key (id_organization) references ref_sn_organizations(id)
 );  
   
-create sequence sq_w_payroll_calculations_item start with 100000 nocache;
+--drop sequence sq_w_payroll_calculations_item;
+create sequence sq_w_payroll_calc_item start with 100000 nocache;
 
-create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
-create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
+--create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
+--create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
 
-create or replace trigger trg_w_payroll_calc_item_bi_r before insert on w_payroll_calculations_item for each row
+create or replace trigger trg_w_payroll_calc_item_bi_r before insert on w_payroll_calc_item for each row
 begin
-  select nvl(:new.id, sq_w_payroll_calculations_item.nextval) into :new.id from dual;
+  select nvl(:new.id, sq_w_payroll_calc_item.nextval) into :new.id from dual;
 end;
    
 
 --вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
-create or replace view v_w_payroll_calculations_item as 
+create or replace view v_w_payroll_calc_item as 
 select
   i.*,
-  s.code,
-  s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
+  s.code as schedule_code,
+  s.code as schedule,
+  --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
   p.id_employee as id_target_employee,
   p.dt1,
-  p.dt2 as dt2,
-  f_fio(w.f, w.i, w.o) as employee,
-  --w.personnel_number,
-  --w.concurrent_employee,
-  --o.name as org_name,
+  p.dt2,
+  p.calc_method,
+  p.overtime_method,
+  --f_fio(e.f, e.i, e.o) as employee,
+  --e.personnel_number,
+  e.name as employee,
+  --e.concurrent_employee,
+  o.name as organization,
   d.name as departament,
   d.id_prod_area,
   a.shortname as prod_area_shortname,
   a.name as prod_area_name,
   j.name as job,
-  p.id_method as id_method
+  0 as changed
 from
-  w_payroll_calculations_item i,
-  w_payroll_calculations p,
-  w_employees w,
+  w_payroll_calc_item i,
+  w_payroll_calc p,
+  v_w_employees e,
   w_departaments d,
   w_jobs j,
-  w_payroll_calculation_methods m,
   w_schedules s,
-  --ref_sn_organizations o,
-  ref_production_areas a
+  ref_production_areas a,
+  ref_sn_organizations o
 where
-  i.id_payroll_calculation = p.id and
-  i.id_departament = d.id and
-  i.id_employee = w.id and 
+  p.id_departament = d.id and
+  i.id_payroll_calc = p.id and
+  i.id_employee = e.id and 
   i.id_job = j.id and
-  p.id_method = m.id (+) and
   i.id_schedule = s.id (+) and
-  --o.id (+) = w.id_organization and
-  a.id (+) = d.id_prod_area
+  a.id (+) = d.id_prod_area and
+  o.id (+) = i.id_organization
+  
 ;     
 
 
