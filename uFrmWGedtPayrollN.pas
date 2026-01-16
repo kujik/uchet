@@ -135,7 +135,7 @@ begin
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
     ['id_employee$i', '_id_employee', wcol, 'e'],
-    ['id_job$i', '_id_job', wcol],
+    ['id_job$i', '_id_job', wcol, 'e'],
     ['id_schedule$i', '_id_schedule', wcol, fcol],
     ['id_organization$i', '_id_org', wcol],
     ['changed$i', '_changed', wcol],
@@ -150,7 +150,7 @@ begin
     ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90, fcol],
     ['period_hours_norm$f', '!Норма отработанных часов за период', 90, fcol],
     ['hours_worked$f', '!Отработано за период', 90, fcol],
-    ['overtime$f', '!Из них переработка', 90, fcol],
+    ['overtime$f', '!Из них переработка', 90, fcol, 'e'],
 
     ['planned_pay$f', '~Плановое' + sLineBreak + 'начисление', wcol, fcol, 'e'],
     ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 'e'],
@@ -241,6 +241,7 @@ var
   size: Integer;
   TurvData: TTurvData;
   Employees: TVarDynArray2;
+  flds: TVarDynArray2;
 begin
   if Q.QSelectOneRow('select count(*) from w_payroll_calculations_item where id_payroll_calculation = :id$i', [id])[0] > 0 then
     Exit;
@@ -372,12 +373,15 @@ function TFrmWGedtPayrollN.GetDataFromTurv: Integer;
 var
   i, j, k, r: Integer;
   st1, st2, st3: string;
+  v1, v2: Variant;
   b: Boolean;
-  //f1, f2: TVarDynArray;
+  NoData: Boolean;
   na, na2: TNamedArr;
 
-  MsgDel, MsgIns: string;
+  MsgDel, MsgIns, MsgChg: string;
   VaDel, VaIns: TVarDynArray;
+  flds: TVarDynArray2;
+  flds1, flds2: TVarDynArray;
 
 function GetDataFromTurv111: Integer;
 //читаем данные из ТУРВ по нажатию соотв кнопки
@@ -668,125 +672,152 @@ begin
     Exit;
 
   //поля, по кторым сравниваем для сопоставления данных в турв и гшриде
-  var flds1: TVarDynArray := ['id_employee', 'id_job', 'id_schedule', 'id_organization', 'personnel_number'];
-  var flds2: TVarDynArray := ['employee', 'job', 'schedulecode', 'organization'];
-  //по этим полям сортируем турв
-  var flds3: TVarDynArray := ['job', 'employee', 'schedulecode', 'organization', 'personnel_number'];
-  //по предыдущим и по этим загружаем данные из турв
-  //f2 := ['id_job', 'id_employee', 'id_schedule', 'id_organization', 'monthly_hours_norm', 'period_hours_norm'];
-  var fldstt: TVarDynArray :=['worktime', 'premium', 'penalty'];
-  var fldsp: TVarDynArray := ['hours_worked', 'daily_bonus', 'penalty'];
+  flds1 := ['id_employee', 'id_job', 'id_schedule', 'id_organization', 'personnel_number'];
+  //поля для заголовка сообщания об изменениях
+  flds2 := ['employee', 'job', 'schedulecode', 'organization', 'monthly_hours_norm', 'period_hours_norm'];
+  //поля
+  //поле в турв; поле в ведомости; загрузка (1 - FTurv.List.G, 2 - CalculateTotals); сравнивать и выдвать отчеты
+  flds:=[
+    ['job', '', 1, 0],
+    ['employee', '', 1, 0],
+    ['schedulecode', '', 1, 0],
+    ['organization', '', 1, 0],
+    ['personnel_number', '', 1, 0],
+    ['monthly_hours_norm', '', 1, 1],
+    ['period_hours_norm', '', 1, 1],
+    ['worktime', 'hours_worked', 2, 1],
+    ['premium', 'daily_bonus', 2, 1],
+    ['penalty', '', 2, 1],
+    ['overtime', '', 2, 1]
+  ];
 
   //загрузим данные из турв
   //строки в ведомости сгруппированы по f1
-  FTurv.Create(FIdTurv, A.Implode(flds3, ';'), '', 0, 0, -1, -1, True, True);
-{  FTurv.LoadTurvCodes;
-  FTurv.LoadList;
-  FTurv.LoadDays;
-  FTurv.LoadSchedules;}
-  //сортировка и группировка
-  //FTurv.SortAndGroup(f1, []);
+  FTurv.Create(FIdTurv, 'job;employee;schedulecode;organization;personnel_number', '', 0, 0, -1, -1, True, True);
 
-{  if Frg1.GetCount = 0 then begin
-    //если ведомсть, ранее она загружена из бд, пуста, заполним все из турв, без уведомлений
-    na := Frg1.ExportToNa('', False);
-    na.SetLen(FTurv.Count);
-    for i := 0 to FTurv.Count - 1 do begin
-      //проходим по уже сгруппированным строкам (к FList обращаться только R(i)[0] !)
-      for j := 0 to High(f11) do
-        na.SetValue(i, f11[j], FTurv.GetListTitleString(i, f11[j]));
-      na2 := FTurv.CalculateTotals(i);
-      na.SetValue(i, 'hours_worked', na2.G('worktime'));
-      na.SetValue(i, 'daily_bonus', na2.G('premium'));
-      na.SetValue(i, 'penalty', na2.G('penalty'));
-      na.SetValue(i, 'changed', 1);
-    end;
-    Frg1.LoadData(na);
-  end
-  else begin}
-    //в ведомости в бд есть данные
-    //заполним то что загружается из турв, остальные данные ранее загруженными из бд, удалим строки из ведомости, которых в турв теперь нет
+  NoData := Frg1.GetCount = 0;
 
-    //получим для удобства работы данные из грида - они там сейчас те, что загрузились из БД
-//    na.Create(A.Explode(cFieldsS + ';' + cFieldsL, ';'), FTurv.Count);
-    na := Frg1.ExportToNa('', False);
-    MsgDel := '';
-    MsgIns := '';
-    VaDel := [];
-    VaIns := [];
-    //найдем те строки в гриде, которых более нет в турв
-    for i := 0 to na.Count - 1 do begin
-      na.SetValue(i, 'temp', -1);
-      st1 := '';
+  //заполним то что загружается из турв, остальные данные ранее загруженными из бд, удалим строки из ведомости, которых в турв теперь нет
+
+  //получим для удобства работы данные из грида - они там сейчас те, что загрузились из БД
+  na := Frg1.ExportToNa('', False);
+  MsgDel := '';
+  MsgIns := '';
+  MsgChg := '';
+  //найдем те строки в гриде, которых более нет в турв
+  for i := 0 to na.Count - 1 do begin
+    na.SetValue(i, 'temp', -1);
+    st1 := '';
+    for k := 0 to High(flds1) do
+      S.ConcatStP(st1, na.G(i, flds1[k]).AsString, '|');
+    b := False;
+    for j := 0 to FTurv.Count - 1 do begin
+      //нужно для доступа в FTurv.FList
+      r := FTurv.R(j)[0];
+      st2 := '';
       for k := 0 to High(flds1) do
-        S.ConcatStP(st1, na.G(i, flds1[k]).AsString, '|');
-      b := False;
-      for j := 0 to FTurv.Count - 1 do begin
-        //нужно для доступа в FTurv.FList
-        r := FTurv.R(j)[0];
-        st2 := '';
-        for k := 0 to High(flds1) do
-          S.ConcatStP(st2, FTurv.List.G(r, flds1[k]).AsString, '|');
-        if st1 = st2 then begin
-          b := True;
-          //сохраним во временной поле массива турв позицию из грида (из загруженной расчетной ведомости)
-          FTurv.List.SetValue(r, 'temp', i);
-          na.SetValue(i, 'temp', j);
-          Break;
-        end;
+        S.ConcatStP(st2, FTurv.List.G(r, flds1[k]).AsString, '|');
+      if st1 = st2 then begin
+        b := True;
+        //сохраним во временной поле массива турв позицию из грида (из загруженной расчетной ведомости)
+        FTurv.List.SetValue(r, 'temp', i);
+        na.SetValue(i, 'temp', j);
+        Break;
       end;
-      //если не нашли в гриде - айди в массив, и данные в сообщение
-      if not b then begin
-        VaDel := VaDel + [na.G(i, 'id')];
-        //данные строки для сообщения
+    end;
+    //если не нашли в гриде - айди в массив, и данные в сообщение
+    if not b then begin
+      //данные строки для сообщения
+      st1 := '';
+      for k := 0 to High(flds2) do
+        S.ConcatStP(st1, na.G(i, flds2[k]).AsString, ' | ');
+      S.ConcatStP(MsgDel, st1, #13#10);
+    end;
+  end;
+
+  //пройдем по данным, загруженным из турв
+  for i := 0 to FTurv.Count - 1 do begin
+    r := FTurv.R(i)[0];
+    //если строки, которая есть в турв, нет в ведомости
+    if FTurv.List.G(r, 'temp').AsIntegerM = -1 then begin
+      //данные строки для сообщения
+      st1 := '';
+      for k := 0 to High(flds2) do
+        S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
+      S.ConcatStP(MsgIns, st1, #13#10);
+      //добавим строку
+      na.IncLength;
+      //установим поля и итоговые данные из турв
+      na2 := FTurv.CalculateTotals(i);
+      //айдишники
+      for k := 0 to High(flds1) do
+        na.SetValue(na.High, flds1[k], FTurv.List.G(r, flds1[k]));
+      //остальные поля
+      for k := 0 to High(flds) do
+        if flds[k][2] = 1 then
+          na.SetValue(na.High, S.IfEmptyStr(flds[k][1], flds[k][0]), FTurv.List.G(r, flds[k][0]))
+        else
+          na.SetValue(na.High, S.IfEmptyStr(flds[k][1], flds[k][0]), na2.G(flds[k][0]));
+    end;
+  end;
+
+  //удалим позиции в ведомости, которые пропали из турв
+  for i := na.High downto 0 do
+    if na.G(i, 'temp') = -1 then begin
+      Delete(na.V, i ,1);
+      //!!!пока так - маркер для сохранения ведомости
+      if na.High > 0 then
+        na.SetValue(0, 'changed', 1);
+    end;
+
+  //пройдем по массиву ведомости, по тем строкам, для которых есть данные турв (а значит могли быть изменения)
+  for i := na.High downto 0 do begin
+    j := na.G(i, 'temp').AsIntegerM;
+    if j <> -1 then begin
+      st2 := '';
+      for k := 0 to High(flds) do
+        //если надо сравнивать и выдавать отчет (сюда включены сейчас все обновляемые)
+        if flds[k][3] = 1 then begin
+          var fld := S.IfEmptyStr(flds[k][1], flds[k][0]);
+          //значение в  ведомости (старое)
+          v1 := na.G(i, fld);
+          //значение из турв (новое)
+          na2 := FTurv.CalculateTotals(i);
+          if flds[k][2] = 1 then
+            v2 := FTurv.List.G(FTurv.R(j)[0], flds[k][0])
+          else
+            v2 := na2.G(flds[k][0]);
+          if v1 <> v2 then begin
+            na.SetValue(i, fld, v2);
+            S.ConcatStP(st2, fld + ':' + '"' + v1.AsString + '" -> "' + v2.AsString + '"', #13#10);
+          end;
+        end;
+      if st2 <> '' then begin
         st1 := '';
         for k := 0 to High(flds2) do
           S.ConcatStP(st1, na.G(i, flds2[k]).AsString, ' | ');
-        S.ConcatStP(MsgDel, st1, #13#10);
+        S.ConcatStP(MsgChg, st1 + #13#10 + '  ' + st2);
       end;
     end;
+  end;
 
-    //пройдем по данным, загруженным из турв
-    for i := 0 to FTurv.Count - 1 do begin
-      r := FTurv.R(i)[0];
-      //если строки, которая есть в турв, нет в ведомости
-      if FTurv.List.G(r, 'temp').AsIntegerM = -1 then begin
-        //данные строки для сообщения
-        st1 := '';
-        for k := 0 to High(flds2) do
-          S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
-        //добавим строку
-        na.IncLength;
-//        for k := 0 to High(Concat(f1, f2)) do
-  //        na.SetValue(na.High, Concat(f1, f2)[k], FTurv.GetListTitleString(i, Concat(f1, f2)[k]));
-//      for j := 0 to High(f1) do
-//        na.SetValue(na.High, f1[j], FTurv.GetListTitleString(i, f1[j]));
-        //скопируем поля
-        for k := 0 to High(flds1) do
-          na.SetValue(na.High, flds1[k], FTurv.List.G(r, flds1[k]));
-        for k := 0 to High(flds2) do
-          na.SetValue(na.High, flds2[k], FTurv.List.G(r, flds2[k]));
-        //установим итоговые данные из турв
-        na2 := FTurv.CalculateTotals(i);
-        for k := 0 to High(fldstt) do begin
-          na.SetValue(i, fldsp[k], na2.G(fldstt[k]));
-          na.SetValue(i, 'changed', 1);
-        end
-      end;
-    end;
 
-    //удалим позиции в ведомости, которые пропали из турв
-    for i := na.High downto 0 do
-      if na.G(i, 'temp') = -1 then begin
-        Delete(na.V, i ,1);
-        //!!!пока так - маркер для сохранения ведомости
-        if na.High > 0 then
-          na.SetValue(0, 'changed', 1);
-      end;
+  //загрузим данные в грид
+  Frg1.LoadData(na);
 
-    //загрузим данные в грид
-    Frg1.LoadData(na);
-//  end;
+  if MsgIns + MsgDel + MsgChg = '' then begin
+    MyInfoMessage('ТУРВ загружен, изменений в ведомости не было.');
+  end
+  else begin
+    MyInfoMessage(
+      'ТУРВ загружен.'#13#10#13#10 +
+      S.IIFStr(MsgIns <> '', 'Внесены записи:'#13#10 + MsgIns + #13#10#13#10) +
+      S.IIFStr(MsgDel <> '', 'Удалены записи:'#13#10 + MsgDel + #13#10#13#10) +
+      S.IIFStr(MsgChg <> '', 'Изменены записи:'#13#10 + MsgChg)
+    );
+  end;
+
+
 
 //      for k := 0 to High(flds2) do
 //        S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');

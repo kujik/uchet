@@ -108,7 +108,9 @@ type
     FList: TNamedArr;                                   //записи, ссоотвествующие каждой записи статуса работника, попавшей в турв
     FCells: TNamedArr2;                                 //массив записей (индекс соотвествует позиции в FList), содержашие TNamedArr[16] для данных по отработанным дням по этому статусу работника
     FTurvCodes: TNamedArr;                              //коды турв
-    FTurvCodeWeekend: Integer;                          //код для "В"
+    FTurvCodeW: Integer;                                //код для "В"
+    FTurvCodeOT: Integer;                               //код для "ОТ"
+    FTurvCodeBL: Integer;                               //код для "БЛ"
     FSchedules: TTurvDataSchedules;                     //данные по графикам работы, которые используются в данном турв
     FScheduleNotApproved : Boolean;                     //флаг, что есть несогласованныые графики работы
     FEmptyDay: TNamedArr;
@@ -130,7 +132,9 @@ type
     property Cells: TNamedArr2 read FCells;
     property List: TNamedArr read FList;
     property TurvCodes: TNamedArr read FTurvCodes;
-    property TurvCodeWeekend: Integer read FTurvCodeWeekend;
+    property TurvCodeW: Integer read FTurvCodeW;
+    property TurvCodeOT: Integer read FTurvCodeOT;
+    property TurvCodBL: Integer read FTurvCodeBL;
     property Schedules: TTurvDataSchedules read FSchedules;
     property ScheduleNotApproved : Boolean read FScheduleNotApproved;
     property EmptyDay: TNamedArr read FEmptyDay;
@@ -340,8 +344,8 @@ begin
     end;
     for j := 0 to FList.Count - 1 do
       if FList.G(i, 'id_schedule') = va[i] then begin
-        FList.SetValue(i, 'period_hours_norm', FSchedules[i].Title.G('period_hours'));
-        FList.SetValue(i, 'monthly_hours_norm', FSchedules[i].Title.G('hours'));
+        FList.SetValue(j, 'period_hours_norm', FSchedules[i].Title.G('period_hours'));
+        FList.SetValue(j, 'monthly_hours_norm', FSchedules[i].Title.G('hours'));
       end;
   end;
 end;
@@ -349,11 +353,16 @@ end;
 procedure TTurvData.LoadTurvCodes;
 //загрузим справочник кодов турв
 begin
-  FTurvCodeWeekend := -1;
+  FTurvCodeW := -1;
   Q.QLoadFromQuery('select id, code, name from ref_turvcodes order by code', [], FTurvCodes);
-  for var j: Integer := 0 to FTurvCodes.Count - 1 do
+  for var j: Integer := 0 to FTurvCodes.Count - 1 do begin
     if FTurvCodes.G(j, 'code') = 'В' then
-      FTurvCodeWeekend := FTurvCodes.G(j, 'id');
+      FTurvCodeW := FTurvCodes.G(j, 'id');
+    if FTurvCodes.G(j, 'code') = 'ОТ' then
+      FTurvCodeOT := FTurvCodes.G(j, 'id');
+    if FTurvCodes.G(j, 'code') = 'БЛ' then
+      FTurvCodeBL := FTurvCodes.G(j, 'id');
+  end;
 end;
 
 function TTurvData.GetTurvCode(AValue: Variant): Variant;
@@ -627,16 +636,46 @@ function TTurvData.CalculateTotals(ARow: Integer): TNamedArr;
 //время - если енсть согласованное то оно, иначе по парсеку, время руководителя не учитывается
 //премии, депремирование - сумма дневных значений
 var
-  i, j, pos: Integer;
+  i, j, k, pos, idsh: Integer;
+  e1: Extended;
+  v1, v2, v3: Variant;
 begin
-  Result.Create(['worktime', 'premium', 'penalty'], 1);
+  Result.Create(['is_incomplete', 'worktime', 'premium', 'penalty', 'overtime'], 1);
+  //пройдем по всем дням периода
   for i := 1 to FDaysCount do begin
+    //получим строку исходных данных, если данных в ячейке нет, пропустим итерацию
     pos := R(ARow, i);
     if pos < 0 then
       Continue;
-    Result.SetValue(0, 'worktime', Result.G('worktime').AsFloat + S.IIf(FCells[pos].G(i, 'worktime3') = null, FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat));
+    //посчитаем переработку
+    for j := 0 to High(FSchedules) do
+      //найдем позицию в данных по графикам, тк нам нужны часы за день
+      if FSchedules[j].Title.G('id_schedule') = FList.G(pos, 'id_schedule') then begin
+        idsh := j;
+        k := -1;
+        //получим часы и код, если есть то из согласованного иначе из парсека
+        v1 := FCells[pos].G(i, 'worktime3');
+        v2 := FCells[pos].G(i, 'id_turvcode3');
+        if (v1 = null) and (v2 = null) then begin
+          v1 := FCells[pos].G(i, 'worktime2');
+          v2 := FCells[pos].G(i, 'id_turvcode2');
+        end;
+        //найдем позицию в данных по часам графика
+        k := A.PosInArray(IncDay(FDtBeg, i -1), FSchedules[j].Hours, 1);
+        //если коды не ОТ или БЛ и найдены часы, просуммируем переработку
+        if (v2 <> FTurvCodeOT) and (v2 <> FTurvCodeBL) and (k > -1) then
+          Result.SetValue(0, 'overtime', Result.G('overtime').AsFloat + v1.AsInteger - FSchedules[j].Hours[k][0]);
+        Break;
+      end;
+    //итоговое рабочее время; если заданы время или код согласованные, берем согласованное время, иначе по парсеку
+    Result.SetValue(0, 'worktime', Result.G('worktime').AsFloat + S.IIf((FCells[pos].G(i, 'worktime3') = null) and (FCells[pos].G(i, 'id_turvcode3') = null), FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat));
+    //суммарные дневные премии
     Result.SetValue(0, 'premium', Result.G('premium').AsFloat + FCells[pos].G(i, 'premium').AsFloat);
+    //суммарные дневные штрафы
     Result.SetValue(0, 'penalty', Result.G('penalty').AsFloat +  FCells[pos].G(i, 'penalty').AsFloat);
+    //переработка не меньше 0
+    Result.SetValue(0, 'overtime', Max(0.0, Result.G('overtime').AsFloat));
+    //!!!is_incomplete =
   end;
 end;
 
