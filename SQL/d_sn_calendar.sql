@@ -337,6 +337,7 @@ create or replace view v_sn_calendar_accounts_t_rep as select
   (case when flighttype = 1 then 'Прямой' else 'Фиксированный' end) as flighttype,
   at.idle,
   at.kilometrage,
+  at.flightdt,
   b.sum as basissum,
   r.strings,
   l1.name as location1,

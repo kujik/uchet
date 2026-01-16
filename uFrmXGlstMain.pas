@@ -473,6 +473,7 @@ begin
       ['strings$s','Количество мест','80'],
       ['kilometrage$f','Километраж, км.','80'],
       ['sumkm$f','Километраж, руб.','80','f=r:'],
+      ['flightdt$f','Дата поездки','80'],
       ['idle$f','Простой, ч.','80','f=r'],
       ['sumidle$f','Простой, руб.','80','f=r:'],
       ['sumother$f','Прочее, руб.','80','f=r:'],
@@ -798,7 +799,10 @@ v:=True;
       ['committxt','Закрыта','60','pic=закрыта;13']
     ]);
     Frg1.Opt.SetTable('v_payroll');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1,[
+      [mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
+      [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
+    ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
@@ -825,7 +829,10 @@ v:=True;
       ['finalized','Закрыта','60','pic=Закрыта;13']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_calc');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch) AND FALSE, 'Закрыть выбранные'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtons(1, [
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
+      [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
+    ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
@@ -2257,14 +2264,39 @@ begin
     end;
   end
   else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtLock) then begin
-    //просмотр общей сметы по одному или нескольким (отмеченным чекбоксами в индикаторе) заказам
     va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
     if (Length(va) > 0) then begin
       if MyQuestionMessage('Проставить для ' + S.GetEndingFull(Length(va), ' ведомост', 'и', 'ей', 'ей' ) + ' статус "Закрыта" ?') <> mrYes then
         Exit;
       for i := 0 to High(va) do
         Q.QExecSql('update payroll set commit = 1 where id = :id$i', [va[i]]);
-        Fr.RefreshGrid;
+      Fr.RefreshGrid;
+    end
+    else
+      MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
+  end
+  else if (FormDoc = myfrm_J_PayrollCalculations) and (Tag = mbtLock) then begin
+    //проставить метку Закрыта по всем отмеченным зарплатным ведомостям
+    va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
+    if (Length(va) > 0) then begin
+      if MyQuestionMessage('Проставить для ' + S.GetEndingFull(Length(va), ' ведомост', 'и', 'ей', 'ей' ) + ' статус "Закрыта" ?') <> mrYes then
+        Exit;
+      for i := 0 to High(va) do
+        Q.QExecSql('update w_payroll_calc set is_finalized = 1 where id = :id$i', [va[i]]);
+      Fr.RefreshGrid;
+    end
+    else
+      MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
+  end
+  else if (FormDoc = myfrm_J_PayrollCalculations) and (Tag = 1001) then begin
+    //удалить все отмеченные ведомости
+    va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
+    if (Length(va) > 0) then begin
+      if MyQuestionMessage('Удалить ' + S.GetEndingFull(Length(va), ' ведомост', 'ь', 'и', 'ей' ) + '?') <> mrYes then
+        Exit;
+      for i := 0 to High(va) do
+        Q.QExecSql('delete from w_payroll_calc where id = :id$i', [va[i]]);
+      Fr.RefreshGrid;
     end
     else
       MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');

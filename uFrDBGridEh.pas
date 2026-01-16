@@ -800,6 +800,7 @@ type
 
     //выгрузить данные в массив TVarDynArray2
     function ExportToVa2(AFields: string = ''; AFiltered: Boolean = True): TVarDynArray2;
+    function ExportToNa(AFields: string = ''; AFiltered: Boolean = True): TNamedArr;
  end;
 
 
@@ -3709,6 +3710,23 @@ begin
       Result[i][j] := GetValue(va[j], i, AFiltered);
   end;
 end;
+
+function TFrDBGridEh.ExportToNa(AFields: string = ''; AFiltered: Boolean = True): TNamedArr;
+//выгрузить данные в TNamedArr
+var
+  va: TVarDynArray;
+begin
+  if AFields <> '' then
+    va := A.Explode(AFields, ';')
+  else
+    va := GetFieldNames;
+  Result.Create(va, GetCount(AFiltered));
+  for var i := 0 to GetCount(AFiltered) - 1 do begin
+    for var j := 0 to High(va) do
+      Result.V[i][j] := GetValue(va[j], i, AFiltered);
+  end;
+end;
+
 
 
 

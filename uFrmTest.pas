@@ -1472,8 +1472,11 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
+  Exit;
+  Tasks.HourlyTasks; Exit;
+  Tasks.SplMonitorReportDay; Exit;
 
-  //Tasks.SplMonitorPrices; Exit;
+
 
   //q.QExecSql('select 2 / 0 from dual', []); Exit;
   TFrmWWedtWorkSchedule.Show(Application, myfrm_Dlg_Work_Schedule, [myfoDialog], fAdd, 32098, null); exit;

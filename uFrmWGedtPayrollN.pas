@@ -30,7 +30,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
   ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd,
   MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv
   ;
 
 type
@@ -45,6 +45,8 @@ type
     FDeletedWorkers: TVarDynArray;
     FColWidth: Integer;
     FIsWorkingHoursDefined: Boolean;
+    FTurv: TTurvData;
+    FIdTurv: Variant;
     function  PrepareForm: Boolean; override;
     function  CreatePayroll: Integer;
     function  GetDataFromDb: Integer;
@@ -82,8 +84,6 @@ var
 implementation
 
 uses
-  uTurv,
-
   uFrmBasicInput,
   uExcel,
   uPrintReport,
@@ -100,11 +100,11 @@ const
   cmbtCard = 1002;
 
   cFieldsS =
-    'id$i;id_employee$i;id_job$i;id_schedule$i;personnel_number$s;' +
-    'monthly_hours_norm;period_hours_norm;hours_worked;overtime;planned_pay;fixed_pay;variable_pay;ors;base_pay;ext_pay;overtime_pay;' +
-    'personal_pay;daily_bonus;extra_bonus;night_pay;milk_compensation;non_work_pay;penalty;correction;total_pay';
+    'id$i;id_employee$i;id_job$i;id_schedule$i;id_organization$i;personnel_number$s;' +
+    'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
+    'personal_pay$f;daily_bonus$f;extra_bonus$f;night_pay$f;milk_compensation$f;non_work_pay$f;penalty$f;correction$f;total_pay$f';
   cFieldsL =
-    'employee$s;organization$s;job$s;schedule_code$s;changed$i';
+    'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i';
 
 function TFrmWGedtPayrollN.PrepareForm: Boolean;
 var
@@ -124,6 +124,8 @@ begin
     MsgRecordIsDeleted;
     Exit;
   end;
+  //айди ТУРВ за данный период по данному подразделению
+  FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
 
   FDeletedWorkers := [];
   FColWidth := 45;
@@ -132,17 +134,18 @@ begin
   Frg1.Options := FrDBGridOptionDef + [myogPanelFind] - [myogColumnFilter];
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
-    ['id_employee$i', '_id_employee', wcol],
+    ['id_employee$i', '_id_employee', wcol, 'e'],
     ['id_job$i', '_id_job', wcol],
     ['id_schedule$i', '_id_schedule', wcol, fcol],
     ['id_organization$i', '_id_org', wcol],
     ['changed$i', '_changed', wcol],
+    ['temp$i', '_temp', wcol],
 
     ['employee$s', 'Работник|ФИО', '200;h'],
     ['organization$s', '!Органиазция', '100'],
     ['personnel_number$s', '!Табельный номер', '60'],
     ['job$s', '!Должность', '150;h'],
-    ['schedule_code$s', '!График', '70'],
+    ['schedulecode$s', '!График', '70'],
 
     ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90, fcol],
     ['period_hours_norm$f', '!Норма отработанных часов за период', 90, fcol],
@@ -215,6 +218,8 @@ begin
   //CreatePayroll;
   //прочитаем из БД ведомость
   GetDataFromDb;
+  if Frg1.GetCount(False) = 0 then
+    GetDataFromTurv;
 {  CalculateBanknotes;
   SetButtons;
   CheckEmpty;}
@@ -356,7 +361,7 @@ function TFrmWGedtPayrollN.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i order by job, employee, id_schedule, organization, personnel_number',
+  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);
@@ -365,7 +370,23 @@ end;
 function TFrmWGedtPayrollN.GetDataFromTurv: Integer;
 //читаем данные из ТУРВ по нажатию соотв кнопки
 var
+  i, j, k, r: Integer;
+  st1, st2, st3: string;
+  b: Boolean;
+  //f1, f2: TVarDynArray;
+  na, na2: TNamedArr;
+
+  MsgDel, MsgIns: string;
+  VaDel, VaIns: TVarDynArray;
+
+function GetDataFromTurv111: Integer;
+//читаем данные из ТУРВ по нажатию соотв кнопки
+var
   i, j, k: Integer;
+  f1, f11: TVarDynArray;
+  na, na2: TNamedArr;
+
+
   va, va1, vadel, norms: TVarDynArray2;
   st, st1, st2, w: string;
   v, v1, v2: Variant;
@@ -375,7 +396,10 @@ var
   e, e1, e2, e3: extended;
   rn : Integer;
   b, b2: Boolean;
+
+
 begin
+Exit;
   ClearFilter;
   //загрузим айди работников, по которым созданя за этот период отдельные ведомости
   vadel := Q.QLoadToVarDynArray2(
@@ -635,6 +659,171 @@ begin
   Frg1.DbGridEh1.Invalidate;
   CheckEmpty;
 end;
+
+
+begin
+
+  //загружаем данные только в режиме редактирования
+  if Mode <> fEdit then
+    Exit;
+
+  //поля, по кторым сравниваем для сопоставления данных в турв и гшриде
+  var flds1: TVarDynArray := ['id_employee', 'id_job', 'id_schedule', 'id_organization', 'personnel_number'];
+  var flds2: TVarDynArray := ['employee', 'job', 'schedulecode', 'organization'];
+  //по этим полям сортируем турв
+  var flds3: TVarDynArray := ['job', 'employee', 'schedulecode', 'organization', 'personnel_number'];
+  //по предыдущим и по этим загружаем данные из турв
+  //f2 := ['id_job', 'id_employee', 'id_schedule', 'id_organization', 'monthly_hours_norm', 'period_hours_norm'];
+  var fldstt: TVarDynArray :=['worktime', 'premium', 'penalty'];
+  var fldsp: TVarDynArray := ['hours_worked', 'daily_bonus', 'penalty'];
+
+  //загрузим данные из турв
+  //строки в ведомости сгруппированы по f1
+  FTurv.Create(FIdTurv, A.Implode(flds3, ';'), '', 0, 0, -1, -1, True, True);
+{  FTurv.LoadTurvCodes;
+  FTurv.LoadList;
+  FTurv.LoadDays;
+  FTurv.LoadSchedules;}
+  //сортировка и группировка
+  //FTurv.SortAndGroup(f1, []);
+
+{  if Frg1.GetCount = 0 then begin
+    //если ведомсть, ранее она загружена из бд, пуста, заполним все из турв, без уведомлений
+    na := Frg1.ExportToNa('', False);
+    na.SetLen(FTurv.Count);
+    for i := 0 to FTurv.Count - 1 do begin
+      //проходим по уже сгруппированным строкам (к FList обращаться только R(i)[0] !)
+      for j := 0 to High(f11) do
+        na.SetValue(i, f11[j], FTurv.GetListTitleString(i, f11[j]));
+      na2 := FTurv.CalculateTotals(i);
+      na.SetValue(i, 'hours_worked', na2.G('worktime'));
+      na.SetValue(i, 'daily_bonus', na2.G('premium'));
+      na.SetValue(i, 'penalty', na2.G('penalty'));
+      na.SetValue(i, 'changed', 1);
+    end;
+    Frg1.LoadData(na);
+  end
+  else begin}
+    //в ведомости в бд есть данные
+    //заполним то что загружается из турв, остальные данные ранее загруженными из бд, удалим строки из ведомости, которых в турв теперь нет
+
+    //получим для удобства работы данные из грида - они там сейчас те, что загрузились из БД
+//    na.Create(A.Explode(cFieldsS + ';' + cFieldsL, ';'), FTurv.Count);
+    na := Frg1.ExportToNa('', False);
+    MsgDel := '';
+    MsgIns := '';
+    VaDel := [];
+    VaIns := [];
+    //найдем те строки в гриде, которых более нет в турв
+    for i := 0 to na.Count - 1 do begin
+      na.SetValue(i, 'temp', -1);
+      st1 := '';
+      for k := 0 to High(flds1) do
+        S.ConcatStP(st1, na.G(i, flds1[k]).AsString, '|');
+      b := False;
+      for j := 0 to FTurv.Count - 1 do begin
+        //нужно для доступа в FTurv.FList
+        r := FTurv.R(j)[0];
+        st2 := '';
+        for k := 0 to High(flds1) do
+          S.ConcatStP(st2, FTurv.List.G(r, flds1[k]).AsString, '|');
+        if st1 = st2 then begin
+          b := True;
+          //сохраним во временной поле массива турв позицию из грида (из загруженной расчетной ведомости)
+          FTurv.List.SetValue(r, 'temp', i);
+          na.SetValue(i, 'temp', j);
+          Break;
+        end;
+      end;
+      //если не нашли в гриде - айди в массив, и данные в сообщение
+      if not b then begin
+        VaDel := VaDel + [na.G(i, 'id')];
+        //данные строки для сообщения
+        st1 := '';
+        for k := 0 to High(flds2) do
+          S.ConcatStP(st1, na.G(i, flds2[k]).AsString, ' | ');
+        S.ConcatStP(MsgDel, st1, #13#10);
+      end;
+    end;
+
+    //пройдем по данным, загруженным из турв
+    for i := 0 to FTurv.Count - 1 do begin
+      r := FTurv.R(i)[0];
+      //если строки, которая есть в турв, нет в ведомости
+      if FTurv.List.G(r, 'temp').AsIntegerM = -1 then begin
+        //данные строки для сообщения
+        st1 := '';
+        for k := 0 to High(flds2) do
+          S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
+        //добавим строку
+        na.IncLength;
+//        for k := 0 to High(Concat(f1, f2)) do
+  //        na.SetValue(na.High, Concat(f1, f2)[k], FTurv.GetListTitleString(i, Concat(f1, f2)[k]));
+//      for j := 0 to High(f1) do
+//        na.SetValue(na.High, f1[j], FTurv.GetListTitleString(i, f1[j]));
+        //скопируем поля
+        for k := 0 to High(flds1) do
+          na.SetValue(na.High, flds1[k], FTurv.List.G(r, flds1[k]));
+        for k := 0 to High(flds2) do
+          na.SetValue(na.High, flds2[k], FTurv.List.G(r, flds2[k]));
+        //установим итоговые данные из турв
+        na2 := FTurv.CalculateTotals(i);
+        for k := 0 to High(fldstt) do begin
+          na.SetValue(i, fldsp[k], na2.G(fldstt[k]));
+          na.SetValue(i, 'changed', 1);
+        end
+      end;
+    end;
+
+    //удалим позиции в ведомости, которые пропали из турв
+    for i := na.High downto 0 do
+      if na.G(i, 'temp') = -1 then begin
+        Delete(na.V, i ,1);
+        //!!!пока так - маркер для сохранения ведомости
+        if na.High > 0 then
+          na.SetValue(0, 'changed', 1);
+      end;
+
+    //загрузим данные в грид
+    Frg1.LoadData(na);
+//  end;
+
+//      for k := 0 to High(flds2) do
+//        S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
+
+(*
+  //загрузим работников из прошлой ведомости по этому же подразделению (по всему подразделению)
+  va1:=Q.QLoadToVarDynArray2(
+    'select id_employee, base_salarym, planned_monthly_payroll, fixed_compensation from payroll_item where id_division = :id_division$i and dt = :dt1$d',
+    [FPayrollParams.G('id_departament'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1))]
+  );
+  //заполним но бланка и баллы за период (оклад), а также планируемую и постоянную часть з/п при использоваении ОРС из прошлого периода
+  for i := 0 to High(va) do begin
+    j := A.PosInArray(va[i][2], va1, 0);
+    SetLength(va[i], 9);
+    if j >= 0 then begin
+      va[i][5] := va1[j][1];
+      va[i][6] := va1[j][2];
+      va[i][7] := va1[j][3];
+      va[i][8] := va1[j][4];
+    end
+    else begin
+      va[i][5] := null;
+      va[i][6] := null;
+      va[i][7] := null;
+      va[i][8] := null;
+    end;
+  end;
+*)
+
+end;
+
+
+
+
+
+
+
 
 procedure TFrmWGedtPayrollN.GetDataFromExcel;
 var
@@ -1478,75 +1667,36 @@ end;
 
 procedure TFrmWGedtPayrollN.SavePayroll;
 var
-  i, j, k, rn: Integer;
-  va, vadel: TVarDynArray2;
-  st, st1, st2, w: string;
-  v, v1, v2: Variant;
-  buf: Variant;
-  changed: Boolean;
-  id1: extended;
+  i, j: Integer;
+  f, fn, va: TVarDynArray;
+  st: string;
 begin
-  ClearFilter;
   //запишем метод расчета
   Q.QBeginTrans(True);
-  Q.QExecSql('update payroll set id_method = :id_method$i, commit = :commit$i where id = :id$i', [FPayrollParams.G('id_method'), s.IIf(FPayrollParams.G('commit') = 1, 1, null), ID]);
+  {Q.QExecSql('update payroll set id_method = :id_method$i, commit = :commit$i where id = :id$i', [FPayrollParams.G('id_method'), s.IIf(FPayrollParams.G('commit') = 1, 1, null), ID]);
   //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
   //может удалить лишних, если вперемешку формировались ведомости, включая по отдельным работникам, и менялись турв
   for i := 0 to High(FDeletedWorkers) do begin
     Q.QExecSql('delete from payroll_item where id_payroll = :id$i and id_worker = :id_worker$i', [id, FDeletedWorkers[i]], False);
   end;
-  rn := Frg1.MemTableEh1.RecNo;
-  for i := 1 to Frg1.MemTableEh1.RecordCount do begin
-    Frg1.MemTableEh1.RecNo := i;
-    id1 := s.NNum(Frg1.MemTableEh1.FieldByName('id').AsVariant);
-    if id1 = 0 then begin
-      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d',
-        [-1, ID, FPayrollParams.G('id_division'), Frg1.MemTableEh1.FieldByName('id_worker').AsInteger, Frg1.MemTableEh1.FieldByName('id_job').AsInteger, FPayrollParams.G('dt1')]
-      );
-      Frg1.MemTableEh1.Edit;
-      Frg1.MemTableEh1.FieldByName('id').Value := Q.LastSequenceId;
-      Frg1.MemTableEh1.Post;
-      Frg1.MemTableEh1.Edit;
+  rn := Frg1.MemTableEh1.RecNo;}
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    if Frg1.GetValueI('id', i, False) = 0 then begin
+      var idn := Q.QIUD('i', 'w_payroll_calc_item', '', 'id$i;id_payroll_calc$i', [-1, ID]);
+      Frg1.SetValue('id', i, False, idn);
     end;
-        //lastgeneraateid
-    Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
-      'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;extra_hours_bonus$f;otpusk$f;bl$f;penalty$f;'+
-      'itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s;'+
-      'salary_plan_m$f;salary_const_m$f;variable_compensation$f;ors;ors_sum$f',
-      [
-        Frg1.MemTableEh1.FieldByName('id').AsInteger,
-        Frg1.MemTableEh1.FieldByName('blank').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ball_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('turv').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ball').AsVariant,
-        Frg1.MemTableEh1.FieldByName('premium_m_src').AsVariant,
-        Frg1.MemTableEh1.FieldByName('premium_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('premium').AsVariant,
-        Frg1.MemTableEh1.FieldByName('extra_hours_bonus').AsVariant,
-        Frg1.MemTableEh1.FieldByName('otpusk').AsVariant,
-        Frg1.MemTableEh1.FieldByName('bl').AsVariant,
-        Frg1.MemTableEh1.FieldByName('penalty').AsVariant,
-        Frg1.MemTableEh1.FieldByName('itog1').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ud').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ndfl').AsVariant,
-        Frg1.MemTableEh1.FieldByName('fss').AsVariant,
-        Frg1.MemTableEh1.FieldByName('pvkarta').AsVariant,
-        Frg1.MemTableEh1.FieldByName('karta').AsVariant,
-        Frg1.MemTableEh1.FieldByName('itog').AsVariant,
-        Frg1.MemTableEh1.FieldByName('id_schedule').AsVariant,
-        Frg1.MemTableEh1.FieldByName('norm').AsVariant,
-        Frg1.MemTableEh1.FieldByName('norm_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('banknotes').AsVariant,
-        Frg1.MemTableEh1.FieldByName('salary_plan_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('salary_const_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('salary_incentive_m').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ors').AsVariant,
-        Frg1.MemTableEh1.FieldByName('ors_sum').AsVariant
-      ], True
-    );
+    f := A.Explode(cFieldsS, ';');
+    va := [];
+    for j := 0 to High(f) do
+    fn := A.Explode(f[j],'$') ;
+    for j := 0 to High(f) do begin
+      fn := A.Explode(f[j],'$');
+      st := fn[0];
+      va := va + [Frg1.GetValue(A.Explode(f[j],'$')[0], i, False)];
+    end;
+    Q.QIUD('u', 'w_payroll_calc_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
-  Frg1.MemTableEh1.RecNo:=rn;
 end;
 
 
@@ -1623,7 +1773,7 @@ begin
     Handled := False;
   end;
   if Handled then
-    SetButtons;
+//!!!    SetButtons;
 end;
 
 procedure TFrmWGedtPayrollN.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -1633,8 +1783,9 @@ var
 begin
   inherited;
   //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
-  if FInPrepare then Exit;
-  ClearFilter;
+  if FInPrepare then
+   Exit;
+  //ClearFilter;
   if IsChanged then begin
     res:=myMessageDlg('Зарплатная ведомость была изменена!'#13#10'Сохранить данные?', mtConfirmation, mbYesNoCancel);
     if res = mrYes then begin

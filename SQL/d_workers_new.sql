@@ -690,7 +690,7 @@ where
 --alter  table _wturv_day add nighttime number(4,2);
 --alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
 --таблица турв для конкретного работника за конкретный день
-create table w_turv_period(
+create table w_turv_day(
   id number(11),        
   id_employee_properties number(11),             --
   id_employee number(11),             --
@@ -802,7 +802,9 @@ where
 
 --данные зарплатной ведомости для конкретного работника из ведомости
 --данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
-drop table w_payroll_calc_item cascade constraints;
+--drop table w_payroll_calc_item cascade constraints;
+alter table w_payroll_calc_item drop column personnel_number;
+alter table w_payroll_calc_item add personnel_number varchar2(10);
 create table w_payroll_calc_item(
   id number(11),
   id_payroll_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -810,7 +812,7 @@ create table w_payroll_calc_item(
   id_job number(11),              --айди должности 
   id_schedule number(11),         --айди графика
   id_organization number(11),     --айди организации, в которой числится работник
-  personnel_number number,        --табельный номер 
+  personnel_number varchar2(10),  --табельный номер 
   monthly_hours_norm number,      --норма за месяц, по данной строке табеля для работника
   period_hours_norm number,       --норма за период ведомости, по данной строке табеля для работника     
   hours_worked number,            --отработано по турв
@@ -855,7 +857,7 @@ end;
 create or replace view v_w_payroll_calc_item as 
 select
   i.*,
-  s.code as schedule_code,
+  s.code as schedulecode,
   s.code as schedule,
   --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
   p.id_employee as id_target_employee,
@@ -873,7 +875,8 @@ select
   a.shortname as prod_area_shortname,
   a.name as prod_area_name,
   j.name as job,
-  0 as changed
+  0 as changed,
+  null as temp
 from
   w_payroll_calc_item i,
   w_payroll_calc p,
@@ -1119,6 +1122,8 @@ where
   
   
   --where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
+  
+  delete from w_payroll_calc_item;
 
 
 

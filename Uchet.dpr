@@ -35,7 +35,7 @@ uses
 implementation
 uses
   SysUtils, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basi
-  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //my basic
+  uSettings, uSys, uForms, uDBOra, uMessages, uWindows, uPrintReport, uFrmBasicInput, uFrmBasicMdi   //Umy basic
   ;
 CnPack - Модули - Очистка модулей
 

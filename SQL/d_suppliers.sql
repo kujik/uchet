@@ -1910,18 +1910,21 @@ select * from v_spl_minremains where id in (select id_nomencl from dv.nomenclatu
 create or replace view v_prices_from_sp_schet as
 select
 --выборка номенклатуры по счетам, цены (в наших единицах) на которые больше, чем контрольная цена
+--так как нет признака НДС, считаем что НДС есть, в ИТМ идет полная цена, в Учете используется без НДС, цены соответственно уменьшаем!!!!!!!!!!!!!!
   n.name,
   u.name_unit,
   s.id_schet,
   s.control_date as dt,
   s.num,
-  round(ss.quantity / ss.kp_unit_sp, 2) as qnt,
-  round(ss.price / ss.kp_unit_sp, 2) as price,
-  (round(ss.price / ss.kp_unit_sp, 2) - p.price_check) * round(ss.quantity / ss.kp_unit_sp, 2) as sum_diff, 
+  round(ss.quantity /nvl(ss.kp_unit_sp, 1), 2) as qnt,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
+  (round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum_diff, 
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum, 
   ss.kp_unit_sp,
   p.price_check,
   ss.price as price_sp,
-  round(ss.price / ss.kp_unit_sp, 2) - p.price_check as price_diff,
+  ss.quantity as qnt_sp,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check as price_diff,
   p.monitor_price  
 from
   spl_itm_nom_props p,
@@ -1934,10 +1937,106 @@ where
   and p.id = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
-  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
+  and s.control_date is not null
+  and round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check > 0  
+;
+
+create or replace view v_prices_from_sp_schet_day as
+select
+--выборка номенклатуры по счетам за вчерашний день
+  n.name,
+  u.name_unit,
+  s.id_schet,
+  s.control_date as dt,
+  s.num,
+  round(ss.quantity /nvl(ss.kp_unit_sp, 1), 2) as qnt,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
+  (round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum_diff, 
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum, 
+  ss.kp_unit_sp,
+  p.price_check,
+  ss.price as price_sp,
+  ss.quantity as qnt_sp,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check as price_diff,
+  p.monitor_price  
+from
+  spl_itm_nom_props p,
+  dv.sp_schet s,
+  dv.sp_schet_spec ss,
+  dv.nomenclatura n,
+  dv.unit u
+where  
+  p.id = n.id_nomencl
+  and p.id = ss.id_nomencl
+  and s.id_schet = ss.id_sp_schet
+  and u.id_unit = n.id_unit
+  and s.control_date is not null
+--  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
+  and s.date_registr >= trunc(sysdate) - 1 and s.date_registr < trunc(sysdate)
 ; 
 
-select * from dv.sp_schet_spec;  
+
+select * from v_prices_from_sp_schet_day;
+select * from v_prices_from_sp_schet where name like '%Фанера/18 мм сорт 2/2%';
+select * from dv.sp_schet order by id_schet desc;
+select * from dv.sp_schet_spec order by id_sp_schet desc;          
+select * from dv.in_bill order by id_inbill desc;  --num 14764 id 116296 
+
+/*
+!!!
+разбираемся с ндс
+--num 14764 id 116296
+
+в накладной сделно Выделять ндс
+NdsInSum =3, type_nds = null
+в спецификации:
+  цена ibprice = 3.53 и сумма 35.3 соотвествует цене с ндс в разбираемой накладной
+  IBSumItogo соответствует сумме с ндс на основе указанной ниже вью, но в нем же ibprice должно быть ценой без ндс!!!
+  в каких-то накладных так а в других иначе, непонятно!!!
+в карточке сумма ндс 58.83
+у меня везде используется цена в спецификаци, те с ндс, а надо без ндс
+
+видимо подсказал давно Лукъянюк, но работает не всегда, по накладной выше выдает одинаковые цены 
+в v_spl_nom_inbills:
+  ibs.ibsum,            --сумма итоговая без ндс (по fact_quantity) 
+  ibs.itogo,             --сумма итоговая с ндс (по fact_quantity)
+  case when nvl(ibs.fact_quantity, 0) = 0 then 0 else round(ibs.ibsum / ibs.fact_quantity, 2) end as price, --цена итоговая без ндс  
+  case when nvl(ibs.fact_quantity, 0) = 0 then 0 else round(ibs.itogo / ibs.fact_quantity, 2) end as price_itogo --цена итоговая с ндс  
+from dv.v_in_bills ib, dv.v_inbillspec_inner ibs
+
+правмим вывод в отчете по накладным, обойдя использование этого представления
+в уведомлениях и пересче контрольной цены сразы убираем 22%
+пересчитаем разово контрольную цену на цену без ндс
+
+*/
+select * from dv.in_bill;
+select * from dv.in_bill where inbillnum in (12381, 12490);  --103526, 104150
+select * from dv.v_inbillspec_inner where id_inbill = 104150;  --!!! с ндс в интерфесе, но без ндс (по одной позиции нмного различапется) в бд
+select * from dv.in_bill where id_inbill = 116296;        
+select * from dv.in_bill_spec;-- where id_inbill = 116296;        
+
+select
+  i.inbillnum,
+  n.name, 
+  i.ndsinsum,
+  s.*,
+  s.ibsumitogo as sum_nds,
+  round(s.ibprice * s.ibquantity) as sum_wo_nds
+from
+  dv.in_bill i,
+  dv.in_bill_spec s,
+  dv.nomenclatura n
+where 
+  i.id_inbill = s.id_inbill
+  and n.id_nomencl = s.id_nomencl
+  and inbillnum in (12403, 12490, 12381, 12748)
+;
+
+select * from dv.v_inbillspec_inner where id_inbill in (12403, 12490, 12381, 12748);
+
+  
+  
+select * from dv.v_inbillspec_inner where id_inbill in (103526, 104150);        
     
 --update spl_itm_nom_props set monitor_price = 1;
 
@@ -2070,7 +2169,6 @@ select * from v_spl_prices_check_get;
 --update spl_itm_nom_props set price_check_test = price_check;
 --update spl_itm_nom_props set price_check = price_check_test;
 --update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check);
-
 
 
 select

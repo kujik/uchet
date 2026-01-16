@@ -685,6 +685,8 @@ begin
     ['Общая смета по выбранным заказам', User.Roles([], [rOr_Rep_Orders_QntItems])],
     [],
     ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
+    [],
+    ['Отчет по транспортным счетам', myfrm_Rep_SnCalendar_Transport, A.InArray(User.GetLogin, ['sprokopenko','sa','dir_proizv','assistant'])],     //!!!временно
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

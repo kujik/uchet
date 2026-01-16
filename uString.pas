@@ -31,10 +31,13 @@ type
     function  GetValue(RowNo: Integer; Field: string): Variant; overload;
     function  GetValue(Field: string): Variant; overload;
     function  GetRow(RowNo: Integer): TVarDynArray;
-    procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant);
+    procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant); overload;
+    procedure SetValue(Field: string; NewValue: Variant); overload;
     function  Empty: Boolean;
     function  Count: Integer;
+    function  High: Integer;
     procedure IncLength;
+    procedure SetLen(ALength: Integer);
     function  FieldsCount: Integer;
     procedure Clear;
     procedure SetNull;
@@ -179,6 +182,8 @@ function DeleteRepSubstr(St: string; SubSt: string): string;
     function NNum(St: Variant; Default: Extended = 0): Extended;
 //возвращает 0 с типом Integer, если значение Empty или Null
     function NInt(St: Variant): Integer;
+//возвращает -1 с типом Integer, если значение Empty или Null
+    function NIntM(St: Variant): Integer;
 //возвращает нулл если v=null or VarToString(v) ='', иначе вернет переданное значение
     function NullIfEmpty(v: Variant): Variant;
 //возвращает нулл если v=0 (0.00), иначе вернет переданное значение
@@ -448,6 +453,7 @@ type
     function IsNumeric: Boolean;
     function AsString: string;
     function AsInteger: Integer;
+    function AsIntegerM: Integer;
     function AsFloat: Extended;
     function AsBoolean: Boolean;
     function AsDateTime: TDatetime;
@@ -961,7 +967,16 @@ function TMyStringHelper.NInt(St: Variant): Integer;
 begin
   Result := 0;
   if NSt(St) = '' then
-    exit;
+    Exit;
+  Result := St;
+end;
+
+function TMyStringHelper.NIntM(St: Variant): Integer;
+//возвращает -1 с типом Integer, если значение Empty или Null
+begin
+  Result := -1;
+  if NSt(St) = '' then
+    Exit;
   Result := St;
 end;
 
@@ -2814,11 +2829,13 @@ var
 begin
   FFull := Copy(Fields);
   F := Copy(Fields);
-  for j := 0 to High(F) do begin
+  for j := 0 to System.High(F) do begin
     i := Pos('$', F[j]);
     if i > 0 then
       F[j] := Copy(F[j], 1, i - 1);
   end;
+  //в любом случае очистим массив данных
+  SetLength(V, 0);
   SetLength(V, Len);
   for i := 0 to Len - 1 do
     SetLength(V[i], Length(F));
@@ -2854,7 +2871,7 @@ var
   i : Integer;
 begin
   i := Col(Field);
-  if (RowNo < 0) or (RowNo > High(V)) then
+  if (RowNo < 0) or (RowNo > System.High(V)) then
     raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
   Result := V[RowNo][i];
 end;
@@ -2868,7 +2885,7 @@ end;
 
 function TNamedArr.GetRow(RowNo: Integer): TVarDynArray;
 begin
-  if (RowNo < 0) or (RowNo > High(V)) then
+  if (RowNo < 0) or (RowNo > System.High(V)) then
     raise Exception.Create('Строка ' + InttoStr(RowNo) + ' вне диапозона в NamedArr');
   Result := A.VarDynArray2RowToVD1(V, RowNo);
 end;
@@ -2878,9 +2895,14 @@ var
   i : Integer;
 begin
   i := Col(Field);
-  if (RowNo < 0) or (RowNo > High(V)) then
+  if (RowNo < 0) or (RowNo > System.High(V)) then
     raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
   V[RowNo][i] := NewValue;
+end;
+
+procedure TNamedArr.SetValue(Field: string; NewValue: Variant);
+begin
+  SetValue(0, Field, NewValue);
 end;
 
 function TNamedArr.Empty: Boolean;
@@ -2893,11 +2915,24 @@ begin
   Result := Length(V);
 end;
 
+function TNamedArr.High: Integer;
+begin
+  Result := System.High(V);
+end;
+
 procedure TNamedArr.IncLength;
 begin
   SetLength(V, Length(V) + 1);
-  SetLength(V[High(V)], Length(F));
+  SetLength(V[System.High(V)], Length(F));
 end;
+
+procedure TNamedArr.SetLen(ALength: Integer);
+begin
+  SetLength(V, ALength);
+  for var i := 0 to Length(V) - 1 do
+    SetLength(V[i], Length(F));
+end;
+
 
 function TNamedArr.FieldsCount: Integer;
 begin
@@ -2913,8 +2948,8 @@ end;
 
 procedure TNamedArr.SetNull;
 begin
-  for var i := 0 to High(V) do
-    for var j := 0 to High(V[i]) do
+  for var i := 0 to System.High(V) do
+    for var j := 0 to System.High(V[i]) do
       V[i][j] := null;
 end;
 
@@ -2975,6 +3010,11 @@ begin
     Result := S.VarToInt(Self)
   else
     Result := 0;}
+end;
+
+function TVariantHelper.AsIntegerM: Integer;
+begin
+  Result := S.NIntM(Self);
 end;
 
 function TVariantHelper.AsFloat: Extended;

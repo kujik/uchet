@@ -51,6 +51,7 @@ type
     function TestTurvComplete: Integer;
     function TestTurvDifferences: Integer;
     function  SplMonitorPrices: Integer;
+    function  SplMonitorReportDay: Integer;
     procedure SmetaReport;
     procedure DeleteOldData;
     procedure CalcPlannedOrders;
@@ -821,7 +822,7 @@ var
 begin
   //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
   IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
-  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
+  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
   IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
   //сохраним айди обработанного счета
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
@@ -831,7 +832,7 @@ begin
 //      S.ConcatStP(st, '[' + na.G(i,'name').AsString + ']  [' + na.G(i,'price').AsString + ']  [' + na.G(i,'price_check').AsString + ']    (' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + ')', #13#10);
      // style="border-width: 1px; border-style: solid; border-color: #000000; padding: 6px;">
       st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString + '</td><td>' + na.G(i,'name_unit').AsString +
-        '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum_diff').AsString + '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
+        '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' + na.G(i,'sum_diff').AsString + '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
     end;
     //письмо в html с целью отображания таблицы!
     //в варианте '<table><thead><tbody>' никакими способами не удалось заставить отображать границу таблицы (атрибут бордер, ксс, инлайн ксс)!
@@ -839,12 +840,17 @@ begin
     // border="1" cellpadding="6" cellspacing="0" style="border-width: 1px; border-style: solid; border-color: #000000;
 //    st :='<table>'+'<thead><tr><th>Наименование</th><th>Цена</th><th>Контрольная цена</th><th>Ед. изм.</th><th>Кол-во</th><th>Разница с контрольной</th><th>Счет</th></tr></thead><tbody>' + st + '</tbody></table>';
 //    st :='<table border = "1">'+'<thead><tr><th>Наименование</th><th>Цена</th><th>Контрольная цена</th><th>Ед. изм.</th><th>Кол-во</th><th>Разница с контрольной</th><th>Счет</th></tr></thead><tbody>' + st + '</tbody></table>';
-    st :='<table border = "1">'+'<tr><td>Наименование</td><td>Цена</td><td>Контрольная цена</td><td>Ед. изм.</td><td>Кол-во</td><td>Разница с контрольной</td><td>Счет</td></tr>' + st + '</table>';
+//    st :='<table border = "1">'+'<tr><td>Наименование</td><td>Цена</td><td>Контрольная цена</td><td>Ед. изм.</td><td>Кол-во</td><td>Разница с контрольной</td><td>Счет</td></tr>' + st + '</table>';
+    st :=
+      '<b>По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену:</b><br>' +
+      '<table border = "1">'+
+      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
+      st + '</table><br>';
     CreateTaskRoot(myTskOpMailHtml, [
-      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
 //      ['to', 'sprokopenko@fr-mix.ru'],
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
-      ['body', 'По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену.:'#13#10#13#10 + st],
+      ['body', st],
       ['user-name', 'Учёт']]
     );
   end;
@@ -867,6 +873,49 @@ begin
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
 end;
 
+function TTasks.SplMonitorReportDay: Integer;
+var
+  i,j: Integer;
+  IdSch, IdSchN, IdIb, IdIbN: Integer;
+  na: TNamedArr;
+  va: TVarDynArray;
+  st, css: string;
+
+begin
+  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day where monitor_price = 1 order by name asc', [], na);
+  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum ) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
+  st := '';
+  //va:=[222222];
+  //не получается сделать границы. появлялись при вставке данных тегов в td, но после пропадали, не воспроизводится
+  //<span ></span> <!-- -->
+  if na.Count > 0 then begin
+    for i:=0 to na.Count- 1 do begin
+      st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString +
+        '</td><td>' + na.G(i,'name_unit').AsString + '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' +
+        S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '<b>') + na.G(i,'sum_diff').AsString + S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '</b>') +
+        '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
+    end;
+    st :=
+      '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
+      '<table border = "1">'+
+      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
+      st + '</table><br>';
+  end;
+  if Length(va) > 0 then begin
+    st := S.IIFStr(st <> '', st + '<br><br>----------------------------------<br><b>') + 'Были приходные накладные без основания за вчерашний день:</b><br>Номера: ' + A.Implode(va,', ') + '<br>';
+  end;
+  if st = '' then
+    Exit;
+  CreateTaskRoot(myTskOpMailHtml, [
+    ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+ //   ['to', 'sprokopenko@fr-mix.ru'],
+    ['subject', 'Счета снабжения за вчерашний день'],
+    ['body', st + '<br>'],
+    ['user-name', 'Учёт']
+  ]);
+end;
+
+
 
 procedure TTasks.HourlyTasks;
 begin
@@ -875,6 +924,9 @@ begin
   Q.QCallStoredProc('P_SetOrdersProdData', '', []);
   SplMonitorPrices;
   Q.QCommitOrRollback(True);
+  if HourOf(Now) = 9 then begin
+    SplMonitorReportDay;
+  end;
 end;
 
 

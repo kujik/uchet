@@ -92,6 +92,9 @@ begin
   FDayColWidth := 40;
 
   Caption:='ТУРВ';
+  FTurv.Create(ID, 'job;employee;schedulecode;organization;personnel_number', '');
+
+{
   FTurv.Create(ID);
   FTurv.LoadTurvCodes;
   FTurv.LoadList;
@@ -99,7 +102,8 @@ begin
   FTurv.LoadSchedules;
 //  FTurv.SortAndGroup(['job','employee'], ['job']);
   FTurv.SortAndGroup(['job'], []);  //сортировка по должности
-  FTurv.LoadFromParsec;
+  }
+//  FTurv.LoadFromParsec;
 
 
   if FTurv.Count = 0 then begin
