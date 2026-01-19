@@ -12,19 +12,19 @@ type
     pgcMain: TPageControl;
     ts_Divisions: TTabSheet;
     lbl1: TLabel;
-    dedtDt1: TDBDateTimeEditEh;
-    dedtDt2: TDBDateTimeEditEh;
     ts_Worker: TTabSheet;
     lbl2: TLabel;
-    chbPrev: TDBCheckBoxEh;
-    chbCurr: TDBCheckBoxEh;
-    dedtW: TDBDateTimeEditEh;
     cmbWorker: TDBComboBoxEh;
+    cmbPeriodD: TDBComboBoxEh;
+    cmbPeriodW: TDBComboBoxEh;
+    procedure cmbPeriodWChange(Sender: TObject);
   private
     Mode: Integer;
     OwnerForm: TForm;
     procedure btnOkclick(Sender: TObject); override;
-    function Prepare: Boolean; override;
+    function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
+    function  Prepare: Boolean; override;
+    procedure FillWorkers;
   public
   end;
 
@@ -44,124 +44,92 @@ uses
   uForms
   ;
 
+procedure TFrmWDedtCreatePayrollN.cmbPeriodWChange(Sender: TObject);
+begin
+  if cmbPeriodD.Text <> '' then
+    FillWorkers;
+end;
+
+procedure TFrmWDedtCreatePayrollN.FillWorkers;
+var
+  dt1, dt2: TDateTime;
+begin
+  S.GetDatesFromPeriodString(cmbPeriodW.Text, dt1, dt2);
+  Q.QLoadToDBComboBoxEh('select distinct employee_st from v_w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d order by employee_st', [dt1, dt2], cmbWorker, cntComboL);
+  cmbWorker.ItemIndex := 0;
+end;
+
+function TFrmWDedtCreatePayrollN.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
+begin
+  Result := (pgcMain.ActivePageIndex = 0) and (cmbPeriodD.Text = '') or (pgcMain.ActivePageIndex = 1) and ((cmbPeriodW.Text = '') or (cmbWorker.Text = ''));
+end;
+
 procedure TFrmWDedtCreatePayrollN.btnOkclick(Sender: TObject);
 var
   dt1, dt2: TDateTime;
-  i, j, periods: Integer;
-  v, v1, v2: Variant;
+  i, j: Integer;
   va1, va2: TVarDynArray2;
   va: TVarDynArray;
-  cnt: Integer;
-  b, b1: Boolean;
-  st: string;
-  wid: Integer;
-  dep: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
 begin
   //inherited;
-  cnt := 0;
-  st := '';
+  Cnt := 0;
+  Msg := '';
   //для создания по всем подразделениям
   if pgcMain.ActivePageIndex = 0 then begin
-    //дата начала периода должна быть корректной датой, но произвольной, по ней высчитываем начало турв
-    if not Cth.DteValueIsDate(dedtDt1) then
-      Exit;
-    //поставим дату начала и конца периода турв исходя из даты начала
-    //используется для отладки, в реальном режиме даты изменять нельзя
-    dedtDt1.Value := Turv.GetTurvBegDate(dedtDt1.Value);
-    dedtDt2.Value := Turv.GetTurvEndDate(dedtDt1.Value);
-    if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dedtDt1.Value) + ' - ' + DateToStr(dedtDt2.Value) + '?') <> mrYes then
+    S.GetDatesFromPeriodString(cmbPeriodD.Text, dt1, dt2);
+    if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
       Exit;
     //получим список созданных турв за период
-    va1 := Q.QLoadToVarDynArray2('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dedtDt1.Value]);
+    va1 := Q.QLoadToVarDynArray2('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dt1]);
     //получим список ведомостей по зп, по полным подразделениям за этот период
-    va2 := Q.QLoadToVarDynArray2('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dedtDt1.Value]);
+    va2 := Q.QLoadToVarDynArray2('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dt1]);
     for i := 0 to High(va1) do begin
       if A.PosInArray(va1[i][0], va2, 0) = -1 then begin
         //если ведомость еще не создана
         if va1[i][2] = 1 then
           //уведомление о незакрытых ТУРВ
-          S.ConcatStP(st, va1[i][1], #13#10);
+          S.ConcatStP(Msg, va1[i][1], #13#10);
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
         if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ, бухгалтерия
-        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dedtDt1.Value, dedtDt2.Value], False) <> -1 then
-          inc(cnt);  //увеличим количество созданных
+        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dt1, dt2], False) <> -1 then
+          inc(Cnt);  //увеличим количество созданных
       end;
     end;
     //сообщение
-    if st <> '' then
-      st := #13#10#13#10'По следующим подразделениям не закрыты ТУРВ:'#13#10 + st;
+    if Msg <> '' then
+      Msg := #13#10#13#10'По следующим подразделениям не закрыты ТУРВ:'#13#10 + Msg;
   end
   //для создания по выбранному работнику
   else begin
-    if (not Cth.DteValueIsDate(dedtW)) or (not chbPrev.Checked and not chbCurr.Checked and not dedtW.Visible) then
+    S.GetDatesFromPeriodString(cmbPeriodW.Text, dt1, dt2);
+    if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + #13#10'для работник "' + cmbWorker.Text + '"?') <> mrYes then
       Exit;
-    //не создаем ведомости по работнику, если хотя бы у кого-то открыты по подразделениям любые ведомости
-    //тк создание может привести к удалению из существующей ведомости
-    Q.DBLock(True, 'clear', '-');
-    Q.DBLock(False, 'clear', '-');
-    v := Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s', [myfrm_Dlg_Payroll]);
-    if v[0] <> null then begin
-      MyInfoMessage('Ведомости расчета заработной платы (у Вас или у другого пользователя) открыты для редактирования.'#13#10'Пока они не будут закрыты, создание ведомостей по одному работнику невозможно!');
-      Exit;
-    end;
-    //не выбран работник, выйдем
-    if  Cth.GetControlValue(cmbWorker) = null then
-      Exit;
-    if MyQuestionMessage('Создать ведомости расчета заработной платы?') <> mrYes then
-      Exit;
-    wid := Cth.GetControlValue(cmbWorker);
-    va1 := Turv.GetWorkerStatusArr(wid);
-//  Result:=QLoadToVarDynArray2('select dt, status, id_division, id_job from j_worker_status where id_worker = :id$i order by dt desc, id_division, id_job', id);
-    for periods := 0 to 1 do begin
-      dt1 := MinDateTime;
-      //получим дату начала периода
-      //если виден ввод даты, то только один период и это значение
-      if dedtW.Visible and (periods = 0) then
-        dt1 := Turv.GetTurvBegDate(dedtW.Value);
-      //иначе, если отмечено галками, прошлый и текущий период
-      if not (dedtW.Visible) and (chbPrev.Checked) and (periods = 0) then
-        dt1 := dedtDt1.Value;
-      if not (dedtW.Visible) and (chbCurr.Checked) and (periods = 1) then
-        dt1 := Turv.GetTurvBegDate(Date);
-      if dt1 = MinDateTime then
-        continue;
-      //конец периода
-      dt2 := Turv.GetTurvEndDate(dt1);
-      //массив затронутых подразделений
-      dep := [];
-      //проход по массиву статусов работника
-      //в обратном поряядке, тк нам здесь надо проход от старых дат, а массив отсортирован от новых к более старым
-      for i := High(va1) downto 0 do begin
-        //после периода, выходим
-        if va1[i][0] > dt2 then
-          Break;
-        //до начала или в первый день - выбираем последнее подразделение
-        if (va1[i][0] <= dt1) and (Integer(va1[i][1]) in [1, 2]) then
-          dep := [va1[i][2]];
-        //после начала и до конца периода - добавляем каждое подразделение куда принят/переведен
-        if (va1[i][0] > dt1) and (Integer(va1[i][1]) in [1, 2]) then
-          dep := dep + [va1[i][2]];
+    Q.QLoadFromQuery(
+      'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties where employee_st = :employee_st$s and is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d',
+      [cmbWorker.Text, dt1, dt2], va1
+    );
+    for i := 0 to High(va1) do begin
+      if Q.QSelectOneRow(
+        'select id from w_payroll_calc where id_departament = :p1$i and id_employee = :p2$i and id_organization = :p3$i and personnel_number = :p4$s and dt1 = :dt1$d',
+         [va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1])[0] = null then
+      begin
+        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+          inc(Cnt);  //увеличим количество созданных
       end;
-      Q.QBeginTrans(True);
-(*      for i := 0 to High(dep) do begin
-        //удалим строки с таким работником из ведомостей (только из ведомостей по отделам, а не по работникам!)
-        Q.QExecSql('delete from payroll_item i where ' + 'id_division = :id_division$i and id_worker = :id_worker$i and dt = :dt$d ' + 'and (select id_worker from payroll where i.id_payroll = id) is null', [dep[i], wid, dt1]);
-        //создадим ведомость по работнику в каждом найденном подразделении за данный период
-        if Q.QIUD('i', 'payroll', 'sq_payroll', 'id$i;id_division$i;dt1$d;dt2$d;id_worker$i', [0, dep[i], dt1, dt2, wid], False) <> -1 then
-          inc(cnt);  //увеличим количество созданных
-      end; *)
-      //Q.QRollbackTrans;
-      Q.QCommitOrRollback(True);
     end;
   end;
   //сообщение
-  if cnt = 0 then
-    st := 'Ни одна ведомость не создана!' + st
+  if Cnt = 0 then
+    Msg := 'Ни одна ведомость не создана!' + Msg
   else
-    st := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' + st;
-  MyInfoMessage(st, 1);
+    Msg := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' + Msg;
+  MyInfoMessage(Msg, 1);
   //обновим форму журнала
-  if cnt > 0 then
+  if Cnt > 0 then
     RefreshParentForm;
   Close;
 end;
@@ -169,25 +137,15 @@ end;
 function TFrmWDedtCreatePayrollN.Prepare: Boolean;
 begin
   Result := False;
-  Caption := '~Добавить ведомости расчета заработной платы';
+  Caption := '~Добавить расчетные ведомости';
   FOpt.RefreshParent := True;
   FOpt.DlgPanelStyle := dpsBottomRight;
   FOpt.StatusBarMode := stbmNone;
   FOpt.AutoAlignControls := True;
-  //даты для отделов по текущему периоду
-  dedtDt1.Value := Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
-  dedtDt2.Value := Turv.GetTurvEndDate(dedtDt1.Value);
-  //даты для ведомости по работнику - текущий и предыдущий периоды
-  chbPrev.Caption := 'с ' + DateToStr(dedtDt1.Value) + ' по ' + DateToStr(dedtDt2.Value);
-  chbCurr.Caption := 'с ' + DateToStr(Turv.GetTurvBegDate(Date)) + ' по ' + DateToStr(Turv.GetTurvEndDate(Date));
-  //менять даты для отделов и вводить произвольную для работнику разрешим только разработчику и администратору дянных (для отладки)
-  dedtW.Value := Turv.GetTurvBegDate(Date);
-  //изменение дат создания ведомстей только для отладки
-  dedtDt1.Enabled := User.IsDeveloper;
-  dedtDt2.Enabled := dedtDt1.Enabled;
-  dedtW.Visible := dedtDt1.Enabled;
-  //список работников
-  Q.QLoadToDBComboBoxEh('select f_fio(f, i, o) as name, id from w_employees order by name', [], cmbWorker, cntComboLK);
+  Cth.FillComboBoxWithBiweeklyPeriods(cmbPeriodD, Date, S.IIf(User.IsDeveloper, 12, 2));
+  cmbPeriodD.ItemIndex := 0;
+  Cth.FillComboBoxWithBiweeklyPeriods(cmbPeriodW, Date, S.IIf(User.IsDeveloper, 12, 2));
+  cmbPeriodW.ItemIndex := 0;
   Result := True;
 end;
 

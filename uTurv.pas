@@ -95,14 +95,14 @@ type
   TTurvData = record
   private
     FId: Variant;                                       //айди табеля
-    FDepartament: Variant;
-    FEmployee: Variant;
+    FDepartament: Integer;
+    FEmployee: Integer;
     FDtMonth: TDateTime;                                //1е число месяца турв
     FDtBeg: TDateTime;                                  //дата начала период турв
     FDtEnd: TDateTime;                                  //дата окончания периода
     FDaysCount: Integer;                                //количество дней в периоде
     FIsFinalized: Boolean;                              //флаг, что ведомость закрыта
-    FWoTerminated: Boolean;                             //в ведомость не загружаются записи по статусам, за которыми в данном периоде последовало увольенеие
+    FWoTerminated: Integer;                             //при 1 в ведомость не загружаются записи по статусам, за которыми в данном периоде последовало увольенеие, при - 1 наоборот
     FTitle: TNamedArr;                                  //заголовочная запись табеля
     FRows: TTurvDataRows;                               //массив сгруппированных строк (как отображаются в турв), содержит информацию по сегментам строки, с 0
     FList: TNamedArr;                                   //записи, ссоотвествующие каждой записи статуса работника, попавшей в турв
@@ -112,15 +112,18 @@ type
     FTurvCodeOT: Integer;                               //код для "ОТ"
     FTurvCodeBL: Integer;                               //код для "БЛ"
     FSchedules: TTurvDataSchedules;                     //данные по графикам работы, которые используются в данном турв
+    FPersBonus: TNamedArr;                              //данные по персональным надбавкам
     FScheduleNotApproved : Boolean;                     //флаг, что есть несогласованныые графики работы
     FEmptyDay: TNamedArr;
     FDays: TNamedArr;
     FParsec: TNamedArr;
+    FIdsEmployees: TVarDynArray;
+    FWherePart: string;
     function GetCount: Integer;
     function GetFinalized: Boolean;
   public
-    property Departament: Variant read FDepartament;
-    property Employee: Variant read FEmployee;
+    property Departament: Integer read FDepartament;
+    property Employee: Integer read FEmployee;
     property DtMonth: TDateTime read FDtMonth;
     property DtBeg: TDateTime read FDtBeg;
     property DtEnd: TDateTime read FDtEnd;
@@ -136,14 +139,15 @@ type
     property TurvCodeOT: Integer read FTurvCodeOT;
     property TurvCodBL: Integer read FTurvCodeBL;
     property Schedules: TTurvDataSchedules read FSchedules;
+    property PersBonus: TNamedArr read FPersBonus;
     property ScheduleNotApproved : Boolean read FScheduleNotApproved;
     property EmptyDay: TNamedArr read FEmptyDay;
-    //procedure Create(AId: Variant); overload;
-    procedure Create(AId: Variant; ASort: string = ''; AGroup: string = ''; ADtBeg: TDateTime = 0.0; ADtEnd: TDateTime = 0.0; ADepartament: Integer = -1; AEmployee: Integer = -1; ALoadDays: Boolean = True; AWoTerminated: Boolean = False);
+    procedure Create(AId: Variant; ASort: string = ''; AGroup: string = ''; ADtBeg: TDateTime = 0.0; ADtEnd: TDateTime = 0.0; ADepartament: Integer = -1; AEmployee: Integer = -1; AWherePart: string = ''; ALoadDays: Boolean = True; AWoTerminated:  Integer = 0);
     procedure LoadList;
     function  GetListTitleString(ARow: Integer; AProp: string; ADay: Integer = -1): string;
     procedure LoadDays;
     procedure LoadSchedules;
+    procedure LoadPersBonus;
     procedure LoadTurvCodes;
     function  GetTurvCode(AValue: Variant): Variant;
     function  R(ARow, ADay: Integer): Integer; overload;
@@ -152,13 +156,18 @@ type
     procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
     procedure SortAndGroup(ASort, AGroup : TVarDynArray);
     procedure CalculateTotals(ARow: Integer; var AWorktime, APremium, APenalty: Extended); overload;
-    function  CalculateTotals(ARow: Integer): TNamedArr; overload;
+    function  CalculateTotals(ARow: Integer = -1): TNamedArr; overload;
+    function  GetDataStatus: Integer;
+    function  CellState(ARow, ADay: Integer): Integer ;
     procedure LoadFromParsec;
   end;
 
 
 var
   Turv: TTurv;
+
+const
+  cTurvMilkcompensationSum = 500;
 
 implementation
 
@@ -171,27 +180,16 @@ uses
   uFrmBasicInput
   ;
 
-{procedure TTurvData.Create(AId: Variant);
-begin
-  Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, is_office, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
-  FDepartament := FTitle.G('id_departament');
-  FEmployee := null;
-  FDtBeg := FTitle.G('dt1');
-  FDtEnd := FTitle.G('dt2');
-  FDtMonth := EncodeDate(YearOf(DtBeg), MonthOf(DtBeg), 1);
-  FDaysCount := DaysBetween(FDtEnd, FDtBeg) + 1;
-end;}
-
-procedure TTurvData.Create(AId: Variant; ASort: string = ''; AGroup: string = ''; ADtBeg: TDateTime = 0.0; ADtEnd: TDateTime = 0.0; ADepartament: Integer = -1; AEmployee: Integer = -1; ALoadDays: Boolean = True; AWoTerminated: Boolean = False);
+procedure TTurvData.Create(AId: Variant; ASort: string = ''; AGroup: string = ''; ADtBeg: TDateTime = 0.0; ADtEnd: TDateTime = 0.0; ADepartament: Integer = -1; AEmployee: Integer = -1; AWherePart: string = ''; ALoadDays: Boolean = True; AWoTerminated: Integer = 0);
 begin
   FDepartament := ADepartament;
   FEmployee := AEmployee;
   FWoTerminated := AWoTerminated;
   FDtBeg := ADtBeg;
+  FWherePart := AWherePart;
   if AId <> null then begin
     Q.QLoadFromQuery('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, is_office, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
     FDepartament := FTitle.G('id_departament');
-    FEmployee := null;
     FDtBeg := FTitle.G('dt1');
     FDtEnd := FTitle.G('dt2');
   end
@@ -208,8 +206,11 @@ begin
     LoadTurvCodes;
     LoadDays;
     LoadSchedules;
+    LoadPersBonus;
   end;
   SortAndGroup(A.Explode(ASort, ';', True), A.Explode(AGroup, ';', True));
+  if ALoadDays then
+    CalculateTotals;
 end;
 
 
@@ -219,14 +220,18 @@ var
   st: string;
   va: TVarDynArray;
 begin
+  FIdsEmployees := [];
   //загрузим список строк ТУРВ, каждая строка соотвествует отдельному статусу работника (кроме увольнений), который начался не позже даты окончания,
   //и окончился не раньше даты начала периода, по данному подразделению.
   Q.QLoadFromQuery(
     'select id, dt_beg, dt_end, id_employee, id_job, grade, id_schedule, id_departament, id_organization, is_trainee, is_foreman, is_concurrent, personnel_number, ' +
-    'name, name as employee, departament, job, schedulecode, organization, null as monthly_hours_norm, null as period_hours_norm, 0 as is_terminated, null as temp ' +
+    'name, name as employee, departament, job, schedulecode, organization, has_milk_compensation, ' +
+    'dt_beg as dt_beg1, dt_end as dt_end1, null as monthly_hours_norm, null as period_hours_norm, 0 as is_terminated, null as ids_pers_bonus, null as temp ' +
     'from v_w_employee_properties ' +
     'where is_terminated <> 1 and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) ' +
     'and id_departament = :id_dep$i ' +
+    S.IIfStr(FEmployee <> -1, 'and id_employee = ' + IntToStr(FEmployee) + ' ') +
+    ' ' + FWherePart + ' ' +
     'order by name, dt_beg, job',
     [FDtEnd, FDtBeg, FDepartament],
     FList
@@ -239,22 +244,42 @@ begin
       if Q.QSelectOneRow('select is_terminated from w_employee_properties where id_employee = :id_employee$i and dt_beg = :dt_beg$d', [FList.G(i, 'id_employee'), IncDay(FList.G(i, 'dt_end'), 0)])[0] = 1 then
         FList.SetValue(i, 'is_terminated', 1);
   //если задано, удалим записи по уволенным
-  if FWoTerminated then
+  if FWoTerminated = 1 then
     for i := FList.Count - 1 downto 0 do
       if FList.G(i, 'is_terminated') = 1 then
         Delete(FList.V, i, 1);
+  if FWoTerminated = -1 then
+    for i := FList.Count - 1 downto 0 do
+      if FList.G(i, 'is_terminated') <> 1 then
+        Delete(FList.V, i, 1);
+  for i := 0 to FList.Count - 1 do begin
+    //массив всех работников, кторые есть в турв
+    if not A.InArray(FList.G(i, 'id_employee'), FIdsEmployees) then
+      FIdsEmployees := FIdsEmployees + [FList.G(i, 'id_employee')];
+    //проставим даты начала и окончания чтобы не было за пределами периода
+    var dt := FList.G(i, 'dt_beg1');
+    if dt < FDtBeg then
+      FList.SetValue(i, 'dt_beg1', FDtBeg);
+    dt := FList.G(i, 'dt_end1');
+    if (dt = null) or (dt > FDtEnd) then
+      FList.SetValue(i, 'dt_end1', FDtEnd);
+  end;
 end;
 
-function TTurvData.GetListTitleString(ARow: Integer; AProp: string; ADay: Integer = -1): string;
+function TTurvData.GetListTitleString(ARow: Integer; AProp: string; ADay: Integer = -1): string;   //!!!
 var
-  i, p: Integer;
+  i, p, Row: Integer;
   va: TVarDynArray;
   v: Variant;
 begin
   Result := '';
+  if ARow < 0 then
+    Exit;
+  try
   if ADay = -1 then begin
     va := [];
     for i := 0 to FRows[ARow].Seg.Count - 1 do
+  //    if FRows[ARow].Seg.G(i, 'r') >= 0 then
       va := va + [FList.G(FRows[ARow].Seg.G(i, 'r'), AProp)];
     v := '';
     for i := 0 to High(va) do
@@ -264,7 +289,12 @@ begin
       end;
   end
   else begin
-    Result := FList.G(R(ARow, ADay), AProp).AsString;
+    Row := R(ARow, ADay);
+    if Row > -1 then
+      Result := FList.G(Row, AProp).AsString;
+  end;
+  except
+    Result := '';
   end;
 end;
 
@@ -286,7 +316,7 @@ begin
     'select id, id_employee_properties, id_employee, dt, worktime1, worktime2, worktime3, id_turvcode1, id_turvcode2, id_turvcode3, premium, premium_comm, penalty, penalty_comm, production, ' +
     'comm1, comm2, comm3, begtime, endtime, settime3, nighttime, ' +
     'null as scheduled_hours, null as changed ' +
-    'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
+    'from w_turv_day where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + S.IfEmptyStr(A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ','), '-1000') + ') ' +
     'order by dt',
      [FDtBeg, FDtEnd],
      FDays
@@ -343,11 +373,41 @@ begin
       FScheduleNotApproved := True;
     end;
     for j := 0 to FList.Count - 1 do
-      if FList.G(i, 'id_schedule') = va[i] then begin
+      if FList.G(j, 'id_schedule') = va[i] then begin
         FList.SetValue(j, 'period_hours_norm', FSchedules[i].Title.G('period_hours'));
         FList.SetValue(j, 'monthly_hours_norm', FSchedules[i].Title.G('hours'));
       end;
   end;
+end;
+
+procedure TTurvData.LoadPersBonus;
+//загрузим данные по персональным надбавкам
+var
+  i, j: Integer;
+  na: TNamedArr;
+  st: string;
+begin
+  if FList.Count = 0 then
+    Exit;
+  //загрузим записи о надбавках по всем работникам турв, для которых действие надбавки в пределах периода турв
+  Q.QLoadFromQuery(
+    'select b.id, b.id_employee, b.id_pers_bonus, b.dt_beg, b.dt_end, s.sum, t.name '+
+    'from w_employee_pers_bonus b, w_pers_bonus_sum s, w_pers_bonus t '+
+    'where b.id_pers_bonus = t.id and b.id_pers_bonus = s.id_pers_bonus (+) and s.dt (+) = :dt$d and '+
+    'id_employee in (' + A.Implode(FIdsEmployees, ',') + ') and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d)',
+    [FDtMonth, FDtEnd, FDtBeg], na
+  );
+  //проставим данные надбавок в массиве по статусам (надбавки, кторые действуют в период десйтвия статуса в турв)
+  //при расчете итогов эти данные испольуем для итоговой инфы по надбавкам и для расчета суммы по надбавкам
+  for i := 0 to FList.High do begin
+    st := '';
+    for j := 0 to na.High do begin
+      if (na.G(j, 'id_employee') = FList.G(i, 'id_employee')) and (na.G(j, 'dt_beg') <= FList.G(i, 'dt_end1')) and ((na.G(j, 'dt_end') = null) or (na.G(j, 'dt_end') >= FList.G(i, 'dt_beg1'))) then
+        S.ConcatStP(st, na.G(j, 'id').AsString + #2 + na.G(j, 'id_pers_bonus').AsString + #2 + na.G(j, 'name').AsString + #2 + na.G(j, 'dt_beg').AsString + #2 + na.G(j, 'dt_end').AsString + #2 + na.G(j, 'sum').AsString, #1);
+    end;
+    FList.SetValue(i, 'ids_pers_bonus', st);
+  end;
+
 end;
 
 procedure TTurvData.LoadTurvCodes;
@@ -416,12 +476,13 @@ var
 begin
   Result := '';
   AColor := -1;
-  if ARow >= 0 then
-    pos := R(ARow, ADay)
+  if ARow >= 0 then begin
+    pos := R(ARow, ADay);
+    if pos = -1 then
+      Exit;
+  end
   else
     pos := -ARow;
-  if pos = -1 then
-    Exit;
   AColor := 0;
   if pos = -2 then
     Exit;
@@ -474,13 +535,23 @@ begin
     AComm := FCells[pos].G(ADay, 'penalty_comm').AsString;
   end
   else if ANum = 6 then begin
+    Result := FCells[pos].G(ADay, 'scheduled_hours');
+    AComm := '';
+  end
+  else if ANum = 7 then begin
+    Result := FormatFloat('00.00', FCells[pos].G(ADay, 'begtime').AsFloat);
+    AComm := '';
+  end
+  else if ANum = 8 then begin
+    Result := FormatFloat('00.00', FCells[pos].G(ADay, 'endtime').AsFloat);
+    AComm := '';
+  end
+  else if ANum = 100 then begin
     Result := FCells[pos].G(ADay, 'nighttime');
     AComm := 'работа в ночную смену'; //FCells[pos].G(ADay, 'nighttime').AsString; //!!!
   end
-  else if ANum = 7 then begin
-    Result := FCells[pos].G(ADay, 'scheduled_hours');
-    AComm := '';
-  end;
+
+
 end;
 
 procedure TTurvData.SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
@@ -495,9 +566,13 @@ end;
 
 
 procedure TTurvData.SortAndGroup(ASort, AGroup : TVarDynArray);
+//процедура должна быть вызвана обязательно!
+//данные групируются по AGroup (строки, для которых все поля из AGroup одинаковы, объединяются)
+//данные сортируются по ASort (писать надо в прямом порядке)
+//процедуру можно применять неоднократно (в процессе работы)
 var
   i, j, k, m, n, p, p2, ep, sh: Integer;
-  b: Boolean;
+  b, b1: Boolean;
 begin
   //сортируем массив строк, при этом сначала отсортируем по начальной дате статуса в любом случае
   ASort := ASort + ['dt_beg'];
@@ -505,26 +580,26 @@ begin
     A.VarDynArray2Sort(FList.V, FList.Col(ASort[i]) + 1);
 
   SetLength(FRows, 0);
-  //SetLength(FRows, FList.Count);
   for i := 0 to FList.Count - 1 do begin
     //проверим, есть ли среди уже созданных записей такая, в которой все поля группировки совпадают с текущей
     b := False;
     if Length(AGroup) > 0 then
       for j := 0 to High(FRows) do begin
-        b := True;
+        b1 := True;
         for k := 0 to High(AGroup) do begin
           if FList.G(i, AGroup[k]) <> FList.G(FRows[j].Seg.G('r'), AGroup[k]) then begin
-            b := False;
+            b1  := False;
             Break;
           end;
-          if b then
+          if not b1 then
             Break;
         end;
-        if b then begin
+        if b1 then begin
           p := j;
+          b := True;
           Break;
         end;
-      end;
+     end;
     if b then begin
       FRows[p].Seg.IncLength;
     end
@@ -552,62 +627,36 @@ begin
   Setlength(FCells, 0);
   Setlength(FCells, FList.Count);
   for i := 0 to FList.Count - 1 do begin
+    //найфдем позицию в массиве графиков для графика данных
     m := -1;
     for k := 0 to High(FSchedules) do
       if FSchedules[k].Title.G('id_schedule') = FList.G(i, 'id_schedule') then begin
         m := k;
         Break;
       end;
+    //создадим запись для дня в ячейке
     FCells[i].Create(FDays.FFull, 17);
     FCells[i].SetNull;
+    //загрузим данные по дням (только те дни, кторые загружены из бд!)
     for j := 0 to FDays.Count - 1 do begin
       ep := FDays.G(j, 'id_employee_properties');
       if ep = FList.G(i, 'id') then begin
         //копируем все поля из исходного сплошного массива дней в ячейку целевого массива,  при условии по айди статуса
         for k := 0 to High(FDays.V[0]) do
           FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.V[j][k];
-        FCells[i].SetValue(DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1, 'scheduled_hours', -1);
-        if m <> -1 then begin
-          for k := 0 to High(FSchedules[m].Hours) do
-            if FSchedules[m].Hours[k, 1] = FDays.G(j, 'dt') then begin
-              FCells[i].SetValue(DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1, 'scheduled_hours', FSchedules[m].Hours[k, 0]);
-              Break;
-            end;
-        end;
+      end;
+    end;
+    //пройдем по всем ячейкам
+    for j := 0 to FDaysCount - 1 do begin
+      //загрузим данные по норме за день из расписания
+      FCells[i].SetValue(j, 'scheduled_hours', null);
+      if m <> -1 then begin
+        k := A.PosInArray(IncDay(FDtBeg, j - 1), FSchedules[m].Hours, 1);
+        if k > -1 then
+          FCells[i].SetValue(j, 'scheduled_hours', FSchedules[m].Hours[k, 0]);
       end;
     end;
   end;
-
-{  SetLength(FRows, 0);
-  SetLength(FRows, FList.Count);
-  for i := 0 to FList.Count - 1 do begin
-    FRows[i].Seg.Create(['c1$i', 'c2$i', 'r$i'], 1);
-    FRows[i].Seg.SetValue(0, 'r', i);
-    FRows[i].Seg.SetValue(0, 'c1', Max(1, DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1));
-    if FList.GetValue(i, 'dt_beg') < DtBeg then
-      j := 1
-    else
-      j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
-    FRows[i].Seg.SetValue(0, 'c1', j);
-    if FList.GetValue(i, 'dt_end') = null then
-      j := 16
-    else
-      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
-    FRows[i].Seg.SetValue(0, 'c2', j);
-  end;
-  //загрузим в данные в массив дней, где номер строки соотвествует строке в FList,
-  //и в строке TNamedArr, содержащий 16 записей данных по дню, строка соотвествует номеру дня (18-05-25 -> FDays[Row].G(3, 'dt')
-  Setlength(FCells, 0);
-  Setlength(FCells, FList.Count);
-  for i := 0 to FList.Count - 1 do begin
-    FCells[i].Create(FDays.FFull, 17);
-    FCells[i].SetNull;
-    for j := 0 to FDays.Count - 1 do begin
-      if FDays.G(j, 'id_employee_properties') = FList.G(i, 'id') then
-        for k := 0 to High(FDays.V[0]) do
-          FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.v[j][k];
-    end;
-  end;}
 end;
 
 
@@ -631,53 +680,155 @@ begin
   end;
 end;
 
-function TTurvData.CalculateTotals(ARow: Integer): TNamedArr;
+function TTurvData.CalculateTotals(ARow: Integer = -1): TNamedArr;
 //итоги по строке ТУРВ
 //время - если енсть согласованное то оно, иначе по парсеку, время руководителя не учитывается
 //премии, депремирование - сумма дневных значений
 var
-  i, j, k, pos, idsh: Integer;
+  i, j, k, pos, idsh, r1, r2, status, Row: Integer;
   e1: Extended;
   v1, v2, v3: Variant;
+  IdsBonus: TVarDynArray;
 begin
-  Result.Create(['is_incomplete', 'worktime', 'premium', 'penalty', 'overtime'], 1);
-  //пройдем по всем дням периода
-  for i := 1 to FDaysCount do begin
-    //получим строку исходных данных, если данных в ячейке нет, пропустим итерацию
-    pos := R(ARow, i);
-    if pos < 0 then
-      Continue;
-    //посчитаем переработку
-    for j := 0 to High(FSchedules) do
-      //найдем позицию в данных по графикам, тк нам нужны часы за день
-      if FSchedules[j].Title.G('id_schedule') = FList.G(pos, 'id_schedule') then begin
-        idsh := j;
-        k := -1;
-        //получим часы и код, если есть то из согласованного иначе из парсека
-        v1 := FCells[pos].G(i, 'worktime3');
-        v2 := FCells[pos].G(i, 'id_turvcode3');
-        if (v1 = null) and (v2 = null) then begin
-          v1 := FCells[pos].G(i, 'worktime2');
-          v2 := FCells[pos].G(i, 'id_turvcode2');
-        end;
-        //найдем позицию в данных по часам графика
-        k := A.PosInArray(IncDay(FDtBeg, i -1), FSchedules[j].Hours, 1);
-        //если коды не ОТ или БЛ и найдены часы, просуммируем переработку
-        if (v2 <> FTurvCodeOT) and (v2 <> FTurvCodeBL) and (k > -1) then
-          Result.SetValue(0, 'overtime', Result.G('overtime').AsFloat + v1.AsInteger - FSchedules[j].Hours[k][0]);
-        Break;
+  if ARow = -1 then begin
+    r1 := 0;
+    r2 := Count - 1;
+  end
+  else begin
+    r1 := ARow;
+    r2 := ARow;
+  end;
+  status := 1000;
+  for Row := r1 to r2 do begin
+    Result.Create(['is_incomplete', 'worktime', 'premium', 'penalty', 'overtime', 'milk_compensation', 'status', 'ids_pers_bonus', 'personal_pay'], 1);
+    //предустановки некоторых значений
+    Result.SetValue('status', 100);
+    IdsBonus := [];
+
+    //пройдем по сегментам строки
+    for i := 0 to FRows[Row].Seg.High do begin
+      pos := FRows[Row].Seg.G('r');
+//      var va := A.Explode(FList.G(pos, 'ids_pers_bonus'), ',' ,True);
+      IdsBonus := IdsBonus + A.Explode(FList.G(pos, 'ids_pers_bonus'), #1 ,True);
+    end;
+    //айди персональных надбавок
+    IdsBonus := A.RemoveDuplicates(IdsBonus);
+    Result.SetValue('ids_pers_bonus', S.IIf(Length(IdsBonus) = 0, '-', A.Implode(IdsBonus, #1)));
+
+    //пройдем по всем дням периода и создадим агрегатные значения для полей, изменяющихся по дате
+    for i := 1 to FDaysCount do begin
+      //получим строку исходных данных, если данных в ячейке нет, пропустим итерацию
+      pos := R(Row, i);
+      if pos < 0 then
+        Continue;
+      var dt := IncDay(FDtBeg, i - 1);
+      v1 := FCells[pos].G(i, 'worktime3');
+      v2 := FCells[pos].G(i, 'id_turvcode3');
+      if (v1 = null) and (v2 = null) then begin
+        v1 := FCells[pos].G(i, 'worktime2');
+        v2 := FCells[pos].G(i, 'id_turvcode2');
       end;
-    //итоговое рабочее время; если заданы время или код согласованные, берем согласованное время, иначе по парсеку
-    Result.SetValue(0, 'worktime', Result.G('worktime').AsFloat + S.IIf((FCells[pos].G(i, 'worktime3') = null) and (FCells[pos].G(i, 'id_turvcode3') = null), FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat));
-    //суммарные дневные премии
-    Result.SetValue(0, 'premium', Result.G('premium').AsFloat + FCells[pos].G(i, 'premium').AsFloat);
-    //суммарные дневные штрафы
-    Result.SetValue(0, 'penalty', Result.G('penalty').AsFloat +  FCells[pos].G(i, 'penalty').AsFloat);
+      //посчитаем переработку
+      for j := 0 to High(FSchedules) do
+        //найдем позицию в данных по графикам, тк нам нужны часы за день
+        if FSchedules[j].Title.G('id_schedule') = FList.G(pos, 'id_schedule') then begin
+          idsh := j;
+          k := -1;
+          //получим часы и код, если есть то из согласованного иначе из парсека
+          //найдем позицию в данных по часам графика
+          k := A.PosInArray(IncDay(FDtBeg, i -1), FSchedules[j].Hours, 1);
+          //если коды не ОТ или БЛ и найдены часы, просуммируем переработку
+          if (v2 <> FTurvCodeOT) and (v2 <> FTurvCodeBL) and (k > -1) then
+            Result.SetValue(0, 'overtime', Result.G('overtime').AsFloat + v1.AsInteger - FSchedules[j].Hours[k][0]);
+          Break;
+        end;
+      //посчитаем сумму по надбавкам
+      var va1 := A.Explode(FList.G(pos, 'ids_pers_bonus'), #1 ,True);
+      for j := 0 to High(va1) do begin
+        var va2 := A.Explode(va1[j], #2);
+        if (StrToDate(va2[3]) <= dt) and ((va2[4].AsString = '') or (StrToDate(va2[4]) >= dt)) then begin
+          Result.SetValue('personal_pay', Result.G('personal_pay').AsFloat + va2[5].AsFloat  * v1.AsFloat / FList.G(R(Row)[0], 'monthly_hours_norm'));
+        end;
+      end;
+
+      //итоговое рабочее время; если заданы время или код согласованные, берем согласованное время, иначе по парсеку
+      Result.SetValue(0, 'worktime', Result.G('worktime').AsFloat + S.IIf((FCells[pos].G(i, 'worktime3') = null) and (FCells[pos].G(i, 'id_turvcode3') = null), FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat));
+      //суммарные дневные премии
+      Result.SetValue(0, 'premium', Result.G('premium').AsFloat + FCells[pos].G(i, 'premium').AsFloat);
+      //суммарные дневные штрафы
+      Result.SetValue(0, 'penalty', Result.G('penalty').AsFloat +  FCells[pos].G(i, 'penalty').AsFloat);
+      Result.SetValue(0, 'status', Min(Result.G('status').AsInteger, CellState(Row, i)));
+      status := Min(Result.G('status').AsInteger, status);
+    end;
+
     //переработка не меньше 0
-    Result.SetValue(0, 'overtime', Max(0.0, Result.G('overtime').AsFloat));
-    //!!!is_incomplete =
+    Result.SetValue('overtime', Max(0.0, Result.G('overtime').AsFloat));
+    //компенсация за молоко, некорректно (FList.G(R(ARow)[0] !!!), но досточно для зп про группировке по должности и графику
+    //сумма * отработаное время / норму
+    if FList.G(R(Row)[0], 'has_milk_compensation') = 1 then
+      Result.SetValue('milk_compensation', Round(cTurvMilkcompensationSum * Result.G('worktime').AsFloat / FList.G(R(Row)[0], 'monthly_hours_norm')))
+    else
+      Result.SetValue('milk_compensation', 0);
+    Result.SetValue('personal_pay', Round(Result.G('personal_pay').AsFloat));
+
+    //установим строку в общщих итогах
+    FRows[Row].Totals := Result;
   end;
 end;
+
+function TTurvData.GetDataStatus: Integer;
+//порлучить статус заполненности данных (1 - все введено, можно закрывать,   0 - все согласованы, но не все заполнены,  3 - есть данные, трубующие исправления)
+begin
+  Result := 100;
+  for var Row := 0 to Count - 1 do
+    Result := Min(Result, FRows[Row].Totals.G('status'));
+  Result := S.Decode([Result, 1, 1, 2, 1, 0, 2, 3]);
+end;
+
+function TTurvData.CellState(ARow, ADay: Integer): Integer;
+//стутус некоректности, если:
+//пустая ячейка руководителя или ОК
+//в обоих ячейках время, и оно не совпадает, не важно на какое значение
+//в одной ячейке время, а в другой код
+//если обе коды, но разные - некритично, пропускаем!
+//время/код согласованные перекрывают все, кроме пункта 1!
+var
+  p: Integer;
+  t1, t2, t3, c1, c2, c3: Variant;
+begin
+  Result := 100;
+  if ARow >= 0 then begin
+    p := R(ARow, ADay);
+    if p = -1 then
+      Exit;
+  end
+  else
+    p := -ARow;
+  t1 := FCells[p].G(ADay, 'worktime1');
+  t2 := FCells[p].G(ADay, 'worktime2');
+  t3 := FCells[p].G(ADay, 'worktime3');
+  c1 := FCells[p].G(ADay, 'id_turvcode1');
+  c2 := FCells[p].G(ADay, 'id_turvcode2');
+  c3 := FCells[p].G(ADay, 'id_turvcode3');
+  Result := 1;
+  if ((t1 = null) and (c1 = null)) and ((t2 = null) and (c2 = null)) then
+    Result := 0  //ячейка не заполнена
+  else if ((t1 = null) and (c1 = null)) and not ((t2 = null) and (c2 = null)) then
+    Result := -1  //не заполнено время руководителя при заполненном для парсека
+  else if not((t1 = null) and (c1 = null)) and ((t2 = null) and (c2 = null)) then
+    Result := -2  //не заполнено время ОК при заполненном времени руководителя
+  else if ((t1 <> null) and (c2 <> null)) or ((t2 <> null) and (c1 <> null)) then
+    Result := -3  //в поле руководитя код, а ОК - время, или наоборот
+  else if ((t1 <> null) and (t2 <> null)) and (Abs(t1 - t2) > Module.GetCfgVar(mycfgWtime_autoagreed)) then
+    Result := -4  //времена руководителя и ок различаются более чем на час
+  else if ((t1 <> null) and (t2 <> null)) and (t1 <> t2) then
+    Result := -5  //времена руководителя и ок различаются но менее чем на час
+  ;
+  if not ((t3 = null) and (c3 = null)) and (Result < -3) and (Result >= -5) then
+    Result := 2  //допустимые несовпадения перекрыты согласованным временем
+  ;
+end;
+
 
 
 procedure TTurvData.LoadFromParsec;

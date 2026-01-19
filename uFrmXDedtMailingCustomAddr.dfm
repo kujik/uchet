@@ -1,13 +1,13 @@
 inherited FrmXDedtMailingCustomAddr: TFrmXDedtMailingCustomAddr
   Caption = 'FrmXDedtMailingCustomAddr'
-  ClientHeight = 121
-  ClientWidth = 632
-  ExplicitWidth = 648
-  ExplicitHeight = 160
+  ClientHeight = 120
+  ClientWidth = 628
+  ExplicitWidth = 644
+  ExplicitHeight = 159
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 632
-    Height = 105
+    Width = 628
+    Height = 104
     ExplicitWidth = 632
     ExplicitHeight = 105
     inherited pnlFrmClient: TPanel
@@ -69,8 +69,8 @@ inherited FrmXDedtMailingCustomAddr: TFrmXDedtMailingCustomAddr
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 105
-    Width = 632
+    Top = 104
+    Width = 628
     ExplicitTop = 105
     ExplicitWidth = 632
     inherited lblStatusBarR: TLabel

@@ -28,7 +28,7 @@ implementation
 
 function TFrmXDedtMemo.ShowDialog(AOwner: TObject; AFormDoc, AFormCaption, ATitle: string; var Text: string): Boolean;
 begin
-  PrepareCreatedForm(AOwner, Self.Name + '_' + AFormDoc, '~' + AFormCaption, fEdit, null, [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
+  PrepareCreatedForm(AOwner, Self.Name + '_' + AFormDoc, '~' + AFormCaption, fEdit, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
   memMain.Text := Text;
   lblCaption.Caption := ATitle;
   Result := ShowModal = mrOk;

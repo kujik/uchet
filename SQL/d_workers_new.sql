@@ -1,11 +1,12 @@
 --------------------------------------------------------------------------------
 --профессии
-alter table w_jobs add has_hazard_comp number(1) default 0;
+alter table w_jobs drop column has_hazard_comp;
+alter table w_jobs add has_milk_compensation number(1) default 0;
 create table w_jobs(
   id number(11),
   name varchar2(400),
   comm varchar2(400),
-  has_hazard_comp number(1) default 0,
+  has_milk_compensation number(1) default 0,
   active number(1),
   constraint pk_w_jobs primary key (id)
 );
@@ -435,8 +436,29 @@ where
   b.id_pers_bonus = t.id (+)
   and b.id_employee (+) = e.id
   and e.is_working_now = 'работает'
-;    
+;
 
+create or replace view v_w_employee_pers_bonus_get as
+select 
+  b.id, 
+  b.id_pers_bonus, 
+  t.name,
+  t.comm,
+  b.dt_beg,
+  b.dt_end,
+  s.dt,
+  s.sum
+from  
+  w_pers_bonus t,
+  w_employee_pers_bonus b,
+  w_pers_bonus_sum s
+where
+  b.id_pers_bonus = t.id 
+  and s.id_pers_bonus (+) = t.id
+;    
+    
+--create or replace view v_w_employee_pers_bonus_get2 as
+--select b.id, b.id_employee, b.id_pers_bonus, b.dt_beg, b.dt_end from w_employee_pers_bonus b, w_pers_bonus_sum s where b.id_pers_bonus = s.id_pers_bonus (+) and s.dt (+) = :dt$d and id_employee in (1,39,77) and dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d);
 
 --------------------------------------------------------------------------------
 
@@ -592,6 +614,7 @@ select
   case when is_hired = 1 then 'принят' when is_terminated = 1 then 'уволен' else 'переведен' end as status,
   f_fio(e.f, e.i, e.o) as name,
   f_fio(e.f, e.i, e.o) as employee,
+  f_fio(e.f, e.i, e.o) || ' - ' || o.name || ' - ' || personnel_number || '' as employee_st,
   o.name as organization,
   d.name as departament,
   j.name as job,
@@ -599,6 +622,7 @@ select
   decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
   decode(ep.is_concurrent, 1, 'совместитель', null) as concurrent,
   decode(ep.is_trainee, 1, 'ученик', null) as trainee,
+  j.has_milk_compensation,
   u.name as managername 
 from
   w_employees e,
@@ -617,24 +641,14 @@ where
   ep.id_schedule = s.id (+) and
   ep.id_manager = u.id (+)
   ;
-/*  
-and h.id = s.id
-    AND h.dt = (
-        CASE
-            WHEN EXTRACT(DAY FROM ep.dt) >= 16 THEN
-                TRUNC(ep.dt, 'MM') + 15  -- 16-е число текущего месяца
-            ELSE
-                TRUNC(ep.dt, 'MM')       -- 1-е число текущего месяца
-        END
-    )
-;
-*/         
+
 --!
 --delete from w_employee_properties;
 --insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
 --  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
   
-  
+
+select distinct employee from v_w_employee_properties where is_terminated = 1 and dt_beg > date '2025-12-01';  
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
@@ -687,7 +701,7 @@ where
 
 --------------------------------------------------------------------------------
 
---alter  table _wturv_day add nighttime number(4,2);
+alter table w_turv_day add begendtime2 varchar2(100);;
 --alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
 --таблица турв для конкретного работника за конкретный день
 create table w_turv_day(
@@ -711,6 +725,7 @@ create table w_turv_day(
   production number(1),             --выработка (сдана, нет)
   begtime number(4,2),              --время прихода по парсеку  
   endtime number(4,2),              --время ухода по парсеку
+  begendtime2 varchar2(100),        --текстовое поле, содержащие времна ухода и прихода по парсеку, если их было несколько  
   nighttime number(4,2),            --время работы в ночную смену
   settime3 number(1),               --1, когда время по парсеку worktime2 установлено 
   constraint pk_w_turv_day primary key (id),
@@ -752,11 +767,15 @@ insert into w_payroll_calculation_methods select * from payroll_method;
 */
 
 --------------------------------------------------------------------------------
-drop table w_payroll_calc cascade constraints;
+--drop table w_payroll_calc cascade constraints;
+alter table w_payroll_calc add id_organization number(11); --айди организации
+alter table w_payroll_calc add personnel_number varchar2(10);  --табельный номер 
 create table w_payroll_calc ( 
   id number(11),
   id_departament number(11), --айди подразделения
   id_employee number(11),    --айди раболтника 
+  id_organization number(11), --айди организации
+  personnel_number varchar2(10),  --табельный номер 
   calc_method number(11),    --общий метод расчета   
   overtime_method number(11),--метод учета переработки    
   dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
@@ -861,6 +880,8 @@ select
   s.code as schedule,
   --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
   p.id_employee as id_target_employee,
+  p.id_organization as id_target_organization,
+  p.personnel_number as target_personnel_number,
   p.dt1,
   p.dt2,
   p.calc_method,
@@ -1124,6 +1145,9 @@ where
   --where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
   
   delete from w_payroll_calc_item;
+  
+  
+
 
 
 

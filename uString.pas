@@ -33,6 +33,7 @@ type
     function  GetRow(RowNo: Integer): TVarDynArray;
     procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant); overload;
     procedure SetValue(Field: string; NewValue: Variant); overload;
+    function  Find(Value: Variant; Field: string): Integer;
     function  Empty: Boolean;
     function  Count: Integer;
     function  High: Integer;
@@ -40,7 +41,8 @@ type
     procedure SetLen(ALength: Integer);
     function  FieldsCount: Integer;
     procedure Clear;
-    procedure SetNull;
+    procedure SetNull; overload;
+    procedure SetNull(RowNo: Integer); overload;
   end;
 
   TNamedArr2 = array of TNamedArr;
@@ -353,6 +355,7 @@ Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меня
     function VarIsClear(const V: Variant): Boolean;
     //возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
     procedure GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
+    procedure GetDatesFromPeriodString(st: string; var dt1: TDateTime; var dt2: TDateTime);
   end;
 
 //------------------------------------------------------------------------------
@@ -457,6 +460,8 @@ type
     function AsFloat: Extended;
     function AsBoolean: Boolean;
     function AsDateTime: TDatetime;
+    function NullIf0: Variant;
+    function NullIfEmpty: Variant;
   end;
 
 //НЕ разобрался пока что
@@ -2178,6 +2183,13 @@ begin
   end;
 end;
 
+procedure TMyStringHelper.GetDatesFromPeriodString(st: string; var dt1: TDateTime; var dt2: TDateTime);
+begin
+  var va := A.Explode(st, ' - ');
+  dt1 := StrToDate(va[0]);
+  dt2 := StrToDate(va[1]);
+end;
+
 
 
 function TMyStringHelper.VeryfyValue(ValueType: string; Verify: string; Value: string; var CorrectValue: Variant): Boolean;
@@ -2353,7 +2365,7 @@ end;
 
 function TMyArrayHelper.Implode(Arr: array of Variant; Delim: string; IgnoreEmpty: Boolean = False): string;
 //сливаем одномерный вариантный массив в строку через разделитель;
-//если IgnoreEmpty установлен, то игр\норируем пустые значения массива
+//если IgnoreEmpty установлен, то игнорируем пустые значения массива
 var
   i: Integer;
 begin
@@ -2905,6 +2917,11 @@ begin
   SetValue(0, Field, NewValue);
 end;
 
+function TNamedArr.Find(Value: Variant; Field: string): Integer;
+begin
+  Result := A.PosInArray(Value, V, Col(Field));
+end;
+
 function TNamedArr.Empty: Boolean;
 begin
   Result := Length(V) = 0;
@@ -2952,6 +2969,13 @@ begin
     for var j := 0 to System.High(V[i]) do
       V[i][j] := null;
 end;
+
+procedure TNamedArr.SetNull(RowNo: Integer);
+begin
+  for var j := 0 to System.High(V[RowNo]) do
+    V[RowNo][j] := null;
+end;
+
 
 
 //==============================================================================
@@ -3037,6 +3061,16 @@ end;
 function TVariantHelper.AsDateTime: TDatetime;
 begin
   Result := Self
+end;
+
+function TVariantHelper.NullIf0: Variant;
+begin
+  Result := S.NullIf0(Self);
+end;
+
+function TVariantHelper.NullIfEmpty: Variant;
+begin
+  Result := S.NullIfEmpty(Self);
 end;
 
 function VTxt(var v: Variant; name: string = ''): string;

@@ -771,7 +771,7 @@ begin
 
   if F = myfrm_Dlg_R_Jobs then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_jobs', 'Должность', 400, 100,
-      [['name$s', cntEdit, 'Должность','1:400::T'], ['comm$s', cntEdit, 'Комментарий','0:400::T'], ['has_hazard_comp$i', cntCheck, 'Компенсация'#13#10'за вредность'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]
+      [['name$s', cntEdit, 'Должность','1:400::T'], ['comm$s', cntEdit, 'Комментарий','0:400::T'], ['has_milk_compensation$i', cntCheck, 'Компенсация'#13#10'за молоко'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]
     );
   end
   else if F = myfrm_Dlg_R_TurvCodes then begin
@@ -919,7 +919,7 @@ begin
     TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);  //нужно обеспечить блокировку оденовременного открытия окна статуса!
   end
   else if F = myfrm_Dlg_Turv then begin
-    TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize], fMode, AID, null);
+    TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize, myfoMulticopy], fMode, AID, null);
   end
   else if F = myfrm_Dlg_AddTurv then begin
 //~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);

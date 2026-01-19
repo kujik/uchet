@@ -55,7 +55,7 @@ end;
 
 procedure TFrmADedtItmCopyRigths.ShowDialog;
 begin
-  PrepareCreatedForm(Application, '', '~Права пользователя ИТМ', fEdit, null, [{myfoModal, }myfoDialog, myfoDialogButtonsB]);
+  PrepareCreatedForm(Application, '', '~Права пользователя ИТМ', fEdit, null, [], [{myfoModal, }myfoDialog, myfoDialogButtonsB]);
   F.DefineFields:=[['cmbSrc','V=1:255'], ['cmbDst','V=1:255']];
   Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], cmbSrc, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], cmbDst, cntComboLK);

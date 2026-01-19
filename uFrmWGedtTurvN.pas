@@ -21,13 +21,11 @@ type
     FTurv : TTurvData;
 
     FRgsCommit, FRgsEdit1, FRgsEdit2, FRgsEdit3: Boolean;  //права
-    FStatus, FStatusOld : Integer;
-
-    FArrTurv: array of array of array of Variant;
 
     FInEditMainGridMode: Boolean;
     FInEditMode: Boolean;
     FIsDetailGridUpdated: Boolean;
+    FIsChanged: Boolean;
 
     FDayColWidth: Integer;
     FLeftPartWidth: Integer;
@@ -36,7 +34,7 @@ type
     function  SetLock: Boolean;
     function  LoadTurv: Boolean;
     procedure PushTurvToGrid;
-    procedure PushTurvCellToGrid(ARow, ADay: Integer);
+    procedure PushTurvCellToGrid(ARow, ADay: Integer; ARepaint: Boolean);
     procedure PushTurvCellToDetailGrid(ARow, ADay: Integer);
     function  GetDay(AFieldName: string = ''; AGridNo: Integer = 0): Integer;
     procedure PrintRowsTitle;
@@ -46,10 +44,11 @@ type
     procedure SetLblsDetailText;
     procedure SetGridEditableMode;
     procedure FrgsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+    procedure FinalizeTurv;
     procedure InputDialog(Mode : Integer);
     procedure SaveDayToDB(r, d: Integer);
     procedure ExportToXlsxA7(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
-//    procedure SundaysToTurv;
+    procedure SundaysToTurv(AMode: Integer);
 //    procedure SendEMailToHead;
 
 
@@ -60,6 +59,7 @@ type
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+    procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
 
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
@@ -92,7 +92,10 @@ begin
   FDayColWidth := 40;
 
   Caption:='ТУРВ';
-  FTurv.Create(ID, 'job;employee;schedulecode;organization;personnel_number', '');
+  var ssort := 'job;employee;schedulecode;organization;personnel_number';
+  //var sgroup := 'schedulecode;job;employee';
+  var sgroup := 'job;employee;schedulecode;organization;personnel_number';
+  FTurv.Create(ID, ssort, sgroup);
 
 {
   FTurv.Create(ID);
@@ -112,13 +115,15 @@ begin
   end;
   if FTurv.ScheduleNotApproved then begin
     MyInfoMessage('Не согласованы плановые графики работы!');
-//    Exit;
+    Mode := fView;
   end;
 
   FOpt.RefreshParent := True;
   FRgsEdit1:=FTurv.Title.G('rgse')=1;
   FRgsEdit2:=User.Role(rW_J_Turv_TP);
   FRgsEdit3:=User.Role(rW_J_Turv_TS);
+  FRgsCommit:=User.Role(rW_J_Turv_Commit);;
+
 
   //возьмем блокировки, отдельно на изменение каждого вида времени
   SetLock;
@@ -153,24 +158,27 @@ begin
     ]];
   end;
 
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind] - [myogColoredEven];
   Frg1.Opt.SetFields([
     ['x$s', '*','20'],
     ['name$s','Работник|ФИО','200'],
     ['job$s','Работник|Должность','150'],
-    ['is_foreman$s','Работник|Бригадир','50','pic'],
-    ['is_trainee$s','Работник|Ученик','40','pic'],
-    ['grade$f','Работник|Разряд','40'],
-    ['schedulecode$s','Работник|График','50']
+    ['is_foreman$s','Работник|Бригадир','50','pic','i'],
+    ['is_trainee$s','Работник|Ученик','40','pic','i'],
+    ['grade$s','Работник|Разряд','40'],
+    ['schedulecode$s','Работник|График','50'],
+    ['period_hours_norm$s','Работник|Норма','50']
     ] + flds1 + [
     ['time$f', 'Итоги|Время', '50'] ,
-//    ['premium_p$f', 'Итоги|Премия за период', '50'],
+    ['overtime$f', 'Итоги|Перера'#13#10'ботка', '50'] ,
     ['premium$f', 'Итоги|Премии', '50'],
-    ['penalty$f', 'Итоги|Депреми' + sLineBreak + 'рование', '50']
+    ['penalty$f', 'Итоги|Депреми'#13#10'рование', '50'],
+    ['ids_pers_bonus$s', 'Итоги|Перс.'#13#10'выплата', '50', 'pic=-:0;10'],
+    ['status$i', 'Статус', '40', 'pic=0;1;2:2;1;7;3']  //не введено - синяя галка, ок - зеленая, закрыта согласованным +, при ошибках -
 //    ['comm$s', 'Итоги|Комментарий', '100']
   ]);
   //ширина столбцов описания работника
-  FLeftPartWidth := 200 + 150 + 50 + 40 + 40 + 50 + 6;
+  FLeftPartWidth := 200 + 150 + {50 + 40 +} 40 + 50 + 50+ 3;
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
     [mbtView, FRgsEdit1, True, 'Итоговое время'],
@@ -184,7 +192,9 @@ begin
     [-mbtComment, FInEditMode, True],
     [],
     //[mbtSendEMail, FRgsEdit2 and FInEditMode],
-    [mbtCustom_SundaysToTurv, FInEditMode and FRgsEdit2, FInEditMode],
+    [-1002, FInEditMode and FRgsEdit1 and (FTurv.Title.G('is_office') = 1), FInEditMode, 'Проставить выходные (время руководитяля)'],
+    [-1003, FInEditMode and FRgsEdit2, FInEditMode, 'Проставить выходные (время отдела кадров)'],
+    [],
     [mbtLock, FRgsCommit and (FTurv.IsFinalized or (Mode = fEdit)), True, S.IIFStr(FTurv.IsFinalized, 'Отменить закрытие периода', 'Закрыть период')],
     [],
     [mbtPrint],
@@ -196,7 +206,7 @@ begin
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblWorker', '', 4, yrefB, 800);
   Frg1.SetInitData([], '');
 
-  Frg2.Options := FrDBGridOptionDef;
+  Frg2.Options := FrDBGridOptionDef  - [myogColoredEven];
   flds2 := [['type$s', 'Значение', IntToStr(FLeftPartWidth - 22)]] + flds2;
   Frg2.Opt.SetFields(flds2);
   Frg2.Opt.SetGridOperations('u');
@@ -209,6 +219,7 @@ begin
     [mbtCommentForWorker, FInEditMode, False, 'Комментарий по работнику', 'edit'],
     [mbtCtlPanel, True, 500],
     [],}
+    [mbtCtlPanel],
     [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True, 'Преимия за день'],
     [-mbtFine, FInEditMode and FRgsEdit1, True, 'Депремирование за день'],
     //[-ghtNightWork, FInEditMode, True, 'Ночная смена'],
@@ -220,7 +231,7 @@ begin
   Frg2.CreateAddControls('2', cntLabelClr, 'Премия:', 'lblDPremium', '', 4, yrefC, 200);
   Frg2.CreateAddControls('3', cntLabelClr, 'Комментарий:', 'lblDComm', '', 4, yrefC, 500);
 
-  Captions2 := ['Время (руководитель)', 'Время (парсек)', 'Время (согласованное)', 'Премия', 'Депремирование', 'Время по графику'];
+  Captions2 := ['Время (руководитель)', 'Время (отдел кадров)', 'Время (согласованное)', 'Премия', 'Депремирование', 'Время по графику', 'Приход на работу', 'Уход с работы'];
   for i := 0 to High(Captions2) do
     values2 := values2 + [[Captions2[i], null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null]];
   Frg2.SetInitData(values2, '');
@@ -290,6 +301,9 @@ end;
 procedure TFrmWGedtTurvN.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
+  if FIsChanged then begin
+    Q.QExecSql('update w_turv_period set status = :status$i where id = :id$i', [FTurv.GetDataStatus, ID]);
+  end;
   if FRgsEdit1 then
     Q.DBLock(False, FormDoc, VarToStr(id) + '-1', '', fNone);
   if FRgsEdit2 then
@@ -370,7 +384,7 @@ begin
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 1, color, v1);
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 2, color, v2);
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 3, color, v3);
-  v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 6, color, v).AsString;
+  v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 100, color, v).AsString;
   //если выйдем, то будет стандартная отрисовка
   //выйдем, если нет никакого комментария
   if (((VarIsEmpty(v1)) or (S.NSt(v1) = '')) and ((VarIsEmpty(v2)) or (S.NSt(v2) = '')) and ((VarIsEmpty(v3)) or (S.NSt(v3) = '')) and ((VarIsEmpty(v4)) or (S.NNum(v4) = 0))) and Frg1.DbGridEh1.ReadOnly then
@@ -404,7 +418,7 @@ end;
 procedure TFrmWGedtTurvN.Frg1DbGridEh1DataHintShow(Sender: TCustomDBGridEh; CursorPos: TPoint; Cell: TGridCoord; InCellCursorPos: TPoint; Column: TColumnEh; var Params: TDBGridEhDataHintParams; var Processed: Boolean);
 var
   v1, v2, v3, v4, st: string;
-  color, day: Integer;
+  color, day, w, h: Integer;
 begin
   inherited;
   //только столбцы с днями
@@ -415,7 +429,7 @@ begin
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 1, color, v1);
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 2, color, v2);
   FTurv.GetDayCell(Frg1.RecNo - 1, Day, 3, color, v3);
-  v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 6, color, st).AsString;
+  v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 100, color, st).AsString;
   //если мышка в верхнем лефом углу, вызовем метод формы посказки, а он уже покажет форму, если комментарий непустой,
   //также передаются координаты чтобы форма была помещена в нужном месте.
   if ((InCellCursorPos.X <= 7) and (InCellCursorPos.Y <= 7)) then
@@ -426,7 +440,7 @@ end;
 
 procedure TFrmWGedtTurvN.Frg1DbGridEh1RowDetailPanelShow(Sender: TCustomDBGridEh; var CanShow: Boolean);
 var
-  i: Integer;
+  i, w, h: Integer;
 begin
   Frg1.DbGridEh1RowDetailPanelShow(Sender, CanShow);
   //заполним сетки
@@ -435,6 +449,8 @@ begin
   end;
   Frg2.MemTableEh1.First;
   SetLblsDetailText;
+  Frg2.GetGridDimensions(w, h);
+  Frg1.DbGridEh1.RowDetailPanel.Height := Frg2.DbGridEh1.Top + h + 6 + S.IIf(Frg1.DbGridEh1.RowDetailPanel.Width < (w + 10), 24, 0);
 //  SetBtns;
 end;
 
@@ -457,8 +473,10 @@ procedure TFrmWGEdtTurvN.PushTurvToGrid;
 var
   i, j: Integer;
   Premium, Penalty, Worktime: Extended;
+  na: TNamedArr;
 begin
   Frg1.MemTableEh1.EmptyTable;
+  FTurv.CalculateTotals;
   for i := 0 to FTurv.Count - 1 do begin
     Frg1.MemTableEh1.Last;
     Frg1.MemTableEh1.Insert;
@@ -468,31 +486,29 @@ begin
     Frg1.MemTableEh1.FieldByName('is_trainee').Value := FTurv.GetListTitleString(i, 'is_trainee');
     Frg1.MemTableEh1.FieldByName('grade').Value := FTurv.GetListTitleString(i, 'grade');
     Frg1.MemTableEh1.FieldByName('schedulecode').Value := FTurv.GetListTitleString(i, 'schedulecode');
+    Frg1.MemTableEh1.FieldByName('period_hours_norm').Value := FTurv.GetListTitleString(i, 'period_hours_norm');
      Frg1.MemTableEh1.Post;
     for j := 1 to FTurv.DaysCount do begin
-      PushTurvCellToGrid(i, j);
+      PushTurvCellToGrid(i, j, False);
     end;
     Frg1.MemTableEh1.Edit;
-    FTurv.CalculateTotals(i, Worktime, Premium, Penalty);
-    Frg1.MemTableEh1.FieldByName('premium').Value := Premium;
-    Frg1.MemTableEh1.FieldByName('penalty').Value := Penalty;
-    Frg1.MemTableEh1.FieldByName('time').Value := Worktime;
+    Frg1.MemTableEh1.FieldByName('time').Value := FTurv.Rows[i].Totals.G('worktime');
+    Frg1.MemTableEh1.FieldByName('premium').Value := FTurv.Rows[i].Totals.G('premium');
+    Frg1.MemTableEh1.FieldByName('penalty').Value := FTurv.Rows[i].Totals.G('penalty');
+    Frg1.MemTableEh1.FieldByName('overtime').Value := FTurv.Rows[i].Totals.G('overtime');
+    Frg1.MemTableEh1.FieldByName('status').Value := FTurv.Rows[i].Totals.G('status');
+    Frg1.MemTableEh1.FieldByName('ids_pers_bonus').Value := FTurv.Rows[i].Totals.G('ids_pers_bonus');
     Frg1.MemTableEh1.Post;
   end;
   Frg1.MemTableEh1.First;
 end;
 
-procedure TFrmWGEdtTurvN.PushTurvCellToGrid(ARow, ADay: Integer);
+procedure TFrmWGEdtTurvN.PushTurvCellToGrid(ARow, ADay: Integer; ARepaint: Boolean);
 //отобразим ячейку в общем гриде на основании массива данных
 var
+  v0: Variant;
+  Color: Integer;
   st: string;
-  v, v0, v1, v2: Variant;
-  color: Integer;
-  i, j, pos: Integer;
-  sum: TVarDynArray;
-  Worktime, Premium, Penalty: Extended;
-  e: extended;
-  b: Boolean;
 {
    если протавлено любое значение в проверенных, то выводится оно, независимо от значения и наличия данных от мастера и парсек
    в противном случае, значение от мастера обязательно должно быть проставлено
@@ -512,54 +528,19 @@ begin
   //при этом на экране отображения только после получения гридом фокуса, переключение фокуса оставляем за вызывающим
   Frg1.SetValue('d' + IntToStr(ADay), ARow, False, v0);
   //посчитаем итоги по строке и обновим данные в таблице
-  FTurv.CalculateTotals(ARow, Worktime, Premium, Penalty);
-  Frg1.SetValue('time', ARow, True, Worktime);
-  Frg1.SetValue('premium', ARow, True, Premium);
-  Frg1.SetValue('penalty', ARow, True, Penalty);
-  Frg1.InvalidateGrid;
-  //обновим текст лейбла
-  SetLblWorkerText;
-
-(*
-  //итоги в правой части таблицы
-  Setlength(sum, 3);
-  b := True;
-  //цикл по дням
-  for i := 1 to FDayColumnsCount do begin
-      //время - от мастеров, если установлено парсек то парсек, если установлено согласованное то оно
-    e := S.NNum(FArrTurv[ARow][i][1]);
-    if (FArrTurv[ARow][i][2] <> null) or (FArrTurv[ARow][i][5] <> null) then
-      e := S.NNum(FArrTurv[ARow][i][2]);
-    if (FArrTurv[ARow][i][3] <> null) or (FArrTurv[ARow][i][6] <> null) then
-      e := S.NNum(FArrTurv[ARow][i][3]);
-    sum[0] := sum[0] + e;
-    sum[1] := sum[1] + S.NNum(FArrTurv[ARow][i][7]);
-    sum[2] := sum[2] + S.NNum(FArrTurv[ARow][i][9]);
-      //ячейки красные и желтые, или пустые итоговые и при этом не серые - не даем возможности закрыть турв
-    if (S.NNum(FArrTurv[ARow][i][12]) = 1) or (S.NNum(FArrTurv[ARow][i][12]) = 2) or ((FArrTurv[ARow][i][0] <> -1) and (FArrTurv[ARow][i][1]) = null) then
-      b := False;
+  var na := FTurv.CalculateTotals(ARow);
+  Frg1.SetValue('time', ARow, True, na.G('worktime'));
+  Frg1.SetValue('premium', ARow, True, na.G('premium'));
+  Frg1.SetValue('penalty', ARow, True, na.G('penalty'));
+  Frg1.SetValue('overtime', ARow, True, na.G('overtime'));
+  Frg1.SetValue('status', ARow, True, na.G('status'));
+  Frg1.SetValue('ids_pers_bonus', ARow, True, na.G('ids_pers_bonus'));
+  if ARepaint then begin
+    Frg1.InvalidateGrid;
+    Frg1.DbGridEh1.Repaint;
+    //обновим текст лейбла
+    SetLblWorkerText;
   end;
-  //заполним итоговые ячейки мемтейбл
-  Frg1.SetValue('time', ARow, False, FormatFloat('0.00', S.NNum(sum[0])));
-  Frg1.SetValue('premium_p', ARow, False, FormatFloat('0.00', S.NNum(FArrTitle.G(ARow, 'premium'))));
-  Frg1.SetValue('premium', ARow, False, FormatFloat('0.00', S.NNum(sum[1])));
-  Frg1.SetValue('penalty', ARow, False, FormatFloat('0.00', S.NNum(sum[2])));
-  Frg1.SetValue('comm', ARow, False, FArrTitle.G(ARow, 'comm'));
-  //кнопка Закрыть период
-  FStatus := 1;
-  for j := 0 to High(FArrTurv) do begin
-    for i := 1 to FDayColumnsCount do begin
-      if (FArrTurv[j][i][cColor] = -1) and (FStatus = 1) then
-        FStatus := 2;
-      if FArrTurv[j][i][cColor] = 1 then
-        FStatus := 3;
-      if FStatus = 3 then
-        break
-    end;
-    if FStatus = 3 then
-      break
-  end;
-  *)
 end;
 
 procedure TFrmWGEdtTurvN.PushTurvCellToDetailGrid(ARow, ADay: Integer);
@@ -575,12 +556,10 @@ begin
   //получим автоматически номер активной строки грида
   if ARow = -1 then
     ARow := Frg1.RecNo - 1;
-  for i := 1 to 5 do begin
+  for i := 1 to 8 do begin
     v := FTurv.GetDayCell(ARow, ADay, i, color, st, True);
     Frg2.SetValue('d' + IntToStr(ADay), i - 1, False, v);
   end;
-  v := FTurv.GetDayCell(ARow, ADay, 7, color, st, True);
-  Frg2.SetValue('d' + IntToStr(ADay), 5, False, v);
   Frg2.InvalidateGrid;
 end;
 
@@ -594,6 +573,7 @@ var
   b: Boolean;
 begin
   d := GetDay;
+//  f := ['name', 'job', 'is_foreman', 'grade', 'schedulecode'];
   f := ['name', 'job', 'is_foreman', 'grade', 'schedulecode'];
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     for j := 0 to High(f) do begin
@@ -708,10 +688,10 @@ end;
 procedure TFrmWGEdtTurvN.SetLblsDetailText;
 //показать в детальной панеле премию и комментарий пользователя, кнопки редактирования
 begin
-{  if not Frg1.MemTableEh1.Active or (Frg1.RecNo < 1) or not Frg2.MemTableEh1.Active or (Frg2.RecNo < 1) or Frg2.InLoadData then
+  if not Frg1.MemTableEh1.Active or (Frg1.RecNo < 1) or not Frg2.MemTableEh1.Active or (Frg2.RecNo < 1) or Frg2.InLoadData then
     Exit;
-  TLabelClr(Frg2.FindComponent('lblDWorker')).SetCaptionAr2(['$FF0000', FArrTitle.G(Frg1.RecNo - 1, 'workername')]);
-  TLabelClr(Frg2.FindComponent('lblDComm')).SetCaptionAr2(['Комментарий:$FF0000 ', S.IIf(S.NSt(FArrTitle.G(Frg1.RecNo - 1, 'comm')) <> '', FArrTitle.G(Frg1.RecNo - 1, 'comm'), 'нет')]);
+  TLabelClr(Frg2.FindComponent('lblDWorker')).SetCaptionAr2(['$FF0000', Frg1.GetValue('name')]);
+{  TLabelClr(Frg2.FindComponent('lblDComm')).SetCaptionAr2(['Комментарий:$FF0000 ', S.IIf(S.NSt(FArrTitle.G(Frg1.RecNo - 1, 'comm')) <> '', FArrTitle.G(Frg1.RecNo - 1, 'comm'), 'нет')]);
   TLabelClr(Frg2.FindComponent('lblDComm')).ShowHint := Length(VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'))) > 150;
   TLabelClr(Frg2.FindComponent('lblDComm')).Hint := VarToStr(FArrTitle.G(Frg1.RecNo - 1, 'comm'));
   TLabelClr(Frg2.FindComponent('lblDPremium')).SetCaptionAr2(['Премия за период:$FF0000 ', FormatFloat('0.00', S.NNum(FArrTitle.G(Frg1.RecNo - 1, 'premium')))]);
@@ -737,8 +717,9 @@ procedure TFrmWGEdtTurvN.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No:
 var
   Row, Day, Pos: Integer;
   Color: Integer;
-  v: Variant;
+  v1, v2, v3: Variant;
   st: string;
+  status: Integer;
 begin
   if (Params.Row = 0) then
     Exit;
@@ -748,7 +729,31 @@ begin
     Params.Background := clSkyBlue;
     Exit;
   end;
-  v := FTurv.GetDayCell(Row, Day, 1, Color, st);
+  v3 := FTurv.GetDayCell(Row, Day, 6, Color, st);
+  v2 := FTurv.GetDayCell(Row, Day, 2, Color, st);
+  v1 := FTurv.GetDayCell(Row, Day, 1, Color, st);
+  status := FTurv.CellState(Row, Day);
+  if Color = - 1 then begin
+    Params.Background := clmyGray;
+    Params.ReadOnly := True;
+  end
+  else begin
+    {
+    -1  //не заполнено время руководителя при заполненном для парсека
+    -2  //не заполнено время ОК при заполненном времени руководителя
+    -3  //в поле руководитя код, а ОК - время, или наоборот
+    -4  //времена руководителя и ок различаются более чем на час
+    -5  //времена руководителя и ок различаются но менее чем на час}
+    if status = -1 then Params.Background := clmyPink;
+    if status = -2 then Params.Background := clmyYelow;
+    if status = -3 then Params.Background := clBlue;
+    if status = -4 then Params.Background := clPurple;
+    if status = -5 then Params.Background := clAqua;
+    //подсветим красным шрифтом выходы в выходные/отпуск/больникц по парсеку и в выходной по графику
+    if S.IsNumber(v1.AsString, 0.01, 24) and ((v2.AsString = 'БЛ') or (v2.AsString = 'ОТ') or (v2.AsString = 'В') or (v3.AsString = '0')) then
+      Params.Font.Color := clRed;
+  end;
+{
   case Color of
     1:
       Params.Background := clRed;
@@ -761,7 +766,7 @@ begin
         Params.Background := clmyGray;
         Params.ReadOnly := True;
       end;
-  end;
+  end;}
 end;
 
 procedure TFrmWGEdtTurvN.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -799,6 +804,20 @@ begin
   end
   else begin
     Row := FTurv.R(Frg1.RecNo - 1, Day);
+    if Params.Row > 5 then begin
+      if Row = -1 then
+        Params.Background := clmyGray
+      else
+        Params.Background := RGB(220, 255, 180);
+      if Params.Text = '0' then
+        Params.Text := 'B';
+      if Copy(Params.Text, 1, 1) = '-' then
+        Params.Text := '';
+      if Params.Text = '00.00' then
+        Params.Text := '';
+      Params.ReadOnly := True;
+      Exit;
+    end;
     if Row = -1 then begin
       Params.Background := clmyGray;
       Params.ReadOnly := True;
@@ -868,7 +887,7 @@ begin
   FTurv.GetDayCell(Frg1.RecNo - 1, day, Params.Row, color, v1);
   v2 := '';
   if Params.Row = 2 then
-    v2 := FTurv.GetDayCell(Frg1.RecNo - 1, day, 6, color, v2).AsString;
+    v2 := FTurv.GetDayCell(Frg1.RecNo - 1, day, 100, color, v2).AsString;
   //стандартная отрисовка
   TDBGridEh(Sender).DefaultDrawColumnDataCell(Cell, AreaCell, Column, ARect, Params);
   //зеленая полоса
@@ -917,7 +936,7 @@ begin
     2:
       begin
         FTurv.GetDayCell(Frg1.RecNo - 1, Day, Cell.Y, color, v2);
-        v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 6, color, v).AsString;
+        v4 := FTurv.GetDayCell(Frg1.RecNo - 1, Day, 100, color, v).AsString;
       end;
     3:
       FTurv.GetDayCell(Frg1.RecNo - 1, Day, Cell.Y, color, v3);
@@ -955,71 +974,21 @@ begin
     Frg1.MemTableEh1.DisableControls;
     for i := 0 to Frg1.GetCount(False) - 1 do
       for j := 1 to 16 do
-        PushTurvCellToGrid(i, j);
+        PushTurvCellToGrid(i, j, False);
     Frg1.MemTableEh1.EnableControls;
   end
   //кнопка закрытия периода
   else if Tag = mbtLock then begin
-  {  if not FIsCommited then
-      //если период не закрыть, то проверим, можно ли его закрыть
-      if Turv.GetStatus(FIdDivision, FPeriodStartDate) = -1 then begin
-        MyInfoMessage('В этом ТУРВ введены не все данные, закрыть его нельзя!');
-        Exit;
-      end;
-    if MyQuestionMessage(S.IIFStr(FIsCommited, 'Вы уверены, что хотите снять статус "Закрыт" с этого ТУРВ?', 'Вы уверены, что хотите отметить этот ТУРВ как "Закрыт"?'#13#10'В этом случае ввод данных в него будет невозможен!')) <> mrYes then
-      Exit;
-    //пробуем заблокировать турв для каждого типа доступа отдельно
-    st1 := Q.DBLock(True, FormDoc, VarToStr(id) + '-1', '', fNone)[1];
-    st2 := Q.DBLock(True, FormDoc, VarToStr(id) + '-2', '', fNone)[1];
-    st3 := Q.DBLock(True, FormDoc, VarToStr(id) + '-3', '', fNone)[1];
-    if (st1 = User.GetName) then
-      st1 := '';
-    if (st2 = User.GetName) then
-      st2 := '';
-    if (st3 = User.GetName) then
-      st3 := '';
-    st := A.ImplodeNotEmpty([st1, st2, st3], #13#10);
-    if st <> '' then begin
-      MyWarningMessage('Этот турв сейчас открыт на редактирование у'#13#10 + st + #13#10'Установка статуса невозможна!');
-      Exit;
-    end;
-    FIsCommited := not FIsCommited;
-    Q.QExecSql('update turv_period set commit = :commit$i where id = :id$i', [S.IIf(FIsCommited, 1, 0), ID]);
-    RefreshParentForm;
-    Exit;
-    if not FIsCommited then begin
-       //если период не закрыть, то проверим, можно ли его закрыть
-      b := True;
-      for j := 0 to High(FArrTurv) do begin
-        if not b then
-          Break;
-        for i := 1 to FDayColumnsCount do begin
-            //ячейки красные и желтые, или не введено время/код руководителя, и при этом не серые - не даем возможности закрыть турв
-          if (S.NNum(FArrTurv[j][i][cColor]) = 1) or (S.NNum(FArrTurv[j][i][cColor]) = 2) or ((FArrTurv[j][i][cExists] <> -1) and (FArrTurv[j][i][cTRuk] = null) and (FArrTurv[j][i][cCRuk] = null)) then begin
-            b := False;
-            Break;
-          end;
-        end;
-      end;
-      if not b then begin
-        MyInfoMessage('В этом ТУРВ введены не все данные, закрыть его нельзя!');
-        Exit;
-      end;
-    end;
-    if MyQuestionMessage(S.IIFStr(FIsCommited,
-      'Вы уверены, что хотите снять статус "Закрыт" с этого ТУРВ?',
-      'Вы уверены, что хотите отметить этот ТУРВ как "Закрыт"?'#13#10'В этом случае ввод данных в него будет невозможен!')
-    ) <> mrYes then
-      Exit;
-    FIsCommited := not FIsCommited;
-    Q.QExecSql('update turv_period set commit = :commit$i where id = :id$i', [S.IIf(FIsCommited, 1, 0), ID]);
-    RefreshParentForm;}
+    FinalizeTurv;
   end
   else if Tag = mbtSendEmail then begin
 //    SendEMailToHead;
   end
-  else if Tag = mbtCustom_SundaysToTurv then begin
-//    SundaysToTurv;
+  else if Tag = 1002 then begin
+    SundaysToTurv(1);
+  end
+  else if Tag = 1003 then begin
+    SundaysToTurv(2);
   end
   else if Tag = mbtPrint then begin
     if FRgsEdit2 then begin
@@ -1042,6 +1011,51 @@ begin
   SetGridEditableMode;
 end;
 
+procedure TFrmWGEdtTurvN.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if (Fr.CurrField = 'ids_pers_bonus') and (Fr.GetValue <> '-') then begin
+    var st := 'Персональные надбавки:'#13#10;
+    var va1 := A.Explode(Fr.GetValue, #1);
+    for var i := 0 to High(va1) do begin
+      var va2 := A.Explode(va1[i], #2);
+      S.ConcatStP(st, '"' + va2[2].AsString + '" c ' + va2[3].AsString + S.IIfStr(va2[4].AsString <> '', ' по ' + va2[4].AsString) + ', ' + va2[5].AsString + ' руб в месяц', #13#10);
+    end;
+    MyInfoMessage(st, 1);
+  end;
+end;
+
+procedure TFrmWGEdtTurvN.FinalizeTurv;
+var
+  st, st1, st2, st3: string;
+begin
+  if not FTurv.IsFinalized then
+    //если период не закрыт, то проверим, можно ли его закрыть
+    if FTurv.GetDataStatus <> 1 then begin
+      MyInfoMessage('В этом ТУРВ введены не все данные, закрыть его нельзя!');
+      Exit;
+    end;
+  if MyQuestionMessage(S.IIFStr(FTurv.IsFinalized, 'Вы уверены, что хотите снять статус "Закрыт" с этого ТУРВ?', 'Вы уверены, что хотите отметить этот ТУРВ как "Закрыт"?'#13#10'В этом случае ввод данных в него будет невозможен!')) <> mrYes then
+    Exit;
+    //пробуем заблокировать турв для каждого типа доступа отдельно
+  st1 := Q.DBLock(True, FormDoc, VarToStr(id) + '-1', '', fNone)[1];
+  st2 := Q.DBLock(True, FormDoc, VarToStr(id) + '-2', '', fNone)[1];
+  st3 := Q.DBLock(True, FormDoc, VarToStr(id) + '-3', '', fNone)[1];
+  if (st1 = User.GetName) then
+    st1 := '';
+  if (st2 = User.GetName) then
+    st2 := '';
+  if (st3 = User.GetName) then
+    st3 := '';
+  st := A.ImplodeNotEmpty([st1, st2, st3], #13#10);
+  if st <> '' then begin
+    MyWarningMessage('Этот турв сейчас открыт на редактирование у'#13#10 + st + #13#10'Установка статуса невозможна!');
+    Exit;
+  end;
+  FTurv.Title.SetValue('is_finalized', S.IIf(FTurv.IsFinalized, 0, 1));
+  Q.QExecSql('update w_turv_period set is_finalized = :is_finalized$i where id = :id$i', [S.IIf(FTurv.IsFinalized, 1, 0), ID]);
+  FIsChanged := True;
+  RefreshParentForm;
+end;
 
 procedure TFrmWGEdtTurvN.InputDialog(Mode : Integer);
 var
@@ -1092,7 +1106,7 @@ begin
     FTurv.SetDayValues(r, d, 'penalty_comm', va2[1]);
   end
   else if Mode = ghtNightWork then begin
-    v := FTurv.GetDayCell(-pos, 0, 6, color, comm);
+    v := FTurv.GetDayCell(-pos, 0, 100, color, comm);
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80, [[cntNEdit, 'Ночью, ч.:', '0:24:2:N']], [v], va2, [['']], nil) < 0 then
       Exit;
     FTurv.SetDayValues(r, d, 'nighttime', va2[0]);
@@ -1176,7 +1190,7 @@ begin
       Q.QExecSql('update ref_workers set id_schedule = :id_schedule$i where id = :id_worker$i', [S.NullIfEmpty(va2[0]), FArrTitle.G(r, 'id_worker')]);
   end;  *)
   //отобразим данные в основной таблице
-  PushTurvCellToGrid(r, d);
+  PushTurvCellToGrid(r, d, True);
   //отобразим данные в детальной таблице
   PushTurvCellToDetailGrid(r, d);
   //запишем в БД
@@ -1283,7 +1297,7 @@ begin
   //событие обработано
   Handled := True;
   //отобразим данные в основной таблице
-  PushTurvCellToGrid(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)));
+  PushTurvCellToGrid(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)), True);
   //отобразим данные в детальной таблице
   PushTurvCellToDetailGrid(r, StrToInt(Copy(TDBGridColumnEh(Sender).FieldName, 2, 2)));
   //сохраним в бд
@@ -1329,6 +1343,7 @@ begin
   for i := 0 to High(Fields) do
     Values := Values + [FTurv.Cells[pos].G(d, Fields[i])];
   Q.QExecSQL(st, Values);
+  FIsChanged := True;
   Q.QCommitOrRollback(True);
 end;
 
@@ -1401,89 +1416,38 @@ begin
   Exit;
 end;
 
-(*
-
-procedure TFrmWGEdtTurv.SundaysToTurv;
+procedure TFrmWGEdtTurvN.SundaysToTurv(AMode: Integer);
 var
-  v: Variant;
-  st: string;
-  dt, dt1: TDateTime;
-  res: Boolean;
-  i, j, k, m, d, rn: Integer;
-  va, va1: TVarDynArray;
-  va2: TVarDynArray2;
-  b: Boolean;
+  i, j, r1, r2, p: Integer;
 begin
-  //если в списке кодов нет буквы В то выход
-  if FTurvCodeWeekend = -1 then
-    Exit;
-  //массив доступных типов данных
-  va1 := [];
-  if FRgsEdit1 then
-    va1 := va1 + ['Время руководителя'];
-  if FRgsEdit2 then
-    va1 := va1 + ['Время по Parsec'];
-  if FRgsEdit3 then
-    va1 := va1 + ['Согласованное время'];
-  if Length(va1) = 0 then
-    Exit;
-  b := False;
-  if Length(va1) = 1 then begin
-    b := MyQuestionMessage('Проставить выходные и праздничные дни из Производственного календаря'#13#10'(' + VarToStr(va1[0] + ')'#13#10'?')) = mrYes;
-    va := [va1[0]];
+  i := MyMessageDlg(
+    'Проставить выходные (время '+ S.IIf(AMode = 1, 'руководителя', 'отдела кадров') +')'#13#10'на основе планового графика?'#13#10'(заполненные ячейки не будут изменены)',
+     mtConfirmation, [mbYes, mbNo, mbCancel], 'Для всех;В строке;Отмена'
+  );
+  if i = mrCancel then
+    Exit
+  else if i = mrYes then begin
+    r1 := 0;
+    r2 := FTurv.Count - 1;
   end
   else begin
-    b := TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Выходные', 420, 210,
-      [[cntComboL, 'Проставить выходные и праздники для', '1:500:0', 200]],
-      [VarArrayOf([va1[0], va1])], va, [['']], nil
-    ) >= 0
+    r1 := Frg1.RecNo - 1;
+    r2 := r1;
   end;
-  //выход, если действие было отменено
-  if not b then
-    Exit;
-  //получим смещение в массиве
-  k := -1;
-  if va[0] = 'Время руководителя' then
-    k := cTRuk;
-  if va[0] = 'Время по Parsec' then
-    k := cTPar;
-  if va[0] = 'Согласованное время' then
-    k := cTSogl;
-  if k = -1 then
-    Exit;
-  //спрятать детальную панель - так как она не обновится
-  Frg1.DBGridEh1.RowDetailPanel.Visible := False;
-  //получим календарь за этот месяц
-  va2 := Q.QLoadToVarDynArray2('select dt, type, descr from ref_holidays where extract(year from dt) = :year$i and extract(month from dt) = :month$i order by dt', [YearOf(FPeriodStartDate), MonthOf(FPeriodStartDate)]);
-  //проход по строкам турв
-  for i := 0 to High(FArrTurv) do begin
-    //проход по столбцам
-    for j := 1 to 16 do begin
-      dt := IncDay(FPeriodStartDate, j - 1);
-      if dt > FPeriodEndDate then
-        Break;
-      //если ячейка не заполнена
-      if (FArrTurv[i][j][cExists] <> -1) and (FArrTurv[i][j][k] = null) and (FArrTurv[i][j][k + 3] = null) then begin
-        //получим тип дня из календаря
-        d := 0;
-        for m := 0 to High(va2) do begin
-          if dt = va2[m][0] then begin
-            d := Trunc(S.NNum(va2[m][1]));
-          end;
-        end;
-        //отметим выходным, если праздник, или (сб,вс и при это не проставлен сокращенным или рабочим)
-        if (d = 1) or ((DayOfTheWeek(dt) >= 6) and (d <> 2) and (d <> 3)) then begin
-          FArrTurv[i][j][k + 3] := FTurvCodeWeekend;
-          //запишем в датасет для грида
-          PushTurvCellToGrid(i, j);
-          //запишем в бд
-          SaveDayToDB(i, j, k);
-        end;
+  for i := r1 to r2 do
+    for j := 1 to FTurv.DaysCount - 1 do begin
+      p := FTurv.R(i, j);
+      if (p > -1) and (FTurv.Cells[p].G(j, 'worktime' + IntToStr(AMode)) = null) and (FTurv.Cells[p].G(j, 'id_turvcode' + IntToStr(AMode)) = null) and (FTurv.Cells[p].G(j, 'scheduled_hours') = 0) then begin
+        FTurv.Cells[p].SetValue(j, 'id_turvcode' + IntToStr(AMode), FTurv.TurvCodeW);
+        SaveDayToDB(i, j);
       end;
     end;
-  end;
+  FTurv.CalculateTotals;
+  Frg1.InvalidateGrid;
 end;
 
+
+(*
 procedure TFrmWGEdtTurv.SendEMailToHead;
 //сформируем письмо для руководителей отдела ТУРВ (тех, кто заполняет), с информацией о незаполненных ячейках и ячейках с расхождениями
 //времн от руководителя и по парсеку, с указанием работников, чисел и времен

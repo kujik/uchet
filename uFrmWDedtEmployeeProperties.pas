@@ -271,6 +271,7 @@ begin
     SetControlsEditable([cmb_id_mode, dedt_dt_beg], False);
   //заблокируем все если выбрали режим Увольнение
   SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
+  SetControlsEditable([chb_is_concurrent, chb_is_foreman, chb_is_trainee], False);
   if Mode = fEdit then
     Exit;
   //заблокирем изменение организации и табльного номера, если это не прием, или если они уже введены

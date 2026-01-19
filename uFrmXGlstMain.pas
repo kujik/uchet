@@ -566,7 +566,7 @@ begin
       ['id$i','_id','40'],
       ['name','Должность','300'],
       ['comm','Комментарий','200;h'],
-      ['has_hazard_comp$i', 'Компенсация за вредность', '80', 'pic'],
+      ['has_milk_compensation$i', 'Компенсация за молоко', '80', 'pic'],
       ['active$i','Используется','75','pic']
     ]);
     Frg1.Opt.SetTable('w_jobs');
@@ -747,7 +747,7 @@ v:=True;
     ];
   end}
   else if FormDoc = myfrm_J_Turv then begin
-    Caption:='Журнал ТУРВ';
+    Caption:='Табели учета рабочего времени';
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -757,8 +757,7 @@ v:=True;
       ['name','Подразделение','200'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
- //     ['foreman_allowance','Брига- дирские','75'],
-      ['finalized','Закрыта','60','pic=закрыт:13'],
+      ['finalized','Закрыт','60','pic=закрыт:13'],
       ['status','Статус','60','pic=1;2;3:1;2;3']
     ]);
     Frg1.Opt.SetTable('v_w_turv_period');
@@ -3052,7 +3051,7 @@ end.
     Frg1.Opt.SetButtons(1, [[mbtAdd]], 4, pnlFrmBtnsR);
     FMode := fView;}
 
-      //картинка /pic=0;1;2:3;2;1/, в строке через ":"
+      //картинка /pic=0;1;2:3;2;1:+/, в строке через ":"
       //1 - значения полей, через точку с запятой
       //2 - соответствующие им индексы картинок
       //3 - если +, то выводитяяся и текст

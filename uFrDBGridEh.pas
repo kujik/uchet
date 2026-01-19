@@ -667,6 +667,8 @@ type
     procedure SetValue(FieldName: string; Pos: Integer; Filtered: Boolean; NewValue: Variant); overload;
     //получить имя поля переданного столбца в нижнем регистре; если столбец не передан, то возвращается текущее поле
     function  GetColumnFieldName(Column: TObject = nil): string;
+    //получить заголовок столбца (из таблицы а не исходных данных)
+    function  GetColumnCaption(FieldName: string; WoCrLf: Boolean = True): string;
     //получить массив имен всех столбцов таблицы
     function  GetFieldNames: TVarDynArray;
     //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X
@@ -940,6 +942,8 @@ begin
 end;
 
 procedure TFrDBGridEhOpt.SetColFeature(AFields: string; AFeatype: string; ASet: Boolean = true; AClearOther: Boolean = False);
+//установка свойств указанных колонок
+//поля передаются через ;, может быть передана *, означающая все поля, или теги (которые могут быть и строковыми и которых может быть для поля при определении несколько)
 var
   i, j, k : Integer;
   st, st1: string;
@@ -951,7 +955,7 @@ begin
   va := A.Explode(AFields, ';');
   for j := 0 to High(va) do
     for i := 0 to High(FSql.Fields) do
-      if (FSql.Fields[i].Name = va[j]) or uString.S.InCommaStr(va[j], FSql.Fields[i].FTags, ',') then
+      if (FSql.Fields[i].Name = va[j]) or (va[j] = '*') or uString.S.InCommaStr(va[j], FSql.Fields[i].FTags, ',') then
         SetFrValue(FSql.Fields[i], AFeatype, ASet);
 end;
 
@@ -2464,6 +2468,15 @@ begin
     then Result := GetCurrField
     else Result := LowerCase(TColumnEh(Column).FieldName);
 end;
+
+function  TFrDBGridEh.GetColumnCaption(FieldName: string; WoCrLf: Boolean = True): string;
+//получить заголовок столбца (из таблицы а не исходных данных)
+begin
+  Result := DbGridEh1.FindFieldColumn(FieldName).Title.Caption;
+  if WoCrLf then
+    Result := StringReplace(Result, #13#10, '', [rfReplaceAll]);
+end;
+
 
 function TFrDBGridEh.GetFieldNames: TVarDynArray;
 //получить массив имен всех столбцов таблицы

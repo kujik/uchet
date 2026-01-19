@@ -208,7 +208,7 @@ type
     //по умолчанию диалоговое окно с кнопками по типау fMode внизу без статусбара
     //AFormDoc = * означет его соответствие имени формы
     function  PrepareCreatedForm(AOwner: TObject; AFormDoc: string; ACaption: string; AMode: TDialogType;
-      AID: Variant; AOptions: TMyFormOptions = [myfoModal, myfoDialog, myfoDialogButtonsB]; AAutoAlign: Boolean = True): Boolean;
+      AID: Variant; AInfoArray: TVarDynArray2; AOptions: TMyFormOptions = [myfoModal, myfoDialog, myfoDialogButtonsB]; AAutoAlign: Boolean = True): Boolean;
     procedure AfterPrepare; virtual;
     //должен вызываться после отображения формы (в таймере срабатывающем после отрисовки)
     function  RefreshParentForm: Boolean;
@@ -705,7 +705,7 @@ begin
 
   //(пере)покажем форму
   //вызов не может быть вынесен из конструктора в фуункции класса
-  if not PrepareCreatedForm(AOwner, ADoc, '', AMode, Aid, AMyFormOptions, False) then
+  if not PrepareCreatedForm(AOwner, ADoc, '', AMode, Aid, [], AMyFormOptions, False) then
     Exit;
   FAddParam := AAddParam;
   ShowForm(Self);
@@ -1631,7 +1631,7 @@ end;
 
 
 function TFrmBasicMdi.PrepareCreatedForm(AOwner: TObject; AFormDoc: string; ACaption: string; AMode: TDialogType;
-  AID: Variant; AOptions: TMyFormOptions = [myfoModal, myfoDialog, myfoDialogButtonsB]; AAutoAlign: Boolean = True): Boolean;
+  AID: Variant; AInfoArray: TVarDynArray2; AOptions: TMyFormOptions = [myfoModal, myfoDialog, myfoDialogButtonsB]; AAutoAlign: Boolean = True): Boolean;
 //процедура для вызова в диалоге формы, созданной в uchet.dpr, с основными предустановками
 //по умолчанию диалоговое окно с кнопками по типау fMode внизу без статусбара
 //AFormDoc = * означет его соответствие имени формы
@@ -1660,6 +1660,7 @@ begin
   Caption := ACaption;
   FMode := AMode;
   FId := AID;
+  FOpt.InfoArray := AInfoArray;
   if myfoDialogButtonsB in FMyFormOptions then
     FOPt.DlgPanelStyle := dpsBottomRight;
   if myfoDialogButtonsT in FMyFormOptions then

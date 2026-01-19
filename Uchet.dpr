@@ -199,7 +199,8 @@ uses
   uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN},
   uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
   uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN},
-  uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule};
+  uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule},
+  uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod};
 
 var
   MT: Integer;
@@ -356,6 +357,7 @@ begin
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
+  Application.CreateForm(TFrmWDedtPayrollCalcMethod, FrmWDedtPayrollCalcMethod);
 
   Application.Run;
 

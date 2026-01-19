@@ -1,29 +1,28 @@
 inherited FrmXDedtMemo: TFrmXDedtMemo
   Caption = 'FrmXDedtMemo'
-  ClientHeight = 302
-  ClientWidth = 596
-  ExplicitWidth = 612
-  ExplicitHeight = 341
+  ClientHeight = 301
+  ClientWidth = 592
+  ExplicitWidth = 608
+  ExplicitHeight = 340
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 596
-    Height = 286
+    Width = 592
+    Height = 285
     ExplicitWidth = 596
     ExplicitHeight = 286
     inherited pnlFrmClient: TPanel
-      Width = 590
-      Height = 238
+      Width = 586
+      Height = 237
       ExplicitWidth = 586
       ExplicitHeight = 237
       object pnlCaption: TPanel
         Left = 0
         Top = 0
-        Width = 590
+        Width = 586
         Height = 25
         Align = alTop
         Caption = 'pnlCaption'
         TabOrder = 0
-        ExplicitWidth = 586
         object lblCaption: TLabel
           Left = 9
           Top = 6
@@ -35,8 +34,8 @@ inherited FrmXDedtMemo: TFrmXDedtMemo
       object memMain: TDBMemoEh
         Left = 0
         Top = 25
-        Width = 590
-        Height = 213
+        Width = 586
+        Height = 212
         Lines.Strings = (
           'mem_Main')
         Align = alClient
@@ -49,8 +48,8 @@ inherited FrmXDedtMemo: TFrmXDedtMemo
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 242
-      Width = 586
+      Top = 241
+      Width = 582
       ExplicitTop = 242
       ExplicitWidth = 586
       inherited bvlFrmBtnsTl: TBevel
@@ -84,8 +83,8 @@ inherited FrmXDedtMemo: TFrmXDedtMemo
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 286
-    Width = 596
+    Top = 285
+    Width = 592
     ExplicitTop = 286
     ExplicitWidth = 596
     inherited lblStatusBarR: TLabel

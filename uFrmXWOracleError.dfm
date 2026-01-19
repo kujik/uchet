@@ -1,38 +1,36 @@
 inherited FrmXWOracleError: TFrmXWOracleError
   Caption = 'FrmXWOracleError'
-  ClientHeight = 203
-  ClientWidth = 571
-  ExplicitWidth = 587
-  ExplicitHeight = 242
+  ClientHeight = 202
+  ClientWidth = 567
+  ExplicitWidth = 583
+  ExplicitHeight = 241
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 571
-    Height = 187
+    Width = 567
+    Height = 186
     ExplicitWidth = 571
     ExplicitHeight = 187
     inherited pnlFrmClient: TPanel
-      Width = 565
-      Height = 139
+      Width = 561
+      Height = 138
       ExplicitWidth = 561
       ExplicitHeight = 138
       object pnlCenter: TPanel
         Left = 73
         Top = 0
-        Width = 492
-        Height = 139
+        Width = 488
+        Height = 138
         Align = alClient
         BevelOuter = bvNone
         Caption = 'pnlCenter'
         Padding.Top = 20
         Padding.Bottom = 4
         TabOrder = 0
-        ExplicitWidth = 488
-        ExplicitHeight = 138
         object MError: TDBMemoEh
           Left = 0
           Top = 20
           Width = 185
-          Height = 115
+          Height = 114
           Margins.Top = 30
           ControlLabel.Width = 70
           ControlLabel.Height = 13
@@ -51,8 +49,8 @@ inherited FrmXWOracleError: TFrmXWOracleError
         object MSql: TDBMemoEh
           Left = 185
           Top = 20
-          Width = 118
-          Height = 114
+          Width = 114
+          Height = 113
           Margins.Top = 30
           ControlLabel.Width = 72
           ControlLabel.Height = 13
@@ -69,10 +67,10 @@ inherited FrmXWOracleError: TFrmXWOracleError
           WantReturns = True
         end
         object MParams: TDBMemoEh
-          Left = 303
+          Left = 299
           Top = 20
           Width = 185
-          Height = 114
+          Height = 113
           Margins.Top = 30
           ControlLabel.Width = 57
           ControlLabel.Height = 13
@@ -93,12 +91,13 @@ inherited FrmXWOracleError: TFrmXWOracleError
         Left = 0
         Top = 0
         Width = 73
-        Height = 138
+        Height = 137
         Align = alLeft
         BevelOuter = bvNone
         Padding.Top = 20
         Padding.Bottom = 4
         TabOrder = 1
+        ExplicitHeight = 138
         object Image1: TImage
           Left = 0
           Top = 20
@@ -265,8 +264,8 @@ inherited FrmXWOracleError: TFrmXWOracleError
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 143
-      Width = 561
+      Top = 142
+      Width = 557
       ExplicitTop = 143
       ExplicitWidth = 561
       inherited bvlFrmBtnsTl: TBevel
@@ -300,8 +299,8 @@ inherited FrmXWOracleError: TFrmXWOracleError
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 187
-    Width = 571
+    Top = 186
+    Width = 567
     ExplicitTop = 187
     ExplicitWidth = 571
     inherited lblStatusBarR: TLabel

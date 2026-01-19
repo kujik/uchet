@@ -1210,7 +1210,7 @@ const
   mybtCustom_AddPayroll_D: TmybtRec = (Bt: mbtCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: '');
   mybtCustom_AddPayroll_W: TmybtRec = (Bt: mbtCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: '');
   mybtCustom_Turv: TmybtRec = (Bt: mbtCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: '');
-  mybtCustom_Payroll: TmybtRec = (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: '');
+  mybtCustom_Payroll: TmybtRec = (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Загрузка мотивации'; hint: '');
   mybtSettings: TmybtRec = (Bt: mbtSettings; Pict: 'settings'; Caption: 'Параметры'; hint: '');
   mybtLock: TmybtRec = (Bt: mbtLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: '');
   mybtUnLock: TmybtRec = (Bt: mbtUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: '');
@@ -1319,7 +1319,7 @@ const
   (Bt: mbtCustom_AddPayroll_D; Pict: 'add'; Caption: 'Добавить ведомости по подразделениям'; hint: ''),
   (Bt: mbtCustom_AddPayroll_W; Pict: 'add'; Caption: 'Добавить ведомости по уволенным'; hint: ''),
   (Bt: mbtCustom_Turv; Pict: 'turv'; Caption: 'ТУРВ'; hint: ''),
-  (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Баллы'; hint: ''),
+  (Bt: mbtCustom_Payroll; Pict: 'payroll'; Caption: 'Загрузка мотивации'; hint: ''),
   (Bt: mbtSettings; Pict: 'settings'; Caption: 'Параметры'; hint: ''),
   (Bt: mbtLock; Pict: 'lock'; Caption: 'Заблокировать'; hint: ''),
   (Bt: mbtUnLock; Pict: 'unlock'; Caption: 'Разблокировать'; hint: ''),

@@ -56,7 +56,7 @@ end;
 
 function TFrmXDedtMailingCustomAddr.ShowDialog(var MailAddr: string): Boolean;
 begin
-  PrepareCreatedForm(Application, '', '~ƒополнительные адреса электронной почты', fEdit, null, [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
+  PrepareCreatedForm(Application, '', '~ƒополнительные адреса электронной почты', fEdit, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
   edtAddr.Text := MailAddr;
   FOpt.InfoArray :=[['¬ведитете через зап€тую произвольные адреса почты, которые также будут использоватьс€ дл€ рассылки, дополнительно к адресам выбранных пользователей.']];
   Result := ShowModal = mrOk;

@@ -64,7 +64,7 @@ procedure TFrmXWOracleError.ShowDialog(ARow: Integer = -1; AError: string = ''; 
 //если заданы строковые значения AError и т.д., то будут показаны они
 //иначе будет показан запрос из лога по переданной строке (при -1 - послений)
 begin
-  PrepareCreatedForm(Application, myfrm_Dlg_OracleError, '~Ошибка при работе с БД', fView, null, [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable], False);
+  PrepareCreatedForm(Application, myfrm_Dlg_OracleError, '~Ошибка при работе с БД', fView, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable], False);
   FOpt.DlgButtonsR := [[1000, True, True, 120, 'Журнал запросов', 'view']];
   ARow := Min(S.IIf(ARow < 0, MaxInt, ARow), High(Q.LogArray));
   Caption := ModuleRecArr[uData.cMainModule].Caption + ' - Ошибка!';

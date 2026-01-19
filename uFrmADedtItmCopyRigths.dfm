@@ -1,13 +1,13 @@
 inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
   Caption = 'FrmADedtItmCopyRigths'
-  ClientHeight = 139
-  ClientWidth = 306
-  ExplicitWidth = 322
-  ExplicitHeight = 178
+  ClientHeight = 138
+  ClientWidth = 302
+  ExplicitWidth = 318
+  ExplicitHeight = 177
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 306
-    Height = 123
+    Width = 302
+    Height = 122
     ExplicitWidth = 306
     ExplicitHeight = 123
     inherited pnlFrmClient: TPanel
@@ -84,8 +84,8 @@ inherited FrmADedtItmCopyRigths: TFrmADedtItmCopyRigths
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 123
-    Width = 306
+    Top = 122
+    Width = 302
     ExplicitTop = 123
     ExplicitWidth = 306
     inherited lblStatusBarR: TLabel
