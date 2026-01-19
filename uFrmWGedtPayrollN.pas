@@ -653,6 +653,8 @@ begin
   Frg1.Opt.SetColFeature('1', 'e', (FPayrollParams.G('calc_method').AsInteger <> cMMotivation) or FIsEditableAll, False);
   Frg1.Opt.SetColFeature('2', 'e', FIsEditableAdd or FIsEditableAll, False);
   Frg1.Opt.SetColFeature('3', 'e', True, False);
+  if FIsEditableAll then
+    Frg1.Opt.SetColFeature('*', 'e', False, False);
   Frg1.SetColumnsVisible;
 end;
 

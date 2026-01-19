@@ -95,7 +95,7 @@ begin
   var ssort := 'job;employee;schedulecode;organization;personnel_number';
   //var sgroup := 'schedulecode;job;employee';
   var sgroup := 'job;employee;schedulecode;organization;personnel_number';
-  FTurv.Create(ID, ssort, sgroup);
+  FTurv.Create(ID, ssort, 'job' {sgroup});
 
 {
   FTurv.Create(ID);
@@ -194,6 +194,8 @@ begin
     //[mbtSendEMail, FRgsEdit2 and FInEditMode],
     [-1002, FInEditMode and FRgsEdit1 and (FTurv.Title.G('is_office') = 1), FInEditMode, 'Проставить выходные (время руководитяля)'],
     [-1003, FInEditMode and FRgsEdit2, FInEditMode, 'Проставить выходные (время отдела кадров)'],
+    [],
+    [-1004, FInEditMode and User.IsDeveloper, FInEditMode, 'Загрузить время по Parsec'],
     [],
     [mbtLock, FRgsCommit and (FTurv.IsFinalized or (Mode = fEdit)), True, S.IIFStr(FTurv.IsFinalized, 'Отменить закрытие периода', 'Закрыть период')],
     [],
@@ -809,8 +811,11 @@ begin
         Params.Background := clmyGray
       else
         Params.Background := RGB(220, 255, 180);
-      if Params.Text = '0' then
+      if Params.Text = '0' then begin
         Params.Text := 'B';
+        Params.Font.Color := clRed;
+      end else if Params.Text <> '' then
+        Params.Text := FormatFloat('#0.00', StrToFloat(Params.Text));
       if Copy(Params.Text, 1, 1) = '-' then
         Params.Text := '';
       if Params.Text = '00.00' then
@@ -989,6 +994,9 @@ begin
   end
   else if Tag = 1003 then begin
     SundaysToTurv(2);
+  end
+  else if Tag = 1004 then begin
+    FTurv.LoadFromParsec;
   end
   else if Tag = mbtPrint then begin
     if FRgsEdit2 then begin

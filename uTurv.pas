@@ -289,9 +289,14 @@ begin
       end;
   end
   else begin
+    //еслди передан столбец
     Row := R(ARow, ADay);
     if Row > -1 then
-      Result := FList.G(Row, AProp).AsString;
+      //выведем строку дл€ данного столбца без группировки
+      Result := FList.G(Row, AProp).AsString
+    else
+      //если в данной €чейке нет данных, то выведем тект дл€ первого статуса этой строки
+      Result := FList.G(R(ARow)[0], AProp).AsString;
   end;
   except
     Result := '';
@@ -929,7 +934,7 @@ begin
       j := A.PosInArray(st, vpb, 2);
       //соберем все приходы за день в массив
       vab := [];
-      while (j > -1) and (vpb[j, 2] = st) do begin
+      while (j > -1) and (j <= High(vpb)) and (vpb[j, 2] = st) do begin
         if (Trunc(StrToDateTime(vpb[j][0])) = dt) then
           vab := vab + [vpb[j][0]];
         inc(j);
@@ -937,7 +942,7 @@ begin
       //соберем все уходы за день в массив
       j := A.PosInArray(st, vpe, 2);
       vae := [];
-      while (j > -1) and (vpe[j, 2] = st) do begin
+      while (j > -1) and (j <= High(vpe)) and (vpe[j, 2] = st) do begin
         if (Trunc(StrToDateTime(vpe[j][0])) = dt) then
           vae := vae + [vpe[j][0]];
         inc(j);
