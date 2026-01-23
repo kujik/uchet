@@ -1472,8 +1472,7 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
-  Exit;
-  Tasks.HourlyTasks; Exit;
+//  Exit;
   Tasks.SplMonitorReportDay; Exit;
 
 

@@ -357,7 +357,8 @@ where
 ; 
 
 select * from v_turv_workers where id_division = 1;
-
+select workername, id_worker, id_schedule_active from v_turv_workers where dt1 = date '2026-01-01';
+update w_employee_properties p set id_schedule = (select max(id_schedule_active) from v_turv_workers w where w.dt1 = date '2026-01-01' and w.id_worker = p.id_employee); 
 
 --вью по одной ячейке турв
 --возвращает кроме полей таблицы итоговые значения в строках, это или код турв или чилос часов в строке,
@@ -1680,3 +1681,10 @@ select * from v_payroll_item pi where itog1 is not null and turv is not null and
 
 
 select distinct area_name || ' - ' || isoffice from v_ref_divisions;
+
+
+
+
+delete from w_payroll_calc;
+delete from w_payroll_transfer;
+delete from w_employee_pers_bonus;

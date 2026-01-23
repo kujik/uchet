@@ -1,6 +1,35 @@
 -- АДМИНИСТРИРОВАНИЕ
 
 
+BEGIN
+  --пакет не установлен!
+  UTL_RECOMP.recomp_serial('UCHET22');
+END;
+/
+
+
+BEGIN
+  -- перекомпилирование всех невалидных объектов в схеме 
+  FOR CUR IN ( SELECT OBJECT_TYPE 
+                    , OBJECT_NAME
+                    , OWNER
+                    , STATUS
+                 FROM ALL_OBJECTS
+                WHERE STATUS <>  'VALID'
+             ) 
+  LOOP
+  BEGIN 
+   DBMS_DDL.ALTER_COMPILE ( CUR.OBJECT_TYPE, CUR.OWNER, CUR.OBJECT_NAME);
+  EXCEPTION
+    WHEN OTHERS THEN
+      DBMS_OUTPUT.put_line ('Ошибка компиляции объекта: ' || CUR.OWNER || '.' || CUR.OBJECT_NAME);
+  END; 
+  END LOOP;   
+END;
+/
+
+--------------------------------------------------------------------------------
+
 --Роли
 
 create table adm_roles ( 

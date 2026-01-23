@@ -67,13 +67,14 @@ end;
 --------------------------------------------------------------------------------
 --сотрудники
 --alter table w_employees drop column i;
---alter table w_employees add i varchar2(25) not null; 
+alter table w_employees add is_concurrent number(1) default 0; 
 create table w_employees(
   id number(11),
   f varchar2(25) not null,
   i varchar2(25) not null,
   o varchar2(25),
   birthday date,
+  is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   comm varchar2(400),
   active number(1),
   constraint pk_w_employees primary key (id)
@@ -478,7 +479,7 @@ create table w_employee_properties(
   id_departament number(11),
   id_job number(11),
   id_schedule number(11),
-  is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
+  is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)  ---!!!
   is_foreman number(1) default 0,
   is_trainee number(1) default 0,           --ученик
   grade number default 1,                    --разряд
@@ -594,6 +595,7 @@ select
   a.personnel_number,
   a.id_organization,
   o.name as organization,
+  e.is_concurrent,
   e.comm
 from w_employees e
 left join last_hired h on e.id = h.id_employee and h.rn = 1
@@ -787,7 +789,8 @@ create table w_payroll_calc (
 );
 
 --уникальный индекс по подразделению/работнику/дате начала
-create unique index idx_w_payroll_calc_uq on w_payroll_calc(id_departament, id_employee, dt1);
+drop index idx_w_payroll_calc_uq;
+create unique index idx_w_payroll_calc_uq on w_payroll_calc(id_departament, id_employee, id_organization, personnel_number, dt1);
 
 create sequence sq_w_payroll_calc start with 1000 nocache;
 
@@ -803,15 +806,18 @@ select
   case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   d.name as departament,
+  o.name as organization,
   d.is_office,
   d.code
 from
   w_payroll_calc p,
   w_employees e,
-  w_departaments d
+  w_departaments d,
+  ref_sn_organizations o 
 where
-  p.id_departament = d.id and
-  p.id_employee = e.id (+) 
+  p.id_departament = d.id
+  and p.id_employee = e.id (+)
+  and p.id_organization = o.id (+)
 ;
 
 /*
@@ -899,33 +905,210 @@ select
   0 as changed,
   null as temp
 from
-  w_payroll_calc_item i,
-  w_payroll_calc p,
+  w_payroll_calc_item i
+  inner join w_payroll_calc p on i.id_payroll_calc = p.id
+  left outer join w_departaments d on p.id_departament = d.id
+  left outer join v_w_employees e on i.id_employee = e.id
+  left outer join w_jobs j on i.id_job = j.id  
+  left outer join w_schedules s on i.id_schedule = s.id 
+  left outer join ref_production_areas a on d.id_prod_area = a.id
+  left outer join ref_sn_organizations o on i.id_organization = o.id
+;  
+
+select id_employee, id_organization, personnel_number, employee, organization, personnel_number, total_pay, null as temp from v_w_payroll_calc_item where id_employee = 721 and id_organization = 1 and personnel_number = '488' and id_target_employee <> null;
+--------------------------------------------------------------------------------
+
+create table w_payroll_transfer ( 
+  id number(11),
+  id_employee number(11),    --айди раболтника 
+  id_organization number(11), --айди организации
+  personnel_number varchar2(10),  --табельный номер 
+  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
+  dt2 date,                  --дата конца ведомости
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_payroll_transfer primary key (id),
+  constraint fk_w_payroll_transfer_empl foreign key (id_employee) references w_employees(id)
+);
+
+--уникальный индекс по подразделению/работнику/дате начала
+--create unique index idx_w_payroll_transfer_uq on w_payroll_transfer(id_departament, id_employee, dt1);
+
+create sequence sq_w_payroll_transfer start with 1000 nocache;
+
+create or replace trigger trg_w_payroll_transfer_bi_r before insert on w_payroll_transfer for each row
+begin
+  select nvl(:new.id, sq_w_payroll_transfer.nextval) into :new.id from dual;
+end;
+
+--вью для журнала зарплатных ведомостей
+create or replace view v_w_payroll_transfer as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  f_fio(e.f, e.i, e.o) as employee,
+  o.name as organization
+from
+  w_payroll_transfer p,
+  w_employees e,
+  ref_sn_organizations o 
+where
+  p.id_employee = e.id (+)
+  and p.id_organization = o.id (+)
+;
+
+create table w_payroll_transfer_item(
+  id number(11),
+  id_payroll_transfer number(11),     --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  id_organization number(11),     --айди организации, в которой числится работник
+  personnel_number varchar2(10),  --табельный номер
+  is_concurrent number(1), 
+  hours_worked number,            --отработано по турв
+  overtime number,                --количество часов переработки (приведенное)
+  total_pay number,               --итого начислено 
+  deduct_enf number,      -- удержание по исполнительному листу
+  deduct_ndfl number,     -- НДФЛ
+  pay_fss number,         -- выплата в ФСС (например, больничный)
+  pay_adv number,         -- промежуточная (авансовая) выплата
+  pay_card number,        -- перечислено на карту
+  pay_cash number,        -- итого к выдаче наличными  
+  constraint pk_w_payroll_transfer_item primary key (id),
+  constraint fk_w_payroll_transfer_i_own foreign key (id_payroll_transfer) references w_payroll_transfer(id) on delete cascade,
+  constraint fk_w_payroll_transfer_i_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_payroll_transfer_i_org foreign key (id_organization) references ref_sn_organizations(id)
+);  
+  
+--drop sequence sq_w_payroll_transferulations_item;
+create sequence sq_w_payroll_transfer_item start with 100000 nocache;
+
+--create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
+--create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
+
+create or replace trigger trg_w_payroll_transfer_it_bi_r before insert on w_payroll_transfer_item for each row
+begin
+  select nvl(:new.id, sq_w_payroll_transfer_item.nextval) into :new.id from dual;
+end;
+
+--delete from w_payroll_transfer;
+   
+
+--вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
+create or replace view v_w_payroll_transfer_item as 
+select
+  i.*,
+  p.dt1,
+  p.dt2,
+  e.name as employee,
+  --e.is_concurrent,
+  o.name as organization,
+  0 as changed,
+  null as temp
+from
+  w_payroll_transfer_item i,
+  w_payroll_transfer p,
   v_w_employees e,
-  w_departaments d,
-  w_jobs j,
-  w_schedules s,
-  ref_production_areas a,
   ref_sn_organizations o
 where
-  p.id_departament = d.id and
-  i.id_payroll_calc = p.id and
-  i.id_employee = e.id and 
-  i.id_job = j.id and
-  i.id_schedule = s.id (+) and
-  a.id (+) = d.id_prod_area and
-  o.id (+) = i.id_organization
-  
+  i.id_payroll_transfer = p.id and
+  i.id_employee (+) = e.id and 
+  i.id_organization = o.id (+)
 ;     
 
 
+--------------------------------------------------------------------------------
+create table w_payroll_cash ( 
+  id number(11),
+  id_departament number(11), --айди подразделения
+  id_employee number(11),    --айди раболтника 
+  id_organization number(11), --айди организации
+  personnel_number varchar2(10),  --табельный номер 
+  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
+  dt2 date,                  --дата конца ведомости
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_payroll_cash primary key (id),
+  constraint fk_w_payroll_cash_div foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_payroll_cash_empl foreign key (id_employee) references w_employees(id)
+);
 
 
 
+--уникальный индекс по подразделению/работнику/дате начала
+--create unique index idx_w_payroll_cash_uq on w_payroll_cash(id_departament, id_employee, dt1);
 
+create sequence sq_w_payroll_cash start with 1000 nocache;
 
+create or replace trigger trg_w_payroll_cash_bi_r before insert on w_payroll_cash for each row
+begin
+  select nvl(:new.id, sq_w_payroll_cash.nextval) into :new.id from dual;
+end;
 
+--вью для журнала зарплатных ведомостей
+create or replace view v_w_payroll_cash as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  d.name as departament,  
+  f_fio(e.f, e.i, e.o) as employee,
+  o.name as organization
+from
+  w_payroll_cash p,
+  w_departaments d,
+  w_employees e,
+  ref_sn_organizations o 
+where
+  p.id_employee = e.id (+)
+  and p.id_departament = d.id
+  and p.id_organization = o.id (+)
+;
 
+create table w_payroll_cash_item(
+  id number(11),
+  id_payroll_cash number(11),     --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  id_job number(11),              --айди должности 
+  id_organization number(11),     --айди организации, в которой числится работник
+  personnel_number varchar2(10),  --табельный номер
+  pay_cash number,                --итого к выдаче наличными
+  banknotes varchar2(400),        --купюры       
+  constraint pk_w_payroll_cash_item primary key (id),
+  constraint fk_w_payroll_cash_i_own foreign key (id_payroll_cash) references w_payroll_cash(id) on delete cascade,
+  constraint fk_w_payroll_cash_i_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_payroll_cash_i_job foreign key (id_job) references w_jobs(id),
+  constraint fk_w_payroll_cash_i_org foreign key (id_organization) references ref_sn_organizations(id)
+);  
+  
+create sequence sq_w_payroll_cash_item start with 100000 nocache;
+
+--create unique index idx_payroll_item_unique on payroll_item(id_division, id_worker, dt);
+--create index idx_payroll_item_dt_job on payroll_item(dt, id_job);
+
+create or replace trigger trg_w_payroll_cash_it_bi_r before insert on w_payroll_cash_item for each row
+begin
+  select nvl(:new.id, sq_w_payroll_cash_item.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_payroll_cash_item as 
+select
+  i.*,
+  p.dt1,
+  p.dt2,
+  e.name as employee,
+  j.name as job,
+  o.name as organization,
+  0 as changed,
+  null as temp
+from
+  w_payroll_cash_item i,
+  w_payroll_cash p,
+  v_w_employees e,
+  w_jobs j,
+  ref_sn_organizations o
+where
+  i.id_payroll_cash = p.id and
+  i.id_employee (+) = e.id and 
+  i.id_job = j.id and  
+  i.id_organization = o.id (+)
+;     
 
 
 
@@ -1082,69 +1265,15 @@ where
 ;   
   
   
-/*  
-  is_foreman number(1),
-  days_worked number,
-  hours_worked number,
-  monthly_work_hours_norm number,
-  period_work_hours_norm number,
-  base_salary number,
-  planned_monthly_payroll number,
-  fixed_compensation number,
-  variable_compensation number,
-  performance_coefficient number,
-  performance_bonus number,
-  core_earnings number,  --Начислено за период  (либо по окладной части, либо на основе выработки
-  
-*/  
-/*  
-  blank number(7),                --номер бланка для печати
-  ball_m number(7),               --баллы за месяц (точнее, отчтетный период, полмесяца)
-  turv number,                    --итоговое время из турв
-  ball number(7),                 --баллы расчетные
-  norm number(7),                 --норма в часах для текущего периода     
-  norm_m number(7),               --норма в часах за данный календарный месяц 
-  premium_m_src number(7),        --премия за отчетный период, взятая из ТУРВ
-  premium_m number(7),            --премия за отчетный период, вычисляется по формуле или вводится вручную в зарплатной ведомости
-  premium number(7),              --премия, сумма дневных премий из турв
-  premium_p number(7),            --премия, за переработку, по формуле
-  otpusk number(7),               --отпуск
-  bl number(7),                   --больничные
-  penalty number(7),              --штрафы, из турв
-  itog1 number(7),                --итого начислено
-  ud number(7),                   --удержано
-  ndfl number(7),                 --ндфл 
-  fss number(7),                  --фсс
-  pvkarta number(7),              --промежуточные выплаты/карта
-  karta number(7),                --карта
-  banknotes varchar2(40),         --расклад по купюрам
-  itog number(7),                 --итого к выдаче
-  ---
-  salary_plan_m number,           --плановое начисление, месяц
-  salary_const_m number,          --постоянная часть, месяц
-  salary_incentive_m number,      --стимулирующая часть з/п
-  ors number,                     --оценка оработы сотрудника, в % (120.5)
-  ors_sum number,
-  
-*/ 
-/*
-  foreman_allowance number,       --брмигадирские
-  hazard_pay number,              --доплата за вредность 
-  daily_premium_total number,     --сумма дневных премий за период  
-  holiday_work_premium number,    --доплата за работу в выходные и праздничные дни
-  additional_premium number,      --премия, вручную выставляемая в расчетных ведомостях
-  vacation_pay number,            --оплата отпуска
-  sick_leave_pay number,          --оплата болльничных 
-  gross_pay number,               --итого начислено до удержаний
-  total_accrued number,
-  blank number,
-*/
-  
-  
   
   --where dt >= :dtbeg$d and dt <= :dtend$d and id_employee_properties in (' + A.Implode(A.VarDynArray2ColToVD1(FList.V, 0), ',') + ') ' +
   
   delete from w_payroll_calc_item;
+  
+  
+  select id_employee, id_organization, personnel_number, employee, organization, personnel_number, total_pay, null as temp from v_w_payroll_calc_item;-- where id_employee = :p1$i and id_organization = :p2$i and personnel_number = :p3$i and dt1 = :dt1$d and id_target_employee <> null
+  
+  select * from w_employee_properties where id_organization is null or personnel_number is null;
   
   
 

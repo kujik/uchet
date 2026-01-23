@@ -279,7 +279,7 @@ Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меня
     //если первый аргумент не пуст, возвращает его, иначе - второй
     function IfEmptyStr(St: string; StIfEmpty: string): string;
 //заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
-    function IfNotEmptyStr(St: string; Mask: string = #0): string;
+    function IfNotEmptyStr(St: string; Mask: string = #0; StIfEmpty: string = ''): string;
     function IIfInt(Expr: Boolean; Par1, Par2: Integer): Integer;
     function IIfFloat(Expr: Boolean; Par1, Par2: extended): Extended;
     //Если AValue = AIfValeu, то вернет AIfValeu, иначе AElseValue
@@ -400,6 +400,10 @@ Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меня
     function PosInArray(V: Variant; Arr: TVarDynArray; IgnoreCase: Boolean = False): Integer; overload;
 //находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V
     function PosInArray(V: Variant; Arr: TVarDynArray2; FNo: Integer = 0; IgnoreCase: Boolean = False): Integer; overload;
+    //найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах
+    function PosInArray(V: TVarDynArray; Arr: TVarDynArray2; FNo: TVarDynArray; IgnoreCase: Boolean = False): Integer; overload;
+    //найдет позицию в массиве Source, при которой все поля совпадаются со строкой массива Needle (размерности 2 уровня должны быть одинаковы, что не провряется)
+    function PosRowInArray(Needle, Source: TVarDynArray2; NeedleRow: Integer): Integer;
 //вернет истину, если строка присутствует в массиве
     function InArray(V: Variant; Arr: array of Variant): Boolean;
 //возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue
@@ -1700,11 +1704,13 @@ begin
     Result := StIfEmpty;
 end;
 
-function TMyStringHelper.IfNotEmptyStr(St: string; Mask: string = #0): string;
+function TMyStringHelper.IfNotEmptyStr(St: string; Mask: string = #0; StIfEmpty: string = ''): string;
 begin
   Result := St;
   if Result <> '' then
-    Result := StringReplace(Mask, #0, Result, [rfReplaceAll]);
+    Result := StringReplace(Mask, #0, Result, [rfReplaceAll])
+  else
+    Result := StIfEmpty;
 end;
 
 
@@ -2491,6 +2497,44 @@ begin
     end;
   end;
 end;
+
+function TMyArrayHelper.PosInArray(V: TVarDynArray; Arr: TVarDynArray2; FNo: TVarDynArray; IgnoreCase: Boolean = False): Integer;
+//найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах\
+begin
+  Result := Low(Arr) - 1;
+  for var i := Low(Arr) to High(Arr) do begin
+    var b := True;
+    for var j := Low(Arr[i]) to High(Arr[i]) do
+      if not ((Arr[i][FNo[j].AsInteger] = V[j]) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i][FNo[j].AsInteger])) = s.ToUpper(VarToStr(V[j]))))) then begin
+        b := False;
+        Break;
+      end;
+    if b then begin
+      Result := i;
+      Exit;
+    end;
+  end;
+end;
+
+function TMyArrayHelper.PosRowInArray(Needle, Source: TVarDynArray2; NeedleRow: Integer): Integer;
+//найдет позицию в массиве Source, при которой все поля совпадаются со строкой массива Needle (размерности 2 уровня должны быть одинаковы, что не провряется)
+begin
+  Result := Low(Source) - 1;
+  for var i := Low(Source) to High(Source) do begin
+    var b := True;
+    for var j := Low(Source[i]) to High(Source[i]) do
+      if not (Source[i][j] = Needle[NeedleRow][j]) then begin
+        b := False;
+        Break;
+      end;
+    if b then begin
+      Result := i;
+      Exit;
+    end;
+  end;
+end;
+
+
 
 function TMyArrayHelper.FindValueInArray2(FindValue: Variant; FindFNo: Integer; ResultFNo: Integer; Arr: TVarDynArray2; IgnoreCase: Boolean = False): Variant;
 //возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue

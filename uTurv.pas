@@ -78,6 +78,8 @@ type
     function CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
 //    function SetForemanAllowance(AId: Integer): Boolean;
+    function  CreateAllPayrollTransfers: Boolean;
+    function  CreateAllPayrollCash: Boolean;
 
     procedure ConvertEmployees202511;
   end;
@@ -216,9 +218,10 @@ end;
 
 procedure TTurvData.LoadList;
 var
-  i: Integer;
+  i, j: Integer;
   st: string;
   va: TVarDynArray;
+  na: TNamedArr;
 begin
   FIdsEmployees := [];
   //загрузим список строк ТУРВ, каждая строка соотвествует отдельному статусу работника (кроме увольнений), который начался не позже даты окончания,
@@ -236,6 +239,18 @@ begin
     [FDtEnd, FDtBeg, FDepartament],
     FList
   );
+  //данные по увольнениям за период  (вообще все уволенные в период турв по всем подразделениям)
+  Q.QLoadFromQuery(
+    'select id, id_employee, id_organization, personnel_number ' +
+    'from v_w_employee_properties ' +
+    'where is_terminated = 1 and dt_beg >= :dt_beg$d and dt_beg <= :dt_end$d ' +
+    //'and id_departament = :id_dep$i ' +
+    //S.IIfStr(FEmployee <> -1, 'and id_employee = ' + IntToStr(FEmployee) + ' ') +
+    //' ' + FWherePart + ' ' +
+    'order by id',
+    [FDtBeg, FDtEnd],
+    na
+  );
   //проставим признак is_terminated, как флаг того, что за данным статусом последовало увольнение в данном периоде.
   //есть статус для этого работника с этим признаком, начинающийся в день окончания проверяемого
   //нужно для расчетных ведомостей
@@ -243,15 +258,36 @@ begin
     if (FList.G(i, 'dt_end') <> null) and (FList.G(i, 'dt_end') < FDtEnd) then
       if Q.QSelectOneRow('select is_terminated from w_employee_properties where id_employee = :id_employee$i and dt_beg = :dt_beg$d', [FList.G(i, 'id_employee'), IncDay(FList.G(i, 'dt_end'), 0)])[0] = 1 then
         FList.SetValue(i, 'is_terminated', 1);
-  //если задано, удалим записи по уволенным
+  //если задано, удалим все записи записи по уволенным в течении периода (не только ту, что кончается увольнением)
+  //так как сравнение производится по работнику+организации+табельному, то удалятся все строки от примема, и далее переводы, которые заканчиваются увольнением,
+  //но не удалятся другие его записи, так как табельный смениьтся при другом приеме
   if FWoTerminated = 1 then
+    for i := FList.Count - 1 downto 0 do
+      for j := 0 to na.Count- 1 do
+        if (FList.G(i, 'id_employee') = na.G(j, 'id_employee')) and (FList.G(i, 'id_organization') = na.G(j, 'id_organization')) and (FList.G(i, 'personnel_number') = na.G(j, 'personnel_number')) then begin
+          Delete(FList.V, i, 1);
+          Break;
+        end;
+  //или наоборот, оставим только те кто уволен
+  if FWoTerminated = -1 then
+    for i := FList.Count - 1 downto 0 do begin
+      var b := False;
+      for j := 0 to na.Count- 1 do
+        if (FList.G(i, 'id_employee') = na.G(j, 'id_employee')) and (FList.G(i, 'id_organization') = na.G(j, 'id_organization')) and (FList.G(i, 'personnel_number') = na.G(j, 'personnel_number')) then begin
+          b := True;
+          Break;
+        end;
+      if not b then
+        Delete(FList.V, i, 1);
+    end;
+{  if FWoTerminated = 1 then
     for i := FList.Count - 1 downto 0 do
       if FList.G(i, 'is_terminated') = 1 then
         Delete(FList.V, i, 1);
   if FWoTerminated = -1 then
     for i := FList.Count - 1 downto 0 do
       if FList.G(i, 'is_terminated') <> 1 then
-        Delete(FList.V, i, 1);
+        Delete(FList.V, i, 1);}
   for i := 0 to FList.Count - 1 do begin
     //массив всех работников, кторые есть в турв
     if not A.InArray(FList.G(i, 'id_employee'), FIdsEmployees) then
@@ -652,7 +688,7 @@ begin
       end;
     end;
     //пройдем по всем ячейкам
-    for j := 0 to FDaysCount - 1 do begin
+    for j := 1 to FDaysCount do begin
       //загрузим данные по норме за день из расписания
       FCells[i].SetValue(j, 'scheduled_hours', null);
       if m <> -1 then begin
@@ -2668,93 +2704,6 @@ end;
 
 
 
-procedure TTurv.ConvertEmployees202511;
-var
-  i, j, k, e: Integer;
-  w ,sh : TVarDynArray2;
-  es: TNamedArr;
-  b1, b2, b3 : Boolean;
-begin
-  if MyQuestionMessage('Импортировать данные?') <> mrYes then
-    Exit;
-  Q.QBeginTrans(True);
-  Q.QExecSql('delete from w_turv_day', []);
-  Q.QExecSql('delete from w_employee_properties', []);
-  Q.QExecSql('delete from w_departaments', []);
-  Q.QExecSql('delete from w_employees', []);
-  Q.QExecSql('delete from w_jobs', []);
-  Q.QExecSql('delete from w_schedule_hours', []);
-  Q.QExecSql('delete from w_schedules', []);
-  Q.QExecSql('insert into w_jobs (id, name, active) select id,name,active from ref_jobs', []);
-  Q.QExecSql('delete from w_turvcodes', []);
-  Q.QExecSql('insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes', []);
-  Q.QExecSql('insert into w_employees(id,f,i,o) select id, f,i,o from ref_workers', []);
-  Q.QExecSql('insert into w_departaments (id,code,name,id_head,id_prod_area,is_office,ids_editusers,active) select id,code,name,id_head,id_prod_area,office,editusers,active from ref_divisions', []);
-  Q.QExecSql('insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules', []);
-  Q.QExecSql('insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours', []);
-  Q.QExecSql('delete from w_turv_period', []);
-  Q.QExecSql('insert into w_turv_period (id, id_departament, dt1, dt2, is_finalized, status) select id, id_division, dt1, dt2, commit, status from turv_period', []);
-  Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
-    'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []
-  );
-  //увольнения ранее делались на день позже, тк неправильно была релализована логика (день увольнения д.б. последним рабочим)
-  Q.QExecSql('update w_employee_properties set dt_beg = dt_beg - 1 where is_terminated = 1',[]);
-  Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
-  w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
-  sh := Q.QloadToVarDynArray2('select * from (select id_worker, id_schedule_active, dt1, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1' ,[]);
-  Q.QExecSql('insert into w_turv_day (dt, id_employee, '+
-    'id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3) '+
-    'select dt, id_worker, id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3 '+
-    'from turv_day', []
-  );
-//Exit;
-  //графики из v_turv_workers
-  e := 0;
-//  0 = 5  1 = 4...
-  for i := 0 to es.Count - 1 do begin
-    if es.G(i, 'id_employee') <> e then begin
-      e := es.G(i, 'id_employee');
-      b1 := True;
-    end;
-    //if e <> 1 then Continue;
-    j := A.PosInArray(e, w, 0);
-    if (j >= 0) and b1 then begin
-      es.SetValue(i, 'f', 1);
-      es.SetValue(i, 'id_organization', w[j][2]);
-      es.SetValue(i, 'personnel_number', w[j][1]);
-      es.SetValue(i, 'is_concurrent', w[j][3]);
-    end;
-    k := A.PosInArray(e, sh, 0);
-    if (k >= 0) and b1 then begin
-      es.SetValue(i, 'f', 1);
-      es.SetValue(i, 'id_schedule', sh[k][1]);
-    end;
-    if b1 and es.G(i, 'is_hired') = 1 then
-      b1 := False;
-
-    //данные из статуса Увольнение из более ранней строки
-    if (i < es.Count - 1) and (es.G(i, 'is_terminated') = 1) and (e = es.G(i + 1, 'id_employee').AsInteger) then begin
-      es.SetValue(i, 'f', 1);
-      es.SetValue(i, 'id_job', es.G(i + 1, 'id_job'));
-      es.SetValue(i, 'id_departament', es.G(i + 1, 'id_departament'));
-    end;
-    //дата завершения статуса = дата начала следующего, из следующей строки - 1 (если следующий = увольнение, то равно ему!)
-    if (i > 0) and (es.G(i, 'is_terminated') <> 1) and (e = es.G(i - 1, 'id_employee').AsInteger) then begin
-      es.SetValue(i, 'f', 1);
-      if es.G(i - 1, 'is_terminated') <> 1 then
-        es.SetValue(i, 'dt_end', IncDay(es.G(i - 1, 'dt_beg'), - 1)) else es.SetValue(i, 'dt_end', es.G(i - 1, 'dt_beg'));
-    end;
-  end;
-  for i := 0 to es.Count - 1 do
-    if es.G(i, 'f') = 1 then
-      Q.QIUD('u', 'w_employee_properties', '', 'id$i;id_employee$i;id_job$i;id_departament$i;is_hired$i;is_terminated$i;dt_beg$d;dt_end$d;personnel_number$s;id_organization$i;is_concurrent$i;id_schedule$i',[
-        es.G(i, 'id'), es.G(i, 'id_employee'), es.G(i, 'id_job'), es.G(i, 'id_departament'), es.G(i, 'is_hired'), es.G(i, 'is_terminated'), es.G(i, 'dt_beg'),
-        es.G(i, 'dt_end'), es.G(i, 'personnel_number'), es.G(i, 'id_organization'), es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
-      ]);
-  Q.QExecSql('update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE(''15.11.2027'', ''DD.MM.YYYY'')))', []);
-  Q.QCommitOrRollback(True);
-end;
-
 
 function TTurv.LoadParsecDataNew: Boolean;
 //переделан запрос данных из парсека, по новым кодам данных, и с использованием объекта БД myDBParsec
@@ -3189,6 +3138,183 @@ end;
 
 
 
+function TTurv.CreateAllPayrollTransfers: Boolean;
+var
+  dt, dt1, dt2: TDateTime;
+  i, j: Integer;
+  va1, va2: TVarDynArray2;
+  va: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
+begin
+  dt := EncodeDate(2026, 01, 01); //!!!
+  dt1 := GetTurvBegDate(dt);
+  dt2 := GetTurvEndDate(dt);
+  if MyQuestionMessage('Создать ведомости к перечислению за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
+    Exit;
+  Cnt := 0;
+  Msg := '';
+  //если есть расчетные ведомости за период по подразделениям, а общая ведомость к перечислению не создана - создадим
+  if (Q.QSelectOneRow('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1])[0] <> 0) and
+    (Q.QSelectOneRow('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1])[0] = 0)
+    then begin
+      if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
+        inc(Cnt);
+    end;
+  va1 := Q.QLoadToVarDynArray2('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_employee, id_organization, personnel_number from w_payroll_transfer where id_employee is not null and dt1 = :dt1$d', [dt1]);
+    for i := 0 to High(va1) do begin
+      if (A.PosRowInArray(va1, va2, i) = -1) then begin
+        //если ведомость еще не создана
+        if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], dt1, dt2], False) <> -1 then
+          inc(Cnt);
+      end;
+    end;
+  //сообщение
+  if Cnt = 0 then
+    Msg := 'Ни одна ведомость не создана!' + Msg
+  else
+    Msg := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' ;
+  MyInfoMessage(Msg, 1);
+  Result := Cnt > 0;
+end;
+
+function TTurv.CreateAllPayrollCash: Boolean;
+var
+  dt, dt1, dt2: TDateTime;
+  i, j: Integer;
+  va1, va2: TVarDynArray2;
+  va: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
+begin
+Exit;
+  dt := EncodeDate(2026, 01, 01); //!!!
+  dt1 := GetTurvBegDate(dt);
+  dt2 := GetTurvEndDate(dt);
+  if MyQuestionMessage('Создать ведомости к выдаче за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
+    Exit;
+  Cnt := 0;
+  Msg := '';
+  if (Q.QSelectOneRow('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1])[0] <> 0) and
+    (Q.QSelectOneRow('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1])[0] = 0)
+    then begin
+      if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
+        inc(Cnt);
+    end;
+  va1 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where dt1 = :dt1$d', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_payroll_cash where dt1 = :dt1$d', [dt1]);
+    for i := 0 to High(va1) do begin
+      if (A.PosRowInArray(va1, va2, i) = -1) then begin
+//      if (A.PosInArray(va1[i][0], va2, 0) = -1) and  (A.PosInArray(va1[i][1], va2, 1) = -1) and  (A.PosInArray(va1[i][2], va2, 2) = -1) and  (A.PosInArray(va1[i][3], va2, 3) = -1) then begin
+        //если ведомость еще не создана
+        //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
+        if Q.QIUD('i', 'w_payroll_cash', '', 'id$i;id_departament;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+          inc(Cnt);  //увеличим количество созданных
+      end;
+    end;
+  //сообщение
+  if Cnt = 0 then
+    Msg := 'Ни одна ведомость не создана!' + Msg
+  else
+    Msg := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' ;
+  MyInfoMessage(Msg, 1);
+  Result := Cnt > 0;
+end;
+
+procedure TTurv.ConvertEmployees202511;
+var
+  i, j, k, e: Integer;
+  w ,sh : TVarDynArray2;
+  es: TNamedArr;
+  b1, b2, b3 : Boolean;
+begin
+  if MyQuestionMessage('Импортировать данные?') <> mrYes then
+    Exit;
+  Q.QBeginTrans(True);
+  Q.QExecSql('delete from w_turv_day', []);
+  Q.QExecSql('delete from w_employee_properties', []);
+  Q.QExecSql('delete from w_departaments', []);
+  Q.QExecSql('delete from w_employees', []);
+  Q.QExecSql('delete from w_jobs', []);
+  Q.QExecSql('delete from w_schedule_hours', []);
+  Q.QExecSql('delete from w_schedules', []);
+  Q.QExecSql('insert into w_jobs (id, name, active) select id,name,active from ref_jobs', []);
+  Q.QExecSql('delete from w_turvcodes', []);
+  Q.QExecSql('insert into w_turvcodes (id, code, name, active) select id,code, name, 1 from ref_turvcodes', []);
+  Q.QExecSql('insert into w_employees(id,f,i,o,is_concurrent) select id, f,i,o,concurrent_employee from ref_workers', []);
+  Q.QExecSql('insert into w_departaments (id,code,name,id_head,id_prod_area,is_office,ids_editusers,active) select id,code,name,id_head,id_prod_area,office,editusers,active from ref_divisions', []);
+  Q.QExecSql('insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules', []);
+  //Q.QExecSql('insert into w_schedule_hours(id,id_schedule,dt,hours) select id,id_work_schedule,dt,hours from ref_working_hours', []);
+  Q.QExecSql('delete from w_turv_period', []);
+  Q.QExecSql('insert into w_turv_period (id, id_departament, dt1, dt2, is_finalized, status) select id, id_division, dt1, dt2, commit, status from turv_period', []);
+  Q.QExecSql('insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) '+
+    'select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status', []
+  );
+  //увольнения ранее делались на день позже, тк неправильно была релализована логика (день увольнения д.б. последним рабочим)
+  Q.QExecSql('update w_employee_properties set dt_beg = dt_beg - 1 where is_terminated = 1',[]);
+  Q.QloadFromQuery('select 0 as f, id, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg, dt_end, personnel_number, id_organization, is_concurrent, id_schedule from w_employee_properties order by id_employee, id desc', [], es);
+  w := Q.QloadToVarDynArray2('select  id, personnel_number, id_organization, concurrent_employee from ref_workers', []);
+  sh := Q.QloadToVarDynArray2('select * from (select id_worker, id_schedule_active, dt1, row_number() over (partition by id_worker order by id desc) as rn from v_turv_workers) where rn = 1' ,[]);
+  Q.QExecSql('insert into w_turv_day (dt, id_employee, '+
+    'id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3) '+
+    'select dt, id_worker, id_turvcode1, worktime1, comm1, id_turvcode2, worktime2, comm2, id_turvcode3, worktime3, comm3, premium, premium_comm, penalty, penalty_comm, production, begtime, endtime, nighttime, settime3 '+
+    'from turv_day', []
+  );
+//Exit;
+  //графики из v_turv_workers
+  e := 0;
+//  0 = 5  1 = 4...
+  for i := 0 to es.Count - 1 do begin
+    if es.G(i, 'id_employee') <> e then begin
+      e := es.G(i, 'id_employee');
+      b1 := True;
+    end;
+    //if e <> 1 then Continue;
+    j := A.PosInArray(e, w, 0);
+    if (j >= 0) and b1 then begin
+      es.SetValue(i, 'f', 1);
+      es.SetValue(i, 'id_organization', w[j][2]);
+      es.SetValue(i, 'personnel_number', w[j][1]);
+//      es.SetValue(i, 'is_concurrent', w[j][3]); //!!!
+      es.SetValue(i, 'is_concurrent', 0);
+    end;
+    k := A.PosInArray(e, sh, 0);
+    if (k >= 0) and b1 then begin
+      es.SetValue(i, 'f', 1);
+      es.SetValue(i, 'id_schedule', sh[k][1]);
+    end;
+    if b1 and es.G(i, 'is_hired') = 1 then
+      b1 := False;
+
+    //данные из статуса Увольнение из более ранней строки
+    if (i < es.Count - 1) and (es.G(i, 'is_terminated') = 1) and (e = es.G(i + 1, 'id_employee').AsInteger) then begin
+      es.SetValue(i, 'f', 1);
+      es.SetValue(i, 'id_job', es.G(i + 1, 'id_job'));
+      es.SetValue(i, 'id_departament', es.G(i + 1, 'id_departament'));
+    end;
+    //дата завершения статуса = дата начала следующего, из следующей строки - 1 (если следующий = увольнение, то равно ему!)
+    if (i > 0) and (es.G(i, 'is_terminated') <> 1) and (e = es.G(i - 1, 'id_employee').AsInteger) then begin
+      es.SetValue(i, 'f', 1);
+      if es.G(i - 1, 'is_terminated') <> 1 then
+        es.SetValue(i, 'dt_end', IncDay(es.G(i - 1, 'dt_beg'), - 1)) else es.SetValue(i, 'dt_end', es.G(i - 1, 'dt_beg'));
+    end;
+  end;
+  for i := 0 to es.Count - 1 do
+    if es.G(i, 'f') = 1 then
+      Q.QIUD('u', 'w_employee_properties', '', 'id$i;id_employee$i;id_job$i;id_departament$i;is_hired$i;is_terminated$i;dt_beg$d;dt_end$d;personnel_number$s;id_organization$i;is_concurrent$i;id_schedule$i',[
+        es.G(i, 'id'), es.G(i, 'id_employee'), es.G(i, 'id_job'), es.G(i, 'id_departament'), es.G(i, 'is_hired'), es.G(i, 'is_terminated'), es.G(i, 'dt_beg'),
+        es.G(i, 'dt_end'), es.G(i, 'personnel_number'), es.G(i, 'id_organization'), es.G(i, 'is_concurrent'), es.G(i, 'id_schedule')
+      ]);
+  Q.QExecSql('update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE(''15.11.2027'', ''DD.MM.YYYY'')))', []);
+  // select workername, id_worker, id_schedule_active from v_turv_workers where dt1 = date '2026-01-01';
+  Q.QExecSql('update w_employee_properties p set id_schedule = (select max(id_schedule_active) from v_turv_workers w where w.dt1 = date ''2026-01-01'' and w.id_worker = p.id_employee)', []);
+  Q.QCommitOrRollback(True);
+end;
 
 
 

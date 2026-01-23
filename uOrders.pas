@@ -1655,6 +1655,19 @@ begin
     Exit;
   if not SenderIsThn and ((va1[0][10] = null) or (va1[0][10] = -100)) then
     Exit;
+  i := mrCancel;
+
+  if not SenderIsThn then begin
+    i := MyMessageDlg('Загрузка документов КНС', mtConfirmation, [mbYes, mbNo, mbCancel], 'Файлы;Не нужны;Отмена');
+    if i = mrCancel then
+      Exit;
+    if (i = mrNo) and (va1[0][11] = null) then begin
+      Q.QExecSql('update order_items set dt_kns = :dt$d, wo_kns = 1 where id = :id$i', [Date, IdOrItem]);
+      Result := True;
+      Exit;
+    end;
+  end;
+
   with TFileOpenDialog.Create(nil) do
     try
       Title := 'Выберите папку';
@@ -2640,6 +2653,7 @@ var
   Path: string;
   PanelsWDrilling: Integer;
   va: TVarDynArray;
+  status: Integer;
 begin
   Result := False;
   if AIdOrItem <> null then begin
@@ -2650,10 +2664,12 @@ begin
     end;
   end;
   try
-    MyData.OpenDialog1.Options := [ofFileMustExist];
-    MyData.OpenDialog1.Filter := 'Файлы XML (*.xml)|*.xml';
-    if not MyData.OpenDialog1.Execute then
-      Exit;
+    i := MyMessageDlg('Загрузка данных из xml-файла', mtConfirmation, [mbYes, mbNo, mbCancel], 'Файл;Без XML;Отмена');
+    if i = mrYes then begin
+      MyData.OpenDialog1.Options := [ofFileMustExist];
+      MyData.OpenDialog1.Filter := 'Файлы XML (*.xml)|*.xml';
+      if not MyData.OpenDialog1.Execute then
+        Exit;
 {    if AIdStdItem <> null then
       Path := Module.GetPath_StdItems_Xml(AIdStdItem);
     if AIdOrItem <> null then
@@ -2663,13 +2679,23 @@ begin
         CopyFile(PChar(MyData.OpenDialog1.Files[0]), PChar(Path + '\data.xml'), False)  //False - перезаписывать файл, True - будет ошибка если существует
       else
         myMessageDlg('Файл не найден!', mtWarning, [mbOk]);}
-    ParseOrItemXML(MyData.OpenDialog1.Files[0], PanelsWDrilling);
-    MyInfoMessage('Панелей со сверловкой - ' + IntToStr(PanelsWDrilling));
-    if AIdOrItem <> null then
-      Q.QExecSql('update order_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
-    if AIdStdItem <> null then
-      Q.QExecSql('update or_std_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
-    Result := True;
+      ParseOrItemXML(MyData.OpenDialog1.Files[0], PanelsWDrilling);
+      MyInfoMessage('Панелей со сверловкой - ' + IntToStr(PanelsWDrilling));
+      if AIdOrItem <> null then
+        Q.QExecSql('update order_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+      if AIdStdItem <> null then
+        Q.QExecSql('update or_std_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+      Result := True;
+    end
+    else if i = mrNo then begin
+      if AIdOrItem <> null then
+        Q.QExecSql('update order_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+      if AIdStdItem <> null then
+        Q.QExecSql('update or_std_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+      Result := True;
+    end
+    else
+      Exit;
   except
     myMessageDlg('Ошибка открытия файла!', mtWarning, [mbOk]);
   end;

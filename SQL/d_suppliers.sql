@@ -76,7 +76,9 @@ insert into spl_categoryes (name) values ('снабжение');
 update spl_categoryes set id = 1 where name = 'снабжение';
 
 --доп параметры номенклатуры ИТМ для снабжения
-alter table spl_itm_nom_props add monitor_price number(1) default 0;
+alter table spl_itm_nom_props add monitor_price number(1) default 1;
+alter table spl_itm_nom_props add mp number(1);
+update spl_itm_nom_props set monitor_price = mp;
 alter table spl_itm_nom_props add price_check_upd number(1) default 1;
 alter table spl_itm_nom_props add price_check_test number(11,2);
 --alter table spl_itm_nom_props add planned_need_qnt number(11,3);
@@ -1916,10 +1918,10 @@ select
   s.id_schet,
   s.control_date as dt,
   s.num,
-  round(ss.quantity /nvl(ss.kp_unit_sp, 1), 2) as qnt,
+  round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
   round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
-  (round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum_diff, 
-  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum, 
+  round((round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum_diff, 
+  round(round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum, 
   ss.kp_unit_sp,
   p.price_check,
   ss.price as price_sp,
@@ -1938,21 +1940,22 @@ where
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
   and s.control_date is not null
-  and round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check > 0  
+  and round(ss.price * nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check > 0  
 ;
 
-create or replace view v_prices_from_sp_schet_day as
+--create or replace view v_prices_from_sp_schet_day as
 select
 --выборка номенклатуры по счетам за вчерашний день
   n.name,
   u.name_unit,
   s.id_schet,
   s.control_date as dt,
+  s.date_registr,
   s.num,
-  round(ss.quantity /nvl(ss.kp_unit_sp, 1), 2) as qnt,
+  round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
   round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
-  (round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum_diff, 
-  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity / nvl(ss.kp_unit_sp, 1), 2) as sum, 
+  round((round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum_diff, 
+  round(round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum, 
   ss.kp_unit_sp,
   p.price_check,
   ss.price as price_sp,
@@ -1971,10 +1974,12 @@ where
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
   and s.control_date is not null
---  and round(ss.price / ss.kp_unit_sp, 2) - p.price_check > 0  
-  and s.date_registr >= trunc(sysdate) - 1 and s.date_registr < trunc(sysdate)
+  and s.date_registr >= trunc(sysdate) - 3 and s.date_registr < trunc(sysdate)
 ; 
 
+/*
+ 1
+*/
 
 select * from v_prices_from_sp_schet_day;
 select * from v_prices_from_sp_schet where name like '%Фанера/18 мм сорт 2/2%';

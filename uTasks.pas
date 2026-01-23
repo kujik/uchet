@@ -880,27 +880,31 @@ var
   na: TNamedArr;
   va: TVarDynArray;
   st, css: string;
-
+  e: Extended;
 begin
   Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day where monitor_price = 1 order by name asc', [], na);
-  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum ) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
+  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   st := '';
   //va:=[222222];
   //не получается сделать границы. появлялись при вставке данных тегов в td, но после пропадали, не воспроизводится
   //<span ></span> <!-- -->
   if na.Count > 0 then begin
+    e := 0;
     for i:=0 to na.Count- 1 do begin
       st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString +
         '</td><td>' + na.G(i,'name_unit').AsString + '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' +
         S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '<b>') + na.G(i,'sum_diff').AsString + S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '</b>') +
         '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
+      e := e + na.G(i,'sum').AsFloat;
     end;
     st :=
       '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
       '<table border = "1">'+
       '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
-      st + '</table><br>';
-  end;
+      st + '</table><br>' + 'Всего по счетаv: <b>' + FloatToStr(Round(e)) + 'р.</b>';
+  end
+  else
+    st := 'За вчерашний день на было создано ни одного счета.<br>';
   if Length(va) > 0 then begin
     st := S.IIFStr(st <> '', st + '<br><br>----------------------------------<br><b>') + 'Были приходные накладные без основания за вчерашний день:</b><br>Номера: ' + A.Implode(va,', ') + '<br>';
   end;

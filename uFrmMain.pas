@@ -605,8 +605,8 @@ begin
     ['Журнал прихода/ухода работников', myfrm_J_Parsec, User.Roles([], [rW_J_Parsec_V, rW_J_Parsec_V_All])],
     [],
     ['Расчетные ведомости', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
-    ['Ведомости к перечислению', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
-    ['Ведомости к выдаче', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    ['Ведомости к перечислению', myfrm_J_PayrollTransfer,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    ['Ведомости к выдаче', myfrm_J_PayrollCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
 
     ['Отчеты'],
     ['Свод по зарплатным ведомостям', myfrm_Rep_W_Payroll, User.Role(rW_Rep_Payroll)],

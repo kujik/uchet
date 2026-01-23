@@ -200,7 +200,9 @@ uses
   uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
   uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN},
   uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule},
-  uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod};
+  uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod},
+  uFrmWGedtPayrollTransfer in 'uFrmWGedtPayrollTransfer.pas' {FrmWGedtPayrollTransfer},
+  uFrmWGedtPayrollCash in 'uFrmWGedtPayrollCash.pas' {FrmWGedtPayrollCash};
 
 var
   MT: Integer;

@@ -120,7 +120,7 @@ var
 begin
   Result:=False;
 
-  Caption:='Зарплатная ведомость';
+  Caption:='Расчетная ведомость';
   FOpt.RefreshParent := True;
 
   if FormDbLock = fNone then Exit;
@@ -134,7 +134,7 @@ begin
   FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
 
   FDeletedWorkers := [];
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind] - [myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize] - [myogColumnFilter];
 
   //определим поля
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
@@ -156,15 +156,15 @@ begin
     ['job$s', '!Должность', '150;h'],
     ['schedulecode$s', '!График', '70'],
 
-    ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90, fcol],
-    ['period_hours_norm$f', '!Норма отработанных часов за период', 90, fcol],
-    ['hours_worked$f', '!Отработано за период', 90, fcol],
-    ['overtime$f', '!Из них переработка', 90, fcol],
+    ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90],
+    ['period_hours_norm$f', '!Норма отработанных часов за период', 90],
+    ['hours_worked$f', '!Отработано за период', 90],
+    ['overtime$f', '!Из них переработка', 90],
 
     ['planned_pay$f', '~Плановое' + sLineBreak + 'начисление', wcol, fcol, 't=1,i1'],
     ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 't=1,i1'],
     ['variable_pay$f', '~Стимулирующая', wcol, fcol, 't=1,i1'],
-    ['ors$f', '~ОРС', wcol, fcol, 't=1,i1'],
+    ['ors$f', '~ОРС', wcol, 't=1,i1'],
     ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol],
     ['ext_pay$f', '~Загрузка' + sLineBreak + ' сделки', wcol, fcol, 't=2'],
     ['overtime_pay$f', '~Переработка', wcol, fcol],
@@ -181,7 +181,10 @@ begin
   ]);
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
-    [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],[],[mbtLock],
+    [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
+    //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
+    [],[mbtLock],
+    [], [-mbtExcel, True],
     [],[-1001, True, 'Разрешить редактирование всех полей'],
     [],[mbtCtlPanel]
   ]);
@@ -192,7 +195,7 @@ begin
   Frg1.SetInitData([], '');
 
   Frg1.InfoArray := [[
-    'Зарплатная ведомость.'#13#10#13#10+
+    'Расчетная ведомость.'#13#10#13#10+
     'Просмотр и редактирование данных для расчета зарплаты работников подразделения.'#13#10+
     'Набор полей может отличаться в зависимости от метода расчета, вводить данные можно в те из них, которые отмечены зеленой полосой.'#13#10+
     'Для расчета заработной платы обязательно нужно выбрать метод расчета для подразделения, если он не был выбран ранее.'#13#10+
@@ -306,8 +309,8 @@ begin
   if FPayrollParams.G('id_employee') = null then
     FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, '', True, 1)
   else begin
-    var WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and id_organization = ''' + FPayrollParams.G('id_organization').AsString +
-      ''' and personnel_number = ''' + FPayrollParams.G('personnel_number').AsString + '''';
+    var WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and nvl(id_organization, -100) = nvl(''' + FPayrollParams.G('id_organization').AsString + ''', -100) ' +
+    'and nvl(personnel_number, -100) = nvl(''' + FPayrollParams.G('personnel_number').AsString + ''', -100)';
     FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, -1);
   end;
 
@@ -512,7 +515,7 @@ begin
     Sys.GetFilesInDirectoryRecursive(Module.GetCfgVar(mycfgWpath_to_payrolls), sl);
     //найдем те, вкоторых есть файл типа "Март 1/Сборка 1.xlsx"
     for i := 0 to sl.Count - 1 do begin
-      if pos(MonthsRu[MonthOf(FPayrollParams.G('dt1'))] + ' ' + S.IIFStr(DayOf(FPayrollParams.G('dt1')) = 1, '1', '2') + '\' + FPayrollParams.G('divisionname') + '.xlsm', sl[i]) > 0 then
+      if pos(MonthsRu[MonthOf(FPayrollParams.G('dt1'))] + ' ' + S.IIFStr(DayOf(FPayrollParams.G('dt1')) = 1, '1', '2') + '\' + FPayrollParams.G('departament') + '.xlsm', sl[i]) > 0 then
         FileName := sl[i];
     end;
     sl.Free;
@@ -544,7 +547,7 @@ begin
       //номер записи с единицы!!!
       while i <= Frg1.MemTableEh1.RecordCount do begin
         Frg1.MemTableEh1.RecNo := i;
-        fio := Frg1.MemTableEh1.FieldByName('workername').AsString;
+        fio := Frg1.MemTableEh1.FieldByName('employee').AsString;
         emp := 0;
         j := 0;
         st1 := '';
@@ -560,12 +563,11 @@ begin
         end;
         if st1 = fio then begin
           e := Round(sh.Cells[cSum - 1, j].Value);
-          if Frg1.MemTableEh1.FieldByName('core_earnings').AsVariant <> e then begin
-            if Frg1.MemTableEh1.FieldByName('core_earnings').AsVariant <> null then
-              st := st + fio + ': Изменен столбец Баллы с ' + Frg1.MemTableEh1.FieldByName('core_earnings').AsString + ' на ' + VarToStr(e) + #13#10;
+          if Frg1.MemTableEh1.FieldByName('ext_pay').AsVariant <> e then begin
+            if Frg1.MemTableEh1.FieldByName('ext_pay').AsVariant <> null then
+              st := st + fio + ': Изменен столбец Баллы с ' + Frg1.MemTableEh1.FieldByName('ext_pay').AsString + ' на ' + VarToStr(e) + #13#10;
             Frg1.MemTableEh1.Edit;
-            Frg1.MemTableEh1.FieldByName('core_earnings').Value := e;
-            Frg1.MemTableEh1.FieldByName('changed').Value := 1;
+            Frg1.MemTableEh1.FieldByName('ext_pay').Value := e;
             FIsChanged := True;
             Frg1.MemTableEh1.Post;
             Frg1.MemTableEh1.Edit;
@@ -650,11 +652,12 @@ begin
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
   Frg1.Opt.SetColFeature('*', 'e', False, False);
   Frg1.Opt.SetColFeature('i1', 'i', FPayrollParams.G('calc_method').AsInteger = cMMotivation, False);
+  Frg1.Opt.SetColFeature('ext_pay', 'i', FPayrollParams.G('calc_method').AsInteger <> cMMotivation, False);
   Frg1.Opt.SetColFeature('1', 'e', (FPayrollParams.G('calc_method').AsInteger <> cMMotivation) or FIsEditableAll, False);
   Frg1.Opt.SetColFeature('2', 'e', FIsEditableAdd or FIsEditableAll, False);
   Frg1.Opt.SetColFeature('3', 'e', True, False);
   if FIsEditableAll then
-    Frg1.Opt.SetColFeature('*', 'e', False, False);
+    Frg1.Opt.SetColFeature('*', 'e', True, False);
   Frg1.SetColumnsVisible;
 end;
 
@@ -850,11 +853,11 @@ end;
 
 procedure TFrmWGedtPayrollN.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
-  if A.InArray(FieldName, ['pos', 'workername', 'job', 'org_name', 'personnel_number']) then
+  if A.InArray(FieldName, ['employee', 'job', 'organization', 'personnel_number', 'schedulecode']) then
       Params.Background := clmyGray;
-  //подсветим отрицательные итоги
-  if FieldName = 'itog' then
-    if Frg2.GetValueF('itog') < 0 then
+  if A.InArray(FieldName, ['total_pay', 'base_pay']) then
+      Params.Background := RGB(220, 255, 190);
+  if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg2.GetValueF(FieldName) < 0) then
       Params.Background := clRed;
 end;
 
@@ -890,8 +893,8 @@ begin
         GetDataFromExcel;
     mbtSettings:
       SetPayrollMethod;
-    mbtExcel:
-      ExportToXlsxA7;
+//    mbtExcel:
+//      ExportToXlsxA7;
     mbtPrintGrid:
       PrintGrid;
     mbtLock:

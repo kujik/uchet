@@ -8,12 +8,12 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
   inherited pnlFrmMain: TPanel
     Width = 503
     Height = 193
-    ExplicitWidth = 351
-    ExplicitHeight = 193
+    ExplicitWidth = 499
+    ExplicitHeight = 192
     inherited pnlFrmClient: TPanel
       Width = 493
       Height = 144
-      ExplicitWidth = 337
+      ExplicitWidth = 489
       ExplicitHeight = 143
       object pgcMain: TPageControl
         Left = 0
@@ -23,7 +23,7 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
         ActivePage = ts_Divisions
         Align = alTop
         TabOrder = 0
-        ExplicitWidth = 337
+        ExplicitWidth = 489
         object ts_Divisions: TTabSheet
           Caption = #1042#1089#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083#1077#1085#1080#1103
           object lbl1: TLabel
@@ -103,7 +103,7 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
       Top = 149
       Width = 493
       ExplicitTop = 148
-      ExplicitWidth = 337
+      ExplicitWidth = 489
       inherited bvlFrmBtnsTl: TBevel
         Width = 491
         ExplicitWidth = 343
@@ -114,22 +114,22 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 491
-        ExplicitWidth = 335
+        ExplicitWidth = 487
         inherited pnlFrmBtnsMain: TPanel
           Left = 392
-          ExplicitLeft = 236
+          ExplicitLeft = 388
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 164
-          ExplicitLeft = 8
+          ExplicitLeft = 160
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 293
-          ExplicitLeft = 137
+          ExplicitLeft = 289
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 24
-          ExplicitWidth = 21
+          ExplicitWidth = 20
         end
       end
     end
@@ -138,11 +138,11 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
     Top = 193
     Width = 503
     ExplicitTop = 192
-    ExplicitWidth = 347
+    ExplicitWidth = 499
     inherited lblStatusBarR: TLabel
       Left = 430
       Height = 14
-      ExplicitLeft = 278
+      ExplicitLeft = 430
     end
     inherited lblStatusBarL: TLabel
       Height = 14

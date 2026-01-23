@@ -557,8 +557,8 @@ begin
   if Mode in [fView, fDelete] then
     Exit;
   //SetControlsEditable([chb_active, edt_code, edt_name, edt_comm, nedt_duration], False);
-  SetControlsEditable([nedt_duration], (Mode = fAdd) or FAdminMode);
-  FrgTemplate.DbGridEh1.ReadOnly := not ((Mode = fAdd) or FAdminMode);
+  SetControlsEditable([nedt_duration], (Mode = fAdd) or FAdminMode      or (Mode = fEdit));    //  !!! временно d FEdit
+  FrgTemplate.DbGridEh1.ReadOnly := not ((Mode = fAdd) or FAdminMode     or (Mode = fEdit));
 end;
 
 function TFrmWWedtWorkSchedule.GetYn: Integer;

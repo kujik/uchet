@@ -117,7 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
-  uFrmWWedtWorkSchedule,
+  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayrollTransfer,
 
 
   D_Order, D_LoadKB,
@@ -580,6 +580,8 @@ begin
     myfrm_J_Vacancy,
     myfrm_Ref_JobsNeeded,
     myfrm_J_PayrollCalculations,
+    myfrm_J_PayrollTransfer,
+    myfrm_J_PayrollCash,
     myfrm_R_PersBonus,
     myfrm_J_PersBonus,
 
@@ -787,6 +789,7 @@ begin
       ['i$s', cntEdit, 'Имя','1:25::T'],
       ['o$s', cntEdit, 'Отчество','0:25::T'],
       ['birthday$d', cntDEdit, 'Дата'#13#10'рождение',''],
+      ['is_concurrent$i', cntCheck, 'Совместитель',''],
       ['comm$s', cntEdit, 'Комментарий','0:400::T']],
       [['caption dlgedit']]
     );
@@ -927,6 +930,12 @@ begin
   end
   else if F = myfrm_Dlg_Payroll then begin
     TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);
+  end
+  else if F = myfrm_Dlg_PayrollCalc then begin
+    TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+  end
+  else if F = myfrm_Dlg_PayrollTransfer then begin
+    TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Candidate then begin
 //~    Form := TDlg_Candidate.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);

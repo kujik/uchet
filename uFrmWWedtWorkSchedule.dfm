@@ -128,7 +128,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           ExplicitWidth = 693
           inherited bvl1: TBevel
             Top = 6
-            Width = 693
+            Width = 689
             ExplicitTop = 6
             ExplicitWidth = 1030
           end

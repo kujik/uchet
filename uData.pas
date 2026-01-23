@@ -837,6 +837,8 @@ const
   myfrm_J_Turv ='J_Turv';
   myfrm_J_Payrolls ='J_Payrolls';
   myfrm_J_PayrollCalculations ='J_PayrollCalculations';
+  myfrm_j_PayrollTransfer ='J_PayrollTransfer';
+  myfrm_j_PayrollCash ='J_PayrollCash';
   myfrm_J_Candidates='J_Candidates';
   myfrm_J_Vacancy='J_Vacancy';
   myfrm_Rep_W_Payroll = 'Rep_W_Payroll';
@@ -1026,6 +1028,9 @@ const
   myfrm_Dlg_Rep_OrderReglament = 'Dlg_Rep_OrderReglament';
   myfrm_Dlg_ForemanAllowance = 'Dlg_ForemanAllowance';
   myfrm_Dlg_J_PersBonus='Dlg_J_PersBonus';
+  myfrm_Dlg_PayrollCalc ='Dlg_PayrollCalc';
+  myfrm_Dlg_PayrollTransfer ='Dlg_PayrollTransfer';
+  myfrm_Dlg_PayrollCash ='Dlg_PayrollCash';
 
 
 const

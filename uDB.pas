@@ -1032,10 +1032,10 @@ begin
     end;
     AdoQuery.Open;
     Result := VarArrayCreate([0, AdoQuery.FieldCount - 1], varVariant);
+    if Length(FLastReceivedFiedNames) = 0 then
+      for i := 0 to AdoQuery.FieldCount - 1 do
+        FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
     if not AdoQuery.EOF then begin
-      if Length(FLastReceivedFiedNames) = 0 then
-        for i := 0 to AdoQuery.FieldCount - 1 do
-          FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
       for i := 0 to AdoQuery.FieldCount - 1 do
         Result[i] := AdoQuery.Fields[i].AsVariant
     end
@@ -1061,12 +1061,12 @@ begin
   FLastReceivedFiedNames := [];
   if QOpen(Sql, ParamValues) < 0 then
     Exit;
+  if Length(FLastReceivedFiedNames) = 0 then
+    for i := 0 to AdoQuery.FieldCount - 1 do
+      FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
   while not AdoQuery.EOF do begin
     SetLength(Result, Length(Result) + 1);
     SetLength(Result[High(Result)], AdoQuery.FieldCount);
-    if Length(FLastReceivedFiedNames) = 0 then
-      for i := 0 to AdoQuery.FieldCount - 1 do
-        FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
     for i := 0 to AdoQuery.FieldCount - 1 do
       Result[High(Result)][i] := AdoQuery.Fields[i].AsVariant;
     AdoQuery.Next;
@@ -1084,12 +1084,12 @@ begin
   FLastReceivedFiedNames := [];
   if QOpen(Sql, ParamValues) < 0 then
     Exit;
+  if Length(FLastReceivedFiedNames) = 0 then
+    for i := 0 to AdoQuery.FieldCount - 1 do
+      FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
   while not AdoQuery.EOF do begin
     SetLength(Result.V, Length(Result.V) + 1);
     SetLength(Result.V[High(Result.V)], AdoQuery.FieldCount);
-    if Length(FLastReceivedFiedNames) = 0 then
-      for i := 0 to AdoQuery.FieldCount - 1 do
-        FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
     for i := 0 to AdoQuery.FieldCount - 1 do
       Result.V[High(Result.V)][i] := AdoQuery.Fields[i].AsVariant;
     AdoQuery.Next;
@@ -1097,9 +1097,9 @@ begin
   Result.FFull := FLastReceivedFiedNames;
   Result.F := FLastReceivedFiedNames;
   for j := 0 to High(Result.F) do begin
-  i := Pos('$', Result.F[j]);
-  if i > 0 then
-    Result.F[j] := Copy(Result.F[j], 1, i - 1);
+    i := Pos('$', Result.F[j]);
+    if i > 0 then
+      Result.F[j] := Copy(Result.F[j], 1, i - 1);
   end;
   QClose;
 end;
@@ -1175,11 +1175,12 @@ begin
   FLastReceivedFiedNames := [];
   if QOpen(Sql, ParamValues) < 0 then
     Exit;
+  for i := 0 to AdoQuery.FieldCount - 1 do
+    FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
   if not AdoQuery.EOF then begin
     SetLength(Result, AdoQuery.FieldCount);
     for i := 0 to AdoQuery.FieldCount - 1 do begin
       Result[i] := AdoQuery.Fields[i].AsVariant;
-      FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
     end;
   end;
   QClose;
@@ -1195,9 +1196,9 @@ begin
   FLastReceivedFiedNames := [];
   if QOpen(Sql, ParamValues) < 0 then
     Exit;
+  if Length(FLastReceivedFiedNames) = 0 then
+    FLastReceivedFiedNames := [AdoQuery.Fields[0].FieldName];
   while not AdoQuery.EOF do begin
-    if Length(FLastReceivedFiedNames) = 0 then
-      FLastReceivedFiedNames := [AdoQuery.Fields[0].FieldName];
     SetLength(Result, Length(Result) + 1);
     Result[High(Result)] := AdoQuery.Fields[0].AsVariant;
     AdoQuery.Next;

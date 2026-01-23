@@ -90,7 +90,7 @@ begin
     for i := 0 to High(va1) do begin
       if A.PosInArray(va1[i][0], va2, 0) = -1 then begin
         //если ведомость еще не создана
-        if va1[i][2] = 1 then
+        if va1[i][2] <> 1 then
           //уведомление о незакрытых ТУРВ
           S.ConcatStP(Msg, va1[i][1], #13#10);
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
@@ -108,15 +108,19 @@ begin
     S.GetDatesFromPeriodString(cmbPeriodW.Text, dt1, dt2);
     if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + #13#10'для работник "' + cmbWorker.Text + '"?') <> mrYes then
       Exit;
+    //получм список ведомостей по уволенным, которые нужно создать
+    //для каждого периода прием-увольнение будет создано не меньше одной ведомости, едина ведомость на несколько таких периодов никогда не создается.
+    //(если были переходы в пределах такого периода в разныве подразделдения, то создастся по каждому подразделению)
     Q.QLoadFromQuery(
-      'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties where employee_st = :employee_st$s and is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d',
+      'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
+      'where employee_st = :employee_st$s and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
+      'group by id_departament, id_employee, id_organization, personnel_number' ,
       [cmbWorker.Text, dt1, dt2], va1
     );
+    //получим список ведомостей по зп, по полным подразделениям за этот период
+    va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);
     for i := 0 to High(va1) do begin
-      if Q.QSelectOneRow(
-        'select id from w_payroll_calc where id_departament = :p1$i and id_employee = :p2$i and id_organization = :p3$i and personnel_number = :p4$s and dt1 = :dt1$d',
-         [va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1])[0] = null then
-      begin
+      if A.PosRowInArray(va1, va2, i) = -1 then begin
         if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
           inc(Cnt);  //увеличим количество созданных
       end;

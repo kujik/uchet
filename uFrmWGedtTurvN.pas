@@ -93,9 +93,9 @@ begin
 
   Caption:='ÒÓÐÂ';
   var ssort := 'job;employee;schedulecode;organization;personnel_number';
-  //var sgroup := 'schedulecode;job;employee';
-  var sgroup := 'job;employee;schedulecode;organization;personnel_number';
-  FTurv.Create(ID, ssort, 'job' {sgroup});
+  var sgroup := 'schedulecode;job;employee';
+  //var sgroup := 'job;employee;schedulecode;organization;personnel_number';
+  FTurv.Create(ID, ssort, sgroup);
 
 {
   FTurv.Create(ID);

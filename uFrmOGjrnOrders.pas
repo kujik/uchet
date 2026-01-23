@@ -170,12 +170,13 @@ begin
     //['thn','Технолог','120'],
     ['id_thn','Технолог','120;L','e',(User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper],
     ['dt_estimate','Смета','80'],
-    ['is_xml_loaded','XML','40','pic=0;1:6;7'],
+    ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
     ['sgp','С СГП','40','pic'],
     ['nstd','Нестандарт','40','pic'],
     ['disassembled','В разборе','40','pic'],
     ['control_assembly','Контр. сборка','40','pic'],
     ['dt_kns','Документы КНС','80'],
+    ['wo_kns','_wo_kns','40'],
     ['dt_thn','Документы ТХН','80'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
@@ -526,6 +527,10 @@ begin
       else if (Fr.GetValue('id_itm') <> null) and (Fr.GetValue('has_itm_est') = null)
         //загружена в учете но не найдена в итм, при том что изделие в заказ в ИТМ передано - розовым
         then Params.Background := clmyPink;
+  end;
+  if (FieldName = 'dt_kns') then begin
+    if (Fr.GetValue('dt_kns') <> null) and (Fr.GetValue('wo_kns') = 1) then
+      Params.Text := 'нет';
   end;
 end;
 
