@@ -882,7 +882,7 @@ var
   st, css: string;
   e: Extended;
 begin
-  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day where monitor_price = 1 order by name asc', [], na);
+  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day /*where monitor_price = 1*/ order by name asc', [], na);
   va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   st := '';
   //va:=[222222];

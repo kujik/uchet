@@ -4,8 +4,8 @@ inherited Dlg_Rep_Smeta: TDlg_Rep_Smeta
   ClientHeight = 364
   ClientWidth = 410
   OnActivate = FormActivate
-  ExplicitWidth = 426
-  ExplicitHeight = 403
+  ExplicitWidth = 422
+  ExplicitHeight = 402
   TextHeight = 13
   object lbl_AddOrders: TLabel
     Left = 8

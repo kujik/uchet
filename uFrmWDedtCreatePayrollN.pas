@@ -55,7 +55,7 @@ var
   dt1, dt2: TDateTime;
 begin
   S.GetDatesFromPeriodString(cmbPeriodW.Text, dt1, dt2);
-  Q.QLoadToDBComboBoxEh('select distinct employee_st from v_w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d order by employee_st', [dt1, dt2], cmbWorker, cntComboL);
+  Q.QLoadToDBComboBoxEh('select distinct employee_st from v_w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d order by employee_st', [dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], cmbWorker, cntComboL);
   cmbWorker.ItemIndex := 0;
 end;
 
@@ -94,7 +94,7 @@ begin
           //уведомление о незакрытых ТУРВ
           S.ConcatStP(Msg, va1[i][1], #13#10);
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
-        if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ, бухгалтерия
+        //if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ, бухгалтерия
         if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dt1, dt2], False) <> -1 then
           inc(Cnt);  //увеличим количество созданных
       end;
@@ -111,11 +111,19 @@ begin
     //получм список ведомостей по уволенным, которые нужно создать
     //для каждого периода прием-увольнение будет создано не меньше одной ведомости, едина ведомость на несколько таких периодов никогда не создается.
     //(если были переходы в пределах такого периода в разныве подразделдения, то создастся по каждому подразделению)
+    //!!! не совсем корректно!
+{    var ide := Q.QSelectOneRow('select distinct id_employee from v_w_employee_properties where employee_st = :p$s', [cmbWorker.Text])[0];
+    Q.QLoadFromQuery(
+      'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
+      'where id_employee = :id_employee$i and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
+      'group by id_departament, id_employee, id_organization, personnel_number' ,
+      [ide, dt1, dt2], va1
+    );}
     Q.QLoadFromQuery(
       'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
       'where employee_st = :employee_st$s and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
       'group by id_departament, id_employee, id_organization, personnel_number' ,
-      [cmbWorker.Text, dt1, dt2], va1
+      [cmbWorker.Text, dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], va1
     );
     //получим список ведомостей по зп, по полным подразделениям за этот период
     va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);

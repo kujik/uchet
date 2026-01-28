@@ -230,8 +230,8 @@ begin
       //но если увольнение - поставим днем начала (днем увольнения, так по тк)
       Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
       if GetcontrolValue('cmb_id_mode').AsInteger = 3 then
-        //если увольнение, то удалим безвозвратно данные по дням для этого работника после и в дату увольнения
-        Q.QExecSql('delete from w_turv_day where id_employee = :id_e$i and dt >= :dt_beg$d', [FIdEmp, GetcontrolValue('dedt_dt_beg')])
+        //если увольнение, то удалим безвозвратно данные по дням для этого работника после даты увольнения
+        Q.QExecSql('delete from w_turv_day where id_employee = :id_e$i and dt > :dt_beg$d', [FIdEmp, GetcontrolValue('dedt_dt_beg')])
       else
         //при переводе поправим в данных по дням айди статуса для работника после начала действия созданного статуса на его айди
         Q.QExecSql('update w_turv_day set id_employee_properties = :id$i where id_employee = :id_e$i and dt >= :dt_beg$d', [ID, FIdEmp, GetcontrolValue('dedt_dt_beg')]);

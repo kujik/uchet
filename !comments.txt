@@ -379,7 +379,7 @@ procedure TFrDBGridEh.GetGridDimensions(var AWidth, AHeight: Integer);
 Если не было контрольной цены, записываем цену покупки в контрольную цену.
 сортировка в ведосмости к перечислению при загрузки из расчетной.
 !--убрать временное разрешение в TFrmWWedtWorkSchedule.SetControlsEditableState
-
+убрать боригадира из справочника подразделений
 
 
 
@@ -414,3 +414,9 @@ procedure TFrDBGridEh.GetGridDimensions(var AWidth, AHeight: Integer);
 сделать галку Контролировать цену проставленной по умолчанию!
 
 +++отчет по тр средствам - вытащить дату поездки, корторая есть внутри счета
+
+
+янин
+
+работники не обновились! :
+master_st

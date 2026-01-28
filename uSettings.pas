@@ -848,8 +848,11 @@ begin
   end;
 //    Sys.SaveTextToFile('r:\1111', A.Implode(va, ','));
   //зададим индекс полей (порядок следования их в таблице)
+  try
   for i := 0 to high(va) do
     Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+  except
+  end;
 
 
   Grid.Options := Grid.Options + oplus - ominus;

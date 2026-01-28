@@ -85,4 +85,21 @@ inherited FrmWGedtPayrollCash: TFrmWGedtPayrollCash
       Height = 14
     end
   end
+  object PrintDBGridEh1: TPrintDBGridEh
+    DBGridEh = Frg1.DbGridEh1
+    Options = []
+    PageFooter.Font.Charset = DEFAULT_CHARSET
+    PageFooter.Font.Color = clWindowText
+    PageFooter.Font.Height = -12
+    PageFooter.Font.Name = 'Segoe UI'
+    PageFooter.Font.Style = []
+    PageHeader.Font.Charset = DEFAULT_CHARSET
+    PageHeader.Font.Color = clWindowText
+    PageHeader.Font.Height = -12
+    PageHeader.Font.Name = 'Segoe UI'
+    PageHeader.Font.Style = []
+    Units = MM
+    Left = 458
+    Top = 310
+  end
 end

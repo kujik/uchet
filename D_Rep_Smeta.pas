@@ -63,8 +63,18 @@ var
 const
   MaxCnt = 10000;
 begin
-  vv:=VarArrayOf(['%', OrIds, 'dt_pnr', 'Дата распила']);
+//  vv:=VarArrayOf(['%', OrIds, 'dt_pnr', 'Дата распила']);
+  vv:=VarArrayOf(['%', OrIds, 'dt_beg', 'Дата распила']);
+//  Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal], vv);
+    Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal, myfoSizeable], VarArrayOf(['%', '',{FOrIds,} '', '']));
+(*    Wh.SelectDialogResult := [-100];
+    Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal, myfoSizeable], VarArrayOf(['%', '',{FOrIds,} '', '']));
+    if (Length(Wh.SelectDialogResult) = 1) and (Wh.SelectDialogResult[0] = -100) then
+      Exit;
+
+
   Wh.ExecAdd(myfrm_J_Orders_SEL_1, Self, fNone, 0, [], vv, True);
+*)
 {
 //!!! не работет вывод диалогового сообщения после ExecDlgFormAdd (ShowMessage не отображается, сворачивает программу, MyWarningMessage блокирет программу без отображения)!!!
 ShowMessage('!!!+++'); exit;
@@ -73,7 +83,7 @@ MyWarningMessage('Выбрано слишшком много заказов!'#13#10'Будут добавлены только 
 self.Visible:=True;
 exit;
 }
-//  if Length(Wh.SelectDialogResult) = 0 then Exit; //++
+  if Length(Wh.SelectDialogResult) = 0 then Exit;
   OrIds:='';
   OrNum:='';
   if Length(Wh.SelectDialogResult2) > MaxCnt

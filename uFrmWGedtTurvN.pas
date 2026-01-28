@@ -96,6 +96,7 @@ begin
   var sgroup := 'schedulecode;job;employee';
   //var sgroup := 'job;employee;schedulecode;organization;personnel_number';
   FTurv.Create(ID, ssort, sgroup);
+  //FTurv.LoadFromParsec;
 
 {
   FTurv.Create(ID);
@@ -119,10 +120,11 @@ begin
   end;
 
   FOpt.RefreshParent := True;
-  FRgsEdit1:=FTurv.Title.G('rgse')=1;
-  FRgsEdit2:=User.Role(rW_J_Turv_TP);
-  FRgsEdit3:=User.Role(rW_J_Turv_TS);
-  FRgsCommit:=User.Role(rW_J_Turv_Commit);;
+  FRgsEdit1 := FTurv.Title.G('rgse') = 1;
+  FRgsEdit2 := User.Role(rW_J_Turv_TP);
+  FRgsEdit3 := User.Role(rW_J_Turv_TS);
+  FRgsCommit := User.Role(rW_J_Turv_Commit);
+  ;
 
 
   //возьмем блокировки, отдельно на изменение каждого вида времени
@@ -814,11 +816,11 @@ begin
       if Params.Text = '0' then begin
         Params.Text := 'B';
         Params.Font.Color := clRed;
-      end else if Params.Text <> '' then
+      end else if S.IsNumber(Params.Text, 0, 10000) then
         Params.Text := FormatFloat('#0.00', StrToFloat(Params.Text));
       if Copy(Params.Text, 1, 1) = '-' then
         Params.Text := '';
-      if Params.Text = '00.00' then
+      if (Params.Text = '00.00') or (Params.Text = '0.00') then
         Params.Text := '';
       Params.ReadOnly := True;
       Exit;
@@ -1338,11 +1340,11 @@ begin
     Fields := Fields + ['worktime3$f', 'id_turvcode3$i' ,'comm3$s'];
   Q.QBeginTrans(True);
   Q.QExecSql(
-    'insert into w_turv_day (id_employee_properties, dt) '+
-    'select :ide$i, :dt$d from dual '+
+    'insert into w_turv_day (id_employee_properties, dt, id_employee) '+
+    'select :ide$i, :dt$d, :idempl$i from dual '+
     'where not exists '+
     '(select 1 from w_turv_day where id_employee_properties = :ide2$i and dt = :dt2$d)',
-    [FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt'), FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt')]
+    [FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt'), FTurv.Cells[pos].G(d, 'id_employee'), FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt')]
   );
   //запишем данные в основную таблицу
   st := Q.QSIUDSql('Q', 'w_turv_day', A.Implode(Fields, ';')) + ' where id_employee_properties = :ide$i and dt = :dt$d';

@@ -1917,6 +1917,7 @@ select
   u.name_unit,
   s.id_schet,
   s.control_date as dt,
+
   s.num,
   round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
   round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
@@ -1935,15 +1936,15 @@ from
   dv.nomenclatura n,
   dv.unit u
 where  
-  p.id = n.id_nomencl
-  and p.id = ss.id_nomencl
+  p.id (+) = n.id_nomencl
+  and n.id_nomencl = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
   and s.control_date is not null
   and round(ss.price * nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check > 0  
 ;
 
---create or replace view v_prices_from_sp_schet_day as
+create or replace view v_prices_from_sp_schet_day as
 select
 --выборка номенклатуры по счетам за вчерашний день
   n.name,
@@ -1969,8 +1970,8 @@ from
   dv.nomenclatura n,
   dv.unit u
 where  
-  p.id = n.id_nomencl
-  and p.id = ss.id_nomencl
+  p.id (+) = n.id_nomencl
+  and n.id_nomencl = ss.id_nomencl
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
   and s.control_date is not null

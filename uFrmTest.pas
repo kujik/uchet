@@ -1473,6 +1473,7 @@ var
   v: TVarDynArray;
 begin
 //  Exit;
+Turv.LoadDataFromParsec; Exit;
   Tasks.SplMonitorReportDay; Exit;
 
 

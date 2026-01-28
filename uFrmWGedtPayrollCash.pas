@@ -11,6 +11,7 @@ uses
 
 type
   TFrmWGedtPayrollCash = class(TFrmBasicGrid2)
+    PrintDBGridEh1: TPrintDBGridEh;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FPayrollParams: TNamedArr;
@@ -29,7 +30,8 @@ type
     procedure CommitPayroll;
     procedure CalculateAll;
     procedure CalculateRow(Row:Integer);
-//    procedure PrintGrid;
+    procedure CalculateBanknotes;
+    procedure PrintGrid;
 //    procedure ExportToXlsxA7;
     procedure SetEditableAll;
 
@@ -67,7 +69,7 @@ uses
 const
 
   cFieldsS =
-    'id$i;id_employee$i;id_jobn$i;' +
+    'id$i;id_employee$i;id_job$i;' +
     'pay_cash$f;banknotes$s';
   cFieldsL =
     'employee$s;job$s;changed$i;temp$i';
@@ -91,7 +93,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_employee, id_departament, dt1, dt2, employee, departament, from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
+  Q.QLoadFromQuery('select id, id_employee, id_departament, dt1, dt2, employee, departament from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -110,14 +112,14 @@ begin
     ['changed$i', '_changed', wcol],
     ['temp$i', '_temp', wcol],
     ['employee$s', 'ФИО', '200;h'],
-    ['jobe$s', 'Должность', '200;h'],
-    ['pay_cash$f', 'Итого к'#13#10' получению', 100, 'f=###,###,###:'],
-    ['banknotes$s', 'Купюры', 200],
-    ['sign$i', 'Подпись', '55', 'i']
+    ['job$s', 'Должность', '200;h'],
+    ['pay_cash$f', 'Итого к'#13#10' получению', 70, 'f=###,###,###:'],
+    ['banknotes$s', 'Купюры', 100, 'f=t:t'],
+    ['sign$i', 'Подпись', '60', 'i', True]
   ]);
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
-    [mbtRefresh, Mode = fEdit, 'Обновить данные'],[],
+    [mbtRefresh, Mode = fEdit, 'Обновить данные'], [], [mbtPrintGrid],
 {    [mbtDividorM],
     [cmbt1C, True, True, 'Загрузка данных из 1С', '1c'],
     [cmbtCard, True, True, 'Загрузить НДФЛ и карты', 'card'],
@@ -150,6 +152,8 @@ begin
   //если ведомость пуста- выполним первоначальную загрузка по данным турв
   if Frg1.GetCount(False) = 0 then
     GetDataFromCalc;
+
+  CalculateBanknotes;
   SetButtons;
 
   Result:=True;
@@ -161,7 +165,7 @@ var
   changed: Boolean;
 begin
   inherited;
-{  //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
+  //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
   if FInPrepare then
    Exit;
   if FIsChanged then begin
@@ -174,7 +178,7 @@ begin
       Action:=caNone;
       Exit;
     end;
-  end;}
+  end;
 end;
 
 
@@ -192,7 +196,7 @@ end;
 
 function TFrmWGedtPayrollCash.GetCaption(Colored: Boolean = False): string;
 begin
-  Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('employee') <> null, FPayrollParams.G('employee'), 'Все работники') +
+  Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('employee') <> null, FPayrollParams.G('employee'), FPayrollParams.G('departament')) +
     S.IIFStr(Colored, '$000000') + ' с' + S.IIFStr(Colored, '$FF00FF') +' ' + DateToStr(FPayrollParams.G('dt1')) +
     S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(FPayrollParams.G('dt2'));
 end;
@@ -202,15 +206,13 @@ var
   i, j: Integer;
   f, fn, va: TVarDynArray;
 begin
-  //запишем метод расчета
   Q.QBeginTrans(True);
-  Q.QExecSql('update w_payroll_cash set is_finalized = :p3$i where id = :id$i', [FPayrollParams.G('is_finalized'), ID]);
   //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
   if Length(FDeletedWorkers) > 0 then
-    Q.QExecSql('delete from w_payroll_Cash_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
+    Q.QExecSql('delete from w_payroll_cash_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_payroll_Cash_item', '', 'id$i;id_payroll_cash$i', [-1, ID]);
+      var idn := Q.QIUD('i', 'w_payroll_cash_item', '', 'id$i;id_payroll_cash$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     f := A.Explode(cFieldsS, ';');
@@ -309,7 +311,7 @@ begin
   Handled := True;
   case Tag of
     mbtRefresh:
-      if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
+      if MyQuestionMessage('Загрузить данные из ведомостей к перечислению?') = mrYes then
         GetDataFromCalc;
 {    cmbtCard:
       if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then
@@ -319,8 +321,8 @@ begin
         GetDeductionsFromExcel;}
 //    mbtExcel:
 //      ExportToXlsxA7;
-//    mbtPrintGrid:
-//      PrintGrid;
+    mbtPrintGrid:
+      PrintGrid;
     mbtLock:
       CommitPayroll;
   else
@@ -353,25 +355,73 @@ begin
   //поля, по кторым сравниваем для сопоставления данных в турв и гшриде
   flds1 := ['id_employee', 'id_organization', 'personnel_number'];
   //поля для заголовка сообщания об изменениях
-  flds2 := ['employee', 'organization', 'personnel_number'];
+//  flds2 := ['employee', 'organization', 'personnel_number'];
+  flds2 := ['employee', 'job'];
+  //поля, по кторым сравниваем для сопоставления данных в турв и гшриде
+  flds1 := ['id_employee'];
+  //поля для заголовка сообщания об изменениях
+  flds2 := ['employee'];
 
-  if FPayrollParams.G('id_employee') <> null then
+  if FPayrollParams.G('id_employee') = null then begin
     Q.QLoadFromQuery(
-      'select id_employee, id_organization, personnel_number, employee, organization, total_pay, null as temp ' +
-      'from v_w_payroll_calc_item where id_employee = :p1$i and id_organization = :p2$i and personnel_number = :p3$i and dt1 = :dt1$d and id_target_employee is not null ' +
-      'order by employee',
-      [FPayrollParams.G('id_employee'), FPayrollParams.G('id_organization'), FPayrollParams.G('personnel_number'),  FPayrollParams.G('dt1')],
-      na1
-    )
-  else
-    Q.QLoadFromQuery(
-      'select id_employee, id_organization, personnel_number, ' +
-      'max(employee) as employee, max(organization) as organization, sum(total_pay) as total_pay, null as temp ' +
-      'from v_w_payroll_calc_item where dt1 = :dt1$d and id_target_employee is null ' +
-      'group by id_employee, id_organization, personnel_number order by employee',
+      'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
+      'from v_w_payroll_transfer_item where dt1 = :dt1$d and id_target_employee is null ' +
+      'group by id_employee '+
+      'order by id_employee',
       [FPayrollParams.G('dt1')],
       na1
     );
+    Q.QLoadFromQuery(
+      'select id_employee, id_departament, id_job, departament, job from v_w_employee_properties where dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) order by employee, id desc', [FPayrollParams.G('dt2'), FPayrollParams.G('dt1')], na2
+    );
+    for i := 0 to na1.High do begin
+      for j := 0 to na2.High do begin
+        if na1.G(i, 'id_employee') = na2.G(j, 'id_employee') then begin
+          na1.SetValue(i, 'id_departament',na2.G(j, 'id_departament'));
+          na1.SetValue(i, 'id_job',na2.G(j, 'id_job'));
+          na1.SetValue(i, 'departament',na2.G(j, 'departament'));
+          na1.SetValue(i, 'job',na2.G(j, 'job'));
+//          na1.SetValue(i, '',na2.G(j, ''))
+          Break;
+        end;
+      end;
+    end;
+    for i := na1.High downto 0 do begin
+      if na1.G(i, 'id_departament') <> FPayrollParams.G('id_departament') then
+        Delete(na1.V, i ,1);
+    end;
+  end
+  else begin
+    Q.QLoadFromQuery(
+      'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
+      'from v_w_payroll_transfer_item where dt1 = :dt1$d and id_target_employee = :ide$i ' +
+      'group by id_employee '+
+      'order by id_employee',
+      [FPayrollParams.G('dt1'), FPayrollParams.G('id_employee')],
+      na1
+    );
+    Q.QLoadFromQuery(
+      'select id_employee, id_departament, id_job, departament, job from v_w_employee_properties where dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) and id_departament = :id_departament$i order by employee, id desc',
+      [FPayrollParams.G('dt2'), FPayrollParams.G('dt1'), FPayrollParams.G('id_departament')], na2
+    );
+    for i := 0 to na1.High do begin
+      for j := 0 to na2.High do begin
+        if na1.G(i, 'id_employee') = na2.G(j, 'id_employee') then begin
+          na1.SetValue(i, 'id_departament',FPayrollParams.G(0, 'id_departament'));
+          na1.SetValue(i, 'id_job',na2.G(j, 'id_job'));
+          na1.SetValue(i, 'departament',FPayrollParams.G(0, 'departament'));
+          na1.SetValue(i, 'job',na2.G(j, 'job'));
+          Break;
+        end;
+      end;
+    end;
+    for i := na1.High downto 0 do begin
+      if na1.G(i, 'id_departament') <> FPayrollParams.G('id_departament') then
+        Delete(na1.V, i ,1);
+    end;
+  end;
+  //сортируем по ФИО
+  A.VarDynArray2Sort(na1.V, 1);
 
   NoData := Frg1.GetCount = 0;
 
@@ -428,8 +478,9 @@ begin
       na.IncLength;
       na.SetNull(na.High);
       //установим поля и итоговые данные из турв
-      for k := 0 to High(na1.F) do
-        na.SetValue(na.High, na1.F[k], na1.G(i, na1.F[k]));
+      for k := 0 to High(na.F) do
+        if not A.InArray(na.F[k],  ['id', 'changed', 'temp', 'banknotes', 'sign']) then
+          na.SetValue(na.High, na.F[k], na1.G(i, na.F[k]));
     end;
   end;
 
@@ -443,9 +494,9 @@ begin
   for i := na.High downto 0 do begin
     j := na.G(i, 'temp').AsIntegerM;
     if j <> -1 then begin
-      if na.G(i, 'total_pay') <> na1.G(j, 'total_pay') then begin
-        st2 :=  ':   "' + na.G(i, 'total_pay')  + '" -> "' + na1.G(j, 'total_pay') + '""';
-        na.SetValue(i, 'total_pay', na1.G(j, 'total_pay'));
+      if na.G(i, 'pay_cash') <> na1.G(j, 'pay_cash') then begin
+        st2 :=  ':   "' + na.G(i, 'pay_cash').AsString  + '" -> "' + na1.G(j, 'pay_cash').AsString + '""';
+        na.SetValue(i, 'pay_cash', na1.G(j, 'pay_cash'));
       end
       else
         st2 := '';
@@ -460,7 +511,7 @@ begin
 
   //загрузим данные в грид
   Frg1.LoadData(na);
-//!!!  CalculateAll;
+  CalculateAll;
 
   if MsgIns + MsgDel + MsgChg = '' then begin
     MyInfoMessage('Изменений в ведомости не было.');
@@ -495,16 +546,121 @@ begin
     CalculateRow(i);
 end;
 
-procedure TFrmWGedtPayrollCash.CalculateRow(Row: Integer);
+procedure TFrmWGedtPayrollCash.PrintGrid;
+//печать грида
+var
+  BeforeGridText: TStringsEh;
+  i, j, rn: Integer;
+  ar: TVarDynArray;
 begin
-{  if Row = -1 then
-    Row := Frg1.MemTableEh1.RecNo - 1;
-  Frg1.SetValue('pay_cash', Row, False, Round(
-    Frg1.GetValueF('total_pay', Row, False) - Frg1.GetValueF('deduct_enf', Row, False) - Frg1.GetValueF('deduct_ndfl', Row, False) - Frg1.GetValueF('pay_fss', Row, False) - Frg1.GetValueF('pay_adv', Row, False) - Frg1.GetValueF('pay_card', Row, False)
-  ));}
+{  Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := False;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := False;}
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := True;
+  rn := Frg1.MemTableEh1.RecNo;
+  ar := [];
+  SetLength(ar, Frg1.MemTableEh1.Fields.Count + 2);
+  //так мы можем скрыть столбцы, которые не имеют данных ни в одной строке
+  {
+  MemTableEh1.DisableControls;
+  for i:=1 to MemTableEh1.RecordCount do begin
+    MemTableEh1.RecNo:=i;
+    for j:=6 to MemTableEh1.Fields.Count - 1 do
+      if MemTableEh1.Fields[j].Value <> null
+        then ar[j+1]:=1;
+  end;
+  MemTableEh1.RecNo:=rn;
+  MemTableEh1.EnableControls;
+  for i:=DbGridEh1.Columns.count - 3 downto 8 do begin
+    if (DbGridEh1.Columns[i].Visible) and (ar[i] <> 1) then begin
+      DbGridEh1.Columns[i].Visible:=False;
+      ar[i] := 2;
+    end;
+  end;
+  }
+  Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, False);
+  //Title отображается вторая строка, вместо первой просто полоска, но вторая строка обрезается по высоте, так нечитаемо.
+//  PrintDBGridEh1.Title.Clear;  PrintDBGridEh1.Title[0]:=lbl_Caption1.Caption;
+  //используем BeforeGridText - форматированная строка
+  //получилось только задать текст в редакторе, одну форматированную строку, и здесь ее заменять
+//  PrintDBGridEh1.BeforeGridText.Clear; PrintDBGridEh1.BeforeGridText.Delete(0);
+//  DBGridEh1.Repaint;
+//  i:=Gh.GetGridColumn(DBGridEh1, 'name').Width;
+//  Gh.GetGridColumn(DBGridEh1, 'name').Width:=1800;
+//  PrintDBGridEh1.Options:=PrintDBGridEh1.Options - [pghFitGridToPageWidth];
+  PrintDBGridEh1.BeforeGridText[0] :=  GetCaption;
+  //альбомная ориентация
+  PrinterPreview.Orientation := poLandscape;
+  //масштабируем всю таблицу для умещения на стронице
+  //но если таблица меньше ширины страницы, то она не реасширится!!!
+  PrintDBGridEh1.Options := Frg1.PrintDBGridEh1.Options + [pghFitGridToPageWidth];
+//  Gh.GetGridColumn(DBGridEh1, 'name').Width:=i;
+  //откроет окно предпросмотра (в нормал)
+  //так как здесь не останавливается, а внешний вид таблицы приводится сразу после к прежнему, то при манипуляциях со свойствами через диалог,
+  //вид таблицы будет приведен к тому что на экране, те опять скроется подпись, появится бланк (и если другие были изменения для печати)!!!
+  //правильнее создавать таблицу на скрытой форме именно для печати, копированием данных
+  PrintDBGridEh1.Preview;
+//  Timer_Print.Enabled:=True;
+
+//  PrintDBGridEh1.Options:=PrintDBGridEh1.Options + [pghFitGridToPageWidth];
+  //покажем скрытые столбцы
+//exit;
+{  for i := Frg1.DbGridEh1.Columns.Count - 3 downto 80 do
+    if ar[i] = 2 then
+      Frg1.DbGridEh1.Columns[i].Visible := True;
+//exit;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'blank').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'org_name').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'personnel_number').Visible := True;
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;}
+  Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, True);
+  Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 
 
+procedure TFrmWGedtPayrollCash.CalculateRow(Row: Integer);
+  function GetBanknotes: string;
+  var
+    s, i, i1, i2, i3, i4 : Integer;
+  begin
+    Result := '';
+    s := Frg1.GetValueI('pay_cash', Row, False);
+    if s <= 0 then
+      Exit;
+    i1 := s div 5000;
+    i := s - i1 * 5000;
+    i2 := i div 1000;
+    i := i - i2 * 1000;
+    i3 := i div 500;
+    i := i - i3 * 500;
+    i4 :=  i div 100;
+    Result := IntToStr(i1) + ',' + IntToStr(i2) + ',' + IntToStr(i3) + ',' + IntToStr(i4);
+  end;
+begin
+  if Row = -1 then
+    Row := Frg1.MemTableEh1.RecNo - 1;
+  Frg1.SetValue('banknotes', Row, False, GetBanknotes);
+  CalculateBanknotes;
+end;
+
+procedure TFrmWGedtPayrollCash.CalculateBanknotes;
+//подсчет итогового количества банкнот (только по отфильтрованным строкам!)
+var
+  i: Integer;
+  va1, va2: TVarDynArray;
+begin
+  va2 := [0, 0, 0, 0];
+  for i := 0 to Frg1.GetCount(True) - 1 do begin
+    va1 := A.Explode(Frg1.GetValueS('banknotes', i, True), ',');
+    if Length(va1) <> 4 then
+      Continue;
+    va2[0] := va2[0] + Max(StrToInt(va1[0]), 0);
+    va2[1] := va2[1] + Max(StrToInt(va1[1]), 0);
+    va2[2] := va2[2] + Max(StrToInt(va1[2]), 0);
+    va2[3] := va2[3] + Max(StrToInt(va1[3]), 0);
+  end;
+  Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := A.Implode(va2, ',');
+end;
 
 
 end.

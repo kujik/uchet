@@ -1,22 +1,22 @@
 inherited Dlg_Order_UPD: TDlg_Order_UPD
   BorderStyle = bsDialog
   Caption = 'Dlg_Order_UPD'
-  ClientHeight = 118
-  ClientWidth = 206
-  ExplicitWidth = 212
-  ExplicitHeight = 146
-  PixelsPerInch = 96
+  ClientHeight = 117
+  ClientWidth = 202
+  ExplicitWidth = 218
+  ExplicitHeight = 156
   TextHeight = 13
   object Img_Info: TImage
     Left = 3
-    Top = 85
+    Top = 84
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
+    ExplicitTop = 85
   end
   object Bt_Ok: TBitBtn
-    Left = 42
-    Top = 85
+    Left = 34
+    Top = 84
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -25,10 +25,12 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     ModalResult = 1
     TabOrder = 0
     OnClick = Bt_OkClick
+    ExplicitLeft = 42
+    ExplicitTop = 85
   end
   object Bt_Cancel: TBitBtn
-    Left = 123
-    Top = 85
+    Left = 115
+    Top = 84
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -36,6 +38,8 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     Caption = 'Bt_Cancel'
     ModalResult = 2
     TabOrder = 1
+    ExplicitLeft = 123
+    ExplicitTop = 85
   end
   object dedt_Upd_Reg: TDBDateTimeEditEh
     Left = 72

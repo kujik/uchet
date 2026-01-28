@@ -51,6 +51,7 @@ inherited FrmWGedtTurvN: TFrmWGedtTurvN
               OnDataHintShow = Frg1DbGridEh1DataHintShow
               OnRowDetailPanelShow = Frg1DbGridEh1RowDetailPanelShow
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitHeight = 109
                 inherited PRowDetailPanel: TPanel
                   Height = 107
                   ExplicitHeight = 107

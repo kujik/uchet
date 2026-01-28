@@ -650,7 +650,11 @@ where
 --  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
   
 
-select distinct employee from v_w_employee_properties where is_terminated = 1 and dt_beg > date '2025-12-01';  
+select distinct employee from v_w_employee_properties where is_terminated = 1 and dt_beg > date '2025-12-01';
+
+--в случае незанесения айди работника в таблицу по днямм, проставим эту информацию (т.к. она избыточна и соответственно имеется)
+update w_turv_day d set id_employee = (select id_employee from w_employee_properties p where p.id = d.id_employee_properties) where d.id_employee is null; 
+  
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
@@ -803,7 +807,7 @@ end;
 create or replace view v_w_payroll_calc as 
 select
   p.*,
-  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   d.name as departament,
   o.name as organization,
@@ -827,9 +831,8 @@ where
 
 --данные зарплатной ведомости для конкретного работника из ведомости
 --данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
---drop table w_payroll_calc_item cascade constraints;
-alter table w_payroll_calc_item drop column personnel_number;
-alter table w_payroll_calc_item add personnel_number varchar2(10);
+--alter table w_payroll_calc_item drop column personnel_number;
+alter table w_payroll_calc_item add ors_pay number;
 create table w_payroll_calc_item(
   id number(11),
   id_payroll_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -846,6 +849,7 @@ create table w_payroll_calc_item(
   fixed_pay number,               --постоянная часть
   variable_pay number,            --стимулирующая часть
   ors number,                     --оценка работы сотрудника, %
+  ors_pay number,                 --оценка работы сотрудника, сумма, начисленная исходя из оценки
   base_pay number,                --итого рассчитано
   ext_pay number,                 --загружено из внешнего источника (рассчет сделки)
   overtime_pay number,            --выплаты за переработки 
@@ -944,7 +948,7 @@ end;
 create or replace view v_w_payroll_transfer as 
 select
   p.*,
-  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   o.name as organization
 from
@@ -956,6 +960,7 @@ where
   and p.id_organization = o.id (+)
 ;
 
+alter table w_payroll_transfer_item add correction number; 
 create table w_payroll_transfer_item(
   id number(11),
   id_payroll_transfer number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -966,11 +971,13 @@ create table w_payroll_transfer_item(
   hours_worked number,            --отработано по турв
   overtime number,                --количество часов переработки (приведенное)
   total_pay number,               --итого начислено 
+  ors_pay number,
   deduct_enf number,      -- удержание по исполнительному листу
   deduct_ndfl number,     -- НДФЛ
   pay_fss number,         -- выплата в ФСС (например, больничный)
   pay_adv number,         -- промежуточная (авансовая) выплата
   pay_card number,        -- перечислено на карту
+  correction number,              --ручная корректировка начисления, вводится в ведомости
   pay_cash number,        -- итого к выдаче наличными  
   constraint pk_w_payroll_transfer_item primary key (id),
   constraint fk_w_payroll_transfer_i_own foreign key (id_payroll_transfer) references w_payroll_transfer(id) on delete cascade,
@@ -998,9 +1005,11 @@ select
   i.*,
   p.dt1,
   p.dt2,
+  p.id_employee as id_target_employee,
   e.name as employee,
   --e.is_concurrent,
   o.name as organization,
+  --d.name as departament,
   0 as changed,
   null as temp
 from
@@ -1008,10 +1017,12 @@ from
   w_payroll_transfer p,
   v_w_employees e,
   ref_sn_organizations o
+  --w_departaments d
 where
   i.id_payroll_transfer = p.id and
   i.id_employee (+) = e.id and 
-  i.id_organization = o.id (+)
+  i.id_organization = o.id (+) 
+  --and p.id_departament (+) = d.id 
 ;     
 
 
@@ -1046,20 +1057,29 @@ end;
 create or replace view v_w_payroll_cash as 
 select
   p.*,
-  case when p.is_finalized = 1 then 'закрыта' else '' end as finalized,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   d.name as departament,  
   f_fio(e.f, e.i, e.o) as employee,
-  o.name as organization
+  o.name as organization,
+  a.shortname as prod_area_shortname,
+  a.name as prod_area_name,
+  d.code,
+  a.shortname || ' - ' || decode(d.is_office, 1, 'офис', 'цех') || '' as area
 from
   w_payroll_cash p,
   w_departaments d,
   w_employees e,
-  ref_sn_organizations o 
+  ref_sn_organizations o,
+  ref_production_areas a 
 where
   p.id_employee = e.id (+)
   and p.id_departament = d.id
   and p.id_organization = o.id (+)
+  and d.id_prod_area = a.id
 ;
+
+select * from v_w_payroll_cash;
+
 
 create table w_payroll_cash_item(
   id number(11),
@@ -1110,12 +1130,55 @@ where
   i.id_organization = o.id (+)
 ;     
 
-
-
-
-
-
-
+--------------------------------------------------------------------------------
+create or replace view v_w_payroll_summary as 
+select 
+--отчет по зарплатным ведомостям
+--нужен только итоговый отчет за конкретный период, по нескольким периодам не нужно
+--также выводятся данные только по ведомостям на подразделения, ведомости на отдельных работников не учитываются
+  dt1,
+  max(dt2) as dt2,
+  id_departament,
+  max(d.name) as departament,
+  max(d.code) as departament_code,
+  max(a.shortname) || ' - ' || decode(max(d.is_office), 1, 'офис', 'цех') || '' as area,
+ sum(total_pay) as total_pay, sum(deduct_enf) as deduct_enf, sum(deduct_ndfl) as deduct_ndfl, sum(pay_fss) as pay_fss, sum(pay_card) as pay_card, sum(pay_adv) as pay_adv, sum(pay_cash) as pay_cash 
+from 
+  (select
+    pt.dt1,
+    pt.dt2,
+    id_departament,
+    pti.id_employee,
+    total_pay, deduct_enf, deduct_ndfl, pay_fss, pay_card, pay_adv, pay_cash
+  from  
+    w_payroll_transfer pt,
+    w_payroll_transfer_item pti,
+    (select 
+      pc.dt1,
+      pci.id_employee as id_employee,
+      max(pc.id_departament) as id_departament
+    from
+      w_payroll_cash_item pci,
+      w_payroll_cash pc
+    where
+      pci.id_payroll_cash = pc.id
+    group by
+      pc.dt1, pci.id_employee
+    ) ed    
+  where
+    (nvl(get_context('rep_payroll_sum_full'), 0) = 1 or pt.id_employee is null) 
+    and pti.id_payroll_transfer = pt.id
+    and pti.id_employee = ed.id_employee
+    and pt.dt1 = ed.dt1
+  ) t,
+  w_departaments d,
+  ref_production_areas a 
+where
+  t.id_departament = d.id  
+  and d.id_prod_area = a.id
+group by
+  dt1, id_departament
+; 
 
 
 
@@ -1275,12 +1338,26 @@ where
   
   select * from w_employee_properties where id_organization is null or personnel_number is null;
   
+  select max(case when is_terminated = 1 then id_departament else -1 end) as id_dep, id_employee, id_organization, personnel_number from w_employee_properties group by id_employee, id_organization, personnel_number;
+  
   
 
 
 
 
-
-
+  --c.id_employee, id_organization, personnel_number 
+  
+select
+  p.id 
+from 
+  w_payroll_calc c,
+  v_w_employee_properties p
+where
+  c.id_employee = p.id_employee 
+  and c.id_organization = p.id_organization 
+  and c.personnel_number = p.personnel_number
+;  
+   
+  
 
  

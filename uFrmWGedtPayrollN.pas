@@ -95,6 +95,8 @@ uses
 const
   cmbtDeduction = 1001;
   cmbtCard = 1002;
+  cmbRecalculate = 1005;
+  cmbSetEditable = 1006;
 
   cMOffice = 1;
   cMWorkshop = 2;
@@ -107,7 +109,7 @@ const
 
   cFieldsS =
     'id$i;id_employee$i;id_job$i;id_schedule$i;id_organization$i;personnel_number$s;' +
-    'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
+    'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;ors_pay$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
     'personal_pay$f;daily_bonus$f;extra_bonus$f;night_pay$f;milk_compensation$f;non_work_pay$f;penalty$f;correction$f;total_pay$f';
   cFieldsL =
     'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i';
@@ -165,6 +167,7 @@ begin
     ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 't=1,i1'],
     ['variable_pay$f', '~Стимулирующая', wcol, fcol, 't=1,i1'],
     ['ors$f', '~ОРС', wcol, 't=1,i1'],
+    ['ors_pay$f', '~ОРС сумма', wcol, fcol, 't=1,i1'],
     ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol],
     ['ext_pay$f', '~Загрузка' + sLineBreak + ' сделки', wcol, fcol, 't=2'],
     ['overtime_pay$f', '~Переработка', wcol, fcol],
@@ -185,7 +188,8 @@ begin
     //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
     [],[mbtLock],
     [], [-mbtExcel, True],
-    [],[-1001, True, 'Разрешить редактирование всех полей'],
+    [],[-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
+    [],[-cmbRecalculate, True, 'Пересчитать все'],
     [],[mbtCtlPanel]
   ]);
   Frg1.Opt.ButtonsNoAutoState := [0];
@@ -270,12 +274,12 @@ var
   b: Boolean;
   NoData: Boolean;
   na, na2: TNamedArr;
-
   MsgDel, MsgIns, MsgChg: string;
-  //VaDel, VaIns: TVarDynArray;
   flds: TVarDynArray2;
   flds1, flds2: TVarDynArray;
-
+  va: TVarDynArray;
+  va2: TVarDynArray2;
+  WhereSt: string;
 begin
   //загружаем данные только в режиме редактирования
   if Mode <> fEdit then
@@ -306,12 +310,30 @@ begin
   //загрузим данные из турв
   //строки в ведомости сгруппированы по f1
   var GroupingSt := 'job;employee;schedulecode;organization;personnel_number';
-  if FPayrollParams.G('id_employee') = null then
-    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, '', True, 1)
+  if FPayrollParams.G('id_employee') = null then begin
+//    va2 := Q.QSelectOneCol(('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
+    va := Q.QLoadToVarDynArrayOneCol(
+      'select '+
+      '  p.id '+
+      'from '+
+      '  w_payroll_calc c, '+
+      '  v_w_employee_properties p '+
+      'where '+
+      '  c.id_employee = p.id_employee '+
+      '  and c.id_organization = p.id_organization '+
+      '  and c.personnel_number = p.personnel_number '+
+      '  and c.dt1 = :dt1$d',
+    [FPayrollParams.G('dt1')]
+    );
+    WhereSt := '';
+    if Length(va) <> 0 then
+      WhereSt := 'and not id in (' + A.Implode(va, ',') + ')';
+    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 1)
+  end
   else begin
-    var WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and nvl(id_organization, -100) = nvl(''' + FPayrollParams.G('id_organization').AsString + ''', -100) ' +
+    WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and nvl(id_organization, -100) = nvl(''' + FPayrollParams.G('id_organization').AsString + ''', -100) ' +
     'and nvl(personnel_number, -100) = nvl(''' + FPayrollParams.G('personnel_number').AsString + ''', -100)';
-    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, -1);
+    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);               //по всем, я не только уволенным
   end;
 
   NoData := Frg1.GetCount = 0;
@@ -614,6 +636,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
 {  NoNorms:= False;
   for i := 0 to Frg1.GetCount(False) - 1 do
@@ -640,6 +663,7 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('calc_method')) in [cMMotivation]);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('is_finalized') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);
@@ -883,8 +907,13 @@ procedure TFrmWGedtPayrollN.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integ
 begin
   Handled := True;
   case Tag of
-    1001:
+    cmbSetEditable:
       SetEditableAll;
+    cmbRecalculate: begin
+      CalculateAll;
+      FIsChanged := True;
+      Frg1.InvalidateGrid;
+    end;
     mbtCustom_Turv:
       if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
         GetDataFromTurv;
@@ -949,16 +978,23 @@ begin
   EHours := Frg1.GetValue('hours_worked', Row, False);
   EOvertime := Frg1.GetValue('overtime', Row, False);
 
+  if M <> cMMotivation then
+    Frg1.SetValue('ext_pay', Row, False, null);
+
+  if Frg1.GetValue('employee', Row, False) = 'Кобзя Алексей Анатольевич' then
+    var Test := True;
+
   if M = cMMotivation then begin
     Frg1.SetValue('planned_pay', Row, False, null);
     Frg1.SetValue('fixed_pay', Row, False, null);
     Frg1.SetValue('variable_pay', Row, False, null);
     Frg1.SetValue('ors', Row, False, null);
     Frg1.SetValue('base_pay', Row, False, null);
+    Frg1.SetValue('ors_pay', Row, False,  null);
     VBase := Frg1.GetValue('ext_pay', Row, False);
   end
   else begin
-    EOrs := Frg1.GetValue('ors', Row, False).AsInteger;
+    EOrs := Frg1.GetValueF('ors', Row, False);
     EOrs := S.IIf(EOrs = 0, 100, EOrs);
     if M = cMWorkshop then begin
       if (EOrs < 95) then
@@ -977,19 +1013,20 @@ begin
     if (Frg1.GetValue('planned_pay', Row, False).AsFloat <> 0) and (Frg1.GetValue('fixed_pay', Row, False) <> null) then begin
       Frg1.SetValue('variable_pay', Row, False, S.NullIf0(Frg1.GetValueF('planned_pay', Row, False) - Frg1.GetValueF('fixed_pay', Row, False)));
       //Итого начислено: Расчет = (постоянная часть / норма рабочих часов за месяц * отработанные часы ) + (стимулирующая выплата * ОРС  / норма рабочих часов за месяц * отработанные часы)
-      VBase := (Frg1.GetValueF('fixed_pay', Row, False) / ENormM * EHours) + (Frg1.GetValueF('variable_pay', Row, False) * EOrs / ENormM * EHours);
+      VBase := (Frg1.GetValueF('fixed_pay', Row, False) / ENormM * Min(EHours, ENormP)) + (Frg1.GetValueF('variable_pay', Row, False) * EOrs / ENormM * Min(EHours, ENormP));
     end
     else begin
       VBase := null;
       Frg1.SetValue('variable_pay', Row, False, null);
     end;
     Frg1.SetValue('base_pay', Row, False, VBase);
+    Frg1.SetValue('ors_pay', Row, False, Round(Frg1.GetValueF('variable_pay', Row, False) * EOrs / ENormM * Min(ENormP, EHours)));
   end;
   //Переработки: Расчет = (постоянная часть  + (стимулирующая выплата * ОРС ) / норма рабочих часов за месяц * часы переработки  * коэффициент
   if O = cO00 then
     Frg1.SetValue('overtime_pay', Row, False, null)
   else begin
-    Frg1.SetValue('overtime_pay', Row, False, (Frg1.GetValueF('fixed_pay', Row, False) + Frg1.GetValueF('variable_pay', Row, False)) * EOrs / ENormM * EOvertime * S.IIf(O = cO10, 1, 1.5));
+    Frg1.SetValue('overtime_pay', Row, False, (Frg1.GetValueF('fixed_pay', Row, False) + Frg1.GetValueF('variable_pay', Row, False) * EOrs) / ENormM * EOvertime * S.IIf(O = cO10, 1, 1.5));
   end;
 
   var flds := ['base_pay', 'overtime_pay', 'personal_pay', 'daily_bonus', 'extra_bonus', 'night_pay', 'milk_compensation', 'non_work_pay', 'penalty', 'correction'];
@@ -1002,7 +1039,8 @@ begin
     end;
     VTotal := VTotal + v1.AsFloat;
   end;
-  VTotal := RoundTo(VTotal, 2);
+  //VTotal := RoundTo(VTotal, 2);
+  VTotal := VTotal + Frg1.GetValue('ext_pay', Row, False).AsFloat;
   Frg1.SetValue('total_pay', Row, False, VTotal);
 end;
 
@@ -1011,4 +1049,29 @@ end;
 
 end.
 
+  if (CalcMode = 16) then begin
+    //орс
+    Frg1.SetValue('salary_incentive_m', Row, False, null);
+    Frg1.SetValue('ors_sum', Row, False, null);
+    if (Frg1.GetValueF('salary_plan_m', Row, False) <> null) and (Frg1.GetValueF('salary_const_m', Row, False) <> null) then begin
+      Frg1.SetValue('salary_incentive_m', Row, False, Frg1.GetValueF('salary_plan_m', Row, False) - Frg1.GetValueF('salary_const_m', Row, False));
+      e4 := Frg1.GetValueF('norm_m', Row, False);
+      e5 := RoundTo(Frg1.GetValueF('ors', Row, False), -2);
+      if (e5 < 95) then
+        e5 := e5
+      else if (e5 >= 95) and (e5 <= 100) then
+        e5 := 100
+      else if (e5 >= 100) and (e5 <= 105) then
+        e5 := 105
+      else if (e5 >= 105) and (e5 <= 110) then
+        e5 := 110
+      else if (e5 > 110) then
+        e5 := 120;
+      e5 := e5 / 100;
+      if (Frg1.GetValueF('ors', Row, False) <> null) then begin
+        e3 := Frg1.GetValueF('salary_const_m', Row, False) / e4 * e2 +  Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2;
+        Frg1.SetValue('ors_sum', Row, False, Round(Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * Min(Frg1.GetValueF('norm', Row, False), e2)));
+      end;
+    end;
+  end;
 

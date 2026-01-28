@@ -78,8 +78,10 @@ type
     function CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
 //    function SetForemanAllowance(AId: Integer): Boolean;
+    function  GetArrOfTurvPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
     function  CreateAllPayrollTransfers: Boolean;
     function  CreateAllPayrollCash: Boolean;
+    procedure LoadDataFromParsec;
 
     procedure ConvertEmployees202511;
   end;
@@ -780,7 +782,7 @@ begin
           k := A.PosInArray(IncDay(FDtBeg, i -1), FSchedules[j].Hours, 1);
           //если коды не ОТ или БЛ и найдены часы, просуммируем переработку
           if (v2 <> FTurvCodeOT) and (v2 <> FTurvCodeBL) and (k > -1) then
-            Result.SetValue(0, 'overtime', Result.G('overtime').AsFloat + v1.AsInteger - FSchedules[j].Hours[k][0]);
+            Result.SetValue(0, 'overtime', Result.G('overtime').AsFloat + v1.AsFloat - FSchedules[j].Hours[k][0]);
           Break;
         end;
       //посчитаем сумму по надбавкам
@@ -882,6 +884,7 @@ var
   ParsecEvents, va2, vp, vpb, vpe: TVarDynArray2;
   vab, vae: TVarDynArray;
   tbegday, tbegkontr, tobc, tobo, t1, t2, tp: Extended;
+  v: Variant;
 begin
   //первая дата - за 3 дня до начала текущего периода ТУРВ (можно бы за 3 дня до последнего успешного выполнения этой задачи)
   dt1:=IncDay(FDtBeg, -3);
@@ -916,39 +919,40 @@ begin
     S.ConcatStP(st, '''' + FList.G(i, 'name') + '''', ',');
   for i := 0 to 1 do begin
     vp := [];
-    vp := myDBParsec.QLoadToVarDynArray2(
-      'select '+
-      'format(dateadd(hour, 3, t.tran_date), ''dd.MM.yyyy HH:mm'') as dt, '+
-      'case '+
-      'when tt.trantype_desc = ''Нормальный вход по ключу'' then ''Приход'' '+
-      'when tt.trantype_desc = ''Фактический вход'' then ''Приход'' '+
-      'when tt.trantype_desc = ''Нормальный выход по ключу'' then ''Уход'' '+
-      'when tt.trantype_desc = ''Фактический выход'' then ''Уход'' '+
-      'end as event, '+
-      'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) as name '+
-      'from '+
-      '  parsec3trans.dbo.translog as t '+
-      '  left outer join '+
-      '  parsec3.dbo.person as p '+
-      '  on t.usr_id = p.pers_id '+
-      '  left outer join '+
-      '  parsec3.dbo.trantypes_desc tt '+
-      '  on t.trantype_id = tt.trantype_id '+
-      'where '+
-      '  ((t.trantype_id = :trantype1$i)or '+
-      '  (t.trantype_id = :trantype2$i)) '+
-      '  and '+
-      '  (tt.locale = ''RU'') '+
-      '  and '+
-      '  t.tran_date >= :dt1$d ' +
-      '  and '+
-      '  t.tran_date <= :dt2$d ' +
-      '  and '+
-      'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) in (' + st + ') '+
-      'order by concat(p.last_name, '' '', p.first_name, '' '', p.middle_name), tran_date asc '
-      ,
-      [ParsecEvents[i][0], ParsecEvents[i][1], IncHour(dt1, -3), IncHour(dt2, -3)]
-    );
+    if st <> '' then
+      vp := myDBParsec.QLoadToVarDynArray2(
+        'select '+
+        'format(dateadd(hour, 3, t.tran_date), ''dd.MM.yyyy HH:mm'') as dt, '+
+        'case '+
+        'when tt.trantype_desc = ''Нормальный вход по ключу'' then ''Приход'' '+
+        'when tt.trantype_desc = ''Фактический вход'' then ''Приход'' '+
+        'when tt.trantype_desc = ''Нормальный выход по ключу'' then ''Уход'' '+
+        'when tt.trantype_desc = ''Фактический выход'' then ''Уход'' '+
+        'end as event, '+
+        'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) as name '+
+        'from '+
+        '  parsec3trans.dbo.translog as t '+
+        '  left outer join '+
+        '  parsec3.dbo.person as p '+
+        '  on t.usr_id = p.pers_id '+
+        '  left outer join '+
+        '  parsec3.dbo.trantypes_desc tt '+
+        '  on t.trantype_id = tt.trantype_id '+
+        'where '+
+        '  ((t.trantype_id = :trantype1$i)or '+
+        '  (t.trantype_id = :trantype2$i)) '+
+        '  and '+
+        '  (tt.locale = ''RU'') '+
+        '  and '+
+        '  t.tran_date >= :dt1$d ' +
+        '  and '+
+        '  t.tran_date <= :dt2$d ' +
+        '  and '+
+        'concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) in (' + st + ') '+
+        'order by concat(p.last_name, '' '', p.first_name, '' '', p.middle_name), tran_date asc '
+        ,
+        [ParsecEvents[i][0], ParsecEvents[i][1], IncHour(dt1, -3), IncHour(dt2, -3)]
+      );
     if i = 0 then
       vpb := copy(vp)
     else
@@ -960,10 +964,10 @@ begin
     //пройдем по всему диапозону дней турв
     for d := 1 to 16 do begin
       p := R(i, d);
-      st := FList.G(p, 'name');
       //пропускаем ячейки, в которых нет данных
       if p = -1 then
         Continue;
+      st := FList.G(p, 'name');
       //дата для данного номера дня
       dt := IncDay(DtBeg, d - 1);
       //первая позици работника в данных парсека
@@ -984,14 +988,28 @@ begin
         inc(j);
       end;
       //сохраним самое ранне время прихода
-      if Length(vab) > 0 then
-        FCells[p].SetValue(d, 'begtime', HourOf(StrToDateTime(vab[0])) + (MinuteOf(StrToDateTime(vab[0])) / 100));
+      if Length(vab) > 0 then begin
+        v := HourOf(StrToDateTime(vab[0])) + (MinuteOf(StrToDateTime(vab[0])) / 100);
+        if FCells[p].G(d, 'begtime') <> v then begin
+          FCells[p].SetValue(d, 'begtime', v);
+          FCells[p].SetValue(d, 'changed', 1);
+        end;
+      end;
       //сохраним самое позднее время ухода (за текущий день не проставляем вообще)
-      if (Length(vae) > 0) and (dt <> Date) then
-        FCells[p].SetValue(d, 'endtime', HourOf(StrToDateTime(vae[High(vae)])) + (MinuteOf(StrToDateTime(vae[High(vae)])) / 100));
+      if (Length(vae) > 0) and (dt <> Date) then begin
+        v := HourOf(StrToDateTime(vae[High(vae)])) + (MinuteOf(StrToDateTime(vae[High(vae)])) / 100);
+        if FCells[p].G(d, 'endtime') <> v then begin
+          FCells[p].SetValue(d, 'endtime', v);
+          FCells[p].SetValue(d, 'changed', 1);
+        end;
+      end;
       //проставляем флаг для подсмветки ячейки в детально таблице турв (если только одно из времен есть, либо есть повторные отметки прихода или ухода)
-      if (dt <> Date) and ((Length(vab) = 0) or (Length(vab) > 1) or (Length(vae) = 0) or (Length(vae) > 1)) and not ((Length(vab) = 0) and (Length(vae) = 0)) then
-        FCells[p].SetValue(d, 'settime3', 1);
+      if (dt <> Date) and ((Length(vab) = 0) or (Length(vab) > 1) or (Length(vae) = 0) or (Length(vae) > 1)) and not ((Length(vab) = 0) and (Length(vae) = 0)) then begin
+        if FCells[p].G(d, 'settime3') <> 1 then begin
+          FCells[p].SetValue(d, 'settime3', 1);
+          FCells[p].SetValue(d, 'changed', 1);
+        end;
+      end;
     end;
   end;
 
@@ -1020,7 +1038,7 @@ begin
         Continue;
       //дата для данного номера дня
       dt := IncDay(DtBeg, d - 1);
-      if dt = Date then
+      if dt >= Date then
         Continue;
       t1 := -1;
       if FCells[p].G(d, 'begtime') <> null then
@@ -1028,19 +1046,21 @@ begin
       t2 := -1;
       if FCells[p].G(d, 'endtime') <> null then
         t2 := trunc(FCells[p].G(d, 'endtime')) + frac(FCells[p].G(d, 'endtime')) / 60 * 100;
-      if FTitle.G('is_office') = 1 then begin
+      if (FTitle.G('is_office') = 1) or (FTitle.G('is_office') = 0) then begin
         //обработка для офиса, попроще
         if (t1 = -1) and (t2 = -1) then begin
           //нет ни прихода ни ухода - поставим выходной
           //если не было никакого кода, тк может быть еще отпуск
           if FCells[p].G(d, 'id_turvcode2') = null then
             FCells[p].SetValue(d, 'id_turvcode2', id_vyh);
+            FCells[p].SetValue(d, 'changed', 1);
           //vt[i][7]:=1;
         end
         else if (t1 = -1) or (t2 = -1) then begin
           //нет одного времени - поставим 8.00 и подсветим
           FCells[p].SetValue(d, 'id_turvcode2', null);
           FCells[p].SetValue(d, 'worktime2', 8);
+          FCells[p].SetValue(d, 'changed', 1);
         end
         else if (t1 > -1) and (t2 > -1) then begin
           //время начала рабочего дня возьмем максимальное от фактического или 8:00
@@ -1057,6 +1077,7 @@ begin
             tp := trunc(tp) + 1;
           FCells[p].SetValue(d, 'id_turvcode2', null);
           FCells[p].SetValue(d, 'worktime2', tp);
+          FCells[p].SetValue(d, 'changed', 1);
 //          vt[i][7]:=1;
         end;
       end
@@ -1066,6 +1087,29 @@ begin
     end;
   end;
 
+  //пройдем по списку строк турв
+  for i := 0 to High(FRows) do begin
+    //пройдем по всему диапозону дней турв
+    for d := 1 to 16 do begin
+      p := R(i, d);
+      if p = -1 then
+        Continue;
+      if FCells[p].G(d, 'changed') <> 1 then
+        Continue;
+      Q.QBeginTrans(True);
+      Q.QExecSql(
+        'insert into w_turv_day (id_employee_properties, dt, id_employee) '+
+        'select :ide$i, :dt$d, :idempl$i from dual '+
+        'where not exists '+
+        '(select 1 from w_turv_day where id_employee_properties = :ide2$i and dt = :dt2$d)',
+        [FCells[p].G(d, 'id_employee_properties'), FCells[p].G(d, 'dt'), FCells[p].G(d, 'id_employee'), FCells[p].G(d, 'id_employee_properties'), FCells[p].G(d, 'dt')]
+      );
+      //запишем данные в основную таблицу
+      st := Q.QSIUDSql('Q', 'w_turv_day', 'begtime$f;endtime$f;settime3$i;id_turvcode2$i;worktime2$f' + ' where id_employee_properties = :ide$i and dt = :dt$d');
+      Q.QExecSQL(st, [FCells[p].G(d, 'begtime'), FCells[p].G(d, 'endtime'), FCells[p].G(d, 'settime3'), FCells[p].G(d, 'id_turvcode2'), FCells[p].G(d, 'worktime2'), FCells[p].G(d, 'id_employee_properties'), FCells[p].G(d, 'dt')]);
+      Q.QCommitOrRollback(True);
+    end;
+  end;
 
 
   (*  //время начала рабочего дня, из настроек модуля, там оно в часах и минутах - целые это часы, а дробная часть минута, напр 8.30!
@@ -2523,29 +2567,41 @@ function TTurv.GetDaysFromCalendar_Next(DtBeg: TDateTime; CntOfWork: Integer): T
 //-1 вернет вчерашний, если он был рабочий, а если вчера была суббота, то вернет пятницу.
 //то есть CntOfWork количество рабочих дней, не считая текущий (не важно рабочий он или нет), которые надо прибавить/отнять к текущей дате
 var
-  i, j: Integer;
+  i, j, k: Integer;
   va2: TVarDynArray2;
   dt: TDateTime;
 begin
-  Result:=DtBeg;
-  if CntOfWork = 0 then Exit;
-  j:=0;
-  if CntOfWork > 0
-    then begin
-      va2:=GetDaysFromCalendar(DtBeg, IncDay(DtBeg, CntOfWork + (CntOfWork div 7) * 2 + 20));
-      for i:=0 to High(va2) do begin
-        if va2[i][1] = 1 then inc(j);
-        if j = CntOfWork then Break;
-      end;
-    end
-    else begin
-      va2:=GetDaysFromCalendar(IncDay(DtBeg, -(CntOfWork + (CntOfWork div 7) * 2 + 20)), DtBeg);
-      for i:=High(va2)-1 downto 0 do begin
-        if va2[i][1] = 1 then inc(j);
-        if j = -CntOfWork then Break;
+  Result := DtBeg;
+  if CntOfWork = 0 then
+    Exit;
+  j := 0;
+  k := -1;
+  if CntOfWork > 0 then begin
+    va2 := GetDaysFromCalendar(DtBeg, IncDay(DtBeg, CntOfWork + (CntOfWork div 7) * 2 + 20));
+    for i := 0 to High(va2) do begin
+      if va2[i][1] = 1 then
+        inc(j);
+      if j = CntOfWork then begin
+        k := i;
+        Break;
       end;
     end;
-  Result:=va2[i][0];
+  end
+  else begin
+    va2 := GetDaysFromCalendar(IncDay(DtBeg, -(CntOfWork + (CntOfWork div 7) * 2 + 20)), DtBeg);
+    for i := High(va2) - 1 downto 0 do begin
+      if va2[i][1] = 1 then
+        inc(j);
+      if j = -CntOfWork then begin
+        k := i;
+        Break;
+      end;
+    end;
+  end;
+  if k <> -1 then
+    Result := va2[k][0]          //!!! неверное если нет рабочих дней, напр каникулы НГ!!!
+  else
+    Result := micntBadDate;
 end;
 
 function TTurv.DeletePayrollCalculations(AId: Variant): Boolean;
@@ -3136,7 +3192,36 @@ begin
   end;
 end;
 
-
+function TTurv.GetArrOfTurvPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
+var
+  CurrentStart, CurrentEnd: TDateTime;
+  i: Integer;
+  TargetPeriodIndex: Integer;
+begin
+  Result := [];
+  if APeriodCount <= 0 then
+    Exit;
+  if DayOf(ADate) <= 15 then begin
+    CurrentStart := EncodeDate(YearOf(ADate), MonthOf(ADate), 1);
+    CurrentEnd := EncodeDate(YearOf(ADate), MonthOf(ADate), 15);
+  end
+  else begin
+    CurrentStart := EncodeDate(YearOf(ADate), MonthOf(ADate), 16);
+    CurrentEnd := EndOfTheMonth(ADate);
+  end;
+  for i := 0 to APeriodCount - 1 do begin
+    Result := Result + [FormatDateTime('dd.mm.yyyy', CurrentStart) + ' - ' + FormatDateTime('dd.mm.yyyy', CurrentEnd)];
+    if DayOf(CurrentStart) = 1 then begin
+      CurrentEnd := IncMonth(CurrentStart, -1);
+      CurrentEnd := EndOfTheMonth(CurrentEnd);
+      CurrentStart := EncodeDate(YearOf(CurrentEnd), MonthOf(CurrentEnd), 16);
+    end
+    else begin
+      CurrentEnd := EncodeDate(YearOf(CurrentStart), MonthOf(CurrentStart), 15);
+      CurrentStart := EncodeDate(YearOf(CurrentStart), MonthOf(CurrentStart), 1);
+    end;
+  end;
+end;
 
 function TTurv.CreateAllPayrollTransfers: Boolean;
 var
@@ -3149,11 +3234,15 @@ var
   IdEmpl, IdDep, IdOrg: Variant;
   EmplInfo: TNamedArr;
 begin
-  dt := EncodeDate(2026, 01, 01); //!!!
+  if TFrmBasicInput.ShowDialog(Application, '', [], fAdd, '~Создать ведомости', 185, 45, [[cntComboL,'Период','1:400:0', 135]],
+    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfTurvPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
+  Exit;
+  S.GetDatesFromPeriodString(va[0], dt1, dt2);
+{  dt := EncodeDate(2026, 01, 01); //!!!
   dt1 := GetTurvBegDate(dt);
   dt2 := GetTurvEndDate(dt);
   if MyQuestionMessage('Создать ведомости к перечислению за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
-    Exit;
+    Exit;}
   Cnt := 0;
   Msg := '';
   //если есть расчетные ведомости за период по подразделениям, а общая ведомость к перечислению не создана - создадим
@@ -3163,6 +3252,7 @@ begin
       if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
         inc(Cnt);
     end;
+  //ведомости по уволенным работникам - сгруппированы по работнику и периоду работы
   va1 := Q.QLoadToVarDynArray2('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
   va2 := Q.QLoadToVarDynArray2('select id_employee, id_organization, personnel_number from w_payroll_transfer where id_employee is not null and dt1 = :dt1$d', [dt1]);
     for i := 0 to High(va1) do begin
@@ -3185,38 +3275,48 @@ function TTurv.CreateAllPayrollCash: Boolean;
 var
   dt, dt1, dt2: TDateTime;
   i, j: Integer;
-  va1, va2: TVarDynArray2;
+  va1, va2, va3: TVarDynArray2;
   va: TVarDynArray;
   Cnt: Integer;
   Msg: string;
   IdEmpl, IdDep, IdOrg: Variant;
   EmplInfo: TNamedArr;
 begin
-Exit;
+  if TFrmBasicInput.ShowDialog(Application, '', [], fAdd, '~Создать ведомости', 185, 45, [[cntComboL,'Период','1:400:0', 135]],
+    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfTurvPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
+  Exit;
+  S.GetDatesFromPeriodString(va[0], dt1, dt2);
+{
   dt := EncodeDate(2026, 01, 01); //!!!
   dt1 := GetTurvBegDate(dt);
   dt2 := GetTurvEndDate(dt);
   if MyQuestionMessage('Создать ведомости к выдаче за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
-    Exit;
+    Exit;                 }
   Cnt := 0;
   Msg := '';
-  if (Q.QSelectOneRow('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1])[0] <> 0) and
-    (Q.QSelectOneRow('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1])[0] = 0)
-    then begin
-      if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
-        inc(Cnt);
+  //по работающим (по подразделениям)
+  //создадим ведомости по всем подразделениям, которые есть в расчетных
+  va1 := Q.QLoadToVarDynArray2('select id_departament from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_departament from w_payroll_cash where id_employee is null and dt1 = :dt1$d', [dt1]);
+  for i := 0 to High(va1) do begin
+    if (A.PosRowInArray(va1, va2, i) = -1) then begin
+      if Q.QIUD('i', 'w_payroll_cash', '', 'id$i;id_departament;dt1$d;dt2$d', [0, va1[i][0], dt1, dt2], False) <> -1 then
+        inc(Cnt);  //увеличим количество созданных
     end;
-  va1 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where dt1 = :dt1$d', [dt1]);
+  end;
+  //выберем данные по уволенным
+  //строка соответствует периоду работы, подразделение берется на момент увольнения
+  va1 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d', [dt1]);
   va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_payroll_cash where dt1 = :dt1$d', [dt1]);
-    for i := 0 to High(va1) do begin
-      if (A.PosRowInArray(va1, va2, i) = -1) then begin
-//      if (A.PosInArray(va1[i][0], va2, 0) = -1) and  (A.PosInArray(va1[i][1], va2, 1) = -1) and  (A.PosInArray(va1[i][2], va2, 2) = -1) and  (A.PosInArray(va1[i][3], va2, 3) = -1) then begin
-        //если ведомость еще не создана
-        //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
-        if Q.QIUD('i', 'w_payroll_cash', '', 'id$i;id_departament;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
-          inc(Cnt);  //увеличим количество созданных
-      end;
+  va3 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1,  Turv.GetTurvEndDate(IncDay(dt2, 1))]);
+  for i := 0 to High(va1) do begin
+    if (A.PosRowInArray(va1, va2, i) = -1) and (A.PosRowInArray(va1, va3, i) > -1) then begin
+      //если ведомость еще не создана, и с такими параметрами есть в списке уволенных за периода
+      //(таким образом исключаем ведомости с промежуточными подразделениями, т.е. если бли переходы по ним в течении периода работы, то будет создана только ведомость с подразделением на момент увольнения)
+      if Q.QIUD('i', 'w_payroll_cash', '', 'id$i;id_departament;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+        inc(Cnt);  //увеличим количество созданных
     end;
+  end;
   //сообщение
   if Cnt = 0 then
     Msg := 'Ни одна ведомость не создана!' + Msg
@@ -3226,6 +3326,25 @@ Exit;
   Result := Cnt > 0;
 end;
 
+procedure TTurv.LoadDataFromParsec;
+var
+  LTurv: TTurvData;
+  Ids: TVarDynArray;
+  i: Integer;
+begin
+  Ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
+  Ids := Ids + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(Date)]);
+  for i := 0 to High(Ids) do begin
+    LTurv.Create(Ids[i], '', '');
+//    try
+    LTurv.LoadFromParsec;
+//    except
+//    end;
+    LTurv := Default(TTurvData);
+  end;
+end;
+
+
 procedure TTurv.ConvertEmployees202511;
 var
   i, j, k, e: Integer;
@@ -3233,6 +3352,7 @@ var
   es: TNamedArr;
   b1, b2, b3 : Boolean;
 begin
+Exit;
   if MyQuestionMessage('Импортировать данные?') <> mrYes then
     Exit;
   Q.QBeginTrans(True);
@@ -3318,6 +3438,10 @@ end;
 
 
 
+
 begin
   Turv:=TTurv.Create;
 end.
+
+
+

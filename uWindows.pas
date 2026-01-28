@@ -117,7 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
-  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayrollTransfer,
+  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
 
 
   D_Order, D_LoadKB,
@@ -936,6 +936,9 @@ begin
   end
   else if F = myfrm_Dlg_PayrollTransfer then begin
     TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+  end
+  else if F = myfrm_Dlg_PayrollCash then begin
+    TFrmWGedtPayrollCash.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
   end
   else if F = myfrm_Dlg_Candidate then begin
 //~    Form := TDlg_Candidate.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);

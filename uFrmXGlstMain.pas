@@ -763,7 +763,7 @@ v:=True;
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
 //v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[-1000, False and User.IsDeveloper, 'Задать бригадирские'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)]{,[-1000, False and User.IsDeveloper, 'Задать бригадирские']},[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
@@ -878,17 +878,18 @@ v:=True;
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
+      ['area','Площадка','150'],
       ['departament','Подразделение','200'],
       ['employee','Работник','200'],
       ['organization$s','Организация','90'],
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13']
+      ['finalized','Закрыта','60','pic=Закрыта;13', 'i']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_cash', 'w_payroll_cash');
     Frg1.Opt.SetButtons(1, [
-      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'], //[mbtDelete, 1],
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],{[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],} //[mbtDelete, 1],
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
@@ -920,7 +921,7 @@ v:=True;
   end
   else if FormDoc = myfrm_Rep_W_Payroll then begin
     Caption:='Свод по зарплатным ведомостям';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+ {   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
     Frg1.Opt.SetFields([
       ['rownum as id$i','_id','40'],
       ['area','Площадка','70'],
@@ -942,6 +943,32 @@ v:=True;
     Frg1.CreateAddControls('1', cntComboLK, 'Период:', 'CbPeriod', '', 60, yrefC, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Включить ведомости по работникам:', 'chbAddW', '', 60 + 150 + 5, yrefC, 250);
     Q.QLoadToDBComboBoxEh('select to_char(dt1, ''dd-mm-yyyy'') || '' - '' || to_char(max(dt2), ''dd-mm-yyyy'') as dt from v_payroll group by dt1 order by dt1 desc', [],
+      TDBComboBoxEh(Frg1.FindComponent('CbPeriod')), cntComboL
+    );
+    TDBComboBoxEh(Frg1.FindComponent('CbPeriod')).ItemIndex := 0;
+}
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['rownum as id$i','_id','40'],
+      ['area','Площадка','70'],
+      ['departament_code','Код','60'],
+      ['departament','Подразделение','250;h'],
+      ['total_pay','Начислено','80','f=r:'],
+      ['deduct_enf','Удержано','80','f=r:'],
+      ['deduct_ndfl','НДФЛ','80','f=r:'],
+      ['pay_fss','ФСС','80','f=r:'],
+      ['pay_adv','Пром. выплата','80','f=r:'],
+      ['pay_card','Карта','80','f=r:'],
+      ['pay_cash','К получению','80','f=r:'],
+      ['null','Подпись','80']
+    ]);
+    Frg1.Opt.SetTable('v_w_payroll_summary');
+    Frg1.Opt.SetWhere('where dt1 = :dt1$d');
+    Frg1.Opt.SetButtons(1,[[mbtGo, False],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
+    Frg1.CreateAddControls('1', cntComboLK, 'Период:', 'CbPeriod', '', 60, yrefC, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Включить ведомости по работникам:', 'chbAddW', '', 60 + 150 + 5, yrefC, 250);
+    Q.QLoadToDBComboBoxEh('select to_char(dt1, ''dd-mm-yyyy'') || '' - '' || to_char(max(dt2), ''dd-mm-yyyy'') as dt from w_payroll_transfer group by dt1 order by dt1 desc', [],
       TDBComboBoxEh(Frg1.FindComponent('CbPeriod')), cntComboL
     );
     TDBComboBoxEh(Frg1.FindComponent('CbPeriod')).ItemIndex := 0;
@@ -2560,7 +2587,7 @@ begin
   else if (FormDoc = myfrm_J_Turv) then begin
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere,
       S.IIfStr(not User.Role(rW_J_Turv_VAll), 'dt1 >= sysdate - 93'),  //турв за последние 3 месяца
-      S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', editusers) = 1'),
+      S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', ids_editusers) = 1'),
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
@@ -2812,6 +2839,8 @@ begin
     myfrm_J_Turv,
     myfrm_J_Payrolls,
     myfrm_J_PayrollCalculations,
+    myfrm_J_PayrollTransfer,
+    myfrm_J_PayrollCash,
     myfrm_R_Holideys,
     myfrm_Rep_PayrollsSum,
 

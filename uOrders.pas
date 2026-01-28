@@ -2689,9 +2689,9 @@ begin
     end
     else if i = mrNo then begin
       if AIdOrItem <> null then
-        Q.QExecSql('update order_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+        Q.QExecSql('update order_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [AIdOrItem]);
       if AIdStdItem <> null then
-        Q.QExecSql('update or_std_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+        Q.QExecSql('update or_std_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [AIdStdItem]);
       Result := True;
     end
     else

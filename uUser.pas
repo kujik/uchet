@@ -163,7 +163,7 @@ begin
   if FrmMain <> nil then
     FrmMain.AfterUserLogged;
     {$IFDEF  TURV}
-  if not A.InArray(User.GetLogin, ['sprokopenko', 'eteplyakova', 'kadry1', 'kadry2', 'kadry3', 'eveselova', 'ostulihina']) then Halt;  //!T!!! //!!!
+//  if not A.InArray(User.GetLogin, ['sprokopenko', 'eteplyakova', 'kadry1', 'kadry2', 'kadry3', 'eveselova', 'ostulihina']) then Halt;  //!T!!! //!!!
     {$ENDIF}
 
 end;

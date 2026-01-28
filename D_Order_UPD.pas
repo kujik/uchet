@@ -51,23 +51,19 @@ uses
 procedure TDlg_Order_UPD.Bt_OkClick(Sender: TObject);
 begin
   inherited;
-  ModalResult:=mrNone;
-  if (va2[0][1] <> null)and(dedt_Upd.Value = null)and(Trim(edt_Upd.Text) = '') then begin
+  ModalResult := mrNone;
+  if (va2[0][1] <> null) and (dedt_Upd.Value = null) and (Trim(edt_Upd.Text) = '') then begin
     if (MyQuestionMessage('Удалить данные УПД?') = mrYes) then begin
     end
-    else Exit;
-  end
-  else if (dedt_Upd.Value = null)or(Trim(edt_Upd.Text) = '')or(dedt_Upd.Value > Date)or
-          (dedt_Upd.Value < Turv.GetDaysFromCalendar_Next(va2[0][6], -5))
-    then begin
-      MyWarningMessage('Данные некорректны!');
+    else
       Exit;
-    end;
-  Q.QExecSql(
-    'update orders set dt_upd_reg = :dt_upd_reg$d, dt_upd = :dt_upd$d, upd = :upd$s where id = :id$i',
-    [S.IIf(dedt_Upd.Value = null, null, dedt_Upd_Reg.Value), dedt_Upd.Value, Trim(edt_Upd.Text), ID]
-  );
-  ModalResult:=mrOk;
+  end
+  else if (dedt_Upd.Value = null) or (Trim(edt_Upd.Text) = '') or (dedt_Upd.Value > Date) or (dedt_Upd.Value < Turv.GetDaysFromCalendar_Next(va2[0][6], -5)) then begin
+    MyWarningMessage('Данные некорректны!');
+    Exit;
+  end;
+  Q.QExecSql('update orders set dt_upd_reg = :dt_upd_reg$d, dt_upd = :dt_upd$d, upd = :upd$s where id = :id$i', [S.IIf(dedt_Upd.Value = null, null, dedt_Upd_Reg.Value), dedt_Upd.Value, Trim(edt_Upd.Text), ID]);
+  ModalResult := mrOk;
 end;
 
 procedure TDlg_Order_UPD.FormShow(Sender: TObject);
