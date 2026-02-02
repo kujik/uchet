@@ -2197,7 +2197,9 @@ begin
     if (FormDoc = myfrm_J_Turv) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_Turv, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Turv) and (fMode in [fAdd]) then
-      Wh.ExecDialog(myfrm_Dlg_AddTurv, Self, [], fMode, Fr.ID, null);
+      if Turv.CreateAllTurvForDate(Self, Turv.GetTurvBegDate(Date)) then
+        Frg1.RefreshGrid;
+//      Wh.ExecDialog(myfrm_Dlg_AddTurv, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Turv) and (fMode in [fDelete]) then
       if Turv.DeleteTURV(Fr.ID) then
         Fr.RefreshGrid;

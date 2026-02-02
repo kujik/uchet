@@ -108,6 +108,7 @@ uses
 
   V_MDI, V_Normal, uFrmBasicMdi,
   uFrmMain,
+  uTurv,
 
   uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
 
@@ -926,7 +927,8 @@ begin
   end
   else if F = myfrm_Dlg_AddTurv then begin
 //~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);
-    TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
+//    TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
+    Turv.CreateAllTurvForDate(AOwner, Turv.GetTurvBegDate(Date));
   end
   else if F = myfrm_Dlg_Payroll then begin
     TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);

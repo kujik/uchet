@@ -2689,24 +2689,24 @@ begin
   Result := AMode <> fView;
 end;
 
-function TTurv.CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
+function TTurv.CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
 var
   va1, va2, va3: TVarDynArray;
   i, j: Integer;
   LDate: TDateTime;
 begin
   Result := False;
-  LDate := Date;
+  LDate := ADt;
   if User.IsDeveloper then begin
     if TFrmBasicInput.ShowDialog(AOwner, '', [], fEdit, '~Дата для создаваемых ТУРВ', 370, 80,
-      [[cntDtEdit, 'Дата', '*:*']], [Date], va3, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
+      [[cntDtEdit, 'Дата', '*:*']], [ADt], va3, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
     ) < 0 then Exit;
     LDate := va3[0];
   end;
   if MyQuestionMessage('Создать все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' ?') <> mrYes then
     Exit;
-  va1 := Q.QSelectOneRow('select id_departament from w_employee_properties where dt_beg <= :dte$d and (dt_end is null or dt_end >= :dtb$d)', [Turv.GetTurvEndDate(LDate), Turv.GetTurvBegDate(LDate)]);
-  va2 := Q.QSelectOneRow('select id_departament from w_turv_period where dt1 = :dt$d', [Turv.GetTurvBegDate(LDate)]);
+  va1 := Q.QLoadToVarDynArrayOneCol('select distinct id_departament from w_employee_properties where dt_beg <= :dte$d and (dt_end is null or dt_end >= :dtb$d)', [Turv.GetTurvEndDate(LDate), Turv.GetTurvBegDate(LDate)]);
+  va2 := Q.QLoadToVarDynArrayOneCol('select distinct id_departament from w_turv_period where dt1 = :dt$d', [Turv.GetTurvBegDate(LDate)]);
   j := 0;
   for i := 0 to High(va1) do
     if not A.InArray(va1[i], va2) then begin
@@ -3336,10 +3336,10 @@ begin
   Ids := Ids + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(Date)]);
   for i := 0 to High(Ids) do begin
     LTurv.Create(Ids[i], '', '');
-//    try
+    try
     LTurv.LoadFromParsec;
-//    except
-//    end;
+    except
+    end;
     LTurv := Default(TTurvData);
   end;
 end;
