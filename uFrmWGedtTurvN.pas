@@ -1327,7 +1327,7 @@ begin
   if pos < 0 then
     Exit;
   if FTurv.Cells[pos].G(d, 'id_employee_properties').AsString = ''
-    then FTurv.Cells[pos].SetValue(d, 'id_employee_properties', FTurv.List.G(pos, 'id_employee_properties'));
+    then FTurv.Cells[pos].SetValue(d, 'id_employee_properties', FTurv.List.G(pos, 'id'));
   if FTurv.Cells[pos].G(d, 'dt').AsString = ''
     then FTurv.Cells[pos].SetValue(d, 'dt', IncDay(FTurv.DtBeg, d - 1));
   if FTurv.Cells[pos].G(d, 'id_employee').AsString = ''

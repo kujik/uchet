@@ -1096,6 +1096,12 @@ begin
         Continue;
       if FCells[p].G(d, 'changed') <> 1 then
         Continue;
+      if FCells[p].G(d, 'id_employee_properties').AsString = ''
+        then FCells[p].SetValue(d, 'id_employee_properties', FList.G(p, 'id'));
+      if FCells[p].G(d, 'dt').AsString = ''
+        then FCells[p].SetValue(d, 'dt', IncDay(DtBeg, d - 1));
+      if FCells[p].G(d, 'id_employee').AsString = ''
+        then FCells[p].SetValue(d, 'id_employee', FList.G(p, 'id_employee'));
       Q.QBeginTrans(True);
       Q.QExecSql(
         'insert into w_turv_day (id_employee_properties, dt, id_employee) '+
@@ -1108,6 +1114,7 @@ begin
       st := Q.QSIUDSql('Q', 'w_turv_day', 'begtime$f;endtime$f;settime3$i;id_turvcode2$i;worktime2$f' + ' where id_employee_properties = :ide$i and dt = :dt$d');
       Q.QExecSQL(st, [FCells[p].G(d, 'begtime'), FCells[p].G(d, 'endtime'), FCells[p].G(d, 'settime3'), FCells[p].G(d, 'id_turvcode2'), FCells[p].G(d, 'worktime2'), FCells[p].G(d, 'id_employee_properties'), FCells[p].G(d, 'dt')]);
       Q.QCommitOrRollback(True);
+//      Exit;
     end;
   end;
 

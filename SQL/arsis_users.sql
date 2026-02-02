@@ -96,18 +96,19 @@ grant create view to MAIL;
 grant create materialized view to MAIL;
 grant unlimited tablespace to MAIL;
 
-create user NFT identified by NFT25 default tablespace users temporary tablespace temp;
-grant connect, resource to NFT;
-alter user NFT default role all;
-grant create procedure to NFT;
-grant create sequence to NFT;
-grant create session to NFT;
-grant create synonym to NFT;
-grant create table to NFT;
-grant create trigger to NFT;
-grant create view to NFT;
-grant create materialized view to NFT;
-grant unlimited tablespace to NFT;
+
+create user NTF identified by NTF25 default tablespace users temporary tablespace temp;
+grant connect, resource to NTF;
+alter user NTF default role all;
+grant create procedure to NTF;
+grant create sequence to NTF;
+grant create session to NTF;
+grant create synonym to NTF;
+grant create table to NTF;
+grant create trigger to NTF;
+grant create view to NTF;
+grant create materialized view to NTF;
+grant unlimited tablespace to NTF;
 
 create user MOB identified by MOB25 default tablespace users temporary tablespace temp;
 grant connect, resource to MOB;
