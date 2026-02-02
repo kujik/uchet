@@ -970,7 +970,7 @@ var
 begin
   Handled := True;
   if A.InArray(Tag, [mbtComment, mbtPremiumForDay, mbtFine, mbtDivisionScedule, mbtWorkerScedule]) then begin
-    //InputDialog(Tag)
+    InputDialog(Tag)
   end
   //кнопки ввода времни руководителя/ввода итогов
   else if Tag in [mbtView, mbtEdit] then begin
