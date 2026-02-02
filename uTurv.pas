@@ -82,6 +82,7 @@ type
     function  CreateAllPayrollTransfers: Boolean;
     function  CreateAllPayrollCash: Boolean;
     procedure LoadDataFromParsec;
+    procedure FinalizeAllTurvForPeriod;
 
     procedure ConvertEmployees202511;
   end;
@@ -3350,6 +3351,54 @@ begin
     LTurv := Default(TTurvData);
   end;
 end;
+
+procedure TTurv.FinalizeAllTurvForPeriod;
+var
+  st, st1, st2, st3: string;
+  va, va2, va3: TVarDynArray;
+  i, j, k: Integer;
+  LDate: TDateTime;
+  LTurv: TTurvData;
+begin
+  LDate := GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1));
+  va := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where dt1 = :dt$d and is_finalized = 0', [Turv.GetTurvBegDate(LDate)]);
+  if Length(va) = 0 then begin
+    MyInfoMessage('Все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' уже закрыты.');
+    Exit;
+  end;
+  if MyQuestionMessage('Закрыть все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' ?') <> mrYes then
+    Exit;
+  j := 0;
+  k := 0;
+  for i := 0 to High(va) do
+    try
+    LTurv.Create(va[i], '', '');
+    if LTurv.GetDataStatus <> 1 then begin
+      Inc(j);
+    end
+    else begin
+      //Q.QExecSql('update w_turv_day set is_finalized = 1 where id = :id$i', [va[i]]);
+      Inc(k);
+    end;
+    except
+    end;
+  if j = 0 then
+    MyInfoMessage('Все ТУРВ закрыты.')
+  else begin
+    MyInfoMessage(IntToStr(j) + ' ТУРВ закрыть не удалось.');
+  end;
+    //пробуем заблокировать турв для каждого типа доступа отдельно
+{  st1 := Q.DBLock(True, FormDoc, VarToStr(id) + '-1', '', fNone)[1];
+  st2 := Q.DBLock(True, FormDoc, VarToStr(id) + '-2', '', fNone)[1];
+  st3 := Q.DBLock(True, FormDoc, VarToStr(id) + '-3', '', fNone)[1];
+  if (st1 = User.GetName) then
+    st1 := '';
+  if (st2 = User.GetName) then
+    st2 := '';
+  if (st3 = User.GetName) then
+    st3 := '';}
+end;
+
 
 
 procedure TTurv.ConvertEmployees202511;
