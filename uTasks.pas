@@ -931,7 +931,7 @@ begin
   if HourOf(Now) = 9 then begin
     SplMonitorReportDay;
   end;
-  Turv.LoadDataFromParsec;
+//  Turv.LoadDataFromParsec;
 end;
 
 

@@ -1330,6 +1330,8 @@ begin
     then FTurv.Cells[pos].SetValue(d, 'id_employee_properties', FTurv.List.G(pos, 'id_employee_properties'));
   if FTurv.Cells[pos].G(d, 'dt').AsString = ''
     then FTurv.Cells[pos].SetValue(d, 'dt', IncDay(FTurv.DtBeg, d - 1));
+  if FTurv.Cells[pos].G(d, 'id_employee').AsString = ''
+    then FTurv.Cells[pos].SetValue(d, 'id_employee', FTurv.List.G(pos, 'id_employee'));
   //занесем данные
   Fields := [];
   if FRgsEdit1 then
