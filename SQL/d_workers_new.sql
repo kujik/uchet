@@ -832,7 +832,14 @@ where
 --данные зарплатной ведомости для конкретного работника из ведомости
 --данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
 --alter table w_payroll_calc_item drop column personnel_number;
-alter table w_payroll_calc_item add ors_pay number;
+alter table w_payroll_calc_item add ors_pay1 number;
+alter table w_payroll_calc_item add ors1 number;
+alter table w_payroll_calc_item add period_hours_norm1 number;
+alter table w_payroll_calc_item add hours_worked1 number;
+alter table w_payroll_calc_item add overtime1 number;
+alter table w_payroll_calc_item add total_pay1 number;
+
+
 create table w_payroll_calc_item(
   id number(11),
   id_payroll_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка

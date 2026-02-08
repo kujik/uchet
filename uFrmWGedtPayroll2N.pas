@@ -22,7 +22,7 @@ ID	NAME	COMM
 10	Грузчик/упаковщик	оклад, баллы до нормы, премия за отчетный период (формула), премия за переработку (формула)
 }
 
-unit uFrmWGedtPayrollN;
+unit uFrmWGedtPayroll2N;
 
 interface
 
@@ -34,7 +34,7 @@ uses
   ;
 
 type
-  TFrmWGedtPayrollN = class(TFrmBasicGrid2)
+  TFrmWGedtPayroll2N = class(TFrmBasicGrid2)
     PrintDBGridEh1: TPrintDBGridEh;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
@@ -74,7 +74,7 @@ type
   end;
 
 var
-  FrmWGedtPayrollN: TFrmWGedtPayrollN;
+  FrmWGedtPayroll2N: TFrmWGedtPayroll2N;
 
 implementation
 
@@ -117,7 +117,7 @@ const
 +  'period_hours_norm1$f;hours_worked1$f;overtime1$f;ors1$f;ors_pay1$f;total_pay1$f'
     ;
 
-function TFrmWGedtPayrollN.PrepareForm: Boolean;
+function TFrmWGedtPayroll2N.PrepareForm: Boolean;
 var
   i, j, w1: Integer;
   v: Variant;
@@ -242,7 +242,7 @@ begin
   Result:=True;
 end;
 
-procedure TFrmWGedtPayrollN.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFrmWGedtPayroll2N.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   rn, i, res: Integer;
   changed: Boolean;
@@ -264,7 +264,7 @@ begin
   end;
 end;
 
-function TFrmWGedtPayrollN.GetDataFromDb: Integer;
+function TFrmWGedtPayroll2N.GetDataFromDb: Integer;
 //прочитаем ведомость (все данные) из БД и заполним ими сетку
 var
   na : TNamedArr;
@@ -275,7 +275,7 @@ begin
   Frg1.LoadData(na);
 end;
 
-function TFrmWGedtPayrollN.GetDataFromTurv: Integer;
+function TFrmWGedtPayroll2N.GetDataFromTurv: Integer;
 //читаем данные из ТУРВ по нажатию соотв кнопки
 var
   i, j, k, r: Integer;
@@ -509,7 +509,7 @@ begin
 
 end;
 
-procedure TFrmWGedtPayrollN.GetDataFromExcel;
+procedure TFrmWGedtPayroll2N.GetDataFromExcel;
 var
   i, j, k, emp: Integer;
   va, va1, vadel: TVarDynArray2;
@@ -638,7 +638,7 @@ begin
 end;
 
 
-procedure TFrmWGedtPayrollN.SetButtons;
+procedure TFrmWGedtPayroll2N.SetButtons;
 var
   i: Integer;
   NoNorms: Boolean;
@@ -682,7 +682,7 @@ begin
   Frg1.DbGridEh1.Invalidate;
 end;
 
-procedure TFrmWGedtPayrollN.SetColumns;
+procedure TFrmWGedtPayroll2N.SetColumns;
 begin
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
   Frg1.Opt.SetColFeature('*', 'e', False, False);
@@ -696,14 +696,14 @@ begin
   Frg1.SetColumnsVisible;
 end;
 
-function TFrmWGedtPayrollN.GetCaption(Colored: Boolean = False): string;
+function TFrmWGedtPayroll2N.GetCaption(Colored: Boolean = False): string;
 begin
   Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('employee') <> null, FPayrollParams.G('employee') + ' (' + FPayrollParams.G('departament') + ')', FPayrollParams.G('departament')) +
     S.IIFStr(Colored, '$000000') + ' с' + S.IIFStr(Colored, '$FF00FF') +' ' + DateToStr(FPayrollParams.G('dt1')) +
     S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(FPayrollParams.G('dt2'));
 end;
 
-procedure TFrmWGedtPayrollN.CommitPayroll;
+procedure TFrmWGedtPayroll2N.CommitPayroll;
 begin
   if MyQuestionMessage(S.IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
     Exit;
@@ -713,7 +713,7 @@ begin
 end;
 
 
-procedure TFrmWGedtPayrollN.PrintGrid;
+procedure TFrmWGedtPayroll2N.PrintGrid;
 //печать грида
 var
   BeforeGridText: TStringsEh;
@@ -783,7 +783,7 @@ begin
   Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, True);
 end;
 
-procedure TFrmWGedtPayrollN.ExportToXlsxA7;     //!!! not work
+procedure TFrmWGedtPayroll2N.ExportToXlsxA7;     //!!! not work
 var
   i, j, rn, x, y, y1, y2: Integer;
   Rep: TA7Rep;
@@ -844,7 +844,7 @@ begin
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 
-procedure TFrmWGedtPayrollN.SetPayrollMethod;
+procedure TFrmWGedtPayroll2N.SetPayrollMethod;
 var
   va, va1, va2, va3: TVarDynArray;
   n: Variant;
@@ -858,7 +858,7 @@ begin
   SetButtons;
 end;
 
-procedure TFrmWGedtPayrollN.SavePayroll;
+procedure TFrmWGedtPayroll2N.SavePayroll;
 var
   i, j: Integer;
   f, fn, va: TVarDynArray;
@@ -886,7 +886,7 @@ begin
   Q.QCommitOrRollback(True);
 end;
 
-procedure TFrmWGedtPayrollN.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+procedure TFrmWGedtPayroll2N.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
   if A.InArray(FieldName, ['employee', 'job', 'organization', 'personnel_number', 'schedulecode']) then
       Params.Background := clmyGray;
@@ -896,25 +896,25 @@ begin
       Params.Background := clRed;
 end;
 
-procedure TFrmWGedtPayrollN.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+procedure TFrmWGedtPayroll2N.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 //при ручном вводе в ячейке - проставим признак изменения строки
 begin
   FIsChanged := True;
   Frg1.SetValue('changed', 1);
 end;
 
-procedure TFrmWGedtPayrollN.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+procedure TFrmWGedtPayroll2N.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
 begin
   if Mode <> dbgvCell then
     Exit;
   CalculateRow(Row - 1);
 end;
 
-procedure TFrmWGedtPayrollN.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+procedure TFrmWGedtPayroll2N.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
 end;
 
-procedure TFrmWGedtPayrollN.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+procedure TFrmWGedtPayroll2N.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   Handled := True;
   case Tag of
@@ -946,7 +946,7 @@ begin
     SetButtons;
 end;
 
-procedure TFrmWGedtPayrollN.SetEditableAll;
+procedure TFrmWGedtPayroll2N.SetEditableAll;
 begin
   if Frg1.DbGridEh1.ReadOnly then
     Exit;
@@ -957,7 +957,7 @@ begin
   SetColumns;
 end;
 
-procedure TFrmWGedtPayrollN.CalculateAll;
+procedure TFrmWGedtPayroll2N.CalculateAll;
 var
   i: Integer;
 begin
@@ -965,7 +965,7 @@ begin
     CalculateRow(i);
 end;
 
-procedure TFrmWGedtPayrollN.CalculateRow(Row: Integer);
+procedure TFrmWGedtPayroll2N.CalculateRow(Row: Integer);
 var
   i: Integer;
   v1, v2, v3: Variant;
@@ -1085,4 +1085,3 @@ end.
       end;
     end;
   end;
-

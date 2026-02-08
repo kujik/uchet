@@ -2505,7 +2505,7 @@ begin
     [AIdOrder]
   );
   SaOI := Q.QLoadToRec(
-    'select pos, slash, fullitemname as fullname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, kns, thn, comm '+
+    'select pos, slash, fullitemname as fullname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, kns, thn, comm, disassembled, control_assembly '+
     'from v_order_items where id_order = :id_order$i and qnt > 0 order by pos',
     [SaO.G('id')]
   );

@@ -198,6 +198,7 @@ uses
   uFrmWDedtEmployeeProperties in 'uFrmWDedtEmployeeProperties.pas' {FrmWDedtEmployeeProperties},
   uFrmWGedtTurvN in 'uFrmWGedtTurvN.pas' {FrmWGedtTurvN},
   uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
+  uFrmWGedtPayroll2N in 'uFrmWGedtPayroll2N.pas' {FrmWGedtPayroll2N},
   uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN},
   uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule},
   uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod},

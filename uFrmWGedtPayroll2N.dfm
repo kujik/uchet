@@ -1,52 +1,25 @@
-inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
-  Caption = 'FrmOGjrnOrderStages'
-  ClientHeight = 538
+inherited FrmWGedtPayroll2N: TFrmWGedtPayroll2N
+  Caption = 'FrmWGedtPayroll2N'
   ExplicitWidth = 808
-  ExplicitHeight = 576
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Height = 522
-    ExplicitHeight = 522
+    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      Height = 473
       ExplicitWidth = 782
-      ExplicitHeight = 472
-      inherited pnlBottom: TPanel
-        Top = 427
-        ExplicitTop = 426
-      end
-      inherited pnlLeft: TPanel
-        Height = 418
-        ExplicitHeight = 417
-      end
       inherited pnlGrid1: TPanel
-        Height = 418
         ExplicitWidth = 772
-        ExplicitHeight = 417
         inherited Frg1: TFrDBGridEh
-          Height = 416
           ExplicitWidth = 770
-          ExplicitHeight = 415
           inherited pnlGrid: TPanel
-            Height = 362
-            ExplicitHeight = 361
             inherited DbGridEh1: TDBGridEh
               Width = 762
-              Height = 339
-              OnKeyDown = Frg1DbGridEh1KeyDown
+              Height = 337
             end
             inherited pnlStatusBar: TPanel
-              Top = 340
+              Top = 338
               Width = 762
             end
-          end
-          inherited pnlLeft: TPanel
-            Height = 362
-            ExplicitHeight = 361
-          end
-          inherited pnlBottom: TPanel
-            Top = 416
-            ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -65,8 +38,6 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 432
-        ExplicitTop = 431
         ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 780
@@ -94,19 +65,17 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
           end
         end
       end
-      inherited pnlRight: TPanel
-        Height = 418
-        ExplicitHeight = 417
-      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 478
-      ExplicitTop = 477
+      inherited bvlFrmBtnsTl: TBevel
+        ExplicitWidth = 788
+      end
+      inherited bvlFrmBtnsB: TBevel
+        ExplicitWidth = 788
+      end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 522
-    ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 723
       Height = 14
@@ -114,5 +83,31 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
     inherited lblStatusBarL: TLabel
       Height = 14
     end
+  end
+  object PrintDBGridEh1: TPrintDBGridEh
+    DBGridEh = Frg1.DbGridEh1
+    Options = [pghColored, pghRowAutoStretch]
+    PageFooter.Font.Charset = DEFAULT_CHARSET
+    PageFooter.Font.Color = clWindowText
+    PageFooter.Font.Height = -11
+    PageFooter.Font.Name = 'Tahoma'
+    PageFooter.Font.Style = []
+    PageHeader.Font.Charset = DEFAULT_CHARSET
+    PageHeader.Font.Color = clWindowText
+    PageHeader.Font.Height = -11
+    PageHeader.Font.Name = 'Tahoma'
+    PageHeader.Font.Style = []
+    Units = MM
+    Left = 708
+    Top = 99
+    BeforeGridText_Data = {
+      7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+      7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+      305C666E696C5C666368617273657430205461686F6D613B7D7B5C66315C666E
+      696C5C6663686172736574323034205461686F6D613B7D7D0D0A7B5C2A5C6765
+      6E657261746F722052696368656432302031302E302E32363130307D5C766965
+      776B696E64345C756331200D0A5C706172645C66305C667332385C6C616E6731
+      303333207361736173617361646173615C66315C667331365C6C616E67313034
+      395C7061720D0A7D0D0A00}
   end
 end

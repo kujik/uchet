@@ -189,8 +189,8 @@ begin
     [-mbtDivisionScedule, FInEditMode, True],
     [-mbtWorkerScedule, FInEditMode, True],}
     [],
-    [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True],
-    [-mbtFine, FInEditMode and FRgsEdit1, True],
+    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1), True],
+    [-mbtFine, FInEditMode and (FRgsEdit2), True, 'Депремирование за день'],
     [-mbtComment, FInEditMode, True],
     [],
     //[mbtSendEMail, FRgsEdit2 and FInEditMode],
@@ -224,8 +224,8 @@ begin
     [mbtCtlPanel, True, 500],
     [],}
     [mbtCtlPanel],
-    [-mbtPremiumForDay, FInEditMode and FRgsEdit1, True, 'Преимия за день'],
-    [-mbtFine, FInEditMode and FRgsEdit1, True, 'Депремирование за день'],
+    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1), True, 'Преимия за день'],
+    [-mbtFine, FInEditMode and (FRgsEdit2), True, 'Депремирование за день'],
     //[-ghtNightWork, FInEditMode, True, 'Ночная смена'],
     [-mbtComment, FInEditMode, True, 'Комментарий'],
     []
@@ -1335,9 +1335,9 @@ begin
   //занесем данные
   Fields := [];
   if FRgsEdit1 then
-    Fields := Fields + ['worktime1$f', 'id_turvcode1$i', 'comm1$s', 'premium$f', 'premium_comm$s', 'penalty$f', 'penalty_comm$s'];
+    Fields := Fields + ['worktime1$f', 'id_turvcode1$i', 'comm1$s', 'premium$f', 'premium_comm$s'];
   if FRgsEdit2 then
-    Fields := Fields + ['worktime2$f', 'id_turvcode2$i', 'comm2$s', 'begtime$f', 'endtime$f', 'settime3$i', 'nighttime$f'];
+    Fields := Fields + ['worktime2$f', 'id_turvcode2$i', 'comm2$s', 'begtime$f', 'endtime$f', 'settime3$i', 'nighttime$f', 'penalty$f', 'penalty_comm$s'];
   if FRgsEdit3 then
     Fields := Fields + ['worktime3$f', 'id_turvcode3$i' ,'comm3$s'];
   Q.QBeginTrans(True);

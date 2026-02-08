@@ -200,7 +200,7 @@ begin
         ['rej','Замечания','70']
       ]);
       Frg1.Opt.SetTable('v_order_stages1_otk');
-      Frg1.Opt.SetWhere('where id > 0 and st4 is not null');
+      Frg1.Opt.SetWhere('where id > 0 and st4 is not null /*and 1 = 2*/'); //!!!
       Frg2.Opt.SetFields(fdef2 + [
         ['st4','Статус','40'],
         ['dt4b','Дата нач.','75'],
