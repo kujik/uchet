@@ -118,7 +118,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
-  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
+  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
 
 
   D_Order, D_LoadKB,
@@ -934,7 +934,10 @@ begin
     TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_PayrollCalc then begin
-    TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+    if AAddParam = 1 then
+      TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null)
+    else
+      TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
   end
   else if F = myfrm_Dlg_PayrollTransfer then begin
     TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);

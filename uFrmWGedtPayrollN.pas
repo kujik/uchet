@@ -113,9 +113,7 @@ const
     'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;ors_pay$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
     'personal_pay$f;daily_bonus$f;extra_bonus$f;night_pay$f;milk_compensation$f;non_work_pay$f;penalty$f;correction$f;total_pay$f';
   cFieldsL =
-    'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i'
-+  'period_hours_norm1$f;hours_worked1$f;overtime1$f;ors1$f;ors_pay1$f;total_pay1$f'
-    ;
+    'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i';
 
 function TFrmWGedtPayrollN.PrepareForm: Boolean;
 var
@@ -163,23 +161,17 @@ begin
     ['schedulecode$s', '!График', '70'],
 
     ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90],
-    ['period_hours_norm1$f', '!Норма отработанных часов за 1й период', 90],
-    ['hours_worked1$f', '!Отработано за 1й период', 90],
-    ['overtime1$f', '!Из них переработка', 90],
-    ['period_hours_norm$f', '!Норма отработанных часов за 2й период', 90],
-    ['hours_worked$f', '!Отработано за 2й период', 90],
+    ['period_hours_norm$f', '!Норма отработанных часов за период', 90],
+    ['hours_worked$f', '!Отработано за период', 90],
     ['overtime$f', '!Из них переработка', 90],
 
     ['planned_pay$f', '~Плановое' + sLineBreak + 'начисление', wcol, fcol, 't=1,i1'],
     ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 't=1,i1'],
     ['variable_pay$f', '~Стимулирующая', wcol, fcol, 't=1,i1'],
-    ['ors1$f', '~ОРС 1', wcol, 't=1,i1'],
-    ['ors_pay1$f', '~ОРС 1 сумма', wcol, fcol, 't=1,i1'],
-    ['ors$f', '~ОРС 2', wcol, 't=1,i1'],
-    ['ors_pay$f', '~ОРС 2 сумма', wcol, fcol, 't=1,i1'],
+    ['ors$f', '~ОРС', wcol, 't=1,i1'],
+    ['ors_pay$f', '~ОРС сумма', wcol, fcol, 't=1,i1'],
     ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol],
     ['ext_pay$f', '~Загрузка' + sLineBreak + ' сделки', wcol, fcol, 't=2'],
-    ['total_pay1$f', '~Итого' + sLineBreak + ' начислено ' + sLineBreak + ' за 1й период', wcol, fcol],
     ['overtime_pay$f', '~Переработка', wcol, fcol],
     ['personal_pay$f', '~Персональная' + sLineBreak + ' надбавка', wcol, fcol, 't=2'],
     ['daily_bonus$f', '~Премия ТУРВ', wcol, fcol],

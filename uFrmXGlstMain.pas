@@ -2238,7 +2238,7 @@ begin
  //     if Turv.DeletePayrollCalculations(Fr.ID) then
 //        Fr.RefreshGrid();
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
-      Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, null);
+      Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2));
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_PayrollTransfer, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode = fAdd) then
