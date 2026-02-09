@@ -49,6 +49,7 @@ type
     FIsListChanged: Boolean;
     FIsEditableAdd, FIsEditableAll: Boolean;
     FIsSecondPeriod: Boolean;
+    FIsSecondPeriodVisible: Boolean;
     FNoData: Boolean;
     function  PrepareForm: Boolean; override;
     function  GetDataFromDb: Integer;
@@ -101,6 +102,7 @@ const
   cmbtCard = 1002;
   cmbRecalculate = 1005;
   cmbSetEditable = 1006;
+  cmbSetP1Visible = 1007;
 
   cMOffice = 1;
   cMWorkshop = 2;
@@ -149,7 +151,7 @@ begin
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
   FColWidth := 45;
   wcol := IntToStr(FColWidth) + ';r';
-  fcol := 'f=###,###,###:';
+  fcol := 'f=###,###,###:###,###,##0';
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
     ['id_employee$i', '_id_employee', wcol],
@@ -177,16 +179,16 @@ begin
     ['planned_pay$f', '~Плановое' + sLineBreak + 'начисление', wcol, fcol, 't=1,i1'],
     ['fixed_pay$f', '~Постоянная' + sLineBreak + ' часть', wcol, fcol, 't=1,i1'],
     ['variable_pay$f', '~Стимулирующая', wcol, fcol, 't=1,i1'],
-    ['ors1$f', '~ОРС 1', wcol, 't=1,i1,p1'],
-    ['ors_pay1$f', '~ОРС 1 сумма', wcol, fcol, 't=1,i1,p1'],
-    ['ors$f', '~ОРС 2', wcol, 't=1,i1'],
-    ['ors_pay$f', '~ОРС 2 сумма', wcol, fcol, 't=1,i1'],
+    ['ors1$f', '~ОРС' + sLineBreak + ' 1й период', wcol, 't=1,i1,p1'],
+    ['ors_pay1$f', '~ОРС сумма' + sLineBreak + ' 1й период', wcol, fcol, 't=1,i1,p1'],
+    ['ors$f', '~ОРС' + sLineBreak + ' 2й период', wcol, 't=1,i1'],
+    ['ors_pay$f', '~ОРС сумма' + sLineBreak + ' 2й период', wcol, fcol, 't=1,i1'],
     ['base_pay1$f', '~Итого' + sLineBreak + ' рассчитано 1', wcol, fcol, 't=p1'],
     ['base_pay2$f', '~Итого' + sLineBreak + ' рассчитано 2', wcol, fcol],
     ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol],
-    ['ext_pay1$f', '~Мотивация' + sLineBreak + ' 1й период', wcol, fcol, 't=2,p1'],
-    ['ext_pay$f', '~Мотивация' + sLineBreak + ' 2й период', wcol, fcol, 't=2'],
-    ['total_pay1$f', '~Итого' + sLineBreak + ' начислено ' + sLineBreak + ' за 1й период', wcol, fcol, 't=p1'],
+    ['ext_pay1$f', '~Мотивация' + sLineBreak + ' 1й период', wcol, fcol, 't=1,p1'],
+    ['ext_pay$f', '~Мотивация' + sLineBreak + ' 2й период', wcol, fcol, 't=1'],
+    ['total_pay1$f', '~Итого' + sLineBreak + ' начислено ' + sLineBreak + ' за 1й период', wcol, fcol, 't=8,p1'],
     ['overtime_pay$f', '~Переработка', wcol, fcol],
     ['personal_pay$f', '~Персональная' + sLineBreak + ' надбавка', wcol, fcol, 't=2'],
     ['daily_bonus$f', '~Премия ТУРВ', wcol, fcol],
@@ -203,6 +205,7 @@ begin
   Frg1.Opt.SetButtons(1, [
     [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
     //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
+    [],[-cmbSetP1Visible, True, 'Показать 1й период', '', VK_F3],
     [],[mbtLock],
     [], [-mbtExcel, True],
     [],[-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
@@ -732,10 +735,15 @@ procedure TFrmWGedtPayroll2N.SetColumns;
 begin
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
   Frg1.Opt.SetColFeature('*', 'e', False, False);
+  Frg1.Opt.SetColFeature('p1', 'i', False, False);
   Frg1.Opt.SetColFeature('i1', 'i', FPayrollParams.G('calc_method').AsInteger = cMMotivation, False);
   Frg1.Opt.SetColFeature('ext_pay', 'i', FPayrollParams.G('calc_method').AsInteger <> cMMotivation, False);
+  Frg1.Opt.SetColFeature('ext_pay1', 'i', FPayrollParams.G('calc_method').AsInteger <> cMMotivation, False);
+  if not FIsSecondPeriodVisible then
+    Frg1.Opt.SetColFeature('p1', 'i', True, False);
   Frg1.Opt.SetColFeature('1', 'e', (FPayrollParams.G('calc_method').AsInteger <> cMMotivation) or FIsEditableAll, False);
   Frg1.Opt.SetColFeature('2', 'e', FIsEditableAdd or FIsEditableAll, False);
+  Frg1.Opt.SetColFeature('p1', 'e', False, False);
   Frg1.Opt.SetColFeature('3', 'e', True, False);
   if FIsEditableAll then
     Frg1.Opt.SetColFeature('*', 'e', True, False);
@@ -940,7 +948,7 @@ begin
     Params.Background := RGB(220, 255, 190);
   if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg1.GetValueF(FieldName) < 0) then
     Params.Background := clRed;
-  if A.InArray(FieldName, ['total_pay1', 'base_pay1', 'period_hours_norm1', 'hours_worked1', 'overtime1', 'ors_pay1', 'base_pay1', 'ext_pay1', 'total_pay1']) then
+  if A.InArray(FieldName, ['total_pay1', 'base_pay1', 'period_hours_norm1', 'hours_worked1', 'overtime1', 'ors1', 'ors_pay1', 'base_pay1', 'ext_pay1', 'total_pay1']) then
     Params.Background := RGB(220, 220, 255);
 end;
 
@@ -987,6 +995,7 @@ begin
       PrintGrid;
     mbtLock:
       CommitPayroll;
+    cmbSetP1Visible: FIsSecondPeriodVisible := not FIsSecondPeriodVisible;
   else
     Handled := False;
   end;
@@ -1005,12 +1014,18 @@ begin
   SetColumns;
 end;
 
-procedure TFrmWGedtPayroll2N.CalculateAll;
+procedure TFrmWGedtPayroll2N.CalculateAll;                      //!!!
 var
   i: Integer;
 begin
   for i := 0 to Frg1.GetCount(False) - 1 do
     CalculateRow(i);
+  //при пересчете в процедуре инициализации не обновляются расчетные итоговые суммы
+  //InvalidateFooter не дает эффект, PostAndEdit позволяет добиться правильной работы
+  Frg1.InvalidateGrid;
+  if Frg1.GetCount(True) > 0 then
+    Mth.PostAndEdit(Frg1.MemTableEh1);
+  //Frg1.DbGridEh1.InvalidateFooter;
 end;
 
 procedure TFrmWGedtPayroll2N.CalculateRow(Row: Integer);
