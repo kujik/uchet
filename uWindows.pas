@@ -632,7 +632,8 @@ begin
     myfrm_J_OrItemsInProd,
     myfrm_J_ItmLog,
     myfrm_R_OrderReglament,
-    myfrm_J_SplDealsMonitoring
+    myfrm_J_SplDealsMonitoring,
+    myfrm_J_PayrollsForWorker
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);

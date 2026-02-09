@@ -79,6 +79,7 @@ inherited FrmWGedtPayroll2N: TFrmWGedtPayroll2N
     inherited lblStatusBarR: TLabel
       Left = 723
       Height = 14
+      ExplicitLeft = 723
     end
     inherited lblStatusBarL: TLabel
       Height = 14

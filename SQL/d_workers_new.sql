@@ -336,6 +336,35 @@ create table w_pers_bonus_sum(
   constraint fk_w_pers_bonus_sum foreign key (id_pers_bonus) references w_pers_bonus(id) on delete cascade
 );  
 
+
+CREATE OR REPLACE PROCEDURE P_extend_pers_bonuses as 
+-- проставим суммы персональных надбавок в справочнике за текущий месяц равными теми, что были в прошшлом месяце
+--(только если значение в текущем еще не введено, и если надбавка активна)
+BEGIN
+MERGE INTO w_pers_bonus_sum target
+USING (
+  SELECT 
+    b.id AS id_pers_bonus,
+    TRUNC(SYSDATE, 'MM') AS dt_current,
+    (
+      SELECT prev.sum
+      FROM w_pers_bonus_sum prev
+      WHERE prev.id_pers_bonus = b.id
+        AND prev.dt = ADD_MONTHS(TRUNC(SYSDATE, 'MM'), -1)
+    ) AS sum_from_prev
+  FROM w_pers_bonus b
+  WHERE b.active = 1
+) src
+ON (target.id_pers_bonus = src.id_pers_bonus AND target.dt = src.dt_current)
+WHEN MATCHED THEN
+  UPDATE SET sum = src.sum_from_prev
+  WHERE target.sum IS NULL
+WHEN NOT MATCHED THEN
+  INSERT (id_pers_bonus, dt, sum)
+  VALUES (src.id_pers_bonus, src.dt_current, src.sum_from_prev);
+END;
+/  
+
 create or replace view v_w_pers_bonus as
 select
   b.*,
@@ -619,6 +648,8 @@ select
   f_fio(e.f, e.i, e.o) || ' - ' || o.name || ' - ' || personnel_number || '' as employee_st,
   o.name as organization,
   d.name as departament,
+  d.ids_editusers,
+  d.id_head,
   j.name as job,
   s.code as schedulecode,
   decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
@@ -838,6 +869,10 @@ alter table w_payroll_calc_item add period_hours_norm1 number;
 alter table w_payroll_calc_item add hours_worked1 number;
 alter table w_payroll_calc_item add overtime1 number;
 alter table w_payroll_calc_item add total_pay1 number;
+alter table w_payroll_calc_item add from_first_period number;
+alter table w_payroll_calc_item add base_pay1 number;
+alter table w_payroll_calc_item add base_pay2 number;
+alter table w_payroll_calc_item add ext_pay1 number;
 
 
 create table w_payroll_calc_item(
@@ -896,6 +931,7 @@ select
   s.code as schedulecode,
   s.code as schedule,
   --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
+  p.id_departament as id_target_departament,
   p.id_employee as id_target_employee,
   p.id_organization as id_target_organization,
   p.personnel_number as target_personnel_number,
@@ -1188,11 +1224,19 @@ group by
 ; 
 
 
-
-
-
-
-
+create or replace view v_w_payrolls_for_employee as
+select
+ id, 'Расчетная' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee from v_w_payroll_calc p, (select id_employee, id_payroll_calc, max(employee) as employee from v_w_payroll_calc_item group by id_payroll_calc, id_employee) i where  i.id_payroll_calc = p.id           
+union all
+select
+ id, 'К перечислению' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee from v_w_payroll_transfer p, (select id_employee, id_payroll_transfer, max(employee) as employee from v_w_payroll_transfer_item group by id_payroll_transfer, id_employee) i where  i.id_payroll_transfer = p.id
+union all
+select
+ id, 'К выдаче' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, 1 as is_finalized, dt1, dt2, 'Закрыта' as finalized, i.id_employee, i.employee from v_w_payroll_cash p, (select id_employee, id_payroll_cash, max(employee) as employee from v_w_payroll_cash_item group by id_payroll_cash, id_employee) i where  i.id_payroll_cash = p.id
+; 
+ 
+ 
+select count(*) from w_departaments where id_head = 29;
 
 
 
@@ -1363,7 +1407,10 @@ where
   c.id_employee = p.id_employee 
   and c.id_organization = p.id_organization 
   and c.personnel_number = p.personnel_number
-;  
+;
+
+
+select id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, total_pay as total_pay1 planned_pay, fixed_pay from v_w_payroll_calc_item where id_departament = :id_departament$i and dt1 = :dt1$d  
    
   
 

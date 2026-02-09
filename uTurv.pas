@@ -75,12 +75,13 @@ type
     //данные надбавки и суммы за текущий и следующий месяц
     function ExecureRefPersBonusDialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
     function ExecureJPersBonusDialog(AOwner: TComponent; AId: Variant; AIdEmpl: Variant; AMode: TDialogType): Boolean;
-    function CreateAllTurvforDate(AOwner: TComponent; ADt: Variant): Boolean;
+    function CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
 //    function SetForemanAllowance(AId: Integer): Boolean;
     function  GetArrOfTurvPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
     function  CreateAllPayrollTransfers: Boolean;
     function  CreateAllPayrollCash: Boolean;
+    procedure ExtendPersBonuses;
     procedure LoadDataFromParsec;
     procedure FinalizeAllTurvForPeriod;
 
@@ -2701,7 +2702,7 @@ end;
 
 function TTurv.CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
 var
-  va1, va2, va3: TVarDynArray;
+  va1, va2, va3, va4: TVarDynArray;
   i, j: Integer;
   LDate: TDateTime;
 begin
@@ -2709,17 +2710,18 @@ begin
   LDate := ADt;
   if User.IsDeveloper then begin
     if TFrmBasicInput.ShowDialog(AOwner, '', [], fEdit, '~Дата для создаваемых ТУРВ', 370, 80,
-      [[cntDtEdit, 'Дата', '*:*']], [ADt], va3, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
+      [[cntDtEdit, 'Дата', '*:*']], [ADt], va4, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
     ) < 0 then Exit;
-    LDate := va3[0];
+    LDate := va4[0];
   end;
   if MyQuestionMessage('Создать все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' ?') <> mrYes then
     Exit;
   va1 := Q.QLoadToVarDynArrayOneCol('select distinct id_departament from w_employee_properties where dt_beg <= :dte$d and (dt_end is null or dt_end >= :dtb$d)', [Turv.GetTurvEndDate(LDate), Turv.GetTurvBegDate(LDate)]);
   va2 := Q.QLoadToVarDynArrayOneCol('select distinct id_departament from w_turv_period where dt1 = :dt$d', [Turv.GetTurvBegDate(LDate)]);
+  va3 := Q.QLoadToVarDynArrayOneCol('select id from w_departaments where active = 1', []);
   j := 0;
   for i := 0 to High(va1) do
-    if not A.InArray(va1[i], va2) then begin
+    if (not A.InArray(va1[i], va2)) and (A.InArray(va1[i], va3)) then begin
       Q.QExecSql('insert into w_turv_period (id_departament, dt1, dt2, is_finalized, status) values (:idd$i, :dtb$d, :dte$d, 0, 0)', [va1[i], Turv.GetTurvBegDate(LDate), Turv.GetTurvEndDate(LDate)]);
       inc(j);
     end;
@@ -3335,6 +3337,16 @@ begin
   MyInfoMessage(Msg, 1);
   Result := Cnt > 0;
 end;
+
+procedure TTurv.ExtendPersBonuses;
+//продлим действие (продублируем суммы за текущий месяц, если не заданы, из прошлого месяца) в справочнике персональных надбавок
+//вызывается из модуля Сервер
+begin
+  Q.QCallStoredProc('P_extend_pers_bonuses', '', []);
+end;
+
+//w_employee_properties
+
 
 procedure TTurv.LoadDataFromParsec;
 var

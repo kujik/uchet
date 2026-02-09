@@ -445,7 +445,7 @@ begin
         st1 := '';
         for k := 0 to High(flds2) do
           S.ConcatStP(st1, na.G(i, flds2[k]).AsString, ' | ');
-        S.ConcatStP(MsgChg, st1 + #13#10 + st2);
+        S.ConcatStP(MsgChg, st1 + #13#10 + st2, #13#10);
       end;
     end;
   end;
@@ -881,11 +881,11 @@ end;
 procedure TFrmWGedtPayrollN.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
   if A.InArray(FieldName, ['employee', 'job', 'organization', 'personnel_number', 'schedulecode']) then
-      Params.Background := clmyGray;
+    Params.Background := clmyGray;
   if A.InArray(FieldName, ['total_pay', 'base_pay']) then
-      Params.Background := RGB(220, 255, 190);
-  if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg2.GetValueF(FieldName) < 0) then
-      Params.Background := clRed;
+    Params.Background := RGB(220, 255, 190);
+  if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg1.GetValueF(FieldName) < 0) then
+    Params.Background := clRed;
 end;
 
 procedure TFrmWGedtPayrollN.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);

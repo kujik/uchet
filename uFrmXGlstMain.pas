@@ -826,7 +826,7 @@ v:=True;
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13']
+      ['finalized','Закрыта','60','pic=Закрыта;13:']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_calc', 'w_payroll_calc');
     Frg1.Opt.SetButtons(1, [
@@ -845,6 +845,34 @@ v:=True;
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
       'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
       ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
+    ];
+  end
+  else if FormDoc = myfrm_J_PayrollsForWorker then begin
+    Caption:='Расчет по работнику';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['type','Тип ведомости','100'],
+      ['type2','Вид','100'],
+      //['departament','Подразделение','200'],
+      ['employee','Работник','200'],
+      //['organization$s','Организация','90'],
+      ['dt1','Нач. дата','75'],
+      ['dt2','Кон. дата','75']
+      //['finalized','Закрыта','60','pic=Закрыта;13:']
+    ]);
+    Frg1.Opt.SetTable('v_w_payrolls_for_employee');
+    Frg1.Opt.SetWhere('where nvl(is_finalized, 0) >= :is_finalized$i and dt1 >= :dt1$d and id_employee = :id_employee$i');
+    Frg1.Opt.SetButtons(1, 'rvsp');
+    Frg1.CreateAddControls('1', cntComboL, 'Работник', 'cmbEmployee', '', 55, yrefC, 450);
+    Q.QLoadToDBComboBoxEh(
+      'select distinct employee_st from v_w_employee_properties where (dt_end is null or dt_end >= :dt1$d) and (dt_beg >= :dt2$d or is_terminated <> 1) and ((IsStInCommaSt(:id$i, ids_editusers) = 1 or 1 = :view_all$i)) order by employee_st',
+      [Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), User.GetId, S.IIf(User.IsDeveloper, 1, 0)],
+      TDBComboBoxEh(Frg1.FindComponent('cmbEmployee')),
+      cntComboL
+    );
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10]
     ];
   end
   else if FormDoc = myfrm_J_PayrollTransfer then begin
@@ -2199,7 +2227,6 @@ begin
     if (FormDoc = myfrm_J_Turv) and (fMode in [fAdd]) then
       if Turv.CreateAllTurvForDate(Self, Turv.GetTurvBegDate(Date)) then
         Frg1.RefreshGrid;
-//      Wh.ExecDialog(myfrm_Dlg_AddTurv, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Turv) and (fMode in [fDelete]) then
       if Turv.DeleteTURV(Fr.ID) then
         Fr.RefreshGrid;
@@ -2207,7 +2234,6 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
       TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
-      //~Dlg_CreatePayroll.ShowDialog(Self, 1);
     if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
       if Q.DBLock(True, myfrm_Dlg_Payroll, Fr.ID)[0] <> True  then
         Exit;
@@ -2238,6 +2264,9 @@ begin
  //     if Turv.DeletePayrollCalculations(Fr.ID) then
 //        Fr.RefreshGrid();
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
+    if FormDoc = myfrm_J_PayrollsForWorker then begin
+
+    end;
       Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2));
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_PayrollTransfer, Self, [], fMode, Fr.ID, null);
@@ -2249,6 +2278,8 @@ begin
     if (FormDoc = myfrm_J_PayrollCash) and (fMode = fAdd) then
       if Turv.CreateAllPayrollCash then
         Fr.RefreshGrid;
+
+
     if FormDoc = myfrm_R_StdProjects then
       Wh.ExecDialog(myfrm_Dlg_R_StdProjects, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Groups then
@@ -2624,6 +2655,10 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end}
+  else if (FormDoc = myfrm_J_PayrollsForWorker) then begin
+    var idempl := Q.QSelectOneRow('select id_employee from v_w_employee_properties where employee_st = :est$s', [Cth.GetControlValue(Fr, 'cmbEmployee')])[0];
+    Fr.SetSqlParameters('id_employee$i;dt1$d;is_finalized$i', [idempl, S.IIf(User.IsDeveloper, IncYear(Date, -10), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))), S.IIf(User.IsDeveloper, 0, 1)]);
+  end
   else if FormDoc = myfrm_R_Holideys then
     Fr.SetSqlParameters('year$i', [Cth.GetControlValue(Fr, 'CbYear')])
   else if (FormDoc = myfrm_Rep_W_Payroll) or (FormDoc = myfrm_Rep_PayrollsSum) then begin
@@ -2847,6 +2882,7 @@ begin
     myfrm_J_PayrollCash,
     myfrm_R_Holideys,
     myfrm_Rep_PayrollsSum,
+    myfrm_J_PayrollsForWorker,
 
     myfrm_Rep_Sgp2,
     myfrm_J_Sgp_Acts,

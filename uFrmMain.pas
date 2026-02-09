@@ -607,6 +607,9 @@ begin
     ['Расчетные ведомости', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Ведомости к перечислению', myfrm_J_PayrollTransfer,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Ведомости к выдаче', myfrm_J_PayrollCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    [],
+//    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper or User.Role(rW_J_Turv) and (Q.QSelectOneRow('select count(*) from w_departaments where IsStInCommaSt(:id$i, ids_editusers) = 1', [User.GetID])[0] > 0)],
+    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper],
 
     ['Отчеты'],
     ['Свод по зарплатным ведомостям', myfrm_Rep_W_Payroll, User.Role(rW_Rep_Payroll)],

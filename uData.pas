@@ -932,6 +932,7 @@ const
   myfrm_J_SplDealsMonitoring = 'J_SplDealsMonitoring';
   myfrm_R_PersBonus='R_PersBonus';
   myfrm_J_PersBonus='J_PersBonus';
+  myfrm_J_PayrollsForWorker='J_PayrollsForWorker';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
