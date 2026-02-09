@@ -3391,7 +3391,7 @@ begin
       Inc(j);
     end
     else begin
-      //Q.QExecSql('update w_turv_day set is_finalized = 1 where id = :id$i', [va[i]]);
+      Q.QExecSql('update w_turv_period set is_finalized = 1 where id = :id$i', [va[i]]);
       Inc(k);
     end;
     except

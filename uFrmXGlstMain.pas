@@ -826,7 +826,7 @@ v:=True;
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13:']
+      ['finalized','Закрыта','60','pic=Закрыта:13']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_calc', 'w_payroll_calc');
     Frg1.Opt.SetButtons(1, [
@@ -885,7 +885,7 @@ v:=True;
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13']
+      ['finalized','Закрыта','60','pic=Закрыта:13']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_transfer', 'w_payroll_transfer');
     Frg1.Opt.SetButtons(1, [
@@ -913,7 +913,7 @@ v:=True;
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13', 'i']
+      ['finalized','Закрыта','60','pic=Закрыта:13', 'i']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_cash', 'w_payroll_cash');
     Frg1.Opt.SetButtons(1, [
@@ -2264,10 +2264,10 @@ begin
  //     if Turv.DeletePayrollCalculations(Fr.ID) then
 //        Fr.RefreshGrid();
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
+      Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2));
     if FormDoc = myfrm_J_PayrollsForWorker then begin
 
     end;
-      Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2));
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_PayrollTransfer, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode = fAdd) then
