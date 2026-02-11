@@ -553,16 +553,16 @@ end;
 
 procedure TFrmOGjrnOrders.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_kns') <> null)) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
-  Fr.DbGridEh1.FindFieldColumn('id_thn').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_thn') <> null)) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
+  Fr.DbGridEh1.FindFieldColumn('id_kns').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) {or (Fr.GetValue('dt_kns') <> null)}) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
+  Fr.DbGridEh1.FindFieldColumn('id_thn').EditButton.Visible := not((Fr.GetValueI('sgp') = 1) {or (Fr.GetValue('dt_thn') <> null)}) and ((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper);
 end;
 
 procedure TFrmOGjrnOrders.Frg2GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
   if (Fr.CurrField = 'id_kns') then
-    ReadOnly := (Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_kns') <> null);
+    ReadOnly := (Fr.GetValueI('sgp') = 1) {or (Fr.GetValue('dt_kns') <> null)};
   if (Fr.CurrField = 'id_thn') then
-    ReadOnly := (Fr.GetValueI('sgp') = 1) or (Fr.GetValue('dt_thn') <> null);
+    ReadOnly := (Fr.GetValueI('sgp') = 1) {or (Fr.GetValue('dt_thn') <> null)};
 end;
 
 

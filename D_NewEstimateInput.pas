@@ -41,6 +41,8 @@ type
     //проверка корректности сметы после загрузки
     //(но можно и в любой момент)
     procedure VerifyEstimateAfterLoad;
+    procedure LoadStockQnt(ARow: Integer);
+    procedure LoadStockQntAll;
   public
     { Public declarations }
   end;
@@ -187,6 +189,7 @@ begin
   Mth.LoadGridFromVa2(DBGridEh1, Est, 'idgroup;name;idunit;qnt1;comm', '1;0;2;3;4');
   VerifyEstimateAfterLoad;
   Mth.PostAndEdit(MemTableEh1);
+  LoadStockQntAll;
   InPrepare := False;
 end;
 
@@ -197,6 +200,7 @@ begin
   Q.QLoadToMemTableEh('select id_group as idgroup, name, id_unit as idunit, qnt1, comm from v_estimate where id_estimate = :id$i order by groupname', [id], MemTableEh1);
   VerifyEstimateAfterLoad;
   Mth.PostAndEdit(MemTableEh1);
+  LoadStockQntAll;
 end;
 
 procedure TDlg_NewEstimateInput.Bt_PasteEstimateClick(Sender: TObject);
@@ -208,6 +212,7 @@ begin
   Q.QLoadToMemTableEh('select id_group as idgroup, name, id_unit as idunit, qnt1, comm from v_estimate where id_estimate = :id$i order by groupname', [-User.GetID], MemTableEh1);
   VerifyEstimateAfterLoad;
   Mth.PostAndEdit(MemTableEh1);
+  LoadStockQntAll;
 end;
 
 procedure TDlg_NewEstimateInput.CellButtonClick(Sender: TObject; var Handled: Boolean);
@@ -248,24 +253,39 @@ begin
   end;
   Mth.PostAndEdit(MemTableEh1);
   VerifyEstimateRow;
+  LoadStockQnt(MemTableEh1.RecNo - 1);
+  DBGridEh1.Invalidate;
 end;
 
 procedure TDlg_NewEstimateInput.DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
   inherited;
   VerifyEstimateRow;
+  if TColumnEh(Sender).FieldName = 'name' then begin
+    LoadStockQnt(MemTableEh1.RecNo - 1);
+    DBGridEh1.Invalidate;
+  end;
 end;
 
-procedure TDlg_NewEstimateInput.DBGridEh1GetCellParams(Sender: TObject;
-  Column: TColumnEh; AFont: TFont; var Background: TColor;
-  State: TGridDrawState);
+procedure TDlg_NewEstimateInput.DBGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
 begin
   inherited;
-  if MemTableEh1.RecNo <= 0 then Exit;
-  if (High(Err2) < MemTableEh1.RecNo)or(S.Nst(Err2[MemTableEh1.RecNo])='') then Exit;
-  if S.Nst(Err2[MemTableEh1.RecNo])[1] = '0' then Background:=RGB(255,255,150);
-  if S.Nst(Err2[MemTableEh1.RecNo])[2] = '0' then Background:=RGB(255,150,150);
-  if S.Nst(Err2[MemTableEh1.RecNo])[3] = '0' then Background:=RGB(255,150,150);
+  if MemTableEh1.RecNo <= 0 then
+    Exit;
+  if not ((High(Err2) < MemTableEh1.RecNo) or (S.Nst(Err2[MemTableEh1.RecNo]) = '')) then begin
+    if S.Nst(Err2[MemTableEh1.RecNo])[1] = '0' then
+      Background := RGB(255, 255, 150);
+    if S.Nst(Err2[MemTableEh1.RecNo])[2] = '0' then
+      Background := RGB(255, 150, 150);
+    if S.Nst(Err2[MemTableEh1.RecNo])[3] = '0' then
+      Background := RGB(255, 150, 150);
+  end;
+  if (Column.FieldName = 'qnts') and (MemTableEh1.FieldByName('qnt1').Value <> null) and (MemTableEh1.FieldByName('qnts').Value <> null) then begin
+    if MemTableEh1.FieldByName('qnts').Value.AsFloat = 0 then
+      Background := clRed
+    else if MemTableEh1.FieldByName('qnt1').Value > MemTableEh1.FieldByName('qnts').Value then
+      Background := clYellow;
+  end;
 end;
 
 procedure TDlg_NewEstimateInput.DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -306,12 +326,13 @@ begin
     ['name', ftString, 1000, 'Наименование', 400, True, True, True],
     ['idunit', ftString, 50, 'Ед.изм.', 100, True, False, False],
     ['qnt1', ftFloat, 0, 'Кол-во', 80, True, False, False],
+    ['qnts', ftFloat, 0, 'На складе', 80, True, False, False],
     ['comm', ftString, 1000, 'Дополнение', 400, True, True, True]
     ],
     [], '', ''
   );
   {*)}
-  ColumnsVerifications := ['1:1000', '1:1000', '1:50:TP', '0:999999:5:N'{недопустимо пустое кол-во}, '0:1000::TP'];  //TP - ????
+  ColumnsVerifications := ['1:1000', '1:1000', '1:50:TP', '0:999999:5:N'{недопустимо пустое кол-во}, '', '0:1000::TP'];  //TP - ????
   FieldsNoRepaeted := 'name';
 //  Gh.SetGridColumnPickList(DBGridEh1, 'group', Q.QLoadToVarDynArrayOneCol('select name from bcad_groups order by name', []), [], True);
 //  Gh.SetGridColumnPickList(DBGridEh1, 'unit', Q.QLoadToVarDynArrayOneCol('select name from bcad_units order by name', []), [], True);
@@ -320,6 +341,8 @@ begin
   Gh.SetGridInCellButtons(DBGridEh1, 'name;name', 'Выбрать из справочника номенклатуры;Выбрать из справочника стандартных изделий', CellButtonClick);
 //  Gh.SetGridInCellButtons(DBGridEh1, 'name;name', 'номенклатуры;стандартных изделий', CellButtonClick);
 //  Gh.SetGridInCellButtons(DBGridEh1, 'name', 'Выбрать из справочника номенклатуры', CellButtonClick);
+  FieldsReadOnly := 'qnts';
+
 
   if id <> null
     then Bt_LoadSelfClick(nil);
@@ -349,6 +372,28 @@ begin
   Cth.SetBtn(Bt_CopyEstimate, mybtLoad, True, 'Скопировать смету в буфер');
   Bt_LoadSelf.Enabled := id <> null;
   Result := True;
+end;
+
+procedure TDlg_NewEstimateInput.LoadStockQnt(ARow: Integer);
+var
+  qnt: Variant;
+begin
+  if S.NSt(MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['name', dvvValueEh]) = '' then
+    MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['qnts', dvvValueEh] := null
+  else begin
+    qnt := Q.QSelectOneRow('select qnt from v_spl_qntonstocks_sum_2 where name = :name$s', [MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['name', dvvValueEh]])[0];
+    MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['qnts', dvvValueEh] := S.NNum(qnt);
+  end;
+end;
+
+procedure TDlg_NewEstimateInput.LoadStockQntAll;
+var
+  i: Integer;
+  qnt: Extended;
+begin
+  for i:=0 to MemTableEh1.RecordsView.MemTableData.RecordsList.Count - 1 do
+    LoadStockQnt(i);
+  DBGridEh1.Invalidate;
 end;
 
 function TDlg_NewEstimateInput.Prepare: Boolean;

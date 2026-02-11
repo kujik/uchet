@@ -183,6 +183,8 @@ begin
   F.SetPropsControls;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);      }
   Result := Inherited;
+  if Result = False then
+    Exit;
   if Mode <> fAdd then
     FAccountType := F.GetPropB('accounttype').AsInteger;
   LoadPayments;

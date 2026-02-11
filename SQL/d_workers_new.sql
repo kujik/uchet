@@ -689,6 +689,8 @@ update w_turv_day d set id_employee = (select id_employee from w_employee_proper
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
+--alter table w_turv_period drop constraint fk_w_turv_period_dep;
+--alter table w_turv_period add constraint fk_w_turv_period_dep  foreign key (id_departament) references w_departaments(id);
 alter table w_turv_period add foreman_allowance number;
 create table w_turv_period(  
   id number(11),                   
@@ -700,7 +702,7 @@ create table w_turv_period(
   foreman_allowance_comm varchar2(400),  --комментарий по данной доплате
   status number(1),                 --статус заполенности данных
   constraint pk_w_turv_period  primary key (id),
-  constraint fk_w_turv_period_dep foreign key (id_departament) references ref_divisions(id)
+  constraint fk_w_turv_period_dep foreign key (id_departament) references w_departaments(id)
 );
 
 create unique index idx_w_turv_period_1 on w_turv_period(id_departament, dt1);
@@ -873,7 +875,7 @@ alter table w_payroll_calc_item add from_first_period number;
 alter table w_payroll_calc_item add base_pay1 number;
 alter table w_payroll_calc_item add base_pay2 number;
 alter table w_payroll_calc_item add ext_pay1 number;
-
+alter table w_payroll_calc_item add adjustments_total1 number;
 
 create table w_payroll_calc_item(
   id number(11),
@@ -1235,9 +1237,13 @@ select
  id, 'К выдаче' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, 1 as is_finalized, dt1, dt2, 'Закрыта' as finalized, i.id_employee, i.employee from v_w_payroll_cash p, (select id_employee, id_payroll_cash, max(employee) as employee from v_w_payroll_cash_item group by id_payroll_cash, id_employee) i where  i.id_payroll_cash = p.id
 ; 
  
- 
-select count(*) from w_departaments where id_head = 29;
 
+
+--апдейт промежуточного значения
+select nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) from w_payroll_calc_item i where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2026-01-01');   
+
+update w_payroll_calc_item i set adjustments_total1 = nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2025-01-01');
+update w_payroll_calc_item i set adjustments_total1 = (select   
 
 
 
@@ -1410,8 +1416,10 @@ where
 ;
 
 
-select id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, total_pay as total_pay1 planned_pay, fixed_pay from v_w_payroll_calc_item where id_departament = :id_departament$i and dt1 = :dt1$d  
-   
+
+select id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, 
+personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, 
+nvl(base_pay) + nvl(overtime_pay) + nvl(personal_pay) + nvl(daily_bonus) +nvl(extra_bonus) + nvl(night_pay) + nvl(milk_compensation) + nvl(non_work_pay) + nvl(penalty) + nvl(correction) as adjustments_total1, planned_pay, fixed_pay, 1 as from_first_period from v_w_payroll_calc_item;-- where id_target_departament = :id_target_departament$i and dt1 = :dt1$d order by job, employee, schedulecode, organization, personnel_number   
   
 
  

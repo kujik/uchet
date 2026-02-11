@@ -1040,41 +1040,14 @@ begin
       v1 := S.NullIf0(Round(v1.AsFloat));
       Frg1.SetValue(flds[i], Row, False, v1)
     end;
-    VTotal := VTotal + v1.AsFloat;
+    if flds[i] = 'penalty' then
+      VTotal := VTotal - v1.AsFloat
+    else
+      VTotal := VTotal + v1.AsFloat;
   end;
   //VTotal := RoundTo(VTotal, 2);
   VTotal := VTotal + Frg1.GetValue('ext_pay', Row, False).AsFloat;
   Frg1.SetValue('total_pay', Row, False, VTotal);
 end;
 
-
-
-
 end.
-
-  if (CalcMode = 16) then begin
-    //орс
-    Frg1.SetValue('salary_incentive_m', Row, False, null);
-    Frg1.SetValue('ors_sum', Row, False, null);
-    if (Frg1.GetValueF('salary_plan_m', Row, False) <> null) and (Frg1.GetValueF('salary_const_m', Row, False) <> null) then begin
-      Frg1.SetValue('salary_incentive_m', Row, False, Frg1.GetValueF('salary_plan_m', Row, False) - Frg1.GetValueF('salary_const_m', Row, False));
-      e4 := Frg1.GetValueF('norm_m', Row, False);
-      e5 := RoundTo(Frg1.GetValueF('ors', Row, False), -2);
-      if (e5 < 95) then
-        e5 := e5
-      else if (e5 >= 95) and (e5 <= 100) then
-        e5 := 100
-      else if (e5 >= 100) and (e5 <= 105) then
-        e5 := 105
-      else if (e5 >= 105) and (e5 <= 110) then
-        e5 := 110
-      else if (e5 > 110) then
-        e5 := 120;
-      e5 := e5 / 100;
-      if (Frg1.GetValueF('ors', Row, False) <> null) then begin
-        e3 := Frg1.GetValueF('salary_const_m', Row, False) / e4 * e2 +  Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2;
-        Frg1.SetValue('ors_sum', Row, False, Round(Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * Min(Frg1.GetValueF('norm', Row, False), e2)));
-      end;
-    end;
-  end;
-

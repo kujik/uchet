@@ -1,3 +1,11 @@
+{
+создание паспортов на полуфабрикаты МТ
+
+сам заказ создается в бд процкедурой
+p_CreatePspForSemiproducts
+регламент и срок выполнения 10 дней прописаны жестко в ней!
+}
+
 unit uFrmOGjrnSemiproducts;
 
 interface
@@ -669,6 +677,7 @@ var
   function SaveOrder: Boolean;
   var
     i, j, k, IdT: Integer;
+    IdReg: Variant;
     StI, StC: string;
     va: TVarDynArray;
     v: Variant;
@@ -688,17 +697,25 @@ var
     end;
     if IdT = 0 then
       Exit;
-    k := Trunc(Frg1.GetValue('dt_otgr', rb, False)) - Trunc(Frg1.GetValue('dt_beg', rb, False));
-    k := Round(k * 24 / 30);
-    DtO := IncDay(Frg1.GetValue('dt_beg', rb, False), k);
-    if Frg1.GetValue('dt_otgr', rb, False) < DtO then
-      DtO := Frg1.GetValue('dt_otgr', rb, False);
+    IdReg := null;
+    if TDbComboBoxEh(Frg1.FindComponent('CbType')).Text = 'Металл' then begin
+      //пропишем регламент и дату отгрузки (по регламенту 10 дней включая текущий)
+      IdReg := 113;
+      DtO := IncDay(Date, Q.QSelectOneRow('select deadline from order_reglaments where id = :id$i', [IdReg])[0] - 1);
+    end
+    else begin
+      k := Trunc(Frg1.GetValue('dt_otgr', rb, False)) - Trunc(Frg1.GetValue('dt_beg', rb, False));
+      k := Round(k * 24 / 30);
+      DtO := IncDay(Frg1.GetValue('dt_beg', rb, False), k);
+      if Frg1.GetValue('dt_otgr', rb, False) < DtO then
+        DtO := Frg1.GetValue('dt_otgr', rb, False);
+    end;
     StC := 'К заказу ' + Frg1.GetValue('ornum', rb, False);
     //pnl_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
     va := Q.QCallStoredProc(
       'p_CreatePspForSemiproducts',
-      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id$io;ornum$so',
-       [IdT, StI, User.GetId, StC, DtO, -1, -1]
+      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;;id$io;ornum$so',
+       [IdT, StI, User.GetId, StC, DtO, IdReg, -1, -1]
     );
     if Length(va) = 0 then
       Exit;

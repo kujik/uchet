@@ -1472,16 +1472,11 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
+  TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 38236, null); exit;
 //  Exit;
-Turv.LoadDataFromParsec; Exit;
-  Tasks.SplMonitorReportDay; Exit;
+//Turv.LoadDataFromParsec; Exit;
+//  Tasks.SplMonitorReportDay; Exit;
 
-
-
-  //q.QExecSql('select 2 / 0 from dual', []); Exit;
-  TFrmWWedtWorkSchedule.Show(Application, myfrm_Dlg_Work_Schedule, [myfoDialog], fAdd, 32098, null); exit;
-
-  TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
 
 
   v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);

@@ -61,6 +61,7 @@ begin
   CtrlValues := Q.QLoadToVarDynArray2(Q.QSIUDSql('s', View, FieldsSt), [id]);
   if Length(CtrlValues) = 0 then begin
     MsgRecordIsDeleted;
+    Exit;
   end;
   j := -1;
   for i := 0 to F.Count - 1 do

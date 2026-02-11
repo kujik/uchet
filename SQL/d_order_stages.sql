@@ -375,7 +375,44 @@ end;
 /
 
 
-
+create or replace view v_order_items_for_stages as
+--промежуточное представление для получения данных из журнала заказов 
+  select
+    i.*,
+    o.ornum,
+    o.id_organization,
+    --o.area,
+    --o.customer,
+    --o.project,
+    o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
+    o.id_itm as id_order_itm,
+    o.sync_with_itm,
+    o.dt_beg,
+    o.dt_end,
+    o.dt_otgr,
+    o.path,
+    o.in_archive,
+    s.name as itemname,
+    (case 
+      when ee.id > 0 then ee.prefix
+      else ''
+    end) prefix, 
+    (case 
+      when ee.id > 0 then ee.prefix || '_'
+      else ''
+    end) || s.name  as fullitemname,  --наименование с префиксом формата, только для стандартных изделий и стандартной д/к
+    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2
+  from
+    order_items i,
+    --v_orders o,
+    orders o,
+    or_std_items s,
+    or_format_estimates ee 
+ where
+   i.id_order = o.id 
+   and i.id_std_item = s.id (+) 
+   and s.id_or_format_estimates = ee.id (+)
+;
 
 create or replace view v_order_item_stages1 as
 select
@@ -404,7 +441,8 @@ select
   qnt4, dt4b, dt4e, is4.qnt as qnt4c, is4.dt as dt4c,
    (case when not(nvl(i.sgp,0) = 1 or i.qnt = 0) then (case when qnt4 >=  i.qnt then 2 when qnt4 is not null then 1 else 0 end) else null end) as st4
 from
-  v_order_items i,
+--  v_order_items i,
+  v_order_items_for_stages i,
  (select 
    id_order_item, 
    max(qnt1) as qnt1, min(dt1b) as dt1b, max(dt1e) as dt1e, 
@@ -448,7 +486,8 @@ select
   ss.dt3b, ss.dt3e, st3,
   ss.dt4b, ss.dt4e, st4 
 from
-  v_orders o,
+  --v_orders o,
+  orders o,
   (select 
     id_order,
     min(dt1b) as dt1b,  max(dt1e) as dt1e, F_GetOrderStage_State(min(st1), max(st1)) as st1, 
@@ -790,6 +829,7 @@ create table or_otk_rejected (
 );
 
 create index idx_or_otk_rejected_oritem on or_otk_rejected(id_order_item);
+create index idx_or_otk_rejected_2 on or_otk_rejected(id_order_item, id_reason);
       
 --create unique index idx_ref_customers_n on re_customers(lower(name));
 
@@ -817,7 +857,23 @@ from
 where
   s.st4 is not null and
   o.id_order_item (+) = s.id
+;
+
+create or replace view v_order_item_stages1_otk as
+select
+  s.*,
+  o.r,
+  (case when o.r is null then 0 else 1 end) is_rej,
+  (case when o.r is null then 'без замечаний' else 'с замечаниями' end) rej
+from
+  v_order_item_stages1 s,  
+  (select -9 as id_order_item, null as r from dual) o
+  --(select id_order_item, max(id_reason) as r from or_otk_rejected group by id_order_item) o
+where
+  s.st4 is not null and
+  o.id_order_item (+) = s.id
 ;    
+    
  
 select * from v_order_item_stages1_otk where r is not null;     
 

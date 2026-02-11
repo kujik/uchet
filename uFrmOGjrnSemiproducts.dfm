@@ -36,6 +36,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
             end
             inherited pnlStatusBar: TPanel
               Top = 340
+              ExplicitTop = 339
             end
           end
           inherited pnlLeft: TPanel

@@ -874,6 +874,19 @@ from (
     id_nomencl
 ;
 
+create or replace view v_spl_qntonstocks_sum_2 as
+select 
+  n.id_nomencl,
+  n.name,
+  q.qnt
+from
+  dv.nomenclatura n,
+  v_spl_qntonstocks_sum q
+where
+  n.id_nomencl = q.id_nomencl(+)
+;      
+
+
 create or replace function F_GetOrdersWhereNoQnt (
 --выдает номер и дату самого раннего по отгрузке заказа, на который не хватает остака плюс резерва
 --2025-12-22 - резерв болеене учитывается

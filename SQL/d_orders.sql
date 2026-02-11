@@ -749,6 +749,7 @@ create table order_items (
 create unique index idx_order_items_pos on order_items(id_order, pos);
 create index idx_order_items_id_order on order_items(id_order);
 create index idx_order_items_id_std_item on order_items(id_std_item);
+create index idx_order_items_id_order on order_items(id_order);
 
 create sequence sq_order_items nocache;
 
@@ -1585,6 +1586,7 @@ create or replace procedure P_SyncOrderWithITM(
   FSendEstimate number;
   FEstQntInItm number;
   FIDOrEstimate number;
+  FNeedeSyncBoardsEdges number;
 begin
   --есть ли заказ в базе учета
   select count(*) into i from orders where id = AIdOrder;
@@ -1618,6 +1620,7 @@ begin
     when no_data_found then
       i := 0;
   end;
+  FNeedeSyncBoardsEdges := 0;
   --если id_itm is null или айди есть, но не найден в итм, то это вставка, иначе изменение
   if FIdZakaz is null or i = 0 then
     update orders set id_itm = null where id = AIdOrder;
@@ -1654,6 +1657,7 @@ begin
         --если смета есть, но в ней нет позиций дл€ итм, то удалим это изделие
         dv.P_SyncIzdel(FIdZakaz, 3, CVOrderItems.slash, CVOrderItems.fullitemname, CVOrderItems.qnt, CVOrderItems.id_itm, FIdIzdel);
         update order_items set id_itm = null where id = CVOrderItems.id;
+        FNeedeSyncBoardsEdges := 1;
         Continue;
       end if;
       if FOrOpMode = 1 and FCreateZ = 0 then
@@ -1680,7 +1684,8 @@ begin
     if (FSendEstimate = 1)and(FIdIzdel is not null)
     and((AOrImems is null)or(instr(',' || AOrImems || ',', ',' || CVOrderItems.id || ',') > 0)) 
     then
-      P_SendEstimateToItm(FIDOrEstimate, FIdZakaz, FIdIzdel, i);  
+      P_SendEstimateToItm(FIDOrEstimate, FIdZakaz, FIdIzdel, i); 
+      FNeedeSyncBoardsEdges := 1; 
       dbms_output.put_line('P_SendEstimateToItm');
     end if; 
   end loop;
@@ -1708,6 +1713,9 @@ begin
       --иначе финишна€ процедура итм
       update orders set id_itm = FIdZakaz where id = AIdOrder;
       dv.P_SyncOrder_Finish(AIdOrder);
+      if FNeedeSyncBoardsEdges = 1 then
+        P_SetOrderEdgesAndBoards(AIdOrder);
+      end if;
     end if;
   end if;
  end;
@@ -1837,6 +1845,7 @@ create or replace procedure P_CreatePspForSemiproducts(
   AIdManager number,             --айди менеджера, по которому провети заказ
   AComment varchar2,             --комментарий к заказу
   ADtOtgr date,                  --планова€ дата отгрузки  
+  AIdReglament number,           --айди регламента 
   AIdOrder out number,           --возврат: айди созданного заказа 
   AOrNum out varchar2            --возврат: номер созданного заказа 
 )  
@@ -1862,7 +1871,7 @@ begin
     area, id_organization, id_or_format_estimates, estimatepath, cashtype, wholesale,
     project, id_format, id_manager, 
     dt_beg, dt_otgr, dt_montage_beg, dt_montage_end,
-  ndsd, comm, path
+    ndsd, comm, id_reglament, path
   ) (select
     FOrnum,
     extract(year from sysdate), 'ѕ', substr(FOrnum, 4), 1,
@@ -1871,6 +1880,7 @@ begin
     trunc(sysdate), ADtOtgr, dt_montage_beg, dt_montage_end,
     ndsd, 
     AComment, 
+    AIdReglament,
     ''
   from 
     orders
@@ -2165,6 +2175,37 @@ begin
 end;
 /
 
+
+create or replace procedure P_SetOrderEdgesAndBoards(
+--заполн€ет дл€ изделий заказа количество плитных и кромки
+  AIdOrder number
+) is
+begin
+  update order_items set qnt_boards_m2 = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_boards_m2 where id_order = AIdOrder) t2
+  on (t1.id = t2.id and t1.id_order = AIdOrder)
+  when matched then
+      update set t1.qnt_boards_m2 = t2.qnt;
+      
+  update order_items set qnt_edges_m = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_edges_m where id_order = AIdOrder) t2
+  on (t1.id = t2.id and t1.id_order = AIdOrder)
+  when matched then
+      update set t1.qnt_edges_m = t2.qnt;
+end;
+/      
+
+begin
+P_SetOrdersProdData;
+end;
+/
+
+begin
+P_SetOrderEdgesAndBoards(13481);
+end;
+/
 
 create or replace procedure P_SetOrderProdData(
   AIdOrder number

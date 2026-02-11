@@ -51,6 +51,7 @@ type
     FIsSecondPeriod: Boolean;
     FIsSecondPeriodVisible: Boolean;
     FNoData: Boolean;
+    FFirstPeriodMotivation: Boolean;
     function  PrepareForm: Boolean; override;
     function  GetDataFromDb: Integer;
     function  GetDataFromDbFirst: Integer;
@@ -68,6 +69,7 @@ type
     procedure SetPayrollMethod;
     procedure SavePayroll;
     procedure SetEditableAll;
+    procedure TempGetDataFromFirstPeriod;
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
@@ -117,7 +119,7 @@ const
     'id$i;id_employee$i;id_job$i;id_schedule$i;id_organization$i;personnel_number$s;' +
     'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;ors_pay$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
     'personal_pay$f;daily_bonus$f;extra_bonus$f;night_pay$f;milk_compensation$f;non_work_pay$f;penalty$f;correction$f;total_pay$f' +
-    'from_first_perion$i;period_hours_norm1$f;hours_worked1$f;overtime1$f;ors1$f;ors_pay1$f;base_pay1$f;base_pay2$f;ext_pay1$f;total_pay1$f';
+    'from_first_perion$i;period_hours_norm1$f;hours_worked1$f;overtime1$f;ors1$f;ors_pay1$f;base_pay1$f;base_pay2$f;ext_pay1$f;adjustments_total1$f;total_pay1$f';
   cFieldsL =
     'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i'
     ;
@@ -143,6 +145,11 @@ begin
   //айди ТУРВ за данный период по данному подразделению
   FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
   FIsSecondPeriod := DayOf(FPayrollParams.G('dt1')) = 16;
+
+  FFirstPeriodMotivation := Q.QSelectOneRow('select calc_method from w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
+    [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)]
+  )[0] = cMMotivation;
+
 
   FDeletedWorkers := [];
   Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize] - [myogColumnFilter];
@@ -186,9 +193,10 @@ begin
     ['base_pay1$f', '~Итого' + sLineBreak + ' рассчитано 1', wcol, fcol, 't=p1'],
     ['base_pay2$f', '~Итого' + sLineBreak + ' рассчитано 2', wcol, fcol],
     ['base_pay$f', '~Итого' + sLineBreak + ' рассчитано', wcol, fcol],
-    ['ext_pay1$f', '~Мотивация' + sLineBreak + ' 1й период', wcol, fcol, 't=1,p1'],
-    ['ext_pay$f', '~Мотивация' + sLineBreak + ' 2й период', wcol, fcol, 't=1'],
-    ['total_pay1$f', '~Итого' + sLineBreak + ' начислено ' + sLineBreak + ' за 1й период', wcol, fcol, 't=8,p1'],
+    ['ext_pay1$f', '~Мотивация' + sLineBreak + ' 1й период', wcol, fcol, 't=3,p1'],
+    ['ext_pay$f', '~Мотивация' + sLineBreak + ' 2й период', wcol, fcol, 't=3'],
+    ['total_pay1$f', '~Итого' + sLineBreak + ' начислено ' + sLineBreak + ' за 1й период', wcol, fcol, 't=p1'],
+    ['adjustments_total1$f', '~Итого' + sLineBreak + ' доп. выплаты' + sLineBreak + ' за 1й период', wcol, fcol, 't=p1'],
     ['overtime_pay$f', '~Переработка', wcol, fcol],
     ['personal_pay$f', '~Персональная' + sLineBreak + ' надбавка', wcol, fcol, 't=2'],
     ['daily_bonus$f', '~Премия ТУРВ', wcol, fcol],
@@ -299,39 +307,94 @@ var
 begin
   if Frg1.GetCount(False) <> 0 then
     Exit;
-  Q.QLoadFromQuery('select ' +
-   'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
-   'employee, organization, job, schedulecode, ' +
-   'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
-   'planned_pay, fixed_pay, ' +
-   '1 as from_first_period '+
-   'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d',
-    [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na
-  );
-  Q.QLoadFromQuery(
-    'select '+
-    '  c.id_employee, c.id_organization, c.personnel_number '+
-    'from '+
-    '  w_payroll_calc c, '+
-    '  v_w_employee_properties p '+
-    'where '+
-    '  c.id_employee = p.id_employee '+
-    '  and c.id_organization = p.id_organization '+
-    '  and c.personnel_number = p.personnel_number '+
-    '  and (c.dt1 = :dt1$d or c.dt1 = :dt2$d)',
-    [FPayrollParams.G('dt1'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)] ,
-    nadel
-  );
-  for i := na.High downto 0 do
-    for j := 0 to nadel.High do
-      if (na.G(i, 'id_employee') = nadel.G(j, 'id_employee')) and (na.G(i, 'id_organization') = nadel.G(j, 'id_organization')) and (na.G(i, 'personnel_number') = nadel.G(j, 'personnel_number')) then begin
-        Delete(na.V, i ,1);
-        Break;
-      end;
+  if FPayrollParams.G('id_employee') = null then begin
+    Q.QLoadFromQuery('select ' +
+     'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
+     'employee, organization, job, schedulecode, ' +
+     'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
+     'nullif(nvl(overtime_pay, 0) + nvl(personal_pay, 0) + nvl(daily_bonus, 0) +nvl(extra_bonus, 0) + nvl(night_pay, 0) + nvl(milk_compensation, 0) + nvl(non_work_pay, 0) + nvl(penalty, 0) + nvl(correction, 0), 0) as adjustments_total1, ' +
+     'planned_pay, fixed_pay, ' +
+     '1 as from_first_period '+
+     'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d ' +
+     'order by job, employee, schedulecode, organization, personnel_number',
+      [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na
+    );
+    Q.QLoadFromQuery(
+      'select '+
+      '  c.id_employee, c.id_organization, c.personnel_number '+
+      'from '+
+      '  w_payroll_calc c, '+
+      '  v_w_employee_properties p '+
+      'where '+
+      '  c.id_employee = p.id_employee '+
+      '  and c.id_organization = p.id_organization '+
+      '  and c.personnel_number = p.personnel_number '+
+      '  and (c.dt1 = :dt1$d or c.dt1 = :dt2$d)',
+      [FPayrollParams.G('dt1'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)] ,
+      nadel
+    );
+    for i := na.High downto 0 do
+      for j := 0 to nadel.High do
+        if (na.G(i, 'id_employee') = nadel.G(j, 'id_employee')) and (na.G(i, 'id_organization') = nadel.G(j, 'id_organization')) and (na.G(i, 'personnel_number') = nadel.G(j, 'personnel_number')) then begin
+          Delete(na.V, i ,1);
+          Break;
+        end;
+  end
+  else begin
+    Q.QLoadFromQuery('select ' +
+     'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
+     'employee, organization, job, schedulecode, ' +
+     'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
+     'nullif(nvl(overtime_pay, 0) + nvl(personal_pay, 0) + nvl(daily_bonus, 0) +nvl(extra_bonus, 0) + nvl(night_pay, 0) + nvl(milk_compensation, 0) + nvl(non_work_pay, 0) + nvl(penalty, 0) + nvl(correction, 0), 0) as adjustments_total1, ' +
+     'planned_pay, fixed_pay, ' +
+     '1 as from_first_period '+
+     'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d and id_employee = :id_employee$i ' +
+     'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$i, -100) ' +
+     'order by job, employee, schedulecode, organization, personnel_number',
+      [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1), FPayrollParams.G('id_employee'), FPayrollParams.G('id_organization'), FPayrollParams.G('personnel_number')], na
+    );
+  end;
   Frg1.LoadData(na);
   if na.Count > 0 then
     FIsChanged := True;
 end;
+
+procedure  TFrmWGedtPayroll2N.TempGetDataFromFirstPeriod;
+var
+  na, nadel: TNamedArr;
+  flds: string;
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //if Frg1.GetValue('from_first_period', i ,False) = 1 then begin
+      Q.QLoadFromQuery('select ' +
+       'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
+       'employee, organization, job, schedulecode, ' +
+       'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
+       'nullif(nvl(overtime_pay, 0) + nvl(personal_pay, 0) + nvl(daily_bonus, 0) +nvl(extra_bonus, 0) + nvl(night_pay, 0) + nvl(milk_compensation, 0) + nvl(non_work_pay, 0) - nvl(penalty, 0) + nvl(correction, 0), 0) as adjustments_total1, ' +
+       'planned_pay, fixed_pay, ' +
+       '1 as from_first_period '+
+       'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d and id_employee = :id_employee$i ' +
+       'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$i, -100) and id_job = :id_job$i and id_schedule = :id_schedule$i' ,
+        [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1),
+         Frg1.GetValue('id_employee', i ,False), Frg1.GetValue('id_organization', i ,False), Frg1.GetValue('personnel_number', i ,False), Frg1.GetValue('id_job', i ,False), Frg1.GetValue('id_schedule', i ,False)],
+        na
+      );
+       if na.Count > 0 then begin
+         FIsChanged := True;
+         Frg1.SetValue('hours_worked1', i, False, na.G('hours_worked1'));
+         Frg1.SetValue('overtime1', i, False, na.G('overtime1'));
+         Frg1.SetValue('ors1', i, False, na.G('ors1'));
+         Frg1.SetValue('ors_pay1', i, False, na.G('ors_pay1'));
+         Frg1.SetValue('base_pay1', i, False, na.G('base_pay1'));
+         Frg1.SetValue('ext_pay1', i, False, na.G('ext_pay1'));
+         Frg1.SetValue('total_pay1', i, False, na.G('total_pay1'));
+         Frg1.SetValue('adjustments_total1', i, False, na.G('adjustments_total1'));
+       end;
+   end;
+end;
+
 
 procedure TFrmWGedtPayroll2N.LoadPrevCalcMethods;
 var
@@ -339,7 +402,7 @@ var
 begin
   if (FPayrollParams.G('calc_method') <> null) and (FPayrollParams.G('overtime_method') <> null) then
     Exit;
-  Q.QLoadFromQuery('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d',
+  Q.QLoadFromQuery('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
     [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na);
   if na.Count = 0 then
     Exit;
@@ -948,7 +1011,7 @@ begin
     Params.Background := RGB(220, 255, 190);
   if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg1.GetValueF(FieldName) < 0) then
     Params.Background := clRed;
-  if A.InArray(FieldName, ['total_pay1', 'base_pay1', 'period_hours_norm1', 'hours_worked1', 'overtime1', 'ors1', 'ors_pay1', 'base_pay1', 'ext_pay1', 'total_pay1']) then
+  if A.InArray(FieldName, ['total_pay1', 'base_pay1', 'period_hours_norm1', 'hours_worked1', 'overtime1', 'ors1', 'ors_pay1', 'base_pay1', 'ext_pay1', 'adjustments_total1', 'total_pay1']) then
     Params.Background := RGB(220, 220, 255);
 end;
 
@@ -977,6 +1040,7 @@ begin
     cmbSetEditable:
       SetEditableAll;
     cmbRecalculate: begin
+      TempGetDataFromFirstPeriod; //!!!
       CalculateAll;
       FIsChanged := True;
       Frg1.InvalidateGrid;
@@ -1113,10 +1177,13 @@ begin
       v1 := S.NullIf0(Round(v1.AsFloat));
       Frg1.SetValue(flds[i], Row, False, v1)
     end;
-    VTotal := VTotal + v1.AsFloat;
+    if flds[i] = 'penalty' then
+      VTotal := VTotal - v1.AsFloat
+    else
+      VTotal := VTotal + v1.AsFloat;
   end;
   //VTotal := RoundTo(VTotal, 2);
-  VTotal := VTotal + Frg1.GetValue('ext_pay', Row, False).AsFloat + Frg1.GetValue('ext_pay1', Row, False).AsFloat - Frg1.GetValueF('total_pay1', Row, False);
+  VTotal := VTotal + Frg1.GetValue('ext_pay', Row, False).AsFloat + Frg1.GetValue('ext_pay1', Row, False).AsFloat + Frg1.GetValue('adjustments_total1', Row, False).AsFloat - Frg1.GetValueF('total_pay1', Row, False) - S.IIf(FFirstPeriodMotivation, 0, Frg1.GetValueF('ext_pay1', Row, False));
   Frg1.SetValue('total_pay', Row, False, VTotal);
 end;
 

@@ -1782,6 +1782,9 @@ begin
       Q.QExecSql('update order_items set dt_thn = :dt$d where id = :id$i', [Date, IdOrItem]);
     if not SenderIsThn and (va1[0][11] = null) then
       Q.QExecSql('update order_items set dt_kns = :dt$d where id = :id$i', [Date, IdOrItem]);
+    //сбросим признак Ѕез док. кнс
+    if not SenderIsThn  then
+      Q.QExecSql('update order_items set wo_kns = 0 where id = :id$i', [IdOrItem]);
     MyInfoMessage('ƒанные отправлены на сервер.');
     Result := True;
   except
@@ -2658,8 +2661,22 @@ begin
   Result := False;
   if AIdOrItem <> null then begin
     va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
-    if (va[0].AsInteger = 1) or (va[1] <> null) then begin
-      MyInfoMessage('Ќельз€ загрузить данные из XML дл€ этого издели€!');
+    if va[1] <> null then begin
+      MyInfoMessage('Ќельз€ загрузить данные из XML дл€ издели€ закрытого заказа!');
+      Exit;
+    end;
+    if (va[0].AsInteger = 1) then begin
+      //дл€ стандартного издели€ обновим из справочника изделий
+      if MyQuestionMessage('ќбнивить XML из основании справочника стандартных изделий?') <> mrYes then
+        Exit;
+      Q.QExecSql(
+        'update order_items i set '+
+        'qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill), '+
+        'is_xml_loaded = nvl((select is_xml_loaded from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.is_xml_loaded) '+
+        'where i.id = :id_order_item$i',
+        [AIdOrItem]
+      );
+      Result := True;
       Exit;
     end;
   end;

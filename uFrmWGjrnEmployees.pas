@@ -113,7 +113,7 @@ begin
   Frg2.Opt.SetWhere('where id_employee = :id_employee$i order by rn');
   Frg2.Opt.SetButtons(1, [
    [mbtRefresh], [], [mbtView, True, 'Просмотреть выбранный статус работника'], [mbtAdd, User.Role(rW_J_WorkerStatus_Ch), 'Добавить статус работника'],
-   [mbtDelete, 1, 'Удалить последний статус работника'], [mbtEdit, 1, 'Изимзенить выбранный статус работника'], [], [mbtGridSettings], [mbtTest, User.IsDeveloper]  //!!!
+   [mbtDelete, 1, 'Удалить последний статус работника'], [mbtEdit, 1, 'Изимзенить выбранный статус работника'], [], [mbtGridSettings]
   ]);
   Frg2.Opt.SetButtonsIfEmpty([mbtTest]);
 
@@ -142,9 +142,9 @@ end;
 procedure TFrmWGjrnEmployees.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   Handled := True;
-  if Tag = mbtTest then
+{  if Tag = mbtTest then
     Turv.ConvertEmployees202511
-  else
+  else}
   if fMode <> fNone then
     TFrmWDedtEmployeeProperties.Show(Frg2, '*' , [myfoDialog, myfoSizeable], fMode, Fr.ID, Frg1.ID)
   else begin
