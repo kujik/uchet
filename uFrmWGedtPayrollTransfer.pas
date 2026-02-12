@@ -51,7 +51,7 @@ implementation
 {$R *.dfm}
 
 uses
-  Winapi.ShlObj,
+  System.Win.ComObj, Winapi.ActiveX, Winapi.ShlObj, System.IOUtils,
   uMessages,
   uForms,
   uDBOra,
@@ -104,7 +104,7 @@ begin
   end;
 
   FDeletedWorkers := [];
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind] - [myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind, myogSorting] - [myogColumnFilter];
 
   //определим поля
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
@@ -539,7 +539,9 @@ begin
   ));
 end;
 
+(*
 procedure TFrmWGedtPayrollTransfer.GetNdflFromExcel;
+//старый вариант
 var
   i, j, k: Integer;
   st, st1: string;
@@ -592,6 +594,98 @@ begin
     while j <= High(ArXls) do begin
       //проверим по свопадению имени и табельного номера, или же только по имени, если совместитель, организацию не учитываем
       if (Frg1.GetValueS('employee', i, False) = ArXls[j][0]) and (b or (Frg1.GetValueS('personnel_number', i, False) = ArXls[j][1])) then begin
+        e1 := ArXls[j][2].AsFloat;
+        e2 := ArXls[j][3].AsFloat;
+        //и если совместитель то просуммируем все строки с таким фио
+        if b then
+          for k := j + 1 to High(ArXls) do
+            if Frg1.GetValueS('employee', i, False) = ArXls[k][0] then begin
+              e1 := e1+ ArXls[k][2].AsFloat;
+              e2 := e2 + ArXls[k][3].AsFloat;
+            end;
+        //проверим что полученные данные численно отличаются от того что уже в ведомости
+        if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
+          //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+          st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец НДФЛ с ' + Frg1.GetValueS('deduct_ndfl', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e1))) + #13#10;
+          Frg1.SetValue('deduct_ndfl', i, False, S.NullIf0(e1));
+          FIsChanged := True;
+          b1 := True;
+        end;
+        if Frg1.GetValueF('pay_card', i, False) <> Round(e2) then begin
+          //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+          st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец Карта с ' + Frg1.GetValueS('pay_card', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e2))) + #13#10;
+          Frg1.SetValue('pay_card', i, False, S.NullIf0(e2));
+          FIsChanged := True;
+          b1 := True;
+        end;
+      Break;
+      end;
+      inc(j);
+    end;
+    //проверим, что работник в списке выгрузки не найден
+    if j > High(ArXls) then begin
+      st := st + Frg1.GetValueS('employee', i, False) + ': Не найден в файлах выгрузки!' + #13#10;
+      b2 := True;
+    end;
+  end;
+  //пересчитаем таблицу
+  CalculateAll;
+  //выведем сообщение
+  if b1 or b2 then
+    MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st))
+  else
+    MyInfoMessage('Данные загружены.');
+end;
+*)
+
+procedure TFrmWGedtPayrollTransfer.GetNdflFromExcel;
+var
+  i, j, k: Integer;
+  st, st1: string;
+  v, v1, v2: Variant;
+  b, b1, b2: Boolean;
+  XlsFile: TXlsMemFileEh;
+  sh, sh1: TXlsWorksheetEh;
+  ArXls: TVarDynArray2;
+  EmplCn: TVarDynArray;
+  e1, e2: Extended;
+  org: string;
+begin
+  //выберем файл
+  MyData.OpenDialog1.Filter := 'файлы Excel (*.xlsx)|*.xlsx';
+  if not MyData.OpenDialog1.Execute then
+    Exit;
+  if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
+    Exit;
+  //получим список совместителей
+  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  //загрузим в массив данные из эксель со второй строки до первой пустой
+  ArXls := [];
+  sh := XlsFile.Workbook.Worksheets[0];
+  org := sh.Cells[4 - 1, 1].Value.AsString;
+  for i := 4 to 2000 do begin
+    if (sh.Cells[2 - 1, i].Value.AsString = '') then
+      Break;
+    if (sh.Cells[2 - 1, i].Value.AsString = '') then
+      Continue;
+    //фио, таб.номер, ндфл, карта, организация(из заголовка)
+    ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, org]];
+  end;
+  sh.Free;
+  XlsFile.Free;
+  //стобцы 1-фило, 3-ндфл, 4-карты
+  //пройдем по списку работников в ведомости
+  b1 := False;
+  b2 := False;
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //проверим, не совместитель ли
+    b := A.InArray(Frg1.GetValueF('id_employee', i, False), EmplCn);
+    //пройдем по загруженным из файла даннм
+    j := 0;
+    while j <= High(ArXls) do begin
+      //проверим по свопадению имени и табельного номера, или же только по имени, если совместитель, организацию не учитываем
+      //!!!пока не проверяем по табельному номеру
+      if (Frg1.GetValueS('employee', i, False) = ArXls[j][0]) {and (b or (Frg1.GetValueS('personnel_number', i, False) = ArXls[j][1]))} then begin
         e1 := ArXls[j][2].AsFloat;
         e2 := ArXls[j][3].AsFloat;
         //и если совместитель то просуммируем все строки с таким фио
@@ -723,6 +817,7 @@ begin
     MyInfoMessage('Данные загружены.');
 end;
 
+(*
 procedure TFrmWGedtPayrollTransfer.GetNdflFromExcelZup;
 var
   i, j, k: Integer;
@@ -833,8 +928,163 @@ Break;
     MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st), 1)
   else
     MyInfoMessage('Данные загружены.');
+end;*)
+
+procedure TFrmWGedtPayrollTransfer.GetNdflFromExcelZup;
+var
+  i, j, k: Integer;
+  st, st1: string;
+  v, v1, v2: Variant;
+  b, b1, b2: Boolean;
+  XlsFile: TXlsMemFileEh;
+  sh, sh1: TXlsWorksheetEh;
+  ArXls: TVarDynArray2;
+  EmplCn: TVarDynArray;
+  e1, e2, e3: Extended;
+  org, dir: string;
+
+function GetSelectedFiles(OpenDialog: TFileOpenDialog): TArray<string>;
+var
+  i: Integer;
+  ShellItemArray: IShellItemArray;
+  ShellItem: IShellItem;
+  pszPath: PWideChar;
+  Count: DWORD;
+begin
+  SetLength(Result, 0);
+
+  ShellItemArray := OpenDialog.ShellItems;
+
+  if ShellItemArray = nil then
+    Exit;
+
+  if Failed(ShellItemArray.GetCount(Count)) then
+    Exit;
+
+  SetLength(Result, Count);
+
+  for i := 0 to Count - 1 do
+  begin
+    if Failed(ShellItemArray.GetItemAt(i, ShellItem)) then
+      Continue;
+
+    if Succeeded(ShellItem.GetDisplayName(SIGDN_FILESYSPATH, pszPath)) then
+    begin
+      Result[i] := pszPath;
+      CoTaskMemFree(pszPath);
+    end;
+  end;
 end;
 
+begin
+
+  //выберем файл
+  MyData.FileOpenDialog1.Options := MyData.FileOpenDialog1.Options + [fdoAllowMultiSelect];
+  MyData.FileOpenDialog1.FileTypes.Clear;
+  with MyData.FileOpenDialog1.FileTypes.Add do begin DisplayName := 'файлы Excel (*.xlsx)'; FileMask := '*.xlsx'; end;
+  if not MyData.FileOpenDialog1.Execute then
+    Exit;
+  //загрузим в массив данные из эксель со второй строки до первой пустой
+  ArXls := [];
+  var files := GetSelectedFiles(MyData.FileOpenDialog1);
+(*  with TFileOpenDialog.Create(nil) do
+    try
+      Title := 'Выберите папку';
+      Options := [fdoPickFolders, fdoPathMustExist, fdoForceFileSystem]; // YMMV
+      OkButtonLabel := 'Выбрать';
+      if Execute then begin
+        Dir := FileName;
+      end;
+    finally
+      Free;
+    end;
+  if Dir = '' then
+    Exit;
+  if Dir = TDirectory.GetDirectoryRoot(Dir) then begin
+    MyWarningMessage('Нельзя выбрать корневую папку!');
+    Exit;
+  end;
+  var files := TDirectory.GetFiles(Dir, '*.*', TSearchOption.soTopDirectoryOnly); *)
+  for var fn := 0 to High(files) do begin
+    if not CreateTXlsMemFileEhFromExists(Files[fn], True, '$2', XlsFile, st) then
+      Exit;
+    sh := XlsFile.Workbook.Worksheets[0];
+    org := sh.Cells[4 - 1, 1].Value.AsString;
+    for i := 4 to 2000 do begin
+      if (sh.Cells[2 - 1, i].Value.AsString = '') then
+        Break;
+      //фио, таб.номер, ндфл, карта, удержания, организация(из заголовка)
+      //!!удержаний пока нет!
+      ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, 0, org]];
+    end;
+    sh.Free;
+    XlsFile.Free;
+  end;
+  //получим список совместителей
+  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  //пройдем по списку работников в ведомости
+  b1 := False;
+  b2 := False;
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //проверим, не совместитель ли
+    b := A.InArray(Frg1.GetValueF('id_employee', i, False), EmplCn);
+    //пройдем по загруженным из файла даннм
+    j := 0;
+    while j <= High(ArXls) do begin
+      //проверим по свопадению имени и табельного номера, или же только по имени, если совместитель, организацию не учитываем
+      if (Frg1.GetValueS('employee', i, False) = ArXls[j][0]) {and (b or (Frg1.GetValueS('personnel_number', i, False) = ArXls[j][1]))} then begin
+        e1 := ArXls[j][2].AsFloat;
+        e2 := ArXls[j][3].AsFloat;
+        e3 := ArXls[j][4].AsFloat;
+        //и если совместитель то просуммируем все строки с таким фио
+        if b then
+          for k := j + 1 to High(ArXls) do
+            if Frg1.GetValueS('employee', i, False) = ArXls[k][0] then begin
+              e1 := e1+ ArXls[k][2].AsFloat;
+              e2 := e2 + ArXls[k][3].AsFloat;
+              e3 := e3 + ArXls[k][4].AsFloat;
+            end;
+        e1 := Round(e1); e2 := Round(e2); e3 := Round(e3);
+        //проверим что полученные данные численно отличаются от того что уже в ведомости
+        if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
+          //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+          st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец НДФЛ с ' + Frg1.GetValueS('deduct_ndfl', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e1))) + #13#10;
+          Frg1.SetValue('deduct_ndfl', i, False, S.NullIf0(e1));
+          FIsChanged := True;
+          b1 := True;
+        end;
+        if Frg1.GetValueF('pay_card', i, False) <> Round(e2) then begin
+          //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+          st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец Карта с ' + Frg1.GetValueS('pay_card', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e2))) + #13#10;
+          Frg1.SetValue('pay_card', i, False, S.NullIf0(e2));
+          FIsChanged := True;
+          b1 := True;
+        end;
+        {if Frg1.GetValueF('deduct_enf', i, False) <> Round(e3) then begin
+          //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
+          st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец Удержано с ' + Frg1.GetValueS('deduct_enf', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e3))) + #13#10;
+          Frg1.SetValue('deduct_enf', i, False, S.NullIf0(e3));
+          FIsChanged := True;
+          b1 := True;
+        end;}
+        Break;
+      end;
+      inc(j);
+    end;
+    //проверим, что работник в списке выгрузки не найден
+    if j > High(ArXls) then begin
+      st := st + Frg1.GetValueS('employee', i, False) + ': Не найден в файлах выгрузки!' + #13#10;
+      b2 := True;
+    end;
+  end;
+  //пересчитаем таблицу
+  CalculateAll;
+  //выведем сообщение
+  if b1 or b2 then
+    MyInfoMessage('Данные загружены' + S.IIf(b2, ', однако не по всем работникам!', '.') + #13#10#13#10 + S.IIFStr(not b1 and not b2, 'Изменений не было.', st), 1)
+  else
+    MyInfoMessage('Данные загружены.');
+end;
 
 
 end.

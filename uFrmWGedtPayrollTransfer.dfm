@@ -1,6 +1,8 @@
 inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   Caption = 'FrmWGedtPayrollTransfer'
   OnCloseQuery = nil
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     inherited pnlFrmClient: TPanel

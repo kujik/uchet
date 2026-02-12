@@ -901,4 +901,14 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
     Left = 20
     Top = 5
   end
+  object tmr1: TTimer
+    Interval = 500
+    OnTimer = tmr1Timer
+    Left = 482
+    Top = 774
+  end
+  object ApplicationEvents1: TApplicationEvents
+    Left = 530
+    Top = 766
+  end
 end

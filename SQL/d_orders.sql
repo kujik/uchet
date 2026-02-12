@@ -2203,7 +2203,7 @@ end;
 /
 
 begin
-P_SetOrderEdgesAndBoards(13481);
+P_SetOrderEdgesAndBoards(13476);
 end;
 /
 

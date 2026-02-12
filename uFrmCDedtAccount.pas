@@ -7,7 +7,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh, Math, Types,
   uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uData, uFrDBGridEh, uSys,
   Data.Bind.EngExt, Vcl.Bind.DBEngExt, Data.Bind.Components, Vcl.Buttons,
-  Vcl.Mask
+  Vcl.Mask, Vcl.AppEvnts
   ;
 
 type
@@ -60,7 +60,10 @@ type
     nedt_SumOther: TDBNumberEditEh;
     chb_AccountFile: TDBCheckBoxEh;
     chb_RequestFile: TDBCheckBoxEh;
+    tmr1: TTimer;
+    ApplicationEvents1: TApplicationEvents;
     procedure FormResize(Sender: TObject);
+    procedure tmr1Timer(Sender: TObject);
   private
     FAccountType: Integer;
     function  Prepare: Boolean; override;
@@ -74,6 +77,7 @@ type
     procedure LoadPayments;
     procedure SetFormAppearance;
     procedure CreatePaymentsEdts;
+    procedure UpdateAfterResize;
   public
   end;
 
@@ -182,6 +186,8 @@ begin
 //    Exit;
   F.SetPropsControls;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);      }
+//  Cth.SetDoubleBuffered(Self, True);
+  Self.DoubleBuffered := True;
   Result := Inherited;
   if Result = False then
     Exit;
@@ -230,6 +236,36 @@ procedure TFrmCDedtAccount.ControlOnExit(Sender: TObject);
 begin
 
 end;
+
+(*ocedure TFrmCDedtAccount.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+begin
+  if FResizePending and (GetTickCount - FLastResizeTime > 10000) then
+  begin
+    FResizePending := False;
+    FLastResizeTime := GetTickCount;
+
+    LockWindowUpdate(Self.Handle); // БЛОКИРУЕМ ВСЕ
+    try
+      Self.Realign;
+      Self.Repaint;
+    finally
+      LockWindowUpdate(0);
+    end;
+  end;
+  Done := True;
+end;
+*)
+(*
+procedure TFrmCDedtAccount.ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
+begin
+  // Ждем 200мс после последнего изменения размера
+  if FResizeNeeded and (GetTickCount - FResizeTime > 10000) then begin
+    FResizeNeeded := False;
+    UpdateAfterResize;
+  end;
+  Done := True;
+end;
+*)
 
 procedure TFrmCDedtAccount.ControlOnChange(Sender: TObject);
 var
@@ -298,6 +334,12 @@ begin
   Self.Width:= StrtoInt(Settings.ReadProperty(FormDoc, 'Width_' + IntToStr(AccMode), '0'));
   Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));
   Self.Resize;}
+end;
+
+procedure TFrmCDedtAccount.tmr1Timer(Sender: TObject);
+begin
+  inherited;
+  //UnLockDrawing;
 end;
 
 procedure TFrmCDedtAccount.CreatePaymentsEdts;
@@ -405,17 +447,35 @@ begin
   end;
 end;
 
+procedure TFrmCDedtAccount.UpdateAfterResize;
+begin
+  Exit;
+  Self.LockDrawing;
+  try
+    // Принудительно применяем якоря
+    Self.Realign;
+    // Обновляем все контролы
+    var I: Integer;
+    for I := 0 to Self.ControlCount - 1 do
+      if Self.Controls[I] is TWinControl then
+        TWinControl(Self.Controls[I]).Realign;
+    Self.Invalidate;
+  finally
+    Self.UnlockDrawing;
+  end;
+end;
 
+(*ocedure TFrmCDedtAccount.WMWindowPosChanged(var Msg: TWMWindowPosChanged);
+begin
+  Inherited;
+  FResizePending := True; // Флаг для OnIdle
+end;
+*)
 
 procedure TFrmCDedtAccount.FormResize(Sender: TObject);
 begin
-  {Perform(WM_SETREDRAW, 0, 0);
-  inherited;
-  ClientHeight := FWHCorrected.Y + 35;
-  Perform(WM_SETREDRAW, 1, 0);
-  Invalidate;
-  Repaint;}
   ClientHeight := pnlAdd.Top + pnlAdd.Height + pnlFrmBtnsMain.Height + 30;
 end;
+
 
 end.

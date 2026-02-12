@@ -349,7 +349,7 @@ begin
      'planned_pay, fixed_pay, ' +
      '1 as from_first_period '+
      'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d and id_employee = :id_employee$i ' +
-     'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$i, -100) ' +
+     'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100) ' +
      'order by job, employee, schedulecode, organization, personnel_number',
       [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1), FPayrollParams.G('id_employee'), FPayrollParams.G('id_organization'), FPayrollParams.G('personnel_number')], na
     );
@@ -376,7 +376,7 @@ begin
        'planned_pay, fixed_pay, ' +
        '1 as from_first_period '+
        'from v_w_payroll_calc_item where id_target_departament = :id_target_departament$i and dt1 = :dt1$d and id_employee = :id_employee$i ' +
-       'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$i, -100) and id_job = :id_job$i and id_schedule = :id_schedule$i' ,
+       'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100) and id_job = :id_job$i and id_schedule = :id_schedule$i' ,
         [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1),
          Frg1.GetValue('id_employee', i ,False), Frg1.GetValue('id_organization', i ,False), Frg1.GetValue('personnel_number', i ,False), Frg1.GetValue('id_job', i ,False), Frg1.GetValue('id_schedule', i ,False)],
         na

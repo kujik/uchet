@@ -363,6 +363,7 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     procedure SetInfoIcon(Pict: TImage; Info: string; Width: Integer = 20);
     //устанавливает или сбрасывае курсов в  виде песочныч часво
     procedure SetWaitCursor(Wait: Boolean = True);
+    procedure SetDoubleBuffered(AControl: TWinControl; Enable: Boolean);
   end;
 
 var
@@ -3695,6 +3696,21 @@ begin
     Screen.Cursor := crHourGlass
   else
     Screen.Cursor := crDefault;
+end;
+
+procedure TControlsHelper.SetDoubleBuffered(AControl: TWinControl; Enable: Boolean);
+var
+  i: Integer;
+begin
+  if AControl = nil then
+    Exit;
+  // Включаем для самого контрола, если это TPanel
+  if (AControl is TPanel) or (AControl is TForm) then
+    TPanel(AControl).DoubleBuffered := Enable;
+  // Рекурсивно обходим все дочерние контролы
+  for i := 0 to AControl.ControlCount - 1 do
+    if AControl.Controls[i] is TWinControl then
+      SetDoubleBuffered(TWinControl(AControl.Controls[i]), Enable);
 end;
 
 
