@@ -2513,7 +2513,18 @@ end;
 
 
 
-
+--------------------------------------------------------------------------------
+--задвоившиеся id_order_dv в ИТМ
+SELECT *
+FROM dv.zakaz
+WHERE id_order_dv IN (
+    SELECT id_order_dv
+    FROM dv.zakaz
+    WHERE id_order_dv IS NOT NULL
+    GROUP BY id_order_dv
+    HAVING COUNT(*) > 1
+)
+ORDER BY id_order_dv;
 
 
 

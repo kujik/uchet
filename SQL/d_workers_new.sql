@@ -937,6 +937,7 @@ select
   p.id_employee as id_target_employee,
   p.id_organization as id_target_organization,
   p.personnel_number as target_personnel_number,
+  p.is_finalized,
   p.dt1,
   p.dt2,
   p.calc_method,

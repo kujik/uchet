@@ -68,7 +68,7 @@ procedure TFrmWDedtCreatePayrollN.btnOkclick(Sender: TObject);
 var
   dt1, dt2: TDateTime;
   i, j: Integer;
-  va1, va2: TVarDynArray2;
+  va1, va2, va3: TVarDynArray2;
   va: TVarDynArray;
   Cnt: Integer;
   Msg: string;
@@ -119,19 +119,52 @@ begin
       'group by id_departament, id_employee, id_organization, personnel_number' ,
       [ide, dt1, dt2], va1
     );}
+    //получим список нужных ведомостей (сгруппированных по подразделению и статусу работника)
     Q.QLoadFromQuery(
       'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
       'where employee_st = :employee_st$s and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
       'group by id_departament, id_employee, id_organization, personnel_number' ,
       [cmbWorker.Text, dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], va1
     );
-    //получим список ведомостей по зп, по полным подразделениям за этот период
+    //получим список всех ведомостей по зп, по уволенным за этот период
     va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);
-    for i := 0 to High(va1) do begin
-      if A.PosRowInArray(va1, va2, i) = -1 then begin
-        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
-          inc(Cnt);  //увеличим количество созданных
+    var b := False;
+    for i := 0 to High(va1) do
+      if A.PosRowInArray(va1, va2, i) = -1 then
+        b := True;
+    if b then begin
+      //получим ведомости по полным подразделениям, в которых присутствует работник с данным статусом
+      Q.QLoadFromQuery(
+        'select id, id_target_departament, is_finalized from v_w_payroll_calc_item where id_target_employee is null and id_employee = :id_employee$i and  dt1 = :dt1$d ' +
+        'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100)',
+        [dt1, va1[1], va1[2], va1[3]], va3
+      );
+      b := True;
+      if Length(va3) > 0 then begin
+        if A.PosInArray(1, va3, 2) >= 0 then begin
+          //если среди найденных ведомостей есть закрытые, то не будем создвать вообще, выдадим сообщение
+          MyInfoMessage('Ведомость не будет создана, так как запись работника с этим статусом присутствует в ведомсти по подразделению со статусом "Закрыта"');
+          b := False;
+        end
+        else begin
+          //если есть незакрыте - спроим что делать
+          b := MyQuestionMessage('Запись работника с этим статусом присутствует в ведомсти по подразделению и будет из нее удалена!'#13#10'Продолжить?') = mrYes;
+          //если продолжаем - удалим из ведомостей по подразделениям найденные строки
+          if b then
+            for j := 0 to High(va3) do
+              Q.QExecSql('delete from w_payroll_calc_item where id = :id$i', [va3[j, 0]]);
+        end;
       end;
+      //если нужно, создадим ведомости
+      if b then
+        for i := 0 to High(va1) do begin
+          //проверим, нет ли уже такой ведомсти
+          if A.PosRowInArray(va1, va2, i) = -1 then begin
+            //создаем
+            if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+              inc(Cnt);  //увеличим количество созданных
+          end;
+        end;
     end;
   end;
   //сообщение
