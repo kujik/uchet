@@ -2,24 +2,24 @@ inherited FrmODedtDevel: TFrmODedtDevel
   Caption = 'FrmODedtDevel'
   ClientHeight = 403
   ClientWidth = 829
-  ExplicitWidth = 845
-  ExplicitHeight = 442
+  ExplicitWidth = 841
+  ExplicitHeight = 441
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 829
     Height = 387
-    ExplicitWidth = 829
-    ExplicitHeight = 387
+    ExplicitWidth = 825
+    ExplicitHeight = 386
     inherited pnlFrmClient: TPanel
-      Width = 823
-      Height = 339
-      ExplicitWidth = 819
-      ExplicitHeight = 338
+      Width = 819
+      Height = 338
+      ExplicitWidth = 815
+      ExplicitHeight = 337
       object mem_Comm: TDBMemoEh
         Left = 84
         Top = 224
-        Width = 651
-        Height = 72
+        Width = 647
+        Height = 71
         ControlLabel.Width = 67
         ControlLabel.Height = 13
         ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
@@ -33,15 +33,17 @@ inherited FrmODedtDevel: TFrmODedtDevel
         TabOrder = 0
         Visible = True
         WantReturns = True
+        ExplicitWidth = 643
+        ExplicitHeight = 70
       end
-      object nedt_Time: TDBNumberEditEh
-        Left = 198
+      object nedt_Hours: TDBNumberEditEh
+        Left = 84
         Top = 197
-        Width = 80
+        Width = 45
         Height = 21
-        ControlLabel.Width = 26
+        ControlLabel.Width = 47
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1063#1072#1089#1099
+        ControlLabel.Caption = #1042#1088#1077#1084#1103', '#1095'.'
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         currency = False
@@ -53,25 +55,6 @@ inherited FrmODedtDevel: TFrmODedtDevel
         Value = 12235123.050000000000000000
         Visible = True
       end
-      object nedt_Cnt: TDBNumberEditEh
-        Left = 84
-        Top = 197
-        Width = 80
-        Height = 21
-        ControlLabel.Width = 38
-        ControlLabel.Height = 13
-        ControlLabel.Caption = #1057#1076#1077#1083#1082#1072
-        ControlLabel.Visible = True
-        ControlLabelLocation.Position = lpLeftCenterEh
-        currency = False
-        DynProps = <>
-        EditButton.DefaultAction = True
-        EditButtons = <>
-        MaxValue = 500.000000000000000000
-        TabOrder = 2
-        Value = 12235123.050000000000000000
-        Visible = True
-      end
       object cmb_Id_Kns: TDBComboBoxEh
         Left = 84
         Top = 170
@@ -79,12 +62,12 @@ inherited FrmODedtDevel: TFrmODedtDevel
         Height = 21
         ControlLabel.Width = 66
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1050#1086#1085#1089#1090#1088#1091#1082#1090#1086#1088
+        ControlLabel.Caption = #1048#1089#1087#1086#1083#1085#1080#1090#1077#1083#1100
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
         EditButtons = <>
-        TabOrder = 3
+        TabOrder = 2
         Visible = True
       end
       object cmb_Id_Status: TDBComboBoxEh
@@ -100,7 +83,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
         DynProps = <>
         EditButtons = <>
         LimitTextToListValues = True
-        TabOrder = 4
+        TabOrder = 3
         Visible = True
       end
       object dedt_Dt_End: TDBDateTimeEditEh
@@ -116,7 +99,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
         DynProps = <>
         EditButtons = <>
         Kind = dtkDateEh
-        TabOrder = 5
+        TabOrder = 4
         Visible = True
       end
       object dedt_Dt_Plan: TDBDateTimeEditEh
@@ -132,7 +115,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
         DynProps = <>
         EditButtons = <>
         Kind = dtkDateEh
-        TabOrder = 6
+        TabOrder = 5
         Visible = True
       end
       object dedt_Dt_Beg: TDBDateTimeEditEh
@@ -148,13 +131,13 @@ inherited FrmODedtDevel: TFrmODedtDevel
         DynProps = <>
         EditButtons = <>
         Kind = dtkDateEh
-        TabOrder = 7
+        TabOrder = 6
         Visible = True
       end
       object cmb_Name: TDBComboBoxEh
         Left = 84
         Top = 89
-        Width = 647
+        Width = 643
         Height = 21
         ControlLabel.Width = 73
         ControlLabel.Height = 26
@@ -164,13 +147,14 @@ inherited FrmODedtDevel: TFrmODedtDevel
         Anchors = [akLeft, akTop, akRight]
         DynProps = <>
         EditButtons = <>
-        TabOrder = 8
+        TabOrder = 7
         Visible = True
+        ExplicitWidth = 639
       end
       object cmb_Project: TDBComboBoxEh
         Left = 84
         Top = 62
-        Width = 647
+        Width = 643
         Height = 21
         ControlLabel.Width = 37
         ControlLabel.Height = 13
@@ -180,8 +164,9 @@ inherited FrmODedtDevel: TFrmODedtDevel
         Anchors = [akLeft, akTop, akRight]
         DynProps = <>
         EditButtons = <>
-        TabOrder = 9
+        TabOrder = 8
         Visible = True
+        ExplicitWidth = 639
       end
       object cmb_Slash: TDBComboBoxEh
         Left = 84
@@ -195,7 +180,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
         EditButtons = <>
-        TabOrder = 10
+        TabOrder = 9
         Visible = True
       end
       object cmb_Id_DevelType: TDBComboBoxEh
@@ -210,41 +195,41 @@ inherited FrmODedtDevel: TFrmODedtDevel
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
         EditButtons = <>
-        TabOrder = 11
+        TabOrder = 10
         Visible = True
       end
     end
     inherited pnlFrmBtns: TPanel
       Top = 343
       Width = 819
-      ExplicitTop = 343
-      ExplicitWidth = 819
+      ExplicitTop = 342
+      ExplicitWidth = 815
       inherited bvlFrmBtnsTl: TBevel
-        Width = 821
+        Width = 817
         ExplicitWidth = 825
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 821
+        Width = 817
         ExplicitWidth = 825
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 821
-        ExplicitWidth = 817
+        Width = 817
+        ExplicitWidth = 813
         inherited pnlFrmBtnsMain: TPanel
-          Left = 722
-          ExplicitLeft = 718
+          Left = 718
+          ExplicitLeft = 714
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 494
-          ExplicitLeft = 490
+          Left = 490
+          ExplicitLeft = 486
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 623
-          ExplicitLeft = 619
+          Left = 619
+          ExplicitLeft = 615
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 354
-          ExplicitWidth = 350
+          Width = 350
+          ExplicitWidth = 346
         end
       end
     end
@@ -252,11 +237,15 @@ inherited FrmODedtDevel: TFrmODedtDevel
   inherited pnlStatusBar: TPanel
     Top = 387
     Width = 829
-    ExplicitTop = 387
-    ExplicitWidth = 829
+    ExplicitTop = 386
+    ExplicitWidth = 825
     inherited lblStatusBarR: TLabel
-      Left = 760
-      ExplicitLeft = 760
+      Left = 756
+      Height = 14
+      ExplicitLeft = 756
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

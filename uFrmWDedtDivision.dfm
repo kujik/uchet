@@ -2,19 +2,19 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
   Caption = 'FrmWDedtDivision'
   ClientHeight = 295
   ClientWidth = 664
-  ExplicitWidth = 680
-  ExplicitHeight = 334
+  ExplicitWidth = 676
+  ExplicitHeight = 333
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 664
     Height = 279
-    ExplicitWidth = 664
-    ExplicitHeight = 279
+    ExplicitWidth = 660
+    ExplicitHeight = 278
     inherited pnlFrmClient: TPanel
-      Width = 658
-      Height = 231
-      ExplicitWidth = 654
-      ExplicitHeight = 230
+      Width = 654
+      Height = 230
+      ExplicitWidth = 650
+      ExplicitHeight = 229
       object cmb_Office: TDBComboBoxEh
         Left = 104
         Top = 42
@@ -440,36 +440,36 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 236
-      Width = 658
-      ExplicitTop = 235
-      ExplicitWidth = 654
+      Top = 235
+      Width = 654
+      ExplicitTop = 234
+      ExplicitWidth = 650
       inherited bvlFrmBtnsTl: TBevel
-        Width = 656
+        Width = 652
         ExplicitWidth = 844
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 656
+        Width = 652
         ExplicitWidth = 844
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 656
-        ExplicitWidth = 652
+        Width = 652
+        ExplicitWidth = 648
         inherited pnlFrmBtnsMain: TPanel
-          Left = 557
-          ExplicitLeft = 553
+          Left = 553
+          ExplicitLeft = 549
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 329
-          ExplicitLeft = 325
+          Left = 325
+          ExplicitLeft = 321
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 458
-          ExplicitLeft = 454
+          Left = 454
+          ExplicitLeft = 450
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 189
-          ExplicitWidth = 185
+          Width = 185
+          ExplicitWidth = 181
         end
       end
     end
@@ -477,11 +477,15 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
   inherited pnlStatusBar: TPanel
     Top = 279
     Width = 664
-    ExplicitTop = 279
-    ExplicitWidth = 664
+    ExplicitTop = 278
+    ExplicitWidth = 660
     inherited lblStatusBarR: TLabel
-      Left = 595
-      ExplicitLeft = 595
+      Left = 591
+      Height = 14
+      ExplicitLeft = 591
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

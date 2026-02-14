@@ -714,7 +714,7 @@ var
     //pnl_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
     va := Q.QCallStoredProc(
       'p_CreatePspForSemiproducts',
-      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;;id$io;ornum$so',
+      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id$io;ornum$so',
        [IdT, StI, User.GetId, StC, DtO, IdReg, -1, -1]
     );
     if Length(va) = 0 then

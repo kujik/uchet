@@ -80,7 +80,8 @@ end;
 
 function TFrmWDedtDivision.LoadComboBoxes: Boolean;
 begin
-  Q.QLoadToDBComboBoxEh('select f_fio(f,i,o) as name, id from w_employees order by name', [], cmb_id_head, cntComboLK);
+//  Q.QLoadToDBComboBoxEh('select f_fio(f,i,o) as name, id from w_employees order by name', [], cmb_id_head, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from adm_users where id > 0 order by name', [], cmb_id_head, cntComboLK);
 //  Q.QLoadToDBComboBoxEh('select code, id from w_schedules order by code', [], cmb_id_schedule, cntComboLK);
   //пока ограничим список первыми трем€ площадками, так как там есть фиктивна€ ћ“, по состо€нию на 2025-07-26
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where id <> 3 order by id', [], cmb_id_prod_area, cntComboLK);

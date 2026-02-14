@@ -12,8 +12,7 @@ uses
 type
   TFrmODedtDevel = class(TFrmBasicDbDialog)
     mem_Comm: TDBMemoEh;
-    nedt_Time: TDBNumberEditEh;
-    nedt_Cnt: TDBNumberEditEh;
+    nedt_Hours: TDBNumberEditEh;
     cmb_Id_Kns: TDBComboBoxEh;
     cmb_Id_Status: TDBComboBoxEh;
     dedt_Dt_End: TDBDateTimeEditEh;
@@ -24,6 +23,9 @@ type
     cmb_Slash: TDBComboBoxEh;
     cmb_Id_DevelType: TDBComboBoxEh;
   private
+    FDeveloper: Integer;
+    FCaption: string;
+    FHours: TVarDynArray2;
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnChange(Sender: TObject); override;
@@ -40,10 +42,10 @@ implementation
 function TFrmODedtDevel.LoadComboBoxes: Boolean;
 begin
   //загружаем комбобоксы
-  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes order by name', [], cmb_Id_DevelType, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select distinct project from j_development order by project', [], cmb_Project, cntComboE);
-  Q.QLoadToDBComboBoxEh('select distinct name from j_development order by name', [], cmb_Name, cntComboE);
-  Q.QLoadToDBComboBoxEh('select slash from v_order_items where id_order > 0 and qnt > 0 and dt_end is null order by slash', [], cmb_Slash, cntComboE);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes where developer = :d$i order by name', [FDeveloper], cmb_Id_DevelType, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select distinct project from j_development where developer = :d$i order by project', [FDeveloper], cmb_Project, cntComboE);
+  Q.QLoadToDBComboBoxEh('select distinct name from j_development where developer = :d$i order by name', [FDeveloper], cmb_Name, cntComboE);
+  Q.QLoadToDBComboBoxEh('select slash from v_order_items where id_order > 0 and qnt > 0 and dt_end is null order by slash', [], cmb_Slash, cntComboE);    //долго!
   cmb_Slash.MaxLength:=25;
   //комбобокс статуса жестко прописан
   Cth.AddToComboBoxEh(cmb_Id_Status, [
@@ -57,19 +59,22 @@ begin
   //загрузим комбобокс конструкторов, так как для этого надо знать айди в таблице проектов, чтобы загрузить неактивного но который уже в ней есть
   Q.QLoadToDBComboBoxEh(
     'select name, id from adm_users where (job = :id_job$i and active = 1) or id = :id_old$i order by name asc',
-    [myjobKNS, F.GetPropB('id_kns')],
+    [S.Decode([FormDoc, myfrm_Dlg_J_Devel, myjobKNS, myjobTHN]), F.GetPropB('id_kns')],
     cmb_Id_Kns,
     cntComboLK
   );
+  FHours := Q.QLoadToVarDynArray2('select hours, id from ref_develtypes where developer = :d$i', [FDeveloper]);
   Result:=True;
 end;
 
 function TFrmODedtDevel.Prepare: Boolean;
 begin
-  Caption:='Журнал разработки';
-  Caption:='Задача';
+  FDeveloper := S.Decode([FormDoc, myfrm_Dlg_J_Devel, 1, 2]);
+  FCaption := S.Decode([FormDoc, myfrm_Dlg_J_Devel, 'Журнал разработки', 'Журнал проверки заказов']);
+  Caption := 'Задача';
   F.DefineFields:=[
     ['id$i'],
+    ['developer$i',#0,FDeveloper],
     ['id_develtype$i','V=1:400',#0],
     ['project$s','V=1:400:0:T',#0],
     ['name$s','V=1:400:0:T',#0],
@@ -77,28 +82,31 @@ begin
     ['dt_plan$d','V=1',#0],
     ['dt_end$d',#0],
     ['id_status$i','V=0:400',#0,1],
-    ['cnt$f','V=0:9999999:1',#0],
+//    ['cnt$f','V=0:9999999:1',#0],
+//    ['time$f','V=0:9999999:1',#0],
     ['comm$s','V=0:4000:0:T',#0],
     ['id_kns$i','V=0:400',#0],
-    ['time$f','V=0:9999999:1',#0],
+    ['hours$f;0','V=0:9999999:1',#0],
     ['slash$s','V=0:25:0:T',#0]
   ];
   View:='v_j_development';
   Table:='j_development';
   FOpt.UseChbNoClose:= False;
   FOpt.InfoArray := [[
-    'Реадктирование журнала разработки.'#13#10+
+     FCaption + ' - реадктирование записи.'#13#10+
     'Вид работы может быть выбран только из стандартных вариантов.'#13#10+
     'Проект и наименование могут быть любыми, но должны быть обязательно заданы.'#13#10+
     'Обязательно нужно установить статус.'#13#10+
     'Дата запуска проставляется автоматически при создании, а дата завершения - про установке статуса Готово.'#13#10+
-    'Поля Сделка, Часы, Конструктор и Комментарий обязательными не являются.'#13#10
+    'Поля № изделия, Исполнитель и Комментарий обязательными не являются.'#13#10
   ]];
   FWHBounds.X := 610;
   FWHBounds.Y := 400;
-  Result:=inherited;
-  SetControlsEditable([dedt_Dt_Beg], False);
-  SetControlsEditable([dedt_Dt_End], (cmb_Id_Status.Value = '100')and(Mode in [fCopy, fEdit, fAdd]));
+  Result := inherited;
+  if not Result then
+    Exit;
+  SetControlsEditable([dedt_Dt_Beg, nedt_Hours], False);
+  SetControlsEditable([dedt_Dt_End], (cmb_Id_Status.Value = '100') and (Mode in [fCopy, fEdit, fAdd]));
   if F.GetPropB('id_status') = 100 then
     Cth.SetControlVerification(dedt_dt_end, '1');
 end;
@@ -106,6 +114,12 @@ end;
 procedure TFrmODedtDevel.ControlOnChange(Sender: TObject);
 //событие изменения данных контрола
 begin
+  if Sender = cmb_Id_DevelType then begin
+    if cmb_Id_DevelType.Value.AsString = '' then
+      Cth.SetControlValue(nedt_Hours, null)
+    else
+      Cth.SetControlValue(nedt_Hours, FHours[A.PosInArray(cmb_Id_DevelType.Value, FHours, 1)][0]);
+  end;
   //выход если в процедуре загрузки
   if FInPrepare then
     Exit;

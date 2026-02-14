@@ -68,7 +68,7 @@ type
     function TaskForSendSnDocuments(IdOrder, IdOrItem: Variant): Boolean;
     function TaskForSendThnDocuments(IdOrItem: Variant; SenderIsThn: Boolean = True): Boolean;
     function GetSubject(Subject: string; OrderName: string; IdOrder, IdOrderItem: Variant): string;
-    function OrderItemsToDevel(IdOrder, IdOrItem: Variant): Boolean;
+    function OrderItemsToDevel(IdOrder, IdOrItem: Variant; Developer: Integer): Boolean;
     function FinalizeOrder(IdOrder: Variant; OpMode: Integer; Mode: Integer = 1; Silent: Boolean = True): Integer;
     function FinalizeOrderM(IdOrder: Variant): Integer;
     //переименование номенклатурных позиций в базах Учета и ИТМ
@@ -1792,24 +1792,39 @@ begin
   end;
 end;
 
-function TOrders.OrderItemsToDevel(IdOrder, IdOrItem: Variant): Boolean;
+function TOrders.OrderItemsToDevel(IdOrder, IdOrItem: Variant; Developer: Integer): Boolean;
 var
   i, j, k: Integer;
   OrItems: TVardynArray2;
   DevItems: TVarDynArray;
+  Caption: string;
 begin
+  Caption := S.Decode([Developer, 1, 'журнал разработки', 'журнал проверки']);
   OrItems := [];
-  if IdOrItem <> null then begin
-    OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns from v_order_items where id = :id$i', [IdOrItem]);
+  if Developer = 1 then begin
+    if IdOrItem <> null then begin
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns from v_order_items where id = :id$i', [IdOrItem]);
+    end
+    else if IdOrder <> null then begin
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
+    end;
   end
-  else if IdOrder <> null then begin
-    OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
+  else begin
+    if IdOrItem <> null then begin
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, thn from v_order_items where id = :id$i', [IdOrItem]);
+    end
+    else if IdOrder <> null then begin
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, thn ' + 'from v_order_items ' + 'where id_order = :id$i and id_thn <> -101 and qnt > 0', [IdOrder]);
+    end;
   end;
   if Length(OrItems) = 0 then begin
-    MyInfoMessage('Нет записей для внесения в журнал разработки.');
+    MyInfoMessage('Нет записей для внесения в ' + Caption + '.');
     Exit;
   end;
-  DevItems := A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select slash from j_development where id_develtype = 5 and slash is not null', []), 0);
+  //если есть запись с типом Запуск для КНС - не будем вносить
+  DevItems := [];
+  if Developer = 1 then
+    DevItems := A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select slash from j_development where developer = :developer$i and id_develtype = 5 and slash is not null', [Developer]), 0);
   k := 0;
   for i := 0 to High(OrItems) do
     if A.InArray(OrItems[i][2], DevItems) then
@@ -1817,16 +1832,16 @@ begin
     else
       inc(k);
   if k = 0 then begin
-    MyInfoMessage('Нет записей для внесения в журнал разработки.' + S.IIFStr(High(OrItems) - k + 1 = 0, '', #13#10'(' + IntToStr(High(OrItems) - k + 1) + ' уже внесен' + S.GetEnding(High(OrItems) - k + 1, 'а', 'ы', 'ы') + '.)'));
+    MyInfoMessage('Нет записей для внесения в ' + Caption + '.' + S.IIFStr(High(OrItems) - k + 1 = 0, '', #13#10'(' + IntToStr(High(OrItems) - k + 1) + ' уже внесен' + S.GetEnding(High(OrItems) - k + 1, 'а', 'ы', 'ы') + '.)'));
     Exit;
   end;
-  if MyQuestionMessage('Внести в журнал разработки ' + inttostr(k) + ' запис' + S.GetEnding(k, 'ь', 'и', 'ей') + '?') <> mrYes then
+  if MyQuestionMessage('Внести в ' + Caption + ' ' + inttostr(k) + ' запис' + S.GetEnding(k, 'ь', 'и', 'ей') + '?') <> mrYes then
     Exit;
   for i := 0 to High(OrItems) do
     if OrItems[i][0] = 1 then begin
-      Q.QIUD('i', 'j_development', '', 'id$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_status$i', [-1, 5, OrItems[i][2], OrItems[i][3], OrItems[i][5] + ' [' + OrItems[i][6] + ']', OrItems[i][4], 1]);
+      Q.QIUD('i', 'j_development', '', 'id$i;developer$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_status$i', [-1, Developer, 5, OrItems[i][2], OrItems[i][3], OrItems[i][5] + ' [' + OrItems[i][6] + ']', OrItems[i][4], 1]);
     end;
-  MyInfoMessage('Готово!'#13#10'Обновите журнал разработки.');
+  MyInfoMessage('Готово!'#13#10'Обновите ' + Caption + '.');
 end;
 
 function TOrders.FinalizeOrderM(IdOrder: Variant): Integer;

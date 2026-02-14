@@ -610,6 +610,9 @@ begin
     myfrm_Rep_PlannedMaterials,
     myfrm_J_Tasks,
     myfrm_J_Devel,
+    myfrm_J_DevelThn,
+    myfrm_J_Devel_Ref,
+    myfrm_J_DevelThn_Ref,
     myfrm_R_Itm_Nomencl,
     myfrm_R_bCAD_Nomencl_SEL,
     myfrm_R_bCAD_Nomencl_SelMaterials,
@@ -983,7 +986,7 @@ begin
      [['name$s', cntEdit, 'Наименование','1:100']], [['caption dlgedit ']]);
 //    Form := TForm_BasicInput.ShowDialog(AOwner, F, 'Ед. изм. bCAD', 450, 90, fMode, AId, [[cntEdit, 0, 'Наименование', '1:50']], [['*', 'select name from bcad_units where id = :id']], ['bcad_units', '', 'id$i;name'], [['caption dlgedit']], MyFormOptions);
   end
-  else if F = myfrm_Dlg_J_Devel then begin
+  else if (F = myfrm_Dlg_J_Devel) or (F = myfrm_Dlg_J_DevelThn) then begin
     TFrmODedtDevel.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_R_Customer_Main then begin

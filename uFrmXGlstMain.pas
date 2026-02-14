@@ -1459,27 +1459,47 @@ v:=True;
       ]
     ];
   end
-  else if FormDoc = myfrm_J_Devel then begin
-    Caption:='Журнал разработки';
+  else if A.InArray(FormDoc, [myfrm_J_Devel, myfrm_J_DevelThn]) then begin
+    Caption := S.Decode([FormDoc, myfrm_J_Devel, 'Журнал разработки', 'Журнал проверки заказов']);
     Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
+      ['developer$i','_developer','40'],
       ['develtype','Вид разработки','100'],
       ['project','Проект','200;h'],
       ['slash','№ изделия','140'],
       ['name','Название изделия','300;h'],
-      ['constr','Конструктор','120'],
+      ['constr','Исполнитель','120'],
       ['dt_beg','Дата запуска','80'],
       ['dt_plan','План. дата сдачи','80'],
       ['dt_end','Дата сдачи','80'],
       ['status','Статус','80'],
-      ['cnt','Сделка','80','f=f:'],
-      ['time','Часы','80','f=f:'],
+      ['hours','Часы','80','f=f:'],
+      //['cnt','Сделка','80','f=f:'],
+      //['time','Часы','80','f=f:'],
       ['comm','Комментарий','300;h']
     ]);
     Frg1.Opt.SetTable('v_j_development');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_Devel_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_J_Devel_Del)],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetWhere('where developer = ' + S.Decode([FormDoc, myfrm_J_Devel, '1', '2']));
+    if FormDoc = myfrm_J_Devel then
+      Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_Devel_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_J_Devel_Del)],[],[-1000, User.Role(rOr_J_Devel_Ref), 'Виды работ'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    if FormDoc = myfrm_J_DevelThn then
+      Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_J_DevelThn_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,User.Role(rOr_J_DevelThn_Del)],[],[-1000, User.Role(rOr_J_DevelThn_Ref), 'Виды работ'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.Opt.SetButtonsIfEmpty([1000]);
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_plan;dt_end']];
+  end
+  else if A.InArray(FormDoc, [myfrm_J_Devel_Ref, myfrm_J_DevelThn_Ref]) then begin
+    Caption := S.Decode([FormDoc, myfrm_Dlg_J_Devel, 'Журнал разработки', 'Журнал проверки заказов']) + ' - виды работ';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['developer$i','_developer','40'],
+      ['name','Вид работы','300;h'],
+      ['hours','Время, ч.','80','f=f:']
+   ]);
+    Frg1.Opt.SetTable('ref_develtypes');
+    Frg1.Opt.SetWhere('where developer = ' + S.Decode([FormDoc, myfrm_J_Devel_Ref, '1', '2']));
+    Frg1.Opt.SetButtons(1, 'reads', True);
   end
   else if FormDoc = myfrm_R_Itm_Nomencl then begin
     Caption:='Справочник номенклатуры ИТМ';
@@ -2316,6 +2336,24 @@ begin
       Wh.ExecDialog(myfrm_Dlg_R_StdPspFormats, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_J_Devel then
       Wh.ExecDialog(myfrm_Dlg_J_Devel, Self, [], fMode, Fr.ID, null);
+    if FormDoc = myfrm_J_DevelThn then
+      Wh.ExecDialog(myfrm_Dlg_J_DevelThn, Self, [], fMode, Fr.ID, null);
+    if ((FormDoc = myfrm_J_Devel_Ref) or (FormDoc = myfrm_J_DevelThn_Ref)) and ((fMode = fAdd) or (fMode = fEdit)) then begin
+      if TFrmBasicInput.ShowDialog(Self, '', [], fMode, '~Вид работ', 500, 110,
+         [[cntEdit, 'Наименование', '1:400:0:T'],[cntNEdit, 'Время, ч.', '0:1000000000:1:N']],
+         [S.IIfStr(fMode = fEdit, Frg1.GetValueS('name')), S.IIf(fMode = fEdit, Frg1.GetValue('hours'), null)],
+         va, [['']], nil
+      ) < 0 then Exit;
+      if fMode = fAdd then
+        Q.QExecSql('insert into ref_develtypes (developer, name, hours) values (:developer$i, :name$s, :hours$f)', [S.Decode([FormDoc, myfrm_J_Devel_Ref, 1, 2]), va[0], va[1]], False)
+      else
+        Q.QExecSql('update ref_develtypes set name = :name$s, hours = :hours$f where id = :id$i', [va[0], va[1], Fr.ID], False);
+      Fr.RefreshGrid;
+    end;
+    if ((FormDoc = myfrm_J_Devel_Ref) or (FormDoc = myfrm_J_DevelThn_Ref)) and (fMode = fDelete) and (MyQuestionMessage('Удалить вид работ?') = mrYes) then begin
+      Q.QExecSql('delete from ref_develtypes where id = :id$i', [Fr.ID], False);
+      Fr.RefreshGrid;
+    end;
     if (FormDoc = myfrm_R_Itm_Nomencl) and (fMode = fAdd) then
       Wh.ExecDialog(myfrm_Dlg_EditNomenclatura, Self, [], fMode, Fr.ID, null);
     if (formDoc = myfrm_R_Itm_Nomencl) and (fMode = fEdit) then
@@ -2471,6 +2509,14 @@ begin
       Fr.RefreshGrid;
     end;
   end
+  else if (FormDoc = myfrm_J_Devel) and (Tag = 1000) then begin
+    Wh.ExecReference(myfrm_J_Devel_Ref, Self, [], 0);
+  end
+  else if (FormDoc = myfrm_J_DevelThn) and (Tag = 1000) then begin
+    Wh.ExecReference(myfrm_J_DevelThn_Ref, Self, [], 0);
+  end
+
+
   else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
     TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
   end

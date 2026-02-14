@@ -657,6 +657,7 @@ begin
     ['Журналы'],
     ['Журнал задач', myfrm_J_Tasks, True or User.Roles([], [rOr_J_Tasks_VAll, rOr_J_Tasks_Ch])],
     ['Журнал разработки', myfrm_J_Devel, User.Roles([], [rOr_J_Devel_V, rOr_J_Devel_Ch, rOr_J_Devel_Del])],
+    ['Журнал проверки заказов', myfrm_J_DevelThn, User.Roles([], [rOr_J_DevelThn_V, rOr_J_DevelThn_Ch, rOr_J_DevelThn_Del])],
     [],
     ['Плановые заказы', myfrm_J_PlannedOrders, User.Roles([], [rOr_J_PlannedOrders_V, rOr_J_PlannedOrders_Ch])],
     ['Заказы на полуфабрикаты', myfrm_J_Semiproducts, User.Roles([], [rOr_J_Semiproducts_V, rOr_J_Semiproducts_Ch])],

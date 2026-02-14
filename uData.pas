@@ -864,6 +864,9 @@ const
   myfrm_R_Bcad_Groups='R_Bcad_Groups';
   myfrm_R_Bcad_Units='R_Bcad_Units';
   myfrm_J_Devel='J_Devel';
+  myfrm_J_Devel_Ref='J_Devel_Ref';
+  myfrm_J_DevelThn='J_DevelThn';
+  myfrm_J_DevelThn_Ref='J_DevelThn_Ref';
   myfrm_J_Order_Stages1='J_Order_Stages1';
   myfrm_Rep_Order_Complaints='Rep_Order_Complaints';
   myfrm_J_OrderStages_ToProd='J_OrderStages_ToProd';
@@ -973,6 +976,7 @@ const
   myfrm_Dlg_Bcad_Groups='Dlg_Bcad_Groups';
   myfrm_Dlg_Bcad_Units='Dlg_Bcad_Units';
   myfrm_Dlg_J_Devel='Dlg_J_Devel';
+  myfrm_Dlg_J_DevelThn='Dlg_J_DevelThn';
   myfrm_Dlg_R_Customer_Main='Dlg_R_Customer_Main';
   myfrm_Dlg_R_Customer_Contact='Dlg_R_Customer_Contact';
   myfrm_Dlg_R_Customer_Legal='Dlg_R_Customer_Legal';
@@ -1689,9 +1693,15 @@ const
   rOr_R_OrderReglaments_Ch='6-130';
   rOr_D_Order_EditDtOtgr='6-131';
   rOr_J_SplDealsMonitoring='6-132';
+  rOr_J_Devel_Ref='6-133';
+  rOr_J_DevelThn_Ref='6-134';
+  rOr_J_DevelThn_V='6-135';
+  rOr_J_DevelThn_Ch='6-136';
+  rOr_J_DevelThn_Del='6-137';
+  rOr_J_Orders_ToDevelThn='6-138';
 
   const
-  URights : array [0..242] of array [0..3] of string = (
+  URights : array [0..248] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1837,6 +1847,7 @@ const
     (rOr_J_Orders_PaymentsN_Ch,'Модуль "Заказы"','Журналы: Заказы','Внесение предварительного платежа по заказу'),
     (rOr_J_Orders_PrimeCost,'Модуль "Заказы"','Журналы: Заказы','Просмотр себестоимости по заказу в журнале'),
     (rOr_J_Orders_ToDevel,'Модуль "Заказы"','Журналы: Заказы','Добавить в журнал разработки'),
+    (rOr_J_Orders_ToDevelThn,'Модуль "Заказы"','Журналы: Заказы','Добавить в журнал проверки'),
     (rOr_J_PlannedOrders_V,'Модуль "Заказы"','Журналы: Плановые заказы','Доступ к журналу, просмотр плановых заказов'),
     (rOr_J_PlannedOrders_Ch,'Модуль "Заказы"','Журналы: Плановые заказы','Создание и изменение плановых заказов'),
     (rOr_J_Semiproducts_V,'Модуль "Заказы"','Журналы: Заказы на полуфабрикаты','Доступ к журналу'),
@@ -1844,6 +1855,11 @@ const
     (rOr_J_Devel_V,'Модуль "Заказы"','Журналы: Разаработка','Доступ к журналу'),
     (rOr_J_Devel_Ch,'Модуль "Заказы"','Журналы: Разаработка','Добавление, изменение'),
     (rOr_J_Devel_Del,'Модуль "Заказы"','Журналы: Разаработка','Удаление'),
+    (rOr_J_Devel_Ref,'Модуль "Заказы"','Журналы: Разаработка','Редактирование справочника видов работ'),
+    (rOr_J_DevelThn_V,'Модуль "Заказы"','Журналы: Проверка заказов','Доступ к журналу'),
+    (rOr_J_DevelThn_Ch,'Модуль "Заказы"','Журналы: Проверка заказов','Добавление, изменение'),
+    (rOr_J_DevelThn_Del,'Модуль "Заказы"','Журналы: Проверка заказов','Удаление'),
+    (rOr_J_DevelThn_Ref,'Модуль "Заказы"','Журналы: Проверка заказов','Редактирование справочника видов работ'),
     (rOr_J_Tasks_VAll,'Модуль "Заказы"','Журналы: Задачи','Просмотр всех задач'),
     (rOr_J_Tasks_Ch,'Модуль "Заказы"','Журналы: Задачи','Создание задачи'),
     (rOr_J_Orderstages_ToProd_V,'Модуль "Заказы"','Журналы: Выдача в производство','Доступ к журналу'),

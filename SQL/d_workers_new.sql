@@ -100,7 +100,8 @@ end;
 
 --------------------------------------------------------------------------------
 --подразделени€
-drop table w_departments cascade constraints;
+alter table w_departaments drop constraint fk_w_departaments_head;
+alter table w_departaments add constraint fk_w_departaments_head foreign key (id_head) references adm_users(id);
 create table w_departaments(
   id number(11),
   code varchar(5),
@@ -113,9 +114,11 @@ create table w_departaments(
   comm varchar2(400),
   active number(1),
   constraint pk_w_departaments primary key (id),
-  constraint fk_w_departaments_head foreign key (id_head) references w_employees(id), 
+  constraint fk_w_departaments_head foreign key (id_head) references adm_users(id), 
   constraint fk_w_departaments_area foreign key (id_prod_area) references ref_production_areas(id) 
 );
+
+update w_departaments set id_head = null;
 
 create unique index idx_w_departaments_name on w_departaments(lower(name)); 
 create unique index idx_w_departaments_code on w_departaments(lower(code)); 
@@ -135,7 +138,7 @@ end;
 create or replace view v_w_departaments as  
 select
   d.*,
-  f_fio(e.f, e.i, e.o) as head,
+  u.name as head,
   case when d.is_office = 1 then 'офис' else 'цех' end as office,
   case when d.has_foreman = 1 then 'есть бригадир' else '' end as st_foreman,
   getusernames(d.ids_editusers) as editusernames,
@@ -143,17 +146,16 @@ select
   a.shortname as area_shortname  
 from
   w_departaments d,
-  w_employees e,
+  adm_users u,
   ref_production_areas a
 where
-  d.id_head = e.id
+  d.id_head = u.id (+)
   and a.id = d.id_prod_area
 ;     
 
 
 --------------------------------------------------------------------------------
 --справочник персональных надбавок
-drop table w_personal_allowances cascade constraints;
 create table w_personal_allowances(
   id number(11),
   name varchar2(400),
@@ -176,7 +178,6 @@ end;
 
 --------------------------------------------------------------------------------
 --таблица графиков работы
-drop table w_schedules cascade constraints;
 alter table w_schedules add duration number;
 create table w_schedules(
   id number(11),
@@ -203,7 +204,6 @@ end;
 insert into w_schedules(id,code,name,active) select id, code, name, active from ref_work_schedules;
 
 --таблица шаблона графикав
---drop table w_schedule_templates cascade constraints;
 create table w_schedule_templates(
   id_schedule number(11),      --айди графика работы 
   pos number,                  --номер дн€ циклва
@@ -225,7 +225,6 @@ create table w_schedule_periods(
 ); 
 
 --таблица норма рабочего времени, по графикам и по периодам
---drop table w_schedule_hours cascade constraints;
   create table w_schedule_hours(
     id number(11),
     id_schedule number(11),      --айди графика работы 
@@ -493,7 +492,6 @@ where
 --------------------------------------------------------------------------------
 
 --статусы работников (когда и куда прин€т/переведен/уволен)
---drop table w_worker_status cascade constraints;
 alter table w_employee_properties add grade number default 1;
 create table w_employee_properties(
   id number(11),
@@ -529,6 +527,141 @@ create sequence sq_w_employee_properties start with 100000 nocache;
 create index idx_w_employee_properties_div on w_employee_properties(id_departament); 
 create index idx_w_employee_properties_job on w_employee_properties(id_job); 
 create index idx_w_employee_properties_emp on w_employee_properties(id_employee); 
+
+CREATE UNIQUE INDEX idx_employee_properties_pn
+ON w_employee_properties (
+    CASE 
+        WHEN is_hired = 1 AND id_organization IS NOT NULL 
+        THEN id_organization 
+        ELSE NULL 
+    END,
+    CASE 
+        WHEN is_hired = 1 AND id_organization IS NOT NULL 
+        THEN personnel_number 
+        ELSE NULL 
+    END,
+    CASE 
+        WHEN is_hired = 1 AND id_organization IS NULL AND personnel_number IS NOT NULL 
+        THEN personnel_number   -- »ндексируем номер, чтобы он был уникален среди NULL-организаций
+        ELSE NULL 
+    END
+);
+
+WITH duplicates AS (
+  -- Ќаходим все пары (организаци€, номер), которые дублируютс€
+  SELECT id_organization, personnel_number
+  FROM w_employee_properties
+  WHERE is_hired = 1 
+    AND id_organization IS NOT NULL
+    AND personnel_number IS NOT NULL
+  GROUP BY id_organization, personnel_number
+  HAVING COUNT(*) > 1
+  
+  UNION ALL
+  
+  -- Ќаходим все номера без организации, которые дублируютс€
+  SELECT NULL AS id_organization, personnel_number
+  FROM w_employee_properties
+  WHERE is_hired = 1 
+    AND id_organization IS NULL
+    AND personnel_number IS NOT NULL
+  GROUP BY personnel_number
+  HAVING COUNT(*) > 1
+)
+-- ¬ыбираем все строки, попадающие в найденные дубликаты
+SELECT 
+  w.*,
+  CASE 
+    WHEN w.id_organization IS NOT NULL THEN 'ќрганизаци€: ' || w.id_organization
+    ELSE 'Ѕез организации'
+  END AS duplicate_group
+FROM w_employee_properties w
+WHERE EXISTS (
+  SELECT 1 FROM duplicates d
+  WHERE (d.id_organization = w.id_organization OR 
+         (d.id_organization IS NULL AND w.id_organization IS NULL))
+    AND d.personnel_number = w.personnel_number
+    AND w.is_hired = 1
+)
+ORDER BY 
+  w.id_organization NULLS FIRST,
+  w.personnel_number,
+  w.id;
+  
+
+WITH index_calc AS (
+  SELECT 
+    id,
+    id_employee,
+    is_hired,
+    id_organization,
+    personnel_number,
+    -- –ассчитываем значени€, которые попадут в функциональный индекс
+    CASE 
+      WHEN is_hired = 1 AND id_organization IS NOT NULL 
+      THEN id_organization 
+      ELSE NULL 
+    END AS idx_org,
+    CASE 
+      WHEN is_hired = 1 AND id_organization IS NOT NULL 
+      THEN personnel_number 
+      ELSE NULL 
+    END AS idx_number,
+    CASE 
+      WHEN is_hired = 1 AND id_organization IS NULL AND personnel_number IS NOT NULL 
+      THEN personnel_number 
+      ELSE NULL 
+    END AS idx_null_org_number
+  FROM w_employee_properties
+)
+SELECT 
+  id,
+  id_employee,
+  is_hired,
+  id_organization,
+  personnel_number,
+  idx_org,
+  idx_number,
+  idx_null_org_number
+FROM index_calc
+WHERE (idx_org, idx_number) IN (
+  -- Ќаходим дубликаты дл€ случа€ с организацией
+  SELECT idx_org, idx_number
+  FROM index_calc
+  WHERE idx_org IS NOT NULL AND idx_number IS NOT NULL
+  GROUP BY idx_org, idx_number
+  HAVING COUNT(*) > 1
+)
+OR idx_null_org_number IN (
+  -- Ќаходим дубликаты дл€ случа€ без организации
+  SELECT idx_null_org_number
+  FROM index_calc
+  WHERE idx_null_org_number IS NOT NULL
+  GROUP BY idx_null_org_number
+  HAVING COUNT(*) > 1
+)
+ORDER BY 
+  CASE 
+    WHEN idx_org IS NOT NULL THEN idx_org 
+    ELSE 999999 
+  END,
+  idx_number,
+  idx_null_org_number;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
 
 create or replace trigger trg_w_employee_properties_bi_r before insert on w_employee_properties for each row
 begin

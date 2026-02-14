@@ -143,7 +143,9 @@ begin
    [mbtRefresh], [],
    [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [-1001, True, 'Пересчитать данные для производства'], [],
-   [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [], [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)], [],
+   [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [],
+   [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[-1004, User.Role(rOr_J_Orders_ToDevelThn), 'Добавить в журнал проверки'],
+   [],
    [mbtTest, User.IsDeveloper],
    [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [],
    [mbtGridFilter], [], [mbtGridSettings], [], [mbtCtlPanel]
@@ -193,7 +195,8 @@ begin
     [],[-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
     [],[-1003, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Загрузить XML'],
      {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
-    [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[],[-1001, True, 'Переход к стандартному изделию'],
+    [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[-1004, User.Role(rOr_J_Orders_ToDevelThn), 'Добавить в журнал проверки'],
+    [],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
 
@@ -243,7 +246,10 @@ begin
     Exit;
   end}
   else if Tag = mbtCustom_OrToDevel then begin
-    Orders.OrderItemsToDevel(Fr.ID, null);
+    Orders.OrderItemsToDevel(Fr.ID, null, 1);
+  end
+  else if Tag = 1004 then begin
+    Orders.OrderItemsToDevel(Fr.ID, null, 2);
   end
   else if Tag = mbtViewEstimate then begin
     //просмотр общей сметы по одному или нескольким (отмеченным чекбоксами в индикаторе) заказам
@@ -459,8 +465,11 @@ begin
       end;
     mbtCustom_OrToDevel:
       begin
-//        Fr.SetState(False, False, null);
-        Orders.OrderItemsToDevel(null, Fr.ID);
+        Orders.OrderItemsToDevel(null, Fr.ID, 1);
+      end;
+    1004:
+      begin
+        Orders.OrderItemsToDevel(null, Fr.ID, 2);
       end;
     mbtViewEstimate: //просмотр сметы
       begin
