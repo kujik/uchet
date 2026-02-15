@@ -50,7 +50,11 @@ const
   dpSaveValue = 'SaveValue';
 
 type
-   TEditButtons1ClickEvent = procedure(Sender: TObject; var Handled: Boolean) of Object;
+   TEditButtons1ClickEvent = TButtonClickEventEh; // procedure(Sender: TObject; var Handled: Boolean) of Object;
+
+  TMyEditButtonStyleEh = (myebsDropDownEh, myebsEllipsisEh, myebsGlyphEh, myebsUpDownEh,
+    myebsPlusEh, myebsMinusEh, myebsAltDropDownEh, myebsAltUpDownEh);
+
 
 
 type
@@ -193,8 +197,10 @@ function GetDynProp(Control: TObject; DynProp: string): Variant;
 function GetOwneredControlNames(AOwner: TComponent): TVarDynArray;
 procedure SetControlsEhEvents(AParent: TWinControl; AOnlyFields: Boolean; AIfEmptyEvent: Boolean; AOnEnter, AOnExit, AOnChange: TNotifyEvent; AOnCheckDrawRS: TOnCheckDrawRequiredStateEventEh; AOnEditButtonsClick: TEditButtons1ClickEvent);
 procedure LoadBitmap(ImageList: TImageList; Number: Integer; Bitmap: TBitmap);
-procedure SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer);
+procedure SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer; AHint: string = '');
+procedure SetEditButtons(AControl: TObject; AButtons: TVarDynArray2);
 procedure FillComboBoxWithBiweeklyPeriods(ComboBox: TDBComboBoxEh; ADate: TDateTime; APeriodCount: Integer);
+function GetEditButtonStyleEh(AStyle: TMyEditButtonStyleEh): TEditButtonStyleEh;
 
     procedure SetControlValue(c: TControl; v: Variant); overload;
     procedure SetControlValue(f: TObject; c: string; v: Variant); overload;
@@ -253,6 +259,8 @@ procedure SetControlVerification(Control: TControl; Verify: string);
     procedure SetControlsOnCheckDrawRequired(ASelf: TForm; c: TOnCheckDrawRequiredStateEventEh);
     //проверить все дбэх контролы на форме
     procedure VerifyAllDbEhControls(ASelf: TForm);
+    //установить вссем кнопкам событие OnClick (если оно еще не установлено)
+    procedure SetButtonsOnClick(ASelf: TWinControl; c: TNotifyEvent);
     //найти родительскую форму для контрола
     function GetParentForm(C: TControl): TForm;
 
@@ -2144,7 +2152,6 @@ end;
 
 procedure TControlsHelper.SetControlsOnChange(ASelf: TForm; c: TNotifyEvent; WithCheckboxes: Boolean = False);
 //установить вссем дбэх контролам формы событития ончейнж
-//используем ASelf.ComponentCount а не ASelf.ControlCount, так как последний проходит только по родителю, а не по всей форме, те не проставит например если контролы на панелях
 var
   i, j: Integer;
   st: string;
@@ -2170,6 +2177,7 @@ begin
       TDBEditEh(ASelf.Components[i]).OnExit := c;
 end;
 
+
 procedure TControlsHelper.SetControlsOnCheckDrawRequired(ASelf: TForm; c: TOnCheckDrawRequiredStateEventEh);
 //установить вссем дбэх контролам формы событития OnCheckDrawRequiredState
 var
@@ -2192,6 +2200,25 @@ begin
       st := TCustomDBEditEh(ASelf.Components[i]).Name;
       VerifyControl(TDBEditEh(ASelf.Components[i]), False);
     end;
+end;
+
+procedure TControlsHelper.SetButtonsOnClick(ASelf: TWinControl; c: TNotifyEvent);
+//установить вссем кнопкам событие OnClick (если оно еще не установлено) рекурсивно
+var
+  i, j: Integer;
+begin
+  for i := 0 to ASelf.ControlCount - 1 do begin
+    if (ASelf.Controls[i].Owner is TFrame) then
+      Continue;
+    if ASelf.Controls[i] is TButton then
+      TButton(ASelf.Controls[i]).OnClick := c;
+    if ASelf.Controls[i] is TBitBtn then
+      TButton(ASelf.Controls[i]).OnClick := c;
+    if ASelf.Controls[i] is TSpeedButton then
+      TButton(ASelf.Controls[i]).OnClick := c;
+    if ASelf.Controls[i] is TWinControl then
+      SetButtonsOnClick(TWinControl(ASelf.Controls[i]), c);
+  end;
 end;
 
 function TControlsHelper.GetParentForm(C: TControl): TForm;
@@ -4407,15 +4434,49 @@ begin
   end;
 end;
 
-procedure TControlsHelper.SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer);
+procedure TControlsHelper.SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer; AHint: string = '');
 begin
   AEditButton.Style := ebsGlyphEh;
-  AEditButton.Images.NormalImages := MyData.IL_CellButtons;
-  AEditButton.Images.NormalIndex := APictureIndex;
-  AEditButton.Images.HotIndex := AEditButton.Images.NormalIndex;
-  AEditButton.Images.PressedIndex := AEditButton.Images.NormalIndex;
-  AEditButton.Images.DisabledIndex := 32; //прозрачная
+  if APictureIndex > 0 then begin
+    AEditButton.Images.NormalImages := MyData.IL_CellButtons;
+    AEditButton.Images.NormalIndex := APictureIndex;
+    AEditButton.Images.HotIndex := AEditButton.Images.NormalIndex;
+    AEditButton.Images.PressedIndex := AEditButton.Images.NormalIndex;
+    AEditButton.Images.DisabledIndex := 32; //прозрачная
+  end
+  else begin
+    AEditButton.Style := GetEditButtonStyleEh(TMyEditButtonStyleEh(-APictureIndex));
+  end;
+  AEditButton.Hint := AHint;
+//  AEditButton.
 end;
+
+procedure TControlsHelper.SetEditButtons(AControl: TObject; AButtons: TVarDynArray2);
+//  Cth.SetEditButtons(cmb_id_supplier, [37, 39, -myebsUpDownEh]);
+begin
+  TDBEditEh(AControl).EditButtons.Clear;
+  for var i := 0 to High(AButtons) do begin
+    TDBEditEh(AControl).EditButtons.Add;
+    SetEditButtonPictures(TDBEditEh(AControl).EditButtons[i], AButtons[i][0]);
+  end;
+end;
+
+function TControlsHelper.GetEditButtonStyleEh(AStyle: TMyEditButtonStyleEh): TEditButtonStyleEh;
+begin
+  case AStyle of
+    myebsDropDownEh : Result := ebsDropDownEh;
+    myebsEllipsisEh : Result := ebsEllipsisEh;
+    myebsGlyphEh : Result := ebsGlyphEh;
+    myebsUpDownEh : Result := ebsUpDownEh;
+    myebsPlusEh : Result := ebsPlusEh;
+    myebsMinusEh : Result := ebsMinusEh;
+    myebsAltDropDownEh : Result := ebsAltDropDownEh;
+    myebsAltUpDownEh : Result := ebsAltUpDownEh;
+  end;
+end;
+
+
+
 
 function TControlsHelper.AlignControls(AParent: TObject; Exclude: TControlArray; ResizeParent: Boolean = False; VMargin: Integer = 0; LabelsToLeft: Boolean = False): TCoord;
 //выравнивает контролы в переданном конейнере, устанавливает порядок табуляции

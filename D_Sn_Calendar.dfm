@@ -4,7 +4,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsDialog
   Caption = 'Dlg_Sn_Calendar'
-  ClientHeight = 835
+  ClientHeight = 858
   ClientWidth = 914
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -29,6 +29,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Color = clBtnFace
     ParentColor = False
     TabOrder = 0
+    ExplicitWidth = 910
     object lbl_Payments_Error: TLabel
       Left = 9
       Top = 13
@@ -404,6 +405,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1054#1089#1085#1086#1074#1085#1086#1077
     TabOrder = 1
+    ExplicitWidth = 910
     DesignSize = (
       914
       135)
@@ -498,7 +500,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object edt_Account: TDBEditEh
       Left = 270
       Top = 25
-      Width = 463
+      Width = 459
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       ControlLabel.Width = 42
@@ -512,9 +514,10 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Text = 'edt_Account'
       Visible = True
       OnExit = ControlExit
+      ExplicitWidth = 455
     end
     object Dt_Account: TDBDateTimeEditEh
-      Left = 769
+      Left = 765
       Top = 24
       Width = 121
       Height = 21
@@ -531,11 +534,12 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = True
       OnExit = ControlExit
       OnKeyPress = Dt1_KeyPress
+      ExplicitLeft = 761
     end
     object cmb_Org: TDBComboBoxEh
       Left = 579
       Top = 52
-      Width = 311
+      Width = 307
       Height = 21
       ControlLabel.Width = 64
       ControlLabel.Height = 13
@@ -549,6 +553,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Text = 'cmb_Cash'
       Visible = True
       OnExit = ControlExit
+      ExplicitWidth = 303
     end
     object Bt_RefreshSuppliers: TBitBtn
       Left = 460
@@ -619,7 +624,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object cmb_User: TDBComboBoxEh
       Left = 579
       Top = 74
-      Width = 311
+      Width = 307
       Height = 21
       ControlLabel.Width = 53
       ControlLabel.Height = 13
@@ -634,6 +639,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Text = 'cmb_Cash'
       Visible = True
       OnExit = ControlExit
+      ExplicitWidth = 303
     end
     object Bt_SelectSupplier: TBitBtn
       Left = 487
@@ -693,6 +699,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1044#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1086
     TabOrder = 2
+    ExplicitWidth = 910
     DesignSize = (
       914
       72)
@@ -711,7 +718,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Caption = 'lbl_AccountFile'
     end
     object lbl1: TLabel
-      Left = 579
+      Left = 575
       Top = 46
       Width = 63
       Height = 13
@@ -773,7 +780,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object edt_Comm: TDBEditEh
       Left = 96
       Top = 13
-      Width = 794
+      Width = 790
       Height = 21
       Anchors = [akLeft, akRight]
       ControlLabel.Width = 63
@@ -786,6 +793,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       TabOrder = 0
       Text = 'DBEditEh1'
       Visible = True
+      ExplicitWidth = 786
     end
     object Bt_FileAttach: TBitBtn
       Left = 12
@@ -832,7 +840,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       OnClick = Bt_ReqestFileOpenClick
     end
     object chb_Agreed1: TDBCheckBoxEh
-      Left = 659
+      Left = 655
       Top = 45
       Width = 159
       Height = 17
@@ -841,9 +849,10 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       TabOrder = 5
       OnClick = chb_Agreed1Click
+      ExplicitLeft = 651
     end
     object chb_Agreed2: TDBCheckBoxEh
-      Left = 816
+      Left = 812
       Top = 45
       Width = 82
       Height = 17
@@ -851,9 +860,10 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Caption = #1044#1080#1088#1077#1082#1090#1086#1088
       DynProps = <>
       TabOrder = 6
+      ExplicitLeft = 808
     end
     object chbAccountFile: TDBCheckBoxEh
-      Left = 355
+      Left = 351
       Top = 49
       Width = 158
       Height = 17
@@ -862,19 +872,20 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       DynProps = <>
       TabOrder = 7
       OnClick = chb_Agreed1Click
+      ExplicitLeft = 347
     end
   end
   object pnl_Buttons: TPanel
     Left = 0
     Top = 750
     Width = 914
-    Height = 39
+    Height = 51
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 3
     DesignSize = (
       914
-      39)
+      51)
     object lbl_Payments: TLabel
       Left = 16
       Top = 6
@@ -919,18 +930,20 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       Visible = False
     end
     object Bt_OK: TBitBtn
-      Left = 734
-      Top = 6
+      Left = 730
+      Top = 12
       Width = 75
       Height = 24
       Anchors = [akRight]
       Caption = 'Bt_OK'
       TabOrder = 2
       OnClick = Bt_OKClick
+      ExplicitLeft = 726
+      ExplicitTop = 6
     end
     object Bt_Cancel: TBitBtn
-      Left = 815
-      Top = 6
+      Left = 811
+      Top = 12
       Width = 75
       Height = 25
       Anchors = [akRight]
@@ -939,6 +952,8 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
       ModalResult = 2
       TabOrder = 3
       OnClick = Bt_CancelClick
+      ExplicitLeft = 807
+      ExplicitTop = 6
     end
   end
   object gb_Route: TGroupBox
@@ -949,15 +964,16 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1052#1072#1088#1096#1088#1091#1090
     TabOrder = 4
+    ExplicitWidth = 910
     object pnl_Route: TPanel
       Left = 2
       Top = 15
-      Width = 914
+      Width = 910
       Height = 58
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 910
+      ExplicitWidth = 906
       object lbl_Route_Error: TLabel
         Left = 7
         Top = 25
@@ -1164,7 +1180,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     object DBGridEh1: TDBGridEh
       Left = 2
       Top = 73
-      Width = 914
+      Width = 910
       Height = 86
       Align = alClient
       DataSource = DataSource1
@@ -1188,6 +1204,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1055#1083#1072#1090#1077#1078#1080
     TabOrder = 5
+    ExplicitWidth = 910
     object lbl_Payments_T_Error: TLabel
       Left = 9
       Top = 13
@@ -1327,15 +1344,16 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
     Align = alTop
     Caption = #1054#1089#1085#1086#1074#1072#1085#1080#1077
     TabOrder = 6
+    ExplicitWidth = 910
     object pnl_Basis: TPanel
       Left = 2
       Top = 15
-      Width = 914
+      Width = 910
       Height = 19
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 910
+      ExplicitWidth = 906
       DesignSize = (
         910
         19)
@@ -1406,7 +1424,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         Stretch = True
       end
       object nedt_BasisSum: TDBNumberEditEh
-        Left = 812
+        Left = 808
         Top = -3
         Width = 80
         Height = 21
@@ -1421,6 +1439,7 @@ object Dlg_Sn_Calendar: TDlg_Sn_Calendar
         EditButtons = <>
         TabOrder = 0
         Visible = True
+        ExplicitLeft = 804
       end
     end
     object DBGridEh2: TDBGridEh

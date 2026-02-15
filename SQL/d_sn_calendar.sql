@@ -32,7 +32,7 @@ create table sn_calendar_accounts(
   agreed2 number(1),            -- согласовано (директор)
   agreed2auto number(1),        -- если 1, то согласование директора не трубуется  
   accounttype number(1) default 0,   -- тип счета по этой статье (0-обычный, 1-транспорт отгрузки, 2-транспорт снабжения, 3-подрядчик по монтажу)
-  nds number(4,2),              -- ставка ндс 
+  nds number(4,2),              -- ставка ндс, в % 
   constraint pk_sn_calendar_accounts primary key (id),
 --  constraint fk_sn_calendar_accounts_user foreign key (id_user) references users(id_user),
   constraint fk_sn_calendar_accounts_exp foreign key (id_expenseitem) references ref_expenseitems(id),

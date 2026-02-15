@@ -122,7 +122,9 @@ object FrmTest: TFrmTest
     DynProps = <>
     EditButton.DefaultAction = True
     EditButton.Style = ebsEllipsisEh
-    EditButtons = <>
+    EditButtons = <
+      item
+      end>
     HighlightRequired = True
     TabOrder = 6
     Visible = True

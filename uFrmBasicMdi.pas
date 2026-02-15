@@ -244,7 +244,11 @@ type
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
     procedure btnOkClick(Sender: TObject); virtual;
     procedure btnCancelClick(Sender: TObject); virtual;
+    //событие онклик для кнопок в строке кнопок
     procedure btnClick(Sender: TObject); virtual;
+    //событие онклик для кнопок в клиентской обласи
+    procedure btnClientClick(Sender: TObject); virtual;
+    //собатие онклик для встроенных кнопок TEditButtons для Eh-контролов
     procedure EditButtonsClick(Sender: TObject; var Handled: Boolean); virtual;
     procedure GetFormLTWH;
     //получить значение контрола на форме по его имени
@@ -256,6 +260,7 @@ type
     //устанавливает редактируемыми или нет (Editable) все контролы из массива AConrols;
     //если последний пустой, то все контролы формы (кнопки и чекбокс повтора всегда исключаются из этой процедуры)
     procedure SetControlsEditable(AConrols: array of TControl; Editable: Boolean = True; Disabled: Boolean = False; Parent: TControl = nil);
+    procedure SetControlsEditableForParent(AConrols: array of TControl; Editable: Boolean = True; Disabled: Boolean = False; Parent: TControl = nil);
     //сериализуется значения контролов формы (всех, кроме галки повтора формы)
     //если задано NoSerializeCtrls, то всегда возвращает '' без проверки
     procedure Serialize; virtual;
@@ -1135,18 +1140,14 @@ end;
 procedure TFrmBasicMdi.SetControlEvents;
 //устанавливаем события (изменение, потеря фокуса, отрисовка статуса ошибки),
 //а также условия проверки контролов
-var
-  i: Integer;
 begin
   //параметры проверки контролов установив для них
   //передается массив имен контролов и их условий проверки [cname1, cver1, cname2, cver2...]
   Cth.SetControlsVerification(Self, FControlVerifycations);
   //назаначим события всем дб-контролам формы, если они не были назначены явно в дизайнере формы или в Prepare
   Cth.SetControlsEhEvents(pnlFrmClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState, EditButtonsClick);
-exit;
-  Cth.SetControlsOnChange(Self, ControlOnChange, True);
-  Cth.SetControlsOnExit(Self, ControlOnExit);
-  Cth.SetControlsOnCheckDrawRequired(Self, ControlCheckDrawRequiredState);
+  //назаначим событие онклик кнопкам в клиентской области (не в строке кнопок), если для них оно не задано в дизайнтайм или в prepare
+  Cth.SetButtonsOnClick(pnlFrmClient, btnClientClick);
 end;
 
 procedure TFrmBasicMdi.SetControlsEditable(AConrols: array of TControl; Editable: Boolean = True; Disabled: Boolean = False; Parent: TControl = nil);
@@ -1157,16 +1158,16 @@ var
   c: TControl;
   va: TVarDynArray;
 begin
+  if Parent = nil then
+    Parent := pnlFrmClient;
   va := [];
   for i := 0 to High(AConrols) do
     va := va + [AConrols[i].Name];
   for i := 0 to ComponentCount - 1 do
     if Components[i] is TWinControl then begin
       c := TControl(Components[i]);
-      if not Cth.IsChildControl(pnlFrmClient, TWinControl(c), True)
+      if not Cth.IsChildControl(TWinControl(Parent), TWinControl(c), True)
         then Continue;
-//      if A.PosInArray(c.Name, ['pnl_statusbar', 'lbl_StatusBar_Left', 'lbl_StatusBar_Right', 'pnl_bottom', 'bt_ok', 'bt_cancel', 'chb_NoClose'], True) >= 0 then
-//        Continue;
       if (Length(AConrols) = 0) or (A.PosInArray(c.Name, va, True) >= 0) then begin
         Cth.SetControlNotEditable(c, not Editable, False, True);
         if c is TCustomDBEditEh then
@@ -1174,6 +1175,13 @@ begin
       end;
     end;
 end;
+
+procedure TFrmBasicMdi.SetControlsEditableForParent(AConrols: array of TControl; Editable: Boolean = True; Disabled: Boolean = False; Parent: TControl = nil);
+var
+  i, j: Integer;
+begin
+end;
+
 
 procedure TFrmBasicMdi.Serialize;
 //
@@ -1418,7 +1426,18 @@ procedure TFrmBasicMdi.btnClick(Sender: TObject);
 begin
 end;
 
+procedure TFrmBasicMdi.btnClientClick(Sender: TObject);
+//событие онклик для кнопок в клиентской обласи
+begin
+end;
+
 procedure TFrmBasicMdi.EditButtonsClick(Sender: TObject; var Handled: Boolean);
+//событие по умолчанию для клика EditButton в eh-контролах
+//не очень хорошо различать кнопки, Sender имеет тип TEditButtonControlEh и Hint там всегда пустой, index недоступен
+//можно различать по картинке, если присвоена через Cth.SetEditButtonPictures, так:
+//  var i := TEditButtonControlEh(Sender).ButtonImages.NormalIndex;
+//родительский контрол получим так:
+//  TEditButtonControlEh(Sender).Owner;
 begin
 end;
 

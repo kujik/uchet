@@ -311,7 +311,7 @@ begin
       ['agreed2$i','Директор','60','pic'],
       ['pdt$d','Дата платежа','80'],
       ['psum$f','Сумма платежа','80','f=r:'],
-      ['pnlStatusBar$i','Платеж проведен','60','chb=+','e',User.Role(rPC_P_Payment)]
+      ['pstatus$i','Платеж проведен','60','chb=+','e',User.Role(rPC_P_Payment)]
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_payments');
     Frg1.Opt.FilterRules := [[], ['accountdt;dt;pdt']];
@@ -2125,6 +2125,13 @@ v:=True;
   Frg1.Grid2 := Frg2;
   Frg1.Prepare;
 
+
+
+  Frg1.RefreshGrid;
+
+  if (FormDoc = myfrm_R_Suppliers_SELCH) then begin
+    Frg1.MemTableEh1.Locate('id', AddParam.AsString, []);
+  end;
   if (FormDoc = myfrm_J_Orders_SEL_1) then begin
     //окно выбора заказа, второй переменной в AddParam передаем строку айди через ;, которые надо отметить
     //!!!сделать заполнение комбобоксов из массива по ИД
@@ -2141,8 +2148,6 @@ v:=True;
     end;
   end;
 
-
-  Frg1.RefreshGrid;
   Result := True;
 end;
 

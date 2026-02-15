@@ -556,7 +556,6 @@ begin
     myfrm_R_GrExpenseItems,
     myfrm_R_ExpenseItems,
     myfrm_R_Suppliers,
-    myfrm_R_Suppliers_SELCH,
     myfrm_J_Accounts,
     myfrm_J_Payments,
     myfrm_J_Accounts_SEL,
@@ -641,10 +640,8 @@ begin
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);
   end
-  else if A.InArray(F, [
-    myfrm_R_Suppliers_SELCH
-  ]) then begin
-    TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [myfoModal], fNone, 0, AAddParam);
+  else if A.InArray(F, [myfrm_R_Suppliers_SELCH]) then begin
+    TFrmXGlstMain.Show(AOwner, F, [myfoDialog, myfoModal, myfoSizeable], fNone, 0, AAddParam);
   end
   else if F = myfrm_J_SnHistory then begin
     TFrmOGrepSnHistory.Show(AOwner, F, MyFormOptions + [myfoModal], fNone, 0, AAddParam);
