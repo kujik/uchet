@@ -1831,6 +1831,7 @@ select pos from order_items where id_order = -105;
 update order_items set pos = pos - 1 where id_order = -154 and pos > 1;
 
 
+select id from order_reglaments;
 --==============================================================================
 -- -99
 
@@ -1967,7 +1968,9 @@ declare
   v varchar2(4000);
 begin
   -- -99, 4063, 4064
-  P_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
+  P_CreatePspForSemiproducts(-166, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), 113, i, v);
+  
+--d_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id$io;ornum$so = -166 | 6606=20,6608=40,6609=40,6607=20,6617=20,6618=60,6611=60,6610=180,6612=180,5740=240,6615=120,6614=60,6613=60 | 33 | К заказу П260033 | 25.02.2026 | 113 | -1 | -1  
 end;
 /   
 

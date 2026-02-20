@@ -966,7 +966,7 @@ begin
   //пройдем по списку строк турв
   for i := 0 to High(FRows) do begin
     //пройдем по всему диапозону дней турв
-    for d := 1 to 16 do begin
+    for d := 1 to FDaysCount do begin
       p := R(i, d);
       //пропускаем ячейки, в которых нет данных
       if p = -1 then
@@ -1034,7 +1034,7 @@ begin
   //пройдем по списку строк турв
   for i := 0 to High(FRows) do begin
     //пройдем по всему диапозону дней турв
-    for d := 1 to 16 do begin
+    for d := 1 to FDaysCount do begin
       p := R(i, d);
       if p = -1 then
         Continue;
@@ -1055,10 +1055,10 @@ begin
         if (t1 = -1) and (t2 = -1) then begin
           //нет ни прихода ни ухода - поставим выходной
           //если не было никакого кода, тк может быть еще отпуск
-          if FCells[p].G(d, 'id_turvcode2') = null then
+          if FCells[p].G(d, 'id_turvcode2') = null then begin
             FCells[p].SetValue(d, 'id_turvcode2', id_vyh);
             FCells[p].SetValue(d, 'changed', 1);
-          //vt[i][7]:=1;
+          end;
         end
         else if (t1 = -1) or (t2 = -1) then begin
           //нет одного времени - поставим 8.00 и подсветим
@@ -1094,7 +1094,7 @@ begin
   //пройдем по списку строк турв
   for i := 0 to High(FRows) do begin
     //пройдем по всему диапозону дней турв
-    for d := 1 to 16 do begin
+    for d := 1 to FDaysCount do begin
       p := R(i, d);
       if p = -1 then
         Continue;
@@ -3357,7 +3357,8 @@ begin
   Ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   Ids := Ids + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(Date)]);
   for i := 0 to High(Ids) do begin
-    LTurv.Create(Ids[i], '', '');
+   //if not ((Ids[i] = 12969) or (Ids[i] = 12889)) then Continue;
+   LTurv.Create(Ids[i], '', '');
     try
     LTurv.LoadFromParsec;
     except

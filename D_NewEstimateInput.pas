@@ -85,9 +85,12 @@ var
   b: Boolean;
 begin
   Mth.PostAndEdit(MemTableEh1);
+  DbGridEh1.SearchPanel.SearchingText := '';
+  DbGridEh1.SearchPanel.ApplySearchFilter;
   Result := inherited;
   if Result <> '' then
     Exit;
+//  Gh.GridFilterClear(DBGridEh1);
   Result := '';
 {  va1 := A.Explode(FieldsNoRepaeted, ';');
   rn := MemTableEh1.RecNo;
@@ -321,7 +324,7 @@ begin
   {(*}
   Orders.LoadBcadGroups(True);
   Mth.CreateTableGrid(
-    DBGridEh1, True, False, False, False,[
+    DBGridEh1, True, True, False, False,[
     ['idgroup', ftString, 1000, 'Группа', 200, True, False, False],
     ['name', ftString, 1000, 'Наименование', 400, True, True, True],
     ['idunit', ftString, 50, 'Ед.изм.', 100, True, False, False],

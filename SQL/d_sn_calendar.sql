@@ -54,13 +54,18 @@ create index idx_sn_calendar_accounts_2 on sn_calendar_accounts(id_supplier);
 create index idx_sn_calendar_accounts_3 on sn_calendar_accounts(dt);
 create index idx_sn_calendar_accounts_4 on sn_calendar_accounts(accountdt);
 
---select (select legalname from ref_suppliers where id = id_supplier), id from uchet.sn_calendar_accounts; 
-
---insert into sn_calendar_accounts (
+---insert into sn_calendar_accounts (
 --  id, type, account, dt, accountdt, id_expenseitem, id_supplier, id_org, id_user, sum, filename, comm, agreed1, agreed2, agreed2auto )
 --  select id, type, account, dt, accountdt, id_expenseitem, id_supplier, id_org, id_user, sum, filename, comm, agreed1, agreed2, agreed2auto from uchet.sn_calendar_accounts;  
 
-update sn_calendar_accounts a set id_whoagreed1 = (select e.agreed from ref_expenseitems e where a.id_expenseitem = e.id) where a.agreed1 = 1;
+--update sn_calendar_accounts a set id_whoagreed1 = (select e.agreed from ref_expenseitems e where a.id_expenseitem = e.id) where a.agreed1 = 1;
+
+create or replace trigger trg_w_sn_accounts_bi_r before insert on sn_calendar_accounts for each row   --+++
+begin
+  select nvl(:new.id, sq_sn_calendar_accounts.nextval) into :new.id from dual;
+end;
+/
+
 
 
 
@@ -80,7 +85,14 @@ create table sn_calendar_payments(
 
 create sequence sq_sn_calendar_payments start with 250 nocache;
 
---insert into sn_calendar_payments (id, id_account, dt, sum, status, dtpaid) select id, id_account, dt, sum, status, dtpaid from uchet.sn_calendar_payments; 
+--insert into sn_calendar_payments (id, id_account, dt, sum, status, dtpaid) select id, id_account, dt, sum, status, dtpaid from uchet.sn_calendar_payments;
+
+create or replace trigger trg_w_sn_payments_bi_r before insert on sn_calendar_payments for each row   --+++
+begin
+  select nvl(:new.id, sq_sn_calendar_payments.nextval) into :new.id from dual;
+end;
+/
+ 
 
 
 --справочник поставщиков

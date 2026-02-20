@@ -1472,6 +1472,8 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
 begin
+Turv.LoadDataFromParsec; Exit;
+
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 38236, null); exit;
 //  Exit;
 //Turv.LoadDataFromParsec; Exit;

@@ -545,11 +545,11 @@ begin
     try
     if ParamStr(1) = '/turvreport1' then begin
       IscorrectTask:=True;
-      if DayOf(Date) in [1, 16] then TestTurvComplete;
+      //if DayOf(Date) in [1, 16] then TestTurvComplete;
     end;
     if ParamStr(1) = '/turvreport2' then begin
       IscorrectTask:=True;
-      Run_TestTurvDifferences;
+      //Run_TestTurvDifferences;
     end;
     if ParamStr(1) = '/fromparsec' then begin
       IscorrectTask:=True;

@@ -58,6 +58,7 @@ type
     procedure FillFromPlanned;
     procedure SetDetailInfo;
     procedure ClearInvalidReserve;
+    procedure SendMail;
   protected
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
@@ -83,6 +84,7 @@ uses
   RegularExpressions,
   uWindows,
   uOrders,
+  uTasks,
 
   D_Spl_InfoGrid,
   uFrmODedtNomenclFiles,
@@ -1281,6 +1283,8 @@ begin
     //восстановим фильтр
     Gh.GridFilterRestore(Frg1.DbGridEh1, gf);
   end;
+  //в рассылку информацию по заявке
+  SendMail;
   //вызовем процедуру формирования заявки поставщику по переданной категории
   Q.QBeginTrans(True);
   Q.QCallStoredProc('p_Spl_Create_History', 'st$s', ['Заказ']);
@@ -1394,6 +1398,45 @@ begin
   Frg1.RefreshGrid;
 end;
 
+procedure TFrmOGedtSnMain.SendMail;
+var
+  i, j: Integer;
+  IdSch, IdSchN, IdIb, IdIbN: Integer;
+  na: TNamedArr;
+  va: TVarDynArray;
+  st, st1, css: string;
+  e: Extended;
+begin
+  Q.QLoadFromQuery('select name, name_unit, qnt, qnt_onway, rezerv, qnt1, qnt3, need, qnt_order, qnt_order - need as excess from v_spl_minremains where to_order = 1 and id_category = :id_category$i order by name asc', [Frg1.GetControlValue('CbCategory')], na);
+  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
+  st := '';
+  if na.Count = 0 then
+    Exit;
+  st := '';
+  for i:=0 to na.Count- 1 do begin
+    st1 := '';
+    for j := 0 to High(na.F) do
+      S.ConcatStP(st1, '<td>' + na.G(i, na.F[j]).AsString + '</td>', '');
+{    st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString +
+      '</td><td>' + na.G(i,'name_unit').AsString + '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' +
+      S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '<b>') + na.G(i,'sum_diff').AsString + S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '</b>') +
+      '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';}
+    S.ConcatStP(st, '<tr>' + st1 + '</tr>');
+  end;
+  st :=
+    '<b>Номенклатура к заказу:</b><br>' +
+    '<table border = "1">'+
+    '<tr><td><b>Наименование</b></td><td><b>ед.Изм</b></td><td><b>Остаток</b></td><td><b>В пути</b></td><td><b>Резерв</b></td><td><b>Расход за месяц</b>'+
+    '</td><td><b>Расход за квартал</b></td><td><b>Потребность</b></td><td><b>Кол-во к заказу</b></td><td><b>Превышение</b></td></tr>' +
+    st + '</table><br>' + 'Менеджер: <b>' + User.GetName + '</b>';
+  Tasks.CreateTaskRoot(myTskOpMailHtml, [
+    ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+//  ['to', 'sprokopenko@fr-mix.ru'],
+    ['subject', 'Создана заявка на закупку материалов'],
+    ['body', st + '<br>'],
+    ['user-name', 'Учёт']
+  ]);
+end;
 
 
 
@@ -1401,3 +1444,6 @@ end;
 
 
 end.
+
+
+

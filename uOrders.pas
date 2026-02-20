@@ -258,7 +258,14 @@ begin
     Columns := cr1
   else
     Columns := cr2;
-  if not ((High(va) >= 2) and (High(va[0]) >= Columns.cComm) and ((EstimateFormat = 1) and (S.NSt(va[0][0]) = '№') and (S.NSt(va[0][1]) = 'Название') and (S.NSt(va[0][2]) = 'Код') and (S.NSt(va[0][3]) = 'Ед. изм.') and (S.NSt(va[0][13]) = 'Комментарий')) or ((EstimateFormat = 2) and (S.NSt(va[Columns.rBeg - 1][Columns.cNo]) = '№') and (S.NSt(va[Columns.rBeg - 1][Columns.cName]) = 'Наименование') and (S.NSt(va[Columns.rBeg - 1][Columns.cUnit]) = 'Ед. изм.') and (S.NSt(va[Columns.rBeg - 1][Columns.cComm]) = 'Примечание'))) then begin
+  if not ((High(va) >= 2) and (High(va[0]) >= Columns.cComm) and
+  ((EstimateFormat = 1) and
+  (S.NSt(va[0][0]) = '№') and (A.InArray(S.NSt(va[Columns.rBeg - 1][Columns.cName]), ['Наименование', 'Название'])) and (S.NSt(va[0][2]) = 'Код') and
+  (S.NSt(va[0][3]) = 'Ед. изм.') and (A.InArray(S.NSt(va[Columns.rBeg - 1][Columns.cComm]), ['Комментарий', 'Примечание']))) or
+  ((EstimateFormat = 2) and
+  (S.NSt(va[Columns.rBeg - 1][Columns.cNo]) = '№') and (A.InArray(S.NSt(va[Columns.rBeg - 1][Columns.cName]), ['Наименование', 'Название'])) and
+  (S.NSt(va[Columns.rBeg - 1][Columns.cUnit]) = 'Ед. изм.') and (S.NSt(va[Columns.rBeg - 1][Columns.cComm]) = 'Примечание')))
+  then begin
 //MyInfoMessage(S.NSt(va[Columns.rBeg-1][Columns.cNo]));
     MyWarningMessage('Выбранный файл не является сметой!');
     Exit;
@@ -1803,18 +1810,18 @@ begin
   OrItems := [];
   if Developer = 1 then begin
     if IdOrItem <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns from v_order_items where id = :id$i', [IdOrItem]);
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns from v_order_items where id = :id$i', [IdOrItem]);
     end
     else if IdOrder <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
     end;
   end
   else begin
     if IdOrItem <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, thn from v_order_items where id = :id$i', [IdOrItem]);
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn from v_order_items where id = :id$i', [IdOrItem]);
     end
     else if IdOrder <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, thn ' + 'from v_order_items ' + 'where id_order = :id$i and id_thn <> -101 and qnt > 0', [IdOrder]);
+      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn ' + 'from v_order_items ' + 'where id_order = :id$i and id_thn <> -101 and qnt > 0', [IdOrder]);
     end;
   end;
   if Length(OrItems) = 0 then begin
@@ -1839,7 +1846,8 @@ begin
     Exit;
   for i := 0 to High(OrItems) do
     if OrItems[i][0] = 1 then begin
-      Q.QIUD('i', 'j_development', '', 'id$i;developer$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_status$i', [-1, Developer, 5, OrItems[i][2], OrItems[i][3], OrItems[i][5] + ' [' + OrItems[i][6] + ']', OrItems[i][4], 1]);
+      Q.QIUD('i', 'j_development', '', 'id$i;developer$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_kns$i;id_status$i',
+        [-1, Developer, S.IIf((Developer = 1), 5{запуск}, null), OrItems[i][2], OrItems[i][3], OrItems[i][5] + ' [' + OrItems[i][6] + ']', OrItems[i][4], S.IIf((Developer = 1) or (OrItems[i][7].AsIntegerM < 0), null, OrItems[i][7]), 1]);
     end;
   MyInfoMessage('Готово!'#13#10'Обновите ' + Caption + '.');
 end;

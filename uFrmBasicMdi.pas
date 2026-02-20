@@ -202,6 +202,7 @@ type
     //если возвращает ложь то происходит выход из конструктора с закрытием формы ExitWithoutShow
     //(то есть False блокирет отображение формы);
     //перекрываетс€.
+    procedure AfterFormActivate; virtual;
     function  Prepare(): Boolean; reintroduce; virtual;
     //процедура дл€ установки основных параметров формы, используетс€ в конструкторе в случае динамически создаваемых форм,
     //и может вызыватьс€ €вно в диалоге формы, созданной в uchet.dpr, с основными предустановками
@@ -325,6 +326,8 @@ type
     //процедра здесь вызываетс€ в собыли€х изменени€ и потери фокуса дл€ контрола, а полна€ проверка
     //при показе окна и при нажатии ќ 
     procedure Verify(Sender: TObject; onInput: Boolean = False); virtual;
+
+    procedure GlobalEvent(AEvent: Integer); virtual;
 
     {--------------------------------------------------------------------------}
     {  эти функции используем дл€ создани€ и открыти€ формы-потомка, они достаточны дл€ большинства мди-чайлд форм, в которых происходит отображание
@@ -851,6 +854,11 @@ begin
     BorderStyle := bsSizeable
   else
     BorderStyle := bsDialog;
+end;
+
+procedure TFrmBasicMdi.GlobalEvent(AEvent: Integer);
+begin
+  //MyInfoMessage('!!!');
 end;
 
 
@@ -1454,6 +1462,12 @@ begin
   if FPreventShow then Exit;
   if Left < 0 then Left := 10;
   Wh.ChildFormActivate(Self);
+  AfterFormActivate;
+end;
+
+procedure TFrmBasicMdi.AfterFormActivate;
+begin
+
 end;
 
 procedure TFrmBasicMdi.FormCanResize(Sender: TObject; var NewWidth, NewHeight: Integer; var Resize: Boolean);

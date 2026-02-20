@@ -407,6 +407,20 @@ type
     function AppendGrid(DBGridEh1: TDBGridEh; Table: string; IDs: TVarDynArray2): Integer;
   end;
 
+type
+  TWinControlHelper = class helper for TWinControl
+  private
+    function GetRight: Integer;
+    function GetBottom: Integer;
+    procedure SetRight(const Value: Integer);
+    procedure SetBottom(const Value: Integer);
+  public
+    property Right: Integer read GetRight write SetRight;
+    property Bottom: Integer read GetBottom write SetBottom;
+    procedure SetRightKeepLeft(const Value: Integer);
+    procedure SetBottomKeepTop(const Value: Integer);
+  end;
+
 function clmyPink: Cardinal;
 function clmyYelow: Cardinal;
 function clmyGreen: Cardinal;
@@ -1831,6 +1845,8 @@ procedure TControlsHelper.SetErrorMarker(c: TControl; HasError: Boolean);
 //устанавливает или снимает в зависимости от HasError динамическую переменную 'error'
 //для контрола, чтобы в дальнейшем визуализировать и проверить на ошибки
 begin
+//  if c.Name = 'nedt_PriceKm'then
+//    var b := True;
   SetDynProps(c, [[dpError, '', HasError]]);
 end;
 
@@ -4679,6 +4695,54 @@ begin
     Periods.Free;
   end;
 end;
+
+
+
+
+
+
+{
+================================================================================
+TWinControlHelper
+================================================================================
+}
+
+function TWinControlHelper.GetRight: Integer;
+begin
+  // Правая граница = Left + Width
+  Result := Left + Width;
+end;
+
+procedure TWinControlHelper.SetRight(const Value: Integer);
+begin
+  // Устанавливаем Left так, чтобы правая граница стала Value
+  // (ширина контрола сохраняется)
+  Left := Value - Width;
+end;
+
+procedure TWinControlHelper.SetRightKeepLeft(const Value: Integer);
+begin
+  // Устанавливаем Left так, чтобы правая граница стала Value
+  // (ширина контрола изменяется)
+  Width := Value - Left;
+end;
+
+function TWinControlHelper.GetBottom: Integer;
+begin
+  Result := Top + Height;
+end;
+
+procedure TWinControlHelper.SetBottom(const Value: Integer);
+begin
+  Top := Value - Height;
+end;
+
+procedure TWinControlHelper.SetBottomKeepTop(const Value: Integer);
+begin
+  Height := Value - Top;
+end;
+
+
 
 
 end.

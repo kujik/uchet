@@ -464,8 +464,12 @@ from
 where
   b.id_pers_bonus = t.id (+)
   and b.id_employee (+) = e.id
-  and e.is_working_now = 'работает'
+  --and e.is_working_now = 'работает'
 ;
+
+select * from v_w_employees where id = 458;
+select * from v_w_employees where is_working_now is null; 
+ 
 
 create or replace view v_w_employee_pers_bonus_get as
 select 

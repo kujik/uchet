@@ -77,6 +77,6 @@ from
   ref_develtypes t,
   adm_users u
 where
-  d.id_develtype = t.id and
+  d.id_develtype = t.id (+) and
   u.id (+) = d.id_kns
 ;

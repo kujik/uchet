@@ -186,7 +186,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
       object cmb_Id_DevelType: TDBComboBoxEh
         Left = 84
         Top = 8
-        Width = 195
+        Width = 643
         Height = 21
         ControlLabel.Width = 60
         ControlLabel.Height = 13
@@ -241,11 +241,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
     ExplicitWidth = 825
     inherited lblStatusBarR: TLabel
       Left = 756
-      Height = 14
       ExplicitLeft = 756
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

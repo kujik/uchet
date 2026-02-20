@@ -91,7 +91,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uFrmXWAbout, uData, uDBOra, V_MDI,
+  uFrmXWAbout, uData, uDBOra, V_MDI, uFrmBasicMdi,
 
   uWindows, uTasks,
   D_SetPassword,
@@ -310,6 +310,10 @@ begin
     end
     else if (Char(msg.wParam) = 'D') and CtrlAlShift then begin
 //      Handled := True;
+    end
+    else if (Char(msg.wParam) = 'E') and (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then begin
+      if Screen.ActiveForm is TFrmBasicMDI then
+        TFrmBasicMDI(Screen.ActiveForm).GlobalEvent(1);
     end;
   end;
 end;

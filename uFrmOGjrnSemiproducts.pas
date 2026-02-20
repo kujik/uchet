@@ -711,7 +711,6 @@ var
         DtO := Frg1.GetValue('dt_otgr', rb, False);
     end;
     StC := 'К заказу ' + Frg1.GetValue('ornum', rb, False);
-    //pnl_CreatePspForSemiproducts(-99, '4063=12,4064=123', 33, 'К заказу 1234', trunc(sysdate), i, v);
     va := Q.QCallStoredProc(
       'p_CreatePspForSemiproducts',
       'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id$io;ornum$so',
@@ -719,8 +718,8 @@ var
     );
     if Length(va) = 0 then
       Exit;
-    IdO := va[5];
-    StO := va[6];
+    IdO := va[6];
+    StO := va[7];
     Result := True;
   end;
 

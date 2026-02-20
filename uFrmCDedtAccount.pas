@@ -26,10 +26,8 @@ type
     cmb_nds: TDBComboBoxEh;
     pnlRoute: TPanel;
     frmpcRoute: TFrMyPanelCaption;
-    FrgRoute: TFrDBGridEh;
     pnlBasis: TPanel;
     frmpcBasis: TFrMyPanelCaption;
-    FrgBasis: TFrDBGridEh;
     BindingsList1: TBindingsList;
     pnlPayments: TPanel;
     scrlbxPaymentsM: TScrollBox;
@@ -49,23 +47,25 @@ type
     btnFileAttach: TBitBtn;
     edt_comm: TDBEditEh;
     pnlRouteM: TPanel;
-    cmb_CarType: TDBComboBoxEh;
-    cmb_Flight: TDBComboBoxEh;
-    nedt_Kilometrage: TDBNumberEditEh;
-    dedt_FlightDt: TDBDateTimeEditEh;
-    nedt_Idle: TDBNumberEditEh;
-    nedt_PriceKm: TDBNumberEditEh;
-    nedt_PriceIdle: TDBNumberEditEh;
-    nedt_SumOther: TDBNumberEditEh;
     chb_AccountFile: TDBCheckBoxEh;
     chb_RequestFile: TDBCheckBoxEh;
     tmr1: TTimer;
     ApplicationEvents1: TApplicationEvents;
     lbl_Info: TLabel;
+    cmb_CarType: TDBComboBoxEh;
+    cmb_Flight: TDBComboBoxEh;
+    dedt_FlightDt: TDBDateTimeEditEh;
+    nedt_Kilometrage: TDBNumberEditEh;
+    nedt_Idle: TDBNumberEditEh;
+    nedt_SumOther: TDBNumberEditEh;
+    nedt_PriceIdle: TDBNumberEditEh;
+    nedt_PriceKm: TDBNumberEditEh;
+    pnlBasicM: TPanel;
+    FrgRoute: TFrDBGridEh;
+    FrgBasis: TFrDBGridEh;
     procedure FormResize(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
-    procedure edt_accountEditButtons0Click(Sender: TObject;
-      var Handled: Boolean);
+    procedure edt_accountEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     FAccountType: Integer;
     FExpenseItemsAgreed: TVarDynArray2;
@@ -74,16 +74,21 @@ type
     FIsPaid: Boolean;
     //Можно редактировать только платежи
     FEdtPaymentsOnly: Boolean;
+    //список платежей, которые были сформированы на момент открытия счета
+    FPayments: TNamedArr;
     function  Prepare: Boolean; override;
+    procedure AfterFormActivate; override;
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
     procedure ControlOnEnter(Sender: TObject); override;
     procedure ControlOnChange(Sender: TObject); override;
     procedure EditButtonsClick(Sender: TObject; var Handled: Boolean); override;
     procedure btnClientClick(Sender: TObject); override;
+    function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
     procedure EdtPaymentOnChaange(Sender: TObject);
     function  Save: Boolean; override;
     procedure LoadPayments;
+    function  SavePayments: Boolean;
     procedure SetFormAppearance;
     procedure CreatePaymentsEdts;
     procedure CalculateNds;
@@ -123,6 +128,11 @@ function TFrmCDedtAccount.Prepare: Boolean;
 begin
   Result := False;
 
+  //веременами форма уезжает. если в дизайнтайме раастянута широко, то может при запуске В РЕДАКТОРЕ ФОРМЫ схлопнуться,
+  //при этом в программе съезжают элементы, управляемые якорями.
+  //вроде все выравнивается если здесь установить ширину формы больше чем она в редакторе формы в дизайнтайме.
+  Self.Width := 1116;
+
   FAccountType := AddParam.AsInteger;
 
   Caption := 'Счет';
@@ -131,8 +141,6 @@ begin
   FOpt.StatusBarMode := stbmDialog;
 
   Cth.MakePanelsFlat(pnlFrmClient, []);
-
-  //FWHCorrected := Cth.AlignControls(pnlFrmClient, FOpt.ControlsWoAligment, False);
 
   frmpcGeneral.SetParameters(True, 'Основное', [['Данные счета.']], False);
   Cth.AlignControls(pnlGeneralM, FOpt.ControlsWoAligment, True);
@@ -211,6 +219,8 @@ begin
   Result := Inherited;
   if Result = False then
     Exit;
+
+
   if Mode <> fAdd then
     FAccountType := F.GetPropB('accounttype').AsInteger;
   CalculateNds;
@@ -221,7 +231,17 @@ begin
   SetFormAppearance;
 end;
 
+procedure TFrmCDedtAccount.AfterFormActivate;
+begin
+  nedt_SumWoNds.Right := edt_account.Right;
+  cmb_id_supplier.SetRightKeepLeft(edt_account.Right);
+  cmb_id_expenseitem.SetRightKeepLeft(edt_account.Right);
+  SetFormAppearance;
+end;
+
+
 function TFrmCDedtAccount.LoadComboBoxes: Boolean;
+//загрузка списков и других дополнительных данных
 begin
   Result := False;
   LoadSuppliers;
@@ -249,6 +269,14 @@ begin
   Result := True;
 end;
 
+function TFrmCDedtAccount.Save: Boolean;
+//сохранение данных
+begin
+  Q.QBeginTrans(True);
+  Result := inherited and SavePayments;
+  Q.QCommitOrRollback(Result);
+end;
+
 procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
 begin
 
@@ -258,7 +286,6 @@ procedure TFrmCDedtAccount.ControlOnExit(Sender: TObject);
 begin
 
 end;
-
 
 procedure TFrmCDedtAccount.ControlOnChange(Sender: TObject);
 var
@@ -304,32 +331,66 @@ begin
     ViewFiles(False);
 end;
 
-function TFrmCDedtAccount.Save: Boolean;
+function TFrmCDedtAccount.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
+//дополнительная проверка
+//нужна для ввода сумм и дат оплаты, так как:
+//при вводе значения контрола, для которого не установлены правила проверки (и которого нет в Props), он все равно проверяется при вводе, по кранйе мере очищается маркер,
+//где это происходит, не выяснил!!!
+//однако, даже в этом решении, работает для сумм, но не работает для даты, при вводе правильной даты очищается все равно
 begin
-
+  //нет общщей ошибки
+  Result := False;
+  if Sender <> nil then begin
+    if ((Pos('dedt_', TControl(Sender).Name) = 1) or (Pos('nedt_', TControl(Sender).Name) = 1)) and  S.IsNumber(Copy(TControl(Sender).Name, 6, 2), 1, 99)  then
+      //ддесь выставляются маркеры ошибки, а также отображение контролов
+      EdtPaymentOnChaange(Sender);
+  end;
 end;
 
-
 procedure TFrmCDedtAccount.LoadPayments;
+//загружаем список платежей по заказу в поле класса и сразу же в поля редактирования на форме. установим признак наличия проведенных платежей
 var
-  i, j: Integer;
-  va2: TVarDynArray2;
+  i: Integer;
 begin
   EdtPaymentOnChaange(nil);
   if Mode in [fAdd, fCopy] then
     Exit;
-  va2 := Q.QLoadToVarDynArray2('select id, dt, sum, status from sn_calendar_payments where id_account = :id$i order by status desc, dt, sum', [ID]);
+  Q.QLoadFromQuery('select id, dt, sum, status from sn_calendar_payments where id_account = :id$i order by status desc, dt, sum', [ID], FPayments);
   FIsPaid := False;
-  for i := 0 to High(va2) do begin
-    Cth.SetControlValue(Self, 'dedt_' + IntToStr(i + 1), va2[i][1]);
-    Cth.SetControlValue(Self, 'nedt_' + IntToStr(i + 1), va2[i][2]);
-    if (Mode in [fEdit]) and (va2[i][3] = 1) then begin
+  for i := 0 to FPayments.High do begin
+    Cth.SetControlValue(Self, 'dedt_' + IntToStr(i + 1), FPayments.G(i, 'dt'));
+    Cth.SetControlValue(Self, 'nedt_' + IntToStr(i + 1), FPayments.G(i, 'sum'));
+    if (Mode in [fEdit]) and (FPayments.G(i, 'status') = 1) then begin
       FIsPaid := True;
       SetControlsEditable([TControl(FindComponent('dedt_' + IntToStr(i + 1))), TControl(FindComponent('nedt_' + IntToStr(i + 1)))], False);
     end;
   end;
   EdtPaymentOnChaange(nil);
-//  EdtPaymentOnChaange(TControl(FindComponent('dedt_1')));
+end;
+
+function TFrmCDedtAccount.SavePayments: Boolean;
+//сохраним платежи по счету
+//меняем только те кторые изменились (айди привязан к позиции в сетке), если сумма пуситая или 0 то удаляем
+//при копировании - все добавляем в новый счет
+var
+  i, j: Integer;
+  dt, sum : Variant;
+begin
+  Result := True;
+  for i := 0 to cMaxPaymentsCnt - 1 do begin
+    dt := Cth.GetControlValue(Self, 'dedt_' + IntToStr(i + 1));
+    sum := Cth.GetControlValue(Self, 'nedt_' + IntToStr(i + 1));
+    if i <= S.IIf(Mode <> fCopy, FPayments.High, -1) then begin
+      if sum.AsFloat = 0 then
+        Q.QExecSQL('delete from sn_calendar_payments where id  = :id$i', [FPayments.G(i, 'id')])
+      else if (sum <> FPayments.G(i, 'sum')) or (dt <> FPayments.G(i, 'dt')) then
+        Q.QExecSQL('update sn_calendar_payments set dt = :dt$d, sum = :sum$f where id = :id$i', [FPayments.G(i, 'dt'), dt, sum]);
+    end
+    else begin
+      Q.QExecSQL('insert into sn_calendar_payments (id_account, dt, sum, status) values (:id_account$i, :dt$d, :sum$f, 0)', [ID, dt, sum]);
+    end;
+  end;
+  Result := True;
 end;
 
 procedure TFrmCDedtAccount.SetFormAppearance;
@@ -338,14 +399,21 @@ var
 begin
   pnlRoute.Visible := a.InArray(FAccountType, [1, 2]);      //маршрут, для транспортных
   pnlBasis.Visible := a.InArray(FAccountType, [1, 2, 3]);    //основания, для транспортных и монтажа
-  h := pnlAdd.Top + pnlAdd.Height;
+  pnlRoute.Height := 150;
+  pnlBasis.Height := 150;
+  pnlRoute.Top := pnlGeneral.Bottom + 1;
+  pnlBasis.Top := pnlRoute.Bottom + 1;
+  pnlPayments.Top := pnlBasis.Bottom + 1;
+  pnlAdd.Top := pnlPayments.Bottom + 1;
+  h := 1500; //pnlAdd.Top + pnlAdd.Height;
   FWHCorrected.Y := h;
   FWHCorrected.Y2 := h;
   //FWHBounds := FWHCorrected;   //ведет к блокировке изменения размера и неверному размеру
 { //возьмем размеры формы из настроек
   Self.Width:= StrtoInt(Settings.ReadProperty(FormDoc, 'Width_' + IntToStr(AccMode), '0'));
-  Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));
-  Self.Resize;}
+  Self.Height:= StrtoInt(Settings.ReadProperty(FormDoc, 'Height_' + IntToStr(AccMode), '0'));}
+  Self.Height := h;
+//  Self.Resize;
 end;
 
 procedure TFrmCDedtAccount.tmr1Timer(Sender: TObject);
@@ -355,6 +423,7 @@ begin
 end;
 
 procedure TFrmCDedtAccount.CreatePaymentsEdts;
+//создадим контролы для ввода платежей (метки, даты и суммы)
 var
   i, j: Integer;
   dedt1: TDBDateTimeEditEh;
@@ -385,44 +454,11 @@ begin
     end;
   pnlPaymentsD.Visible := True;
 end;
-(*
-procedure TFrmCDedtAccount.CreatePaymentsEdts;
-var
-  i, j: Integer;
-  dedt1: TDBDateTimeEditEh;
-  nedt1: TDBNumberEditEh;
-  w: Integer;
-begin
-  pnlPaymentsD.Visible := False;
-  w := nedt_1.Left + nedt_1.Width + 25;
-  for i := 1 to cMaxPaymentsCnt div 3  do
-    for j := S.IIf(i = 1, 2, 1) to 3 do begin
-      dedt1 := TDBDateTimeEditEh.Create(Self);
-      dedt1.Parent := pnlPaymentsD;
-      dedt1.Name := 'dedt_' + IntToStr((i - 1) * 3 + j);
-      dedt1.Visible := (i = 1) and (j = 1);
-      dedt1.Left := (j - 1) * w  + dedt_1.Left;
-      dedt1.Width := dedt_1.Width;
-      dedt1.Top := (i - 1) * (dedt_1.Height + 4) + dedt_1.Top;
-      dedt1.ControlLabelLocation.Position := lpLeftCenterEh;
-      dedt1.ControlLabel.Visible := True;
-      dedt1.ControlLabel.Caption := IntToStr((i - 1) * 3 + j);
-      nedt1 := TDBNumberEditEh.Create(Self);
-      nedt1.Parent := pnlPaymentsD;
-      nedt1.Name := 'nedt_' + IntToStr((i - 1) * 3 + j);
-      nedt1.Visible := (i = 1) and (j = 1);
-      nedt1.Left := (j - 1) * w  + nedt_1.Left;
-      nedt1.Width := nedt_1.Width;
-      nedt1.Top := dedt1.Top;
-    end;
-  pnlPaymentsD.Visible := True;
-end;
-*)
 
 procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
 var
   i, j, t: Integer;
-  b: Boolean;
+  HasEmpty: Boolean;
   sum: Extended;
 begin
   //if not FInPrepare then
@@ -433,6 +469,7 @@ begin
     dec(i);
   t := TControl(FindComponent('dedt_' + IntToStr(i))).Top;
   sum:= 0;
+  //очистим ошибку у всех контролов
   for i := 1 to cMaxPaymentsCnt do begin
     Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(i))), False);
     Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(i))), False);
@@ -440,12 +477,13 @@ begin
   i := cMaxPaymentsCnt;
   while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
     dec(i);
-  b := False;
+  HasEmpty := False;
   for j := i downto 1 do  begin
     sum := sum + GetControlValue('nedt_' + IntToStr(j)).AsFloat;
     if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
-       b := True;
+       HasEmpty := True;
     end
+    //поставим ошибку и подсветим если заполено дата, а сумма пустая, или наоборот
     else if (GetControlValue('dedt_' + IntToStr(j), True) <> null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
       Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
     end
@@ -453,25 +491,29 @@ begin
       Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
     end;
   end;
-//Exit;
-  if (not b) and (i < cMaxPaymentsCnt) then begin
-    TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
-    TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
+  //отобразим все контролы с первого до последнего введенного
+  for j := 1 to i do begin
+    TControl(FindComponent('dedt_' + IntToStr(j))).Visible := True;
+    TControl(FindComponent('nedt_' + IntToStr(j))).Visible := True;
   end;
-  for i := 0 to cMaxPaymentsCnt - 1 do
-    if not ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) then begin
+  //покажем пустое поле ввода после введенныых данных
+  if not (Mode in [fView, fDelete]) then
+    if (not HasEmpty) and (i < cMaxPaymentsCnt) then begin
       TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
       TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
     end;
   i := cMaxPaymentsCnt;
   while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
     dec(i);
-  if sum <> GetControlValue('nedt_sum').AsFloat then
-    for j := i downto 1 do
-      if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
+  //подсветим последнее заполеннное поле суммы, если общая сумма не равна итоговой по счету
+  for j := i downto 1 do
+    if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
+      if sum <> GetControlValue('nedt_sum').AsFloat then begin
         Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
-        Break;
+        Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
       end;
+      Break;
+    end;
   finally
     if not FInPrepare then begin
       //Perform(WM_SETREDRAW, 1, 0);
