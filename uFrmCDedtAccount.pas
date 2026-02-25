@@ -53,11 +53,11 @@ type
     ApplicationEvents1: TApplicationEvents;
     lbl_Info: TLabel;
     cmb_CarType: TDBComboBoxEh;
-    cmb_Flight: TDBComboBoxEh;
+    cmb_FlightType: TDBComboBoxEh;
     dedt_FlightDt: TDBDateTimeEditEh;
     nedt_Kilometrage: TDBNumberEditEh;
     nedt_Idle: TDBNumberEditEh;
-    nedt_SumOther: TDBNumberEditEh;
+    nedt_OtherSum: TDBNumberEditEh;
     nedt_PriceIdle: TDBNumberEditEh;
     nedt_PriceKm: TDBNumberEditEh;
     pnlBasicM: TPanel;
@@ -76,8 +76,11 @@ type
     FEdtPaymentsOnly: Boolean;
     //список платежей, которые были сформированы на момент открытия счета
     FPayments: TNamedArr;
+    //маршрутные точки (локации) - свои, и для счетов ТО
+    FPoints1, FPoints2: TVarDynArray;
     function  Prepare: Boolean; override;
     procedure AfterFormActivate; override;
+    function  Load: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
     procedure ControlOnExit(Sender: TObject); override;
     procedure ControlOnEnter(Sender: TObject); override;
@@ -85,8 +88,13 @@ type
     procedure EditButtonsClick(Sender: TObject; var Handled: Boolean); override;
     procedure btnClientClick(Sender: TObject); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
+    procedure VerifyBeforeSave; override;
     procedure EdtPaymentOnChaange(Sender: TObject);
     function  Save: Boolean; override;
+    procedure FrgRouteButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+    procedure FrgRouteGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+    procedure FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+    procedure FrgBasisButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
     procedure LoadPayments;
     function  SavePayments: Boolean;
     procedure SetFormAppearance;
@@ -100,6 +108,8 @@ type
     procedure AttachFiles(AMode: Boolean);
     procedure ViewFiles(AMode: Boolean);
     procedure SetEditable;
+    function  TestAccountnumDuplicates: string;
+    procedure SetGrids;
   public
   end;
 
@@ -110,11 +120,13 @@ implementation
 
 uses
   ToolCtrlsEh,
+  System.DateUtils,
   uForms,
   uDBOra,
   uMessages,
   uWindows,
-  uFields
+  uFields,
+  uFrmCWAcoountBasis
 ;
 
 
@@ -171,7 +183,7 @@ begin
   F.DefineFields:=[
     ['id$i'],
     ['type$i'],
-    ['accounttype$i','V=1:400',#0,AddParam],
+    ['accounttype$i','',#0,AddParam],
     ['account$s','V=1:400::T'],
     ['accountdt$d','V=:'],
     ['dt$d','V=:',#0,Date],
@@ -186,7 +198,20 @@ begin
     ['agreed1$i',''],
     ['agreed2$i',''],
     ['id_whoagreed1$i',''],
-    ['accountfile;0;0','V=1:1']
+    ['accountfile;0;0','V=1:1'],
+    //для транспортных счетов
+    ['idt$i;0;0','V=','T=1'],
+    ['cartype$i;0;0','V=1:400','T=1'],
+    ['flighttype$i;0;0','V=1:400','T=1', #0, 2],
+    ['flightdt$d;0;0','V=:','T=1'],
+    ['kilometrage$f;0;0','V=','T=1'],  //может нен вводиться!!!
+    //для транспортных с прямым видом рейса, сейчас не используем!!!
+    ['idle$f;0;0','V=','T=1'],
+    ['basissum$f;0;0','V=','T=1'],
+    ['othersum$f;0;0','V=','T=1'],
+    ['priceidle$f;0;0','V=','T=1'],
+    ['pricekm$f;0;0','V=','T=1'],
+    ['freeidletime$f;0;0','V=','T=1']
   ];
 
   View := 'sn_calendar_accounts';
@@ -225,6 +250,7 @@ begin
     FAccountType := F.GetPropB('accounttype').AsInteger;
   CalculateNds;
   LoadPayments;
+  SetGrids;
   SetAgreed1(False);
   IsFilesLoaded;
   SetEditable;
@@ -237,6 +263,24 @@ begin
   cmb_id_supplier.SetRightKeepLeft(edt_account.Right);
   cmb_id_expenseitem.SetRightKeepLeft(edt_account.Right);
   SetFormAppearance;
+end;
+
+function TFrmCDedtAccount.Load: Boolean;
+var
+  va2: TVarDynArray2;
+begin
+  Result := inherited;
+  if not Result then
+    Exit;
+  if A.InArray(F.GetPropB('accounttype'), [1, 2]) then begin
+    if Mode in [fEdit, fView, fDelete] then begin
+      va2 := Q.QLoadToVarDynArray2(Q.QSIUDSql('s', 'sn_calendar_accounts_t', 'id$i;cartype$i;flighttype$i;flightdt;kilometrage;idle;basissum;othersum;priceidle;pricekm;freeidletime'), [ID]);
+      F.SetPropsFromSelect(va2);
+    end
+    else begin
+  //      MaxIdle:=Q.QSelectOneRow('select transport_maxidle from sn_calendar_cfg', [])[0];
+    end;
+  end;
 end;
 
 
@@ -266,6 +310,18 @@ begin
   Q.QLoadToDBComboBoxEh('select name, id from adm_users order by name', [], cmb_id_user, cntComboLK);
   Cth.AddToComboBoxEh(cmb_nds, [['без НДС', '0'], ['5%','5'], ['7%','7'], ['10%','10'], ['20%','20'], ['22%','22']]);
   FExpenseItemsAgreed := Q.QLoadToVarDynArray2('select agreed, id from ref_expenseitems', []);
+
+  if A.InArray(F.GetPropB('accounttype'), [1, 2]) then begin
+    Q.QLoadToDBComboBoxEh('select name, id from ref_sn_cartypes where active = 1 or id = :id order by name', [F.GetPropB('cartype')], cmb_CarType, cntComboLK);
+    Cth.AddToComboBoxEh(cmb_FlightType, [['Прямой', '1'], ['Фиксированный','2']]);
+  if (Mode <> fView) and (Mode <> fDelete) then begin
+      //свои локации и локации маршрута по типу счета
+      FPoints1 := Q.QLoadToVarDynArrayOneCol('select name from ref_sn_locations where type = 0 and active = 1 order by name', []);
+      FPoints2 := Q.QLoadToVarDynArrayOneCol('select name from ref_sn_locations where type = :type order by name', [F.GetPropB('accounttype')]);
+    end;
+  end;
+
+
   Result := True;
 end;
 
@@ -273,9 +329,51 @@ function TFrmCDedtAccount.Save: Boolean;
 //сохранение данных
 begin
   Q.QBeginTrans(True);
-  Result := inherited and SavePayments;
+  Result := inherited;
+  Result := Result and SavePayments;
   Q.QCommitOrRollback(Result);
 end;
+
+procedure TFrmCDedtAccount.FrgRouteButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+
+end;
+
+procedure TFrmCDedtAccount.FrgRouteGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+begin
+  ReadOnly := (Cth.GetControlValue(cmb_flighttype) <> '2') or ((Fr.CurrField = 'point1') and (Fr.RecNo <> 1));
+end;
+
+procedure TFrmCDedtAccount.FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+begin
+  if FieldName = 'point1' then
+    Exit;
+  //установим при изменении ячеки Пункт назначения, если это не первая строка, ячейку Пункт отправки слева от введенной
+  if Fr.RecNo > 1 then begin
+    Fr.SetValue('point1', Fr.RecNo - 1, False, Fr.GetValue('point2', Fr.RecNo - 2, False));
+  end;
+  //установим при изменении ячеки Пункт назначения, ячейку Пункт отправки на следующей строке
+  if (Fr.RecNo < Fr.GetCount(False)) then begin
+    Fr.SetValue('point1', Fr.RecNo, False, Fr.GetValue('point2', Fr.RecNo - 1, False));
+  end;
+end;
+
+procedure TFrmCDedtAccount.FrgBasisButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  Handled := True;
+  if Tag = mbtDelete then begin
+    FrgBasis.DeleteRow;
+    FrgBasis.SetState(True, null, null);
+  end
+  else if Tag = mbtAdd then begin
+    FrmCWAcoountBasis.ShowDialog(Self, ID, fAdd, FAccountType);
+  end
+  else begin
+    Handled := False;
+    inherited;
+  end;
+end;
+
 
 procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
 begin
@@ -347,6 +445,11 @@ begin
   end;
 end;
 
+procedure TFrmCDedtAccount.VerifyBeforeSave;
+begin
+  FErrorMessage := TestAccountnumDuplicates;
+end;
+
 procedure TFrmCDedtAccount.LoadPayments;
 //загружаем список платежей по заказу в поле класса и сразу же в поля редактирования на форме. установим признак наличия проведенных платежей
 var
@@ -397,8 +500,8 @@ procedure TFrmCDedtAccount.SetFormAppearance;
 var
   h : Integer;
 begin
-  pnlRoute.Visible := a.InArray(FAccountType, [1, 2]);      //маршрут, для транспортных
-  pnlBasis.Visible := a.InArray(FAccountType, [1, 2, 3]);    //основания, для транспортных и монтажа
+  pnlRoute.Visible := A.InArray(FAccountType, [1, 2]);      //маршрут, для транспортных
+  pnlBasis.Visible := A.InArray(FAccountType, [1, 2, 3]);    //основания, для транспортных и монтажа
   pnlRoute.Height := 150;
   pnlBasis.Height := 150;
   pnlRoute.Top := pnlGeneral.Bottom + 1;
@@ -684,7 +787,96 @@ begin
     chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir);
   end;
   //эти ридонли всегда
-  SetControlsEditable([cmb_id_user, nedt_SumWoNds], False, False, pnlGeneral);
- end;
+  SetControlsEditable([cmb_id_user, nedt_SumWoNds, cmb_flighttype], False, False, pnlFrmClient);
+  nedt_PriceKm.Visible := False;
+  nedt_PriceIdle.Visible := False;
+  nedt_OtherSum.Visible := False;
+  nedt_Idle.Visible := False;
+  pnlRouteM.Height := 32;
+end;
+
+function TFrmCDedtAccount.TestAccountnumDuplicates: string;
+//проверим чтобы не было другого счета у того же поставщика с таким же номером при том же годе, взятом из даты выставления счета
+begin
+  Result := '';
+  if (Cth.GetControlValue(edt_Account) = '') or (Mode = fDelete) then
+    Exit;
+  if Q.QSelectOneRow('select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
+    [Cth.GetControlValue(cmb_id_Supplier), s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))])[0] = null then
+    Exit;
+  Result := '?Счет с таким же номером у этого поставщика уже есть.'#13#10'Нажнажмите "Да" чтобы сохранить данные, или "Нет" чтобы продолжить редактирование.';
+end;
+
+procedure TFrmCDedtAccount.SetGrids;
+//установи вид гридов маршрута и основания счета
+//внимание!!! колонки (в везде - логика) для прямого рейсап исключены!!! для старых счетов этого формата не будут отображаться дополнительные данные по нему, и невозможно редактирование!!!
+begin
+  if not A.InArray(F.GetPropB('accounttype'), [1, 2]) then
+    Exit;
+
+  FrgRoute.Opt.Caption := 'Маршрут';
+  FrgRoute.Options := [myogGrayTitle, myogIndicatorColumn, myogHiglightEditableCells];
+  FrgRoute.Opt.SetFields([
+    ['point1$s','Пункт отправки','100;w', 'e'],
+//    ['dt1$d','Дата и время убытия','110'],
+    ['point2$s','Пункт назначения','100;w', 'e']
+//    ['dt2$d','Дата и время прибытия','110'],
+//    ['kilometrage$i','Расстояние, км','60'],
+//    ['idle$f','Время простоя','50']
+  ]);
+  FrgRoute.Opt.SetButtons(-3, 'aid', True, cbttSSmall);
+  FrgRoute.Opt.SetGridOperations('uaid');
+//  FrgRoute.SetInitData('select (select name from ref_sn_locations where id=point1) as point1, dt1 , (select name from ref_sn_locations where id=point2) as point2, dt2, kilometrage, null as idle from sn_calendar_t_route where id_account=:id order by pos', [ID]);
+  FrgRoute.SetInitData('select (select name from ref_sn_locations where id=point1) as point1, (select name from ref_sn_locations where id=point2) as point2 from sn_calendar_t_route where id_account=:id order by pos', [ID]);
+  FrgRoute.Prepare;
+  if (Mode <> fView) and (Mode <> fDelete) then begin
+    //свои локации и локации маршрута по типу счета
+    FrgRoute.Opt.SetPick('point1', FPoints1 + FPoints2, [], False, True);
+    FrgRoute.Opt.SetPick('point2', FPoints1 + FPoints2, [], False, True);
+    FrgRoute.SetColumnsPropertyes;
+  end;
+  FrgRoute.RefreshGrid;
+  FrgRoute.First;
+  FrgRoute.OnButtonClick := FrgRouteButtonClick;
+  FrgRoute.OnGetCellReadOnly := FrgRouteGetCellReadOnly;
+  FrgRoute.OnCellValueSave := FrgRouteCellValueSave;
+
+
+
+  FrgBasis.Opt.Caption := 'Основание';
+  FrgBasis.Options := [myogGrayTitle, myogIndicatorColumn];
+  FrgBasis.Opt.SetFields([
+    ['id_basis$i','_id','60'],
+    ['type$s','Тип','60'],
+    ['name$s','Основание','200;w'],
+    ['prc$i','%','60'],
+    ['sum$f','Сумма','60','f=r:r']
+  ]);
+  FrgBasis.Opt.SetButtons(-3, 'ad', True, cbttSSmall);
+  FrgBasis.Opt.SetGridOperations('uad');
+  FrgBasis.SetInitData('select id_basis, type, name, prc, sum from v_sn_calendar_t_basis where id_account=:id order by pos', [ID]);
+  FrgBasis.Prepare;
+  FrgBasis.RefreshGrid;
+  FrgBasis.First;
+  FrgBasis.OnButtonClick := FrgBasisButtonClick;
+
+end;
+
 
 end.
+
+
+procedure TDlg_Sn_Calendar.MenuItem1Click(Sender: TObject);
+//вставить строку для грида оснований
+begin
+  FrmCWAcoountBasis.ShowDialog(Self, ID, fAdd, AccMode);
+end;
+
+procedure TDlg_Sn_Calendar.MenuItem2Click(Sender: TObject);
+begin
+  if MemTableEh2.RecordCount = 0 then Exit;
+  MemTableEh2.Delete;
+  BasisTableGetSum;
+  isBasisGridEdited:=True;
+end;
+

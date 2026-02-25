@@ -1429,7 +1429,7 @@ end;
 procedure TDlg_Sn_Calendar.MenuItem1Click(Sender: TObject);
 //вставить строку для грида оснований
 begin
-  FrmCWAcoountBasis.ShowDialog(Self, ID, fAdd, AccMode);
+//  FrmCWAcoountBasis.ShowDialog(Self, ID, fAdd, AccMode);
 end;
 
 procedure TDlg_Sn_Calendar.MenuItem2Click(Sender: TObject);

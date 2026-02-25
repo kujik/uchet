@@ -697,9 +697,8 @@ alter table order_items add qnt_boards_m2 number;
 alter table order_items add qnt_edges_m number;
 alter table order_items add qnt_panels_w_drill number;
 alter table order_items add is_xml_loaded number default 0;
-alter table order_items add wo_kns number(1) default 0;
+alter table order_items add labor_intensity number;
 
-----drop table order_items cascade constraints;
 create table order_items (
   id number(11),
   id_order number(11),               --айди заказа
@@ -739,6 +738,7 @@ create table order_items (
   qnt_edges_m number,                -- метраж кромки
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   is_xml_loaded number default 0,      --загружен xml
+  labor_intensity number,              --трудоемкость, мин.
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
@@ -811,8 +811,8 @@ create or replace view v_order_items as (
      round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
     niz.cnt as has_itm_est,
     case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
-    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all
---    1 as has_itm_est 
+    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
+    cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total
   from
     order_items i,
     v_orders o,
@@ -1085,7 +1085,7 @@ end;
 -- справочник стандартных изделий
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
-alter table or_std_items add is_xml_loaded number default 0;      --загружен xml
+alter table or_std_items add labor_intensity number;
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы (КБ/Производство)
@@ -1099,6 +1099,7 @@ create table or_std_items (
   by_sgp number(1) default 0,          --для данного изделия ведется учет СГП по стандартным изделиям 
   qnt_panels_w_drill number,
   is_xml_loaded number default 0,      --загружен xml
+  labor_intensity number,              --трудоемкость, мин.
   
   r1 number(1),                        --производственный маршрут
   r2 number(1),

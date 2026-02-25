@@ -2226,11 +2226,11 @@ begin
   for i := 0 to ASelf.ControlCount - 1 do begin
     if (ASelf.Controls[i].Owner is TFrame) then
       Continue;
-    if ASelf.Controls[i] is TButton then
+    if (ASelf.Controls[i] is TButton) and (not Assigned(TButton(ASelf.Controls[i]).OnClick)) then
       TButton(ASelf.Controls[i]).OnClick := c;
-    if ASelf.Controls[i] is TBitBtn then
+    if (ASelf.Controls[i] is TBitBtn) and (not Assigned(TButton(ASelf.Controls[i]).OnClick)) then
       TButton(ASelf.Controls[i]).OnClick := c;
-    if ASelf.Controls[i] is TSpeedButton then
+    if (ASelf.Controls[i] is TSpeedButton) and (not Assigned(TButton(ASelf.Controls[i]).OnClick)) then
       TButton(ASelf.Controls[i]).OnClick := c;
     if ASelf.Controls[i] is TWinControl then
       SetButtonsOnClick(TWinControl(ASelf.Controls[i]), c);

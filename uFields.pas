@@ -412,11 +412,3 @@ begin
 end.
 
 
-      if j = 0 then Continue;
-      if S.CompareStI(Copy(TControl(AFSelf.Components[i]).Name, j + 1), FieldName) then begin
-        Result := TControl(AFSelf.Components[i]);
-        Exit;
-      end;}
-'$name$s', cntEdit, 'N=Реквизиты','V=0:100:0:N', 'P=Frg1.1', 'D=100,20,T', 'F=DILSEHC', BegValues, AddValues
-
-    procedure CreateAddControls(Parent: TWinControl; CType: TMyControlType; CLabel: string = ''; CName: string = ''; CVerify: string = ''; x: Integer = 1; y: Integer = yrefC; Width: Integer = 0; Tag: Integer = 0);

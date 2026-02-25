@@ -87,6 +87,8 @@ type
     function ExportPassportToXLSX(AIdOrder: Integer; OrderPath: string; Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
     procedure CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
     procedure ViewItmDocumentFromLog(AParent: TForm; AId: Variant);
+    //ввод трудоемкости изделия заказа или стандартного (диалог ввода количества минут на изготовление изделия)
+    function  InputLaborIntensity (AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
     function  AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
     procedure ParseOrItemXML(const FileName: string; var PanelsWDrilling: Integer);
 end;
@@ -398,11 +400,12 @@ begin
       else  LoadEstimate(null, va1[i][0], null, False, False, True);
     HasestimateUpload := True;
   end;
-  //обновим данные по панелям со сверловкой
+  //обновим данные по панелям со сверловкой, факту загрузки xml и трудоемкости
   Q.QExecSql(
     'update order_items i set '+
     'qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill), '+
-    'is_xml_loaded = nvl((select is_xml_loaded from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.is_xml_loaded) '+
+    'is_xml_loaded = nvl((select is_xml_loaded from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.is_xml_loaded), '+
+    'labor_intensity = nvl((select labor_intensity from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.labor_intensity) '+
     'where i.id_order = :id_order$i',
     [IdOrder]
   );
@@ -2673,6 +2676,52 @@ begin
     Wh.ExecReference(DocType, AParent, [myfoDialog, myfoSizeable, myfoEnableMaximize], DocId);
 end;
 
+function TOrders.InputLaborIntensity(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
+//ввод трудоемкости изделия заказа или стандартного (диалог ввода количества минут на изготовление изделия)
+var
+  i: Integer;
+  va: TVarDynArray;
+  Labor: Variant;
+begin
+  Result := False;
+  if AIdOrItem <> null then begin
+    va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
+    if va[1] <> null then begin
+      MyInfoMessage('Нельзя задать трудоемкость для изделия закрытого заказа!');
+      Exit;
+    end;
+    if (va[0].AsInteger = 1) then begin
+      //для стандартного изделия обновим из справочника изделий
+      if MyQuestionMessage('Обнивить трудоемкость на основании справочника стандартных изделий?') <> mrYes then
+        Exit;
+      Q.QExecSql(
+        'update order_items i set '+
+        'labor_intensity = nvl((select labor_intensity from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.labor_intensity), '+
+        'where i.id = :id_order_item$i',
+        [AIdOrItem]
+      );
+      Result := True;
+      Exit;
+    end;
+  end;
+  if AIdOrItem <> null then
+    Labor := Q.QSelectOneRow('select labor_intensity from order_items where id = :id$i', [AIdOrItem])[0];
+  if AIdStdItem <> null then
+    Labor := Q.QSelectOneRow('select labor_intensity from or_std_items where id = :id$i', [AIdStdItem])[0];
+  if TFrmBasicInput.ShowDialog(AParent, '', [], fEdit, '~Трудоемкость', 240, 120,
+     [[cntNEdit, 'Трудоемкость, мин.', '0:60000:0', 0]],
+     [Labor],
+     va, [['']], nil
+  ) < 0 then Exit;
+  Labor := va[0];
+  if AIdOrItem <> null then
+    Q.QExecSql('update order_items set labor_intensity = :labor$i where id = :id$i', [Labor, AIdOrItem]);
+  if AIdStdItem <> null then
+    Q.QExecSql('update or_std_items set labor_intensity = :labor$i where id = :id$i', [Labor, AIdStdItem]);
+  Result := True;
+end;
+
+
 function TOrders.AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
 var
   i: Integer;
@@ -2680,8 +2729,10 @@ var
   PanelsWDrilling: Integer;
   va: TVarDynArray;
   status: Integer;
+  qnt: Variant;
 begin
   Result := False;
+//  i := MyMessageDlg('Загрузка данных из xml-файла', mtConfirmation, [mbYesToAll, mbYes, mbNo, mbCancel], 'Файл;Вручную;Без XML;Отмена'); {6;7;2;14} myinfomessage(inttostr(i)); exit;
   if AIdOrItem <> null then begin
     va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
     if va[1] <> null then begin
@@ -2690,7 +2741,7 @@ begin
     end;
     if (va[0].AsInteger = 1) then begin
       //для стандартного изделия обновим из справочника изделий
-      if MyQuestionMessage('Обнивить XML из основании справочника стандартных изделий?') <> mrYes then
+      if MyQuestionMessage('Обнивить XML на основании справочника стандартных изделий?') <> mrYes then
         Exit;
       Q.QExecSql(
         'update order_items i set '+
@@ -2704,8 +2755,11 @@ begin
     end;
   end;
   try
-    i := MyMessageDlg('Загрузка данных из xml-файла', mtConfirmation, [mbYes, mbNo, mbCancel], 'Файл;Без XML;Отмена');
-    if i = mrYes then begin
+  //7,1,2,3 myinfomessage(inttostr(j)); exit;
+    //кнопки будут расположены на форме в предопределенном порядке, не соответствуюзщим порядку заголовков!
+    i := MyMessageDlg('Загрузка данных из xml-файла', mtConfirmation, [mbYesToAll, mbYes, mbNo, mbCancel], 'Файл;Вручную;Без XML;Отмена'); {myinfomessage(inttostr(i)) 6;7;2;14}
+    if i = 6 then begin
+      //загружаем файл xml
       MyData.OpenDialog1.Options := [ofFileMustExist];
       MyData.OpenDialog1.Filter := 'Файлы XML (*.xml)|*.xml';
       if not MyData.OpenDialog1.Execute then
@@ -2727,7 +2781,26 @@ begin
         Q.QExecSql('update or_std_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
       Result := True;
     end
-    else if i = mrNo then begin
+    else if i = 7 then begin
+      //введем вручную
+      if AIdOrItem <> null then
+        qnt := Q.QSelectOneRow('select qnt_panels_w_drill from order_items where id = :id$i', [AIdOrItem])[0];
+      if AIdStdItem <> null then
+        qnt := Q.QSelectOneRow('select qnt_panels_w_drill from or_std_items where id = :id$i', [AIdStdItem])[0];
+      if TFrmBasicInput.ShowDialog(AParent, '', [], fEdit, '~Панели со сверловкой', 170, 70,
+         [[cntNEdit, 'Количество', '0:1000000000:0:N', 0]],
+         [qnt],
+         va, [['']], nil
+      ) < 0 then Exit;
+      PanelsWDrilling := va[0].AsInteger;
+      if AIdOrItem <> null then
+        Q.QExecSql('update order_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdOrItem]);
+      if AIdStdItem <> null then
+        Q.QExecSql('update or_std_items set is_xml_loaded = 1, qnt_panels_w_drill = :qnt$i where id = :id$i', [PanelsWDrilling, AIdStdItem]);
+      Result := True;
+    end
+    else if i = 2 then begin
+      //проставим = 0 при выборе Без XML
       if AIdOrItem <> null then
         Q.QExecSql('update order_items set is_xml_loaded = 2, qnt_panels_w_drill = 0 where id = :id$i', [AIdOrItem]);
       if AIdStdItem <> null then

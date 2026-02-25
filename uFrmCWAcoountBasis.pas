@@ -11,7 +11,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls,
   Vcl.ComCtrls, Vcl.Buttons, DBCtrlsEh, DateUtils, Math,
-  uData, D_Sn_Calendar, uFrDBGridEh, Vcl.Mask
+  uData, uFrmCDedtAccount, uFrDBGridEh, Vcl.Mask
   ;
 
 type
@@ -30,7 +30,7 @@ type
     procedure pgcMainChange(Sender: TObject);
     procedure btnOkClick(Sender: TObject);
   private
-    FSnCalendar: TDlg_Sn_Calendar;
+    FSnCalendar: TFrmCDedtAccount;
     FIdAccount: Integer;
     FAccMode: Integer;  //1-странспорт снабжения, 2-транспорт отгрузки, 3-монтаж
     procedure InsertToAccount;
@@ -38,7 +38,7 @@ type
     procedure FrgAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
     procedure FrgSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); virtual;
   public
-    procedure ShowDialog(aSn_Calendar:TDlg_Sn_Calendar; aIdAccount: Integer; Mode: TDialogType; aAccMode:Integer);
+    procedure ShowDialog(aSn_Calendar:TFrmCDedtAccount; aIdAccount: Integer; Mode: TDialogType; aAccMode:Integer);
   end;
 
 var
@@ -81,9 +81,9 @@ begin
   end;
   //проверим, есть ли уже такое основание в гриде в диалоге счета, и не даем выбрать если есть
   b:=True;
-  for i := 1 to FSnCalendar.MemTableEh2.RecordCount do begin
-    FSnCalendar.MemTableEh2.RecNo := i;
-    if (FSnCalendar.MemTableEh2.Fields[0].AsInteger = id) and (FSnCalendar.MemTableEh2.Fields[1].AsString = tp) then begin
+  for i := 0 to FSnCalendar.FrgBasis.GetCount(False) - 1 do begin
+    if (FSnCalendar.FrgBasis.GetValueI('id_basis', i, False) = id) and (FSnCalendar.FrgBasis.GetValueS('type', i, False) = tp) then begin
+      FSnCalendar.FrgBasis.SetRow(i);
       b := False;
       Break;
     end;
@@ -139,15 +139,13 @@ begin
   end;
   if b then begin
     prc := nedtPrc.Value;
-    FSnCalendar.MemTableEh2.Append;
-    FSnCalendar.MemTableEh2.Fields[0].AsInteger := id;
-    FSnCalendar.MemTableEh2.Fields[1].AsString := tp;
-    FSnCalendar.MemTableEh2.Fields[2].AsString := nm;
-    FSnCalendar.MemTableEh2.Fields[3].AsInteger := prc;
-    FSnCalendar.MemTableEh2.Fields[4].AsFloat := round(sum / 100 * prc);
-    FSnCalendar.MemTableEh2.Post;
-    FSnCalendar.BasisTableGetSum;
-    FSnCalendar.isBasisGridEdited := True;
+    FSnCalendar.FrgBasis.AddRow;
+    FSnCalendar.FrgBasis.SetValue('id_basis', id);
+    FSnCalendar.FrgBasis.SetValue('type', tp);
+    FSnCalendar.FrgBasis.SetValue('name', nm);
+    FSnCalendar.FrgBasis.SetValue('prc', prc);
+    FSnCalendar.FrgBasis.SetValue('sum', round(sum / 100 * prc));
+    FSnCalendar.FrgBasis.SetState(True, null, null);
   end;
 end;
 
@@ -200,7 +198,7 @@ begin
   end;
 end;
 
-procedure TFrmCWAcoountBasis.ShowDialog(aSn_Calendar:TDlg_Sn_Calendar; aIdAccount: Integer; Mode: TDialogType; aAccMode:Integer);
+procedure TFrmCWAcoountBasis.ShowDialog(aSn_Calendar:TFrmCDedtAccount; aIdAccount: Integer; Mode: TDialogType; aAccMode:Integer);
 var
   b: Boolean;
 begin

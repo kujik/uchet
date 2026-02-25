@@ -271,7 +271,7 @@ type
   }
 
   TFrDBGridOption = (
-    myogColoredTitle,                         //раскраска заголовка
+    myogColoredTitle,                         //раскраска заголовка голлубым градиентом
     myogColoredEven,                          //раскраска четных/нечетных строк
     myogPanelFilter,                          //фильтр в панели
     myogPanelFind,                            //поиск в панели (вместо фильтра)
@@ -300,7 +300,8 @@ type
     myogFroozeColumn,                         //разрешать заморозить столбцы через окно настроек
     myogNoTextEditing,                        //запретить открытие InplaceEditor
     myogToNextRowAfterDeleting,               //переход к следующей строке после удаления строки (иначе окажется на той, что была перед удаленной; работает при обновлении из TFrmBasicMDI или в вызове RefreshGrit(fDelete)
-    myogfastrefresh                           //быстрое обновление грида (добавлением/удалениеем/апдейтом записи). если вызывает потомок tfrmbasicmdi, то он должен обновлять id (как tfrmbasicinput). Если ади не числовое, сработает обычное обновление.
+    myogFastRefresh,                          //быстрое обновление грида (добавлением/удалениеем/апдейтом записи). если вызывает потомок tfrmbasicmdi, то он должен обновлять id (как tfrmbasicinput). Если ади не числовое, сработает обычное обновление.
+    myogGrayTitle                             //раскраска заголовка серым цветом
   );
 
   TFrDBGridOptions = set of TFrDBGridOption;
@@ -415,6 +416,7 @@ type
     V: Boolean;                  //вертикальное расположиние кнопок, по умолчанию горизонтально, если только панель не pnlLeft
     P: TPanel;                   //панель, в которой располагаются кнопки. если задана только массив кнопок для индекса 0, то она станет pnlTop
                                  //панель может и не принадлежать фрейму, быть на форме
+    PN: Integer;
   end;
 
   //определение таблиц и зпросов скл
@@ -526,7 +528,7 @@ type
     //настройка панелей кнопок и меню
     procedure SetButtons(AIndex: Integer; AButtons: TVarDynArray2; AType: Integer = 1; APanel: TPanel = nil; AHeight: Integer = 0; AVertical: Boolean = False); overload;
     //простая настройка панели кнопок, только стандартные строкой, меню будет совпадать
-    procedure SetButtons(AIndex: Integer; AButtons: string = ''; ARight: Boolean = True); overload;
+    procedure SetButtons(AIndex: Integer; AButtons: string = ''; ARight: Boolean = True; AType: Integer = 1); overload;
     //установка кнопок, которые доступны при пустом гриде. если не вызывалась - там будут кнопки по умолчанию
     //переданные кнопки добаляются к тем что по умолчанию!. чтобы очистить, сначала передайте пустой массив!
     procedure SetButtonsIfEmpty(AButtonsIfEmpty: TVarDynArray);
@@ -889,6 +891,12 @@ type
     //перемещение к следующей/предыдущей позиции
     procedure Next;
     procedure Prior;
+    procedure First;
+    procedure Last;
+    //установка фокуса грида на переданную строку, с нуля
+    procedure SetRow(ARow: Integer);
+    //установка фокуса грида на переданную строку, с единицы
+    procedure SetRecNo(ARecNo: Integer);
     //получить значение поля в текущей строке грида
     function  GetValue(FieldName: string = ''): Variant; overload;
     function  GetValueI(FieldName: string = ''): Integer; overload;
@@ -1200,16 +1208,26 @@ begin
 end;
 
 procedure TFrDBGridEhOpt.SetButtons(AIndex: Integer; AButtons: TVarDynArray2; AType: Integer = 1; APanel: TPanel = nil; AHeight: Integer = 0; AVertical: Boolean = False);
+var
+  PN: Integer;
 begin
-  if High(FButtons) < AIndex then SetLength(FButtons, AIndex + 1);
+  if AIndex < 0 then begin
+    AIndex := -AIndex;
+    PN := AIndex;
+  end
+  else
+    PN := 0;
+  if High(FButtons) < AIndex then
+    SetLength(FButtons, AIndex + 1);
   FButtons[AIndex].A := AButtons;
   FButtons[AIndex].T := AType;
   FButtons[AIndex].P := APanel;
   FButtons[AIndex].V := AVertical;
   FButtons[AIndex].H := AHeight;
+  FButtons[AIndex].PN := PN;
 end;
 
-procedure TFrDBGridEhOpt.SetButtons(AIndex: Integer; AButtons: string = ''; ARight: Boolean = True);
+procedure TFrDBGridEhOpt.SetButtons(AIndex: Integer; AButtons: string = ''; ARight: Boolean = True; AType: Integer = 1);
 const
   CButtons = 'rveacdo';
 begin
@@ -1219,11 +1237,11 @@ begin
       then AButtons := CButtons + Copy(AButtons, 2);
   SetButtons(AIndex, [
     [mbtSelectFromList, Pos('l', AButtons) > 0], [], [mbtRefresh, Pos('r', AButtons) > 0], [], [mbtView, Pos('v', AButtons) > 0], [],
-    [mbtEdit, (Pos('e', AButtons) > 0) and ARight], [mbtAdd, (Pos('a', AButtons) > 0) and ARight],
+    [mbtEdit, (Pos('e', AButtons) > 0) and ARight], [mbtAdd, (Pos('a', AButtons) > 0) and ARight], [mbtInsert, (Pos('i', AButtons) > 0) and ARight],
     [mbtCopy, (Pos('c', AButtons) > 0) and ARight], [mbtDelete, (Pos('d', AButtons) > 0) and ARight], [],
     [mbtGridFilter, (Pos('f', AButtons) > 0)], [], [mbtGridSettings, (Pos('s', AButtons) > 0)], [],
-    [mbtCtlPanel, (Pos('p', AButtons) > 0)]
-  ]);
+    [mbtCtlPanel, (Pos('p', AButtons) > 0)]], AType
+  );
 end;
 
 procedure TFrDBGridEhOpt.SetTable(AView: string; ATable: string = ''; AIdField: string = ''; ARefreshBeforeSave: Boolean = True; ARefreshAfterSave: Boolean = True);
@@ -2043,6 +2061,10 @@ begin
       DBGridEh1.TitleParams.FillStyle := cfstGradientEh;
       if Module.StyleName = '' then DBGridEh1.TitleParams.SecondColor := clSkyBlue;
     end
+    else if myogGrayTitle in FOptions then begin
+      DBGridEh1.TitleParams.FillStyle := cfstSolidEh;
+      if Module.StyleName = '' then DBGridEh1.TitleParams.Color := clBtnFace;
+    end
     else begin
       DBGridEh1.TitleParams.FillStyle := cfstDefaultEh;
     end;
@@ -2624,6 +2646,29 @@ procedure TFrDBGridEh.Prior;
 begin
   MemTableEh1.Prior;
 end;
+
+procedure TFrDBGridEh.First;
+begin
+  MemTableEh1.First;
+end;
+
+procedure TFrDBGridEh.Last;
+begin
+  MemTableEh1.Last;
+end;
+
+procedure TFrDBGridEh.SetRow(ARow: Integer);
+//установка фокуса грида на переданную строку, с нуля
+begin
+  MemTableEh1.RecNo := ARow + 1;
+end;
+
+procedure TFrDBGridEh.SetRecNo(ARecNo: Integer);
+//установка фокуса грида на переданную строку, с единицы
+begin
+  MemTableEh1.RecNo := ARecNo;
+end;
+
 
 function TFrDBGridEh.GetValue(FieldName: string = ''): Variant;
 //получить значение поля в текущей строке грида
@@ -3626,6 +3671,12 @@ begin
   FBtnIds:= [];
   for i:= Low(Opt.Buttons) to High(Opt.Buttons) do
     if Length(Opt.Buttons[i].A) > 0 then begin
+      if Opt.Buttons[i].P = nil then
+        case Opt.Buttons[i].PN of
+          1 : Opt.Buttons[i].P:= pnlTop;
+          2 : Opt.Buttons[i].P:= pnlBottom;
+          3 : Opt.Buttons[i].P:= pnlLeft;
+        end;
       if (i = 1) and (Opt.Buttons[i].P = nil) then Opt.Buttons[i].P:= pnlTop;
       if Opt.Buttons[i].P = pnlLeft then Opt.Buttons[i].V:= true;
       if Opt.Buttons[i].P <> nil then begin
@@ -4105,7 +4156,7 @@ end;
 function TFrDBGridEh.DeleteRow: Boolean;
 //если доступна операция удаления, то удалим в строку конец таблицы
 begin
-  if (MemTableEh1.State in [dsInsert]) or not (alopInsertEh in FOpt.AllowedOperations) then
+  if (MemTableEh1.State in [dsInsert]) or not (alopDeleteEh in FOpt.AllowedOperations) then
     Exit;
   if (ID < MY_IDS_INSERTED_MIN) and not A.InArray(ID, FEditData.IdsDeleted) then
     FEditData.IdsDeleted := FEditData.IdsDeleted + [ID];

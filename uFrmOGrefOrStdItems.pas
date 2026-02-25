@@ -63,9 +63,10 @@ begin
     ['priceraw$f','Цена по смете','70','f=r'],
     ['route2','Производственный маршрут','120'],
 //    ['route','Производственный маршрут','120'],
-    ['qnt_panels_w_drill','Сверловка, панелей','80', 'f'],
+    ['qnt_panels_w_drill','Сверловка, панелей','80'],
     ['dt_estimate','Смета','75'],
     ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
+    ['labor_intensity','Трудо-'#13#10'емкость','65'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
@@ -73,6 +74,7 @@ begin
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
     [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
     [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
+    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
     [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[mbtTest]]
   );
   Frg1.Opt.SetButtonsIfEmpty([1000]);
@@ -151,6 +153,10 @@ begin
   end
   else if (Tag = 1001) then begin
     if Orders.AddOrItemXMLFile(Self, Fr.ID, null) then
+      Fr.RefreshRecord;
+  end
+  else if (Tag = 1002) then begin
+    if Orders.InputLaborIntensity(Self, Fr.ID, null) then
       Fr.RefreshRecord;
   end
 (*//!!!es else if (Tag = mbtViewEstimate) then begin

@@ -182,7 +182,9 @@ begin
     ['dt_thn','Документы ТХН','80'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
-    ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
+    ['qnt_panels_w_drill_all','Сверловка, панелей','80', 'f=f:'],
+    ['labor_intensity','Трудо-'#13#10'емкость, на ед.','65'],
+    ['labor_intensity_total$i','Трудо-'#13#10'емкость, всего','65','f=#:'],
     ['cost_wo_nds$f','Сумма','80','f=r:','t=1'],
     ['sum0$f','Себестоимость','80','f=r:','t=2','null'],
     ['comm$s','Дополнение','200']
@@ -196,6 +198,7 @@ begin
     [],[-1003, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Загрузить XML'],
      {[-mbtCustom_OrderSetAllSN, User.Role(rOr_D_Order_SetSn)], }
     [],[-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[-1004, User.Role(rOr_J_Orders_ToDevelThn), 'Добавить в журнал проверки'],
+    [],[-1005, User.Role(rOr_J_Orders_Set_Labor), 'Задать трудоемкость'],
     [],[-1001, True, 'Переход к стандартному изделию'],
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
@@ -511,6 +514,13 @@ begin
     1003:
       begin
         if Orders.AddOrItemXMLFile(Self, null, Fr.ID) then begin
+          Fr.RefreshRecord;
+          Fr.SetState(True, null, null);
+        end;
+      end;
+    1005:
+      begin
+        if Orders.InputLaborIntensity(Self, null, Fr.ID) then begin
           Fr.RefreshRecord;
           Fr.SetState(True, null, null);
         end;
