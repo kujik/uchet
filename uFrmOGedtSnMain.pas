@@ -1407,7 +1407,7 @@ var
   st, st1, css: string;
   e: Extended;
 begin
-  Q.QLoadFromQuery('select name, name_unit, qnt, qnt_onway, rezerv, qnt1, qnt3, need, qnt_order, qnt_order - need as excess from v_spl_minremains where to_order = 1 and id_category = :id_category$i order by name asc', [Frg1.GetControlValue('CbCategory')], na);
+  Q.QLoadFromQuery('select name, name_unit, qnt, qnt_onway, rezerv, qnt1, qnt3, need, qnt_order, qnt_order + need as excess from v_spl_minremains where to_order = 1 and id_category = :id_category$i order by name asc', [Frg1.GetControlValue('CbCategory')], na);
   va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   st := '';
   if na.Count = 0 then

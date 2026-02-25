@@ -2,8 +2,8 @@ object FrmBasicMdi: TFrmBasicMdi
   Left = 0
   Top = 0
   Caption = 'FrmBasicMdi'
-  ClientHeight = 98
-  ClientWidth = 270
+  ClientHeight = 97
+  ClientWidth = 266
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,16 +20,16 @@ object FrmBasicMdi: TFrmBasicMdi
   object pnlFrmMain: TPanel
     Left = 0
     Top = 0
-    Width = 270
-    Height = 82
+    Width = 266
+    Height = 81
     Align = alClient
     AutoSize = True
     Padding.Left = 4
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
-    ExplicitWidth = 266
-    ExplicitHeight = 81
+    ExplicitWidth = 270
+    ExplicitHeight = 82
     object pnlFrmClient: TPanel
       Left = 5
       Top = 5
@@ -57,8 +57,6 @@ object FrmBasicMdi: TFrmBasicMdi
       Ctl3D = True
       ParentCtl3D = False
       TabOrder = 1
-      ExplicitTop = 37
-      ExplicitWidth = 256
       object bvlFrmBtnsTl: TBevel
         Left = 1
         Top = 1
@@ -94,7 +92,6 @@ object FrmBasicMdi: TFrmBasicMdi
         Padding.Bottom = 4
         ParentCtl3D = False
         TabOrder = 0
-        ExplicitWidth = 254
         object pnlFrmBtnsMain: TPanel
           Tag = -1
           Left = 159
@@ -115,7 +112,6 @@ object FrmBasicMdi: TFrmBasicMdi
           Align = alRight
           Caption = 'pnlFrmBtnsChb'
           TabOrder = 1
-          ExplicitLeft = -73
           DesignSize = (
             129
             27)
@@ -131,14 +127,13 @@ object FrmBasicMdi: TFrmBasicMdi
         end
         object pnlFrmBtnsR: TPanel
           Tag = -3
-          Left = 60
+          Left = 56
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'pnlFrmBtnsR'
           TabOrder = 2
-          ExplicitLeft = 56
         end
         object pnlFrmBtnsInfo: TPanel
           Tag = 1
@@ -180,8 +175,8 @@ object FrmBasicMdi: TFrmBasicMdi
   end
   object pnlStatusBar: TPanel
     Left = 0
-    Top = 82
-    Width = 270
+    Top = 81
+    Width = 266
     Height = 16
     Align = alBottom
     Color = cl3DLight
@@ -189,25 +184,21 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Right = 8
     ParentBackground = False
     TabOrder = 1
-    ExplicitTop = 81
-    ExplicitWidth = 266
     object lblStatusBarR: TLabel
       Left = 197
       Top = 1
       Width = 64
-      Height = 14
+      Height = 13
       Align = alRight
       Caption = 'lblStatusBarR'
-      ExplicitHeight = 13
     end
     object lblStatusBarL: TLabel
       Left = 9
       Top = 1
       Width = 62
-      Height = 14
+      Height = 13
       Align = alLeft
       Caption = 'lblStatusBarL'
-      ExplicitHeight = 13
     end
   end
   object tmrAfterCreate: TTimer

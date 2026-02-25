@@ -254,7 +254,10 @@ type
     procedure GetFormLTWH;
     //получить значение контрола на форме по его имени
     //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
-    function  GetControlValue(ControlName: string; NullIfEmpty: Boolean = False): Variant;
+    function  GetControlValue(ControlName: string; NullIfEmpty: Boolean = False): Variant; overload;
+    function  GetControlValue(Control: TControl; NullIfEmpty: Boolean = False): Variant; overload;
+    function  GetControlValues(ControlNames: TVarDynArray; NullIfEmpty: Boolean = False): TVarDynArray; overload;
+    function  GetControlValues(Controls: TControlArray; NullIfEmpty: Boolean = False): TVarDynArray; overload;
     //устанавливаем события (изменение, потеря фокуса, отрисовка статуса ошибки),
     //а также условия проверки контролов
     procedure SetControlEvents;
@@ -1209,10 +1212,38 @@ function TFrmBasicMdi.GetControlValue(ControlName: string; NullIfEmpty: Boolean 
 //получить значение контрола на форме по его имени
 //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
 begin
-  Result:= Cth.GetControlValue(TControl(Self.FindComponent(ControlName)));
-//  Result:=FindComponent
-  if NullIfEmpty then Result:=S.NullIfEmpty(Result);
+  Result := Cth.GetControlValue(TControl(Self.FindComponent(ControlName)));
+  if NullIfEmpty then
+    Result := S.NullIfEmpty(Result);
 end;
+
+function TFrmBasicMdi.GetControlValue(Control: TControl; NullIfEmpty: Boolean = False): Variant;
+begin
+  Result := Cth.GetControlValue(Control);
+  if NullIfEmpty then
+    Result := S.NullIfEmpty(Result);
+end;
+
+function TFrmBasicMdi.GetControlValues(ControlNames: TVarDynArray; NullIfEmpty: Boolean = False): TVarDynArray;
+begin
+  Result := [];
+  for var i := 0 to High(ControlNames) do begin
+    Result := Result + [Cth.GetControlValue(TControl(Self.FindComponent(ControlNames[i])))];
+    if NullIfEmpty then
+      Result[High(Result)] := S.NullIfEmpty(Result[High(Result)]);
+  end;
+end;
+
+function TFrmBasicMdi.GetControlValues(Controls: TControlArray; NullIfEmpty: Boolean = False): TVarDynArray;
+begin
+  Result := [];
+  for var i := 0 to High(Controls) do begin
+    Result := Result + [Cth.GetControlValue(Controls[i])];
+    if NullIfEmpty then
+      Result[High(Result)] := S.NullIfEmpty(Result[High(Result)]);
+  end;
+end;
+
 
 procedure TFrmBasicMdi.ControlOnChangeEvent(Sender: TObject);
 //событие изменения данных контрола

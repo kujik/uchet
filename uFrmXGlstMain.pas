@@ -264,9 +264,9 @@ begin
       ['comm$s','Примечание','150;w'],
       ['paimentstatus$s','Статус оплаты',''],
       ['agreed1$i','Согласовано','80','chb=+','e',User.Roles([], [rPC_A_AgrSelfCat])],
-      ['agreed2$i','Директор','80','chb=+','e',User.Roles([], [rPC_A_AgrDir])],
-      ['receiptdt$d','Оприходован','80',S.IIFStr(User.Role(rPC_A_Receipt),'bt=Дата оприходования')],
-      ['receiptdays$i','Оприходован, дней','80']
+      ['agreed2$i','Директор','80','chb=+','e',User.Roles([], [rPC_A_AgrDir])]
+      //['receiptdt$d','Оприходован','80',S.IIFStr(User.Role(rPC_A_Receipt),'bt=Дата оприходования')],
+      //['receiptdays$i','Оприходован, дней','80']
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_accounts');
     Frg1.Opt.FilterRules := [[], ['accountdt;dt']];
@@ -315,8 +315,7 @@ begin
     ]);
     Frg1.Opt.SetTable('v_sn_calendar_payments');
     Frg1.Opt.FilterRules := [[], ['accountdt;dt;pdt']];
-    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rPC_R_GrExp_Ch));
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit,User.Roles([],[rPC_A_ChSelfCat, rPC_A_ChAll])], [mbtAdd, 1],
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit, User.Roles([],[rPC_A_ChSelfCat, rPC_A_ChAll])], [mbtAdd, 1],
       [mbtCopy,1], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard],[],[-mbtCustom_RunPayments],[],[mbtGridFilter], [], [mbtGridSettings]]);
     Frg1.Opt.SetButtonsIfEmpty([mbtAdd_Account_TO, mbtAdd_Account_TS, mbtAdd_Account_M]);
   end
@@ -2195,8 +2194,8 @@ begin
       Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fMode, Fr.GetValue('aid'), null{AddInfo});
     if FormDoc = myfrm_R_GrExpenseItems then
       Wh.ExecDialog(myfrm_Dlg_R_GrExpenseItems, Self, [], fMode, Fr.ID, null);
-    if FormDoc = myfrm_R_ExpenseItems then
-      Wh.ExecDialog(myfrm_Dlg_RefExpenseItems, Self, [], fMode, Fr.ID, null);
+  //!!!  if FormDoc = myfrm_R_ExpenseItems then
+  //    Wh.ExecDialog(myfrm_Dlg_RefExpenseItems, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Suppliers then
       Wh.ExecDialog(myfrm_Dlg_RefSuppliers, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Suppliers_SELCH then
@@ -2400,7 +2399,7 @@ begin
     //посчитаем сколько неоплаченных и согласованных в отфильтрованных записях (не обновляем, считаем по данным грида)
     for i:=0 to Fr.GetCount - 1 do
       begin
-        if S.NNum(Fr.GetValue('pnlStatusBar', i)) = 0
+        if S.NNum(Fr.GetValue('pstatus', i)) = 0
            //2024-01-10 - можно проводить несогласованные!!!
            //and
            //(MemTableEh1.RecordsView.Rec[i].DataValues['agreed1', dvvValueEh] = 1)and
@@ -2415,7 +2414,7 @@ begin
       //проход по отфильтрованным
       for i:=0 to Fr.GetCount - 1 do
         begin
-          if S.NNum(Fr.GetValue('pnlStatusBar', i)) = 0
+          if S.NNum(Fr.GetValue('status', i)) = 0
            //2024-01-10 - можно проводить несогласованные!!!
              {and
              (MemTableEh1.RecordsView.Rec[i].DataValues['agreed1', dvvValueEh] = 1)and
@@ -2664,6 +2663,8 @@ begin
 
   else if FormDoc = myfrm_J_Accounts then
     SqlWhere := A.ImplodeNotEmpty([SqlWhere, S.IIfStr(User.Roles([],  [rPC_A_VSelfCat], [rPC_A_VAll]), 'anyinstr(useravail, ' + IntToStr(User.GetID) + ')=1')], ' and ')
+  else if FormDoc = myfrm_J_Payments then
+    SqlWhere := A.ImplodeNotEmpty([SqlWhere, S.IIfStr(User.Roles([],  [rPC_P_VSelfCat], [rPC_P_VAll]), 'anyinstr(useravail, ' + IntToStr(User.GetID) + ')=1')], ' and ')
   else if A.InArray(FormDoc, [myfrm_Rep_SnCalendar_Transport, myfrm_Rep_SnCalendar_AccMontage]) then
     Fr.SetSqlParameters('dt_beg;dt_end;i', [
         S.IIf(Cth.DteValueIsDate(TDBDateTimeEditEh(Fr.FindComponent('DeBeg'))), TDBDateTimeEditEh(Fr.FindComponent('DeBeg')).Value, IncMonth(Date, +1000)),
@@ -2822,31 +2823,29 @@ begin
         if Fr.RefreshRecord then begin
           i:= S.NInt(Fr.GetValue(Fr.CurrField));
           if MyQuestionMessage(S.IIf(i = 0, 'Согласовать счет'#10#13'('+st+') ?', 'Отменить согласование счета'#10#13'('+st+') ?')) = mrYes then begin
-            if myMessageDlg(st, mtconfirmation, [mbYes, mbNo]) = mrYes then begin
-              if Fr.CurrField = 'agreed1'
-                then
-                Q.QExecSql(
-                  'update sn_calendar_accounts set agreed1=:agreed1$i, id_whoagreed1 = :id_whoagreed1$i where id=:id$i',
-                  [S.IIf(i = 1, 0, 1), S.IIf(i = 1, null, User.GetId), Fr.ID], False
-                )
-                else
-                Q.QExecSql(
-                  'update sn_calendar_accounts set agreed2=:agreed2$i where id=:id$i',
-                  [S.IIf(i = 1, 0, 1), Fr.ID], False
-                );
-                Fr.RefreshRecord;
+            if Fr.CurrField = 'agreed1'
+              then
+              Q.QExecSql(
+                'update sn_calendar_accounts set agreed1=:agreed1$i, id_whoagreed1 = :id_whoagreed1$i where id=:id$i',
+                [S.IIf(i = 1, 0, 1), S.IIf(i = 1, null, User.GetId), Fr.ID], False
+              )
+              else
+              Q.QExecSql(
+                'update sn_calendar_accounts set agreed2=:agreed2$i where id=:id$i',
+                [S.IIf(i = 1, 0, 1), Fr.ID], False
+              );
+              Fr.RefreshRecord;
             end;
-          end;
         end;
       end;
     end
 
     else if FormDoc = myfrm_J_Payments then begin
-      if (Fr.CurrField = 'pnlStatusBar') and (User.Role(rPC_P_Payment)) and Fr.RefreshRecord then begin
+      if (Fr.CurrField = 'pstatus') and (User.Role(rPC_P_Payment)) and Fr.RefreshRecord then begin
         i := S.NInt(Fr.GetValue(Fr.CurrField));
         if MyQuestionMessage(S.IIf(i = 0, 'Провести платёж?', 'Отменить проведение платежа?')) = mrYes then begin
           Q.QExecSql(
-            'update sn_calendar_payments set status=:pnlStatusBar$i, dtpaid=:pdtpaid$d where id=:id$i',
+            'update sn_calendar_payments set status=:status$i, dtpaid=:pdtpaid$d where id=:id$i',
             [S.IIf(i = 1, 0, 1), S.IIf(i = 1, null, Date), Fr.ID], False
           );
           Fr.RefreshRecord;

@@ -212,7 +212,7 @@ begin
   for i:=1 to 7 do
     Amounts[i]:=v[i-1];
   for i:=Low(Amounts) to High(Amounts) do
-    TDBEditEh(FindComponent('DBEditEh'+IntToStr(i))).Text:=formatFloat('#,##0.00', Amounts[i]);
+    TDBEditEh(FindComponent('edt'+IntToStr(i))).Text:=formatFloat('#,##0.00', Amounts[i]);
 end;
 
 procedure TFrmCWCash.FormResize(Sender: TObject);
@@ -227,6 +227,7 @@ begin
   Result := False;
   //получим номер кассы (строковая константа заканчивается соотв числом)
   CashNo := StrToInt(FormDoc[Length(FormDoc)]);
+  //ID := CashNo;
   //получим признак возможности внесения данных
   Caption := '~Журнал Кассы' + IntToStr(CashNo);
   //если открываем на редактирование, то получим блокировку

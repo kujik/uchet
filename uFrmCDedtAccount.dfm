@@ -9,12 +9,12 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
   inherited pnlFrmMain: TPanel
     Width = 1053
     Height = 802
-    ExplicitWidth = 944
+    ExplicitWidth = 1053
     ExplicitHeight = 802
     inherited pnlFrmClient: TPanel
       Width = 1043
       Height = 753
-      ExplicitWidth = 930
+      ExplicitWidth = 1039
       ExplicitHeight = 752
       object pnlGeneral: TPanel
         Left = 0
@@ -24,7 +24,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
         Align = alTop
         Caption = 'pnlGeneral'
         TabOrder = 0
-        ExplicitWidth = 930
+        ExplicitWidth = 1039
         object pnlGeneralM: TPanel
           Left = 1
           Top = 19
@@ -33,7 +33,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Align = alTop
           Caption = 'pnlGeneralM'
           TabOrder = 0
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           DesignSize = (
             1041
             134)
@@ -74,7 +74,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 1
             Text = 'edt_account'
             Visible = True
-            ExplicitWidth = 256
+            ExplicitWidth = 365
           end
           object cmb_id_supplier: TDBComboBoxEh
             Left = 104
@@ -92,7 +92,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 2
             Text = 'cmb_Cash'
             Visible = True
-            ExplicitWidth = 430
+            ExplicitWidth = 539
           end
           object dedt_accountdt: TDBDateTimeEditEh
             Left = 723
@@ -110,7 +110,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Kind = dtkDateEh
             TabOrder = 3
             Visible = True
-            ExplicitLeft = 610
+            ExplicitLeft = 719
           end
           object cmb_id_org: TDBComboBoxEh
             Left = 723
@@ -128,7 +128,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 4
             Text = 'cmb_Cash'
             Visible = True
-            ExplicitLeft = 610
+            ExplicitLeft = 719
           end
           object cmb_id_user: TDBComboBoxEh
             Left = 722
@@ -147,7 +147,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 5
             Text = 'cmb_Cash'
             Visible = True
-            ExplicitLeft = 609
+            ExplicitLeft = 718
           end
           object cmb_id_expenseitem: TDBComboBoxEh
             Left = 104
@@ -165,7 +165,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 6
             Text = 'cmb_Cash'
             Visible = True
-            ExplicitWidth = 430
+            ExplicitWidth = 539
           end
           object nedt_sum: TDBNumberEditEh
             Left = 104
@@ -232,7 +232,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 1
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           inherited bvl1: TBevel
             Width = 1049
             ExplicitWidth = 840
@@ -247,7 +247,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
         Align = alTop
         Caption = 'pnlRoute'
         TabOrder = 1
-        ExplicitWidth = 930
+        ExplicitWidth = 1039
         inline frmpcRoute: TFrMyPanelCaption
           Left = 1
           Top = 1
@@ -257,7 +257,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           inherited bvl1: TBevel
             Width = 1049
             ExplicitWidth = 840
@@ -271,6 +271,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 1
+          ExplicitWidth = 1037
           object cmb_CarType: TDBComboBoxEh
             Left = 104
             Top = 3
@@ -412,14 +413,14 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Align = alClient
           TabOrder = 2
           ExplicitLeft = 1
-          ExplicitTop = 81
-          ExplicitWidth = 928
-          ExplicitHeight = 118
+          ExplicitTop = 75
+          ExplicitWidth = 1037
+          ExplicitHeight = 124
           inherited pnlGrid: TPanel
             Width = 1031
             Height = 70
-            ExplicitWidth = 918
-            ExplicitHeight = 64
+            ExplicitWidth = 1027
+            ExplicitHeight = 70
             inherited DbGridEh1: TDBGridEh
               Width = 1029
               Height = 47
@@ -432,22 +433,23 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
-                ExplicitHeight = 2
+                ExplicitHeight = 8
                 inherited PRowDetailPanel: TPanel
                   Width = 44
-                  Height = 0
+                  Height = 6
                   ExplicitWidth = 44
-                  ExplicitHeight = 0
+                  ExplicitHeight = 6
                 end
               end
             end
             inherited pnlStatusBar: TPanel
               Top = 48
               Width = 1029
-              ExplicitTop = 42
-              ExplicitWidth = 916
+              ExplicitTop = 48
+              ExplicitWidth = 1025
               inherited lblStatusBarL: TLabel
                 Height = 13
                 ExplicitHeight = 13
@@ -460,21 +462,21 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           end
           inherited pnlLeft: TPanel
             Height = 70
-            ExplicitHeight = 64
+            ExplicitHeight = 70
           end
           inherited pnlTop: TPanel
             Width = 1041
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
           end
           inherited pnlContainer: TPanel
             Width = 1041
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
           end
           inherited pnlBottom: TPanel
             Top = 124
             Width = 1041
-            ExplicitTop = 118
-            ExplicitWidth = 928
+            ExplicitTop = 124
+            ExplicitWidth = 1037
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -482,7 +484,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32363130307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -500,7 +502,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
         Align = alTop
         Caption = 'pnlBasis'
         TabOrder = 2
-        ExplicitWidth = 930
+        ExplicitWidth = 1039
         inline frmpcBasis: TFrMyPanelCaption
           Left = 1
           Top = 1
@@ -510,7 +512,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           inherited bvl1: TBevel
             Width = 1049
             ExplicitWidth = 840
@@ -524,7 +526,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Align = alTop
           Caption = 'pnlBasicM'
           TabOrder = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
         end
         inline FrgBasis: TFrDBGridEh
           Left = 1
@@ -535,12 +537,12 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 2
           ExplicitLeft = 1
           ExplicitTop = 19
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           ExplicitHeight = 100
           inherited pnlGrid: TPanel
             Width = 1031
             Height = 46
-            ExplicitWidth = 918
+            ExplicitWidth = 1027
             ExplicitHeight = 46
             inherited DbGridEh1: TDBGridEh
               Width = 1029
@@ -554,6 +556,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 inherited PRowDetailPanel: TPanel
@@ -568,7 +571,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
               Top = 24
               Width = 1029
               ExplicitTop = 24
-              ExplicitWidth = 916
+              ExplicitWidth = 1025
               inherited lblStatusBarL: TLabel
                 Height = 13
                 ExplicitHeight = 13
@@ -585,17 +588,17 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           end
           inherited pnlTop: TPanel
             Width = 1041
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
           end
           inherited pnlContainer: TPanel
             Width = 1041
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
           end
           inherited pnlBottom: TPanel
             Top = 100
             Width = 1041
             ExplicitTop = 100
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -603,7 +606,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E32363130307D5C766965
+              6E657261746F722052696368656432302031302E302E31393034317D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -621,7 +624,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
         Align = alTop
         Caption = 'pnlPayments'
         TabOrder = 3
-        ExplicitWidth = 930
+        ExplicitWidth = 1039
         object scrlbxPaymentsM: TScrollBox
           Left = 1
           Top = 19
@@ -636,7 +639,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           BevelInner = bvNone
           BorderStyle = bsNone
           TabOrder = 0
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           object pnlPaymentsD: TPanel
             Left = 0
             Top = 0
@@ -645,7 +648,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Align = alClient
             Caption = 'pnlPaymentsD'
             TabOrder = 0
-            ExplicitWidth = 928
+            ExplicitWidth = 1037
             object dedt_1: TDBDateTimeEditEh
               Left = 19
               Top = 6
@@ -672,6 +675,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
               EditButtons = <>
               TabOrder = 1
               Visible = True
+              OnKeyPress = EdtPaymentKeyPress
             end
           end
         end
@@ -684,7 +688,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 1
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           inherited bvl1: TBevel
             Width = 1041
             ExplicitWidth = 840
@@ -699,7 +703,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
         Align = alTop
         Caption = 'pnlAdd'
         TabOrder = 4
-        ExplicitWidth = 930
+        ExplicitWidth = 1039
         inline frmpcAdd: TFrMyPanelCaption
           Left = 1
           Top = 1
@@ -709,7 +713,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           inherited bvl1: TBevel
             Width = 1041
             ExplicitWidth = 840
@@ -724,7 +728,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
           Anchors = [akTop]
           Caption = 'pnlAddM'
           TabOrder = 1
-          ExplicitWidth = 928
+          ExplicitWidth = 1037
           DesignSize = (
             1041
             94)
@@ -746,7 +750,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Caption = #1044#1080#1088#1077#1082#1090#1086#1088
             DynProps = <>
             TabOrder = 0
-            ExplicitLeft = 852
+            ExplicitLeft = 956
           end
           object chb_Agreed1: TDBCheckBoxEh
             Left = 776
@@ -757,7 +761,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Caption = #1056#1091#1082#1086#1074#1086#1076#1080#1090#1077#1083#1100
             DynProps = <>
             TabOrder = 1
-            ExplicitLeft = 682
+            ExplicitLeft = 773
           end
           object btnReqestFileOpen: TBitBtn
             Left = 264
@@ -815,7 +819,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             TabOrder = 6
             Text = 'DBEditEh1'
             Visible = True
-            ExplicitWidth = 850
+            ExplicitWidth = 959
           end
           object chb_AccountFile: TDBCheckBoxEh
             Left = 71
@@ -842,7 +846,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
       Top = 758
       Width = 1043
       ExplicitTop = 757
-      ExplicitWidth = 930
+      ExplicitWidth = 1039
       inherited bvlFrmBtnsTl: TBevel
         Width = 1041
         ExplicitWidth = 923
@@ -853,22 +857,22 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 1041
-        ExplicitWidth = 928
+        ExplicitWidth = 1037
         inherited pnlFrmBtnsMain: TPanel
           Left = 942
-          ExplicitLeft = 829
+          ExplicitLeft = 938
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 714
-          ExplicitLeft = 601
+          ExplicitLeft = 710
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 843
-          ExplicitLeft = 730
+          ExplicitLeft = 839
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 574
-          ExplicitWidth = 461
+          ExplicitWidth = 570
           object lbl_Info: TLabel
             Left = 14
             Top = 2
@@ -884,14 +888,10 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
     Top = 802
     Width = 1053
     ExplicitTop = 801
-    ExplicitWidth = 940
+    ExplicitWidth = 1049
     inherited lblStatusBarR: TLabel
       Left = 980
-      Height = 14
-      ExplicitLeft = 871
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 980
     end
   end
   inherited tmrAfterCreate: TTimer

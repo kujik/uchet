@@ -314,6 +314,10 @@ begin
     else if (Char(msg.wParam) = 'E') and (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then begin
       if Screen.ActiveForm is TFrmBasicMDI then
         TFrmBasicMDI(Screen.ActiveForm).GlobalEvent(1);
+    end
+    else if (Char(msg.wParam) = 'T') and (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then begin
+      if Screen.ActiveForm is TFrmBasicMDI then
+        TFrmBasicMDI(Screen.ActiveForm).GlobalEvent(2);
     end;
   end;
 end;
@@ -579,7 +583,7 @@ begin
 
     ['Отчеты'],
     ['Платежи по датам', myfrm_Rep_SnCalendarByDate, False],
-    ['Платежи по месяцам', myfrm_Rep_SnCalendarByMonths, User.Role(rPC_Rep_PmByMonths)],
+//!!!    ['Платежи по месяцам', myfrm_Rep_SnCalendarByMonths, User.Role(rPC_Rep_PmByMonths)],
     ['Отчет по транспортным счетам', myfrm_Rep_SnCalendar_Transport, User.Roles([], [rPC_Rep_Transport])],
     ['Отчет по счетам подрядчиков по монтажу', myfrm_Rep_SnCalendar_AccMontage, User.Roles([], [rPC_Rep_AccMontage])],
     []

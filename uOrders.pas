@@ -2696,7 +2696,7 @@ begin
         Exit;
       Q.QExecSql(
         'update order_items i set '+
-        'labor_intensity = nvl((select labor_intensity from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.labor_intensity), '+
+        'labor_intensity = nvl((select labor_intensity from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.labor_intensity) '+
         'where i.id = :id_order_item$i',
         [AIdOrItem]
       );
