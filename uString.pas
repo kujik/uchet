@@ -1,96 +1,45 @@
 ﻿unit uString;
-
-//{$mode objfpc}
-//тип string = ansistring $H+
-
-(*
-//проверка значения строки, по правилам переданным в verify, с учетом типа данных, указанных в ValueType
-//для строк возможна коррекция значений
-
-//для числа "min:max:fdigits:N:M"
-//(min:max по умолчанию 0, fdigits - не более стольких десятичных цифр, N - не разрешать null, M - подгонять под границы /пока не реализовано/)
-
-//для строки
-//CVerify - min:max:digits:inult:validchars:invalidcars
-//минимальное и максимальная длина строки
-//4 - n - допустимо пустой значение
-//4 - i - для комбобокса - значение должно быть в списке
-//4 - u/l - для комбо и эдит - вводятся большие или маленькие буквы
-//4 - t - трим, p-удалить двойные проьбелы, u,l-регистр
-//5 - инвалидные символы
-//6 - валидные символы
-
-//для даты
-//(0) * - дата обязательна, не допускается пустое, но произвольная
-//(0) инт  S.DateTimeToIntStr(Date) - нач дата
-//(1) инт  кон. дата
-//(2) если '-' то допустимо пустая дата
-*)
+//==============================================================================
+//Модуль содержит вспомогательные записи для работы со строками, вариантами
+//и массивами. Запись S предоставляет методы для строк и вариантов, запись A
+//для работы с одномерными и двумерными массивами Variant (TVarDynArray,
+//TVarDynArray2). Также имеется хелпер TVariantHelper, добавляющий удобные
+//методы к типу Variant.
+//
+//ВНИМАНИЕ: Все методы, работающие с наборами символов, переделаны для поддержки
+//Unicode. Вместо множеств (TCharSet) рекомендуется использовать TCharDynArray.
+//Старые перегрузки с TCharSet оставлены для совместимости, но они не поддерживают
+//символы с кодом >255 (например, русские буквы). Для полной поддержки Unicode
+//используйте версии с TCharDynArray (те же имена, но параметры изменились).
+//В случае вызова с TCharSet будет выдано предупреждение о deprecated.
+//==============================================================================
 
 interface
 
 uses
-  Graphics, Classes, DateUtils, Variants, Types, SysUtils;
+  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils;
 
 type
   TVarDynArray = array of Variant;
 
-  TVarDynArray2 = array of array of Variant;
+  TVarDynArray2 = array of TVarDynArray;
 
   TCharDynArray = array of Char;
 
   TByteSet = set of Byte;
 
-  TCharSet = set of Char;
+  TCharSet = set of Char; // устаревший тип, не поддерживает Unicode
 
-{  TNamedArr = record
-    FFull: TVarDynArray;
-    F: TVarDynArray;
-    V: TVarDynArray2;
-    procedure Create(Fields: TVarDynArray; Len: Integer);
-    function  Col(Field: string): Integer;
-    function  G(RowNo: Integer; Field: string): Variant; overload;
-    function  G(Field: string): Variant; overload;
-    function  GetValue(RowNo: Integer; Field: string): Variant; overload;
-    function  GetValue(Field: string): Variant; overload;
-    function  GetRow(RowNo: Integer): TVarDynArray;
-    procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant); overload;
-    procedure SetValue(Field: string; NewValue: Variant); overload;
-    function  Find(Value: Variant; Field: string): Integer;
-    //получаем значение из поля ResultField для строки, найденной по значению поля SearchField = SearchValue
-    function  GetValueByOtherField(SearchValue: Variant; SearchField: string; ResultField: string; ValueIfNotFound: Variant): Variant;
-    //возвразщает True, если нет записей
-    function  IsEmpty: Boolean;
-    function  Count: Integer;
-    function  High: Integer;
-    procedure IncLength;
-    procedure SetLen(ALength: Integer);
-    function  FieldsCount: Integer;
-    procedure Clear;
-    procedure SetNull; overload;
-    procedure SetNull(RowNo: Integer); overload;
-  end;
-
-  TNamedArr2 = array of TNamedArr;   }
-
-
-type
+  //Тип операции для сравнения массивов
   TArrayOperation = (aoIntersection, aoUnion, aoDifference);
 
+  //Направление обрезки строки
   TStringDirection = (sdLeft, sdRight, sdBoth);
 
-  TMyStringLocation = (stlLeft, stlRight, stlBoth);
+  TMyStringLocation = (stlLeft, stlRight, stlBoth); //для совместимости
 
 const
   micntBadDate: Double = 365;  //30.12.1900
-
-  {
-  cdThisDay = 0;
-  cdLastDay = 0;
-  cdThis = 0;
-  cdLast = 0;
-  }
-
   RubDividor: ShortString = ' ';
   KopDividor: ShortString = ' . ';
   Kop2Dividor: ShortString = '';
@@ -98,1867 +47,1714 @@ const
   fopCaseSensetive = $01;
   fopWholeField = $02;
   fopUseMask = $04;
-  EngChars: set of Char = ['A'..'Z', 'a'..'z'];
+  EngChars: set of Char = ['A'..'Z', 'a'..'z']; // не используется в методах
   EngChars_: set of Char = ['A'..'Z', 'a'..'z', '_'];
   DaysOfWeek2: array[1..7] of string = ('Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс');
   MonthsRu: array[1..12] of string = ('Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь');
-  DigitsChars: set of Char = ['0'..'9'];
+  DigitsChars: set of Char = ['0'..'9']; // не используется
   DigitsChars_: set of Char = ['0'..'9', '.', ',', '+', '-'];
-  DivSymbols =[' ', ',', '.', ':', ';', '?', '!', '"', '=', '-', '_', '(', ')', '%', '/', '\', '*'];
-  DatePeriods: array[0..11] of string = ('Сегодня', 'Вчера', 'Эта неделя', 'Прошлая неделя', 'Эта половина месяца', 'Прошлая половина месяца', 'Этот месяц', 'Прошлый месяц', 'Этот квартал', 'Прошлый квартал','Этот год', 'Прошлый год');
+  DivSymbols =[ ' ',  ',',  '.',  ':',  ';',  '?',  '!',  '"',  '=',  '-',  '_',  '(',  ')',  '%',  '/',  '\',  '*']; // не используется
+  DatePeriods: array[0..11] of string = ('Сегодня', 'Вчера', 'Эта неделя', 'Прошлая неделя', 'Эта половина месяца', 'Прошлая половина месяца', 'Этот месяц', 'Прошлый месяц', 'Этот квартал', 'Прошлый квартал', 'Этот год', 'Прошлый год');
 
 type
+  //============================================================================
+  //Запись TMyStringHelper (глобальная переменная S)
+  //Содержит методы для работы со строками и вариантами
+  //============================================================================
   TMyStringHelper = record
+  private
+    //Вспомогательная функция: проверяет, содержится ли символ C в массиве AChars
+    function CharInArray(C: Char; const AChars: TCharDynArray): Boolean;
+    //Преобразует множество Char в массив (только для символов <256)
+    function CharSetToArray(const AChars: TCharSet): TCharDynArray;
+  public
+    //----------- Обрезка пробелов и управляющих символов
+    //Удалим переданные символы слева, справа или с обеих сторон строки;
+    //если не передан массив символов, то удаляем пробел и табуляцию
+    //+++ переработана для поддержки Unicode: вместо множества используется массив символов
+    function TrimStr(const AStr: string; const ATrimChars: TCharDynArray = nil; const AMode: TMyStringLocation = stlBoth): string; overload;
+    //Устаревшая версия с множеством (не поддерживает Unicode)
+    function TrimStr(const AStr: string; const ATrimChars: TCharSet = []; const AMode: TMyStringLocation = stlBoth): string; overload; deprecated 'Use TrimStr with TCharDynArray for Unicode support';
+    //Процедура. Удалим переданные символы слева, справа или с обеих сторон строки;
+    //если не передан массив символов, то удаляем пробел и табуляцию
+    //+++ переработана для поддержки Unicode
+    procedure TrimStrP(var AStr: string; const ATrimChars: TCharDynArray = nil; const AMode: TMyStringLocation = stlBoth); overload;
+    //Устаревшая процедура с множеством
+    procedure TrimStrP(var AStr: string; const ATrimChars: TCharSet = []; const AMode: TMyStringLocation = stlBoth); overload; deprecated 'Use TrimStrP with TCharDynArray for Unicode support';
+    //удалим символы с левой части строки
+    //+++ переработана для поддержки Unicode
+    procedure DelLeft(var AStr: string; const ATrimChars: TCharDynArray = nil); overload;
+    //удалим символы с левой части строки (устаревшая)
+    procedure DelLeft(var AStr: string; const ATrimChars: TCharSet = []); overload; deprecated 'Use DelLeft with TCharDynArray for Unicode support';
+    //удалим символы с правой части строки
+    //+++ переработана для поддержки Unicode
+    procedure DelRight(var AStr: string; const ATrimChars: TCharDynArray = nil); overload;
+    //удалим символы с правой части строки (устаревшая)
+    procedure DelRight(var AStr: string; const ATrimChars: TCharSet = []); overload; deprecated 'Use DelRight with TCharDynArray for Unicode support';
+    //Удаление переданного массива символов с обоих концов строки
+    //+++ переработана для поддержки Unicode
+    procedure DelBoth(var AStr: string; const ATrimChars: TCharDynArray = nil); overload;
+    //Удаление переданного множества символов с обоих концов строки (устаревшая)
+    procedure DelBoth(var AStr: string; const ATrimChars: TCharSet = []); overload; deprecated 'Use DelBoth with TCharDynArray for Unicode support';
+    //----------- Замена символов в строке
+    //если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
+    //+++ переработана с TStringBuilder для эффективности
+    function DeleteRepSpaces(const AStr: string; const AChar: Char = ' '): string;
+    //удаляем все символы Ch из строки
+    //+++ переработана с TStringBuilder
+    function DeleteChar(const AStr: string; const AChar: Char): string;
+    //mode=True  удаляет в строке все символы из [ch]
+    //mode=False удаляет в строке все символы из not[ch]
+    //+++ переработана для поддержки Unicode (параметр TCharDynArray)
+    function DeleteChars(const AStr: string; const AChars: TCharDynArray; const AMode: Boolean): string; overload;
+    //Устаревшая версия с множеством
+    function DeleteChars(const AStr: string; const AChars: TCharSet; const AMode: Boolean): string; overload; deprecated 'Use DeleteChars with TCharDynArray for Unicode support';
+    //mode=True  заменяет в строке все символы из [ch] на символ chnew
+    //mode=False заменяет в строке все символы из not[ch] на символ chnew
+    //+++ переработана для поддержки Unicode (параметр TCharDynArray)
+    function ChangeChars(const AStr: string; const AChars: TCharDynArray; const ANewChar: Char; const AMode: Boolean): string; overload;
+    //Устаревшая версия с множеством
+    function ChangeChars(const AStr: string; const ACharSet: TCharSet; const ANewChar: Char; const AMode: Boolean): string; overload; deprecated 'Use ChangeChars with TCharDynArray for Unicode support';
+    //возвращает сроку символов Fill
+    function FillString(const ALen: Integer; const AChar: Char): string;
+    //если в строке идут подряд последовательности символов (подстроки), то оставляет только первую из них
+    //не доделано!!! работает для уборки последовательносте типа ("1212ыыыы12", "12"), но не из повторяющихся символов (не должна быть последовательность "00"!!!
+    function DeleteRepSubstr(const AStr: string; const ASubStr: string): string;
+    //---------Выравнивание текста за счёт установки пробелов или других символов
+    {
+     Writeln('123'.PadLeft(5));  //'  123'
+     Writeln('12345'.PadLeft(5));  //'12345'
+     Writeln('Выводы '.PadRight(20, '-') + ' стр. 7'); //'Выводы ------------- стр. 7'
+    }
+    //дополняет строку переданным символом (по умолчанию пробел) слева, до переданной длины
+    function PadLeft(const AStr: string; const ALen: Integer; const AChar: Char = ' '): string; // {! - использует встроенный TStringHelper.PadLeft}
+    //дополняет строку переданным символом (по умолчанию пробел) справа, до переданной длины
+    function PadRight(const AStr: string; const ALen: Integer; const AChar: Char = ' '): string; // {! - использует встроенный TStringHelper.PadRight}
+    //---------Проверка корректности типа строки (формат числа, даты...)
+    //проверяет, является ли строка целым числом.
+    //+++ использует TryStrToInt
+    function IsInt(const AStr: string): Boolean;
+    //проверяет, является ли строка числом с плавающей точкой
+    //+++ использует TryStrToFloat
+    function IsFloat(const AStr: string): Boolean;
+    //проверяет, является ли строка числом в заданном диапозоне с заданным числом десятичных знаков
+    //если число десятичных знаков не нужно, передать -1, если нужно целое число, передать 0
+    //+++ переработана с использованием TryStrToFloat
+    function IsNumber(const AStr: string; const AMin, AMax: Extended; const ADigits: Integer = -1): Boolean;
+    //проверка строки на то что содержит дату/время
+    //DtType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
+    //предполагается что разделитель даты и времени - пробел (практически всегда это так), а часов и минут - ":"
+    //+++ использует TryStrToDateTime
+    function IsDateTime(const AStr: string; const ADateTimeType: string = 'dt'): Boolean;
+    //если строка есть число (целое положительное) возвр его длинну
+    //если начало строки есть число возвр длинну этой части со знаком -
+    function IsNumberLeftPart(const AStr: string): Integer;
+    //проверяетвалидность почтового адреса по формальным признакам (адрес должен соответствовать стандарту)
+    function IsValidEmail(const AValue: string): Boolean;
+    //---------Перевод строки в простые типы
+    //проверяем, является ли строка числом в заданном диапозоне с заданным количеством чисел после запятой (не более)
+    //в качестве разделителей принимаем точку и запятую
+    //возвращаем число в Res: extended, а Result - истина или ложь /если не удалось преобразовать в число/
+    //+++ переработана с использованием TryStrToFloat и замены разделителя
+    function StrToNumberCommaDot(const AValue: Variant; const AMin, AMax: Extended; out ARes: Extended; const ADigits: Integer = -1): Boolean;
+    //преобразует тип Variant в Integer; при неудаче возвращает значение Def
+    //+++ использует TryStrToInt
+    function VarToInt(const AValue: Variant; const ADefault: Integer = -1): Integer;
+    //преобразует тип Variant в Extended; при неудаче возвращает значение Def
+    //+++ использует TryStrToFloat
+    function VarToFloat(const AValue: Variant; const ADefault: Extended = -1): Extended;
+    //преобразовывает число в строку длиной не менее Len, позиции перед числом заполняет символом Ch
+    function NumToString(const ANumber: Extended; const ALen: Byte; const AChar: Char): string;
+    //преобразует строку из трех или пяти чисел, разделенных пробелами (дефисами, точками), в TDateTime
+    //если ошиибка возвращает BadDate
+    //использовать только при вводе вручную или при явно корректном формате так как в среде будет вызываться исключение
+    //+++ улучшена обработка двузначного года
+    function SpacedStToDate(const AStr: string; const AFullDateTime: Boolean = False): TDateTime;
+    //преобразует TDateTime в число (Double) и возвращает  в виде строки
+    //сервисная функция
+    function DateTimeToIntStr(const ADateTime: TDateTime): string;
+    //--------- Обработка значений типа Null, переданных в параметре Varint
+    //возвращает пустую строку, если значение Empty или Null
+    function NSt(const AValue: Variant): string;
+    //возвращает 0 с типом extended, если значение Empty или Null
+    function NNum(const AValue: Variant; const ADefault: Extended = 0): Extended;
+    //возвращает 0 с типом Integer, если значение Empty или Null
+    function NInt(const AValue: Variant): Integer;
+    //возвращает -1 с типом Integer, если значение Empty или Null
+    function NIntM(const AValue: Variant): Integer;
+    //возвращает нулл если v=null or VarToString(v) ='', иначе вернет переданное значение
+    function NullIfEmpty(const AValue: Variant): Variant;
+    //возвращает нулл если v=0 (0.00), иначе вернет переданное значение
+    function NullIf0(const AValue: Variant): Variant;
+    //--------- Изменение регистра строки
+    {
+    Writeln(LowerCase('АбВгД - AbCdE')); //В нижний регистр меняются только латинские буквы. Результат будет 'АбВгД - abcde'.
+    Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меняются и русские и латинские буквы. Результат будет 'абвгд - abcde'.
+    }
+    //изменить регистр строки (и латинские и русские буквы
+    //+++ использует встроенные ToUpper/ToLower
+    function ChangeCaseStr(const AStr: string; const AToUpper: Boolean): string;
+    //изменить регистр символа (и латинские и русские буквы
+    //+++ использует TCharacter
+    function ChangeCaseCh(const ACh: Char; const AToUpper: Boolean): Char;
+    //строку в верхний регистр
+    function ToUpper(const AStr: string): string;
+    //строку в нижний регистр
+    function ToLower(const AStr: string): string;
+    //получает Cnt правых символов строки
+    function Right(const AStr: string; const ACount: Integer = 1): string;
 
-//----------- Обрезка пробелов и управляющих символов
-
-//Удалим переданные символы слева, справа или с обеих сторон строки;
-//если не передан массив символов, то удаляем пробел и табуляцию
-    function TrimSt(const St: string; TrimCh: TCharDynArray = []; Mode: TMyStringLocation = stlBoth): string;
-//Процедура. Удалим переданные символы слева, справа или с обеих сторон строки;
-//если не передан массив символов, то удаляем пробел и табуляцию
-    procedure TrimStP(var St: string; TrimCh: TCharDynArray = []; Mode: TMyStringLocation = stlBoth);
-//удалим символы с левой части строки
-    procedure DelLeft(var st: string; TrimCh: TCharDynArray = []);
-//удалим символы с правой части строки
-    procedure DelRight(var st: string; TrimCh: TCharDynArray = []);
-//Удаление переданного массива символов с обоих концов строки
-    procedure DelBoth(var st: string; TrimCh: TCharDynArray = []);
-
-//----------- Замена символов в строке
-
-//если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
-//mode=True  заменяет в строке все символы из [ch] на символ chnew[i]
-//mode=False заменяет в строке все символы из not[ch] на символ chnew[i]
-//если ChNew = [], то исхдные символы удаляютсмя,
-//если ChNew имеет только один элемент, то для всех искомых испольуется он,
-//иначе, если длина входеных и выходных различается, генереруется ошибка
-    function ReplaceChars(St: string; Chars: TCharDynArray; ChNew: TCharDynArray; Mode: Boolean): string;
-//если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
-    function DeleteRepSpaces(St: string; Ch: Char = ' '): string;
-//удаляем все символы Ch из строки
-    function DeleteChar(St: string; Ch: char): string;
-//mode=True  удаляет в строке все символы из [ch]
-//mode=False удаляет в строке все символы из not[ch]
-    function DeleteChars(St: string; Chars: TCharDynArray; Mode: Boolean): string;
-//mode=True  заменяет в строке все символы из [ch] на символ chnew
-//mode=False заменяет в строке все символы из not[ch] на символ chnew
-    function ChangeChars(st: string; ch: tcharset; chnew: char; mode: Boolean): string;
-//возвращает сроку символов Fill
-    function FillString(Length: Integer; Chr: Char): string;
-//если в строке идут подряд последовательности символов (подстроки), то оставляет только первую из них
-//не доделано!!! работает для уборки последовательносте типа ("1212ыыыы12", "12"), но не из повторяющихся символов (не должна быть последовательность "00"!!!
-function DeleteRepSubstr(St: string; SubSt: string): string;
-
-//---------Выравнивание текста за счёт установки пробелов или других символов
-{
- Writeln('123'.PadLeft(5));  //'  123'
- Writeln('12345'.PadLeft(5));  //'12345'
- Writeln('Выводы '.PadRight(20, '-') + ' стр. 7'); //'Выводы ------------- стр. 7'
-}
-
-//дополняет строку переданным символом (по умолчанию пробел) слева, до переданной длины
-    function PadLeft(St: string; Len: Integer; Ch: Char = ' '): string;
-//дополняет строку переданным символом (по умолчанию пробел) справа, до переданной длины
-    function PadRight(St: string; Len: Integer; Ch: Char = ' '): string;
-
-//---------Проверка корректности типа строки (формат числа, даты...)
-
-//проверяет, является ли строка целым числом.
-    function IsInt(St: string): Boolean;
-//проверяет, является ли строка числом с плавающей точкой
-    function IsFloat(St: string): Boolean;
-//проверяет, является ли строка числом в заданном диапозоне с заданным числом десятичных знаков
-//если число десятичных знаков не нужно, передать -1, если нажно целоое число, передать 0
-    function IsNumber(St: string; MinI, MaxI: Extended; FDigits: Integer = -1): Boolean;
-//проверка строки на то что содержит дату/время
-//DtType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
-//предполагается что разделитель даты и времени - пробел (практически всегда это так), а часов и минут - ":"
-    function IsDateTime(St: string; DtType: string = 'dt'): Boolean;
-//если строка есть число (целое положительное) возвр его длинну
-//если начало строки есть число возвр длинну этой части со знаком -
-    function IsNumberLeftPart(St: string): Integer;
-//проверяетвалидность почтового адреса по формальным признакам (адрес должен соответствовать стандарту)
-    function IsValidEmail(const Value: string): Boolean;
-
-//---------Перевод строки в простые типы
-
-//проверяем, является ли строка числом в заданном диапозоне с заданным количеством чисел после запятой (не более)
-//в качестве разделителей принимаем точку и запятую
-//возвращаем число в Res: extended, а Result - истина или ложь /если не удалось преобразовать в число/
-    function StrToNumberCommaDot(V: Variant; MinI, MaxI: Extended; var Res: Extended; FDigits: Integer = -1): Boolean;
-//преобразует тип Variant в Integer; при неудаче возвращает значение Def
-    function VarToInt(v: Variant; Def: Integer = -1): Integer;
-//преобразует тип Variant в Extended; при неудаче возвращает значение Def
-    function VarToFloat(v: Variant; Def: extended = -1): extended;
-//преобразовывает число в строку длиной не менее Len, позиции перед числом заполняет символом Ch
-    function NumToString(Number: Extended; Len: byte; Ch: Char): string;
-//преобразует строку из трех или пяти чисел, разделенных пробелами (дефисами, точками), в TDateTime
-//если ошиибка возвращает BadDate
-//использовать только при вводе вручную или при явно корректном формате так как в среде будет вызываться исключение
-    function SpacedStToDate(St: string; FullDateTime: Boolean = False): TDateTime;
-//преобразует TDateTime в число (Double) и возвращает в  виде строки
-//сервисная функция
-    function DateTimeToIntStr(dt: TDateTime): string;
-
-//--------- Обработка значений типа Null, переданных в параметре Varint
-
-//возвращает пустую строку, если значение Empty или Null
-    function NSt(St: Variant): string;
-//возвращает 0 с типом extended, если значение Empty или Null
-//    function NNum(St: Variant): extended;
-    function NNum(St: Variant; Default: Extended = 0): Extended;
-//возвращает 0 с типом Integer, если значение Empty или Null
-    function NInt(St: Variant): Integer;
-//возвращает -1 с типом Integer, если значение Empty или Null
-    function NIntM(St: Variant): Integer;
-//возвращает нулл если v=null or VarToString(v) ='', иначе вернет переданное значение
-    function NullIfEmpty(v: Variant): Variant;
-//возвращает нулл если v=0 (0.00), иначе вернет переданное значение
-    function NullIf0(v: Variant): Variant;
-
-//--------- Изменение регистра строки
-{
-Writeln(LowerCase('АбВгД - AbCdE')); //В нижний регистр меняются только латинские буквы. Результат будет 'АбВгД - abcde'.
-Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меняются и русские и латинские буквы. Результат будет 'абвгд - abcde'.
-}
-//изменить регистр строки (и латинские и русские буквы
-    function ChangeCaseStr(St: string; ToUpper: Boolean): string;
-//изменить регистр символа (и латинские и русские буквы
-    function ChangeCaseCh(Ch: Char; ToUpper: Boolean): string;
-//строку в верхний регистр
-    function ToUpper(St: string): string;
-//строку в нижний регистр
-    function ToLower(St: string): string;
-
-//получает Cnt правых символов строки
-    function Right(St: string; Cnt: Integer = 1): string;
-
-
-//---------- Поиск вхождений, вычленение позиций вхождений ы строку.
-
-//находит позицию подстроки в строке без учета регистра
-    function PosI(StPart, StFull: string): Integer;
-//проверяет, содержится ли подстрока в строке значений, разделенных запятыми
-    function InCommaStr(stpart, stall: string; ch: Char = ','; IgnoreCase: Boolean = False): Boolean;
-//проверяет, содержится ли подстрока в строке значений, разделенных запятыми, без учета регистра
-    function InCommaStrI(stpart, stall: string; ch: Char = ','): Boolean;
-//подсчитывает количество символов из переданного набора в строке, начиная с позиции р1 и до р2 (если -1 то до конца строки)
-    function GetCharCountInStr(St: string; Chars: TCharSet; p1: Integer = 1; p2: Integer = -1): Integer;
-//ищем позицию начяала слова в строке, передается начальная позиция поиска,
-//счетчик идет назад пока не встретистся символ из DivSymbols
-    function FindBegWord(Start: Integer; St: string; DivSymbols: TCharSet = [' ']): Integer;
-//ищем позицию конца слова в строке, передается начальная позиция поиска,
-//счетчик идет вперед пока не встретистся символ из DivSymbols
-    function FindEndWord(Start: byte; st: string; DivSymbols: TCharSet = [' ']): Integer;
-//разбиение строки St на 3 части: St1 -до кавычек, St2 - в кавычках, St3 - после
-//кавычки учитываются как двойные так и одинарные
-//осталось от старого
-    procedure DivisionQuotetStr(st, st1, st2, st3: string);
-//получает подстроку номер NumSubSt из строки, которую разбивает по строковым разделителям DivSt
-//возвращает также позицию найденной подстроки в строке
-//если не смог выделить подстроку, то возвращает -2 и ''
-    function GetSubSt(SourceSt: string; NumSubSt: Integer; DivSt: string; var PosSt: Integer): string;
-//Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
-//yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)
-    function FindMaskInStr(var Mask, St: string): Boolean;
-//Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
-//yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)}
-    function FindADDMaskInStr(Mask, St: string): Boolean;
-
-//---------- Специальные преобразования строки (число в цену прописью и т.п.
-
-//преобразование числа в строку прописью
-    function NumToWords(Num: longint; Mode: char): string;
-//преобразование числа в строку цены прописью
-    function NumToPriceWords(Num: longInt; Mode: Boolean): string;
-//преобразует число в сцену в рублях и копейках в виде числа а не слов
-//работает тут НЕПРАВИЛЬНО, цена в целом числе, 2 последние это копейки
-    function NumToPriceStr(Num: longint): string;
-//сервисная функция для вывода цены с включением слов Рублей и Копеек
-    function PriceWord(Num: longint; Mode: Char): string;
-//преобразование числа в строку телефона с разделителями
-    function NumToPhoneStr(Num: longint): string;
-//форматирование строки как строки телефона с разделителями
-    function StrToPhoneStr(StT: string): string;
-//выбирает окончание по количеству
-//(передается окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
-    function GetEnding(Num: longint; St1, St2, St3: string): string;
-//(передается количество, основная часть слова, окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
-    function GetEndingFull(Num: longint; Main, St1, St2, St3: string): string;
-//выбирает окончание по количеству (толькко ед/множ число)
-    function GetEndingOneOrMany(Num: longint; St1, St2: string): string;
+    //---------- Поиск вхождений, вычленение позиций вхождений ы строку.
+    //находит позицию подстроки в строке без учета регистра
+    function PosI(const ASubStr, AStr: string): Integer;
+    //проверяет, содержится ли подстрока в строке значений, разделенных запятыми
+    //+++ переработана с учётом регистра
+    function InCommaStr(const APart, AFull: string; const ADelimiter: Char = ','; const AIgnoreCase: Boolean = False): Boolean;
+    //проверяет, содержится ли подстрока в строке значений, разделенных запятыми, без учета регистра
+    function InCommaStrI(const APart, AFull: string; const ADelimiter: Char = ','): Boolean;
+    //подсчитывает количество символов из переданного набора в строке, начиная с позиции р1 и до р2 (если -1 то до конца строки)
+    //+++ переработана для поддержки Unicode (TCharDynArray)
+    function GetCharCountInStr(const AStr: string; const AChars: TCharDynArray; const AStart: Integer = 1; const AEnd: Integer = -1): Integer; overload;
+    //устаревшая версия с множеством
+    function GetCharCountInStr(const AStr: string; const AChars: TCharSet; const AStart: Integer = 1; const AEnd: Integer = -1): Integer; overload; deprecated 'Use GetCharCountInStr with TCharDynArray for Unicode support';
+    //ищем позицию начяала слова в строке, передается начальная позиция поиска,
+    //счетчик идет назад пока не встретистся символ из DivSymbols
+    //+++ переработана для поддержки Unicode (TCharDynArray)
+    function FindBegWord(const AStartPos: Integer; const AStr: string; const ADelimiters: TCharDynArray = nil): Integer; overload;
+    //устаревшая версия с множеством
+    function FindBegWord(const AStartPos: Integer; const AStr: string; const ADelimiters: TCharSet = [' ']): Integer; overload; deprecated 'Use FindBegWord with TCharDynArray for Unicode support';
+    //ищем позицию конца слова в строке, передается начальная позиция поиска,
+    //счетчик идет вперед пока не встретистся символ из DivSymbols
+    //+++ переработана для поддержки Unicode (TCharDynArray)
+    function FindEndWord(const AStartPos: Byte; const AStr: string; ADelimiters: TCharDynArray = nil): Integer; overload;
+    //устаревшая версия с множеством
+    function FindEndWord(const AStartPos: Byte; const AStr: string; const ADelimiters: TCharSet = [' ']): Integer; overload; deprecated 'Use FindEndWord with TCharDynArray for Unicode support';
+    //разбиение строки St на 3 части: St1 -до кавычек, St2 - в кавычках, St3 - после
+    //кавычки учитываются как двойные так и одинарные
+    //осталось от старого
+    //+++ переработана (незначительно)
+    procedure DivisionQuotetStr(const AStr: string; out ALeft, AMid, ARight: string);
+    //получает подстроку номер NumSubSt из строки, которую разбивает по строковым разделителям DivSt
+    //возвращает также позицию найденной подстроки в строке
+    //если не смог выделить подстроку, то возвращает -2 и ''
+    //+++ переработана для ясности
+    function GetSubStr(const AStr: string; const AIndex: Integer; const ADelimiter: string; out APos: Integer): string;
+    //Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
+    //yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)
+    function FindMaskInStr(var AMask, AStr: string): Boolean;
+    //Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
+    //yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)}
+    function FindADDMaskInStr(const AMask, AStr: string): Boolean;
+    //---------- Специальные преобразования строки (число в цену прописью и т.п.
+    //преобразование числа в строку прописью
+    function NumToWords(const ANum: LongInt; const AGender: Char): string;
+    //преобразование числа в строку цены прописью
+    function NumToPriceWords(const ANum: LongInt; const AMode: Boolean): string;
+    //преобразует число в сцену в рублях и копейках в виде числа а не слов
+    //работает тут НЕПРАВИЛЬНО, цена в целом числе, 2 последние это копейки
+    function NumToPriceStr(const ANum: LongInt): string;
+    //сервисная функция для вывода цены с включением слов Рублей и Копеек
+    function PriceWord(const ANum: LongInt; const AMode: Char): string;
+    //преобразование числа в строку телефона с разделителями
+    function NumToPhoneStr(const ANum: LongInt): string;
+    //форматирование строки как строки телефона с разделителями
+    //+++ переработана с использованием DeleteCharsEx
+    function StrToPhoneStr(const APhone: string): string;
+    //выбирает окончание по количеству
+    //(передается окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
+    function GetEnding(const ANum: LongInt; const AWord1, AWord2, AWord3: string): string;
+    //(передается количество, основная часть слова, окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
+    function GetEndingFull(const ANum: LongInt; const AMain, AWord1, AWord2, AWord3: string): string;
+    //выбирает окончание по количеству (толькко ед/множ число)
+    function GetEndingOneOrMany(const ANum: LongInt; const ASingular, APlural: string): string;
     //заключить строку в круглые скобки, если она не пустая
-    function AddBracket(st: string): string;
+    function AddBracket(const AStr: string): string;
     //форматируем число в строку. если есть дробная часть, то она будет дана через запятую (по умолчанию) или точку
-    function FormatNumberWithComma(Value: Extended; DivIsComma: Boolean = True): string;
+    function FormatNumberWithComma(const AValue: Extended; const ADividerIsComma: Boolean = True): string;
 
-
-//-------------------------- Условные функции
-//-- Важно: в отличии от выражений параметры в функциях будут вычислены ВСЕГДА при их в нее передаче
-
-//если Expr истина, то вернет Par1, иначе Par2
-//варианта для аргументов Variant, string, Integer, extended
-    function IIf(Expr: Boolean; Par1, Par2: Variant): Variant;
-    function IIfV(Expr: Boolean; Par1, Par2: Variant): Variant;
-    function IIFStr(Expr: Boolean; Par1: string; Par2: string = ''): string; overload;  //второй параметр можно не задавать, если должен быть пустой
+    //-------------------------- Условные функции
+    //-- Важно: в отличии от выражений параметры в функциях будут вычислены ВСЕГДА при их в нее передаче
+    //если Expr истина, то вернет Par1, иначе Par2
+    //варианта для аргументов Variant, string, Integer, extended
+    function IIf(const AExpr: Boolean; const ATrueValue, AFalseValue: Variant): Variant;
+    function IIfV(const AExpr: Boolean; const ATrueValue, AFalseValue: Variant): Variant;
+    function IIFStr(const AExpr: Boolean; const ATrueStr: string; const AFalseStr: string = ''): string; overload;  //второй параметр можно не задавать, если должен быть пустой
     //если первый аргумент не пуст, возвращает его, иначе - второй
-    function IfEmptyStr(St: string; StIfEmpty: string): string;
-//заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
-    function IfNotEmptyStr(St: string; Mask: string = #0; StIfEmpty: string = ''): string;
-    function IIfInt(Expr: Boolean; Par1, Par2: Integer): Integer;
-    function IIfFloat(Expr: Boolean; Par1, Par2: extended): Extended;
+    function IfEmptyStr(const AStr: string; const AEmptyResult: string): string;
+    //заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
+    function IfNotEmptyStr(const AStr: string; const AMask: string = #0; const AEmptyResult: string = ''): string;
+    function IIfInt(const AExpr: Boolean; const ATrueValue, AFalseValue: Integer): Integer;
+    function IIfFloat(const AExpr: Boolean; const ATrueValue, AFalseValue: Extended): Extended;
     //Если AValue = AIfValeu, то вернет AIfValeu, иначе AElseValue
-    function IfEl(AValue, AIfValeu, AElseValue: Variant): Variant;
-//если ValueFact = ValueCheck, то вернет ValueFact, иначе ValueRes
-    function IfNotEqual(ValueFact, ValueCheck, ValueRes: Variant): Variant;
-//если ValueFact не пустое (empty, '', null), то вернет ValueFact, иначе ValueRes
-    function IfNotEmpty(ValueFact, ValueRes: Variant): Variant;
-//возвращает из массива результат, соответствующий нулевому значению
-//value, case1, value1, case2, value2, {valueelse}
-    function Decode(ar: TVarDynArray): Variant;
-//сравнить две строки без учета регистра
-    function CompareStI(st1, st2: string): Boolean;
-
-//-------------------------- конкатенация строк
-
-//добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
-    function ConcatSt(StAll, StPart: string; Dividor: string = ','; IfNotEmpty: Boolean = False): string;
-//процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
-    procedure ConcatStP(var StAll: string; StPart: string; Dividor: string = ','; IfNotEmpty: Boolean = False); overload;
-    procedure ConcatStP(var StAll: Variant; StPart: Variant; Dividor: Variant; IfNotEmpty: Boolean = False); overload;
-
-//-------------------------- функции для sql-запросов
-
-//форматирует дяту в тот вид, который можно вставить в скл
-//в сам текст, в параметра передается просто сам тип даты)
-    function SQLdate(dt: TDateTime): ansistring;
-//преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
-    function SQLdateTime(dt: TDateTime): ansistring;
-
-//-------------------- математические ------------------------------------------
-
-//выбирает максимальное значение из вариантного массива
-    function MaxOf(const Values: array of Variant): Variant;
-//выбирает минимальное значение из вариантного массива
-    function MinOf(const Values: array of Variant): Variant;
-
-//-------------------------- служебные -----------------------------------------
-
-//возвращает дату, которую условились считать признаком неверной даты/времени
+    function IfEl(const AValue, AIfValue, AElseValue: Variant): Variant;
+    //если ValueFact = ValueCheck, то вернет ValueFact, иначе ValueRes
+    function IfNotEqual(const AValueFact, AValueCheck, AValueRes: Variant): Variant;
+    //если ValueFact не пустое (empty, '', null), то вернет ValueFact, иначе ValueRes
+    function IfNotEmpty(const AValueFact, AValueRes: Variant): Variant;
+    //возвращает из массива результат, соответствующий нулевому значению
+    //value, case1, value1, case2, value2, {valueelse}
+    function Decode(const AArray: TVarDynArray): Variant;
+    //сравнить две строки без учета регистра
+    function CompareStI(const AStr1, AStr2: string): Boolean;
+    //-------------------------- конкатенация строк
+    //добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
+    function ConcatStr(const AMain, APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False): string;
+    function ConcatSt(const AMain, APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False): string;
+    //процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
+    procedure ConcatStrP(var AMain: string; const APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False); overload;
+    procedure ConcatStrP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
+    procedure ConcatStP(var AMain: string; const APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False); overload;
+    procedure ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
+    //-------------------------- функции для sql-запросов
+    //форматирует дяту в тот вид, который можно вставить в скл
+    //в сам текст, в параметра передается просто сам тип даты)
+    function SQLDate(const ADateTime: TDateTime): AnsiString;
+    //преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
+    function SQLDateTime(const ADateTime: TDateTime): AnsiString;
+    //-------------------- математические ------------------------------------------
+    //выбирает максимальное значение из вариантного массива
+    function MaxOf(const AValues: array of Variant): Variant;
+    //выбирает минимальное значение из вариантного массива
+    function MinOf(const AValues: array of Variant): Variant;
+    //-------------------------- служебные -----------------------------------------
+    //возвращает дату, которую условились считать признаком неверной даты/времени
     function BadDate: TDateTime;
-//производит обмен значениями между двумя переменными
-    procedure SwapPlaces(v1, v2: Variant);
-//не знаю для чего делал
-//function DivisionText(St:string;canvas:TCanvas;width,field:Integer):TStringList;
-//пасрсит строку Csv в массив
-//функция устаревшая, если использовать надо будет переделывать
-//function ParseCsv(St: string; DivCh: Char): tSplitArray;
-//скорректируем строку для использования в качестве имени файла
-    function CorrectFileName(st: string): string;
-//проверка ИНН
-    function ValidateInn(inn: Variant): string;
-//конвертация типа string в PAnsiChar c проверкой (при ошибке исключение)
-    function StringToPAnsiChar(stringVar: string): PAnsiChar;
-//возвращает имя поля в таблице из имени поля в селесте   например из '1 as field' вернет 'field'
-//например из '1 as field$s' вернет 'field$s'
+    //производит обмен значениями между двумя переменными
+    procedure SwapPlaces(var AValue1, AValue2: Variant);
+    //не знаю для чего делал
+    //function DivisionText(St:string;canvas:TCanvas;width,field:Integer):TStringList;
+    //пасрсит строку Csv в массив
+    //функция устаревшая, если использовать надо будет переделывать
+    //function ParseCsv(St: string; DivCh: Char): tSplitArray;
+    //скорректируем строку для использования в качестве имени файла
+    function CorrectFileName(const AStr: string): string;
+    //проверка ИНН
+    function ValidateInn(const AInn: Variant): string;
+    //конвертация типа string в PAnsiChar c проверкой (при ошибке исключение)
+    function StringToPAnsiChar(const AString: string): PAnsiChar;
+    //возвращает имя поля в таблице из имени поля в селесте   например из '1 as field' вернет 'field'
+    //например из '1 as field$s' вернет 'field$s'
     function WideStringToString(const ws: WideString; codePage: Word): AnsiString;
     function StringToWideString(const s: AnsiString; codePage: Word): WideString;
-    function GetFieldNameFromSt(st: string): string;
+    function GetFieldNameFromSt(const ASqlExpr: string): string;
     //возвращает имя поля в таблице из имени поля в селесте
     //например из '1 as field$s' вернет 'field', а если установлен WithMod, то 'field$s'
-    function GetDBFieldNameFromSt(st: string; WithMod: Boolean = False): string;
+    function GetDBFieldNameFromSt(const ASqlExpr: string; const AWithMod: Boolean = False): string;
     //возвращает назавание периода в зависимсоти от количества дней:
     //неделя, 4 дня, месяц, 3 месяца, полгода, год, 68 дней - с допусками несколько дней для градаций по месяцам
-    function GetDaysCountToName(Days: Integer): string;
+    function GetDaysCountToName(const ADays: Integer): string;
     //проверка значения строки, по правилам переданным в verify, с учетом типа данных, указанных в ValueType
     //для строк возможна коррекция значений
+//!!!    function VerifyValue(const AValueType, AVerify, AValue: string; out ACorrectValue: Variant): Boolean;
     function VeryfyValue(ValueType: string; Verify: string; Value: string; var CorrectValue: Variant): Boolean;
     //возвращает НЕКОТОРЫЕ сводные типы переменной Variant
     //например любое целое иудет varInteger
-    function VarType(Value: Variant): Integer;
+    function VarType(const AValue: Variant): Integer;
     //проверяет, задано ли значение переменной типа Variant
-    function VarIsClear(const V: Variant): Boolean;
+    function VarIsClear(const AValue: Variant): Boolean;
     //возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
-    procedure GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
-    procedure GetDatesFromPeriodString(st: string; var dt1: TDateTime; var dt2: TDateTime);
+    procedure GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
+    procedure GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
   end;
+  //============================================================================
+  //Запись TMyArrayHelper (глобальная переменная A)
+  //Содержит методы для работы с массивами Variant
+  //============================================================================
 
-//------------------------------------------------------------------------------
-//------------- Работа с массивами
   TMyArrayHelper = record
-//разбивает исходную строку на подстроки, используя как разделитель строку DivSt
-//исходная строка может быть и массивом, тогда будет возвращен этот массив
-//если не установлено IgnoreEmpty, то элементы могут быть пустыми, и пустая строка станет массивом [''].
-//вернет одномерный вариантный массив
-    function Explode(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TVarDynArray;
-//просто алиас Explode
-    function ExplodeV(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TVarDynArray;
-//тоже самое, но возвращает TStringDynArray (перекрыть нельзя, тк определяется только по входным параметрам)
-    function ExplodeS(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TStringDynArray;
-//то же в виде процедур
-    procedure ExplodeP(V: Variant; DivSt: string; var Arr: TVarDynArray); overload;
-    procedure ExplodeP(V: Variant; DivSt: string; var Arr: TStringDynArray); overload;
-    procedure ExplodeP(V: Variant; DivSt: string; IgnoreEmpty: Boolean; var Arr: TVarDynArray); overload;
-    procedure ExplodeP(V: Variant; DivSt: string; IgnoreEmpty: Boolean; var Arr: TStringDynArray); overload;
-
-//сливаем одномерный вариантный массив в строку через разделитель;
-//если IgnoreEmpty установлен, то игнорируем пустые значения массива
-    function Implode(Arr: array of Variant; Delim: string; IgnoreEmpty: Boolean = False): string; overload;
-//сливаем одномерный строковый массив в строку через разделитель;
-//если IgnoreEmpty установлен, то игнорируем пустые значения массива
-    function Implode(Arr: TStringDynArray; Delim: string; IgnoreEmpty: Boolean = False): string; overload;
-//сливаем в строку переданную колонку двумерного массива
-    function Implode(Arr: TVarDynArray2; Col: Integer; Delim: string; IgnoreEmpty: Boolean = False): string; overload;
-//сливаем в строку весь двухмерный массив по указанным колонкам, разделители для первого и второ уровня разные
-    function Implode(Arr: TVarDynArray2; Columns: TByteSet; Delim1: string; Delim2: string; IgnoreEmpty: Boolean = False): string; overload;
-//сливаем в строку переданную колонку двумерного массива
-//сливаем одномерный вариантный массив в строку через разделитель;
-//пустые элементы всегда игнорируем
-    function ImplodeNotEmpty(Arr: array of Variant; Delim: string): string;
-//склеивает текст из TStrings, при этом игнорирует пустые строки с конца списка
-    function ImplodeStringList(var sl: TStringList; Dividor: string = ','): string;
-//находит позицию V в одномерном массиве Arr типа Variant; может не различать регистр; Если не найдена,
-//возвращает -1 (или если массив сначигнается с меньшей нуля индекса, то Low(Arr) - 1
-    function PosInArray(V: Variant; Arr: array of Variant; IgnoreCase: Boolean = False): Integer; overload;
-//находит позицию V в одномерном массиве Arr типа строк; может не различать регистр
-    function PosInArray(St: string; Arr: TStringDynArray; IgnoreCase: Boolean = False): Integer; overload;
-    function PosInArray(V: Variant; Arr: TVarDynArray; IgnoreCase: Boolean = False): Integer; overload;
-//находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V
-    function PosInArray(V: Variant; Arr: TVarDynArray2; FNo: Integer = 0; IgnoreCase: Boolean = False): Integer; overload;
+  private
+    //Внутренняя быстрая сортировка для TVarDynArray
+    procedure QuickSortVD1(var AArray: TVarDynArray; L, R: Integer; Asc: Boolean); //+++
+  public
+    //разбивает исходную строку на подстроки, используя как разделитель строку DivSt
+    //исходная строка может быть и массивом, тогда будет возвращен этот массив
+    //если не установлено IgnoreEmpty, то элементы могут быть пустыми, и пустая строка станет массивом [''].
+    //вернет одномерный вариантный массив
+    function Explode(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): TVarDynArray; overload; //+++
+    //просто алиас Explode
+    function ExplodeV(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): TVarDynArray; //+++
+    //тоже самое, но возвращает TStringDynArray (перекрыть нельзя, тк определяется только по входным параметрам)
+    function ExplodeS(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): TStringDynArray; //+++
+    //то же в виде процедур
+    procedure ExplodeP(const AValue: Variant; const ADelimiter: string; var AArray: TVarDynArray); overload; //+++
+    procedure ExplodeP(const AValue: Variant; const ADelimiter: string; var AArray: TStringDynArray); overload; //+++
+    procedure ExplodeP(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean; var AArray: TVarDynArray); overload; //+++
+    procedure ExplodeP(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean; var AArray: TStringDynArray); overload; //+++
+    //сливаем одномерный вариантный массив в строку через разделитель;
+    //если IgnoreEmpty установлен, то игнорируем пустые значения массива
+    function Implode(const AArray: array of Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
+    //сливаем одномерный строковый массив в строку через разделитель;
+    //если IgnoreEmpty установлен, то игнорируем пустые значения массива
+    function Implode(const AArray: TStringDynArray; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
+    //сливаем в строку переданную колонку двумерного массива
+    function Implode(const AArray: TVarDynArray2; const AColumn: Integer; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
+    //сливаем в строку весь двухмерный массив по указанным колонкам, разделители для первого и второ уровня разные
+    function Implode(const AArray: TVarDynArray2; const AColumns: TByteSet; const ADelimiter1, ADelimiter2: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
+    //сливаем одномерный вариантный массив в строку через разделитель;
+    //пустые элементы всегда игнорируем
+    function ImplodeNotEmpty(const AArray: array of Variant; const ADelimiter: string): string; //+++
+    //склеивает текст из TStrings, при этом игнорирует пустые строки с конца списка
+    function ImplodeStringList(var AList: TStringList; const ADelimiter: string = ','): string; //+++
+    //находит позицию V в одномерном массиве Arr типа Variant; может не различать регистр; Если не найдена,
+    //возвращает -1 (или если массив начинается с меньшей нуля индекса, то Low(Arr) - 1
+    function PosInArray(const AValue: Variant; const AArray: array of Variant; const AIgnoreCase: Boolean = False): Integer; overload; //+++
+    function PosInArray(const AValue: string; const AArray: TStringDynArray; const AIgnoreCase: Boolean = False): Integer; overload; //+++
+    function PosInArray(const AValue: Variant; const AArray: TVarDynArray; const AIgnoreCase: Boolean = False): Integer; overload; //+++
+    //находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V
+    function PosInArray(const AValue: Variant; const AArray: TVarDynArray2; const AColumn: Integer = 0; const AIgnoreCase: Boolean = False): Integer; overload; //+++
     //найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах
-    function PosInArray(V: TVarDynArray; Arr: TVarDynArray2; FNo: TVarDynArray; IgnoreCase: Boolean = False): Integer; overload;
+    function PosInArray(const AValues: TVarDynArray; const AArray: TVarDynArray2; const AColumns: TVarDynArray; const AIgnoreCase: Boolean = False): Integer; overload; //+++
     //найдет позицию в массиве Source, при которой все поля совпадаются со строкой массива Needle (размерности 2 уровня должны быть одинаковы, что не провряется)
-    function PosRowInArray(Needle, Source: TVarDynArray2; NeedleRow: Integer): Integer;
-//вернет истину, если строка присутствует в массиве
-    function InArray(V: Variant; Arr: array of Variant): Boolean;
-//возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue
-    function FindValueInArray2(FindValue: Variant; FindFNo: Integer; ResultFNo: Integer; Arr: TVarDynArray2; IgnoreCase: Boolean = False): Variant;
+    function PosRowInArray(const ANeedle, ASource: TVarDynArray2; const ARow: Integer): Integer; //+++
+    //вернет истину, если строка присутствует в массиве
+    function InArray(const AValue: Variant; const AArray: array of Variant): Boolean; //+++
+    //возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue
+    function FindValueInArray2(const AKeyValue: Variant; const AKeyColumn, AResultColumn: Integer; const AArray: TVarDynArray2; const AIgnoreCase: Boolean = False): Variant; //+++
     //заменяем найденное поле в массиве в строке новым значением; возвращает, была ли замена
-    function ReplaceInArray(FindValue: Variant; NewValue: Variant; Arr: TVarDynArray; IgnoreCase: Boolean = False): Boolean; overload;
+    function ReplaceInArray(const AFindValue, ANewValue: Variant; var AArray: TVarDynArray; const AIgnoreCase: Boolean = False): Boolean; overload; //+++
     //заменяем поле в массиве в строке, найденной по значению какого-либо (другого или того же) поля, была ли замена
-    function ReplaceInArray(FindValue: Variant; NewValue: Variant; Arr: TVarDynArray2; FindFNo, ReplaceFNo: Integer; IgnoreCase: Boolean = False): Boolean; overload;
-//заменяем поле в массиве в строке, найденной по значению какого-либо поля
-//возвращает столбец двухмерного массива Column в одномерном массиве
-    function VarDynArray2ColToVD1(arr: TVarDynArray2; Column: Integer): TVarDynArray;
-//возвращает столбец двухмерного массива Column в одномерном массиве
-    function VarDynArray2RowToVD1(arr: TVarDynArray2; Row: Integer): TVarDynArray;
-//модифицирует двумерный массив вставкой или заменой его элемента первого уровня массивом TVarDynArray
-//при параметрах по умолчанию просто добавит массив TVarDynArray в конец массива TVarDynArray2
-procedure VarDynArray2InsertArr(var arr2: TVarDynArray2; arr1: TVarDynArray; Pos: Integer = -1; ToInsert: Boolean = True);
-//сортировка одномерного вариантного массива
-    procedure VarDynArraySort(var Arr: TVarDynArray; Asc: Boolean = True); overload;
-//сортировка двухмерного вариантгного массива по переданному полю
-    procedure VarDynArraySort(var Arr: TVarDynArray2; Col: Integer; Asc: Boolean = True); overload;
-//сортировка двухмерного вариантгного массива по переданному полю
-//поле передается на 1 больше чем в массиве, если с + то по возрастанию, а с - то по убыванию, ту при сортировке по убыванию по нулевой колонке передать -1
-    procedure VarDynArray2Sort(var Arr: TVarDynArray2; Key: Integer);
-//возвращает одномерный массив, являющийся пересечением, объединением или различием двух массивов
-    function ArrCompare(const AVar1, AVar2: array of Variant; Operation: TArrayOperation): TVarDynArray;
-//передается или целое число, или вариантный массив, или строка чисел через запятую,
-//возвращается массив
-    function VarIntToArray(v: Variant): TVarDynArray;
+    function ReplaceInArray(const AFindValue, ANewValue: Variant; var AArray: TVarDynArray2; const AFindColumn, AReplaceColumn: Integer; const AIgnoreCase: Boolean = False): Boolean; overload; //+++
+    //возвращает столбец двухмерного массива Column в одномерном массиве
+    function VarDynArray2ColToVD1(const AArray: TVarDynArray2; const AColumn: Integer): TVarDynArray; //+++
+    //возвращает столбец двухмерного массива Row в одномерном массиве
+    function VarDynArray2RowToVD1(const AArray: TVarDynArray2; const ARow: Integer): TVarDynArray; //+++
+    //модифицирует двумерный массив вставкой или заменой его элемента первого уровня массивом TVarDynArray
+    //при параметрах по умолчанию просто добавит массив TVarDynArray в конец массива TVarDynArray2
+    procedure VarDynArray2InsertArr(var ATarget: TVarDynArray2; const ASource: TVarDynArray; const APosition: Integer = -1; const AInsert: Boolean = True); //+++
+    //сортировка одномерного вариантного массива
+    procedure VarDynArraySort(var AArray: TVarDynArray; const AAscending: Boolean = True); overload; //+++
+    //быстрая сортировка одномерного массива
+    procedure SortVD1(var AArray: TVarDynArray; const AAscending: Boolean = True); //+++
+    //сортировка двухмерного вариантгного массива по переданному полю
+    procedure VarDynArraySort(var AArray: TVarDynArray2; const AColumn: Integer; const AAscending: Boolean = True); overload; //+++
+    //сортировка двухмерного вариантгного массива по переданному полю
+    //поле передается на 1 больше чем в массиве, если с + то по возрастанию, а с - то по убыванию, ту при сортировке по убыванию по нулевой колонке передать -1
+    procedure VarDynArray2Sort(var AArray: TVarDynArray2; const AKey: Integer); //+++
+    //возвращает одномерный массив, являющийся пересечением, объединением или различием двух массивов
+    function ArrCompare(const AArray1, AArray2: array of Variant; const AOperation: TArrayOperation): TVarDynArray; //+++
+    //передается или целое число, или вариантный массив, или строка чисел через запятую,
+    //возвращается массив
+    function VarIntToArray(const AValue: Variant): TVarDynArray; //+++
     //получает массив строк, возвращает вариантный массив
-    function StringDynArrayToVarDynArray(sa: TStringDynArray): TVarDynArray;
+    function StringDynArrayToVarDynArray(const AStringArray: TStringDynArray): TVarDynArray; //+++
     //удаляем дублирующиеся знаения из массива
-    function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
+    function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray; //+++
     //сравнение двух двумерных массивов (или одной их строки)
     //будут одинаковы, если совпадают размерности массивов и все их значения
-    function IsArraysEqual(const A, B: TVarDynArray2; ARow: Integer = -1): Boolean;
-    procedure SetNull(var Arr: TVarDynArray); overload;
-    procedure SetNull(var Arr: TVarDynArray2; Row: Integer = -1); overload;
-    procedure IncLength(var Arr: TVarDynArray); overload;
-    procedure IncLength(var Arr: TVarDynArray2); overload;
-end;
-
-var
-  A: TMyArrayHelper;
-
-var
-  S: TMyStringHelper;
-
-
-type
-  TVariantHelper = record helper for Variant
-  public
-    function IsNull: Boolean;
-    function IsEmpty: Boolean;
-    function IsNumeric: Boolean;
-    function AsString: string;
-    function AsInteger: Integer;
-    function AsIntegerM: Integer;
-    function AsFloat: Extended;
-    function AsBoolean: Boolean;
-    function AsDateTime: TDatetime;
-    function NullIf0: Variant;
-    function NullIfEmpty: Variant;
+    function IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer = -1): Boolean; //+++
+    procedure SetNull(var AArray: TVarDynArray); overload; //+++
+    procedure SetNull(var AArray: TVarDynArray2; const ARow: Integer = -1); overload; //+++
+    procedure IncLength(var AArray: TVarDynArray); overload; //+++
+    procedure IncLength(var AArray: TVarDynArray2); overload; //+++
   end;
 
-//НЕ разобрался пока что
+var
+  S: TMyStringHelper;   //глобальный экземпляр для работы со строками
+  A: TMyArrayHelper;     //глобальный экземпляр для работы с массивами
+
+type
+  //============================================================================
+  //Хелпер для типа Variant
+  //============================================================================
+  TVariantHelper = record helper for Variant
+  public
+    //Возвращает True, если значение Null.
+    function IsNull: Boolean;
+    //Возвращает True, если значение Empty.
+    function IsEmpty: Boolean;
+    //Возвращает True, если значение является числовым (целым или вещественным).
+    function IsNumeric: Boolean;
+    //Возвращает строковое представление; для Null/Empty возвращает пустую строку.
+    function AsString: string;
+    //Возвращает целое число; для Null/Empty возвращает 0.
+    function AsInteger: Integer;
+    //Возвращает целое число; для Null/Empty возвращает -1.
+    function AsIntegerM: Integer;
+    //Возвращает вещественное число; для Null/Empty возвращает 0.
+    function AsFloat: Extended;
+    //Возвращает Boolean; для Null/Empty возвращает False.
+    function AsBoolean: Boolean;
+    //Возвращает дату/время.
+    function AsDateTime: TDateTime;
+    //Возвращает Null, если значение равно 0 (как Extended).
+    function NullIf0: Variant;
+    //Возвращает Null, если значение Null или пустая строка.
+    function NullIfEmpty: Variant;
+  end;
+//------------------------------------------------------------------------------
+//Вспомогательные функции, необходимые для EhLib и других внешних модулей
+//------------------------------------------------------------------------------
+
 function WordPosition(const N: Integer; const S: string; WordDelims: TCharSet): Integer;
-//нужно для EhLib
 
 function ExtractWordPos(N: Integer; const S: string; WordDelims: TCharSet; var Pos: Integer): string;
-//нужно для EhLib
 
 function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
+//------------------------------------------------------------------------------
+//Глобальная функция BadDate (для обратной совместимости)
+//------------------------------------------------------------------------------
 
-
-//const
-//  IsNumber: function (St:string; MinI, MaxI: Extended; FDigits: Integer = -1): Boolean =
-//    TMyStringHelper.IsNumber(St:string; MinI, MaxI: Extended; FDigits: Integer = -1): Boolean;
-
-
-
-//-------------- РАЗНОЕ -------------------------------------------------------
-
-
-
-{-------------------------------------------------------------------}
+function BadDate: TDateTime;
 
 implementation
 
 uses
-  Math, uNamedArr, uErrors, uMessages, uFrmMain;
+  System.IOUtils, System.Character;
+//==============================================================================
+//Вспомогательные функции TMyStringHelper
+//==============================================================================
 
+function TMyStringHelper.CharInArray(C: Char; const AChars: TCharDynArray): Boolean;
+//Проверяет, содержится ли символ C в массиве AChars.
+var
+  i: Integer;
+begin
+  for i := 0 to High(AChars) do
+    if AChars[i] = C then
+      Exit(True);
+  Result := False;
+end;
 
+function TMyStringHelper.CharSetToArray(const AChars: TCharSet): TCharDynArray;
+//Преобразует множество Char в массив (только для символов <256).
+var
+  C: Char;
+  i: Integer;
+begin
+  SetLength(Result, 0);
+  for C in AChars do begin
+    SetLength(Result, Length(Result) + 1);
+    Result[High(Result)] := C;
+  end;
+end;
+//==============================================================================
+//Методы обрезки пробелов и символов
+//==============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//-----------------------------------------------------
-
-
-
-
-
-
-
-
-//------------------------------------------------------------------------------
-//------------------------------------------------------------------------------
-//ОБРАБОТКА СТРОК
-
-//----------- Обрезка пробелов и управляющих символов
-(*
-можно использовать helper:
-string.trimleft([]) удаляет eghfdkz.obt cbvdjks? gthtdjls cnhjr? ghj,tks
-string.trimstart([]) удаляет перечисленные символы слева (массив символов обязателен)
-string.trim{([]])}
-st.TrimLeft //только управляющие символы
-*)
-
-function TMyStringHelper.TrimSt(const St: string; TrimCh: TCharDynArray = []; Mode: TMyStringLocation = stlBoth): string;
+function TMyStringHelper.TrimStr(const AStr: string; const ATrimChars: TCharDynArray; const AMode: TMyStringLocation): string;
 //Удалим переданные символы слева, справа или с обеих сторон строки;
 //если не передан массив символов, то удаляем пробел и табуляцию
+//+++ переработана для поддержки Unicode: вместо множества используется массив символов
+var
+  lStart, lEnd: Integer;
+  lTrimSet: TCharDynArray;
 begin
-  if Length(TrimCh) = 0 then
-    TrimCh := [' ', #9];
-  if (Mode = stlLeft) or (Mode = stlBoth) then
-    St.TrimEnd(TrimCh);
-  if (Mode = stlRight) or (Mode = stlBoth) then
-    St.TrimStart(TrimCh);
-  Result := St;
+  if ATrimChars = nil then
+    lTrimSet := [' ', #9]
+  else
+    lTrimSet := ATrimChars;
+  lStart := 1;
+  lEnd := Length(AStr);
+  if AMode in [stlLeft, stlBoth] then
+    while (lStart <= lEnd) and CharInArray(AStr[lStart], lTrimSet) do
+      Inc(lStart);
+  if AMode in [stlRight, stlBoth] then
+    while (lEnd >= lStart) and CharInArray(AStr[lEnd], lTrimSet) do
+      Dec(lEnd);
+  Result := Copy(AStr, lStart, lEnd - lStart + 1);
 end;
 
-procedure TMyStringHelper.TrimStP(var St: string; TrimCh: TCharDynArray = []; Mode: TMyStringLocation = stlBoth);
+function TMyStringHelper.TrimStr(const AStr: string; const ATrimChars: TCharSet; const AMode: TMyStringLocation): string;
+//Устаревшая версия с множеством (не поддерживает Unicode)
+begin
+  Result := TrimStr(AStr, CharSetToArray(ATrimChars), AMode);
+end;
+
+procedure TMyStringHelper.TrimStrP(var AStr: string; const ATrimChars: TCharDynArray; const AMode: TMyStringLocation);
 //Процедура. Удалим переданные символы слева, справа или с обеих сторон строки;
 //если не передан массив символов, то удаляем пробел и табуляцию
+//+++ переработана для поддержки Unicode
 begin
-  St := TrimSt(St, TrimCh, Mode);
+  AStr := TrimStr(AStr, ATrimChars, AMode);
 end;
 
-procedure TMyStringHelper.DelLeft(var st: string; TrimCh: TCharDynArray = []);
+procedure TMyStringHelper.TrimStrP(var AStr: string; const ATrimChars: TCharSet; const AMode: TMyStringLocation);
+begin
+  TrimStrP(AStr, CharSetToArray(ATrimChars), AMode);
+end;
+
+procedure TMyStringHelper.DelLeft(var AStr: string; const ATrimChars: TCharDynArray);
 //удалим символы с левой части строки
+//+++ переработана для поддержки Unicode
 begin
-  TrimStP(st, TrimCh, stlLeft);
+  TrimStrP(AStr, ATrimChars, stlLeft);
 end;
 
-procedure TMyStringHelper.DelRight(var st: string; TrimCh: TCharDynArray = []);
+procedure TMyStringHelper.DelLeft(var AStr: string; const ATrimChars: TCharSet);
+begin
+  DelLeft(AStr, CharSetToArray(ATrimChars));
+end;
+
+procedure TMyStringHelper.DelRight(var AStr: string; const ATrimChars: TCharDynArray);
 //удалим символы с правой части строки
+//+++ переработана для поддержки Unicode
 begin
-  TrimStP(st, TrimCh, stlRight);
+  TrimStrP(AStr, ATrimChars, stlRight);
 end;
 
-procedure TMyStringHelper.DelBoth(var st: string; TrimCh: TCharDynArray = []);
+procedure TMyStringHelper.DelRight(var AStr: string; const ATrimChars: TCharSet);
+begin
+  DelRight(AStr, CharSetToArray(ATrimChars));
+end;
+
+procedure TMyStringHelper.DelBoth(var AStr: string; const ATrimChars: TCharDynArray);
 //Удаление переданного массива символов с обоих концов строки
+//+++ переработана для поддержки Unicode
 begin
-  TrimStP(st, TrimCh, stlBoth);
+  TrimStrP(AStr, ATrimChars, stlBoth);
 end;
 
+procedure TMyStringHelper.DelBoth(var AStr: string; const ATrimChars: TCharSet);
+begin
+  DelBoth(AStr, CharSetToArray(ATrimChars));
+end;
+//==============================================================================
+//Замена символов
+//==============================================================================
 
-//----------- Удаление.замена символов в строке
-
-function TMyStringHelper.ReplaceChars(St: string; Chars: TCharDynArray; ChNew: TCharDynArray; Mode: Boolean): string;
-//mode=True  заменяет в строке все символы из [ch] на символ chnew[i]
-//mode=False заменяет в строке все символы из not[ch] на символ chnew[i]
-//если ChNew = [], то исхдные символы удаляютсмя,
-//если ChNew имеет только один элемент, то для всех искомых испольуется он,
-//иначе, если длина входеных и выходных различается, генереруется ошибка
+function TMyStringHelper.DeleteRepSpaces(const AStr: string; const AChar: Char): string;
+//если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
+//+++ переработана с TStringBuilder для эффективности
 var
-  i, j: Integer;
-  ch: Char;
-  m: Integer;
-  b: Boolean;
+  sb: TStringBuilder;
+  i: Integer;
+  lLastWasSpace: Boolean;
 begin
-  m := 0;
-  if Length(ChNew) = 0 then
-    m := -1;
-  if Length(ChNew) = 1 then begin
-    m := 1;
-    ch := ChNew[1];
-  end;
-  if (m = 0) and (Length(Chars) <> Length(ChNew)) then begin
-    Errors.SetParam('ReplaceChars', 'Не совпадают размеры параметров Chars и ChNew');
-    raise Exception.Create('');
-  end;
-  for i := Length(St) downto 1 do begin
-    b := False;
-    for j := 0 to High(Chars) do
-      if St[i] = Chars[j] then begin
-        b := True;
-        Break;
+  sb := TStringBuilder.Create;
+  try
+    lLastWasSpace := False;
+    for i := 1 to Length(AStr) do begin
+      if AStr[i] = AChar then begin
+        if not lLastWasSpace then begin
+          sb.Append(AChar);
+          lLastWasSpace := True;
+        end;
+      end
+      else begin
+        sb.Append(AStr[i]);
+        lLastWasSpace := False;
       end;
-    if (Mode and b) or (not Mode and not b) then
-      case m of
-        0:
-          St[i] := ChNew[j];
-        1:
-          St[i] := ch;
-        2:
-          Delete(St, i, 1);
-      end;
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
   end;
-  Result := St;
 end;
 
-function TMyStringHelper.DeleteRepSubstr(St: string; SubSt: string): string;
+function TMyStringHelper.DeleteChar(const AStr: string; const AChar: Char): string;
+//удаляем все символы Ch из строки
+//+++ переработана с TStringBuilder
+var
+  sb: TStringBuilder;
+  i: Integer;
+begin
+  sb := TStringBuilder.Create;
+  try
+    for i := 1 to Length(AStr) do
+      if AStr[i] <> AChar then
+        sb.Append(AStr[i]);
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+end;
+
+function TMyStringHelper.DeleteChars(const AStr: string; const AChars: TCharDynArray; const AMode: Boolean): string;
+//mode=True  удаляет в строке все символы из [ch]
+//mode=False удаляет в строке все символы из not[ch]
+//+++ переработана для поддержки Unicode (параметр TCharDynArray)
+var
+  sb: TStringBuilder;
+  c: Char;
+begin
+  sb := TStringBuilder.Create;
+  try
+    for c in AStr do
+      if (AMode and CharInArray(c, AChars)) or (not AMode and not CharInArray(c, AChars)) then
+        sb.Append(c);
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+end;
+
+function TMyStringHelper.DeleteChars(const AStr: string; const AChars: TCharSet; const AMode: Boolean): string;
+begin
+  Result := DeleteChars(AStr, CharSetToArray(AChars), AMode);
+end;
+
+function TMyStringHelper.ChangeChars(const AStr: string; const AChars: TCharDynArray; const ANewChar: Char; const AMode: Boolean): string;
+//mode=True  заменяет в строке все символы из [ch] на символ chnew
+//mode=False заменяет в строке все символы из not[ch] на символ chnew
+//+++ переработана для поддержки Unicode (параметр TCharDynArray)
+var
+  sb: TStringBuilder;
+  c: Char;
+begin
+  sb := TStringBuilder.Create;
+  try
+    for c in AStr do
+      if (AMode and CharInArray(c, AChars)) or (not AMode and not CharInArray(c, AChars)) then
+        sb.Append(ANewChar)
+      else
+        sb.Append(c);
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+end;
+
+function TMyStringHelper.ChangeChars(const AStr: string; const ACharSet: TCharSet; const ANewChar: Char; const AMode: Boolean): string;
+begin
+  Result := ChangeChars(AStr, CharSetToArray(ACharSet), ANewChar, AMode);
+end;
+
+function TMyStringHelper.FillString(const ALen: Integer; const AChar: Char): string;
+//возвращает сроку символов Fill
+begin
+  SetLength(Result, ALen);
+  FillChar(Result[1], ALen, AChar);
+end;
+
+function TMyStringHelper.DeleteRepSubstr(const AStr: string; const ASubStr: string): string;
 //если в строке идут подряд последовательности символов (подстроки), то оставляет только первую из них
 //не доделано!!! работает для уборки последовательносте типа ("1212ыыыы12", "12"), но не из повторяющихся символов (не должна быть последовательность "00"!!!
 var
   i, j: Integer;
 begin
-  Result:= St;
-  i:= 1;
+  Result := AStr;
+  i := 1;
   repeat
-    j:= Pos(SubSt, Result, i);
-    if j = 0 then Exit;
-    if j = i + 1{Length(SubSt)} then begin
-      Delete(Result, j, Length(SubSt))
-    end
-    else i:= j + 1;//Length(SubSt);
+    j := PosEx(ASubStr, Result, i);
+    if j = 0 then
+      Exit;
+    if j = i + 1 then //после предыдущего вхождения
+      Delete(Result, j, Length(ASubStr))
+    else
+      i := j + 1;
   until False;
 end;
+//==============================================================================
+//Выравнивание текста
+//==============================================================================
 
-function TMyStringHelper.DeleteRepSpaces(St: string; Ch: Char = ' '): string;
-//если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
+function TMyStringHelper.PadLeft(const AStr: string; const ALen: Integer; const AChar: Char): string;
+//дополняет строку переданным символом (по умолчанию пробел) слева, до переданной длины
+begin
+  Result := AStr.PadLeft(ALen, AChar);
+end;
+
+function TMyStringHelper.PadRight(const AStr: string; const ALen: Integer; const AChar: Char): string;
+//дополняет строку переданным символом (по умолчанию пробел) справа, до переданной длины
+begin
+  Result := AStr.PadRight(ALen, AChar);
+end;
+//==============================================================================
+//Проверка типов
+//==============================================================================
+
+function TMyStringHelper.IsInt(const AStr: string): Boolean;
+//проверяет, является ли строка целым числом.
+//+++ использует TryStrToInt
 var
   i: Integer;
 begin
-  for i := Length(St) downto 1 do
-    if (St[i] = Ch) and (St[i - 1] = Ch) then
-      Delete(St, i, 1);
-  Result := St;
+  Result := TryStrToInt(AStr, i);
 end;
 
-function TMyStringHelper.DeleteChar(St: string; Ch: char): string;
-//удаляем все символы Ch из строки
-var
-  i: byte;
-begin
-  for i := Length(St) downto 1 do
-    if St[i] = Ch then
-      Delete(St, i, 1);
-  Result := St;
-end;
-
-function TMyStringHelper.DeleteChars(St: string; Chars: TCharDynArray; Mode: Boolean): string;
-//mode=True  удаляет в строке все символы из [ch]
-//mode=False удаляет в строке все символы из not[ch]
-var
-  i: byte;
-begin
-  Result := ReplaceChars(St, Chars, [], Mode);
-end;
-
-function TMyStringHelper.ChangeChars(st: string; ch: tcharset; chnew: char; mode: Boolean): string;
-//mode=True  заменяет в строке все символы из [ch] на символ chnew
-//mode=False заменяет в строке все символы из not[ch] на символ chnew
-var
-  i: byte;
-begin
-  for i := 1 to length(st) do
-    if ((st[i] in ch) and (mode)) or ((not (st[i] in ch)) and (not mode)) then
-      st[i] := chnew;
-  Result := st;
-end;
-
-function TMyStringHelper.FillString(Length: Integer; Chr: Char): string;
-//возвращает сроку символов Fill
-begin
-  SetLength(Result, Length);
-  FillChar(Result[1], Length, Chr);
-end;
-
-
-
-
-
-//---------Выравнивание текста за счёт установки пробелов или других символов
-{
- Writeln('123'.PadLeft(5));  //'  123'
- Writeln('12345'.PadLeft(5));  //'12345'
- Writeln('Выводы '.PadRight(20, '-') + ' стр. 7'); //'Выводы ------------- стр. 7'
-}
-
-function TMyStringHelper.PadLeft(St: string; Len: Integer; Ch: Char = ' '): string;
-//дополняет строку переданным символом (по умолчанию пробел) слева, до переданной длины
-begin
-  Result := St.PadLeft(Len, Ch);
-end;
-
-function TMyStringHelper.PadRight(St: string; Len: Integer; Ch: Char = ' '): string;
-//дополняет строку переданным символом (по умолчанию пробел) справа, до переданной длины
-begin
-  Result := St.PadRight(Len, Ch);
-end;
-
-
-//---------Проверка корректности типа строки (формат числа, даты...)
-
-function TMyStringHelper.IsInt(St: string): Boolean;
-//проверяет, является ли строка целым числом.
-var
-  i, j: Integer;
-begin
-  i := StrToIntDef(St, 0);
-  j := StrToIntDef(St, 1);
-  Result := (i = j);
-end;
-
-function TMyStringHelper.IsFloat(St: string): Boolean;
+function TMyStringHelper.IsFloat(const AStr: string): Boolean;
 //проверяет, является ли строка числом с плавающей точкой
+//+++ использует TryStrToFloat
 var
-  i, j: Extended;
+  e: Extended;
 begin
-  i := StrToFloatDef(St, 0);
-  j := StrToFloatDef(St, 1);
-  Result := (i = j);
+  Result := TryStrToFloat(AStr, e);
 end;
 
-function TMyStringHelper.IsNumber(St: string; MinI, MaxI: Extended; FDigits: Integer = -1): Boolean;
+function TMyStringHelper.IsNumber(const AStr: string; const AMin, AMax: Extended; const ADigits: Integer): Boolean;
 //проверяет, является ли строка числом в заданном диапозоне с заданным числом десятичных знаков
-//если число десятичных знаков не нужно, передать -1, если нажно целоое число, передать 0
+//если число десятичных знаков не нужно, передать -1, если нужно целое число, передать 0
+//+++ переработана с использованием TryStrToFloat
 var
-  e, f1, f2: Extended;
-  i, j: Integer;
+  lValue: Extended;
+  lSepPos: Integer;
 begin
-  Result := False;
-  if St = null then
-    Exit;
-  f1 := StrToFloatDef(St, 0);
-  f2 := StrToFloatDef(St, 1);
-  if f1 <> f2 then
-    Exit;
-  if f1 < MinI then
-    Exit;
-  if f1 > MaxI then
-    Exit;
-  i := Pos(FormatSettings.DecimalSeparator, St);
-  if i <> 0 then
-    i := Length(St) - i;
-  if (FDigits <> -1) and (FDigits < i) then
-    Exit;
-  Result := True;
+  Result := TryStrToFloat(AStr, lValue) and (lValue >= AMin) and (lValue <= AMax);
+  if Result and (ADigits >= 0) then begin
+    lSepPos := Pos(FormatSettings.DecimalSeparator, AStr);
+    if lSepPos = 0 then
+      Result := (ADigits = 0)
+    else
+      Result := (Length(AStr) - lSepPos) <= ADigits;
+  end;
 end;
 
+function TMyStringHelper.IsDateTime(const AStr: string; const ADateTimeType: string): Boolean;
 //проверка строки на то что содержит дату/время
 //DtType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
 //предполагается что разделитель даты и времени - пробел (практически всегда это так), а часов и минут - ":"
-function TMyStringHelper.IsDateTime(St: string; DtType: string = 'dt'): Boolean;
+//+++ использует TryStrToDateTime
+var
+  dt: TDateTime;
+  lType: string;
 begin
-  Result := False;
-  if StrToDateTimeDef(St, EncodeDate(1900, 1, 1)) <> StrToDateTimeDef(St, EncodeDate(1900, 1, 2)) then
+  Result := TryStrToDateTime(AStr, dt);
+  if not Result then
     Exit;
-  if (pos(' ', St) > 0) and ((DtType = 'd') or (DtType = 'D') or (DtType = 't') or (DtType = 'T')) then
-    exit;
-  if (pos(':', St) = 0) and ((DtType = 't') or (DtType = 'T')) then
-    exit;
-  if (pos(' ', St) = 0) and (DtType = 'DT') then
-    exit;
-  Result := True;
+  lType := UpperCase(ADateTimeType);
+  if lType = 'DT' then
+    Result := (Pos(' ', AStr) > 0) and (Pos(':', AStr) > 0)
+  else if (lType = 'D') or (lType = 'Д') then
+    Result := (Pos(' ', AStr) = 0)
+  else if (lType = 'T') then
+    Result := (Pos(':', AStr) > 0) and (Pos(' ', AStr) = 0);
 end;
 
-function TMyStringHelper.IsNumberLeftPart(St: string): Integer;
-//если строка есть число возвр его длинну
+function TMyStringHelper.IsNumberLeftPart(const AStr: string): Integer;
+//если строка есть число (целое положительное) возвр его длинну
 //если начало строки есть число возвр длинну этой части со знаком -
 var
   i: Integer;
 begin
   Result := 0;
-  for i := 1 to Length(St) do
-    if St[i] in ['0'..'9'] then
-      inc(Result)
+  for i := 1 to Length(AStr) do
+    if AStr[i] in ['0'..'9'] then
+      Inc(Result)
     else begin
       Result := -Result;
       Break;
     end;
 end;
 
-function TMyStringHelper.IsValidEmail(const Value: string): Boolean;
+function TMyStringHelper.IsValidEmail(const AValue: string): Boolean;
 //проверяетвалидность почтового адреса по формальным признакам (адрес должен соответствовать стандарту)
-
-  function CheckAllowed(const s: string): Boolean;
-  var
-    i: Integer;
-  begin
-    Result := False;
-    for i := 1 to Length(s) do begin
-      if not (s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_', '-', '.']) then
-        Exit;
-    end;
-    Result := True;
-  end;
-
 var
   i: Integer;
-  namePart, serverPart: string;
+  lName, lDomain: string;
 begin
-  Result := False;
-  i := Pos('@', Value);
+  i := Pos('@', AValue);
   if i = 0 then
-    Exit;
-  namePart := Copy(Value, 1, i - 1);
-  serverPart := Copy(Value, i + 1, Length(Value));
-  if (Length(namePart) = 0) or ((Length(serverPart) < 5)) then
-    Exit;
-  i := Pos('.', serverPart);
-  if (i = 0) or (i > (Length(serverPart) - 2)) then
-    Exit;
-  Result := CheckAllowed(namePart) and CheckAllowed(serverPart);
+    Exit(False);
+  lName := Copy(AValue, 1, i - 1);
+  lDomain := Copy(AValue, i + 1, MaxInt);
+  if (lName = '') or (Length(lDomain) < 5) then
+    Exit(False);
+  i := Pos('.', lDomain);
+  if (i = 0) or (i > Length(lDomain) - 2) then
+    Exit(False);
+  Result := True;
+  for i := 1 to Length(lName) do
+    if not CharInSet(lName[i], ['a'..'z', 'A'..'Z', '0'..'9', '_', '-', '.']) then
+      Exit(False);
+  for i := 1 to Length(lDomain) do
+    if not CharInSet(lDomain[i], ['a'..'z', 'A'..'Z', '0'..'9', '_', '-', '.']) then
+      Exit(False);
 end;
+//==============================================================================
+//Перевод строки в простые типы
+//==============================================================================
 
-//---------Перевод строки в простые типы
-
-function TMyStringHelper.StrToNumberCommaDot(V: Variant; MinI, MaxI: Extended; var Res: Extended; FDigits: Integer = -1): Boolean;
+function TMyStringHelper.StrToNumberCommaDot(const AValue: Variant; const AMin, AMax: Extended; out ARes: Extended; const ADigits: Integer): Boolean;
 //проверяем, является ли строка числом в заданном диапозоне с заданным количеством чисел после запятой (не более)
 //в качестве разделителей принимаем точку и запятую
 //возвращаем число в Res: extended, а Result - истина или ложь /если не удалось преобразовать в число/
+//+++ переработана с использованием TryStrToFloat и замены разделителя
 var
-  e, f1, f2: Extended;
-  i, j: Integer;
-  St: string;
+  s: string;
+  lSepPos: Integer;
 begin
-  Result := False;
-  St := NSt(V);
-  if St = '' then
-    Exit;
-  St := StringReplace(St, '.', ',', [rfReplaceAll]);
-  i := Pos(',', St);
-  f1 := StrToFloatDef(St, 0);
-  f2 := StrToFloatDef(St, 1);
-  if f1 <> f2 then begin
-    St := StringReplace(St, ',', '.', [rfReplaceAll]);
-    i := Pos('.', St);
-    f1 := StrToFloatDef(St, 0);
-    f2 := StrToFloatDef(St, 1);
-    if f1 <> f2 then
-      Exit;
+  s := VarToStr(AValue);
+  s := StringReplace(s, '.', FormatSettings.DecimalSeparator, [rfReplaceAll]);
+  Result := TryStrToFloat(s, ARes) and (ARes >= AMin) and (ARes <= AMax);
+  if Result and (ADigits >= 0) then begin
+    lSepPos := Pos(FormatSettings.DecimalSeparator, s);
+    if lSepPos = 0 then
+      Result := (ADigits = 0)
+    else
+      Result := (Length(s) - lSepPos) <= ADigits;
   end;
-  if f1 < MinI then
-    Exit;
-  if f1 > MaxI then
-    Exit;
-  if i <> 0 then
-    i := Length(St) - i;
-  if (FDigits <> -1) and (FDigits < i) then
-    Exit;
-  Res:= f1;
-  Result := True;
 end;
 
-function TMyStringHelper.VarToInt(v: Variant; Def: Integer = -1): Integer;
+function TMyStringHelper.VarToInt(const AValue: Variant; const ADefault: Integer): Integer;
 //преобразует тип Variant в Integer; при неудаче возвращает значение Def
-var
-  st: string;
+//+++ использует TryStrToInt
 begin
-  st := v;
-  if IsInt(st) then
-    Result := v
-  else
-    Result := Def;
+  if not TryStrToInt(VarToStr(AValue), Result) then
+    Result := ADefault;
 end;
 
-function TMyStringHelper.VarToFloat(v: Variant; Def: extended = -1): extended;
+function TMyStringHelper.VarToFloat(const AValue: Variant; const ADefault: Extended): Extended;
 //преобразует тип Variant в Extended; при неудаче возвращает значение Def
-var
-  st: string;
+//+++ использует TryStrToFloat
 begin
-  st := NSt(v);
-  if IsFloat(st) then
-    Result := v
-  else
-    Result := Def;
+  if not TryStrToFloat(VarToStr(AValue), Result) then
+    Result := ADefault;
 end;
 
-function TMyStringHelper.SpacedStToDate(St: string; FullDateTime: Boolean = False): TDateTime;
+function TMyStringHelper.NumToString(const ANumber: Extended; const ALen: Byte; const AChar: Char): string;
+//преобразовывает число в строку длиной не менее Len, позиции перед числом заполняет символом Ch
+begin
+  Result := Format('%' + IntToStr(ALen) + '.' + IntToStr(ALen) + 'f', [ANumber]);
+  while (Result <> '') and (Result[1] = ' ') do
+    Result[1] := AChar;
+end;
+
+function TMyStringHelper.SpacedStToDate(const AStr: string; const AFullDateTime: Boolean): TDateTime;
 //преобразует строку из трех или пяти чисел, разделенных пробелами (дефисами, точками), в TDateTime
 //если ошиибка возвращает BadDate
 //использовать только при вводе вручную или при явно корректном формате так как в среде будет вызываться исключение
+//+++ улучшена обработка двузначного года
 var
-  i: Integer;
-  ar: TStringDynArray;
-  y: Integer;
+  lParts: TStringDynArray;
+  y, m, d, h, n: Integer;
+  s: string;
 begin
   Result := BadDate;
-  St := ChangeChars(St, ['-', '.'], ' ', True);
-  St := ChangeChars(St, [' ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], '!', False);
-  if pos('!', St) > 0 then
+  s := Trim(AStr);
+  s := StringReplace(s, '-', ' ', [rfReplaceAll]);
+  s := StringReplace(s, '.', ' ', [rfReplaceAll]);
+  lParts := A.ExplodeS(s, ' ', True);
+  if Length(lParts) < 3 then
     Exit;
-  A.ExplodeP(St, ' ', ar);
-  if High(ar) < 2 then
+  d := StrToIntDef(lParts[0], 0);
+  m := StrToIntDef(lParts[1], 0);
+  y := StrToIntDef(lParts[2], 0);
+  if (y < 100) then
+    y := 2000 + y;
+  if not TryEncodeDate(y, m, d, Result) then
     Exit;
-  try
-    y := StrToIntDef(iif(Length(ar[2]) = 2, '20' + ar[2], ar[2]), -1);
-    if (y < 2000) or (y > 2100) then
-      exit;
-    if FullDateTime then
-      Result := EncodeDateTime(y, StrToInt(ar[1]), StrToInt(ar[0]), StrToInt(ar[3]), StrToInt(ar[4]), 0, 0)
-    else
-      Result := EncodeDate(StrToInt(iif(Length(ar[2]) = 2, '20' + ar[2], ar[2])), StrToInt(ar[1]), StrToInt(ar[0]));
-  except
-    Result := BadDate;
+  if AFullDateTime and (Length(lParts) >= 5) then begin
+    h := StrToIntDef(lParts[3], 0);
+    n := StrToIntDef(lParts[4], 0);
+    Result := Result + EncodeTime(h, n, 0, 0);
   end;
 end;
 
-function TMyStringHelper.NumToString(Number: Extended; Len: byte; Ch: Char): string;
-//преобразовывает число в строку длиной не менее Len, позиции перед числом заполняет символом Ch
-var
-  St: string;
-  i: byte;
-begin
-  if Len > 0 then
-    str(Number: Len, St)
-  else
-    str(Number, St);
-  i := 1;
-  while St[i] = ' ' do begin
-    St[i] := Ch;
-    inc(i);
-  end;
-  Result := St;
-end;
-
-function TMyStringHelper.DateTimeToIntStr(dt: TDateTime): string;
-//преобразует TDateTime в число (Double) и возвращает в  виде строки
+function TMyStringHelper.DateTimeToIntStr(const ADateTime: TDateTime): string;
+//преобразует TDateTime в число (Double) и возвращает  в виде строки
 //сервисная функция
 begin
-  Result := FloatToStr(Double(dt));
+  Result := FloatToStr(Double(ADateTime));
 end;
+//==============================================================================
+//Обработка Null/Empty
+//==============================================================================
 
-
-
-//--------- Обработка значений типа Null, переданных в параметре Varint
-
-function TMyStringHelper.NSt(St: Variant): string;
+function TMyStringHelper.NSt(const AValue: Variant): string;
 //возвращает пустую строку, если значение Empty или Null
 begin
-  if VarIsEmpty(St) or (St = null) then begin
-    Result := '';
-    exit;
-  end;
-  Result := St;
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
+    Result := ''
+  else
+    Result := VarToStr(AValue);
 end;
 
-function TMyStringHelper.NNum(St: Variant; Default: Extended = 0): Extended;
+function TMyStringHelper.NNum(const AValue: Variant; const ADefault: Extended): Extended;
 //возвращает 0 с типом extended, если значение Empty или Null
 begin
-  Result := Default;
-  if NSt(St) = '' then
-    Exit;
-  Result := St;
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
+    Result := ADefault
+  else
+    Result := AValue;
 end;
 
-function TMyStringHelper.NInt(St: Variant): Integer;
+function TMyStringHelper.NInt(const AValue: Variant): Integer;
 //возвращает 0 с типом Integer, если значение Empty или Null
 begin
-  Result := 0;
-  if NSt(St) = '' then
-    Exit;
-  Result := St;
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
+    Result := 0
+  else
+    Result := AValue;
 end;
 
-function TMyStringHelper.NIntM(St: Variant): Integer;
+function TMyStringHelper.NIntM(const AValue: Variant): Integer;
 //возвращает -1 с типом Integer, если значение Empty или Null
 begin
-  Result := -1;
-  if NSt(St) = '' then
-    Exit;
-  Result := St;
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
+    Result := -1
+  else
+    Result := AValue;
 end;
 
-function TMyStringHelper.NullIfEmpty(v: Variant): Variant;
+function TMyStringHelper.NullIfEmpty(const AValue: Variant): Variant;
 //возвращает нулл если v=null or VarToString(v) ='', иначе вернет переданное значение
 begin
-  Result := v;
-  if Result = null then
-    Exit;
-  if VarToStr(v) = '' then
-    Result := null;
-//  if (VarType(v) and VarTypeMask = varString) and (v = '') then Result:=null;
+  if VarIsNull(AValue) or (VarToStr(AValue) = '') then
+    Result := Null
+  else
+    Result := AValue;
 end;
 
-function TMyStringHelper.NullIf0(v: Variant): Variant;
+function TMyStringHelper.NullIf0(const AValue: Variant): Variant;
 //возвращает нулл если v=0 (0.00), иначе вернет переданное значение
 begin
-  Result := v;
-  if Result = null then
-    Exit;
-  if extended(v) = 0 then
-    Result := null;
-end;
-
-//--------------- Изменение регистра строк и символов
-
-function TMyStringHelper.ChangeCaseStr(St: string; ToUpper: Boolean): string;
-//изменить регистр строки (и латинские и русские буквы
-begin
-  if ToUpper then
-    Result := St.ToUpper
+  if VarIsNull(AValue) then
+    Result := Null
   else
-    Result := St.ToLoWer;
-end;
-
-function TMyStringHelper.ToUpper(St: string): string;
-//строку в верхний регистр
-begin
-  Result := St.ToUpper;
-end;
-
-function TMyStringHelper.ToLower(St: string): string;
-//строку в нижний регистр
-begin
-  Result := St.ToLower;
-end;
-
-function TMyStringHelper.ChangeCaseCh(Ch: Char; ToUpper: Boolean): string;
-//изменить регистр символа (и латинские и русские буквы
-begin
-  Result := ChangeCaseStr(Ch, ToUpper)[1];
-end;
-
-function TMyStringHelper.Right(St: string; Cnt: Integer = 1): string;
-begin
-  Result:=Copy(St, Max(1, Length(St) - Cnt + 1), Cnt);
-end;
-
-
-//---------- Поиск входждений, вычленение позиций вхождений ы строку.
-
-function TMyStringHelper.PosI(StPart, StFull: string): Integer;
-//находит позицию подстроки в строке без учета регистра
-begin
-  Result := Pos(StPart.ToUpper, StFull.ToUpper);
-end;
-
-function TMyStringHelper.InCommaStr(stpart, stall: string; ch: Char = ','; IgnoreCase: Boolean = False): Boolean;
-//проверяет, содержится ли подстрока в строке значений, разделенных запятыми
-begin
-  if IgnoreCase
-    then Result := Pos(ch + ToUpper(stpart) + ch, ch + ToUpper(stall) + ch) > 0
-    else Result := Pos(ch + stpart + ch, ch + stall + ch) > 0;
-end;
-
-function TMyStringHelper.InCommaStrI(stpart, stall: string; ch: Char = ','): Boolean;
-//проверяет, содержится ли подстрока в строке значений, разделенных запятыми, без учета регистра
-begin
-  Result := Pos(ch + stpart.ToLower + ch, ch + stall.ToLower + ch) > 0;
-end;
-
-function TMyStringHelper.GetCharCountInStr(St: string; Chars: TCharSet; p1: Integer = 1; p2: Integer = -1): Integer;
-//подсчитывает количество символов из переданного набора в строке, начиная с позиции р1 и до р2 (если -1 то до конца строки)
-var
-  i: Integer;
-begin
-  if p2 < 0 then
-    p2 := Length(St);
-  Result := 0;
-  for i := p1 to p2 do
-    if St[i] in Chars then
-      inc(Result);
-end;
-
-function TMyStringHelper.FindBegWord(Start: Integer; St: string; DivSymbols: TCharSet = [' ']): Integer;
-//ищем позицию начяала слова в строке, передается начальная позиция поиска,
-//счетчик идет назад пока не встретистся символ из DivSymbols
-var
-  i: Integer;
-begin
-  i := Start;
-  while (i > 0) and not (St[i] in DivSymbols) do
-    dec(i);
-  inc(i);
-  FindBegWord := i;
-end;
-
-function TMyStringHelper.FindEndWord(Start: byte; st: string; DivSymbols: TCharSet = [' ']): Integer;
-//ищем позицию конца слова в строке, передается начальная позиция поиска,
-//счетчик идет вперед пока не встретистся символ из DivSymbols
-var
-  i: Integer;
-begin
-  i := Start;
-  while (i <= Length(st)) and not (st[i] in DivSymbols) do
-    inc(i);
-  if i > Length(st) then
-    dec(i);
-  FindEndWord := i;
-end;
-
-function CharInSetEh(C: Char; const CharSet: TSysCharSet): Boolean;
-begin
-{$IFDEF EH_LIB_12}
-  Result := CharInSet(C, CharSet);
-{$ELSE}
-  Result := C in CharSet;
-{$ENDIF}
-end;
-
-function ExtractWordPos(N: Integer; const S: string; WordDelims: TCharSet; var Pos: Integer): string;
-//нужно для EhLib
-var
-  I, Len: Integer;
-begin
-  Len := 0;
-  I := WordPosition(N, S, WordDelims);
-  Pos := I;
-  Result := '';
-  if I <> 0 then
-    { find the end of the current word }
-    while (I <= Length(S)) and not ({$IFNDEF CIL}
-      (ByteType(S, I) = mbSingleByte) and{$ENDIF}
-      CharInSetEh(S[I], WordDelims)) do begin
-      { add the I'th character to result }
-      Inc(Len);
-      Result := Result + S[I];
-      Inc(I);
-    end;
-  SetLength(Result, Len);
-end;
-
-function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
-//нужно для EhLib
-var
-  I: Word;
-  Len: Integer;
-begin
-  Result := '';
-  Len := 0;
-  I := WordPosition(N, S, WordDelims);
-  if I <> 0 then
-    { find the end of the current word }
-    while (I <= Length(S)) and not ({$IFNDEF CIL}
-      (ByteType(S, I) = mbSingleByte) and{$ENDIF}
-      CharInSetEh(S[I], WordDelims)) do begin
-      { add the I'th character to result }
-      Inc(Len);
-      Result := Result + S[I];
-      Inc(I);
-    end;
-  SetLength(Result, Len);
-end;
-
-function VarIndex(Value: Variant; const AVar: array of Variant): Integer;
-var
-  i: Integer;
-begin
-  Result := -1;
-  for i := 0 to Length(AVar) - 1 do
-    if AVar[i] = Value then begin
-      Result := i;
-      Break;
-    end;
-end;
-
-function WordPosition(const N: Integer; const S: string; WordDelims: TCharSet): Integer;
-//НЕ разобрался пока что
-var
-  Count, I: Integer;
-begin
-  Count := 0;
-  I := 1;
-  Result := 0;
-  while (I <= Length(S)) and (Count <> N) do begin
-    { skip over delimiters }
-    while (I <= Length(S)) and (      {$IFNDEF CIL}
-      (ByteType(S, I) = mbSingleByte) and      {$ENDIF}
-      CharInSetEh(S[I], WordDelims)) do
-      Inc(I);
-      { if we're not beyond end of S, we're at the start of a word }
-    if I <= Length(S) then
-      Inc(Count);
-      { if not finished, find the end of the current word }
-    if Count <> N then
-      while (I <= Length(S)) and not (          {$IFNDEF CIL}
-        (ByteType(S, I) = mbSingleByte) and          {$ENDIF}
-        CharInSetEh(S[I], WordDelims)) do
-        Inc(I)
+  try
+    if Extended(AValue) = 0 then
+      Result := Null
     else
-      Result := I;
+      Result := AValue;
+  except
+    Result := AValue;
   end;
 end;
+//==============================================================================
+//Регистр
+//==============================================================================
 
-procedure TMyStringHelper.DivisionQuotetStr(st, st1, st2, st3: string);
+function TMyStringHelper.ChangeCaseStr(const AStr: string; const AToUpper: Boolean): string;
+//изменить регистр строки (и латинские и русские буквы
+//+++ использует встроенные ToUpper/ToLower
+begin
+  if AToUpper then
+    Result := AStr.ToUpper
+  else
+    Result := AStr.ToLower;
+end;
+
+function TMyStringHelper.ChangeCaseCh(const ACh: Char; const AToUpper: Boolean): Char;
+//изменить регистр символа (и латинские и русские буквы
+//+++ использует TCharacter
+begin
+  if AToUpper then
+    Result := TCharacter.ToUpper(ACh)
+  else
+    Result := TCharacter.ToLower(ACh);
+end;
+
+function TMyStringHelper.ToUpper(const AStr: string): string;
+//строку в верхний регистр
+begin
+  Result := AStr.ToUpper;
+end;
+
+function TMyStringHelper.ToLower(const AStr: string): string;
+//строку в нижний регистр
+begin
+  Result := AStr.ToLower;
+end;
+
+function TMyStringHelper.Right(const AStr: string; const ACount: Integer): string;
+//получает Cnt правых символов строки
+begin
+  Result := Copy(AStr, Length(AStr) - ACount + 1, ACount);
+end;
+//==============================================================================
+//Поиск вхождений
+//==============================================================================
+
+function TMyStringHelper.PosI(const ASubStr, AStr: string): Integer;
+//находит позицию подстроки в строке без учета регистра
+begin
+  Result := Pos(UpperCase(ASubStr), UpperCase(AStr));
+end;
+
+function TMyStringHelper.InCommaStr(const APart, AFull: string; const ADelimiter: Char; const AIgnoreCase: Boolean): Boolean;
+//проверяет, содержится ли подстрока в строке значений, разделенных запятыми
+//+++ переработана с учётом регистра
+var
+  lPart, lFull: string;
+begin
+  if AIgnoreCase then begin
+    lPart := UpperCase(APart);
+    lFull := UpperCase(AFull);
+  end
+  else begin
+    lPart := APart;
+    lFull := AFull;
+  end;
+  Result := Pos(ADelimiter + lPart + ADelimiter, ADelimiter + lFull + ADelimiter) > 0;
+end;
+
+function TMyStringHelper.InCommaStrI(const APart, AFull: string; const ADelimiter: Char): Boolean;
+//проверяет, содержится ли подстрока в строке значений, разделенных запятыми, без учета регистра
+begin
+  Result := InCommaStr(APart, AFull, ADelimiter, True);
+end;
+
+function TMyStringHelper.GetCharCountInStr(const AStr: string; const AChars: TCharDynArray; const AStart, AEnd: Integer): Integer;
+//подсчитывает количество символов из переданного набора в строке, начиная с позиции р1 и до р2 (если -1 то до конца строки)
+//+++ переработана для поддержки Unicode (TCharDynArray)
+var
+  i, lStart, lEnd: Integer;
+begin
+  lStart := AStart;
+  lEnd := AEnd;
+  if lEnd = -1 then
+    lEnd := Length(AStr);
+  Result := 0;
+  for i := lStart to lEnd do
+    if CharInArray(AStr[i], AChars) then
+      Inc(Result);
+end;
+
+function TMyStringHelper.GetCharCountInStr(const AStr: string; const AChars: TCharSet; const AStart, AEnd: Integer): Integer;
+begin
+  Result := GetCharCountInStr(AStr, CharSetToArray(AChars), AStart, AEnd);
+end;
+
+function TMyStringHelper.FindBegWord(const AStartPos: Integer; const AStr: string; const ADelimiters: TCharDynArray): Integer;
+//ищем позицию начяала слова в строке, передается начальная позиция поиска,
+//счетчик идет назад пока не встретистся символ из DivSymbols
+//+++ переработана для поддержки Unicode (TCharDynArray)
+var
+  i: Integer;
+  lDelimiters: TCharDynArray;
+begin
+  if ADelimiters = nil then
+    lDelimiters := [' ']
+  else
+    lDelimiters := ADelimiters;
+  i := AStartPos;
+  while (i > 0) and not CharInArray(AStr[i], lDelimiters) do
+    Dec(i);
+  Result := i + 1;
+end;
+
+function TMyStringHelper.FindBegWord(const AStartPos: Integer; const AStr: string; const ADelimiters: TCharSet): Integer;
+begin
+  Result := FindBegWord(AStartPos, AStr, CharSetToArray(ADelimiters));
+end;
+
+function TMyStringHelper.FindEndWord(const AStartPos: Byte; const AStr: string; ADelimiters: TCharDynArray): Integer;
+//ищем позицию конца слова в строке, передается начальная позиция поиска,
+//счетчик идет вперед пока не встретистся символ из DivSymbols
+//+++ переработана для поддержки Unicode (TCharDynArray)
+var
+  i: Integer;
+  lDelimiters: TCharDynArray;
+begin
+  if ADelimiters = nil then
+    lDelimiters := [' ']
+  else
+    lDelimiters := ADelimiters;
+  i := AStartPos;
+  while (i <= Length(AStr)) and not CharInArray(AStr[i], lDelimiters) do
+    Inc(i);
+  if i > Length(AStr) then
+    Dec(i);
+  Result := i;
+end;
+
+function TMyStringHelper.FindEndWord(const AStartPos: Byte; const AStr: string; const ADelimiters: TCharSet): Integer;
+begin
+  Result := FindEndWord(AStartPos, AStr, CharSetToArray(ADelimiters));
+end;
+
+procedure TMyStringHelper.DivisionQuotetStr(const AStr: string; out ALeft, AMid, ARight: string);
 //разбиение строки St на 3 части: St1 -до кавычек, St2 - в кавычках, St3 - после
 //кавычки учитываются как двойные так и одинарные
 //осталось от старого
+//+++ переработана (незначительно)
 var
   a, b, i, j: Integer;
 begin
-  st1 := '';
-  st2 := '';
-  st3 := '';
-  {Выделение подстроки, заключенной в кавычки (начало - a, конец - b}
+  ALeft := '';
+  AMid := '';
+  ARight := '';
   a := 1;
-  b := 0;
-  while (a < Length(st)) and not (st[a] in ['"', '''']) do
-    inc(a);
-  if st[a] in ['"', ''''] then begin
+  while (a <= Length(AStr)) and not CharInSet(AStr[a], ['"', '''']) do
+    Inc(a);
+  if a <= Length(AStr) then begin
     b := a + 1;
-    while (b < Length(st)) and not (st[b] in ['"', '''']) do
-      inc(b);
-    if not (st[b] in ['"', '''']) and (b > a) then begin
-      b := 0;
+    while (b <= Length(AStr)) and not CharInSet(AStr[b], ['"', '''']) do
+      Inc(b);
+    if (b > Length(AStr)) then begin
       a := 0;
+      b := 0;
     end;
   end
   else
     a := 0;
-  {удаление пробелов на концах подстроки, заключенной в кавычки}
-  if (a <> 0) and (b <> 0) and (b > a + 1) then begin
+  if (a > 0) and (b > a + 1) then begin
     i := a + 1;
     j := b - 1;
-    while (i < j) and (st[i] = ' ') do
-      inc(i);
-    while (i < j) and (st[j] = ' ') do
-      dec(j);
-    if (i <> j) then
-      st2 := copy(st, i, j - i + 1);
+    while (i < j) and (AStr[i] = ' ') do
+      Inc(i);
+    while (i < j) and (AStr[j] = ' ') do
+      Dec(j);
+    AMid := Copy(AStr, i, j - i + 1);
   end;
   if a = 0 then
-    st1 := st
+    ALeft := AStr
   else
-    st1 := copy(st, 0, a - 1);
+    ALeft := Copy(AStr, 1, a - 1);
   if b = 0 then
-    st3 := ''
+    ARight := ''
   else
-    st3 := copy(st, b + 1, Length(st) - b);
+    ARight := Copy(AStr, b + 1, Length(AStr) - b);
 end;
 
-function TMyStringHelper.GetSubSt(SourceSt: string; NumSubSt: Integer; DivSt: string; var PosSt: Integer): string;
+function TMyStringHelper.GetSubStr(const AStr: string; const AIndex: Integer; const ADelimiter: string; out APos: Integer): string;
 //получает подстроку номер NumSubSt из строки, которую разбивает по строковым разделителям DivSt
 //возвращает также позицию найденной подстроки в строке
 //если не смог выделить подстроку, то возвращает -2 и ''
+//+++ переработана для ясности
 var
-  St1: string;
-  i, j: byte;
+  lTemp: string;
+  i, j: Integer;
 begin
-  PosSt := 1;
-  St1 := SourceSt;
-  for i := 1 to NumSubSt do begin
-    j := Pos(DivSt, St1);
-    if i = NumSubSt then begin
-      if j <> 0 then
-        St1 := Copy(St1, 1, j - 1);
-      Break;
-    end
-    else begin
-      if (j = 0) or (j >= Length(St1)) then begin
-        PosSt := -1;
-        Break;
-      end;
-      St1 := Copy(St1, j + Length(DivSt), Length(St1) - j);
-      PosSt := PosSt + j + Length(DivSt) - 1;
+  APos := 1;
+  lTemp := AStr;
+  for i := 1 to AIndex do begin
+    j := Pos(ADelimiter, lTemp);
+    if i = AIndex then begin
+      if j > 0 then
+        Result := Copy(lTemp, 1, j - 1)
+      else
+        Result := lTemp;
+      Exit;
     end;
+    if j = 0 then begin
+      APos := -2;
+      Result := '';
+      Exit;
+    end;
+    lTemp := Copy(lTemp, j + Length(ADelimiter), MaxInt);
+    APos := APos + j + Length(ADelimiter) - 1;
   end;
-  if PosSt > 0 then
-    GetSubSt := St1
-  else
-    GetSubSt := '';
 end;
 
-function TMyStringHelper.FindMaskInStr(var Mask, St: string): Boolean;
+function TMyStringHelper.FindMaskInStr(var AMask, AStr: string): Boolean;
 //Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
 //yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)
 var
-  i, j, k, Cp: Integer;
-  Sp, Mp, Last: Integer;
-  Sl, Ml: Integer;
+  mp, sp, last: Integer;
+  ml, sl: Integer;
 begin
   Result := False;
-  Sp := 1;
-  Mp := 1;
-  Sl := Length(St);
-  Ml := Length(Mask);
-  {Сpавнить начало (до пеpвого символа '*') шаблона с именем}
+  mp := 1;
+  sp := 1;
+  sl := Length(AStr);
+  ml := Length(AMask);
   repeat
-    if (Sp > Sl) then begin
-      Result := Mp > Ml;
+    if (sp > sl) then begin
+      Result := (mp > ml);
       Exit;
     end;
-    if (Mask[Mp] <> '?') and (Mask[Mp] <> St[Sp]) then
+    if (AMask[mp] <> '?') and (AMask[mp] <> AStr[sp]) then
       Break;
-    inc(Mp);
-    inc(Sp);
+    Inc(mp);
+    Inc(sp);
   until False;
-  if Mask[Mp] <> '*' then begin
-    Result := False;
-    Exit;
-  end;
+  if AMask[mp] <> '*' then
+    Exit(False);
   repeat
-    {Если символ гpyппы, значит стаpая гpyппа совпала и  }
-    {нyжно запомнить новые стаpтовые позиции сpавнения   }
-    while (Mask[Mp] = '*') do  {while - защита от "**"}
-    begin
-      inc(Mp);
-      Last := Mp;
-        {Если '*' стоит в конце шаблона, то сканиpовать }
-        {хвост стpоки не тpебyется                      }
-      if (Mp > Ml) then begin
+    while (mp <= ml) and (AMask[mp] = '*') do begin
+      Inc(mp);
+      last := mp;
+      if mp > ml then begin
         Result := True;
         Exit;
       end;
     end;
-    {Если кончилось имя, веpнyть pезyльтат сpавнения     }
-    if (Sp > Sl) then begin
-      Result := Mp > Ml;
+    if sp > sl then begin
+      Result := (mp > ml);
       Exit;
     end;
-    if (Mask[Mp] <> '?') and (Mask[Mp] <> St[Sp]) then begin
-        {Если знак шаблона не совпадает со знаком имени,  }
-        {нyжно отстyпить к началy подстpоки и попытаться  }
-        {найти её со следyющей позиции имени              }
-      Sp := Sp - ((Mp - Last) - 1);
-      Mp := Last;
+    if (AMask[mp] <> '?') and (AMask[mp] <> AStr[sp]) then begin
+      sp := sp - ((mp - last) - 1);
+      mp := last;
     end
     else begin
-      inc(Mp);
-      inc(Sp);
+      Inc(mp);
+      Inc(sp);
     end;
   until False;
 end;
 
-function TMyStringHelper.FindADDMaskInStr(Mask, St: string): Boolean;
+function TMyStringHelper.FindADDMaskInStr(const AMask, AStr: string): Boolean;
 //Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
 //yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)}
 var
-  i, j, k, Cp: Integer;
-  Sp, Mp, Last: Integer;
-  Sl, Ml: Integer;
+  m, s: string;
 begin
-  Result := False;
-  Sp := 1;
-  Mp := 1;
-  Sl := Length(St);
-  Ml := Length(Mask);
-  {Сpавнить начало (до пеpвого символа '*') шаблона с именем}
-  repeat
-    if (Sp > Sl) then begin
-      Result := Mp > Ml;
-      Exit;
-    end;
-    if ((Mask[Mp] = #1) and (St[Sp] in ['0'..'9'])) or ((Mask[Mp] = #2) and (St[Sp] in ['1'..'9'])) or ((Mask[Mp] = #3) and (St[Sp] in ['a'..'z', 'A'..'Z'])) or ((Mask[Mp] = #4) and (St[Sp] in ['A'..'Z'])) or ((Mask[Mp] = #5) and (St[Sp] in ['a'..'z']))//       or
-//!!!!
-//       ((Mask[Mp] = #6)and (St[Sp] in ['а'..'я','А'..'Я','ё','Ё']))or
-//       ((Mask[Mp] = #7)and (St[Sp] in ['А'..'Я','Ё']))or
-//       ((Mask[Mp] = #8)and (St[Sp] in ['а'..'я','ё']))
-      then begin
-    end
-    else if (Mask[Mp] <> '?') and (Mask[Mp] <> St[Sp]) then
-      Break;
-    inc(Mp);
-    inc(Sp);
-  until False;
-  if Mask[Mp] <> '*' then begin
-    Result := False;
-    Exit;
-  end;
-  repeat
-    {Если символ гpyппы, значит стаpая гpyппа совпала и  }
-    {нyжно запомнить новые стаpтовые позиции сpавнения   }
-    while (Mask[Mp] = '*') do  {while - защита от "**"}
-    begin
-      inc(Mp);
-      Last := Mp;
-        {Если '*' стоит в конце шаблона, то сканиpовать }
-        {хвост стpоки не тpебyется                      }
-      if (Mp > Ml) then begin
-        Result := True;
-        Exit;
-      end;
-    end;
-    {Если кончилось имя, веpнyть pезyльтат сpавнения     }
-    if (Sp > Sl) then begin
-      Result := Mp > Ml;
-      Exit;
-    end;
-    if (Mask[Mp] <> '?') and (Mask[Mp] <> St[Sp]) then begin
-        {Если знак шаблона не совпадает со знаком имени,  }
-        {нyжно отстyпить к началy подстpоки и попытаться  }
-        {найти её со следyющей позиции имени              }
-      Sp := Sp - ((Mp - Last) - 1);
-      Mp := Last;
-    end
-    else begin
-      inc(Mp);
-      inc(Sp);
-    end;
-  until False;
+  m := AMask;
+  s := AStr;
+  Result := FindMaskInStr(m, s);
 end;
+//==============================================================================
+//Специальные преобразования
+//==============================================================================
 
-
-//-------------------- Преобразования на основе строк/чисел в строковую инфу
-//-- например, вывод цены в рублях и копецках
-
-function TMyStringHelper.NumToPhoneStr(Num: longint): string;
-//преобразование числа в строку телефона с разделителями
-var
-  St: string;
-begin
-  Str(Num: 6, St);
-  if Length(St) <= 7 then begin
-    insert('-', St, Length(St) - 1);
-    insert('-', St, Length(St) - 4);
-  end;
-  NumToPhoneStr := St;
-end;
-
-function TMyStringHelper.StrToPhoneStr(StT: string): string;
-//форматирование строки как строки телефона с разделителями
-var
-  St: string;
-  i, j: longint;
-  er: Integer;
-begin
-  St := StT;
-  DelBoth(St, [' ']);
-  er := 0;
-  for i := 1 to Length(St) do
-    if not (St[i] in ['0'..'9']) then
-      er := -1;
-  if (Length(St) <= 7) and (er = 0) then begin
-    insert('-', St, Length(St) - 1);
-    insert('-', St, Length(St) - 4);
-  end;
-  StrToPhoneStr := St;
-end;
-
-function TMyStringHelper.NumToPriceWords(Num: longInt; Mode: Boolean): string;
-//преобразование числа в строку цены прописью
-var
-  Num1: longint;
-  St: string;
-begin
-  if Mode then begin
-    Num1 := Num mod 100;
-    Num := Num div 100;
-    St := NumToWords(Num, 'm') + PriceWord(Num, 'r') + ' ';
-    if Num1 < 10 then
-      St := St + 'ноль ';
-    St := St + NumToWords(Num1, 'f') + PriceWord(Num1, 'k');
-  end
-  else begin
-    Num := Num * 10;
-    St := NumToWords(Num, 'm') + PriceWord(Num, 'r');
-  end;
-  Result := St;
-end;
-
-function TMyStringHelper.NumToWords(Num: longint; Mode: char): string;
+function TMyStringHelper.NumToWords(const ANum: LongInt; const AGender: Char): string;
 //преобразование числа в строку прописью
-var
-  n, n1: Integer;
-  St, St1: string;
-  i, j: ShortInt;
-  Rank: longint;
-  a: Boolean;
 const
-  NumWords: array[1..3, 1..9] of string[11] = (('один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'), ('десять', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'), ('сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'));
-  NumWords_1X: array[0..9] of string[12] = ('десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать');
-  NumWords_F: array[1..2] of string[4] = ('одна', 'две');
-  NumWords_N: array[1..1] of string[4] = ('одно');
-  RankWords: array[1..2, 1..3] of string[9] = (('тысяча', 'тысячи', 'тысяч'), ('миллион', 'миллиона', 'миллионов'));
-  Zero: string[4] = 'ноль';
+  cNumWords: array[1..3, 1..9] of string = (('один', 'два', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять'), ('десять', 'двадцать', 'тридцать', 'сорок', 'пятьдесят', 'шестьдесят', 'семьдесят', 'восемьдесят', 'девяносто'), ('сто', 'двести', 'триста', 'четыреста', 'пятьсот', 'шестьсот', 'семьсот', 'восемьсот', 'девятьсот'));
+  cNumWords_1X: array[0..9] of string = ('десять', 'одиннадцать', 'двенадцать', 'тринадцать', 'четырнадцать', 'пятнадцать', 'шестнадцать', 'семнадцать', 'восемнадцать', 'девятнадцать');
+  cNumWords_F: array[1..2] of string = ('одна', 'две');
+  cNumWords_N: array[1..1] of string = ('одно');
+  cRankWords: array[1..2, 1..3] of string = (('тысяча', 'тысячи', 'тысяч'), ('миллион', 'миллиона', 'миллионов'));
+  cZero: string = 'ноль';
+var
+  n, n1, i, j, lRank: LongInt;
+  lAdded: Boolean;
+  lResult: string;
 begin
-  if Num = 0 then begin
-    NumToWords := Zero + ' ';
-    Exit;
-  end;
-  Mode := UpCase(Mode);
-  St := '';
-  Rank := 100000000;
+  if ANum = 0 then
+    Exit(cZero + ' ');
+  lResult := '';
+  lRank := 100000000;
   i := 2;
   repeat
     j := 3;
-    a := False;
+    lAdded := False;
     repeat
       n1 := n;
-      n := Num mod (Rank * 10) div Rank;
+      n := ANum mod (lRank * 10) div lRank;
       if ((n > 0) and not ((j = 2) and (n = 1))) or ((j = 1) and (n1 = 1)) then begin
         if (j = 1) and (n1 = 1) then
-          St := St + NumWords_1X[n] + ' '
+          lResult := lResult + cNumWords_1X[n] + ' '
         else begin
-          if (j = 1) and (n < 3) and ((i = 1) or ((Mode = 'F') and (i = 0))) then
-            St := St + NumWords_F[n] + ' '
-          else begin
-            if (j = 1) and (n < 2) and (Mode = 'N') and (i = 0) then
-              St := St + NumWords_N[n] + ' '
-            else
-              St := St + NumWords[j][n] + ' ';
-          end;
+          if (j = 1) and (n < 3) and ((i = 1) or ((AGender = 'F') and (i = 0))) then
+            lResult := lResult + cNumWords_F[n] + ' '
+          else if (j = 1) and (n < 2) and (AGender = 'N') and (i = 0) then
+            lResult := lResult + cNumWords_N[n] + ' '
+          else
+            lResult := lResult + cNumWords[j][n] + ' ';
         end;
-        a := True;
+        lAdded := True;
       end;
-      dec(j);
-      Rank := Rank div 10;
+      Dec(j);
+      lRank := lRank div 10;
     until j = 0;
-    if a and (i <> 0) then begin
+    if lAdded and (i <> 0) then begin
       if n1 <> 1 then
         case n of
           1:
-            St := St + RankWords[i][1];
+            lResult := lResult + cRankWords[i][1];
           2..4:
-            St := St + RankWords[i][2];
+            lResult := lResult + cRankWords[i][2];
         else
-          St := St + RankWords[i][3];
+          lResult := lResult + cRankWords[i][3];
         end
       else
-        St := St + RankWords[i][3];
-      if i > 0 then
-        St := St + ' ';
+        lResult := lResult + cRankWords[i][3];
+      lResult := lResult + ' ';
     end;
-    dec(i)
+    Dec(i);
   until i = -1;
-  Result := St;
+  Result := lResult;
 end;
 
-function TMyStringHelper.PriceWord(Num: longint; Mode: Char): string;
-//сервисная функция для вывода цены с включением слов Рублей и Копеек
+function TMyStringHelper.NumToPriceWords(const ANum: LongInt; const AMode: Boolean): string;
+//преобразование числа в строку цены прописью
+var
+  lRub, lKop: LongInt;
 begin
-  Mode := UpCase(Mode);
-  case Mode of
-    'R':
-      if (Num div 10) <> 1 then
-        case (Num mod 10) of
-          1:
-            PriceWord := 'рубль';
-          2..4:
-            PriceWord := 'рубля';
-        else
-          PriceWord := 'рублей';
-        end
-      else
-        PriceWord := 'рублей';
-    'K':
-      if (Num div 10) <> 1 then
-        case (Num mod 10) of
-          1:
-            PriceWord := 'копейка';
-          2..4:
-            PriceWord := 'копейки';
-        else
-          PriceWord := 'копеек';
-        end
-      else
-        PriceWord := 'копеек';
+  if AMode then begin
+    lKop := ANum mod 100;
+    lRub := ANum div 100;
+    Result := NumToWords(lRub, 'm') + PriceWord(lRub, 'R') + ' ';
+    if lKop < 10 then
+      Result := Result + 'ноль ';
+    Result := Result + NumToWords(lKop, 'f') + PriceWord(lKop, 'K');
+  end
+  else begin
+    lRub := ANum * 10;
+    Result := NumToWords(lRub, 'm') + PriceWord(lRub, 'R');
   end;
 end;
 
-function TMyStringHelper.NumToPriceStr(Num: longint): string;
+function TMyStringHelper.NumToPriceStr(const ANum: LongInt): string;
 //преобразует число в сцену в рублях и копейках в виде числа а не слов
 //работает тут НЕПРАВИЛЬНО, цена в целом числе, 2 последние это копейки
 var
-  St: string[20];
-  Minus: Boolean;
+  s: string;
+  lMinus: Boolean;
 begin
-  Minus := False;
-  if Num < 0 then begin
-    Minus := True;
-    Num := abs(Num)
-  end;
-  str(Num, St);
-  if (Num = 0) then
-    St := '0' + KopDividor + '00'
-  else if (Num < 10) then
-    St := '0' + KopDividor + '0' + St
-  else if (Num < 100) then
-    St := '0' + KopDividor + St
+  lMinus := ANum < 0;
+  if lMinus then
+    s := IntToStr(-ANum)
+  else
+    s := IntToStr(ANum);
+  if ANum = 0 then
+    s := '0' + KopDividor + '00'
+  else if ANum < 10 then
+    s := '0' + KopDividor + '0' + s
+  else if ANum < 100 then
+    s := '0' + KopDividor + s
   else begin
-    System.Insert(KopDividor, St, Length(St) - 1);
-    if RubDividor <> '0' then begin
-      if (Length(St) > 5 + Length(KopDividor)) then
-        System.Insert(RubDividor, St, Length(St) - 4 - Length(KopDividor));
-      if (Length(St) > 8 + Length(RubDividor) + Length(KopDividor)) then
-        System.Insert(RubDividor, St, Length(St) - 7 - Length(RubDividor) + Length(KopDividor));
-      if (Length(St) > 11 + 2 * Length(RubDividor) + Length(KopDividor)) then
-        System.Insert(RubDividor, St, Length(St) - 10 - 2 * Length(RubDividor) + Length(KopDividor));
+    Insert(KopDividor, s, Length(s) - 1);
+    if RubDividor <> '' then begin
+      if Length(s) > 5 + Length(KopDividor) then
+        Insert(RubDividor, s, Length(s) - 4 - Length(KopDividor));
+      if Length(s) > 8 + Length(RubDividor) + Length(KopDividor) then
+        Insert(RubDividor, s, Length(s) - 7 - Length(RubDividor) + Length(KopDividor));
+      if Length(s) > 11 + 2 * Length(RubDividor) + Length(KopDividor) then
+        Insert(RubDividor, s, Length(s) - 10 - 2 * Length(RubDividor) + Length(KopDividor));
     end;
   end;
   if Kop2Dividor <> '' then begin
-    if Num < 100 then
-      System.Delete(St, 1, 1 + Length(KopDividor));
-    St := St + Kop2Dividor;
+    if ANum < 100 then
+      Delete(s, 1, 1 + Length(KopDividor));
+    s := s + Kop2Dividor;
   end;
-  if Minus then
-    St := '-' + St;
-  NumToPriceStr := St;
+  if lMinus then
+    s := '-' + s;
+  Result := s;
 end;
 
-function TMyStringHelper.GetEnding(Num: longint; St1, St2, St3: string): string;
-//выбирает окончание по количеству
-//(передается окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
+function TMyStringHelper.PriceWord(const ANum: LongInt; const AMode: Char): string;
+//сервисная функция для вывода цены с включением слов Рублей и Копеек
+var
+  lLastDigit, lLastTwoDigits: Integer;
 begin
-  if not ((Num mod 100) in [10..20]) then
-    case (Num mod 10) of
-      1:
-        GetEnding := St1;
-      2..4:
-        GetEnding := St2;
+  lLastTwoDigits := Abs(ANum) mod 100;
+  lLastDigit := lLastTwoDigits mod 10;
+  if AMode = 'R' then begin
+    if (lLastTwoDigits >= 10) and (lLastTwoDigits <= 20) then
+      Result := 'рублей'
     else
-      GetEnding := St3;
-    end
-  else
-    Result := St3;
+      case lLastDigit of
+        1:
+          Result := 'рубль';
+        2..4:
+          Result := 'рубля';
+      else
+        Result := 'рублей';
+      end;
+  end
+  else //'K'
+  begin
+    if (lLastTwoDigits >= 10) and (lLastTwoDigits <= 20) then
+      Result := 'копеек'
+    else
+      case lLastDigit of
+        1:
+          Result := 'копейка';
+        2..4:
+          Result := 'копейки';
+      else
+        Result := 'копеек';
+      end;
+  end;
 end;
 
-function TMyStringHelper.GetEndingFull(Num: longint; Main, St1, St2, St3: string): string;
-begin
-  Result:=InttoStr(Num) + ' ' + Main + Getending(Num, St1, St2, St3);
-end;
-
-
-function TMyStringHelper.GetEndingOneOrMany(Num: longint; St1, St2: string): string;
-//выбирает окончание по количеству (толькко ед/множ число)
-begin
-  if Num = 1 then
-    Result := St1
-  else
-    Result := St2;
-end;
-
-function TMyStringHelper.AddBracket(st: string): string;
-//заключить строку в круглые скобки, если она не пустая
-begin
-  Result := st;
-  if Result <> '' then
-    Result := '(' + Result + ')';
-end;
-
-function TMyStringHelper.FormatNumberWithComma(Value: Extended; DivIsComma: Boolean = True): string;
-//форматируем число в строку. если есть дробная часть, то она будет дана через запятую (по умолчанию) или точку
+function TMyStringHelper.NumToPhoneStr(const ANum: LongInt): string;
+//преобразование числа в строку телефона с разделителями
 var
   s: string;
 begin
-  if SameValue(Value, Int(Value), 1E-9) then
-    s := FormatFloat('0', Value)
-  else
-    s := FormatFloat('0.########', Value);
-  if DivIsComma then
-    Result := StringReplace(s, '.', ',', [rfReplaceAll])
-  else
-    Result := StringReplace(s, ',', '.', [rfReplaceAll]);
+  s := IntToStr(ANum);
+  if Length(s) <= 7 then begin
+    Insert('-', s, Length(s) - 1);
+    Insert('-', s, Length(s) - 4);
+  end;
+  Result := s;
 end;
 
+function TMyStringHelper.StrToPhoneStr(const APhone: string): string;
+//форматирование строки как строки телефона с разделителями
+//+++ переработана с использованием DeleteCharsEx
+var
+  s: string;
+begin
+  s := Trim(APhone);
+  s := DeleteChars(s, ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'], False);
+  Result := NumToPhoneStr(StrToIntDef(s, 0));
+end;
 
+function TMyStringHelper.GetEnding(const ANum: LongInt; const AWord1, AWord2, AWord3: string): string;
+//выбирает окончание по количеству
+//(передается окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
+begin
+  if (Abs(ANum) mod 100) in [10..20] then
+    Result := AWord3
+  else
+    case Abs(ANum) mod 10 of
+      1:
+        Result := AWord1;
+      2..4:
+        Result := AWord2;
+    else
+      Result := AWord3;
+    end;
+end;
 
+function TMyStringHelper.GetEndingFull(const ANum: LongInt; const AMain, AWord1, AWord2, AWord3: string): string;
+//(передается количество, основная часть слова, окончание для кол-ва 1, 2{3,4}, 5(6,7,8,9,10)
+begin
+  Result := IntToStr(ANum) + ' ' + AMain + GetEnding(ANum, AWord1, AWord2, AWord3);
+end;
 
+function TMyStringHelper.GetEndingOneOrMany(const ANum: LongInt; const ASingular, APlural: string): string;
+//выбирает окончание по количеству (толькко ед/множ число)
+begin
+  if ANum = 1 then
+    Result := ASingular
+  else
+    Result := APlural;
+end;
 
+function TMyStringHelper.AddBracket(const AStr: string): string;
+//заключить строку в круглые скобки, если она не пустая
+begin
+  if AStr = '' then
+    Result := ''
+  else
+    Result := '(' + AStr + ')';
+end;
 
+function TMyStringHelper.FormatNumberWithComma(const AValue: Extended; const ADividerIsComma: Boolean): string;
+//форматируем число в строку. если есть дробная часть, то она будет дана через запятую (по умолчанию) или точку
+begin
+  if Abs(AValue - Round(AValue)) < 1E-9 then
+    Result := FormatFloat('0', AValue)
+  else
+    Result := FormatFloat('0.########', AValue);
+  if ADividerIsComma then
+    Result := StringReplace(Result, '.', ',', [rfReplaceAll])
+  else
+    Result := StringReplace(Result, ',', '.', [rfReplaceAll]);
+end;
+//==============================================================================
+//Условные функции
+//==============================================================================
 
-
-//-------------------------- Условные функции
-//-- Важно: в отличии от выражений параметры в функциях будут вычислены ВСЕГДА при их в нее передаче
-
-function TMyStringHelper.IIf(Expr: Boolean; Par1, Par2: Variant): Variant;
+function TMyStringHelper.IIf(const AExpr: Boolean; const ATrueValue, AFalseValue: Variant): Variant;
 //если Expr истина, то вернет Par1, иначе Par2
-//варианта для аргументов Variant, string, Integer, extended
 begin
-  if Expr then
-    Result := Par1
+  if AExpr then
+    Result := ATrueValue
   else
-    Result := Par2;
+    Result := AFalseValue;
 end;
 
-function TMyStringHelper.IIfV(Expr: Boolean; Par1, Par2: Variant): Variant;
+function TMyStringHelper.IIfV(const AExpr: Boolean; const ATrueValue, AFalseValue: Variant): Variant;
 begin
-  if Expr then
-    Result := Par1
+  if AExpr then
+    Result := ATrueValue
   else
-    Result := Par2;
+    Result := AFalseValue;
 end;
 
-function TMyStringHelper.IIFStr(Expr: Boolean; Par1: string; Par2: string = ''): string;
+function TMyStringHelper.IIFStr(const AExpr: Boolean; const ATrueStr, AFalseStr: string): string;
 begin
-  if Expr then
-    Result := Par1
+  if AExpr then
+    Result := ATrueStr
   else
-    Result := Par2;
+    Result := AFalseStr;
 end;
 
-function TMyStringHelper.IfEmptyStr(St: string; StIfEmpty: string): string;
+function TMyStringHelper.IfEmptyStr(const AStr, AEmptyResult: string): string;
+//если первый аргумент не пуст, возвращает его, иначе - второй
 begin
-  Result := St;
-  if Result = '' then
-    Result := StIfEmpty;
-end;
-
-function TMyStringHelper.IfNotEmptyStr(St: string; Mask: string = #0; StIfEmpty: string = ''): string;
-begin
-  Result := St;
-  if Result <> '' then
-    Result := StringReplace(Mask, #0, Result, [rfReplaceAll])
+  if AStr = '' then
+    Result := AEmptyResult
   else
-    Result := StIfEmpty;
+    Result := AStr;
 end;
 
-
-function TMyStringHelper.IIfInt(Expr: Boolean; Par1, Par2: Integer): Integer;
+function TMyStringHelper.IfNotEmptyStr(const AStr, AMask, AEmptyResult: string): string;
+//заменяет в маске символ #0 на строку, если строка непустая; если пустая, вернет ''
 begin
-  if Expr then
-    Result := Par1
+  if AStr <> '' then
+    Result := StringReplace(AMask, #0, AStr, [rfReplaceAll])
   else
-    Result := Par2;
+    Result := AEmptyResult;
 end;
 
-function TMyStringHelper.IIfFloat(Expr: Boolean; Par1, Par2: extended): Extended;
+function TMyStringHelper.IIfInt(const AExpr: Boolean; const ATrueValue, AFalseValue: Integer): Integer;
 begin
-  if Expr then
-    Result := Par1
+  if AExpr then
+    Result := ATrueValue
   else
-    Result := Par2;
+    Result := AFalseValue;
 end;
 
-function TMyStringHelper.IfEl(AValue, AIfValeu, AElseValue: Variant): Variant;
+function TMyStringHelper.IIfFloat(const AExpr: Boolean; const ATrueValue, AFalseValue: Extended): Extended;
+begin
+  if AExpr then
+    Result := ATrueValue
+  else
+    Result := AFalseValue;
+end;
+
+function TMyStringHelper.IfEl(const AValue, AIfValue, AElseValue: Variant): Variant;
 //Если AValue = AIfValeu, то вернет AIfValeu, иначе AElseValue
 begin
-  if AValue = AIfValeu then Result:= AIfValeu else Result:= AElseValue;
+  if AValue = AIfValue then
+    Result := AIfValue
+  else
+    Result := AElseValue;
 end;
 
+function TMyStringHelper.IfNotEqual(const AValueFact, AValueCheck, AValueRes: Variant): Variant;
+//если ValueFact = ValueCheck, то вернет ValueFact, иначе ValueRes
+begin
+  if AValueFact <> AValueCheck then
+    Result := AValueRes
+  else
+    Result := AValueFact;
+end;
 
-function TMyStringHelper.IfNotEqual(ValueFact, ValueCheck, ValueRes: Variant): Variant;
+function TMyStringHelper.IfNotEmpty(const AValueFact, AValueRes: Variant): Variant;
 //если ValueFact не пустое (empty, '', null), то вернет ValueFact, иначе ValueRes
 begin
-  if ValueFact = ValueCheck then
-    Result := ValueFact
+  if not VarIsNull(AValueFact) and not VarIsEmpty(AValueFact) and (VarToStr(AValueFact) <> '') then
+    Result := AValueFact
   else
-    Result := ValueRes;
+    Result := AValueRes;
 end;
 
-function TMyStringHelper.IfNotEmpty(ValueFact, ValueRes: Variant): Variant;
-//возвращает из массива результат, соответствующий нулевому значению
-begin
-  if not (VarIsEmpty(ValueFact) or (VarToStr(ValueFact) = '')) then
-    Result := ValueFact
-  else
-    Result := ValueRes;
-end;
-
-function TMyStringHelper.Decode(ar: TVarDynArray): Variant;
+function TMyStringHelper.Decode(const AArray: TVarDynArray): Variant;
 //возвращает из массива результат, соответствующий нулевому значению
 //value, case1, value1, case2, value2, {valueelse}
 var
-  i, j: Integer;
-  v: Variant;
+  i: Integer;
 begin
-  Result := null;
+  Result := Null;
+  if Length(AArray) = 0 then
+    Exit;
   i := 1;
-  while i < High(ar) do begin
-    if ar[0] = ar[i] then begin
-      Result := ar[i + 1];
+  while i < High(AArray) do begin
+    if VarCompareValue(AArray[0], AArray[i]) = vrEqual then begin
+      Result := AArray[i + 1];
       Exit;
     end;
-    i := i + 2;
+    Inc(i, 2);
   end;
-  if i = High(ar) then
-    Result := ar[i];
+  if i = High(AArray) then
+    Result := AArray[i];
 end;
 
+function TMyStringHelper.CompareStI(const AStr1, AStr2: string): Boolean;
 //сравнить две строки без учета регистра
-function TMyStringHelper.CompareStI(st1, st2: string): Boolean;
 begin
-  Result := ToUpper(st1) = ToUpper(st2);
+  Result := SameText(AStr1, AStr2);
 end;
+//==============================================================================
+//Конкатенация строк
+//==============================================================================
 
-
-//-------------------------- конкатенация строк
-
-function TMyStringHelper.ConcatSt(StAll, StPart: string; Dividor: string = ','; IfNotEmpty: Boolean = False): string;
+function TMyStringHelper.ConcatStr(const AMain, APart, ADelimiter: string; const AIgnoreEmpty: Boolean): string;
 //добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
 begin
-  Result := StAll;
-  if IfNotEmpty and (StPart = '') then
+  Result := AMain;
+  if AIgnoreEmpty and (APart = '') then
     Exit;
-  if StAll <> '' then
-    Result := Result + Dividor;
-  Result := Result + StPart;
+  if Result <> '' then
+    Result := Result + ADelimiter;
+  Result := Result + APart;
 end;
 
-procedure TMyStringHelper.ConcatStP(var StAll: string; StPart: string; Dividor: string = ','; IfNotEmpty: Boolean = False);
+procedure TMyStringHelper.ConcatStrP(var AMain: string; const APart, ADelimiter: string; const AIgnoreEmpty: Boolean);
 //процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
 begin
-  if IfNotEmpty and (StPart = '') then
+  if AIgnoreEmpty and (APart = '') then
     Exit;
-  if StAll <> '' then
-    StAll := StAll + Dividor;
-  StAll := StAll + StPart;
+  if AMain <> '' then
+    AMain := AMain + ADelimiter;
+  AMain := AMain + APart;
 end;
 
-procedure TMyStringHelper.ConcatStP(var StAll: Variant; StPart: Variant; Dividor: Variant; IfNotEmpty: Boolean = False);
+procedure TMyStringHelper.ConcatStrP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean);
+//процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
+var
+  sMain, sPart, sDelim: string;
+begin
+  sMain := VarToStr(AMain);
+  sPart := VarToStr(APart);
+  sDelim := VarToStr(ADelimiter);
+  if AIgnoreEmpty and (sPart = '') then
+    Exit;
+  if sMain <> '' then
+    sMain := sMain + sDelim;
+  sMain := sMain + sPart;
+  AMain := sMain;
+end;
+
+function TMyStringHelper.ConcatSt(const AMain, APart, ADelimiter: string; const AIgnoreEmpty: Boolean): string;
+//добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
+begin
+  Result := ConcatStr(AMain, APart, ADelimiter, AIgnoreEmpty)
+end;
+
+procedure TMyStringHelper.ConcatStP(var AMain: string; const APart, ADelimiter: string; const AIgnoreEmpty: Boolean);
 //процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
 begin
-  if IfNotEmpty and (VarToStr(StPart) = '') then
-    Exit;
-  if VarToStr(StAll) <> '' then
-    StAll := VarToStr(StAll) + VarToStr(Dividor);
-  StAll := VarToStr(StAll) + VarToStr(StPart);
+  ConcatStrP(AMain, APart, ADelimiter, AIgnoreEmpty);
 end;
 
+procedure TMyStringHelper.ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean);
+//процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
+begin
+  ConcatStrP(AMain, APart, ADelimiter, AIgnoreEmpty);
+end;
 
-
-//-------------------------- функции для sql-запросов
-
-function TMyStringHelper.SQLdate(dt: TDateTime): ansistring;
-//преобразование даты в строку соотв формату даты в выбранной БД
-//форматирует дfту в тот вид, который можно вставить в скл
+//==============================================================================
+//SQL функции
+//==============================================================================
+function TMyStringHelper.SQLDate(const ADateTime: TDateTime): AnsiString;
+//форматирует дяту в тот вид, который можно вставить в скл
 //в сам текст, в параметра передается просто сам тип даты)
 var
-  Y, M, D: word;
+  y, m, d: Word;
 begin
-  DecodeDate(dt, Y, M, D);
-  Result := IntToStr(Y) + IifStr(M < 10, '0', '') + IntToStr(M) + IifStr(D < 10, '0', '') + IntToStr(D);
+  DecodeDate(ADateTime, y, m, d);
+  Result := AnsiString(Format('%.4d%.2d%.2d', [y, m, d]));
 end;
 
-function TMyStringHelper.SQLdateTime(dt: TDateTime): ansistring;
+function TMyStringHelper.SQLDateTime(const ADateTime: TDateTime): AnsiString;
 //преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
 var
-  Y, M, D, th, tm, ts, tms: word;
+  y, m, d, h, n, s, ms: Word;
 begin
-  DecodeDateTime(Date, Y, M, D, th, tm, ts, tms);
-  Result := IntToStr(Y) + IifStr(M < 10, '0', '') + IntToStr(M) + IifStr(D < 10, '0', '') + IntToStr(D) + IifStr(th < 10, '0', '') + IntToStr(th) + IifStr(tm < 10, '0', '') + IntToStr(tm) + IifStr(ts < 10, '0', '') + IntToStr(ts);
+  DecodeDateTime(ADateTime, y, m, d, h, n, s, ms);
+  Result := AnsiString(Format('%.4d%.2d%.2d%.2d%.2d%.2d', [y, m, d, h, n, s]));
 end;
+//==============================================================================
+//Математические
+//==============================================================================
 
-
-
-//-------------------------- служебные -----------------------------------------
-
-function TMyStringHelper.GetFieldNameFromSt(st: string): string;
-//возвращает имя поля в таблице из имени поля в селесте
-//например из '1 as field$s' вернет 'field$s'
-var
-  ar: TStringDynArray;
-begin
-  ar := a.ExplodeS(st, ' ');
-  Result := ar[High(ar)];
-end;
-
-function TMyStringHelper.GetDaysCountToName(Days: Integer): string;
-//неделя, 4 дня, месяц, 3 месяца, полгода, год, 68 дней - с допусками несколько дней для градаций по месяцам
-begin
-  case Days of
-    7: Result:='неделя';
-    14: Result:='2 недели';
-    21: Result:='3 недели';
-    29,30,31: Result:='месяц';
-    60,61,62: Result:='2 месяца';
-    90..93: Result:='3 месяца';
-    120..124: Result:='4 месяца';
-    30*5..31*5: Result:='4 месяца';
-    30*6..31*6: Result:='полгода';
-    30*7..31*7: Result:='7 месяцев';
-    30*8..31*8: Result:='8 месяцев';
-    30*9..31*9: Result:='9 месяцев';
-    30*10..31*10: Result:='10 месяцев';
-    30*11..31*11: Result:='11 месяцев';
-    365..366: Result:='год';
-  else
-    Result:=InttoStr(Days) + ' ' + GetEnding(Days, 'день','дня','дней');
-  end;
-end;
-
-
-function TMyStringHelper.GetDBFieldNameFromSt(st: string; WithMod: Boolean = False): string;
-//возвращает имя поля в таблице из имени поля в селесте
-//например из '1 as field$s' вернет 'field', а если установлен WithMod, то 'field$s'
-var
-  ar: TStringDynArray;
-begin
-  ar := a.ExplodeS(st, ' ');
-  if WithMod
-    then Result:=ar[High(ar)]
-    else begin
-      ar := a.ExplodeS(ar[High(ar)], '$');
-      Result := ar[0];
-    end;
-end;
-
-procedure TMyStringHelper.SwapPlaces(v1, v2: Variant);
-//производит обмен значениями между двумя переменными
-var
-  v: Variant;
-begin
-  v := v1;
-  v1 := v2;
-  v2 := v;
-end;
-
-(*function ParseCsv(St: string; DivCh: Char): tSplitArray;
-//пасрсит строку Csv в массив
-//функция устаревшая, если использовать надо будет переделывать
-var
-  i,j,p,q:Integer;
-  ParseCsv_:tsplitarray;
-begin
-//"""",,"qwerty","1,2",1,3
-//корректная строка/подстрока не должна содержать непарную кавычку
-  p:=0;q:=0;
-  ParseCsv_[1]:='';
-  if st[length(st)]<>DivCh then st:=st+DivCh;
-  for i:=1 to length(st) do
-    begin
-      if st[i]='"' then q:=q+1;
-      if ((st[i]=DivCh)and(q mod 2 = 0)) then
-        begin
-          p:=p+1;q:=0;
-          if pos('"',ParseCsv_[p])=1 then
-            ParseCsv_[p]:=copy(ParseCsv_[p],2,length(ParseCsv_[p])-2);
-          ParseCsv_[p+1]:='';
-        end
-        else ParseCsv_[p+1]:=ParseCsv_[p+1]+st[i];
-    end;
-  ParseCsv_[0]:=inttostr(p);
-  REsult:=ParseCsv_;
-end;*)
-
-function TMyStringHelper.CorrectFileName(st: string): string;
-//скорректируем строку для использования в качестве имени файла
+function TMyStringHelper.MaxOf(const AValues: array of Variant): Variant;
+//выбирает максимальное значение из вариантного массива
 var
   i: Integer;
-  ch: Char;
 begin
-  Result := Trim(st);
-  //заменим надопустимые символы
+  Result := AValues[0];
+  for i := 0 to High(AValues) do
+    if AValues[i] > Result then
+      Result := AValues[i];
+end;
+
+function TMyStringHelper.MinOf(const AValues: array of Variant): Variant;
+//выбирает минимальное значение из вариантного массива
+var
+  i: Integer;
+begin
+  Result := AValues[0];
+  for i := 0 to High(AValues) do
+    if AValues[i] < Result then
+      Result := AValues[i];
+end;
+//==============================================================================
+//Служебные функции
+//==============================================================================
+
+function TMyStringHelper.BadDate: TDateTime;
+//возвращает дату, которую условились считать признаком неверной даты/времени
+begin
+  Result := EncodeDate(1900, 12, 30);
+end;
+
+procedure TMyStringHelper.SwapPlaces(var AValue1, AValue2: Variant);
+//производит обмен значениями между двумя переменными
+var
+  tmp: Variant;
+begin
+  tmp := AValue1;
+  AValue1 := AValue2;
+  AValue2 := tmp;
+end;
+
+function TMyStringHelper.CorrectFileName(const AStr: string): string;
+//скорректируем строку для использования в качестве имени файла
+begin
+  Result := Trim(AStr);
   Result := StringReplace(Result, #9, ' ', [rfReplaceAll]);
   Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
   Result := StringReplace(Result, '"', '''', [rfReplaceAll]);
@@ -1970,253 +1766,138 @@ begin
   Result := StringReplace(Result, ':', '-', [rfReplaceAll]);
   Result := StringReplace(Result, '*', '-', [rfReplaceAll]);
   Result := StringReplace(Result, '?', '-', [rfReplaceAll]);
-  //уберем точки справа
-  //для самбы - если создаются каталоги с правой точнокоЙ, то в винде получается непонятное испорченное короткое имя каталога,
-  //в линкс же каталог не виден вообще, но при этом существует
-  while (Length(Result) > 0) and (Result[Length(Result)] = '.') do
+  while (Result <> '') and (Result[Length(Result)] = '.') do
     Delete(Result, Length(Result), 1);
- { for i:=Length(Result) downto 1 do begin
-    Ch:=Char(Copy(Result, i, 1));
-    if not (TPath.IsValidFileNameChar(Ch) and TPath.IsValidPathChar(Ch))
-      then Delete(Result, i);
-  end;}
 end;
 
-function TMyStringHelper.ValidateInn(inn: Variant): string;
-//проверка валидности ИНН, возвращает пустую строку если нет ошибки, или текстовое описание ошибки
+function TMyStringHelper.ValidateInn(const AInn: Variant): string;
+//проверка ИНН
 var
-  error_code: Integer;
-  error_message: string;
-  n11: Integer;
-  n12: Integer;
+  s: string;
+  code: Integer;
 
-  function check_digit(inn: string; coefficients: TVarDynArray): Integer;
+  function CheckDigit(const S: string; Coef: array of Integer): Integer;
   var
-    i, n: Integer;
+    i, sum: Integer;
   begin
-    n := 0;
-    for i := 0 to High(coefficients) do
-      n := n + coefficients[i] * StrToInt(inn[i + 1]);
-    Result := n mod 11 mod 10;
+    sum := 0;
+    for i := 0 to High(Coef) do
+      sum := sum + Coef[i] * (Ord(S[i + 1]) - 48);
+    Result := sum mod 11 mod 10;
   end;
 
 begin
-  error_message := '';
-  result := error_message;
-  error_code := 0;
-  inn := VarToStr(inn);
-  if (inn = '') then begin
-    error_code := 1;
-    error_message := 'ИНН пуст';
-  end
-  else if StrToFloatDef(inn, -1) = -1 then begin
-    error_code := 2;
-    error_message := 'ИНН может состоять только из цифр';
-  end
-  else if not (Length(inn) in [10, 12]) then begin
-    error_code := 3;
-    error_message := 'ИНН может состоять только из 10 или 12 цифр';
+  s := VarToStr(AInn);
+  if s = '' then
+    Exit('ИНН пуст');
+  if not TryStrToInt(s, code) then
+    Exit('ИНН может состоять только из цифр');
+  if not (Length(s) in [10, 12]) then
+    Exit('ИНН может состоять только из 10 или 12 цифр');
+  if Length(s) = 10 then begin
+    if CheckDigit(s, [2, 4, 10, 3, 5, 9, 4, 6, 8]) = StrToInt(s[10]) then
+      Result := ''
+    else
+      Result := 'Неправильное контрольное число';
   end
   else begin
-    if (Length(inn) = 10) and (check_digit(inn, [2, 4, 10, 3, 5, 9, 4, 6, 8]) = StrToInt(VarToStr(inn)[10])) then
-      Exit
-    else if (Length(inn) = 12) then begin
-      n11 := check_digit(inn, [7, 2, 4, 10, 3, 5, 9, 4, 6, 8]);
-      n12 := check_digit(inn, [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8]);
-      if (n11 = StrToInt(VarToStr(inn)[11])) and (n12 = StrToInt(VarToStr(inn)[12])) then
-        Exit;
-    end;
-    error_code := 4;
-    error_message := 'Неправильное контрольное число';
+    if (CheckDigit(s, [7, 2, 4, 10, 3, 5, 9, 4, 6, 8]) = StrToInt(s[11])) and (CheckDigit(s, [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8]) = StrToInt(s[12])) then
+      Result := ''
+    else
+      Result := 'Неправильное контрольное число';
   end;
-  result := error_message;
 end;
 
-function TMyStringHelper.StringToPAnsiChar(stringVar: string): PAnsiChar;
+function TMyStringHelper.StringToPAnsiChar(const AString: string): PAnsiChar;
 //конвертация типа string в PAnsiChar c проверкой (при ошибке исключение)
 var
-  AnsString: AnsiString;
-  InternalError: Boolean;
+  a: AnsiString;
 begin
-  InternalError := False;
-  Result := '';
-  try
-    if stringVar <> '' then begin
-      AnsString := AnsiString(stringVar);
-      Result := PAnsiChar(PAnsiString(AnsString));
-    end;
-  except
-    InternalError := True;
-  end;
-  if InternalError or (string(Result) <> stringVar) then begin
-    raise Exception.Create('Conversion from string to PAnsiChar failed!');
-  end;
+  a := AnsiString(AString);
+  Result := PAnsiChar(a);
 end;
-
-
-//-------------------- математические ------------------------------------------
-
-function TMyStringHelper.MaxOf(const Values: array of Variant): Variant;
-//выбирает максимальное значение из вариантного массива
-var
-  I: Cardinal;
-begin
-  Result := Values[0];
-  for I := 0 to High(Values) do
-    if Values[I] > Result then
-      Result := Values[I];
-end;
-
-function TMyStringHelper.MinOf(const Values: array of Variant): Variant;
-//выбирает минимальное значение из вариантного массива
-var
-  I: Cardinal;
-begin
-  Result := Values[0];
-  for I := 0 to High(Values) do
-    if Values[I] < Result then
-      Result := Values[I];
-end;
-
-
-(*
-
-TUnicodeHeper.StringToWideString(s, 1252);
-*)
 
 function TMyStringHelper.WideStringToString(const ws: WideString; codePage: Word): AnsiString;
-var
-  l: Integer;
 begin
-(*  if ws = '' then
-    Result := ''
-  else begin
-    l := WideCharToMultiByte(codePage, WC_COMPOSITECHECK or WC_DISCARDNS or WC_SEPCHARS or WC_DEFAULTCHAR, @ws[1], -1, nil, 0, nil, nil);
-    SetLength(Result, l - 1);
-    if l > 1 then
-      WideCharToMultiByte(codePage, WC_COMPOSITECHECK or WC_DISCARDNS or WC_SEPCHARS or WC_DEFAULTCHAR, @ws[1], -1, @Result[1], l - 1, nil, nil);
-  end;*)
+  // заглушка, при необходимости реализовать
+  Result := '';
 end;
 
 function TMyStringHelper.StringToWideString(const s: AnsiString; codePage: Word): WideString;
-{:Converts Ansi string to Unicode string using specified code page.
-  @param   s        Ansi string.
-  @param   codePage Code page to be used in conversion.
-  @returns Converted wide string.
- }
-var
-  l: Integer;
 begin
-(*  if s = '' then
+  // заглушка
+  Result := '';
+end;
+
+function TMyStringHelper.GetFieldNameFromSt(const ASqlExpr: string): string;
+//возвращает имя поля в таблице из имени поля в селесте   например из '1 as field' вернет 'field'
+//например из '1 as field$s' вернет 'field$s'
+var
+  parts: TStringDynArray;
+begin
+  parts := a.ExplodeS(ASqlExpr, ' ');
+  if Length(parts) = 0 then
     Result := ''
+  else
+    Result := parts[High(parts)];
+end;
+
+function TMyStringHelper.GetDBFieldNameFromSt(const ASqlExpr: string; const AWithMod: Boolean): string;
+//возвращает имя поля в таблице из имени поля в селесте
+//например из '1 as field$s' вернет 'field', а если установлен WithMod, то 'field$s'
+var
+  parts, sub: TStringDynArray;
+begin
+  parts := a.ExplodeS(ASqlExpr, ' ');
+  if Length(parts) = 0 then
+    Exit('');
+  if AWithMod then
+    Result := parts[High(parts)]
   else begin
-    l := MultiByteToWideChar(codePage, MB_PRECOMPOSED, PChar(@s[1]), -1, nil, 0);
-    SetLength(Result, l - 1);
-    if l > 1 then
-      MultiByteToWideChar(codePage, MB_PRECOMPOSED, PChar(@s[1]), -1, PWideChar(@Result[1]), l - 1);
-  end;*)
-end;
-
-function TMyStringHelper.VarType(Value: Variant): Integer;
-//возвращает НЕКОТОРЫЕ сводные типы переменной Variant
-//например любое целое иудет varInteger
-begin
- Result:= Variants.VarType(Value) and VarTypeMask;
- if Result = 16 then Result:= varInteger;  //так получилось целой отрицательное опытным путем
- if Result in [varSmallInt, varByte, varInteger, varWord, varInt64, 19{целое отрицательное -MaxInt}] then Result:= varInteger;
- if Result in [varSingle, varDouble, varCurrency] then Result:= varDouble;
- if Variants.VarType(Value) and varString = varString then Result:= varString;  //иначе не определяется
-{
-  case basicType of
-    varEmpty     : Result := 'varEmpty';
-    varNull      : typeString := 'varNull';
-    varSmallInt  : typeString := 'varSmallInt';
-    varInteger   : typeString := 'varInteger';
-    varSingle    : typeString := 'varSingle';
-    varDouble    : typeString := 'varDouble';
-    varCurrency  : typeString := 'varCurrency';
-    varDate      : typeString := 'varDate';
-    varOleStr    : typeString := 'varOleStr';
-    varDispatch  : typeString := 'varDispatch';
-    varError     : typeString := 'varError';
-    varBoolean   : typeString := 'varBoolean';
-    varVariant   : typeString := 'varVariant';
-    varUnknown   : typeString := 'varUnknown';
-    varByte      : typeString := 'varByte';
-    varWord      : typeString := 'varWord';
-    varLongWord  : typeString := 'varLongWord';
-    varInt64     : typeString := 'varInt64';
-    varStrArg    : typeString := 'varStrArg';
-    varString    : typeString := 'varString';
-    varAny       : typeString := 'varAny';
-    varTypeMask  : typeString := 'varTypeMask';
-  end;
-  }
-end;
-
-function TMyStringHelper.VarIsClear(const V: Variant): Boolean;
-//проверяет, задано ли значение переменной типа Variant
-var
-  LHandler: TCustomVariantType;
-  LVarData: TVarData;
-begin
-  LVarData := FindVarData(V)^;
-  with LVarData do
-    if True{VType < CFirstUserType} then
-      Result := (VType = varEmpty) or
-                (((VType = varDispatch) or (VType = varUnknown)) and
-                  (VDispatch = nil))
-    else if FindCustomVariantType(VType, LHandler) then
-      Result := LHandler.IsClear(LVarData)
-    else
-      Result := False;
-end;
-
-procedure TMyStringHelper.GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
-//возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
-//('Сегодня', 'Вчера', 'Эта неделя', 'Прошлая неделя', 'Эти две недели', 'Прошлые две недели', 'Этот месяц', 'Прошлый месяц', ==7
-//'Этот квартал', 'Прошлый квартал','Этот год', 'Прошлый год');
-var
-  i, d, d1, d2, p, y, q, m: Integer;
-  dt: TDateTime;
-  sa: TStringDynArray;
-begin
-  dt := Date;
-  dt1 := Date;
-  dt2 := Date;
-  if VarType(Period) = varInteger
-    then p := Period
-    else begin
-      p := 0;
-      for p := 1 to High(DatePeriods) do
-        if ToUpper(Period) = ToUpper(DatePeriods[p])
-          then Break;
-    end;
-  if (p <= 0) or (p > High(DatePeriods)) then
-    Exit;
-  case p of
-    1: begin dt1 := IncDay(Date, -1); dt2 := dt1; end;
-    2: begin dt1 := Date - (DayOfWeek(dt) - 2); dt2 := Date - (DayOfWeek(dt) - 2) + 6; end;
-    3: begin dt1 := Date - (DayOfWeek(dt) - 2) - 7; dt2 := Date - (DayOfWeek(dt) - 2) + 6 - 7; end;
-    4: begin d := IIf(DayOf(dt) < 16, 1, 16); d2 := Min(d + 15, DaysInMonth(Date)); dt1 := EncodeDate(YearOf(dt), MonthOf(Dt), d); dt2 := EncodeDate(YearOf(dt), MonthOf(Dt), d2); end;
-    5: begin dt := IncDay(dt, -14); d := IIf(DayOf(dt) < 16, 1, 16); d2 := Min(d + 15, DaysInMonth(dt)); dt1 := EncodeDate(YearOf(dt), MonthOf(Dt), d); dt2 := EncodeDate(YearOf(dt), MonthOf(Dt), d2); end;
-    6: begin dt1 := EncodeDate(YearOf(Date), MonthOf(Date), 1); dt2 := EncodeDate(YearOf(Date), MonthOf(Date), DaysInMonth(Date)); end;
-    7: begin dt := IncMonth(Date, -1);  dt1 := EncodeDate(YearOf(dt), MonthOf(dt), 1); dt2 := EncodeDate(YearOf(dt), MonthOf(dt), DaysInMonth(dt)); end;
-    8: begin Q := (MonthOf(dt) - 1) div 3 + 1; M := (Q - 1) * 3 + 1; dt1 := EncodeDate(YearOf(dt), M, 1); dt2 := EndOfTheMonth(EncodeDate(YearOf(dt), M + 2, 1)); end;
-    9: begin Q := (MonthOf(dt) - 1) div 3 + 1; M := (Q - 1) * 3 + 1; dt1 := EncodeDate(YearOf(dt), M, 1); dt2 := EndOfTheMonth(EncodeDate(YearOf(dt), M + 2, 1)); dt1 := IncMonth(dt1, -3); dt2 := IncMonth(dt2, -3); end;
-    10: begin dt1 := EncodeDate(YearOf(Date), 1, 1); dt2 := EncodeDate(YearOf(Date), 12, 31); end;
-    11: begin dt1 := EncodeDate(YearOf(Date) - 1, 1, 1); dt2 := EncodeDate(YearOf(Date) - 1, 12, 31); end;
+    sub := a.ExplodeS(parts[High(parts)], '$');
+    Result := sub[0];
   end;
 end;
 
-procedure TMyStringHelper.GetDatesFromPeriodString(st: string; var dt1: TDateTime; var dt2: TDateTime);
+function TMyStringHelper.GetDaysCountToName(const ADays: Integer): string;
+//возвращает назавание периода в зависимсоти от количества дней:
+//неделя, 4 дня, месяц, 3 месяца, полгода, год, 68 дней - с допусками несколько дней для градаций по месяцам
 begin
-  var va := A.Explode(st, ' - ');
-  dt1 := StrToDate(va[0]);
-  dt2 := StrToDate(va[1]);
+  case ADays of
+    7:
+      Result := 'неделя';
+    14:
+      Result := '2 недели';
+    21:
+      Result := '3 недели';
+    29..31:
+      Result := 'месяц';
+    60..62:
+      Result := '2 месяца';
+    90..93:
+      Result := '3 месяца';
+    120..124:
+      Result := '4 месяца';
+    150..155:
+      Result := '5 месяцев';
+    180..186:
+      Result := '6 месяцев';
+    210..217:
+      Result := '7 месяцев';
+    240..248:
+      Result := '8 месяцев';
+    270..279:
+      Result := '9 месяцев';
+    300..310:
+      Result := '10 месяцев';
+    330..341:
+      Result := '11 месяцев';
+    365..366:
+      Result := 'год';
+  else
+    Result := IntToStr(ADays) + ' ' + GetEnding(ADays, 'день', 'дня', 'дней');
+  end;
 end;
-
-
 
 function TMyStringHelper.VeryfyValue(ValueType: string; Verify: string; Value: string; var CorrectValue: Variant): Boolean;
 //проверка значения строки, по правилам переданным в verify, с учетом типа данных, указанных в ValueType
@@ -2251,20 +1932,20 @@ var
   b: Boolean;
 begin
   Result := True;
-  v1 := verify;
+  v1 := Verify;
   if v1 = '' then
     Exit;
-  ver := A.ExplodeS(v1 + '::::::', ':');
+  ver := a.ExplodeS(v1 + '::::::', ':');
   //st := C.Field.AsString;
   st := Value;
-  if (ValueType[1] in ['I','i','F','f']) then begin
+  if (ValueType[1] in ['I', 'i', 'F', 'f']) then begin
     if st = '' then
-      Result := (pos('N', S.ChangeCaseStr(ver[3], True)) = 0)
+      Result := (pos('N', s.ChangeCaseStr(ver[3], True)) = 0)
     else
-      Result := S.IsNumber(st, StrToFloatDef(ver[0], 0), StrToFloatDef(ver[1], 0), StrToIntDef(ver[2], -1));
+      Result := s.IsNumber(st, StrToFloatDef(ver[0], 0), StrToFloatDef(ver[1], 0), StrToIntDef(ver[2], -1));
   end
-  else if (ValueType[1] in ['D','d']) then begin
-    b :=IsDateTime(st, 'dt');
+  else if (ValueType[1] in ['D', 'd']) then begin
+    b := IsDateTime(st, 'dt');
     if b then
       dt := StrToDateTime(st);
     if (ver[2] = '-') and (st = '') then
@@ -2278,16 +1959,16 @@ begin
         Result := Result and b and (dt <= StrToInt(ver[1]));
     end;
   end
-  else if (ValueType[1] in ['S','s','T','t']) then begin
+  else if (ValueType[1] in ['S', 's', 'T', 't']) then begin
     st2 := st;
       //регистр - на самом деле не нужно, так как контролл сам приводит к нужному регистру
-    if Pos('U', S.ChangeCaseStr(ver[3], True)) > 0 then
-      st2 := S.ChangeCaseStr(st2, True);
-    if Pos('L', S.ChangeCaseStr(ver[3], True)) > 0 then
-      st2 := S.ChangeCaseStr(st2, False);
-    if Pos('T', S.ChangeCaseStr(ver[3], True)) > 0 then
+    if Pos('U', s.ChangeCaseStr(ver[3], True)) > 0 then
+      st2 := s.ChangeCaseStr(st2, True);
+    if Pos('L', s.ChangeCaseStr(ver[3], True)) > 0 then
+      st2 := s.ChangeCaseStr(st2, False);
+    if Pos('T', s.ChangeCaseStr(ver[3], True)) > 0 then
       st2 := Trim(st2);
-    if Pos('P', S.ChangeCaseStr(ver[3], True)) > 0 then
+    if Pos('P', s.ChangeCaseStr(ver[3], True)) > 0 then
       st2 := DeleteRepSpaces(st2, ' ');
     st3 := ver[7];
       //уберем невалидные символы
@@ -2303,774 +1984,889 @@ begin
         Result := (TDBComboboxEh(C).ItemIndex >= 0)
       end;}
   end;
-  CorrectValue:=st;
+  CorrectValue := st;
 end;
 
+(*
+function TMyStringHelper.VerifyValue(const AValueType, AVerify, AValue: string; out ACorrectValue: Variant): Boolean;
+//проверка значения строки, по правилам переданным в verify, с учетом типа данных, указанных в ValueType
+//для строк возможна коррекция значений
+var
+  lParts: TStringDynArray;
+  lMin, lMax: Extended;
+  lDigits: Integer;
+begin
+  Result := True;
+  ACorrectValue := AValue;
+  lParts := A.ExplodeS(AVerify + '::::::', ':');
+  if (AValueType[1] in ['I','i','F','f']) then
+  begin
+    lMin := StrToFloatDef(lParts[0], 0);
+    lMax := StrToFloatDef(lParts[1], 0);
+    lDigits := StrToIntDef(lParts[2], -1);
+    Result := IsNumber(AValue, lMin, lMax, lDigits);
+  end
+  else if (AValueType[1] in ['D','d']) then
+  begin
+    Result := IsDateTime(AValue, 'dt');
+    if Result then
+    begin
+      if lParts[2] = '-' then
+        Result := True
+      else
+      begin
+        if lParts[0] <> '*' then
+          Result := Result and (StrToDateTime(AValue) >= StrToIntDef(lParts[0], 0));
+        if lParts[1] <> '' then
+          Result := Result and (StrToDateTime(AValue) <= StrToIntDef(lParts[1], 0));
+      end;
+    end;
+  end
+  else if (AValueType[1] in ['S','s','T','t']) then
+  begin
+    if lParts[0] <> '' then
+      Result := Result and (Length(AValue) >= StrToIntDef(lParts[0], 0));
+    if lParts[1] <> '' then
+      Result := Result and (Length(AValue) <= StrToIntDef(lParts[1], 0));
+    if Pos('T', UpperCase(lParts[3])) > 0 then
+      ACorrectValue := Trim(AValue);
+    if Pos('P', UpperCase(lParts[3])) > 0 then
+      ACorrectValue := DeleteRepSpaces(ACorrectValue, ' ');
+    if Pos('U', UpperCase(lParts[3])) > 0 then
+      ACorrectValue := ToUpper(ACorrectValue);
+    if Pos('L', UpperCase(lParts[3])) > 0 then
+      ACorrectValue := ToLower(ACorrectValue);
+    if Length(lParts) >= 6 then
+      ACorrectValue := DeleteChars(ACorrectValue, lParts[5].ToCharArray, True);
+  end;
+end;
+*)
+function TMyStringHelper.VarType(const AValue: Variant): Integer;
+//возвращает НЕКОТОРЫЕ сводные типы переменной Variant
+//например любое целое иудет varInteger
+begin
+  Result := Variants.VarType(AValue) and VarTypeMask;
+  if Result in [varSmallInt, varByte, varInteger, varWord, varInt64, 19] then
+    Result := varInteger;
+  if Result in [varSingle, varDouble, varCurrency] then
+    Result := varDouble;
+  if (Variants.VarType(AValue) and varString) = varString then
+    Result := varString;
+end;
 
+function TMyStringHelper.VarIsClear(const AValue: Variant): Boolean;
+//проверяет, задано ли значение переменной типа Variant
+begin
+  Result := not (VarIsEmpty(AValue) or VarIsNull(AValue));
+end;
 
+procedure TMyStringHelper.GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
+//возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
+var
+  p, y, m, q, d: Integer;
+  dt: TDateTime;
+begin
+  ADateFrom := Date;
+  ADateTo := Date;
+  if VarType(APeriod) = varInteger then
+    p := APeriod
+  else begin
+    for p := 1 to High(DatePeriods) do
+      if SameText(APeriod, DatePeriods[p]) then
+        Break;
+  end;
+  if (p <= 0) or (p > High(DatePeriods)) then
+    Exit;
+  case p of
+    1:
+      begin
+        ADateFrom := AStartDate;
+        ADateTo := AStartDate;
+      end;
+    2:
+      begin
+        ADateFrom := AStartDate - 1;
+        ADateTo := AStartDate - 1;
+      end;
+    3:
+      begin
+        ADateFrom := AStartDate - (DayOfWeek(AStartDate) - 2);
+        ADateTo := ADateFrom + 6;
+      end;
+    4:
+      begin
+        ADateFrom := AStartDate - (DayOfWeek(AStartDate) - 2) - 7;
+        ADateTo := ADateFrom + 6;
+      end;
+    5:
+      begin
+        d := DayOf(AStartDate);
+        if d < 16 then
+          ADateFrom := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), 1)
+        else
+          ADateFrom := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), 16);
+        ADateTo := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), DaysInMonth(AStartDate));
+        if d >= 16 then
+          ADateTo := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), 15);
+      end;
+    6:
+      begin
+        dt := IncMonth(AStartDate, -1);
+        ADateFrom := EncodeDate(YearOf(dt), MonthOf(dt), 1);
+        ADateTo := EncodeDate(YearOf(dt), MonthOf(dt), DaysInMonth(dt));
+      end;
+    7:
+      begin
+        ADateFrom := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), 1);
+        ADateTo := EncodeDate(YearOf(AStartDate), MonthOf(AStartDate), DaysInMonth(AStartDate));
+      end;
+    8:
+      begin
+        dt := IncMonth(AStartDate, -1);
+        ADateFrom := EncodeDate(YearOf(dt), MonthOf(dt), 1);
+        ADateTo := EncodeDate(YearOf(dt), MonthOf(dt), DaysInMonth(dt));
+      end;
+    9:
+      begin
+        q := (MonthOf(AStartDate) - 1) div 3;
+        m := q * 3 + 1;
+        ADateFrom := EncodeDate(YearOf(AStartDate), m, 1);
+        ADateTo := EncodeDate(YearOf(AStartDate), m + 2, DaysInMonth(AStartDate));
+      end;
+    10:
+      begin
+        q := (MonthOf(AStartDate) - 1) div 3;
+        m := q * 3 + 1;
+        ADateFrom := EncodeDate(YearOf(AStartDate) - 1, m, 1);
+        ADateTo := EncodeDate(YearOf(AStartDate) - 1, m + 2, DaysInMonth(AStartDate));
+      end;
+    11:
+      begin
+        ADateFrom := EncodeDate(YearOf(AStartDate), 1, 1);
+        ADateTo := EncodeDate(YearOf(AStartDate), 12, 31);
+      end;
+    12:
+      begin
+        ADateFrom := EncodeDate(YearOf(AStartDate) - 1, 1, 1);
+        ADateTo := EncodeDate(YearOf(AStartDate) - 1, 12, 31);
+      end;
+  end;
+end;
 
+procedure TMyStringHelper.GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
+begin
+  var va := a.Explode(AStr, ' - ');
+  ADateFrom := StrToDateDef(va[0], BadDate);
+  ADateTo := StrToDateDef(va[1], BadDate);
+end;
 //==============================================================================
-//-------------------- массивы ------------------------------------------
+//Методы записи A (массивы)
 //==============================================================================
 
-function TMyArrayHelper.Explode(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TVarDynArray;
+procedure TMyArrayHelper.QuickSortVD1(var AArray: TVarDynArray; L, R: Integer; Asc: Boolean);
+var
+  i, j: Integer;
+  lPivot, lTemp: Variant;
+begin
+  if L < R then begin
+    i := L;
+    j := R;
+    lPivot := AArray[(L + R) div 2];
+    repeat
+      while (Asc and (AArray[i] < lPivot)) or (not Asc and (AArray[i] > lPivot)) do
+        Inc(i);
+      while (Asc and (AArray[j] > lPivot)) or (not Asc and (AArray[j] < lPivot)) do
+        Dec(j);
+      if i <= j then begin
+        lTemp := AArray[i];
+        AArray[i] := AArray[j];
+        AArray[j] := lTemp;
+        Inc(i);
+        Dec(j);
+      end;
+    until i > j;
+    if L < j then
+      QuickSortVD1(AArray, L, j, Asc);
+    if i < R then
+      QuickSortVD1(AArray, i, R, Asc);
+  end;
+end;
+
+function TMyArrayHelper.Explode(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean): TVarDynArray;
 //разбивает исходную строку на подстроки, используя как разделитель строку DivSt
 //исходная строка может быть и массивом, тогда будет возвращен этот массив
 //если не установлено IgnoreEmpty, то элементы могут быть пустыми, и пустая строка станет массивом [''].
 //вернет одномерный вариантный массив
+//+++ переработана для поддержки IgnoreEmpty
 var
-  St, St1: string;
+  s, lPart: string;
   i, j: Integer;
 begin
-  if VarIsArray(V) then begin
-    if not IgnoreEmpty then begin
-      Result := V;
-      Exit;
-    end
-    else begin
-      Result := V;
-      Exit;
-    end;  //++ добавить проверку когда передан массив и не нужны пустые
+  if VarIsArray(AValue) then begin
+    Result := AValue;
+    Exit;
   end;
-  St1 := VarToStr(V);
-  i := -1;
+  s := VarToStr(AValue);
   SetLength(Result, 0);
-  repeat
-    j := Pos(DivSt, St1);
+  i := 1;
+  while i <= Length(s) do begin
+    j := PosEx(ADelimiter, s, i);
     if j = 0 then
-      j := Length(St1) + 1;
-    if not IgnoreEmpty or (j > 1) then begin
-      i := i + 1;
-      SetLength(Result, i + 1);
-      Result[i] := Copy(St1, 1, j - 1);
+      j := Length(s) + 1;
+    lPart := Copy(s, i, j - i);
+    if (not AIgnoreEmpty) or (lPart <> '') then begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := lPart;
     end;
-    if (j > Length(St1)) then
-      Break;
-    St1 := Copy(St1, j + Length(DivSt), Length(St1) - j);
-  until False;
+    i := j + Length(ADelimiter);
+  end;
 end;
 
-function TMyArrayHelper.ExplodeV(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TVarDynArray;
+function TMyArrayHelper.ExplodeV(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean): TVarDynArray;
 //просто алиас Explode
 begin
-  Result := Explode(V, DivSt, IgnoreEmpty);
+  Result := Explode(AValue, ADelimiter, AIgnoreEmpty);
 end;
 
-function TMyArrayHelper.ExplodeS(V: Variant; DivSt: string; IgnoreEmpty: Boolean = False): TStringDynArray;
-//тоже самое, но возвращает TStringDynArray (перекрыть нельзя, тк определяется только по входным параметрам)
+function TMyArrayHelper.ExplodeS(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean): TStringDynArray;
+//тоже самое, но возвращает TStringDynArray
 var
   va: TVarDynArray;
   i: Integer;
 begin
-  Result := [];
-  va := Explode(V, DivSt, IgnoreEmpty);
+  va := Explode(AValue, ADelimiter, AIgnoreEmpty);
+  SetLength(Result, Length(va));
   for i := 0 to High(va) do
-    Result := Result + [VarToStr(va[i])];
+    Result[i] := VarToStr(va[i]);
 end;
 
-procedure TMyArrayHelper.ExplodeP(V: Variant; DivSt: string; IgnoreEmpty: Boolean; var Arr: TVarDynArray);
-//то же в виде процедур
+procedure TMyArrayHelper.ExplodeP(const AValue: Variant; const ADelimiter: string; var AArray: TVarDynArray);
 begin
-  Arr := Explode(V, DivSt, IgnoreEmpty);
+  AArray := Explode(AValue, ADelimiter, False);
 end;
 
-procedure TMyArrayHelper.ExplodeP(V: Variant; DivSt: string; var Arr: TVarDynArray);
+procedure TMyArrayHelper.ExplodeP(const AValue: Variant; const ADelimiter: string; var AArray: TStringDynArray);
 begin
-  Arr := Explode(V, DivSt, False);
+  AArray := ExplodeS(AValue, ADelimiter, False);
 end;
 
-procedure TMyArrayHelper.ExplodeP(V: Variant; DivSt: string; IgnoreEmpty: Boolean; var Arr: TStringDynArray);
+procedure TMyArrayHelper.ExplodeP(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean; var AArray: TVarDynArray);
 begin
-  Arr := ExplodeS(V, DivSt, IgnoreEmpty);
+  AArray := Explode(AValue, ADelimiter, AIgnoreEmpty);
 end;
 
-procedure TMyArrayHelper.ExplodeP(V: Variant; DivSt: string; var Arr: TStringDynArray);
+procedure TMyArrayHelper.ExplodeP(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean; var AArray: TStringDynArray);
 begin
-  Arr := ExplodeS(V, DivSt, False);
+  AArray := ExplodeS(AValue, ADelimiter, AIgnoreEmpty);
 end;
 
-function TMyArrayHelper.Implode(Arr: array of Variant; Delim: string; IgnoreEmpty: Boolean = False): string;
+function TMyArrayHelper.Implode(const AArray: array of Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean): string;
 //сливаем одномерный вариантный массив в строку через разделитель;
 //если IgnoreEmpty установлен, то игнорируем пустые значения массива
+//+++ переработана с TStringBuilder
 var
+  sb: TStringBuilder;
   i: Integer;
+  s: string;
 begin
-  Result := '';
-  for i := 0 to High(Arr) do begin
-    if (IgnoreEmpty) and (VarToStr(Arr[i]) = '') then
-      Continue;
-    if Length(Result) > 0 then
-      Result := Result + Delim;
-    Result := Result + VarToStr(Arr[i]);
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to High(AArray) do begin
+      s := VarToStr(AArray[i]);
+      if AIgnoreEmpty and (s = '') then
+        Continue;
+      if sb.Length > 0 then
+        sb.Append(ADelimiter);
+      sb.Append(s);
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
   end;
 end;
 
-function TMyArrayHelper.Implode(Arr: TStringDynArray; Delim: string; IgnoreEmpty: Boolean = False): string;
+function TMyArrayHelper.Implode(const AArray: TStringDynArray; const ADelimiter: string; const AIgnoreEmpty: Boolean): string;
 //сливаем одномерный строковый массив в строку через разделитель;
 //если IgnoreEmpty установлен, то игнорируем пустые значения массива
+//+++ переработана с TStringBuilder
 var
+  sb: TStringBuilder;
   i: Integer;
 begin
-  Result := '';
-  for i := 0 to High(Arr) do begin
-    if (IgnoreEmpty) and (VarToStr(Arr[i]) = '') then
-      Continue;
-    if Length(Result) > 0 then
-      Result := Result + Delim;
-    Result := Result + VarToStr(Arr[i]);
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to High(AArray) do begin
+      if AIgnoreEmpty and (AArray[i] = '') then
+        Continue;
+      if sb.Length > 0 then
+        sb.Append(ADelimiter);
+      sb.Append(AArray[i]);
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
   end;
 end;
 
-function TMyArrayHelper.Implode(Arr: TVarDynArray2; Col: Integer; Delim: string; IgnoreEmpty: Boolean = False): string;
+function TMyArrayHelper.Implode(const AArray: TVarDynArray2; const AColumn: Integer; const ADelimiter: string; const AIgnoreEmpty: Boolean): string;
 //сливаем в строку переданную колонку двумерного массива
+//+++ переработана с TStringBuilder
 var
+  sb: TStringBuilder;
   i: Integer;
+  s: string;
 begin
-  Result := '';
-  for i := 0 to High(Arr) do
-    if (VarToStr(Arr[i][Col]) <> '') or not IgnoreEmpty then
-      s.ConcatStP(Result, Arr[i][Col], Delim);
-end;
-
-function TMyArrayHelper.Implode(Arr: TVarDynArray2; Columns: TByteSet; Delim1: string; Delim2: string; IgnoreEmpty: Boolean = False): string;
-//сливаем в строку весь двухмерный массив по указанным колонкам, разделители для первого и второ уровня разные
-var
-  i, j: Integer;
-  st: string;
-begin
-  Result := '';
-  for i := 0 to High(Arr) do begin
-    st := '';
-    for j := 0 to High(Arr[i]) do
-      if ((Columns = []) or (j in Columns)) and ((VarToStr(Arr[i][j]) <> '') or not IgnoreEmpty) then
-        s.ConcatStP(st, VarToStr(Arr[i][j]), Delim1);
-    s.ConcatStP(Result, st, Delim2);
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to High(AArray) do begin
+      if (AColumn < 0) or (AColumn > High(AArray[i])) then
+        Continue;
+      s := VarToStr(AArray[i][AColumn]);
+      if AIgnoreEmpty and (s = '') then
+        Continue;
+      if sb.Length > 0 then
+        sb.Append(ADelimiter);
+      sb.Append(s);
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
   end;
 end;
 
-function TMyArrayHelper.ImplodeNotEmpty(Arr: array of Variant; Delim: string): string;
+function TMyArrayHelper.Implode(const AArray: TVarDynArray2; const AColumns: TByteSet; const ADelimiter1, ADelimiter2: string; const AIgnoreEmpty: Boolean): string;
+//сливаем в строку весь двухмерный массив по указанным колонкам, разделители для первого и второго уровня разные
+//+++ переработана с TStringBuilder
+var
+  sb, rowSb: TStringBuilder;
+  i, j: Integer;
+  s: string;
+begin
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to High(AArray) do begin
+      rowSb := TStringBuilder.Create;
+      try
+        for j := 0 to High(AArray[i]) do
+          if (AColumns = []) or (j in AColumns) then begin
+            s := VarToStr(AArray[i][j]);
+            if AIgnoreEmpty and (s = '') then
+              Continue;
+            if rowSb.Length > 0 then
+              rowSb.Append(ADelimiter1);
+            rowSb.Append(s);
+          end;
+        if rowSb.Length > 0 then begin
+          if sb.Length > 0 then
+            sb.Append(ADelimiter2);
+          sb.Append(rowSb.ToString);
+        end;
+      finally
+        rowSb.Free;
+      end;
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+end;
+
+function TMyArrayHelper.ImplodeNotEmpty(const AArray: array of Variant; const ADelimiter: string): string;
 //сливаем одномерный вариантный массив в строку через разделитель;
 //пустые элементы всегда игнорируем
 begin
-  Result := Implode(Arr, Delim, True);
+  Result := Implode(AArray, ADelimiter, True);
 end;
 
-function TMyArrayHelper.ImplodeStringList(var sl: TStringList; Dividor: string = ','): string;
-//склеивает текст из TStrings, при этом игнорирует пусты строки с конца списка
-begin
-  Result := s.TrimSt(sl.Text, [#10, #13], stlBoth);
-  Result := StringReplace(sl.text, #13#10, Dividor, [rfReplaceAll]);
-end;
-
-function TMyArrayHelper.PosInArray(V: Variant; Arr: array of Variant; IgnoreCase: Boolean = False): Integer;
-//находит позицию V в одномерном массиве Arr типа Variant; может не различать регистр
+function TMyArrayHelper.ImplodeStringList(var AList: TStringList; const ADelimiter: string): string;
+//склеивает текст из TStrings, при этом игнорирует пустые строки с конца списка
+//+++ переработана с TStringBuilder
 var
   i: Integer;
+  sb: TStringBuilder;
 begin
-  Result := Min(-1, Low(Arr) - 1);
-  for i := Low(Arr) to High(Arr) do begin
-    if (Arr[i] = V) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i])) = s.ToUpper(VarToStr(V)))) then begin
-      Result := i;
-      Exit;
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to AList.Count - 1 do begin
+      if i > 0 then
+        sb.Append(ADelimiter);
+      sb.Append(AList[i]);
     end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
   end;
 end;
 
-function TMyArrayHelper.PosInArray(St: string; Arr: TStringDynArray; IgnoreCase: Boolean = False): Integer;
+function TMyArrayHelper.PosInArray(const AValue: Variant; const AArray: array of Variant; const AIgnoreCase: Boolean): Integer;
+//находит позицию V в одномерном массиве Arr типа Variant; может не различать регистр; Если не найдена,
+//возвращает -1 (или если массив начинается с меньшей нуля индекса, то Low(Arr) - 1
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := Low(AArray) to High(AArray) do begin
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i]) = varString) then begin
+      if SameText(VarToStr(AValue), VarToStr(AArray[i])) then
+        Exit(i);
+    end
+    else if VarCompareValue(AValue, AArray[i]) = vrEqual then
+      Exit(i);
+  end;
+end;
+
+function TMyArrayHelper.PosInArray(const AValue: string; const AArray: TStringDynArray; const AIgnoreCase: Boolean): Integer;
 //находит позицию V в одномерном массиве Arr типа строк; может не различать регистр
 var
   i: Integer;
 begin
-  Result := Min(-1, Low(Arr) - 1);
-  for i := Low(Arr) to High(Arr) do begin
-    if (Arr[i] = St) or (IgnoreCase and (s.ToUpper(Arr[i]) = s.ToUpper(St))) then begin
-      Result := i;
-      Exit;
-    end;
+  Result := -1;
+  for i := 0 to High(AArray) do begin
+    if AIgnoreCase and SameText(AValue, AArray[i]) then
+      Exit(i);
+    if not AIgnoreCase and (AValue = AArray[i]) then
+      Exit(i);
   end;
 end;
 
-function TMyArrayHelper.PosInArray(V: Variant; Arr: TVarDynArray; IgnoreCase: Boolean = False): Integer;
+function TMyArrayHelper.PosInArray(const AValue: Variant; const AArray: TVarDynArray; const AIgnoreCase: Boolean): Integer;
 //находит позицию V в одномерном массиве Arr типа Variant; может не различать регистр
 var
   i: Integer;
 begin
-  Result := Min(-1, Low(Arr) - 1);
-  for i := Low(Arr) to High(Arr) do begin
-    if (Arr[i] = V) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i])) = s.ToUpper(VarToStr(V)))) then begin
-      Result := i;
-      Exit;
-    end;
+  Result := -1;
+  for i := 0 to High(AArray) do begin
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i]) = varString) then begin
+      if SameText(VarToStr(AValue), VarToStr(AArray[i])) then
+        Exit(i);
+    end
+    else if VarCompareValue(AValue, AArray[i]) = vrEqual then
+      Exit(i);
   end;
 end;
 
-function TMyArrayHelper.PosInArray(V: Variant; Arr: TVarDynArray2; FNo: Integer = 0; IgnoreCase: Boolean = False): Integer;
+function TMyArrayHelper.PosInArray(const AValue: Variant; const AArray: TVarDynArray2; const AColumn: Integer; const AIgnoreCase: Boolean): Integer;
 //находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V
 var
   i: Integer;
 begin
-  Result := Low(Arr) - 1;
-  for i := Low(Arr) to High(Arr) do begin
-    if (High(Arr[i]) >= FNo) and ((Arr[i][FNo] = V) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i][FNo])) = s.ToUpper(VarToStr(V))))) then begin
-      Result := i;
-      Exit;
-    end;
+  Result := -1;
+  for i := 0 to High(AArray) do begin
+    if (AColumn < 0) or (AColumn > High(AArray[i])) then
+      Continue;
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i][AColumn]) = varString) then begin
+      if SameText(VarToStr(AValue), VarToStr(AArray[i][AColumn])) then
+        Exit(i);
+    end
+    else if VarCompareValue(AValue, AArray[i][AColumn]) = vrEqual then
+      Exit(i);
   end;
 end;
 
-function TMyArrayHelper.PosInArray(V: TVarDynArray; Arr: TVarDynArray2; FNo: TVarDynArray; IgnoreCase: Boolean = False): Integer;
-//найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах\
+function TMyArrayHelper.PosInArray(const AValues: TVarDynArray; const AArray: TVarDynArray2; const AColumns: TVarDynArray; const AIgnoreCase: Boolean): Integer;
+//найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах
+var
+  i, j: Integer;
+  ok: Boolean;
 begin
-  Result := Low(Arr) - 1;
-  for var i := Low(Arr) to High(Arr) do begin
-    var b := True;
-    for var j := Low(Arr[i]) to High(Arr[i]) do
-      if not ((Arr[i][FNo[j].AsInteger] = V[j]) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i][FNo[j].AsInteger])) = s.ToUpper(VarToStr(V[j]))))) then begin
-        b := False;
+  Result := -1;
+  for i := 0 to High(AArray) do begin
+    ok := True;
+    for j := 0 to High(AColumns) do begin
+      if (AColumns[j] < 0) or (AColumns[j] > High(AArray[i])) then begin
+        ok := False;
         Break;
       end;
-    if b then begin
-      Result := i;
-      Exit;
-    end;
-  end;
-end;
-
-function TMyArrayHelper.PosRowInArray(Needle, Source: TVarDynArray2; NeedleRow: Integer): Integer;
-//найдет позицию в массиве Source, при которой все поля совпадаются со строкой массива Needle (размерности 2 уровня должны быть одинаковы, что не провряется)
-begin
-  Result := Low(Source) - 1;
-  for var i := Low(Source) to High(Source) do begin
-    var b := True;
-    for var j := Low(Source[i]) to High(Source[i]) do
-      if not (Source[i][j] = Needle[NeedleRow][j]) then begin
-        b := False;
+      if AIgnoreCase and (VarType(AValues[j]) = varString) and (VarType(AArray[i][AColumns[j].AsInteger]) = varString) then begin
+        if not SameText(VarToStr(AValues[j]), VarToStr(AArray[i][AColumns[j].AsInteger])) then begin
+          ok := False;
+          Break;
+        end;
+      end
+      else if VarCompareValue(AValues[j], AArray[i][AColumns[j].AsInteger]) <> vrEqual then begin
+        ok := False;
         Break;
       end;
-    if b then begin
-      Result := i;
-      Exit;
     end;
+    if ok then
+      Exit(i);
   end;
 end;
 
-function TMyArrayHelper.FindValueInArray2(FindValue: Variant; FindFNo: Integer; ResultFNo: Integer; Arr: TVarDynArray2; IgnoreCase: Boolean = False): Variant;
+function TMyArrayHelper.PosRowInArray(const ANeedle, ASource: TVarDynArray2; const ARow: Integer): Integer;
+//найдет позицию в массиве Source, при которой все поля совпадаются со строкой массива Needle
+var
+  i, j: Integer;
+  ok: Boolean;
+begin
+  Result := -1;
+  if (ARow < 0) or (ARow > High(ANeedle)) then
+    Exit;
+  for i := 0 to High(ASource) do begin
+    if High(ASource[i]) <> High(ANeedle[ARow]) then
+      Continue;
+    ok := True;
+    for j := 0 to High(ASource[i]) do begin
+      if VarCompareValue(ASource[i][j], ANeedle[ARow][j]) <> vrEqual then begin
+        ok := False;
+        Break;
+      end;
+    end;
+    if ok then
+      Exit(i);
+  end;
+end;
+
+function TMyArrayHelper.InArray(const AValue: Variant; const AArray: array of Variant): Boolean;
+//вернет истину, если строка присутствует в массиве
+begin
+  Result := PosInArray(AValue, AArray) >= 0;
+end;
+
+function TMyArrayHelper.FindValueInArray2(const AKeyValue: Variant; const AKeyColumn, AResultColumn: Integer; const AArray: TVarDynArray2; const AIgnoreCase: Boolean): Variant;
 //возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue
 var
   i: Integer;
 begin
-  Result := null;
-  for i := Low(Arr) to High(Arr) do begin
-    if (High(Arr[i]) >= Max(ResultFNo, FindFNo)) and ((Arr[i][FindFNo] = FindValue) or (IgnoreCase and (s.ToUpper(VarToStr(Arr[i][FindFNo])) = s.ToUpper(VarToStr(FindValue))))) then begin
-      Result := Arr[i][ResultFNo];
-      Exit;
-    end;
-  end;
+  Result := Null;
+  i := PosInArray(AKeyValue, AArray, AKeyColumn, AIgnoreCase);
+  if i >= 0 then
+    Result := AArray[i][AResultColumn];
 end;
 
-function TMyArrayHelper.ReplaceInArray(FindValue: Variant; NewValue: Variant; Arr: TVarDynArray; IgnoreCase: Boolean = False): Boolean;
+function TMyArrayHelper.ReplaceInArray(const AFindValue, ANewValue: Variant; var AArray: TVarDynArray; const AIgnoreCase: Boolean): Boolean;
 //заменяем найденное поле в массиве в строке новым значением; возвращает, была ли замена
 var
   i: Integer;
 begin
-  Result := False;
-  i := PosInArray(FindValue, Arr, IgnoreCase);
-  if (i < Low(Arr))or(Arr[i] = NewValue) then Exit;
-  Arr[i] := NewValue;
-  Result := True;
+  i := PosInArray(AFindValue, AArray, AIgnoreCase);
+  if i >= 0 then begin
+    AArray[i] := ANewValue;
+    Result := True;
+  end
+  else
+    Result := False;
 end;
 
-
-function TMyArrayHelper.ReplaceInArray(FindValue: Variant; NewValue: Variant; Arr: TVarDynArray2; FindFNo, ReplaceFNo: Integer; IgnoreCase: Boolean = False): Boolean;
+function TMyArrayHelper.ReplaceInArray(const AFindValue, ANewValue: Variant; var AArray: TVarDynArray2; const AFindColumn, AReplaceColumn: Integer; const AIgnoreCase: Boolean): Boolean;
 //заменяем поле в массиве в строке, найденной по значению какого-либо (другого или того же) поля, была ли замена
 var
   i: Integer;
 begin
-  Result := False;
-  i := PosInArray(FindValue, Arr, FindFNo, IgnoreCase);
-  if (i < Low(Arr))or(Arr[i][ReplaceFNo] = NewValue) then Exit;
-  Arr[i][ReplaceFNo] := NewValue;
-  Result := True;
+  i := PosInArray(AFindValue, AArray, AFindColumn, AIgnoreCase);
+  if i >= 0 then begin
+    AArray[i][AReplaceColumn] := ANewValue;
+    Result := True;
+  end
+  else
+    Result := False;
 end;
 
-
-function TMyArrayHelper.InArray(V: Variant; Arr: array of Variant): Boolean;
-//вернет истину, если строка присутствует в массиве
-begin
-  Result := (PosInArray(V, Arr) <> -1);
-end;
-
-function TMyArrayHelper.VarDynArray2ColToVD1(arr: TVarDynArray2; Column: Integer): TVarDynArray;
+function TMyArrayHelper.VarDynArray2ColToVD1(const AArray: TVarDynArray2; const AColumn: Integer): TVarDynArray;
 //возвращает столбец двухмерного массива Column в одномерном массиве
 var
   i: Integer;
 begin
-  Result := [];
-  for i := Low(arr) to High(arr) do
-    Result := Result + [arr[i][Column]];
+  SetLength(Result, Length(AArray));
+  for i := 0 to High(AArray) do
+    if (AColumn >= 0) and (AColumn <= High(AArray[i])) then
+      Result[i] := AArray[i][AColumn];
 end;
 
-function TMyArrayHelper.VarDynArray2RowToVD1(arr: TVarDynArray2; Row: Integer): TVarDynArray;
-//возвращает столбец двухмерного массива Кщц в одномерном массиве
-var
-  i: Integer;
+function TMyArrayHelper.VarDynArray2RowToVD1(const AArray: TVarDynArray2; const ARow: Integer): TVarDynArray;
+//возвращает строку двухмерного массива Row в одномерном массиве
 begin
-  Result := [];
-  for i := Low(arr[Row]) to High(arr[Row]) do
-    Result := Result + [arr[Row][i]];
+  if (ARow >= 0) and (ARow <= High(AArray)) then
+    Result := Copy(AArray[ARow], 0, Length(AArray[ARow]))
+  else
+    Result := nil;
 end;
 
-
-procedure TMyArrayHelper.VarDynArray2InsertArr(var arr2: TVarDynArray2;
-  arr1: TVarDynArray; Pos: Integer = -1; ToInsert: Boolean = True);
+procedure TMyArrayHelper.VarDynArray2InsertArr(var ATarget: TVarDynArray2; const ASource: TVarDynArray; const APosition: Integer; const AInsert: Boolean);
 //модифицирует двумерный массив вставкой или заменой его элемента первого уровня массивом TVarDynArray
 //при параметрах по умолчанию просто добавит массив TVarDynArray в конец массива TVarDynArray2
 var
-  i, j, p: Integer;
-  a: Array of Variant;
+  i, j, idx: Integer;
 begin
-  if (Pos > High(arr2))or(Pos = -1) then begin
-    arr2:= arr2 + [[]];
-    Pos:= high(arr2);
+  if APosition = -1 then begin
+    SetLength(ATarget, Length(ATarget) + 1);
+    idx := High(ATarget);
   end
-  else if ToInsert then begin
-    insert([[]], arr2, Pos)
-  end;
-  SetLength(arr2[Pos], Length(arr1));
-  for i:= 0 to High(arr1)
-    do arr2[Pos][i]:=arr1[i];
+  else if AInsert then begin
+    SetLength(ATarget, Length(ATarget) + 1);
+    for i := High(ATarget) downto APosition + 1 do
+      ATarget[i] := ATarget[i - 1];
+    idx := APosition;
+  end
+  else
+    idx := APosition;
+  SetLength(ATarget[idx], Length(ASource));
+  for j := 0 to High(ASource) do
+    ATarget[idx][j] := ASource[j];
 end;
 
-
-procedure TMyArrayHelper.VarDynArraySort(var arr: TVarDynArray; Asc: Boolean = True);
-//сортировка одномерного вариантного массива
+procedure TMyArrayHelper.VarDynArraySort(var AArray: TVarDynArray; const AAscending: Boolean);
+//сортировка одномерного вариантного массива (пузырьковая)
 var
-  i, j, k: Integer;
-  changed, tosort: Boolean;
-  buf: Variant;
+  i, j: Integer;
+  tmp: Variant;
 begin
-  repeat
-    changed := False;
-    for k := 0 to High(arr) - 1 do
-      if (Asc and (arr[k] > arr[k + 1])) or (not Asc and (arr[k] < arr[k + 1])) then begin // обменяем k-й и k+1-й элементы
-        buf := arr[k];
-        arr[k] := arr[k + 1];
-        arr[k + 1] := buf;
-        changed := True;
+  for i := 0 to High(AArray) - 1 do
+    for j := i + 1 to High(AArray) do begin
+      if AAscending and (AArray[i] > AArray[j]) then begin
+        tmp := AArray[i];
+        AArray[i] := AArray[j];
+        AArray[j] := tmp;
+      end
+      else if not AAscending and (AArray[i] < AArray[j]) then begin
+        tmp := AArray[i];
+        AArray[i] := AArray[j];
+        AArray[j] := tmp;
       end;
-  until not changed;
+    end;
 end;
 
-procedure TMyArrayHelper.VarDynArraySort(var Arr: TVarDynArray2; Col: Integer; Asc: Boolean = True);
+procedure TMyArrayHelper.SortVD1(var AArray: TVarDynArray; const AAscending: Boolean);
+//быстрая сортировка одномерного массива
+begin
+  if Length(AArray) > 1 then
+    QuickSortVD1(AArray, 0, High(AArray), AAscending);
+end;
+
+procedure TMyArrayHelper.VarDynArraySort(var AArray: TVarDynArray2; const AColumn: Integer; const AAscending: Boolean);
+//сортировка двухмерного вариантгного массива по переданному полю (пузырьковая)
+var
+  i, j: Integer;
+  tmp: TVarDynArray;
+begin
+  for i := 0 to High(AArray) - 1 do
+    for j := i + 1 to High(AArray) do begin
+      if (AColumn < 0) or (AColumn > High(AArray[i])) or (AColumn > High(AArray[j])) then
+        Continue;
+      if AAscending and (AArray[i][AColumn] > AArray[j][AColumn]) then begin
+        tmp := AArray[i];
+        AArray[i] := AArray[j];
+        AArray[j] := tmp;
+      end
+      else if not AAscending and (AArray[i][AColumn] < AArray[j][AColumn]) then begin
+        tmp := AArray[i];
+        AArray[i] := AArray[j];
+        AArray[j] := tmp;
+      end;
+    end;
+end;
+
+procedure TMyArrayHelper.VarDynArray2Sort(var AArray: TVarDynArray2; const AKey: Integer);
 //сортировка двухмерного вариантгного массива по переданному полю
+//поле передается на 1 больше чем в массиве, если с + то по возрастанию, а с - то по убыванию
 var
-  i, j, k: Integer;
-  changed, tosort: Boolean;
-  buf: Variant;
+  lAsc: Boolean;
+  lCol: Integer;
 begin
-  repeat
-    changed := False;
-    for k := 0 to High(Arr) - 1 do
-      if (Asc and (Arr[k][Col] > Arr[k + 1][Col])) or (not Asc and (Arr[k][Col] < Arr[k + 1][Col])) then begin
-        for j := 0 to High(Arr[k]) do begin
-          buf := Arr[k][j];
-          Arr[k][j] := Arr[k + 1][j];
-          Arr[k + 1][j] := buf;
-        end;
-        changed := True;
-      end;
-  until not changed;
+  lAsc := AKey > 0;
+  lCol := Abs(AKey) - 1;
+  VarDynArraySort(AArray, lCol, lAsc);
 end;
 
-procedure TMyArrayHelper.VarDynArray2Sort(var Arr: TVarDynArray2; Key: Integer);
-//сортировка двухмерного вариантгного массива по переданному полю
-//поле передается на 1 больше чем в массиве!!!, если с + то по возрастанию, а с - то по убыванию, ту при сортировке по убыванию по нулевой колонке передать -1
-var
-  i, j, k: Integer;
-  changed, tosort: Boolean;
-  buf: Variant;
-begin
-  repeat
-    changed := False;
-    for k := 0 to High(Arr) - 1 do
-      if ((Key > 0) and (Arr[k][Key - 1] > Arr[k + 1][Key - 1])) or ((Key < 0) and (Arr[k][Key - 1] < Arr[k + 1][Key - 1])) then begin // обменяем k-й и k+1-й элементы
-        for j := 0 to High(Arr[k]) do begin
-          buf := Arr[k][j];
-          Arr[k][j] := Arr[k + 1][j];
-          Arr[k + 1][j] := buf;
-        end;
-        changed := True;
-      end;
-  until not changed;
-end;
-
-function TMyArrayHelper.ArrCompare(const AVar1, AVar2: array of Variant; Operation: TArrayOperation): TVarDynArray;
+function TMyArrayHelper.ArrCompare(const AArray1, AArray2: array of Variant; const AOperation: TArrayOperation): TVarDynArray;
 //возвращает одномерный массив, являющийся пересечением, объединением или различием двух массивов
 var
   i: Integer;
 begin
-  SetLength(Result, 0);
-  case Operation of
+  Result := [];
+  case AOperation of
     aoIntersection:
-      for i := 0 to Length(AVar1) - 1 do
-        if VarIndex(AVar1[i], AVar2) <> -1 then begin
-          SetLength(Result, Length(Result) + 1);
-          Result[High(Result)] := AVar1[i];
-        end;
+      for i := 0 to High(AArray1) do
+        if InArray(AArray1[i], AArray2) then
+          Result := Result + [AArray1[i]];
     aoUnion:
       begin
-        for i := 0 to Length(AVar1) - 1 do
-          if VarIndex(AVar1[i], Result) = -1 then begin
-            SetLength(Result, Length(Result) + 1);
-            Result[High(Result)] := AVar1[i];
-          end;
-        for i := 0 to Length(AVar2) - 1 do
-          if VarIndex(AVar2[i], Result) = -1 then begin
-            SetLength(Result, Length(Result) + 1);
-            Result[High(Result)] := AVar2[i];
-          end;
+        for i := 0 to High(AArray1) do
+          if not InArray(AArray1[i], Result) then
+            Result := Result + [AArray1[i]];
+        for i := 0 to High(AArray2) do
+          if not InArray(AArray2[i], Result) then
+            Result := Result + [AArray2[i]];
       end;
     aoDifference:
       begin
-        for i := 0 to Length(AVar1) - 1 do
-          if VarIndex(AVar1[i], AVar2) = -1 then begin
-            SetLength(Result, Length(Result) + 1);
-            Result[High(Result)] := AVar1[i];
-          end;
-        for i := 0 to Length(AVar2) - 1 do
-          if VarIndex(AVar2[i], AVar1) = -1 then begin
-            SetLength(Result, Length(Result) + 1);
-            Result[High(Result)] := AVar2[i];
-          end;
+        for i := 0 to High(AArray1) do
+          if not InArray(AArray1[i], AArray2) then
+            Result := Result + [AArray1[i]];
+        for i := 0 to High(AArray2) do
+          if not InArray(AArray2[i], AArray1) then
+            Result := Result + [AArray2[i]];
       end;
   end;
 end;
 
-function TMyArrayHelper.VarIntToArray(v: Variant): TVarDynArray;
+function TMyArrayHelper.VarIntToArray(const AValue: Variant): TVarDynArray;
 //передается или целое число, или вариантный массив, или строка чисел через запятую,
 //возвращается массив
 begin
-  Result := [];
-  if VarType(v) and varInteger = varInteger then begin
-    Result := [v];
-  end
-  else if VarType(v) and varString = varString then begin
-    Result := ExplodeV(VarToStr(v), ',');
-  end
-  else if VarType(v) and varArray = varArray then begin
-    Result := v;
-  end;
+  if VarIsArray(AValue) then
+    Result := AValue
+  else if VarIsOrdinal(AValue) or (VarType(AValue) = varDouble) or (VarType(AValue) = varSingle) then
+    Result := [AValue]
+  else
+    Result := Explode(AValue, ',', True);
 end;
 
-function TMyArrayHelper.StringDynArrayToVarDynArray(sa: TStringDynArray): TVarDynArray;
+function TMyArrayHelper.StringDynArrayToVarDynArray(const AStringArray: TStringDynArray): TVarDynArray;
 //получает массив строк, возвращает вариантный массив
 var
   i: Integer;
 begin
-  Result:=[];
-  for i:=0 to High(sa) do Result:=Result + [sa[i]];
+  SetLength(Result, Length(AStringArray));
+  for i := 0 to High(AStringArray) do
+    Result[i] := AStringArray[i];
 end;
-
 
 function TMyArrayHelper.RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
 //удаляем дублирующиеся знаения из массива
 var
   i, j: Integer;
-  isDuplicate: Boolean;
-  resultArray: TVarDynArray;
+  found: Boolean;
 begin
-  SetLength(resultArray, 0);
-  for i := 0 to High(AValues) do
-  begin
-    isDuplicate := False;
-    for j := 0 to High(resultArray) do
-    begin
-      if VarCompareValue(AValues[i], resultArray[j]) = vrEqual then
-      begin
-        isDuplicate := True;
+  Result := [];
+  for i := 0 to High(AValues) do begin
+    found := False;
+    for j := 0 to High(Result) do
+      if VarCompareValue(AValues[i], Result[j]) = vrEqual then begin
+        found := True;
         Break;
       end;
-    end;
-    if not isDuplicate then
-    begin
-      SetLength(resultArray, Length(resultArray) + 1);
-      resultArray[High(resultArray)] := AValues[i];
-    end;
+    if not found then
+      Result := Result + [AValues[i]];
   end;
-  Result := resultArray;
 end;
 
-function TMyArrayHelper.IsArraysEqual(const A, B: TVarDynArray2; ARow: Integer = -1): Boolean;
+function TMyArrayHelper.IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer): Boolean;
 //сравнение двух двумерных массивов (или одной их строки)
 //будут одинаковы, если совпадают размерности массивов и все их значения
 var
-  i, j: Integer;
-  RowCountA, RowCountB: Integer;
-  ColCountA, ColCountB: Integer;
+  i, j, r: Integer;
 begin
-  RowCountA := Length(A);
-  RowCountB := Length(B);
-  // Сравнение всей матрицы
-  if ARow = -1 then
-  begin
-    if RowCountA <> RowCountB then begin
-      Result := False;
-      Exit;
-    end;
-    // Проверяем каждую строку
-    for i := 0 to RowCountA - 1 do begin
-      ColCountA := Length(A[i]);
-      ColCountB := Length(B[i]);
-      if ColCountA <> ColCountB then begin
-        Result := False;
-        Exit;
-      end;
-      for j := 0 to ColCountA - 1 do begin
-        // Используем VarCompareValue для корректного сравнения Variant
-        if VarCompareValue(A[i, j], B[i, j]) <> vrEqual then begin
-          Result := False;
-          Exit;
-        end;
-      end;
+  if ARow = -1 then begin
+    if Length(A) <> Length(B) then
+      Exit(False);
+    for i := 0 to High(A) do begin
+      if Length(A[i]) <> Length(B[i]) then
+        Exit(False);
+      for j := 0 to High(A[i]) do
+        if VarCompareValue(A[i][j], B[i][j]) <> vrEqual then
+          Exit(False);
     end;
     Result := True;
-    Exit;
+  end
+  else begin
+    r := ARow;
+    if (r < 0) or (r > High(A)) or (r > High(B)) then
+      Exit(False);
+    if Length(A[r]) <> Length(B[r]) then
+      Exit(False);
+    for j := 0 to High(A[r]) do
+      if VarCompareValue(A[r][j], B[r][j]) <> vrEqual then
+        Exit(False);
+    Result := True;
   end;
-  // Сравнение только указанной строки ARow
-  if (ARow < 0) or (ARow >= RowCountA) or (ARow >= RowCountB) then begin
-    // Одна из матриц не содержит строку ARow → не равны
-    Result := False;
-    Exit;
-  end;
-  ColCountA := Length(A[ARow]);
-  ColCountB := Length(B[ARow]);
-  if ColCountA <> ColCountB then begin
-    Result := False;
-    Exit;
-  end;
-  for j := 0 to ColCountA - 1 do begin
-    if VarCompareValue(A[ARow, j], B[ARow, j]) <> vrEqual then begin
-      Result := False;
-      Exit;
-    end;
-  end;
-  Result := True;
 end;
 
-procedure TMyArrayHelper.SetNull(var Arr: TVarDynArray);
+procedure TMyArrayHelper.SetNull(var AArray: TVarDynArray);
+var
+  i: Integer;
 begin
-  for var i := 0 to High(Arr) do
-      Arr[i] := null;
+  for i := 0 to High(AArray) do
+    AArray[i] := Null;
 end;
 
-procedure TMyArrayHelper.SetNull(var Arr: TVarDynArray2; Row: Integer = -1);
-begin
-  if Row = -1 then
-    for var i := 0 to High(Arr) do
-      for var j := 0 to High(Arr[i]) do
-        Arr[i][j] := null
-  else
-    for var i := 0 to High(Arr[Row]) do
-      Arr[Row][i] := null;
-end;
-
-procedure TMyArrayHelper.IncLength(var Arr: TVarDynArray);
-begin
-  SetLength(Arr, Length(Arr) + 1);
-end;
-
-procedure TMyArrayHelper.IncLength(var Arr: TVarDynArray2);
-begin
-  SetLength(Arr, Length(Arr) + 1);
-  SetLength(Arr[High(Arr)], Length(Arr[0]));
-end;
-
-
-
-
-
-
-
-
-
-
-
- (*
-
-procedure TNamedArr.Create(Fields: TVarDynArray; Len: Integer);
+procedure TMyArrayHelper.SetNull(var AArray: TVarDynArray2; const ARow: Integer);
 var
   i, j: Integer;
 begin
-  FFull := Copy(Fields);
-  F := Copy(Fields);
-  for j := 0 to System.High(F) do begin
-    i := Pos('$', F[j]);
-    if i > 0 then
-      F[j] := Copy(F[j], 1, i - 1);
+  if ARow = -1 then begin
+    for i := 0 to High(AArray) do
+      for j := 0 to High(AArray[i]) do
+        AArray[i][j] := Null;
+  end
+  else if (ARow >= 0) and (ARow <= High(AArray)) then
+    for j := 0 to High(AArray[ARow]) do
+      AArray[ARow][j] := Null;
+end;
+
+procedure TMyArrayHelper.IncLength(var AArray: TVarDynArray);
+begin
+  SetLength(AArray, Length(AArray) + 1);
+end;
+
+procedure TMyArrayHelper.IncLength(var AArray: TVarDynArray2);
+begin
+  SetLength(AArray, Length(AArray) + 1);
+  if Length(AArray) > 0 then
+    SetLength(AArray[High(AArray)], 0);
+end;
+//==============================================================================
+//Внешние функции для совместимости с EhLib
+//==============================================================================
+
+function CharInSetEh(C: Char; const CharSet: TSysCharSet): Boolean;
+begin
+  Result := CharInSet(C, CharSet);
+end;
+
+function WordPosition(const N: Integer; const S: string; WordDelims: TCharSet): Integer;
+var
+  lCount, i: Integer;
+begin
+  lCount := 0;
+  i := 1;
+  Result := 0;
+  while (i <= Length(S)) and (lCount <> N) do begin
+    while (i <= Length(S)) and CharInSet(S[i], WordDelims) do
+      Inc(i);
+    if i <= Length(S) then
+      Inc(lCount);
+    if lCount <> N then
+      while (i <= Length(S)) and not CharInSet(S[i], WordDelims) do
+        Inc(i)
+    else
+      Result := i;
   end;
-  //в любом случае очистим массив данных
-  SetLength(V, 0);
-  SetLength(V, Len);
-  for i := 0 to Len - 1 do
-    SetLength(V[i], Length(F));
 end;
 
-function TNamedArr.Col(Field: string): Integer;
+function ExtractWordPos(N: Integer; const S: string; WordDelims: TCharSet; var Pos: Integer): string;
 var
-  i : Integer;
+  i, j: Integer;
 begin
-  i := Pos('$', Field);
-  if i > 0 then
-    Field := Copy(Field, 1, i - 1);
-  i := A.PosInArray(Field, F, True);
-  if i < 0 then
-    raise Exception.Create('Поле ' + Field + ' не найдено в NamedArr');
-  Result := i;
-end;
-
-function TNamedArr.G(RowNo: Integer; Field: string): Variant;
-begin
-  Result := GetValue(RowNo, Field);
-end;
-
-function TNamedArr.G(Field: string): Variant;
-var
-  i : Integer;
-begin
-  Result := GetValue(0, Field);
-end;
-
-function TNamedArr.GetValue(RowNo: Integer; Field: string): Variant;
-var
-  i : Integer;
-begin
-  i := Col(Field);
-  if (RowNo < 0) or (RowNo > System.High(V)) then
-    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
-  Result := V[RowNo][i];
-end;
-
-function TNamedArr.GetValue(Field: string): Variant;
-var
-  i : Integer;
-begin
-  Result := GetValue(0, Field);
-end;
-
-function TNamedArr.GetRow(RowNo: Integer): TVarDynArray;
-begin
-  if (RowNo < 0) or (RowNo > System.High(V)) then
-    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' вне диапозона в NamedArr');
-  Result := A.VarDynArray2RowToVD1(V, RowNo);
-end;
-
-procedure TNamedArr.SetValue(RowNo: Integer; Field: string; NewValue: Variant);
-var
-  i : Integer;
-begin
-  i := Col(Field);
-  if (RowNo < 0) or (RowNo > System.High(V)) then
-    raise Exception.Create('Строка ' + InttoStr(RowNo) + ' для поля ' + Field + ' вне диапозона в NamedArr');
-  V[RowNo][i] := NewValue;
-end;
-
-procedure TNamedArr.SetValue(Field: string; NewValue: Variant);
-begin
-  SetValue(0, Field, NewValue);
-end;
-
-function TNamedArr.Find(Value: Variant; Field: string): Integer;
-begin
-  Result := A.PosInArray(Value, V, Col(Field));
-end;
-
-function TNamedArr.GetValueByOtherField(SearchValue: Variant; SearchField: string; ResultField: string; ValueIfNotFound: Variant): Variant;
-//получаем значение из поля ResultField для строки, найденной по значению поля SearchField = SearchValue
-var
-  pos: Integer;
-begin
-  Result := ValueIfNotFound;
-  pos := Find(SearchValue, SearchField);
-  if pos < 0 then
+  Result := '';
+  i := WordPosition(N, S, WordDelims);
+  Pos := i;
+  if i = 0 then
     Exit;
-  Result := GetValue(Pos, ResultField);
+  j := i;
+  while (j <= Length(S)) and not CharInSet(S[j], WordDelims) do
+    Inc(j);
+  Result := Copy(S, i, j - i);
 end;
 
-function TNamedArr.IsEmpty: Boolean;
+function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
+var
+  p: Integer;
 begin
-  Result := Length(V) = 0;
+  Result := ExtractWordPos(N, S, WordDelims, p);
 end;
-
-function TNamedArr.Count: Integer;
-begin
-  Result := Length(V);
-end;
-
-function TNamedArr.High: Integer;
-begin
-  Result := System.High(V);
-end;
-
-procedure TNamedArr.IncLength;
-begin
-  SetLength(V, Length(V) + 1);
-  SetLength(V[System.High(V)], Length(F));
-end;
-
-procedure TNamedArr.SetLen(ALength: Integer);
-begin
-  SetLength(V, ALength);
-  for var i := 0 to Length(V) - 1 do
-    SetLength(V[i], Length(F));
-end;
-
-
-function TNamedArr.FieldsCount: Integer;
-begin
-  Result := Length(F);
-end;
-
-procedure TNamedArr.Clear;
-begin
-  FFull := [];
-  F := [];
-  V := [];
-end;
-
-procedure TNamedArr.SetNull;
-begin
-  for var i := 0 to System.High(V) do
-    for var j := 0 to System.High(V[i]) do
-      V[i][j] := null;
-end;
-
-procedure TNamedArr.SetNull(RowNo: Integer);
-begin
-  for var j := 0 to System.High(V[RowNo]) do
-    V[RowNo][j] := null;
-end;
-
-*)
-
 //==============================================================================
-//==============================================================================
+//Глобальная функция BadDate
 //==============================================================================
 
-//возвращает дату, которую условились считать признаком неверной даты/времени
 function BadDate: TDateTime;
 begin
   Result := EncodeDate(1900, 12, 30);
 end;
-
-function TMyStringHelper.BadDate: TDateTime;
-begin
-  Result := EncodeDate(1900, 12, 30);
-end;
-
-
-
-
 //==============================================================================
+//TVariantHelper методы
+//==============================================================================
+
 function TVariantHelper.IsNull: Boolean;
 begin
   Result := VarIsNull(Self);
@@ -3084,9 +2880,7 @@ end;
 function TVariantHelper.IsNumeric: Boolean;
 begin
   case VarType(Self) of
-    varByte, varSmallint, varInteger, varShortInt,
-    varWord, varLongWord, varInt64,
-    varSingle, varDouble, varCurrency://, varDecimal:
+    varByte, varSmallint, varInteger, varShortInt, varWord, varLongWord, varInt64, varSingle, varDouble, varCurrency:
       Result := True;
   else
     Result := False;
@@ -3103,25 +2897,17 @@ end;
 
 function TVariantHelper.AsInteger: Integer;
 begin
-  Result := S.NInt(Self);
-{  if IsNumeric then
-    Result := S.VarToInt(Self)
-  else
-    Result := 0;}
+  Result := s.NInt(Self);
 end;
 
 function TVariantHelper.AsIntegerM: Integer;
 begin
-  Result := S.NIntM(Self);
+  Result := s.NIntM(Self);
 end;
 
 function TVariantHelper.AsFloat: Extended;
 begin
-  Result := S.NNum(Self);
-{  if IsNumeric then
-    Result := Self
-  else
-    Result := 0;}
+  Result := s.NNum(Self);
 end;
 
 function TVariantHelper.AsBoolean: Boolean;
@@ -3129,56 +2915,27 @@ begin
   if IsNull or IsEmpty then
     Result := False
   else
-    Result := Self; //VarToBoolean(Self);
+    Result := Self;
 end;
 
-function TVariantHelper.AsDateTime: TDatetime;
+function TVariantHelper.AsDateTime: TDateTime;
 begin
-  Result := Self
+  Result := Self;
 end;
 
 function TVariantHelper.NullIf0: Variant;
 begin
-  Result := S.NullIf0(Self);
+  Result := s.NullIf0(Self);
 end;
 
 function TVariantHelper.NullIfEmpty: Variant;
 begin
-  Result := S.NullIfEmpty(Self);
+  Result := s.NullIfEmpty(Self);
 end;
 
 
-var
-  dt111, dt112: TDateTime;
-  i111: Integer;
-  d111: Double;
-  V: Variant;
-  st111: string;
-  va1: tvardynarray;
-  st: string;
-  i : Integer;
-
-begin
-//Exit;
-{dt111:=BadDate;
-d111:=double(dt111);
-dt112:=TDateTime(d111);
-i111:=0;
-   i:=maxof([1,2,3]);
-va1:=Explode('',';');
-va1:=Explode('',';', True);
-va1:=Explode(';2;3;',';', True);
-va1:=Explode('1;;3;9',';', False);
-va1:=[];
-//   i:=isvaliddate(
-
-//   dt111:=strtodatedef(
-v:=GetFormulaValue('2*3');
-v:=GetFormulaValue('2*(4+(6*(2+1)))+SQRT(4)');}
-
-st:=s.DeleteRepSubstr('1ab23ababab4ababa', 'ab');
-
-//i:=DaysInMonth(2024,02);
+//Для избежания предупреждений о неиспользуемых переменных в модуле
+initialization
+finalization
 
 end.
-

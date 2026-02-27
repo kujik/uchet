@@ -3,8 +3,8 @@
 interface
 
 uses
-  System.SysUtils, System.Variants, System.Classes, System.Generics.Collections, System.StrUtils, System.Math,
-  uString;
+  System.SysUtils, System.Variants, System.Classes, System.Generics.Collections,
+  System.StrUtils, System.Math, uString;
 
 type
   //собственное исключение
@@ -15,7 +15,6 @@ type
     constructor Create(const Msg: string; const AField: string = '');
     property Field: string read FField;
   end;
-
   //запись для хранения табличных данных с именованными полями
   TNamedArr = record
   private
@@ -39,12 +38,12 @@ type
     procedure Create(Data: TVarDynArray2; FieldNames: string = ''); overload;
 
     //доступ к данным
-    function  GetValue(RowNo: Integer; const FieldName: string): Variant;
-    function  GetValueI(RowNo: Integer; ColIndex: Integer): Variant;
+    function GetValue(RowNo: Integer; const FieldName: string): Variant;
+    function GetValueI(RowNo: Integer; ColIndex: Integer): Variant;
     procedure SetValue(RowNo: Integer; const FieldName: string; const Value: Variant); overload;
     procedure SetValue(const FieldName: string; const Value: Variant); overload;
     procedure SetValueI(RowNo: Integer; ColIndex: Integer; const Value: Variant);
-    function  GetRow(RowNo: Integer): TVarDynArray;
+    function GetRow(RowNo: Integer): TVarDynArray;
     procedure SetRow(RowNo: Integer; const Values: TVarDynArray);
 
     //информация о структуре
@@ -58,8 +57,8 @@ type
     function GetRawFieldNames: TVarDynArray;   //исходные имена
 
     //получение списков полей в виде строки
-    function GetFFullStr(Delimiter: String = ';'): string;  //исходные поля через заданный разделитель (по умолчанию ';')
-    function GetFStr(Delimiter: String = ','): string;      //очищенные поля через заданный разделитель (по умолчанию ',')
+    function GetFFullStr(Delimiter: string = ';'): string;  //исходные поля через заданный разделитель (по умолчанию ';')
+    function GetFStr(Delimiter: string = ','): string;      //очищенные поля через заданный разделитель (по умолчанию ',')
 
     //добавление / удаление строк
     procedure IncLength;
@@ -119,11 +118,9 @@ type
     function Col(const FieldName: string): Integer;
     function G(RowNo: Integer; const FieldName: string): Variant; overload;
     function G(const FieldName: string): Variant; overload;
-    function GetValueByOtherField(SearchValue: Variant; const SearchField: string;
-      const ResultField: string; ValueIfNotFound: Variant): Variant;
+    function GetValueByOtherField(SearchValue: Variant; const SearchField: string; const ResultField: string; ValueIfNotFound: Variant): Variant;
     function Find(Value: Variant; const FieldName: string): Integer; //первое вхождение
   end;
-
   //вспомогательный класс-итератор (оставлен классом, хранит копию записи, изменение в цикле не влияет на значения итератора)
   TNamedArrEnumerator = class(TEnumerator<TVarDynArray>)
   private
@@ -142,7 +139,6 @@ implementation
 
 uses
   System.IOUtils;
-
 { ENamedArrError }
 
 constructor ENamedArrError.Create(const Msg: string; const AField: string);
@@ -150,7 +146,6 @@ begin
   inherited Create(Msg);
   FField := AField;
 end;
-
 { TNamedArrEnumerator }
 
 constructor TNamedArrEnumerator.Create(const AArr: TNamedArr);
@@ -170,7 +165,6 @@ begin
   Inc(FIndex);
   Result := FIndex < FArr.Count;
 end;
-
 { TNamedArr }
 
 //==============================================================================
@@ -193,8 +187,7 @@ var
 begin
   FFull := System.Copy(Fields, 0, Length(Fields));
   System.SetLength(F, Length(Fields));
-  for j := 0 to System.High(Fields) do
-  begin
+  for j := 0 to System.High(Fields) do begin
     s := VarToStr(Fields[j]);
     p := Pos('$', s);
     if p > 0 then
@@ -203,8 +196,7 @@ begin
       F[j] := s;
   end;
   System.SetLength(V, Len);
-  for i := 0 to Len - 1 do
-  begin
+  for i := 0 to Len - 1 do begin
     System.SetLength(V[i], Length(F));
     for j := 0 to System.High(V[i]) do
       V[i][j] := Null;
@@ -233,8 +225,7 @@ begin
   // Определяем имена полей
   if Length(FieldNames) > 0 then
     Fields := System.Copy(FieldNames, 0, Length(FieldNames))
-  else
-  begin
+  else begin
     System.SetLength(Fields, ColCount);
     for i := 0 to ColCount - 1 do
       Fields[i] := IntToStr(i);
@@ -246,8 +237,7 @@ begin
   // Устанавливаем FFull и F
   FFull := System.Copy(Fields, 0, Length(Fields));
   System.SetLength(F, Length(Fields));
-  for j := 0 to System.High(Fields) do
-  begin
+  for j := 0 to System.High(Fields) do begin
     s := VarToStr(Fields[j]);
     p := Pos('$', s);
     if p > 0 then
@@ -258,8 +248,7 @@ begin
 
   // Копируем данные
   System.SetLength(V, RowCount);
-  for i := 0 to RowCount - 1 do
-  begin
+  for i := 0 to RowCount - 1 do begin
     if Length(Data[i]) <> ColCount then
       raise ENamedArrError.CreateFmt('Строка %d имеет длину %d, ожидалось %d', [i, Length(Data[i]), ColCount]);
     System.SetLength(V[i], ColCount);
@@ -274,7 +263,6 @@ begin
   Create(Data, A.Explode(FieldNames, ';', True));
 end;
 
-
 //==============================================================================
 // Вспомогательные методы
 //==============================================================================
@@ -285,8 +273,7 @@ var
   i: Integer;
   s: string;
 begin
-  for i := 0 to System.High(F) do
-  begin
+  for i := 0 to System.High(F) do begin
     s := VarToStr(F[i]);
     if SameText(s, FieldName) then
       Exit(i);
@@ -298,7 +285,7 @@ procedure TNamedArr.CheckRowIndex(RowNo: Integer);
 //проверить допустимость индекса строки, иначе исключение
 begin
   if (RowNo < 0) or (RowNo >= Length(V)) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс строки %d вне допустимого диапазона [0..%d]', [RowNo, Length(V)-1]);
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс строки %d вне допустимого диапазона [0..%d]', [RowNo, Length(V) - 1]);
 end;
 
 procedure TNamedArr.EnsureRowLength(RowNo: Integer);
@@ -314,32 +301,37 @@ var
   mult: Integer;
 begin
   mult := 1;
-  if not Ascending then mult := -1;
+  if not Ascending then
+    mult := -1;
   if VarIsNull(A) and VarIsNull(B) then
     Result := 0
   else if VarIsNull(A) then
     Result := -1 * mult
   else if VarIsNull(B) then
     Result := 1 * mult
-  else
-  begin
+  else begin
     //пытаемся сравнивать по подходящим типам
     case VarType(A) and varTypeMask of
-      varSmallint, varInteger, varShortInt, varByte, varWord, varLongWord, varInt64,
-      varSingle, varDouble, varCurrency:
+      varSmallint, varInteger, varShortInt, varByte, varWord, varLongWord, varInt64, varSingle, varDouble, varCurrency:
         begin
-          if A < B then Result := -1 * mult
-          else if A > B then Result := 1 * mult
-          else Result := 0;
+          if A < B then
+            Result := -1 * mult
+          else if A > B then
+            Result := 1 * mult
+          else
+            Result := 0;
         end;
       varDate:
         begin
           var d1, d2: TDateTime;
           d1 := A;
           d2 := B;
-          if d1 < d2 then Result := -1 * mult
-          else if d1 > d2 then Result := 1 * mult
-          else Result := 0;
+          if d1 < d2 then
+            Result := -1 * mult
+          else if d1 > d2 then
+            Result := 1 * mult
+          else
+            Result := 0;
         end;
       varOleStr, varString, varUString:
         begin
@@ -365,11 +357,9 @@ var
   cmp: Integer;
 begin
   Result := 0;
-  for i := 0 to System.High(FieldIndices) do
-  begin
+  for i := 0 to System.High(FieldIndices) do begin
     cmp := CompareValues(V[Idx1][FieldIndices[i]], V[Idx2][FieldIndices[i]], Ascending);
-    if cmp <> 0 then
-    begin
+    if cmp <> 0 then begin
       Result := cmp;
       Exit;
     end;
@@ -381,17 +371,18 @@ procedure TNamedArr.QuickSort(L, R: Integer; const FieldIndices: array of Intege
 var
   I, J, PivotIdx: Integer;
 begin
-  if L >= R then Exit;
+  if L >= R then
+    Exit;
   I := L;
   J := R;
   PivotIdx := (L + R) shr 1;
   repeat
-    while CompareRows(I, PivotIdx, FieldIndices, Ascending) < 0 do Inc(I);
-    while CompareRows(J, PivotIdx, FieldIndices, Ascending) > 0 do Dec(J);
-    if I <= J then
-    begin
-      if I <> J then
-      begin
+    while CompareRows(I, PivotIdx, FieldIndices, Ascending) < 0 do
+      Inc(I);
+    while CompareRows(J, PivotIdx, FieldIndices, Ascending) > 0 do
+      Dec(J);
+    if I <= J then begin
+      if I <> J then begin
         var Temp := V[I];
         V[I] := V[J];
         V[J] := Temp;
@@ -405,10 +396,11 @@ begin
       Dec(J);
     end;
   until I > J;
-  if L < J then QuickSort(L, J, FieldIndices, Ascending);
-  if I < R then QuickSort(I, R, FieldIndices, Ascending);
+  if L < J then
+    QuickSort(L, J, FieldIndices, Ascending);
+  if I < R then
+    QuickSort(I, R, FieldIndices, Ascending);
 end;
-
 //==============================================================================
 // Доступ к данным
 //==============================================================================
@@ -447,7 +439,7 @@ begin
   CheckRowIndex(RowNo);
   EnsureRowLength(RowNo);
   if (ColIndex < 0) or (ColIndex >= FieldsCount) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount-1]);
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount - 1]);
   Result := V[RowNo][ColIndex];
 end;
 
@@ -457,7 +449,7 @@ begin
   CheckRowIndex(RowNo);
   EnsureRowLength(RowNo);
   if (ColIndex < 0) or (ColIndex >= FieldsCount) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount-1]);
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount - 1]);
   V[RowNo][ColIndex] := Value;
 end;
 
@@ -475,13 +467,11 @@ procedure TNamedArr.SetRow(RowNo: Integer; const Values: TVarDynArray);
 begin
   CheckRowIndex(RowNo);
   if Length(Values) <> FieldsCount then
-    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)',
-      [Length(Values), FieldsCount]);
+    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(Values), FieldsCount]);
   System.SetLength(V[RowNo], FieldsCount);
   //копируем значения – приведение необходимо
   TVarDynArray(V[RowNo]) := TVarDynArray(System.Copy(Values, 0, Length(Values)));
 end;
-
 //==============================================================================
 // Информация о структуре
 //==============================================================================
@@ -538,32 +528,31 @@ begin
   Result := System.Copy(FFull, 0, Length(FFull)); // приведение не нужно, т.к. FFull уже TVarDynArray
 end;
 
-function TNamedArr.GetFFullStr(Delimiter: String = ';'): string;
+function TNamedArr.GetFFullStr(Delimiter: string = ';'): string;
 //исходные имена полей через заданный разделитель
 var
   i: Integer;
 begin
   Result := '';
-  for i := 0 to System.High(FFull) do
-  begin
-    if i > 0 then Result := Result + Delimiter;
+  for i := 0 to System.High(FFull) do begin
+    if i > 0 then
+      Result := Result + Delimiter;
     Result := Result + VarToStr(FFull[i]);
   end;
 end;
 
-function TNamedArr.GetFStr(Delimiter: String = ','): string;
+function TNamedArr.GetFStr(Delimiter: string = ','): string;
 //очищенные имена полей через заданный разделитель
 var
   i: Integer;
 begin
   Result := '';
-  for i := 0 to System.High(F) do
-  begin
-    if i > 0 then Result := Result + Delimiter;
+  for i := 0 to System.High(F) do begin
+    if i > 0 then
+      Result := Result + Delimiter;
     Result := Result + VarToStr(F[i]);
   end;
 end;
-
 //==============================================================================
 // Добавление / удаление строк
 //==============================================================================
@@ -597,8 +586,7 @@ begin
   if (Index < 0) or (Index > Count) then
     raise ENamedArrError.CreateFmt('TNamedArr: индекс вставки %d вне диапазона [0..%d]', [Index, Count]);
   if Length(Values) <> FieldsCount then
-    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)',
-      [Length(Values), FieldsCount]);
+    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(Values), FieldsCount]);
   System.SetLength(V, Count + 1);
   for i := Count - 1 downto Index do
     V[i + 1] := V[i];
@@ -633,14 +621,12 @@ begin
   OldLen := Count;
   System.SetLength(V, NewLen);
   if NewLen > OldLen then
-    for i := OldLen to NewLen - 1 do
-    begin
+    for i := OldLen to NewLen - 1 do begin
       System.SetLength(V[i], FieldsCount);
       for j := 0 to System.High(V[i]) do
         V[i][j] := Null;
     end;
 end;
-
 //==============================================================================
 // Добавление / удаление полей
 //==============================================================================
@@ -662,8 +648,7 @@ begin
   F[System.High(F)] := FieldName;
   System.SetLength(FFull, FieldsCount);
   FFull[System.High(FFull)] := FieldName;
-  for i := 0 to Count - 1 do
-  begin
+  for i := 0 to Count - 1 do begin
     System.SetLength(V[i], FieldsCount);
     V[i][System.High(V[i])] := DefaultValue;
   end;
@@ -691,21 +676,18 @@ begin
   idx := IndexOfField(FieldName);
   if idx < 0 then
     raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
-  for i := idx to FieldsCount - 2 do
-  begin
+  for i := idx to FieldsCount - 2 do begin
     F[i] := F[i + 1];
     FFull[i] := FFull[i + 1];
   end;
   System.SetLength(F, FieldsCount - 1);
   System.SetLength(FFull, FieldsCount - 1);
-  for i := 0 to Count - 1 do
-  begin
+  for i := 0 to Count - 1 do begin
     for j := idx to Length(V[i]) - 2 do
       V[i][j] := V[i][j + 1];
     System.SetLength(V[i], Length(V[i]) - 1);
   end;
 end;
-
 //==============================================================================
 // Поиск
 //==============================================================================
@@ -735,14 +717,12 @@ begin
   System.SetLength(Result, Count);
   cnt := 0;
   for i := 0 to Count - 1 do
-    if VarSameValue(V[i][idx], Value) then
-    begin
+    if VarSameValue(V[i][idx], Value) then begin
       Result[cnt] := i;
       Inc(cnt);
     end;
   System.SetLength(Result, cnt);
 end;
-
 //==============================================================================
 // Агрегатные функции
 //==============================================================================
@@ -757,9 +737,8 @@ begin
   if idx < 0 then
     raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
   Result := 0;
-  for i := 0 to Count - 1 do
-  begin
-    v := V[i][idx];
+  for i := 0 to Count - 1 do begin
+    v := v[i][idx];
     if not VarIsNull(v) then
       Result := Result + v;
   end;
@@ -777,11 +756,9 @@ begin
     raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
   sum := 0;
   cnt := 0;
-  for i := 0 to Count - 1 do
-  begin
-    v := V[i][idx];
-    if not VarIsNull(v) then
-    begin
+  for i := 0 to Count - 1 do begin
+    v := v[i][idx];
+    if not VarIsNull(v) then begin
       sum := sum + v;
       Inc(cnt);
     end;
@@ -802,9 +779,8 @@ begin
   if idx < 0 then
     raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
   Result := Null;
-  for i := 0 to Count - 1 do
-  begin
-    v := V[i][idx];
+  for i := 0 to Count - 1 do begin
+    v := v[i][idx];
     if not VarIsNull(v) then
       if VarIsNull(Result) or (v < Result) then
         Result := v;
@@ -821,15 +797,13 @@ begin
   if idx < 0 then
     raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
   Result := Null;
-  for i := 0 to Count - 1 do
-  begin
-    v := V[i][idx];
+  for i := 0 to Count - 1 do begin
+    v := v[i][idx];
     if not VarIsNull(v) then
       if VarIsNull(Result) or (v > Result) then
         Result := v;
   end;
 end;
-
 //==============================================================================
 // Сортировка
 //==============================================================================
@@ -840,17 +814,16 @@ var
   FieldIndices: TArray<Integer>;
   i: Integer;
 begin
-  if Count <= 1 then Exit;
+  if Count <= 1 then
+    Exit;
   System.SetLength(FieldIndices, Length(FieldNames));
-  for i := 0 to System.High(FieldNames) do
-  begin
+  for i := 0 to System.High(FieldNames) do begin
     FieldIndices[i] := IndexOfField(VarToStr(FieldNames[i]));
     if FieldIndices[i] < 0 then
       raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(FieldNames[i])]), VarToStr(FieldNames[i]));
   end;
   QuickSort(0, Count - 1, FieldIndices, Ascending);
 end;
-
 //==============================================================================
 // Фильтрация
 //==============================================================================
@@ -863,18 +836,15 @@ var
   ok: Boolean;
 begin
   Result.Create(FFull, 0); // инициализируем результат с теми же полями, без строк
-  for i := 0 to Count - 1 do
-  begin
+  for i := 0 to Count - 1 do begin
     ok := True;
-    for j := 0 to System.High(Conditions) do
-    begin
+    for j := 0 to System.High(Conditions) do begin
       if Length(Conditions[j]) <> 2 then
         raise ENamedArrError.Create('TNamedArr: условие фильтра должно содержать пару [ИмяПоля, Значение]');
       FieldIdx := IndexOfField(VarToStr(Conditions[j][0]));
       if FieldIdx < 0 then
         raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(Conditions[j][0])]), VarToStr(Conditions[j][0]));
-      if not VarSameValue(V[i][FieldIdx], Conditions[j][1]) then
-      begin
+      if not VarSameValue(v[i][FieldIdx], Conditions[j][1]) then begin
         ok := False;
         Break;
       end;
@@ -894,7 +864,6 @@ begin
     if Predicate(i) then
       Result.AddRow(GetRow(i));
 end;
-
 //==============================================================================
 // Null-значения
 //==============================================================================
@@ -906,7 +875,7 @@ var
 begin
   for i := 0 to Count - 1 do
     for j := 0 to FieldsCount - 1 do
-      V[i][j] := Null;
+      v[i][j] := Null;
 end;
 
 procedure TNamedArr.SetNull(RowNo: Integer);
@@ -916,7 +885,7 @@ var
 begin
   CheckRowIndex(RowNo);
   for j := 0 to FieldsCount - 1 do
-    V[RowNo][j] := Null;
+    v[RowNo][j] := Null;
 end;
 
 function TNamedArr.IsNull(RowNo: Integer; const FieldName: string): Boolean;
@@ -932,11 +901,10 @@ var
 begin
   CheckRowIndex(RowNo);
   for j := 0 to FieldsCount - 1 do
-    if not VarIsNull(V[RowNo][j]) then
+    if not VarIsNull(v[RowNo][j]) then
       Exit(False);
   Result := True;
 end;
-
 //==============================================================================
 // Клонирование и присваивание
 //==============================================================================
@@ -955,11 +923,10 @@ var
 begin
   FFull := System.Copy(Source.FFull, 0, Length(Source.FFull));
   F := System.Copy(Source.F, 0, Length(Source.F));
-  System.SetLength(V, Source.Count);
+  System.SetLength(v, Source.Count);
   for i := 0 to Source.Count - 1 do
-    TVarDynArray(V[i]) := TVarDynArray(System.Copy(Source.V[i], 0, Length(Source.V[i])));
+    TVarDynArray(v[i]) := TVarDynArray(System.Copy(Source.V[i], 0, Length(Source.V[i])));
 end;
-
 //==============================================================================
 // Итератор
 //==============================================================================
@@ -969,7 +936,6 @@ function TNamedArr.GetEnumerator: TEnumerator<TVarDynArray>;
 begin
   Result := TNamedArrEnumerator.Create(Self);
 end;
-
 //==============================================================================
 // Объединение записей
 //==============================================================================
@@ -979,17 +945,14 @@ procedure TNamedArr.Concat(const Other: TNamedArr; CheckFields: Boolean = True);
 var
   i: Integer;
 begin
-  if CheckFields then
-  begin
+  if CheckFields then begin
     if FieldsCount <> Other.FieldsCount then
       raise ENamedArrError.Create('TNamedArr.Concat: разное количество полей');
     for i := 0 to FieldsCount - 1 do
       if VarToStr(F[i]) <> VarToStr(Other.F[i]) then
-        raise ENamedArrError.CreateFmt('TNamedArr.Concat: имена полей %d различаются: "%s" <> "%s"',
-          [i, VarToStr(F[i]), VarToStr(Other.F[i])]);
+        raise ENamedArrError.CreateFmt('TNamedArr.Concat: имена полей %d различаются: "%s" <> "%s"', [i, VarToStr(F[i]), VarToStr(Other.F[i])]);
   end
-  else
-  begin
+  else begin
     if FieldsCount <> Other.FieldsCount then
       raise ENamedArrError.Create('TNamedArr.Concat: разное количество полей (проверка отключена, но число колонок должно совпадать)');
   end;
@@ -998,7 +961,6 @@ begin
   for i := 0 to Other.Count - 1 do
     AddRow(Other.GetRow(i));
 end;
-
 //==============================================================================
 // Сохранение / загрузка
 //==============================================================================
@@ -1012,6 +974,7 @@ end;
 
 procedure TNamedArr.SaveToCSV(const Filename: string);
 //сохранить данные в CSV-файл с правильным экранированием
+
   function QuoteCSV(const S: string): string;
   //экранировать строку для CSV
   begin
@@ -1030,21 +993,20 @@ begin
   try
     //заголовок
     line := '';
-    for j := 0 to FieldsCount - 1 do
-    begin
-      if j > 0 then line := line + ',';
+    for j := 0 to FieldsCount - 1 do begin
+      if j > 0 then
+        line := line + ',';
       line := line + QuoteCSV(VarToStr(FFull[j]));
     end;
     Lines.Add(line);
 
     //данные
-    for i := 0 to Count - 1 do
-    begin
+    for i := 0 to Count - 1 do begin
       line := '';
-      for j := 0 to FieldsCount - 1 do
-      begin
-        if j > 0 then line := line + ',';
-        line := line + QuoteCSV(VarToStr(V[i][j]));
+      for j := 0 to FieldsCount - 1 do begin
+        if j > 0 then
+          line := line + ',';
+        line := line + QuoteCSV(VarToStr(v[i][j]));
       end;
       Lines.Add(line);
     end;
@@ -1064,14 +1026,14 @@ begin
   s := TStringBuilder.Create;
   try
     s.Append('[');
-    for i := 0 to Count - 1 do
-    begin
-      if i > 0 then s.Append(',');
+    for i := 0 to Count - 1 do begin
+      if i > 0 then
+        s.Append(',');
       s.Append('{');
-      for j := 0 to FieldsCount - 1 do
-      begin
-        if j > 0 then s.Append(',');
-        s.Append('"').Append(VarToStr(F[j])).Append('":"').Append(VarToStr(V[i][j])).Append('"');
+      for j := 0 to FieldsCount - 1 do begin
+        if j > 0 then
+          s.Append(',');
+        s.Append('"').Append(VarToStr(F[j])).Append('":"').Append(VarToStr(v[i][j])).Append('"');
       end;
       s.Append('}');
     end;
@@ -1087,7 +1049,6 @@ procedure TNamedArr.FromJSON(const JSON: string);
 begin
   raise ENamedArrError.Create('TNamedArr.FromJSON не реализован');
 end;
-
 //==============================================================================
 // Совместимость с исходным кодом
 //==============================================================================
@@ -1112,8 +1073,7 @@ begin
   Result := GetValue(0, FieldName);
 end;
 
-function TNamedArr.GetValueByOtherField(SearchValue: Variant; const SearchField, ResultField: string;
-  ValueIfNotFound: Variant): Variant;
+function TNamedArr.GetValueByOtherField(SearchValue: Variant; const SearchField, ResultField: string; ValueIfNotFound: Variant): Variant;
 //ищет строку по SearchField = SearchValue и возвращает значение из ResultField (или ValueIfNotFound)
 var
   row: Integer;
