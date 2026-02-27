@@ -51,6 +51,7 @@ uses
   Forms,
   Windows,
   SysUtils,
+  uUpdater in 'uUpdater.pas',
   uDBParsec in 'uDBParsec.pas' {myDBParsec: TDataModule},
   uMessages in 'uMessages.pas',
   uFields in 'uFields.pas',
@@ -72,6 +73,7 @@ uses
   uTasks in 'uTasks.pas',
   uTurv in 'uTurv.pas',
   uString in 'uString.pas',
+  uNamedArr in 'uNamedArr.pas',
   uExcel2 in 'uExcel2.pas',
   uExcel in 'uExcel.pas',
   uForms in 'uForms.pas',
@@ -203,7 +205,8 @@ uses
   uFrmWWedtWorkSchedule in 'uFrmWWedtWorkSchedule.pas' {FrmWWedtWorkSchedule},
   uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod},
   uFrmWGedtPayrollTransfer in 'uFrmWGedtPayrollTransfer.pas' {FrmWGedtPayrollTransfer},
-  uFrmWGedtPayrollCash in 'uFrmWGedtPayrollCash.pas' {FrmWGedtPayrollCash};
+  uFrmWGedtPayrollCash in 'uFrmWGedtPayrollCash.pas' {FrmWGedtPayrollCash},
+  uFrmOGjrnProdCalculations in 'uFrmOGjrnProdCalculations.pas' {FrmOGjrnProdCalculations};
 
 var
   MT: Integer;
@@ -293,6 +296,8 @@ begin
     Halt;
   end;
 
+  //проверим обновления программы
+  CheckForUpdatesAndRunUpdater;
 
   //инициализация прилдожения
   Application.Initialize;

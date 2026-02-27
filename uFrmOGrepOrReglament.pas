@@ -8,7 +8,7 @@ uses
   GridsEh, DBAxisGridsEh, DBGridEh, PropFilerEh, PropStorageEh, Math,
   Types, DBCtrlsEh, ExtCtrls, DateUtils, Vcl.ComCtrls,
   uLabelColors, uFrmBasicMdi, uFrDBGridEh, uString, uData,
-  uFrmBasicEditabelGrid
+  uFrmBasicEditabelGrid, uNamedArr
   ;
 
 type

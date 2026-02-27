@@ -9,7 +9,7 @@ uses
   Clipbrd, GridsEh, DBAxisGridsEh,
   DBGridEh, Menus, Math, Buttons, PrnDbgEh, DBCtrlsEh, Types,
   uString, uData, uMessages, uForms,
-  uDBOra, uFrmBasicMdi, uFrDBGridEh, uLabelColors, ufields, Vcl.Mask;
+  uDBOra, uFrmBasicMdi, uFrDBGridEh, uLabelColors, ufields, Vcl.Mask, uNamedArr;
 
 type
   TFrmOWOrder = class(TFrmBasicMdi)
@@ -451,4 +451,3 @@ begin
 end;
 
 end.
-

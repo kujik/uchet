@@ -2034,7 +2034,7 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('order_reglaments');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderReglament;
-    Frg1.Opt.SetButtons(1, 'ravecids');
+    Frg1.Opt.SetButtons(1, 'ravecds');
     Frg1.InfoArray:=[
     ];
   end

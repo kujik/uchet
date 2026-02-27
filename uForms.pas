@@ -10,7 +10,7 @@ uses
   SearchPanelsEh, PropFilerEh, MemTreeEh,
   DataDriverEh, ADODataDriverEh, ImgList, ActnList, Jpeg, PngImage,
   ShellApi, DBGridEhXlsMemFileExporters, DBGridEhImpExp, TypInfo, DateUtils,
-  uData, uString, uDBOra, uSys;
+  uData, uString, uDBOra, uSys, uNamedArr;
 
 type
   TmyCustomDBEditEh = class(TCustomDBEditEh)

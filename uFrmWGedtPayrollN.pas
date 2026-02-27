@@ -30,7 +30,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
   ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd,
   MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv, uNamedArr
   ;
 
 type
@@ -52,6 +52,7 @@ type
     function  PrepareForm: Boolean; override;
     function  GetDataFromDb: Integer;
     function  GetDataFromTurv: Integer;
+    procedure LoadPrevCalcMethods;
     procedure GetDataFromExcel;
     procedure SetButtons;
     procedure SetColumns;
@@ -226,6 +227,8 @@ begin
 
   //прочитаем из БД ведомость
   GetDataFromDb;
+  //загрузим метод расчета из турв прошлого месяца того же периода
+  LoadPrevCalcMethods;
   //если ведомость пуста- выполним первоначальную загрузка по данным турв
   if Frg1.GetCount(False) = 0 then
     GetDataFromTurv;
@@ -275,7 +278,7 @@ var
   v1, v2: Variant;
   b: Boolean;
   NoData: Boolean;
-  na, na2: TNamedArr;
+  na, na2, naprev: TNamedArr;
   MsgDel, MsgIns, MsgChg: string;
   flds: TVarDynArray2;
   flds1, flds2: TVarDynArray;
@@ -339,6 +342,8 @@ begin
     FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);               //по всем, я не только уволенным
   end;
 
+  Q.QLoadFromQuery('select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt1 = :dt1$d', [FPayrollParams.G('id_departament'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1))], naprev);
+
   NoData := Frg1.GetCount = 0;
 
   //заполним то что загружается из турв, остальные данные ранее загруженными из бд, удалим строки из ведомости, которых в турв теперь нет
@@ -400,6 +405,7 @@ begin
       na2 := FTurv.CalculateTotals(i);
       //айдишники
       for k := 0 to High(flds1) do
+   //     na.SetValue(i, flds1[k], FTurv.List.G(r, st));
         na.SetValue(na.High, flds1[k], FTurv.List.G(r, flds1[k]));
       //остальные поля
       for k := 0 to High(flds) do
@@ -450,6 +456,18 @@ begin
     end;
   end;
 
+  for i := 0 to na.High do
+  for j:= 0 to naprev.High do begin
+
+    if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
+      if na.G(i, 'planned_pay') = null then
+        na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
+      if na.G(i, 'fixed_pay') = null then
+        na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
+      Break;
+    end;
+  end;
+
 
   //загрузим данные в грид
   Frg1.LoadData(na);
@@ -468,38 +486,22 @@ begin
       1
     );
   end;
-
-
-
-//      for k := 0 to High(flds2) do
-//        S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
-
-(*
-  //загрузим работников из прошлой ведомости по этому же подразделению (по всему подразделению)
-  va1:=Q.QLoadToVarDynArray2(
-    'select id_employee, base_salarym, planned_monthly_payroll, fixed_compensation from payroll_item where id_division = :id_division$i and dt = :dt1$d',
-    [FPayrollParams.G('id_departament'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1))]
-  );
-  //заполним но бланка и баллы за период (оклад), а также планируемую и постоянную часть з/п при использоваении ОРС из прошлого периода
-  for i := 0 to High(va) do begin
-    j := A.PosInArray(va[i][2], va1, 0);
-    SetLength(va[i], 9);
-    if j >= 0 then begin
-      va[i][5] := va1[j][1];
-      va[i][6] := va1[j][2];
-      va[i][7] := va1[j][3];
-      va[i][8] := va1[j][4];
-    end
-    else begin
-      va[i][5] := null;
-      va[i][6] := null;
-      va[i][7] := null;
-      va[i][8] := null;
-    end;
-  end;
-*)
-
 end;
+
+procedure TFrmWGedtPayrollN.LoadPrevCalcMethods;
+var
+  na: TNamedArr;
+begin
+  if (FPayrollParams.G('calc_method') <> null) and (FPayrollParams.G('overtime_method') <> null) then
+    Exit;
+  Q.QLoadFromQuery('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
+    [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt1'), -1)], na);
+  if na.Count = 0 then
+    Exit;
+  FPayrollParams.SetValue('calc_method', na.G('calc_method'));
+  FPayrollParams.SetValue('overtime_method', na.G('overtime_method'));
+end;
+
 
 procedure TFrmWGedtPayrollN.GetDataFromExcel;
 var

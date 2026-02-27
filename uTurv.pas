@@ -42,7 +42,7 @@ uses
   MemTableDataEh, Db, Math, ExtCtrls,
   IniFiles, SearchPanelsEh,
   PropFilerEh, ActnList, Jpeg, uString, PngImage, DateUtils,
-  uData, uForms;
+  uData, uForms, uNamedArr;
 
 type
   TTurv = class(TObject)
@@ -158,6 +158,7 @@ type
     function  GetTurvCode(AValue: Variant): Variant;
     function  R(ARow, ADay: Integer): Integer; overload;
     function  R(ARow: Integer): TVarDynArray; overload;
+    function  GetResultDayValue(ARow, ADay: Integer; AAsString: Boolean = True): Variant;
     function  GetDayCell(ARow, ADay, ANum: Integer; var AColor: Integer; var AComm: string; AFormatTime: Boolean = False): Variant;
     procedure SetDayValues(ARow, ADay: Integer; AField: string; ANewValue: Variant);
     procedure SortAndGroup(ASort, AGroup : TVarDynArray);
@@ -166,6 +167,7 @@ type
     function  GetDataStatus: Integer;
     function  CellState(ARow, ADay: Integer): Integer ;
     procedure LoadFromParsec;
+    procedure UpdateExportTable;
   end;
 
 
@@ -1275,6 +1277,80 @@ begin
 *)
 end;
 
+function TTurvData.GetResultDayValue(ARow, ADay: Integer; AAsString: Boolean = True): Variant;
+//получим текущее результирующее значение по дню для работника, исходя из всех трех времен, с приоритетом согласованное-кадры-мастер
+//если AAsString то вернем или число, или текстом код, иначе часы с плюсом, а если код - то с минусом
+var
+  Pos: Integer;
+begin
+  Result := null;
+  if (ADay > FDaysCount) then
+    Exit;
+  Pos := R(ARow, ADay);
+  if (Pos < 0) then
+    Exit;
+  Result := S.IIf(FCells[Pos].G(ADay, 'id_turvcode3') = null, S.IIf(FCells[Pos].G(ADay, 'worktime3') = null, null, FCells[Pos].G(ADay, 'worktime3')), -FCells[Pos].G(ADay, 'id_turvcode3'));
+  if Result = null then
+    Result := S.IIf(FCells[Pos].G(ADay, 'id_turvcode2') = null, S.IIf(FCells[Pos].G(ADay, 'worktime2') = null, null, FCells[Pos].G(ADay, 'worktime2')), -FCells[Pos].G(ADay, 'id_turvcode2'));
+  if Result = null then
+    Result := S.IIf(FCells[Pos].G(ADay, 'id_turvcode1') = null, S.IIf(FCells[Pos].G(ADay, 'worktime1') = null, null, FCells[Pos].G(ADay, 'worktime1')), -FCells[Pos].G(ADay, 'id_turvcode1'));
+  if (Result.AsInteger < 0) and AAsString then
+    Result := FTurvCodes.GetValueByOtherField(-Result, 'id', 'code', null);
+end;
+
+procedure TTurvData.UpdateExportTable;
+var
+  i, j, k, pos: Integer;
+  b: Boolean;
+  vaTurv, vaTable: TVarDynArray2;
+  IdsDel, Flds: string;
+begin
+  Flds := 'id$i;id_departament$i;id_employee$i;id_job$i;d1$s;d2$s;d3$s;d4$s;d5$s;d6$s;d7$s;d8$s;d9$s;d10$s;d11$s;d12$s;d13$s;d14$s;d15$s;d16$s;hours$f;premium$f;penalty$f';
+  vaTable := Q.QLoadToVarDynArray2(
+    Q.QSIUDSql('a', 'w_turv_export', Flds) + ' from w_turv_export where id_departament = :id_departament$i and dt1 = :dt1$d',
+    [FTitle.G('id_departament'), FDtBeg]
+  );
+  vaTurv := [];
+  for i := 0 to Count - 1 do begin
+    vaTurv := vaTurv + [];
+    SetLength(vaTurv[High(vaTurv)], 4 + 16 + 3 + 1);
+    vaTurv[i][0] := -1;
+    vaTurv[i][1] := FTitle.G('id_departament');
+    vaTurv[i][2] := List.G(R(i)[0], 'id_employeee');
+    vaTurv[i][3] := List.G(R(i)[0], 'id_job');
+    vaTurv[i][4 + 16] := Rows[i].Totals.G('worktime');
+    vaTurv[i][4 + 17] := Rows[i].Totals.G('premium');
+    vaTurv[i][4 + 18] := Rows[i].Totals.G('penalty');
+    for j := 1 to 16 do begin
+      vaTurv[i][3 + j] := GetResultDayValue(i, j);
+    end;
+    j := A.PosInArray(vaTurv[i][2], vaTable, 2);
+    if j < 0 then
+      vaTurv[i][0] := -2
+    else begin
+      b := True;
+      for k := 1 to High(vaTurv[i]) do begin
+        if vaTurv[i][k].AsString <> vaTable[j][k].AsString then begin
+          b := False;
+          Break;
+        end;
+      end;
+      if b then
+        vaTurv[i][0] := vaTable[j][0];
+    end;
+  end;
+  IdsDel := '';
+  for i := 0 to High(vaTable) do
+    if A.PosInArray(vaTable[i][2], vaTurv, 2) < 0 then
+      S.ConcatStP(IdsDel, vaTable[i][0], ',');
+  Q.QBeginTrans(True);
+  for i := 0 to High(vaTurv) do begin
+    Q.QIUD(S.IIf(vaTurv[i][0] = -1, 'i', 'd'), 'w_turv_export', '', Flds, A.VarDynArray2RowToVD1(vaTurv, i));
+  end;
+  if IdsDel <> '' then
+    Q.QExecSql('delete from w_turv_export where id in (' + IdsDel + ')', []);
+  Q.QCommitTrans;
+end;
 
 
 
@@ -2685,6 +2761,7 @@ begin
       ['id_pers_bonus$i', cntComboLK, 'Вид надбавки','1:400'],
       ['dt_beg$d', cntDEdit, 'C',':'],
       ['dt_end$d', cntDEdit, 'По',':']],
+      [],
       ['select name, id from w_pers_bonus where active = 1 order by name'],
       [['caption dlgedit']]
     );
@@ -3513,6 +3590,3 @@ end;
 begin
   Turv:=TTurv.Create;
 end.
-
-
-

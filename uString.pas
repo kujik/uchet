@@ -43,7 +43,7 @@ type
 
   TCharSet = set of Char;
 
-  TNamedArr = record
+{  TNamedArr = record
     FFull: TVarDynArray;
     F: TVarDynArray;
     V: TVarDynArray2;
@@ -57,7 +57,10 @@ type
     procedure SetValue(RowNo: Integer; Field: string; NewValue: Variant); overload;
     procedure SetValue(Field: string; NewValue: Variant); overload;
     function  Find(Value: Variant; Field: string): Integer;
-    function  Empty: Boolean;
+    //получаем значение из поля ResultField для строки, найденной по значению поля SearchField = SearchValue
+    function  GetValueByOtherField(SearchValue: Variant; SearchField: string; ResultField: string; ValueIfNotFound: Variant): Variant;
+    //возвразщает True, если нет записей
+    function  IsEmpty: Boolean;
     function  Count: Integer;
     function  High: Integer;
     procedure IncLength;
@@ -68,7 +71,7 @@ type
     procedure SetNull(RowNo: Integer); overload;
   end;
 
-  TNamedArr2 = array of TNamedArr;
+  TNamedArr2 = array of TNamedArr;   }
 
 
 type
@@ -508,12 +511,6 @@ function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
 
 
 //-------------- РАЗНОЕ -------------------------------------------------------
-procedure Txt2File(St: string; Fname: string);
-function VTxt(var v: Variant; name: string = ''): string; overload;
-function VTxt(var va2: TVarDynArray2; name: string = ''): string; overload;
-function VTxt(var va: TVarDynArray; name: string = ''): string; overload;
-function VTxt(var na: TNamedArr; name: string = ''): string; overload;
-procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
 
 
 
@@ -522,7 +519,7 @@ procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False)
 implementation
 
 uses
-  Math, uErrors, uMessages, uFrmMain;
+  Math, uNamedArr, uErrors, uMessages, uFrmMain;
 
 
 
@@ -2557,8 +2554,6 @@ begin
   end;
 end;
 
-
-
 function TMyArrayHelper.FindValueInArray2(FindValue: Variant; FindFNo: Integer; ResultFNo: Integer; Arr: TVarDynArray2; IgnoreCase: Boolean = False): Variant;
 //возвращает значение из столбца ValueFNo, для которого значения в столбце KeyFNo = KeyValue
 var
@@ -2900,7 +2895,7 @@ end;
 
 
 
-
+ (*
 
 procedure TNamedArr.Create(Fields: TVarDynArray; Len: Integer);
 var
@@ -2989,7 +2984,19 @@ begin
   Result := A.PosInArray(Value, V, Col(Field));
 end;
 
-function TNamedArr.Empty: Boolean;
+function TNamedArr.GetValueByOtherField(SearchValue: Variant; SearchField: string; ResultField: string; ValueIfNotFound: Variant): Variant;
+//получаем значение из поля ResultField для строки, найденной по значению поля SearchField = SearchValue
+var
+  pos: Integer;
+begin
+  Result := ValueIfNotFound;
+  pos := Find(SearchValue, SearchField);
+  if pos < 0 then
+    Exit;
+  Result := GetValue(Pos, ResultField);
+end;
+
+function TNamedArr.IsEmpty: Boolean;
 begin
   Result := Length(V) = 0;
 end;
@@ -3043,7 +3050,7 @@ begin
     V[RowNo][j] := null;
 end;
 
-
+*)
 
 //==============================================================================
 //==============================================================================
@@ -3140,69 +3147,6 @@ begin
   Result := S.NullIfEmpty(Self);
 end;
 
-function VTxt(var v: Variant; name: string = ''): string;
-var
-  i, j: Integer;
-begin
-  Result := name + ':  ' + VarToStr(v);
-end;
-
-function VTxt(var va2: TVarDynArray2; name: string = ''): string;
-var
-  i, j: Integer;
-begin
-  Result := name + ':'#10#13;
-  for i := 0 to High(va2) do begin
-    for j := 0 to High(va2[i]) do
-      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + IntToStr(j) + '] => ' + VarToStr(va2[i][j])), '   ');
-  end;
-end;
-
-function VTxt(var va: TVarDynArray; name: string = ''): string;
-var
-  i, j: Integer;
-begin
-  Result := name + ':'#10#13;
-  for i := 0 to High(va) do begin
-    s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + '] => ' + VarToStr(va[i])), '   ');
-  end;
-end;
-
-function VTxt(var na: TNamedArr; name: string = ''): string;
-var
-  i, j: Integer;
-begin
-  Result := name + ':'#10#13;
-  for i := 0 to na.Count - 1 do begin
-    for j := 0 to na.FieldsCount - 1 do
-      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + na.F[j] + '] => ' + VarToStr(na.V[i][j])), '   ');
-  end;
-end;
-
-procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
-var
-  i: Integer;
-  st: string;
-begin
-  if Skip and not FrmMain.DeveloperMode then
-    Exit;
-  st := '';
-  if Name <> '' then
-    st := '<' + Name + '>'#13#10#13#10;
-  for i := 0 to High(Values) do
-    S.ConcatStP(st, Values[i], '---------------------------'#13#10#13#10);
-  MyInfoMessage(st);
-end;
-
-procedure Txt2File(St: string; Fname: string);
-var
-  SL: TStringList;
-begin
-  SL := TStringList.Create;
-  SL.Text := St;
-  SL.SaveToFile(s.Iif(Fname <> '', Fname, 'debug.txt'));
-  SL.Free;
-end;
 
 var
   dt111, dt112: TDateTime;

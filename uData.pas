@@ -556,7 +556,7 @@ uses
   DBCtrlsEh, Types, System.ImageList, frxClass, frxDesgn, Vcl.Styles, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdHTTP, Xml.xmldom, Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   IdSMTP, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle,
-  Menus, uModule, uUser, Xml.XMLIntf;
+  Menus, uModule, uUser, Xml.XMLIntf, uString, uNamedArr;
 
 var
   Module: TModule;
@@ -936,6 +936,7 @@ const
   myfrm_R_PersBonus='R_PersBonus';
   myfrm_J_PersBonus='J_PersBonus';
   myfrm_J_PayrollsForWorker='J_PayrollsForWorker';
+  myfrm_J_ProdCalculations='J_ProdCalculations';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1036,6 +1037,7 @@ const
   myfrm_Dlg_PayrollCalc ='Dlg_PayrollCalc';
   myfrm_Dlg_PayrollTransfer ='Dlg_PayrollTransfer';
   myfrm_Dlg_PayrollCash ='Dlg_PayrollCash';
+  myfrm_Dlg_ProdCalculation='Dlg_ProdCalculation';
 
 
 const
@@ -1701,9 +1703,11 @@ const
   rOr_J_Orders_ToDevelThn='6-138';
   rOr_R_StdItems_Set_Labor='6-139';
   rOr_J_Orders_Set_Labor='6-140';
+  rOr_J_ProdCalculations_V='6-141';
+  rOr_J_ProdCalculations_Ch='6-142';
 
   const
-  URights : array [0..250] of array [0..3] of string = (
+  URights : array [0..252] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1855,6 +1859,8 @@ const
     (rOr_J_PlannedOrders_Ch,'Модуль "Заказы"','Журналы: Плановые заказы','Создание и изменение плановых заказов'),
     (rOr_J_Semiproducts_V,'Модуль "Заказы"','Журналы: Заказы на полуфабрикаты','Доступ к журналу'),
     (rOr_J_Semiproducts_Ch,'Модуль "Заказы"','Журналы: Заказы на полуфабрикаты','Формирование заказов и заявок'),
+    (rOr_J_ProdCalculations_V,'Модуль "Заказы"','Журналы: Просчеты','Доступ к журналу'),
+    (rOr_J_ProdCalculations_Ch,'Модуль "Заказы"','Журналы: Просчеты','Создание и изменение просчетов'),
     (rOr_J_Devel_V,'Модуль "Заказы"','Журналы: Разаработка','Доступ к журналу'),
     (rOr_J_Devel_Ch,'Модуль "Заказы"','Журналы: Разаработка','Добавление, изменение'),
     (rOr_J_Devel_Del,'Модуль "Заказы"','Журналы: Разаработка','Удаление'),
@@ -2021,12 +2027,85 @@ var
 
 {*)}
 
+procedure Txt2File(St: string; Fname: string);
+function VTxt(var v: Variant; name: string = ''): string; overload;
+function VTxt(var va2: TVarDynArray2; name: string = ''): string; overload;
+function VTxt(var va: TVarDynArray; name: string = ''): string; overload;
+function VTxt(var na: TNamedArr; name: string = ''): string; overload;
+procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
+
+
 implementation
 
 {$R *.dfm}
 
 uses
-  uMessages, uForms, uSettings;
+  uMessages, uForms, uSettings, uFrmMain;
+
+function VTxt(var v: Variant; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':  ' + VarToStr(v);
+end;
+
+function VTxt(var va2: TVarDynArray2; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to High(va2) do begin
+    for j := 0 to High(va2[i]) do
+      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + IntToStr(j) + '] => ' + VarToStr(va2[i][j])), '   ');
+  end;
+end;
+
+function VTxt(var va: TVarDynArray; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to High(va) do begin
+    s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + '] => ' + VarToStr(va[i])), '   ');
+  end;
+end;
+
+function VTxt(var na: TNamedArr; name: string = ''): string;
+var
+  i, j: Integer;
+begin
+  Result := name + ':'#10#13;
+  for i := 0 to na.Count - 1 do begin
+    for j := 0 to na.FieldsCount - 1 do
+      s.ConcatStP(Result, VarToStr('[' + IntToStr(i) + ']' + '[' + na.F[j] + '] => ' + VarToStr(na.V[i][j])), '   ');
+  end;
+end;
+
+procedure MsgDbg(Values: TVarDynArray; Name: string = ''; Skip: Boolean = False);
+var
+  i: Integer;
+  st: string;
+begin
+  if Skip and not FrmMain.DeveloperMode then
+    Exit;
+  st := '';
+  if Name <> '' then
+    st := '<' + Name + '>'#13#10#13#10;
+  for i := 0 to High(Values) do
+    S.ConcatStP(st, Values[i], '---------------------------'#13#10#13#10);
+  MyInfoMessage(st);
+end;
+
+procedure Txt2File(St: string; Fname: string);
+var
+  SL: TStringList;
+begin
+  SL := TStringList.Create;
+  SL.Text := St;
+  SL.SaveToFile(s.Iif(Fname <> '', Fname, 'debug.txt'));
+  SL.Free;
+end;
+
 
 initialization
   DefFontData.Name := 'Calibri'; //'Tahoma';
@@ -2047,5 +2126,7 @@ initialization
 
 //  AutoSaveBugReport('Начало моего отчета об ошибке');
 //  AutoSaveBugReport(exceptIntf.GetBugReport);
+
+
 
 end.

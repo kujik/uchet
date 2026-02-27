@@ -1,23 +1,23 @@
 inherited FrmOGselOrReglament: TFrmOGselOrReglament
   Anchors = [akTop, akRight]
   Caption = 'FrmOGselOrReglament'
-  ClientHeight = 505
-  ClientWidth = 349
+  ClientHeight = 504
+  ClientWidth = 345
   ExplicitWidth = 361
   ExplicitHeight = 543
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 349
-    Height = 499
+    Width = 345
+    Height = 498
     ExplicitWidth = 349
     ExplicitHeight = 499
     inherited pnlFrmClient: TPanel
-      Width = 339
-      Height = 450
+      Width = 335
+      Height = 449
       ExplicitWidth = 335
       ExplicitHeight = 449
       inherited pnlTop: TPanel
-        Width = 339
+        Width = 335
         Height = 35
         ExplicitWidth = 335
         ExplicitHeight = 35
@@ -46,32 +46,32 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
         end
       end
       inherited pnlBottom: TPanel
-        Top = 404
-        Width = 339
+        Top = 403
+        Width = 335
         ExplicitTop = 403
         ExplicitWidth = 335
       end
       inherited pnlLeft: TPanel
         Top = 35
-        Height = 369
+        Height = 368
         ExplicitTop = 35
         ExplicitHeight = 368
       end
       inherited pnlGrid1: TPanel
         Top = 35
-        Width = 329
-        Height = 369
+        Width = 325
+        Height = 368
         ExplicitTop = 35
         ExplicitWidth = 325
         ExplicitHeight = 368
         inherited Frg1: TFrDBGridEh
-          Width = 327
-          Height = 367
+          Width = 323
+          Height = 366
           ExplicitWidth = 323
           ExplicitHeight = 366
           inherited pnlGrid: TPanel
-            Width = 317
-            Height = 313
+            Width = 313
+            Height = 312
             ExplicitWidth = 313
             ExplicitHeight = 312
             inherited DbGridEh1: TDBGridEh
@@ -98,20 +98,20 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
             end
           end
           inherited pnlLeft: TPanel
-            Height = 313
+            Height = 312
             ExplicitHeight = 312
           end
           inherited pnlTop: TPanel
-            Width = 327
+            Width = 323
             ExplicitWidth = 323
           end
           inherited pnlContainer: TPanel
-            Width = 327
+            Width = 323
             ExplicitWidth = 323
           end
           inherited pnlBottom: TPanel
-            Top = 367
-            Width = 327
+            Top = 366
+            Width = 323
             ExplicitTop = 366
             ExplicitWidth = 323
           end
@@ -132,15 +132,15 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 409
-        Width = 339
+        Top = 408
+        Width = 335
         ExplicitTop = 408
         ExplicitWidth = 335
         inherited Frg2: TFrDBGridEh
-          Width = 337
+          Width = 333
           ExplicitWidth = 333
           inherited pnlGrid: TPanel
-            Width = 327
+            Width = 323
             ExplicitWidth = 323
             inherited DbGridEh1: TDBGridEh
               Width = 325
@@ -155,15 +155,15 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
             end
           end
           inherited pnlTop: TPanel
-            Width = 337
+            Width = 333
             ExplicitWidth = 333
           end
           inherited pnlContainer: TPanel
-            Width = 337
+            Width = 333
             ExplicitWidth = 333
           end
           inherited pnlBottom: TPanel
-            Width = 337
+            Width = 333
             ExplicitWidth = 333
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -183,17 +183,17 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
         end
       end
       inherited pnlRight: TPanel
-        Left = 334
+        Left = 330
         Top = 35
-        Height = 369
+        Height = 368
         ExplicitLeft = 330
         ExplicitTop = 35
         ExplicitHeight = 368
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 455
-      Width = 339
+      Top = 454
+      Width = 335
       ExplicitTop = 454
       ExplicitWidth = 335
       inherited bvlFrmBtnsTl: TBevel
@@ -227,19 +227,15 @@ inherited FrmOGselOrReglament: TFrmOGselOrReglament
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 499
-    Width = 349
+    Top = 498
+    Width = 345
     Height = 6
     ExplicitTop = 498
     ExplicitWidth = 345
     ExplicitHeight = 6
     inherited lblStatusBarR: TLabel
       Left = 276
-      Height = 4
       ExplicitLeft = 276
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 4
     end
   end
 end

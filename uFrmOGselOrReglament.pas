@@ -77,7 +77,7 @@ begin
   for var i: Integer := 0 to Frg1.GetCount(False) - 1 do
     if S.InCommaStr(Frg1.GetValueS('id', i, False), AddParam.AsString) then
       Frg1.SetValue('used', i, False, 1);
-  FReglaments := Q.QLoadToVarDynArray2('select id, name, ids_properties, deadline, ids_types from order_reglaments order by deadline desc', []);
+  FReglaments := Q.QLoadToVarDynArray2('select id, name, ids_properties, deadline, ids_types from order_reglaments where active = 1 order by deadline desc', []);
   FindReglament;
 end;
 

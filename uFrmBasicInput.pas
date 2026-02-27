@@ -64,7 +64,7 @@ type
     FWidth: Integer;                        //переданная ширина формы
     FLeft: Integer;                         //передеанный левый отступ контролов
 
-    FieldsBegValues: Variant;               //начальные значения полей (массив)
+    FieldsBegValues: TVarDynArray;               //начальные значения полей (массив)
 
     MyDlgFormOptions: TDlgBasicInputOptions;//опции диалога
 
@@ -100,7 +100,7 @@ type
       ADlgFunction:TDlgFunction=nil): Integer;
     class function ShowDialogDB3(
       AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
-      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
+      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AFieldsBegValues: TVarDynArray; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
       ADlgFunction:TDlgFunction=nil): Integer;
     class function _TestFunction(): Integer;
     class function _TestFunctionDB(): Integer;
@@ -215,7 +215,7 @@ end;
 //функция вызова диалога (mdi или модального окна) с загрузкой исходных данных из БД и их записью в БД
 class function TFrmBasicInput.ShowDialogDB3(
       AOwner: TComponent; ADoc: string; AMyFormOptions: TDlgBasicInputOptions; AMode: TDialogType; AID: Variant; ATable: string;
-      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
+      ACaption: string; aWidth: Integer; aLeft: Integer; AFieldsDef: TVarDynArray2; AFieldsBegValues: TVarDynArray; AComboboxesFieldsDef: TVarDynArray; AInfo: TVarDynArray2;
       ADlgFunction:TDlgFunction=nil): Integer;
 var
   i: Integer;
@@ -231,7 +231,7 @@ begin
   TFrmBasicInput(ASelf).FLeft := AControlValues[1];
   TFrmBasicInput(ASelf).FCaption := AControlValues[2];
   TFrmBasicInput(ASelf).FieldsDef := GFieldsDef;
-  TFrmBasicInput(ASelf).FieldsBegValues := VarArrayOf([]);
+  TFrmBasicInput(ASelf).FieldsBegValues := GFieldsBegValues; //VarArrayOf([]);
   TFrmBasicInput(ASelf).ComboboxesFieldsDef := GComboboxesFieldsDef;
 
   TFrmBasicInput(ASelf).MyDlgFormOptions := GMyFormOptions;
@@ -246,6 +246,7 @@ end;
 begin
   GFieldsDef := AFieldsDef;
   GComboboxesFieldsDef := AComboboxesFieldsDef;
+  GFieldsBegValues := AFieldsBegValues;
   GMyFormOptions := AMyFormOptions;
   if dbioModal in AMyFormOptions then
     myFormOptions1 := myFormOptions1 + [myfoModal];
@@ -319,23 +320,24 @@ var
   c: TVarDynArray;
   va: TVarDynArray;
   va2: TVarDynArray2;
-  i, j, k, h, h1, r :Integer;
-  st:string;
+  i, j, k, h, h1, r: Integer;
+  st: string;
 begin
-  va2:=[];
+  va2 := [];
   DisabledControls := [];
-  for i:=0 to High(FieldsDef) do begin
-    va2:= va2 + [[cntBevel, ''{caption}, ''{verify}, 0{width}, 0{left}, 0, 0, '', '']];
-    if High(FieldsDef[i]) < 0 then Continue;
-    j:= 0;
+  for i := 0 to High(FieldsDef) do begin
+    va2 := va2 + [[cntBevel, ''{caption}, ''{verify}, 0{width}, 0{left}, 0, 0, '', '']];
+    if High(FieldsDef[i]) < 0 then
+      Continue;
+    j := 0;
     if UseDB or ((High(FieldsDef[i]) >= 0) and (S.VarType(FieldsDef[i][0]) = varString)) then begin
-      va:=a.Explode(FieldsDef[i][0] + ';', ';');
+      va := a.Explode(FieldsDef[i][0] + ';', ';');
       S.ConcatStP(Fields, va[0], ';');
       S.ConcatStP(FieldsSave, S.IIFStr(va[1] = '', va[0], va[1]), ';');
-      j:= 1;
+      j := 1;
     end;
-    for k:= j to High(FieldsDef[i]) do begin
-      va2[i][k-j]:= FieldsDef[i][k];
+    for k := j to High(FieldsDef[i]) do begin
+      va2[i][k - j] := FieldsDef[i][k];
     end;
   end;
   SetLength(Ctrls, Length(va2));
@@ -346,9 +348,13 @@ begin
   h := 3;
   k := 0;
   for i := 0 to High(va2) do begin
-    Ctrls[i]:= Cth.CreateControls(pnlFrmClient, va2[i][0], va2[i][1], 'Ctrl_'+IntToStr(i), va2[i][2]);
-    Ctrls[i].Left:=FLeft;
-    Ctrls[i].Top:=h;
+    Ctrls[i] := Cth.CreateControls(pnlFrmClient, va2[i][0], va2[i][1], 'Ctrl_' + IntToStr(i), va2[i][2]);
+    Ctrls[i].Left := FLeft;
+    Ctrls[i].Top := h;
+    if Pos('-', va2[i][1]) = 1 then begin
+      Ctrls[i].Height := 0;
+      Ctrls[i].Visible := False;
+    end;
     //есть четвертый параметр - расположим контрол на той же строке, в позиции Х равном этому параметру
     if (va2[i][4] > 0) then begin
       Ctrls[i].Left := va2[i][4];
@@ -365,14 +371,14 @@ begin
       Ctrls[i].Width := 1;  //всегда на все окно
     end
     else begin
-      if(va2[i][3]) = 0 then begin
+      if (va2[i][3]) = 0 then begin
         if not (TMyControlType(va2[i][0]) in [cntNEdit, cntNEditC, cntNEditS, cntDEdit, cntTEdit, cntDTEdit]) then
-          Ctrls[i].Width:= 1;
+          Ctrls[i].Width := 1;
       end
-      else if(va2[i][3]) = 1 then
-        Ctrls[i].Width:= 1
-      else if va2[i][3] > 1
-        then Ctrls[i].Width:=va2[i][3];
+      else if (va2[i][3]) = 1 then
+        Ctrls[i].Width := 1
+      else if va2[i][3] > 1 then
+        Ctrls[i].Width := va2[i][3];
       if Copy(va2[i][1], 1, 1) = ' ' then
         DisabledControls := DisabledControls + [Ctrls[i]];
     end;
@@ -383,23 +389,23 @@ begin
   //выравнивание контролов и размеров формы
   //на 2025-01-21 подобрал так
   if myfoSizeable in MyFormOptions then begin
-    FWHBounds.Y2:=-1;
-    ClientWidth:= Max(r + 3, 5);
-    FWHCorrected:= Cth.AlignControls(pnlFrmClient, [], False) ;
-    FWHCorrected.X:= Max(r + 3, FWidth);
+    FWHBounds.Y2 := -1;
+    ClientWidth := Max(r + 3, 5);
+    FWHCorrected := Cth.AlignControls(pnlFrmClient, [], False);
+    FWHCorrected.X := Max(r + 3, FWidth);
     ClientWidth := FWHCorrected.X + MY_FORMPRM_H_EDGES + 2;
   //  FOpt.AutoAlignControls:=True;
   end
   else begin
-    FWHCorrected:= Cth.AlignControls(pnlFrmClient, [], False) ;
-    FWHCorrected.X:= Max(r + 3, FWidth);
+    FWHCorrected := Cth.AlignControls(pnlFrmClient, [], False);
+    FWHCorrected.X := Max(r + 3, FWidth);
     ClientWidth := FWHCorrected.X + MY_FORMPRM_H_EDGES + 2;
   end;
 
   //растянем контролы с шириной  = 1 до конца окна
   for i := 0 to High(Ctrls) do
     if Ctrls[i].Width = 1 then begin
-      Ctrls[i].Width:= ClientWidth - Ctrls[i].Left - MY_FORMPRM_H_EDGES * 2 - 2;
+      Ctrls[i].Width := ClientWidth - Ctrls[i].Left - MY_FORMPRM_H_EDGES * 2 - 2;
       //если формы расширяемая по ширине, нам нужны якоря. но если ставить их здесь, то все съзжает
       //ставим признак у контролов в параметре Tag, по которому в предке в TFrmMDI.CorrectFormSize устанавливаются якоря
       //!!!стандартизовать использование Tag!!!
@@ -408,13 +414,12 @@ begin
        //Ctrls[i].Anchors := [akLeft, akTop, akRight];
     end;
 
-
   FieldsDefAdd := Copy(va2);
 
   //исключим бевели из массива контролов, так как они не несут нагрузки в плане данных
   for i := High(va2) downto 0 do
-    if va2[i][0] = cntBevel
-      then Delete(Ctrls, i, 1);
+    if va2[i][0] = cntBevel then
+      Delete(Ctrls, i, 1);
 
 end;
 
@@ -427,53 +432,14 @@ end;
 function TFrmBasicInput.Load(): Boolean;
 //установка значений контролов из переданного массива вариант
 var
-  s: string;
+  st: string;
   f, f1: TVarDynArray;
-  i, j, k : Integer;
+  i, j, k: Integer;
   v, vcb, vcb_list: TVarDynArray;
 begin
-  Result:= True;
-  v:=FieldsBegValues;
+  Result := True;
   SetLength(FieldsNewValues, Length(Ctrls));
-  if not UseDB then begin
-  k := -1;
-  try
-    for i := 0 to High(FieldsDefAdd) do begin
-      if TMyControlType(FieldsDefAdd[i][0]) = cntBevel
-        then Continue;
-      inc(k);
-      //для комбобоксов передается массив значений вида VarArrayOf([value, VarArrayOf([v1, v2]) ,{VarArrayOf([key1, key2])} ])
-      if TMyControlType(FieldsDefAdd[i][0]) in [cntComboL, cntComboLK, cntComboLK0, cntComboE, cntComboEK] then begin
-        vcb := v[k];
-        vcb_list := vcb[1];
-        //присвоим значений
-        for j := 0 to High(vcb_list) do
-          TDBComboBoxEh(Ctrls[k]).Items.Add(vcb_list[j]);
-        if TMyControlType(FieldsDefAdd[i][0]) in [cntComboLK, cntComboLK0, cntComboEK] then
-          //для комбобоксов с ключевым полем
-          if High(vcb) > 1 then begin
-              //если передан третий параметр-массив, то из него ключи
-            vcb_list := vcb[2];
-            for j := 0 to High(vcb_list) do
-              TDBComboBoxEh(Ctrls[k]).KeyItems.Add(vcb_list[j]);
-          end
-          else begin
-              //иначе ключи просто цифры начиная с 0
-            for j := 0 to High(vcb_list) do
-              TDBComboBoxEh(Ctrls[k]).KeyItems.Add(IntToStr(j));
-          end;
-       //значение комбобокса из 0го элемента, это или само значение, или ключ
-        Cth.SetControlValue(Ctrls[k], vcb[0]);
-      end      //все другие котролы - просто установим занчение
-      else begin
-        Cth.SetControlValue(Ctrls[k], v[k]);
-      end;
-    end;
-  except
-    Result:= False;
-  end;
-  end
-  else begin
+  if UseDb then begin
     //для работы с БД
     //загрузим комбобоксы (текст запроса из массива, в массиве в порядке создания контролов)
     //пока не поддерживается выражения типа (active = 1 or id = :id$i)!!!
@@ -487,8 +453,8 @@ begin
 
     if Mode <> fAdd then begin
       Result := False;
-      Fields:= IdField + ';' + Fields;
-      FieldsSave:= IdField + ';' + FieldsSave;
+      Fields := IdField + ';' + Fields;
+      FieldsSave := IdField + ';' + FieldsSave;
       v := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', View, Fields), [ID]);
       if Length(v) = 0 then begin
         MsgRecordIsDeleted;
@@ -499,12 +465,56 @@ begin
       Result := True;
     end
     else begin
-      FieldsSave:= IdField + ';' + FieldsSave;
+      FieldsSave := IdField + ';' + FieldsSave;
       for i := 0 to High(Ctrls) do
-        if not((Ctrls[i] is TDBCheckBoxEh) and (TDBCheckBoxEh(Ctrls[i]).Checked))
-         then Cth.SetControlValue(Ctrls[i], null);
+        if not ((Ctrls[i] is TDBCheckBoxEh) and (TDBCheckBoxEh(Ctrls[i]).Checked)) then
+          Cth.SetControlValue(Ctrls[i], null);
     end;
   end;
+  v := FieldsBegValues;
+  if Length(v) > 0 then begin
+    k := -1;
+    try
+      for i := 0 to High(FieldsDefAdd) do begin
+      //массив значенийф передан без учета разделителей
+        if TMyControlType(FieldsDefAdd[i][0]) = cntBevel then
+          Continue;
+        inc(k);
+      //не устанавливаем значение если передано #0
+      //это нужно для режима работы с БД
+        if (S.VarType(v[k]) = varString) and (v[k] = #0) then
+          Continue;
+      //для комбобоксов передается массив значений вида VarArrayOf([value, VarArrayOf([v1, v2]) ,{VarArrayOf([key1, key2])} ])
+        if TMyControlType(FieldsDefAdd[i][0]) in [cntComboL, cntComboLK, cntComboLK0, cntComboE, cntComboEK] then begin
+          vcb := v[k];
+          vcb_list := vcb[1];
+        //присвоим значений
+          for j := 0 to High(vcb_list) do
+            TDBComboBoxEh(Ctrls[k]).Items.Add(vcb_list[j]);
+          if TMyControlType(FieldsDefAdd[i][0]) in [cntComboLK, cntComboLK0, cntComboEK] then
+          //для комбобоксов с ключевым полем
+            if High(vcb) > 1 then begin
+              //если передан третий параметр-массив, то из него ключи
+              vcb_list := vcb[2];
+              for j := 0 to High(vcb_list) do
+                TDBComboBoxEh(Ctrls[k]).KeyItems.Add(vcb_list[j]);
+            end
+            else begin
+              //иначе ключи просто цифры начиная с 0
+              for j := 0 to High(vcb_list) do
+                TDBComboBoxEh(Ctrls[k]).KeyItems.Add(IntToStr(j));
+            end;
+       //значение комбобокса из 0го элемента, это или само значение, или ключ
+          Cth.SetControlValue(Ctrls[k], vcb[0]);
+        end      //все другие котролы - просто установим занчение
+        else begin
+          Cth.SetControlValue(Ctrls[k], v[k]);
+        end;
+      end;
+    except
+      Result := False;
+    end;
+  end
 end;
 
 
@@ -755,3 +765,17 @@ VarArrayOf(['2', VarArrayOf(['item 0','item 1','item 2']), VarArrayOf(['0','2','
 НЕ РЕАЛИЗОВАНА
 загрузка комбобоксов в случае работы с бд
 Callback-функция, в разработке
+
+
+--------------------------------------------------------------------------------
+//диалог в варианте работы с БД с загрузкой комбобоксов
+    TFrmBasicInput.ShowDialogDB3(Self, '', [dbioStatusBar, dbioSizeable], fMode, Fr.ID, 'prod_calc', 'Просчет', 500, 80, [
+      ['customer$s', cntComboE, 'Клиент','1:400'],
+      ['project$s', cntComboE, 'Проект','1:400'],
+      ['comm$s', cntEdit, 'Комментарий','0:400']],
+      ['select distinct customer from prod_calc order by customer',
+       'select project customer from prod_calc order by project'],
+      [['caption dlgedit']]
+    );
+);
+

@@ -138,6 +138,7 @@ uses
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
+  uFrmOGjrnProdCalculations,
 
 
   uFrmXGlstMain,
@@ -687,6 +688,9 @@ begin
   else if F = myfrm_J_Orders then begin
     TFrmOGjrnOrders.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
+  else if F = myfrm_J_ProdCalculations then begin
+    TFrmOGjrnProdCalculations.Show(Application, F, MyFormOptions, fNone, 0, null);
+  end
   else if F = myfrm_R_OrderStdItems then begin
 //    Form := TForm_R_OrStdItems.Create(Application, F, MyFormOptions, fNone, 0, null);
     TFrmOGrefOrStdItems.Show(Application, F, MyFormOptions, fNone, 0, null);
@@ -896,6 +900,7 @@ begin
     TFrmBasicInput.ShowDialogDB3(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_workers_needed', 'Работник', 400, 100, [
       ['id_job$i', cntComboLK, 'Профессия','1:400'],
       ['id_division$i', cntComboLK, 'Подразделение','1:400']],
+      [],
       ['select name, id from ref_jobs where active = 1 order by name',
        'select name, id from ref_divisions where active = 1 order by name'],
       [['caption dlgedit']]

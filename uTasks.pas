@@ -28,7 +28,7 @@ unit uTasks;
 interface
 
 uses
- Graphics, Classes, DateUtils, Variants, SysUtils, Types, uString,Windows
+ Graphics, Classes, DateUtils, Variants, SysUtils, Types, uString,Windows, uNamedArr
  ;
 
 

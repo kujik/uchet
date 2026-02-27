@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls,
-  DBCtrlsEh, Vcl.ComCtrls, DateUtils, Vcl.Mask;
+  DBCtrlsEh, Vcl.ComCtrls, DateUtils, Vcl.Mask, uNamedArr;
 
 type
   TFrmWDedtCreatePayrollN = class(TFrmBasicMdi)
@@ -137,7 +137,7 @@ begin
       Q.QLoadFromQuery(
         'select id, id_target_departament, is_finalized from v_w_payroll_calc_item where id_target_employee is null and id_employee = :id_employee$i and  dt1 = :dt1$d ' +
         'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100)',
-        [dt1, va1[1], va1[2], va1[3]], va3
+        [dt1, va1[0][1], va1[0][2], va1[0][3]], va3
       );
       b := True;
       if Length(va3) > 0 then begin

@@ -16,7 +16,7 @@ uses
   Xml.XMLIntf, Xml.XMLDoc, IdExplicitTLSClientServerBase, IdMessageClient,
   IdSMTPBase, IdSMTP, iDMessage, IdIOHandler, IdIOHandlerSocket,
   IdIOHandlerStack, IdSSL, IdSSLOpenSSL, Data.DBXOracle, Data.SqlExpr, ComObj,
-  Math, DateUtils, ShlObj, FileCtrl, StrUtils;
+  Math, DateUtils, ShlObj, FileCtrl, StrUtils, uNamedArr;
 
 const
   cOrItmStatus_Completed = 30;

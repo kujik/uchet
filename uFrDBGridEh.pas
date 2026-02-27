@@ -249,7 +249,7 @@ uses
   DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
   DataDriverEh, ADODataDriverEh, MemTableEh, Math, PrnDbgEh, ClipBrd,
   ComCtrls, Buttons, Vcl.Menus, DBCtrlsEh, Vcl.Mask,
-  uData, uString, uLabelColors, Vcl.Imaging.pngimage, EhLibVclUtils
+  uData, uString, uLabelColors, Vcl.Imaging.pngimage, EhLibVclUtils, uNamedArr
   ;
 
 const

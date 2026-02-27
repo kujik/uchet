@@ -30,7 +30,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
   ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd,
   MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv, uNamedArr
   ;
 
 type
@@ -403,7 +403,8 @@ begin
   if (FPayrollParams.G('calc_method') <> null) and (FPayrollParams.G('overtime_method') <> null) then
     Exit;
   Q.QLoadFromQuery('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
-    [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na);
+//    [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na);
+    [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt1'), -1)], na);
   if na.Count = 0 then
     Exit;
   FPayrollParams.SetValue('calc_method', na.G('calc_method'));
@@ -1191,4 +1192,3 @@ end;
 
 
 end.
-

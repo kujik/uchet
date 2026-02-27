@@ -926,7 +926,54 @@ end;
 --update w_turv_day d set id_employee_properties = (select id from w_employee_properties p where p.is_terminated <> 1 and d.id_employee = p.id_employee and d.dt >= p.dt_beg and d.dt <= nvl(p.dt_end, TO_DATE('15.11.2027', 'DD.MM.YYYY')));
 
 
+--------------------------------------------------------------------------------
+-- таблица дл€ экспорта данных в эксель
+-- по одной строке на каждого работника (последние по времени данные), €чейки по времени на каждый день и и тоговые
 
+--drop table w_turv_export cascade constraints;
+create table w_turv_export(  
+  id number(11),                   
+  id_departament number(11),        --подразделение
+  dt1 date,                         --дата начала периода “”–¬
+  id_employee number(11),
+  id_job number(11),
+  d1 varchar2(10), d2 varchar2(10), d3 varchar2(10), d4 varchar2(10), d5 varchar2(10), d6 varchar2(10), d7 varchar2(10), d8 varchar2(10), d9 varchar2(10), d10 varchar2(10), d11 varchar2(10), d12 varchar2(10), d13 varchar2(10), d14 varchar2(10), d15 varchar2(10), d16 varchar2(10),
+  hours number,
+  premium number,
+  penalty number,
+  constraint pk_w_turv_export  primary key (id),
+  constraint fk_w_turv_export_dep foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_turv_export_empl foreign key (id_employee) references w_employees(id),
+  constraint fk_w_turv_export_job foreign key (id_job) references w_jobs(id)
+);
+
+create unique index idx_w_turv_export_uk on w_turv_export(id_departament, dt1, id_employee);
+create index idx_w_turv_export_1 on w_turv_export(id_departament, dt1); 
+
+create sequence sq_w_turv_export start with 1 nocache;
+
+create or replace trigger trg_w_turv_export_bi_r before insert on w_turv_export for each row
+begin
+  select nvl(:new.id, sq_w_turv_export.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_turv_export as
+select
+  t.*,
+  d.name as departament,
+  e.name as employee,
+  j.name as job
+from
+  w_turv_export t,  
+  w_departaments d, 
+  v_w_employees e,
+  w_jobs j
+where
+  t.id_departament = d.id
+  and t.id_employee = e.id
+  and t.id_job = j.id
+;  
+   
 --------------------------------------------------------------------------------
 --методы расчета «/ѕ
 --пока определ€ютс€ просто значением јйƒи
@@ -1103,6 +1150,25 @@ from
 ;  
 
 select id_employee, id_organization, personnel_number, employee, organization, personnel_number, total_pay, null as temp from v_w_payroll_calc_item where id_employee = 721 and id_organization = 1 and personnel_number = '488' and id_target_employee <> null;
+
+--проверимм, нет ли задвоени€ мотивации (загруженных баллов)в одном подразделениии
+--така€ ситуаци€ сейчас будет если были перехода работника внутри подразделени€, во все строки загрузитс€ одно число из хлс
+WITH dups AS (
+    SELECT t.dt1, t.departament, t.employee, t.ext_pay,
+           COUNT(*) OVER (PARTITION BY id_target_departament, employee) AS cnt,
+           MIN(nvl(ext_pay,-1)) OVER (PARTITION BY id_target_departament, employee) AS min_pay,
+           MAX(nvl(ext_pay,-1)) OVER (PARTITION BY id_target_departament, employee) AS max_pay
+    FROM v_w_payroll_calc_item t
+    where dt1 = date '2026-02-01'
+)
+SELECT *
+FROM dups
+WHERE cnt > 1
+  AND min_pay = max_pay
+  and max_pay <> -1 
+  AND min_pay IS NOT NULL;
+
+
 --------------------------------------------------------------------------------
 
 create table w_payroll_transfer ( 
@@ -1557,7 +1623,17 @@ where
 
 select id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, 
 personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, employee, organization, job, schedulecode, hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, 
-nvl(base_pay) + nvl(overtime_pay) + nvl(personal_pay) + nvl(daily_bonus) +nvl(extra_bonus) + nvl(night_pay) + nvl(milk_compensation) + nvl(non_work_pay) + nvl(penalty) + nvl(correction) as adjustments_total1, planned_pay, fixed_pay, 1 as from_first_period from v_w_payroll_calc_item;-- where id_target_departament = :id_target_departament$i and dt1 = :dt1$d order by job, employee, schedulecode, organization, personnel_number   
+nvl(base_pay) + nvl(overtime_pay) + nvl(personal_pay) + nvl(daily_bonus) +nvl(extra_bonus) + nvl(night_pay) + nvl(milk_compensation) + nvl(non_work_pay) + nvl(penalty) + nvl(correction) as adjustments_total1, planned_pay, fixed_pay, 1 as from_first_period from v_w_payroll_calc_item;-- where id_target_departament = :id_target_departament$i and dt1 = :dt1$d order by job, employee, schedulecode, organization, personnel_number
+
+
+
+
+
+
+
+
+
+   
   
 
  

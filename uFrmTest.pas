@@ -20,7 +20,7 @@ uses
   Vcl.ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
   MemTableDataEh, MemTableEh, EhLibVclUtils, GridsEh, DBAxisGridsEh,
   DBGridEhGrouping, DynVarsEh, IdComponent, IdExplicitTLSClientServerBase,
-  IdMessageClient, IdSMTPBase, Vcl.Mask;
+  IdMessageClient, IdSMTPBase, Vcl.Mask, uNamedArr;
 
 type
   TFrmTest = class(TForm)
@@ -1471,7 +1471,12 @@ var
   st: string;
   va2: tvardynarray2;
   v: TVarDynArray;
+  na: TNamedArr;
 begin
+  na.Create([[1,2]]);
+  na.g('3');
+  Exit;
+
 Turv.LoadDataFromParsec; Exit;
 
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 38236, null); exit;
@@ -1565,5 +1570,3 @@ end;
 
 
 end.
-
-

@@ -1,13 +1,13 @@
 inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
   Caption = 'FrmWDedtCreatePayrollN'
-  ClientHeight = 209
-  ClientWidth = 503
+  ClientHeight = 208
+  ClientWidth = 499
   ExplicitWidth = 515
   ExplicitHeight = 247
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 503
-    Height = 193
+    Width = 499
+    Height = 192
     ExplicitWidth = 499
     ExplicitHeight = 192
     inherited pnlFrmClient: TPanel
@@ -135,17 +135,13 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 193
-    Width = 503
+    Top = 192
+    Width = 499
     ExplicitTop = 192
     ExplicitWidth = 499
     inherited lblStatusBarR: TLabel
       Left = 430
-      Height = 14
       ExplicitLeft = 430
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

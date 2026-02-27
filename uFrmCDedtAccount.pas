@@ -6,7 +6,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, DBCtrlsEh, Math, Types,
   Vcl.Mask, Vcl.AppEvnts, Data.Bind.EngExt, Vcl.Bind.DBEngExt, Data.Bind.Components, Vcl.Buttons,
-  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uString, uData, uSys
+  uFrMyPanelCaption, uFrmBasicMdi, uFrmBasicDbDialog, uFrDBGridEh, uString, uData, uSys, uNamedArr
   ;
 
 type
@@ -1041,6 +1041,3 @@ begin
 end;
 
 end.
-
-
-

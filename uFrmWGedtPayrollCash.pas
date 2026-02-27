@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
   ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd,
   MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uFrmBasicGrid2, uFrDBGridEh, uFrmBasicMdi
+  uString, uData, uFrmBasicGrid2, uFrDBGridEh, uFrmBasicMdi, uNamedArr
   ;
 
 type

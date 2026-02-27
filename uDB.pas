@@ -25,7 +25,7 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   MemTableDataEh, DataDriverEh, Math, Types, Dialogs, StdCtrls, DBCtrlsEh, DB,
   AdoDB, uString, Variants, MemTableEh, IniFiles, ADODataDriverEh, DBGridEh,
-  uFrmXDmsgNoConnection, uErrors, uData;
+  uFrmXDmsgNoConnection, uErrors, uData, uNamedArr;
 
 type
   TmydbType = (mydbtOra, mydbtMsSql, mydbtSqLite);
@@ -1080,7 +1080,7 @@ function TmyDB.QLoadToRec(Sql: string; ParamValues: TVarDynArray): TNamedArr;
 var
   res, i, j: Integer;
 begin
-  Result.Clear;
+  Result.Create;
   FLastReceivedFiedNames := [];
   if QOpen(Sql, ParamValues) < 0 then
     Exit;
