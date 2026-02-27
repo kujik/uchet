@@ -608,7 +608,6 @@ procedure TMyStringHelper.DelBoth(var AStr: string; const ATrimChars: TCharSet);
 begin
   DelBoth(AStr, CharSetToArray(ATrimChars));
 end;
-
 //==============================================================================
 //Замена символов
 //==============================================================================
@@ -735,7 +734,6 @@ begin
       i := j + 1;
   until False;
 end;
-
 //==============================================================================
 //Выравнивание текста
 //==============================================================================
@@ -751,7 +749,6 @@ function TMyStringHelper.PadRight(const AStr: string; const ALen: Integer; const
 begin
   Result := AStr.PadRight(ALen, AChar);
 end;
-
 //==============================================================================
 //Проверка типов
 //==============================================================================
@@ -853,7 +850,6 @@ begin
     if not CharInSet(lDomain[i], ['a'..'z', 'A'..'Z', '0'..'9', '_', '-', '.']) then
       Exit(False);
 end;
-
 //==============================================================================
 //Перевод строки в простые типы
 //==============================================================================
@@ -869,7 +865,6 @@ var
 begin
   s := VarToStr(AValue);
   s := StringReplace(s, '.', FormatSettings.DecimalSeparator, [rfReplaceAll]);
-  s := StringReplace(s, ',', FormatSettings.DecimalSeparator, [rfReplaceAll]);
   Result := TryStrToFloat(s, ARes) and (ARes >= AMin) and (ARes <= AMax);
   if Result and (ADigits >= 0) then begin
     lSepPos := Pos(FormatSettings.DecimalSeparator, s);
@@ -955,27 +950,27 @@ begin
 end;
 
 function TMyStringHelper.NNum(const AValue: Variant; const ADefault: Extended): Extended;
-//возвращает 0 с типом extended, если значение Empty или Null или ''
+//возвращает 0 с типом extended, если значение Empty или Null
 begin
-  if NSt(AValue) = '' then
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
     Result := ADefault
   else
     Result := AValue;
 end;
 
 function TMyStringHelper.NInt(const AValue: Variant): Integer;
-//возвращает 0 с типом Integer, если значение Empty или Null или ''
+//возвращает 0 с типом Integer, если значение Empty или Null
 begin
-  if NSt(AValue) = '' then
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
     Result := 0
   else
     Result := AValue;
 end;
 
 function TMyStringHelper.NIntM(const AValue: Variant): Integer;
-//возвращает -1 с типом Integer, если значение Empty или Null или ''
+//возвращает -1 с типом Integer, если значение Empty или Null
 begin
-  if NSt(AValue) = '' then
+  if VarIsNull(AValue) or VarIsEmpty(AValue) then
     Result := -1
   else
     Result := AValue;
@@ -1005,7 +1000,6 @@ begin
     Result := AValue;
   end;
 end;
-
 //==============================================================================
 //Регистр
 //==============================================================================
@@ -2047,54 +2041,17 @@ begin
   end;
 end;
 *)
-
 function TMyStringHelper.VarType(const AValue: Variant): Integer;
 //возвращает НЕКОТОРЫЕ сводные типы переменной Variant
 //например любое целое иудет varInteger
 begin
   Result := Variants.VarType(AValue) and VarTypeMask;
-  if Result = 16 then
-    Result := varInteger;  //так получилось целой отрицательное опытным путем
-  if Result in [varSmallInt, varByte, varInteger, varWord, varInt64, 19{целое отрицательное -MaxInt}] then
-    Result := varInteger;
-  if Result in [varSingle, varDouble, varCurrency] then
-    Result := varDouble;
-  if Variants.VarType(AValue) and varString = varString then
-    Result := varString;  //иначе не определяется
-{
-  case basicType of
-    varEmpty     : Result := 'varEmpty';
-    varNull      : typeString := 'varNull';
-    varSmallInt  : typeString := 'varSmallInt';
-    varInteger   : typeString := 'varInteger';
-    varSingle    : typeString := 'varSingle';
-    varDouble    : typeString := 'varDouble';
-    varCurrency  : typeString := 'varCurrency';
-    varDate      : typeString := 'varDate';
-    varOleStr    : typeString := 'varOleStr';
-    varDispatch  : typeString := 'varDispatch';
-    varError     : typeString := 'varError';
-    varBoolean   : typeString := 'varBoolean';
-    varVariant   : typeString := 'varVariant';
-    varUnknown   : typeString := 'varUnknown';
-    varByte      : typeString := 'varByte';
-    varWord      : typeString := 'varWord';
-    varLongWord  : typeString := 'varLongWord';
-    varInt64     : typeString := 'varInt64';
-    varStrArg    : typeString := 'varStrArg';
-    varString    : typeString := 'varString';
-    varAny       : typeString := 'varAny';
-    varTypeMask  : typeString := 'varTypeMask';
-  end;
-  }
-
-(*  Result := Variants.VarType(AValue) and VarTypeMask;
   if Result in [varSmallInt, varByte, varInteger, varWord, varInt64, 19] then
     Result := varInteger;
   if Result in [varSingle, varDouble, varCurrency] then
     Result := varDouble;
   if (Variants.VarType(AValue) and varString) = varString then
-    Result := varString; *)
+    Result := varString;
 end;
 
 function TMyStringHelper.VarIsClear(const AValue: Variant): Boolean;
@@ -2242,39 +2199,6 @@ function TMyArrayHelper.Explode(const AValue: Variant; const ADelimiter: string;
 //вернет одномерный вариантный массив
 //+++ переработана для поддержки IgnoreEmpty
 var
-  St, St1: string;
-  i, j: Integer;
-begin
-  if VarIsArray(AValue) then begin
-    if not AIgnoreEmpty then begin
-      Result := AValue;
-      Exit;
-    end
-    else begin
-      Result := AValue;
-      Exit;
-    end;  //++ добавить проверку когда передан массив и не нужны пустые
-  end;
-  St1 := VarToStr(AValue);
-  i := -1;
-  SetLength(Result, 0);
-  repeat
-    j := Pos(ADelimiter, St1);
-    if j = 0 then
-      j := Length(St1) + 1;
-    if not AIgnoreEmpty or (j > 1) then begin
-      i := i + 1;
-      SetLength(Result, i + 1);
-      Result[i] := Copy(St1, 1, j - 1);
-    end;
-    if (j > Length(St1)) then
-      Break;
-    St1 := Copy(St1, j + Length(ADelimiter), Length(St1) - j);
-  until False;
-end;
-(*
-
-var
   s, lPart: string;
   i, j: Integer;
 begin
@@ -2296,7 +2220,7 @@ begin
     end;
     i := j + Length(ADelimiter);
   end;
-end;  *)
+end;
 
 function TMyArrayHelper.ExplodeV(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean): TVarDynArray;
 //просто алиас Explode
@@ -2482,7 +2406,7 @@ var
 begin
   Result := -1;
   for i := Low(AArray) to High(AArray) do begin
-    if AIgnoreCase then begin
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i]) = varString) then begin
       if SameText(VarToStr(AValue), VarToStr(AArray[i])) then
         Exit(i);
     end
@@ -2512,7 +2436,7 @@ var
 begin
   Result := -1;
   for i := 0 to High(AArray) do begin
-    if AIgnoreCase then begin  //! and (VarType(AValue) = varString) and (VarType(AArray[i]) = varString) убираем - неверно работет
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i]) = varString) then begin
       if SameText(VarToStr(AValue), VarToStr(AArray[i])) then
         Exit(i);
     end
@@ -2530,7 +2454,7 @@ begin
   for i := 0 to High(AArray) do begin
     if (AColumn < 0) or (AColumn > High(AArray[i])) then
       Continue;
-    if AIgnoreCase then begin
+    if AIgnoreCase and (VarType(AValue) = varString) and (VarType(AArray[i][AColumn]) = varString) then begin
       if SameText(VarToStr(AValue), VarToStr(AArray[i][AColumn])) then
         Exit(i);
     end
