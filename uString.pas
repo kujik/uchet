@@ -69,6 +69,7 @@ type
     function CharSetToArray(const AChars: TCharSet): TCharDynArray;
   public
     //----------- Обрезка пробелов и управляющих символов
+
     //Удалим переданные символы слева, справа или с обеих сторон строки;
     //если не передан массив символов, то удаляем пробел и табуляцию
     //+++ переработана для поддержки Unicode: вместо множества используется массив символов
@@ -96,7 +97,9 @@ type
     procedure DelBoth(var AStr: string; const ATrimChars: TCharDynArray = nil); overload;
     //Удаление переданного множества символов с обоих концов строки (устаревшая)
     procedure DelBoth(var AStr: string; const ATrimChars: TCharSet = []); overload; deprecated 'Use DelBoth with TCharDynArray for Unicode support';
+
     //----------- Замена символов в строке
+
     //если в строке идут несколько пробелов подряд, то приводит их к одному пробелу
     //+++ переработана с TStringBuilder для эффективности
     function DeleteRepSpaces(const AStr: string; const AChar: Char = ' '): string;
@@ -120,7 +123,9 @@ type
     //если в строке идут подряд последовательности символов (подстроки), то оставляет только первую из них
     //не доделано!!! работает для уборки последовательносте типа ("1212ыыыы12", "12"), но не из повторяющихся символов (не должна быть последовательность "00"!!!
     function DeleteRepSubstr(const AStr: string; const ASubStr: string): string;
+
     //---------Выравнивание текста за счёт установки пробелов или других символов
+
     {
      Writeln('123'.PadLeft(5));  //'  123'
      Writeln('12345'.PadLeft(5));  //'12345'
@@ -141,6 +146,8 @@ type
     //если число десятичных знаков не нужно, передать -1, если нужно целое число, передать 0
     //+++ переработана с использованием TryStrToFloat
     function IsNumber(const AStr: string; const AMin, AMax: Extended; const ADigits: Integer = -1): Boolean;
+    //проверяем, является ли переменная типа Variant датой (но вернет ложь если это дата в виде строки!)
+    function IsDate(const AValue: Variant): Boolean;
     //проверка строки на то что содержит дату/время
     //DtType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
     //предполагается что разделитель даты и времени - пробел (практически всегда это так), а часов и минут - ":"
@@ -151,7 +158,9 @@ type
     function IsNumberLeftPart(const AStr: string): Integer;
     //проверяетвалидность почтового адреса по формальным признакам (адрес должен соответствовать стандарту)
     function IsValidEmail(const AValue: string): Boolean;
+
     //---------Перевод строки в простые типы
+
     //проверяем, является ли строка числом в заданном диапозоне с заданным количеством чисел после запятой (не более)
     //в качестве разделителей принимаем точку и запятую
     //возвращаем число в Res: extended, а Result - истина или ложь /если не удалось преобразовать в число/
@@ -173,24 +182,29 @@ type
     //преобразует TDateTime в число (Double) и возвращает  в виде строки
     //сервисная функция
     function DateTimeToIntStr(const ADateTime: TDateTime): string;
-    //--------- Обработка значений типа Null, переданных в параметре Varint
+
+    //--------- Обработка значений типа Null или пустых строк, переданных в параметре Varint
+
     //возвращает пустую строку, если значение Empty или Null
     function NSt(const AValue: Variant): string;
-    //возвращает 0 с типом extended, если значение Empty или Null
+    //возвращает 0 с типом extended, если значение Empty или Null или ''
     function NNum(const AValue: Variant; const ADefault: Extended = 0): Extended;
-    //возвращает 0 с типом Integer, если значение Empty или Null
+    //возвращает 0 с типом Integer, если значение Empty или Null или ''
     function NInt(const AValue: Variant): Integer;
-    //возвращает -1 с типом Integer, если значение Empty или Null
+    //возвращает -1 с типом Integer, если значение Empty или Null или ''
     function NIntM(const AValue: Variant): Integer;
     //возвращает нулл если v=null or VarToString(v) ='', иначе вернет переданное значение
     function NullIfEmpty(const AValue: Variant): Variant;
     //возвращает нулл если v=0 (0.00), иначе вернет переданное значение
     function NullIf0(const AValue: Variant): Variant;
+
     //--------- Изменение регистра строки
+
     {
     Writeln(LowerCase('АбВгД - AbCdE')); //В нижний регистр меняются только латинские буквы. Результат будет 'АбВгД - abcde'.
     Writeln('АбВгД - AbCdE'.ToLower); //В нижний регистр меняются и русские и латинские буквы. Результат будет 'абвгд - abcde'.
     }
+
     //изменить регистр строки (и латинские и русские буквы
     //+++ использует встроенные ToUpper/ToLower
     function ChangeCaseStr(const AStr: string; const AToUpper: Boolean): string;
@@ -205,6 +219,7 @@ type
     function Right(const AStr: string; const ACount: Integer = 1): string;
 
     //---------- Поиск вхождений, вычленение позиций вхождений ы строку.
+
     //находит позицию подстроки в строке без учета регистра
     function PosI(const ASubStr, AStr: string): Integer;
     //проверяет, содержится ли подстрока в строке значений, разделенных запятыми
@@ -245,7 +260,9 @@ type
     //Поиск по маске:  Сpавнение стpоки St с шаблоном Mask. В шаблоне можно
     //yпотpеблять знаки '?'(любой знак) и '*' (любое количество любых знаков)}
     function FindADDMaskInStr(const AMask, AStr: string): Boolean;
+
     //---------- Специальные преобразования строки (число в цену прописью и т.п.
+
     //преобразование числа в строку прописью
     function NumToWords(const ANum: LongInt; const AGender: Char): string;
     //преобразование числа в строку цены прописью
@@ -273,6 +290,7 @@ type
     function FormatNumberWithComma(const AValue: Extended; const ADividerIsComma: Boolean = True): string;
 
     //-------------------------- Условные функции
+
     //-- Важно: в отличии от выражений параметры в функциях будут вычислены ВСЕГДА при их в нее передаче
     //если Expr истина, то вернет Par1, иначе Par2
     //варианта для аргументов Variant, string, Integer, extended
@@ -296,7 +314,9 @@ type
     function Decode(const AArray: TVarDynArray): Variant;
     //сравнить две строки без учета регистра
     function CompareStI(const AStr1, AStr2: string): Boolean;
+
     //-------------------------- конкатенация строк
+
     //добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
     function ConcatStr(const AMain, APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False): string;
     function ConcatSt(const AMain, APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False): string;
@@ -305,18 +325,24 @@ type
     procedure ConcatStrP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: string; const APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
+
     //-------------------------- функции для sql-запросов
+
     //форматирует дяту в тот вид, который можно вставить в скл
     //в сам текст, в параметра передается просто сам тип даты)
     function SQLDate(const ADateTime: TDateTime): AnsiString;
     //преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
     function SQLDateTime(const ADateTime: TDateTime): AnsiString;
+
     //-------------------- математические ------------------------------------------
+
     //выбирает максимальное значение из вариантного массива
     function MaxOf(const AValues: array of Variant): Variant;
     //выбирает минимальное значение из вариантного массива
     function MinOf(const AValues: array of Variant): Variant;
+
     //-------------------------- служебные -----------------------------------------
+
     //возвращает дату, которую условились считать признаком неверной даты/времени
     function BadDate: TDateTime;
     //производит обмен значениями между двумя переменными
@@ -356,6 +382,9 @@ type
     procedure GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
     procedure GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
   end;
+
+
+
   //============================================================================
   //Запись TMyArrayHelper (глобальная переменная A)
   //Содержит методы для работы с массивами Variant
@@ -464,6 +493,8 @@ type
     function IsEmpty: Boolean;
     //Возвращает True, если значение является числовым (целым или вещественным).
     function IsNumeric: Boolean;
+    //Возвращает True, если значение является TDateTime
+    function IsDateTime: Boolean;
     //Возвращает строковое представление; для Null/Empty возвращает пустую строку.
     function AsString: string;
     //Возвращает целое число; для Null/Empty возвращает 0.
@@ -785,10 +816,38 @@ begin
   Result := TryStrToFloat(AStr, lValue) and (lValue >= AMin) and (lValue <= AMax);
   if Result and (ADigits >= 0) then begin
     lSepPos := Pos(FormatSettings.DecimalSeparator, AStr);
-    if lSepPos = 0 then
-      Result := (ADigits = 0)
+    if ADigits = 0 then
+      Result := (lSepPos = 0)
     else
       Result := (Length(AStr) - lSepPos) <= ADigits;
+  end;
+end;
+
+function TMyStringHelper.IsDate(const AValue: Variant): Boolean;
+//проверяем, является ли переменная типа Variant датой (но вернет ложь если это дата в виде строки!)
+begin
+  case VarType(AValue) and varTypeMask of
+    varDate:        Result := True;
+    varDouble,
+    varCurrency,
+    varInteger,
+    varInt64,
+    varSmallint,
+    varByte,
+    varWord,
+    varLongWord:    // числовые типы могут быть TDateTime (Double)
+      begin
+        // TDateTime = Double, но не любое число — корректная дата
+        // Минимальная допустимая дата в Delphi: 1 янв. 0001 г. → -693594
+        // Максимальная: 31 дек. 9999 г. → ~2958465
+        var d: Double := AValue;
+        Result := (d >= -693594) and (d <= 2958465);
+      end;
+    varString,
+    varUString:     // строки нужно парсить — см. Вариант 2
+      Result := False; // или вызвать TryStrToDateTime
+    else
+      Result := False;
   end;
 end;
 
@@ -2881,6 +2940,7 @@ begin
   if Length(AArray) > 0 then
     SetLength(AArray[High(AArray)], 0);
 end;
+
 //==============================================================================
 //Внешние функции для совместимости с EhLib
 //==============================================================================
@@ -2931,6 +2991,7 @@ var
 begin
   Result := ExtractWordPos(N, S, WordDelims, p);
 end;
+
 //==============================================================================
 //Глобальная функция BadDate
 //==============================================================================
@@ -2939,6 +3000,7 @@ function BadDate: TDateTime;
 begin
   Result := EncodeDate(1900, 12, 30);
 end;
+
 //==============================================================================
 //TVariantHelper методы
 //==============================================================================
@@ -2961,6 +3023,11 @@ begin
   else
     Result := False;
   end;
+end;
+
+function TVariantHelper.IsDateTime: Boolean;
+begin
+  Result := S.IsDate(Self);
 end;
 
 function TVariantHelper.AsString: string;

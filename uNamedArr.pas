@@ -12,19 +12,20 @@ type
   private
     FField: string;
   public
-    constructor Create(const Msg: string; const AField: string = '');
+    constructor Create(const AMsg: string; const AField: string = '');
     property Field: string read FField;
   end;
+
   //запись для хранения табличных данных с именованными полями
   TNamedArr = record
   private
     //вспомогательные методы
-    function GetFieldIndex(const FieldName: string): Integer;
-    procedure CheckRowIndex(RowNo: Integer);
-    procedure EnsureRowLength(RowNo: Integer);
-    function CompareValues(const A, B: Variant; Ascending: Boolean): Integer;
-    function CompareRows(Idx1, Idx2: Integer; const FieldIndices: array of Integer; Ascending: Boolean): Integer;
-    procedure QuickSort(L, R: Integer; const FieldIndices: array of Integer; Ascending: Boolean);
+    function GetFieldIndex(const AFieldName: string): Integer;
+    procedure CheckRowIndex(ARowNo: Integer);
+    procedure EnsureRowLength(ARowNo: Integer);
+    function CompareValues(const A, B: Variant; AAscending: Boolean): Integer;
+    function CompareRows(AIdx1, AIdx2: Integer; const AFieldIndices: array of Integer; AAscending: Boolean): Integer;
+    procedure QuickSort(ALeft, ARight: Integer; const AFieldIndices: array of Integer; AAscending: Boolean);
 
   public
     FFull: TVarDynArray;      //исходные имена полей (могут содержать $)
@@ -33,94 +34,95 @@ type
 
     //инициализация (конструкторы)
     procedure Create; overload;
-    procedure Create(Fields: TVarDynArray; Len: Integer = 0); overload;
-    procedure Create(Data: TVarDynArray2; FieldNames: TVarDynArray); overload;
-    procedure Create(Data: TVarDynArray2; FieldNames: string = ''); overload;
+    procedure Create(AFields: TVarDynArray; ALen: Integer = 0); overload;
+    procedure Create(AData: TVarDynArray2; AFieldNames: TVarDynArray); overload;
+    procedure Create(AData: TVarDynArray2; AFieldNames: string = ''); overload;
 
     //доступ к данным
-    function GetValue(RowNo: Integer; const FieldName: string): Variant;
-    function GetValueI(RowNo: Integer; ColIndex: Integer): Variant;
-    procedure SetValue(RowNo: Integer; const FieldName: string; const Value: Variant); overload;
-    procedure SetValue(const FieldName: string; const Value: Variant); overload;
-    procedure SetValueI(RowNo: Integer; ColIndex: Integer; const Value: Variant);
-    function GetRow(RowNo: Integer): TVarDynArray;
-    procedure SetRow(RowNo: Integer; const Values: TVarDynArray);
+    function GetValue(ARowNo: Integer; const AFieldName: string): Variant;
+    function GetValueI(ARowNo: Integer; AColIndex: Integer): Variant;
+    procedure SetValue(ARowNo: Integer; const AFieldName: string; const AValue: Variant); overload;
+    procedure SetValue(const AFieldName: string; const AValue: Variant); overload;
+    procedure SetValueI(ARowNo: Integer; AColIndex: Integer; const AValue: Variant);
+    function GetRow(ARowNo: Integer): TVarDynArray;
+    procedure SetRow(ARowNo: Integer; const AValues: TVarDynArray);
 
     //информация о структуре
     function Count: Integer;
     function High: Integer;
     function FieldsCount: Integer;
     function IsEmpty: Boolean;
-    function HasField(const FieldName: string): Boolean;
-    function IndexOfField(const FieldName: string): Integer;
+    function HasField(const AFieldName: string): Boolean;
+    function IndexOfField(const AFieldName: string): Integer;
     function GetFieldNames: TVarDynArray;      //очищенные имена как TVarDynArray (строки)
     function GetRawFieldNames: TVarDynArray;   //исходные имена
 
     //получение списков полей в виде строки
-    function GetFFullStr(Delimiter: string = ';'): string;  //исходные поля через заданный разделитель (по умолчанию ';')
-    function GetFStr(Delimiter: string = ','): string;      //очищенные поля через заданный разделитель (по умолчанию ',')
+    function GetFFullStr(ADelimiter: string = ';'): string;  //исходные поля через заданный разделитель (по умолчанию ';')
+    function GetFStr(ADelimiter: string = ','): string;      //очищенные поля через заданный разделитель (по умолчанию ',')
 
     //добавление / удаление строк
     procedure IncLength;
-    procedure AddRow(const Values: TVarDynArray); overload;
-    procedure AddRow(const Other: TNamedArr; RowIndex: Integer); overload;
-    procedure InsertRow(Index: Integer; const Values: TVarDynArray);
-    procedure DeleteRow(Index: Integer);
+    procedure AddRow(const AValues: TVarDynArray); overload;
+    procedure AddRow(const AOther: TNamedArr; ARowIndex: Integer); overload;
+    procedure InsertRow(AIndex: Integer; const AValues: TVarDynArray);
+    procedure DeleteRow(AIndex: Integer);
     procedure Clear;
-    procedure SetLength(NewLen: Integer); // используем System.SetLength
+    procedure SetLength(ANewLen: Integer); // используем System.SetLength
 
     //добавление / удаление полей
-    procedure AddField(const FieldName: string); overload;   //добавить поле со значениями Null
-    procedure AddField(const FieldName: string; DefaultValue: Variant); overload;
-    procedure AddField(const FieldName: string; const Values: TVarDynArray); overload;
-    procedure DeleteField(const FieldName: string);
+    procedure AddField(const AFieldName: string); overload;   //добавить поле со значениями Null
+    procedure AddField(const AFieldName: string; ADefaultValue: Variant); overload;
+    procedure AddField(const AFieldName: string; const AValues: TVarDynArray); overload;
+    procedure DeleteField(const AFieldName: string);
 
     //поиск
-    function FindFirst(const FieldName: string; const Value: Variant): Integer;
-    function FindAll(const FieldName: string; const Value: Variant): TArray<Integer>;
+    function FindFirst(const AFieldName: string; const AValue: Variant): Integer;
+    function FindAll(const AFieldName: string; const AValue: Variant): TArray<Integer>;
 
     //агрегатные функции
-    function Sum(const FieldName: string): Variant;
-    function Avg(const FieldName: string): Double;
-    function Min(const FieldName: string): Variant;
-    function Max(const FieldName: string): Variant;
+    function Sum(const AFieldName: string): Variant;
+    function Avg(const AFieldName: string): Double;
+    function Min(const AFieldName: string): Variant;
+    function Max(const AFieldName: string): Variant;
 
     //сортировка по нескольким полям (имена полей передаются в TVarDynArray)
-    procedure Sort(const FieldNames: TVarDynArray; Ascending: Boolean = True);
+    procedure Sort(const AFieldNames: TVarDynArray; AAscending: Boolean = True);
 
     //фильтрация: возвращает новый TNamedArr, содержащий строки, удовлетворяющие условию
-    function Filter(const Conditions: TVarDynArray2): TNamedArr; overload;
-    function Filter(Predicate: TFunc<Integer, Boolean>): TNamedArr; overload;
+    function Filter(const AConditions: TVarDynArray2): TNamedArr; overload;
+    function Filter(APredicate: TFunc<Integer, Boolean>): TNamedArr; overload;
 
     //null-значения
     procedure SetNull; overload;
-    procedure SetNull(RowNo: Integer); overload;
-    function IsNull(RowNo: Integer; const FieldName: string): Boolean;
-    function IsNullRow(RowNo: Integer): Boolean;
+    procedure SetNull(ARowNo: Integer); overload;
+    function IsNull(ARowNo: Integer; const AFieldName: string): Boolean;
+    function IsNullRow(ARowNo: Integer): Boolean;
 
     //клонирование и присваивание
     function Clone: TNamedArr;
-    procedure Assign(const Source: TNamedArr);
+    procedure Assign(const ASource: TNamedArr);
 
     //итератор (для for..in)
     function GetEnumerator: TEnumerator<TVarDynArray>;
 
     //объединение записей
-    procedure Concat(const Other: TNamedArr; CheckFields: Boolean = True); //добавляет строки из Other в текущую запись
+    procedure Concat(const AOther: TNamedArr; ACheckFields: Boolean = True); //добавляет строки из Other в текущую запись
 
     //сохранение / загрузка (CSV, JSON)
-    procedure LoadFromCSV(const Filename: string; HasHeader: Boolean = True);
-    procedure SaveToCSV(const Filename: string);
+    procedure LoadFromCSV(const AFilename: string; AHasHeader: Boolean = True);
+    procedure SaveToCSV(const AFilename: string);
     function ToJSON: string;
-    procedure FromJSON(const JSON: string);
+    procedure FromJSON(const AJSON: string);
 
     //методы для совместимости с исходным кодом
-    function Col(const FieldName: string): Integer;
-    function G(RowNo: Integer; const FieldName: string): Variant; overload;
-    function G(const FieldName: string): Variant; overload;
-    function GetValueByOtherField(SearchValue: Variant; const SearchField: string; const ResultField: string; ValueIfNotFound: Variant): Variant;
-    function Find(Value: Variant; const FieldName: string): Integer; //первое вхождение
+    function Col(const AFieldName: string): Integer;
+    function G(ARowNo: Integer; const AFieldName: string): Variant; overload;
+    function G(const AFieldName: string): Variant; overload;
+    function GetValueByOtherField(ASearchValue: Variant; const ASearchField, AResultField: string; AValueIfNotFound: Variant): Variant;
+    function Find(AValue: Variant; const AFieldName: string): Integer; //первое вхождение
   end;
+
   //вспомогательный класс-итератор (оставлен классом, хранит копию записи, изменение в цикле не влияет на значения итератора)
   TNamedArrEnumerator = class(TEnumerator<TVarDynArray>)
   private
@@ -139,13 +141,15 @@ implementation
 
 uses
   System.IOUtils;
+
 { ENamedArrError }
 
-constructor ENamedArrError.Create(const Msg: string; const AField: string);
+constructor ENamedArrError.Create(const AMsg: string; const AField: string);
 begin
-  inherited Create(Msg);
+  inherited Create(AMsg);
   FField := AField;
 end;
+
 { TNamedArrEnumerator }
 
 constructor TNamedArrEnumerator.Create(const AArr: TNamedArr);
@@ -165,6 +169,7 @@ begin
   Inc(FIndex);
   Result := FIndex < FArr.Count;
 end;
+
 { TNamedArr }
 
 //==============================================================================
@@ -172,306 +177,312 @@ end;
 //==============================================================================
 
 procedure TNamedArr.Create;
+//пустая запись
 begin
   FFull := [];
   F := [];
   V := [];
 end;
 
-procedure TNamedArr.Create(Fields: TVarDynArray; Len: Integer = 0);
+procedure TNamedArr.Create(AFields: TVarDynArray; ALen: Integer = 0);
 //инициализируем запись, массив значений заполняем null
 var
   i, j: Integer;
-  s: string;
-  p: Integer;
+  st: string;
+  LPos: Integer;
 begin
-  FFull := System.Copy(Fields, 0, Length(Fields));
-  System.SetLength(F, Length(Fields));
-  for j := 0 to System.High(Fields) do begin
-    s := VarToStr(Fields[j]);
-    p := Pos('$', s);
-    if p > 0 then
-      F[j] := Copy(s, 1, p - 1)
+  FFull := System.Copy(AFields, 0, Length(AFields));
+  System.SetLength(F, Length(AFields));
+  for j := 0 to System.High(AFields) do begin
+    st := VarToStr(AFields[j]);
+    LPos := Pos('$', st);
+    if LPos > 0 then
+      F[j] := Copy(st, 1, LPos - 1)
     else
-      F[j] := s;
+      F[j] := st;
   end;
-  System.SetLength(V, Len);
-  for i := 0 to Len - 1 do begin
+  System.SetLength(V, ALen);
+  for i := 0 to ALen - 1 do begin
     System.SetLength(V[i], Length(F));
     for j := 0 to System.High(V[i]) do
       V[i][j] := Null;
   end;
 end;
 
-procedure TNamedArr.Create(Data: TVarDynArray2; FieldNames: TVarDynArray);
+procedure TNamedArr.Create(AData: TVarDynArray2; AFieldNames: TVarDynArray);
 //инициализируем запись из массива; передаются поля, если [] то создаются числовые по индексам колонок
 var
-  RowCount, ColCount, i, j: Integer;
-  Fields: TVarDynArray;
-  s: string;
-  p: Integer;
+  LRowCount, LColCount, i, j: Integer;
+  vaFields: TVarDynArray;
+  st: string;
+  LPos: Integer;
 begin
   // Сначала обнуляем
   FFull := [];
   F := [];
   V := [];
 
-  RowCount := Length(Data);
-  if RowCount > 0 then
-    ColCount := Length(Data[0])
+  LRowCount := Length(AData);
+  if LRowCount > 0 then
+    LColCount := Length(AData[0])
   else
-    ColCount := 0;
+    LColCount := 0;
 
   // Определяем имена полей
-  if Length(FieldNames) > 0 then
-    Fields := System.Copy(FieldNames, 0, Length(FieldNames))
+  if Length(AFieldNames) > 0 then
+    vaFields := System.Copy(AFieldNames, 0, Length(AFieldNames))
   else begin
-    System.SetLength(Fields, ColCount);
-    for i := 0 to ColCount - 1 do
-      Fields[i] := IntToStr(i);
+    System.SetLength(vaFields, LColCount);
+    for i := 0 to LColCount - 1 do
+      vaFields[i] := IntToStr(i);
   end;
 
-  if Length(Fields) <> ColCount then
+  if Length(vaFields) <> LColCount then
     raise ENamedArrError.Create('Количество имён полей не совпадает с числом колонок данных');
 
   // Устанавливаем FFull и F
-  FFull := System.Copy(Fields, 0, Length(Fields));
-  System.SetLength(F, Length(Fields));
-  for j := 0 to System.High(Fields) do begin
-    s := VarToStr(Fields[j]);
-    p := Pos('$', s);
-    if p > 0 then
-      F[j] := Copy(s, 1, p - 1)
+  FFull := System.Copy(vaFields, 0, Length(vaFields));
+  System.SetLength(F, Length(vaFields));
+  for j := 0 to System.High(vaFields) do begin
+    st := VarToStr(vaFields[j]);
+    LPos := Pos('$', st);
+    if LPos > 0 then
+      F[j] := Copy(st, 1, LPos - 1)
     else
-      F[j] := s;
+      F[j] := st;
   end;
 
   // Копируем данные
-  System.SetLength(V, RowCount);
-  for i := 0 to RowCount - 1 do begin
-    if Length(Data[i]) <> ColCount then
-      raise ENamedArrError.CreateFmt('Строка %d имеет длину %d, ожидалось %d', [i, Length(Data[i]), ColCount]);
-    System.SetLength(V[i], ColCount);
-    for j := 0 to ColCount - 1 do
-      V[i][j] := Data[i][j];
+  System.SetLength(V, LRowCount);
+  for i := 0 to LRowCount - 1 do begin
+    if Length(AData[i]) <> LColCount then
+      raise ENamedArrError.CreateFmt('Строка %d имеет длину %d, ожидалось %d', [i, Length(AData[i]), LColCount]);
+    System.SetLength(V[i], LColCount);
+    for j := 0 to LColCount - 1 do
+      V[i][j] := AData[i][j];
   end;
 end;
 
-procedure TNamedArr.Create(Data: TVarDynArray2; FieldNames: string = '');
+procedure TNamedArr.Create(AData: TVarDynArray2; AFieldNames: string = '');
 //инициализируем запись из массива; передаются поля, если не переданы то создаются числовые по индексам колонок
 begin
-  Create(Data, A.Explode(FieldNames, ';', True));
+  Create(AData, A.Explode(AFieldNames, ';', True));
 end;
 
 //==============================================================================
 // Вспомогательные методы
 //==============================================================================
 
-function TNamedArr.GetFieldIndex(const FieldName: string): Integer;
-//найти индекс поля по имени (без учёта регистра)
+function TNamedArr.GetFieldIndex(const AFieldName: string): Integer;
 var
   i: Integer;
-  s: string;
+  LCleanName: string;
+  LPos: Integer;
 begin
+  LCleanName := AFieldName;
+  LPos := Pos('$', LCleanName);
+  if LPos > 0 then
+    LCleanName := Copy(LCleanName, 1, LPos - 1);
   for i := 0 to System.High(F) do begin
-    s := VarToStr(F[i]);
-    if SameText(s, FieldName) then
+    if SameText(VarToStr(F[i]), LCleanName) then
       Exit(i);
   end;
   Result := -1;
 end;
 
-procedure TNamedArr.CheckRowIndex(RowNo: Integer);
+procedure TNamedArr.CheckRowIndex(ARowNo: Integer);
 //проверить допустимость индекса строки, иначе исключение
 begin
-  if (RowNo < 0) or (RowNo >= Length(V)) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс строки %d вне допустимого диапазона [0..%d]', [RowNo, Length(V) - 1]);
+  if (ARowNo < 0) or (ARowNo >= Length(V)) then
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс строки %d вне допустимого диапазона [0..%d]', [ARowNo, Length(V) - 1]);
 end;
 
-procedure TNamedArr.EnsureRowLength(RowNo: Integer);
+procedure TNamedArr.EnsureRowLength(ARowNo: Integer);
 //при необходимости выровнять длину строки по числу полей
 begin
-  if Length(V[RowNo]) <> FieldsCount then
-    System.SetLength(V[RowNo], FieldsCount);
+  if Length(V[ARowNo]) <> FieldsCount then
+    System.SetLength(V[ARowNo], FieldsCount);
 end;
 
-function TNamedArr.CompareValues(const A, B: Variant; Ascending: Boolean): Integer;
+function TNamedArr.CompareValues(const A, B: Variant; AAscending: Boolean): Integer;
 //сравнить два варианта с учётом направления сортировки
 var
-  mult: Integer;
+  LMult: Integer;
 begin
-  mult := 1;
-  if not Ascending then
-    mult := -1;
+  LMult := 1;
+  if not AAscending then
+    LMult := -1;
   if VarIsNull(A) and VarIsNull(B) then
     Result := 0
   else if VarIsNull(A) then
-    Result := -1 * mult
+    Result := -1 * LMult
   else if VarIsNull(B) then
-    Result := 1 * mult
+    Result := 1 * LMult
   else begin
     //пытаемся сравнивать по подходящим типам
     case VarType(A) and varTypeMask of
       varSmallint, varInteger, varShortInt, varByte, varWord, varLongWord, varInt64, varSingle, varDouble, varCurrency:
         begin
           if A < B then
-            Result := -1 * mult
+            Result := -1 * LMult
           else if A > B then
-            Result := 1 * mult
+            Result := 1 * LMult
           else
             Result := 0;
         end;
       varDate:
         begin
-          var d1, d2: TDateTime;
-          d1 := A;
-          d2 := B;
-          if d1 < d2 then
-            Result := -1 * mult
-          else if d1 > d2 then
-            Result := 1 * mult
+          var LDate1, LDate2: TDateTime;
+          LDate1 := A;
+          LDate2 := B;
+          if LDate1 < LDate2 then
+            Result := -1 * LMult
+          else if LDate1 > LDate2 then
+            Result := 1 * LMult
           else
             Result := 0;
         end;
       varOleStr, varString, varUString:
         begin
-          var s1, s2: string;
-          s1 := VarToStr(A);
-          s2 := VarToStr(B);
-          Result := CompareText(s1, s2) * mult;
+          var st1, st2: string;
+          st1 := VarToStr(A);
+          st2 := VarToStr(B);
+          Result := CompareText(st1, st2) * LMult;
         end;
     else
       //для остальных типов используем строковое представление
-      var s1, s2: string;
-      s1 := VarToStr(A);
-      s2 := VarToStr(B);
-      Result := CompareText(s1, s2) * mult;
+      var st1, st2: string;
+      st1 := VarToStr(A);
+      st2 := VarToStr(B);
+      Result := CompareText(st1, st2) * LMult;
     end;
   end;
 end;
 
-function TNamedArr.CompareRows(Idx1, Idx2: Integer; const FieldIndices: array of Integer; Ascending: Boolean): Integer;
+function TNamedArr.CompareRows(AIdx1, AIdx2: Integer; const AFieldIndices: array of Integer; AAscending: Boolean): Integer;
 //сравнить две строки по заданному списку полей (последовательно)
 var
   i: Integer;
-  cmp: Integer;
+  LCmp: Integer;
 begin
   Result := 0;
-  for i := 0 to System.High(FieldIndices) do begin
-    cmp := CompareValues(V[Idx1][FieldIndices[i]], V[Idx2][FieldIndices[i]], Ascending);
-    if cmp <> 0 then begin
-      Result := cmp;
+  for i := 0 to System.High(AFieldIndices) do begin
+    LCmp := CompareValues(V[AIdx1][AFieldIndices[i]], V[AIdx2][AFieldIndices[i]], AAscending);
+    if LCmp <> 0 then begin
+      Result := LCmp;
       Exit;
     end;
   end;
 end;
 
-procedure TNamedArr.QuickSort(L, R: Integer; const FieldIndices: array of Integer; Ascending: Boolean);
+procedure TNamedArr.QuickSort(ALeft, ARight: Integer; const AFieldIndices: array of Integer; AAscending: Boolean);
 //рекурсивная быстрая сортировка по нескольким полям
 var
-  I, J, PivotIdx: Integer;
+  i, j, LPivotIdx: Integer;
 begin
-  if L >= R then
+  if ALeft >= ARight then
     Exit;
-  I := L;
-  J := R;
-  PivotIdx := (L + R) shr 1;
+  i := ALeft;
+  j := ARight;
+  LPivotIdx := (ALeft + ARight) shr 1;
   repeat
-    while CompareRows(I, PivotIdx, FieldIndices, Ascending) < 0 do
-      Inc(I);
-    while CompareRows(J, PivotIdx, FieldIndices, Ascending) > 0 do
-      Dec(J);
-    if I <= J then begin
-      if I <> J then begin
-        var Temp := V[I];
-        V[I] := V[J];
-        V[J] := Temp;
+    while CompareRows(i, LPivotIdx, AFieldIndices, AAscending) < 0 do
+      Inc(i);
+    while CompareRows(j, LPivotIdx, AFieldIndices, AAscending) > 0 do
+      Dec(j);
+    if i <= j then begin
+      if i <> j then begin
+        var LTemp := V[i];
+        V[i] := V[j];
+        V[j] := LTemp;
         //корректируем индекс опорного элемента после обмена
-        if PivotIdx = I then
-          PivotIdx := J
-        else if PivotIdx = J then
-          PivotIdx := I;
+        if LPivotIdx = i then
+          LPivotIdx := j
+        else if LPivotIdx = j then
+          LPivotIdx := i;
       end;
-      Inc(I);
-      Dec(J);
+      Inc(i);
+      Dec(j);
     end;
-  until I > J;
-  if L < J then
-    QuickSort(L, J, FieldIndices, Ascending);
-  if I < R then
-    QuickSort(I, R, FieldIndices, Ascending);
+  until i > j;
+  if ALeft < j then
+    QuickSort(ALeft, j, AFieldIndices, AAscending);
+  if i < ARight then
+    QuickSort(i, ARight, AFieldIndices, AAscending);
 end;
+
 //==============================================================================
 // Доступ к данным
 //==============================================================================
 
-function TNamedArr.GetValue(RowNo: Integer; const FieldName: string): Variant;
+function TNamedArr.GetValue(ARowNo: Integer; const AFieldName: string): Variant;
 //получить значение по имени поля
 var
-  idx: Integer;
+  LIdx: Integer;
 begin
-  idx := GetFieldIndex(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
-  Result := GetValueI(RowNo, idx);
+  LIdx := GetFieldIndex(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
+  Result := GetValueI(ARowNo, LIdx);
 end;
 
-procedure TNamedArr.SetValue(RowNo: Integer; const FieldName: string; const Value: Variant);
+procedure TNamedArr.SetValue(ARowNo: Integer; const AFieldName: string; const AValue: Variant);
 //установить значение по имени поля
 var
-  idx: Integer;
+  LIdx: Integer;
 begin
-  idx := GetFieldIndex(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
-  SetValueI(RowNo, idx, Value);
+  LIdx := GetFieldIndex(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
+  SetValueI(ARowNo, LIdx, AValue);
 end;
 
-procedure TNamedArr.SetValue(const FieldName: string; const Value: Variant);
+procedure TNamedArr.SetValue(const AFieldName: string; const AValue: Variant);
 //установить значение по имени поля для первой строки
 begin
-  SetValue(0, FieldName, Value);
+  SetValue(0, AFieldName, AValue);
 end;
 
-function TNamedArr.GetValueI(RowNo: Integer; ColIndex: Integer): Variant;
+function TNamedArr.GetValueI(ARowNo: Integer; AColIndex: Integer): Variant;
 //получить значение по индексу колонки
 begin
-  CheckRowIndex(RowNo);
-  EnsureRowLength(RowNo);
-  if (ColIndex < 0) or (ColIndex >= FieldsCount) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount - 1]);
-  Result := V[RowNo][ColIndex];
+  CheckRowIndex(ARowNo);
+  EnsureRowLength(ARowNo);
+  if (AColIndex < 0) or (AColIndex >= FieldsCount) then
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [AColIndex, FieldsCount - 1]);
+  Result := V[ARowNo][AColIndex];
 end;
 
-procedure TNamedArr.SetValueI(RowNo: Integer; ColIndex: Integer; const Value: Variant);
+procedure TNamedArr.SetValueI(ARowNo: Integer; AColIndex: Integer; const AValue: Variant);
 //установить значение по индексу колонки
 begin
-  CheckRowIndex(RowNo);
-  EnsureRowLength(RowNo);
-  if (ColIndex < 0) or (ColIndex >= FieldsCount) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [ColIndex, FieldsCount - 1]);
-  V[RowNo][ColIndex] := Value;
+  CheckRowIndex(ARowNo);
+  EnsureRowLength(ARowNo);
+  if (AColIndex < 0) or (AColIndex >= FieldsCount) then
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс колонки %d вне диапазона [0..%d]', [AColIndex, FieldsCount - 1]);
+  V[ARowNo][AColIndex] := AValue;
 end;
 
-function TNamedArr.GetRow(RowNo: Integer): TVarDynArray;
+function TNamedArr.GetRow(ARowNo: Integer): TVarDynArray;
 //получить всю строку как массив
 begin
-  CheckRowIndex(RowNo);
-  EnsureRowLength(RowNo);
+  CheckRowIndex(ARowNo);
+  EnsureRowLength(ARowNo);
   //копируем массив с указанием длины – приведение необходимо для совместимости с TVarDynArray
-  Result := TVarDynArray(System.Copy(V[RowNo], 0, Length(V[RowNo])));
+  Result := TVarDynArray(System.Copy(V[ARowNo], 0, Length(V[ARowNo])));
 end;
 
-procedure TNamedArr.SetRow(RowNo: Integer; const Values: TVarDynArray);
+procedure TNamedArr.SetRow(ARowNo: Integer; const AValues: TVarDynArray);
 //установить всю строку из массива
 begin
-  CheckRowIndex(RowNo);
-  if Length(Values) <> FieldsCount then
-    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(Values), FieldsCount]);
-  System.SetLength(V[RowNo], FieldsCount);
+  CheckRowIndex(ARowNo);
+  if Length(AValues) <> FieldsCount then
+    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(AValues), FieldsCount]);
+  System.SetLength(V[ARowNo], FieldsCount);
   //копируем значения – приведение необходимо
-  TVarDynArray(V[RowNo]) := TVarDynArray(System.Copy(Values, 0, Length(Values)));
+  TVarDynArray(V[ARowNo]) := TVarDynArray(System.Copy(AValues, 0, Length(AValues)));
 end;
+
 //==============================================================================
 // Информация о структуре
 //==============================================================================
@@ -500,16 +511,16 @@ begin
   Result := Count = 0;
 end;
 
-function TNamedArr.HasField(const FieldName: string): Boolean;
+function TNamedArr.HasField(const AFieldName: string): Boolean;
 //существует ли поле с таким именем
 begin
-  Result := GetFieldIndex(FieldName) >= 0;
+  Result := GetFieldIndex(AFieldName) >= 0;
 end;
 
-function TNamedArr.IndexOfField(const FieldName: string): Integer;
+function TNamedArr.IndexOfField(const AFieldName: string): Integer;
 //индекс поля (или -1)
 begin
-  Result := GetFieldIndex(FieldName);
+  Result := GetFieldIndex(AFieldName);
 end;
 
 function TNamedArr.GetFieldNames: TVarDynArray;
@@ -528,7 +539,7 @@ begin
   Result := System.Copy(FFull, 0, Length(FFull)); // приведение не нужно, т.к. FFull уже TVarDynArray
 end;
 
-function TNamedArr.GetFFullStr(Delimiter: string = ';'): string;
+function TNamedArr.GetFFullStr(ADelimiter: string = ';'): string;
 //исходные имена полей через заданный разделитель
 var
   i: Integer;
@@ -536,12 +547,12 @@ begin
   Result := '';
   for i := 0 to System.High(FFull) do begin
     if i > 0 then
-      Result := Result + Delimiter;
+      Result := Result + ADelimiter;
     Result := Result + VarToStr(FFull[i]);
   end;
 end;
 
-function TNamedArr.GetFStr(Delimiter: string = ','): string;
+function TNamedArr.GetFStr(ADelimiter: string = ','): string;
 //очищенные имена полей через заданный разделитель
 var
   i: Integer;
@@ -549,10 +560,11 @@ begin
   Result := '';
   for i := 0 to System.High(F) do begin
     if i > 0 then
-      Result := Result + Delimiter;
+      Result := Result + ADelimiter;
     Result := Result + VarToStr(F[i]);
   end;
 end;
+
 //==============================================================================
 // Добавление / удаление строк
 //==============================================================================
@@ -564,43 +576,43 @@ begin
   System.SetLength(V[System.High(V)], FieldsCount);
 end;
 
-procedure TNamedArr.AddRow(const Values: TVarDynArray);
+procedure TNamedArr.AddRow(const AValues: TVarDynArray);
 //добавить строку в конец
 begin
-  InsertRow(Count, Values);
+  InsertRow(Count, AValues);
 end;
 
-procedure TNamedArr.AddRow(const Other: TNamedArr; RowIndex: Integer);
+procedure TNamedArr.AddRow(const AOther: TNamedArr; ARowIndex: Integer);
 //добавить копию строки из другого экземпляра
 begin
-  if Other.FieldsCount <> Self.FieldsCount then
+  if AOther.FieldsCount <> Self.FieldsCount then
     raise ENamedArrError.Create('TNamedArr: число полей источника не совпадает с текущим');
-  AddRow(Other.GetRow(RowIndex));
+  AddRow(AOther.GetRow(ARowIndex));
 end;
 
-procedure TNamedArr.InsertRow(Index: Integer; const Values: TVarDynArray);
+procedure TNamedArr.InsertRow(AIndex: Integer; const AValues: TVarDynArray);
 //вставить строку в указанную позицию
 var
   i: Integer;
 begin
-  if (Index < 0) or (Index > Count) then
-    raise ENamedArrError.CreateFmt('TNamedArr: индекс вставки %d вне диапазона [0..%d]', [Index, Count]);
-  if Length(Values) <> FieldsCount then
-    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(Values), FieldsCount]);
+  if (AIndex < 0) or (AIndex > Count) then
+    raise ENamedArrError.CreateFmt('TNamedArr: индекс вставки %d вне диапазона [0..%d]', [AIndex, Count]);
+  if Length(AValues) <> FieldsCount then
+    raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(AValues), FieldsCount]);
   System.SetLength(V, Count + 1);
-  for i := Count - 1 downto Index do
+  for i := Count - 1 downto AIndex do
     V[i + 1] := V[i];
-  System.SetLength(V[Index], FieldsCount);
-  TVarDynArray(V[Index]) := TVarDynArray(System.Copy(Values, 0, Length(Values)));
+  System.SetLength(V[AIndex], FieldsCount);
+  TVarDynArray(V[AIndex]) := TVarDynArray(System.Copy(AValues, 0, Length(AValues)));
 end;
 
-procedure TNamedArr.DeleteRow(Index: Integer);
+procedure TNamedArr.DeleteRow(AIndex: Integer);
 //удалить строку
 var
   i: Integer;
 begin
-  CheckRowIndex(Index);
-  for i := Index to Count - 2 do
+  CheckRowIndex(AIndex);
+  for i := AIndex to Count - 2 do
     V[i] := V[i + 1];
   System.SetLength(V, Count - 1);
 end;
@@ -613,257 +625,263 @@ begin
   V := [];
 end;
 
-procedure TNamedArr.SetLength(NewLen: Integer);
+procedure TNamedArr.SetLength(ANewLen: Integer);
 //установить новое количество строк (при увеличении новые строки заполняются Null)
 var
-  OldLen, i, j: Integer;
+  LOldLen, i, j: Integer;
 begin
-  OldLen := Count;
-  System.SetLength(V, NewLen);
-  if NewLen > OldLen then
-    for i := OldLen to NewLen - 1 do begin
+  LOldLen := Count;
+  System.SetLength(V, ANewLen);
+  if ANewLen > LOldLen then
+    for i := LOldLen to ANewLen - 1 do begin
       System.SetLength(V[i], FieldsCount);
       for j := 0 to System.High(V[i]) do
         V[i][j] := Null;
     end;
 end;
+
 //==============================================================================
 // Добавление / удаление полей
 //==============================================================================
 
-procedure TNamedArr.AddField(const FieldName: string);
+procedure TNamedArr.AddField(const AFieldName: string);
 //добавить новое поле со значениями Null (перегрузка без DefaultValue)
 begin
-  AddField(FieldName, Null);
+  AddField(AFieldName, Null);
 end;
 
-procedure TNamedArr.AddField(const FieldName: string; DefaultValue: Variant);
+procedure TNamedArr.AddField(const AFieldName: string; ADefaultValue: Variant);
 //добавить новое поле с указанным значением по умолчанию
 var
   i: Integer;
 begin
-  if HasField(FieldName) then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" уже существует', [FieldName]), FieldName);
+  if HasField(AFieldName) then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" уже существует', [AFieldName]), AFieldName);
   System.SetLength(F, FieldsCount + 1);
-  F[System.High(F)] := FieldName;
+  F[System.High(F)] := AFieldName;
   System.SetLength(FFull, FieldsCount);
-  FFull[System.High(FFull)] := FieldName;
+  FFull[System.High(FFull)] := AFieldName;
   for i := 0 to Count - 1 do begin
     System.SetLength(V[i], FieldsCount);
-    V[i][System.High(V[i])] := DefaultValue;
+    V[i][System.High(V[i])] := ADefaultValue;
   end;
 end;
 
-procedure TNamedArr.AddField(const FieldName: string; const Values: TVarDynArray);
+procedure TNamedArr.AddField(const AFieldName: string; const AValues: TVarDynArray);
 //добавить поле с заполнением значений из массива (длина массива должна равняться числу строк)
 var
   i: Integer;
 begin
-  if HasField(FieldName) then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" уже существует', [FieldName]), FieldName);
-  if Length(Values) <> Count then
+  if HasField(AFieldName) then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" уже существует', [AFieldName]), AFieldName);
+  if Length(AValues) <> Count then
     raise ENamedArrError.Create('TNamedArr: количество значений должно совпадать с числом строк');
-  AddField(FieldName, Null);
+  AddField(AFieldName, Null);
   for i := 0 to Count - 1 do
-    SetValue(i, FieldName, Values[i]);
+    SetValue(i, AFieldName, AValues[i]);
 end;
 
-procedure TNamedArr.DeleteField(const FieldName: string);
+procedure TNamedArr.DeleteField(const AFieldName: string);
 //удалить поле (столбец)
 var
-  idx, i, j: Integer;
+  LIdx, i, j: Integer;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
-  for i := idx to FieldsCount - 2 do begin
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
+  for i := LIdx to FieldsCount - 2 do begin
     F[i] := F[i + 1];
     FFull[i] := FFull[i + 1];
   end;
   System.SetLength(F, FieldsCount - 1);
   System.SetLength(FFull, FieldsCount - 1);
   for i := 0 to Count - 1 do begin
-    for j := idx to Length(V[i]) - 2 do
+    for j := LIdx to Length(V[i]) - 2 do
       V[i][j] := V[i][j + 1];
     System.SetLength(V[i], Length(V[i]) - 1);
   end;
 end;
+
 //==============================================================================
 // Поиск
 //==============================================================================
 
-function TNamedArr.FindFirst(const FieldName: string; const Value: Variant): Integer;
+function TNamedArr.FindFirst(const AFieldName: string; const AValue: Variant): Integer;
 //найти первую строку, где значение поля равно заданному (иначе -1)
 var
-  idx, i: Integer;
+  LIdx, i: Integer;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
   for i := 0 to Count - 1 do
-    if VarSameValue(V[i][idx], Value) then
+    if VarSameValue(V[i][LIdx], AValue) then
       Exit(i);
   Result := -1;
 end;
 
-function TNamedArr.FindAll(const FieldName: string; const Value: Variant): TArray<Integer>;
+function TNamedArr.FindAll(const AFieldName: string; const AValue: Variant): TArray<Integer>;
 //найти индексы всех строк, где значение поля равно заданному
 var
-  idx, i, cnt: Integer;
+  LIdx, i, LCnt: Integer;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
   System.SetLength(Result, Count);
-  cnt := 0;
+  LCnt := 0;
   for i := 0 to Count - 1 do
-    if VarSameValue(V[i][idx], Value) then begin
-      Result[cnt] := i;
-      Inc(cnt);
+    if VarSameValue(V[i][LIdx], AValue) then begin
+      Result[LCnt] := i;
+      Inc(LCnt);
     end;
-  System.SetLength(Result, cnt);
+  System.SetLength(Result, LCnt);
 end;
+
 //==============================================================================
 // Агрегатные функции
 //==============================================================================
 
-function TNamedArr.Sum(const FieldName: string): Variant;
+function TNamedArr.Sum(const AFieldName: string): Variant;
 //сумма значений поля (нечисловые и Null игнорируются)
 var
-  idx, i: Integer;
-  v: Variant;
+  LIdx, i: Integer;
+  LVal: Variant;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
   Result := 0;
   for i := 0 to Count - 1 do begin
-    v := v[i][idx];
-    if not VarIsNull(v) then
-      Result := Result + v;
+    LVal := V[i][LIdx];
+    if not VarIsNull(LVal) then
+      Result := Result + LVal;
   end;
 end;
 
-function TNamedArr.Avg(const FieldName: string): Double;
+function TNamedArr.Avg(const AFieldName: string): Double;
 //среднее арифметическое значений поля
 var
-  idx, i, cnt: Integer;
-  sum: Double;
-  v: Variant;
+  LIdx, i, LCnt: Integer;
+  LSum: Double;
+  LVal: Variant;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
-  sum := 0;
-  cnt := 0;
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
+  LSum := 0;
+  LCnt := 0;
   for i := 0 to Count - 1 do begin
-    v := v[i][idx];
-    if not VarIsNull(v) then begin
-      sum := sum + v;
-      Inc(cnt);
+    LVal := V[i][LIdx];
+    if not VarIsNull(LVal) then begin
+      LSum := LSum + LVal;
+      Inc(LCnt);
     end;
   end;
-  if cnt > 0 then
-    Result := sum / cnt
+  if LCnt > 0 then
+    Result := LSum / LCnt
   else
     Result := 0;
 end;
 
-function TNamedArr.Min(const FieldName: string): Variant;
+function TNamedArr.Min(const AFieldName: string): Variant;
 //минимальное значение поля
 var
-  idx, i: Integer;
-  v: Variant;
+  LIdx, i: Integer;
+  LVal: Variant;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
   Result := Null;
   for i := 0 to Count - 1 do begin
-    v := v[i][idx];
-    if not VarIsNull(v) then
-      if VarIsNull(Result) or (v < Result) then
-        Result := v;
+    LVal := V[i][LIdx];
+    if not VarIsNull(LVal) then
+      if VarIsNull(Result) or (LVal < Result) then
+        Result := LVal;
   end;
 end;
 
-function TNamedArr.Max(const FieldName: string): Variant;
+function TNamedArr.Max(const AFieldName: string): Variant;
 //максимальное значение поля
 var
-  idx, i: Integer;
-  v: Variant;
+  LIdx, i: Integer;
+  LVal: Variant;
 begin
-  idx := IndexOfField(FieldName);
-  if idx < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+  LIdx := IndexOfField(AFieldName);
+  if LIdx < 0 then
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
   Result := Null;
   for i := 0 to Count - 1 do begin
-    v := v[i][idx];
-    if not VarIsNull(v) then
-      if VarIsNull(Result) or (v > Result) then
-        Result := v;
+    LVal := V[i][LIdx];
+    if not VarIsNull(LVal) then
+      if VarIsNull(Result) or (LVal > Result) then
+        Result := LVal;
   end;
 end;
+
 //==============================================================================
 // Сортировка
 //==============================================================================
 
-procedure TNamedArr.Sort(const FieldNames: TVarDynArray; Ascending: Boolean = True);
+procedure TNamedArr.Sort(const AFieldNames: TVarDynArray; AAscending: Boolean = True);
 //отсортировать строки по указанным полям (в порядке перечисления)
 var
-  FieldIndices: TArray<Integer>;
+  LFieldIndices: TArray<Integer>;
   i: Integer;
 begin
   if Count <= 1 then
     Exit;
-  System.SetLength(FieldIndices, Length(FieldNames));
-  for i := 0 to System.High(FieldNames) do begin
-    FieldIndices[i] := IndexOfField(VarToStr(FieldNames[i]));
-    if FieldIndices[i] < 0 then
-      raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(FieldNames[i])]), VarToStr(FieldNames[i]));
+  System.SetLength(LFieldIndices, Length(AFieldNames));
+  for i := 0 to System.High(AFieldNames) do begin
+    LFieldIndices[i] := IndexOfField(VarToStr(AFieldNames[i]));
+    if LFieldIndices[i] < 0 then
+      raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(AFieldNames[i])]), VarToStr(AFieldNames[i]));
   end;
-  QuickSort(0, Count - 1, FieldIndices, Ascending);
+  QuickSort(0, Count - 1, LFieldIndices, AAscending);
 end;
+
 //==============================================================================
 // Фильтрация
 //==============================================================================
 
-function TNamedArr.Filter(const Conditions: TVarDynArray2): TNamedArr;
+function TNamedArr.Filter(const AConditions: TVarDynArray2): TNamedArr;
 //отфильтровать строки по условиям (AND) в виде пар [ИмяПоля, Значение]
 var
   i, j: Integer;
-  FieldIdx: Integer;
-  ok: Boolean;
+  LFieldIdx: Integer;
+  bOk: Boolean;
 begin
   Result.Create(FFull, 0); // инициализируем результат с теми же полями, без строк
   for i := 0 to Count - 1 do begin
-    ok := True;
-    for j := 0 to System.High(Conditions) do begin
-      if Length(Conditions[j]) <> 2 then
+    bOk := True;
+    for j := 0 to System.High(AConditions) do begin
+      if Length(AConditions[j]) <> 2 then
         raise ENamedArrError.Create('TNamedArr: условие фильтра должно содержать пару [ИмяПоля, Значение]');
-      FieldIdx := IndexOfField(VarToStr(Conditions[j][0]));
-      if FieldIdx < 0 then
-        raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(Conditions[j][0])]), VarToStr(Conditions[j][0]));
-      if not VarSameValue(v[i][FieldIdx], Conditions[j][1]) then begin
-        ok := False;
+      LFieldIdx := IndexOfField(VarToStr(AConditions[j][0]));
+      if LFieldIdx < 0 then
+        raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [VarToStr(AConditions[j][0])]), VarToStr(AConditions[j][0]));
+      if not VarSameValue(V[i][LFieldIdx], AConditions[j][1]) then begin
+        bOk := False;
         Break;
       end;
     end;
-    if ok then
+    if bOk then
       Result.AddRow(GetRow(i));
   end;
 end;
 
-function TNamedArr.Filter(Predicate: TFunc<Integer, Boolean>): TNamedArr;
+function TNamedArr.Filter(APredicate: TFunc<Integer, Boolean>): TNamedArr;
 //отфильтровать строки по произвольному предикату (индекс строки -> Boolean)
 var
   i: Integer;
 begin
   Result.Create(FFull, 0);
   for i := 0 to Count - 1 do
-    if Predicate(i) then
+    if APredicate(i) then
       Result.AddRow(GetRow(i));
 end;
+
 //==============================================================================
 // Null-значения
 //==============================================================================
@@ -875,36 +893,37 @@ var
 begin
   for i := 0 to Count - 1 do
     for j := 0 to FieldsCount - 1 do
-      v[i][j] := Null;
+      V[i][j] := Null;
 end;
 
-procedure TNamedArr.SetNull(RowNo: Integer);
+procedure TNamedArr.SetNull(ARowNo: Integer);
 //установить все ячейки указанной строки в Null
 var
   j: Integer;
 begin
-  CheckRowIndex(RowNo);
+  CheckRowIndex(ARowNo);
   for j := 0 to FieldsCount - 1 do
-    v[RowNo][j] := Null;
+    V[ARowNo][j] := Null;
 end;
 
-function TNamedArr.IsNull(RowNo: Integer; const FieldName: string): Boolean;
+function TNamedArr.IsNull(ARowNo: Integer; const AFieldName: string): Boolean;
 //проверить, является ли значение в ячейке Null
 begin
-  Result := VarIsNull(GetValue(RowNo, FieldName));
+  Result := VarIsNull(GetValue(ARowNo, AFieldName));
 end;
 
-function TNamedArr.IsNullRow(RowNo: Integer): Boolean;
+function TNamedArr.IsNullRow(ARowNo: Integer): Boolean;
 //проверить, вся ли строка состоит из Null
 var
   j: Integer;
 begin
-  CheckRowIndex(RowNo);
+  CheckRowIndex(ARowNo);
   for j := 0 to FieldsCount - 1 do
-    if not VarIsNull(v[RowNo][j]) then
+    if not VarIsNull(V[ARowNo][j]) then
       Exit(False);
   Result := True;
 end;
+
 //==============================================================================
 // Клонирование и присваивание
 //==============================================================================
@@ -916,17 +935,18 @@ begin
   Result.Assign(Self);
 end;
 
-procedure TNamedArr.Assign(const Source: TNamedArr);
+procedure TNamedArr.Assign(const ASource: TNamedArr);
 //скопировать данные из другого экземпляра
 var
   i: Integer;
 begin
-  FFull := System.Copy(Source.FFull, 0, Length(Source.FFull));
-  F := System.Copy(Source.F, 0, Length(Source.F));
-  System.SetLength(v, Source.Count);
-  for i := 0 to Source.Count - 1 do
-    TVarDynArray(v[i]) := TVarDynArray(System.Copy(Source.V[i], 0, Length(Source.V[i])));
+  FFull := System.Copy(ASource.FFull, 0, Length(ASource.FFull));
+  F := System.Copy(ASource.F, 0, Length(ASource.F));
+  System.SetLength(V, ASource.Count);
+  for i := 0 to ASource.Count - 1 do
+    TVarDynArray(V[i]) := TVarDynArray(System.Copy(ASource.V[i], 0, Length(ASource.V[i])));
 end;
+
 //==============================================================================
 // Итератор
 //==============================================================================
@@ -936,159 +956,162 @@ function TNamedArr.GetEnumerator: TEnumerator<TVarDynArray>;
 begin
   Result := TNamedArrEnumerator.Create(Self);
 end;
+
 //==============================================================================
 // Объединение записей
 //==============================================================================
 
-procedure TNamedArr.Concat(const Other: TNamedArr; CheckFields: Boolean = True);
+procedure TNamedArr.Concat(const AOther: TNamedArr; ACheckFields: Boolean = True);
 //добавляет строки из Other в текущую запись
 var
   i: Integer;
 begin
-  if CheckFields then begin
-    if FieldsCount <> Other.FieldsCount then
+  if ACheckFields then begin
+    if FieldsCount <> AOther.FieldsCount then
       raise ENamedArrError.Create('TNamedArr.Concat: разное количество полей');
     for i := 0 to FieldsCount - 1 do
-      if VarToStr(F[i]) <> VarToStr(Other.F[i]) then
-        raise ENamedArrError.CreateFmt('TNamedArr.Concat: имена полей %d различаются: "%s" <> "%s"', [i, VarToStr(F[i]), VarToStr(Other.F[i])]);
+      if VarToStr(F[i]) <> VarToStr(AOther.F[i]) then
+        raise ENamedArrError.CreateFmt('TNamedArr.Concat: имена полей %d различаются: "%s" <> "%s"', [i, VarToStr(F[i]), VarToStr(AOther.F[i])]);
   end
   else begin
-    if FieldsCount <> Other.FieldsCount then
+    if FieldsCount <> AOther.FieldsCount then
       raise ENamedArrError.Create('TNamedArr.Concat: разное количество полей (проверка отключена, но число колонок должно совпадать)');
   end;
 
   // Добавляем все строки из Other
-  for i := 0 to Other.Count - 1 do
-    AddRow(Other.GetRow(i));
+  for i := 0 to AOther.Count - 1 do
+    AddRow(AOther.GetRow(i));
 end;
+
 //==============================================================================
 // Сохранение / загрузка
 //==============================================================================
 
-procedure TNamedArr.LoadFromCSV(const Filename: string; HasHeader: Boolean = True);
+procedure TNamedArr.LoadFromCSV(const AFilename: string; AHasHeader: Boolean = True);
 //загрузить данные из CSV-файла (с поддержкой кавычек)
 begin
   // Реализация временно закомментирована в исходном коде, оставляем как есть
   // ...
 end;
 
-procedure TNamedArr.SaveToCSV(const Filename: string);
+procedure TNamedArr.SaveToCSV(const AFilename: string);
 //сохранить данные в CSV-файл с правильным экранированием
 
-  function QuoteCSV(const S: string): string;
+  function QuoteCSV(const A: string): string;
   //экранировать строку для CSV
   begin
-    if (Pos(',', S) > 0) or (Pos('"', S) > 0) or (Pos(#10, S) > 0) or (Pos(#13, S) > 0) then
-      Result := '"' + StringReplace(S, '"', '""', [rfReplaceAll]) + '"'
+    if (Pos(',', A) > 0) or (Pos('"', A) > 0) or (Pos(#10, A) > 0) or (Pos(#13, A) > 0) then
+      Result := '"' + StringReplace(A, '"', '""', [rfReplaceAll]) + '"'
     else
-      Result := S;
+      Result := A;
   end;
 
 var
-  Lines: TStringList;
+  LLines: TStringList;
   i, j: Integer;
-  line: string;
+  LLine: string;
 begin
-  Lines := TStringList.Create;
+  LLines := TStringList.Create;
   try
     //заголовок
-    line := '';
+    LLine := '';
     for j := 0 to FieldsCount - 1 do begin
       if j > 0 then
-        line := line + ',';
-      line := line + QuoteCSV(VarToStr(FFull[j]));
+        LLine := LLine + ',';
+      LLine := LLine + QuoteCSV(VarToStr(FFull[j]));
     end;
-    Lines.Add(line);
+    LLines.Add(LLine);
 
     //данные
     for i := 0 to Count - 1 do begin
-      line := '';
+      LLine := '';
       for j := 0 to FieldsCount - 1 do begin
         if j > 0 then
-          line := line + ',';
-        line := line + QuoteCSV(VarToStr(v[i][j]));
+          LLine := LLine + ',';
+        LLine := LLine + QuoteCSV(VarToStr(V[i][j]));
       end;
-      Lines.Add(line);
+      LLines.Add(LLine);
     end;
 
-    Lines.SaveToFile(Filename);
+    LLines.SaveToFile(AFilename);
   finally
-    Lines.Free;
+    LLines.Free;
   end;
 end;
 
 function TNamedArr.ToJSON: string;
 //простейшая сериализация в JSON (массив объектов)
 var
+  LBuilder: TStringBuilder;
   i, j: Integer;
-  s: TStringBuilder;
 begin
-  s := TStringBuilder.Create;
+  LBuilder := TStringBuilder.Create;
   try
-    s.Append('[');
+    LBuilder.Append('[');
     for i := 0 to Count - 1 do begin
       if i > 0 then
-        s.Append(',');
-      s.Append('{');
+        LBuilder.Append(',');
+      LBuilder.Append('{');
       for j := 0 to FieldsCount - 1 do begin
         if j > 0 then
-          s.Append(',');
-        s.Append('"').Append(VarToStr(F[j])).Append('":"').Append(VarToStr(v[i][j])).Append('"');
+          LBuilder.Append(',');
+        LBuilder.Append('"').Append(VarToStr(F[j])).Append('":"').Append(VarToStr(V[i][j])).Append('"');
       end;
-      s.Append('}');
+      LBuilder.Append('}');
     end;
-    s.Append(']');
-    Result := s.ToString;
+    LBuilder.Append(']');
+    Result := LBuilder.ToString;
   finally
-    s.Free;
+    LBuilder.Free;
   end;
 end;
 
-procedure TNamedArr.FromJSON(const JSON: string);
+procedure TNamedArr.FromJSON(const AJSON: string);
 //заглушка (можно реализовать через парсер)
 begin
   raise ENamedArrError.Create('TNamedArr.FromJSON не реализован');
 end;
+
 //==============================================================================
 // Совместимость с исходным кодом
 //==============================================================================
 
-function TNamedArr.Col(const FieldName: string): Integer;
+function TNamedArr.Col(const AFieldName: string): Integer;
 //возвращает индекс поля (аналог IndexOfField, но с исключением при отсутствии)
 begin
-  Result := IndexOfField(FieldName);
+  Result := IndexOfField(AFieldName);
   if Result < 0 then
-    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [FieldName]), FieldName);
+    raise ENamedArrError.Create(Format('TNamedArr: поле "%s" не найдено', [AFieldName]), AFieldName);
 end;
 
-function TNamedArr.G(RowNo: Integer; const FieldName: string): Variant;
+function TNamedArr.G(ARowNo: Integer; const AFieldName: string): Variant;
 //получить значение (сокращение для GetValue)
 begin
-  Result := GetValue(RowNo, FieldName);
+  Result := GetValue(ARowNo, AFieldName);
 end;
 
-function TNamedArr.G(const FieldName: string): Variant;
+function TNamedArr.G(const AFieldName: string): Variant;
 //получить значение из первой строки
 begin
-  Result := GetValue(0, FieldName);
+  Result := GetValue(0, AFieldName);
 end;
 
-function TNamedArr.GetValueByOtherField(SearchValue: Variant; const SearchField, ResultField: string; ValueIfNotFound: Variant): Variant;
+function TNamedArr.GetValueByOtherField(ASearchValue: Variant; const ASearchField, AResultField: string; AValueIfNotFound: Variant): Variant;
 //ищет строку по SearchField = SearchValue и возвращает значение из ResultField (или ValueIfNotFound)
 var
-  row: Integer;
+  LRow: Integer;
 begin
-  row := FindFirst(SearchField, SearchValue);
-  if row >= 0 then
-    Result := GetValue(row, ResultField)
+  LRow := FindFirst(ASearchField, ASearchValue);
+  if LRow >= 0 then
+    Result := GetValue(LRow, AResultField)
   else
-    Result := ValueIfNotFound;
+    Result := AValueIfNotFound;
 end;
 
-function TNamedArr.Find(Value: Variant; const FieldName: string): Integer;
+function TNamedArr.Find(AValue: Variant; const AFieldName: string): Integer;
 //синоним FindFirst
 begin
-  Result := FindFirst(FieldName, Value);
+  Result := FindFirst(AFieldName, AValue);
 end;
 
 end.
