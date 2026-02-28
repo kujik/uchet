@@ -49,7 +49,7 @@ procedure MsgDefDlgError(Mode: TDialogType);
 implementation
 
 uses
-  uFrmMain;
+  uFrmMain, uWaitForm;
 
 {
 mbOK	mrOk
@@ -138,6 +138,7 @@ var
   MMessage: TMemo;
   F : TForm;
 begin
+  HideWaitForm;
   F := CreateMessageDialog(Msg, DlgType, Buttons);
   with F do
   try

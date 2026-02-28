@@ -77,6 +77,7 @@ uses
   uExcel2 in 'uExcel2.pas',
   uExcel in 'uExcel.pas',
   uForms in 'uForms.pas',
+  uWaitForm in 'uWaitForm.pas',
   uMailingInterface in 'uMailingInterface.pas',
   uFrmMain in 'uFrmMain.pas' {FrmMain},
   V_MDI in 'V_MDI.pas' {Form_MDI},

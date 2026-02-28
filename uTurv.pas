@@ -82,7 +82,10 @@ type
     function  CreateAllPayrollTransfers: Boolean;
     function  CreateAllPayrollCash: Boolean;
     procedure ExtendPersBonuses;
+    //заагрзука данных из парсек и сохраниение их в турв, новый вариантт 2025г
     procedure LoadDataFromParsec;
+    //сохранение данных всех турв в экспортную таблицу для их использования в таблицах эксель
+    procedure SaveAllTurvToExportTable;
     procedure FinalizeAllTurvForPeriod;
 
     procedure ConvertEmployees202511;
@@ -183,6 +186,7 @@ uses
   uDBOra,
   uMessages,
   uTasks,
+  uWaitForm,
 
   uDBParsec,
   uFrmBasicInput
@@ -624,9 +628,10 @@ var
   b, b1: Boolean;
 begin
   //сортируем массив строк, при этом сначала отсортируем по начальной дате статуса в любом случае
-  ASort := ASort + ['dt_beg'];
+  {ASort := ASort + ['dt_beg'];
   for i := High(ASort) downto 0 do
-    A.VarDynArray2Sort(FList.V, FList.Col(ASort[i]) + 1);
+    A.VarDynArray2Sort(FList.V, FList.Col(ASort[i]) + 1);}
+  FList.Sort(ASort + ['dt_beg']); //+++
 
   SetLength(FRows, 0);
   for i := 0 to FList.Count - 1 do begin
@@ -1299,56 +1304,71 @@ begin
 end;
 
 procedure TTurvData.UpdateExportTable;
+//загрузим турв в промежуточную таблицу (колонки по дням с итоговым временем или кодом, и  итоговые колонки) для экспорта в эксель
 var
   i, j, k, pos: Integer;
   b: Boolean;
   vaTurv, vaTable: TVarDynArray2;
   IdsDel, Flds: string;
 begin
-  Flds := 'id$i;id_departament$i;id_employee$i;id_job$i;d1$s;d2$s;d3$s;d4$s;d5$s;d6$s;d7$s;d8$s;d9$s;d10$s;d11$s;d12$s;d13$s;d14$s;d15$s;d16$s;hours$f;premium$f;penalty$f';
+  if FTitle.G('id_departament') <> 20 then Exit; //бух
+  //поля
+  Flds := 'id$i;id_departament$i;dt1$d;id_employee$i;id_job$i;d1$s;d2$s;d3$s;d4$s;d5$s;d6$s;d7$s;d8$s;d9$s;d10$s;d11$s;d12$s;d13$s;d14$s;d15$s;d16$s;hours$f;premium$f;penalty$f';
+  //загружаем из бд по этому департаменту и периоду
   vaTable := Q.QLoadToVarDynArray2(
-    Q.QSIUDSql('a', 'w_turv_export', Flds) + ' from w_turv_export where id_departament = :id_departament$i and dt1 = :dt1$d',
+    Q.QSIUDSql('a', 'w_turv_export', Flds) + ' where id_departament = :id_departament$i and dt1 = :dt1$d',
     [FTitle.G('id_departament'), FDtBeg]
   );
+  //загрузим аналогичные данные из турв
   vaTurv := [];
   for i := 0 to Count - 1 do begin
-    vaTurv := vaTurv + [];
+    vaTurv := vaTurv + [[]];
     SetLength(vaTurv[High(vaTurv)], 4 + 16 + 3 + 1);
+    //поля и итоги
     vaTurv[i][0] := -1;
     vaTurv[i][1] := FTitle.G('id_departament');
-    vaTurv[i][2] := List.G(R(i)[0], 'id_employeee');
-    vaTurv[i][3] := List.G(R(i)[0], 'id_job');
-    vaTurv[i][4 + 16] := Rows[i].Totals.G('worktime');
-    vaTurv[i][4 + 17] := Rows[i].Totals.G('premium');
-    vaTurv[i][4 + 18] := Rows[i].Totals.G('penalty');
+    vaTurv[i][2] := FTitle.G('dt1');
+    vaTurv[i][3] := List.G(R(i)[0], 'id_employee');
+    vaTurv[i][4] := List.G(R(i)[0], 'id_job');
+    vaTurv[i][5 + 16] := Rows[i].Totals.G('worktime');
+    vaTurv[i][5 + 17] := Rows[i].Totals.G('premium');
+    vaTurv[i][5 + 18] := Rows[i].Totals.G('penalty');
+    //данные по дням
     for j := 1 to 16 do begin
-      vaTurv[i][3 + j] := GetResultDayValue(i, j);
+      vaTurv[i][4 + j] := GetResultDayValue(i, j);
     end;
-    j := A.PosInArray(vaTurv[i][2], vaTable, 2);
+    //есть ли строка с этим работником уже в бд, -2 будет значить что нет
+    j := A.PosInArray(vaTurv[i][3], vaTable, 3);
     if j < 0 then
       vaTurv[i][0] := -2
     else begin
-      b := True;
+      //если есть, провим, изменились ли какие-то данные
+      b := False;
       for k := 1 to High(vaTurv[i]) do begin
         if vaTurv[i][k].AsString <> vaTable[j][k].AsString then begin
-          b := False;
+          b := True;
           Break;
         end;
       end;
+      //если изменились, проставим айди из БД
       if b then
         vaTurv[i][0] := vaTable[j][0];
     end;
   end;
+  //получим список айди из бд для работников, которых теперь нет в турв
   IdsDel := '';
   for i := 0 to High(vaTable) do
-    if A.PosInArray(vaTable[i][2], vaTurv, 2) < 0 then
+    if A.PosInArray(vaTable[i][3], vaTurv, 3) < 0 then
       S.ConcatStP(IdsDel, vaTable[i][0], ',');
   Q.QBeginTrans(True);
-  for i := 0 to High(vaTurv) do begin
-    Q.QIUD(S.IIf(vaTurv[i][0] = -1, 'i', 'd'), 'w_turv_export', '', Flds, A.VarDynArray2RowToVD1(vaTurv, i));
-  end;
+  //еслит есть таковые, то удалим эти строки
   if IdsDel <> '' then
     Q.QExecSql('delete from w_turv_export where id in (' + IdsDel + ')', []);
+  //обработаем массив данных из турв
+  //в итоге нам надо исходя из колонки айди, при -2 - вставить строку, при -1 (данные не изменились) ничего не делать, иначе обновить
+  for i := 0 to High(vaTurv) do
+    if vaTurv[i][0] <> -1 then
+      Q.QIUD(S.IIf(vaTurv[i][0] = -2, 'i', 'u'), 'w_turv_export', '', Flds, A.VarDynArray2RowToVD1(vaTurv, i));
   Q.QCommitTrans;
 end;
 
@@ -3426,23 +3446,46 @@ end;
 
 
 procedure TTurv.LoadDataFromParsec;
+//заагрзука данных из парсек и сохраниение их в турв, новый вариантт 2025г
 var
   LTurv: TTurvData;
-  Ids: TVarDynArray;
+  LIds: TVarDynArray;
   i: Integer;
 begin
-  Ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
-  Ids := Ids + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(Date)]);
-  for i := 0 to High(Ids) do begin
+  ShowWaitForm('Загрузка данных в ТУРВ из Parsec...');
+  LIds := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
+  LIds := LIds + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where is_finalized = 0 and dt1 = :dt1$d', [GetTurvBegDate(Date)]);
+  for i := 0 to High(LIds) do begin
    //if not ((Ids[i] = 12969) or (Ids[i] = 12889)) then Continue;
-   LTurv.Create(Ids[i], '', '');
+    LTurv.Create(LIds[i], '', '');
     try
-    LTurv.LoadFromParsec;
+      LTurv.LoadFromParsec;
     except
     end;
     LTurv := Default(TTurvData);
   end;
 end;
+
+procedure TTurv.SaveAllTurvToExportTable;
+//сохранение данных всех турв в экспортную таблицу для их использования в таблицах эксель
+var
+  LTurv: TTurvData;
+  LIds: TVarDynArray;
+  i: Integer;
+begin
+  ShowWaitForm('Подготовка данных ТУРВ для использования в таблицах Excel...');
+  LIds := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
+  LIds := LIds + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(Date)]);
+  for i := 0 to High(LIds) do begin
+   LTurv.Create(LIds[i], '', '');
+//    try
+    LTurv.UpdateExportTable;
+//    except
+//    end;
+    LTurv := Default(TTurvData);
+  end;
+end;
+
 
 procedure TTurv.FinalizeAllTurvForPeriod;
 var
@@ -3460,6 +3503,7 @@ begin
   end;
   if MyQuestionMessage('Закрыть все ТУРВ за период с ' + DateToStr(Turv.GetTurvBegDate(LDate)) + ' по ' + DateToStr(Turv.GetTurvEndDate(LDate)) + ' ?') <> mrYes then
     Exit;
+  ShowWaitForm('Производится закрытие ТУРВ...');
   j := 0;
   k := 0;
   for i := 0 to High(va) do
@@ -3474,6 +3518,7 @@ begin
     end;
     except
     end;
+  //HideWaitForm;
   if j = 0 then
     MyInfoMessage('Все ТУРВ закрыты.')
   else begin

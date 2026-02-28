@@ -358,8 +358,7 @@ var
 implementation
 
 uses
-  uWindows, uSettings, uFrmMain, uDBOra, uForms, uMessages, uFrDbGridEh
-  ;
+  uWindows, uSettings, uFrmMain, uDBOra, uForms, uMessages, uFrDbGridEh, uWaitForm;
 
 {$R *.dfm}
 
@@ -1489,6 +1488,7 @@ end;
 procedure TFrmBasicMdi.FormActivate(Sender: TObject);
 //вызовем событие для информирования о создании нового окна
 begin
+  HideWaitForm;
   Cth.SetWaitCursor(False);
   if FPreventShow then Exit;
   if Left < 0 then Left := 10;

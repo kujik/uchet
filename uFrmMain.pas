@@ -618,6 +618,8 @@ begin
     [],
 //    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper or User.Role(rW_J_Turv) and (Q.QSelectOneRow('select count(*) from w_departaments where IsStInCommaSt(:id$i, ids_editusers) = 1', [User.GetID])[0] > 0)],
     ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper],
+    [],
+    ['Выгрузка для таблиц Excel', myfrm_Dlg_ExportTurvToXls, User.Role(rW_J_Turv_TP) or User.Role(rW_J_Turv_TS) or User.IsDeveloper],
 
     ['Отчеты'],
     ['Свод по зарплатным ведомостям', myfrm_Rep_W_Payroll, User.Role(rW_Rep_Payroll)],

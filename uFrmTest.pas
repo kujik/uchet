@@ -20,7 +20,7 @@ uses
   Vcl.ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls,
   MemTableDataEh, MemTableEh, EhLibVclUtils, GridsEh, DBAxisGridsEh,
   DBGridEhGrouping, DynVarsEh, IdComponent, IdExplicitTLSClientServerBase,
-  IdMessageClient, IdSMTPBase, Vcl.Mask, uNamedArr;
+  IdMessageClient, IdSMTPBase, Vcl.Mask, uNamedArr, uWaitForm;
 
 type
   TFrmTest = class(TForm)
@@ -1473,11 +1473,26 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+//  ShowWaitForm('111111111111', nil, True, 1);
+  ShowWaitForm;
+  Sleep(3000);
+  //i:=i div i;
+  //FrmCWAcoountBasis.ShowDialog(nil, 0, fAdd, 0);
+  ShowWaitForm('Привет!'#13#10'Производится очень долгая операция!');
+  Sleep(3000);
+
+
+
+  Exit;
+
+Turv.LoadDataFromParsec; Exit;
+
+Turv.SaveAllTurvToExportTable; Exit;
+
   na.Create([[1,2]]);
   na.g('3');
   Exit;
 
-Turv.LoadDataFromParsec; Exit;
 
   TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 38236, null); exit;
 //  Exit;

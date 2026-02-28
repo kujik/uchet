@@ -1038,7 +1038,7 @@ const
   myfrm_Dlg_PayrollTransfer ='Dlg_PayrollTransfer';
   myfrm_Dlg_PayrollCash ='Dlg_PayrollCash';
   myfrm_Dlg_ProdCalculation='Dlg_ProdCalculation';
-
+  myfrm_Dlg_ExportTurvToXls='Dlg_ExportTurvToXls';
 
 const
   DefHorizMargin = 5;

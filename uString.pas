@@ -17,7 +17,7 @@
 interface
 
 uses
-  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils;
+  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils, System.Generics.Collections;
 
 type
   TVarDynArray = array of Variant;
@@ -459,8 +459,15 @@ type
     //сортировка двухмерного вариантгного массива по переданному полю
     //поле передается на 1 больше чем в массиве, если с + то по возрастанию, а с - то по убыванию, ту при сортировке по убыванию по нулевой колонке передать -1
     procedure VarDynArray2Sort(var AArray: TVarDynArray2; const AKey: Integer); //+++
+    //Сравнение двух массивов TVarDynArray2 по заданным индексам колонок.
+    //Возвращает массив пар [позиция в первом {-1}, позиция во втором {-1}] (полный внешний ключ).
+    //результат соотвествует inner join (полное декартово произведение)
+    function CompareArrays(const AData1, AData2: TVarDynArray2; const AKeyIndices1, AKeyIndices2: TArray<Integer>): TVarDynArray2;
     //возвращает одномерный массив, являющийся пересечением, объединением или различием двух массивов
     function ArrCompare(const AArray1, AArray2: array of Variant; const AOperation: TArrayOperation): TVarDynArray; //+++
+    //сравнение двух строк из разных массивов по разным наборам полей. наборы могту быль включающими (все положительные числа),
+    //исключающимми (отрицательные, null дл 0), [True] - все поля, второй может быть [] - сравниваются те колонки, которые переданы в первом
+    function CompareRowsArrays(const AData1, AData2: TVarDynArray2; ARow1, ARow2: Integer; const ACols1, ACols2: TVarDynArray): TVarDynArray;
     //передается или целое число, или вариантный массив, или строка чисел через запятую,
     //возвращается массив
     function VarIntToArray(const AValue: Variant): TVarDynArray; //+++
@@ -495,6 +502,8 @@ type
     function IsNumeric: Boolean;
     //Возвращает True, если значение является TDateTime
     function IsDateTime: Boolean;
+    //Возвращает True, если значение является булевым
+    function IsBool: Boolean;
     //Возвращает строковое представление; для Null/Empty возвращает пустую строку.
     function AsString: string;
     //Возвращает целое число; для Null/Empty возвращает 0.
@@ -2803,6 +2812,95 @@ begin
   VarDynArraySort(AArray, lCol, lAsc);
 end;
 
+function TMyArrayHelper.CompareArrays(const AData1, AData2: TVarDynArray2; const AKeyIndices1, AKeyIndices2: TArray<Integer>): TVarDynArray2;
+// Сравнение двух массивов TVarDynArray2 по заданным индексам колонок.
+// Возвращает массив пар [позиция в первом, позиция во втором] (полный внешний ключ).
+// Если строка из первого не найдена во втором, то пара [i, -1].
+// Если строка из второго не найдена в первом, то пара [-1, j].
+var
+  i, j, k: Integer;
+  LKey: string;
+  LBuilder: TStringBuilder;
+  LDict: TDictionary<string, TList<Integer>>;
+  LList: TList<Integer>;
+  LPair: TVarDynArray;
+begin
+  LDict := TDictionary<string, TList<Integer>>.Create;
+  LBuilder := TStringBuilder.Create;
+  try
+    // Построить словарь для второго массива
+    for j := 0 to High(AData2) do begin
+      LBuilder.Clear;
+      for k := 0 to High(AKeyIndices2) do begin
+        if k > 0 then
+          LBuilder.Append(#1); // разделитель
+        if VarIsNull(AData2[j][AKeyIndices2[k]]) then
+          LBuilder.Append('#NULL#')
+        else
+          LBuilder.Append(VarToStr(AData2[j][AKeyIndices2[k]]));
+      end;
+      LKey := LBuilder.ToString;
+
+      if not LDict.TryGetValue(LKey, LList) then begin
+        LList := TList<Integer>.Create;
+        LDict.Add(LKey, LList);
+      end;
+      LList.Add(j);
+    end;
+
+    Result := [];
+
+    // Обработать строки первого массива
+    for i := 0 to High(AData1) do begin
+      LBuilder.Clear;
+      for k := 0 to High(AKeyIndices1) do begin
+        if k > 0 then
+          LBuilder.Append(#1);
+        if VarIsNull(AData1[i][AKeyIndices1[k]]) then
+          LBuilder.Append('#NULL#')
+        else
+          LBuilder.Append(VarToStr(AData1[i][AKeyIndices1[k]]));
+      end;
+      LKey := LBuilder.ToString;
+
+      if LDict.TryGetValue(LKey, LList) then begin
+        // Есть совпадения – добавить все пары и удалить использованные
+        for j in LList do begin
+          SetLength(Result, Length(Result) + 1);
+          SetLength(Result[High(Result)], 2);
+          Result[High(Result)][0] := i;
+          Result[High(Result)][1] := j;
+        end;
+        LList.Free;
+        LDict.Remove(LKey);
+      end else begin
+        // Нет совпадения – добавить пару (i, -1)
+        SetLength(Result, Length(Result) + 1);
+        SetLength(Result[High(Result)], 2);
+        Result[High(Result)][0] := i;
+        Result[High(Result)][1] := -1;
+      end;
+    end;
+
+    // Оставшиеся строки второго массива (не сопоставленные)
+    for LKey in LDict.Keys do begin
+      LList := LDict[LKey];
+      for j in LList do begin
+        SetLength(Result, Length(Result) + 1);
+        SetLength(Result[High(Result)], 2);
+        Result[High(Result)][0] := -1;
+        Result[High(Result)][1] := j;
+      end;
+      LList.Free;
+    end;
+    LDict.Clear; // чтобы не было повторного освобождения
+
+  finally
+    LBuilder.Free;
+    LDict.Free;
+  end;
+end;
+
 function TMyArrayHelper.ArrCompare(const AArray1, AArray2: array of Variant; const AOperation: TArrayOperation): TVarDynArray;
 //возвращает одномерный массив, являющийся пересечением, объединением или различием двух массивов
 var
@@ -2832,6 +2930,173 @@ begin
           if not InArray(AArray2[i], AArray1) then
             Result := Result + [AArray2[i]];
       end;
+  end;
+end;
+
+function TMyArrayHelper.CompareRowsArrays(const AData1, AData2: TVarDynArray2; ARow1, ARow2: Integer; const ACols1, ACols2: TVarDynArray): TVarDynArray;
+//сравнение двух строк из разных массивов по разным наборам полей. наборы могту быль включающими (все положительные числа),
+//исключающимми (отрицательные, null дл 0), [True] - все поля, второй может быть [] - сравниваются те колонки, которые переданы в первом
+
+// Сравнивает строки ARow1 из первого массива и ARow2 из второго массива.
+// ACols1 задаёт, какие колонки участвуют в сравнении из первого массива:
+//   - если содержит один элемент True, то все колонки первого массива;
+//   - если все элементы >=0, то это список индексов для включения;
+//   - если содержит null (для колонки 0) и/или отрицательные числа, то это список для исключения:
+//       null исключает колонку 0, отрицательное число -n исключает колонку n (n>0).
+// ACols2 задаёт соответствующие колонки из второго массива:
+//   - если пуст, то набор колонок считается тем же (индексы из первого массива применяются ко второму);
+//   - иначе должен содержать положительные числа (индексы) той же длины, что и результирующий список из ACols1.
+// Возвращает массив индексов колонок первого массива, в которых найдены отличия.
+var
+  LIdx1, LIdx2: TArray<Integer>;
+  i, j, LColCount1, LColCount2: Integer;
+  LHasPositive, LHasNegativeOrNull: Boolean;
+  LTempList: TList<Integer>;
+begin
+  Result := [];
+
+  // Проверка индексов строк
+  if (ARow1 < 0) or (ARow1 > High(AData1)) then
+    raise Exception.CreateFmt('CompareRowsArrays: индекс первой строки %d вне диапазона', [ARow1]);
+  if (ARow2 < 0) or (ARow2 > High(AData2)) then
+    raise Exception.CreateFmt('CompareRowsArrays: индекс второй строки %d вне диапазона', [ARow2]);
+
+  LColCount1 := Length(AData1[ARow1]);
+  LColCount2 := Length(AData2[ARow2]);
+
+  // ---------- Обработка ACols1 ----------
+  if Length(ACols1) = 0 then
+    raise Exception.Create('CompareRowsArrays: ACols1 не может быть пустым');
+
+  // Проверка на специальное значение [True]
+  if (Length(ACols1) = 1) and (VarType(ACols1[0]) = varBoolean) and (ACols1[0] = True) then
+  begin
+    // Все колонки первого массива
+    SetLength(LIdx1, LColCount1);
+    for i := 0 to LColCount1 - 1 do
+      LIdx1[i] := i;
+  end
+  else
+  begin
+    // Анализируем состав ACols1: все положительные или null/отрицательные
+    LHasPositive := False;
+    LHasNegativeOrNull := False;
+    for i := 0 to High(ACols1) do
+    begin
+      if VarIsNull(ACols1[i]) then
+        LHasNegativeOrNull := True
+      else if VarIsOrdinal(ACols1[i]) then
+      begin
+        j := ACols1[i];
+        if j >= 0 then
+          LHasPositive := True
+        else
+          LHasNegativeOrNull := True;
+      end
+      else
+        raise Exception.Create('CompareRowsArrays: ACols1 содержит недопустимый тип элемента');
+    end;
+
+    if LHasPositive and LHasNegativeOrNull then
+      raise Exception.Create('CompareRowsArrays: ACols1 не может одновременно содержать положительные и отрицательные/null элементы');
+
+    if LHasPositive then
+    begin
+      // Список для включения
+      SetLength(LIdx1, Length(ACols1));
+      for i := 0 to High(ACols1) do
+      begin
+        j := ACols1[i];
+        if (j < 0) or (j >= LColCount1) then
+          raise Exception.CreateFmt('CompareRowsArrays: индекс %d в ACols1 вне допустимого диапазона [0..%d]', [j, LColCount1 - 1]);
+        LIdx1[i] := j;
+      end;
+    end
+    else // LHasNegativeOrNull
+    begin
+      // Список для исключения: начинаем со всех индексов
+      LTempList := TList<Integer>.Create;
+      try
+        for i := 0 to LColCount1 - 1 do
+          LTempList.Add(i);
+
+        for i := 0 to High(ACols1) do
+        begin
+          if VarIsNull(ACols1[i]) then
+          begin
+            // исключаем колонку 0
+            if LTempList.Remove(0) = -1 then
+              raise Exception.Create('CompareRowsArrays: попытка исключить отсутствующую колонку 0');
+          end
+          else // отрицательное число
+          begin
+            j := -ACols1[i]; // абсолютное значение
+            if (j < 0) or (j >= LColCount1) then
+              raise Exception.CreateFmt('CompareRowsArrays: индекс %d для исключения вне допустимого диапазона', [j]);
+            if LTempList.Remove(j) = -1 then
+              raise Exception.CreateFmt('CompareRowsArrays: попытка исключить отсутствующую колонку %d', [j]);
+          end;
+        end;
+        LIdx1 := LTempList.ToArray;
+      finally
+        LTempList.Free;
+      end;
+
+      if Length(LIdx1) = 0 then
+        raise Exception.Create('CompareRowsArrays: после исключений не осталось колонок для сравнения');
+    end;
+  end;
+
+  // ---------- Обработка ACols2 ----------
+  if Length(ACols2) = 0 then
+  begin
+    // Используем те же индексы, но проверяем их наличие во втором массиве
+    SetLength(LIdx2, Length(LIdx1));
+    for i := 0 to High(LIdx1) do
+    begin
+      if LIdx1[i] >= LColCount2 then
+        raise Exception.CreateFmt('CompareRowsArrays: индекс колонки %d первого массива выходит за пределы второго массива (колонок %d)', [LIdx1[i], LColCount2]);
+      LIdx2[i] := LIdx1[i];
+    end;
+
+    // Если первый был [True], не требуем равенства количества колонок,
+    // но все индексы должны быть доступны во втором (уже проверено выше).
+  end
+  else
+  begin
+    // ACols2 должен содержать положительные числа той же длины, что и LIdx1
+    if Length(ACols2) <> Length(LIdx1) then
+      raise Exception.CreateFmt('CompareRowsArrays: длина ACols2 (%d) не совпадает с числом сравниваемых колонок (%d)', [Length(ACols2), Length(LIdx1)]);
+
+    SetLength(LIdx2, Length(ACols2));
+    for i := 0 to High(ACols2) do
+    begin
+      if not VarIsOrdinal(ACols2[i]) then
+        raise Exception.Create('CompareRowsArrays: ACols2 содержит нечисловой элемент');
+      j := ACols2[i];
+      if j < 0 then
+        raise Exception.Create('CompareRowsArrays: ACols2 не может содержать отрицательные индексы');
+      if j >= LColCount2 then
+        raise Exception.CreateFmt('CompareRowsArrays: индекс %d в ACols2 вне допустимого диапазона [0..%d]', [j, LColCount2 - 1]);
+      LIdx2[i] := j;
+    end;
+  end;
+
+  // Количество сравниваемых колонок должно совпадать (уже гарантировано, но проверим)
+  if Length(LIdx1) <> Length(LIdx2) then
+    raise Exception.Create('CompareRowsArrays: внутренняя ошибка – несоответствие длины списков колонок');
+
+  // ---------- Сравнение ----------
+  LTempList := TList<Integer>.Create;
+  try
+    for i := 0 to High(LIdx1) do
+    begin
+      if not VarSameValue(AData1[ARow1][LIdx1[i]], AData2[ARow2][LIdx2[i]]) then
+        LTempList.Add(LIdx1[i]);
+    end;
+    Result := TVarDynArray(LTempList.ToArray);
+  finally
+    LTempList.Free;
   end;
 end;
 
@@ -3028,6 +3293,11 @@ end;
 function TVariantHelper.IsDateTime: Boolean;
 begin
   Result := S.IsDate(Self);
+end;
+
+function TVariantHelper.IsBool: Boolean;
+begin
+  Result := S.VarType(Self) = varBoolean;
 end;
 
 function TVariantHelper.AsString: string;

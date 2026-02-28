@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, DBCtrlsEh, Buttons, DBGridEh, DBAxisGridsEh, GridsEh,
-  ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh,
+  ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, System.Generics.Collections,
   MemTableDataEh, Db, MemTableEh, Math, ExtCtrls, Types,
   IniFiles,  SearchPanelsEh,
 

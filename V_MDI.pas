@@ -190,8 +190,7 @@ var
 implementation
 
 uses
-  uWindows, uSettings, uFrmMain, uDBOra, uForms, uMessages, uString, uFrDbGridEh, uFrmBasicMdi
-  ;
+  uWindows, uSettings, uFrmMain, uDBOra, uForms, uMessages, uString, uFrDbGridEh, uFrmBasicMdi, uWaitForm;
 
 {$R *.dfm}
 
@@ -373,6 +372,7 @@ var
   st: string;
 begin
   st:=Self.Name;
+  HideWaitForm;
   Cth.SetWaitCursor(False);
   if FPreventShow then
     exit;

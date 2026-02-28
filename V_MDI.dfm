@@ -29,21 +29,26 @@ object Form_MDI: TForm_MDI
     Color = cl3DLight
     ParentBackground = False
     TabOrder = 0
+    ExplicitTop = 155
+    ExplicitWidth = 325
     object lbl_StatusBar_Right: TLabel
-      Left = 244
+      Left = 242
       Top = 1
       Width = 86
-      Height = 13
+      Height = 17
       Align = alRight
       Caption = 'lbl_StatusBar_Left'
+      ExplicitLeft = 244
+      ExplicitHeight = 13
     end
     object lbl_StatusBar_Left: TLabel
       Left = 1
       Top = 1
       Width = 86
-      Height = 13
+      Height = 17
       Align = alLeft
       Caption = 'lbl_StatusBar_Left'
+      ExplicitHeight = 13
     end
   end
   object tmrAfterCreate: TTimer

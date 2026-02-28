@@ -755,6 +755,9 @@ begin
   else if F = myfrm_R_Workers then begin
     TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fView, null, null);
   end
+  else if F = myfrm_Dlg_ExportTurvToXls then begin
+    Turv.SaveAllTurvToExportTable;
+  end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
 end;
@@ -807,16 +810,6 @@ begin
   else if F = myfrm_Dlg_Work_Schedule then begin
     TFrmWWedtWorkSchedule.Show(Application, F, [myfoDialog, myfoMultiCopy], fMode, AId, null);
   end
-{  else if F = myfrm_Dlg_J_PersBonus then begin
-    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_employees', 'Работник', 600, 70, [
-      ['f$s', cntEdit, 'Фамилия','1:25::T'],
-      ['i$s', cntEdit, 'Имя','1:25::T'],
-      ['o$s', cntEdit, 'Отчество','0:25::T'],
-      ['birthday$d', cntDEdit, 'Дата'#13#10'рождение',''],
-      ['comm$s', cntEdit, 'Комментарий','0:400::T']],
-      [['caption dlgedit']]
-    );
-  end}
 
 
 
