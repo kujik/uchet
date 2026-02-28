@@ -574,11 +574,13 @@ begin
     ['Журналы'],
     ['Счета', myfrm_J_Accounts, User.Roles([], [rPC_A_VAll, rPC_A_VSelfCat, rPC_A_VSelf])],
     ['Платежи', myfrm_J_Payments, User.Roles([], [rPC_P_VAll, rPC_P_VSelfCat])],
+    [],
     ['Платежи по заказам', myfrm_J_OrPayments, User.Roles([], [rPC_J_OrPayments_V, rPC_J_OrPayments_Ch])],
 
     ['Касса'],
     ['Журнал Кассы1', myfrm_J_SnCalendar_Cash_1, User.Roles([], [rPC_J_Cash_1_V, rPC_J_Cash_1_Ch])],
     ['Журнал Кассы2', myfrm_J_SnCalendar_Cash_2, User.Roles([], [rPC_J_Cash_2_V, rPC_J_Cash_2_Ch])],
+    [],
     ['Ревизия кассы', myfrm_Dlg_CashRevision, User.Roles([], [rPC_A_Cash_Revision_Ch, rPC_J_Cash_1_V, rPC_J_Cash_1_Ch, rPC_J_Cash_2_V, rPC_J_Cash_2_Ch])],
 
     ['Отчеты'],

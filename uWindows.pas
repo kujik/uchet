@@ -114,7 +114,8 @@ uses
 
 //  D_Sn_Calendar,
   uFrmCDedtAccount,
-  D_ExpenseItems,
+  //D_ExpenseItems,
+  uFrmCDedtExpenseItem,
 
   uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
@@ -792,6 +793,10 @@ begin
   else if F = myfrm_Dlg_R_Divisions then begin
     TFrmWDedtDivision.Show(AOwner, F, MyFormOptions, fMode, AId, null);
   end
+  else if F = myfrm_Dlg_RefExpenseItems then begin
+    TFrmCDedtExpenseItem.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
+//  Form := TDlg_ExpenseItems.Create(AOwner, F, MyFormOptions, fMode, AId, null);
+  end
   else if F = myfrm_Dlg_R_Workers then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'w_employees', 'Работник', 600, 70, [
       ['f$s', cntEdit, 'Фамилия','1:25::T'],
@@ -879,9 +884,6 @@ begin
   else if F = myfrm_Dlg_SnCalendar then begin
     TFrmCDedtAccount.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMultiCopy], fMode, AId, AAddParam);
     //Form := TDlg_Sn_Calendar.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);
-  end
-  else if F = myfrm_Dlg_RefExpenseItems then begin
-    Form := TDlg_ExpenseItems.Create(AOwner, F, MyFormOptions, fMode, AId, null);
   end
   else if F = myfrm_Dlg_Sn_Defectives then begin
 //    Form := TDlg_Sn_Defectives.Create(AOwner, F, MyFormOptions, fMode, AId, null);

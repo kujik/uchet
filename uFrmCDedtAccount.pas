@@ -1,3 +1,5 @@
+//!!!!!!!FExpenseItemsNeedReceipt не обрабатывается
+
 unit uFrmCDedtAccount;
 
 interface
@@ -276,7 +278,6 @@ begin
   Result := Inherited;
   if Result = False then
     Exit;
-
 
   if Mode <> fAdd then
     FAccountType := F.GetPropB('accounttype').AsInteger;
@@ -925,6 +926,12 @@ var
   st: string;
 begin
   lbl_Info.Caption := '';
+  //для транспортных счетов типа Прямой, не используем и скроем
+  nedt_PriceKm.Visible := False;
+  nedt_PriceIdle.Visible := False;
+  nedt_OtherSum.Visible := False;
+  nedt_Idle.Visible := False;
+  pnlRouteM.Height := 32;
   if Mode in [fDelete, fView] then
     Exit;
   //сообщение о причинах блокировки, оно же маркер
@@ -944,12 +951,6 @@ begin
   chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir) and not FEdtPaymentsOnly;
   //эти ридонли всегда
   SetControlsEditable([cmb_id_user, nedt_SumWoNds, cmb_flighttype], False, False, pnlFrmClient);
-  //для транспортных счетов типа Прямой, не используем и скроем
-  nedt_PriceKm.Visible := False;
-  nedt_PriceIdle.Visible := False;
-  nedt_OtherSum.Visible := False;
-  nedt_Idle.Visible := False;
-  pnlRouteM.Height := 32;
   //если счета не транспортные, отключим проверку
   if not (FAccountType in [1, 2]) then
     Cth.SetControlsVerification([cmb_CarType, cmb_FlightType, dedt_FlightDt], ['', '', '']);

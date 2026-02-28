@@ -1311,7 +1311,7 @@ var
   vaTurv, vaTable: TVarDynArray2;
   IdsDel, Flds: string;
 begin
-  if FTitle.G('id_departament') <> 20 then Exit; //бух
+  //if FTitle.G('id_departament') <> 20 then Exit; //бух
   //поля
   Flds := 'id$i;id_departament$i;dt1$d;id_employee$i;id_job$i;d1$s;d2$s;d3$s;d4$s;d5$s;d6$s;d7$s;d8$s;d9$s;d10$s;d11$s;d12$s;d13$s;d14$s;d15$s;d16$s;hours$f;premium$f;penalty$f';
   //загружаем из бд по этому департаменту и периоду
@@ -3477,7 +3477,7 @@ begin
   LIds := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   LIds := LIds + Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(Date)]);
   for i := 0 to High(LIds) do begin
-   LTurv.Create(LIds[i], '', '');
+   LTurv.Create(LIds[i], '', 'id_employee');
 //    try
     LTurv.UpdateExportTable;
 //    except

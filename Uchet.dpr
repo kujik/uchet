@@ -207,7 +207,8 @@ uses
   uFrmWDedtPayrollCalcMethod in 'uFrmWDedtPayrollCalcMethod.pas' {FrmWDedtPayrollCalcMethod},
   uFrmWGedtPayrollTransfer in 'uFrmWGedtPayrollTransfer.pas' {FrmWGedtPayrollTransfer},
   uFrmWGedtPayrollCash in 'uFrmWGedtPayrollCash.pas' {FrmWGedtPayrollCash},
-  uFrmOGjrnProdCalculations in 'uFrmOGjrnProdCalculations.pas' {FrmOGjrnProdCalculations};
+  uFrmOGjrnProdCalculations in 'uFrmOGjrnProdCalculations.pas' {FrmOGjrnProdCalculations},
+  uFrmCDedtExpenseItem in 'uFrmCDedtExpenseItem.pas' {FrmCDedtExpenseItem};
 
 var
   MT: Integer;

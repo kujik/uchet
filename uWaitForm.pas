@@ -48,6 +48,7 @@ uses
 //показывает форму
 procedure ShowWaitForm(const AMessage: string = ''; ATimeoutSec: Extended = 0.001; AProc: TProc = nil);
 //Скрывает форму (для ручного управления).
+
 procedure HideWaitForm;
 
 implementation
@@ -65,7 +66,6 @@ type
 var
   WaitFormInstance: TWaitForm = nil;
 
-{ TWaitForm }
 constructor TWaitForm.CreateNew(AOwner: TComponent; AMessage: string);
 begin
   inherited CreateNew(AOwner);
@@ -102,7 +102,6 @@ begin
   FHideTimer.Interval := 0;
   HideWaitForm;
 end;
-{ Вспомогательные процедуры }
 
 procedure PositionWaitForm;
 var
@@ -168,3 +167,4 @@ initialization
 finalization
 
 end.
+

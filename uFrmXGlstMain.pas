@@ -2194,8 +2194,8 @@ begin
       Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fMode, Fr.GetValue('aid'), null{AddInfo});
     if FormDoc = myfrm_R_GrExpenseItems then
       Wh.ExecDialog(myfrm_Dlg_R_GrExpenseItems, Self, [], fMode, Fr.ID, null);
-  //!!!  if FormDoc = myfrm_R_ExpenseItems then
-  //    Wh.ExecDialog(myfrm_Dlg_RefExpenseItems, Self, [], fMode, Fr.ID, null);
+    if FormDoc = myfrm_R_ExpenseItems then
+      Wh.ExecDialog(myfrm_Dlg_RefExpenseItems, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Suppliers then
       Wh.ExecDialog(myfrm_Dlg_RefSuppliers, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Suppliers_SELCH then

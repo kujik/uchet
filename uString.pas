@@ -500,8 +500,10 @@ type
     function IsEmpty: Boolean;
     //Возвращает True, если значение является числовым (целым или вещественным).
     function IsNumeric: Boolean;
-    //Возвращает True, если значение является TDateTime
+    //Возвращает True, если значение является TDateTime, но не строка в формате даты!
     function IsDateTime: Boolean;
+    //Возвращает True, если значение является TDateTime или строка в формате даты
+    function IsDateTimeEx: Boolean;
     //Возвращает True, если значение является булевым
     function IsBool: Boolean;
     //Возвращает строковое представление; для Null/Empty возвращает пустую строку.
@@ -853,7 +855,7 @@ begin
         Result := (d >= -693594) and (d <= 2958465);
       end;
     varString,
-    varUString:     // строки нужно парсить — см. Вариант 2
+    varUString:        // строки нужно парсить — см. Вариант 2
       Result := False; // или вызвать TryStrToDateTime
     else
       Result := False;
@@ -862,15 +864,18 @@ end;
 
 function TMyStringHelper.IsDateTime(const AStr: string; const ADateTimeType: string): Boolean;
 //проверка строки на то что содержит дату/время
-//DtType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
+//ADateTimeType = dt - должно быть датой или датой со временем, DT - обязательно дата и время, d,D -только дата, t - только время
 //предполагается что разделитель даты и времени - пробел (практически всегда это так), а часов и минут - ":"
 //+++ использует TryStrToDateTime
 var
   dt: TDateTime;
   lType: string;
+  St: string;
 begin
   Result := TryStrToDateTime(AStr, dt);
   if not Result then
+    Exit;
+  if Result and (ADateTimeType = 'dt') then
     Exit;
   lType := UpperCase(ADateTimeType);
   if lType = 'DT' then
@@ -3293,6 +3298,11 @@ end;
 function TVariantHelper.IsDateTime: Boolean;
 begin
   Result := S.IsDate(Self);
+end;
+
+function TVariantHelper.IsDateTimeEx: Boolean;
+begin
+  Result := S.IsDateTime(Self);
 end;
 
 function TVariantHelper.IsBool: Boolean;

@@ -932,6 +932,7 @@ begin
     SplMonitorReportDay;
   end;
   Turv.LoadDataFromParsec;
+  Turv.SaveAllTurvToExportTable;
   Turv.ExtendPersBonuses;
 end;
 
