@@ -1,7 +1,3 @@
-{
-редактирование татьи расходов
-}
-
 unit uFrmCDedtExpenseItem;
 
 interface
@@ -50,7 +46,6 @@ function TFrmCDedtExpenseItem.Prepare: Boolean;
 begin
   Result := False;
   Caption := 'Статья расходов';
-  //поля
   F.DefineFields:=[
     ['id$i'],
     ['id_group$i','v=1:400'],
@@ -63,15 +58,12 @@ begin
     ['accounttype$i',''],
     ['active$i','']
   ];
-  //параметры доступа к данным
   View := 'v_ref_expenseitems';
   Table := 'ref_expenseitems';
   Sequence := 'sq_ref_expenseitems';
   FOpt.UseChbNoClose := False;
-  //установим кнопки в полях выбора пользователей
   Cth.SetEditButtons(edt_usernames, [[30, 'Выбрать пользователей']]);
   Cth.SetEditButtons(edt_agreednames, [[30, 'Выбрать пользователей']]);
-  //информация
   FOpt.InfoArray:= [[
     'Редактирование статьи расходов.'#13#10+
     'Выберите группу из списка существующих, наименование статьи расходов.'#13#10+
@@ -84,21 +76,16 @@ begin
     '(заявка не обязательна, если сумма счета не превышает значения, установленного в настройках программы).'#13#10
     ,not (Mode in [fView, fDelete])
   ]];
-  //растягиваем только по ширине
   FWHBounds.Y2:= -1;
-  //подительский метод
   Result := inherited;
   if not Result then
     Exit;
-  //поля выбора пользователей должны быть ридонли
   edt_usernames.ReadOnly := True;
   edt_agreednames.ReadOnly := True;
-  //установим чекбокс с типом счта для статьи (транспортные, монтаж), если 0 то все будут без отметки
   Cth.SetControlValue(Self, 'chb_accounttype_' + F.GetPropB('accounttype').AsString, 1);
 end;
 
 function TFrmCDedtExpenseItem.LoadComboBoxes: Boolean;
-//загрузим данные в комбобокс
 begin
   Result := False;
   Q.QLoadToDBComboBoxEh('select name, id from ref_grexpenseitems order by name', [], cmb_id_group, cntComboLK);
@@ -106,14 +93,12 @@ begin
 end;
 
 procedure TFrmCDedtExpenseItem.ControlOnChange(Sender: TObject);
-//при изменении данных в полях ввода
 begin
   OnAccountTypeClick(Sender);
   inherited;
 end;
 
 procedure TFrmCDedtExpenseItem.EditButtonsClick(Sender: TObject; var Handled: Boolean);
-//при клики на едитбаттон
 var
   LNewIds, LNewNames: string;
 begin
@@ -124,7 +109,6 @@ begin
 end;
 
 procedure TFrmCDedtExpenseItem.OpenChooseUsersDialog(AIdsName, ANamesName: string);
-//вызов диалога выбора пользователей, передаем имена свойтв для айдишников и наименований пользователей
 var
   LNewIds, LNewNames: string;
 begin
@@ -137,14 +121,13 @@ begin
 end;
 
 procedure TFrmCDedtExpenseItem.OnAccountTypeClick(Sender: TObject);
-//процедура для обработки клика на чекбоксе выбора типа счета (может быть выбран один из них или ни одного)
 var
   i: Integer;
 begin
-  //нужные контролы определим по префиксу
-  if Mode in [fDelete, fView] or (Pos('chb_accounttype_', TComponent(Sender).Name) <> 1) then
+  if Mode in [fDelete, fView] then
     Exit;
-  //снимем пометку с остальных, если текущий отмечен, и установим свойство для типа счета
+  if Pos('chb_accounttype_', TComponent(Sender).Name) <> 1 then
+    Exit;
   if TDBCheckBoxEh(Sender).Checked then begin
     for i := 0 to ComponentCount - 1 do
       if (Pos('chb_accounttype_', Components[i].Name) = 1) and (Components[i].Name <> TComponent(Sender).Name) then

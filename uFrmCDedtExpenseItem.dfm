@@ -8,13 +8,13 @@ inherited FrmCDedtExpenseItem: TFrmCDedtExpenseItem
   inherited pnlFrmMain: TPanel
     Width = 786
     Height = 261
-    ExplicitWidth = 786
-    ExplicitHeight = 308
+    ExplicitWidth = 782
+    ExplicitHeight = 260
     inherited pnlFrmClient: TPanel
       Width = 776
       Height = 212
       ExplicitWidth = 772
-      ExplicitHeight = 258
+      ExplicitHeight = 211
       object cmb_id_group: TDBComboBoxEh
         Left = 88
         Top = 8
@@ -148,7 +148,7 @@ inherited FrmCDedtExpenseItem: TFrmCDedtExpenseItem
     inherited pnlFrmBtns: TPanel
       Top = 217
       Width = 776
-      ExplicitTop = 263
+      ExplicitTop = 216
       ExplicitWidth = 772
       inherited bvlFrmBtnsTl: TBevel
         Width = 774
@@ -183,7 +183,7 @@ inherited FrmCDedtExpenseItem: TFrmCDedtExpenseItem
   inherited pnlStatusBar: TPanel
     Top = 261
     Width = 786
-    ExplicitTop = 307
+    ExplicitTop = 260
     ExplicitWidth = 782
     inherited lblStatusBarR: TLabel
       Left = 713
