@@ -523,6 +523,19 @@ type
     //Возвращает Null, если значение Null или пустая строка.
     function NullIfEmpty: Variant;
   end;
+
+type
+  //============================================================================
+  //Хелпер для типа Variant
+  //============================================================================
+  TVarDynArray2Helper = record helper for TVarDynArray2
+  public
+    function Row(ARow: Integer): TVarDynArray;
+    function Col(ACol: Integer): TVarDynArray;
+  end;
+
+
+
 //------------------------------------------------------------------------------
 //Вспомогательные функции, необходимые для EhLib и других внешних модулей
 //------------------------------------------------------------------------------
@@ -532,6 +545,8 @@ function WordPosition(const N: Integer; const S: string; WordDelims: TCharSet): 
 function ExtractWordPos(N: Integer; const S: string; WordDelims: TCharSet; var Pos: Integer): string;
 
 function ExtractWord(N: Integer; const S: string; WordDelims: TCharSet): string;
+
+
 //------------------------------------------------------------------------------
 //Глобальная функция BadDate (для обратной совместимости)
 //------------------------------------------------------------------------------
@@ -3354,6 +3369,20 @@ end;
 function TVariantHelper.NullIfEmpty: Variant;
 begin
   Result := s.NullIfEmpty(Self);
+end;
+
+//==============================================================================
+//TVarDynArray2Helper методы
+//==============================================================================
+
+function TVarDynArray2Helper.Row(ARow: Integer): TVarDynArray;
+begin
+  Result := A.VarDynArray2RowToVD1(Self, ARow);
+end;
+
+function TVarDynArray2Helper.Col(ACol: Integer): TVarDynArray;
+begin
+  Result := A.VarDynArray2ColToVD1(Self, ACol);
 end;
 
 

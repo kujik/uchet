@@ -158,6 +158,7 @@ type
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean; overload;
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TDBGridEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
+    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray): TVarDynArray2; overload;
 
     //возвращаем первую строку запроса
     //передается текст запроса, массив параметров
@@ -1161,6 +1162,15 @@ begin
   Result := QLoadFromQuery(Sql, ParamValues, na);
   Mth.LoadGridFromNamedArray(Res, na, ByFieldNames, ClearTable);
 end;
+
+function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
+var
+  na: TNamedArr;
+begin
+  QLoadFromQuery(Sql, ParamValues, na);
+  Result := na.V;
+end;
+
 
 
 

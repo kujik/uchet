@@ -3308,7 +3308,7 @@ begin
         DBGridEh1.RestoreVertPos(KeyString);
       //if myogIndicatorCheckBoxes in Options then EndOperation;
       if myogIndicatorCheckBoxes in Options then
-        SetIndicatorCheckBoxesByField(Opt.Sql.IdField, A.VarDynArray2ColToVD1(charr, 0));
+        SetIndicatorCheckBoxesByField(Opt.Sql.IdField, charr.Col(0));
     end
     //обновление грида в онлайн-режиме
     else begin
@@ -3363,7 +3363,7 @@ begin
         Gh.GridRefresh(DBGridEh1, myogGrayedWhenRefresh in Options, AfMode, (AFastMode = 1) or (AFastMode = 0) and (myogFastRefresh in FOptions), FOpt.Sql.IdField, AID, myogToNextRowAfterDeleting in FOptions);
 //exit;
         if myogIndicatorCheckBoxes in Options then
-          SetIndicatorCheckBoxesByField(Opt.Sql.IdField, A.VarDynArray2ColToVD1(charr, 0));
+          SetIndicatorCheckBoxesByField(Opt.Sql.IdField, charr.Col(0));
       end
       else begin
         MemTableEh1.Open;
