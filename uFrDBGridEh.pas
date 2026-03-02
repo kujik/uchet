@@ -3158,7 +3158,7 @@ begin
       st := Opt.Sql.Fields[i].FChbPic;
       if (st <> '')and(not IsColumnEditable(col.FieldName)) then begin
         //зеленая галка для 1, для 0 прозрачная
-        if st = '+' then st := '0;1';
+        if st = '+' then st := '1;0';
         Gh.SetGridInCellImagesAdd(DbGridEh1, [[col.FieldName, '1;0', st, true, 0]])
       end
       else begin

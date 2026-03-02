@@ -227,7 +227,7 @@ begin
   F.DefineFields:=[
     ['id$i'],
     ['type$i'],
-    ['accounttype$i','',#0,AddParam],
+    ['accounttype$i','',#0,AddParam.AsInteger],
     ['account$s','V=1:400::T'],
     ['accountdt$d','V=:'],
     ['dt$d','V=:',#0,Date],
@@ -281,6 +281,14 @@ begin
 
   if Mode <> fAdd then
     FAccountType := F.GetPropB('accounttype').AsInteger;
+  //сбросим поля при копировании счета
+  if Mode = fCopy then begin
+    F.SetProp('dt', Date);
+    F.SetProp('filename', FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now));
+    F.SetProp('agreed1', False);
+    F.SetProp('agreed2', False);
+    F.SetProp('id_whoagreed1', null);
+  end;
   CalculateNds;
   LoadPayments;
   SetGrids;
@@ -561,7 +569,7 @@ begin
       if sum.AsFloat = 0 then
         Q.QExecSQL('delete from sn_calendar_payments where id  = :id$i', [FPayments.G(i, 'id')])
       else if (sum <> FPayments.G(i, 'sum')) or (dt <> FPayments.G(i, 'dt')) then
-        Q.QExecSQL('update sn_calendar_payments set dt = :dt$d, sum = :sum$f where id = :id$i', [FPayments.G(i, 'dt'), dt, sum]);
+        Q.QExecSQL('update sn_calendar_payments set dt = :dt$d, sum = :sum$f where id = :id$i', [dt, sum, FPayments.G(i, 'id')]);
     end
     else begin
       Q.QExecSQL('insert into sn_calendar_payments (id_account, dt, sum, status) values (:id_account$i, :dt$d, :sum$f, 0)', [ID, dt, sum]);
@@ -769,9 +777,10 @@ begin
   while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
     dec(i);
   //подсветим последнее заполеннное поле суммы, если общая сумма не равна итоговой по счету
+var vvv :=GetControlValue('nedt_sum').AsFloat;    //!!!!
   for j := i downto 1 do
     if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
-      if FPaymentsSum <> GetControlValue('nedt_sum').AsFloat then begin
+      if RoundTo(Extended(FPaymentsSum),-2) <> RoundTo(Extended(vvv),-2) {GetControlValue('nedt_sum').AsFloat} then begin
         Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
         Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
       end;
@@ -841,15 +850,20 @@ end;
 
 function TFrmCDedtAccount.IsAgreed1Enabled: Boolean;
 //когда может быть согласовано руководителем
+var
+  LWhoAgreed: string;
 begin
   Result := False;
   if Cth.GetControlValue(cmb_id_ExpenseItem) = null then
     Exit;
   //может, если:
   //в любом случае IsDataEditor, иначе только когда не согласован директором, при праве rPC_A_AgrAll для люой или праве rPC_A_AgrSelfCat для своей (есть пользователь в поле Кто согласовывает для категории) категории
+  LWhoAgreed := '';
+  if cmb_id_ExpenseItem.ItemIndex >= 0 then
+    LWhoAgreed := FExpenseItemsAgreed[A.PosInArray(Cth.GetControlValue(cmb_id_ExpenseItem), FExpenseItemsAgreed, 1)][0];
   Result:=
     (User.IsDataEditor) or ((not chb_Agreed2.Checked) and
-      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (S.InCommaStr(IntToStr(User.GetId), FExpenseItemsAgreed[A.PosInArray(Cth.GetControlValue(cmb_id_ExpenseItem), FExpenseItemsAgreed, 1)][0]))));
+      (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (S.InCommaStr(IntToStr(User.GetId),LWhoAgreed))));
 end;
 
 procedure TFrmCDedtAccount.SetAgreed1(AChange: Boolean = True);
@@ -867,19 +881,20 @@ end;
 function TFrmCDedtAccount.IsFilesLoaded: Boolean;
 //проверимм, загружены ли файлы для счета и заявки по счету
 //в качестве маркера загруженности установим значение соответсвующего чекбокса
-//в качестве маркера ошибки, если требуется загрузка, установим его подчеркивание крачсным (маркер ошибки)
+//в качестве маркера ошибки, если требуется загрузка, установим его подчеркивание красным (маркер ошибки)
 var
-  a: TStringDynArray;
+  sta: TStringDynArray;
   b1, b2: Boolean;
 begin
-  a := Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_A(F.GetProp('filename')));
-  chb_AccountFile.Checked := Length(a) > 0;
-  chb_AccountFile.Caption := 'Файл счета ' + S.IIf(chb_AccountFile.Checked, 'загружен', 'не загружен');
-  Cth.SetErrorMarker(chb_AccountFile, not chb_AccountFile.Checked);
-  a := Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_Z(F.GetProp('filename')));
-  chb_RequestFile.Checked := Length(a) > 0;
-  chb_RequestFile.Caption := 'Файл заявки ' + S.IIf(chb_AccountFile.Checked, 'загружен', 'не загружен');
-  Cth.SetErrorMarker(chb_RequestFile, (not chb_AccountFile.Checked) and (nedt_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req)));
+//var st:=F.GetProp('filename');
+  sta := Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_A(F.GetProp('filename')));
+  chb_AccountFile.Caption := 'Файл счета ' + S.IIfStr(Length(sta) = 0, 'не ') + 'загружен';
+  chb_AccountFile.Checked := Length(sta) > 0;
+  Cth.SetErrorMarker(chb_AccountFile,Length(sta) = 0);
+  sta := Sys.GetFileInDirectoryOnly(Module.GetPath_Accounts_Z(F.GetProp('filename')));
+  chb_RequestFile.Caption := 'Файл заявки ' + S.IIfStr(Length(sta) = 0, 'не ') + 'загружен';
+  chb_RequestFile.Checked := Length(sta) > 0;
+  Cth.SetErrorMarker(chb_RequestFile, (Length(sta) = 0) and (nedt_sum.Value > Module.GetCfgVar(mycfgPCsum_need_req)) and (A.FindValueInArray2(cmb_id_expenseitem.ItemIndex, 1, 0, FExpenseItemsNeedReceipt) = 1));
 end;
 
 procedure TFrmCDedtAccount.AttachFiles(AMode: Boolean);
@@ -895,8 +910,8 @@ begin
   try
     for i := 0 to MyData.OpenDialog1.Files.Count - 1 do begin
       if FileExists(MyData.OpenDialog1.Files[i]) then begin
-        SPath := Module.GetPath_Accounts_A(F.GetPropB('filename'));
-        ZPath := Module.GetPath_Accounts_Z(F.GetPropB('filename'));
+        SPath := Module.GetPath_Accounts_A(F.GetProp('filename'));
+        ZPath := Module.GetPath_Accounts_Z(F.GetProp('filename'));
         ForceDirectories(SPath);
         ForceDirectories(ZPath);
         CopyFile(PChar(MyData.OpenDialog1.Files[i]), PChar(s.IIFStr(AMode, SPath, ZPath) + '\' + ExtractFileName(MyData.OpenDialog1.Files[i])), True);
@@ -963,7 +978,7 @@ begin
   if (Cth.GetControlValue(edt_Account) = '') or (Mode = fDelete) then
     Exit;
   if Q.QSelectOneRow('select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
-    [Cth.GetControlValue(cmb_id_Supplier), s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))])[0] = null then
+    [Cth.GetControlValue(cmb_id_Supplier).AsIntegerM, s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))])[0] = null then
     Exit;
   Result := '?Счет с таким же номером у этого поставщика уже есть.'#13#10'Нажнажмите "Да" чтобы сохранить данные, или "Нет" чтобы продолжить редактирование.';
 end;
@@ -974,7 +989,8 @@ function TFrmCDedtAccount.GetRemainingSum(Sender: TObject): Extended;
 begin
   if nedt_sum.Value.AsString = '' then
     Exit;
-  Result := nedt_sum.Value.AsFloat - FPaymentsSum - (Sender as TDBNumberEditEh).Value.AsFloat;
+  TDBNumberEditEh(Sender).Value := 0;
+  Result := RoundTo(nedt_sum.Value.AsFloat, -2) - RoundTo(FPaymentsSum, -2); // - RoundTo((Sender as TDBNumberEditEh).Value.AsFloat, -2);
   (Sender as TDBNumberEditEh).Value := Result;
 end;
 

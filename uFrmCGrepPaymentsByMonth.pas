@@ -8,16 +8,19 @@ unit uFrmCGrepPaymentsByMonth;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicGrid2, Vcl.ExtCtrls, Vcl.StdCtrls,
-  uFrDBGridEh, VCLTee.Series, VCLTee.TeEngine, MemTableDataEh,
-  VCLTee.Chart, DBCtrlsEh, uData, VclTee.TeeGDIPlus, Vcl.Mask, VCLTee.TeeProcs;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
+  DynVarsEh, MemTableDataEh, Db, ADODB, DataDriverEh, IOUtils, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils,
+  Buttons, PrnDbgEh, DBCtrlsEh, Types, RegularExpressions,
+  uSettings, uData, uMessages, uForms, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh,
+  VclTee.TeeGDIPlus, VCLTee.Series, VCLTee.TeEngine, Vcl.Mask, VCLTee.TeeProcs, VCLTee.Chart,
+  DBLookupEh;
 
 type
   TFrmCGrepPaymentsByMonth = class(TFrmBasicGrid2)
     Chart1: TChart;
     Series1: TLineSeries;
     Series2: TPieSeries;
+    DBLookupComboboxEh1: TDBLookupComboboxEh;
     procedure Frg1DbGridEh1ColEnter(Sender: TObject);
   private
     function  PrepareForm: Boolean; override;
