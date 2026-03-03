@@ -80,7 +80,7 @@ inherited FrmCGrepPaymentsByMonth: TFrmCGrepPaymentsByMonth
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -127,7 +127,7 @@ inherited FrmCGrepPaymentsByMonth: TFrmCGrepPaymentsByMonth
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -160,28 +160,6 @@ inherited FrmCGrepPaymentsByMonth: TFrmCGrepPaymentsByMonth
           ExplicitHeight = 486
           DefaultCanvas = 'TGDIPlusCanvas'
           ColorPaletteIndex = 13
-          object DBComboBoxEh1: TDBComboBoxEh
-            Left = 336
-            Top = 464
-            Width = 121
-            Height = 21
-            DynProps = <>
-            EditButtons = <>
-            TabOrder = 0
-            Text = 'DBComboBoxEh1'
-            Visible = True
-          end
-          object DBLookupComboboxEh1: TDBLookupComboboxEh
-            Left = 224
-            Top = 440
-            Width = 121
-            Height = 21
-            DynProps = <>
-            DataField = ''
-            EditButtons = <>
-            TabOrder = 1
-            Visible = True
-          end
           object Series1: TLineSeries
             HoverElement = [heCurrent]
             Brush.BackColor = clDefault
@@ -273,7 +251,11 @@ inherited FrmCGrepPaymentsByMonth: TFrmCGrepPaymentsByMonth
     ExplicitWidth = 1136
     inherited lblStatusBarR: TLabel
       Left = 1067
+      Height = 14
       ExplicitLeft = 1067
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

@@ -20,7 +20,6 @@ type
     Chart1: TChart;
     Series1: TLineSeries;
     Series2: TPieSeries;
-    DBLookupComboboxEh1: TDBLookupComboboxEh;
     procedure Frg1DbGridEh1ColEnter(Sender: TObject);
   private
     function  PrepareForm: Boolean; override;
@@ -196,7 +195,7 @@ begin
   '  group by to_char(c.dt, ''mm'')) '+
   ') a'+
   ')'+
-  'group by ie_name'
+  'group by ie_name order by ie_name'
   else
   sql:=
   'select'+
@@ -236,7 +235,7 @@ begin
   '  group by to_char(c.dt, ''mm'')) '+
   ') a'+
   ')'+
-  'group by ie_name'
+  'group by ie_name order by ie_name'
   ;
   y := Frg1.GetControlValue('CbYear');
   if y = null then

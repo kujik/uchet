@@ -1751,7 +1751,10 @@ begin
     if (Area.HorzType = hctDataEh) {and (Area.VertType = vctDataEh)} and (Cell.Y > 0) and (Button = mbLeft) and FLastFilterClick then begin
       //если была нажата кнопка фильтра и он не применился (в событии OnApplyFilter флаг очистится)
       //то применим фильтр по клику в клентской части грида
+      try
       DbGridEh1.DefaultApplyFilter;
+      except
+      end;
       FLastFilterClick := False;
     end;
   if myogColumnFilter in Options then

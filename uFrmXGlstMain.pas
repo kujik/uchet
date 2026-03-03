@@ -2202,9 +2202,9 @@ begin
     if FormDoc = myfrm_R_Suppliers_SELCH then
       Wh.ExecDialog(myfrm_Dlg_RefSuppliers, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_Rep_SnCalendar_Transport then
-      Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fView, ID, null);
+      Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fView, Fr.ID, null);
     if FormDoc = myfrm_Rep_SnCalendar_AccMontage then
-      Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fView, ID, null);
+      Wh.ExecDialog(myfrm_Dlg_SnCalendar, Self, [], fView, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Units then
       Wh.ExecDialog(myfrm_Dlg_Bcad_Units, Self, [], fMode, Fr.ID, null);
     if ((FormDoc = myfrm_J_OrPayments) or (FormDoc = myfrm_J_OrPayments_N)) and (Tag = mbtAdd) then begin
@@ -2415,7 +2415,7 @@ begin
       //проход по отфильтрованным
       for i:=0 to Fr.GetCount - 1 do
         begin
-          if S.NNum(Fr.GetValue('status', i)) = 0
+          if S.NNum(Fr.GetValue('pstatus', i)) = 0
            //2024-01-10 - можно проводить несогласованные!!!
              {and
              (MemTableEh1.RecordsView.Rec[i].DataValues['agreed1', dvvValueEh] = 1)and
@@ -2856,7 +2856,13 @@ begin
     else FHandled := False;
     until True;
     if FHandled then begin
+      //ошибка при фильтре по чекбоксу, если грид становится пустым. проверка не помогает, начинаются ошибки далее, надо разбираться!
+//if Fr.GetCount = 0 then fr.refreshgrid;
+     // if Fr.GetCount > 0 then
+      try
       Fr.MemTableEh1.Cancel;
+      except
+      end;
       Handled := True;
     end;
   end;

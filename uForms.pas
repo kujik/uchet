@@ -1418,9 +1418,15 @@ Exit;
   if not FastUpdated then begin
     if AGrayed then
       ADBGridEh.StartLoadingStatus(GLoadingCaption, GLoadingBlackout);
+    try
     TMemTableEh(ADBGridEh.DataSet).Refresh;
+    except
+    end;
     ADBGridEh.DefaultApplySorting;
+    try
     ADBGridEh.DefaultApplyFilter;
+    except
+    end;
     if AGrayed then
       ADBGridEh.FinishLoadingStatus(GLoadingBlackout);
   end
@@ -1429,7 +1435,10 @@ Exit;
     ADBGridEh.DefaultApplyFilter;
   end;
   if KeyString <> '' then
+    try
     ADBGridEh.RestoreVertPos(KeyString);
+    except
+    end;
 end;
 
 procedure TGridEhHelper.DBGridEhAdvDrawDataCellDefault(Sender: TCustomDBGridEh;

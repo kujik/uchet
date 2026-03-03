@@ -284,7 +284,9 @@ begin
   //сбросим пол€ при копировании счета
   if Mode = fCopy then begin
     F.SetProp('dt', Date);
+    F.SetProp('filename', FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now), fvtVBeg);
     F.SetProp('filename', FormatDateTime('yyyy-mm-dd hh.mm.ss.zzz', Now));
+    F.SetProp('id_user', User.GetId);
     F.SetProp('agreed1', False);
     F.SetProp('agreed2', False);
     F.SetProp('id_whoagreed1', null);
@@ -572,7 +574,8 @@ begin
         Q.QExecSQL('update sn_calendar_payments set dt = :dt$d, sum = :sum$f where id = :id$i', [dt, sum, FPayments.G(i, 'id')]);
     end
     else begin
-      Q.QExecSQL('insert into sn_calendar_payments (id_account, dt, sum, status) values (:id_account$i, :dt$d, :sum$f, 0)', [ID, dt, sum]);
+      if (dt.AsString <> '') and (sum.AsString <> '') then
+        Q.QExecSQL('insert into sn_calendar_payments (id_account, dt, sum, status) values (:id_account$i, :dt$d, :sum$f, 0)', [ID, dt, sum]);
     end;
   end;
   Result := True;
@@ -590,10 +593,12 @@ begin
     Exit;
   Result := False;
   //сохраним первую €чекй грида в качестве наименовани€ производственной площадки
-  st := FrgRoute.GetValueS('point1', 1, False);
-  if not A.InArray(st, FPoints1) then
-    Q.QIUD('i', 'ref_sn_locations', 'sq_ref_sn_locations', 'id;name;type;active', [0, st, 0, 1], False);
-  //сохраним €чейки из столбца ѕункт назначени€ в таблице локаций, соотвественно типу счета
+  if FrgRoute.GetCount(False) > 0 then begin
+    st := FrgRoute.GetValueS('point1', 0, False);
+    if not A.InArray(st, FPoints1) then
+      Q.QIUD('i', 'ref_sn_locations', 'sq_ref_sn_locations', 'id;name;type;active', [0, st, 0, 1], False);
+  end;
+    //сохраним €чейки из столбца ѕункт назначени€ в таблице локаций, соотвественно типу счета
   for i := 0 to FrgRoute.GetCount(False) - 1 do begin
     st := FrgRoute.GetValueS('point2', i, False);
     if not A.InArray(st, FPoints2) then
