@@ -95,6 +95,7 @@ grant create trigger to MAIL;
 grant create view to MAIL;
 grant create materialized view to MAIL;
 grant unlimited tablespace to MAIL;
+grant select any table to MAIL;
 
 
 create user NTF identified by NTF25 default tablespace users temporary tablespace temp;
@@ -109,6 +110,7 @@ grant create trigger to NTF;
 grant create view to NTF;
 grant create materialized view to NTF;
 grant unlimited tablespace to NTF;
+grant select any table to NTF;
 
 create user MOB identified by MOB25 default tablespace users temporary tablespace temp;
 grant connect, resource to MOB;
@@ -122,6 +124,7 @@ grant create trigger to MOB;
 grant create view to MOB;
 grant create materialized view to MOB;
 grant unlimited tablespace to MOB;
+grant select any table to MOB;
 
 
 

@@ -42,6 +42,7 @@ begin
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
+    ['format_name','Формат','250;h'],
     ['slash','Слеш','110'],
     ['name','Изделие','300;h'],
     ['qnt_psp_sell','Заказано всего','80'],
@@ -59,11 +60,12 @@ begin
     ['sumraw','Сумма по смете','80','f=r:','i',not User.Role(rOr_Rep_Sgp_ViewPrice)]
   ]);
   Frg1.Opt.SetTable('v_sgp_items');
-  Frg1.Opt.SetWhere('where id_format_est = :id_format_est$i');
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[-mbtCustom_Revision,User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions,1,'Журнал ревизий'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtCustom_JRevisions]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbFormat', '', 50, yrefC, 400);
-  FFormats:=Q.QLoadToVarDynArray2('select name, id from v_sgp_sell_formats order by name', []);
+  FFormats:=Q.QLoadToVarDynArray2(
+    'select name, id from (select ''[все]'' as name, -1000 as id, 0 as srt from dual union all select name, id, 1 as srt from v_sgp_sell_formats order by srt, name)', []
+  );
   Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbFormat')), FFormats);
   TDBComboBoxEh(Frg1.FindComponent('CbFormat')).ItemIndex := 0;
   FIdFormat:= Frg1.GetControlValue('CbFormat');
@@ -143,7 +145,8 @@ end;
 
 procedure TFrmOGrepSgp.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
-  FIdFormat:= Fr.GetControlValue('CbFormat');
+  FIdFormat := Fr.GetControlValue('CbFormat');
+  SqlWhere := S.IIfStr(FIdFormat >= 0, 'id_format_est = :id_format_est$i');
   Fr.SetSqlParameters('id_format_est$i', [FIdFormat]);
 end;
 

@@ -42,7 +42,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
             inherited pnlStatusBar: TPanel
               Top = 340
               Width = 762
-              ExplicitTop = 340
+              ExplicitTop = 339
             end
           end
           inherited pnlLeft: TPanel
@@ -114,6 +114,11 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
     ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 723
+      Height = 14
+      ExplicitLeft = 723
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

@@ -44,13 +44,16 @@ where
 --------------------------------------------------------------------------------
 
 --таблица изделий по проекту (просчету)
-
+drop table prod_calc_items cascade constraints;
 create table prod_calc_items(
   id number(11),
   id_prod_calc number(11),   
   name varchar2(400),  
-  price number,   
-  comm varchar2(400),      --комментарий
+  purchase_sum number,            --общая сумма закупки
+  markup_percent number,            --запас цены, %
+  overall_coeff number,       --общий коэффициент, число
+  sales_sum_from_items number,    --продажа по расчету (суммарная из таблиц)  
+  comm varchar2(400),              --комментарий
   constraint pk_prod_calc_items primary key (id),
   constraint fk_prod_calc_items_parent foreign key (id_prod_calc) references prod_calc(id) on delete cascade
 );
@@ -67,8 +70,34 @@ end;
 
 create or replace view v_prod_calc_items as
 select
-  i.*
+  i.*,
+  round(i.purchase_sum * (i.markup_percent / 100) * overall_coeff) as product_sales_sum,
+  i.sales_sum_from_items / nullif(purchase_sum,0)  as coeff_from_items
 from
   prod_calc_items i
-;  
+;
+
+
+
+
+--------------------------------------------------------------------------------
+--справочники для просчетов (узлы изделия, пипы панелей)
+create table prod_calc_refs(
+  id number(11),
+  type varchar2(40),
+  name varchar2(200),    
+  active number(1),
+  constraint pk_prod_calc_refs primary key (id)
+);
+
+create index idx_prod_calc_refs_uq on prod_calc(lower(type), lower(name)); 
+
+create sequence sq_prod_calc_refs start with 1 nocache;
+
+create or replace trigger trg_prod_calc_refs_bi_r before insert on prod_calc_refs for each row
+begin
+  select nvl(:new.id, sq_prod_calc_refs.nextval) into :new.id from dual;
+end;
+/
+
 

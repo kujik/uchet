@@ -677,7 +677,7 @@ var
   function SaveOrder: Boolean;
   var
     i, j, k, IdT: Integer;
-    IdReg: Variant;
+    IdReg, IdOrType, OrProps: Variant;
     StI, StC: string;
     va: TVarDynArray;
     v: Variant;
@@ -698,10 +698,14 @@ var
     if IdT = 0 then
       Exit;
     IdReg := null;
+    IdOrType := null;
+    OrProps := null;
     if TDbComboBoxEh(Frg1.FindComponent('CbType')).Text = 'Металл' then begin
       //пропишем регламент и дату отгрузки (по регламенту 10 дней включая текущий)
       IdReg := 113;
       DtO := IncDay(Date, Q.QSelectOneRow('select deadline from order_reglaments where id = :id$i', [IdReg])[0] - 1);
+      IdOrType := 113;
+      OrProps := '121,122,123,124,125';
     end
     else begin
       k := Trunc(Frg1.GetValue('dt_otgr', rb, False)) - Trunc(Frg1.GetValue('dt_beg', rb, False));
@@ -713,13 +717,13 @@ var
     StC := 'К заказу ' + Frg1.GetValue('ornum', rb, False);
     va := Q.QCallStoredProc(
       'p_CreatePspForSemiproducts',
-      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id$io;ornum$so',
-       [IdT, StI, User.GetId, StC, DtO, IdReg, -1, -1]
+      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id_ortype$i;orprops$s;id$io;ornum$so',
+       [IdT, StI, User.GetId, StC, DtO, IdReg, IdOrType, OrProps, -1, -1]
     );
     if Length(va) = 0 then
       Exit;
-    IdO := va[6];
-    StO := va[7];
+    IdO := va[8];
+    StO := va[9];
     Result := True;
   end;
 

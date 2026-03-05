@@ -615,6 +615,7 @@ begin
     myfrm_J_Devel_Ref,
     myfrm_J_DevelThn_Ref,
     myfrm_R_Itm_Nomencl,
+    myfrm_R_Itm_Nomencl_SEL,
     myfrm_R_bCAD_Nomencl_SEL,
     myfrm_R_bCAD_Nomencl_SelMaterials,
     myfrm_R_OrderStdItems_SEL,

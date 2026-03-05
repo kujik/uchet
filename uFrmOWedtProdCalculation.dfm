@@ -30,7 +30,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         object edt_name: TDBEditEh
           Left = 81
           Top = 15
-          Width = 1030
+          Width = 1026
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 73
@@ -43,7 +43,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
-          ExplicitWidth = 1026
+          ExplicitWidth = 1022
         end
       end
       object pgcMain: TPageControl
@@ -51,455 +51,13 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         Top = 49
         Width = 1116
         Height = 477
-        ActivePage = ts4
+        ActivePage = ts5
         Align = alClient
         TabOrder = 1
-        ExplicitWidth = 1112
-        ExplicitHeight = 476
         object ts1: TTabSheet
-          Caption = #1058#1072#1081#1084#1083#1072#1081#1085
+          Caption = 'ts1'
           ImageIndex = 1
           inline Frg1: TFrDBGridEh
-            Left = 0
-            Top = 0
-            Width = 1108
-            Height = 449
-            Align = alClient
-            TabOrder = 0
-            ExplicitWidth = 1104
-            ExplicitHeight = 448
-            inherited pnlGrid: TPanel
-              Width = 1098
-              Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 371
-              inherited DbGridEh1: TDBGridEh
-                Width = 1046
-                Height = 372
-                Columns = <
-                  item
-                    CellButtons = <>
-                    DynProps = <>
-                    EditButtons = <>
-                    FieldName = 'iii'
-                    Footers = <>
-                  end>
-                inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
-                  ExplicitTop = 35
-                  ExplicitWidth = 46
-                  ExplicitHeight = 120
-                  inherited PRowDetailPanel: TPanel
-                    Width = 44
-                    ExplicitWidth = 44
-                  end
-                end
-              end
-              inherited pnlStatusBar: TPanel
-                Top = 373
-                Width = 1046
-                ExplicitTop = 349
-                ExplicitWidth = 1096
-                inherited lblStatusBarL: TLabel
-                  Height = 13
-                  ExplicitHeight = 13
-                end
-              end
-              inherited CProp: TDBEditEh
-                Height = 21
-                ExplicitHeight = 21
-              end
-            end
-            inherited pnlLeft: TPanel
-              Height = 395
-              ExplicitHeight = 371
-            end
-            inherited pnlTop: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlContainer: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlBottom: TPanel
-              Top = 449
-              Width = 1108
-              ExplicitTop = 425
-              ExplicitWidth = 1108
-            end
-            inherited PrintDBGridEh1: TPrintDBGridEh
-              BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
-                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
-                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
-                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
-                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
-                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
-                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
-                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
-                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
-                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
-            end
-          end
-        end
-        object ts2: TTabSheet
-          Caption = 'ts2'
-          ImageIndex = 1
-          inline Frg2: TFrDBGridEh
-            Left = 0
-            Top = 0
-            Width = 1108
-            Height = 449
-            Align = alClient
-            TabOrder = 0
-            ExplicitWidth = 1104
-            ExplicitHeight = 448
-            inherited pnlGrid: TPanel
-              Width = 1098
-              Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 371
-              inherited DbGridEh1: TDBGridEh
-                Width = 1046
-                Height = 372
-                Columns = <
-                  item
-                    CellButtons = <>
-                    DynProps = <>
-                    EditButtons = <>
-                    FieldName = 'iii'
-                    Footers = <>
-                  end>
-                inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
-                  ExplicitTop = 35
-                  ExplicitWidth = 46
-                  ExplicitHeight = 120
-                  inherited PRowDetailPanel: TPanel
-                    Width = 44
-                    ExplicitWidth = 44
-                  end
-                end
-              end
-              inherited pnlStatusBar: TPanel
-                Top = 373
-                Width = 1046
-                ExplicitTop = 349
-                ExplicitWidth = 1096
-                inherited lblStatusBarL: TLabel
-                  Height = 13
-                  ExplicitHeight = 13
-                end
-              end
-              inherited CProp: TDBEditEh
-                Height = 21
-                ExplicitHeight = 21
-              end
-            end
-            inherited pnlLeft: TPanel
-              Height = 395
-              ExplicitHeight = 371
-            end
-            inherited pnlTop: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlContainer: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlBottom: TPanel
-              Top = 449
-              Width = 1108
-              ExplicitTop = 425
-              ExplicitWidth = 1108
-            end
-            inherited PrintDBGridEh1: TPrintDBGridEh
-              BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
-                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
-                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
-                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
-                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
-                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
-                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
-                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
-                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
-                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
-            end
-          end
-        end
-        object ts3: TTabSheet
-          Caption = 'ts3'
-          ImageIndex = 2
-          inline Frg3: TFrDBGridEh
-            Left = 0
-            Top = 0
-            Width = 1108
-            Height = 449
-            Align = alClient
-            TabOrder = 0
-            ExplicitWidth = 1104
-            ExplicitHeight = 448
-            inherited pnlGrid: TPanel
-              Width = 1098
-              Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 371
-              inherited DbGridEh1: TDBGridEh
-                Width = 1046
-                Height = 372
-                Columns = <
-                  item
-                    CellButtons = <>
-                    DynProps = <>
-                    EditButtons = <>
-                    FieldName = 'iii'
-                    Footers = <>
-                  end>
-                inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
-                  ExplicitTop = 35
-                  ExplicitWidth = 46
-                  ExplicitHeight = 120
-                  inherited PRowDetailPanel: TPanel
-                    Width = 44
-                    ExplicitWidth = 44
-                  end
-                end
-              end
-              inherited pnlStatusBar: TPanel
-                Top = 373
-                Width = 1046
-                ExplicitTop = 349
-                ExplicitWidth = 1096
-                inherited lblStatusBarL: TLabel
-                  Height = 13
-                  ExplicitHeight = 13
-                end
-              end
-              inherited CProp: TDBEditEh
-                Height = 21
-                ExplicitHeight = 21
-              end
-            end
-            inherited pnlLeft: TPanel
-              Height = 395
-              ExplicitHeight = 371
-            end
-            inherited pnlTop: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlContainer: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlBottom: TPanel
-              Top = 449
-              Width = 1108
-              ExplicitTop = 425
-              ExplicitWidth = 1108
-            end
-            inherited PrintDBGridEh1: TPrintDBGridEh
-              BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
-                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
-                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
-                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
-                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
-                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
-                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
-                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
-                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
-                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
-            end
-          end
-        end
-        object ts5: TTabSheet
-          Caption = 'ts5'
-          ImageIndex = 4
-          inline Frg5: TFrDBGridEh
-            Left = 0
-            Top = 0
-            Width = 1108
-            Height = 449
-            Align = alClient
-            TabOrder = 0
-            ExplicitWidth = 1104
-            ExplicitHeight = 448
-            inherited pnlGrid: TPanel
-              Width = 1098
-              Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 371
-              inherited DbGridEh1: TDBGridEh
-                Width = 1046
-                Height = 372
-                Columns = <
-                  item
-                    CellButtons = <>
-                    DynProps = <>
-                    EditButtons = <>
-                    FieldName = 'iii'
-                    Footers = <>
-                  end>
-                inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
-                  ExplicitTop = 35
-                  ExplicitWidth = 46
-                  ExplicitHeight = 120
-                  inherited PRowDetailPanel: TPanel
-                    Width = 44
-                    ExplicitWidth = 44
-                  end
-                end
-              end
-              inherited pnlStatusBar: TPanel
-                Top = 373
-                Width = 1046
-                ExplicitTop = 349
-                ExplicitWidth = 1096
-                inherited lblStatusBarL: TLabel
-                  Height = 13
-                  ExplicitHeight = 13
-                end
-              end
-              inherited CProp: TDBEditEh
-                Height = 21
-                ExplicitHeight = 21
-              end
-            end
-            inherited pnlLeft: TPanel
-              Height = 395
-              ExplicitHeight = 371
-            end
-            inherited pnlTop: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlContainer: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlBottom: TPanel
-              Top = 449
-              Width = 1108
-              ExplicitTop = 425
-              ExplicitWidth = 1108
-            end
-            inherited PrintDBGridEh1: TPrintDBGridEh
-              BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
-                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
-                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
-                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
-                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
-                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
-                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
-                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
-                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
-                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
-            end
-          end
-        end
-        object ts6: TTabSheet
-          Caption = 'ts6'
-          ImageIndex = 5
-          inline Frg6: TFrDBGridEh
-            Left = 0
-            Top = 0
-            Width = 1108
-            Height = 449
-            Align = alClient
-            TabOrder = 0
-            ExplicitWidth = 1104
-            ExplicitHeight = 448
-            inherited pnlGrid: TPanel
-              Width = 1098
-              Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 371
-              inherited DbGridEh1: TDBGridEh
-                Width = 1046
-                Height = 372
-                Columns = <
-                  item
-                    CellButtons = <>
-                    DynProps = <>
-                    EditButtons = <>
-                    FieldName = 'iii'
-                    Footers = <>
-                  end>
-                inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
-                  ExplicitTop = 35
-                  ExplicitWidth = 46
-                  ExplicitHeight = 120
-                  inherited PRowDetailPanel: TPanel
-                    Width = 44
-                    ExplicitWidth = 44
-                  end
-                end
-              end
-              inherited pnlStatusBar: TPanel
-                Top = 373
-                Width = 1046
-                ExplicitTop = 349
-                ExplicitWidth = 1096
-                inherited lblStatusBarL: TLabel
-                  Height = 13
-                  ExplicitHeight = 13
-                end
-              end
-              inherited CProp: TDBEditEh
-                Height = 21
-                ExplicitHeight = 21
-              end
-            end
-            inherited pnlLeft: TPanel
-              Height = 395
-              ExplicitHeight = 371
-            end
-            inherited pnlTop: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlContainer: TPanel
-              Width = 1108
-              ExplicitWidth = 1108
-            end
-            inherited pnlBottom: TPanel
-              Top = 449
-              Width = 1108
-              ExplicitTop = 425
-              ExplicitWidth = 1108
-            end
-            inherited PrintDBGridEh1: TPrintDBGridEh
-              BeforeGridText_Data = {
-                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
-                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
-                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
-                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
-                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
-                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
-                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
-                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
-                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
-                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
-            end
-          end
-        end
-        object ts4: TTabSheet
-          Caption = 'ts4'
-          ImageIndex = 5
-          inline Frg4: TFrDBGridEh
             Left = 0
             Top = 0
             Width = 1108
@@ -525,10 +83,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
-                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
-                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -574,7 +130,351 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E31393034317D5C766965
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
+            end
+          end
+        end
+        object ts2: TTabSheet
+          Caption = 'ts2'
+          ImageIndex = 2
+          inline Frg2: TFrDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1108
+            Height = 449
+            Align = alClient
+            TabOrder = 0
+            ExplicitWidth = 1104
+            ExplicitHeight = 448
+            inherited pnlGrid: TPanel
+              Width = 1098
+              Height = 395
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
+              inherited DbGridEh1: TDBGridEh
+                Width = 1096
+                Height = 372
+                Columns = <
+                  item
+                    CellButtons = <>
+                    DynProps = <>
+                    EditButtons = <>
+                    FieldName = 'iii'
+                    Footers = <>
+                  end>
+                inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitTop = 35
+                  ExplicitWidth = 46
+                  inherited PRowDetailPanel: TPanel
+                    Width = 44
+                    ExplicitWidth = 44
+                  end
+                end
+              end
+              inherited pnlStatusBar: TPanel
+                Top = 373
+                Width = 1096
+                ExplicitTop = 373
+                ExplicitWidth = 1096
+                inherited lblStatusBarL: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
+              end
+              inherited CProp: TDBEditEh
+                Height = 21
+                ExplicitHeight = 21
+              end
+            end
+            inherited pnlLeft: TPanel
+              Height = 395
+              ExplicitHeight = 395
+            end
+            inherited pnlTop: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlContainer: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlBottom: TPanel
+              Top = 449
+              Width = 1108
+              ExplicitTop = 449
+              ExplicitWidth = 1108
+            end
+            inherited PrintDBGridEh1: TPrintDBGridEh
+              BeforeGridText_Data = {
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
+            end
+          end
+        end
+        object ts3: TTabSheet
+          Caption = 'ts3'
+          ImageIndex = 4
+          inline Frg3: TFrDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1108
+            Height = 449
+            Align = alClient
+            TabOrder = 0
+            ExplicitWidth = 1104
+            ExplicitHeight = 448
+            inherited pnlGrid: TPanel
+              Width = 1098
+              Height = 395
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
+              inherited DbGridEh1: TDBGridEh
+                Width = 1096
+                Height = 372
+                Columns = <
+                  item
+                    CellButtons = <>
+                    DynProps = <>
+                    EditButtons = <>
+                    FieldName = 'iii'
+                    Footers = <>
+                  end>
+                inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitTop = 35
+                  ExplicitWidth = 46
+                  inherited PRowDetailPanel: TPanel
+                    Width = 44
+                    ExplicitWidth = 44
+                  end
+                end
+              end
+              inherited pnlStatusBar: TPanel
+                Top = 373
+                Width = 1096
+                ExplicitTop = 373
+                ExplicitWidth = 1096
+                inherited lblStatusBarL: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
+              end
+              inherited CProp: TDBEditEh
+                Height = 21
+                ExplicitHeight = 21
+              end
+            end
+            inherited pnlLeft: TPanel
+              Height = 395
+              ExplicitHeight = 395
+            end
+            inherited pnlTop: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlContainer: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlBottom: TPanel
+              Top = 449
+              Width = 1108
+              ExplicitTop = 449
+              ExplicitWidth = 1108
+            end
+            inherited PrintDBGridEh1: TPrintDBGridEh
+              BeforeGridText_Data = {
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
+            end
+          end
+        end
+        object ts4: TTabSheet
+          Caption = 'ts4'
+          ImageIndex = 5
+          inline Frg4: TFrDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1108
+            Height = 449
+            Align = alClient
+            TabOrder = 0
+            ExplicitWidth = 1104
+            ExplicitHeight = 448
+            inherited pnlGrid: TPanel
+              Width = 1098
+              Height = 395
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
+              inherited DbGridEh1: TDBGridEh
+                Width = 1096
+                Height = 372
+                Columns = <
+                  item
+                    CellButtons = <>
+                    DynProps = <>
+                    EditButtons = <>
+                    FieldName = 'iii'
+                    Footers = <>
+                  end>
+                inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitTop = 35
+                  ExplicitWidth = 46
+                  inherited PRowDetailPanel: TPanel
+                    Width = 44
+                    ExplicitWidth = 44
+                  end
+                end
+              end
+              inherited pnlStatusBar: TPanel
+                Top = 373
+                Width = 1096
+                ExplicitTop = 373
+                ExplicitWidth = 1096
+                inherited lblStatusBarL: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
+              end
+              inherited CProp: TDBEditEh
+                Height = 21
+                ExplicitHeight = 21
+              end
+            end
+            inherited pnlLeft: TPanel
+              Height = 395
+              ExplicitHeight = 395
+            end
+            inherited pnlTop: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlContainer: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlBottom: TPanel
+              Top = 449
+              Width = 1108
+              ExplicitTop = 449
+              ExplicitWidth = 1108
+            end
+            inherited PrintDBGridEh1: TPrintDBGridEh
+              BeforeGridText_Data = {
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
+            end
+          end
+        end
+        object ts5: TTabSheet
+          Caption = 'ts5'
+          ImageIndex = 5
+          inline Frg5: TFrDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1108
+            Height = 449
+            Align = alClient
+            TabOrder = 0
+            ExplicitWidth = 1104
+            ExplicitHeight = 448
+            inherited pnlGrid: TPanel
+              Width = 1098
+              Height = 395
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
+              inherited DbGridEh1: TDBGridEh
+                Width = 1096
+                Height = 372
+                Columns = <
+                  item
+                    CellButtons = <>
+                    DynProps = <>
+                    EditButtons = <>
+                    FieldName = 'iii'
+                    Footers = <>
+                  end>
+                inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitTop = 35
+                  ExplicitWidth = 46
+                  inherited PRowDetailPanel: TPanel
+                    Width = 44
+                    ExplicitWidth = 44
+                  end
+                end
+              end
+              inherited pnlStatusBar: TPanel
+                Top = 373
+                Width = 1096
+                ExplicitTop = 373
+                ExplicitWidth = 1096
+                inherited lblStatusBarL: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
+              end
+              inherited CProp: TDBEditEh
+                Height = 21
+                ExplicitHeight = 21
+              end
+            end
+            inherited pnlLeft: TPanel
+              Height = 395
+              ExplicitHeight = 395
+            end
+            inherited pnlTop: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlContainer: TPanel
+              Width = 1108
+              ExplicitWidth = 1108
+            end
+            inherited pnlBottom: TPanel
+              Top = 449
+              Width = 1108
+              ExplicitTop = 449
+              ExplicitWidth = 1108
+            end
+            inherited PrintDBGridEh1: TPrintDBGridEh
+              BeforeGridText_Data = {
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
                 66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
                 720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631

@@ -945,6 +945,25 @@ order by
   o.dt_end desc  
 ;
 
+create or replace view v_itm_nomencl_sel as
+select
+--вью для диалога выбора номенклатуры (материала) ИТМ
+  n.id_nomencl as id,
+  n.name,
+  u.name_unit,
+  p.price_check
+from
+  dv.nomenclatura n,  
+  dv.unit u,
+  spl_itm_nom_props p
+where
+  n.id_nomencl = p.id (+)
+  and n.id_nomencltype = 0
+  and n.id_unit = u.id_unit
+;   
+     
+  
+
 
 select * from v_reservpos_completed_orders2;
 select * from stock where doctype = 27;

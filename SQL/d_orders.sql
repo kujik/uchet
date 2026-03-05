@@ -421,7 +421,7 @@ create table orders (
   --qnt_boards_m2 number,              -- метраж плитных материалов 
   --qnt_edges_m number,                -- метраж кромки
   --qnt_panels_w_drill number,         -- количество панелей со сверловкой 
-  has_prod number(1) default 0,      -- в составе заказа есть про изводственные материалы
+  has_prod number(1) default 0,      -- в составе заказа есть производственные материалы
   ids_order_properties varchar2(4000),  --айди свойств заказа через "," 
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
@@ -1848,6 +1848,8 @@ create or replace procedure P_CreatePspForSemiproducts(
   AComment varchar2,             --комментарий к заказу
   ADtOtgr date,                  --плановая дата отгрузки  
   AIdReglament number,           --айди регламента 
+  AIdType number,                --тип заказа (МТ, Плановый ...)
+  AProps varchar2(4000),         --свойства заказов (которые выбираются в окне выбора регламента)
   AIdOrder out number,           --возврат: айди созданного заказа 
   AOrNum out varchar2            --возврат: номер созданного заказа 
 )  
@@ -1873,7 +1875,7 @@ begin
     area, id_organization, id_or_format_estimates, estimatepath, cashtype, wholesale,
     project, id_format, id_manager, 
     dt_beg, dt_otgr, dt_montage_beg, dt_montage_end,
-    ndsd, comm, id_reglament, path
+    ndsd, comm, id_reglament, id_type2, ids_order_properties, path
   ) (select
     FOrnum,
     extract(year from sysdate), 'П', substr(FOrnum, 4), 1,
@@ -1883,6 +1885,8 @@ begin
     ndsd, 
     AComment, 
     AIdReglament,
+    AIdType,
+    AProps,
     ''
   from 
     orders

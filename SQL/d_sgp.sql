@@ -783,7 +783,6 @@ where
 select * from v_sgp_move_list where doctype = 'акт оприходования' and id_order = 34;
 
 
-
 create or replace view v_sgp_items as
 select
 --итоговое представление для состояния СГП про стандартному формату изделий    
@@ -792,6 +791,7 @@ select
   ssi.id_format_est,
   ssi.orf_name,
   ssi.orfe_name,
+  ssi.orf_name || ' (' ||  ssi.orfe_name || ')' as format_name, 
   ssi.slash,
   ssi.name,
   ssi.price,
@@ -840,8 +840,8 @@ where
 --order by ssi.name  
 ;
 
-
-select * from v_sgp_items where id = 482;
+select '[все]' as name, -1, 0  as srt from dual union all select name, id, 1 as srt from v_sgp_sell_formats order by srt, name;
+ select * from v_sgp_items; -- where id = 482;
 select * from sgp_act_in_items where id_std_item = 482;
 
 select * from v_sgp_move_list where id = 482;

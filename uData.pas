@@ -937,6 +937,7 @@ const
   myfrm_J_PersBonus='J_PersBonus';
   myfrm_J_PayrollsForWorker='J_PayrollsForWorker';
   myfrm_J_ProdCalculations='J_ProdCalculations';
+  myfrm_R_Itm_Nomencl_SEL='R_Itm_Nomencl_SEL';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';

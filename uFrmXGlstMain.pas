@@ -1537,6 +1537,24 @@ v:=True;
       ['Вы можете переименовать номенклатурную позицию, при этом наименование изменится во всех справочниках и документах как в Учете, так и в ИТМ.'#13#10, User.Role(rOr_R_Itm_Nomencl_Rename)]
     ];
   end
+  else if FormDoc = myfrm_R_Itm_Nomencl_SEL then begin
+    //выбор из списка сметной позиции, в списке все что загружалось в учет из смет, артикул берется из базы ИТМ
+    Caption:='Справочник номенклатуры';
+    Frg1.Options := Frg1.Options + [myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['artikul','Артикул','120'],
+      ['name','Наименование','300;h'],
+      ['unit','Ед. изм.','00'],
+      ['price_check','Цена','00']
+    ]);
+    Frg1.Opt.SetTable('v_bcad_nomencl_add');
+    Frg1.Opt.SetWhere('where id_itm is not null');
+    Frg1.Opt.SetButtons(1, 'lrs');
+    Frg1.InfoArray:=[
+      ['Выбор номенклатуры bCAD.'#10#13'Выберите номенклатуру в таблице и нажмите кнопку "выбрать" или дважды кликните мышью на запись.'#10#13]
+    ];
+  end
   else if FormDoc = myfrm_R_bCAD_Nomencl_SEL then begin
     //выбор из списка сметной позиции, в списке все что загружалось в учет из смет, артикул берется из базы ИТМ
     Caption:='Справочник номенклатуры';
