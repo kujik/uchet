@@ -11,7 +11,7 @@ uses
 
 type
   TFrmWDedtDivision = class(TFrmBasicDbDialog)
-    cmb_Office: TDBComboBoxEh;
+    cmb_is_office: TDBComboBoxEh;
     edt_Code: TDBEditEh;
     edt_name: TDBEditEh;
     cmb_id_head: TDBComboBoxEh;
@@ -84,7 +84,7 @@ begin
   Q.QLoadToDBComboBoxEh('select name, id from adm_users where id > 0 order by name', [], cmb_id_head, cntComboLK);
   //пока ограничим список первыми тремя площадками, так как там есть фиктивная МТ, по состоянию на 2025-07-26
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where id <> 3 order by id', [], cmb_id_prod_area, cntComboLK);
-  Cth.AddToComboBoxEh(cmb_office, [['Цех',0], ['Офис',1]]);
+  Cth.AddToComboBoxEh(cmb_is_office, [['Цех',0], ['Офис',1]]);
   Result := True;
 end;
 

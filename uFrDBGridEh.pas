@@ -4161,7 +4161,7 @@ function TFrDBGridEh.DeleteRow: Boolean;
 begin
   if (MemTableEh1.State in [dsInsert]) or not (alopDeleteEh in FOpt.AllowedOperations) then
     Exit;
-  if (ID < MY_IDS_INSERTED_MIN) and not A.InArray(ID, FEditData.IdsDeleted) then
+  if (ID <> null) and (ID.IsNumeric) and (ID < MY_IDS_INSERTED_MIN) and not A.InArray(ID, FEditData.IdsDeleted) then
     FEditData.IdsDeleted := FEditData.IdsDeleted + [ID];
   DBGridEh1.AllowedOperations := DBGridEh1.AllowedOperations + [alopDeleteEh];
   MemTableEh1.Delete;

@@ -1016,7 +1016,7 @@ begin
       end;
       //проставляем флаг для подсмветки ячейки в детально таблице турв (если только одно из времен есть, либо есть повторные отметки прихода или ухода)
       if (dt <> Date) and ((Length(vab) = 0) or (Length(vab) > 1) or (Length(vae) = 0) or (Length(vae) > 1)) and not ((Length(vab) = 0) and (Length(vae) = 0)) then begin
-        if FCells[p].G(d, 'settime3') <> 1 then begin
+        if (FCells[p].G(d, 'settime3') <> 1) and (FCells[p].GetValue(d, 'changed') = 1) then begin
           FCells[p].SetValue(d, 'settime3', 1);
           FCells[p].SetValue(d, 'changed', 1);
         end;
@@ -1541,7 +1541,7 @@ begin
   if not Silent then
     if not ((MyQuestionMessage('Удалить ТУРВ?') = mrYes) and (MyQuestionMessage('Вы Уверены?') = mrYes))
       then Exit;
-  Q.QExecSql('delete from turv_period where id = :id$i', [ID]);
+  Q.QExecSql('delete from v_w_turv_period where id = :id$i', [ID]);
   Result:=True;
 end;
 

@@ -154,11 +154,12 @@ begin
 //  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Только производственные', 'prod'], ['Тест', '', True], ['Тест2'], ['ТТТТТТТТ', False]];
   Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_Sum)]];
 
-  Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];
+  Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];// - [myogSaveOptions];
   Frg2.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_std_item$i','_id_std_item','40'],
     ['id_itm$i','_id_itm','40'],
+    ['wo_kns','_wo_kns','40'],
     ['has_itm_est$i','_has_itm_est','40'],
     ['slash','№','100'],
     ['fullitemname','Изделие','200'],
@@ -177,7 +178,6 @@ begin
     ['disassembled','В разборе','40','pic'],
     ['control_assembly','Контр. сборка','40','pic'],
     ['dt_kns','Документы КНС','80'],
-    ['wo_kns','_wo_kns','40'],
     ['dt_thn','Документы ТХН','80'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],

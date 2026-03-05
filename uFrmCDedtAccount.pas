@@ -100,6 +100,7 @@ type
     function  Save: Boolean; override;
     procedure FrgRouteButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
     procedure FrgRouteGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+    procedure FrgRouteUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
     procedure FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
     procedure FrgBasisButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
     procedure LoadPayments;
@@ -416,11 +417,19 @@ end;
 
 procedure TFrmCDedtAccount.FrgRouteGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
-  ReadOnly := (Cth.GetControlValue(cmb_flighttype) <> '2') or ((Fr.CurrField = 'point1') and (Fr.RecNo <> 1));
+  ReadOnly := (Cth.GetControlValue(cmb_flighttype) <> '2') or ((Fr.CurrField = 'point1') and not((Fr.RecNo = 1) or ((Fr.RecNo = -1) and (Fr.GetCount = 0))));
 end;
 
-procedure TFrmCDedtAccount.FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+procedure TFrmCDedtAccount.FrgRouteUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 begin
+  //по непон€тной причине при изменении  первой €чейки на нулл (в том числе если первой операцией сделать выбор пункта назначени€), происходит вставка какого-то числа в первую €чейку!
+  //пробовал все варианты работы и в этом обработчике и в FrgRouteCellValueSave
+  Handled := True;
+  var FieldName := Fr.CurrField;
+  //if Fr.RecNo = -1 then
+  //  FrgRoute.SetValue('point1', null);
+  FrgRoute.SetValue(FieldName, Value);
+  Mth.PostAndEdit(Fr.MemTableEh1);
   //установим статус что было изменение
   Fr.SetState(True, null, null);
   if FieldName = 'point1' then
@@ -430,16 +439,21 @@ begin
     Fr.SetValue('point1', Fr.RecNo - 1, False, Fr.GetValue('point2', Fr.RecNo - 2, False));
   end;
   //установим при изменении €чеки ѕункт назначени€, €чейку ѕункт отправки на следующей строке
-  if (Fr.RecNo < Fr.GetCount(False)) then begin
+  if (Fr.RecNo < Fr.GetCount(False)) and (Fr.GetCount > 0) then begin
     Fr.SetValue('point1', Fr.RecNo, False, Fr.GetValue('point2', Fr.RecNo - 1, False));
   end;
   //проверим на ошибки - ошибка, если хоть одна €чейка пуста€, или вообще нет маршрута (пустой грид)
-   Fr.SetState(null, Fr.GetCount(False) = 0, null);
+  Fr.SetState(null, Fr.GetCount(False) = 0, null);
   for var i := 0 to Fr.GetCount(False) - 1 do
     if (Fr.GetValueS('point1', i, False) = '') or (Fr.GetValueS('point2', i, False) = '') then begin
       Fr.SetState(null, True, null);
       Break;
     end;
+end;
+
+
+procedure TFrmCDedtAccount.FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+begin
 end;
 
 procedure TFrmCDedtAccount.FrgBasisButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -862,12 +876,12 @@ begin
   if Cth.GetControlValue(cmb_id_ExpenseItem) = null then
     Exit;
   //может, если:
-  //в любом случае IsDataEditor, иначе только когда не согласован директором, при праве rPC_A_AgrAll дл€ люой или праве rPC_A_AgrSelfCat дл€ своей (есть пользователь в поле  то согласовывает дл€ категории) категории
+  //только когда не согласован директором, при праве rPC_A_AgrAll дл€ люой или праве rPC_A_AgrSelfCat дл€ своей (есть пользователь в поле  то согласовывает дл€ категории) категории
   LWhoAgreed := '';
   if cmb_id_ExpenseItem.ItemIndex >= 0 then
     LWhoAgreed := FExpenseItemsAgreed[A.PosInArray(Cth.GetControlValue(cmb_id_ExpenseItem), FExpenseItemsAgreed, 1)][0];
   Result:=
-    (User.IsDataEditor) or ((not chb_Agreed2.Checked) and
+    (FAllEditMode) or ((not chb_Agreed2.Checked) and
       (User.Roles([], [rPC_A_AgrAll]) or User.Roles([], [rPC_A_AgrSelfCat]) and (S.InCommaStr(IntToStr(User.GetId),LWhoAgreed))));
 end;
 
@@ -964,11 +978,13 @@ begin
   FEdtPaymentsOnly := (st <> '') and not FAllEditMode;      //!!!
   //делаем контролы ридонли
   SetControlsEditable([], not FEdtPaymentsOnly, False, pnlGeneral);
-  SetControlsEditable([btnFileAttach, btnReqestFileAttach, edt_comm], not FEdtPaymentsOnly, False, pnlAdd);
+  SetControlsEditable([btnFileAttach, {btnReqestFileAttach, }edt_comm], not FEdtPaymentsOnly, False, pnlAdd);
   btnFileAttach.Enabled := not FEdtPaymentsOnly;
-  btnReqestFileAttach.Enabled := not FEdtPaymentsOnly;
+  //прикрепл€ть файлы в папку за€вки можно всегда
+  btnReqestFileAttach.Enabled := True; //not FEdtPaymentsOnly;
   chb_Agreed1.Enabled := IsAgreed1Enabled and not FEdtPaymentsOnly;
-  chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir) and not FEdtPaymentsOnly;
+  //галка —огласовать (директор) доступна всегда (тому, у кого есть права)
+  chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir); // and not FEdtPaymentsOnly;
   //эти ридонли всегда
   SetControlsEditable([cmb_id_user, nedt_SumWoNds, cmb_flighttype], False, False, pnlFrmClient);
   //если счета не транспортные, отключим проверку
@@ -1032,6 +1048,7 @@ begin
     FrgRoute.First;
     FrgRoute.OnButtonClick := FrgRouteButtonClick;
     FrgRoute.OnGetCellReadOnly := FrgRouteGetCellReadOnly;
+    FrgRoute.OnColumnsUpdateData := FrgRouteUpdateData;
     FrgRoute.OnCellValueSave := FrgRouteCellValueSave;
 //  end;
 

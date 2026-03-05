@@ -763,7 +763,7 @@ v:=True;
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
 //v:=True;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor)],[-1000, User.Role(rW_J_Turv_Commit), 'Закрыть все за прошлый период'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor or User.Role(rW_J_Turv_TP))],[-1000, User.Role(rW_J_Turv_Commit), 'Закрыть все за прошлый период'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);

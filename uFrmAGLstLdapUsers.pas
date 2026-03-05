@@ -85,18 +85,32 @@ begin
 end;
 
 begin
-//exit;
+  var LUser := 'FRESH\testuser';
+  var LPassword := 'usertest';
+//  var LUser := 'FRESH\sprokopenko';
+//  var LPassword := '';
   va2 := [];
-  ADOConnection1.ConnectionString := 'Provider=ADsDSOObject;Encrypt Password=False;Mode=Read;Bind Flags=0;ADSI Flag=-2147483648;';
+  ADOConnection1.ConnectionString :=
+    'Provider=ADsDSOObject;' +
+    'Encrypt Password=False;' +
+    'Mode=Read;' +
+    'Bind Flags=0;' +
+    'ADSI Flag=-2147483648;' +
+    'User ID=' + LUser + ';' +
+    'Password=' +LPassword + ';';
+//  ADOConnection1.ConnectionString := 'Provider=ADsDSOObject;Encrypt Password=False;Mode=Read;Bind Flags=0;ADSI Flag=-2147483648;';
   ADOConnection1.LoginPrompt := False;
   ADOConnection1.Mode := cmRead;
   ADOConnection1.Provider := 'ADsDSOObject';
   ADOConnection1.Open;
   ADOQuery1.Close;
   ADOQuery1.ParamCheck:=false;
+{  ADOQuery1.SQL.Text:=
+    'SELECT sn,givenName,initials,description,comment,name,wWWHomePage,physicalDeliveryOfficeName,telephoneNumber,mail,title,department,company,ipPhone,mobile '+
+    'FROM ''LDAP://DC=fresh,DC=local'' WHERE objectCategory=''user''';}
   ADOQuery1.SQL.Text:=
     'SELECT sn,givenName,initials,description,comment,name,wWWHomePage,physicalDeliveryOfficeName,telephoneNumber,mail,title,department,company,ipPhone,mobile '+
-    'FROM ''LDAP://DC=fresh,DC=local'' WHERE objectCategory=''user''';// AND mail IS NOT NULL';
+    'FROM ''LDAP://10.1.1.11/DC=fresh,DC=local'' WHERE objectCategory=''user''';
   ADOQuery1.Open;
   ADOQuery1.First;
   while not ADOQuery1.Eof do begin

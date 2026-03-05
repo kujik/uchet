@@ -15,7 +15,7 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
       Height = 230
       ExplicitWidth = 650
       ExplicitHeight = 229
-      object cmb_Office: TDBComboBoxEh
+      object cmb_is_office: TDBComboBoxEh
         Left = 104
         Top = 42
         Width = 121

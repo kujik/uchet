@@ -149,6 +149,7 @@ uses
   uErrors,
 
   uFrmCWAcoountBasis,
+  uFrmOWedtProdCalculation,
 
 
   uFrmXDedtMemo,
@@ -1421,6 +1422,7 @@ var
   i: Integer;
   st: string;
 begin
+TFrmOWedtProdCalculation.Show(Application, 'qqqqqqqqqq', [myfoSizeable, myfoDialog, myfoEnableMaximize], fAdd, null, null); exit;
 Exit;
 //  q.QExecSql('select 1 from www', [1]); exit;
 
@@ -1473,6 +1475,8 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+Exit;
+Turv.LoadDataFromParsec; Exit;
 //  ShowWaitForm('111111111111', nil, True, 1);
   ShowWaitForm;
   Sleep(3000);
@@ -1485,7 +1489,6 @@ begin
 
   Exit;
 
-Turv.LoadDataFromParsec; Exit;
 
 Turv.SaveAllTurvToExportTable; Exit;
 

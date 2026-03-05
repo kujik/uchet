@@ -2,19 +2,19 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
   Caption = 'FrmXWGridOptions'
   ClientHeight = 305
   ClientWidth = 881
-  ExplicitWidth = 897
-  ExplicitHeight = 344
+  ExplicitWidth = 893
+  ExplicitHeight = 343
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 881
     Height = 289
-    ExplicitWidth = 885
-    ExplicitHeight = 290
+    ExplicitWidth = 881
+    ExplicitHeight = 289
     inherited pnlFrmClient: TPanel
       Width = 871
       Height = 240
-      ExplicitWidth = 871
-      ExplicitHeight = 240
+      ExplicitWidth = 867
+      ExplicitHeight = 239
       object pnlLeft: TPanel
         Left = 0
         Top = 0
@@ -23,6 +23,7 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
         Align = alLeft
         Caption = 'pnlLeft'
         TabOrder = 0
+        ExplicitHeight = 239
         object pnlLeftTop: TPanel
           Left = 1
           Top = 1
@@ -53,6 +54,8 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
         Align = alClient
         Caption = 'pnlRight'
         TabOrder = 1
+        ExplicitWidth = 642
+        ExplicitHeight = 239
         object pnlRightTop: TPanel
           Left = 1
           Top = 1
@@ -60,6 +63,7 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
           Height = 25
           Align = alTop
           TabOrder = 0
+          ExplicitWidth = 640
           object lbl2: TLabel
             Left = 4
             Top = 4
@@ -83,16 +87,16 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
           TabOrder = 1
           ExplicitLeft = 1
           ExplicitTop = 26
-          ExplicitWidth = 644
-          ExplicitHeight = 213
+          ExplicitWidth = 640
+          ExplicitHeight = 212
           inherited pnlGrid: TPanel
             Width = 634
             Height = 159
-            ExplicitWidth = 634
-            ExplicitHeight = 159
+            ExplicitWidth = 630
+            ExplicitHeight = 158
             inherited DbGridEh1: TDBGridEh
-              Width = 636
-              Height = 137
+              Width = 632
+              Height = 136
               Columns = <
                 item
                   CellButtons = <>
@@ -104,17 +108,17 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
                 ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 32
-                ExplicitHeight = 97
+                ExplicitHeight = 96
                 inherited PRowDetailPanel: TPanel
                   Align = alNone
                 end
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 138
-              Width = 636
-              ExplicitTop = 137
-              ExplicitWidth = 632
+              Top = 137
+              Width = 632
+              ExplicitTop = 136
+              ExplicitWidth = 628
               inherited lblStatusBarL: TLabel
                 Height = 13
                 ExplicitHeight = 13
@@ -127,21 +131,21 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
           end
           inherited pnlLeft: TPanel
             Height = 159
-            ExplicitHeight = 159
+            ExplicitHeight = 158
           end
           inherited pnlTop: TPanel
             Width = 644
-            ExplicitWidth = 644
+            ExplicitWidth = 640
           end
           inherited pnlContainer: TPanel
             Width = 644
-            ExplicitWidth = 644
+            ExplicitWidth = 640
           end
           inherited pnlBottom: TPanel
             Top = 213
             Width = 644
-            ExplicitTop = 213
-            ExplicitWidth = 644
+            ExplicitTop = 212
+            ExplicitWidth = 640
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -163,34 +167,34 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
     inherited pnlFrmBtns: TPanel
       Top = 245
       Width = 871
-      ExplicitTop = 245
-      ExplicitWidth = 871
+      ExplicitTop = 244
+      ExplicitWidth = 867
       inherited bvlFrmBtnsTl: TBevel
-        Width = 873
+        Width = 869
         ExplicitWidth = 803
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 873
+        Width = 869
         ExplicitWidth = 803
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 873
-        ExplicitWidth = 869
+        Width = 869
+        ExplicitWidth = 865
         inherited pnlFrmBtnsMain: TPanel
-          Left = 774
-          ExplicitLeft = 770
+          Left = 770
+          ExplicitLeft = 766
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 546
-          ExplicitLeft = 542
+          Left = 542
+          ExplicitLeft = 538
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 675
-          ExplicitLeft = 671
+          Left = 671
+          ExplicitLeft = 667
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 406
-          ExplicitWidth = 402
+          Width = 402
+          ExplicitWidth = 398
         end
       end
     end
@@ -198,11 +202,15 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
   inherited pnlStatusBar: TPanel
     Top = 289
     Width = 881
-    ExplicitTop = 289
-    ExplicitWidth = 881
+    ExplicitTop = 288
+    ExplicitWidth = 877
     inherited lblStatusBarR: TLabel
-      Left = 812
-      ExplicitLeft = 812
+      Left = 808
+      Height = 14
+      ExplicitLeft = 808
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end
