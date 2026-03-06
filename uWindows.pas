@@ -936,16 +936,16 @@ begin
     TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);
   end
   else if F = myfrm_Dlg_PayrollCalc then begin
-    if AAddParam = 1 then
-      TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null)
+    if TVarDynArray(AAddParam)[0] = 1 then
+      TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1])
     else
-      TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+      TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1]);
   end
   else if F = myfrm_Dlg_PayrollTransfer then begin
-    TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+    TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_PayrollCash then begin
-    TFrmWGedtPayrollCash.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, null);
+    TFrmWGedtPayrollCash.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_Candidate then begin
 //~    Form := TDlg_Candidate.ShowDialog(AOwner, F, fMode, AId, MyFormOptions, AAddParam);

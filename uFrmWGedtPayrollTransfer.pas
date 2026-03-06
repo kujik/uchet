@@ -147,7 +147,7 @@ begin
     [mbtDividorM],
     //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
     [],[mbtLock],
-    [], [-mbtExcel, True],
+    [], [-mbtExcel, AddParam = null],
     [],[-cmbtEditAll, True, 'Разрешить редактирование всех полей'],
     [],[-cmbRecalculate, True, 'Пересчитать все'],
     [],[mbtCtlPanel]
@@ -208,7 +208,7 @@ function TFrmWGedtPayrollTransfer.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_transfer = :id$i order by employee, organization, personnel_number',
+  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_transfer = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);

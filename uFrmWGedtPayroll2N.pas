@@ -215,7 +215,7 @@ begin
     //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
     [],[-cmbSetP1Visible, True, 'Показать 1й период', '', VK_F3],
     [],[mbtLock],
-    [], [-mbtExcel, True],
+    [], [-mbtExcel, AddParam = null],
     [],[-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
     [],[-cmbRecalculate, True, 'Пересчитать все'],
     [],[mbtCtlPanel]
@@ -293,7 +293,7 @@ function TFrmWGedtPayroll2N.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i order by job, employee, schedulecode, organization, personnel_number',
+  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);
@@ -761,6 +761,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
 {  NoNorms:= False;
   for i := 0 to Frg1.GetCount(False) - 1 do
@@ -787,7 +788,8 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('calc_method')) in [cMMotivation]);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('is_finalized') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);

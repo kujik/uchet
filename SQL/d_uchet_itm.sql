@@ -950,6 +950,7 @@ select
 --вью для диалога выбора номенклатуры (материала) ИТМ
   n.id_nomencl as id,
   n.name,
+  n.artikul,
   u.name_unit,
   p.price_check
 from

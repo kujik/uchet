@@ -1379,8 +1379,48 @@ where
   i.id_employee (+) = e.id and 
   i.id_job = j.id and  
   i.id_organization = o.id (+)
-;     
+;
 
+--create or replace view v_w_payrolls as 
+select
+  'ведомость к выдаче' as type,
+  dt1,
+  dt2,
+  departament,
+  employee,
+  finalized   
+from
+  v_w_payroll_cash
+where
+  nvl(is_finalized, 0) = 1  
+union all  
+select
+  'расчетная ведомость' as type,
+  dt1,
+  dt2,
+  departament,
+  employee,   
+  finalized   
+from
+  v_w_payroll_calc
+where
+  nvl(is_finalized, 0) = 1  
+union all  
+select
+  'ведомость к перечислению' as type,
+  dt1,
+  dt2,
+  null as departament,
+  employee,
+  finalized   
+from
+  v_w_payroll_transfer
+where
+  nvl(is_finalized, 0) = 1  
+;  
+  
+  
+  
 --------------------------------------------------------------------------------
 create or replace view v_w_payroll_summary as 
 select 
@@ -1434,13 +1474,13 @@ group by
 
 create or replace view v_w_payrolls_for_employee as
 select
- id, 'Расчетная' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee from v_w_payroll_calc p, (select id_employee, id_payroll_calc, max(employee) as employee from v_w_payroll_calc_item group by id_payroll_calc, id_employee) i where  i.id_payroll_calc = p.id           
+ id, 1 as id_type, 'Расчетная' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee, departament from v_w_payroll_calc p, (select id_employee, id_payroll_calc, max(employee) as employee from v_w_payroll_calc_item group by id_payroll_calc, id_employee) i where  i.id_payroll_calc = p.id           
 union all
 select
- id, 'К перечислению' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee from v_w_payroll_transfer p, (select id_employee, id_payroll_transfer, max(employee) as employee from v_w_payroll_transfer_item group by id_payroll_transfer, id_employee) i where  i.id_payroll_transfer = p.id
+ id, 2 as id_type, 'К перечислению' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, is_finalized, dt1, dt2, finalized, i.id_employee, i.employee, null as departament from v_w_payroll_transfer p, (select id_employee, id_payroll_transfer, max(employee) as employee from v_w_payroll_transfer_item group by id_payroll_transfer, id_employee) i where  i.id_payroll_transfer = p.id
 union all
 select
- id, 'К выдаче' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, 1 as is_finalized, dt1, dt2, 'Закрыта' as finalized, i.id_employee, i.employee from v_w_payroll_cash p, (select id_employee, id_payroll_cash, max(employee) as employee from v_w_payroll_cash_item group by id_payroll_cash, id_employee) i where  i.id_payroll_cash = p.id
+ id, 3 as id_type, 'К выдаче' as type, decode(p.id_employee, null, 'Подразделение', 'Увольнение') as type2, 1 as is_finalized, dt1, dt2, 'Закрыта' as finalized, i.id_employee, i.employee, departament from v_w_payroll_cash p, (select id_employee, id_payroll_cash, max(employee) as employee from v_w_payroll_cash_item group by id_payroll_cash, id_employee) i where  i.id_payroll_cash = p.id
 ; 
  
 

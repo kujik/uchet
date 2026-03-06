@@ -188,7 +188,7 @@ function TFrmWGedtPayrollCash.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_cash_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_cash = :id$i order by employee, job',
+  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_cash_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_cash = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, job',
     [ID], na
   );
   Frg1.LoadData(na);

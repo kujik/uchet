@@ -508,6 +508,9 @@ end;
 
 procedure TFrmMain.DefineMainMenu;
 begin
+  {$IFDEF  TURV}
+  var LAccesToPayrollCalculations := User.IsDeveloper or (Q.QSelectOneRow('select count(*) from w_departaments where id_head = :id$i', [User.GetID])[0] > 0);
+  {$ENDIF}
   MenuDef := [
     //общее меню
     ['='],
@@ -619,7 +622,7 @@ begin
     ['Ведомости к выдаче', myfrm_J_PayrollCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     [],
 //    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper or User.Role(rW_J_Turv) and (Q.QSelectOneRow('select count(*) from w_departaments where IsStInCommaSt(:id$i, ids_editusers) = 1', [User.GetID])[0] > 0)],
-    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, User.IsDeveloper],
+    ['Раcчет по работнику', myfrm_J_PayrollsForWorker, LAccesToPayrollCalculations],
     [],
     ['Выгрузка для таблиц Excel', myfrm_Dlg_ExportTurvToXls, User.Role(rW_J_Turv_TP) or User.Role(rW_J_Turv_TS) or User.IsDeveloper],
 
