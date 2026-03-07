@@ -37,7 +37,7 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
             inherited pnlStatusBar: TPanel
               Top = 340
               Width = 762
-              ExplicitTop = 340
+              ExplicitTop = 339
             end
           end
           inherited pnlLeft: TPanel
@@ -110,6 +110,7 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
     inherited lblStatusBarR: TLabel
       Left = 723
       Height = 14
+      ExplicitLeft = 723
     end
     inherited lblStatusBarL: TLabel
       Height = 14

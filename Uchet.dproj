@@ -95,11 +95,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>13082</VerInfo_Build>
+        <VerInfo_Build>13137</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV_;SRV_;PROD_;OR;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.13082;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.03.07 16:39:01;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.13137;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.03.07 21:13:10;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>
@@ -143,7 +143,6 @@
         <DCCReference Include="uWindows.pas">
             <Form>Dlg_DelayedInProd</Form>
         </DCCReference>
-        <DCCReference Include="uStringCalculator.pas"/>
         <DCCReference Include="uErrors.pas"/>
         <DCCReference Include="uUtils.pas"/>
         <DCCReference Include="uTasks.pas"/>
@@ -167,23 +166,14 @@
         <DCCReference Include="uFrmXWAbout.pas">
             <Form>FrmXWAbout</Form>
         </DCCReference>
-        <DCCReference Include="D_ExpenseItems.pas">
-            <Form>Dlg_ExpenseItems</Form>
-        </DCCReference>
         <DCCReference Include="uFrmXDmsgNoConnection.pas">
             <Form>Dlg_D_SQLNoConnection</Form>
-        </DCCReference>
-        <DCCReference Include="D_Sn_Calendar.pas">
-            <Form>Dlg_Sn_Calendar</Form>
         </DCCReference>
         <DCCReference Include="uFrmXDsrvAuth.pas">
             <Form>FrmXDsrvAuth</Form>
         </DCCReference>
         <DCCReference Include="uFrmTest.pas">
             <Form>FrmTest</Form>
-        </DCCReference>
-        <DCCReference Include="D_SnOrder.pas">
-            <Form>Dlg_SnOrder</Form>
         </DCCReference>
         <DCCReference Include="uFrmXWNoConnectionAfterStart.pas">
             <Form>FrmXWNoConnectionAfterStart</Form>
@@ -437,23 +427,8 @@
         <DCCReference Include="uFrmOWrepOrdersPrimeCost.pas">
             <Form>FrmOWrepOrdersPrimeCost</Form>
         </DCCReference>
-        <DCCReference Include="D_Grid1.pas">
-            <Form>Dlg_Grid1</Form>
-        </DCCReference>
-        <DCCReference Include="D_Vacancy.pas">
-            <Form>Dlg_Vacancy</Form>
-        </DCCReference>
-        <DCCReference Include="D_Candidate.pas">
-            <Form>Dlg_Candidate</Form>
-        </DCCReference>
-        <DCCReference Include="D_CandidatesFromWorkerStatus.pas">
-            <Form>Dlg_CandidatesFromWorkerStatus</Form>
-        </DCCReference>
         <DCCReference Include="uFrmWDedtDivision.pas">
             <Form>FrmWDedtDivision</Form>
-        </DCCReference>
-        <DCCReference Include="uFrmWDAddTurv.pas">
-            <Form>FrmWDAddTurv</Form>
         </DCCReference>
         <DCCReference Include="uFrmWDedtWorkerStatus.pas">
             <Form>FrmWDedtWorkerStatus</Form>
@@ -464,17 +439,8 @@
         <DCCReference Include="uFrmXGsesUsersChoice.pas">
             <Form>FrmXGsesUsersChoice</Form>
         </DCCReference>
-        <DCCReference Include="uFrmWGEdtTurv.pas">
-            <Form>FrmWGEdtTurv</Form>
-        </DCCReference>
         <DCCReference Include="uFrmWWsrvTurvComment.pas">
             <Form>FrmWWsrvTurvComment</Form>
-        </DCCReference>
-        <DCCReference Include="uFrmWGedtPayroll.pas">
-            <Form>FrmWGedtPayroll</Form>
-        </DCCReference>
-        <DCCReference Include="uFrmWDedtCreatePayroll.pas">
-            <Form>FrmWDedtCreatePayroll</Form>
         </DCCReference>
         <DCCReference Include="uFrmTest2.pas">
             <Form>FrmTest2</Form>
@@ -533,30 +499,24 @@
         </DCCReference>
         <DCCReference Include="uFrmWWedtWorkSchedule.pas">
             <Form>FrmWWedtWorkSchedule</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWDedtPayrollCalcMethod.pas">
             <Form>FrmWDedtPayrollCalcMethod</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWGedtPayrollTransfer.pas">
             <Form>FrmWGedtPayrollTransfer</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmWGedtPayrollCash.pas">
             <Form>FrmWGedtPayrollCash</Form>
         </DCCReference>
         <DCCReference Include="uFrmOGjrnProdCalculations.pas">
             <Form>FrmOGjrnProdCalculations</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmCDedtExpenseItem.pas">
             <Form>FrmCDedtExpenseItem</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="uFrmOWedtProdCalculation.pas">
             <Form>FrmOWedtProdCalculation</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

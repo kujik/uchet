@@ -67,7 +67,7 @@ uses
   uSys in 'uSys.pas',
   uOrders in 'uOrders.pas',
   uWindows in 'uWindows.pas' {Dlg_DelayedInProd},
-  uStringCalculator in 'uStringCalculator.pas',
+//  uStringCalculator in 'uStringCalculator.pas',
   uErrors in 'uErrors.pas',
   uUtils in 'uUtils.pas',
   uTasks in 'uTasks.pas',
@@ -83,12 +83,12 @@ uses
   V_MDI in 'V_MDI.pas' {Form_MDI},
   V_Normal in 'V_Normal.pas' {Form_Normal},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
-  D_ExpenseItems in 'D_ExpenseItems.pas' {Dlg_ExpenseItems},
+//  D_ExpenseItems in 'D_ExpenseItems.pas' {Dlg_ExpenseItems},
   uFrmXDmsgNoConnection in 'uFrmXDmsgNoConnection.pas' {Dlg_D_SQLNoConnection},
-  D_Sn_Calendar in 'D_Sn_Calendar.pas' {Dlg_Sn_Calendar},
+//  D_Sn_Calendar in 'D_Sn_Calendar.pas' {Dlg_Sn_Calendar},
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
   uFrmTest in 'uFrmTest.pas' {FrmTest},
-  D_SnOrder in 'D_SnOrder.pas' {Dlg_SnOrder},
+  //D_SnOrder in 'D_SnOrder.pas' {Dlg_SnOrder},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
   D_MainSettings in 'D_MainSettings.pas' {Dlg_MainSettings},
@@ -172,19 +172,16 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-  D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
-  D_Vacancy in 'D_Vacancy.pas' {Dlg_Vacancy},
-  D_Candidate in 'D_Candidate.pas' {Dlg_Candidate},
-  D_CandidatesFromWorkerStatus in 'D_CandidatesFromWorkerStatus.pas' {Dlg_CandidatesFromWorkerStatus},
+//  D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
   uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision},
-  uFrmWDAddTurv in 'uFrmWDAddTurv.pas' {FrmWDAddTurv},
+//  uFrmWDAddTurv in 'uFrmWDAddTurv.pas' {FrmWDAddTurv},
   uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
-  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
+//  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
-  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
-  uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
+//  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
+//  uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
   uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
   uFrmWGrepPersonal1 in 'uFrmWGrepPersonal1.pas' {FrmWGrepPersonal1},
   uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
@@ -344,7 +341,7 @@ begin
   Application.CreateForm(TForm_Normal, Form_Normal);
   Application.CreateForm(TFrmXWAbout, FrmXWAbout);
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
-  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
+//  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TDlg_SetPassword, Dlg_SetPassword);
   Application.CreateForm(TDlg_MainSettings, Dlg_MainSettings);
   Application.CreateForm(TDlg_ModuleSettings, Dlg_ModuleSettings);

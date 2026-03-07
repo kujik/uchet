@@ -381,6 +381,7 @@ type
   TFrDBGridRecFieldsList = record
                                     //st$s as name     (алиасы нельзя использовать для полей где будет подстановка null)
     Name: string;                   //наименование поля (краткое до $ или алиас), совпадающее с полем в MemTable) - name
+    NameWithSuffix: string;         //наименование поля вида st$s
     NameDb: string;                 //наименование поля в БД - st
     FullName: string;               //наименование поля полное, как оно было указано в массиве определения полей - st$s as name
     Caption: string;                //заголовок поля
@@ -909,11 +910,15 @@ type
     function  GetValueF(FieldName: string; Pos: Integer; Filtered: Boolean = true): Extended; overload;
     function  GetValueS(FieldName: string; Pos: Integer; Filtered: Boolean = true): string; overload;
     function  GetValueD(FieldName: string; Pos: Integer; Filtered: Boolean = true): TDateTime; overload;
-    //получить значения всех перечисленных полей
+    //получить значения всех перечисленных полей; если поля не переданы - получаем все
     function  GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
     function  GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
     //получить значение ячейки футера для поля (если там автосумма, то при AsText = False получит именно значение а не форматированный текст)
     function  GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
+    //сохраним айди измененной строки в массиве EditData.IdsChanged
+    procedure MakrIdAsChanged;
+    //проверить, был ли ручной ввод (или был помечен как измененный) для данного айди
+    function  IsRowChanged(Pos: Integer; Filtered: Boolean): Boolean;
     //установить значение поля в текущей записи. если поле не задано, использется поле текущего столбца. по умолчанию делает Post
     procedure SetValue(FieldName: string; NewValue: Variant; Post: Boolean = True); overload;
     //установить значение поля во внутреннем массиве (отфильтрованных или всех зщаписей)
@@ -922,8 +927,10 @@ type
     function  GetColumnFieldName(Column: TObject = nil): string;
     //получить заголовок столбца (из таблицы а не исходных данных)
     function  GetColumnCaption(FieldName: string; WoCrLf: Boolean = True): string;
-    //получить массив имен всех столбцов таблицы
-    function  GetFieldNames: TVarDynArray;
+    //получить массив имен всех столбцов таблицы (на основании имен колонок мемтейбла)
+    function  GetFieldNames: TVarDynArray; overload;
+    //получить массив имен всех столбцов таблицы по тегам, на основании данных определения фрейма
+    function  GetFieldNamesEx(Tag: string = ''; WithSuffix: Boolean = False): TVarDynArray; overload;
     //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X
     function  GetCol(Col: Integer = -1): Integer;
     //получим, является ли данный столбец реадактируемыи
@@ -1149,7 +1156,7 @@ begin
   for i:= 0 to High(FSql.FieldsDef) do begin
     //первый элемент массива всегда определение поля, разбиваем его на составляющие
     fr.FullName := FSql.FieldsDef[i][0];
-    Q.ParseFieldNameFull(FSql.FieldsDef[i][0], st, fr.Name, fr.NameDb, st, fr.DataType, fr.FieldSize);
+    Q.ParseFieldNameFull(FSql.FieldsDef[i][0], fr.NameWithSuffix, fr.Name, fr.NameDb, st, fr.DataType, fr.FieldSize);
     //второй элемент всегда заголовок
     //если начинается с !, то заменим ее на предыдущий заголовок группы
     st := Copy(FSql.FieldsDef[i][1], 1, Pos('|', FSql.FieldsDef[i][1]));
@@ -2444,6 +2451,8 @@ begin
   //установим в текущей строке, по умолчанию делаем Post (фильтр в столбце сработает)
   if (FOpt.FDataMode <> myogdmWithAdoDriver) or not FOpt.Sql.RefreshAfterSave then
     SetValue(TColumnEh(Sender).FieldName, S.IIf(Text = '', null, Value));
+  //сохраним айди измененной строки в массиве
+  MakrIdAsChanged;
   //проверим строку или всю таблицу
   if EditOptions.AlwaysVerifyAllTable then
     IsTableCorrect
@@ -2742,6 +2751,8 @@ function TFrDBGridEh.GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filter
 //получить значения всех перечисленных полей
 begin
   Result := [];
+  if Length(FieldNames) = 0 then
+    FieldNames := GetFieldNames;
   for var i := 0 to High(FieldNames) do
     Result := Result + [GetValue(FieldNames[i], Pos, Filtered)];
 end;
@@ -2749,7 +2760,7 @@ end;
 function TFrDBGridEh.GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray;
 //получить значения всех перечисленных полей
 begin
-  Result := GetValuesArr(A.Explode(FieldNames, ';'), Pos, Filtered);
+  Result := GetValuesArr(A.Explode(FieldNames, ';', True), Pos, Filtered);
 end;
 
 function TFrDBGridEh.GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
@@ -2768,6 +2779,20 @@ begin
   end;
 end;
 
+
+procedure TFrDBGridEh.MakrIdAsChanged;
+//сохраним айди измененной строки в массиве
+begin
+  if not A.InArray(ID, FEditData.IdsChanged) then
+    FEditData.IdsChanged := FEditData.IdsChanged + [ID];
+end;
+
+function TFrDBGridEh.IsRowChanged(Pos: Integer; Filtered: Boolean): Boolean;
+//проверить, был ли ручной ввод (или был помечен как измененный) для данного айди
+begin
+  var LId := GetValue(FOpt.Sql.IdField, Pos, Filtered);
+  Result := A.InArray(LId, FEditData.IdsChanged);
+end;
 
 procedure TFrDBGridEh.SetValue(FieldName: string; NewValue: Variant; Post: Boolean = true);
 //установить значение поля в текущей записи
@@ -2812,6 +2837,19 @@ begin
   for var i: Integer := 0 to MemTableEh1.FieldCount - 1 do
     Result := Result + [LowerCase(MemTableEh1.Fields[i].FieldName)];
 end;
+
+function TFrDBGridEh.GetFieldNamesEx(Tag: string = ''; WithSuffix: Boolean = False): TVarDynArray;
+//получить массив имен всех столбцов таблицы по тегам, на основании данных определения фрейма
+begin
+  Result := [];
+  for var i := 0 to High(FOpt.Sql.Fields) do
+    if (Tag = '') or S.InCommaStr(Tag, FOpt.Sql.Fields[i].FTags, ',') then
+      if WithSuffix then
+        Result := Result + [FOpt.Sql.Fields[i].NameWithSuffix]
+      else
+        Result := Result + [FOpt.Sql.Fields[i].Name]
+end;
+
 
 function TFrDBGridEh.GetCol(Col: Integer = -1): Integer;
 //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X

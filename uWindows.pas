@@ -112,12 +112,13 @@ uses
 
   uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
 
-//  D_Sn_Calendar,
   uFrmCDedtAccount,
-  //D_ExpenseItems,
   uFrmCDedtExpenseItem,
+  //uFrmWDAddTurv,
+  //uFrmWGEdtTurv,
+  //uFrmWGedtPayroll,
 
-  uFrmWDedtDivision, uFrmWDAddTurv, uFrmWDedtWorkerStatus, uFrmWGEdtTurv, uFrmWGedtPayroll,
+  uFrmWDedtDivision, uFrmWDedtWorkerStatus,
   uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
   uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
 
@@ -125,7 +126,8 @@ uses
   D_Order, D_LoadKB,
   D_ItmInfo, D_J_Montage,
   D_R_OrStdItems, D_NewEstimateInput,
-  D_SuppliersMinPart, D_Spl_InfoGrid,
+  D_SuppliersMinPart,
+  D_Spl_InfoGrid,
   F_Adm_Installer,
 
   uFrmXGsrvSqlMonitor,
@@ -575,7 +577,7 @@ begin
     myfrm_J_Candidates,
     myfrm_R_Candidates_Ad_SELCH,
     myfrm_J_Turv,
-    myfrm_J_Payrolls,
+    //myfrm_J_Payrolls,
     myfrm_R_Holideys,
     myfrm_Rep_W_Payroll,
     myfrm_Rep_PayrollsSum,
@@ -932,9 +934,9 @@ begin
 //    TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
     Turv.CreateAllTurvForDate(AOwner, Turv.GetTurvBegDate(Date));
   end
-  else if F = myfrm_Dlg_Payroll then begin
+{  else if F = myfrm_Dlg_Payroll then begin
     TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);
-  end
+  end}
   else if F = myfrm_Dlg_PayrollCalc then begin
     if TVarDynArray(AAddParam)[0] = 1 then
       TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1])

@@ -1,6 +1,6 @@
 object PrintReport: TPrintReport
-  Height = 457
-  Width = 116
+  Height = 563
+  Width = 133
   object frxReportTableObject1: TfrxReportTableObject
     Left = 44
     Top = 16

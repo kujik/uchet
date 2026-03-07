@@ -134,13 +134,10 @@ begin
     Frg.OnColumnsUpdateData := FrgUpdateData;
     Frg.OnCellValueSave := FrgCellValueSave;
     Frg.Opt.SetGridOperations('uiad');
-    Frg.Opt.SetButtons(-3, 'aids', True, cbttSSmall);
+    Frg.Opt.SetButtons(-3, 'aidcs', True, cbttSSmall);
     Frg.Opt.Caption := '~' + LName;
-    LFieldsSt := '';
+    LFieldsSt := Frg.GetFieldNamesEx('1', True).Implode(';');
     Frg.SetInitData([]);
-    for var j := 0 to High(LFields) do
-      if A.InArray('t=1', TVarDynArray(LFields[j])) then
-        S.ConcatStP(LFieldsSt, LFields[j][0], ';');
     Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_' + LTable, LFieldsSt + ';name$s') + ' where id_prod_calc_item = :id$i order by name', [ID], LData); //F.GetProp('id_prod_calc')
     FTablesData := FTablesData + [[LTable, LFieldsSt]];
     Frg.SetInitData(LData);
@@ -221,7 +218,7 @@ end;
 procedure TFrmOWedtProdCalculation.FrgCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
   Fr.SetState(True, null, null);
-  Fr.SetValue('changed', 1);
+//  Fr.SetValue('changed', 1);
   CalculateOneRow(Fr, No, -1);
 end;
 
@@ -419,7 +416,8 @@ begin
     if Length(Frg.EditData.IdsDeleted) > 0 then
       Q.QExecSql('delete from ' + FTablesData[i][0] + ' where id in (' + A.Implode(Frg.EditData.IdsDeleted, ',') + ')', []);
     for var j := 0 to Frg.GetCount(False) - 1 do begin
-      if Frg.GetValueI('changed', j, False) = 1 then
+//      if Frg.GetValueI('changed', j, False) = 1 then
+      if Frg.IsRowChanged(j, False) then
         Q.QIUD(S.IIf(Frg.GetValueI('id', j, False) >= MY_IDS_INSERTED_MIN, 'i', 'u'), FTablesData[i][0], '', FTablesData[i][1] + ';id_prod_calc_item$i', Frg.GetValuesArr(FTablesData[i][1].AsString, j, False) + [ID]);
     end;
   end;

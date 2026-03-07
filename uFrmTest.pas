@@ -177,7 +177,7 @@ uses
   uFrmBasicEditabelGrid,
   uFrmOWOrder,
 
-  uFrmWGEdtTurv,
+  //uFrmWGEdtTurv,
   uFrmOGedtEstimate,
   uFrmCDedtAccount,
   uFrmWWedtWorkSchedule
@@ -1422,6 +1422,10 @@ var
   i: Integer;
   st: string;
 begin
+va:=[1,2];
+va.Add(2);
+va.Add(3);
+Exit;
   Wh.ExecReference(myfrm_R_Itm_Nomencl_SEL, nil, [myfoDialog,  myfoSizeable], null);
 Exit;
 //  q.QExecSql('select 1 from www', [1]); exit;
@@ -1515,8 +1519,7 @@ Turv.SaveAllTurvToExportTable; Exit;
    TFrmOGedtEstimate.Show(Application, '222221', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
 
 
-  TFrmWGEdtTurv.Show(Application, '22222', [myfoDialog, myfoSizeable], fEdit, 2234, null); exit;
-
+  
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 
   FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;

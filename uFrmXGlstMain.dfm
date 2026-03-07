@@ -2,8 +2,8 @@ inherited FrmXGlstMain: TFrmXGlstMain
   Caption = 'FrmXGlstMain'
   ClientHeight = 359
   ClientWidth = 581
-  ExplicitWidth = 593
-  ExplicitHeight = 397
+  ExplicitWidth = 597
+  ExplicitHeight = 398
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 581
@@ -13,8 +13,8 @@ inherited FrmXGlstMain: TFrmXGlstMain
     inherited pnlFrmClient: TPanel
       Width = 571
       Height = 294
-      ExplicitWidth = 567
-      ExplicitHeight = 293
+      ExplicitWidth = 571
+      ExplicitHeight = 294
       inherited pnlTop: TPanel
         Width = 571
         ExplicitWidth = 567
@@ -32,13 +32,13 @@ inherited FrmXGlstMain: TFrmXGlstMain
       inherited pnlGrid1: TPanel
         Width = 561
         Height = 239
-        ExplicitWidth = 557
-        ExplicitHeight = 238
+        ExplicitWidth = 561
+        ExplicitHeight = 239
         inherited Frg1: TFrDBGridEh
           Width = 559
           Height = 237
-          ExplicitWidth = 555
-          ExplicitHeight = 236
+          ExplicitWidth = 559
+          ExplicitHeight = 237
           inherited pnlGrid: TPanel
             Width = 549
             Height = 183
@@ -92,11 +92,11 @@ inherited FrmXGlstMain: TFrmXGlstMain
       inherited pnlFrg2: TPanel
         Top = 253
         Width = 571
-        ExplicitTop = 252
-        ExplicitWidth = 567
+        ExplicitTop = 253
+        ExplicitWidth = 571
         inherited Frg2: TFrDBGridEh
           Width = 569
-          ExplicitWidth = 565
+          ExplicitWidth = 569
           inherited pnlGrid: TPanel
             Width = 559
             ExplicitWidth = 555
@@ -183,11 +183,7 @@ inherited FrmXGlstMain: TFrmXGlstMain
     ExplicitWidth = 577
     inherited lblStatusBarR: TLabel
       Left = 508
-      Height = 14
       ExplicitLeft = 508
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

@@ -434,7 +434,7 @@ var
 implementation
 
 uses
-  uFrmMain, uMessages, uLabelColors2, uFrDBGridEh, uFrmBasicMdi;
+  uFrmMain, uMessages, uLabelColors2, uFrDBGridEh, uFrmBasicMdi, uErrors;
 
 
 function clmyPink: Cardinal;
@@ -3970,7 +3970,13 @@ begin
     for i := 0 to High(Values.V) do begin
       MemTableEh.Append;
       for j := 0 to Values.FieldsCount - 1 do
+        try
         MemTableEh.FieldByName(Values.F[j]).Value := Values.V[i][j];
+        except on E: Exception do begin
+          Errors.SetParam('LoadMemTableFromNamedArray', 'Ошибка установки поля ' + Values.F[j]);
+          Application.ShowException(E);
+        end;
+        end;
       MemTableEh.Post;
     end;
   end

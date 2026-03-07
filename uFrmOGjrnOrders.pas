@@ -71,7 +71,7 @@ var
   va2: TVarDynArray2;
 begin
   Caption:='Журнал заказов';
-  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogRowDetailPanel, myogLoadAfterVisible];
+  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect{, myogGridLabels}, myogRowDetailPanel, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
     ['id$i','_id','d=40'],
     ['id_itm$i','_id_itm','40'],
@@ -88,12 +88,12 @@ begin
     ['address$s','Адрес отгрузки','250'],
     ['dt_otgr$d','Отгрузка (план)',''],
     ['managername$s','Менеджер','100'],
-    ['to_kns$i','Конструктор',''],
-    ['to_thn$i','Технолог',''],
-    ['dt_kns_max','Документы КНС',''],
-    ['dt_thn_max','Документы ТХН',''],
-    ['estimates$i','Смета','30', 'pic=-;+:6;7', True],
-    ['xml_status$i','XML','30', 'pic=-;+:6;7'],
+    ['to_kns$s','Конструктор',''],
+    ['to_thn$s','Технолог',''],
+    ['dt_kns_max$d','Документы КНС',''],
+    ['dt_thn_max$d','Документы ТХН',''],
+    ['estimates$s','Смета','30', 'pic=-;+:6;7', True],
+    ['xml_status$s','XML','30', 'pic=-;+:6;7'],
     ['dt_estimate_max$d','Изменение сметы',''],
     ['dt_reserve$d','Дата резервирования'],
     ['dt_aggr_estimate$d','Общая смета',''],
@@ -112,9 +112,9 @@ begin
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
     ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
-    ['dt_upd_reg','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
-    ['dt_upd','Дата УПД',''],
-    ['upd','Номер УПД','80'],
+    ['dt_upd_reg$d','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
+    ['dt_upd$d','Дата УПД',''],
+    ['upd$s','Номер УПД','80'],
     ['pay$f','Оплачено','f=r:','null',not User.Role(rOr_J_Orders_Payments_V)],
     ['pay_n$f','Промежуточная оплата','f=r:','null',not User.Role(rOr_J_Orders_PaymentsN_V)],
     ['account$s','Счет','100'],
@@ -131,6 +131,8 @@ begin
   ]);
   Frg1.Opt.SetTable('v_orders_list');
   Frg1.Opt.SetWhere('where id > 0');
+//Frg1.SetInitData([]);
+//Frg1.SetInitData('*',[]);
   Frg1.CreateAddControls('1', cntCheck, 'Только незакрытые', 'ChbNoClosed', '', 4, yrefT, 200);
   Frg1.CreateAddControls('1', cntCheck, 'В производстве', 'ChbInProd', '', 4, yrefB, 200);
   //просроченные заказы - работают как радиобаттоны со снятием (-11)

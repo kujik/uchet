@@ -80,15 +80,11 @@ uses
   uOrders,
   uTurv,
 
-  D_Sn_Calendar,
-  D_ExpenseItems,
-  D_SnOrder,
   D_Order,
   D_OrderPrintLabels,
   D_R_EstimateReplace,
   D_J_Error_Log,
   D_Spl_InfoGrid,
-  //~D_CreatePayroll,
 
   uFrmOGedtSnMain,
   uFrmDlgRItmSupplier,
@@ -96,9 +92,9 @@ uses
   uFrmOWPlannedOrder,
   uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
-  uFrmWGEdtTurv,
-  uFrmWGedtPayroll,
-  uFrmWDedtCreatePayroll,
+  //uFrmWGEdtTurv,
+//  uFrmWGedtPayroll,
+//  uFrmWDedtCreatePayroll,
   uFrmWDedtCreatePayrollN
   ;
 
@@ -784,7 +780,7 @@ v:=True;
     ['refoptions']
     ];
   end
-  else if FormDoc = myfrm_J_Payrolls then begin
+(*  else if FormDoc = myfrm_J_Payrolls then begin
     Caption:='Зарплатные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
@@ -813,7 +809,7 @@ v:=True;
       'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
       ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
     ];
-  end
+  end*)
   else if FormDoc = myfrm_J_PayrollCalculations then begin
     Caption:='Расчетные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
@@ -2277,11 +2273,11 @@ begin
     if (FormDoc = myfrm_J_Turv) and (fMode in [fDelete]) then
       if Turv.DeleteTURV(Fr.ID) then
         Fr.RefreshGrid;
-    if (FormDoc = myfrm_J_Payrolls) and (fMode in [fEdit, fView]) then
-      Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
-    if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
-      TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
-    if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
+//    if (FormDoc = myfrm_J_Payrolls) and (fMode in [fEdit, fView]) then
+//      Wh.ExecDialog(myfrm_Dlg_Payroll, Self, [], fMode, Fr.ID, null);
+//    if (FormDoc = myfrm_J_Payrolls) and (fMode = fAdd) then
+//      TFrmWDedtCreatePayroll.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
+{    if (FormDoc = myfrm_J_Payrolls) and (fMode = fDelete) then begin
       if Q.DBLock(True, myfrm_Dlg_Payroll, Fr.ID)[0] <> True  then
         Exit;
       if (MyQuestionMessage(
@@ -2304,7 +2300,7 @@ begin
         end
         else
           Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
-    end;
+    end;}
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
       TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
  //   if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
@@ -2457,7 +2453,7 @@ begin
       Fr.RefreshGrid;
     end;
   end
-  else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtLock) then begin
+{  else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtLock) then begin
     va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
     if (Length(va) > 0) then begin
       if MyQuestionMessage('Проставить для ' + S.GetEndingFull(Length(va), ' ведомост', 'и', 'ей', 'ей' ) + ' статус "Закрыта" ?') <> mrYes then
@@ -2468,7 +2464,7 @@ begin
     end
     else
       MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
-  end
+  end}
   else if A.InArray(FormDoc, [myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = mbtLock) then begin
     //проставить метку Закрыта по всем отмеченным зарплатным ведомостям
     va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
@@ -2549,16 +2545,10 @@ begin
   end
 
 
-  else if (FormDoc = myfrm_J_Payrolls) and (Tag = mbtTest) then begin
-    TFrmWGedtPayroll.Show(Application, '22222------', [myfoDialog, myfoSizeable], fEdit, Fr.ID, null); exit;
-  end
   else if (FormDoc = myfrm_J_Turv) and (Tag = 1000) then begin
     //Wh.ExecDialog(myfrm_Dlg_ForemanAllowance, Self, [], fEdit, Fr.ID, null);
     Turv.FinalizeAllTurvForPeriod;
     Fr.RefreshGrid;
-  end
-  else if (FormDoc = myfrm_J_Turv) and (Tag = mbtTest) then begin  //!T
-    TFrmWGEdtTurv.Show(Self, 'OLD-TURV', [myfoDialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
   end
   else inherited;
 
@@ -2709,14 +2699,14 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-  else if (FormDoc = myfrm_J_Payrolls) then begin
+{  else if (FormDoc = myfrm_J_Payrolls) then begin
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_worker is null'),
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
         ' or '), '('#0')')], ' and '
     );
-  end
+  end}
   else if (FormDoc = myfrm_J_PayrollCalculations) or (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
@@ -2960,7 +2950,7 @@ begin
     myfrm_J_Error_Log,
 
     myfrm_J_Turv,
-    myfrm_J_Payrolls,
+    //myfrm_J_Payrolls,
     myfrm_J_PayrollCalculations,
     myfrm_J_PayrollTransfer,
     myfrm_J_PayrollCash,

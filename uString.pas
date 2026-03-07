@@ -476,7 +476,8 @@ type
     //получает массив строк, возвращает вариантный массив
     function StringDynArrayToVarDynArray(const AStringArray: TStringDynArray): TVarDynArray; //+++
     //удаляем дублирующиеся знаения из массива
-    function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray; //+++
+    function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
+    procedure RemoveDuplicatesInPlace(var AValues: TVarDynArray);
     //сравнение двух двумерных массивов (или одной их строки)
     //будут одинаковы, если совпадают размерности массивов и все их значения
     function IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer = -1): Boolean; //+++
@@ -526,7 +527,23 @@ type
     function NullIfEmpty: Variant;
   end;
 
-type
+
+  //============================================================================
+  //Хелпер для типа Variant
+  //============================================================================
+
+  TVarDynArrayHelper = record helper for TVarDynArray
+  public
+    function Implode(const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string;
+    function Pos(const AValue: Variant; const AIgnoreCase: Boolean = False): Integer;
+    function Found(const AValue: Variant; const AIgnoreCase: Boolean = False): Boolean;
+    function Sort(const AAscending: Boolean = True): TVarDynArray;
+    procedure SortP(const AAscending: Boolean = True);
+    function RemoveDuplicates: TVarDynArray;
+    //добавляет элемент в конец массива, если такого элемента в нем еще нет
+    procedure Add(const AValue: Variant);
+  end;
+
   //============================================================================
   //Хелпер для типа Variant
   //============================================================================
@@ -535,8 +552,6 @@ type
     function Row(ARow: Integer): TVarDynArray;
     function Col(ACol: Integer): TVarDynArray;
   end;
-
-
 
 //------------------------------------------------------------------------------
 //Вспомогательные функции, необходимые для EhLib и других внешних модулей
@@ -3176,6 +3191,28 @@ begin
   end;
 end;
 
+procedure TMyArrayHelper.RemoveDuplicatesInPlace(var AValues: TVarDynArray);
+var
+  Temp: TVarDynArray;
+  i, j: Integer;
+  found: Boolean;
+begin
+  Temp := [];
+  for i := 0 to High(AValues) do
+  begin
+    found := False;
+    for j := 0 to High(Temp) do
+      if VarCompareValue(AValues[i], Temp[j]) = vrEqual then
+      begin
+        found := True;
+        Break;
+      end;
+    if not found then
+      Temp := Temp + [AValues[i]];
+  end;
+  AValues := Temp;
+end;
+
 function TMyArrayHelper.IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer): Boolean;
 //сравнение двух двумерных массивов (или одной их строки)
 //будут одинаковы, если совпадают размерности массивов и все их значения
@@ -3385,6 +3422,48 @@ function TVariantHelper.NullIfEmpty: Variant;
 begin
   Result := s.NullIfEmpty(Self);
 end;
+
+//==============================================================================
+//TVarDynArrayHelper методы
+//==============================================================================
+
+function TVarDynArrayHelper.Implode(const ADelimiter: string; const AIgnoreEmpty: Boolean): string;
+begin
+  Result := A.Implode(Self, ADelimiter, AIgnoreEmpty);
+end;
+
+function TVarDynArrayHelper.Pos(const AValue: Variant; const AIgnoreCase: Boolean = False): Integer;
+begin
+  Result := a.PosInArray(AValue, Self, AIgnoreCase);
+end;
+
+function TVarDynArrayHelper.Found(const AValue: Variant; const AIgnoreCase: Boolean = False): Boolean;
+begin
+  Result := a.PosInArray(AValue, Self, AIgnoreCase) >= 0;
+end;
+
+function TVarDynArrayHelper.Sort(const AAscending: Boolean = True): TVarDynArray;
+begin
+  Result := Copy(Self);
+  A.SortVD1(Result, AAscending);
+end;
+
+procedure TVarDynArrayHelper.SortP(const AAscending: Boolean = True);
+begin
+  A.SortVD1(Self, AAscending);
+end;
+
+function TVarDynArrayHelper.RemoveDuplicates: TVarDynArray;
+begin
+  Result := A.RemoveDuplicates(Self);
+end;
+
+procedure TVarDynArrayHelper.Add(const AValue: Variant);
+begin
+  if not Self.Found(AValue) then
+    Self := Self + [AValue];
+end;
+
 
 //==============================================================================
 //TVarDynArray2Helper методы
