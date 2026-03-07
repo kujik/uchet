@@ -909,6 +909,11 @@ type
     function  GetValueF(FieldName: string; Pos: Integer; Filtered: Boolean = true): Extended; overload;
     function  GetValueS(FieldName: string; Pos: Integer; Filtered: Boolean = true): string; overload;
     function  GetValueD(FieldName: string; Pos: Integer; Filtered: Boolean = true): TDateTime; overload;
+    //получить значения всех перечисленных полей
+    function  GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
+    function  GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
+    //получить значение ячейки футера для поля (если там автосумма, то при AsText = False получит именно значение а не форматированный текст)
+    function  GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
     //установить значение поля в текущей записи. если поле не задано, использется поле текущего столбца. по умолчанию делает Post
     procedure SetValue(FieldName: string; NewValue: Variant; Post: Boolean = True); overload;
     //установить значение поля во внутреннем массиве (отфильтрованных или всех зщаписей)
@@ -927,6 +932,8 @@ type
     procedure SetIndicatorCheckBoxesByField(FieldName: string; Values: TVarDynArray);
     //получить ширину таблицы, посчитав ширины видимых столбцов
     function  GetTableWidth: Integer;
+    //принудительно пересчитать все суммы в футере
+    procedure RecalcSum;
     //обновить данные грида
     procedure InvalidateGrid;
 
@@ -1002,9 +1009,9 @@ type
     //установить значение контрола принадлежащего фрейму по переданному имени контрола
     procedure SetControlValue(ControlName: string; Value: Variant);
     //ставка строки в таблицу в текущую позицию
-    function InsertRow: Boolean;
+    function InsertRow(Post: Boolean = False): Boolean;
     //добавление строки в конец таблицы
-    function AddRow: Boolean;
+    function AddRow(Post: Boolean = False): Boolean;
     //удаление строки
     function DeleteRow: Boolean;
     //проверка, что все поля строки пустые (кроме невидимых, точнее с заголовками с _)
@@ -2676,9 +2683,11 @@ function TFrDBGridEh.GetValue(FieldName: string = ''): Variant;
 //получить значение поля в текущей строке грида
 begin
   Result := null;
-  if (not MemTableEh1.Active) or (MemTableEh1.RecordCount = 0) then Exit;
-  if FieldName = '' then FieldName:= GetCurrField;
-  Result:= MemTableEh1.FieldByName(FieldName).Value;
+  if (not MemTableEh1.Active) or (MemTableEh1.RecordCount = 0) then
+    Exit;
+  if FieldName = '' then
+    FieldName := GetCurrField;
+  Result := MemTableEh1.FieldByName(S.FieldNameOnly(FieldName)).Value;
 end;
 
 function TFrDBGridEh.GetValueI(FieldName: string = ''): Integer;
@@ -2704,9 +2713,10 @@ end;
 function TFrDBGridEh.GetValue(FieldName: string; Pos: Integer; Filtered: Boolean = true): Variant;
 //получить значение поля из внутреннего массива (отфильтрованных или всех зщаписей)
 begin
-  if Filtered
-    then Result:= MemTableEh1.RecordsView[Pos].DataValues[FieldName, dvvValueEh]
-    else Result:= MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[FieldName, dvvValueEh];
+  if Filtered then
+    Result := MemTableEh1.RecordsView[Pos].DataValues[S.FieldNameOnly(FieldName), dvvValueEh]
+  else
+    Result := MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[S.FieldNameOnly(FieldName), dvvValueEh];
 end;
 
 function TFrDBGridEh.GetValueI(FieldName: string; Pos: Integer; Filtered: Boolean = true): Integer;
@@ -2718,7 +2728,6 @@ function TFrDBGridEh.GetValueF(FieldName: string; Pos: Integer; Filtered: Boolea
 begin
   Result := S.NNum(GetValue(FieldName, Pos, Filtered));
 end;
-
 function TFrDBGridEh.GetValueS(FieldName: string; Pos: Integer; Filtered: Boolean = true): string;
 begin
   Result := S.NSt(GetValue(FieldName, Pos, Filtered));
@@ -2728,6 +2737,37 @@ function TFrDBGridEh.GetValueD(FieldName: string; Pos: Integer; Filtered: Boolea
 begin
   Result := VarToDateTime(GetValue(FieldName, Pos, Filtered));
 end;
+
+function TFrDBGridEh.GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray;
+//получить значения всех перечисленных полей
+begin
+  Result := [];
+  for var i := 0 to High(FieldNames) do
+    Result := Result + [GetValue(FieldNames[i], Pos, Filtered)];
+end;
+
+function TFrDBGridEh.GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray;
+//получить значения всех перечисленных полей
+begin
+  Result := GetValuesArr(A.Explode(FieldNames, ';'), Pos, Filtered);
+end;
+
+function TFrDBGridEh.GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
+//получить значение ячейки футера для поля (если там автосумма, то при AsText = False получит именно значение а не форматированный текст)
+begin
+  if AsText then
+    Result := DBGridEh1.FindFieldColumn(FieldName).Footer.Value
+  else begin
+    Result := Null;
+    if Assigned(DBGridEh1.SumList) and DBGridEh1.SumList.Active then
+      for var i := 0 to DBGridEh1.SumList.SumCollection.Count - 1 do
+        if DBGridEh1.SumList.SumCollection[i].FieldName.ToLower = S.ToLower(FieldName) then begin
+          Result := DBGridEh1.SumList.SumCollection[i].SumValue;
+          Break;
+        end;
+  end;
+end;
+
 
 procedure TFrDBGridEh.SetValue(FieldName: string; NewValue: Variant; Post: Boolean = true);
 //установить значение поля в текущей записи
@@ -2838,6 +2878,13 @@ begin
     if DBGridEh1.Columns[i].Visible then
       Result := Result + DBGridEh1.Columns[i].Width;
 end;
+
+procedure TFrDBGridEh.RecalcSum;
+//принудительно пересчитать все суммы в футере
+begin
+  DBGridEh1.SumList.RecalcAll;
+end;
+
 
 procedure TFrDBGridEh.InvalidateGrid;
 begin
@@ -4129,7 +4176,7 @@ begin
 //  DBGridEh1.OnShowFilterDialog
 end;
 
-function TFrDBGridEh.InsertRow: Boolean;
+function TFrDBGridEh.InsertRow(Post: Boolean = False): Boolean;
 //вставим строку в таблицу, если доступна эта операция
 //если доступна операция добавления, то добавим в конец
 //вызываем по кнопке и по VK_INSERT
@@ -4142,9 +4189,11 @@ begin
   else
     MemTableEh1.Insert;
   DBGridEh1.AllowedOperations := DBGridEh1.AllowedOperations - [alopInsertEh];
+  if Post then
+    Mth.PostAndEdit(MemTableEh1);
 end;
 
-function TFrDBGridEh.AddRow: Boolean;
+function TFrDBGridEh.AddRow(Post: Boolean = False): Boolean;
 //если доступна операция добавления, то добавим в строку конец таблицы
 //вызываем по кнопке и по VK_DOWN на последней строке грида
 begin
@@ -4153,6 +4202,8 @@ begin
   DBGridEh1.AllowedOperations := DBGridEh1.AllowedOperations + [alopInsertEh];
   MemTableEh1.Append;
   DBGridEh1.AllowedOperations := DBGridEh1.AllowedOperations - [alopInsertEh];
+  if Post then
+    Mth.PostAndEdit(MemTableEh1);
 end;
 
 function TFrDBGridEh.DeleteRow: Boolean;

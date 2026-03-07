@@ -30,7 +30,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         object edt_name: TDBEditEh
           Left = 81
           Top = 15
-          Width = 1026
+          Width = 1022
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 73
@@ -43,7 +43,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
-          ExplicitWidth = 1022
+          ExplicitWidth = 1018
         end
       end
       object pgcMain: TPageControl
@@ -51,7 +51,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         Top = 49
         Width = 1116
         Height = 477
-        ActivePage = ts5
+        ActivePage = tsEconomic
         Align = alClient
         TabOrder = 1
         object ts1: TTabSheet
@@ -69,8 +69,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             inherited pnlGrid: TPanel
               Width = 1098
               Height = 395
-              ExplicitWidth = 1094
-              ExplicitHeight = 394
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
               inherited DbGridEh1: TDBGridEh
                 Width = 1096
                 Height = 372
@@ -83,8 +83,10 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
+                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -94,8 +96,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
               inherited pnlStatusBar: TPanel
                 Top = 373
                 Width = 1096
-                ExplicitTop = 372
-                ExplicitWidth = 1092
+                ExplicitTop = 373
+                ExplicitWidth = 1096
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -108,21 +110,21 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             end
             inherited pnlLeft: TPanel
               Height = 395
-              ExplicitHeight = 394
+              ExplicitHeight = 395
             end
             inherited pnlTop: TPanel
               Width = 1108
-              ExplicitWidth = 1104
+              ExplicitWidth = 1108
             end
             inherited pnlContainer: TPanel
               Width = 1108
-              ExplicitWidth = 1104
+              ExplicitWidth = 1108
             end
             inherited pnlBottom: TPanel
               Top = 449
               Width = 1108
-              ExplicitTop = 448
-              ExplicitWidth = 1104
+              ExplicitTop = 449
+              ExplicitWidth = 1108
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -169,8 +171,10 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
+                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -255,8 +259,10 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
+                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -341,8 +347,10 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
+                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -413,8 +421,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             inherited pnlGrid: TPanel
               Width = 1098
               Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 395
+              ExplicitWidth = 1094
+              ExplicitHeight = 394
               inherited DbGridEh1: TDBGridEh
                 Width = 1096
                 Height = 372
@@ -427,8 +435,10 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                     Footers = <>
                   end>
                 inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 46
+                  ExplicitHeight = 120
                   inherited PRowDetailPanel: TPanel
                     Width = 44
                     ExplicitWidth = 44
@@ -438,8 +448,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
               inherited pnlStatusBar: TPanel
                 Top = 373
                 Width = 1096
-                ExplicitTop = 373
-                ExplicitWidth = 1096
+                ExplicitTop = 372
+                ExplicitWidth = 1092
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -452,21 +462,21 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             end
             inherited pnlLeft: TPanel
               Height = 395
-              ExplicitHeight = 395
+              ExplicitHeight = 394
             end
             inherited pnlTop: TPanel
               Width = 1108
-              ExplicitWidth = 1108
+              ExplicitWidth = 1104
             end
             inherited pnlContainer: TPanel
               Width = 1108
-              ExplicitWidth = 1108
+              ExplicitWidth = 1104
             end
             inherited pnlBottom: TPanel
               Top = 449
               Width = 1108
-              ExplicitTop = 449
-              ExplicitWidth = 1108
+              ExplicitTop = 448
+              ExplicitWidth = 1104
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -482,6 +492,100 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
                 34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
                 305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
             end
+          end
+        end
+        object tsEconomic: TTabSheet
+          Caption = #1069#1082#1086#1085#1086#1084#1080#1082#1072
+          ImageIndex = 5
+          object nedt_markup_percent: TDBNumberEditEh
+            Left = 160
+            Top = 38
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 76
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1047#1072#1087#1072#1089' '#1094#1077#1085#1099', %'
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 0
+            Visible = True
+          end
+          object nedt_purchase_sum: TDBNumberEditEh
+            Left = 160
+            Top = 11
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 111
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1054#1073#1097#1072#1103' '#1089#1091#1084#1084#1072' '#1079#1072#1082#1091#1087#1082#1080
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 1
+            Visible = True
+          end
+          object nedt_overall_coeff: TDBNumberEditEh
+            Left = 160
+            Top = 65
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 107
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1054#1073#1097#1080#1081' '#1082#1086#1101#1092#1092#1080#1094#1080#1077#1085#1090
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 2
+            Visible = True
+          end
+          object nedt_sales_sum: TDBNumberEditEh
+            Left = 160
+            Top = 92
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 79
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1057#1091#1084#1084#1072' '#1087#1088#1086#1076#1072#1078#1080
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 3
+            Visible = True
+          end
+          object nedt_sales_sum_from_items: TDBNumberEditEh
+            Left = 160
+            Top = 119
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 138
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1057#1091#1084#1084#1072' '#1087#1088#1086#1076#1072#1078#1080' '#1087#1086' '#1088#1072#1089#1095#1077#1090#1091
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 4
+            Visible = True
+          end
+          object nedt_coeff_from_items: TDBNumberEditEh
+            Left = 160
+            Top = 146
+            Width = 121
+            Height = 21
+            ControlLabel.Width = 129
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1050#1086#1101#1092#1092#1080#1094#1080#1077#1085#1090' '#1087#1086' '#1088#1072#1089#1095#1077#1090#1091
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 5
+            Visible = True
           end
         end
       end

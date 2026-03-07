@@ -779,3 +779,18 @@ Callback-функция, в разработке
     );
 );
 
+--------------------------------------------------------------------------------
+//диалог в варианте работы с БД с загрузкой невидимых полей, и прямым определением данных
+//(перекрывающим загрузку из БД). определение данных идентично варианту без бд.
+      ['id_manager$i', cntNEdit, '-', ''],
+      ['dt$d', cntDEdit, '-', ''],
+      ['customer$s', cntComboE, 'Клиент','1:400'],
+      ['project$s', cntComboE, 'Проект','1:400'],
+      ['comm$s', cntEdit, 'Комментарий','0:400']],
+      [S.IIf(fMode = fAdd, User.GetId, #0), S.IIf(fMode = fAdd, Date, #0), #0, #0, #0],
+      ['select distinct customer from prod_calc order by customer',
+       'select project customer from prod_calc order by project'],
+      [['caption dlgedit']]
+    );
+
+

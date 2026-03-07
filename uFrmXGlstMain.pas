@@ -1545,7 +1545,7 @@ v:=True;
   else if FormDoc = myfrm_R_Itm_Nomencl_SEL then begin
     //выбор из списка сметной позиции, в списке все что загружалось в учет из смет, артикул берется из базы ИТМ
     Caption:='Справочник номенклатуры';
-    Frg1.Options := Frg1.Options + [myogLoadAfterVisible];
+    Frg1.Options := Frg1.Options + [myogLoadAfterVisible];// - [myogSaveOptions];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['artikul','Артикул','120'],

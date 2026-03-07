@@ -1422,7 +1422,7 @@ var
   i: Integer;
   st: string;
 begin
-TFrmOWedtProdCalculation.Show(Application, 'qqqqqqqqqq', [myfoSizeable, myfoDialog, myfoEnableMaximize], fAdd, null, null); exit;
+  Wh.ExecReference(myfrm_R_Itm_Nomencl_SEL, nil, [myfoDialog,  myfoSizeable], null);
 Exit;
 //  q.QExecSql('select 1 from www', [1]); exit;
 

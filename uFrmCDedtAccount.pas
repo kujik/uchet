@@ -88,6 +88,7 @@ type
     FPaymentsSum: Extended;
     function  Prepare: Boolean; override;
     procedure AfterFormActivate; override;
+    //глобалное событие приложения
     procedure GlobalEvent(AEvent: Integer); override;
     function  Load: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -115,12 +116,12 @@ type
     procedure CalculateNds;
     procedure LoadSuppliers;
     procedure ChooseSupplier;
+    procedure SetEditable;
     function  IsAgreed1Enabled: Boolean;
     procedure SetAgreed1(AChange: Boolean = True);
     function  IsFilesLoaded: Boolean;
     procedure AttachFiles(AMode: Boolean);
     procedure ViewFiles(AMode: Boolean);
-    procedure SetEditable;
     function  TestAccountnumDuplicates: string;
     function  GetRemainingSum(Sender: TObject): Extended;
     procedure SetGrids;
@@ -149,6 +150,25 @@ uses
 const
   cMaxPaymentsCnt = 5 * 12;
   cPaymentsCntSt = 5;
+
+procedure TFrmCDedtAccount.FormResize(Sender: TObject);
+begin
+  ClientHeight := pnlAdd.Top + pnlAdd.Height + pnlFrmBtnsMain.Height + 30;
+end;
+
+procedure TFrmCDedtAccount.tmr1Timer(Sender: TObject);
+begin
+  inherited;
+  //UnLockDrawing;
+end;
+
+procedure TFrmCDedtAccount.EdtPaymentKeyPress(Sender: TObject; var Key: Char);
+begin
+  if Key = ' ' then begin
+    GetRemainingSum(Sender);
+    Key := #0;
+  end;
+end;
 
 function TFrmCDedtAccount.Prepare: Boolean;
 var
@@ -328,7 +348,6 @@ begin
   end;
 end;
 
-
 function TFrmCDedtAccount.Load: Boolean;
 var
   va2: TVarDynArray2;
@@ -346,7 +365,6 @@ begin
     end;
   end;
 end;
-
 
 function TFrmCDedtAccount.LoadComboBoxes: Boolean;
 //загрузка списков и других дополнительных данных
@@ -385,6 +403,165 @@ begin
     end;
   end;
   Result := True;
+end;
+
+procedure TFrmCDedtAccount.ControlOnExit(Sender: TObject);
+begin
+
+end;
+
+procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
+begin
+
+end;
+
+procedure TFrmCDedtAccount.ControlOnChange(Sender: TObject);
+var
+  Name: string;
+begin
+  Name := LowerCase(TControl(Sender).Name);
+  if Sender = chb_Agreed1 then
+    SetAgreed1(True);
+  if Sender = cmb_id_expenseitem then begin
+    chb_Agreed1.Enabled := IsAgreed1Enabled;
+    if not chb_Agreed1.Enabled then
+      chb_Agreed1.Checked := False;
+  end;
+  if (Name = 'cmb_nds') or (Name = 'nedt_sum') then
+    CalculateNds;
+  if ((Pos('dedt_', Name) = 1) or (Pos('nedt_', Name) = 1)) and  S.IsNumber(Copy(Name, 6, 2), 1, 99)  then
+    EdtPaymentOnChaange(Sender);
+  if (Name = 'chb_accountfile') or  (Name = 'chb_requestfile') then
+    TDBCheckBoxEh(Sender).Checked := Pos(' не ', TDBCheckBoxEh(Sender).Caption) = 0;
+  if Name = 'nedt_sum' then
+    EdtPaymentOnChaange(nil);
+end;
+
+procedure TFrmCDedtAccount.EditButtonsClick(Sender: TObject; var Handled: Boolean);
+var
+  Name: string;
+begin
+  if (TEditButtonControlEh(Sender).Owner = cmb_id_supplier) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 37) then
+    LoadSuppliers;
+  if (TEditButtonControlEh(Sender).Owner = cmb_id_supplier) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 39) then
+    ChooseSupplier;
+end;
+
+procedure TFrmCDedtAccount.btnClientClick(Sender: TObject);
+begin
+  if Sender = btnFileAttach then
+    AttachFiles(True);
+  if Sender = btnReqestFileAttach then
+    AttachFiles(False);
+  if Sender = btnFileOpen then
+    ViewFiles(True);
+  if Sender = btnReqestFileOpen then
+    ViewFiles(False);
+end;
+
+function TFrmCDedtAccount.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
+//дополнительная проверка
+//нужна для ввода сумм и дат оплаты, так как:
+//при вводе значения контрола, для которого не установлены правила проверки (и которого нет в Props), он все равно проверяется при вводе, по кранйе мере очищается маркер,
+//где это происходит, не выяснил!!!
+//однако, даже в этом решении, работает для сумм, но не работает для даты, при вводе правильной даты очищается все равно
+begin
+  //нет общщей ошибки
+  Result := False;
+  if Sender <> nil then begin
+    if ((Pos('dedt_', TControl(Sender).Name) = 1) or (Pos('nedt_', TControl(Sender).Name) = 1)) and  S.IsNumber(Copy(TControl(Sender).Name, 6, 2), 1, 99)  then
+      //ддесь выставляются маркеры ошибки, а также отображение контролов
+      EdtPaymentOnChaange(Sender);
+  end;
+end;
+
+procedure TFrmCDedtAccount.VerifyBeforeSave;
+begin
+  FErrorMessage := TestAccountnumDuplicates;
+end;
+
+procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
+var
+  i, j, t: Integer;
+  HasEmpty: Boolean;
+begin
+  //if not FInPrepare then
+    //Perform(WM_SETREDRAW, 0, 0);
+  try
+  i := cMaxPaymentsCnt;
+  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
+    dec(i);
+  t := TControl(FindComponent('dedt_' + IntToStr(i))).Top;
+  FPaymentsSum:= 0;
+  //очистим ошибку у всех контролов
+  for i := 1 to cMaxPaymentsCnt do begin
+    Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(i))), False);
+    Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(i))), False);
+  end;
+  i := cMaxPaymentsCnt;
+  while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
+    dec(i);
+  HasEmpty := False;
+  for j := i downto 1 do  begin
+    FPaymentsSum := FPaymentsSum + GetControlValue('nedt_' + IntToStr(j)).AsFloat;
+    if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
+       HasEmpty := True;
+    end
+    //поставим ошибку и подсветим если заполено дата, а сумма пустая, или наоборот
+    else if (GetControlValue('dedt_' + IntToStr(j), True) <> null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
+      Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
+    end
+    else if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) <> null) then begin
+      Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
+    end;
+  end;
+  //отобразим все контролы с первого до последнего введенного
+  for j := 1 to i do begin
+    TControl(FindComponent('dedt_' + IntToStr(j))).Visible := True;
+    TControl(FindComponent('nedt_' + IntToStr(j))).Visible := True;
+  end;
+  //покажем пустое поле ввода после введенныых данных
+  if not (Mode in [fView, fDelete]) then
+    if (not HasEmpty) and (i < cMaxPaymentsCnt) then begin
+      TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
+      TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
+    end;
+  i := cMaxPaymentsCnt;
+  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
+    dec(i);
+  //подсветим последнее заполеннное поле суммы, если общая сумма не равна итоговой по счету
+var vvv :=GetControlValue('nedt_sum').AsFloat;    //!!!!
+  for j := i downto 1 do
+    if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
+      if RoundTo(Extended(FPaymentsSum),-2) <> RoundTo(Extended(vvv),-2) {GetControlValue('nedt_sum').AsFloat} then begin
+        Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
+        Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
+      end;
+      Break;
+    end;
+  finally
+    if not FInPrepare then begin
+      //Perform(WM_SETREDRAW, 1, 0);
+    //  Invalidate;
+    end;
+  end;
+  if (t <> TControl(FindComponent('dedt_' + IntToStr(i))).Top) or (FInPrepare) then begin
+    t := TControl(FindComponent('dedt_' + IntToStr(i))).Top + TControl(FindComponent('dedt_' + IntToStr(i))).Height + 8;
+    pnlPaymentsD.Height := t;
+    scrlbxPaymentsM.Height := t + 4;
+{
+    if pnlPaymentsD.Height <> TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8 then
+      pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8;
+    scrlbxPaymentsM.Height := pnlPaymentsD.Height + 4;
+
+    if scrlbxPaymentsM.Height <> Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4) then
+      scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);}
+    if pnlPayments.Height <> frmpcPayments.Height + scrlbxPaymentsM.Height then
+    begin
+      pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
+      FormResize(nil);
+    end;
+  end;
 end;
 
 function TFrmCDedtAccount.Save: Boolean;
@@ -453,7 +630,6 @@ begin
     end;
 end;
 
-
 procedure TFrmCDedtAccount.FrgRouteCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
 end;
@@ -472,82 +648,6 @@ begin
     Handled := False;
     inherited;
   end;
-end;
-
-
-procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
-begin
-
-end;
-
-procedure TFrmCDedtAccount.ControlOnExit(Sender: TObject);
-begin
-
-end;
-
-procedure TFrmCDedtAccount.ControlOnChange(Sender: TObject);
-var
-  Name: string;
-begin
-  Name := LowerCase(TControl(Sender).Name);
-  if Sender = chb_Agreed1 then
-    SetAgreed1(True);
-  if Sender = cmb_id_expenseitem then begin
-    chb_Agreed1.Enabled := IsAgreed1Enabled;
-    if not chb_Agreed1.Enabled then
-      chb_Agreed1.Checked := False;
-  end;
-  if (Name = 'cmb_nds') or (Name = 'nedt_sum') then
-    CalculateNds;
-  if ((Pos('dedt_', Name) = 1) or (Pos('nedt_', Name) = 1)) and  S.IsNumber(Copy(Name, 6, 2), 1, 99)  then
-    EdtPaymentOnChaange(Sender);
-  if (Name = 'chb_accountfile') or  (Name = 'chb_requestfile') then
-    TDBCheckBoxEh(Sender).Checked := Pos(' не ', TDBCheckBoxEh(Sender).Caption) = 0;
-  if Name = 'nedt_sum' then
-    EdtPaymentOnChaange(nil);
-end;
-
-procedure TFrmCDedtAccount.EditButtonsClick(Sender: TObject; var Handled: Boolean);
-var
-  Name: string;
-begin
-  if (TEditButtonControlEh(Sender).Owner = cmb_id_supplier) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 37) then
-    LoadSuppliers;
-  if (TEditButtonControlEh(Sender).Owner = cmb_id_supplier) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 39) then
-    ChooseSupplier;
-end;
-
-procedure TFrmCDedtAccount.btnClientClick(Sender: TObject);
-begin
-  if Sender = btnFileAttach then
-    AttachFiles(True);
-  if Sender = btnReqestFileAttach then
-    AttachFiles(False);
-  if Sender = btnFileOpen then
-    ViewFiles(True);
-  if Sender = btnReqestFileOpen then
-    ViewFiles(False);
-end;
-
-function TFrmCDedtAccount.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
-//дополнительная проверка
-//нужна для ввода сумм и дат оплаты, так как:
-//при вводе значения контрола, для которого не установлены правила проверки (и которого нет в Props), он все равно проверяется при вводе, по кранйе мере очищается маркер,
-//где это происходит, не выяснил!!!
-//однако, даже в этом решении, работает для сумм, но не работает для даты, при вводе правильной даты очищается все равно
-begin
-  //нет общщей ошибки
-  Result := False;
-  if Sender <> nil then begin
-    if ((Pos('dedt_', TControl(Sender).Name) = 1) or (Pos('nedt_', TControl(Sender).Name) = 1)) and  S.IsNumber(Copy(TControl(Sender).Name, 6, 2), 1, 99)  then
-      //ддесь выставляются маркеры ошибки, а также отображение контролов
-      EdtPaymentOnChaange(Sender);
-  end;
-end;
-
-procedure TFrmCDedtAccount.VerifyBeforeSave;
-begin
-  FErrorMessage := TestAccountnumDuplicates;
 end;
 
 procedure TFrmCDedtAccount.LoadPayments;
@@ -708,12 +808,6 @@ begin
 //  Self.Resize;
 end;
 
-procedure TFrmCDedtAccount.tmr1Timer(Sender: TObject);
-begin
-  inherited;
-  //UnLockDrawing;
-end;
-
 procedure TFrmCDedtAccount.CreatePaymentsEdts;
 //создадим контролы для ввода платежей (метки, даты и суммы)
 var
@@ -748,103 +842,6 @@ begin
   pnlPaymentsD.Visible := True;
 end;
 
-procedure TFrmCDedtAccount.EdtPaymentOnChaange(Sender: TObject);
-var
-  i, j, t: Integer;
-  HasEmpty: Boolean;
-begin
-  //if not FInPrepare then
-    //Perform(WM_SETREDRAW, 0, 0);
-  try
-  i := cMaxPaymentsCnt;
-  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
-    dec(i);
-  t := TControl(FindComponent('dedt_' + IntToStr(i))).Top;
-  FPaymentsSum:= 0;
-  //очистим ошибку у всех контролов
-  for i := 1 to cMaxPaymentsCnt do begin
-    Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(i))), False);
-    Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(i))), False);
-  end;
-  i := cMaxPaymentsCnt;
-  while (i > 1) and ((GetControlValue('dedt_' + IntToStr(i), True) = null) and (GetControlValue('nedt_' + IntToStr(i), True) = null)) do
-    dec(i);
-  HasEmpty := False;
-  for j := i downto 1 do  begin
-    FPaymentsSum := FPaymentsSum + GetControlValue('nedt_' + IntToStr(j)).AsFloat;
-    if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
-       HasEmpty := True;
-    end
-    //поставим ошибку и подсветим если заполено дата, а сумма пустая, или наоборот
-    else if (GetControlValue('dedt_' + IntToStr(j), True) <> null) and (GetControlValue('nedt_' + IntToStr(j), True) = null) then begin
-      Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
-    end
-    else if (GetControlValue('dedt_' + IntToStr(j), True) = null) and (GetControlValue('nedt_' + IntToStr(j), True) <> null) then begin
-      Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
-    end;
-  end;
-  //отобразим все контролы с первого до последнего введенного
-  for j := 1 to i do begin
-    TControl(FindComponent('dedt_' + IntToStr(j))).Visible := True;
-    TControl(FindComponent('nedt_' + IntToStr(j))).Visible := True;
-  end;
-  //покажем пустое поле ввода после введенныых данных
-  if not (Mode in [fView, fDelete]) then
-    if (not HasEmpty) and (i < cMaxPaymentsCnt) then begin
-      TControl(FindComponent('dedt_' + IntToStr(i + 1))).Visible := True;
-      TControl(FindComponent('nedt_' + IntToStr(i + 1))).Visible := True;
-    end;
-  i := cMaxPaymentsCnt;
-  while (i > 1) and not TControl(FindComponent('dedt_' + IntToStr(i))).Visible do
-    dec(i);
-  //подсветим последнее заполеннное поле суммы, если общая сумма не равна итоговой по счету
-var vvv :=GetControlValue('nedt_sum').AsFloat;    //!!!!
-  for j := i downto 1 do
-    if (GetControlValue('nedt_' + IntToStr(j), True) <> null) or (j = 1) then begin
-      if RoundTo(Extended(FPaymentsSum),-2) <> RoundTo(Extended(vvv),-2) {GetControlValue('nedt_sum').AsFloat} then begin
-        Cth.SetErrorMarker(TControl(FindComponent('nedt_' + IntToStr(j))), True);
-        Cth.SetErrorMarker(TControl(FindComponent('dedt_' + IntToStr(j))), True);
-      end;
-      Break;
-    end;
-  finally
-    if not FInPrepare then begin
-      //Perform(WM_SETREDRAW, 1, 0);
-    //  Invalidate;
-    end;
-  end;
-  if (t <> TControl(FindComponent('dedt_' + IntToStr(i))).Top) or (FInPrepare) then begin
-    t := TControl(FindComponent('dedt_' + IntToStr(i))).Top + TControl(FindComponent('dedt_' + IntToStr(i))).Height + 8;
-    pnlPaymentsD.Height := t;
-    scrlbxPaymentsM.Height := t + 4;
-{
-    if pnlPaymentsD.Height <> TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8 then
-      pnlPaymentsD.Height := TControl(FindComponent('nedt_' + IntToStr(i + 0))).Top + TControl(FindComponent('nedt_' + IntToStr(i + 0))).Height + 8;
-    scrlbxPaymentsM.Height := pnlPaymentsD.Height + 4;
-
-    if scrlbxPaymentsM.Height <> Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4) then
-      scrlbxPaymentsM.Height := Min(pnlPaymentsD.Height + 4, (dedt_1.Height + 4) * 3 + 4 + 4);}
-    if pnlPayments.Height <> frmpcPayments.Height + scrlbxPaymentsM.Height then
-    begin
-      pnlPayments.Height := frmpcPayments.Height + scrlbxPaymentsM.Height;
-      FormResize(nil);
-    end;
-  end;
-end;
-
-procedure TFrmCDedtAccount.EdtPaymentKeyPress(Sender: TObject; var Key: Char);
-begin
-  if Key = ' ' then begin
-    GetRemainingSum(Sender);
-    Key := #0;
-  end;
-end;
-
-procedure TFrmCDedtAccount.FormResize(Sender: TObject);
-begin
-  ClientHeight := pnlAdd.Top + pnlAdd.Height + pnlFrmBtnsMain.Height + 30;
-end;
-
 procedure TFrmCDedtAccount.CalculateNds;
 begin
   //Сумма без НДС = Сумма с НДС / (1 + Ставка_НДС_в_процентах / 100)? ,анковское округление
@@ -867,6 +864,47 @@ begin
   Q.QLoadToDBComboBoxEh('select legalname, id from ref_suppliers where active = 1 or id = :id order by legalname', [cmb_id_supplier.Value], cmb_id_supplier, cntComboLK);
   //установим выбранного в справочнике
   cmb_id_supplier.Text := Wh.SelectDialogResult[1];
+end;
+
+procedure TFrmCDedtAccount.SetEditable;
+//заблокирем ввод данных, кроме распределения платежей (не проведённые платежи изменить нельзя!),
+//в случае, если по счету есть проведенные платежи, или он согласован диретором, либо руководителем
+//(в последнем случае исключение - редактирует тот кто может согласовывать его для этой статьи расходов)
+//также, разрешается редактирование для DataEditor
+var
+  st: string;
+begin
+  lbl_Info.Caption := '';
+  //для транспортных счетов типа Прямой, не используем и скроем
+  nedt_PriceKm.Visible := False;
+  nedt_PriceIdle.Visible := False;
+  nedt_OtherSum.Visible := False;
+  nedt_Idle.Visible := False;
+  pnlRouteM.Height := 32;
+  if Mode in [fDelete, fView] then
+    Exit;
+  //сообщение о причинах блокировки, оно же маркер
+  st := a.Implode([s.IIfStr((F.GetProp('agreed1').AsInteger = 1) and not IsAgreed1Enabled, 'руководителем'), s.IIfStr(F.GetProp('agreed2').AsInteger = 1, 'деректором')], ' и ', True);
+  st := a.Implode([S.IIFStr(st <> '', 'согласован ' + st), s.IIfStr(FIsPaid, '(частично) оплачен')], ' и ', True);
+  //выведем сообщение
+  if st <> '' then
+    lbl_Info.Caption := 'Счет ' + st + '!' + S.IIFStr(not FAllEditMode, #13#10'Возможно только редактирование запланированных платежей!');
+  //поле - признак блокировки
+  FEdtPaymentsOnly := (st <> '') and not FAllEditMode;      //!!!
+  //делаем контролы ридонли
+  SetControlsEditable([], not FEdtPaymentsOnly, False, pnlGeneral);
+  SetControlsEditable([btnFileAttach, {btnReqestFileAttach, }edt_comm], not FEdtPaymentsOnly, False, pnlAdd);
+  btnFileAttach.Enabled := not FEdtPaymentsOnly;
+  //прикреплять файлы в папку заявки можно всегда
+  btnReqestFileAttach.Enabled := True; //not FEdtPaymentsOnly;
+  chb_Agreed1.Enabled := IsAgreed1Enabled and not FEdtPaymentsOnly;
+  //галка Согласовать (директор) доступна всегда (тому, у кого есть права)
+  chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir); // and not FEdtPaymentsOnly;
+  //эти ридонли всегда
+  SetControlsEditable([cmb_id_user, nedt_SumWoNds, cmb_flighttype], False, False, pnlFrmClient);
+  //если счета не транспортные, отключим проверку
+  if not (FAccountType in [1, 2]) then
+    Cth.SetControlsVerification([cmb_CarType, cmb_FlightType, dedt_FlightDt], ['', '', '']);
 end;
 
 function TFrmCDedtAccount.IsAgreed1Enabled: Boolean;
@@ -922,7 +960,7 @@ procedure TFrmCDedtAccount.AttachFiles(AMode: Boolean);
 //выбираем файлы и копируем их в папку на сервере
 //режим Труе = счет, Фолс = заявка
 var
-  SPath, ZPath: string;
+  LSPath, LZPath: string;
   i: Integer;
 begin
   MyData.OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
@@ -931,11 +969,11 @@ begin
   try
     for i := 0 to MyData.OpenDialog1.Files.Count - 1 do begin
       if FileExists(MyData.OpenDialog1.Files[i]) then begin
-        SPath := Module.GetPath_Accounts_A(F.GetProp('filename'));
-        ZPath := Module.GetPath_Accounts_Z(F.GetProp('filename'));
-        ForceDirectories(SPath);
-        ForceDirectories(ZPath);
-        CopyFile(PChar(MyData.OpenDialog1.Files[i]), PChar(s.IIFStr(AMode, SPath, ZPath) + '\' + ExtractFileName(MyData.OpenDialog1.Files[i])), True);
+        LSPath := Module.GetPath_Accounts_A(F.GetProp('filename'));
+        LZPath := Module.GetPath_Accounts_Z(F.GetProp('filename'));
+        ForceDirectories(LSPath);
+        ForceDirectories(LZPath);
+        CopyFile(PChar(MyData.OpenDialog1.Files[i]), PChar(s.IIFStr(AMode, LSPath, LZPath) + '\' + ExtractFileName(MyData.OpenDialog1.Files[i])), True);
       end
       else
         MyWarningMessage('Файл не найден!');
@@ -951,47 +989,6 @@ begin
     Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(F.GetPropB('filename')), 'Файл счета не найден!')
   else
     Sys.OpenFileOrDirectory(Module.GetPath_Accounts_Z(F.GetPropB('filename')), 'Файл заявки не найден!');
-end;
-
-procedure TFrmCDedtAccount.SetEditable;
-//заблокирем ввод данных, кроме распределения платежей (не проведённые платежи изменить нельзя!),
-//в случае, если по счету есть проведенные платежи, или он согласован диретором, либо руководителем
-//(в последнем случае исключение - редактирует тот кто может согласовывать его для этой статьи расходов)
-//также, разрешается редактирование для DataEditor
-var
-  st: string;
-begin
-  lbl_Info.Caption := '';
-  //для транспортных счетов типа Прямой, не используем и скроем
-  nedt_PriceKm.Visible := False;
-  nedt_PriceIdle.Visible := False;
-  nedt_OtherSum.Visible := False;
-  nedt_Idle.Visible := False;
-  pnlRouteM.Height := 32;
-  if Mode in [fDelete, fView] then
-    Exit;
-  //сообщение о причинах блокировки, оно же маркер
-  st := a.Implode([s.IIfStr((F.GetProp('agreed1').AsInteger = 1) and not IsAgreed1Enabled, 'руководителем'), s.IIfStr(F.GetProp('agreed2').AsInteger = 1, 'деректором')], ' и ', True);
-  st := a.Implode([S.IIFStr(st <> '', 'согласован ' + st), s.IIfStr(FIsPaid, '(частично) оплачен')], ' и ', True);
-  //выведем сообщение
-  if st <> '' then
-    lbl_Info.Caption := 'Счет ' + st + '!' + S.IIFStr(not FAllEditMode, #13#10'Возможно только редактирование запланированных платежей!');
-  //поле - признак блокировки
-  FEdtPaymentsOnly := (st <> '') and not FAllEditMode;      //!!!
-  //делаем контролы ридонли
-  SetControlsEditable([], not FEdtPaymentsOnly, False, pnlGeneral);
-  SetControlsEditable([btnFileAttach, {btnReqestFileAttach, }edt_comm], not FEdtPaymentsOnly, False, pnlAdd);
-  btnFileAttach.Enabled := not FEdtPaymentsOnly;
-  //прикреплять файлы в папку заявки можно всегда
-  btnReqestFileAttach.Enabled := True; //not FEdtPaymentsOnly;
-  chb_Agreed1.Enabled := IsAgreed1Enabled and not FEdtPaymentsOnly;
-  //галка Согласовать (директор) доступна всегда (тому, у кого есть права)
-  chb_Agreed2.Enabled := User.Role(rPC_A_AgrDir); // and not FEdtPaymentsOnly;
-  //эти ридонли всегда
-  SetControlsEditable([cmb_id_user, nedt_SumWoNds, cmb_flighttype], False, False, pnlFrmClient);
-  //если счета не транспортные, отключим проверку
-  if not (FAccountType in [1, 2]) then
-    Cth.SetControlsVerification([cmb_CarType, cmb_FlightType, dedt_FlightDt], ['', '', '']);
 end;
 
 function TFrmCDedtAccount.TestAccountnumDuplicates: string;
@@ -1080,5 +1077,7 @@ begin
     FrgBasis.SetState(False, False, null);
 
 end;
+
+
 
 end.

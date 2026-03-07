@@ -333,6 +333,8 @@ type
     function SQLDate(const ADateTime: TDateTime): AnsiString;
     //преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
     function SQLDateTime(const ADateTime: TDateTime): AnsiString;
+    //получить из полного имени поля field$i только само имя
+    function FieldNameOnly(const AValue: string): string;
 
     //-------------------- математические ------------------------------------------
 
@@ -1800,6 +1802,19 @@ begin
   DecodeDateTime(ADateTime, y, m, d, h, n, s, ms);
   Result := AnsiString(Format('%.4d%.2d%.2d%.2d%.2d%.2d', [y, m, d, h, n, s]));
 end;
+
+function TMyStringHelper.FieldNameOnly(const AValue: string): string;
+//получить из полного имени поля field$i только само имя
+var
+  DollarPos: Integer;
+begin
+  DollarPos := Pos('$', AValue);
+  if DollarPos > 0 then
+    Result := Copy(AValue, 1, DollarPos - 1)
+  else
+    Result := AValue;
+end;
+
 //==============================================================================
 //Математические
 //==============================================================================

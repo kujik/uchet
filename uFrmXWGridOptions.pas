@@ -189,8 +189,6 @@ begin
 //      if (Pos('_', FFrDbGrid.DBGridEh1.Columns[i].Title.Caption) = 1) then Continue;
       if FFrDbGrid.Opt.Sql.Fields[i].Invisible or FFrDbGrid.Opt.Sql.Fields[i].FIsNull or (Pos('_', FFrDbGrid.Opt.Sql.Fields[i].Caption) = 1) then
         Continue;
-if FFrDbGrid.DBGridEh1.Columns[i].Title.Caption = '_wo_kns' then
-        var b := false;
       va2 := va2 + [[
         i,
         FFrDbGrid.DBGridEh1.Columns[i].FieldName,

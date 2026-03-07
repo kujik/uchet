@@ -139,7 +139,7 @@ uses
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
-  uFrmOGjrnProdCalculations,
+  uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation,
 
 
   uFrmXGlstMain,
@@ -1071,6 +1071,10 @@ begin
   else if F = myfrm_Dlg_Rep_OrderReglament then begin
     TFrmOGrepOrReglament.Show(AOwner, F, MyFormOptions + [{myfoSizeable, }myfoMultiCopy, myfoDialog], fNone, AId, null);
   end
+  else if F = myfrm_Dlg_ProdCalculation then begin
+    TFrmOWedtProdCalculation.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopy, myfoDialog, myfoEnableMaximize], fMode, AId, AAddParam);
+  end
+
   else if F = myfrm_Dlg_Test then begin
   end
 

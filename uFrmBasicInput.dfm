@@ -1,13 +1,13 @@
 inherited FrmBasicInput: TFrmBasicInput
   Caption = 'FrmBasicInput'
-  ClientHeight = 153
-  ClientWidth = 150
-  ExplicitWidth = 166
-  ExplicitHeight = 192
+  ClientHeight = 152
+  ClientWidth = 146
+  ExplicitWidth = 162
+  ExplicitHeight = 191
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 150
-    Height = 137
+    Width = 146
+    Height = 136
     ExplicitWidth = 150
     ExplicitHeight = 137
     inherited pnlFrmClient: TPanel
@@ -48,8 +48,8 @@ inherited FrmBasicInput: TFrmBasicInput
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 137
-    Width = 150
+    Top = 136
+    Width = 146
     ExplicitTop = 137
     ExplicitWidth = 150
     inherited lblStatusBarR: TLabel
