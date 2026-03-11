@@ -1670,7 +1670,7 @@ select
   np.id_category,
   --подвисшие остатки
   case when vn.qnt is not null and nvl(s1.qnt3,0) <> 0 then round(vn.qnt / s1.qnt3, 2) else null end as qnt_suspended,
-  case when bn.id in null then '-' else '+' end as in_estimates
+  case when bn.id is null then '-' else '+' end as in_estimates
 from 
 --таблица номенклатуры
 dv.nomenclatura n
