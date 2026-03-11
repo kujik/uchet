@@ -433,7 +433,6 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 ExplicitHeight = 8
@@ -556,9 +555,9 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
+                ExplicitHeight = 0
                 inherited PRowDetailPanel: TPanel
                   Width = 44
                   Height = 0
@@ -838,6 +837,24 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
             Caption = #1060#1072#1081#1083
             DynProps = <>
             TabOrder = 8
+          end
+          object chb_itm_account: TDBCheckBoxEh
+            Left = 455
+            Top = 54
+            Width = 74
+            Height = 17
+            Caption = #1057#1095#1077#1090' '#1048#1058#1052
+            DynProps = <>
+            TabOrder = 9
+          end
+          object chb_itm_request: TDBCheckBoxEh
+            Left = 535
+            Top = 54
+            Width = 88
+            Height = 17
+            Caption = #1047#1072#1103#1074#1082#1072' '#1048#1058#1052
+            DynProps = <>
+            TabOrder = 10
           end
         end
       end

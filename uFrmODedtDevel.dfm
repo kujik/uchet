@@ -241,7 +241,11 @@ inherited FrmODedtDevel: TFrmODedtDevel
     ExplicitWidth = 825
     inherited lblStatusBarR: TLabel
       Left = 756
+      Height = 14
       ExplicitLeft = 756
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

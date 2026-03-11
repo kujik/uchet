@@ -67,6 +67,8 @@ type
     pnlBasicM: TPanel;
     FrgRoute: TFrDBGridEh;
     FrgBasis: TFrDBGridEh;
+    chb_itm_account: TDBCheckBoxEh;
+    chb_itm_request: TDBCheckBoxEh;
     procedure FormResize(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure EdtPaymentKeyPress(Sender: TObject; var Key: Char);
@@ -86,6 +88,10 @@ type
     FAllEditMode: Boolean;
     //общая сумма платежей
     FPaymentsSum: Extended;
+    FOldAcoount, FOldAcoountDt: Variant;
+    FIdItmAcoount: Variant;
+    FIdItmRequest: Variant;
+    FLItmAccount: TNotifyEvent;
     function  Prepare: Boolean; override;
     procedure AfterFormActivate; override;
     //глобалное событие приложения
@@ -125,6 +131,10 @@ type
     function  TestAccountnumDuplicates: string;
     function  GetRemainingSum(Sender: TObject): Extended;
     procedure SetGrids;
+    procedure ViewItmAccount;
+    procedure ViewItmRequest;
+    procedure GetItmDocuments;
+    procedure SetItmDocumentsStatus;
   public
   end;
 
@@ -318,6 +328,8 @@ begin
   LoadPayments;
   SetGrids;
   SetAgreed1(False);
+  GetItmDocuments;
+  SetItmDocumentsStatus;
   IsFilesLoaded;
   SetEditable;
   SetFormAppearance;
@@ -407,7 +419,9 @@ end;
 
 procedure TFrmCDedtAccount.ControlOnExit(Sender: TObject);
 begin
-
+  inherited;
+  GetItmDocuments;
+  SetItmDocumentsStatus;
 end;
 
 procedure TFrmCDedtAccount.ControlOnEnter(Sender: TObject);
@@ -435,6 +449,14 @@ begin
     TDBCheckBoxEh(Sender).Checked := Pos(' не ', TDBCheckBoxEh(Sender).Caption) = 0;
   if Name = 'nedt_sum' then
     EdtPaymentOnChaange(nil);
+  if Sender = chb_itm_account  then begin
+    SetItmDocumentsStatus;
+    ViewItmAccount;
+  end;
+  if Sender = chb_itm_request  then begin
+    SetItmDocumentsStatus;
+    ViewItmRequest;
+  end;
 end;
 
 procedure TFrmCDedtAccount.EditButtonsClick(Sender: TObject; var Handled: Boolean);
@@ -1078,6 +1100,59 @@ begin
 
 end;
 
+procedure TFrmCDedtAccount.ViewItmAccount;
+begin
+  if chb_itm_account.Checked and chb_itm_account.Focused then
+    Wh.ExecReference(myfrm_R_Itm_Schet, Self, [myfoDialog, {myfoModal, }myfoSizeable], FIdItmAcoount);
+end;
 
+procedure TFrmCDedtAccount.GetItmDocuments;
+var
+  LItmAccount: TNamedArr;
+  LDocStr: string;
+begin
+  if (dedt_accountdt.Value <> FOldAcoountDt) or (edt_account.Text <> FOldAcoount) then begin
+    FOldAcoountDt := dedt_accountdt.Value;
+    FOldAcoount := edt_account.Text;
+    LItmAccount.Clear;
+    LDocStr := '';
+    if not FOldAcoountDt.IsEmpty and not FOldAcoount.IsEmpty then begin
+      Q.QLoadFromQuery(
+        'select s.id_schet, s.num, s.date_registr, s.states, k.name_org, s.docstr '+
+        'from dv.sp_schet s, dv.kontragent k '+
+        'where k.id_kontragent = s.id_kontragent2 and s.control_date = :control_date$d and s.num = :num$s',
+        [dedt_accountdt.Value, edt_account.Text], LItmAccount
+      );
+    end;
+    if LItmAccount.Count = 1 then begin
+      FIdItmAcoount := LItmAccount.G('id_schet');
+      //Заявка поставщика № 108 от 01.04.2024
+      if LItmAccount.G('docstr') <> null then
+      try
+        LDocStr := A.Explode(LItmAccount.G('docstr'), ' ')[3];
+      except
+      end;
+    end
+    else begin
+      FIdItmAcoount := null;
+    end;
+    if FIdItmAcoount = null then
+      FIdItmRequest := null
+    else
+      FIdItmRequest := Q.QSelectOneRow('select id_demand_supplier from dv.demand_supplier where num_demand = :num_demand$s', [LDocStr])[0];
+  end;
+end;
+
+procedure TFrmCDedtAccount.SetItmDocumentsStatus;
+begin
+  chb_itm_account.Checked := FIdItmAcoount.AsIntegerM <> -1;
+  chb_itm_request.Checked := FIdItmRequest.AsIntegerM <> -1;
+end;
+
+procedure TFrmCDedtAccount.ViewItmRequest;
+begin
+  if chb_itm_request.Checked and chb_itm_request.Focused then
+    Wh.ExecReference(myfrm_R_Itm_DemandSupplier, Self, [myfoDialog, {myfoModal, }myfoSizeable], FIdItmRequest);
+end;
 
 end.

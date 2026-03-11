@@ -679,7 +679,7 @@ begin
     [],
     ['Заказы', myfrm_J_Orders, User.Roles([], [rOr_J_Orders_V, rOr_J_Orders_V_Wo_Prices, rOr_D_Order_Ch])],
     [],
-    ['Просчеты', myfrm_J_ProdCalculations, User.Roles([], [rOr_J_Orders_V, rOr_J_ProdCalculations_V, rOr_J_ProdCalculations_Ch])],
+    ['Просчеты', myfrm_J_ProdCalculations, User.Roles([], [rOr_J_ProdCalculations_V, rOr_J_ProdCalculations_Ch])],
     [],
     ['Журнал выдачи в производство', myfrm_J_OrderStages_ToProd, User.Roles([], [rOr_J_OrderStages_ToProd_V, rOr_J_OrderStages_ToProd_Ch])],
     ['Журнал просрочки в производстве', myfrm_J_Or_DelayedInProd, User.Roles([], [rOr_J_DelayedInprod_V, rOr_J_DelayedInprod_Ch])],

@@ -43,7 +43,8 @@ implementation
 
 uses
   uWindows,
-  uOrders
+  uOrders,
+  uFrmOGedtEstimate
   ;
 
 {$R *.dfm}
@@ -139,8 +140,9 @@ begin
   else if (Tag = mbtLoadEstimate) then begin
     //в справочнике стандартных изделий загрузим смету (если это не группа общих изделий)
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
-      Orders.LoadBcadGroups(True);
+//      Orders.LoadBcadGroups(True);
       Orders.LoadEstimate(null, null, Fr.ID);
+     // TFrmOGedtEstimate.Show(Self, '1112', [], fEdit, Fr.ID, 1);
       Fr.RefreshGrid;
     end;
   end

@@ -291,11 +291,34 @@ end;
 function TFrmWGedtPayroll2N.GetDataFromDb: Integer;
 //прочитаем ведомость (все данные) из БД и заполним ими сетку
 var
-  na : TNamedArr;
+  na, nadel : TNamedArr;
 begin
   Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
+  if FPayrollParams.G('id_employee') = null then begin
+    Q.QLoadFromQuery(
+      'select '+
+      '  c.id_employee, c.id_organization, c.personnel_number '+
+      'from '+
+      '  w_payroll_calc c, '+
+      '  v_w_employee_properties p '+
+      'where '+
+      '  c.id_employee = p.id_employee '+
+      '  and nvl(c.id_organization, -100) = nvl(p.id_organization, -100) '+
+      '  and nvl(c.personnel_number, -100) = nvl(p.personnel_number, -100) '+
+      '  and (c.dt1 = :dt1$d or c.dt1 = :dt2$d)',
+      [FPayrollParams.G('dt1'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)] ,
+      nadel
+    );
+    for var i := na.High downto 0 do
+      for var j := 0 to nadel.High do
+        if (na.G(i, 'id_employee') = nadel.G(j, 'id_employee')) and (na.G(i, 'id_organization') = nadel.G(j, 'id_organization')) and (na.G(i, 'personnel_number') = nadel.G(j, 'personnel_number')) then begin
+          Delete(na.V, i ,1);
+          FIsChanged := True;
+          Break;
+        end;
+  end;
   Frg1.LoadData(na);
 end;
 
@@ -327,8 +350,8 @@ begin
       '  v_w_employee_properties p '+
       'where '+
       '  c.id_employee = p.id_employee '+
-      '  and c.id_organization = p.id_organization '+
-      '  and c.personnel_number = p.personnel_number '+
+      '  and nvl(c.id_organization, -100) = nvl(p.id_organization, -100) '+
+      '  and nvl(c.personnel_number, -100) = nvl(p.personnel_number, -100) '+
       '  and (c.dt1 = :dt1$d or c.dt1 = :dt2$d)',
       [FPayrollParams.G('dt1'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)] ,
       nadel

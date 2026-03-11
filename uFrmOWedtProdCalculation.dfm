@@ -30,7 +30,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         object edt_name: TDBEditEh
           Left = 81
           Top = 15
-          Width = 1022
+          Width = 1014
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 73
@@ -43,7 +43,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
-          ExplicitWidth = 1018
+          ExplicitWidth = 1010
         end
       end
       object pgcMain: TPageControl
@@ -54,6 +54,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         ActivePage = tsEconomic
         Align = alClient
         TabOrder = 1
+        ExplicitWidth = 1112
+        ExplicitHeight = 476
         object ts1: TTabSheet
           Caption = 'ts1'
           ImageIndex = 1

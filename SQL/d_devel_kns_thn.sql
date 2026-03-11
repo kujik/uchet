@@ -1,13 +1,16 @@
 --------------------------------------------------------------------------------
 --таблица видов работы для журнала рахработки проектов (кнс)
---alter table ref_develtypes add hours number;
+alter table ref_develtypes add active number(1);
 create table ref_develtypes (
   id number(11),
   developer number,                   --1 - кнс, 2 - тхн
   name varchar2(400),                 --наименование вида разработки
   hours number,                       --отведенное на работу время в часах
+  active number(1),
   constraint pk_ref_develtypes primary key (id)
 );  
+
+--update ref_develtypes set active = 1;
 
 create unique index uq_ref_develtypes_name on ref_develtypes(developer, lower(name));
 

@@ -102,6 +102,13 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
     inherited pnlFrmBtns: TPanel
       Top = 478
       ExplicitTop = 477
+      ExplicitWidth = 782
+      inherited pnlFrmBtnsContainer: TPanel
+        ExplicitWidth = 780
+        inherited pnlFrmBtnsChb: TPanel
+          ExplicitLeft = 453
+        end
+      end
     end
   end
   inherited pnlStatusBar: TPanel

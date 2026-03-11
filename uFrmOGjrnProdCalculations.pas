@@ -137,7 +137,7 @@ begin
         'Будет создана копия изделия:'#13#10#13#10 + va[2].AsString + #13#10 + va[3].AsString + #13#10 + va[4].AsString + #13#10#13#10 + 'Продолжить?'
       ) <> mrYes then
         Exit;
-      Wh.ExecDialog(myfrm_Dlg_ProdCalculation, Fr, [], fCopy, va[0], va[1]);
+      Wh.ExecDialog(myfrm_Dlg_ProdCalculation, Fr, [], fCopy, va[0], Frg1.ID);
     end;
   end;
   inherited;

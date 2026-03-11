@@ -49,6 +49,7 @@ type
     FVersion: string;
     FCompileNumber: Integer;
     FCompileDate: string;
+    FVersionString: string;
     FIsUserActive: Boolean;
     FUserActivityTime: TDateTime;
     procedure GetDevFile;
@@ -58,6 +59,7 @@ type
     procedure CreateModuleRuFileName;
   public
     property Version: string read FVersion;
+    property VersionString: string read FVersionString;
     property CompileNumber: Integer read FCompileNumber;
     property CompileDate: string read FCompileDate;
     //название установленного стиля приложения
@@ -175,6 +177,7 @@ begin
   FVersion:=GetFileVersion;
   FCompileNumber:=A.Explode(FVersion, '.')[3];
   FCompileDate:=GetFileVersion(ParamStr(0), 'LastCompiledTime');
+  FVersionString := FVersion + ' (' + FCompileDate + ')';
   FUserActivityTime := Now;
   FIsUserActive := True;
 end;
@@ -933,6 +936,7 @@ begin
   );
 //  Result := Sys.GetThreadStackInfo(GetCurrentThread);
 end;
+
 
 
 

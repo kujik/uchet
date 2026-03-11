@@ -123,7 +123,7 @@ uses
   uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
 
 
-  D_Order, D_LoadKB,
+  D_Order,
   D_ItmInfo, D_J_Montage,
   D_R_OrStdItems, D_NewEstimateInput,
   D_SuppliersMinPart,
@@ -624,6 +624,7 @@ begin
     myfrm_R_OrderStdItems_SelSemiproduct,
     myfrm_R_OrderStdItems_SelProdStdItem,
     myfrm_R_Itm_Schet,
+    myfrm_R_Itm_DemandSupplier,
     myfrm_R_Itm_InBill,
     myfrm_R_Itm_MoveBill,
     myfrm_R_Itm_OffMinus,
@@ -964,7 +965,7 @@ begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_candidates_ad;;sq_ref_suppliers', 'Источники информации о вакансии', 400, 100,
      [['name$s', cntEdit, 'Наименование','1:100']], [['caption dlgedit ']]);
 //    Form := TForm_BasicInput.ShowDialog(AOwner, F, 'Источники информации о вакансии', 400, 100, fMode, AId, [[cntEdit, 0, 'Наименование', '1:100']],
-//[['*', 'select name from ref_candidates_ad where id = :id']], ['ref_candidates_ad', 'sq_ref_suppliers', 'id;name'], [['caption dlgedit dlgactive']], MyFormOptions);
+//[['*', 'select name from ref_candidates_ad wheRe id = :id']], ['ref_candidates_ad', 'sq_ref_suppliers', 'id;name'], [['caption dlgedit dlgactive']], MyFormOptions);
   end
   else if F = myfrm_Dlg_Or_FindNameInEstimates then begin
 //    Form := TDlg_Or_FindNameInEstimates.Create(AOwner, F, MyFormOptions, fMode, AId, null);
@@ -973,9 +974,9 @@ begin
   else if F = myfrm_Dlg_Or_ItmInfo then begin
     Form := TDlg_ItmInfo.Create(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AId, null);
   end
-  else if F = myfrm_Dlg_LoadKB then begin
+{  else if F = myfrm_Dlg_LoadKB then begin
     Form := TDlg_LoadKB.Create(AOwner, F, MyFormOptions, fMode, AId, null);
-  end
+  end}
   else if F = myfrm_Dlg_Bcad_Groups then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'bcad_groups', 'Группа bCAD', 450, 90,
      [['name$s', cntEdit, 'Наименование','1:100']], [['caption dlgedit ']]);

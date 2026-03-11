@@ -42,7 +42,7 @@ implementation
 function TFrmODedtDevel.LoadComboBoxes: Boolean;
 begin
   //загружаем комбобоксы
-  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes where developer = :d$i order by name', [FDeveloper], cmb_Id_DevelType, cntComboLK);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_develtypes where developer = :d$i and (active = 1 or id = :id$i) order by name', [FDeveloper, F.GetPropB('id_develtype')], cmb_Id_DevelType, cntComboLK);
   Q.QLoadToDBComboBoxEh('select distinct project from j_development where developer = :d$i order by project', [FDeveloper], cmb_Project, cntComboE);
   Q.QLoadToDBComboBoxEh('select distinct name from j_development where developer = :d$i order by name', [FDeveloper], cmb_Name, cntComboE);
   Q.QLoadToDBComboBoxEh('select slash from v_order_items where id_order > 0 and qnt > 0 and dt_end is null order by slash', [], cmb_Slash, cntComboE);    //долго!

@@ -1669,7 +1669,8 @@ select
   --категория выгрузки (снабжение, канцтовары, интсрумент..)
   np.id_category,
   --подвисшие остатки
-  case when vn.qnt is not null and nvl(s1.qnt3,0) <> 0 then round(vn.qnt / s1.qnt3, 2) else null end as qnt_suspended
+  case when vn.qnt is not null and nvl(s1.qnt3,0) <> 0 then round(vn.qnt / s1.qnt3, 2) else null end as qnt_suspended,
+  case when bn.id in null then '-' else '+' end as in_estimates
 from 
 --таблица номенклатуры
 dv.nomenclatura n
@@ -1839,6 +1840,9 @@ left outer join
 --данные по ценам последнего прихода товара
 v_spl_nom_lastibprice prclast
 on n.id_nomencl = prclast.id_nomencl and prclast.rn = 1   
+left outer join
+bcad_nomencl bn
+on n.name = bn.name
 left outer join
 --единицы измерения
 dv.unit u

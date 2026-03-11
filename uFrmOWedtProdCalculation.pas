@@ -106,6 +106,7 @@ begin
   Result := inherited;
   if not Result then
     Exit;
+  F.SetProp('id_prod_calc$i', AddParam);
   SetControlsEditable([nedt_purchase_sum, nedt_sales_sum, nedt_sales_sum_from_items, nedt_coeff_from_items], False, False);
   PrepareAndLoadGrids;
   pgcMain.TabIndex := 0;
@@ -247,7 +248,6 @@ begin
         Fr.GetValueF('facing_qnt', Row, False) * Fr.GetValueF('facing_id_banding_type', Row, False));
     Fr.SetValue('facing_sum0', Row, False, Fr.GetValueF('facing_price0', Row, False) * Fr.GetValueF('facing_consumption', Row, False));
     Fr.SetValue('facing_sum', Row, False, Fr.GetValueF('facing_sum0', Row, False) * Fr.GetValueF('facing_markup', Row, False));
-// (Fr.GetValueS('', Row, False) <> '') and
     LIsValid := (Fr.GetValueS('name', Row, False) <> '') and (Fr.GetValueF('sum0', Row, False) <> 0) and (Fr.GetValueF('sum', Row, False) <> 0);
     if LIsValid then
       LIsValid := (Fr.GetValueS('facing_name', Row, False) = '') or (Fr.GetValueS('facing_name', Row, False) <> '') and (Fr.GetValueF('facing_sum0', Row, False) <> 0) and (Fr.GetValueF('facing_sum', Row, False) <> 0);
@@ -443,7 +443,7 @@ begin
   LSalesSum := Round(LSalesSum);
   nedt_purchase_sum.Value := LPurchaseSum;
   nedt_sales_sum_from_items.Value := LSalesSum;
-  nedt_sales_sum.Value := Round(LPurchaseSum * (nedt_markup_percent.Value.AsFloat / 100) * nedt_overall_coeff.Value.AsFloat);
+  nedt_sales_sum.Value := Round(LPurchaseSum * ((nedt_markup_percent.Value.AsFloat + 100) / 100) * nedt_overall_coeff.Value.AsFloat);
   nedt_coeff_from_items.Value := null;
   if LPurchaseSum <> 0 then
     nedt_coeff_from_items.Value := RoundTo(LSalesSum / LPurchaseSum, -2);

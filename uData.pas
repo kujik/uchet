@@ -896,6 +896,7 @@ const
   myfrm_R_Itm_Suppliers='R_Itm_Suppliers';
   myfrm_R_Itm_InGroup_Nomencl='R_Itm_InGroup_Nomencl';
   myfrm_R_Itm_Schet='R_Itm_Schet';
+  myfrm_R_Itm_DemandSupplier='R_Itm_DemantSupplier';
   myfrm_R_Itm_InBill='R_Itm_InBill';
   myfrm_R_Itm_Nomencl='R_Itm_Nomencl';
   myfrm_Rep_Sgp='Rep_Sgp';
@@ -974,7 +975,7 @@ const
   myfrm_Dlg_R_ComplaintReasons='Dlg_R_ComplaintReasons';
   myfrm_Dlg_R_DelayedInprodReasons='Dlg_R_DelayedInprodReasons';
   myfrm_Dlg_R_RejectionOtkReasons='Dlg_R_RejectionOtcReasons';
-  myfrm_Dlg_LoadKB = 'Dlg_LoadKB';
+//  myfrm_Dlg_LoadKB = 'Dlg_LoadKB';
   myfrm_Dlg_Bcad_Groups='Dlg_Bcad_Groups';
   myfrm_Dlg_Bcad_Units='Dlg_Bcad_Units';
   myfrm_Dlg_J_Devel='Dlg_J_Devel';

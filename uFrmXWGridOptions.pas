@@ -175,6 +175,7 @@ var
   sa: TStringDynArray;
   va2: TVarDynArray2;
   c: TDBCheckBoxEh;
+  fr: TFrDBGridRecFieldsList;
   i: Integer;
 begin
   va2 := [];
@@ -183,11 +184,8 @@ begin
   //(не сервисные с _, не нулл, и не скрытые
   for i:=0 to FFrDbGrid.DBGridEh1.Columns.Count-1 do
     begin
-      var st := FFrDbGrid.Opt.Sql.Fields[i].Caption;
-      if st = '_wo_kns' then
-        var b := false;
-//      if (Pos('_', FFrDbGrid.DBGridEh1.Columns[i].Title.Caption) = 1) then Continue;
-      if FFrDbGrid.Opt.Sql.Fields[i].Invisible or FFrDbGrid.Opt.Sql.Fields[i].FIsNull or (Pos('_', FFrDbGrid.Opt.Sql.Fields[i].Caption) = 1) then
+      fr := FFrDbGrid.Opt.GetFieldRec(FFrDbGrid.DBGridEh1.Columns[i].FieldName);
+      if fr.Invisible or fr.FIsNull or (Pos('_', fr.Caption) = 1) then
         Continue;
       va2 := va2 + [[
         i,

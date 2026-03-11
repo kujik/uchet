@@ -156,7 +156,7 @@ begin
 //  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Только производственные', 'prod'], ['Тест', '', True], ['Тест2'], ['ТТТТТТТТ', False]];
   Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_Sum)]];
 
-  Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];// - [myogSaveOptions];
+  Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];// - [myogIndicatorcolumn, myogIndicatorCheckBoxes, myogSaveOptions];
   Frg2.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_std_item$i','_id_std_item','40'],
@@ -451,8 +451,8 @@ end;
 procedure TFrmOGjrnOrders.Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean);
 begin
   LoadKnsAndThnList;
+  inherited;
 end;
-
 
 
 {детальный грид}

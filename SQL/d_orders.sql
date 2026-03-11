@@ -1849,7 +1849,7 @@ create or replace procedure P_CreatePspForSemiproducts(
   ADtOtgr date,                  --плановая дата отгрузки  
   AIdReglament number,           --айди регламента 
   AIdType number,                --тип заказа (МТ, Плановый ...)
-  AProps varchar2(4000),         --свойства заказов (которые выбираются в окне выбора регламента)
+  AProps varchar2,         --свойства заказов (которые выбираются в окне выбора регламента)
   AIdOrder out number,           --возврат: айди созданного заказа 
   AOrNum out varchar2            --возврат: номер созданного заказа 
 )  

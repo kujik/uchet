@@ -105,9 +105,7 @@ inherited FrmXWGridOptions: TFrmXWGridOptions
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
-                ExplicitWidth = 32
                 ExplicitHeight = 96
                 inherited PRowDetailPanel: TPanel
                   Align = alNone

@@ -128,14 +128,14 @@ begin
     );
     //получим список всех ведомостей по зп, по уволенным за этот период
     va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);
-    var b := False;
+    var b := True;
     for i := 0 to High(va1) do
-      if A.PosRowInArray(va1, va2, i) = -1 then
-        b := True;
+      if A.PosRowInArray(va1, va2, i) <> -1 then
+        b := False;
     if b then begin
       //получим ведомости по полным подразделениям, в которых присутствует работник с данным статусом
       Q.QLoadFromQuery(
-        'select id, id_target_departament, is_finalized from v_w_payroll_calc_item where id_target_employee is null and id_employee = :id_employee$i and  dt1 = :dt1$d ' +
+        'select id, id_target_departament, is_finalized from v_w_payroll_calc_item where id_target_employee is null and dt1 = :dt1$d and id_employee = :id_employee$i ' +
         'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100)',
         [dt1, va1[0][1], va1[0][2], va1[0][3]], va3
       );

@@ -2,9 +2,9 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   Anchors = [akLeft, akTop, akBottom]
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
   ClientHeight = 512
-  ClientWidth = 776
-  ExplicitWidth = 792
-  ExplicitHeight = 551
+  ClientWidth = 850
+  ExplicitWidth = 862
+  ExplicitHeight = 550
   TextHeight = 13
   object lbl_InstalledInfo: TLabel [0]
     Left = 8
@@ -58,14 +58,14 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
   end
   inherited pnl_StatusBar: TPanel
     Top = 511
-    Width = 776
+    Width = 850
     Height = 1
     Visible = False
-    ExplicitTop = 511
-    ExplicitWidth = 776
+    ExplicitTop = 510
+    ExplicitWidth = 772
     ExplicitHeight = 1
     inherited lbl_StatusBar_Right: TLabel
-      Left = 693
+      Left = 763
       ExplicitLeft = 706
     end
     inherited lbl_StatusBar_Left: TLabel
@@ -195,7 +195,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 553
+    Left = 623
     Top = 471
     Width = 195
     Height = 33
@@ -203,6 +203,8 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
     TabOrder = 8
     OnClick = Bt_OkClick
+    ExplicitLeft = 545
+    ExplicitTop = 470
   end
   object Dbg_PrevInstall: TDBGridEh [13]
     Left = 8
@@ -213,6 +215,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     DynProps = <>
     ReadOnly = True
     TabOrder = 9
+    OnCellClick = Dbg_PrevInstallCellClick
     object RowDetailData: TRowDetailPanelControlEh
     end
   end

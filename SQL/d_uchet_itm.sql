@@ -1100,6 +1100,18 @@ connect by prior
  id_group=id_parentgroup
 ;
 
+create or replace view v_itm_demandsupplierspec as
+select
+  s.*,
+  p.price_check
+from
+  dv.v_demandsupplierspec s,
+  spl_itm_nom_props p
+where
+  s.id_nomencl = p.id (+)
+;    
+  
+
 
 select
 --информация по зависшему резерву

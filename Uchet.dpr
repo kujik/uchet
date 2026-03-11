@@ -67,7 +67,6 @@ uses
   uSys in 'uSys.pas',
   uOrders in 'uOrders.pas',
   uWindows in 'uWindows.pas' {Dlg_DelayedInProd},
-//  uStringCalculator in 'uStringCalculator.pas',
   uErrors in 'uErrors.pas',
   uUtils in 'uUtils.pas',
   uTasks in 'uTasks.pas',
@@ -83,12 +82,9 @@ uses
   V_MDI in 'V_MDI.pas' {Form_MDI},
   V_Normal in 'V_Normal.pas' {Form_Normal},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
-//  D_ExpenseItems in 'D_ExpenseItems.pas' {Dlg_ExpenseItems},
   uFrmXDmsgNoConnection in 'uFrmXDmsgNoConnection.pas' {Dlg_D_SQLNoConnection},
-//  D_Sn_Calendar in 'D_Sn_Calendar.pas' {Dlg_Sn_Calendar},
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
   uFrmTest in 'uFrmTest.pas' {FrmTest},
-  //D_SnOrder in 'D_SnOrder.pas' {Dlg_SnOrder},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
   D_MainSettings in 'D_MainSettings.pas' {Dlg_MainSettings},
@@ -98,7 +94,6 @@ uses
   D_Otk in 'D_Otk.pas' {Dlg_Otk},
   D_Order in 'D_Order.pas' {Dlg_Order},
   D_Order_Complaints in 'D_Order_Complaints.pas' {Dlg_Order_Complaints: TCustomDropDownFormEh},
-  D_LoadKB in 'D_LoadKB.pas' {dlg_LoadKB},
   D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
@@ -172,16 +167,11 @@ uses
   uFrmOWSearchInEstimates in 'uFrmOWSearchInEstimates.pas' {FrmOWSearchInEstimates},
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
-//  D_Grid1 in 'D_Grid1.pas' {Dlg_Grid1},
   uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision},
-//  uFrmWDAddTurv in 'uFrmWDAddTurv.pas' {FrmWDAddTurv},
   uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
-//  uFrmWGEdtTurv in 'uFrmWGEdtTurv.pas' {FrmWGEdtTurv},
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
-//  uFrmWGedtPayroll in 'uFrmWGedtPayroll.pas' {FrmWGedtPayroll},
-//  uFrmWDedtCreatePayroll in 'uFrmWDedtCreatePayroll.pas' {FrmWDedtCreatePayroll},
   uFrmTest2 in 'uFrmTest2.pas' {FrmTest2},
   uFrmWGrepPersonal1 in 'uFrmWGrepPersonal1.pas' {FrmWGrepPersonal1},
   uFrmWGrepStaffSchedule in 'uFrmWGrepStaffSchedule.pas' {FrmWGrepStaffSchedule},
@@ -206,7 +196,8 @@ uses
   uFrmWGedtPayrollCash in 'uFrmWGedtPayrollCash.pas' {FrmWGedtPayrollCash},
   uFrmOGjrnProdCalculations in 'uFrmOGjrnProdCalculations.pas' {FrmOGjrnProdCalculations},
   uFrmCDedtExpenseItem in 'uFrmCDedtExpenseItem.pas' {FrmCDedtExpenseItem},
-  uFrmOWedtProdCalculation in 'uFrmOWedtProdCalculation.pas' {FrmOWedtProdCalculation};
+  uFrmOWedtProdCalculation in 'uFrmOWedtProdCalculation.pas' {FrmOWedtProdCalculation},
+  uFrmXWNonActualVersion in 'uFrmXWNonActualVersion.pas' {FrmXWNonActualVersion};
 
 var
   MT: Integer;
@@ -318,6 +309,8 @@ begin
   AfterProgramStart := true;
 
   if not TFrmXWNoConnectionAfterStart.Execute then
+    Exit;
+  if not TFrmXWNonActualVersion.Execute then
     Exit;
   if not TFrmXDmsgIncorrectDate.Execute then
     Exit;

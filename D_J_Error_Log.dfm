@@ -1,27 +1,37 @@
 inherited Dlg_J_Error_Log: TDlg_J_Error_Log
   Caption = 'Dlg_J_Error_Log'
-  ClientHeight = 175
-  ClientWidth = 321
-  ExplicitWidth = 337
-  ExplicitHeight = 214
+  ClientHeight = 425
+  ClientWidth = 1020
+  ExplicitWidth = 1032
+  ExplicitHeight = 463
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 156
-    Width = 321
+    Top = 406
+    Width = 1020
+    ExplicitWidth = 317
+    inherited lbl_StatusBar_Right: TLabel
+      Left = 933
+      Height = 17
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
+    end
   end
   object PageControl1: TPageControl [1]
     Left = 0
     Top = 0
-    Width = 321
-    Height = 156
+    Width = 1020
+    Height = 406
     ActivePage = TabSheet1
     Align = alClient
     TabOrder = 1
+    ExplicitWidth = 317
+    ExplicitHeight = 155
     object TabSheet1: TTabSheet
       Caption = 'Information'
       DesignSize = (
-        313
-        128)
+        1012
+        378)
       object lbl_Module: TLabel
         Left = 16
         Top = 3
@@ -60,7 +70,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object mem_ErrorText: TDBMemoEh
         Left = 16
         Top = 128
-        Width = 737
+        Width = 1432
         Height = 89
         ControlLabel.Width = 117
         ControlLabel.Height = 13
@@ -75,6 +85,7 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
         TabOrder = 0
         Visible = True
         WantReturns = True
+        ExplicitWidth = 729
       end
     end
     object TabSheet2: TTabSheet
@@ -83,8 +94,8 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object DBGridEh1: TDBGridEh
         Left = 0
         Top = 0
-        Width = 786
-        Height = 424
+        Width = 1012
+        Height = 378
         Align = alClient
         DataSource = DataSource1
         DynProps = <>
@@ -118,8 +129,8 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object DBGridEh2: TDBGridEh
         Left = 0
         Top = 0
-        Width = 786
-        Height = 424
+        Width = 1012
+        Height = 378
         Align = alClient
         DynProps = <>
         TabOrder = 0
@@ -134,12 +145,11 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object pnl1: TPanel
         Left = 0
         Top = 0
-        Width = 313
+        Width = 1012
         Height = 41
         Align = alTop
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitWidth = 786
         object lbl_SrcPath: TLabel
           Left = 8
           Top = 3
@@ -165,8 +175,8 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object mem_SourceFile: TfsSyntaxMemo
         Left = 0
         Top = 41
-        Width = 313
-        Height = 87
+        Width = 1012
+        Height = 337
         Cursor = crIBeam
         Align = alClient
         Font.Charset = DEFAULT_CHARSET
@@ -216,18 +226,16 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       ImageIndex = 4
       object Panel2: TPanel
         Left = 0
-        Top = 88
-        Width = 317
+        Top = 337
+        Width = 1012
         Height = 41
         Align = alBottom
         TabOrder = 0
-        ExplicitTop = 383
-        ExplicitWidth = 786
       end
       object mem_OraParams: TDBMemoEh
         Left = 0
-        Top = -15
-        Width = 317
+        Top = 234
+        Width = 1012
         Height = 103
         ControlLabel.Width = 104
         ControlLabel.Height = 13
@@ -246,15 +254,14 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object Panel3: TPanel
         Left = 0
         Top = 0
-        Width = 313
+        Width = 1012
         Height = 73
         Align = alTop
         TabOrder = 2
-        ExplicitWidth = 325
         object mem_OraError: TDBMemoEh
           Left = 1
           Top = 16
-          Width = 315
+          Width = 1010
           Height = 56
           ControlLabel.Width = 71
           ControlLabel.Height = 13
@@ -274,19 +281,18 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object Panel4: TPanel
         Left = 0
         Top = 73
-        Width = 313
-        Height = 177
+        Width = 1012
+        Height = 161
         Align = alClient
         TabOrder = 3
-        ExplicitWidth = 325
         DesignSize = (
-          313
-          177)
+          1012
+          161)
         object mem_OraSQL: TDBMemoEh
           Left = 1
           Top = 23
-          Width = 768
-          Height = 162
+          Width = 1463
+          Height = 146
           ControlLabel.Width = 60
           ControlLabel.Height = 13
           ControlLabel.Caption = 'SQL-'#1079#1072#1087#1088#1086#1089
@@ -310,8 +316,8 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object Im_Pict: TImage
         Left = 0
         Top = 0
-        Width = 786
-        Height = 424
+        Width = 1012
+        Height = 378
         Align = alClient
         Proportional = True
         ExplicitLeft = 104
@@ -326,8 +332,8 @@ inherited Dlg_J_Error_Log: TDlg_J_Error_Log
       object mem_FullReport: TfsSyntaxMemo
         Left = 0
         Top = 0
-        Width = 313
-        Height = 128
+        Width = 1012
+        Height = 378
         Cursor = crIBeam
         Align = alClient
         Font.Charset = DEFAULT_CHARSET

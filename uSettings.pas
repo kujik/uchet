@@ -8,7 +8,6 @@ uses
   ToolCtrlsEh, DBGridEhToolCtrls, DynVarsEh, System.Generics.Collections,
   MemTableDataEh, Db, MemTableEh, Math, ExtCtrls, Types,
   IniFiles,  SearchPanelsEh,
-
   PropFilerEh,
   ActnList,
   uData, Jpeg, uString, PngImage,
@@ -649,6 +648,7 @@ begin
   st := '';
   for i:= 0 to Grid.DbGridEh1.Columns.Count - 1 do begin
     col := Grid.DbGridEh1.Columns[i];
+
     fr := Grid.Opt.GetFieldRec(col.FieldName);
     st1 := '0';
     if i > 0 then
@@ -669,7 +669,6 @@ begin
       ], #2), #1);
    end;
    MC.WriteString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), St);
-//    Sys.SaveTextToFile('r:\2222', st);
    va:=A.Explode(st, #1);
    va:=A.Explode(va[0], #2);
 end;
@@ -701,267 +700,300 @@ var
   oplus, ominus : TFrDBGridOptions;
   fr: TFrDBGridRecFieldsList;
   cols, colsd : TVarDynArray2;
+  FieldNames: array of string;
+
+(*
+
+/// <summary>
+/// Формирует порядок отображения столбцов.
+/// </summary>
+/// <param name="CurrentFieldNames">
+/// Массив имён всех существующих полей в дефолтном порядке (из Grid.Opt.Sql.Fields).
+/// </param>
+/// <param name="PreviousOrder">
+/// Предыдущий порядок отображения (TVarDynArray из cols).
+/// </param>
+/// <returns>
+/// TVarDynArray с именами в правильном порядке.
+/// </returns>
+function ReorderColumns(const CurrentFieldNames: array of string;
+  const PreviousOrder: TVarDynArray): TVarDynArray;
+var
+  ExistingSet: TDictionary<string, Integer>;   // для быстрой проверки наличия
+  ResultList: TList<string>;                    // строящийся порядок
+  i, j, insertPos: Integer;
+  name: string;
+  prevName: string;
+begin
+  // Множество всех актуальных имён (для фильтрации PreviousOrder)
+  ExistingSet := TDictionary<string, Integer>.Create;
+  try
+    for i := 0 to High(CurrentFieldNames) do
+      ExistingSet.Add(CurrentFieldNames[i], i);
+
+    ResultList := TList<string>.Create;
+    try
+      // 1. Берём только те столбцы из PreviousOrder, которые ещё существуют
+      for i := 0 to Length(PreviousOrder) - 1 do
+      begin
+        name := VarToStr(PreviousOrder[i]);
+        if ExistingSet.ContainsKey(name) then
+          ResultList.Add(name);
+      end;
+
+      // 2. Вставляем недостающие поля в соответствии с дефолтным порядком
+      for i := 0 to High(CurrentFieldNames) do
+      begin
+        name := CurrentFieldNames[i];
+        // Если имя уже есть в результате — пропускаем
+        if ResultList.Contains(name) then
+          Continue;
+
+        // Определяем позицию вставки:
+        // ищем ближайшего предшественника по CurrentFieldNames,
+        // который уже присутствует в ResultList
+        insertPos := 0; // по умолчанию в начало
+        for j := i - 1 downto 0 do
+        begin
+          prevName := CurrentFieldNames[j];
+          if ResultList.Contains(prevName) then
+          begin
+            insertPos := ResultList.IndexOf(prevName) + 1;
+            Break;
+          end;
+        end;
+
+        // Вставляем новое имя
+        ResultList.Insert(insertPos, name);
+      end;
+
+      // 3. Преобразуем TList<string> в TVarDynArray
+      SetLength(Result, ResultList.Count);
+      for i := 0 to ResultList.Count - 1 do
+        Result[i] := ResultList[i];
+
+    finally
+      ResultList.Free;
+    end;
+  finally
+    ExistingSet.Free;
+  end;
+end; *)
+
 begin
 //exit;
   try
-  oplus := [];
-  ominus := [];
-  SetLength(ColumnArray, Grid.DbGridEh1.Columns.Count);
-  if (M.SectionExists(Section) and not SetDefault)and
-     (M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Settings)']), '--') <> '--')
-    then MC:= M
-    else MC:= MA;
+    oplus := [];
+    ominus := [];
+    SetLength(ColumnArray, Grid.DbGridEh1.Columns.Count);
+    if (M.SectionExists(Section) and not SetDefault) and (M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Settings)']), '--') <> '--') then
+      MC := M
+    else
+      MC := MA;
 
   //параметры фильтра в окне; читаем даже при неактивном гриде, так как фильтр влияет на параметры загрузки данных
-  Grid.Opt.FilterResult := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(DefFilter)']), '');
+    Grid.Opt.FilterResult := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(DefFilter)']), '');
   //выйдем, если мемтейбл не открыт
-  if not Grid.MemTableEh1.Active then
-    Exit;
+    if not Grid.MemTableEh1.Active then
+      Exit;
 
 
   //получим параметры, общие для грида
-  st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Settings)']), '--');
-  if st <> '--' then  begin
-    va := A.Explode(st, #1);
-    for i := 0 to High(va) do begin
-      va1 := A.Explode(va[i], #2);
-      if va1[1] = '0' then
-        ominus := ominus + [TFrDBGridOption(va1[0])]
-      else
-        oplus := oplus + [TFrDBGridOption(va1[0])];
-    end;
+    st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Settings)']), '--');
+    if st <> '--' then begin
+      va := A.Explode(st, #1);
+      for i := 0 to High(va) do begin
+        va1 := A.Explode(va[i], #2);
+        if va1[1] = '0' then
+          ominus := ominus + [TFrDBGridOption(va1[0])]
+        else
+          oplus := oplus + [TFrDBGridOption(va1[0])];
+      end;
       //получим массив STFilter - фильтр в стольбцах
       //в массиве [[fieldname, stfilter_string],]
-    ar2 := [];
-    if myogSaveFilter in oplus then begin
-      si := M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), '');
-      if si <> '' then begin
-        a1 := A.ExplodeS(si, #1);
-        SetLength(ar2, Length(a1));
-        for i := 0 to High(a1) do begin
-//!!!почему-то в этом варианте возникает ошибка
-            //a2:=Ah..ExplodeV(a1[i], #2);
-//            a[i]:=[a2[0], a2[1]];         //если включена вот эта срока???
-//ошибки совершенно непонятные, не индексы, такое ощущение что портим память, возникают не всегда!!!
-//a[i]:=[a2[0],''];
-          j := pos(#2, a1[i]);
-          ar2[i] := [#5, ''];
-          if j > 1 then begin
-            ar2[i] := [copy(a1[i], 1, j - 1), copy(a1[i], j + 1, 40000)];
-//              a[i]:=[copy(a1[i],1,j-1), 'asdasasdasd'];
+      ar2 := [];
+      if myogSaveFilter in oplus then begin
+        si := M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), '');
+        if si <> '' then begin
+          a1 := A.ExplodeS(si, #1);
+          SetLength(ar2, Length(a1));
+          for i := 0 to High(a1) do begin
+            j := pos(#2, a1[i]);
+            ar2[i] := [#5, ''];
+            if j > 1 then begin
+              ar2[i] := [copy(a1[i], 1, j - 1), copy(a1[i], j + 1, 40000)];
+            end;
           end;
         end;
       end;
     end;
-  end;
 
   //дополнительные параметры (пока только имя замороженного столбца)
-  st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(AddSettings)']), '');
-  va := A.Explode(st, #1);
-  Grid.Opt.FrozenColumn := va[0];
+    st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(AddSettings)']), '');
+    va := A.Explode(st, #1);
+    Grid.Opt.FrozenColumn := va[0];
 
-  st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), '--');
-  va := A.Explode(st, #1);
-  cols := [];
-  if st <> '--' then
-    for i := 0 to High(va) do
-      A.VarDynArray2InsertArr(cols, A.Explode(va[i], #2));
+    st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), '--');
+    va := A.Explode(st, #1);
+    cols := [];
+    if st <> '--' then
+      for i := 0 to High(va) do
+        A.VarDynArray2InsertArr(cols, A.Explode(va[i], #2));
 
-  st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), '--');
-  va := A.Explode(st, #1);
-  colsd := [];
-  if st <> '--' then
-    for i := 0 to High(va) do
-      A.VarDynArray2InsertArr(colsd, A.Explode(va[i], #2));
+    st := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), '--');
+    va := A.Explode(st, #1);
+    colsd := [];
+    if st <> '--' then
+      for i := 0 to High(va) do
+        A.VarDynArray2InsertArr(colsd, A.Explode(va[i], #2));
 
-  for i := 0 to High(colsd) do
-    if A.PosInArray(colsd[i][0], cols, 0, True) < 0 then
-      A.VarDynArray2InsertArr(cols, A.VarDynArray2RowToVD1(colsd, i));
+    for i := 0 to High(colsd) do
+      if A.PosInArray(colsd[i][0], cols, 0, True) < 0 then
+        A.VarDynArray2InsertArr(cols, A.VarDynArray2RowToVD1(colsd, i));
 
   //нужно для простановки маркеров сортировки, если их несколько!
-  Grid.DBGridEh1.OptionsEh:=Grid.DBGridEh1.OptionsEh+[dghAutoSortMarking, dghMultiSortMarking];
-  for i:=0 to Grid.DbGridEh1.Columns.Count - 1 do begin
-    col := Grid.DbGridEh1.Columns[i];
-    p := A.PosInArray(col.FieldName, cols, 0, True);
-    if p < 0 then Continue;
-    col.Width := Strtoint(cols[p][2]);
-    Grid.Opt.SetFieldVisible(col.FieldName, Boolean(StrToIntDef(cols[p][3], Integer(col.Visible))));
-    col.Title.SortIndex := StrToIntDef(cols[p][5], 0);
-    col.Title.SortMarker := TSortMarkerEh(StrToIntDef(cols[p][4], Integer(col.Title.SortMarker)));
-    col.WordWrap := Boolean(StrToIntDef(cols[p][6], Integer(col.WordWrap)));
-    col.AutoFitColWidth := Boolean(StrToIntDef(cols[p][7], Integer(col.AutoFitColWidth)));
-    col.DropDownRows := StrToIntDef(cols[p][8], col.DropDownRows);
-    col.DropDownWidth := StrToIntDef(cols[p][9], col.DropDownWidth);
-    col.InRowLinePos := StrToIntDef(cols[p][10], col.InRowLinePos);
-    col.InRowLineHeight := StrToIntDef(cols[p][11], col.InRowLineHeight);
-  end;
+    Grid.DBGridEh1.OptionsEh := Grid.DBGridEh1.OptionsEh + [dghAutoSortMarking, dghMultiSortMarking];
+    for i := 0 to Grid.DbGridEh1.Columns.Count - 1 do begin
+      col := Grid.DbGridEh1.Columns[i];
+      p := A.PosInArray(col.FieldName, cols, 0, True);
+      if p < 0 then
+        Continue;
+      col.Width := Strtoint(cols[p][2]);
+      Grid.Opt.SetFieldVisible(col.FieldName, Boolean(StrToIntDef(cols[p][3], Integer(col.Visible))));
+      col.Title.SortIndex := StrToIntDef(cols[p][5], 0);
+      col.Title.SortMarker := TSortMarkerEh(StrToIntDef(cols[p][4], Integer(col.Title.SortMarker)));
+      col.WordWrap := Boolean(StrToIntDef(cols[p][6], Integer(col.WordWrap)));
+      col.AutoFitColWidth := Boolean(StrToIntDef(cols[p][7], Integer(col.AutoFitColWidth)));
+      col.DropDownRows := StrToIntDef(cols[p][8], col.DropDownRows);
+      col.DropDownWidth := StrToIntDef(cols[p][9], col.DropDownWidth);
+      col.InRowLinePos := StrToIntDef(cols[p][10], col.InRowLinePos);
+      col.InRowLineHeight := StrToIntDef(cols[p][11], col.InRowLineHeight);
+    end;
+  //Grid.TestCompareFC;
   //второй проход
-  for i:=0 to Grid.DbGridEh1.Columns.Count - 1 do begin
-    col := Grid.DbGridEh1.Columns[i];
-    p := A.PosInArray(col.FieldName, cols, 0, True);
-    if p < 0 then Continue;
-    fr := Grid.Opt.GetFieldRec(col.FieldName);
+    for i := 0 to Grid.DbGridEh1.Columns.Count - 1 do begin
+      col := Grid.DbGridEh1.Columns[i];
+      p := A.PosInArray(col.FieldName, cols, 0, True);
+      if p < 0 then
+        Continue;
+      fr := Grid.Opt.GetFieldRec(col.FieldName);
     //для видимых колонок установим значения фильтра, если он был загружен
     //сопоставление столбцов проводим по имени поля
-    if fr.Visible and (High(ar2) >=0) then
-      for n:=0 to High(ar2)-1 do
-        if (ar2[n][0] = col.FieldName) and (ar2[n][1] <> '') then
+      if fr.Visible and (High(ar2) >= 0) then
+        for n := 0 to High(ar2) - 1 do
+          if (ar2[n][0] = col.FieldName) and (ar2[n][1] <> '') then
           //может быть ошибка из-за несовпадения форматов чисел/дат при сохранении и чтении
           try
-            col.STFilter.ExpressionStr:=ar2[n][1];
+            col.STFilter.ExpressionStr := ar2[n][1];
           except
           end;
-  end;
+    end;
 
   {установим порядок стлбцов. в настройках сохранены имена столбца, идущего перед данным}
   //создадим мааасив имен полей в том порядке, как соотвествующие столбцы должны отображаться, по всем сохраненным столбцам
-  va := [];
-  st := '0';
-  for j := 0 to high(cols) do begin
-    for i:=0 to high(cols) do
-      if cols[i][1] = st then begin
-        va := va + [cols[i][0]];
-        st := cols[i][0];
-        Break;
-      end;
-  end;
+    va := [];
+    st := '0';
+    for j := 0 to high(cols) do begin
+      for i := 0 to high(cols) do
+        if cols[i][1] = st then begin
+          va := va + [cols[i][0]];
+          st := cols[i][0];
+          Break;
+        end;
+    end;
+
   //удалим записи с полями, которых более нет в таблице
-  for i := High(va) downto 0 do
-    if Grid.DbGridEh1.FindFieldColumn(va[i]) = nil then
-      Delete(va, i, 1);
+    for i := High(va) downto 0 do
+      if Grid.DbGridEh1.FindFieldColumn(va[i]) = nil then
+        Delete(va, i, 1);
   //вставим имена полей, которые есть в таблице определения полей, но нет в сохраненных
   //вставляем так, чтобы он шел за столбцом, который расположен перед ним в описании полей в коде
-  st := '0';
-  for i := 0 to High(Grid.Opt.Sql.Fields) do begin
-    p := A.PosInArray(Grid.Opt.Sql.Fields[i].Name, va, True);
-    if i > 0 then
-      st := Grid.Opt.Sql.Fields[i - 1].Name;
-    if p < 0 then
-      if st = '0'
-        then Insert(Grid.Opt.Sql.Fields[i].Name, va, 0)
+    st := '0';
+    for i := 0 to High(Grid.Opt.Sql.Fields) do begin
+      p := A.PosInArray(Grid.Opt.Sql.Fields[i].Name, va, True);
+      if i > 0 then
+        st := Grid.Opt.Sql.Fields[i - 1].Name;
+      if p < 0 then
+        if st = '0' then
+          Insert(Grid.Opt.Sql.Fields[i].Name, va, 0)
         else begin
           j := A.PosInArray(st, va, True);
-          if j >= 0
-            then Insert(Grid.Opt.Sql.Fields[i].Name, va, j + 1)
-            else va := va + [Grid.Opt.Sql.Fields[i].Name]
+          if j >= 0 then
+            Insert(Grid.Opt.Sql.Fields[i].Name, va, j + 1)
+          else
+            va := va + [Grid.Opt.Sql.Fields[i].Name]
         end;
-  end;
-//    Sys.SaveTextToFile('r:\1111', A.Implode(va, ','));
-  //зададим индекс полей (порядок следования их в таблице)
-  try
-  for i := 0 to high(va) do
-    Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
-  except
-  end;
-
-
-  Grid.Options := Grid.Options + oplus - ominus;
-
-  finally
-
-  end;
-
-exit;
-
-      //параметры столбцов (восстановим из выбранного файла - если есть пользовательский, то из него, иначе из общего. выбор файла был выше)
-      for i := 0 to Grid.DbGridEh1.Columns.Count - 1 do
-      begin
-        col := Grid.DbGridEh1.Columns[i];
-        St := MC.ReadString(Section, Format('%s.%s', [Grid.Name, col.FieldName]), '');
-        //настройки столбца из общего файла, нужны для восстановления параметров столбца, который был добавлен в дефолт после сохранения настроек пользователя
-        SA := MA.ReadString(Section, Format('%s.%s', [Grid.Name, col.FieldName]), '');
-        fr := Grid.Opt.GetFieldRec(col.FieldName);
-        ColumnArray[I].Column := col;
-        ColumnArray[I].EndIndex := col.Index;
-        b:= St <> ''; //есть пользовательские данные по столбцу
-        if (St <> '')or(SA <> '') then
-        begin
-//          if (crpColWidthsEh in RestoreParams) then
-          //если нет столбца, восстановим ширину из дефолтного
-//if col.FieldName = 'COST'
-//  then k := StrToIntDef(ExtractWord(2, St, Delims), -1);
-//          k := StrToIntDef(ExtractWord(2, St, Delims), col.Width);
-//          if not b then k:= StrToIntDef(ExtractWord(2, St.IIf(b, St, SA), Delims), col.Width);
-          col.Width := StrToIntDef(ExtractWord(2, S.IIf(b, St, SA), Delims), col.Width);
-          col.WordWrap := Boolean(StrToIntDef(ExtractWord(10, S.IIf(b, St, SA), Delims), Integer(Grid.DbGridEh1.Columns[I].WordWrap)));
-          col.AutoFitColWidth := Boolean(StrToIntDef(ExtractWord(11, S.IIf(b, St, SA), Delims), Integer(Grid.DbGridEh1.Columns[I].AutoFitColWidth)));
-          //все остальное только из пользовательского
-          if b then begin
-            ColumnArray[I].EndIndex := StrToIntDef(ExtractWord(1, St, Delims), ColumnArray[I].EndIndex);
-              col.Title.SortMarker := TSortMarkerEh(StrToIntDef(ExtractWord(3, St, Delims), Integer(col.Title.SortMarker)));
- //             col.Visible := Boolean(StrToIntDef(ExtractWord(4, St, Delims), Integer(col.Visible)));
-              Grid.Opt.SetFieldVisible(col.FieldName, Boolean(StrToIntDef(ExtractWord(4, St, Delims), Integer(col.Visible))));
-              //скрываем все столбцы, заголовки которых начинаются на _
-  //          if (crpSortMarkerEh in RestoreParams) then
-              ColumnArray[I].SortIndex := StrToIntDef(ExtractWord(5, St, Delims), 0);
-  //          if (crpDropDownRowsEh in RestoreParams) then
-              col.DropDownRows := StrToIntDef(ExtractWord(6, St, Delims), col.DropDownRows);
-  //          if (crpDropDownWidthEh in RestoreParams) then
-              col.DropDownWidth := StrToIntDef(ExtractWord(7, St, Delims), col.DropDownWidth);
-    //        if (crpRowPanelColPlacementEh in RestoreParams) then
-              col.InRowLinePos := StrToIntDef(ExtractWord(8, St, Delims), col.InRowLinePos);
-              col.InRowLineHeight := StrToIntDef(ExtractWord(9, St, Delims), col.InRowLineHeight);
-              ColumnArray[I].PrevCol :=ExtractWord(12, St, Delims);
-            //для видимых колонок установим значения фильтра, если он был загружен
-            //сопоставление столбцов проводим по имени поля
-            if fr.Visible and (High(ar2) >=0) then begin
-              for n:=0 to High(ar2)-1 do begin
-                if ar2[n][0] = Col.FieldName then begin
-                  try
-                    if ar2[n][1] <> '' then Col.STFilter.ExpressionStr:=ar2[n][1];
-                  except
-                  end;
-                end;
-              end;
-            end;
-          end;
-        end;
-        if Pos('_', col.Title.Caption) = 1
-          then col.Visible:=False;
-        col.MinWidth:=25; //!!!
-      end;
-//      if (crpSortMarkerEh in RestoreParams) then
-      if True then
-      begin
-        for I := 0 to Grid.DbGridEh1.Columns.Count - 1 do
-          Grid.DbGridEh1.Columns[i].Title.SortIndex := ColumnArray[I].SortIndex;
-      end;
-//      if (crpColIndexEh in RestoreParams) then
-          if False then
-      begin
-        for I := 0 to Grid.DbGridEh1.Columns.Count - 1 do
-        begin
-          for J := 0 to Grid.DbGridEh1.Columns.Count - 1 do
-          begin
-            if ColumnArray[J].EndIndex = I then
-            begin
-              ColumnArray[J].Column.Index := ColumnArray[J].EndIndex;
-              Break;
-            end;
-          end;
-        end;
-      end;
-
-    va:=[];
-    st:='0';
-    for j:=0 to high(ColumnArray) do begin
-    for i:=0 to high(ColumnArray) do
-      if ColumnArray[i].PrevCol = st then begin
-        va := va + [ColumnArray[i].Column.FieldName];
-        st := ColumnArray[i].Column.FieldName;
-        Break;
-      end;
     end;
-//    sys.SaveArray2ToFile([va], 'r:\1111');
-    Sys.SaveTextToFile('r:\1111', A.Implode(va, ','));
-    for i := 0 to high(va) do
-      Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+    //изменим порядок столбцов.
+    //!!! в каких-то случаях похоже логическая ошибка при переиндексации, хотя если проверить все стобцы в гриде есть и до и после процедуры, все индексы идут подряд, и их столько же,
+    //но в программе в дбгридех исчезают в отображегнии столбцы слева и в ячейках оказываются не те данные, хотя при этом соотвествие и количество
+    //в определении полей и гриде также сохраняются (проверяем  Grid.TestCompareFC;)
+    //случилось только в деитальной таблице заказов у двоих пользователей при изменении в коде определения полей.
+    for i := High(va) downto 0 do begin
+      j := Grid.DbGridEh1.FindFieldColumn(va[i]).Index;
+      if j <> i then
+        Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+    end;
 
-      //    for i:= 0 to high(va)
+    Grid.Options := Grid.Options + oplus - ominus;
+  finally
+  end;
 
-  Grid.Options := Grid.Options + oplus - ominus;
 
 end;
+
+(*
+
+  //зададим индекс полей (порядок следования их в таблице)
+    try
+{  SetLength(FieldNames, Length(Grid.Opt.Sql.Fields));
+  for i := 0 to High(Grid.Opt.Sql.Fields) do
+    FieldNames[i] := Grid.Opt.Sql.Fields[i].Name;
+  va := ReorderColumns(FieldNames, va);  }
+
+  var vai: tvardynarray := [];
+  var van: tvardynarray := [];
+for i:=0 to Grid.DbGridEh1.Columns.count -1 do begin
+  //Grid.DbGridEh1.Columns[i].Visible := True;
+  vai := vai + [Grid.DbGridEh1.Columns[i].Index];
+  van := van + [Grid.DbGridEh1.Columns[i].FieldName];
+//  st := Grid.DbGridEh1.Columns[i].FieldName;
+//  var st1 := Grid.DbGridEh1.Columns[i].Name;
+  end;
+
+      va := va.RemoveDuplicates;
+      if Length(va) <> Length(Grid.Opt.Sql.Fields) then
+//    Sys.SaveTextToFile('r:\1111', A.Implode(va, ','))
+        var bbb := True
+      else begin
+          var bb1 := False;
+  var vai2: tvardynarray := [];
+  var van2: tvardynarray := [];
+  Grid.DbGridEh1.Columns.BeginUpdate;
+        for i := High(va) downto 0 do begin
+          j:=Grid.DbGridEh1.FindFieldColumn(va[i]).Index;
+          if j <> i then begin
+            Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+            var stt1 := Grid.DbGridEh1.Columns[i].FieldName;
+            var stt2 := Grid.Opt.Sql.Fields[i].Name;
+            if stt1 <> stt2 then
+              var bbb1 := True;
+          end;
+        end;
+for i:=0 to Grid.DbGridEh1.Columns.Count - 1 do
+  Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+Grid.DbGridEh1.Columns.EndUpdate;
+for i:=0 to Grid.DbGridEh1.Columns.Count -1 do begin
+  vai2 := vai2 + [Grid.DbGridEh1.Columns[i].Index];
+  van2 := van2 + [Grid.DbGridEh1.Columns[i].FieldName];
+  end;
+      end;
+    except
+    end;
+
+  Grid.TestCompareFC;
+*)
+
 
 
 

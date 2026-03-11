@@ -1,28 +1,21 @@
 inherited FrmOGjrnProdCalculations: TFrmOGjrnProdCalculations
   Caption = 'FrmOGjrnProdCalculations'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 782
+      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 772
+        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 770
+          ExplicitWidth = 774
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 762
-              Height = 337
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
-            end
-            inherited pnlStatusBar: TPanel
-              Top = 338
-              Width = 762
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -40,19 +33,15 @@ inherited FrmOGjrnProdCalculations: TFrmOGjrnProdCalculations
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 782
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          ExplicitWidth = 784
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 772
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
               end
-            end
-            inherited pnlStatusBar: TPanel
-              Width = 772
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -75,7 +64,6 @@ inherited FrmOGjrnProdCalculations: TFrmOGjrnProdCalculations
   end
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
-      Left = 723
       Height = 14
     end
     inherited lblStatusBarL: TLabel

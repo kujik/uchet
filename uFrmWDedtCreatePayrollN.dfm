@@ -2,28 +2,28 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
   Caption = 'FrmWDedtCreatePayrollN'
   ClientHeight = 208
   ClientWidth = 499
-  ExplicitWidth = 515
-  ExplicitHeight = 247
+  ExplicitWidth = 511
+  ExplicitHeight = 246
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 499
     Height = 192
-    ExplicitWidth = 499
-    ExplicitHeight = 192
+    ExplicitWidth = 495
+    ExplicitHeight = 191
     inherited pnlFrmClient: TPanel
-      Width = 493
-      Height = 144
-      ExplicitWidth = 489
-      ExplicitHeight = 143
+      Width = 489
+      Height = 143
+      ExplicitWidth = 485
+      ExplicitHeight = 142
       object pgcMain: TPageControl
         Left = 0
         Top = 0
-        Width = 493
+        Width = 489
         Height = 201
         ActivePage = ts_Divisions
         Align = alTop
         TabOrder = 0
-        ExplicitWidth = 489
+        ExplicitWidth = 485
         object ts_Divisions: TTabSheet
           Caption = #1042#1089#1077' '#1087#1086#1076#1088#1072#1079#1076#1077#1083#1077#1085#1080#1103
           object lbl1: TLabel
@@ -100,36 +100,36 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 149
-      Width = 493
-      ExplicitTop = 148
-      ExplicitWidth = 489
+      Top = 148
+      Width = 489
+      ExplicitTop = 147
+      ExplicitWidth = 485
       inherited bvlFrmBtnsTl: TBevel
-        Width = 491
+        Width = 487
         ExplicitWidth = 343
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 491
+        Width = 487
         ExplicitWidth = 343
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 491
-        ExplicitWidth = 487
+        Width = 487
+        ExplicitWidth = 483
         inherited pnlFrmBtnsMain: TPanel
-          Left = 392
-          ExplicitLeft = 388
+          Left = 388
+          ExplicitLeft = 384
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 164
-          ExplicitLeft = 160
+          Left = 160
+          ExplicitLeft = 156
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 293
-          ExplicitLeft = 289
+          Left = 289
+          ExplicitLeft = 285
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 24
-          ExplicitWidth = 20
+          Width = 20
+          ExplicitWidth = 16
         end
       end
     end
@@ -137,11 +137,15 @@ inherited FrmWDedtCreatePayrollN: TFrmWDedtCreatePayrollN
   inherited pnlStatusBar: TPanel
     Top = 192
     Width = 499
-    ExplicitTop = 192
-    ExplicitWidth = 499
+    ExplicitTop = 191
+    ExplicitWidth = 495
     inherited lblStatusBarR: TLabel
-      Left = 430
-      ExplicitLeft = 430
+      Left = 426
+      Height = 14
+      ExplicitLeft = 426
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

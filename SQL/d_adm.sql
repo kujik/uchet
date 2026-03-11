@@ -138,13 +138,15 @@ select * from v_users;
       
 
 -- модули, сделано для сохранения целостности таблиц, добавляются сюда вручную
-alter table adm_modules add (autoclosedt date, autoclosemin number(4) default 0);
+--alter table adm_modules add (module_version varchar2(150), check_module_version number(1) default(1));
 create table adm_modules (
   id number(12),             -- айди, по которому проходят модули в таблицах, совпадёт с таковым в дельфи
   nameen varchar2(50),       -- английское наименование, совпадает с дельфи
   nameru varchar2(50),       -- русское, аналогично 
   autoclosedt date,          -- дата/время автозавершения модуля, преверяется раз в минуту, если время проверки менее +3мин то программа завершается
   autoclosemin number(4) default 0,    -- количество минут после autoclosedt, в течении которых программа не может быть запущена, проверяется при запуске
+  module_version varchar2(150),
+  check_module_version number(1) default(1),
   constraint pk_adm_modules primary key (id)
 );
 
@@ -387,20 +389,25 @@ create table adm_locks (
 --------------------------------------------------------------------------------
 --таблица, в которую заносятся данные при логине пользователя в Учете
 --заполняется вызовом P_UserLogon
+--alter table adm_user_sessions drop column module_vaersion;
+--alter table adm_user_sessions add module_version varchar2(200);
 create table adm_user_sessions (
   id number(11),
   logon_time date,               --время создания сессии в оракле
   sid number(20),             
   serial# number(20),
-  --login varchar2(50),
   id_module number(11),          --айди модуля (ПК, Заказы..)
   id_user number(11),            --айди пользователя, который залогинился
-  --username varchar2(50),
   user_logon_time date,          --время авторизации пользователя в Учете (может отличается от logon_time) 
+  module_version varchar2(200), --версия и дата компиляции модуля
   constraint pk_adm_user_sessions primary key (id)
 );
 
 create sequence sq_adm_user_sessions nocache;
+
+create index idx_adm_user_sessions_ss on adm_user_sessions(sid, serial#);
+create unique index idx_adm_user_sessions_ss_uq on adm_user_sessions(sid, serial#, user_logon_time);
+
 
 create or replace trigger trg_adm_user_sessions_bi_r
   before insert on adm_user_sessions for each row
@@ -413,7 +420,8 @@ create or replace procedure P_UserLogon (
 --вызывается из программы Учет при удачном логине пользователя
 --данные сессии заполняет автоматически, принимает айди модуля учета и айди полььзователя учета
   AIdModule in number,
-  AIdUser in number
+  AIdUser in number,
+  AVersion in varchar2 := null
 )
 is
 begin
@@ -422,18 +430,93 @@ begin
     ((select count(1) from v$session vs where us.sid = vs.sid and us.serial# = vs.serial#) = 0)
     and (trunc(SysDate) - trunc(us.logon_time) > 14);
   --внесем данные 
-  insert into adm_user_sessions (logon_time, sid, serial#, id_module, id_user, user_logon_time) values (
+  insert into adm_user_sessions (logon_time, sid, serial#, id_module, id_user, user_logon_time, module_version) values (
   (select logon_time from v$session where sid in (select sid from v$mystat where rownum = 1)),
   (select sid from v$session where sid in (select sid from v$mystat where rownum = 1)),
   (select serial# from v$session where sid in (select sid from v$mystat where rownum = 1)),
-  AIdModule, AIdUser, SysDate
+  AIdModule, AIdUser, SysDate, AVersion
   );
 end;
 /
 
-exec P_UserLogon(1,33);
+--exec P_UserLogon(1,33);
+
+select * from v$session;
+
+create or replace view v_active_user_sessions as
+select
+--информация по текущим сессиям (всем), включая данные из учета по сессиям учета, без групприровки
+    cast('sess_' || v.sid || '_' || v.serial# as varchar2(100)) as id,
+    v.sid,
+    v.serial#,
+    v.module,
+    v.machine,
+    v.username,
+    v.osuser,
+    v.logon_time,                        -- время подключения к oracle
+    a.id as id_uchet,
+    a.logon_time as session_logon_time,  -- время из таблицы (если есть)
+    a.id_module,
+    a.id_user,
+    a.user_logon_time,
+    a.module_version,
+    case when a.module_version is null then null
+      when a.module_version = m.module_version then 1 else 0 end as module_actual,
+    u.name,
+    u.login,
+    v.type
+from v$session v
+left join (
+    select a.*,
+           row_number() over (
+               partition by a.sid, a.serial#
+               order by a.user_logon_time desc, a.id desc
+           ) as rn
+    from adm_user_sessions a
+) a on a.sid = v.sid and a.serial# = v.serial# and a.rn = 1
+left join adm_users u on u.id = a.id_user
+left join adm_modules m on m.id = a.id_module
+--where v.type != 'background' --and v.module is not null        -- исключаем фоновые процессы, при необходимости
+order by v.sid, v.serial#;
 
 
+create or replace view v_active_user_sessions_w_grp as
+select
+--информация по текущим сессиям (всем), включая данные из учета по сессиям учета, ч групприровкой
+    cast('grp_' || ora_hash(osuser || chr(0) || machine || chr(0) || module) as varchar2(100)) as id,
+    v.osuser,
+    v.machine,
+    v.module,
+    -- для sid: если все sid в группе одинаковы, то вывести его, иначе null
+    case when min(v.sid) = max(v.sid) then min(v.sid) else null end as sid,
+    case when min(v.serial#) = max(v.serial#) then min(v.serial#) else null end as serial#,
+    case when min(v.logon_time) = max(v.logon_time) then min(v.logon_time) else null end as logon_time,
+    case when min(v.username) = max(v.username) then min(v.username) else null end as username,
+    case when min(v.type) = max(v.type) then min(v.type) else null end as type,
+    -- поля из a (adm_user_sessions)
+    case when min(a.id) = max(a.id) then min(a.id) else null end as id_uchet,
+    case when min(a.logon_time) = max(a.logon_time) then min(a.logon_time) else null end as session_logon_time,
+    case when min(a.id_module) = max(a.id_module) then min(a.id_module) else null end as id_module,
+    case when min(a.id_user) = max(a.id_user) then min(a.id_user) else null end as id_user,
+    case when min(a.user_logon_time) = max(a.user_logon_time) then min(a.user_logon_time) else null end as user_logon_time,
+    case when min(a.module_version) = max(a.module_version) then min(a.module_version) else null end as module_version,
+    case when min(a.module_version) is null then null
+      when min(a.module_version) = min(m.module_version) then 1 else 0 end as module_actual,
+    -- поля из u (adm_users)
+    case when min(u.name) = max(u.name) then min(u.name) else null end as name,
+    case when min(u.login) = max(u.login) then min(u.login) else null end as login,
+    count(*) as session_count   -- добавим для информации
+from v$session v
+left join (
+    select a.*,
+           row_number() over (partition by a.sid, a.serial# order by a.user_logon_time desc, a.id desc) as rn
+    from adm_user_sessions a
+) a on a.sid = v.sid and a.serial# = v.serial# and a.rn = 1
+left join adm_users u on u.id = a.id_user
+left join adm_modules m on m.id = a.id_module
+--where v.type != 'background'  -- опционально
+group by v.osuser, v.machine, v.module
+order by v.osuser, v.machine, v.module;
 
 
 --возвращает 1, если 

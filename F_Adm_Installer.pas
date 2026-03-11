@@ -66,6 +66,7 @@ type
     procedure Bt_OkClick(Sender: TObject);
     procedure Timer2Timer(Sender: TObject);
     procedure Dbg_PrevInstallAfterScroll(DataSet: TDataSet);
+    procedure Dbg_PrevInstallCellClick(Column: TColumnEh);
   private
     { Private declarations }
     //список файлов для копирования в исходники
@@ -97,6 +98,7 @@ const
   PATH_DST = '\\10.1.1.14\Uchet\Учет';
   //путь репозитория (должен начинаться со слеша, если не пустой
   PATH_LAUNCHER_STORAGE = '\launcher_storage\Uchet';
+  PATH_APPLICATION_STORAGE = '\Application';
 
 {$R *.dfm}
 
@@ -225,7 +227,13 @@ end;
 procedure TForm_Adm_Installer.Dbg_PrevInstallAfterScroll(DataSet: TDataSet);
 begin
   inherited;
-//1  mem_PrevInstalllcomment.Text:=Dbg_PrevInstall.DataSource.DataSet.FieldByName('comm').AsString;
+  mem_PrevInstalllcomment.Text:=Dbg_PrevInstall.DataSet.FieldByName('comm').AsString;
+end;
+
+procedure TForm_Adm_Installer.Dbg_PrevInstallCellClick(Column: TColumnEh);
+begin
+  inherited;
+  mem_PrevInstalllcomment.Text:=Dbg_PrevInstall.DataSet.FieldByName('comm').AsString;
 end;
 
 function TForm_Adm_Installer.Prepare: Boolean;
@@ -346,6 +354,10 @@ begin
       pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
       pwidechar(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe'), False
     );
+    Result := Result and CopyFile(
+      pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
+      pwidechar(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe'), False
+    );
     {$R+}
     if (Result) or (cmb_Module.Value = '0') then begin
       InInstall := False;
@@ -370,7 +382,8 @@ begin
         'insert into adm_install_log (id_module, compile_dt, ver, comm) values (:id_module$i, :compile_dt$s, :ver$s, :comm$s)',
         [Cth.GetcontrolValue(cmb_Module), Cth.GetcontrolValue(edt_DtCompiled), Cth.GetcontrolValue(edt_Version), Cth.GetcontrolValue(mem_Comment)]
       );
-      Bt_Ok.Enabled := True;
+     Q.QExecSql('update adm_modules set module_version = :version$s where id = :id$i', [Cth.GetcontrolValue(edt_Version) + ' (' + Cth.GetcontrolValue(edt_DtCompiled) + ')', Cth.GetControlValue(cmb_Module)]);
+  Bt_Ok.Enabled := True;
       cmb_Module.Enabled := True;
       mem_Comment.Enabled := True;
       edt_SrcPath.Enabled := True;

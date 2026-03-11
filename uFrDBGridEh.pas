@@ -1033,6 +1033,8 @@ type
     procedure GetGridDimensions(var AWidth, AHeight: Integer);
     //тестовая процедура
     procedure Test;
+    function  TestCompareFC: Boolean;
+
 
     {функции, вызываемые событиями во время работы или настройки фрейма}
 
@@ -1918,8 +1920,10 @@ begin
   if (Key = VK_F3) then
     DbGridEh1.DefaultApplyFilter;
   //подсказка по столбцу
-  if (Key = VK_F1) then
+  if (Key = VK_F1) then begin
+    TestCompareFC; //---
     ShowColumnInfo;
+  end;
   //скопировать в буфер текущее значение
   if (Key = Ord('C')) and (Shift = [ssCtrl]) then
     Clipboard.AsText := S.NSt(GetValue);
@@ -3180,8 +3184,12 @@ begin
     DBGridEh1.AutoFitColWidths := False;
   DBGridEh1.FooterRowCount := 0;
   DBGridEh1.SumList.Active := False;
-  for i:= 0 to DBGridEh1.Columns.Count - 1 do begin
-    col := DBGridEh1.Columns[i];
+//  for i:= 0 to DBGridEh1.Columns.Count - 1 do begin
+//    col := DBGridEh1.Columns[i];
+  for i:= 0 to High(Opt.Sql.Fields) do begin
+    col := DBGridEh1.FindFieldColumn(Opt.Sql.Fields[i].Name);
+    if col = nil then
+      Continue;
     if not FIsPrepared then begin
       //настройки по умолчанию, прописанные в коде. только после первого открытия грида
       col.AutoFitColWidth := False;
@@ -3304,6 +3312,7 @@ begin
       va := A.Explode(Opt.Sql.Fields[i].FPic, ':') + ['', '', ''];
       if va[0] = '' then va[0] := '1';
       if va[1] = '' then va[1] := '1';
+      var ttt := Opt.Sql.Fields[i].Name;
       Gh.SetGridInCellImagesAdd(DbGridEh1, [[col.FieldName + S.IIfStr(va[2] = '+', '+'), va[0], va[1], true, 0 {это Il_All16}]])
     end;
     if Opt.Sql.Fields[i].FFormat <> '' then begin
@@ -4395,6 +4404,21 @@ begin
     if DBGridEh1.Columns[i].Visible then
       cl := cl + DBGridEh1.Columns[i].Width + 1;
   AWidth := cl + 5 + S.IIf(DBGridEh1.VertScrollBar.Visible, 23 , 0);
+end;
+
+
+function TFrDBGridEh.TestCompareFC: Boolean;
+var
+  fr: TFrDBGridRecFieldsList;
+begin
+  for var i := 0 to DbGridEh1.Columns.Count - 1 do begin
+    fr := FOpt.GetFieldRec(DBGridEh1.Columns[i].FieldName);
+    if fr.Name <> S.tolower(DbGridEh1.Columns[i].FieldName) then begin
+//    if fr.Caption <> S.tolower(DbGridEh1.Columns[i].Title.Caption) then begin
+      MyInfoMessage('!!!');
+      Exit;
+    end;
+  end;
 end;
 
 
