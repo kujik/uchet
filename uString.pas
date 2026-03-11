@@ -334,7 +334,7 @@ type
     //преобразование даты, включая временнУю часть, в строку соотв формату даты в выбранной БД
     function SQLDateTime(const ADateTime: TDateTime): AnsiString;
     //получить из полного имени поля field$i только само имя
-    function FieldNameOnly(const AValue: string): string;
+    function GetFieldNameOnly(const AValue: string): string;
 
     //-------------------- математические ------------------------------------------
 
@@ -862,7 +862,7 @@ begin
     if ADigits = 0 then
       Result := (lSepPos = 0)
     else
-      Result := (Length(AStr) - lSepPos) <= ADigits;
+      Result := (lSepPos = 0) or ((Length(AStr) - lSepPos) <= ADigits);
   end;
 end;
 
@@ -1818,7 +1818,7 @@ begin
   Result := AnsiString(Format('%.4d%.2d%.2d%.2d%.2d%.2d', [y, m, d, h, n, s]));
 end;
 
-function TMyStringHelper.FieldNameOnly(const AValue: string): string;
+function TMyStringHelper.GetFieldNameOnly(const AValue: string): string;
 //получить из полного имени поля field$i только само имя
 var
   DollarPos: Integer;

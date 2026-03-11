@@ -614,7 +614,7 @@ begin
     //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_AQnt')).Checked, '(prc_qnt <= aprc_qnt)', ''),
     //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_ANeedM')).Checked, '((need_m < 0)or(prc_need_m <= -aprc_need_m or prc_need_m >= aprc_need_m))', ''),
     S.IIfStr((Fr.GetControlValue('ChbCatAll') = 0) and (Length(FCategoryesSelf) > 0),
-      '(id_category = ' + VarToStr(Fr.GetControlValue('CbCategory')) + S.IIfStr(Fr.GetControlValue('ChbCatEmpty') = 1, ' or id_category is null') + ')')
+      '(id_category = ' + IntToStr(Fr.GetControlValue('CbCategory').AsIntegerM) + S.IIfStr(Fr.GetControlValue('ChbCatEmpty') = 1, ' or id_category is null') + ')')
     ], ' and '
   );
 end;

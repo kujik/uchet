@@ -144,7 +144,6 @@ end;
 /
 
 --------------------------------------------------------------------------------
-drop table prod_calc_boards cascade constraints;
 create table prod_calc_boards(
   id number(11),
   id_prod_calc_item number(11),
@@ -193,8 +192,6 @@ where
   and t.id_facing_name = n2.id_nomencl (+)
 ;   
 
-select * from v_prod_calc_boards;
- 
 --------------------------------------------------------------------------------
 create table prod_calc_edges(
   id number(11),
@@ -230,6 +227,7 @@ where
 
 
 --------------------------------------------------------------------------------
+alter table prod_calc_profiles add width number;
 create table prod_calc_profiles(
   id number(11),
   id_prod_calc_item number(11),
@@ -239,9 +237,14 @@ create table prod_calc_profiles(
   info varchar2(400),
   price0 number,
   length number,
+  width number,
   waste number,
   qnt number,
   markup number,     
+  id_facing_name number,
+  facing_waste number,
+  facing_price0 number,
+  facing_markup number,     
   constraint pk_prod_calc_profiles primary key (id),
   constraint fk_prod_calc_profiles_pci foreign key (id_prod_calc_item) references prod_calc_items(id) 
 );
@@ -256,12 +259,15 @@ end;
 
 create or replace view v_prod_calc_profiles as select
   t.*,
-  n.name
+  n.name,
+  n2.name as facing_name
 from   
  prod_calc_profiles t,
- dv.nomenclatura n
+ dv.nomenclatura n,
+ dv.nomenclatura n2
 where
   t.id_name = n.id_nomencl
+  and t.id_facing_name = n2.id_nomencl (+)
 ;   
 
 

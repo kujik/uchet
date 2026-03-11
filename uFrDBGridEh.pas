@@ -896,6 +896,8 @@ type
     procedure Last;
     //установка фокуса грида на переданную строку, с нул€
     procedure SetRow(ARow: Integer);
+    //проверить, есть ли столбец с таким наименованием
+    function  IsFieldExists(FieldName: string): Boolean;
     //установка фокуса грида на переданную строку, с единицы
     procedure SetRecNo(ARecNo: Integer);
     //получить значение пол€ в текущей строке грида
@@ -2385,7 +2387,8 @@ end;
 procedure TFrDBGridEh.CellButtonClick(Sender: TObject; var Handled: Boolean);
 //событи€ клика кнопки в €чейке
 begin
-  if Assigned(FOnCellButtonClick) and (IsNotEmpty) then
+  //вызываем событие нажати€ кнопки, если гри непусутой, или дл€ кнопки указано вызывать при пустом грижде (заголовок начинаетс€ с '-')
+  if Assigned(FOnCellButtonClick) and (IsNotEmpty or (Copy(FOpt.GetFieldRec(CurrField).FBt, 1, 1) = '-')) then
     FOnCellButtonClick(Self, No, Sender, Handled);
 end;
 
@@ -2691,6 +2694,17 @@ begin
   MemTableEh1.RecNo := ARecNo;
 end;
 
+function TFrDBGridEh.IsFieldExists(FieldName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to High(FOpt.Sql.Fields) do
+    if S.CompareStI(FOpt.Sql.Fields[i].Name, S.GetFieldNameOnly(FieldName)) then begin
+      Result := True;
+      Exit;
+    end;
+end;
 
 function TFrDBGridEh.GetValue(FieldName: string = ''): Variant;
 //получить значение пол€ в текущей строке грида
@@ -2700,7 +2714,7 @@ begin
     Exit;
   if FieldName = '' then
     FieldName := GetCurrField;
-  Result := MemTableEh1.FieldByName(S.FieldNameOnly(FieldName)).Value;
+  Result := MemTableEh1.FieldByName(S.GetFieldNameOnly(FieldName)).Value;
 end;
 
 function TFrDBGridEh.GetValueI(FieldName: string = ''): Integer;
@@ -2727,9 +2741,9 @@ function TFrDBGridEh.GetValue(FieldName: string; Pos: Integer; Filtered: Boolean
 //получить значение пол€ из внутреннего массива (отфильтрованных или всех зщаписей)
 begin
   if Filtered then
-    Result := MemTableEh1.RecordsView[Pos].DataValues[S.FieldNameOnly(FieldName), dvvValueEh]
+    Result := MemTableEh1.RecordsView[Pos].DataValues[S.GetFieldNameOnly(FieldName), dvvValueEh]
   else
-    Result := MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[S.FieldNameOnly(FieldName), dvvValueEh];
+    Result := MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[S.GetFieldNameOnly(FieldName), dvvValueEh];
 end;
 
 function TFrDBGridEh.GetValueI(FieldName: string; Pos: Integer; Filtered: Boolean = true): Integer;
@@ -3277,7 +3291,7 @@ begin
       va := A.Explode(Opt.Sql.Fields[i].FBt, ';');
       for j := 0 to High(va) do begin
         //параметры кнопки через :
-        //заголовок
+        //заголовок; если начинаетс€ с "-" то кнопка будет нажитматьс€ и в пустом гриде
         //тип кнопки, если пустой то эллипсе, если число то картинка, иначе по сокращени€м ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud'], иначе это текст на кнопке
         //если l то выравнивание по левому краю
         //если h, то кнопка скрываетс€ когда на нее не наведена мышка
@@ -3300,7 +3314,10 @@ begin
         if va1[2] <> 'l'
           then ebtp := ebhpRightEh
           else ebtp := ebhpLeftEh;
-        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, va1[0], CellButtonClick, ebtp, ebt, k , st, va1[3] = 'h', va1[4], S.NInt(va1[5]));
+        var LBtCaption := va1[0];
+        if Pos('-', LBtCaption) = 1 then
+          LBtCaption := Copy(LBtCaption, 2);
+        Gh.SetGridInCellButtons(DBGridEh1, col.FieldName, LBtCaption, CellButtonClick, ebtp, ebt, k , st, va1[3] = 'h', va1[4], S.NInt(va1[5]));
       end;
     end;
     if Opt.Sql.Fields[i].FPic <> '' then begin

@@ -864,6 +864,8 @@ begin
       3: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий согласовывающего', null, FInEditMode and FRgsEdit3);
       4: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к премии', null, FInEditMode and FRgsEdit1);
       5: Cth.SetButtonState(Frg2, mbtComment, 'Комментарий к депремированию', null, FInEditMode and FRgsEdit1);
+      else
+        Cth.SetButtonState(Frg2, mbtComment, 'Комментарий', null, False);
     end;
   end;
 end;

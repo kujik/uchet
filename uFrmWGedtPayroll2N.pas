@@ -314,6 +314,7 @@ begin
     for var i := na.High downto 0 do
       for var j := 0 to nadel.High do
         if (na.G(i, 'id_employee') = nadel.G(j, 'id_employee')) and (na.G(i, 'id_organization') = nadel.G(j, 'id_organization')) and (na.G(i, 'personnel_number') = nadel.G(j, 'personnel_number')) then begin
+          FDeletedWorkers := FDeletedWorkers + [na.G(i, 'id')];
           Delete(na.V, i ,1);
           FIsChanged := True;
           Break;
