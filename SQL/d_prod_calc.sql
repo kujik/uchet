@@ -182,13 +182,18 @@ end;
 
 create or replace view v_prod_calc_boards as select
   t.*,
-  n.name
+  n.name,
+  n2.name as facing_name
 from   
  prod_calc_boards t,
- dv.nomenclatura n
+ dv.nomenclatura n,
+ dv.nomenclatura n2
 where
   t.id_name = n.id_nomencl
+  and t.id_facing_name = n2.id_nomencl (+)
 ;   
+
+select * from v_prod_calc_boards;
  
 --------------------------------------------------------------------------------
 create table prod_calc_edges(

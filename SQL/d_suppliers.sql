@@ -2181,7 +2181,7 @@ where
   and p.id = ss.id_nomencl
   and s.id_inbill = ss.id_inbill
   and ss.ibprice <> 0
-  and ss.ibprice < p.price_check
+  and ss.ibprice < nvl(p.price_check, 1000000000)
 )
 group by id_nomencl    
 ;   
