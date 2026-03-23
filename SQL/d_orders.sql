@@ -1829,7 +1829,7 @@ order by ep.id_order, ep.pos
 
 select pos from order_items where id_order = -105;
 --поправить так (подстваить айди шаблона и pos из запроса выше)
-update order_items set pos = pos - 1 where id_order = -154 and pos > 1;
+update order_items set pos = pos - 1 where id_order = -175 and pos > 1;
 
 
 select id from order_reglaments;

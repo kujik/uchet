@@ -127,9 +127,9 @@ select
   'Конструктор' as type,
   u.name,
   u.id as id_user,
-  o.dt_beg + ri.day_end as dt_by_reglament,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,
   oi.dt_kns as dt_fact,
-  -(nvl(oi.dt_kns, trunc(sysdate)) - (o.dt_beg + ri.day_end)) as overdue_days 
+  -(nvl(oi.dt_kns, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
 from
   v_orders o,
   v_order_items oi,
@@ -154,9 +154,9 @@ select
   'Технолог' as type,
   u.name,
   u.id as id_user,
-  o.dt_beg + ri.day_end as dt_by_reglament,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,
   oi.dt_thn as dt_fact,
-  -(nvl(oi.dt_thn, trunc(sysdate)) - (o.dt_beg + ri.day_end)) as overdue_days 
+  -(nvl(oi.dt_thn, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
 from
   v_orders o,
   v_order_items oi,

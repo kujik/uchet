@@ -1261,10 +1261,10 @@ v:=True;
       ['slash$s','№ заказа','100'],
       ['itemname','Изделие','400;h'],
       ['dt_beg$dt','Дата создания','80'],
-      ['dt_otgr$dt','Дата создания','80'],
+      ['dt_otgr$dt','Дата отгрузки','80'],
       ['project$s','Проект','180;h'],
       ['customer$s','Покупатель','180;h'],
-      ['type','Оперыция','90'],
+      ['type','Операция','90'],
       ['name','Работник','120'],
       ['dt_by_reglament','Дата по регламенту','90'],
       ['dt_fact','Дата фактическая','90'],
@@ -1272,7 +1272,8 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_rep_orders_overdue_kns_thn');
     Frg1.Opt.SetButtons(1, 'rfs');
-    Frg1.Opt.FilterRules := [[], ['dt_beg']];
+    Frg1.CreateAddControls('1', cntCheck, 'Только просрочка', 'ChbOverdue', '', 4, yrefC, 150);
+    Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_by_reglament;dt_fact']];
     Frg1.InfoArray:=[[
        Caption + '.'#13#10 +
        'В отчете отображается информация по датам выполнению операций конструкторами и технологами с изделиями заказов'#13#10 +
@@ -1355,6 +1356,7 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_order_items');
     Frg1.Opt.SetWhere('where id_order in (' + AddParam + ') and qnt > 0 order by slash');
+    Frg1.Opt.SetButtons(1, 'rs');
   end
   else if FormDoc = myfrm_R_Or_ItmExtNomencl then begin
     Caption:='Расширенный справочник номенклатуры ИТМ';
@@ -2867,6 +2869,8 @@ begin
     SqlWhere := S.IIfStr(Cth.GetControlValue(Fr, 'ChbFromItm') = 1, 'id_itm is not null')
   else if FormDoc = myfrm_Rep_Order_Complaints then
     SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'is_complaint = 1', 'id > 0'], ' and ')
+  else if FormDoc = myfrm_Rep_Orders_Overdue_Kns_Thn then
+    SqlWhere := S.IIfStr(Cth.GetControlValue(Fr, 'ChbOverdue') = 1, 'overdue_days < 0')
   else if FormDoc = myfrm_J_InvoiceToSgp then
     Fr.SetSqlParameters('area$i', [S.NNum(Fr.GetControlValue('CbArea'))])
   else if FormDoc = myfrm_R_Itm_InGroup_Nomencl then
@@ -3086,7 +3090,8 @@ begin
     myfrm_J_Sgp_Acts,
     myfrm_J_InvoiceToSgp,
     myfrm_J_Tasks,
-    myfrm_J_SplDealsMonitoring
+    myfrm_J_SplDealsMonitoring,
+    myfrm_Rep_Orders_Overdue_Kns_Thn
     ])
   then Fr.RefreshGrid;
   except on E: Exception do Application.ShowException(E);
@@ -3409,7 +3414,7 @@ end.
       //если ничего не задано, то будет галка для значения "1", если задан только один параметр, то будет галка для него
 
         //параметры кнопки через :
-        //заголовок
+        //заголовок, если начинается с - то кнопка будет активной и в пустом гриде
         //тип кнопки, если пустой то эллипсе, если число то картинка, иначе по сокращениям ['dd', '', 'g', 'ud' ,'+', '-', 'add', 'aud'], иначе это текст на кнопке
         //если l то выравнивание по левому краю
         //если h, то кнопка скрывается когда на нее не наведена мышка
@@ -3430,6 +3435,13 @@ end.
   Frg1.SetInitData(NamedArr);
   //при этом автоматом установится и тип работы грида с массивом, и загрузится данный массив при обновлении.
   //эту же функцию можно использовать для формирования данных по кнопке, после чего вызвать RefreshGrid
+
+
+Правила фильра заданы в свойстве TFrDBGridEh.Opt.FilterRules
+[[текст_дополнения_общей_подсказки, {подсказки_чекбоксов_не _реализовано}],
+ ['dtfield1;dtfieldN'],
+ [заголовок, {имя_контрола}, {sql-правило}, {True/False}], [...]
+]
 
 
 *)

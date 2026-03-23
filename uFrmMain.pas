@@ -686,13 +686,13 @@ begin
     ['Журнал приёмки ОТК', myfrm_J_OrderStages_Otk, User.Roles([], [rOr_J_OrderStages_Otk_V, rOr_J_OrderStages_Otk_Ch])],
     ['Журнал накладных перемещения на СГП', myfrm_J_InvoiceToSgp, User.Roles([], [rOr_J_InvoiceToSGP_V, rOr_J_InvoiceToSgp_Ch_M, rOr_J_InvoiceToSgp_Ch_S])],
     ['Журнал приёмки на СГП', myfrm_J_OrderStages_ToSgp, User.Roles([], [rOr_J_OrderStages_ToSgp_V, rOr_J_OrderStages_ToSgp_Ch])],
-    ['Журнал отгрузки с СГП', myfrm_J_OrderStages_FromSgp, User.Roles([], [rOr_J_Pdo_Order_Stage_Dates, rOr_J_Pdo_Order_Stage_Dates_Ch])],
+    ['Журнал отгрузки с СГП', myfrm_J_OrderStages_FromSgp, User.Roles([], [rOr_J_OrderStages_FromSgp_V, rOr_J_OrderStages_FromSgp_Ch])],
     ['Журнал монтажа', myfrm_J_Or_Montage, User.Roles([], [rOr_J_OrderStages_Montage_V, rOr_J_OrderStages_Montage_Ch])],
     [],
     ['Платежи по заказам', myfrm_J_OrPayments, User.Roles([], [rOr_J_OrPayments_V, rOr_J_OrPayments_Ch])],
     ['Промежуточные платежи по заказам', myfrm_J_OrPayments_N, User.Roles([], [rOr_J_OrPayments_N_V, rOr_J_OrPayments_N_Ch]) and False], //!!!
     [],
-    ['Планирование - даты заказа', myfrm_J_Pdo_Order_Stage_Dates, User.Roles([], [rOr_J_OrPayments_V, rOr_J_OrPayments_Ch])],
+    ['Планирование - даты заказа', myfrm_J_Pdo_Order_Stage_Dates, User.Roles([], [rOr_J_Pdo_Order_Stage_Dates, rOr_J_Pdo_Order_Stage_Dates_Ch])],
 
     ['Отчеты'],
     ['Текущее состояние СГП (стандартные изделия)', myfrm_Rep_Sgp, User.Roles([], [rOr_Rep_Sgp_V])],
