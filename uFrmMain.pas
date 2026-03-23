@@ -686,11 +686,13 @@ begin
     ['Журнал приёмки ОТК', myfrm_J_OrderStages_Otk, User.Roles([], [rOr_J_OrderStages_Otk_V, rOr_J_OrderStages_Otk_Ch])],
     ['Журнал накладных перемещения на СГП', myfrm_J_InvoiceToSgp, User.Roles([], [rOr_J_InvoiceToSGP_V, rOr_J_InvoiceToSgp_Ch_M, rOr_J_InvoiceToSgp_Ch_S])],
     ['Журнал приёмки на СГП', myfrm_J_OrderStages_ToSgp, User.Roles([], [rOr_J_OrderStages_ToSgp_V, rOr_J_OrderStages_ToSgp_Ch])],
-    ['Журнал отгрузки с СГП', myfrm_J_OrderStages_FromSgp, User.Roles([], [rOr_J_OrderStages_FromSgp_V, rOr_J_OrderStages_FromSgp_Ch])],
+    ['Журнал отгрузки с СГП', myfrm_J_OrderStages_FromSgp, User.Roles([], [rOr_J_Pdo_Order_Stage_Dates, rOr_J_Pdo_Order_Stage_Dates_Ch])],
     ['Журнал монтажа', myfrm_J_Or_Montage, User.Roles([], [rOr_J_OrderStages_Montage_V, rOr_J_OrderStages_Montage_Ch])],
     [],
     ['Платежи по заказам', myfrm_J_OrPayments, User.Roles([], [rOr_J_OrPayments_V, rOr_J_OrPayments_Ch])],
     ['Промежуточные платежи по заказам', myfrm_J_OrPayments_N, User.Roles([], [rOr_J_OrPayments_N_V, rOr_J_OrPayments_N_Ch]) and False], //!!!
+    [],
+    ['Планирование - даты заказа', myfrm_J_Pdo_Order_Stage_Dates, User.Roles([], [rOr_J_OrPayments_V, rOr_J_OrPayments_Ch])],
 
     ['Отчеты'],
     ['Текущее состояние СГП (стандартные изделия)', myfrm_Rep_Sgp, User.Roles([], [rOr_Rep_Sgp_V])],
@@ -705,9 +707,11 @@ begin
     ['Отчет по изделиям в заказах', myfrm_Rep_SnCalendar_Orders_QntItems, User.Roles([], [rOr_Rep_Orders_QntItems])],
     ['Общая смета по выбранным заказам', '_', User.Roles([], [rOr_Rep_Orders_QntItems])],
     [],
-    ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
+    ['Выполнение сроков конструкторами/технологами', myfrm_Rep_Orders_Overdue_Kns_Thn, User.Roles([], [rOr_Rep_Orders_Overdue_Kns_Thn])],
     [],
-    ['Отчет по транспортным счетам', myfrm_Rep_SnCalendar_Transport, A.InArray(User.GetLogin, ['sprokopenko','sa','dir_proizv','assistant'])],     //!!!временно
+    ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
+    //[],
+    //['Отчет по транспортным счетам', myfrm_Rep_SnCalendar_Transport, A.InArray(User.GetLogin, ['sprokopenko','sa','dir_proizv','assistant'])],     //!!!временно
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

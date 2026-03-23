@@ -56,10 +56,8 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
-                ExplicitHeight = 120
                 inherited PRowDetailPanel: TPanel
                   Width = 44
                   ExplicitWidth = 44

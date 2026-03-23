@@ -129,6 +129,7 @@ begin
     ['e_qnt_order_opt$i','_eoo','40'],
     ['e_qnt_order$i','_eqo','40'],
 
+    ['active$i','V','70','pic','t=3'],
     ['id_category$i','Категория','80;L'],
     ['artikul$s','Номенклатура|Артикул','80'],
     ['name$s','Номенклатура|Наименование','180'],
@@ -190,13 +191,18 @@ begin
   Frg1.Opt.SetTable('v_spl_minremains');
 
   //кнопки (формирование заявки только для тех у кого права на изменение)
-  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtParams, User.Role(rOr_Other_R_MinRemains_Ch)],[mbtGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],[],
-    [-mbtCustom_SetCategory],
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],
+    [mbtParams, User.Role(rOr_Other_R_MinRemains_Ch)],[mbtGridSettings,User.Role(rOr_Other_R_MinRemains_ViewReports)],
+    [],[-mbtCustom_SetCategory],
     [],[-1003,True,'Выбрать заказы'],[],
     [-mbtCustom_SnRecalcPlannedEst, User.Role(rOr_Other_R_MinRemains_Ch), 'Пересчитать плановую потребность'],
-    [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'], [-mbtCustom_SetOnWayPeriod],
+    [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'],
+    [-mbtCustom_SetOnWayPeriod],
+    [-1004,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить минимальный остаток'],
+    [-1005,User.Role(rOr_Other_R_MinRemains_Ch),'Пропроставить признак "Активный"'],
     [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
-    [],[mbtExcelView],[-1001, True,'Просмотреть историю'],[],[mbtGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[mbtCtlPanel]
+    [],[mbtExcelView],[-1001, True,'Просмотреть историю'],[],[mbtGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[mbtCtlPanel],
+    [],[-mbtTest, User.IsDeveloper]
   ]);
   Frg1.Opt.SetButtonsIfEmpty([1003]);
 
@@ -211,6 +217,7 @@ begin
   Frg1.CreateAddControls('1', cntComboLK, 'Категория', 'CbCategory', '', 420, yrefC, 180);
   Frg1.CreateAddControls('1', cntCheck, 'Пустые', 'ChbCatEmpty', '', 620 , yrefC, 80);
   Frg1.CreateAddControls('1', cntCheck, 'Все', 'ChbCatAll', '', 620 + 80, yrefC, 40);
+  Frg1.CreateAddControls('1', cntCheck, 'Только активные', 'ChbActive', '', 620 + 80 + 150, yrefC, 130);
 //  Frg1.ReadControlValues;
 
   Frg2.Opt.SetFields([
@@ -416,8 +423,42 @@ var
   va1, va2: TVarDynArray;
   b: Boolean;
   st: string;
+  LIds: TVarDynArray;
 begin
-  if Tag = mbtGo then begin
+  if Tag = mbtTest then begin
+    Q.QBeginTrans(True);
+    //Q.QInsertRowsIfNotExists('spl_itm_nom_props', 'id', (Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1).Col(0)));
+    //Q.QDeleteRows('spl_itm_nom_props', 'id', (Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1).Col(0)));
+    Q.QRollbackTrans;
+  end
+  else if Tag = 1004 then begin
+    if not (User.Roles([], [rOr_Other_R_MinRemains_Ch]) and not FLockEdit) then
+      Exit;
+    LIds := Fr.GetSetlectedIds;
+    if LIds.Count = 0 then
+      MyInfoMessage('Отметьте необходимые позиции.')
+    else if MyQuestionMessage('Очистить минимальные остатки у ' + S.GetEndingFull(LIds.Count, 'позици', 'и', 'й', 'й') + '?') = mrYes then begin
+      Q.QBeginTrans(True);
+      Q.QUpdateRows('dv.nomenclatura', 'id_nomencl', LIds, 'min_ostatok$f', [null]);
+      Q.QCommitTrans;
+    end;
+  end
+  else if Tag = 1005 then begin
+    if not (User.Roles([], [rOr_Other_R_MinRemains_Ch]) and not FLockEdit) then
+      Exit;
+    LIds := Fr.GetSetlectedIds;
+    if LIds.Count = 0 then
+      MyInfoMessage('Отметьте необходимые позиции.')
+    else begin
+      var LRes := MyMessageDlg('Заждать признак "Активна" у ' + S.GetEndingFull(LIds.Count, 'позици', 'и', 'й', 'й') + '?', mtConfirmation, [mbYes, mbNo, mbCancel], 'Установить;Сбросить;Отмена');
+      if LRes <> mrCancel then begin
+        Q.QBeginTrans(True);
+        Q.QUpdateRows('spl_itm_nom_props', 'id', LIds, 'active$f', [S.IIf(LRes = mrYes, 1, 0)]);
+        Q.QCommitTrans;
+      end;
+    end;
+  end
+  else if Tag = mbtGo then begin
     CreateDemand;
   end
   else if Tag = mbtTest then begin
@@ -613,6 +654,7 @@ begin
     //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_AMinOst')).Checked, '(prc_min_ost <= -aprc_min_ost or prc_min_ost >= aprc_min_ost)', ''),
     //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_AQnt')).Checked, '(prc_qnt <= aprc_qnt)', ''),
     //S.IIf(TDbCheckBoxEh(Self.FindComponent('chb_ANeedM')).Checked, '((need_m < 0)or(prc_need_m <= -aprc_need_m or prc_need_m >= aprc_need_m))', ''),
+    S.IIfStr((Fr.GetControlValue('ChbActive') = 1), 'active = 1'),
     S.IIfStr((Fr.GetControlValue('ChbCatAll') = 0) and (Length(FCategoryesSelf) > 0),
       '(id_category = ' + IntToStr(Fr.GetControlValue('CbCategory').AsIntegerM) + S.IIfStr(Fr.GetControlValue('ChbCatEmpty') = 1, ' or id_category is null') + ')')
     ], ' and '

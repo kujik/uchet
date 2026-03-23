@@ -433,6 +433,7 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 ExplicitHeight = 8
@@ -555,9 +556,9 @@ inherited FrmCDedtAccount: TFrmCDedtAccount
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
-                ExplicitHeight = 0
                 inherited PRowDetailPanel: TPanel
                   Width = 44
                   Height = 0

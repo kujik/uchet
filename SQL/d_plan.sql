@@ -87,3 +87,87 @@ begin
 end;
 / 
 
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+drop table pdo_order_stage_dates cascade constraints;
+create table pdo_order_stage_dates (
+  id number(11),
+  constraint pk_pdo_order_stage_dates primary key (id),
+  constraint fk_pdo_order_stage_dates_id foreign key (id) references order_items(id) on delete cascade
+);  
+  
+drop table pdo_order_stage_dates_items cascade constraints;
+create table pdo_order_stage_dates_items (
+  --id number(11),
+  id_dates number(11),
+  id_stage number(11),
+  dt_plan date,
+  dt_fact date,
+--  constraint pk_pdo_order_stage_dates_items primary key (id),
+  constraint pk_pdo_order_stage_dates_items primary key (id_dates, id_stage),
+  constraint fk_pdo_order_stage_dates_i_1 foreign key (id_dates) references pdo_order_stage_dates(id) on delete cascade
+);  
+
+
+
+create or replace view v_rep_orders_overdue_kns_thn as 
+select
+--отчет по соблюдению сроков обработки заказов конструкторами и технологами
+  oi.slash,
+  o.dt_beg,
+  o.dt_otgr,
+  o.project,
+  o.customer,
+  oi.itemname,
+  'Конструктор' as type,
+  u.name,
+  u.id as id_user,
+  o.dt_beg + ri.day_end as dt_by_reglament,
+  oi.dt_kns as dt_fact,
+  -(nvl(oi.dt_kns, trunc(sysdate)) - (o.dt_beg + ri.day_end)) as overdue_days 
+from
+  v_orders o,
+  v_order_items oi,
+  adm_users u,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  nvl(oi.id_kns, -1) > 0
+  and o.id_reglament is not null 
+  and oi.id_order = o.id
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 1
+  and u.id = oi.id_kns and u.id > 0
+union all  
+select
+  oi.slash,
+  o.dt_beg,
+  o.dt_otgr,
+  o.project,
+  o.customer,
+  oi.itemname,
+  'Технолог' as type,
+  u.name,
+  u.id as id_user,
+  o.dt_beg + ri.day_end as dt_by_reglament,
+  oi.dt_thn as dt_fact,
+  -(nvl(oi.dt_thn, trunc(sysdate)) - (o.dt_beg + ri.day_end)) as overdue_days 
+from
+  v_orders o,
+  v_order_items oi,
+  adm_users u,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  nvl(oi.id_thn, -1) > 0
+  and o.id_reglament is not null 
+  and oi.id_order = o.id
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 2
+  and u.id = oi.id_thn and u.id > 0 
+;       

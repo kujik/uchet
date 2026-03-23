@@ -80,11 +80,12 @@ alter table spl_itm_nom_props add monitor_price number(1) default 1;
 alter table spl_itm_nom_props add mp number(1);
 update spl_itm_nom_props set monitor_price = mp;
 alter table spl_itm_nom_props add price_check_upd number(1) default 1;
-alter table spl_itm_nom_props add price_check_test number(11,2);
+alter table spl_itm_nom_props add active number(1);
 --alter table spl_itm_nom_props add planned_need_qnt number(11,3);
 --alter table spl_itm_nom_props add constraint fk_spl_itm_nom_props_category foreign key (id_category) references spl_categoryes(id);
 create table spl_itm_nom_props(
   id number(11),                    --айди номенклатуры в итм  dv.nomenclatura.id_nomencl
+  active number(1),                 --активная номенклатура
   id_category number(11),           --айди категории снабжения
   tomin number(1) default 0,        --использовать ли в мин остатках
   dt_correct date,                  --дата корректировки мин остатков
@@ -632,6 +633,7 @@ create or replace procedure P_SetSplDemandValue(
 --8 - признак наличия привязанных файлов к номенклатуре
 --9 - количество дней для закупки по плановой потребности
 --10 - флаг мониторирования цены
+--11 - активная номенклатура
   IdNomencl in number,
   PMode in number,
   PValue in number 
@@ -678,6 +680,9 @@ begin
   end if;  
   if PMode = 10 then 
     update spl_itm_nom_props set monitor_price = PValue where id = IdNomencl;
+  end if;  
+  if PMode = 11 then 
+    update spl_itm_nom_props set active = PValue where id = IdNomencl;
   end if;  
 end;
 /  
@@ -1579,6 +1584,7 @@ create or replace view v_spl_minremains as
 --вью для таблицы формирования заявок на снабжение (новый вариант) 
 select
   n.id_nomencl as id,
+  np.active,
   s1.*,
   s2.*,
   n.name as name,
@@ -2272,6 +2278,41 @@ order by
 2025-02-14
 v_spl_nom_onway_agg
 */
+
+
+select
+--выборка номенклатуры по счетам за вчерашний день
+  n.name,
+  u.name_unit,
+  s.id_schet,
+  s.control_date as dt,
+  s.date_registr,
+  s.num,
+  round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
+  round((round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum_diff, 
+  round(round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum, 
+  ss.kp_unit_sp,
+  p.price_check,
+  ss.price as price_sp,
+  ss.quantity as qnt_sp,
+  round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check as price_diff,
+  p.monitor_price  
+from
+  spl_itm_nom_props p,
+  dv.sp_schet s,
+  dv.sp_schet_spec ss,
+  dv.nomenclatura n,
+  dv.unit u
+where  
+  p.id (+) = n.id_nomencl
+  and n.id_nomencl = ss.id_nomencl
+  and s.id_schet = ss.id_sp_schet
+  and u.id_unit = n.id_unit
+  and s.control_date is not null
+  and s.date_registr >= trunc(sysdate) - 3 and s.date_registr < trunc(sysdate)
+; 
+
 
 
 

@@ -71,7 +71,7 @@ var
   va2: TVarDynArray2;
 begin
   Caption:='Журнал заказов';
-  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect{, myogGridLabels}, myogRowDetailPanel, myogLoadAfterVisible];
+  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogRowDetailPanel, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
     ['id$i','_id','d=40'],
     ['id_itm$i','_id_itm','40'],
@@ -146,6 +146,8 @@ begin
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [-1001, True, 'Пересчитать данные для производства'], [],
    [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [],
    [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[-1004, User.Role(rOr_J_Orders_ToDevelThn), 'Добавить в журнал проверки'],
+   [],
+   [-1005, True, 'Просмотр выбранных по слешам'],
    [],
    [mbtTest, User.IsDeveloper],
    [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [],
@@ -254,6 +256,16 @@ begin
   end
   else if Tag = 1004 then begin
     Orders.OrderItemsToDevel(Fr.ID, null, 2);
+  end
+  else if Tag = 1005 then begin
+    //просмотр по слешам
+    va1 := Frg1.GetSetlectedIds;
+    if Length(va1) = 0 then
+      MyInfoMessage('Выберете заказы для просмотра по слешам.')
+    else if Length(va1) > 4000 then
+      MyInfoMessage('Выбрано слишком много заказов!')
+    else
+      Wh.ExecReference(myfrm_J_OrdersBySlashes, Self, [], va1.Implode(','));
   end
   else if Tag = mbtViewEstimate then begin
     //просмотр общей сметы по одному или нескольким (отмеченным чекбоксами в индикаторе) заказам

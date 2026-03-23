@@ -6,7 +6,8 @@
 alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 
 -- ТАБЛИЦА СЧЕТОВ
---alter table sn_calendar_accounts add nds number(4,2) default 0;
+--alter table sn_calendar_accounts add id_itm_schet number;
+alter table sn_calendar_accounts drop column itm_id_demand;
 --alter table sn_calendar_accounts add accounttype number(1) default 0;
 --update sn_calendar_accounts set agreed2dt=dt, receiptdt = dt;
 --alter table sn_calendar_accounts add nds number(4,2);
@@ -33,6 +34,8 @@ create table sn_calendar_accounts(
   agreed2auto number(1),        -- если 1, то согласование директора не трубуется  
   accounttype number(1) default 0,   -- тип счета по этой статье (0-обычный, 1-транспорт отгрузки, 2-транспорт снабжения, 3-подрядчик по монтажу)
   nds number(4,2),              -- ставка ндс, в % 
+  id_itm_schet number,
+  id_itm_demand number,
   constraint pk_sn_calendar_accounts primary key (id),
 --  constraint fk_sn_calendar_accounts_user foreign key (id_user) references users(id_user),
   constraint fk_sn_calendar_accounts_exp foreign key (id_expenseitem) references ref_expenseitems(id),
@@ -112,7 +115,7 @@ create sequence sq_ref_suppliers start with 10016 nocache;
 
 
 --справочник статьи расходов
---alter table ref_expenseitems add accounttype number(1) default 0;
+alter table ref_expenseitems add itm_needed number(1) default 1;
 --alter table ref_expenseitems add constraint fk_ref_expenseitems_group foreign key (id_group) references ref_grexpenseitems(id);
 --alter table ref_expenseitems drop column receipttype;
 create table ref_expenseitems(
@@ -123,6 +126,7 @@ create table ref_expenseitems(
   agreed varchar2(4000),
   recvreceipt number(1) default 0,   --обязательно требовать заявку на снабжение 
   accounttype number(1) default 0,   --тип счета по этой статье (0-обычный, 1-транспорт отгрузки, 2-транспорт снабжения
+  itm_needed number(1) default 1,    --требуется счет в итм 
   active number(1),
   constraint ref_expenseitems primary key (id),
   constraint fk_ref_expenseitems_group foreign key (id_group) references ref_grexpenseitems(id)
@@ -974,7 +978,25 @@ create or replace view v_sn_calendar_cash as select
   where
     p.id_account = a.id;
     
-select * from v_sn_calendar_payments;    
+select * from v_sn_calendar_payments;
+
+
+--------------------------------------------------------------------------------
+create or replace view v_itm_accounts as
+--список всех счетов ИТМ
+select
+   s.id_schet, s.num, date_registr, s.control_date, s.states, s.docstr, s.sum,
+   k.name_org,
+   a.id_itm_schet
+from 
+  dv.sp_schet s, 
+  dv.kontragent k,
+  sn_calendar_accounts a
+where 
+  k.id_kontragent = s.id_kontragent2
+  and a.id_itm_schet (+) = s.id_schet
+;
+    
 
 
 

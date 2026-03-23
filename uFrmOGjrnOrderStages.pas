@@ -164,9 +164,13 @@ begin
       ]);
       Frg2.Opt.SetTable('v_order_item_stages1_tosgp');
       Frg2.Opt.SetWhere('where id_order = :id_order$i and st2 is not null order by slash asc');
-      if User.Role(rOr_J_Orderstages_ToSgp_Ch) then FEditMode:=1;
+      if User.Roles([], [rOr_J_Orderstages_ToSgp_Ch, rOr_J_Orderstages_ToSgp_ChAll]) then
+        FEditMode:=1;
       Q.QSetContextValue('order_stages_dt2c', FDtEdit);
-      FDtEditMin:=Turv.GetDaysFromCalendar_Next(Date, - Orders.fDaysToSgp);
+      if User.Role(rOr_J_Orderstages_ToSgp_ChAll) then
+        FDtEditMin:=EncodeDate(2024,01,01)
+      else
+        FDtEditMin:=Turv.GetDaysFromCalendar_Next(Date, - Orders.fDaysToSgp);
     end;
     mFromSgp: begin
       Caption:='Журнал отгрузки с СГП';
@@ -186,10 +190,13 @@ begin
         ['qnt3c','Отгружено сегодня','80']
       ]);
       Frg2.Opt.SetWhere('where id_order = :id_order$i and st3 is not null order by slash asc');
-      if User.Role(rOr_J_Orderstages_FromSgp_Ch) then
+      if User.Roles([], [rOr_J_Orderstages_FromSgp_Ch, rOr_J_Orderstages_FromSgp_ChAll]) then
         FEditMode := 1;
       Q.QSetContextValue('order_stages_dt3c', FDtEdit);
-      FDtEditMin:=Turv.GetDaysFromCalendar_Next(Date, - Orders.fDaysFromSgp);
+      if User.Role(rOr_J_Orderstages_FromSgp_ChAll) then
+        FDtEditMin:=EncodeDate(2024,01,01)
+      else
+        FDtEditMin:=Turv.GetDaysFromCalendar_Next(Date, - Orders.fDaysFromSgp);
     end;
     mOtk: begin
       Caption:='Журнал приёмки ОТК';

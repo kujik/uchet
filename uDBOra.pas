@@ -33,7 +33,7 @@ type
     constructor CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = true); reintroduce;
     //установка в контексте сеайнса переданного параметра равному переданному значению
     //поскольку сессий две (для запросов и для dbgrideh, устанавливаются и в том и в том контексте
-    function QSetContextValue(Par: string; Val: Variant): Integer;
+    function  QSetContextValue(Par: string; Val: Variant): Integer;
     //запись в журнал действийй БД
     //передается имя события (процедура, таблица...) и произвольный коммент до 4000 символов
     procedure QLog(ItemName, Comm: string);
@@ -45,10 +45,17 @@ type
     //если очищать блокировки при логине пользователя, то будет некорректно работать если вход под одним пользователем с разных компов
     //блокировки для закрытых сессий сбрасываются запросом возврата блокировки, поэтомуц после закрытия программы все блокировки пользователя исчезнут автоматически
     // Mode: Integer = 0 fNone - зацикливается на подключении модулей
-    function DBLock(SetLock: Boolean; Docum: string; DocumAdd: string = ''; Msg: string = '*|*'; Mode: TDialogType = fNone) : TVarDynArray;
+    function  DBLock(SetLock: Boolean; Docum: string; DocumAdd: string = ''; Msg: string = '*|*'; Mode: TDialogType = fNone) : TVarDynArray;
     //очистить все блокироки для текущего пользователя
     procedure DBLock_ClearAll;
     procedure OraError(msg: string);
+    //ставляем в таблицу строки, которых еще нет в по значениям полей AField, переданных в AFieldValues (сколько угодно значений)
+    //TODO - реализовать поддержку типов, сейчас всегда числа!
+    function  QInsertRowsIfNotExists(const ATable, AField: string; AFieldValues: TVarDynArray): Integer;
+    function  QInsertRowIfNotExists(ATable, AFieldsSearch, AFieldsAll: string; const AFieldValuesAll: TVarDynArray): Integer;
+    //удаляет строки из таблицы, по значени полей из AFieldValues
+    function  QDeleteRows(const ATable, AField: string; AFieldValues: TVarDynArray): Integer;
+    function  QUpdateRows(const ATable, AField: string; AFieldValues: TVarDynArray; AFieldToSet: string; AFieldValuesToSet: TVarDynArray): Integer;
   end;
 
 var
@@ -228,6 +235,77 @@ begin
   QExecSql('delete from adm_locks where login = :login$s', [User.GetLogin], false);
 end;
 
+function TmyDBOra.QInsertRowsIfNotExists(const ATable, AField: string; AFieldValues: TVarDynArray): Integer;
+begin
+  Result := 0;
+  if Length(AFieldValues) = 0 then
+    Exit;
+  var LAFieldValuesArr := S.SQLSplitto1000(AFieldValues, 200);
+  for var i := 0 to High(LAFieldValuesArr) do begin
+    var LAFieldValues := LAFieldValuesArr[i].Implode(',', True);
+    Result := Q.QExecSql(
+      'insert into ' + ATable + '(' + AField + ') ' +
+      'select column_value '+
+      'from table(sys.odcinumberlist('  +LAFieldValues + ')) src '+
+      'where not exists ('+
+      '  select 1 from ' + ATable + ' where ' + ATable + '.' + AField + ' = src.column_value'+
+      ')', []
+    );
+  end;
+end;
+
+function TmyDBOra.QInsertRowIfNotExists(ATable, AFieldsSearch, AFieldsAll: string; const AFieldValuesAll: TVarDynArray): Integer;
+var
+  LFieldValuesSearch, LFieldsSearch, LFieldsAll: TVarDynArray;
+begin
+{  Result := 0;
+  if (AFieldsSearch + AFieldsAll = '') then
+    Exit;
+  if AFieldsAll = '' then
+    AFieldsAll := AFieldsSearch;
+  LFieldValuesSearch := A.Explode(AFieldsSearch, ';');
+  LFieldsAll := A.Explode(AFieldsAll, ';');
+  LFieldValuesSearch := [];
+        'insert into w_turv_day (id_employee_properties, dt, id_employee) '+
+        'select :ide$i, :dt$d, :idempl$i from dual '+
+        'where not exists '+
+        '(select 1 from w_turv_day where id_employee_properties = :ide2$i and dt = :dt2$d)',
+
+
+MERGE INTO целевая_таблица T
+USING (источник_данных) S
+ON (условие_совпадения)
+WHEN MATCHED THEN
+    UPDATE SET T.поле1 = S.значение1, T.поле2 = S.значение2, ...      --нельзя менять то чо в ON
+WHEN NOT MATCHED THEN
+    INSERT (T.поле1, T.поле2, ...) VALUES (S.значение1, S.значение2, ...);
+         }
+end;
+
+
+function TmyDBOra.QDeleteRows(const ATable, AField: string; AFieldValues: TVarDynArray): Integer;
+begin
+  Result := 0;
+  if Length(AFieldValues) = 0 then
+    Exit;
+  var LAFieldValuesArr := S.SQLSplitto1000(AFieldValues);
+  for var i := 0 to High(LAFieldValuesArr) do begin
+    var LAFieldValues := LAFieldValuesArr[i].Implode(',', True);
+    Result := Q.QExecSql('delete from ' + ATable + ' where ' + AField + ' in (' +  LAFieldValues + ')', []);
+  end;
+end;
+
+function TmyDBOra.QUpdateRows(const ATable, AField: string; AFieldValues: TVarDynArray; AFieldToSet: string; AFieldValuesToSet: TVarDynArray): Integer;
+begin
+  Result := 0;
+  if Length(AFieldValues) = 0 then
+    Exit;
+  var LAFieldValuesArr := S.SQLSplitto1000(AFieldValues);
+  for var i := 0 to High(LAFieldValuesArr) do begin
+    var LAFieldValues := LAFieldValuesArr[i].Implode(',', True);
+    Result := Q.QExecSql(QSIUDSql('Q', ATable, AFieldToSet) + ' where ' + AField + ' in (' +  LAFieldValues + ')', AFieldValuesToSet);
+  end;
+end;
 
 
 end.

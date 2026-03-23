@@ -80,4 +80,17 @@ on turtles
 begin
   pkg_around_mutation.update_painters;  
 end tr_turtles_bu;
-/ 
+/
+
+
+--вставка в таблицу элементов, которых нет в переденном списке значений поля (может быть > 1000)
+INSERT INTO test2 (t)
+SELECT column_value
+FROM TABLE(sys.odcinumberlist(1, 2, 3)) src
+WHERE NOT EXISTS (
+    SELECT 1 FROM test2 WHERE test2.t = src.column_value
+);
+
+
+SELECT column_value
+FROM TABLE(sys.odcinumberlist(10, 20, 30));

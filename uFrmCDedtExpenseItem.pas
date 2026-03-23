@@ -20,6 +20,7 @@ type
     chb_accounttype_3: TDBCheckBoxEh;
     chb_recvreceipt: TDBCheckBoxEh;
     chb_active: TDBCheckBoxEh;
+    chb_itm_needed: TDBCheckBoxEh;
   private
     function  Prepare: Boolean; override;
     function  LoadComboBoxes: Boolean; override;
@@ -56,6 +57,7 @@ begin
     ['agreed$s',''],
     ['recvreceipt$i',''],
     ['accounttype$i',''],
+    ['itm_needed$i',''],
     ['active$i','']
   ];
   View := 'v_ref_expenseitems';

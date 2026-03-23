@@ -1,16 +1,18 @@
 inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
   Caption = 'FrmOGjrnOrderStages'
   ClientHeight = 538
-  ExplicitWidth = 808
+  ClientWidth = 800
   ExplicitHeight = 576
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Width = 800
     Height = 522
     ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
+      Width = 790
       Height = 473
-      ExplicitWidth = 782
-      ExplicitHeight = 472
+      ExplicitWidth = 790
+      ExplicitHeight = 473
       inherited pnlBottom: TPanel
         Top = 427
         ExplicitTop = 426
@@ -21,11 +23,9 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
       end
       inherited pnlGrid1: TPanel
         Height = 418
-        ExplicitWidth = 772
         ExplicitHeight = 417
         inherited Frg1: TFrDBGridEh
           Height = 416
-          ExplicitWidth = 770
           ExplicitHeight = 415
           inherited pnlGrid: TPanel
             Height = 362
@@ -38,6 +38,7 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
             inherited pnlStatusBar: TPanel
               Top = 340
               Width = 762
+              ExplicitTop = 339
             end
           end
           inherited pnlLeft: TPanel
@@ -67,9 +68,7 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
       inherited pnlFrg2: TPanel
         Top = 432
         ExplicitTop = 431
-        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               Width = 772
@@ -101,14 +100,14 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
     end
     inherited pnlFrmBtns: TPanel
       Top = 478
-      ExplicitTop = 477
+      Width = 790
     end
   end
   inherited pnlStatusBar: TPanel
     Top = 522
+    Width = 800
     ExplicitTop = 521
     inherited lblStatusBarR: TLabel
-      Left = 723
       Height = 14
     end
     inherited lblStatusBarL: TLabel

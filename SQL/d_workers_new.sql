@@ -1161,7 +1161,7 @@ WITH dups AS (
            MIN(nvl(ext_pay,-1)) OVER (PARTITION BY id_target_departament, employee) AS min_pay,
            MAX(nvl(ext_pay,-1)) OVER (PARTITION BY id_target_departament, employee) AS max_pay
     FROM v_w_payroll_calc_item t
-    where dt1 = date '2026-02-01'
+    where dt1 = date '2026-02-16'
 )
 SELECT *
 FROM dups

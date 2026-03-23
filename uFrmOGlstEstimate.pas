@@ -345,6 +345,7 @@ begin
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Font.Color := clBlue;
       Frg1.DBGridEh1.FieldColumns['qnt'].Footer.Value := FormatFloat('#,###.###', e);
     end;
+    Frg1.DBGridEh1.InvalidateFooter;
 //  end;
 end;
 

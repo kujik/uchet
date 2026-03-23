@@ -470,11 +470,11 @@ begin
     end;
     QntAll := null;
     if (OrQnt is not null)and(PQnt1 is not null) then
-      QntAll := Ceil(PQnt1 * OrQnt * 10) / 10; 
+      QntAll := Ceil(PQnt1 * OrQnt * 1000) / 1000; 
     end if;
     QntAll_Itm := null;
     if (OrQnt is not null)and(PQnt1_Itm is not null) then
-      QntAll_Itm := Ceil(PQnt1_Itm * OrQnt * 10) / 10; 
+      QntAll_Itm := Ceil(PQnt1_Itm * OrQnt * 1000) / 1000; 
     end if;
     update estimate_items 
       set id_group = IdGroup, id_unit = IdUnit, id_comment = IdComment, qnt1 = PQnt1, qnt = QntAll, qnt1_itm = PQnt1_Itm, qnt_itm = QntAll_ITM, deleted = 0

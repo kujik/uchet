@@ -793,6 +793,7 @@ const
   myfrm_J_Payments = 'J_Payments';
   myfrm_R_Suppliers = 'R_Suppliers';
   myfrm_R_Suppliers_SELCH = 'R_Suppliers_selch';
+  myfrm_R_Itm_Schet_SELCH = 'R_Itm_Schet_selch';
   myfrm_R_ExpenseItems = 'R_ExpenseItems';
   myfrm_R_GrExpenseItems = 'R_GrExpenseItems';
   myfrm_F_UsersAndRoles = 'Doc_UsersAndRoles';
@@ -851,6 +852,7 @@ const
   myfrm_R_Materials='R_Materials';
   myfrm_J_Otk='J_Otk';
   myfrm_J_Orders='J_Orders';
+  myfrm_J_OrdersBySlashes='J_OrdersBySlashes';
   myfrm_R_OrderTemplates='R_OrderTemplates';
   myfrm_R_OrderStdItems='R_OrderStdItems';
   myfrm_R_OrderStdItems_SEL='R_OrderStdItems_SEL';
@@ -939,6 +941,9 @@ const
   myfrm_J_PayrollsForWorker='J_PayrollsForWorker';
   myfrm_J_ProdCalculations='J_ProdCalculations';
   myfrm_R_Itm_Nomencl_SEL='R_Itm_Nomencl_SEL';
+  myfrm_Rep_Orders_Overdue_Kns_Thn='Rep_Orders_Overdue_Kns_Thn';
+  myfrm_J_Pdo_Order_Stage_Dates='J_Pdo_Order_Stage_Dates';
+
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1707,9 +1712,15 @@ const
   rOr_J_Orders_Set_Labor='6-140';
   rOr_J_ProdCalculations_V='6-141';
   rOr_J_ProdCalculations_Ch='6-142';
+  rOr_J_Orderstages_ToSgp_ChAll='6-143';
+  rOr_J_Orderstages_FromSgp_ChAll='6-144';
+  rOr_Rep_Orders_Overdue_Kns_Thn='6-145';
+  rOr_J_Pdo_Order_Stage_Dates='6-146';
+  rOr_J_Pdo_Order_Stage_Dates_Ch='6-147';
+
 
   const
-  URights : array [0..252] of array [0..3] of string = (
+  URights : array [0..257] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1877,8 +1888,10 @@ const
     (rOr_J_Orderstages_ToProd_Ch,'Модуль "Заказы"','Журналы: Выдача в производство','Ввод данных'),
     (rOr_J_Orderstages_ToSgp_V,'Модуль "Заказы"','Журналы: Приемка на СГП','Доступ к журналу'),
     (rOr_J_Orderstages_ToSgp_Ch,'Модуль "Заказы"','Журналы: Приемка на СГП','Ввод данных'),
+    (rOr_J_Orderstages_ToSgp_ChAll,'Модуль "Заказы"','Журналы: Приемка на СГП','Ввод данных за любой период'),
     (rOr_J_Orderstages_FromSgp_V,'Модуль "Заказы"','Журналы: Отгрузка с СГП','Доступ к журналу'),
     (rOr_J_Orderstages_FromSgp_Ch,'Модуль "Заказы"','Журналы: Отгрузка с СГП','Ввод данных'),
+    (rOr_J_Orderstages_FromSgp_ChAll,'Модуль "Заказы"','Журналы: Отгрузка с СГП','Ввод данных за любой период'),
     (rOr_J_Orderstages_Otk_V,'Модуль "Заказы"','Журналы: Приёмка ОТК','Доступ к журналу'),
     (rOr_J_Orderstages_Otk_Ch,'Модуль "Заказы"','Журналы: Приёмка ОТК','Ввод данных'),
     (rOr_J_Orderstages_Montage_V,'Модуль "Заказы"','Журналы: Журнал монтажа','Доступ к журналу'),
@@ -1892,6 +1905,8 @@ const
     (rOr_J_InvoiceToSgp_V,'Модуль "Заказы"','Журналы: Накладные перемещения на СГП','Доступ к журналу'),
     (rOr_J_InvoiceToSgp_Ch_M,'Модуль "Заказы"','Журналы: Накладные перемещения на СГП','Создание накладной, ввод передаваемых позиций'),
     (rOr_J_InvoiceToSgp_Ch_S,'Модуль "Заказы"','Журналы: Накладные перемещения на СГП','Ввод количества, принятого на СГП'),
+    (rOr_J_Pdo_Order_Stage_Dates,'Модуль "Заказы"','Журналы: Планирование - даты заказа','Доступ к журналу'),
+    (rOr_J_Pdo_Order_Stage_Dates_Ch,'Модуль "Заказы"','Журналы: Планирование - даты заказа','Ввод данных'),
     (rOr_R_Or_Templates_V,'Модуль "Заказы"','Справочники: Шаблоны заказов','Доступ к справочнику'),
     (rOr_R_Or_Templates_Ch,'Модуль "Заказы"','Справочники: Шаблоны заказов','Создание, изменение, удаление шаблонов заказов'),
     (rOr_R_Customers_V,'Модуль "Заказы"','Справочники: Покупатели','Доступ к справочнику'),
@@ -1958,6 +1973,7 @@ const
     (rOr_Rep_PlannedMaterials_V,'Модуль "Заказы"','Отчеты','Отчет "Годовая потребность в материалах", просмотр'),
     (rOr_Rep_PlannedMaterials_Calc,'Модуль "Заказы"','Отчеты','Отчет "Годовая потребность в материалах", перерасчет данных'),
     (rOr_J_SplDealsMonitoring,'Модуль "Заказы"','Отчеты','Мониторинг сделок снабжения'),
+    (rOr_Rep_Orders_Overdue_Kns_Thn,'Модуль "Заказы"','Отчеты','Выполнение сроков конструкторами/технологами'),
     (rOr_Other_Order_FindEstimate,'Модуль "Заказы"','Сервис: Поиск сметы по сметной позиции', 'Доступ'),
     (rOr_Other_ItmInfo,'Модуль "Заказы"','Сервис: Информация по ИТМ', 'Доступ'),
     (rOr_Other_ItmExtNomencl,'Модуль "Заказы"','Сервис: Расширенный справочник номенклатуры ИТМ', 'Доступ'),

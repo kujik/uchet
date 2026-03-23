@@ -135,7 +135,7 @@ inherited FrmCDedtExpenseItem: TFrmCDedtExpenseItem
       end
       object chb_active: TDBCheckBoxEh
         Left = 95
-        Top = 165
+        Top = 190
         Width = 97
         Height = 17
         Caption = #1048#1089#1087#1086#1083#1100#1079#1091#1077#1090#1089#1103
@@ -143,6 +143,17 @@ inherited FrmCDedtExpenseItem: TFrmCDedtExpenseItem
         DynProps = <>
         ParentColor = False
         TabOrder = 8
+      end
+      object chb_itm_needed: TDBCheckBoxEh
+        Left = 95
+        Top = 167
+        Width = 162
+        Height = 17
+        Caption = #1058#1088#1077#1073#1091#1077#1090#1089#1103' '#1089#1095#1077#1090' '#1074' '#1048#1058#1052
+        Color = clRed
+        DynProps = <>
+        ParentColor = False
+        TabOrder = 9
       end
     end
     inherited pnlFrmBtns: TPanel

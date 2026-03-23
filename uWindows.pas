@@ -563,6 +563,7 @@ begin
     myfrm_J_Accounts,
     myfrm_J_Payments,
     myfrm_J_Accounts_SEL,
+    myfrm_R_Itm_Schet_SELCH,
     myfrm_J_OrPayments,
     myfrm_Rep_SnCalendarByDate,
     myfrm_Rep_SnCalendar_Transport,
@@ -577,7 +578,6 @@ begin
     myfrm_J_Candidates,
     myfrm_R_Candidates_Ad_SELCH,
     myfrm_J_Turv,
-    //myfrm_J_Payrolls,
     myfrm_R_Holideys,
     myfrm_Rep_W_Payroll,
     myfrm_Rep_PayrollsSum,
@@ -588,6 +588,7 @@ begin
     myfrm_J_PayrollCash,
     myfrm_R_PersBonus,
     myfrm_J_PersBonus,
+    myfrm_J_PayrollsForWorker,
 
     {заказы}
     myfrm_R_StdProjects,
@@ -641,7 +642,7 @@ begin
     myfrm_J_ItmLog,
     myfrm_R_OrderReglament,
     myfrm_J_SplDealsMonitoring,
-    myfrm_J_PayrollsForWorker
+    myfrm_J_OrdersBySlashes
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);

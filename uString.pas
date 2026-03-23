@@ -335,6 +335,10 @@ type
     function SQLDateTime(const ADateTime: TDateTime): AnsiString;
     //получить из полного имени поля field$i только само имя
     function GetFieldNameOnly(const AValue: string): string;
+    //получить из полного имени поля field$i только тип ('i'); если модификатора нет, вернет  's' !!!
+    function GetFieldTypeChar(const AValue: string): Char;
+    //разбивает массив значений на несколько по 1000 значений
+    function SQLSplitto1000(const AArray: TVarDynArray; const ALen: Integer = 1000): TVarDynArray2;
 
     //-------------------- математические ------------------------------------------
 
@@ -534,6 +538,7 @@ type
 
   TVarDynArrayHelper = record helper for TVarDynArray
   public
+    function Count: Integer;
     function Implode(const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string;
     function Pos(const AValue: Variant; const AIgnoreCase: Boolean = False): Integer;
     function Found(const AValue: Variant; const AIgnoreCase: Boolean = False): Boolean;
@@ -549,6 +554,7 @@ type
   //============================================================================
   TVarDynArray2Helper = record helper for TVarDynArray2
   public
+    function Count: Integer;
     function Row(ARow: Integer): TVarDynArray;
     function Col(ACol: Integer): TVarDynArray;
   end;
@@ -1829,6 +1835,31 @@ begin
   else
     Result := AValue;
 end;
+
+function TMyStringHelper.GetFieldTypeChar(const AValue: string): Char;
+//получить из полного имени поля field$i только тип ('i'); если модификатора нет, вернет  's' !!!
+var
+  DollarPos: Integer;
+begin
+  DollarPos := Pos('$', AValue);
+  if DollarPos > 0 then
+    Result := Copy(AValue, DollarPos + 1)[1]
+  else
+    Result := 's';
+end;
+
+function TMyStringHelper.SQLSplitTo1000(const AArray: TVarDynArray; const ALen: Integer = 1000): TVarDynArray2;
+//разбивает массив значений на несколько по 1000 значений
+begin
+  SetLength(Result, (Length(AArray) + ALen - 1) div ALen);
+  for var i := 0 to High(Result) - 1 do
+    SetLength(Result[i], ALen);
+  if High(Result) >= 0 then
+    SetLength(Result[High(Result)], Length(AArray) - High(Result) * ALen);
+  for var i := 0 to High(AArray) do
+    Result[i div ALen][i mod ALen] := AArray[i];
+end;
+
 
 //==============================================================================
 //Математические
@@ -3427,6 +3458,11 @@ end;
 //TVarDynArrayHelper методы
 //==============================================================================
 
+function TVarDynArrayHelper.Count: Integer;
+begin
+  Result := Length(Self);
+end;
+
 function TVarDynArrayHelper.Implode(const ADelimiter: string; const AIgnoreEmpty: Boolean): string;
 begin
   Result := A.Implode(Self, ADelimiter, AIgnoreEmpty);
@@ -3469,6 +3505,11 @@ end;
 //TVarDynArray2Helper методы
 //==============================================================================
 
+function TVarDynArray2Helper.Count: Integer;
+begin
+  Result := Length(Self);
+end;
+
 function TVarDynArray2Helper.Row(ARow: Integer): TVarDynArray;
 begin
   Result := A.VarDynArray2RowToVD1(Self, ARow);
@@ -3482,6 +3523,10 @@ end;
 
 //Для избежания предупреждений о неиспользуемых переменных в модуле
 initialization
+
+//var va2 := s.SQLSplitto1000([1,2,3,4,5,6,7,8]);
+
+
 finalization
 
 end.

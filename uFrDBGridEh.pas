@@ -933,6 +933,8 @@ type
     function  GetFieldNames: TVarDynArray; overload;
     //получить массив имен всех столбцов таблицы по тегам, на основании данных определения фрейма
     function  GetFieldNamesEx(Tag: string = ''; WithSuffix: Boolean = False): TVarDynArray; overload;
+    //вернуть массив значений поля ID, отмеченных чекбоксами в индикаторном столбце
+    function  GetSetlectedIds: TVarDynArray;
     //получить позицию в массиве столбцов Columns по значению DBGridEh1.Col или Cell.X
     function  GetCol(Col: Integer = -1): Integer;
     //получим, является ли данный столбец реадактируемыи
@@ -1762,21 +1764,25 @@ var
 begin
   //получим параметры области
   Area := DBGridEh1.GetCellAreaType(ACol, ARow, AreaCol, AreaRow);
-  if Area.VertType = vctDataEh then;
+  var xx := Cell.X;
+  var yy := Cell.Y;
+  if Area.VertType = vctDataEh then
+    ;
   //Area.HorzType/VertType  так должен определять тайтл, но не работает! определяет неправильно, и в разных таблицах по-разному
-  //определяем так
+  //определяем по Cell.X: 0 - индикаторный столбец, если есть
+  //определяем по Cell.Y: 0 - заголовок таблицы
   if myogColumnFilter in Options then
-    if (Area.HorzType = hctDataEh) {and (Area.VertType = vctDataEh)} and (Cell.Y > 0) and (Button = mbLeft) and FLastFilterClick then begin
+    if {(Area.HorzType = hctDataEh)} {and (Area.VertType = vctDataEh) and } (Cell.Y > 0) and (Button = mbLeft) and FLastFilterClick then begin
       //если была нажата кнопка фильтра и он не применился (в событии OnApplyFilter флаг очистится)
       //то применим фильтр по клику в клентской части грида
       try
-      DbGridEh1.DefaultApplyFilter;
+        DbGridEh1.DefaultApplyFilter;
       except
       end;
       FLastFilterClick := False;
     end;
   if myogColumnFilter in Options then
-    if (Area.HorzType = hctDataEh) {and (Area.VertType = vctDataEh)} and (Cell.Y = 0) and (Button = mbLeft) then begin
+    if {(Area.HorzType = hctDataEh)} {and (Area.VertType = vctDataEh) and } (Cell.Y = 0) and (Button = mbLeft) then begin
       //получим номер столбца, скрытые учитываются, если есть индикаторнеый, то для него будет -1
       k := GetCol(Cell.X);
       if (k >= 0) and (X >= DBGridEh1.Columns[GetCol(Cell.X)].Width - 16) then begin
@@ -1787,14 +1793,17 @@ begin
         //MyInfoMessage(inttostr(Cell.X) + '  ' + DBGridEh1.Columns[GetCol(Cell.X)].Title.Caption);
       end;
     end;
-  //ставим галку в индикаторном столбце, для случая, когда она должна быть единственной (hctIndicatorEh также не работает)
-  if (Area.HorzType = hctDataEh) {and (Area.VertType = vctDataEh)} and (Cell.Y > 0) and (Cell.X = 0) and (Button = mbLeft) then begin
-    if ((myogIndicatorCheckBoxes in Options) and not (myogMultiSelect in Options)) then  begin
-      DBGridEh1.SelectedRows.Clear;
-      DBGridEh1.SelectedRows.CurrentRowSelected := True;
+  if {(Area.HorzType = hctIndicatorEh) and (Area.VertType = vctDataEh) and} (Cell.Y > 0) and (Cell.X = 0) and (Button = mbLeft) then begin
+    if myogIndicatorCheckBoxes in Options then begin
+       //ставим галку в индикаторном столбце, для случая, когда она должна быть единственной (hctIndicatorEh также не работает)
+      if not (myogMultiSelect in Options) then begin
+        DBGridEh1.SelectedRows.Clear;
+        DBGridEh1.SelectedRows.CurrentRowSelected := True;
+      end;
+      //при клике в индикаторном столбце для обработки возможных изменений чекбоксов вызываем события
+      ChangeSelectedData;
+      PrintStatusBar;
     end;
-    ChangeSelectedData;
-    PrintStatusBar;
   end;
 end;
 
@@ -2854,6 +2863,12 @@ begin
   Result := [];
   for var i: Integer := 0 to MemTableEh1.FieldCount - 1 do
     Result := Result + [LowerCase(MemTableEh1.Fields[i].FieldName)];
+end;
+
+function TFrDBGridEh.GetSetlectedIds: TVarDynArray;
+//вернуть массив значений поля ID, отмеченных чекбоксами в индикаторном столбце
+begin
+  Result := Gh.GetGridArrayOfChecked(DBGridEh1, DBGridEh1.FindFieldColumn(Opt.Sql.IdField).Index).Col(0);
 end;
 
 function TFrDBGridEh.GetFieldNamesEx(Tag: string = ''; WithSuffix: Boolean = False): TVarDynArray;

@@ -1109,7 +1109,19 @@ from
   spl_itm_nom_props p
 where
   s.id_nomencl = p.id (+)
+;
+
+create or replace view v_itm_spschetspec as
+select
+  s.*,
+  p.price_check
+from
+  dv.v_spschetspec s,
+  spl_itm_nom_props p
+where
+  s.id_nomencl = p.id (+)
 ;    
+    
   
 
 

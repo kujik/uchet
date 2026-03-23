@@ -44,6 +44,7 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
             inherited pnlStatusBar: TPanel
               Top = 340
               Width = 762
+              ExplicitTop = 339
             end
           end
           inherited pnlLeft: TPanel

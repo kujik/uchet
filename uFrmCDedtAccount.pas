@@ -122,6 +122,7 @@ type
     procedure CalculateNds;
     procedure LoadSuppliers;
     procedure ChooseSupplier;
+    procedure ChooseAccount;
     procedure SetEditable;
     function  IsAgreed1Enabled: Boolean;
     procedure SetAgreed1(AChange: Boolean = True);
@@ -256,6 +257,7 @@ begin
 //  Cth.SetBtn(Bt_SelectSupplier, mybtSelectFromList, True, 'Выбрать поставщика из списка');
 
   Cth.SetEditButtons(cmb_id_supplier, [[37, 'Обновить'], [39, 'Выбрать из справочника']]);
+  Cth.SetEditButtons(edt_account, [[39, 'Выбрать из ИТМ']]);
 
   F.DefineFields:=[
     ['id$i'],
@@ -467,6 +469,8 @@ begin
     LoadSuppliers;
   if (TEditButtonControlEh(Sender).Owner = cmb_id_supplier) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 39) then
     ChooseSupplier;
+  if (TEditButtonControlEh(Sender).Owner = edt_account) and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 39) then
+    ChooseAccount;
 end;
 
 procedure TFrmCDedtAccount.btnClientClick(Sender: TObject);
@@ -1154,5 +1158,19 @@ begin
   if chb_itm_request.Checked and chb_itm_request.Focused then
     Wh.ExecReference(myfrm_R_Itm_DemandSupplier, Self, [myfoDialog, {myfoModal, }myfoSizeable], FIdItmRequest);
 end;
+
+procedure TFrmCDedtAccount.ChooseAccount;
+//откроем список счетов ИТМ
+begin
+  Wh.SelectDialogResult := [];
+  Wh.ExecReference(myfrm_R_Itm_Schet_SELCH, Self, [myfoDialog, myfoModal, myfoSizeable], null);
+  if Length(Wh.SelectDialogResult) = 0 then
+    Exit;
+  //установим выбранного в справочнике
+  cmb_id_supplier.Text := Wh.SelectDialogResult[2];
+  dedt_accountdt.Value := Wh.SelectDialogResult[3];
+  nedt_sum.Value := Wh.SelectDialogResult[5];
+end;
+
 
 end.
