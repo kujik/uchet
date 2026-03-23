@@ -199,7 +199,7 @@ begin
     [-mbtCustom_SnFillFromPlanned, 1, 'Заполнить из плановой потребности'],
     [-mbtCustom_SetOnWayPeriod],
     [-1004,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить минимальный остаток'],
-    [-1005,User.Role(rOr_Other_R_MinRemains_Ch),'Пропроставить признак "Активный"'],
+    [-1005,User.Role(rOr_Other_R_MinRemains_Ch),'Проставить признак "Активный"'],
     [],[-1002,User.Role(rOr_Other_R_MinRemains_Ch),'Очистить подвисшие резервы'],[],
     [],[mbtExcelView],[-1001, True,'Просмотреть историю'],[],[mbtGo, User.Role(rOr_Other_R_MinRemains_Ch), 'Сформировать заявку'],[mbtCtlPanel],
     [],[-mbtTest, User.IsDeveloper]
@@ -444,7 +444,7 @@ begin
     end;
   end
   else if Tag = 1005 then begin
-    if not (User.Roles([], [rOr_Other_R_MinRemains_Ch]) and not FLockEdit) then
+    if not (User.Roles([], [rOr_Other_R_MinRemains_Ch]){ and not FLockEdit}) then
       Exit;
     LIds := Fr.GetSetlectedIds;
     if LIds.Count = 0 then

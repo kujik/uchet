@@ -642,7 +642,8 @@ begin
     myfrm_J_ItmLog,
     myfrm_R_OrderReglament,
     myfrm_J_SplDealsMonitoring,
-    myfrm_J_OrdersBySlashes
+    myfrm_J_OrdersBySlashes,
+    myfrm_Rep_Orders_Overdue_Kns_Thn
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);

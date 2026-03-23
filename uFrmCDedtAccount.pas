@@ -1167,7 +1167,7 @@ begin
   if Length(Wh.SelectDialogResult) = 0 then
     Exit;
   //установим выбранного в справочнике
-  cmb_id_supplier.Text := Wh.SelectDialogResult[2];
+  edt_account.Text := Wh.SelectDialogResult[2];
   dedt_accountdt.Value := Wh.SelectDialogResult[3];
   nedt_sum.Value := Wh.SelectDialogResult[5];
 end;
