@@ -95,11 +95,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>13435</VerInfo_Build>
+        <VerInfo_Build>13479</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;PICK_;ADMIN_;TURV;SRV_;PROD_;OR_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.13435;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.03.25 06:43:47;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.13479;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.03.25 13:36:34;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>
@@ -485,6 +485,9 @@
         <DCCReference Include="uFrmWGedtTurvN.pas">
             <Form>FrmWGedtTurvN</Form>
         </DCCReference>
+        <DCCReference Include="uFrmWGedtAdvance.pas">
+            <Form>FrmWGedtAdvance</Form>
+        </DCCReference>
         <DCCReference Include="uFrmWGedtPayrollN.pas">
             <Form>FrmWGedtPayrollN</Form>
         </DCCReference>
@@ -493,6 +496,9 @@
         </DCCReference>
         <DCCReference Include="uFrmWDedtCreatePayrollN.pas">
             <Form>FrmWDedtCreatePayrollN</Form>
+        </DCCReference>
+        <DCCReference Include="uFrmWDedtCreateAdvance.pas">
+            <Form>FrmWDedtCreateAdvance</Form>
         </DCCReference>
         <DCCReference Include="uFrmWWedtWorkSchedule.pas">
             <Form>FrmWWedtWorkSchedule</Form>

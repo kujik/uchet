@@ -92,10 +92,8 @@ uses
   uFrmOWPlannedOrder,
   uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
-  //uFrmWGEdtTurv,
-//  uFrmWGedtPayroll,
-//  uFrmWDedtCreatePayroll,
-  uFrmWDedtCreatePayrollN
+  uFrmWDedtCreatePayrollN,
+  uFrmWDedtCreateAdvance
   ;
 
 
@@ -775,7 +773,6 @@ v:=True;
     Frg1.Opt.SetTable('v_w_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
     v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
-//v:=True;
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor or User.Role(rW_J_Turv_TP))],[-1000, User.Role(rW_J_Turv_Commit), 'Закрыть все за прошлый период'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
@@ -797,36 +794,92 @@ v:=True;
     ['refoptions']
     ];
   end
-(*  else if FormDoc = myfrm_J_Payrolls then begin
-    Caption:='Зарплатные ведомости';
+  else if FormDoc = myfrm_J_AdvanceCalculations then begin
+    Caption:='Авансовые расчетные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['code','Код','50'],
-      ['divisionname','Подразделение','200'],
-      ['workername','Работник','200'],
-      ['dt1','Нач. дата','75'],
-      ['dt2','Кон. дата','75'],
-      ['committxt','Закрыта','60','pic=закрыта;13']
+      ['departament','Подразделение','200'],
+      ['employee','Работник','200'],
+      ['personnel_number$s','Табельный номер','90'],
+      ['dt','Нач. дата','75'],
+//      ['dt2','Кон. дата','75'],
+      ['finalized','Закрыта','60','pic=Закрыта:13']
     ]);
-    Frg1.Opt.SetTable('v_payroll');
-    Frg1.Opt.SetButtons(1,[
-      [mbtRefresh],[]{,[mbtTest]},[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[mbtDelete, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
+    Frg1.Opt.SetTable('v_w_advance_calc', 'w_advance_calc');
+    Frg1.Opt.SetButtons(1, [
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Только подразделения', 'ChbDivisions', '', -1, yrefC, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий месяц', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый месяц', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Подразделения', 'ChbDivisions', '', 120, yrefT, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Уволенные', 'ChbEmployees', '', 120, yrefB, 150);
     Frg1.InfoArray:=[
-      ['Зарплатные ведомости.'#13#10+
+      [Caption + '.'#13#10+
       'Для просмотра ведомостей только за прошедший (и текущий - по уволенным) период поставьте соответствующую галочку.'#13#10+
       'Если Вы не хотите видеть ведомости по уволенным работникам, поставьте соответствующую галочку.'#13#10],
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
       'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
       ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
     ];
-  end*)
+  end
+  else if FormDoc = myfrm_J_AdvanceTransfer then begin
+    Caption:='Авансовые ведомости к перечислению';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['employee','Работник','200'],
+      ['organization$s','Организация','90'],
+      ['personnel_number$s','Табельный номер','90'],
+      ['dt1','Нач. дата','75'],
+      ['dt2','Кон. дата','75'],
+      ['finalized','Закрыта','60','pic=Закрыта:13']
+    ]);
+    Frg1.Opt.SetTable('v_w_Advance_transfer', 'w_Advance_transfer');
+    Frg1.Opt.SetButtons(1, [
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'], //[mbtDelete, 1],
+      [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
+    ]);
+    Frg1.Opt.FilterRules := [[], ['dt1']];
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Групповые', 'ChbDivisions', '', 130, yrefT, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'По уволенным', 'ChbEmployees', '', 130, yrefB, 150);
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10]
+    ];
+  end
+  else if FormDoc = myfrm_J_AdvanceCash then begin
+    Caption:='Авансовые ведомости к выдаче';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['area','Площадка','150'],
+      ['departament','Подразделение','200'],
+      ['employee','Работник','200'],
+      ['organization$s','Организация','90'],
+      ['personnel_number$s','Табельный номер','90'],
+      ['dt1','Нач. дата','75'],
+      ['dt2','Кон. дата','75'],
+      ['finalized','Закрыта','60','pic=Закрыта:13', 'i']
+    ]);
+    Frg1.Opt.SetTable('v_w_Advance_cash', 'w_Advance_cash');
+    Frg1.Opt.SetButtons(1, [
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],{[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],} //[mbtDelete, 1],
+      [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
+    ]);
+    Frg1.Opt.FilterRules := [[], ['dt1']];
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Подразделения', 'ChbDivisions', '', 120, yrefT, 150);
+    Frg1.CreateAddControls('1', cntCheck, 'Уволенные', 'ChbEmployees', '', 120, yrefB, 150);
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10]
+    ];
+  end
   else if FormDoc = myfrm_J_PayrollCalculations then begin
     Caption:='Расчетные ведомости';
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
@@ -858,39 +911,6 @@ v:=True;
       ['Для создания платежных ведомостей за прошедший период по всем подразделениям,'#13#10+
       'либо для создания ведомостей по уволенным в текущем периоде работникам, нажмите соответствующую кнопку.'#13#10 , User.Role(rW_J_Payroll_Ch)],
       ['Дважды кликните на записи, или нажмите кнопку "Изменить" для редактирования ведомости.'#13#10, User.Role(rW_J_Payroll_Ch)]
-    ];
-  end
-  else if FormDoc = myfrm_J_PayrollsForWorker then begin
-    Caption:='Расчет по работнику';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
-    Frg1.Opt.SetFields([
-      ['id$i','_id','40'],
-      ['id_type$i','_idt','40'],
-      ['id_employee$i','_ide','40'],
-      ['type','Тип ведомости','100'],
-      ['type2','Вид','100'],
-      ['departament','Подразделение','200'],
-      ['employee','Работник','200'],
-      //['organization$s','Организация','90'],
-      ['dt1','Нач. дата','75'],
-      ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта;13:']
-    ]);
-    Frg1.Opt.SetTable('v_w_payrolls_for_employee');
-    Frg1.Opt.SetWhere('where nvl(is_finalized, 0) >= :is_finalized$i and dt1 >= :dt1$d and id_employee = :id_employee$i');
-    Frg1.Opt.SetButtons(1, 'rvsp');
-    Frg1.CreateAddControls('1', cntComboL, 'Работник', 'cmbEmployee', '', 55, yrefC, 450);
-    Q.QLoadToDBComboBoxEh(
-      'select distinct employee_st from v_w_employee_properties where (dt_end is null or dt_end >= :dt1$d) and (dt_beg >= :dt2$d or is_terminated <> 1) and ((:idh$i = id_head) or (1 = :view_all$i)) order by employee_st',
-//      'select distinct employee, id_employee from v_w_employee_properties where (dt_end is null or dt_end >= :dt1$d) and (dt_beg >= :dt2$d or is_terminated <> 1) and (:id$i = id_head) or 1 = :view_all$i)) order by employee',
-      [Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1)), User.GetId, S.IIf(User.IsDeveloper, 1, 0)],
-      TDBComboBoxEh(Frg1.FindComponent('cmbEmployee')),
-      cntComboL
-    );
-    Frg1.ReadControlValues;
-    Frg1.SetControlValue('cmbEmployee', '');
-    Frg1.InfoArray:=[
-      [Caption + '.'#13#10]
     ];
   end
   else if FormDoc = myfrm_J_PayrollTransfer then begin
@@ -943,6 +963,39 @@ v:=True;
     Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Подразделения', 'ChbDivisions', '', 120, yrefT, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Уволенные', 'ChbEmployees', '', 120, yrefB, 150);
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10]
+    ];
+  end
+  else if FormDoc = myfrm_J_PayrollsForWorker then begin
+    Caption:='Расчет по работнику';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_type$i','_idt','40'],
+      ['id_employee$i','_ide','40'],
+      ['type','Тип ведомости','100'],
+      ['type2','Вид','100'],
+      ['departament','Подразделение','200'],
+      ['employee','Работник','200'],
+      //['organization$s','Организация','90'],
+      ['dt1','Нач. дата','75'],
+      ['dt2','Кон. дата','75'],
+      ['finalized','Закрыта','60','pic=Закрыта;13:']
+    ]);
+    Frg1.Opt.SetTable('v_w_payrolls_for_employee');
+    Frg1.Opt.SetWhere('where nvl(is_finalized, 0) >= :is_finalized$i and dt1 >= :dt1$d and id_employee = :id_employee$i');
+    Frg1.Opt.SetButtons(1, 'rvsp');
+    Frg1.CreateAddControls('1', cntComboL, 'Работник', 'cmbEmployee', '', 55, yrefC, 450);
+    Q.QLoadToDBComboBoxEh(
+      'select distinct employee_st from v_w_employee_properties where (dt_end is null or dt_end >= :dt1$d) and (dt_beg >= :dt2$d or is_terminated <> 1) and ((:idh$i = id_head) or (1 = :view_all$i)) order by employee_st',
+//      'select distinct employee, id_employee from v_w_employee_properties where (dt_end is null or dt_end >= :dt1$d) and (dt_beg >= :dt2$d or is_terminated <> 1) and (:id$i = id_head) or 1 = :view_all$i)) order by employee',
+      [Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1)), User.GetId, S.IIf(User.IsDeveloper, 1, 0)],
+      TDBComboBoxEh(Frg1.FindComponent('cmbEmployee')),
+      cntComboL
+    );
+    Frg1.ReadControlValues;
+    Frg1.SetControlValue('cmbEmployee', '');
     Frg1.InfoArray:=[
       [Caption + '.'#13#10]
     ];
@@ -2425,11 +2478,12 @@ begin
         else
           Q.DBLock(False, myfrm_Dlg_Payroll, Fr.ID);
     end;}
+    if (FormDoc = myfrm_J_AdvanceCalculations) and (fMode = fAdd) then
+      TFrmWDedtCreateAdvance.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
+    if (FormDoc = myfrm_J_AdvanceCalculations) and (fMode in [fEdit, fView]) then
+      Wh.ExecDialog(myfrm_Dlg_AdvanceCalc, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
       TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
- //   if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fDelete) then
- //     if Turv.DeletePayrollCalculations(Fr.ID) then
-//        Fr.RefreshGrid();
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, VarArrayOf([S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2), null]));
     if FormDoc = myfrm_J_PayrollsForWorker then begin
@@ -2589,7 +2643,7 @@ begin
     else
       MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
   end}
-  else if A.InArray(FormDoc, [myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = mbtLock) then begin
+  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = mbtLock) then begin
     //проставить метку Закрыта по всем отмеченным зарплатным ведомостям
     va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
     if (Length(va) > 0) then begin
@@ -2602,7 +2656,7 @@ begin
     else
       MyInfoMessage('Отметьте те ведомости, которые нужено закрыть.');
   end
-  else if A.InArray(FormDoc, [myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = 1001) then begin
+  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = 1001) then begin
     //удалить все отмеченные ведомости
     va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
     if (Length(va) > 0) then begin
@@ -2823,14 +2877,15 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-{  else if (FormDoc = myfrm_J_Payrolls) then begin
-    SqlWhere:= A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_worker is null'),
+  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash]) then begin
+    st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
+    SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
-        S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
-        S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
+        S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt = ''' + S.SQLdate(EncodeDate(YearOf(Date), MonthOf(Date), 1)) + ''''),
+        S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt = ''' + S.SQLdate(EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1)) + '''')],
         ' or '), '('#0')')], ' and '
     );
-  end}
+  end
   else if (FormDoc = myfrm_J_PayrollCalculations) or (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
@@ -2840,15 +2895,6 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-{  else if (FormDoc = myfrm_J_PayrollTransfer) then begin
-    st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
-    SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
-      S.IfNotEmptyStr(A.ImplodeNotEmpty([
-        S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
-        S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
-        ' or '), '('#0')')], ' and '
-    );
-  end}
   else if (FormDoc = myfrm_J_PayrollsForWorker) then begin
     var idempl := Q.QSelectOneRow('select id_employee from v_w_employee_properties where employee_st = :est$s', [Cth.GetControlValue(Fr, 'cmbEmployee')])[0];
     Fr.SetSqlParameters('id_employee$i;dt1$d;is_finalized$i', [idempl, S.IIf(User.IsDeveloper, IncYear(Date, -10), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1))), S.IIf(User.IsDeveloper, 0, 1)]);
@@ -3078,7 +3124,9 @@ begin
     myfrm_J_Error_Log,
 
     myfrm_J_Turv,
-    //myfrm_J_Payrolls,
+    myfrm_J_AdvanceCalculations,
+    myfrm_J_AdvanceTransfer,
+    myfrm_J_AdvanceCash,
     myfrm_J_PayrollCalculations,
     myfrm_J_PayrollTransfer,
     myfrm_J_PayrollCash,

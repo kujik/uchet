@@ -1377,6 +1377,8 @@ select
 
 --------------------------------------------------------------------------------
 --drop table w_advance_calc cascade constraints;
+delete from w_advance_calc;
+
 alter table w_advance_calc add id_organization number(11); --айди организации
 create table w_advance_calc ( 
   id number(11),
@@ -1394,7 +1396,7 @@ create table w_advance_calc (
 --уникальный индекс по подразделению/работнику/дате начала
 create unique index idx_w_advance_calc_uq on w_advance_calc(id_departament, id_employee, personnel_number, dt);
 
-create sequence sq_w_advance_calc start with 1000 nocache;
+create sequence sq_w_advance_calc start with 1 nocache;
 
 create or replace trigger trg_w_advance_calc_bi_r before insert on w_advance_calc for each row
 begin
@@ -1408,64 +1410,48 @@ select
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   d.name as departament,
-  --o.name as organization,
+--  o.name as organization,
   d.is_office,
   d.code
 from
   w_advance_calc p,
   w_employees e,
-  w_departaments d,
-  ref_sn_organizations o 
+  w_departaments d
+--  ref_sn_organizations o 
 where
   p.id_departament = d.id
   and p.id_employee = e.id (+)
-  and p.id_organization = o.id (+)
+--  and p.id_organization = o.id (+)
 ;
 
-
-
+alter table w_advance_calc_item add fixed_pay number;
 create table w_advance_calc_item(
   id number(11),
   id_advance_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка
   id_employee number(11),         --айди раболтника 
   id_job number(11),              --айди должности 
   id_schedule number(11),         --айди графика
-  id_organization number(11),     --айди организации, в которой числится работник
+--  id_organization number(11),     --айди организации, в которой числится работник
   personnel_number varchar2(10),  --табельный номер 
   monthly_hours_norm number,      --норма за месяц, по данной строке табеля для работника
   period_hours_norm number,       --норма за период ведомости, по данной строке табеля для работника     
   hours_worked number,            --отработано по турв
-  overtime number,                --количество часов переработки (приведенное)
+  --overtime number,                --количество часов переработки (приведенное)
   planned_pay number,             --плановое начисление
   fixed_pay number,               --постоянная часть
-  variable_pay number,            --стимулирующая часть
-  ors number,                     --оценка работы сотрудника, %
-  ors_pay number,                 --оценка работы сотрудника, сумма, начисленная исходя из оценки
   base_pay number,                --итого рассчитано
-  ext_pay number,                 --загружено из внешнего источника (рассчет сделки)
-  overtime_pay number,            --выплаты за переработки 
-  personal_pay number,            --персональная выплата
-  daily_bonus number,             --ежедневные премии (не депремирование!) из турв
-  extra_bonus number,             --дополнительная премия, вводится в ведомости
-  night_pay number,               --выплата за ночные часы, вводится в ведомости
-  milk_compensation number,       --выплата за молоко  
-  non_work_pay number,            --оплата неотработанного вермени (ОТ/БЛ)
-  penalty number,                 --депремирование
   correction number,              --ручная корректировка начисления, вводится в ведомости
   total_pay number,               --итого начислено 
   constraint pk_w_advance_calc_item primary key (id),
   constraint fk_w_advance_calc_i_own foreign key (id_advance_calc) references w_advance_calc(id) on delete cascade,
   constraint fk_w_advance_calc_i_emp foreign key (id_employee) references w_employees(id),
   constraint fk_w_advance_calc_i_job foreign key (id_job) references w_jobs(id),
-  constraint fk_w_advance_calc_i_sch foreign key (id_schedule) references w_schedules(id),
-  constraint fk_w_advance_calc_i_org foreign key (id_organization) references ref_sn_organizations(id)
+  constraint fk_w_advance_calc_i_sch foreign key (id_schedule) references w_schedules(id)
+--  constraint fk_w_advance_calc_i_org foreign key (id_organization) references ref_sn_organizations(id)
 );  
   
---drop sequence sq_w_advance_calculations_item;
-create sequence sq_w_advance_calc_item start with 100000 nocache;
+create sequence sq_w_advance_calc_item start with 1 nocache;
 
---create unique index idx_advance_item_unique on advance_item(id_division, id_worker, dt);
---create index idx_advance_item_dt_job on advance_item(dt, id_job);
 
 create or replace trigger trg_w_advance_calc_item_bi_r before insert on w_advance_calc_item for each row
 begin
@@ -1479,21 +1465,16 @@ select
   i.*,
   s.code as schedulecode,
   s.code as schedule,
-  --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
   p.id_departament as id_target_departament,
   p.id_employee as id_target_employee,
-  p.id_organization as id_target_organization,
+  --p.id_organization as id_target_organization,
   p.personnel_number as target_personnel_number,
   p.is_finalized,
-  p.dt1,
-  p.dt2,
-  p.calc_method,
-  p.overtime_method,
-  --f_fio(e.f, e.i, e.o) as employee,
-  --e.personnel_number,
+  p.dt,
   e.name as employee,
   --e.concurrent_employee,
-  o.name as organization,
+  null as organization,   --!!!
+  null as id_organization,   --!!!
   d.name as departament,
   d.id_prod_area,
   a.shortname as prod_area_shortname,
@@ -1509,7 +1490,7 @@ from
   left outer join w_jobs j on i.id_job = j.id  
   left outer join w_schedules s on i.id_schedule = s.id 
   left outer join ref_production_areas a on d.id_prod_area = a.id
-  left outer join ref_sn_organizations o on i.id_organization = o.id
+  --left outer join ref_sn_organizations o on i.id_organization = o.id
 ;  
 
 
@@ -1770,6 +1751,18 @@ FROM (
 ) t
 WHERE cnt > 1
 ORDER BY personnel_number;
+
+
+
+
+
+
+      select id_departament from v_w_employee_properties 
+      where id_organization is null and dt_beg <= date '2026-03-15' and (dt_end is null or dt_end >= date '2026-03-01') and id_departament = 4 
+      group by id_departament;
+
+      select * from v_w_employee_properties 
+      where id_organization is null and dt_beg <= date '2026-03-15' and (dt_end is null or dt_end >= date '2026-03-01') and id_departament = 5 and is_terminated <> 1; 
  
 
 

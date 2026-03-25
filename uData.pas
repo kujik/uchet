@@ -840,6 +840,9 @@ const
   myfrm_J_PayrollCalculations ='J_PayrollCalculations';
   myfrm_j_PayrollTransfer ='J_PayrollTransfer';
   myfrm_j_PayrollCash ='J_PayrollCash';
+  myfrm_J_AdvanceCalculations ='J_AdvanceCalculations';
+  myfrm_j_AdvanceTransfer ='J_AdvanceTransfer';
+  myfrm_j_AdvanceCash ='J_AdvanceCash';
   myfrm_J_Candidates='J_Candidates';
   myfrm_J_Vacancy='J_Vacancy';
   myfrm_Rep_W_Payroll = 'Rep_W_Payroll';
@@ -1044,6 +1047,9 @@ const
   myfrm_Dlg_PayrollCalc ='Dlg_PayrollCalc';
   myfrm_Dlg_PayrollTransfer ='Dlg_PayrollTransfer';
   myfrm_Dlg_PayrollCash ='Dlg_PayrollCash';
+  myfrm_Dlg_AdvanceCalc ='Dlg_AdvanceCalc';
+  myfrm_Dlg_AdvanceTransfer ='Dlg_AdvanceTransfer';
+  myfrm_Dlg_AdvanceCash ='Dlg_AdvanceCash';
   myfrm_Dlg_ProdCalculation='Dlg_ProdCalculation';
   myfrm_Dlg_ExportTurvToXls='Dlg_ExportTurvToXls';
 

@@ -114,13 +114,10 @@ uses
 
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
-  //uFrmWDAddTurv,
-  //uFrmWGEdtTurv,
-  //uFrmWGedtPayroll,
 
-  uFrmWDedtDivision, uFrmWDedtWorkerStatus,
-  uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGEdtTurvN,
-  uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer, uFrmWGedtPayrollCash,
+  uFrmWDedtDivision, uFrmWDedtWorkerStatus, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
+  uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
+  uFrmWGedtPayrollCash, uFrmWGedtAdvance,
 
 
   D_Order,
@@ -583,6 +580,9 @@ begin
     myfrm_Rep_PayrollsSum,
     myfrm_J_Vacancy,
     myfrm_Ref_JobsNeeded,
+    myfrm_J_AdvanceCalculations,
+    myfrm_J_AdvanceTransfer,
+    myfrm_J_AdvanceCash,
     myfrm_J_PayrollCalculations,
     myfrm_J_PayrollTransfer,
     myfrm_J_PayrollCash,
@@ -919,27 +919,18 @@ begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_otk_reject_reasons', 'Типы транспортных средств', 400, 100,
      [['name$s', cntEdit, 'Тип','1:100'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]);
   end
-  else if F = myfrm_Dlg_R_PayrollMethods then begin
-//      Form:=TDlg_PayrollMethod.ShowDialog(AOwner, F, fMode, AId);
-  end
-  else if F = myfrm_Dlg_R_DivisionMembers then begin
-//      Form:=TDlg_DivisionMembers.ShowDialog(AOwner, F, fMode, AId);
-  end
   else if F = myfrm_Dlg_WorkerStatus then begin
-//~    Form := TDlg_WorkerStatus.ShowDialog(AOwner, F, fMode, AId, AAddParam);
     TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);  //нужно обеспечить блокировку оденовременного открытия окна статуса!
   end
   else if F = myfrm_Dlg_Turv then begin
     TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize, myfoMulticopy], fMode, AID, null);
   end
   else if F = myfrm_Dlg_AddTurv then begin
-//~    Form := TDlg_AddTurv.ShowDialog(AOwner, F, fMode, AId, null);
-//    TFrmWDAddTurv.Show(AOwner, F, [myfoDialog], fMode, AId, null);
     Turv.CreateAllTurvForDate(AOwner, Turv.GetTurvBegDate(Date));
   end
-{  else if F = myfrm_Dlg_Payroll then begin
-    TFrmWGedtPayroll.Show(AOwner, F, [myfoDialog, myfoSizeable], fMode, AId, null);
-  end}
+  else if F = myfrm_Dlg_AdvanceCalc then begin
+    TFrmWGedtAdvance.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
+  end
   else if F = myfrm_Dlg_PayrollCalc then begin
     if TVarDynArray(AAddParam)[0] = 1 then
       TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1])
