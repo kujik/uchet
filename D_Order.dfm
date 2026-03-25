@@ -26,10 +26,9 @@ inherited Dlg_Order: TDlg_Order
     Left = 0
     Top = 0
     Width = 1264
-    Height = 41
+    Height = 74
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1260
     object lbl_ITM: TLabel
       Left = 228
       Top = 7
@@ -72,14 +71,15 @@ inherited Dlg_Order: TDlg_Order
       Left = 659
       Top = 1
       Width = 604
-      Height = 39
+      Height = 72
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 4
       ExplicitLeft = 655
+      ExplicitHeight = 39
       DesignSize = (
         604
-        39)
+        72)
       object edt_TemplateName: TDBEditEh
         Left = 145
         Top = 14
@@ -148,18 +148,19 @@ inherited Dlg_Order: TDlg_Order
   end
   object pnl_Center: TPanel [3]
     Left = 0
-    Top = 309
+    Top = 342
     Width = 1264
-    Height = 317
+    Height = 284
     Align = alClient
     TabOrder = 2
+    ExplicitTop = 309
     ExplicitWidth = 1260
     ExplicitHeight = 316
     object DBGridEh1: TDBGridEh
       Left = 1
       Top = 1
       Width = 1262
-      Height = 315
+      Height = 282
       Align = alClient
       DataSource = DataSource1
       DynProps = <>
@@ -176,12 +177,13 @@ inherited Dlg_Order: TDlg_Order
   end
   object pnl_Header: TPanel [4]
     Left = 0
-    Top = 41
+    Top = 74
     Width = 1264
     Height = 268
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
+    ExplicitTop = 41
     ExplicitWidth = 1260
     object pnl_Header_3: TPanel
       Left = 683

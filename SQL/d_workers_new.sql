@@ -527,149 +527,34 @@ create table w_employee_properties(
 );
 
 create sequence sq_w_employee_properties start with 100000 nocache;
+create sequence sq_w_employee_properties_pn start with 1000 nocache;
+
 
 create index idx_w_employee_properties_div on w_employee_properties(id_departament); 
 create index idx_w_employee_properties_job on w_employee_properties(id_job); 
-create index idx_w_employee_properties_emp on w_employee_properties(id_employee); 
+create index idx_w_employee_properties_emp on w_employee_properties(id_employee);
 
-CREATE UNIQUE INDEX idx_employee_properties_pn
-ON w_employee_properties (
-    CASE 
-        WHEN is_hired = 1 AND id_organization IS NOT NULL 
-        THEN id_organization 
-        ELSE NULL 
-    END,
-    CASE 
-        WHEN is_hired = 1 AND id_organization IS NOT NULL 
-        THEN personnel_number 
-        ELSE NULL 
-    END,
-    CASE 
-        WHEN is_hired = 1 AND id_organization IS NULL AND personnel_number IS NOT NULL 
-        THEN personnel_number   -- Индексируем номер, чтобы он был уникален среди NULL-организаций
-        ELSE NULL 
-    END
+drop index idx_employee_properties_pn;
+create unique index idx_employee_properties_pn on w_employee_properties (
+  case 
+--    when id_organization is not null and personnel_number is not null and nvl(personnel_number, '-') <> '-' and is_hired = 1  then personnel_number else 'id____' || to_char(id)
+    when personnel_number <> '-' and is_hired = 1  then personnel_number else 'id____' || to_char(id)
+  end,
+  case 
+    when id_organization is not null or personnel_number is null then id_organization else -9999
+  end
 );
-
-WITH duplicates AS (
-  -- Находим все пары (организация, номер), которые дублируются
-  SELECT id_organization, personnel_number
-  FROM w_employee_properties
-  WHERE is_hired = 1 
-    AND id_organization IS NOT NULL
-    AND personnel_number IS NOT NULL
-  GROUP BY id_organization, personnel_number
-  HAVING COUNT(*) > 1
-  
-  UNION ALL
-  
-  -- Находим все номера без организации, которые дублируются
-  SELECT NULL AS id_organization, personnel_number
-  FROM w_employee_properties
-  WHERE is_hired = 1 
-    AND id_organization IS NULL
-    AND personnel_number IS NOT NULL
-  GROUP BY personnel_number
-  HAVING COUNT(*) > 1
-)
--- Выбираем все строки, попадающие в найденные дубликаты
-SELECT 
-  w.*,
-  CASE 
-    WHEN w.id_organization IS NOT NULL THEN 'Организация: ' || w.id_organization
-    ELSE 'Без организации'
-  END AS duplicate_group
-FROM w_employee_properties w
-WHERE EXISTS (
-  SELECT 1 FROM duplicates d
-  WHERE (d.id_organization = w.id_organization OR 
-         (d.id_organization IS NULL AND w.id_organization IS NULL))
-    AND d.personnel_number = w.personnel_number
-    AND w.is_hired = 1
-)
-ORDER BY 
-  w.id_organization NULLS FIRST,
-  w.personnel_number,
-  w.id;
-  
-
-WITH index_calc AS (
-  SELECT 
-    id,
-    id_employee,
-    is_hired,
-    id_organization,
-    personnel_number,
-    -- Рассчитываем значения, которые попадут в функциональный индекс
-    CASE 
-      WHEN is_hired = 1 AND id_organization IS NOT NULL 
-      THEN id_organization 
-      ELSE NULL 
-    END AS idx_org,
-    CASE 
-      WHEN is_hired = 1 AND id_organization IS NOT NULL 
-      THEN personnel_number 
-      ELSE NULL 
-    END AS idx_number,
-    CASE 
-      WHEN is_hired = 1 AND id_organization IS NULL AND personnel_number IS NOT NULL 
-      THEN personnel_number 
-      ELSE NULL 
-    END AS idx_null_org_number
-  FROM w_employee_properties
-)
-SELECT 
-  id,
-  id_employee,
-  is_hired,
-  id_organization,
-  personnel_number,
-  idx_org,
-  idx_number,
-  idx_null_org_number
-FROM index_calc
-WHERE (idx_org, idx_number) IN (
-  -- Находим дубликаты для случая с организацией
-  SELECT idx_org, idx_number
-  FROM index_calc
-  WHERE idx_org IS NOT NULL AND idx_number IS NOT NULL
-  GROUP BY idx_org, idx_number
-  HAVING COUNT(*) > 1
-)
-OR idx_null_org_number IN (
-  -- Находим дубликаты для случая без организации
-  SELECT idx_null_org_number
-  FROM index_calc
-  WHERE idx_null_org_number IS NOT NULL
-  GROUP BY idx_null_org_number
-  HAVING COUNT(*) > 1
-)
-ORDER BY 
-  CASE 
-    WHEN idx_org IS NOT NULL THEN idx_org 
-    ELSE 999999 
-  END,
-  idx_number,
-  idx_null_org_number;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
+ 
 create or replace trigger trg_w_employee_properties_bi_r before insert on w_employee_properties for each row
 begin
   select nvl(:new.id, sq_w_employee_properties.nextval) into :new.id from dual;
+  if :new.personnel_number = 'Временный' then
+--    :new.personnel_number := lpad(sq_w_employee_properties_pn.nextval, 7, '0');
+    :new.personnel_number := 'ВН-' || to_char(sq_w_employee_properties_pn.nextval);
+   end if;
+  if :new.id_organization = -1000 then
+    :new.id_organization := null;
+   end if;
 end;
 /
 
@@ -719,6 +604,7 @@ last_any_event as (
         id_job,
         personnel_number,
         id_organization,
+        id_schedule,
         row_number() over (partition by id_employee order by id desc) as rn
     from w_employee_properties
     where is_terminated <> 1
@@ -761,6 +647,7 @@ select
   a.personnel_number,
   a.id_organization,
   o.name as organization,
+  s.code as schedulecode,
   e.is_concurrent,
   e.comm
 from w_employees e
@@ -772,6 +659,7 @@ left outer join last_transfer lt on e.id = lt.id_employee
 left outer join w_departaments d on a.id_departament = d.id and a.rn = 1
 left outer join w_jobs j on a.id_job = j.id and a.rn = 1
 left outer join ref_sn_organizations o on a.id_organization = o.id and a.rn = 1
+left outer join w_schedules s on a.id_schedule = s.id 
 ;
 
 
@@ -1485,18 +1373,144 @@ select
  
 
 
---апдейт промежуточного значения
-select nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) from w_payroll_calc_item i where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2026-01-01');   
+--------------------------------------------------------------------------------
 
-update w_payroll_calc_item i set adjustments_total1 = nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2025-01-01');
-update w_payroll_calc_item i set adjustments_total1 = (select   
+--------------------------------------------------------------------------------
+--drop table w_advance_calc cascade constraints;
+alter table w_advance_calc add id_organization number(11); --айди организации
+create table w_advance_calc ( 
+  id number(11),
+  id_departament number(11), --айди подразделения
+  id_employee number(11),    --айди раболтника 
+--  id_organization number(11), --айди организации
+  personnel_number varchar2(10),  --табельный номер 
+  dt date,                   --дата начала ведомости, по полмесяца, как в турв
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_advance_calc primary key (id),
+  constraint fk_w_advance_calc_div foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_advance_calc_emp foreign key (id_employee) references w_employees(id)
+);
+
+--уникальный индекс по подразделению/работнику/дате начала
+create unique index idx_w_advance_calc_uq on w_advance_calc(id_departament, id_employee, personnel_number, dt);
+
+create sequence sq_w_advance_calc start with 1000 nocache;
+
+create or replace trigger trg_w_advance_calc_bi_r before insert on w_advance_calc for each row
+begin
+  select nvl(:new.id, sq_w_advance_calc.nextval) into :new.id from dual;
+end;
+
+--вью для журнала зарплатных ведомостей
+create or replace view v_w_advance_calc as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
+  f_fio(e.f, e.i, e.o) as employee,
+  d.name as departament,
+  --o.name as organization,
+  d.is_office,
+  d.code
+from
+  w_advance_calc p,
+  w_employees e,
+  w_departaments d,
+  ref_sn_organizations o 
+where
+  p.id_departament = d.id
+  and p.id_employee = e.id (+)
+  and p.id_organization = o.id (+)
+;
 
 
 
+create table w_advance_calc_item(
+  id number(11),
+  id_advance_calc number(11),     --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  id_job number(11),              --айди должности 
+  id_schedule number(11),         --айди графика
+  id_organization number(11),     --айди организации, в которой числится работник
+  personnel_number varchar2(10),  --табельный номер 
+  monthly_hours_norm number,      --норма за месяц, по данной строке табеля для работника
+  period_hours_norm number,       --норма за период ведомости, по данной строке табеля для работника     
+  hours_worked number,            --отработано по турв
+  overtime number,                --количество часов переработки (приведенное)
+  planned_pay number,             --плановое начисление
+  fixed_pay number,               --постоянная часть
+  variable_pay number,            --стимулирующая часть
+  ors number,                     --оценка работы сотрудника, %
+  ors_pay number,                 --оценка работы сотрудника, сумма, начисленная исходя из оценки
+  base_pay number,                --итого рассчитано
+  ext_pay number,                 --загружено из внешнего источника (рассчет сделки)
+  overtime_pay number,            --выплаты за переработки 
+  personal_pay number,            --персональная выплата
+  daily_bonus number,             --ежедневные премии (не депремирование!) из турв
+  extra_bonus number,             --дополнительная премия, вводится в ведомости
+  night_pay number,               --выплата за ночные часы, вводится в ведомости
+  milk_compensation number,       --выплата за молоко  
+  non_work_pay number,            --оплата неотработанного вермени (ОТ/БЛ)
+  penalty number,                 --депремирование
+  correction number,              --ручная корректировка начисления, вводится в ведомости
+  total_pay number,               --итого начислено 
+  constraint pk_w_advance_calc_item primary key (id),
+  constraint fk_w_advance_calc_i_own foreign key (id_advance_calc) references w_advance_calc(id) on delete cascade,
+  constraint fk_w_advance_calc_i_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_advance_calc_i_job foreign key (id_job) references w_jobs(id),
+  constraint fk_w_advance_calc_i_sch foreign key (id_schedule) references w_schedules(id),
+  constraint fk_w_advance_calc_i_org foreign key (id_organization) references ref_sn_organizations(id)
+);  
+  
+--drop sequence sq_w_advance_calculations_item;
+create sequence sq_w_advance_calc_item start with 100000 nocache;
 
+--create unique index idx_advance_item_unique on advance_item(id_division, id_worker, dt);
+--create index idx_advance_item_dt_job on advance_item(dt, id_job);
 
+create or replace trigger trg_w_advance_calc_item_bi_r before insert on w_advance_calc_item for each row
+begin
+  select nvl(:new.id, sq_w_advance_calc_item.nextval) into :new.id from dual;
+end;
+   
 
-
+--вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
+create or replace view v_w_advance_calc_item as 
+select
+  i.*,
+  s.code as schedulecode,
+  s.code as schedule,
+  --s.code || ' (' || to_char(i.period_work_hours_norm) || ')' as schedule,
+  p.id_departament as id_target_departament,
+  p.id_employee as id_target_employee,
+  p.id_organization as id_target_organization,
+  p.personnel_number as target_personnel_number,
+  p.is_finalized,
+  p.dt1,
+  p.dt2,
+  p.calc_method,
+  p.overtime_method,
+  --f_fio(e.f, e.i, e.o) as employee,
+  --e.personnel_number,
+  e.name as employee,
+  --e.concurrent_employee,
+  o.name as organization,
+  d.name as departament,
+  d.id_prod_area,
+  a.shortname as prod_area_shortname,
+  a.name as prod_area_name,
+  j.name as job,
+  0 as changed,
+  null as temp
+from
+  w_advance_calc_item i
+  inner join w_advance_calc p on i.id_advance_calc = p.id
+  left outer join w_departaments d on p.id_departament = d.id
+  left outer join v_w_employees e on i.id_employee = e.id
+  left outer join w_jobs j on i.id_job = j.id  
+  left outer join w_schedules s on i.id_schedule = s.id 
+  left outer join ref_production_areas a on d.id_prod_area = a.id
+  left outer join ref_sn_organizations o on i.id_organization = o.id
+;  
 
 
 
@@ -1505,6 +1519,14 @@ update w_payroll_calc_item i set adjustments_total1 = (select
 --================================================================================
 --alter table ref_production_areas add constraint pk_ref_production_areas primary key (id);
 
+
+
+
+--апдейт промежуточного значения
+select nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) from w_payroll_calc_item i where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2026-01-01');   
+
+update w_payroll_calc_item i set adjustments_total1 = nullif(nvl(overtime_pay,0) + nvl(personal_pay,0) + nvl(daily_bonus,0) +nvl(extra_bonus,0) + nvl(night_pay,0) + nvl(milk_compensation,0) + nvl(non_work_pay,0) + nvl(penalty,0) + nvl(correction,0), 0) where i.id_payroll_calc in (select id from w_payroll_calc where dt1 = date '2025-01-01');
+update w_payroll_calc_item i set adjustments_total1 = (select   
 
 
 
@@ -1669,6 +1691,86 @@ nvl(base_pay) + nvl(overtime_pay) + nvl(personal_pay) + nvl(daily_bonus) +nvl(ex
 
 
 
+
+
+--------------------------------------------------------------------------------
+select * from w_employee_properties where id_organization is null order by dt_beg, id;
+
+
+--------------------------------------------------------------------------------
+--находим статусы переводов, которые были без предыдущих записей, или после стутуса Уволен
+select *
+from (
+    select 
+        t.*,
+        -- получаем значение is_terminated из предыдущей строки для того же сотрудника
+        lag(is_terminated) over (
+            partition by id_employee 
+            order by id
+        ) as prev_is_terminated
+        ,
+        lag(id) over (
+            partition by id_employee 
+            order by id
+        ) as prev_id
+    from w_employee_properties t
+)
+where
+    is_hired = 0 and is_terminated = 0 and
+    -- предыдущей записи нет (это первая запись в истории) или
+    (prev_is_terminated is null or
+    -- или предыдущая запись имеет статус уволен
+    prev_is_terminated = 1)
+    ;
+
+--найдем записи где увольнения первым статусом или после увольнения    
+select *
+from (
+    select 
+        t.*,
+        -- получаем значение is_terminated из предыдущей строки для того же сотрудника
+        lag(is_terminated) over (
+            partition by id_employee 
+            order by id
+        ) as prev_is_terminated
+        ,
+        lag(id) over (
+            partition by id_employee 
+            order by id
+        ) as prev_id
+    from w_employee_properties t
+)
+where
+    is_hired = 0 and is_terminated = 1 and
+    -- предыдущей записи нет (это первая запись в истории) или
+    (prev_is_terminated is null or
+    -- или предыдущая запись имеет статус уволен
+    prev_is_terminated = 1)
+    ;
+    
+
+
+create table temp_w_employee_properties as select * from w_employee_properties;
+
+update w_employee_properties set personnel_number = null where id_organization is null;
+
+select * from w_employee_properties where personnel_number is null;
+
+update w_employee_properties set personnel_number = '-' where personnel_number is null;
+
+
+SELECT *
+FROM (
+    SELECT wp.*,
+           COUNT(*) OVER (PARTITION BY personnel_number) AS cnt
+    FROM w_employee_properties wp
+    WHERE id_organization IS NULL
+      AND personnel_number IS NOT NULL
+      AND is_hired = 1
+) t
+WHERE cnt > 1
+ORDER BY personnel_number;
+ 
 
 
 

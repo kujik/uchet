@@ -457,6 +457,7 @@ var
   HasWarn: Boolean;
 begin
   Result := False;
+  pnl_Top.Height := 175;
   //проверим блокировку, выйдем если нельзя взять (при попытке редактирования уйдет в просмотр, при удалении - выход)
   if FormDbLock = fNone then
     Exit;

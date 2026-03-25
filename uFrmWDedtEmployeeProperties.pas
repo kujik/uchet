@@ -26,9 +26,6 @@ type
     cmb_id_job: TDBComboBoxEh;
     cmb_id_schedule: TDBComboBoxEh;
     edt_comm: TDBEditEh;
-    chb_is_trainee: TDBCheckBoxEh;
-    chb_is_foreman: TDBCheckBoxEh;
-    chb_is_concurrent: TDBCheckBoxEh;
     cmb_id_organization: TDBComboBoxEh;
     edt_personnel_number: TDBEditEh;
     cmb_grade: TDBComboBoxEh;
@@ -124,8 +121,8 @@ begin
     ['is_concurrent$i'],
     ['is_foreman$i'],
     ['is_trainee$i'],
-    ['id_organization$i', 'V=0:400'],
-    ['personnel_number$s', 'V=0:400'],
+    ['id_organization$i', 'V=1:400'],
+    ['personnel_number$s', 'V=1:400'],
     ['comm$s', 'V=0:400'],
     ['is_hired$i'],
     ['is_terminated$i']
@@ -133,13 +130,24 @@ begin
 
   View := 'w_employee_properties';
   Table := 'w_employee_properties';
-  FOpt.InfoArray := [['¬вод данных.'#13#10 + ''#13#10 + ''#13#10, not A.InArray(Mode, [fView, fDelete]) {and (User.GetId = S.NInt(CtrlValues[3]))}
-    ], [''#13#10, not A.InArray(Mode, [fView, fDelete])], ['', A.InArray(Mode, [fView, fDelete])]];
+  FOpt.InfoArray := [[
+    '¬ведите данные дл€ добавл€емого статуса работника.'#13#10 +
+    '¬се пол€ об€зательны дл€ ввода.'#13#10 +
+    'Ќедопустимые данные будут подчеркнуты красным.'#13#10 +
+    'ѕри приеме работника без табельного номера (который надо будет об€зательно задать позднее),'#13#10+
+    'поствьте в этом поле "-".'#13#10+
+    '“акже, если ¬ы ошибетесь или пока неизвестны'#13#10 +
+    'подразделение, должность или график, ¬ы сможете их отредактировать впоследствии.'#13#10
+    , not A.InArray(Mode, [fView, fDelete])] ,
+    [''#13#10, not A.InArray(Mode, [fView, fDelete])], ['', A.InArray(Mode, [fView, fDelete])]
+  ];
   FWHBounds.Y2 := -1;
   //выполним метод родител€
   Result := inherited;
   if not Result then
     Exit;
+  if (Mode <> fAdd) and  (F.GetPropB('id_organization') = null) then
+    Cth.SetControlValue(cmb_id_organization, -1000);
   F.SetProp('id_employee', FIdEmp);
   SetControlsState;
 end;
@@ -149,7 +157,8 @@ var
   va2: TVarDynArray2;
 begin
   //загружаем комбобоксы
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where active = 1 and id > 0 or id = :id_old$i order by name asc', [F.GetPropB('id_organization')], cmb_id_organization, cntComboLK);
+  Cth.AddToComboBoxEh(cmb_id_organization, [['Ѕез оформлени€', '-1000']]);
+  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where active = 1 and id > 0 or id = :id_old$i order by name asc', [F.GetPropB('id_organization')], cmb_id_organization, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from w_jobs where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_job')], cmb_id_job, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from w_departaments where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_departament')], cmb_id_departament, cntComboLK);
   Q.QLoadToDBComboBoxEh('select code, id from w_schedules where active = 1 or id = :id_old$i order by code asc', [F.GetPropB('id_schedule')], cmb_id_schedule, cntComboLK);
@@ -171,6 +180,10 @@ var
   ids, lock, users: TVarDynArray;
 begin
   FErrorMessage := '';
+  if (Mode = fAdd) and (edt_personnel_number.Text = '-') and (GetcontrolValue(cmb_id_mode).AsString = '2')  then begin
+    FErrorMessage := 'ѕри приеме работника не был задан табельный номер. «адайте его дл€ статуса приема, и после этого добавьте статус перевода.';
+    Exit;
+  end;
   FDep := [GetcontrolValue('cmb_id_departament'), GetcontrolValue('cmb_id_departament')];
   if (FIdLast <> null) and (FLastRec.G('id_departament') <> FDep[0]) then
     FDep[1] := FLastRec.G('id_departament');
@@ -260,6 +273,17 @@ begin
     Exit;
   if Sender = cmb_id_mode then
     SetControlsState;
+  if Sender = cmb_id_organization then begin
+    if cmb_id_organization.Value = '-1000' then begin
+      edt_personnel_number.Text := '¬ременный';
+      edt_personnel_number.ReadOnly := True;
+    end
+    else begin
+      if edt_personnel_number.Text = '¬ременный' then
+        edt_personnel_number.Text := '';
+      edt_personnel_number.ReadOnly := False;
+    end;
+  end;
   inherited;
 end;
 
@@ -270,20 +294,20 @@ begin
   else if Mode = fEdit then
     SetControlsEditable([cmb_id_mode, dedt_dt_beg], False);
   //заблокируем все если выбрали режим ”вольнение
-  SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, chb_is_trainee, chb_is_foreman, chb_is_concurrent, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
-  SetControlsEditable([chb_is_concurrent, chb_is_foreman, chb_is_trainee], False);
+  SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
   if Mode = fEdit then
     Exit;
-  //заблокирем изменение организации и табльного номера, если это не прием, или если они уже введены
+  //заблокирем изменение организации и табельного номера, если это не прием
   if FIdMode <> 1 then begin
-    if (FIdLast <> null) and (FLastRec.G('id_organization') <> null) then
+    SetControlsEditable([cmb_id_organization, edt_personnel_number], False);
+{    if (FIdLast <> null) and (FLastRec.G('id_organization') <> null) then
       SetControlsEditable([cmb_id_organization], False);
     if (FIdLast <> null) and (FLastRec.G('personnel_number') <> null) then
-      SetControlsEditable([edt_personnel_number], False);
+      SetControlsEditable([edt_personnel_number], False);}
   end;
   if GetControlValue('cmb_id_mode').AsString <> '3' then
     Exit;
-Exit;
+  Exit;
   F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);  //!!! работает неправильно, сбрасываетс€ комбобокс выбора режима!!!
 end;
 
@@ -314,3 +338,6 @@ end;
 *)
 
 end.
+
+
+!!!увольнение нужно допускать и первым днем прошлого статуса, а не следующим!!!

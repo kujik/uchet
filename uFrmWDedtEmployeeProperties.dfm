@@ -70,9 +70,9 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         Top = 89
         Width = 397
         Height = 21
-        ControlLabel.Width = 55
+        ControlLabel.Width = 57
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1055#1088#1086#1092#1077#1089#1089#1080#1103
+        ControlLabel.Caption = #1044#1086#1083#1078#1085#1086#1089#1090#1100
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         Anchors = [akLeft, akTop, akRight]
@@ -84,8 +84,8 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         ExplicitWidth = 393
       end
       object cmb_id_schedule: TDBComboBoxEh
-        Left = 91
-        Top = 209
+        Left = 92
+        Top = 143
         Width = 113
         Height = 21
         ControlLabel.Width = 79
@@ -100,8 +100,8 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         Visible = True
       end
       object edt_comm: TDBEditEh
-        Left = 89
-        Top = 286
+        Left = 90
+        Top = 220
         Width = 395
         Height = 21
         Anchors = [akLeft, akTop, akRight]
@@ -115,38 +115,10 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 5
         Text = 'DBEditEh1'
         Visible = True
-        ExplicitWidth = 391
-      end
-      object chb_is_trainee: TDBCheckBoxEh
-        Left = 92
-        Top = 143
-        Width = 97
-        Height = 17
-        Caption = #1059#1095#1077#1085#1080#1082
-        DynProps = <>
-        TabOrder = 6
-      end
-      object chb_is_foreman: TDBCheckBoxEh
-        Left = 92
-        Top = 166
-        Width = 97
-        Height = 17
-        Caption = #1041#1088#1080#1075#1072#1076#1080#1088
-        DynProps = <>
-        TabOrder = 7
-      end
-      object chb_is_concurrent: TDBCheckBoxEh
-        Left = 92
-        Top = 189
-        Width = 97
-        Height = 17
-        Caption = #1057#1086#1074#1084#1077#1089#1090#1080#1090#1077#1083#1100
-        DynProps = <>
-        TabOrder = 8
       end
       object cmb_id_organization: TDBComboBoxEh
-        Left = 91
-        Top = 236
+        Left = 92
+        Top = 170
         Width = 392
         Height = 21
         ControlLabel.Width = 66
@@ -157,14 +129,13 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         Anchors = [akLeft, akTop, akRight]
         DynProps = <>
         EditButtons = <>
-        TabOrder = 9
+        TabOrder = 6
         Text = 'cmb_id_job'
         Visible = True
-        ExplicitWidth = 388
       end
       object edt_personnel_number: TDBEditEh
-        Left = 91
-        Top = 263
+        Left = 92
+        Top = 197
         Width = 113
         Height = 21
         ControlLabel.Width = 89
@@ -174,7 +145,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
         EditButtons = <>
-        TabOrder = 10
+        TabOrder = 7
         Text = 'edt_personnel_number'
         Visible = True
       end
@@ -190,7 +161,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         ControlLabelLocation.Position = lpLeftCenterEh
         DynProps = <>
         EditButtons = <>
-        TabOrder = 11
+        TabOrder = 8
         Text = 'cmb_id_job'
         Visible = True
       end
