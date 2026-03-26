@@ -93,7 +93,7 @@ begin
 
   Caption:='ТУРВ';
   var ssort := 'job;employee;schedulecode;organization;personnel_number';
-  var sgroup := 'schedulecode;job;employee';
+  var sgroup := 'schedulecode;job;organization;employee';
   //var sgroup := 'job;employee;schedulecode;organization;personnel_number';
   FTurv.Create(ID, ssort, sgroup);
   //FTurv.LoadFromParsec;
@@ -164,6 +164,7 @@ begin
   Frg1.Opt.SetFields([
     ['x$s', '*','20'],
     ['name$s','Работник|ФИО','200'],
+    ['organization$s','Работник|Организация','90'],
     ['job$s','Работник|Должность','150'],
     ['is_foreman$s','Работник|Бригадир','50','pic','i'],
     ['is_trainee$s','Работник|Ученик','40','pic','i'],
@@ -486,6 +487,7 @@ begin
     Frg1.MemTableEh1.Insert;
     Frg1.MemTableEh1.FieldByName('name').Value := FTurv.GetListTitleString(i, 'name');
     Frg1.MemTableEh1.FieldByName('job').Value := FTurv.GetListTitleString(i, 'job');
+    Frg1.MemTableEh1.FieldByName('organization').Value := FTurv.GetListTitleString(i, 'organization');
     Frg1.MemTableEh1.FieldByName('is_foreman').Value := FTurv.GetListTitleString(i, 'is_foreman');
     Frg1.MemTableEh1.FieldByName('is_trainee').Value := FTurv.GetListTitleString(i, 'is_trainee');
     Frg1.MemTableEh1.FieldByName('grade').Value := FTurv.GetListTitleString(i, 'grade');

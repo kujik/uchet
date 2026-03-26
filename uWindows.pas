@@ -117,7 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWDedtWorkerStatus, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
-  uFrmWGedtPayrollCash, uFrmWGedtAdvance,
+  uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash,
 
 
   D_Order,
@@ -937,8 +937,14 @@ begin
     else
       TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1]);
   end
+  else if F = myfrm_Dlg_AdvanceTransfer then begin
+    TFrmWGedtAdvanceTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
+  end
   else if F = myfrm_Dlg_PayrollTransfer then begin
     TFrmWGedtPayrollTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
+  end
+  else if F = myfrm_Dlg_AdvanceCash then begin
+    TFrmWGedtAdvanceCash.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_PayrollCash then begin
     TFrmWGedtPayrollCash.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);

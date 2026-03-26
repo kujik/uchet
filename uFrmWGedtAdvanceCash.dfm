@@ -1,5 +1,5 @@
-inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
-  Caption = 'FrmWGjrnEmployees'
+inherited FrmWGedtAdvanceCash: TFrmWGedtAdvanceCash
+  Caption = 'FrmWGedtAdvanceCash'
   ExplicitWidth = 812
   ExplicitHeight = 575
   TextHeight = 13
@@ -10,6 +10,14 @@ inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
         ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
           ExplicitWidth = 774
+          inherited pnlGrid: TPanel
+            inherited DbGridEh1: TDBGridEh
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
+                ExplicitHeight = 120
+              end
+            end
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -28,6 +36,14 @@ inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
         ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 784
+          inherited pnlGrid: TPanel
+            inherited DbGridEh1: TDBGridEh
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
+                ExplicitWidth = 32
+              end
+            end
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -53,5 +69,22 @@ inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
     inherited lblStatusBarL: TLabel
       Height = 14
     end
+  end
+  object PrintDBGridEh1: TPrintDBGridEh
+    DBGridEh = Frg1.DbGridEh1
+    Options = []
+    PageFooter.Font.Charset = DEFAULT_CHARSET
+    PageFooter.Font.Color = clWindowText
+    PageFooter.Font.Height = -12
+    PageFooter.Font.Name = 'Segoe UI'
+    PageFooter.Font.Style = []
+    PageHeader.Font.Charset = DEFAULT_CHARSET
+    PageHeader.Font.Color = clWindowText
+    PageHeader.Font.Height = -12
+    PageHeader.Font.Name = 'Segoe UI'
+    PageHeader.Font.Style = []
+    Units = MM
+    Left = 458
+    Top = 310
   end
 end

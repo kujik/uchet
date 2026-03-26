@@ -123,7 +123,7 @@ begin
    [mbtDelete, 1, 'Удалить последний статус работника'], [-1001, 1, 'Изменить выбранный статус работника'], [-1002, 1, 'Задать табельный номер'],
    [], [mbtEdit, User.IsDeveloper, 'Изменить выбранный статус работника (все поля)'],
    [], [mbtGridSettings]
-   //,[mbtTest]
+//   ,[mbtTest]
 
   ]);
   Frg2.Opt.SetButtonsIfEmpty([mbtTest]);
@@ -154,9 +154,11 @@ procedure TFrmWGjrnEmployees.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Inte
 begin
   Handled := True;
   if Tag = mbtTest then begin
-//    TempSetPersonnelNumbers;
-{    if MyQuestionMessage('?') = mrYes then begin
-      Q.QExecSql('update w_employee_properties set is_hired = 1 where id = :id$i', [Fr.ID]);
+{//    TempSetPersonnelNumbers;
+    if MyQuestionMessage('?') = mrYes then begin
+//      Q.QExecSql('update w_employee_properties set is_hired = 1 where id = :id$i', [Fr.ID]);
+      var pn := Q.QSelectOneRow('select ''ВН-'' || to_char(sq_w_employee_properties_pn.nextval) from dual', [])[0];
+      Q.QExecSql('update w_employee_properties set id_organization = null, personnel_number = :pn$s where id = :id$i', [pn, Fr.ID]);
       Fr.RefreshRecord;
     end;}
   end

@@ -558,6 +558,7 @@ begin
 end;
 /
 
+--select 'ВН-' || to_char(sq_w_employee_properties_pn.nextval) from dual;
 
 select * from w_employee_properties order by id_employee, dt_beg;
 
@@ -1269,7 +1270,7 @@ where
   i.id_organization = o.id (+)
 ;
 
---create or replace view v_w_payrolls as 
+create or replace view v_w_payrolls as 
 select
   'ведомость к выдаче' as type,
   dt1,
@@ -1458,7 +1459,6 @@ begin
   select nvl(:new.id, sq_w_advance_calc_item.nextval) into :new.id from dual;
 end;
    
-
 --вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
 create or replace view v_w_advance_calc_item as 
 select
@@ -1492,6 +1492,168 @@ from
   left outer join ref_production_areas a on d.id_prod_area = a.id
   --left outer join ref_sn_organizations o on i.id_organization = o.id
 ;  
+
+
+--------------------------------------------------------------------------------
+
+create table w_advance_transfer ( 
+  id number(11),
+  id_employee number(11),    --айди раболтника 
+  personnel_number varchar2(10),  --табельный номер 
+  dt date,                   --дата начала ведомости, по полмесяца, как в турв
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_advance_transfer primary key (id),
+  constraint fk_w_advance_transfer_empl foreign key (id_employee) references w_employees(id)
+);
+
+create sequence sq_w_advance_transfer start with 1 nocache;
+
+create or replace trigger trg_w_advance_transfer_bi_r before insert on w_advance_transfer for each row
+begin
+  select nvl(:new.id, sq_w_advance_transfer.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_advance_transfer as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
+  f_fio(e.f, e.i, e.o) as employee
+from
+  w_advance_transfer p,
+  w_employees e
+where
+  p.id_employee = e.id (+)
+;
+
+--alter table w_advance_transfer_item add correction number;
+--alter table w_advance_transfer_item  drop column hours_worked;
+create table w_advance_transfer_item(
+  id number(11),
+  id_advance_transfer number(11), --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  personnel_number varchar2(10),  --табельный номер
+  total_pay number,               --итого начислено 
+  correction number,              --ручная корректировка начисления, вводится в ведомости
+  pay_cash number,                --итого к выдаче наличными  
+  constraint pk_w_advance_transfer_item primary key (id),
+  constraint fk_w_advance_transfer_i_own foreign key (id_advance_transfer) references w_advance_transfer(id) on delete cascade,
+  constraint fk_w_advance_transfer_i_emp foreign key (id_employee) references w_employees(id)
+);  
+  
+create sequence sq_w_advance_transfer_item start with 1 nocache;
+
+create or replace trigger trg_w_advance_transfer_it_bi_r before insert on w_advance_transfer_item for each row
+begin
+  select nvl(:new.id, sq_w_advance_transfer_item.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_advance_transfer_item as 
+select
+  i.*,
+  p.dt,
+  p.id_employee as id_target_employee,
+  e.name as employee,
+  null as temp
+from
+  w_advance_transfer_item i,
+  w_advance_transfer p,
+  v_w_employees e
+where
+  i.id_advance_transfer = p.id and
+  i.id_employee (+) = e.id 
+;     
+
+--------------------------------------------------------------------------------
+create table w_advance_cash ( 
+  id number(11),
+  id_departament number(11), --айди подразделения
+  id_employee number(11),    --айди раболтника 
+  personnel_number varchar2(10),  --табельный номер 
+  dt date,                  --дата начала ведомости, по полмесяца, как в турв
+  is_finalized number(1),    --период закрыт
+  constraint pk_w_advance_cash primary key (id),
+  constraint fk_w_advance_cash_div foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_advance_cash_empl foreign key (id_employee) references w_employees(id)
+);
+
+create sequence sq_w_advance_cash start with 1 nocache;
+
+create or replace trigger trg_w_advance_cash_bi_r before insert on w_advance_cash for each row
+begin
+  select nvl(:new.id, sq_w_advance_cash.nextval) into :new.id from dual;
+end;
+
+
+create or replace view v_w_advance_cash as 
+select
+  p.*,
+  case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
+  d.name as departament,  
+  f_fio(e.f, e.i, e.o) as employee,
+  a.shortname as prod_area_shortname,
+  a.name as prod_area_name,
+  d.code,
+  a.shortname || ' - ' || decode(d.is_office, 1, 'офис', 'цех') || '' as area
+from
+  w_advance_cash p,
+  w_departaments d,
+  w_employees e,
+  ref_production_areas a 
+where
+  p.id_employee = e.id (+)
+  and p.id_departament = d.id
+  and d.id_prod_area = a.id
+;
+
+
+create table w_advance_cash_item(
+  id number(11),
+  id_advance_cash number(11),     --айди зарплатной ведомости, в которую входит эта строка
+  id_employee number(11),         --айди раболтника 
+  id_job number(11),              --айди должности 
+  personnel_number varchar2(10),  --табельный номер
+  pay_cash number,                --итого к выдаче наличными
+  banknotes varchar2(400),        --купюры       
+  constraint pk_w_advance_cash_item primary key (id),
+  constraint fk_w_advance_cash_i_own foreign key (id_advance_cash) references w_advance_cash(id) on delete cascade,
+  constraint fk_w_advance_cash_i_emp foreign key (id_employee) references w_employees(id),
+  constraint fk_w_advance_cash_i_job foreign key (id_job) references w_jobs(id)
+);  
+  
+create sequence sq_w_advance_cash_item start with 1 nocache;
+
+create or replace trigger trg_w_advance_cash_it_bi_r before insert on w_advance_cash_item for each row
+begin
+  select nvl(:new.id, sq_w_advance_cash_item.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_advance_cash_item as 
+select
+  i.*,
+  p.dt,
+  e.name as employee,
+  j.name as job,
+  null as temp
+from
+  w_advance_cash_item i,
+  w_advance_cash p,
+  v_w_employees e,
+  w_jobs j
+where
+  i.id_advance_cash = p.id and
+  i.id_employee (+) = e.id and 
+  i.id_job = j.id and  
+;
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1761,12 +1923,15 @@ ORDER BY personnel_number;
       where id_organization is null and dt_beg <= date '2026-03-15' and (dt_end is null or dt_end >= date '2026-03-01') and id_departament = 4 
       group by id_departament;
 
-      select * from v_w_employee_properties 
-      where id_organization is null and dt_beg <= date '2026-03-15' and (dt_end is null or dt_end >= date '2026-03-01') and id_departament = 5 and is_terminated <> 1; 
+      select distinct id_departament from v_w_employee_properties 
+      where id_organization is null and dt_beg <= date '2026-03-15' and (dt_end is null or dt_end >= date '2026-03-01') and is_terminated <> 1; 
  
 
+      select * from v_w_employee_properties 
+      where id_organization is null   and is_terminated <> 1  and id_departament = 55; 
 
-
+      select * from v_w_employee_properties where is_terminated <> 1  and id_departament = 55 and id =1948;
+      
 
 
 

@@ -29,7 +29,6 @@ uses
 type
   TFrmWGedtAdvance = class(TFrmBasicGrid2)
     PrintDBGridEh1: TPrintDBGridEh;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FPayrollParams: TNamedArr;
     FDeletedWorkers: TVarDynArray;
@@ -37,6 +36,7 @@ type
     FIdTurv: Variant;
     FIsEditableAdd, FIsEditableAll: Boolean;
     function  PrepareForm: Boolean; override;
+    function  Save: Boolean; override;
     //события грида
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
@@ -50,10 +50,8 @@ type
     procedure SetEditableAll;
     procedure FinalizePayroll;
     procedure PrintGrid;
-    procedure SavePayroll;
     procedure CalculateAll;
     procedure CalculateRow(Row:Integer);
-    const CColWidth = 45;
   public
   end;
 
@@ -81,33 +79,13 @@ const
   //позиции меню
   cmbRecalculate = 1005;
   cmbSetEditable = 1006;
+  cmbDeleteRow = 1007;
   //поля в бд ()
   cFieldsS =
     'id$i;id_employee$i;id_job$i;id_schedule$i;personnel_number$s;monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;planned_pay$f;fixed_pay$f;base_pay$f;correction$f;total_pay$f';
   cFieldsL =
     'employee$s;job$s;schedulecode$s;id_organization$i;temp$i';  //id_organization$i;organization$s;changed$i;
-
-procedure TFrmWGedtAdvance.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  rn, i, res: Integer;
-  changed: Boolean;
-begin
-  inherited;
-  //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
-  if FInPrepare then
-   Exit;
-  if Frg1.IsDataChanged then begin
-    res:=myMessageDlg('Зарплатная ведомость была изменена!'#13#10'Сохранить данные?', mtConfirmation, mbYesNoCancel);
-    if res = mrYes then begin
-      SavePayroll;
-      RefreshParentForm;
-    end
-    else if res = mrCancel then begin
-      Action:=caNone;
-      Exit;
-    end;
-  end;
-end;
+  cColWidth = 45;
 
 function TFrmWGedtAdvance.PrepareForm: Boolean;
 var
@@ -164,13 +142,15 @@ begin
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
     [mbtCustom_Turv],
-    [-mbtExcel, AddParam = null],
+    [-cmbDeleteRow, True, 'Удалить строку'],
     [-cmbRecalculate, True, 'Пересчитать все'],
     [-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
+    [-mbtExcel, AddParam = null],
     [],[mbtLock],
     [],[mbtCtlPanel]
   ]);
   Frg1.Opt.ButtonsNoAutoState := [0];
+  Frg1.Opt.SetGridOperations('ud');
 
   Frg1.CreateAddControls('1', cntLabelClr, GetCaption(True), 'lblDivision', '', 4, yrefT, 800);
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblInfo', '', 4, yrefB, 800);
@@ -192,6 +172,10 @@ begin
     'полям "ФИО" или "Бланк".'#13#10+
     ''#13#10
   ]];
+
+  FQueryCloseMessage := 'Ведомость была изменена!'#13#10'Сохранить данные?';
+  FOpt.RequestWhereClose := cqYNC;
+
   Result := inherited;
   if not Result then
     Exit;
@@ -208,6 +192,39 @@ begin
   SetButtons;
 
   Result:=True;
+end;
+
+function TFrmWGedtAdvance.Save: Boolean;
+//сохраним ведомость
+var
+  i, j: Integer;
+  f, fn, va: TVarDynArray;
+begin
+  Result := False;
+  Q.QBeginTrans(True);
+  Q.QExecSql('update w_advance_calc set is_finalized = :p$i where id = :id$i', [FPayrollParams.G('is_finalized'), ID]);
+  //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
+  if Length(FDeletedWorkers) > 0 then
+    Q.QExecSql('delete from w_advance_calc_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
+  //обновим в бд все строки таблицы
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //если строка не была прочитана ранее из бд - вставим
+    if Frg1.GetValueI('id', i, False) = 0 then begin
+      var idn := Q.QIUD('i', 'w_advance_calc_item', '', 'id$i;id_advance_calc$i', [-1, ID]);
+      Frg1.SetValue('id', i, False, idn);
+    end;
+    //обновим все сохраняемые поля грида для строки
+    f := A.Explode(cFieldsS, ';');
+    va := [];
+    for j := 0 to High(f) do
+      fn := A.Explode(f[j], '$');
+    for j := 0 to High(f) do begin
+      va := va + [Frg1.GetValue(A.Explode(f[j], '$')[0], i, False)];
+    end;
+    Q.QIUD('u', 'w_advance_calc_item', '', cFieldsS, va);
+  end;
+  Q.QCommitTrans;
+  Result := Q.CommitSuccess;
 end;
 
 procedure TFrmWGedtAdvance.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -235,11 +252,18 @@ begin
   case Tag of
     cmbSetEditable:
       SetEditableAll;
-    cmbRecalculate: begin
-      CalculateAll;
-      Frg1.SetState(True, null, null);
-      Frg1.InvalidateGrid;
-    end;
+    cmbDeleteRow:
+      if MyQuestionMessage('Удалить строку?') = mrYes then begin
+        FDeletedWorkers := FDeletedWorkers + [Frg1.GetValue('id')];
+        Frg1.DeleteRow;
+        Frg1.SetState(True, null, null);
+      end;
+    cmbRecalculate:
+      begin
+        CalculateAll;
+        Frg1.SetState(True, null, null);
+        Frg1.InvalidateGrid;
+      end;
     mbtCustom_Turv:
       if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
         GetDataFromTurv;
@@ -335,7 +359,7 @@ begin
     //получаем турв, с учкетом выборки, с загрузкой данных по дням, включая уволенных
     FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);
   end;
-  //загрузим дванные по зарплате из предыдущей ведомости
+  //загрузим дванные по зарплате из предыдущей ведомости по этому подраздделению
   //!!!
   Q.QLoadFromQuery(
     'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt1 = :dt1$d',
@@ -455,16 +479,15 @@ begin
   end;
 
   for i := 0 to na.High do
-  for j:= 0 to naprev.High do begin
-
-    if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
-      if na.G(i, 'planned_pay') = null then
-        na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
-      if na.G(i, 'fixed_pay') = null then
-        na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
-      Break;
+    for j := 0 to naprev.High do begin
+      if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
+        if na.G(i, 'planned_pay') = null then
+          na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
+        if na.G(i, 'fixed_pay') = null then
+          na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
+        Break;
+      end;
     end;
-  end;
 
   //загрузим данные в грид
   Frg1.LoadData(na);
@@ -491,14 +514,11 @@ begin
   var dt := FPayrollParams.G('dt');
   Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('employee') <> null, FPayrollParams.G('employee') + ' (' + FPayrollParams.G('departament') + ')', FPayrollParams.G('departament')) +
     S.IIFStr(Colored, '$000000') + ' с' + S.IIFStr(Colored, '$FF00FF') +' ' + DateToStr(dt) +
-    S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(EncodeDate(YearOf(dt), MonthOf(dt), 15));
+    S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(encodedate(yearof(dt), monthof(dt), 15));
 end;
 
 procedure TFrmWGedtAdvance.SetButtons;
 //установим доступность кнопок и пунктов меню, а также подсказу в заголовке
-var
-  i: Integer;
-  NoNorms: Boolean;
 begin
   //заблокируем все
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, False);
@@ -506,6 +526,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbDeleteRow, null, False);
   //грид ридонли
   Frg1.DbGridEh1.ReadOnly := True;
   if Mode = fView then begin
@@ -522,6 +543,7 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbDeleteRow, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
   //кнопка закрытия ведомости
@@ -583,36 +605,6 @@ begin
   Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, True);
 end;
 
-procedure TFrmWGedtAdvance.SavePayroll;
-//сохраним ведомость
-var
-  i, j: Integer;
-  f, fn, va: TVarDynArray;
-begin
-  Q.QBeginTrans(True);
-  //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
-  if Length(FDeletedWorkers) > 0 then
-    Q.QExecSql('delete from w_advance_calc_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
-  //обновим в бд все строки таблицы
-  for i := 0 to Frg1.GetCount(False) - 1 do begin
-    //если строка не была прочитана ранее из бд - вставим
-    if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_advance_calc_item', '', 'id$i;id_advance_calc$i', [-1, ID]);
-      Frg1.SetValue('id', i, False, idn);
-    end;
-    //обновим все сохраняемые поля грида для строки
-    f := A.Explode(cFieldsS, ';');
-    va := [];
-    for j := 0 to High(f) do
-      fn := A.Explode(f[j], '$');
-    for j := 0 to High(f) do begin
-      va := va + [Frg1.GetValue(A.Explode(f[j], '$')[0], i, False)];
-    end;
-    Q.QIUD('u', 'w_advance_calc_item', '', cFieldsS, va);
-  end;
-  Q.QCommitTrans;
-end;
-
 procedure TFrmWGedtAdvance.CalculateAll;
 //пересчитаем всю таблицу
 var
@@ -639,6 +631,5 @@ begin
     Frg1.SetValue('base_pay', Row, False, null);
   Frg1.SetValue('total_pay', Row, False, Round(Frg1.GetValue('base_pay', Row, False).AsFloat + Frg1.GetValue('correction', Row, False).AsFloat));
 end;
-
 
 end.

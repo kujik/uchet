@@ -77,9 +77,10 @@ type
     function ExecureJPersBonusDialog(AOwner: TComponent; AId: Variant; AIdEmpl: Variant; AMode: TDialogType): Boolean;
     function CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
-//    function SetForemanAllowance(AId: Integer): Boolean;
     function  GetArrOfTurvPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
+    function  CreateAllAdvanceTransfers: Boolean;
     function  CreateAllPayrollTransfers: Boolean;
+    function  CreateAllAdvanceCash: Boolean;
     function  CreateAllPayrollCash: Boolean;
     procedure ExtendPersBonuses;
     //заагрзука данных из парсек и сохраниение их в турв, новый вариантт 2025г
@@ -3332,6 +3333,54 @@ begin
   end;
 end;
 
+function TTurv.CreateAllAdvanceTransfers: Boolean;
+var
+  dt, dt1, dt2: TDateTime;
+  i, j: Integer;
+  va1, va2: TVarDynArray2;
+  va: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
+begin
+{  if TFrmBasicInput.ShowDialog(Application, '', [], fAdd, '~Создать ведомости', 185, 45, [[cntComboL,'Период','1:400:0', 135]],
+    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfTurvPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
+  Exit;
+  S.GetDatesFromPeriodString(va[0], dt1, dt2);}
+  dt1:=EncodeDate(YearOf(Date), MonthOf(Date), 1);
+  dt2:=EncodeDate(YearOf(Date), MonthOf(Date), 15);
+  if MyQuestionMessage('Создать ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
+    Exit;
+  Cnt := 0;
+  Msg := '';
+  //если есть расчетные ведомости за период по подразделениям, а общая ведомость к перечислению не создана - создадим
+  if (Q.QSelectOneRow('select count(id) from w_advance_calc where id_employee is null and dt = :dt$d', [dt1])[0] <> 0) and
+    (Q.QSelectOneRow('select count(id) from w_advance_transfer where id_employee is null and dt = :dt$d', [dt1])[0] = 0)
+    then begin
+      if Q.QIUD('i', 'w_advance_transfer', '', 'id$i;dt$d', [0, dt1]) <> -1 then
+        inc(Cnt);
+    end;
+  //ведомости по уволенным работникам - сгруппированы по работнику и периоду работы
+  va1 := Q.QLoadToVarDynArray2('select id_employee, personnel_number from w_advance_calc where id_employee is not null and dt = :dt$d group by id_employee, personnel_number', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_employee, personnel_number from w_advance_transfer where id_employee is not null and dt = :dt$d', [dt1]);
+    for i := 0 to High(va1) do begin
+      if (A.PosRowInArray(va1, va2, i) = -1) then begin
+        //если ведомость еще не создана
+        if Q.QIUD('i', 'w_advance_transfer', '', 'id$i;id_employee$i;personnel_number$s;dt$d', [0, va1[i][0], va1[i][1], dt1], False) <> -1 then
+          inc(Cnt);
+      end;
+    end;
+  //сообщение
+  if Cnt = 0 then
+    Msg := 'Ни одна ведомость не создана!' + Msg
+  else
+    Msg := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' ;
+  MyInfoMessage(Msg, 1);
+  Result := Cnt > 0;
+end;
+
+
 function TTurv.CreateAllPayrollTransfers: Boolean;
 var
   dt, dt1, dt2: TDateTime;
@@ -3371,6 +3420,56 @@ begin
           inc(Cnt);
       end;
     end;
+  //сообщение
+  if Cnt = 0 then
+    Msg := 'Ни одна ведомость не создана!' + Msg
+  else
+    Msg := 'Создан' + S.GetEnding(cnt, 'а', 'о', 'о') + ' ' + IntToStr(cnt) + ' ведомост' + S.GetEnding(cnt, 'ь', 'и', 'ей') + '.' ;
+  MyInfoMessage(Msg, 1);
+  Result := Cnt > 0;
+end;
+
+function TTurv.CreateAllAdvanceCash: Boolean;
+var
+  dt, dt1, dt2, dt3: TDateTime;
+  i, j: Integer;
+  va1, va2, va3: TVarDynArray2;
+  va: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
+begin
+  dt1:=EncodeDate(YearOf(Date), MonthOf(Date), 1);
+  dt2:=EncodeDate(YearOf(Date), MonthOf(Date), 15);
+  dt3:=EncodeDate(YearOf(Date), MonthOf(Date), DaysInMonth(Date));
+  if MyQuestionMessage('Создать ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
+    Exit;
+  Cnt := 0;
+  Msg := '';
+  //по работающим (по подразделениям)
+  //создадим ведомости по всем подразделениям, которые есть в расчетных
+  va1 := Q.QLoadToVarDynArray2('select id_departament from w_advance_calc where id_employee is null and dt = :dt$d', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_departament from w_advance_cash where id_employee is null and dt = :dt$d', [dt1]);
+  for i := 0 to High(va1) do begin
+    if (A.PosRowInArray(va1, va2, i) = -1) then begin
+      if Q.QIUD('i', 'w_advance_cash', '', 'id$i;id_departament;dt$d', [0, va1[i][0], dt1], False) <> -1 then
+        inc(Cnt);  //увеличим количество созданных
+    end;
+  end;
+  //выберем данные по уволенным
+  //строка соответствует периоду работы, подразделение берется на момент увольнения
+  va1 := Q.QLoadToVarDynArray2('select id_departament, id_employee, personnel_number from w_advance_calc where id_employee is not null and dt = :dt$d', [dt1]);
+  va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, personnel_number from w_advance_cash where dt = :dt$d', [dt1]);
+  va3 := Q.QLoadToVarDynArray2('select id_departament, id_employee, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1,  dt3]);
+  for i := 0 to High(va1) do begin
+    if (A.PosRowInArray(va1, va2, i) = -1) and (A.PosRowInArray(va1, va3, i) > -1) then begin
+      //если ведомость еще не создана, и с такими параметрами есть в списке уволенных за периода
+      //(таким образом исключаем ведомости с промежуточными подразделениями, т.е. если бли переходы по ним в течении периода работы, то будет создана только ведомость с подразделением на момент увольнения)
+      if Q.QIUD('i', 'w_advance_cash', '', 'id$i;id_departament;id_employee$i;personnel_number$s;dt$d', [0, va1[i][0], va1[i][1], va1[i][2], dt1], False) <> -1 then
+        inc(Cnt);  //увеличим количество созданных
+    end;
+  end;
   //сообщение
   if Cnt = 0 then
     Msg := 'Ни одна ведомость не создана!' + Msg
