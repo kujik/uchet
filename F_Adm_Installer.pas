@@ -117,7 +117,7 @@ begin
   edt_SrcPath.Enabled := False;
   edt_DstPath.Enabled := False;
   {$R-}
-  CopyFile(pwidechar(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe'), pwidechar(Sys.GetWinTemp + '\' + cmb_Module.Text + '.exe'), False);
+  //CopyFile(pwidechar(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe'), pwidechar(Sys.GetWinTemp + '\' + cmb_Module.Text + '.exe'), False);
   {$R+}
   ProgressBar1.Visible:= True;
   if chb_CloseSessions.Checked
@@ -184,8 +184,8 @@ begin
 
   Ver2 := '';
   Dt2 := '';
-  Ver2 := Module.GetFileVersion(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe');
-  Dt2 := Module.GetFileVersion(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe', 'LastCompiledTime');
+  Ver2 := Module.GetFileVersion(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe');
+  Dt2 := Module.GetFileVersion(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe', 'LastCompiledTime');
   if Ver2 + Dt2 = '' then begin
     lbl_InstalledInfo.SetCaption('$FF00FFМодуль отсутствует в целевом каталоге!');
   end
