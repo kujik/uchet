@@ -62,7 +62,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Height = 1
     Visible = False
     ExplicitTop = 510
-    ExplicitWidth = 772
+    ExplicitWidth = 846
     ExplicitHeight = 1
     inherited lbl_StatusBar_Right: TLabel
       Left = 763
@@ -195,7 +195,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     WantReturns = True
   end
   object Bt_Ok: TBitBtn [12]
-    Left = 623
+    Left = 619
     Top = 471
     Width = 195
     Height = 33
@@ -203,7 +203,7 @@ inherited Form_Adm_Installer: TForm_Adm_Installer
     Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
     TabOrder = 8
     OnClick = Bt_OkClick
-    ExplicitLeft = 545
+    ExplicitLeft = 615
     ExplicitTop = 470
   end
   object Dbg_PrevInstall: TDBGridEh [13]

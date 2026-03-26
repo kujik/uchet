@@ -327,11 +327,14 @@ var
   s: string;
   dt1: TDateTime;
   i: Integer;
+  va: TVarDynArray;
 begin
   Result := False;
   dt1 := Sys.GetFileAge(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe');
-  FileList := TDirectory.GetFiles(edt_SrcPath.Text, '*.pas'); // TSearchOption.soAllDirectories
-  FileList := FileList + TDirectory.GetFiles(edt_SrcPath.Text, '*.dfm');
+  va:= ['*.pas', '*.dfm', '*.dpr', '*.dproj'];
+  FileList := [];
+  for i := 0 to High(va) do
+    FileList := FileList + TDirectory.GetFiles(edt_SrcPath.Text, va[i]);
   for i := 0 to High(FileList) do begin
     if Sys.GetFileAge(FileList[i]) > dt1 then
       Exit;
@@ -350,10 +353,10 @@ begin
   Result := False;
   if True or (mem_Users.Text = '') then begin
     {$R-}
-    Result := CopyFile(
+{    Result := CopyFile(
       pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
       pwidechar(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe'), False
-    );
+    );}
     Result := Result and CopyFile(
       pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
       pwidechar(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe'), False

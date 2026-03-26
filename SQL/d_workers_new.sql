@@ -1408,21 +1408,20 @@ end;
 create or replace view v_w_advance_calc as 
 select
   p.*,
+  p.dt as dt1,
+  trunc(p.dt, 'MM') + 14 as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   d.name as departament,
---  o.name as organization,
   d.is_office,
   d.code
 from
   w_advance_calc p,
   w_employees e,
   w_departaments d
---  ref_sn_organizations o 
 where
   p.id_departament = d.id
   and p.id_employee = e.id (+)
---  and p.id_organization = o.id (+)
 ;
 
 alter table w_advance_calc_item add fixed_pay number;
@@ -1516,6 +1515,8 @@ end;
 create or replace view v_w_advance_transfer as 
 select
   p.*,
+  p.dt as dt1,
+  trunc(p.dt, 'MM') + 14 as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee
 from
@@ -1587,6 +1588,8 @@ end;
 create or replace view v_w_advance_cash as 
 select
   p.*,
+  p.dt as dt1,
+  trunc(p.dt, 'MM') + 14 as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   d.name as departament,  
   f_fio(e.f, e.i, e.o) as employee,
