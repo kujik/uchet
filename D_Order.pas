@@ -106,6 +106,8 @@ type
     nedt_Attention: TDBNumberEditEh;
     cmb_Area: TDBComboBoxEh;
     lbl_ItmStatus: TLabel;
+    edt_id_reglament: TDBEditEh;
+    edt_ids_order_properties: TDBEditEh;
     procedure BitBtn1Click(Sender: TObject);
     procedure Pm_FilesClick(Sender: TObject);
     procedure Bt_OkClick(Sender: TObject);
@@ -139,6 +141,7 @@ type
     procedure cmb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
     procedure cmb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
     procedure cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+    procedure cmb_OrderReferenceEnter(Sender: TObject);
     procedure mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure cmb_OrderTypeEditButtons0Click(Sender: TObject;
@@ -457,12 +460,14 @@ var
   HasWarn: Boolean;
 begin
   Result := False;
-  pnl_Top.Height := 175;
   //проверим блокировку, выйдем если нельзя взять (при попытке редактирования уйдет в просмотр, при удалении - выход)
   if FormDbLock = fNone then
     Exit;
   inLoadData := True;
-  ;
+
+  edt_id_reglament.Visible := False;
+  edt_ids_order_properties.Visible := False;
+
   //показывать ли цены/суммы
   ShowPrices := (Mode <> fView) or (User.Role(rOr_J_Orders_V));
 
@@ -499,12 +504,12 @@ begin
     ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
     ['', null, 'id_status_itm', '', -1, null, -1],
     ['', null, 'status_itm', '', -1, null, -1],
-    ['', null, 'ids_order_properties', 'ids_order_properties$s', -1, null, -1],
-    ['', null, 'id_reglament', 'id_reglament$i', -1, null, -1],
+    ['edt_ids_order_properties', null, 'ids_order_properties', 'ids_order_properties$s', 0, null, -1],
+    ['edt_id_reglament', null, 'id_reglament', 'id_reglament$i', 0, null, -1],
     ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
     ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
     ['edt_OrderNum', null, 'ornum', '', 1, null, 0],
-    ['cmb_OrderReference', null, 'or_reference', 'or_reference$s', 1, null, 1],
+    ['cmb_OrderReference', null, 'or_reference', 'or_reference$s', 0, null, 0],
     ['edt_Complaints', null, 'complaints', '', 1, null, 1],
     ['cmb_Format', null, 'id_format', 'id_format$i', 1, null, 0],
     ['cmb_EstimatePath', null, 'id_or_format_estimates', 'id_or_format_estimates$i', 1, null, 0],
@@ -620,8 +625,8 @@ begin
   end;
 
   //!!! не разобрался как устанавливаются текущие значения, если были прочитаны начальные, но не было изменения, и это не контролы, сделал так
-  FieldsArr[GetFieldsArrPos('id_reglament')][cNewValue] := FieldsArr[GetFieldsArrPos('id_reglament')][cBegValue];
-  FieldsArr[GetFieldsArrPos('ids_order_properties')][cNewValue] := FieldsArr[GetFieldsArrPos('ids_order_properties')][cBegValue];
+  //FieldsArr[GetFieldsArrPos('id_reglament')][cNewValue] := FieldsArr[GetFieldsArrPos('id_reglament')][cBegValue];
+  //FieldsArr[GetFieldsArrPos('ids_order_properties')][cNewValue] := FieldsArr[GetFieldsArrPos('ids_order_properties')][cBegValue];
 
   //Синхронизируем ли заказа с ИТМ
   //для шаблона - всегда нет, для нового заказа или копии - по значению глобальной переменной, при редактировании - как было ранее,
@@ -799,6 +804,7 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
   MinWidth := 1100;
   MinHeight := 500;
+  //pnl_Top.Height := 175; //!!!
   Self.Resize;
 
   //события onCahange и  onExit для всех dbeh контролов
@@ -1411,9 +1417,9 @@ begin
   end;
   if (Sender = cmb_OrderType) then begin
     SetComplaints;
-    if (GetOrderTypeOldValue= '1') or (GetOrderTypeOldValue = '3') then begin
+    {if (GetOrderTypeOldValue= '1') or (GetOrderTypeOldValue = '3') then begin
       cmb_OrderReference.Text := '';
-    end;
+    end;}
     if FNewOrderType = 1 then begin
       FieldsArr[GetFieldsArrPos('id_type2'), cNewValue] := GetOrderTypeOldValue;
       FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
@@ -1506,8 +1512,8 @@ begin
       if c = cmb_OrderType  //тип заказа не может быть пустым, не может рекламация для производства, не может эксперимент не для производства
         then
         Cth.SetErrorMarker(c, (GetOrderTypeOldValue.AsString = '') or ((GetOrderTypeOldValue = '2') and (cmb_Organization.Value = '-1')) or ((GetOrderTypeOldValue = '3') and (cmb_Organization.Value <> '-1')));
-      if c = cmb_OrderReference then
-        Cth.SetErrorMarker(c, (GetOrderTypeOldValue = '1') and (cmb_OrderReference.Text <> '') or (GetOrderTypeOldValue = '2') and (cmb_OrderReference.Text = ''));
+      //if c = cmb_OrderReference then
+      //  Cth.SetErrorMarker(c, (GetOrderTypeOldValue = '1') and (cmb_OrderReference.Text <> '') or (GetOrderTypeOldValue = '2') and (cmb_OrderReference.Text = ''));
       if c = edt_Complaints then
         Cth.SetErrorMarker(c, (GetOrderTypeOldValue = '2') and (edt_Complaints.Text = ''));
       if c = edt_CustomerINN then
@@ -1544,10 +1550,10 @@ begin
 //      Cth.DotRedLine(nedt_Trans_0);
 //      if b then dedt_Otgr.Color:=RGB(255,0,0) else dedt_Otgr.Color:=RGB(255,255,255);
   Ok := Cth.VerifyVisualise(Self);
-  //проверим выбран ли регламент
   //если это не шаблон и не тип заказа Отгрузочный с СГП
   if (not IsTemplate) and Ok and (cmb_OrderType.Value <> '111') and (Cth.GetControlValue(dedt_beg) >= EncodeDate(2025,12,22)) then
-    Ok := FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] <> null;
+    Ok := edt_id_reglament.Text <> '';
+//    Ok := FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] <> null;
 end;
 
 procedure TDlg_Order.SetComplaints;
@@ -1561,8 +1567,8 @@ begin
     edt_Complaints.Visible := True;
     //подправим расположение комментария
     mem_Comment.Top := edt_Complaints.Top + edt_Complaints.Height + 4;
-    if cmb_OrderReference.Items.Count = 0 then
-      Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], cmb_OrderReference, cntComboE, 0);
+//    if cmb_OrderReference.Items.Count = 0 then
+//      Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], cmb_OrderReference, cntComboE, 0);
   end
   else begin
   //это новый заказ
@@ -2107,18 +2113,22 @@ begin
   if FNewOrderType <> 1 then
     Exit;
   res := TFrmOGselOrReglament.Show(
-    Self, '', MyFormOptions + [myfoDialog, myfoSizeable, myfoModal], S.IIf(not (Mode in [fView, fDelete]), fEdit, fView), Cth.GetControlValue(cmb_OrderType), FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue]
+    Self, '', MyFormOptions + [myfoDialog, myfoSizeable, myfoModal], S.IIf(not (Mode in [fView, fDelete]), fEdit, fView), Cth.GetControlValue(cmb_OrderType), edt_ids_order_properties.text
   );
   if res.ModalResult <> mrOk then
     Exit;
   if res.DataA[0][0] = -1 then begin
-    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := null;
-    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
+//    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := null;
+//    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := '';
+    edt_id_reglament.Text := '';
+    edt_ids_order_properties.Text := '';
     dedt_Otgr.Value := null;
   end
   else begin
-    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := res.DataA[0][0];
-    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := res.DataA[0][1];
+//    FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] := res.DataA[0][0];
+//    FieldsArr[GetFieldsArrPos('ids_order_properties'), cNewValue] := res.DataA[0][1];
+    edt_id_reglament.Text := res.DataA[0][0];
+    edt_ids_order_properties.Text := res.DataA[0][1];
     dedt_Otgr.Value := IncDay(dedt_Beg.Value, res.DataA[0][2] - 1);
   end;
 end;
@@ -2129,6 +2139,12 @@ begin
   if InLoadData then
     Exit;
   HideEmptyItems;
+end;
+
+procedure TDlg_Order.cmb_OrderReferenceEnter(Sender: TObject);
+begin
+  if cmb_OrderReference.Items.Count = 0 then
+    Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], cmb_OrderReference, cntComboE, 0);
 end;
 
 procedure TDlg_Order.SetSumInHeader;
@@ -2819,8 +2835,26 @@ var
   st, st1, st2: string;
   va, va1: TVarDynArray;
   c: TComponent;
+  FieldsNoUsed: TVarDynArray;
+  UsedComponents: TVarDynArray;
 begin
   DifferencesText := '';
+
+  //только по этим полям заголовка проверяются изменения
+  UsedComponents := [
+    edt_ids_order_properties.Name,
+    edt_id_reglament.Name,
+    cmb_Area.Name,
+    edt_OrderNum.Name,
+    cmb_OrderReference.Name,
+    dedt_Otgr.Name,
+    dedt_MontageBeg.Name,
+    dedt_MontageEnd.Name,
+    mem_Comment.Name
+  ];
+  //по этим полям таблицы не проверяются изменения
+  FieldsNoUsed := ['price', 'price_pp', 'sum', '_sum_resale', '_sum_items_nosgp'];
+
   st1 := '';
   st2 := '';
   //по заголовку паспотра
@@ -2828,6 +2862,9 @@ begin
   for i := 0 to High(va) do begin
     c := Self.FindComponent(va[i]);
     if c = nil then
+      Continue;
+    //включим в строку изменений только указанные компоненты
+    if not A.InArray(c.Name, UsedComponents) then
       Continue;
     st := TCustomDBEditEh(c).ControlLabel.Caption;
     st := StringReplace(st, #13#10, ' ', []);
@@ -2864,8 +2901,8 @@ begin
         va1[j] := 'route'        //все галки маршрута будем считать как одну
       else if va1[j] = 'attention' then
         va1[j] := 'comm';      //изменение признака цвета важности считаем изменением дополнения
-      //исключим повторы
-      if not A.InArray(va1[j], va) then
+      //создадим массив полей с изменениями, исключим повторы, искключим ненужные поля
+      if (not A.InArray(va1[j], va)) and (not A.InArray(va1[j], FieldsNoUsed)) then
         va := va + [va1[j]];
     end;
   end;

@@ -513,24 +513,25 @@ create or replace view v_orders as (
     pa.shortname as area_short,
     decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
     f.name as format,
+    ob.dt_beg as ref_dt_beg, 
+    ob.dt_otgr as ref_dt_otgr, 
     (case 
       when o.cashtype = 2 then 'наличные'
       when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
       when o.cashtype = 1 and o.account is not null then 'безнал'
       else ''
-
     end) as cashtypename,
     (case 
       when o.cashtype = 1 and o.account is null then 0
       else o.cashtype
     end) as cashtype_add,
-    round(nvl(cost_i, 0) / ndsd, 2) cost_i_wo_nds,
-    round(nvl(cost_i_nosgp, 0) / ndsd, 2) cost_i_nosgp_wo_nds,
-    round(nvl(cost_a, 0) / ndsd, 2) cost_a_wo_nds,
-    round(nvl(cost_d, 0) / ndsd, 2) cost_d_wo_nds,
-    round(nvl(cost_m, 0) / ndsd, 2) cost_m_wo_nds,
-    (case when dt_cancel is null then 0 else 1 end) as cancel, 
-    dt_beg + trunc(((dt_otgr - dt_beg) / 2)) as dt_pnr,  -- плановая дата начала распила
+    round(nvl(o.cost_i, 0) / o.ndsd, 2) cost_i_wo_nds,
+    round(nvl(o.cost_i_nosgp, 0) / o.ndsd, 2) cost_i_nosgp_wo_nds,
+    round(nvl(o.cost_a, 0) / o.ndsd, 2) cost_a_wo_nds,
+    round(nvl(o.cost_d, 0) / o.ndsd, 2) cost_d_wo_nds,
+    round(nvl(o.cost_m, 0) / o.ndsd, 2) cost_m_wo_nds,
+    (case when o.dt_cancel is null then 0 else 1 end) as cancel, 
+    o.dt_beg + trunc(((o.dt_otgr - o.dt_beg) / 2)) as dt_pnr,  -- плановая дата начала распила
    (select 
        listagg(oc.name,  '; ') within group (order by oc.name) 
        from ((select o.id, o.id_order, r.name from order_complaints o, ref_complaint_reasons r where o.id_complaint_reason = r.id) oc ) 
@@ -555,7 +556,7 @@ create or replace view v_orders as (
     decode(nvl(oxml.qnt_xml_no, 0), 0, '+', '-') as xml_status,
     decode(othndt.dt_thn_cnt, othndt.cnt, othndt.dt_thn_max, null) as dt_thn_max,
     decode(oknsdt.dt_kns_cnt, oknsdt.cnt, oknsdt.dt_kns_max, null) as dt_kns_max,
-    trunc(dt_aggr_estimate - dt_beg) as days_aggr_estimate,
+    trunc(o.dt_aggr_estimate - o.dt_beg) as days_aggr_estimate,
     --opc.sum0
     --0 as sum0
     --(select sum0 from v_order_primecost_itm where id_zakaz(+) = o.id_itm) as sum0
@@ -580,6 +581,7 @@ create or replace view v_orders as (
 
   from
     orders o,
+    orders ob,
     ref_sn_organizations ro,
     ref_customers rc,
     ref_customer_contact rcc,
@@ -605,6 +607,7 @@ create or replace view v_orders as (
     (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv,
     order_types ot
   where
+    ob.ornum (+) = o.or_reference and
     ro.id(+) = o.id_organization and
     rc.id(+) = o.id_customer and  
     rcc.id(+) = o.id_customer_contact and  
@@ -769,6 +772,9 @@ create or replace view v_order_items as (
     o.area,
     o.customer,
     o.project,
+    o.or_reference,
+    o.ref_dt_beg,
+    o.ref_dt_otgr,
     o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
     o.id_itm as id_order_itm,
     o.sync_with_itm,

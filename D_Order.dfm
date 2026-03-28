@@ -26,9 +26,12 @@ inherited Dlg_Order: TDlg_Order
     Left = 0
     Top = 0
     Width = 1264
-    Height = 74
+    Height = 41
     Align = alTop
     TabOrder = 0
+    DesignSize = (
+      1264
+      41)
     object lbl_ITM: TLabel
       Left = 228
       Top = 7
@@ -71,15 +74,14 @@ inherited Dlg_Order: TDlg_Order
       Left = 659
       Top = 1
       Width = 604
-      Height = 72
+      Height = 39
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 4
       ExplicitLeft = 655
-      ExplicitHeight = 39
       DesignSize = (
         604
-        72)
+        39)
       object edt_TemplateName: TDBEditEh
         Left = 145
         Top = 14
@@ -118,6 +120,40 @@ inherited Dlg_Order: TDlg_Order
       TabOrder = 2
       OnClick = Bt_CreateXLSClick
     end
+    object edt_id_reglament: TDBEditEh
+      Left = 572
+      Top = 11
+      Width = 29
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      ControlLabel.Width = 55
+      ControlLabel.Height = 13
+      ControlLabel.Caption = #1056#1077#1075#1083#1072#1084#1077#1085#1090
+      ControlLabel.Visible = True
+      ControlLabelLocation.Position = lpLeftCenterEh
+      DynProps = <>
+      EditButtons = <>
+      MaxLength = 400
+      TabOrder = 5
+      Visible = True
+    end
+    object edt_ids_order_properties: TDBEditEh
+      Left = 607
+      Top = 11
+      Width = 29
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      ControlLabel.Width = 80
+      ControlLabel.Height = 26
+      ControlLabel.Caption = #1059#1095#1072#1090#1082#1080#13#10'('#1087#1086' '#1088#1077#1075#1083#1072#1084#1077#1085#1090#1091')'
+      ControlLabel.Visible = True
+      ControlLabelLocation.Position = lpLeftCenterEh
+      DynProps = <>
+      EditButtons = <>
+      MaxLength = 400
+      TabOrder = 6
+      Visible = True
+    end
   end
   object pnl_Bottom: TPanel [2]
     Left = 0
@@ -148,19 +184,18 @@ inherited Dlg_Order: TDlg_Order
   end
   object pnl_Center: TPanel [3]
     Left = 0
-    Top = 342
+    Top = 309
     Width = 1264
-    Height = 284
+    Height = 317
     Align = alClient
     TabOrder = 2
-    ExplicitTop = 309
     ExplicitWidth = 1260
     ExplicitHeight = 316
     object DBGridEh1: TDBGridEh
       Left = 1
       Top = 1
       Width = 1262
-      Height = 282
+      Height = 315
       Align = alClient
       DataSource = DataSource1
       DynProps = <>
@@ -177,13 +212,12 @@ inherited Dlg_Order: TDlg_Order
   end
   object pnl_Header: TPanel [4]
     Left = 0
-    Top = 74
+    Top = 41
     Width = 1264
     Height = 268
     Align = alTop
     TabOrder = 1
     OnClick = pnl_HeaderClick
-    ExplicitTop = 41
     ExplicitWidth = 1260
     object pnl_Header_3: TPanel
       Left = 683
@@ -682,6 +716,7 @@ inherited Dlg_Order: TDlg_Order
         MaxLength = 400
         TabOrder = 4
         Visible = True
+        OnEnter = cmb_OrderReferenceEnter
       end
       object cmb_Area: TDBComboBoxEh
         Left = 280

@@ -37,7 +37,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, V_MDI,
   Vcl.StdCtrls, Vcl.Mask, DBCtrlsEh, Vcl.ExtCtrls, uLabelColors, IOUtils, Types,
-  Vcl.Buttons, ShellApi, ToolCtrlsEh, DBGridEhToolCtrls,
+  Vcl.Buttons, ShellApi, ToolCtrlsEh, DBGridEhToolCtrls, Math,
   GridsEh, DBAxisGridsEh, DBGridEh, AdoDB, DB, Vcl.ComCtrls,
   EhLibVclUtils, MemTableDataEh, DBGridEhGrouping, DynVarsEh;
 
@@ -122,6 +122,7 @@ begin
   ProgressBar1.Visible:= True;
   if chb_CloseSessions.Checked
     then Q.QExecSql('update adm_modules set autoclosedt = (select sysdate from dual), autoclosemin = :idle$i where id = :id$i', [4, Cth.GetControlValue(cmb_Module)]);
+  lbl_FilesInfo.SetCaption2('$FF0000Сжимаем исполняемый файл');
   ShellExecute(Application.Handle, nil, pWideChar(edt_SrcPath.Text + '\' + 'upx.exe'), pWideChar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'), nil, SW_HIDE);
   for i := 0 to 30 do begin
     sleep(1000);
@@ -357,7 +358,9 @@ begin
       pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
       pwidechar(edt_DstPath.Text + PATH_LAUNCHER_STORAGE + '\' + cmb_Module.Text + '.exe'), False
     );}
-    Result := Result and CopyFile(
+    lbl_FilesInfo.SetCaption2('$FF0000Копируем исполняемый файл');
+      Application.ProcessMessages;
+      Result := CopyFile(
       pwidechar(edt_SrcPath.Text + '\' + cmb_Module.Text + '.exe'),
       pwidechar(edt_DstPath.Text + PATH_APPLICATION_STORAGE + '\' + cmb_Module.Text + '.exe'), False
     );
@@ -369,14 +372,17 @@ begin
       ForceDirectories(dn);
       ForceDirectories(dn + '\BACKUP');
       for i := 0 to High(FileList) do begin
-        Application.ProcessMessages;
         CopyFile(pwidechar(FileList[i]), pwidechar(dn + '\' + ExtractFileName(FileList[i])), False);
+        lbl_FilesInfo.SetCaption2('$FF0000Копируем файл $000000  ($FF00FF' + IntToStr(i + 1) + ' из ' + IntToStr(Length(FileList)) + ' = ' + IntToStr(Round((i + 1) / Length(FileList) * 100)) + '%$000000) -- $FF00FF' + ExtractFileName(FileList[i]));
+        Application.ProcessMessages;
       end;
       CopyFile(pwidechar(Sys.GetWinTemp + '\' + cmb_Module.Text + '.exe'), pwidechar(dn + '\BACKUP\' + cmb_Module.Text + '.exe'), False);
       Sys.SaveTextToFile(dn + '\!.txt', DateTimeToStr(Now) + #13#10#13#10'Замена:'#13#10 + lbl_InstalledInfo.Caption + #13#10#13#10 + mem_Comment.Text);
       {$R+}
       lbl_Status.ResetColors;
-      lbl_Status.SetCaption('$00AA00Готово!');
+      lbl_FilesInfo.SetCaption2('$FF0000Файлы исходников - найдено ' + IntToStr(Length(FileList)) + ' шт.');
+      lbl_Status.SetCaption2('$00AA00Готово!');
+      Application.ProcessMessages;
       if not Result then begin
         MyWarningMessage('Модуль "' + cmb_Module.Text + '" не был скопирован, однако все остальные действия завершены успешно. Закройте этот модуль и скопируйте исполняемый файл вручную!');
         Result := True;
@@ -385,8 +391,8 @@ begin
         'insert into adm_install_log (id_module, compile_dt, ver, comm) values (:id_module$i, :compile_dt$s, :ver$s, :comm$s)',
         [Cth.GetcontrolValue(cmb_Module), Cth.GetcontrolValue(edt_DtCompiled), Cth.GetcontrolValue(edt_Version), Cth.GetcontrolValue(mem_Comment)]
       );
-     Q.QExecSql('update adm_modules set module_version = :version$s where id = :id$i', [Cth.GetcontrolValue(edt_Version) + ' (' + Cth.GetcontrolValue(edt_DtCompiled) + ')', Cth.GetControlValue(cmb_Module)]);
-  Bt_Ok.Enabled := True;
+      Q.QExecSql('update adm_modules set module_version = :version$s where id = :id$i', [Cth.GetcontrolValue(edt_Version) + ' (' + Cth.GetcontrolValue(edt_DtCompiled) + ')', Cth.GetControlValue(cmb_Module)]);
+      Bt_Ok.Enabled := True;
       cmb_Module.Enabled := True;
       mem_Comment.Enabled := True;
       edt_SrcPath.Enabled := True;

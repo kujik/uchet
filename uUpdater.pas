@@ -39,6 +39,19 @@ uses
   System.SysUtils, System.IOUtils, System.Classes, Winapi.Windows, Winapi.ShellAPI,
   uData;
 
+function GetAllParams: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to ParamCount do
+  begin
+    if I > 1 then
+      Result := Result + ' ';
+    Result := Result + ParamStr(I);
+  end;
+end;
+
 procedure CheckForUpdatesAndRunUpdater;
 var
   ExeFullPath, ExeDir, ExeName, ExeBaseName: string;
@@ -51,6 +64,7 @@ var
   NeedUpdate: Boolean;
   Code: Integer;
   UpdaterExe: string;
+  Parameters: string;
   ServerFiles: TArray<string>;
   S: string;
 begin
@@ -162,8 +176,11 @@ begin
     if not TFile.Exists(UpdaterExe) then
       raise Exception.Create('Не найден файл обновлятора: ' + UpdaterExe);
 
+    Parameters := GetAllParams;
+    if Parameters <> '' then
+      Parameters := ' ' + Parameters;
     // Запускаем обновлятор с параметром-кодом
-    ShellExecute(0, 'open', PChar(UpdaterExe), PChar(IntToStr(cMainModule)), nil, SW_SHOWNORMAL);
+    ShellExecute(0, 'open', PChar(UpdaterExe), PChar(IntToStr(cMainModule) + Parameters), nil, SW_SHOWNORMAL);
 
     // Завершаем текущую программу (обновлятор возьмёт управление на себя)
     Halt(0);
