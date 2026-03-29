@@ -178,7 +178,7 @@ begin
       if resi = -1 then
         begin
           //ошибка установки блокировки
-          res:= QSelectOneRow(
+          res:= QLoadRow(
 //            'select login, username, lock_time from locks where login <> :login and lock_docum = :docum and lock_docum_add = :documadd',
 //            VarArrayOf([User.GetLogin, Docum, DocumAdd])
             'select login, username, lock_time from adm_locks where lock_docum = :docum and lock_docum_add = :documadd',

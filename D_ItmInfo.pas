@@ -231,7 +231,7 @@ begin
     //зададим контрольную цену номенклатуры
     if MemTableEh3.RecordCount = 0 then Exit;
       //олучим текущую
-      va0:=Q.QSelectOneRow('select max(price_check) from spl_itm_nom_props where id = :id$i', [MemTableEh3.FieldByName('id_nomencl').Value]);
+      va0:=Q.QLoadRow('select max(price_check) from spl_itm_nom_props where id = :id$i', [MemTableEh3.FieldByName('id_nomencl').Value]);
       //диалог ввода (число с 2 знаками п.з. или пустое поле
       if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, '', 200, 100,
 //      if Dlg_BasicInput.ShowDialog(Self, '', 200, 100, fEdit,

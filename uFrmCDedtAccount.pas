@@ -960,7 +960,7 @@ begin
     chb_Agreed1.Caption := S.IIf(chb_Agreed1.Checked, User.GetName, 'Руководитель');
   end
   else
-    chb_Agreed1.Caption := S.IIfStr(F.GetProp('id_whoagreed1') <> null, Q.QSelectOneRow('select name from adm_users where id = :id$i', [F.GetProp('id_whoagreed1')])[0].AsString, 'Руководитель');
+    chb_Agreed1.Caption := S.IIfStr(F.GetProp('id_whoagreed1') <> null, Q.QLoadValue('select name from adm_users where id = :id$i', [F.GetProp('id_whoagreed1')]).AsString, 'Руководитель');
 end;
 
 function TFrmCDedtAccount.IsFilesLoaded: Boolean;
@@ -1023,8 +1023,8 @@ begin
   Result := '';
   if (Cth.GetControlValue(edt_Account) = '') or (Mode = fDelete) then
     Exit;
-  if Q.QSelectOneRow('select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
-    [Cth.GetControlValue(cmb_id_Supplier).AsIntegerM, s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))])[0] = null then
+  if Q.QLoadValue('select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
+    [Cth.GetControlValue(cmb_id_Supplier).AsIntegerM, s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))]) = null then
     Exit;
   Result := '?Счет с таким же номером у этого поставщика уже есть.'#13#10'Нажнажмите "Да" чтобы сохранить данные, или "Нет" чтобы продолжить редактирование.';
 end;
@@ -1143,7 +1143,7 @@ begin
     if FIdItmAcoount = null then
       FIdItmRequest := null
     else
-      FIdItmRequest := Q.QSelectOneRow('select id_demand_supplier from dv.demand_supplier where num_demand = :num_demand$s', [LDocStr])[0];
+      FIdItmRequest := Q.QLoadValue('select id_demand_supplier from dv.demand_supplier where num_demand = :num_demand$s', [LDocStr]);
   end;
 end;
 

@@ -168,7 +168,7 @@ uses
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
   uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision},
-  uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
+//  uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},

@@ -1,30 +1,35 @@
 inherited Dlg_Spl_InfoGrid: TDlg_Spl_InfoGrid
   Caption = 'Dlg_Spl_InfoGrid'
-  ClientHeight = 432
-  ClientWidth = 751
-  ExplicitWidth = 767
-  ExplicitHeight = 471
+  ClientHeight = 431
+  ClientWidth = 747
+  ExplicitWidth = 763
+  ExplicitHeight = 470
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 413
-    Width = 751
+    Top = 412
+    Width = 747
+    ExplicitTop = 413
+    ExplicitWidth = 751
     inherited lbl_StatusBar_Right: TLabel
       Left = 668
       ExplicitLeft = 668
     end
   end
   inherited pnl_Buttons: TPanel
-    Top = 380
-    Width = 751
+    Top = 379
+    Width = 747
     ExplicitTop = 380
     ExplicitWidth = 751
   end
   inherited pnl_Bottom: TPanel
-    Top = 355
-    Width = 751
+    Top = 354
+    Width = 747
+    ExplicitTop = 355
+    ExplicitWidth = 751
   end
   inherited pnl_Top: TPanel
-    Width = 751
+    Width = 747
+    ExplicitWidth = 751
     object lbl_Caption: TLabel
       Left = 8
       Top = 6
@@ -34,8 +39,10 @@ inherited Dlg_Spl_InfoGrid: TDlg_Spl_InfoGrid
     end
   end
   inherited pnl_Client: TPanel
-    Width = 751
-    Height = 330
+    Width = 747
+    Height = 329
+    ExplicitWidth = 751
+    ExplicitHeight = 330
     inherited DBGridEh1: TDBGridEh
       RowDetailPanel.Active = True
       RowDetailPanel.Width = 200

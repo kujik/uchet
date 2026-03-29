@@ -151,12 +151,12 @@ begin
   end;
   //вставим или обновим строку
   res:= Q.QIUD(
-    S.IIFStr(Q.QSelectOneRow('select count(*) from or_montage where id = :id$i', [CtrlValues[0]])[0]= 0, 'i', 'u')[1],
+    S.IIFStr(Q.QLoadValue('select count(*) from or_montage where id = :id$i', [CtrlValues[0]]) = 0, 'i', 'u')[1],
     'or_montage', 'id', Fields, VarArrayOf(CtrlValues)
     );
   if res = -1 then Exit;
   if (S.NSt(BegValues[6]) <> '')and(BegValues[6] <> OldPath) then begin
-    va:=Q.QSelectoneRow('select path, in_archive, year from orders where id = :id$i', [CtrlValues[0]]);
+    va:=Q.QLoadRow('select path, in_archive, year from orders where id = :id$i', [CtrlValues[0]]);
     if va[0] <> null then
       TaskDir:= Tasks.CreateTaskRoot(mytskopLinkMontage, [
         ['directory', va[0]],
@@ -229,9 +229,9 @@ begin
   //соотвествующий им контролы, кроме левого - id
   Ctrls:=[nil, dedt_Beg, dedt_End, chb_RC, chb_RI, mem_Comm, nil];
   //для добавления инициализация значений полей, для других режимов из запроса в базе
-  BegValues:=Q.QSelectOneRow(Q.QSIUDSql('s', 'or_montage', Fields), [ID]);
-  OrderIsEnding:=Q.QSelectOneRow('select dt_end from v_orders where id = :id$i', [ID])[0] <> null;
-  lbl_Caption.Caption:=S.NSt(Q.QSelectOneRow('select ornum from v_orders where id = :id$i', [ID])[0]);
+  BegValues:=Q.QLoadRow(Q.QSIUDSql('s', 'or_montage', Fields), [ID]);
+  OrderIsEnding:=Q.QLoadRow('select dt_end from v_orders where id = :id$i', [ID])[0] <> null;
+  lbl_Caption.Caption:=S.NSt(Q.QLoadRow('select ornum from v_orders where id = :id$i', [ID])[0]);
   if BegValues[0] = null
     then BegValues:=VarArrayOf([ID, Date, null, 0, 0, '', null]);
   OldPath:=S.NSt(BegValues[6]);

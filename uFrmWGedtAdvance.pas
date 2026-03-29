@@ -106,7 +106,7 @@ begin
     Exit;
   end;
   //айди ТУРВ за данный период по данному подразделению
-  FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt')])[0];
+  FIdTurv := Q.QLoadValue('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt')]);
 
   FDeletedWorkers := [];
   Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogHasStatusBar] - [myogColumnFilter];

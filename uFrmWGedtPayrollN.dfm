@@ -1,17 +1,25 @@
 inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
   Caption = 'FrmWGedtPayrollN'
+  ClientHeight = 537
   ExplicitWidth = 808
-  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Height = 521
     ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 782
+      Height = 472
+      inherited pnlBottom: TPanel
+        Top = 426
+      end
+      inherited pnlLeft: TPanel
+        Height = 417
+      end
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 772
+        Height = 417
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 770
+          Height = 415
           inherited pnlGrid: TPanel
+            Height = 361
             inherited DbGridEh1: TDBGridEh
               Width = 762
               Height = 337
@@ -20,6 +28,12 @@ inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
               Top = 338
               Width = 762
             end
+          end
+          inherited pnlLeft: TPanel
+            Height = 361
+          end
+          inherited pnlBottom: TPanel
+            Top = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -38,7 +52,7 @@ inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 782
+        Top = 431
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 780
           inherited pnlGrid: TPanel
@@ -65,8 +79,12 @@ inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
           end
         end
       end
+      inherited pnlRight: TPanel
+        Height = 417
+      end
     end
     inherited pnlFrmBtns: TPanel
+      Top = 477
       inherited bvlFrmBtnsTl: TBevel
         ExplicitWidth = 788
       end
@@ -76,12 +94,10 @@ inherited FrmWGedtPayrollN: TFrmWGedtPayrollN
     end
   end
   inherited pnlStatusBar: TPanel
+    Top = 521
     inherited lblStatusBarR: TLabel
       Left = 723
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 723
     end
   end
   object PrintDBGridEh1: TPrintDBGridEh

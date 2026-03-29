@@ -91,6 +91,7 @@ type
     function  InputLaborIntensity (AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
     function  AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
     procedure ParseOrItemXML(const FileName: string; var PanelsWDrilling: Integer);
+    procedure ToOrderAudit(const AType: Integer; AIsCorrection: Boolean; const AName: string; const AChanges: string = '');
 end;
 
 var
@@ -122,12 +123,17 @@ const
     'Плитные/кромка','Фурнитура','ЛКМ','Заказн. Поз'
   );
 
+  ORDER_AUDIT_ORDER = 1;
+  ORDER_AUDIT_ESTIMATE = 2;
+  ORDER_AUDIT_KNS_DOC = 3;
+  ORDER_AUDIT_THN_DOC = 4;
+
 
 implementation
 
 uses
   uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
-  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo
+  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo, uWaitForm
 //  Xml.XMLDoc, Xml.XMLIntf
 //  OmniXML, OmniXMLUtils
   ;
@@ -463,7 +469,7 @@ var
   va1: TVarDynArray;
   IsOrItemStd: Boolean;
   OrQnt: Variant;
-  OrItemIdItm, OrItemName, OrFullItemName, OrderIdItm, OrderIdUchet, IsEstimateEmpty, OrSyncWithITM: Variant;
+  OrItemIdItm, OrItemName, OrSlash, OrFullItemName, OrderIdItm, OrderIdUchet, IsEstimateEmpty, OrSyncWithITM, OrDtEst: Variant;
   b: Boolean;
   InputType: Integer;
   v: Variant;
@@ -476,13 +482,13 @@ begin
   if IdStdItem <> null then begin
     //для стандартного изделия
     dt1 := null;
-    va1 := Q.QSelectOneRow('select id, dt from estimates where id_std_item = :id_std_item$i', [IdStdItem]);
+    va1 := Q.QLoadRow('select id, dt from estimates where id_std_item = :id_std_item$i', [IdStdItem]);
     IdEstimate := va1[0];
     if IdEstimate <> null then
       dt1 := S.NSt(va1[1]);
     if S.IsDateTime(S.NSt(dt1)) then
       dt1 := DateTimeToStr(VarToDateTime(dt1));
-    va1 := Q.QSelectOneRow('select name, wo_estimate from or_std_items where id = :id$i', [IdStdItem]);
+    va1 := Q.QLoadRow('select name, wo_estimate from or_std_items where id = :id$i', [IdStdItem]);
     OrName := va1[0];
     IsEstimateEmpty := va1[1];
     IsOrItemStd := False;
@@ -517,14 +523,15 @@ begin
   else if (IdOrderItem <> null) then begin
     //загрузка по изделию (слешу) в заказе
     dt1 := null;
-    va1 := Q.QSelectOneRow('select id, dt from estimates where id_order_item = :id_order_item$i', [IdOrderItem]);
+    va1 := Q.QLoadRow('select id, dt from estimates where id_order_item = :id_order_item$i', [IdOrderItem]);
     IdEstimate := va1[0];
     if IdEstimate <> null then
       dt1 := S.NSt(va1[1]);
     if S.IsDateTime(S.NSt(dt1)) then
       dt1 := DateTimeToStr(VarToDateTime(dt1));
-    va1 := Q.QSelectOneRow('select itemname, slash, wo_estimate, std, id_std_item, qnt, id_itm, id_order_itm, id_order, fullitemname, sync_with_itm from v_order_items where id = :id$i', [IdOrderItem]);
+    va1 := Q.QLoadRow('select itemname, slash, wo_estimate, std, id_std_item, qnt, id_itm, id_order_itm, id_order, fullitemname, sync_with_itm, dt_est from v_order_items where id = :id$i', [IdOrderItem]);
     OrName := va1[1] + ' - ' + va1[0];
+    OrSlash := va1[1];
     IsEstimateEmpty := va1[2];
     IsOrItemStd := va1[3] = 1;
     ParentIdStdItem := va1[4];
@@ -534,11 +541,12 @@ begin
     OrderIdUchet := va1[8];
     OrFullItemName := va1[9];
     OrSyncWithITM := va1[10];  //данный заказ синхронизируется с ИТМ
+    OrDtEst := va1[11];  //дата первой подгрузки сметы в ручном режиме
     OrQnt := va1[5];
     //заказ Завершен или Выполнен (в итм) - выдадим сообщение и выйдем.
     if Orders.IsOrderFinalized(OrderIdUchet, not Silent) > 0 then Exit;
     if IsOrItemStd then begin
-      ParentIdEstimate := Q.QSelectOneRow('select id from estimates where id_std_item = :id_std_item$i', [ParentIdStdItem])[0];
+      ParentIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id_std_item$i', [ParentIdStdItem]);
       if not Silent then
         if ParentIdEstimate = null then begin
           MyWarningMessage('Смета к стандартному изделию к этой позиции заказа еше не загружена!');
@@ -605,6 +613,7 @@ begin
     Est := [];
   end;
 
+  ShowWaitForm('Производится загрузка сметы...');
   Q.QBeginTrans(True);
   repeat
     Res := 1;
@@ -682,6 +691,12 @@ begin
     //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
     if (IdOrderItem <> null) and (OneItem)
       then SyncOrderWithITM(OrderIdUchet, [IdOrderItem], False);
+    //запишем в лог про ручном вводе сметы к нестандартному изделию или ручном обновлении для стандартного изделия в заказе
+    //также запишем даты создания и обновления сметы в таблицу слешей
+    if (IdOrder = null) and (IdOrderItem <> null) and not Silent then begin
+      Q.QExecSql('update order_items set dt_est = :dt_est$d, dt_est_last = :dt_est_last$d where id = :id$i', [S.IIf(OrDtEst = null, Date, OrDtEst), Date, IdOrderItem]);
+      ToOrderAudit(ORDER_AUDIT_ESTIMATE, OrDtEst <> null, OrSlash);
+    end;
   until True;
   Q.QCommitOrRollback(Res <> -1);
   if not Q.CommitSuccess then begin
@@ -693,7 +708,7 @@ begin
     if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged or (IdStdItem <> null) or not OneItem) then begin
       st2 := '';
       b := False;
-      if Q.QSelectOneRow('select dt_aggr_estimate from orders where id =:id$i', [OrderIdUchet])[0] <> null then begin
+      if Q.QLoadValue('select dt_aggr_estimate from orders where id =:id$i', [OrderIdUchet]) <> null then begin
         FrmXDedtMemo.ShowDialog(nil, 'AttachEstimate', 'Комментарий к смете', '', st2);
         b := True;
       end;
@@ -715,10 +730,10 @@ var
   va1, va2: TVarDynArray;
 begin
   Result:= True;
-  va1 := Q.QSelectOneRow('select id, dt from estimates where id_std_item = :id_std_item$i', [IdStdItem]);
+  va1 := Q.QLoadRow('select id, dt from estimates where id_std_item = :id_std_item$i', [IdStdItem]);
   if va1[0] = null then Exit;
   if not Silent then begin
-    va2:= Q.QSelectOneRow('select name, wo_estimate from or_std_items where id = :id$i', [IdStdItem]);
+    va2:= Q.QLoadRow('select name, wo_estimate from or_std_items where id = :id$i', [IdStdItem]);
     if MyQuestionMessage('Удалить смету для стандартного изделия'#13#10'"' + va2[0] + '" ?') <> mrYes
       then Exit;
   end;
@@ -1497,7 +1512,7 @@ begin
     Slash := va2[0][0];
   end;
   FilesToSend := S.IIf(IdOrItem = null, 'Заявка СН общая ' + OrderNum, 'Смета ' + Slash) + ExtractFileExt(FileName);
-  Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [3])[0]);
+  Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [3]));
   if IdOrItem <> null then
     Subj := GetSubject('Смета', '', null, IdOrItem)
   else
@@ -1586,7 +1601,7 @@ begin
     Exit;
   end;
   try
-    Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [3])[0]);
+    Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [3]));
     Subj := GetSubject('Документы для снабжения', '', IdOrder, null);
     TaskDir := Tasks.CreateTaskRoot(mytskopToSnDocuments, [
       ['directory', va2[0][1]],
@@ -1628,7 +1643,7 @@ begin
       Exit;
     Area:= '';
     if va[0][3] > 0 then
-      Area:= S.NSt(Q.QSelectOneRow('select name from ref_production_areas where id = :id$i', [va[0][3]])[0]);
+      Area:= S.NSt(Q.QLoadValue('select name from ref_production_areas where id = :id$i', [va[0][3]]));
     OrderName := va[0][0] + ' ' + S.IIf(va[0][1] = null, 'Производство', va[0][1]) + ' ' + va[0][2];
   end;
   Result := Subject + S.IfEl(Area, '',  ' (' + Area + ')')  + ' - ' + OrderName;
@@ -1636,18 +1651,14 @@ end;
 
 function TOrders.TaskForSendThnDocuments(IdOrItem: Variant; SenderIsThn: Boolean = True): Boolean;
 var
-  st, st1, filesadd, filesdelete, TaskDir, Slashes, Addr, Subj, Dir: string;
-  i, j, RecNo: Integer;
-  OrderNum, Slash, OrderPath: string;
-  Dt_Beg: TDateTime;
-  va1, va2: TVarDynArray2;
-  sa: TStringDynArray;
+  i, j: Integer;
   FilesToSend, BigFiles: string;
   AllSize: Integer;
   fs: TFileStream;
   FilesSize, FilesCount: Integer;
-  FileName: string;
-  InArchive: Variant;
+  FileName, Dir, TaskDir, Subj, Addr: string;
+  WoKns: Boolean;
+  na: TNamedArr;
 const
   SELDIRHELP = 1000;
   MaxFilesSize = 300 * 1024 * 1024;
@@ -1658,12 +1669,12 @@ begin
   Result := False;
   Dir := '';
 
-  va1 := Q.QLoadToVarDynArray2('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem]);
-  if (S.NNum(va1[0][7]) = 0) then
+  Q.QLoadFromQuery('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem], na);
+  if na.G('qnt').AsInteger = 0 then
     Exit;
-  if SenderIsThn and ((va1[0][6] = null) or (va1[0][6] = -100)) then
+  if SenderIsThn and ((na.G('id_thn') = null) or (na.G('id_thn') = -100)) then
     Exit;
-  if not SenderIsThn and ((va1[0][10] = null) or (va1[0][10] = -100)) then
+  if not SenderIsThn and ((na.G('id_kns') = null) or (na.G('id_kns') = -100)) then
     Exit;
   i := mrCancel;
 
@@ -1671,8 +1682,9 @@ begin
     i := MyMessageDlg('Загрузка документов КНС', mtConfirmation, [mbYes, mbNo, mbCancel], 'Файлы;Не нужны;Отмена');
     if i = mrCancel then
       Exit;
-    if (i = mrNo) and (va1[0][11] = null) then begin
+    if (i = mrNo) and (na.G('dt_kns') = null) then begin
       Q.QExecSql('update order_items set dt_kns = :dt$d, wo_kns = 1 where id = :id$i', [Date, IdOrItem]);
+      //!!! надо ли тут лог?
       Result := True;
       Exit;
     end;
@@ -1696,22 +1708,6 @@ begin
     end;
   if Dir = '' then
     Exit;
-//  if DirectoryExists(LastThnDocsDirectory) then
-//    Dir := LastThnDocsDirectory;
-//MyInfoMessage(dir);  Exit;
-
-
-//  if not SelectDirectory('Выберите папку', ''{ExtractFileDrive(Dir)}, Dir, [])   //sdNewFolder  sdNewUI
-//    then
-//    Exit;
-//  i:=Max(Pos('\\', Dir), Pos(':\', Dir));
-//  i:=Pos('\', Copy(Dir, i + 2));
-//  LastThnDocsDirectory := Dir;
-{  i:=Pos('\', Copy(Dir, Length(TDirectory.GetDirectoryRoot(Dir)) + 1));
-  if i = 0 then begin
-    MyWarningMessage('Нельзя выбрать каталог верхнего уровня!');
-    Exit;
-  end;}
   if Dir = TDirectory.GetDirectoryRoot(Dir) then begin
     MyWarningMessage('Нельзя выбрать корневую папку!');
     Exit;
@@ -1750,7 +1746,9 @@ begin
     Exit;
   end
   else if (FilesSize > MaxFilesSize) or (FilesCount > MaxFilesCount) then begin
-    if MyQuestionMessage('Объем данных слишком большой!'#13#10 + '(' + FloatToStr(RoundTo(FilesSize / 1024 / 1024, -1)) + 'Mb в ' + IntToStr(FilesCount) + ' файл' + S.GetEnding(FilesCount, 'е', 'ах', 'ах') + ')'#13#10 + 'Все равно продолжить?') <> mrYes then
+    if MyQuestionMessage('Объем данных слишком большой!'#13#10 + '(' + FloatToStr(RoundTo(FilesSize / 1024 / 1024, -1)) + 'Mb в ' + IntToStr(FilesCount) +
+      ' файл' + S.GetEnding(FilesCount, 'е', 'ах', 'ах') + ')'#13#10 + 'Все равно продолжить?'
+    ) <> mrYes then
       Exit;
   end
   else begin
@@ -1759,17 +1757,16 @@ begin
     ) <> mrYes then
       Exit;
   end;
-//  TDirectory.Copy(Dir, 'R:\111');
   try
-// pos, slash, path, dt_beg, dt_end, fullname
+    ShowWaitForm('Файлы отправляются на сервер...');
     if SenderIsThn then begin
-      Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [5])[0]);
+      Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [5]));
       Subj := GetSubject('Добавлены документы ТХН', '', null, IdOrItem);
       TaskDir := Tasks.CreateTaskRoot(mytskopToThnDocuments, [
-        ['directory', va1[0][2]],
-        ['year', YearOf(va1[0][3])],
-        ['in_archive', VarToStr(va1[0][8])],
-        ['slash', RightStr('0000' + IntToStr(va1[0][0]), 3) + ' ' + S.CorrectFileName(va1[0][5])],
+        ['directory', na.G('path')],
+        ['year', YearOf(na.G('dt_beg'))],
+        ['in_archive', VarToStr(na.G('in_archive'))],
+        ['slash', RightStr('0000' + IntToStr(na.G('pos')), 3) + ' ' + S.CorrectFileName(na.G('fullitemname'))],
         ['subject', Subj],
         ['to', Addr],
         ['body', Subj]
@@ -1778,23 +1775,23 @@ begin
     end
     else begin
       TaskDir := Tasks.CreateTaskRoot(mytskopToKnsDocuments, [
-        ['directory', va1[0][2]],
-        ['slash', RightStr('0000' + IntToStr(va1[0][0]), 3) + ' ' + S.CorrectFileName(va1[0][5])]
+        ['directory', na.G('path')],
+        ['slash', RightStr('0000' + IntToStr(na.G('pos')), 3) + ' ' + S.CorrectFileName(na.G('fullitemname'))]
         ], False, False
       );
     end;
-  //скопируем файлы в каталог задачи
+    //скопируем файлы в каталог задачи
     TDirectory.Copy(Dir, Module.GetPath_Tasks + '\' + TaskDir + '\FOLDER');
-  //отправим задачу на выполнение
+    //отправим задачу на выполнение
     Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
-  //если еще не було даты отправки докуентов тхн для слеша, то пропишем там текущую дату
-    if SenderIsThn and (va1[0][8] = null) then
-      Q.QExecSql('update order_items set dt_thn = :dt$d where id = :id$i', [Date, IdOrItem]);
-    if not SenderIsThn and (va1[0][11] = null) then
-      Q.QExecSql('update order_items set dt_kns = :dt$d where id = :id$i', [Date, IdOrItem]);
-    //сбросим признак Без док. кнс
-    if not SenderIsThn  then
-      Q.QExecSql('update order_items set wo_kns = 0 where id = :id$i', [IdOrItem]);
+    if SenderIsThn then begin
+      Q.QIUD('u', 'order_items', '', 'id$i;dt_thn$d;dt_thn_last$d', [IdOrItem, S.IIf(na.G('dt_thn') = null, Date, na.G('dt_thn')), Date]);
+      ToOrderAudit(ORDER_AUDIT_THN_DOC, S.IIf(na.G('dt_thn') = null, 0, 1), na.G('slash'));
+    end
+    else begin
+      Q.QIUD('u', 'order_items', '', 'id$i;dt_kns$d;dt_kns_last$d;wo_kns', [IdOrItem, S.IIf(na.G('dt_kns') = null, Date, na.G('dt_kns')), Date, 1]);
+      ToOrderAudit(ORDER_AUDIT_KNS_DOC, S.IIf(na.G('dt_kns') = null, 0, 1), na.G('slash'));
+    end;
     MyInfoMessage('Данные отправлены на сервер.');
     Result := True;
   except
@@ -1868,7 +1865,7 @@ begin
   Result := -2;
   if not User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]) then
     Exit;
-  va2 := Q.QSelectOneRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint from v_orders where id = :id$i', [IdOrder]);
+  va2 := Q.QLoadRow('select id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint from v_orders where id = :id$i', [IdOrder]);
   //позволим менять статутс закрытия менеджера только сотрудникам, оформившим заказа,
   //или с соотвествующим правом, или с правами администратора данных
   if (User.GetId <> va2[11]) and not User.IsDataEditor and not User.Role(rOr_D_Order_SetCompletedMA) then
@@ -1897,7 +1894,7 @@ begin
     end;
     //предупреждение, если не окончен монтаж
     if Mode and (va2[9] <> null) and (va2[12] <> 1) then begin
-      va3 := Q.QSelectOneRow('select dt_end from or_montage where id = :id$i', [IdOrder]);
+      va3 := Q.QLoadRow('select dt_end from or_montage where id = :id$i', [IdOrder]);
       if (va3[0] = null) then begin
         MyWarningMessage('Монтаж этого заказа еще не завершен!'#13#10'Завершение невозможно!');
         Exit;
@@ -1934,7 +1931,7 @@ var
 begin
   Result := -2;
   to_complete := False;
-  va2 := Q.QSelectOneRow('select ' + 'o.id, o.prefix, o.ornum, o.dt_beg, o.dt_end, o.dt_to_sgp, o.dt_from_sgp, o.dt_upd, ' +  //до 7
+  va2 := Q.QLoadRow('select ' + 'o.id, o.prefix, o.ornum, o.dt_beg, o.dt_end, o.dt_to_sgp, o.dt_from_sgp, o.dt_upd, ' +  //до 7
     'o.dt_end_manager, o.dt_end_copy, o.cost, o.pay, o.dt_montage_end, m.dt_end as dt_montage_end_fact, ' +  //от 8 до 13
     'o.dt_cancel, o.id_type, o.is_complaint ' + 'from ' + 'v_orders o, or_montage m ' + 'where ' + 'o.id = :id$i and m.id(+) = o.id', [IdOrder]);  //от 14          id_type 2-рекламация 3-эксперимент
   if va2[0] = null then
@@ -2085,8 +2082,8 @@ var
   i, j, c1, c2: Integer;
   va1, va2: TVarDynArray2;
 begin
-  c1:=Q.QSelectOneRow('select count(*) from dv.zakaz', [])[0];
-  c2:=Q.QSelectOneRow('select count(*) from orders', [])[0];
+  c1:=Q.QLoadValue('select count(*) from dv.zakaz', []);
+  c2:=Q.QLoadValue('select count(*) from orders', []);
   if MyQuestionMessage(
     'В ИТМ заказов ' + IntToStr(c1) + 'шт., а в Учете ' + IntToStr(c2) + 'шт.'#13#10 +
     'Установить признак синхронизации заказвов с ИТМ исходя из их наличия в базе ИТМ?'
@@ -2111,7 +2108,7 @@ var
 begin
   Result:= False;
   if IdItm = null then Exit;
-  vai:= Q.QSelectOneRow('select name, id_group, id_nomencltype from dv.nomenclatura where id_nomencl = :id$i', [IdItm]);
+  vai:= Q.QLoadRow('select name, id_group, id_nomencltype from dv.nomenclatura where id_nomencl = :id$i', [IdItm]);
   if S.NSt(vai[0]) = '' then Exit;
   if (vai[2]) <> 0 then begin
     MyWarningMessage('Эта номенклатура является Изделием, ее нельзя переименовать!');
@@ -2132,11 +2129,11 @@ begin
     nil
   ) <= 0
   then Exit;
-  if Q.QSelectOneRow('select count(*) from dv.nomenclatura where name = :name$s', [va2[1]])[0] <> 0 then begin
+  if Q.QLoadValue('select count(*) from dv.nomenclatura where name = :name$s', [va2[1]]) <> 0 then begin
     MyWarningMessage('Введенное наименование уже есть в базе номенклатуры ИТМ!'#13#10'Переименование невозможно!');
     Exit;
   end;
-  if Q.QSelectOneRow('select count(*) from bcad_nomencl where name = :name$s', [va2[1]])[0] <> 0 then begin
+  if Q.QLoadValue('select count(*) from bcad_nomencl where name = :name$s', [va2[1]]) <> 0 then begin
     MyWarningMessage('Введенное наименование уже есть в базе номенклатуры Учета!'#13#10'Переименование невозможно!');
     Exit;
   end;
@@ -2460,9 +2457,9 @@ begin
     for i := 0 to SaOI.Count - 1 do begin
       S.ConcatStP(Slashes, RightStr('0000' + VarToStr(SaOI.G(i, 'pos')), 3) + ' ' + S.CorrectFileName(Trim(SaOI.G(i, 'fullitemname'))), #13#10);
     end;
-    Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [1])[0]);
+    Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [1]));
     Subj := Orders.GetSubject('Создан заказ', '', SaO.G('id'), null);
-    st:= S.NSt(Q.QSelectOneRow('select order_prefix from ref_production_areas where id = :id$i', [SaO.G(0, 'area')])[0]);
+    st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [SaO.G(0, 'area')]));
     PspName:= SaO.G('path');
     Delete(PspName, 1, length(st));
     if not ExportPassportToXLSX(SaO.G('id'), PspName, False, True) then
@@ -2634,7 +2631,7 @@ var
       end;
   end;
 begin
-  va := Q.QSelectOneRow('select id, doctype, id_doc, commentsfull, name, user_windows from v_itm_log where id = :id$i', [AId]);
+  va := Q.QLoadRow('select id, doctype, id_doc, commentsfull, name, user_windows from v_itm_log where id = :id$i', [AId]);
   DocId := '';
   if (va[0] = null) or (va[1] = null) then
     Exit;
@@ -2685,7 +2682,7 @@ var
 begin
   Result := False;
   if AIdOrItem <> null then begin
-    va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
+    va := Q.QLoadRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
     if va[1] <> null then begin
       MyInfoMessage('Нельзя задать трудоемкость для изделия закрытого заказа!');
       Exit;
@@ -2705,9 +2702,9 @@ begin
     end;
   end;
   if AIdOrItem <> null then
-    Labor := Q.QSelectOneRow('select labor_intensity from order_items where id = :id$i', [AIdOrItem])[0];
+    Labor := Q.QLoadValue('select labor_intensity from order_items where id = :id$i', [AIdOrItem]);
   if AIdStdItem <> null then
-    Labor := Q.QSelectOneRow('select labor_intensity from or_std_items where id = :id$i', [AIdStdItem])[0];
+    Labor := Q.QLoadValue('select labor_intensity from or_std_items where id = :id$i', [AIdStdItem]);
   if TFrmBasicInput.ShowDialog(AParent, '', [], fEdit, '~Трудоемкость', 240, 120,
      [[cntNEdit, 'Трудоемкость, мин.', '0:60000:0', 0]],
      [Labor],
@@ -2734,7 +2731,7 @@ begin
   Result := False;
 //  i := MyMessageDlg('Загрузка данных из xml-файла', mtConfirmation, [mbYesToAll, mbYes, mbNo, mbCancel], 'Файл;Вручную;Без XML;Отмена'); {6;7;2;14} myinfomessage(inttostr(i)); exit;
   if AIdOrItem <> null then begin
-    va := Q.QSelectOneRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
+    va := Q.QLoadRow('select std, dt_end from v_order_items where id = :id$i', [AIdOrItem]);
     if va[1] <> null then begin
       MyInfoMessage('Нельзя загрузить данные из XML для изделия закрытого заказа!');
       Exit;
@@ -2784,9 +2781,9 @@ begin
     else if i = 7 then begin
       //введем вручную
       if AIdOrItem <> null then
-        qnt := Q.QSelectOneRow('select qnt_panels_w_drill from order_items where id = :id$i', [AIdOrItem])[0];
+        qnt := Q.QLoadValue('select qnt_panels_w_drill from order_items where id = :id$i', [AIdOrItem]);
       if AIdStdItem <> null then
-        qnt := Q.QSelectOneRow('select qnt_panels_w_drill from or_std_items where id = :id$i', [AIdStdItem])[0];
+        qnt := Q.QLoadValue('select qnt_panels_w_drill from or_std_items where id = :id$i', [AIdStdItem]);
       if TFrmBasicInput.ShowDialog(AParent, '', [], fEdit, '~Панели со сверловкой', 170, 70,
          [[cntNEdit, 'Количество', '0:1000000000:0:N', 0]],
          [qnt],
@@ -2897,6 +2894,11 @@ begin
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['FIGBOARDS']) +
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['BENTBOARDS'])
   ;
+end;
+
+procedure TOrders.ToOrderAudit(const AType: Integer; AIsCorrection: Boolean; const AName: string; const AChanges: string = '');
+begin
+  Q.QIUD('i', 'orders_audit', '', 'id$i;id_user$i;is_correction$i;dt$d;type$i;name$s;changes$s', [-1, User.GetId, S.IIf(AIsCorrection, 1, 0), Now, AType, AName, Copy(AChanges, 1, 4000)]);
 end;
 
 begin

@@ -206,13 +206,13 @@ var
   i: Integer;
   v: Variant;
 begin
-  v:=Q.QSelectOneRow('select dt from sn_cash_revision_dt', []);
-  lblCaption.Caption:='Журнал Кассы' + IntToStr(CashNo) + ' с ' + DateToStr(v[0]) + ' по '  + DateToStr(Date);
-  v:=Q.QSelectOneRow('select sum1, sum1+sum2+sum9, sum1, sum2, sum9, arrivalday, spendingday from v_sn_cash_sum', []);
-  for i:=1 to 7 do
-    Amounts[i]:=v[i-1];
-  for i:=Low(Amounts) to High(Amounts) do
-    TDBEditEh(FindComponent('edt'+IntToStr(i))).Text:=formatFloat('#,##0.00', Amounts[i]);
+  v := Q.QLoadRow('select dt from sn_cash_revision_dt', []);
+  lblCaption.Caption := 'Журнал Кассы' + IntToStr(CashNo) + ' с ' + DateToStr(v[0]) + ' по ' + DateToStr(Date);
+  v := Q.QLoadRow('select sum1, sum1+sum2+sum9, sum1, sum2, sum9, arrivalday, spendingday from v_sn_cash_sum', []);
+  for i := 1 to 7 do
+    Amounts[i] := v[i - 1];
+  for i := Low(Amounts) to High(Amounts) do
+    TDBEditEh(FindComponent('edt' + IntToStr(i))).Text := formatFloat('#,##0.00', Amounts[i]);
 end;
 
 procedure TFrmCWCash.FormResize(Sender: TObject);

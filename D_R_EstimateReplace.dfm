@@ -1,22 +1,22 @@
 inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
   BorderStyle = bsDialog
   Caption = 'Dlg_R_EstimateReplace'
-  ClientHeight = 117
-  ClientWidth = 411
-  ExplicitWidth = 427
-  ExplicitHeight = 156
+  ClientHeight = 116
+  ClientWidth = 407
+  ExplicitWidth = 423
+  ExplicitHeight = 155
   TextHeight = 13
   object Img_Info: TImage
     Left = 8
-    Top = 89
+    Top = 88
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
     ExplicitTop = 82
   end
   object Bt_Cancel: TBitBtn
-    Left = 320
-    Top = 89
+    Left = 312
+    Top = 88
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -24,10 +24,12 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     Caption = 'Bt_Cancel'
     ModalResult = 2
     TabOrder = 0
+    ExplicitLeft = 320
+    ExplicitTop = 89
   end
   object Bt_Ok: TBitBtn
-    Left = 241
-    Top = 89
+    Left = 233
+    Top = 88
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -36,11 +38,13 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     ModalResult = 1
     TabOrder = 1
     OnClick = Bt_OkClick
+    ExplicitLeft = 241
+    ExplicitTop = 89
   end
   object edt_1: TDBEditEh
     Left = 8
     Top = 24
-    Width = 389
+    Width = 381
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     ControlLabel.Width = 124
@@ -56,11 +60,12 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     TabOrder = 2
     Text = 'edt_1'
     Visible = True
+    ExplicitWidth = 389
   end
   object edt_2: TDBEditEh
     Left = 8
     Top = 64
-    Width = 389
+    Width = 381
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     ControlLabel.Width = 119
@@ -76,5 +81,6 @@ inherited Dlg_R_EstimateReplace: TDlg_R_EstimateReplace
     TabOrder = 3
     Text = 'edt_2'
     Visible = True
+    ExplicitWidth = 389
   end
 end

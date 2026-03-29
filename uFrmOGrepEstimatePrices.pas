@@ -105,7 +105,7 @@ begin
   Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');
   //получим последнюю цену (по последнему приходу любого поставщика)
   for i := 0 to Frg1.GetCount(False) - 1 do begin
-    v := Q.QSelectOneRow('select p.price_last from dv.nomenclatura n, v_spl_nom_lastibprice p where n.id_nomencl = p.id_nomencl (+) and n.name = :name$s and p.rn = 1', [Frg1.GetValue('name', i, False)])[0];
+    v := Q.QLoadValue('select p.price_last from dv.nomenclatura n, v_spl_nom_lastibprice p where n.id_nomencl = p.id_nomencl (+) and n.name = :name$s and p.rn = 1', [Frg1.GetValue('name', i, False)]);
     if v <> null then begin
       v := RoundTo(v, -2);
       Frg1.SetValue('price', i, False, v);

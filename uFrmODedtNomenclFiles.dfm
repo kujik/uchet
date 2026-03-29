@@ -1,28 +1,29 @@
 inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
   Caption = 'FrmDlgDrawingAddAndView'
-  ClientHeight = 475
-  ClientWidth = 768
-  ExplicitWidth = 784
-  ExplicitHeight = 514
+  ClientHeight = 474
+  ClientWidth = 764
+  ExplicitWidth = 780
+  ExplicitHeight = 513
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 768
-    Height = 459
-    ExplicitWidth = 772
-    ExplicitHeight = 460
+    Width = 764
+    Height = 458
+    ExplicitWidth = 768
+    ExplicitHeight = 459
     inherited pnlFrmClient: TPanel
-      Width = 758
-      Height = 410
-      ExplicitWidth = 758
-      ExplicitHeight = 410
+      Width = 754
+      Height = 409
+      ExplicitWidth = 754
+      ExplicitHeight = 409
       object pnlNomencl: TPanel
         Left = 0
         Top = 0
-        Width = 758
+        Width = 754
         Height = 17
         Align = alTop
         Caption = 'pnlNomencl'
         TabOrder = 0
+        ExplicitWidth = 758
         object lblNomencl: TLabel
           Left = 4
           Top = -2
@@ -34,26 +35,26 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
       object pnlGrid: TPanel
         Left = 0
         Top = 17
-        Width = 758
-        Height = 393
+        Width = 754
+        Height = 392
         Align = alClient
         Caption = 'pnlGrid'
         TabOrder = 1
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 1
-          Width = 756
-          Height = 391
+          Width = 752
+          Height = 390
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 756
-          ExplicitHeight = 391
+          ExplicitWidth = 752
+          ExplicitHeight = 390
           inherited pnlGrid: TPanel
             Top = 22
-            Width = 746
-            Height = 369
+            Width = 742
+            Height = 368
             ExplicitTop = 22
             ExplicitWidth = 746
             ExplicitHeight = 369
@@ -85,25 +86,25 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
           end
           inherited pnlLeft: TPanel
             Top = 22
-            Height = 369
+            Height = 368
             ExplicitTop = 22
             ExplicitHeight = 369
           end
           inherited pnlTop: TPanel
             Top = 17
-            Width = 756
+            Width = 752
             ExplicitTop = 17
             ExplicitWidth = 756
           end
           inherited pnlContainer: TPanel
-            Width = 756
+            Width = 752
             Height = 17
             ExplicitWidth = 756
             ExplicitHeight = 17
           end
           inherited pnlBottom: TPanel
-            Top = 391
-            Width = 756
+            Top = 390
+            Width = 752
             ExplicitTop = 391
             ExplicitWidth = 756
           end
@@ -125,8 +126,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 415
-      Width = 758
+      Top = 414
+      Width = 754
       ExplicitTop = 415
       ExplicitWidth = 758
       inherited bvlFrmBtnsTl: TBevel
@@ -162,8 +163,8 @@ inherited FrmODedtNomenclFiles: TFrmODedtNomenclFiles
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 459
-    Width = 768
+    Top = 458
+    Width = 764
     ExplicitTop = 459
     ExplicitWidth = 768
     inherited lblStatusBarR: TLabel

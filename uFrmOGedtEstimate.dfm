@@ -1,47 +1,47 @@
 inherited FrmOGedtEstimate: TFrmOGedtEstimate
   Caption = 'FrmOGedtEstimate'
-  ClientHeight = 398
-  ClientWidth = 672
-  ExplicitWidth = 688
-  ExplicitHeight = 437
+  ClientHeight = 397
+  ClientWidth = 668
+  ExplicitWidth = 684
+  ExplicitHeight = 436
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 672
-    Height = 382
-    ExplicitWidth = 676
-    ExplicitHeight = 383
+    Width = 668
+    Height = 381
+    ExplicitWidth = 672
+    ExplicitHeight = 382
     inherited pnlFrmClient: TPanel
-      Width = 662
-      Height = 333
-      ExplicitWidth = 662
-      ExplicitHeight = 333
+      Width = 658
+      Height = 332
+      ExplicitWidth = 658
+      ExplicitHeight = 332
       inherited pnlTop: TPanel
-        Width = 662
+        Width = 658
         ExplicitWidth = 662
       end
       inherited pnlBottom: TPanel
-        Top = 287
-        Width = 662
+        Top = 286
+        Width = 658
         ExplicitTop = 287
         ExplicitWidth = 662
       end
       inherited pnlLeft: TPanel
-        Height = 278
+        Height = 277
         ExplicitHeight = 278
       end
       inherited pnlGrid1: TPanel
-        Width = 652
-        Height = 278
-        ExplicitWidth = 652
-        ExplicitHeight = 278
+        Width = 648
+        Height = 277
+        ExplicitWidth = 648
+        ExplicitHeight = 277
         inherited Frg1: TFrDBGridEh
-          Width = 650
-          Height = 276
-          ExplicitWidth = 650
-          ExplicitHeight = 276
+          Width = 646
+          Height = 275
+          ExplicitWidth = 646
+          ExplicitHeight = 275
           inherited pnlGrid: TPanel
-            Width = 640
-            Height = 222
+            Width = 636
+            Height = 221
             ExplicitWidth = 640
             ExplicitHeight = 222
             inherited DbGridEh1: TDBGridEh
@@ -60,20 +60,20 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
             end
           end
           inherited pnlLeft: TPanel
-            Height = 222
+            Height = 221
             ExplicitHeight = 222
           end
           inherited pnlTop: TPanel
-            Width = 650
+            Width = 646
             ExplicitWidth = 650
           end
           inherited pnlContainer: TPanel
-            Width = 650
+            Width = 646
             ExplicitWidth = 650
           end
           inherited pnlBottom: TPanel
-            Top = 276
-            Width = 650
+            Top = 275
+            Width = 646
             ExplicitTop = 276
             ExplicitWidth = 650
           end
@@ -94,15 +94,15 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 292
-        Width = 662
-        ExplicitTop = 292
-        ExplicitWidth = 662
+        Top = 291
+        Width = 658
+        ExplicitTop = 291
+        ExplicitWidth = 658
         inherited Frg2: TFrDBGridEh
-          Width = 660
-          ExplicitWidth = 660
+          Width = 656
+          ExplicitWidth = 656
           inherited pnlGrid: TPanel
-            Width = 650
+            Width = 646
             ExplicitWidth = 650
             inherited DbGridEh1: TDBGridEh
               Width = 652
@@ -117,15 +117,15 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
             end
           end
           inherited pnlTop: TPanel
-            Width = 660
+            Width = 656
             ExplicitWidth = 660
           end
           inherited pnlContainer: TPanel
-            Width = 660
+            Width = 656
             ExplicitWidth = 660
           end
           inherited pnlBottom: TPanel
-            Width = 660
+            Width = 656
             ExplicitWidth = 660
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -145,15 +145,15 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
         end
       end
       inherited pnlRight: TPanel
-        Left = 657
-        Height = 278
+        Left = 653
+        Height = 277
         ExplicitLeft = 657
         ExplicitHeight = 278
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 338
-      Width = 662
+      Top = 337
+      Width = 658
       ExplicitTop = 338
       ExplicitWidth = 662
       inherited bvlFrmBtnsTl: TBevel
@@ -187,8 +187,8 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 382
-    Width = 672
+    Top = 381
+    Width = 668
     ExplicitTop = 382
     ExplicitWidth = 672
     inherited lblStatusBarR: TLabel

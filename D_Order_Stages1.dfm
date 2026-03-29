@@ -1,15 +1,15 @@
 inherited Dlg_Order_Stages1: TDlg_Order_Stages1
   BorderStyle = bsDialog
   Caption = 'Dlg_Order_Stages1'
-  ClientHeight = 306
-  ClientWidth = 266
+  ClientHeight = 305
+  ClientWidth = 262
   OnActivate = FormActivate
-  ExplicitWidth = 282
-  ExplicitHeight = 345
+  ExplicitWidth = 278
+  ExplicitHeight = 344
   TextHeight = 13
   object Img_Info: TImage
-    Left = 7
-    Top = 270
+    Left = 6
+    Top = 269
     Width = 21
     Height = 20
     Anchors = []
@@ -24,8 +24,8 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     Caption = 'lbl_Caption'
   end
   object bvl1: TBevel
-    Left = 85
-    Top = 270
+    Left = 77
+    Top = 269
     Width = 3
     Height = 25
     Anchors = [akRight, akBottom]
@@ -35,8 +35,8 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
   object DBGridEh1: TDBGridEh
     Left = 8
     Top = 24
-    Width = 242
-    Height = 240
+    Width = 234
+    Height = 239
     AllowedOperations = [alopUpdateEh]
     Anchors = [akLeft, akTop, akRight, akBottom]
     DataSource = DataSource1
@@ -67,8 +67,8 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     end
   end
   object Bt_Ok: TBitBtn
-    Left = 94
-    Top = 270
+    Left = 86
+    Top = 269
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -76,10 +76,12 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     ModalResult = 1
     TabOrder = 1
     OnClick = Bt_OkClick
+    ExplicitLeft = 94
+    ExplicitTop = 270
   end
   object Bt_Cancel: TBitBtn
-    Left = 175
-    Top = 270
+    Left = 167
+    Top = 269
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -87,26 +89,32 @@ inherited Dlg_Order_Stages1: TDlg_Order_Stages1
     Caption = 'BitBtn1'
     ModalResult = 2
     TabOrder = 2
+    ExplicitLeft = 175
+    ExplicitTop = 270
   end
   object Bt_Del: TBitBtn
-    Left = 54
-    Top = 270
+    Left = 46
+    Top = 269
     Width = 25
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Bt_Add'
     TabOrder = 3
     OnClick = Bt_DelClick
+    ExplicitLeft = 54
+    ExplicitTop = 270
   end
   object Bt_Add: TBitBtn
-    Left = 23
-    Top = 270
+    Left = 15
+    Top = 269
     Width = 25
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Bt_Add'
     TabOrder = 4
     OnClick = Bt_AddClick
+    ExplicitLeft = 23
+    ExplicitTop = 270
   end
   object MemTableEh1: TMemTableEh
     Params = <>

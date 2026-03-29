@@ -1,13 +1,13 @@
 inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
   Caption = 'FrmODedtOrStdItems'
-  ClientHeight = 252
-  ClientWidth = 827
-  ExplicitWidth = 843
-  ExplicitHeight = 291
+  ClientHeight = 251
+  ClientWidth = 823
+  ExplicitWidth = 839
+  ExplicitHeight = 290
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 827
-    Height = 236
+    Width = 823
+    Height = 235
     ExplicitWidth = 827
     ExplicitHeight = 236
     inherited pnlFrmClient: TPanel
@@ -164,8 +164,8 @@ inherited FrmODedtOrStdItems: TFrmODedtOrStdItems
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 236
-    Width = 827
+    Top = 235
+    Width = 823
     ExplicitTop = 236
     ExplicitWidth = 827
     inherited lblStatusBarR: TLabel

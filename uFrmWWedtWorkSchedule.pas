@@ -467,7 +467,7 @@ begin
       Q.QCallStoredProc('P_SaveScheduleHours', 'Id$i;y$i;h$s', [ID, y, st]);
     end;
     b := False;
-    if Q.QSelectOneRow('select count(*) from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)])[0] = 0 then begin
+    if Q.QLoadValue('select count(*) from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]) = 0 then begin
       for i := 1 to 12 do
         Q.QExecSql('insert into w_schedule_periods (id_schedule, dt) values (:id$i, :dt1$d)', [ID, EncodeDate(y, i, 1)]);
       b := True;

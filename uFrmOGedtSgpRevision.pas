@@ -34,7 +34,7 @@ begin
   Caption:= 'Ревизия СГП';
   if ID = 0
     then FTitleTexts := ['$FF0000Нестандартные изделия']
-    else FTitleTexts := ['Изделие:$FF0000 ' + S.NSt(Q.QSelectOneRow('select name from v_sgp_sell_formats where id = :id$i', [ID])[0])];
+    else FTitleTexts := ['Изделие:$FF0000 ' + S.NSt(Q.QLoadValue('select name from v_sgp_sell_formats where id = :id$i', [ID]))];
   Frg1.Opt.Caption := 'Изделия';
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],

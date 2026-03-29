@@ -62,9 +62,9 @@ begin
   ModalResult:=mrNone;
   if (edt_1.Text = '')or(edt_1.Text = edt_2.Text)
     then begin MyWarningMessage('Данные некорректны!'); Exit; end;
-  id1:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [edt_1.Text])[0];
+  id1:=Q.QLoadValue('select id from bcad_nomencl where name = :name$s', [edt_1.Text]);
   if edt_2.Text <> ''
-    then id2:=Q.QSelectOneRow('select id from bcad_nomencl where name = :name$s', [edt_2.Text])[0]
+    then id2:=Q.QLoadValue('select id from bcad_nomencl where name = :name$s', [edt_2.Text])
     else id2 := -1;
   if (id1 = null)or(id2 = null)
     then begin MyWarningMessage('Должны быть выбраны существующие номенклатурные позиции!'); Exit; end;

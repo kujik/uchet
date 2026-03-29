@@ -1,30 +1,28 @@
 inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
   Caption = 'FrmODrepFinByOrders'
-  ClientHeight = 403
-  ClientWidth = 1040
-  ExplicitWidth = 1056
-  ExplicitHeight = 442
+  ClientHeight = 402
+  ClientWidth = 1036
+  ExplicitWidth = 1052
+  ExplicitHeight = 441
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 1040
-    Height = 387
+    Width = 1036
+    Height = 386
     ExplicitWidth = 1040
     ExplicitHeight = 387
     inherited pnlFrmClient: TPanel
-      Width = 1034
-      Height = 339
+      Width = 1030
+      Height = 338
       ExplicitWidth = 1030
       ExplicitHeight = 338
       object pgc_1: TPageControl
         Left = 0
         Top = 25
-        Width = 1034
-        Height = 314
+        Width = 1030
+        Height = 313
         ActivePage = ts_5
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 1030
-        ExplicitHeight = 313
         object ts_1: TTabSheet
           Caption = #1055#1088#1086#1076#1072#1078#1072
           object pnl_1_Top: TPanel
@@ -2270,26 +2268,24 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
       object Panel2: TPanel
         Left = 0
         Top = 0
-        Width = 1034
+        Width = 1030
         Height = 25
         Align = alTop
         Caption = 'Panel2'
         TabOrder = 1
-        ExplicitWidth = 1030
         object lblCaption: TLabel
           Left = 1
           Top = 1
-          Width = 1032
+          Width = 47
           Height = 13
           Align = alTop
           Caption = 'lblCaption'
-          ExplicitWidth = 47
         end
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 344
-      Width = 1034
+      Top = 343
+      Width = 1030
       ExplicitTop = 343
       ExplicitWidth = 1030
       inherited bvlFrmBtnsTl: TBevel
@@ -2369,8 +2365,8 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 387
-    Width = 1040
+    Top = 386
+    Width = 1036
     ExplicitTop = 387
     ExplicitWidth = 1040
     inherited lblStatusBarR: TLabel

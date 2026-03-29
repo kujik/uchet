@@ -66,12 +66,12 @@ begin
     Frg1.Opt.SetTable('v_estimate_add');  //v_estimate_prices
     if AddParam[0] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
-      FCapt := Q.QSelectOneRow('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]])[0];
-      IsNstd := Q.QSelectOneRow('select nstd from v_order_items where id = :id$i', [AddParam[0]])[0] = 1;
+      FCapt := Q.QLoadValue('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]]);
+      IsNstd := Q.QLoadValue('select nstd from v_order_items where id = :id$i', [AddParam[0]]) = 1;
     end;
     if AddParam[1] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_std_item = :id$i /*ANDWHERE*/');
-      FCapt := Q.QSelectOneRow('select name from v_or_std_items where id = :id$i', [AddParam[1]])[0];
+      FCapt := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [AddParam[1]]);
       IsNstd := False;
     end;
     //Frg1.CreateAddControls('1', cntComboLK, 'Площадка:', 'CbArea', '', 80, yrefC, 80);
@@ -109,7 +109,7 @@ begin
       );
     end;
     if Length(TVarDynArray(AddParam)) = 1 then
-      FCapt := Q.QSelectOneRow('select ornum from v_orders where id = :id$i', TVarDynArray(AddParam))[0]
+      FCapt := Q.QLoadValue('select ornum from v_orders where id = :id$i', TVarDynArray(AddParam))
     else begin
       j := Length(TVarDynArray(AddParam)) - 10;
       va := [];

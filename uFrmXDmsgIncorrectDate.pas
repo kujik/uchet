@@ -40,7 +40,7 @@ var
   dt: TDateTime;
 begin
   Result:=True;
-  dt:=Q.QSelectOneRow('select sysdate from dual', [])[0];
+  dt:=Q.QLoadValue('select sysdate from dual', []);
   if (abs(HoursBetween(dt , Now)) < 2)and(DayOf(Date) = DayOf(dt)) then Exit;
   Result:=False;
   {$IFDEF SRV}

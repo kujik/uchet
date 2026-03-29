@@ -265,7 +265,7 @@ begin
   if AID = null then
     Exit;
   //получим группу стд изделий по его айди, если не найдено или это нестандарт (0) - выйдем
-  va := Q.QSelectOneRow('select id_or_format_estimates from or_std_items where id = :id$i', [AId]);
+  va := Q.QLoadRow('select id_or_format_estimates from or_std_items where id = :id$i', [AId]);
   if S.NNum(va[0]) = 0 then
     Exit;
   if FrmOGrefOrStdItems = nil then
@@ -303,7 +303,7 @@ begin
       Exit;
     va2 := Q.QLoadToVarDynArray2(Q.QSIUDSql('A', 'or_std_items', Fields) + ' where id_or_format_estimates = :ide$i', [va[0]]);
     for i := 0 to High(va2) do begin
-      j := Q.QSelectOneRow('select count(*) from or_std_items where lower(name) = lower(:name$s) and id_or_format_estimates = :ide$i', [va2[i][2], gr])[0];
+      j := Q.QLoadValue('select count(*) from or_std_items where lower(name) = lower(:name$s) and id_or_format_estimates = :ide$i', [va2[i][2], gr]);
       if j > 0 then
         Continue;
       va2[i][1] := gr;

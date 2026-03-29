@@ -1,13 +1,13 @@
 inherited Dlg_ItmInfo: TDlg_ItmInfo
   Caption = 'Form_MD'
-  ClientHeight = 419
-  ClientWidth = 648
-  ExplicitWidth = 664
-  ExplicitHeight = 458
+  ClientHeight = 418
+  ClientWidth = 644
+  ExplicitWidth = 660
+  ExplicitHeight = 457
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 400
-    Width = 648
+    Top = 399
+    Width = 644
     ExplicitTop = 400
     ExplicitWidth = 648
     inherited lbl_StatusBar_Right: TLabel
@@ -18,12 +18,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   object pnl_Top: TPanel [1]
     Left = 0
     Top = 0
-    Width = 648
+    Width = 644
     Height = 89
     Align = alTop
     TabOrder = 1
+    ExplicitWidth = 648
     DesignSize = (
-      648
+      644
       89)
     object lbl1: TLabel
       Left = 12
@@ -54,7 +55,7 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
       Caption = 'lbl1'
     end
     object Bt_Go: TSpeedButton
-      Left = 592
+      Left = 584
       Top = 8
       Width = 32
       Height = 32
@@ -66,11 +67,13 @@ inherited Dlg_ItmInfo: TDlg_ItmInfo
   object Pc_1: TPageControl [2]
     Left = 0
     Top = 89
-    Width = 648
-    Height = 311
+    Width = 644
+    Height = 310
     ActivePage = ts_FromCAD
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 648
+    ExplicitHeight = 311
     object ts_Artikul: TTabSheet
       Caption = #1040#1088#1090#1080#1082#1091#1083#1099
       object DBGridEh1: TDBGridEh

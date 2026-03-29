@@ -1,18 +1,18 @@
 inherited FrmODedtTasks: TFrmODedtTasks
   Caption = 'FrmDlgJTasks'
-  ClientHeight = 490
-  ClientWidth = 843
-  ExplicitWidth = 859
-  ExplicitHeight = 529
+  ClientHeight = 489
+  ClientWidth = 839
+  ExplicitWidth = 855
+  ExplicitHeight = 528
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 843
-    Height = 474
+    Width = 839
+    Height = 473
     ExplicitWidth = 843
     ExplicitHeight = 474
     inherited pnlFrmClient: TPanel
-      Width = 837
-      Height = 426
+      Width = 833
+      Height = 425
       ExplicitWidth = 833
       ExplicitHeight = 425
       object cmb_type: TDBComboBoxEh
@@ -242,8 +242,8 @@ inherited FrmODedtTasks: TFrmODedtTasks
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 430
-      Width = 833
+      Top = 429
+      Width = 829
       ExplicitTop = 430
       ExplicitWidth = 833
       inherited bvlFrmBtnsTl: TBevel
@@ -277,8 +277,8 @@ inherited FrmODedtTasks: TFrmODedtTasks
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 474
-    Width = 843
+    Top = 473
+    Width = 839
     ExplicitTop = 474
     ExplicitWidth = 843
     inherited lblStatusBarR: TLabel

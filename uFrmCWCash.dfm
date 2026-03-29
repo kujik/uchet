@@ -1,30 +1,29 @@
 inherited FrmCWCash: TFrmCWCash
   Caption = 'FrmCWCash'
-  ClientHeight = 643
-  ClientWidth = 1000
+  ClientHeight = 642
+  ClientWidth = 996
   OnResize = FormResize
   ExplicitWidth = 1012
   ExplicitHeight = 681
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 1000
-    Height = 627
+    Width = 996
+    Height = 626
     ExplicitWidth = 1000
     ExplicitHeight = 627
     inherited pnlFrmClient: TPanel
-      Width = 990
-      Height = 578
+      Width = 986
+      Height = 577
       ExplicitWidth = 986
       ExplicitHeight = 577
       object pnlTop: TPanel
         Left = 0
         Top = 0
-        Width = 990
+        Width = 986
         Height = 49
         Align = alTop
         Caption = 'pnlTop'
         TabOrder = 0
-        ExplicitWidth = 986
         object btnRefresh: TSpeedButton
           Left = 9
           Top = 11
@@ -49,12 +48,11 @@ inherited FrmCWCash: TFrmCWCash
       object pnlCheck: TPanel
         Left = 0
         Top = 49
-        Width = 990
+        Width = 986
         Height = 40
         Align = alTop
         Caption = 'pnlCheck'
         TabOrder = 1
-        ExplicitWidth = 986
         object lblCaptionL: TLabel
           Left = 12
           Top = 21
@@ -81,14 +79,12 @@ inherited FrmCWCash: TFrmCWCash
       end
       object pnlTotal1: TPanel
         Left = 0
-        Top = 482
-        Width = 990
+        Top = 481
+        Width = 986
         Height = 35
         Align = alBottom
         Caption = 'pnlTotal1'
         TabOrder = 2
-        ExplicitTop = 481
-        ExplicitWidth = 986
         object edt1: TDBEditEh
           Left = 96
           Top = 4
@@ -110,14 +106,12 @@ inherited FrmCWCash: TFrmCWCash
       end
       object pnlTotal2: TPanel
         Left = 0
-        Top = 517
-        Width = 990
+        Top = 516
+        Width = 986
         Height = 61
         Align = alBottom
         Caption = 'pnlTotal2'
         TabOrder = 3
-        ExplicitTop = 516
-        ExplicitWidth = 986
         object edt2: TDBEditEh
           Left = 96
           Top = 6
@@ -231,7 +225,7 @@ inherited FrmCWCash: TFrmCWCash
         Left = 0
         Top = 89
         Width = 500
-        Height = 393
+        Height = 392
         Align = alLeft
         TabOrder = 4
         ExplicitTop = 89
@@ -239,7 +233,7 @@ inherited FrmCWCash: TFrmCWCash
         ExplicitHeight = 392
         inherited pnlGrid: TPanel
           Width = 490
-          Height = 339
+          Height = 338
           ExplicitWidth = 490
           ExplicitHeight = 338
           inherited DbGridEh1: TDBGridEh
@@ -280,7 +274,7 @@ inherited FrmCWCash: TFrmCWCash
           end
         end
         inherited pnlLeft: TPanel
-          Height = 339
+          Height = 338
           ExplicitHeight = 338
         end
         inherited pnlTop: TPanel
@@ -292,7 +286,7 @@ inherited FrmCWCash: TFrmCWCash
           ExplicitWidth = 500
         end
         inherited pnlBottom: TPanel
-          Top = 393
+          Top = 392
           Width = 500
           ExplicitTop = 392
           ExplicitWidth = 500
@@ -303,7 +297,7 @@ inherited FrmCWCash: TFrmCWCash
             7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
             305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
             666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-            6E657261746F722052696368656432302031302E302E31393034317D5C766965
+            6E657261746F722052696368656432302031302E302E32363130307D5C766965
             776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
             66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
             720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -315,8 +309,8 @@ inherited FrmCWCash: TFrmCWCash
       inline Frg2: TFrDBGridEh
         Left = 500
         Top = 89
-        Width = 490
-        Height = 393
+        Width = 486
+        Height = 392
         Align = alClient
         TabOrder = 5
         ExplicitLeft = 500
@@ -324,8 +318,8 @@ inherited FrmCWCash: TFrmCWCash
         ExplicitWidth = 486
         ExplicitHeight = 392
         inherited pnlGrid: TPanel
-          Width = 480
-          Height = 339
+          Width = 476
+          Height = 338
           ExplicitWidth = 476
           ExplicitHeight = 338
           inherited DbGridEh1: TDBGridEh
@@ -366,20 +360,20 @@ inherited FrmCWCash: TFrmCWCash
           end
         end
         inherited pnlLeft: TPanel
-          Height = 339
+          Height = 338
           ExplicitHeight = 338
         end
         inherited pnlTop: TPanel
-          Width = 490
+          Width = 486
           ExplicitWidth = 486
         end
         inherited pnlContainer: TPanel
-          Width = 490
+          Width = 486
           ExplicitWidth = 486
         end
         inherited pnlBottom: TPanel
-          Top = 393
-          Width = 490
+          Top = 392
+          Width = 486
           ExplicitTop = 392
           ExplicitWidth = 486
         end
@@ -389,7 +383,7 @@ inherited FrmCWCash: TFrmCWCash
             7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
             305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
             666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-            6E657261746F722052696368656432302031302E302E31393034317D5C766965
+            6E657261746F722052696368656432302031302E302E32363130307D5C766965
             776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
             66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
             720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -400,8 +394,8 @@ inherited FrmCWCash: TFrmCWCash
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 583
-      Width = 990
+      Top = 582
+      Width = 986
       ExplicitTop = 582
       ExplicitWidth = 986
       inherited bvlFrmBtnsTl: TBevel
@@ -435,8 +429,8 @@ inherited FrmCWCash: TFrmCWCash
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 627
-    Width = 1000
+    Top = 626
+    Width = 996
     ExplicitTop = 626
     ExplicitWidth = 996
     inherited lblStatusBarR: TLabel

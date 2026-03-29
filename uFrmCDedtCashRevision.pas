@@ -82,10 +82,10 @@ begin
     then Mode := fEdit
     else Mode := fView;
   //значения и состояния контролов в режиме просмотра
-  dedtDate.Value:=Q.QSelectOneRow('select dt from sn_cash_revision_dt', [])[0];
-  nedtCash1.Value:=Q.QSelectOneRow('select sum from sn_cash_revision_sum where id = -1', [])[0];
-  nedtCash2.Value:=Q.QSelectOneRow('select sum from sn_cash_revision_sum where id = -2', [])[0];
-  nedtDeposit.Value:=Q.QSelectOneRow('select sum from sn_cash_revision_sum where id = -9', [])[0];
+  dedtDate.Value:=Q.QLoadValue('select dt from sn_cash_revision_dt', []);
+  nedtCash1.Value:=Q.QLoadValue('select sum from sn_cash_revision_sum where id = -1', []);
+  nedtCash2.Value:=Q.QLoadValue('select sum from sn_cash_revision_sum where id = -2', []);
+  nedtDeposit.Value:=Q.QLoadValue('select sum from sn_cash_revision_sum where id = -9', []);
   Result := True;
 end;
 

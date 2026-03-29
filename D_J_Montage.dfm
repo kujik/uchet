@@ -1,9 +1,9 @@
 inherited Dlg_J_Montage: TDlg_J_Montage
   Caption = 'Dlg_J_Montage'
-  ClientHeight = 315
-  ClientWidth = 399
-  ExplicitWidth = 415
-  ExplicitHeight = 354
+  ClientHeight = 314
+  ClientWidth = 395
+  ExplicitWidth = 411
+  ExplicitHeight = 353
   TextHeight = 13
   object lbl_Act: TLabel [0]
     Left = 36
@@ -21,7 +21,7 @@ inherited Dlg_J_Montage: TDlg_J_Montage
   end
   object Img_Info: TImage [2]
     Left = 8
-    Top = 282
+    Top = 281
     Width = 21
     Height = 20
     Anchors = [akLeft, akBottom]
@@ -41,24 +41,26 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     ParentFont = False
   end
   inherited pnl_StatusBar: TPanel
-    Top = 296
-    Width = 399
+    Top = 295
+    Width = 395
     ExplicitTop = 296
     ExplicitWidth = 399
   end
   object Bt_OK: TBitBtn [5]
-    Left = 227
-    Top = 280
+    Left = 219
+    Top = 279
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
     Caption = 'Bt_OK'
     TabOrder = 1
     OnClick = Bt_OKClick
+    ExplicitLeft = 227
+    ExplicitTop = 280
   end
   object Bt_Cancel: TBitBtn [6]
-    Left = 308
-    Top = 280
+    Left = 300
+    Top = 279
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -67,6 +69,8 @@ inherited Dlg_J_Montage: TDlg_J_Montage
     ModalResult = 2
     TabOrder = 2
     OnClick = Bt_CancelClick
+    ExplicitLeft = 308
+    ExplicitTop = 280
   end
   object dedt_Beg: TDBDateTimeEditEh [7]
     Left = 113

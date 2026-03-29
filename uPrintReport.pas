@@ -259,7 +259,7 @@ begin
   try
   frxReport1.LoadFromFile(PrintReport.GetReportFileFr3('Pick_Item'), True);
   FieldNames:='id;name;article;colorname;description;wi;di;hi;wp;dp;hp;weight;filepath';
-  v:=Q.QSelectOneRow(Q.QSIUDSql('s', 'v_pick_items', FieldNames), [ID]);
+  v:=Q.QLoadRow(Q.QSIUDSql('s', 'v_pick_items', FieldNames), [ID]);
   if v[0] = null then begin MyWarningMessage('Это изделие не найдено в базе данных!'); exit; end;
   SetMemo('Наименование',v[1]);
   SetMemo('Артикул',v[2]);

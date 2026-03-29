@@ -70,7 +70,7 @@ begin
     '  (select extract(year from dt) y from sn_cash_payments c where c.receiver = 1) '+
     ') where y is not null group by y order by y desc',
     [], TDBComboBoxEh(Frg1.FindComponent('CbYear')), cntComboL);
-  Frg1.SetControlValue('NeInitialDebt', S.NNum(Q.QSelectOneRow('select sum from sn_initialdebt', [])[0]));
+  Frg1.SetControlValue('NeInitialDebt', S.NNum(Q.QLoadValue('select sum from sn_initialdebt', [])));
 
   Frg1.Opt.SetDataMode(myogdmFromArray);
   Result := Inherited;
@@ -244,7 +244,7 @@ begin
   Frg1.LoadSourceDataFromArray(va2);
   Frg1.Repaint;
   Frg1.SetStatusBarCaption('Задолженность на сегодня: ' + FormatFloat('###,###,####,##0', S.NNum(
-    Q.QSelectOneRow('select sum(case when status = 0 then round(sum) else 0 end) as debtsum from sn_calendar_payments', [])[0])+
+    Q.QLoadValue('select sum(case when status = 0 then round(sum) else 0 end) as debtsum from sn_calendar_payments', []))+
     S.NNum(Frg1.GetControlValue('NeInitialDebt')))
   );
   SetChart;

@@ -1,22 +1,22 @@
 inherited Dlg_DelayedInProd: TDlg_DelayedInProd
   BorderStyle = bsDialog
   Caption = 'Dlg_DelayedInProd'
-  ClientHeight = 265
-  ClientWidth = 495
-  ExplicitWidth = 511
-  ExplicitHeight = 304
+  ClientHeight = 264
+  ClientWidth = 491
+  ExplicitWidth = 507
+  ExplicitHeight = 303
   TextHeight = 13
   object Img_Info: TImage
     Left = 8
-    Top = 231
+    Top = 230
     Width = 21
     Height = 20
     Anchors = []
     ExplicitTop = 224
   end
   object Bt_Ok: TBitBtn
-    Left = 323
-    Top = 232
+    Left = 315
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -24,10 +24,12 @@ inherited Dlg_DelayedInProd: TDlg_DelayedInProd
     ModalResult = 1
     TabOrder = 0
     OnClick = Bt_OkClick
+    ExplicitLeft = 323
+    ExplicitTop = 232
   end
   object Bt_Cancel: TBitBtn
-    Left = 404
-    Top = 232
+    Left = 396
+    Top = 231
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -35,6 +37,8 @@ inherited Dlg_DelayedInProd: TDlg_DelayedInProd
     Caption = 'BitBtn1'
     ModalResult = 2
     TabOrder = 1
+    ExplicitLeft = 404
+    ExplicitTop = 232
   end
   object cmb_Reason: TDBComboBoxEh
     Left = 8

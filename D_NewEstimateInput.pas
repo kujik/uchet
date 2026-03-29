@@ -69,9 +69,9 @@ var
   st: string;
 begin
   if (MemTableEh1.FieldByName('idgroup').Value = null)or(MemTableEh1.FieldByName('name').Value = null) then Exit;
-  st:=Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual',
+  st:=Q.QLoadValue('select F_TestEstimateItem(:g$i, :n$s) from dual',
     [MemTableEh1.FieldByName('idgroup').Value, MemTableEh1.FieldByName('name').Value]
-  )[0];
+  );
   if High(Err2) < MemTableEh1.RecNo then SetLength(Err2, MemTableEh1.RecNo + 1);
   Err2[MemTableEh1.RecNo]:=st;
 end;
@@ -112,9 +112,9 @@ begin
     //--1й символ = 0 если нет такой позци€ в справочнике номенклатуры бкад
     //--2й символ = 0 - ошибка дл€ номенклатуры из группы »зделий - нет такого издели€ в v_or_std_items
     //--3й символ = 0 - ошибка дл€ номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом €вл€€сь материалом согласно группе
-    st:=Q.QSelectOneRow('select F_TestEstimateItem(:g$i, :n$s) from dual',
+    st:=Q.QLoadValue('select F_TestEstimateItem(:g$i, :n$s) from dual',
       [MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['idgroup', dvvValueEh], MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues['name', dvvValueEh]]
-    )[0];
+    );
     if st <> '111' then begin
 //      Err:=Err + [st];
       if (st[2] = '0')or(st[3] = '0') then
@@ -384,7 +384,7 @@ begin
   if S.NSt(MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['name', dvvValueEh]) = '' then
     MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['qnts', dvvValueEh] := null
   else begin
-    qnt := Q.QSelectOneRow('select qnt from v_spl_qntonstocks_sum_2 where name = :name$s', [MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['name', dvvValueEh]])[0];
+    qnt := Q.QLoadValue('select qnt from v_spl_qntonstocks_sum_2 where name = :name$s', [MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['name', dvvValueEh]]);
     MemTableEh1.RecordsView.MemTableData.RecordsList[ARow].DataValues['qnts', dvvValueEh] := S.NNum(qnt);
   end;
 end;

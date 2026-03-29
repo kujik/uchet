@@ -7,19 +7,19 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
   inherited pnlFrmMain: TPanel
     Width = 800
     Height = 522
-    ExplicitWidth = 804
     ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
       Width = 790
       Height = 473
-      ExplicitHeight = 472
+      ExplicitWidth = 790
+      ExplicitHeight = 473
       inherited pnlTop: TPanel
         Width = 790
       end
       inherited pnlBottom: TPanel
         Top = 427
         Width = 790
-        ExplicitTop = 426
+        ExplicitTop = 427
       end
       inherited pnlLeft: TPanel
         Height = 418
@@ -28,7 +28,8 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
       inherited pnlGrid1: TPanel
         Width = 780
         Height = 418
-        ExplicitHeight = 417
+        ExplicitWidth = 780
+        ExplicitHeight = 418
         inherited Frg1: TFrDBGridEh
           Width = 778
           Height = 416
@@ -42,7 +43,7 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
             end
             inherited pnlStatusBar: TPanel
               Top = 340
-              ExplicitTop = 339
+              ExplicitTop = 340
             end
           end
           inherited pnlLeft: TPanel
@@ -119,12 +120,10 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
     inherited pnlFrmBtns: TPanel
       Top = 478
       Width = 790
-      ExplicitWidth = 786
+      ExplicitTop = 478
+      ExplicitWidth = 790
       inherited pnlFrmBtnsContainer: TPanel
-        ExplicitWidth = 784
-        inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = 457
-        end
+        ExplicitWidth = 788
       end
     end
   end

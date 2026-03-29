@@ -156,7 +156,7 @@ begin
 {  if Settings.InterfaceStyle = ''
     then Module.SetStyle('')
     else Module.SetStyle(Module.GetPath_Styles+'\'+Settings.InterfaceStyle);}
-  v := Q.QSelectOneRow('select job, job_comm, idletime from adm_users where id = :id$i', [GetID]);
+  v := Q.QLoadRow('select job, job_comm, idletime from adm_users where id = :id$i', [GetID]);
   UserJob := v[0].AsInteger;
   UserIdleTime := v[2].AsInteger;
   Errors.SetMadExcept;
@@ -178,11 +178,11 @@ begin
   ComputerUserLogin:=GetComputerUserLogin;
   //автовход под администратором невозможен
   if ComputerUserLogin = 'Администратор' then Exit;
-  v:= Q.QSelectOneRow('select id, login, name from adm_users where login=:login and active = 1 and autologin = 1', [ComputerUserLogin]);
+  v:= Q.QLoadRow('select id, login, name from adm_users where login=:login and active = 1 and autologin = 1', [ComputerUserLogin]);
   Result:= (v[0] <> null) and EnableLogin(v[1]);
   if Result then begin
     i:= v[0];
-    v1:=Q.QSelectOneRow('select IsModuleAvailableToUser(:id_u, :id_m) from dual', [i, cMainModule]);
+    v1:=Q.QLoadRow('select IsModuleAvailableToUser(:id_u, :id_m) from dual', [i, cMainModule]);
     Result:= (v1[0] = 1);
   end;
   if Result then begin
@@ -204,9 +204,9 @@ begin
   //для разработчика в присутствии файла dev вход под любым незаблокированным пользователем без пароля
   if User.IsDeveloper and Module.DevFileExists
     then
-      v:= Q.QSelectOneRow('select id, login, name from adm_users where (name = :name1$s)', [UName])
+      v:= Q.QLoadRow('select id, login, name from adm_users where (name = :name1$s)', [UName])
     else
-      v:= Q.QSelectOneRow(
+      v:= Q.QLoadRow(
         'select id, login, name from adm_users where (name = :name1$s) and ('+
         '( (select password from adm_password) = get_hash_val(:pwd1$s) '+
         ' and (:name2$s <> ''Администратор'') '+
@@ -342,7 +342,7 @@ var
   id: Integer;
 begin
   if ToDef then id:= -1 else id:= GetId;
-  v:=Q.QSelectOneRow('select cfg from adm_user_cfg where id_user = :id_user and id_module = :id_module', [ID, cMainModule]);
+  v:=Q.QLoadRow('select cfg from adm_user_cfg where id_user = :id_user and id_module = :id_module', [ID, cMainModule]);
   if v[0]<> null
     then Result:= VarToStr(v[0])
     else Result:='';

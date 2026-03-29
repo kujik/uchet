@@ -1,28 +1,32 @@
 inherited FrmOGedtSnMain: TFrmOGedtSnMain
   Caption = 'FrmOGedtSnMain'
-  ClientHeight = 538
+  ClientHeight = 537
+  ClientWidth = 792
   ExplicitWidth = 808
   ExplicitHeight = 576
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Height = 522
+    Width = 792
+    Height = 521
+    ExplicitWidth = 796
     ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
-      Height = 473
+      Width = 782
+      Height = 472
       ExplicitWidth = 782
       ExplicitHeight = 472
       inherited pnlTop: TPanel
+        Width = 782
         Height = 73
         ExplicitWidth = 782
         ExplicitHeight = 73
         object pnlName: TPanel
           Left = 1
           Top = 1
-          Width = 784
+          Width = 780
           Height = 20
           Align = alTop
           TabOrder = 0
-          ExplicitWidth = 780
           object lblName: TLabel
             Left = 16
             Top = 3
@@ -34,7 +38,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         inline Frg3: TFrDBGridEh
           Left = 1
           Top = 21
-          Width = 784
+          Width = 780
           Height = 51
           Align = alClient
           TabOrder = 1
@@ -43,7 +47,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
           ExplicitWidth = 780
           ExplicitHeight = 51
           inherited pnlGrid: TPanel
-            Width = 774
+            Width = 770
             Height = 297
             ExplicitWidth = 770
             ExplicitHeight = 297
@@ -89,16 +93,16 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
             ExplicitHeight = 297
           end
           inherited pnlTop: TPanel
-            Width = 784
+            Width = 780
             ExplicitWidth = 780
           end
           inherited pnlContainer: TPanel
-            Width = 784
+            Width = 780
             ExplicitWidth = 780
           end
           inherited pnlBottom: TPanel
             Top = 51
-            Width = 784
+            Width = 780
             ExplicitTop = 51
             ExplicitWidth = 780
           end
@@ -108,7 +112,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -119,27 +123,31 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         end
       end
       inherited pnlBottom: TPanel
-        Top = 427
+        Top = 426
+        Width = 782
         ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
         Top = 73
-        Height = 354
+        Height = 353
         ExplicitTop = 73
         ExplicitHeight = 353
       end
       inherited pnlGrid1: TPanel
         Top = 73
-        Height = 354
+        Width = 772
+        Height = 353
         ExplicitTop = 73
         ExplicitWidth = 772
         ExplicitHeight = 353
         inherited Frg1: TFrDBGridEh
-          Height = 352
+          Width = 770
+          Height = 351
           ExplicitWidth = 770
           ExplicitHeight = 351
           inherited pnlGrid: TPanel
-            Height = 298
+            Width = 760
+            Height = 297
             ExplicitHeight = 297
             inherited DbGridEh1: TDBGridEh
               Width = 762
@@ -152,11 +160,18 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
             end
           end
           inherited pnlLeft: TPanel
-            Height = 298
+            Height = 297
             ExplicitHeight = 297
           end
+          inherited pnlTop: TPanel
+            Width = 770
+          end
+          inherited pnlContainer: TPanel
+            Width = 770
+          end
           inherited pnlBottom: TPanel
-            Top = 352
+            Top = 351
+            Width = 770
             ExplicitTop = 351
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -165,7 +180,7 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -176,12 +191,15 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 432
+        Top = 431
+        Width = 782
         ExplicitTop = 431
         ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
+          Width = 780
           ExplicitWidth = 780
           inherited pnlGrid: TPanel
+            Width = 770
             inherited DbGridEh1: TDBGridEh
               Width = 772
             end
@@ -189,13 +207,22 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
               Width = 772
             end
           end
+          inherited pnlTop: TPanel
+            Width = 780
+          end
+          inherited pnlContainer: TPanel
+            Width = 780
+          end
+          inherited pnlBottom: TPanel
+            Width = 780
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
               7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
               305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
               666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-              6E657261746F722052696368656432302031302E302E31393034317D5C766965
+              6E657261746F722052696368656432302031302E302E32363130307D5C766965
               776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
               66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
               720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
@@ -206,14 +233,16 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         end
       end
       inherited pnlRight: TPanel
+        Left = 777
         Top = 73
-        Height = 354
+        Height = 353
         ExplicitTop = 73
         ExplicitHeight = 353
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 478
+      Top = 477
+      Width = 782
       ExplicitTop = 477
       ExplicitWidth = 782
       inherited pnlFrmBtnsContainer: TPanel
@@ -225,14 +254,12 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 522
+    Top = 521
+    Width = 792
     ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 723
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 723
     end
   end
   inherited tmrAfterCreate: TTimer

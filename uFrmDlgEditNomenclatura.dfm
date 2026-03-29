@@ -1,13 +1,13 @@
 inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
   Caption = 'FrmDlgEditNomenclatura'
-  ClientHeight = 171
-  ClientWidth = 529
-  ExplicitWidth = 545
-  ExplicitHeight = 210
+  ClientHeight = 170
+  ClientWidth = 525
+  ExplicitWidth = 541
+  ExplicitHeight = 209
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 529
-    Height = 155
+    Width = 525
+    Height = 154
     ExplicitWidth = 529
     ExplicitHeight = 155
     inherited pnlFrmClient: TPanel
@@ -129,8 +129,8 @@ inherited FrmDlgEditNomenclatura: TFrmDlgEditNomenclatura
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 155
-    Width = 529
+    Top = 154
+    Width = 525
     ExplicitTop = 155
     ExplicitWidth = 529
     inherited lblStatusBarR: TLabel

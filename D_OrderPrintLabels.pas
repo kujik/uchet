@@ -97,7 +97,7 @@ begin
   end;
   Resize;
   MemTableEh1.DisableControls;
-  OrderFields:=Q.QSelectOneRow('select project from v_orders where id = :id$i', [ID]);
+  OrderFields:=Q.QLoadRow('select project from v_orders where id = :id$i', [ID]);
   Q.QLoadToMemTableEh('select slash, itemname, qnt, qnt as qnt_p from v_order_items where id_order = :id_order$i and qnt > 0 order by slash', [ID],  MemTableEh1, 'slash;itemname;qnt;qnt_p', 0);
   DBGridEh1.Columns[0].Width:=100;
   MemTableEh1.First;

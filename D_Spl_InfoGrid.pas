@@ -55,7 +55,7 @@ begin
   //получим айди заказа в учете
   IdOrder:=null;
   if DBGridEh1.FindFieldColumn('ornum') <> nil
-    then IdOrder:=Q.QSelectOneRow('select id from v_orders where ornum = :ornum$s', [MemTableEh1.FieldByName('ornum').Value])[0];
+    then IdOrder:=Q.QLoadValue('select id from v_orders where ornum = :ornum$s', [MemTableEh1.FieldByName('ornum').Value]);
   //откроем паспотр заказа или смету
   if IdOrder <> null
     then if TCellButtonEh(Sender).Hint = 'ѕаспорт'
@@ -409,9 +409,9 @@ begin
     //номенклатура передеаетс€ в AddParam[0], мес€ц в AddParam[1]
     //если мес€ц отрицательный, то берем из таблицы дл€ —Ќ, иначе из общей на 12 мес€цев
     if AddParam[1] > 0
-      then st := S.NSt(Q.QSelectOneRow('select or' + VarToStr(AddParam[1]) + ' from planned_order_estimate12 where name = :name$s', [AddParam[0]])[0])
+      then st := S.NSt(Q.QLoadValue('select or' + VarToStr(AddParam[1]) + ' from planned_order_estimate12 where name = :name$s', [AddParam[0]]))
       else if AddParam[1] < 0
-        then st := S.NSt(Q.QSelectOneRow('select or' + VarToStr(-AddParam[1]) + ' from planned_order_estimate3 where name = :name$s', [AddParam[0]])[0]);
+        then st := S.NSt(Q.QLoadValue('select or' + VarToStr(-AddParam[1]) + ' from planned_order_estimate3 where name = :name$s', [AddParam[0]]));
     if st = '' then st := '0';
     va2:=Q.QLoadToVarDynArray2(
       'select id, num, projectname, dt_start, dt_end '+

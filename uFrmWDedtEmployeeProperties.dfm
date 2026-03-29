@@ -1,13 +1,13 @@
 inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
   Caption = 'FrmWDedtEmployeeProperties'
-  ClientHeight = 425
-  ClientWidth = 498
+  ClientHeight = 424
+  ClientWidth = 494
   ExplicitWidth = 510
   ExplicitHeight = 463
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 498
-    Height = 409
+    Width = 494
+    Height = 408
     ExplicitWidth = 494
     ExplicitHeight = 408
     inherited pnlFrmClient: TPanel
@@ -202,17 +202,13 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 409
-    Width = 498
+    Top = 408
+    Width = 494
     ExplicitTop = 408
     ExplicitWidth = 494
     inherited lblStatusBarR: TLabel
       Left = 425
-      Height = 14
       ExplicitLeft = 425
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

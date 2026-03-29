@@ -309,7 +309,7 @@ begin
     'select dt1, dt2, id_division, name, editusers, 0 from v_turv_period where dt1 = :dt$d',
     [dt]
   );
-  autoagreedtime:=Q.QSelectOneRow('select time_autoagreed from workers_cfg', [])[0];
+  autoagreedtime:=Q.QLoadValue('select time_autoagreed from workers_cfg', []);
   b:=False;
   //для каждого турв
   for t:=0 to High(ar1) do begin
@@ -325,7 +325,7 @@ begin
       //время от руководителя и парсека отличается на час
       //но все допустимо, если заполнено время согласованное
       //а если не заполнено по парсеку, то смотрим чтоба только был код или время руководителя
-      v:=Q.QSelectOneRow(
+      v:=Q.QLoadRow(
 {        'select count(1) from turv_day  where '+
         '(worktime1 is not null or id_turvcode1 is not null) and id_worker = :id_worker$i and dt >= :dtbeg$d and dt <= :dtend$d',}
         'select count(1) from turv_day  where ('+
@@ -372,9 +372,9 @@ begin
   end;
   //отправим письма
   for i:=0 to High(ar3) do begin
-    st:=S.NSt(Q.QSelectOneRow('select emailaddr from v_users where id = :id$i', [ar3[i][0]])[0]);
+    st:=S.NSt(Q.QLoadValue('select emailaddr from v_users where id = :id$i', [ar3[i][0]]));
     if st = '' then Continue;
-    st2:=S.NSt(Q.QSelectOneRow('select name from v_users where id = :id$i', [ar3[i][0]])[0]);
+    st2:=S.NSt(Q.QLoadValue('select name from v_users where id = :id$i', [ar3[i][0]]));
     Delete(ar3[i], 0, 1);
     st1:=A.Implode(ar3[i], #13#10);
     CreateTaskRoot(mytskopmail, [
@@ -416,9 +416,9 @@ begin
   );
   for i:=0 to High(ar1) do
     S.ConcatStP(ok_user, ar1[i][0],',');
-  ok_user:=S.NSt(Q.QSelectOneRow('select GetUsersemail(:ids$t) from dual', [ok_user])[0]);
+  ok_user:=S.NSt(Q.QLoadValue('select GetUsersemail(:ids$t) from dual', [ok_user]));
   //получим время автосогласования
-  autoagreedtime:=Q.QSelectOneRow('select time_autoagreed from workers_cfg', [])[0];
+  autoagreedtime:=Q.QLoadValue('select time_autoagreed from workers_cfg', []);
   //получим список турв
   ar1:=Q.QLoadToVarDynArray2(
     'select dt1, dt2, id_division, name, editusers, 0 from v_turv_period where dt1 = :dt$d',
@@ -493,7 +493,7 @@ begin
         ['user-name', 'Учёт']]
       );
     //получим адреса руководителей
-    st1:=S.NSt(Q.QSelectOneRow('select GetUsersemail(:ids$t) from dual', [ar1[t][4]])[0]);
+    st1:=S.NSt(Q.QLoadValue('select GetUsersemail(:ids$t) from dual', [ar1[t][4]]));
 //st1 :='';
     //письмо руководителям
     if st1 <> '' then
@@ -619,7 +619,7 @@ begin
     S.ConcatStP(body, #13#10);
   end;
   S.ConcatStP(body, #13#10);
-  addr:=S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [4])[0]);
+  addr:=S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [4]));
   if addr = '' then Exit;
   CreateTaskRoot(myTskOpMail, [
     ['to', addr],
@@ -641,7 +641,7 @@ var
   ok: Boolean;
 begin
   //времена удаления, перые в днях, а турв и зп в периодах 2 недели
-  vtimes:=Q.QSelectOneRow('select or_to_archive, orders_n, accounts_n, turv, payrolls from adm_delete_old', []);
+  vtimes:=Q.QLoadRow('select or_to_archive, orders_n, accounts_n, turv, payrolls from adm_delete_old', []);
   if S.NNum(vtimes[0])>= 10 then begin
     //перенесем в архив заказы, которые завершены ранее /2 недель/ назад, и еще не в архиве
     dt1:=IncDay(Date, -vtimes[0]);
@@ -821,9 +821,9 @@ var
   st, css: string;
 begin
   //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
-  IdSch := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', [])[0], 36327);
+  IdSch := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', []), 36327);
   Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
-  IdSchN := Q.QSelectOneRow('select max(id_schet) from dv.sp_schet', [])[0];
+  IdSchN := Q.QLoadValue('select max(id_schet) from dv.sp_schet', []);
   //сохраним айди обработанного счета
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
   if na.Count > 0 then begin
@@ -856,7 +856,7 @@ begin
   end;
 //Exit;
   //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
-  IdIb := S.IfNotEmpty(Q.QSelectOneRow('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', [])[0], 113205);
+  IdIb := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', []), 113205);
   Q.QExecSql(
     'insert into spl_deals_monitoring '+
       '(dt, id_nomencl, id_inbill, price_check) '+
@@ -869,7 +869,7 @@ begin
   //обновим контрольную цену, если найдена в накладных, старше айди из properties, цена меньше контрольной
   Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
   //получим и сохраним айди последней накладной
-  IdIbN := Q.QSelectOneRow('select max(id_inbill) from dv.in_bill', [])[0];
+  IdIbN := Q.QLoadValue('select max(id_inbill) from dv.in_bill', []);
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
 end;
 

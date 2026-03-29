@@ -78,7 +78,7 @@ begin
   Img_Info.left:=1;
   Img_Info.top:=bt_ok.top+4;
   Img_Info.top:=240;}
-  va:=Q.QSelectOneRow('select id, id_reason, comm from delayed_prod_reasons where id = :id$i', [ID_Order]);
+  va:=Q.QLoadRow('select id, id_reason, comm from delayed_prod_reasons where id = :id$i', [ID_Order]);
   if va[0] = null then begin
     va:=[0, null, ''];
     if Mode <> fView then Mode:=fAdd;

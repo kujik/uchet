@@ -111,13 +111,13 @@ begin
   SetLength(va, 2);
   Cth.SetBtn(Bt_Ok, mybtOk);
   Cth.SetBtn(Bt_Cancel, mybtCancel);
-  v:=Q.QSelectOneRow('select sum_autoagreed, sum_need_req, transport_maxidle from sn_calendar_cfg', []);
+  v:=Q.QLoadRow('select sum_autoagreed, sum_need_req, transport_maxidle from sn_calendar_cfg', []);
   nedt_sum_autoagreed.value:=v[0];
   nedt_sum_need_req.value:=v[1];
   nedt_transport_maxidle.value:=v[2];
   va[0] := [v[0], v[1], v[2]];
 
-  v:=Q.QSelectOneRow('select time_autoagreed, time_dinner_1, time_dinner_2, time_beg_2, time_beg_diff_2 from workers_cfg',[]);
+  v:=Q.QLoadRow('select time_autoagreed, time_dinner_1, time_dinner_2, time_beg_2, time_beg_diff_2 from workers_cfg',[]);
   nedt_W_Time_AutoAggreed.value:=v[0];
   nedt_W_Time_Dinne_1.value:=v[1];
   nedt_W_Time_Dinner_2.value:=v[2];

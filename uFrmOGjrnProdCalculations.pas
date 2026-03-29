@@ -130,7 +130,7 @@ begin
     if FIdCopyedItem = 0 then
       MyInfoMessage('Буфер пуст!')
     else begin
-      var va := Q.QSelectOneRow('select id, id_prod_calc, customer, project, name from v_prod_calc_items where id = :id$i', [FIdCopyedItem]);
+      var va := Q.QLoadRow('select id, id_prod_calc, customer, project, name from v_prod_calc_items where id = :id$i', [FIdCopyedItem]);
       if va[0] = null then
         Exit;
       if MyQuestionMessage(

@@ -225,7 +225,7 @@ end;
 
 function TFrmWGjrnEmployees.IsLastStatus: Boolean;
 begin
-  Result := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [Frg2.GetValue('id_employee')])[0] = Frg2.Id;
+  Result := Q.QLoadValue('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [Frg2.GetValue('id_employee')]) = Frg2.Id;
 end;
 
 procedure TFrmWGjrnEmployees.TempSetPersonnelNumbers;

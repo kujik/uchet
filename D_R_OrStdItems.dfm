@@ -1,7 +1,7 @@
 inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
   Caption = #1057#1090#1072#1085#1076#1072#1088#1090#1085#1086#1077' '#1080#1079#1076#1077#1083#1080#1077
-  ClientHeight = 158
-  ClientWidth = 731
+  ClientHeight = 157
+  ClientWidth = 727
   ExplicitWidth = 743
   ExplicitHeight = 196
   TextHeight = 13
@@ -13,22 +13,18 @@ inherited Dlg_R_OrStdItems: TDlg_R_OrStdItems
     Caption = #1055#1088#1086#1080#1079#1074'. '#1084#1072#1088#1096#1088#1091#1090
   end
   inherited pnl_StatusBar: TPanel
-    Top = 139
-    Width = 731
+    Top = 138
+    Width = 727
     ExplicitTop = 138
     ExplicitWidth = 659
     inherited lbl_StatusBar_Right: TLabel
       Left = 644
-      Height = 17
-      ExplicitLeft = 580
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
+      ExplicitLeft = 644
     end
   end
   inherited pnl_Bottom: TPanel
-    Top = 108
-    Width = 731
+    Top = 107
+    Width = 727
     ExplicitTop = 107
     ExplicitWidth = 659
     inherited bvl1: TBevel

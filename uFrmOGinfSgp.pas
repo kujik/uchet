@@ -54,7 +54,7 @@ begin
      'Информация'
   ]);
   //заголовочный лейбл - наименование выбранного для детализации изделия
-  va:= Q.QSelectOneRow('select slash, name from v_sgp_sell_items where id = :id$i', [ID]);
+  va:= Q.QLoadRow('select slash, name from v_sgp_sell_items where id = :id$i', [ID]);
   lblCaption.SetCaption2('$FF0000 ' + S.NSt(va[0]) + ' $000000 ' + S.NSt(va[1]));
 
   FldDef := [

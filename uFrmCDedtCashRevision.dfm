@@ -1,13 +1,13 @@
 inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
   Caption = 'FrmCDedtCashRevision'
-  ClientHeight = 181
-  ClientWidth = 183
-  ExplicitWidth = 199
-  ExplicitHeight = 220
+  ClientHeight = 180
+  ClientWidth = 179
+  ExplicitWidth = 195
+  ExplicitHeight = 219
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 183
-    Height = 165
+    Width = 179
+    Height = 164
     ExplicitWidth = 183
     ExplicitHeight = 165
     inherited pnlFrmClient: TPanel
@@ -129,8 +129,8 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 165
-    Width = 183
+    Top = 164
+    Width = 179
     ExplicitTop = 165
     ExplicitWidth = 183
     inherited lblStatusBarR: TLabel

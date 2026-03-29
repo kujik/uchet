@@ -1508,7 +1508,7 @@ Turv.SaveAllTurvToExportTable; Exit;
 
 
 
-  v:=Q.QSelectOneRow('select count(*) from adm_user_cfg', []);
+  v:=Q.QLoadRow('select count(*) from adm_user_cfg', []);
   exit;
 
 
@@ -1561,7 +1561,7 @@ exit;
 
 
 Q.QBeginTrans;
-q.qselectonerow('select 1, 45, sysdate from dual where id = :id$s and sysdate = :sysdate$d', [1,date]);
+q.QLoadRow('select 1, 45, sysdate from dual where id = :id$s and sysdate = :sysdate$d', [1,date]);
 Q.QRollbackTrans;
 exit;
 

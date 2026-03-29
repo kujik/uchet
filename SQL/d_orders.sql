@@ -696,11 +696,10 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 --alter table order_items add qnt_to_sgp number default 0; 
 --alter table order_items add constraint fk_order_items_std_item foreign key (id_std_item) references or_std_items(id);
 --alter table order_items drop column id_itm_group;
-alter table order_items add qnt_boards_m2 number;
-alter table order_items add qnt_edges_m number;
-alter table order_items add qnt_panels_w_drill number;
-alter table order_items add is_xml_loaded number default 0;
-alter table order_items add labor_intensity number;
+alter table order_items add dt_est date;
+alter table order_items add dt_est_last date;
+alter table order_items add dt_kns_last date;
+alter table order_items add dt_thn_last date;
 
 create table order_items (
   id number(11),
@@ -732,7 +731,9 @@ create table order_items (
   attention number(3) default 0,     -- признак внимания к ячеке строки (выделена цветом в паспорте)
   dt_sn date,                        -- отметка по слешу, что заказ обработан снабжением   
   dt_thn date,                       -- дата, когда по слэшу загружены документы технологов (при перезагрузке остается старая)
+  dt_thn_last date,
   dt_kns date,                       -- дата, когда по слэшу загружены документы конструкторов (при перезагрузке остается старая)
+  dt_kns_last date,
   wo_kns number(1) default 0,                  -- признак (если 1), что к слешу не нужны документы кнс (имеет смысл при наличии конструктора, когда по логике документы требуются)
   disassembled number default 0,     -- в разборе
   control_assembly number default 0, -- контрольная сборка  
@@ -742,6 +743,8 @@ create table order_items (
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   is_xml_loaded number default 0,      --загружен xml
   labor_intensity number,              --трудоемкость, мин.
+  dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
+  dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
@@ -792,21 +795,9 @@ create or replace view v_order_items as (
       else ''
     end) prefix, 
     (case 
---      when ee.id > 0 then ee.prefix || '_' else ''
       when ee.id > 0 then ee.prefix || '_'
-      --when i.resale = 1 then 'ДК_'
       else ''
     end) || s.name  as fullitemname,  --наименование с префиксом формата, только для стандартных изделий и стандартной д/к
-/*   (case 
-      when i.id_std_item is not null then s.name else i.name
-    end) as itemname,
-   (case 
-      when o.id_or_format_estimates > 0 then e.prefix || '_' else ''
-    end) 
-   ||
-   (case 
-      when i.id_std_item is not null then s.name else i.name
-    end) as fullitemname,*/
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
 --    F_OrItemRoute2(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9,i.resale) as route2,

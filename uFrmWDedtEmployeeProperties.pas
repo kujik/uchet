@@ -67,14 +67,14 @@ begin
   FIdEmp := AddParam;
   if Mode <> fView then begin
     //получим айди последней по работнику записи
-    FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [FIdEmp])[0];
+    FIdLast := Q.QLoadValue('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [FIdEmp]);
     if (Mode = fDelete) then begin
       //в случае удаления статуса - выйдем если нет записей, иначе возьмем айди последней
       if FIdLast = null then
         Exit;
       ID := FIdLast;
       //и найдем запись, предшествующую последней
-      FIdLast := Q.QSelectOneRow('select id from w_employee_properties where id_employee = :id_e$i and id <> :id$i order by id desc', [FIdEmp, ID])[0];
+      FIdLast := Q.QLoadValue('select id from w_employee_properties where id_employee = :id_e$i and id <> :id$i order by id desc', [FIdEmp, ID]);
     end;
     //получим все поля этой записи
     if FIdLast <> null then
@@ -88,7 +88,7 @@ begin
   //первоначальнай режим прием/перевод/увольнение (только прием при первом или после увольения, какой есть для просмотра или удаления, в противном случае не выбран)
   FIdMode := null;
   if Mode in [fView, fDelete] then begin
-    va := Q.QSelectOneRow('select is_terminated, is_hired from w_employee_properties where id = :id$i', [ID]);
+    va := Q.QLoadRow('select is_terminated, is_hired from w_employee_properties where id = :id$i', [ID]);
     FIdMode := S.IIf(va[0] = 1, 3, S.IIf(va[1] = 1, 1, 2));
   end
   else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
@@ -190,7 +190,7 @@ begin
   ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where id_departament in (:id1$i, :id2$i)', FDep);
   users := [];
   for i := 0 to High(ids) do begin
-    lock := Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add like :documadd$s', [myfrm_Dlg_Turv, ids[i].AsString + '-%']);
+    lock := Q.QLoadRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add like :documadd$s', [myfrm_Dlg_Turv, ids[i].AsString + '-%']);
     if lock[0] <> null then
       users := users + [lock[1]];
   end;

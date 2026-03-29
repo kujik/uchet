@@ -101,7 +101,7 @@ var
   va2: TVarDynArray2;
   i, j: integer;
 begin
-  v:= Q.QSelectOneRow(
+  v:= Q.QLoadRow(
     'select name, login, decode(pwd, null, '''', 111), active, autologin, job, email, emailauto, job_comm, idletime from adm_users where id = :id$i',
     [S.IIf(UMode = fAdd, -9999, FrgUsers.Id)]
   );
@@ -395,7 +395,7 @@ begin
   for i:=0 to High(MyJobNames) do
     cmbJob.Items.Add(MyJobNames[i]);
 
-  EmailDomain:=Q.QSelectOneRow('select emaildomain from adm_main_settings', [])[0];
+  EmailDomain:=Q.QLoadValue('select emaildomain from adm_main_settings', []);
 
   FrgUsers.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef + [myogGridLabels];
   FrgUsers.OnButtonClick := FrgUsersButtonClick;

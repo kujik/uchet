@@ -401,7 +401,7 @@ begin
   MemTableEh1.Last;
   //if Mode <> fView then MemTableEh1.Append;
   //получим данные по изделию, с которым работаем
-  va:= Q.QSelectOneRow('select nvl(qnt,0), id_order, dt_end from v_order_items where id = :id_order_item$i', [ID_Order_Item]);
+  va:= Q.QLoadRow('select nvl(qnt,0), id_order, dt_end from v_order_items where id = :id_order_item$i', [ID_Order_Item]);
   if va[0] = null then Exit;
   Qnt:=va[0];
   ID_Order:=va[1];

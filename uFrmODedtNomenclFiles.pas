@@ -169,7 +169,7 @@ begin
     FOpt.DlgButtonsR:=[[mbtAdd, Mode = fNone], [mbtDelete, 1], [mbtDividor], [1000, 'В буфер'], [mbtDividor, True], [mbtSpace, True, 1]];
  // FOpt.DlgButtonsR:= FOpt.DlgButtonsR + [[mbtDividor],[1000, 'В буфер']];
   FOpt.StatusBarMode:=stbmNone;
-  lblNomencl.Caption := S.NSt(Q.QSelectOneRow('select name from dv.nomenclatura where id_nomencl = :id$i', [ID])[0]);
+  lblNomencl.Caption := S.NSt(Q.QLoadValue('select name from dv.nomenclatura where id_nomencl = :id$i', [ID]));
   Cth.AlignControls(pnlNomencl, [], True, 2);
   //настроим фрейм гида
   Frg1.Options:=[myogIndicatorColumn, myogColoredTitle, myogHiglightEditableCells, myogHiglightEditableColumns{, myogMultiSelect, myogIndicatorCheckBoxes}];

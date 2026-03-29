@@ -146,8 +146,11 @@ begin
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
    [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
-   [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCustom_CreateAggregateEstimate, 1], [-1001, True, 'Пересчитать данные для производства'], [],
-   [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)], [],
+   [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate_All), 'Обновить все сметы по заказу'],
+   [-mbtCustom_CreateAggregateEstimate, 1],
+   [-1001, True, 'Пересчитать данные для производства'], [],
+   [-mbtCustom_SendSnDocuments, User.Role(rOr_D_Order_AttachSnDocuments)],
+   [],
    [-mbtCustom_OrToDevel, User.Role(rOr_J_Orders_ToDevel)],[-1004, User.Role(rOr_J_Orders_ToDevelThn), 'Добавить в журнал проверки'],
    [],
    [-1005, True, 'Просмотр выбранных по слешам'],
@@ -350,7 +353,7 @@ begin
   end
   else if Fr.CurrField = 'or_reference' then begin
     if Fr.GetValue('or_reference') <> null then begin
-      var orid := Q.QSelectOneRow('select id from orders where ornum = :ornum$s', [Fr.GetValue('or_reference')])[0];
+      var orid := Q.QLoadValue('select id from orders where ornum = :ornum$s', [Fr.GetValue('or_reference')]);
       if orid <> null then
         Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fView, orid, null);
     end;

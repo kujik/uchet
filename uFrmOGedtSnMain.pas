@@ -1209,9 +1209,9 @@ begin
     'Ининформация по позициям "В обработке"'#13#10#13#10+
     'Количество, на которые созданы заявки на снабжение, за минусом полученного по накладным и за минусом товара "В пути"'#13#10+
     ''#13#10+
-    'Запрошено по заявкам: ' + VarToStr(Q.QselectOneRow('select qnt from v_spl_nom_on_demand where id_nomencl = :id$i', [Frg1.ID])[0]) + #13#10+
-    'Получено по накладным: ' + VarToStr(Q.QselectOneRow('select qnt from v_spl_nom_on_inbill where id_nomencl = :id$i', [Frg1.ID])[0]) + #13#10+
-    'В пути: ' + VarToStr(Q.QselectOneRow('select qnt from v_spl_nom_onway_agg where id_nomencl = :id$i', [Frg1.ID])[0]) + #13#10 +
+    'Запрошено по заявкам: ' + VarToStr(Q.QLoadValue('select qnt from v_spl_nom_on_demand where id_nomencl = :id$i', [Frg1.ID])) + #13#10+
+    'Получено по накладным: ' + VarToStr(Q.QLoadValue('select qnt from v_spl_nom_on_inbill where id_nomencl = :id$i', [Frg1.ID])) + #13#10+
+    'В пути: ' + VarToStr(Q.QLoadValue('select qnt from v_spl_nom_onway_agg where id_nomencl = :id$i', [Frg1.ID])) + #13#10 +
     ''#13#10+
     'Итого: ' + S.NSt(Frg1.GetValue('qnt_in_processing'))
   );
@@ -1292,7 +1292,7 @@ begin
   //получим айди категории
   id_category:= Frg1.GetControlValue('CbCategory');
   //количество, которое попадет в заявку
-  ToDemand := Q.QSelectOneRow('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [id_category])[0];
+  ToDemand := Q.QLoadValue('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [id_category]);
   //если ничего нет, то выйдем
   if ToDemand = 0 then begin
     MyInfoMessage('Нет ни одной позиции к заказу!');
@@ -1426,7 +1426,7 @@ var
   va: TVarDynArray;
   i: Integer;
 begin
-  i := Q.QSelectOneRow('select count(*) from v_reservpos_completed_orders2', [])[0];
+  i := Q.QLoadValue('select count(*) from v_reservpos_completed_orders2', []);
   if i = 0 then begin
     MyInfoMessage('Нет подвисших резервов.');
     Exit;

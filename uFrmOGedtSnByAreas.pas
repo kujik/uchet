@@ -70,7 +70,7 @@ begin
   if FormDoc = myfrm_R_MinRemainsI then FIdArea:= 1;
   if FormDoc = myfrm_R_MinRemainsD then FIdArea:= 2;
   FAreaSuffix:='_' + IntToStr(FIdArea);
-  FAreaName:= Q.QSelectOneRow('select name from ref_production_areas where id = :id$i', [FIdArea])[0];
+  FAreaName:= Q.QLoadValue('select name from ref_production_areas where id = :id$i', [FIdArea]);
   Caption := 'Потребность по участку "' + FAreaName + '"';
   Frg1.Options := Frg1.Options + [myogGridLabels];
   Frg1.Opt.SetFields([
@@ -119,9 +119,9 @@ begin
         va1, va2, [['Введите наименование номенклатуры, которая есть в ИТМ.'#13#10]], nil
       ) >= 0
       then begin
-        if Q.QSelectOneRow('select count(*) from v_spl_minremains_byareas where name = :name$s', [va2[0]])[0] > 0
+        if Q.QLoadValue('select count(*) from v_spl_minremains_byareas where name = :name$s', [va2[0]]) > 0
           then begin MyWarningMessage('Это наименование уже есть в списке!'); Continue; end;
-        idi:=Q.QSelectOneRow('select id_nomencl from dv.nomenclatura where name = :name$s', [va2[0]])[0];
+        idi:=Q.QLoadValue('select id_nomencl from dv.nomenclatura where name = :name$s', [va2[0]]);
         if idi = null
           then begin MyWarningMessage('Такого наименования нет в ИТМ!'); Continue; end;
         Q.QExecSql('insert into spl_minremains_byareas (id) values (:id$i)', [idi]);
@@ -165,7 +165,7 @@ var
   id_category, idi: Integer;
 begin
   //количество, которое попадет в заявку
-  i := Q.QSelectOneRow('select count(*) from spl_minremains_byareas where nvl(qnt_order'+FAreaSuffix+', 0) > 0 and to_order'+FAreaSuffix+' = 1', [])[0];
+  i := Q.QLoadValue('select count(*) from spl_minremains_byareas where nvl(qnt_order'+FAreaSuffix+', 0) > 0 and to_order'+FAreaSuffix+' = 1', []);
   //если ничего нет, то выйдем
   if i = 0 then begin
     MyInfoMessage('Нет ни одной позиции к заказу!');
@@ -173,7 +173,7 @@ begin
     Exit;
   end;
   //количество, отмеченных по снабжению в основной таблице
-  j := Q.QSelectOneRow('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [1])[0];
+  j := Q.QLoadValue('select count(*) from spl_itm_nom_props where nvl(qnt_order, 0) > 0 and to_order = 1 and id_category = :id_category$i', [1]);
   //переспросим
   if MyQuestionMessage(
     'Внести данные в таблицу формирования заявок на снабжение по ' + S.GetEndingFull(i, 'позици', 'и', 'ям', 'ям') + '"?'#13#10+

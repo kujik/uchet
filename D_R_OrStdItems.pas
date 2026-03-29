@@ -375,15 +375,15 @@ begin
     //получим префикс изедия
     prefix:='';
     if ID_Estimate > 0
-      then prefix:=Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [ID_Estimate])[0];
+      then prefix:=Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [ID_Estimate]);
     //старое и новое имя
     name:=S.IIFStr(prefix <> '', prefix + '_', '') + Trim(edt_name.Text);
     nameold:=S.IIFStr(prefix <> '', prefix + '_', '') + Name_Old;
     //проверим, есть ли уже в итм в продукции запись соответствующая новому имени
-    Res:=Q.QSelectOneRow(
+    Res:=Q.QLoadValue(
       'select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s',
       [ItmGroups_Production_ID, name]
-    )[0];
+    );
     if Res = 0 then begin
       //если нет, то переименуем запись со старым именем в новое (если она естественно есть)
       Result:= Q.QExecSql(
@@ -434,9 +434,9 @@ begin
   //также наименование с преиксом не должно быть в базе сметных наименований учета    //!!!
   //и также и в базе итм с типом "материалы и комплектующие"
   if (Mode <> fDelete) and (ID_Estimate > 1) and (edt_name.Text <> Name_Old) then begin
-    res1 := Q.QSelectOneRow('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, ID_Estimate, edt_name.Text])[0];
+    res1 := Q.QLoadValue('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, ID_Estimate, edt_name.Text]);
     //res2 := Q.QSelectOneRow('select count(1) from bcad_nomencl where name = :name$s', [Prefix + '_' + edt_name.Text])[0];
-    res3 := Q.QSelectOneRow('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [Prefix + '_' + edt_name.Text])[0];
+    res3 := Q.QLoadValue('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [Prefix + '_' + edt_name.Text]);
     if res1 + res2 + res3 > 0 then begin
       MyWarningMessage(
         S.IIf(res1 > 0, 'Такое наименование уже существует в этой группе стандартных изделий Учета!'#13#10, '') +
@@ -449,7 +449,7 @@ begin
     end;
   end;
   if (Mode = fEdit) and (chb_Wo_Estimate.Checked) then begin
-    NewEmptyEstimate:=Q.QSelectOneRow('select count(1) from estimates where id_std_item = :id$i and isempty = 0', [id])[0] > 0;
+    NewEmptyEstimate:=Q.QLoadValue('select count(1) from estimates where id_std_item = :id$i and isempty = 0', [id]) > 0;
     if NewEmptyEstimate then
       if MyQuestionMessage('Для этого изделия выбран тип "без сметы", но сейчас к нему уже подгружена непустая смета.'#13#10'Она будет удалена.'#13#10'Продолжить?') <> mrYes then begin
         ok := False;
@@ -535,7 +535,7 @@ begin
   Name_Old := CtrlValues[2];
   Wo_Estimate_Old:=CtrlValues[5];
   ID_Estimate := AddParam;//CtrlValues[1];
-  Prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [ID_Estimate])[0];
+  Prefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [ID_Estimate]);
   SetRoute;
   Verify(nil);
   PreventResize := True;

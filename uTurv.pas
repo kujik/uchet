@@ -269,7 +269,7 @@ begin
   //нужно дл€ расчетных ведомостей
   for i := 0 to FList.Count - 1 do
     if (FList.G(i, 'dt_end') <> null) and (FList.G(i, 'dt_end') < FDtEnd) then
-      if Q.QSelectOneRow('select is_terminated from w_employee_properties where id_employee = :id_employee$i and dt_beg = :dt_beg$d', [FList.G(i, 'id_employee'), IncDay(FList.G(i, 'dt_end'), 0)])[0] = 1 then
+      if Q.QLoadValue('select is_terminated from w_employee_properties where id_employee = :id_employee$i and dt_beg = :dt_beg$d', [FList.G(i, 'id_employee'), IncDay(FList.G(i, 'dt_end'), 0)]) = 1 then
         FList.SetValue(i, 'is_terminated', 1);
   //если задано, удалим все записи записи по уволенным в течении периода (не только ту, что кончаетс€ увольнением)
   //так как сравнение производитс€ по работнику+организации+табельному, то удал€тс€ все строки от примема, и далее переводы, которые заканчиваютс€ увольнением,
@@ -1037,7 +1037,7 @@ begin
   tobo := 12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_1));
   //врем€ окончани€ обеда по цеху, 12ч + врем€ перерыва, в часах и дес€тых часа
   tobc := 12 + S.VarToFloat(Module.GetCfgVar(mycfgWtime_dinner_2));
-  id_vyh:=Q.QSelectOneRow('select id from w_turvcodes where code = ''¬''', [])[0];
+  id_vyh:=Q.QLoadValue('select id from w_turvcodes where code = ''¬''', []);
 
   //пройдем по списку строк турв
   for i := 0 to High(FRows) do begin
@@ -1907,7 +1907,7 @@ begin
       then Result:=Result + [vr[i]];
   end;
   if High(Result) > 0 then begin
-    st:=S.NSt(Q.QSelectOneRow('select emailaddr from v_users where id = :id$i', [33])[0]);
+    st:=S.NSt(Q.QLoadValue('select emailaddr from v_users where id = :id$i', [33]));
     if st = '' then Exit;
     st1:='';
     for i:=0 to High(Result) do
@@ -2160,9 +2160,9 @@ begin
   //втора€ дата - конец текущих суток
   dt2:=IncMilliSecond(IncDay(Date, 1), -1);
   vdiv:=Q.QLoadToVarDynArray2('select id from ref_divisions where office = 1', []);
-  id_vyh:=Q.QSelectOneRow('select id from ref_turvcodes where code = ''¬''', [])[0];
+  id_vyh:=Q.QLoadValue('select id from ref_turvcodes where code = ''¬''', []);
   if id_vyh = null then id_vyh:=-1;
-  id_otp:=Q.QSelectOneRow('select id from ref_turvcodes where code = ''ќ“''', [])[0];
+  id_otp:=Q.QLoadValue('select id from ref_turvcodes where code = ''ќ“''', []);
   if id_otp = null then id_otp:=-1;
   //бухгалтери€=4, кпп=27, станки = 16
   vt:=Q.QLoadToVarDynArray2(
@@ -2715,7 +2715,7 @@ end;
 function TTurv.DeletePayrollCalculations(AId: Variant): Boolean;
 begin
   Result := False;
-  var va: TVarDynArray := Q.QSelectOneRow('select departament, employee, dt1, dt2 from v_w_payroll_calculations where id = :id$i', [AId]);
+(*  var va: TVarDynArray := Q.QSelectOneRow('select departament, employee, dt1, dt2 from v_w_payroll_calculations where id = :id$i', [AId]);
   if va[0] = null then
     Exit;
   if Q.DBLock(True, myfrm_Dlg_Payroll, AID)[0] <> True then
@@ -2730,7 +2730,7 @@ begin
     Result := True;
   end
   else
-    Q.DBLock(False, myfrm_Dlg_Payroll, AID);
+    Q.DBLock(False, myfrm_Dlg_Payroll, AID);*)
 end;
 
 
@@ -2743,8 +2743,8 @@ var
   Id, IdH: Variant;
 begin
   Result := False;
-  va11 := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
-  va12 := Q.QSelectOneRow('select code, name, hours1, hours2, hours3, hours4, comm, active from v_w_schedules where id = :id$i', [AId]);
+  va11 := Q.QLoadRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
+  va12 := Q.QLoadRow('select code, name, hours1, hours2, hours3, hours4, comm, active from v_w_schedules where id = :id$i', [AId]);
   if va12[0] = null then
     va12 := ['', '', null, null, null, null, 1];
   for i := 0 to 3 do
@@ -2760,7 +2760,7 @@ begin
   if AMode = fAdd then
     AId := Id;
   for i := 0 to 3 do begin
-    IdH := Q.QSelectOneRow('select id from w_schedule_hours where id_schedule = :id$i and dt = :dt$d', [AId, va11[i]])[0];
+    IdH := Q.QLoadValue('select id from w_schedule_hours where id_schedule = :id$i and dt = :dt$d', [AId, va11[i]]);
     Id := Q.QIUD(S.IIf(IdH = null, 'i', 'u'), 'w_schedule_hours', '', 'id$i;id_schedule$i;dt$d;hours$f', [IdH, AId, va11[i], va13[1 + i]]);
   end;
   Result := True;
@@ -2845,7 +2845,7 @@ begin
   Result := False;
   va11 := [{EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1), }EncodeDate(YearOf(IncMonth(Date, 0)), MonthOf(IncMonth(Date, 0)), 1), EncodeDate(YearOf(IncMonth(Date, +1)), MonthOf(IncMonth(Date, +1)), 1) ];
 //  va11 := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
-  va12 := Q.QSelectOneRow('select name, sum2, sum3, comm, active from v_w_pers_bonus where id = :id$i', [AId]);
+  va12 := Q.QLoadRow('select name, sum2, sum3, comm, active from v_w_pers_bonus where id = :id$i', [AId]);
   if va12[0] = null then
     va12 := ['', null, null, null, 1];
   for i := 0 to 1 do
@@ -2895,9 +2895,9 @@ begin
   //втора€ дата - конец текущих суток
   dt2:=IncMilliSecond(IncDay(Date, 1), -1);
   vdiv:=Q.QLoadToVarDynArray2('select id from w_departaments where is_office = 1', []);
-  id_vyh:=Q.QSelectOneRow('select id from w_turvcodes where code = ''¬''', [])[0];
+  id_vyh:=Q.QLoadValue('select id from w_turvcodes where code = ''¬''', []);
   if id_vyh = null then id_vyh:=-1;
-  id_otp:=Q.QSelectOneRow('select id from w_turvcodes where code = ''ќ“''', [])[0];
+  id_otp:=Q.QLoadValue('select id from w_turvcodes where code = ''ќ“''', []);
   if id_otp = null then id_otp:=-1;
 
   Q.QLoadFromQuery(
@@ -3355,8 +3355,8 @@ begin
   Cnt := 0;
   Msg := '';
   //если есть расчетные ведомости за период по подразделени€м, а обща€ ведомость к перечислению не создана - создадим
-  if (Q.QSelectOneRow('select count(id) from w_advance_calc where id_employee is null and dt = :dt$d', [dt1])[0] <> 0) and
-    (Q.QSelectOneRow('select count(id) from w_advance_transfer where id_employee is null and dt = :dt$d', [dt1])[0] = 0)
+  if (Q.QLoadValue('select count(id) from w_advance_calc where id_employee is null and dt = :dt$d', [dt1]) <> 0) and
+    (Q.QLoadValue('select count(id) from w_advance_transfer where id_employee is null and dt = :dt$d', [dt1]) = 0)
     then begin
       if Q.QIUD('i', 'w_advance_transfer', '', 'id$i;dt$d', [0, dt1]) <> -1 then
         inc(Cnt);
@@ -3404,8 +3404,8 @@ begin
   Cnt := 0;
   Msg := '';
   //если есть расчетные ведомости за период по подразделени€м, а обща€ ведомость к перечислению не создана - создадим
-  if (Q.QSelectOneRow('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1])[0] <> 0) and
-    (Q.QSelectOneRow('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1])[0] = 0)
+  if (Q.QLoadValue('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1]) <> 0) and
+    (Q.QLoadValue('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1]) = 0)
     then begin
       if Q.QIUD('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
         inc(Cnt);

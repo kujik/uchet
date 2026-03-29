@@ -703,7 +703,7 @@ var
     if TDbComboBoxEh(Frg1.FindComponent('CbType')).Text = 'Металл' then begin
       //пропишем регламент и дату отгрузки (по регламенту 10 дней включая текущий)
       IdReg := 113;
-      DtO := IncDay(Date, Q.QSelectOneRow('select deadline from order_reglaments where id = :id$i', [IdReg])[0] - 1);
+      DtO := IncDay(Date, Q.QLoadValue('select deadline from order_reglaments where id = :id$i', [IdReg]) - 1);
       IdOrType := 113;
       OrProps := '121,122,123,124,125';
     end

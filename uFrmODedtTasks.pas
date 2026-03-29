@@ -222,7 +222,7 @@ begin
   Result := inherited;
   if (Mode <> fAdd) or (Result = False) then
     Exit;
-  st:=S.NSt(Q.QSelectOneRow('select emailaddr from v_users where id = :id$i', [Cth.GetControlValue(Self, 'cmb_id_user2')])[0]);
+  st:=S.NSt(Q.QLoadValue('select emailaddr from v_users where id = :id$i', [Cth.GetControlValue(Self, 'cmb_id_user2')]));
   if st = '' then Exit;
   st1 :=
     'Иниинциатор: ' + Cth.GetControlValue(Self, 'edt_user1').AsString + #13#10 +

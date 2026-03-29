@@ -95,7 +95,7 @@ begin
     FNameOld := S.NSt(F.GetPropB('name'));
     FWoEstimateOld:=S.NInt(F.GetPropB('wo_estimate'));
     FIdEstimateGroup := AddParam;
-    va := Q.QSelectOneRow('select prefix, is_semiproduct from or_format_estimates where id = :id$i', [FIdEstimateGroup]);
+    va := Q.QLoadRow('select prefix, is_semiproduct from or_format_estimates where id = :id$i', [FIdEstimateGroup]);
     FPrefix := S.NSt(va[0]);
     FIsSemiproduct := va[1] = 1;
   end;
@@ -185,12 +185,12 @@ begin
     //получим префикс изедия
       prefix := '';
       if FIdEstimateGroup > 0 then
-        prefix := Q.QSelectOneRow('select prefix from or_format_estimates where id = :id$i', [FIdEstimateGroup])[0];
+        prefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [FIdEstimateGroup]);
     //старое и новое имя
       name := S.IIFStr(prefix <> '', prefix + '_', '') + Trim(edt_name.Text);
       nameold := S.IIFStr(prefix <> '', prefix + '_', '') + FNameOld;
     //проверим, есть ли уже в итм в продукции запись соответствующая новому имени
-      Res := Q.QSelectOneRow('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, name])[0];
+      Res := Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, name]);
       if Res = 0 then begin
       //если нет, то переименуем запись со старым именем в новое (если она естественно есть)
         Result := Q.QExecSql('update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s', [name, name, ItmGroups_Production_ID, nameold]) >= 0;
@@ -233,9 +233,9 @@ begin
   //также наименование с преиксом не должно быть в базе сметных наименований учета    //!!!
   //и также и в базе итм с типом "материалы и комплектующие"
   if (Mode <> fDelete) and (FIdEstimateGroup > 1) and (edt_name.Text <> FNameOld) then begin
-    res1 := Q.QSelectOneRow('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, FIdEstimateGroup, edt_name.Text])[0];
+    res1 := Q.QLoadValue('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, FIdEstimateGroup, edt_name.Text]);
     //res2 := Q.QSelectOneRow('select count(1) from bcad_nomencl where name = :name$s', [Prefix + '_' + edt_name.Text])[0];
-    res3 := Q.QSelectOneRow('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [FPrefix + '_' + edt_name.Text])[0];
+    res3 := Q.QLoadValue('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [FPrefix + '_' + edt_name.Text]);
     if res1 + res2 + res3 > 0 then begin
       MyWarningMessage(S.IIf(res1 > 0, 'Такое наименование уже существует в этой группе стандартных изделий Учета!'#13#10, '') +
           //S.IIf(res2 > 0, 'Такое наименование (с учетом префикса) уже существует в справочнике сметных позиций Учета!'#13#10, '') +
@@ -245,7 +245,7 @@ begin
     end;
   end;
   if (Mode = fEdit) and (chb_Wo_Estimate.Checked) then begin
-    NewEmptyEstimate := Q.QSelectOneRow('select count(1) from estimates where id_std_item = :id$i and isempty = 0', [id])[0] > 0;
+    NewEmptyEstimate := Q.QLoadValue('select count(1) from estimates where id_std_item = :id$i and isempty = 0', [id]) > 0;
     if NewEmptyEstimate then
       if MyQuestionMessage('Для этого изделия выбран тип "без сметы", но сейчас к нему уже подгружена непустая смета.'#13#10'Она будет удалена.'#13#10'Продолжить?') <> mrYes then begin
         HasError := True;

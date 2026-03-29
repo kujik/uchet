@@ -1,29 +1,28 @@
 inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
   Caption = 'FrmWWedtWorkSchedule'
-  ClientHeight = 444
-  ClientWidth = 709
+  ClientHeight = 443
+  ClientWidth = 705
   ExplicitWidth = 721
   ExplicitHeight = 482
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 709
-    Height = 428
+    Width = 705
+    Height = 427
     ExplicitWidth = 709
     ExplicitHeight = 428
     inherited pnlFrmClient: TPanel
-      Width = 699
-      Height = 379
+      Width = 695
+      Height = 378
       ExplicitWidth = 695
       ExplicitHeight = 378
       object pnlPropertiesC: TPanel
         Left = 0
         Top = 0
-        Width = 699
+        Width = 695
         Height = 135
         Align = alTop
         Caption = 'pnlPropertiesC'
         TabOrder = 0
-        ExplicitWidth = 695
         inline frmpcProperties: TFrMyPanelCaption
           Left = 1
           Top = 1
@@ -110,16 +109,15 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
       object pnlHoursC: TPanel
         Left = 0
         Top = 247
-        Width = 699
+        Width = 695
         Height = 358
         Align = alTop
         Caption = 'pnlHoursC'
         TabOrder = 1
-        ExplicitWidth = 695
         inline frmpcHours: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 697
+          Width = 693
           Height = 18
           Align = alTop
           TabOrder = 0
@@ -136,16 +134,15 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
         object pnlHours: TPanel
           Left = 1
           Top = 19
-          Width = 697
+          Width = 693
           Height = 286
           Align = alTop
           Caption = 'pnlHours'
           TabOrder = 1
-          ExplicitWidth = 693
           inline FrgHours: TFrDBGridEh
             Left = 1
             Top = 26
-            Width = 695
+            Width = 691
             Height = 259
             Align = alBottom
             TabOrder = 0
@@ -154,7 +151,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
             ExplicitWidth = 691
             ExplicitHeight = 259
             inherited pnlGrid: TPanel
-              Width = 685
+              Width = 681
               Height = 205
               ExplicitWidth = 681
               ExplicitHeight = 205
@@ -200,16 +197,16 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               ExplicitHeight = 205
             end
             inherited pnlTop: TPanel
-              Width = 695
+              Width = 691
               ExplicitWidth = 691
             end
             inherited pnlContainer: TPanel
-              Width = 695
+              Width = 691
               ExplicitWidth = 691
             end
             inherited pnlBottom: TPanel
               Top = 259
-              Width = 695
+              Width = 691
               ExplicitTop = 259
               ExplicitWidth = 691
             end
@@ -231,7 +228,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
           object tbcYear: TTabControl
             Left = 1
             Top = 1
-            Width = 695
+            Width = 691
             Height = 19
             Align = alTop
             TabOrder = 1
@@ -241,32 +238,29 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
             TabIndex = 0
             OnChange = tbcYearChange
             OnChanging = tbcYearChanging
-            ExplicitWidth = 691
           end
         end
       end
       object pnlTemplateC: TPanel
         Left = 0
         Top = 135
-        Width = 699
+        Width = 695
         Height = 112
         Align = alTop
         Caption = 'pnlTemplateC'
         TabOrder = 2
-        ExplicitWidth = 695
         object pnlTemplate: TPanel
           Left = 1
           Top = 19
-          Width = 697
+          Width = 693
           Height = 78
           Align = alTop
           Caption = 'pnlTemplate'
           TabOrder = 0
-          ExplicitWidth = 693
           inline FrgTemplate: TFrDBGridEh
             Left = 1
             Top = 32
-            Width = 695
+            Width = 691
             Height = 45
             Align = alBottom
             TabOrder = 0
@@ -275,7 +269,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
             ExplicitWidth = 691
             ExplicitHeight = 45
             inherited pnlGrid: TPanel
-              Width = 685
+              Width = 681
               Height = 22
               ExplicitWidth = 681
               ExplicitHeight = 22
@@ -321,16 +315,16 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
               ExplicitHeight = 22
             end
             inherited pnlTop: TPanel
-              Width = 695
+              Width = 691
               ExplicitWidth = 691
             end
             inherited pnlContainer: TPanel
-              Width = 695
+              Width = 691
               ExplicitWidth = 691
             end
             inherited pnlBottom: TPanel
               Top = 45
-              Width = 695
+              Width = 691
               ExplicitTop = 45
               ExplicitWidth = 691
             end
@@ -374,7 +368,7 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
         inline frmpcTemplate: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 697
+          Width = 693
           Height = 18
           Align = alTop
           TabOrder = 1
@@ -391,8 +385,8 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 384
-      Width = 699
+      Top = 383
+      Width = 695
       ExplicitTop = 383
       ExplicitWidth = 695
       inherited bvlFrmBtnsTl: TBevel
@@ -426,17 +420,13 @@ inherited FrmWWedtWorkSchedule: TFrmWWedtWorkSchedule
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 428
-    Width = 709
+    Top = 427
+    Width = 705
     ExplicitTop = 427
     ExplicitWidth = 705
     inherited lblStatusBarR: TLabel
       Left = 636
-      Height = 14
       ExplicitLeft = 636
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

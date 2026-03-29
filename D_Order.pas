@@ -165,7 +165,7 @@ type
     StdItems: TVarDynArray2;
     Organizations: TVarDynArray2; //свои организации
     Differences: string;           //различающиеся поля в заголовке, через запятую
-    DifferencesText: string;       //все изменения паспорта, в текстовом виде, для отправки в письме
+    DifferencesText, DifferencesAllText: string;       //все изменения паспорта, в текстовом виде, для отправки в письме
     IsTableOldRowDeleted: Integer;  //устанавливается, если было удаление строки в части таблицы, загруженной ранее (тогда надо сохранять всю таблицу из-за изменения слэшеей, а не только измененные)
     BegItemsCount: Integer;      //сколько строк таблицы изделий загружено первоначально (эти строки в режиме fEdit нельзя удалять)
     Fdb, Fmt: TVarDynArray;      //поля в бд и таблице соответственно, для чтения данных
@@ -210,7 +210,7 @@ type
     procedure Verify(Sender: TObject; onInput: Boolean = False);
     procedure SetControlDisabled(c: TComponent; enable: Boolean);
     procedure LockStdFormat;
-    procedure GetChangesText;
+    procedure GetChangesText(AFullText: Boolean = false);
     function ExportPassportToXLSX(Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
     function SetTask: Boolean;
     procedure GetAddFiles;
@@ -709,7 +709,7 @@ begin
   SetEstimateList(True);
   //если копирование и организация выбрана, то сгенерируем номер заказа
   if (Mode = fCopy) and (Cth.GetControlValue(cmb_Organization) <> null) then
-    edt_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)])[0];
+    edt_OrderNum.Text := Q.QLoadValue('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)]);
   //установим данные, зависящие от типа заказа (рекламация)
   SetComplaints;
 
@@ -952,6 +952,7 @@ begin
   GetDifferences;
   //получим текстовое описание изменений в заказе
   GetChangesText;
+  GetChangesText(True);
   //подготовим (удалим пустые с концы) и проверим таблицу, если VerifyTable не вернет ошибку, то проверим на Пусто/не изменено
   res := S.IIf(VerifyTable, IsTableChanged, -1);
   if (Mode = fEdit) and (HeadDiff = False) and (res = 0) then begin
@@ -973,7 +974,7 @@ begin
     Exit;
   //для шаблона проверим уникальность наименования (но может быть не изменен в случае редактирования)
   if (IsTemplate) and (Mode <> fDelete) then begin
-    if Q.QSelectOneRow('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(edt_TemplateName.Text)])[0] > 0 then begin
+    if Q.QLoadValue('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(edt_TemplateName.Text)]) > 0 then begin
       MyWarningMessage('Шаблон с таким наименованием уже есть!');
       Exit;
     end;
@@ -1003,6 +1004,9 @@ begin
       os := ExportPassportToXLSX(False, True);  //создадим файл паспорта
     if os and b then
       os := SetTask;                            //задачу серверному процессу, если это не шаблон
+    //при редактировании запишем в лог аудита
+    if os and (Mode <> fDelete) and not IsTemplate and (DifferencesAllText <> '') then
+      Orders.ToOrderAudit(ORDER_AUDIT_ORDER, Mode <> fAdd, edt_OrderNum.Text, DifferencesAllText);
     OrderSaved := os;
     Q.QCommitOrRollback(OrderSaved);  //фиксируем транзакцию
     Q.DBLock(False, 'ordercreate', Cth.GetControlValue(cmb_Organization),'');
@@ -1034,7 +1038,7 @@ begin
           'Произошла ошибка при отправке заказа в ИТМ!'#13#10'Попробуйте выполнить "Загрузить смету" в журнале заказов.'
         )
         else begin
-          if Q.QSelectOneRow('select F_TestOrderEstimatesInItm(:id$i) from dual', [ID])[0] > 0 then begin
+          if Q.QLoadValue('select F_TestOrderEstimatesInItm(:id$i) from dual', [ID]) > 0 then begin
             MyWarningMessage('Внимание! Не все сметы были синхронизированы с ИТМ!');
           end;
         end;
@@ -1244,12 +1248,12 @@ begin
         Fields := Fields + ';id_customer$i;id_customer_contact$i;id_customer_org$i';
         Values := Values + [Customer[5], Customer[6], Customer[7]];
       //получим признак Оптовый покупатель
-        IsCustomerWholesale := Q.QSelectOneRow('select wholesale from ref_customers where id = :id$i', [Customer[5]])[0] = 1;
+        IsCustomerWholesale := Q.QLoadValue('select wholesale from ref_customers where id = :id$i', [Customer[5]]) = 1;
       end;
   //если не шаблон и заказа создается, либо при редактировании была изменена орган6изация, то получим номер заказа
     OrNum := Cth.GetControlValue(edt_OrderNum);
     if (not IsTemplate) and (Mode <> fDelete) and ((Mode in [fAdd, fCopy]) or (Id_Org_Old <> Cth.GetControlValue(cmb_Organization))) then begin
-      v := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)]);
+      v := Q.QLoadRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)]);
     //значения полей
       Fields := Fields + ';ornum$s;year$i;prefix$s;num$i';
       Values := Values + [v[0], YearOf(Date), Copy(v[0], 1, Length(v[0]) - 6), Copy(v[0], Length(v[0]) - 3, 4)];
@@ -1259,7 +1263,7 @@ begin
     end;
     //получим наименование каталога заказа
     OrderPath :=
-      S.NSt(Q.QSelectOneRow('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]])[0]) +
+      S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]])) +
       OrNum + ' ' +
       S.CorrectFileName(Trim(S.IIfV(cmb_CustomerName.Text = '', 'Производство', cmb_CustomerName.Text)) + ' ' + Trim(cmb_Project.Text))
     ;
@@ -1395,7 +1399,7 @@ begin
     if (Mode = fEdit) and (Cth.GetControlValue(cmb_Organization) = Id_Org_Old) then
       edt_OrderNum.Text := S.NSt(FieldsArr[GetFieldsArrPos('ornum')][cBegValue])
     else
-      edt_OrderNum.Text := Q.QSelectOneRow('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)])[0];
+      edt_OrderNum.Text := Q.QLoadValue('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_Organization)]);
     //если это производство, то очистим поля
     if Cth.GetControlValue(cmb_Organization) = -1 then
       for i := 0 to High(FieldsArr) do          //если выбрано производство, то очистим контролы с призанком 1
@@ -2828,7 +2832,7 @@ begin
   SetSumInHeader;
 end;
 
-procedure TDlg_Order.GetChangesText;
+procedure TDlg_Order.GetChangesText(AFullText: Boolean = false);
 //получим текстовое описание изменений в паспорте
 var
   i, j, k, RecNo: Integer;
@@ -2839,6 +2843,7 @@ var
   UsedComponents: TVarDynArray;
 begin
   DifferencesText := '';
+  DifferencesAllText := '';
 
   //только по этим полям заголовка проверяются изменения
   UsedComponents := [
@@ -2864,7 +2869,7 @@ begin
     if c = nil then
       Continue;
     //включим в строку изменений только указанные компоненты
-    if not A.InArray(c.Name, UsedComponents) then
+    if not AFullText and not A.InArray(c.Name, UsedComponents) then
       Continue;
     st := TCustomDBEditEh(c).ControlLabel.Caption;
     st := StringReplace(st, #13#10, ' ', []);
@@ -2902,8 +2907,14 @@ begin
       else if va1[j] = 'attention' then
         va1[j] := 'comm';      //изменение признака цвета важности считаем изменением дополнения
       //создадим массив полей с изменениями, исключим повторы, искключим ненужные поля
-      if (not A.InArray(va1[j], va)) and (not A.InArray(va1[j], FieldsNoUsed)) then
-        va := va + [va1[j]];
+      if A.InArray(va1[j], va) then
+        Continue;
+      if not AFullText and A.InArray(va1[j], FieldsNoUsed) then
+        Continue;
+      //в полной версии изменений не включаем маршрут! (т.к. иначе в лог полетят изменения моршрута конструкторами)
+      if AFullText and A.InArray(va1[j], ['route']) then
+        Continue;
+      va := va + [va1[j]];
     end;
   end;
   MemTableEh1.RecNo := RecNo;
@@ -2929,8 +2940,14 @@ begin
     end;
     st2 := 'Тело паспорта:'#13#10'' + st2;
   end;
-  S.ConcatStP(DifferencesText, st1, #13#10#13#10);
-  S.ConcatStP(DifferencesText, st2, #13#10#13#10);
+  if not AFullText then begin
+    S.ConcatStP(DifferencesText, st1, #13#10#13#10);
+    S.ConcatStP(DifferencesText, st2, #13#10#13#10);
+  end
+  else begin
+    S.ConcatStP(DifferencesAllText, st1, #13#10#13#10);
+    S.ConcatStP(DifferencesAllText, st2, #13#10#13#10);
+  end;
 end;
 
 function TDlg_Order.ExportPassportToXLSX(Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
@@ -3164,7 +3181,7 @@ begin
       end;
       MemTableEh2.RecNo := RecNo;
     end;
-    Addr := S.NSt(Q.QSelectOneRow('select addresses from adm_mailing where id = :i$i', [1])[0]);
+    Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [1]));
     if Mode = fDelete then begin
       Subj := 'Удален заказ ' + OrderPath;
       if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
@@ -3179,12 +3196,12 @@ begin
         Subj := 'Создан заказ';
       Subj := Orders.GetSubject(Subj, '', ID, null);
       if Mode = fEdit then begin
-        st:= S.NSt(Q.QSelectOneRow('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cBegValue]])[0]);
+        st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cBegValue]]));
         PspNameOld:= FieldsArr[GetFieldsArrPos('path'), cBegValue] + '.xlsx';
         Delete(PspNameOld, 1, length(st));
       end
       else PspNameOld:= '';
-      st:= S.NSt(Q.QSelectOneRow('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]])[0]);
+      st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]]));
       PspName:= OrderPath + '.xlsx';
       Delete(PspName, 1, length(st));
 //exit;

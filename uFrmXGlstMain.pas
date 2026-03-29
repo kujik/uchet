@@ -267,16 +267,16 @@ begin
     Frg1.Opt.FilterRules := [[], ['accountdt;dt']];
     b0:=User.Role(rPC_A_ChAll)  //право доступа на добавление и копирование
       or (User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat]) and
-      (Q.QSelectOneRow('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 0])[0] > 0));
+      (Q.QLoadValue('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 0]) > 0));
     b1:=User.Role(rPC_A_ChAll)  //транспорт отгрузки
       or (User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat]) and
-      (Q.QSelectOneRow('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 1])[0] > 0));
+      (Q.QLoadValue('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 1]) > 0));
     b2:=User.Role(rPC_A_ChAll)  //снабжения
       or (User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat]) and
-      (Q.QSelectOneRow('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 2])[0] > 0));
+      (Q.QLoadValue('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 2]) > 0));
     b3:=User.Role(rPC_A_ChAll)  //монтаж
       or (User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat]) and
-      (Q.QSelectOneRow('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 3])[0] > 0));
+      (Q.QLoadValue('select count(id) from ref_expenseitems where anyinstr(useravail, :id_user$i)=1 and accounttype = :accmode$i', [User.GetId, 3]) > 0));
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit,User.Roles([],[rPC_A_ChAll, rPC_A_ChSelf, rPC_A_ChSelfCat])], [mbtAdd, b0],
       [mbtAdd_Account_TO,b1], [mbtAdd_Account_TS,b2], [mbtAdd_Account_M,b3], [mbtCopy,b0], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard], [], [mbtGridFilter], [], [mbtGridSettings]]);
     Frg1.Opt.SetButtonsIfEmpty([mbtAdd_Account_TO, mbtAdd_Account_TS, mbtAdd_Account_M]);
@@ -393,7 +393,7 @@ begin
     Frg1.Opt.SetTable('v_sn_calendar_datereport');
     Frg1.Opt.SetButtons(1, 'rsfp');
     Frg1.Opt.FilterRules := [[], ['pdt']];
-    va:=Q.QSelectOneRow('select sum(case when status = 0 then round(sum) else 0 end) as debtsum from sn_calendar_payments', []);
+    va:=Q.QLoadRow('select sum(case when status = 0 then round(sum) else 0 end) as debtsum from sn_calendar_payments', []);
     Frg1.CreateAddControls('1', cntLabelClr,
       S.IIf(va[0] = 0, 'Задолженности нет.', 'Задолженность на сегодня: $FF0000 ' + FormatCurr('#,##0', S.NNum(va[0])) + ' $000000р.'),
       'Lb1', '', -1, yrefC, 300
@@ -772,7 +772,7 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_w_turv_period');
     v:=User.Roles([], [rW_J_Turv_TP, rW_J_Turv_TS]);
-    v:=v or (Q.QSelectOneRow('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId])[0] = 1);
+    v:=v or (Q.QLoadValue('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId]) = 1);
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor or User.Role(rW_J_Turv_TP))],[-1000, User.Role(rW_J_Turv_Commit), 'Закрыть все за прошлый период'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
     Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
@@ -1315,7 +1315,7 @@ v:=True;
       ['dt_otgr$dt','Дата отгрузки','80'],
       ['project$s','Проект','180;h'],
       ['customer$s','Покупатель','180;h'],
-      ['type','Операция','90'],
+      ['type','Операция','150'],
       ['name','Работник','120'],
       ['dt_by_reglament','Дата по регламенту','90'],
       ['dt_fact','Дата фактическая','90'],
@@ -1573,8 +1573,8 @@ v:=True;
   else if FormDoc = myfrm_Rep_PlannedMaterials then begin
     //отчет 'Годовая потребность в материалах'
     //заголовки месяцев формируются в AfterRefresh
-    va:=Q.QSelectOneRow('select dt from properties where prop = ''planned_order_estimate12'' and subprop = ''dt_beg''', []);
-    va1:=Q.QSelectOneRow('select dt from properties where prop = ''planned_order_estimate12'' and subprop = ''dt_calc''', []);
+    va:=Q.QLoadRow('select dt from properties where prop = ''planned_order_estimate12'' and subprop = ''dt_beg''', []);
+    va1:=Q.QLoadRow('select dt from properties where prop = ''planned_order_estimate12'' and subprop = ''dt_calc''', []);
     if va1[0] = null then
       va1[0] := Date;
     Caption:='Годовая потребность в материалах';
@@ -1752,7 +1752,7 @@ v:=True;
     Frg1.Opt.SetWhere('where id_schet = :id_schet$i');
     Frg1.Opt.SetButtons(1, 'sp');
     //дата самого документа счета - control_date
-    va1:=Q.QSelectOneRow(
+    va1:=Q.QLoadRow(
       'select s.num, s.control_date, s.states, k.name_org, s.docstr '+
       'from dv.sp_schet s, dv.kontragent k '+
       'where k.id_kontragent = s.id_kontragent2 and id_schet = :id_schet$i',
@@ -1785,7 +1785,7 @@ v:=True;
     Frg1.Opt.SetTable('v_itm_demandsupplierspec');
     Frg1.Opt.SetWhere('where id_demand_supplier = :id$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow(
+    va1:=Q.QLoadRow(
       'select s.num_demand, s.control_date, s.id_docstate, k.name_org '+
       'from dv.demand_supplier s, dv.kontragent k '+
       'where k.id_kontragent = s.id_supplier and id_demand_supplier = :id_demand_supplier$i',
@@ -1816,7 +1816,7 @@ v:=True;
     Frg1.Opt.SetTable('v_spl_nom_inbills');
     Frg1.Opt.SetWhere('where id_inbill = :id_inbill$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow(
+    va1:=Q.QLoadRow(
       'select inbillnum, inbilldate, id_docstate, '+  //номер, дата регистрации, статус 3=проведена
       'name_org, sclad, '+  //поставщик, склад
       'npost_num, npost_date, npost_sum, docstr '+  //параметры исходного документа, основание
@@ -1855,7 +1855,7 @@ v:=True;
     Frg1.Opt.SetTable('v_spl_nom_movebills');
     Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow(
+    va1:=Q.QLoadRow(
       'select numdoc, dt, id_docstate, is_delete, sourceskladname, destskladname, basis '+
       'from v_spl_nom_movebills '+
       'where id_doc = :id_doc$i',
@@ -1885,7 +1885,7 @@ v:=True;
     Frg1.Opt.SetTable('v_spl_nom_offminuses');
     Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_offminuses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    va1:=Q.QLoadRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_offminuses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
     if va1[0] = null then begin
       MyInfoMessage('Документ не найден!');
       Exit;
@@ -1911,7 +1911,7 @@ v:=True;
     Frg1.Opt.SetTable('v_spl_nom_postpluses');
     Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_postpluses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    va1:=Q.QLoadRow('select numdoc, dt, id_docstate, null, skladname, basis, comments from v_spl_nom_postpluses where id_doc = :id_doc$i', [VarToStr(AddParam)]);
     if va1[0] = null then begin
       MyInfoMessage('Документ не найден!');
       Exit;
@@ -1938,7 +1938,7 @@ v:=True;
     Frg1.Opt.SetTable('v_spl_nom_acts');
     Frg1.Opt.SetWhere('where id_doc = :id_doc$i');
     Frg1.Opt.SetButtons(1, 'sp');
-    va1:=Q.QSelectOneRow('select numdoc, dt, id_docstate, null, null, basis, comments from v_spl_nom_acts where id_doc = :id_doc$i', [VarToStr(AddParam)]);
+    va1:=Q.QLoadRow('select numdoc, dt, id_docstate, null, null, basis, comments from v_spl_nom_acts where id_doc = :id_doc$i', [VarToStr(AddParam)]);
     if va1[0] = null then begin
       MyInfoMessage('Документ не найден!');
       Exit;
@@ -2879,7 +2879,7 @@ begin
     );
   end
   else if (FormDoc = myfrm_J_PayrollsForWorker) then begin
-    var idempl := Q.QSelectOneRow('select id_employee from v_w_employee_properties where employee_st = :est$s', [Cth.GetControlValue(Fr, 'cmbEmployee')])[0];
+    var idempl := Q.QLoadValue('select id_employee from v_w_employee_properties where employee_st = :est$s', [Cth.GetControlValue(Fr, 'cmbEmployee')]);
     Fr.SetSqlParameters('id_employee$i;dt1$d;is_finalized$i', [idempl, S.IIf(User.IsDeveloper, IncYear(Date, -10), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1))), S.IIf(User.IsDeveloper, 0, 1)]);
   end
   else if FormDoc = myfrm_R_Holideys then
@@ -2899,7 +2899,7 @@ begin
   else if FormDoc = myfrm_Rep_Order_Complaints then
     SqlWhere := A.ImplodeNotEmpty([SqlWhere, 'is_complaint = 1', 'id > 0'], ' and ')
   else if FormDoc = myfrm_Rep_Orders_Overdue_Kns_Thn then
-    SqlWhere := S.IIfStr(Cth.GetControlValue(Fr, 'ChbOverdue') = 1, 'overdue_days < 0')
+    SqlWhere := A.ImplodeNotEmpty([SqlWhere, S.IIfStr(Cth.GetControlValue(Fr, 'ChbOverdue') = 1, 'overdue_days < 0')], ' and ')
   else if FormDoc = myfrm_J_InvoiceToSgp then
     Fr.SetSqlParameters('area$i', [S.NNum(Fr.GetControlValue('CbArea'))])
   else if FormDoc = myfrm_R_Itm_InGroup_Nomencl then
@@ -3205,7 +3205,7 @@ var
 begin
  // Handled := False;
   if (FormDoc = myfrm_R_Itm_Nomencl)and(Fr.CurrField = 'price_check') and User.Role(rOr_Other_R_MinRemains_chPriceCheck) then begin
-    va := Q.QSelectOneRow('select max(price_check) from spl_itm_nom_props where id = :id$i', [Fr.ID]);
+    va := Q.QLoadRow('select max(price_check) from spl_itm_nom_props where id = :id$i', [Fr.ID]);
     if TFrmBasicInput.ShowDialog(Self, '', [], fEdit, 'Контрольная цена', 200, 100,
       [[cntNEdit, 'Контрольная цена', '0:100000000:2:+', 80]],  //в позиции 3 не ставим N, тк не нужно требовать непустго значения
       va, va, [['Контрольная цена']], nil

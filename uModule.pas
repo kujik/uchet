@@ -187,17 +187,17 @@ procedure TModule.Init;
 var
   v: Variant;
 begin
-v:=FRunFromIDE;
+  v:=FRunFromIDE;
   QueryToExit:= 0;
   //получим время в минутах с даты автозавершения модуля и время ожидания в минутах (дата может быть нулл и это пройдет нормально)
-  v:=Q.QSelectOneRow('select (sysdate - autoclosedt)*24*60, autoclosemin from adm_modules where id = :id', [cMainModule]);
+  v:=Q.QLoadRow('select (sysdate - autoclosedt)*24*60, autoclosemin from adm_modules where id = :id', [cMainModule]);
   // если не прошли заданные минуты с момента завершения, то выведем сообщение и завершим приложение
   if (v[0]>0) and (v[0]<v[1]) then begin
     MessageBox(0,pWideChar('Приложение "' + string(ModuleRecArr[cMainModule].Caption) + '" не может быть запущено сейчас!'+#13#10+
       'Попробуйте через '+IntToStr(trunc(v[1]-v[0])+1)+' минут'+S.GetEnding(trunc(v[1]-v[0])+1,'у','ы','')+'.'),'Внимание!',0);
     Halt;
   end;
-  v:=Q.QSelectOneRow('select filespath, orderarchivepath, ordercurrentpath, orderestimatepath from adm_main_settings', []);
+  v:=Q.QLoadRow('select filespath, orderarchivepath, ordercurrentpath, orderestimatepath from adm_main_settings', []);
   FilesPath:=v[0];
   OrderArchiveFilePath:= v[1];
   OrderCurrentFilePath:= v[2];
@@ -206,7 +206,7 @@ v:=FRunFromIDE;
   CfgPc:=CfgPc + [[mycfgPCsum_autoagreed, mycfgPCsum_need_req]];
 {  PC_AutoAgreed:= v[0];
   PC_ReqSum:= v[1];}
-  CfgPick:=Q.QSelectOneRow('select ' + mycfgKPick_font_size + ' from pick_cfg', []); //, path_to_files
+  CfgPick:=Q.QLoadRow('select ' + mycfgKPick_font_size + ' from pick_cfg', []); //, path_to_files
   CfgPick:=CfgPick + [[mycfgKPick_font_size]];
 //  Pick_FilePath:= v[1];
   CfgW:=Q.QLoadToVarDynArray2('select ' +
@@ -376,7 +376,7 @@ begin
   //на этой строке при получении значения поля в QSelectOneRow можути быть выданна ошибка:
   //1180.8833333333333333333333333 is not a valid BCD value.
   //попоробуем ограничить количество десятичнх знаков
-  i:=Q.QSelectOneRow('select round((sysdate - autoclosedt)*24*60,2), autoclosemin from adm_modules where id = :id$i', [cMainModule]);
+  i:=Q.QLoadRow('select round((sysdate - autoclosedt)*24*60,2), autoclosemin from adm_modules where id = :id$i', [cMainModule]);
   Q.SetEnableLoG(True);
   if (i[0]>0) and (i[0]<3) then begin
     //среагирует в течении одной-не более трех трех минут после времени завершения, выдадим сообщение если не было уже выдано ранее
@@ -617,12 +617,12 @@ begin
   EMailAddresses:='';
   for i:= 0 to High(UsersAll) do begin
     if StrToIntDef(VarToStr(UsersAll[i]), -1) = -1 then Continue;
-    v:=Q.QSelectOneRow('select emailaddr from v_users where id = :id$i', [S.VarToInt(UsersAll[i])]);
+    v:=Q.QLoadRow('select emailaddr from v_users where id = :id$i', [S.VarToInt(UsersAll[i])]);
     if S.NSt(v[0]) <> ''
       then EMailAddresses:=S.ConcatSt(EMailAddresses, v[0], ',');
   end;
   if EMailAddresses = '' then Exit;
-  v:=Q.QSelectOneRow('select emaildomain, emailuser, emailserver, emaillogin, emailpassword from adm_main_settings', []);
+  v:=Q.QLoadRow('select emaildomain, emailuser, emailserver, emaillogin, emailpassword from adm_main_settings', []);
   try
     MyData.IdSMTP1.Host:=S.NSt(v[2]);
     MyData.IdSMTP1.Port:=25; //587;

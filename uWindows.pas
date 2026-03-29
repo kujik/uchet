@@ -115,7 +115,7 @@ uses
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
 
-  uFrmWDedtDivision, uFrmWDedtWorkerStatus, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
+  uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash,
 
@@ -919,9 +919,9 @@ begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'ref_otk_reject_reasons', 'Типы транспортных средств', 400, 100,
      [['name$s', cntEdit, 'Тип','1:100'], ['active$i', cntCheckX, 'Используется']], [['caption dlgedit dlgactive']]);
   end
-  else if F = myfrm_Dlg_WorkerStatus then begin
+  {else if F = myfrm_Dlg_WorkerStatus then begin
     TFrmWDedtWorkerStatus.Show(AOwner, F, [myfoDialog], fMode, AId, AAddParam);  //нужно обеспечить блокировку оденовременного открытия окна статуса!
-  end
+  end}
   else if F = myfrm_Dlg_Turv then begin
     TFrmWGEdtTurvN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoEnableMaximize, myfoMulticopy], fMode, AID, null);
   end

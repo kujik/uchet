@@ -64,7 +64,7 @@ end;
 procedure TFrmDlgEditNomenclatura.GetGroupItm;
 begin
   Cth.SetControlValue(edt_id_group_itm,
-    Q.QSelectOneRow('select path from v_itm_getnomenclpath where id_group = :id_group$i', [FIdGroupItm])[0]
+    Q.QLoadValue('select path from v_itm_getnomenclpath where id_group = :id_group$i', [FIdGroupItm])
   );
 end;
 
@@ -91,11 +91,11 @@ var
   IdUnitItm: Integer;
 begin
   Result:= False;
-  if Q.QSelectOneRow('select count(*) from bcad_nomencl where name = :name$s', [edt_name.Text])[0] <> 0 then begin
+  if Q.QLoadValue('select count(*) from bcad_nomencl where name = :name$s', [edt_name.Text]) <> 0 then begin
     MyWarningMessage('Введенное наименование уже есть в базе номенклатуры Учета!');
     Exit;
   end;
-  vai:= Q.QSelectOneRow('select name, id_group, id_nomencltype from dv.nomenclatura where name = :name$s', [edt_name.Text]);
+  vai:= Q.QLoadRow('select name, id_group, id_nomencltype from dv.nomenclatura where name = :name$s', [edt_name.Text]);
   if (S.NSt(vai[0]) <> '') and (vai[2] = 0) then begin
     if MyQuestionMessage('Введенное наименование уже есть в базе номенклатуры ИТМ! Запись в ИТМ изменена не будет. Добавить запись в справочник Учета?') <> mrYes then
       Exit;
@@ -107,7 +107,7 @@ begin
 //  Result := True; Exit;
 
   Q.QBeginTrans(True);
-  IdUnitItm := Q.QSelectOneRow('select id_unit from dv.unit where name_unit = :name$s', [cmb_id_unit.Text])[0];
+  IdUnitItm := Q.QLoadValue('select id_unit from dv.unit where name_unit = :name$s', [cmb_id_unit.Text]);
 //  Q.QIUD(Q.QFModeToIUD(Mode), 'bcad_nomencl', '', 'id$i;name$s;id_group$i;id_unit$i',
 //    [ID, edt_name.Text, cmb_id_group.Value, cmb_id_unit.Value]
 //  );

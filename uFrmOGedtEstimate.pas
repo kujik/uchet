@@ -72,13 +72,13 @@ begin
   //получим айди сметы по айди стандартного издели€ или заказа
   if AddParam = 1 then begin
     FIdOfStdItem := ID;
-    FIdEstimate := Q.QSelectOneRow('select id from estimates where id_std_item = :id$i', [ID])[0];
-    FName := Q.QSelectOneRow('select name from v_or_std_items where id = :id$i', [ID])[0];
+    FIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id$i', [ID]);
+    FName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [ID])[0];
   end
   else begin
-    FIdOfStdItem := Q.QSelectOneRow('select id_std_item from order_items where id = :id$i', [ID])[0];
-    FIdEstimate := Q.QSelectOneRow('select id from estimates where id_order_item = :id$i', [ID])[0];
-    va := Q.QSelectOneRow('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID])[0];
+    FIdOfStdItem := Q.QLoadValue('select id_std_item from order_items where id = :id$i', [ID]);
+    FIdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
+    va := Q.QLoadValue('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID]);
     FName := va[0];
     FIdOfOrder := va[1];
     FQntOfItem := va[2];
@@ -87,9 +87,9 @@ begin
   if  FIdEstimate = null then
     Mode := fAdd;
   //получим айди группы (не подгруппыв!) стандартных изделий дл€ данной позиции
-  FGroupOfItem := Q.QSelectOneRow('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem])[0];
+  FGroupOfItem := Q.QLoadValue('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]);
   //получим тип этой позиции - производсственное, отгрузочное, п/ф
-  FTypeOfItem := Q.QSelectOneRow('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem])[0];
+  FTypeOfItem := Q.QLoadValue('select type from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]);
   //заголовочный лейбл
   FTitleTexts := [S.IIf(AddParam = 1, '—мета к стандартному изделию:', '—мета кизделию заказа:'),  {'$FF0000' + } FName];
   pnlTop.Height := 50;
@@ -255,7 +255,7 @@ procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);
 var
   st: string;
 begin
-  Frg1.SetValue('flags', Row, False, S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), FGroupOfItem])[0]));
+  Frg1.SetValue('flags', Row, False, S.NSt(Q.QLoadValue('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), FGroupOfItem])));
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -288,7 +288,7 @@ begin
     //--3й символ = 0 - ошибка дл€ номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом €вл€€сь материалом согласно группе
     st := Frg1.GetValueS('flags', i, False);
     if AReloadStatus then begin
-      st := S.NSt(Q.QSelectOneRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), FGroupOfItem])[0]);
+      st := S.NSt(Q.QLoadRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), FGroupOfItem])[0]);
       Frg1.SetValue('flags', i, False, st);
     end;
     if st <> '' then begin
@@ -392,7 +392,7 @@ var
   i, j: Integer;
   va: TVarDynArray;
 begin
-  va := Q.QSelectOneRow('select id, is_semiproduct from v_or_std_items where fullname = :fullname$s', [Frg1.GetValue('name', Row, False)]);
+  va := Q.QLoadRow('select id, is_semiproduct from v_or_std_items where fullname = :fullname$s', [Frg1.GetValue('name', Row, False)]);
   if va[0] <> null then begin
     //это изделие
     Frg1.SetValue('id_group', S.IIf(va[1] = 1, cIdSemiproduct, cIdProduct));
@@ -400,7 +400,7 @@ begin
   end
   else begin
     //это материал
-    va := Q.QSelectOneRow('select id, id_group, id_unit from v_estimate where name = :name$s', [Frg1.GetValue('name', Row, False)]);
+    va := Q.QLoadRow('select id, id_group, id_unit from v_estimate where name = :name$s', [Frg1.GetValue('name', Row, False)]);
     if va[0] <> null then begin
       Frg1.SetValue('id_group', va[1]);
       Frg1.SetValue('id_unit', va[2]);

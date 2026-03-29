@@ -143,12 +143,12 @@ begin
     Exit;
   end;
   //айди ТУРВ за данный период по данному подразделению
-  FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
+  FIdTurv := Q.QLoadRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
   FIsSecondPeriod := DayOf(FPayrollParams.G('dt1')) = 16;
 
-  FFirstPeriodMotivation := Q.QSelectOneRow('select calc_method from w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
+  FFirstPeriodMotivation := Q.QLoadValue('select calc_method from w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
     [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)]
-  )[0] = cMMotivation;
+  ) = cMMotivation;
 
 
   FDeletedWorkers := [];

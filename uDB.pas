@@ -153,7 +153,7 @@ type
     //возвращаем айди из переданной секвенции
     function QSelectId(sequence: string): LongInt;
 
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr): Boolean; overload;
+    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean; overload;
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray2): Boolean; overload;
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean; overload;
     function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
@@ -163,11 +163,12 @@ type
     //возвращаем первую строку запроса
     //передается текст запроса, массив параметров
     //возвращается ВСЕГДА МАССИВ по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут нулл!!!
-    function QSelectOneRow(Sql: string; ParamValues: TVarDynArray): Variant;
+    function QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
+    function QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
     //загружаем результат запроса в вариантный двухмерный массив
     function QLoadToVarDynArray2(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
     //загружаем результат запроса в вариантный двухмерный массив, содержащий чередующиеся имена параметров и их значения
-    function QLoadToRec(Sql: string; ParamValues: TVarDynArray): TNamedArr;
+    function QLoadToRec(Sql: string; ParamValues: TVarDynArray; OneRow: Boolean = False): TNamedArr;
     //загружаем одну строку в вариантный одномерный массив
     //если данные не выбраны, массив будет нулевой длины
     function QLoadToVarDynArrayOneRow(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
@@ -1013,7 +1014,7 @@ begin
   end;
 end;
 
-function TmyDB.QSelectOneRow(Sql: string; ParamValues: TVarDynArray): Variant;
+function TmyDB.QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
 //возвращаем первую строку запроса
 //передается текст запроса, массив параметров
 //возвращается ВСЕГДА МАССИВ по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут нулл!!!
@@ -1053,6 +1054,16 @@ begin
   QClose;
 end;
 
+function TmyDB.QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
+var
+  Res: Variant;
+begin
+  Result := Null;
+  Res := QLoadRow(Sql, ParamValues);
+//  if Length(Res) > 0 then
+  Result := Res[0];
+end;
+
 function TmyDB.QLoadToVarDynArray2(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
 //загружаем результат запроса в вариантный двухмерный массив
 var
@@ -1076,7 +1087,7 @@ begin
 end;
 
 
-function TmyDB.QLoadToRec(Sql: string; ParamValues: TVarDynArray): TNamedArr;
+function TmyDB.QLoadToRec(Sql: string; ParamValues: TVarDynArray; OneRow: Boolean = False): TNamedArr;
 //загружаем результат запроса в вариантный двухмерный массив, содержащий чередующиеся имена параметров и их значения
 var
   res, i, j: Integer;
@@ -1105,7 +1116,7 @@ begin
   QClose;
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr): Boolean;
+function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean;
 var
   va, va1: TVarDynArray;
   SqlM: string;
@@ -1487,7 +1498,7 @@ end;
 function TmyDB.QSelectId(sequence: string): LongInt;
 //возвращаем айди из переданной секвенции
 begin
-  Result := StrToInt(VarToStr(QSelectOneRow('select ' + sequence + '.nextval from dual', [])[0]));
+  Result := StrToInt(VarToStr(QLoadValue('select ' + sequence + '.nextval from dual', [])));
   FLastSequenceId := Result;
 end;
 

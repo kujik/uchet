@@ -70,7 +70,7 @@ var
 begin
   if FMailingNum <= 0 then
     Exit;
-  v := Q.QSelectOneRow('select id, userids, customemail, comm from adm_mailing where id = :id$i', [FMailingNum]);
+  v := Q.QLoadRow('select id, userids, customemail, comm from adm_mailing where id = :id$i', [FMailingNum]);
   if v[0] = null then begin
     FMailingNum := 0;
     MyWarningMessage('Неверно задан код рассылки!');

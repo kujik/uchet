@@ -171,9 +171,9 @@ var
 begin
   Cth.SetBtn(Bt_Ok, mybtOk);
   Cth.SetBtn(Bt_Cancel, mybtCancel);
-  v1:=Q.QSelectOneRow('select filespath, ordercurrentpath, orderarchivepath from adm_main_settings', []);
-  v2:=Q.QSelectOneRow('select emaildomain, emailuser, emailserver, emaillogin, emailpassword from adm_main_settings',[]);
-  v3:=Q.QSelectOneRow('select or_to_archive, orders_n, accounts_n, turv, payrolls from adm_delete_old', []);
+  v1:=Q.QLoadRow('select filespath, ordercurrentpath, orderarchivepath from adm_main_settings', []);
+  v2:=Q.QLoadRow('select emaildomain, emailuser, emailserver, emaillogin, emailpassword from adm_main_settings',[]);
+  v3:=Q.QLoadRow('select or_to_archive, orders_n, accounts_n, turv, payrolls from adm_delete_old', []);
   edt_PathToFiles.text:=S.NSt(v1[0]);
   edt_ZCurrent.text:=S.NSt(v1[1]);
   edt_ZArchive.text:=S.NSt(v1[2]);

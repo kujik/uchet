@@ -512,7 +512,7 @@ begin
     //отчет по изделиям в производстве
     //сумма изделии и дк без ндс с учетом скидок по производстенным паспортам, и нестандартных изделий по всем остальным,
     //только по незавершенным паспортам, по непринятому на сгп остатку
-    Cth.SetControlValue(Ne5Selling, Q.QSelectOneRow('select sum(sum_i) + sum(sum_a) from v_order_finreport_inprod',[])[0]);
+    Cth.SetControlValue(Ne5Selling, Q.QLoadValue('select sum(sum_i) + sum(sum_a) from v_order_finreport_inprod',[]));
     va2:=Q.QLoadToVarDynArray2('select sum_in_prod, sum_in_stock, sum_rezerv, sum_onway, sum_need, sum_need_p, sum_needcurr from v_nom_for_orders_in_prod_fin', []);
     for i:=0 to High(va2[0]) do
       TDBNumberEditEh(FindComponent('nedt_5_' + InttoStr(i + 1))).Value := va2[0][i];
