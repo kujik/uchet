@@ -123,16 +123,16 @@ begin
   end;
   Q.QBeginTrans(True);
   if Length(va1) > 0 then begin
-    idi := Q.QIUD('i', 'sgp_act_in', '', 'id$i;id_format$i;id_user$i;dt$d;comm$s', [-1, id, User.GetId, Now, '']);
+    idi := Q.QSave('i', 'sgp_act_in', '', 'id$i;id_format$i;id_user$i;dt$d;comm$s', [-1, id, User.GetId, Now, '']);
     for i := 0 to High(va1) do
-      Q.QIUD('i', 'sgp_act_in_items', '-', 'id_act_in$i;' + S.IIf(ID = 0, 'id_or_item$i', 'id_std_item$i') + ';qnt$f',
+      Q.QSave('i', 'sgp_act_in_items', '-', 'id_act_in$i;' + S.IIf(ID = 0, 'id_or_item$i', 'id_std_item$i') + ';qnt$f',
        [idi, va1[i][0], va1[i][1]]
       );
   end;
   if Length(va2) > 0 then begin
-    idi := Q.QIUD('i', 'sgp_act_out', '', 'id$i;id_format$i;id_user$i;dt$d;comm$s', [-1, id, User.GetId, Now, '']);
+    idi := Q.QSave('i', 'sgp_act_out', '', 'id$i;id_format$i;id_user$i;dt$d;comm$s', [-1, id, User.GetId, Now, '']);
     for i := 0 to High(va2) do
-      Q.QIUD('i', 'sgp_act_out_items', '-', 'id_act_out$i;' + S.IIf(ID = 0, 'id_or_item$i', 'id_std_item$i') + ';qnt$f',
+      Q.QSave('i', 'sgp_act_out_items', '-', 'id_act_out$i;' + S.IIf(ID = 0, 'id_or_item$i', 'id_std_item$i') + ';qnt$f',
         [idi, va2[i][0], va2[i][1]]
       );
   end;

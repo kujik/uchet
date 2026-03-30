@@ -331,7 +331,7 @@ begin
       then Exit;
     Q.QBeginTrans(True);
     //прочитаем для заказа записи со статусами 0 и 1
-    va2 := Q.QLoadToVarDynArray2('select id, qnt from v_order_item_stages1 where id_order = :id_order$i and st' + IntToStr(FOpMode) + ' in (0,1)', [Fr.ID]);
+    va2 := Q.QLoad('select id, qnt from v_order_item_stages1 where id_order = :id_order$i and st' + IntToStr(FOpMode) + ' in (0,1)', [Fr.ID]);
     for i:=0 to High(va2) do
       //для каждой позиции выполним процедуру с количество, равным кол-ву в заказе, если нужно меньше - все обрабатывается в хранимой процедуре
       Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo',

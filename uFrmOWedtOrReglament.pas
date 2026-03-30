@@ -331,7 +331,7 @@ begin
   //читаем всю таблицу по участкам для данного регламента
   va2 := [];
   if not (Mode in [fAdd]) then
-    va2 := Q.QLoadToVarDynArray2('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [ID]);
+    va2 := Q.QLoad('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [ID]);
   //установим дни и цвета для участков
   for i := 0 to High(va2) do
     for j := 0 to FrgDays.GetCount(False) - 1 - Length(cOrderReglamentSnTypes) do

@@ -52,7 +52,7 @@ begin
 //  if (Mode = fView) then begin Close; Exit; end;
 //  if edt_name.Text = '' then Exit;
 //  if cmb_Group.Text = '' then Exit;
-  b:= Q.QIUD(Q.QFModeToIUD(Mode), 'delayed_prod_reasons', 'id', 'id$i;id_reason$i;comm$s',
+  b:= Q.QSave(Q.QFModeToIUD(Mode), 'delayed_prod_reasons', 'id', 'id$i;id_reason$i;comm$s',
     [ID_Order, S.NullIfEmpty(Cth.GetControlValue(cmb_Reason)), Cth.GetControlValue(mem_Comment)]
   );
   if b = -1 then Exit;

@@ -78,7 +78,7 @@ begin
     end;
     //получим все поля этой записи
     if FIdLast <> null then
-      Q.QLoadFromQuery('select * from w_employee_properties where id = :id$i', [FIdLast], FLastRec);
+      Q.QLoad('select * from w_employee_properties where id = :id$i', [FIdLast], FLastRec);
   end;
   if (Mode = fAdd) and (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
     //в режиме создания нового статуса, если он не первый для работника и последний не есть увольнение, поставим режим копирования и айди послдедней записи
@@ -187,7 +187,7 @@ begin
   FDep := [GetcontrolValue('cmb_id_departament'), GetcontrolValue('cmb_id_departament')];
   if (FIdLast <> null) and (FLastRec.G('id_departament') <> FDep[0]) then
     FDep[1] := FLastRec.G('id_departament');
-  ids := Q.QLoadToVarDynArrayOneCol('select id from w_turv_period where id_departament in (:id1$i, :id2$i)', FDep);
+  ids := Q.QLoadCol('select id from w_turv_period where id_departament in (:id1$i, :id2$i)', FDep);
   users := [];
   for i := 0 to High(ids) do begin
     lock := Q.QLoadRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add like :documadd$s', [myfrm_Dlg_Turv, ids[i].AsString + '-%']);

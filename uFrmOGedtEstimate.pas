@@ -352,14 +352,14 @@ begin
   //если найдено единственнная такая позиция, то поставим группу, соответсвующую типу изделия, если найдено нсколько - очистим группу
   for i := 0 to Frg1.GetCount(False) do begin
     if Frg1.GetValueI('id_group', i, False) = cIDKrep then begin  //Крепёж
-      va2 := Q.QLoadToVarDynArray2('select fullname, id_format from v_or_std_items where name = :name$s and type = 0 and id_format = :f$i', [Frg1.GetValue('name', i, False), FGroupOfItem]);
+      va2 := Q.QLoad('select fullname, id_format from v_or_std_items where name = :name$s and type = 0 and id_format = :f$i', [Frg1.GetValue('name', i, False), FGroupOfItem]);
       if Length(va2) > 0 then begin
         S.ConcatStP(st, Frg1.GetValue('name', i, False) + ' - является изделием!', #13#10);
         Frg1.SetValue('id_group', i, False, IIf(Length(va2) = 1, cIdProduct, null));
       end;
     end
     else begin
-      va2 := Q.QLoadToVarDynArray2('select fullname, id_format from v_or_std_items where name = :name$s and type = 2 and (id_format = 0 or id_format = :f$i)', [Frg1.GetValue('name', i, False), FGroupOfItem]);
+      va2 := Q.QLoad('select fullname, id_format from v_or_std_items where name = :name$s and type = 2 and (id_format = 0 or id_format = :f$i)', [Frg1.GetValue('name', i, False), FGroupOfItem]);
       if Length(va2) > 0 then begin
         S.ConcatStP(st, Frg1.GetValue('name', i, False) + ' - является полуфабрикатом!', #13#10);
         Frg1.SetValue('id_group', i, False, IIf(Length(va2) = 1, cIdSemiproduct, null));
@@ -419,7 +419,7 @@ var
 begin
   Result := False;
   Q.QBeginTrans(True);
-  Q.QIUD(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
+  Q.QSave(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
    'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
    [FIdEstimate, S.IIf(AddParam = 1, ID, null), S.IIf(AddParam = 0, ID, null), False, Date]);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
@@ -445,7 +445,7 @@ end;
 else begin
     //во всех остальных случаях
     //создадим смету
-      Res := Q.QIUD(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
+      Res := Q.QSave(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
        'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
        [IdEstimate, IdStdItem, IdOrderItem, IsEstimateEmpty, Date]);
       if Res = -1 then Break;

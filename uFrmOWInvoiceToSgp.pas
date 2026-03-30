@@ -143,7 +143,7 @@ begin
   FNum:= Cth.GetControlValue(cmbOrder);
   if FNum = '' then Exit;
   //поля табличной части
-  va:=Q.QLoadToVarDynArray2('select id, ornum, project, dt_beg, dt_otgr from orders where ornum = :id$s', [FNum]);
+  va:=Q.QLoad('select id, ornum, project, dt_beg, dt_otgr from orders where ornum = :id$s', [FNum]);
   if Length(va) = 0 then
     Exit;
   FIdOrder:=va[0][0];
@@ -156,7 +156,7 @@ begin
   //проверка - статус ошибки, а по нему установит доступность кнопок
   Verify(nil);
   //формируем табличную часть на основе айди заказа
-  va:=Q.QLoadToVarDynArray2(
+  va:=Q.QLoad(
     'select id, id, slash, fullitemname, qnt, qnt_max, null, null from v_invoice_to_sgp_getitems where id_order = :id$i and qnt > qnt_sgp order by slash',
     [FIdOrder]
   );
@@ -196,7 +196,7 @@ begin
   else begin
     //при просмотре и редактировании загрузим из таблиц
     //заголовочная часть
-    va:=Q.QLoadToVarDynArray2(
+    va:=Q.QLoad(
       'select num, id_order, ornum, project, dt_beg, dt_otgr, dt_m, user_m, dt_s, user_s from v_invoice_to_sgp where id = :id$i',
       [ID]
     );
@@ -216,7 +216,7 @@ begin
       FUserS := User.GetName;
     end;
     //загрузим тело таблицы
-    va:=Q.QLoadToVarDynArray2(
+    va:=Q.QLoad(
       'select id, id_order_item, slash, fullitemname, qnt, null, qnt_m, qnt_s from v_invoice_to_sgp_items where id_invoice = :id$i order by slash',
       [ID]
     );
@@ -247,14 +247,14 @@ begin
       if S.NSt(Frg1.GetValue('qnt_m', i)) <> '' then
         S.ConcatStP(items, Frg1.GetValue('slash', i), ', ');
     Q.QBeginTrans(True);
-    IdInvoice := Q.QIUD(
+    IdInvoice := Q.QSave(
       'i', 'invoice_to_sgp', '',
       'id$i;num$i;id_order$i;dt_m$d;id_user_m$s;state$i;items$s',
       [-1, FNum, FIdOrder, FDtM, User.GetId, 0, Copy(items, 1, 4000)]
     );
     for i := 0 to Frg1.GetCount - 1 do
       if S.NSt(Frg1.GetValue('qnt_m', i)) <> '' then
-        if Q.QIUD(
+        if Q.QSave(
           'i', 'invoice_to_sgp_items', '', 'id$i;id_invoice$i;id_order_item$i;qnt_m$f',
           [-1, IdInvoice, Frg1.GetValue('id_order_item', i), Frg1.GetValue('qnt_m', i)]
         ) < 0 then
@@ -272,12 +272,12 @@ begin
     end
     else S.ConcatStP(items, Frg1.GetValue('slash', i) + '(П)', ', ');
   end;
-  Q.QIUD(
+  Q.QSave(
     'u', 'invoice_to_sgp', '', 'id$i;dt_s$d;id_user_s$s;state$i;items$s',
     [ID, FDtS, User.GetId, FState, Copy(items, 1, 4000)]
   );
   for i := 0 to Frg1.GetCount - 1 do begin
-   if Q.QIUD(
+   if Q.QSave(
         'u', 'invoice_to_sgp_items', '', 'id$i;qnt_s$f',
         [Frg1.GetValue('id', i), Frg1.GetValue('qnt_s', i)]
       ) < 0 then

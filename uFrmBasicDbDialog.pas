@@ -58,7 +58,7 @@ begin
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
     end;
-  CtrlValues := Q.QLoadToVarDynArray2(Q.QSIUDSql('s', View, FieldsSt), [id]);
+  CtrlValues := Q.QLoad(Q.QGetSql('s', View, FieldsSt), [id]);
   if Length(CtrlValues) = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -94,7 +94,7 @@ begin
   UseTransaction := not Q.AdoConnection.InTransaction;
   if UseTransaction then
     Q.QBeginTrans(True);
-  res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSave2, CtrlValues2);
+  res := Q.QSave(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSave2, CtrlValues2);
   IdAfterInsert:= res;
   if not (Mode in [fEdit, fDelete]) then
     ID := res;

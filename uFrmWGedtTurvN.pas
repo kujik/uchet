@@ -1155,8 +1155,8 @@ begin
   else if Mode = mbtDivisionScedule then begin
     if d = -1 then
       d := 1;
-    va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
-    va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
+    va3 := Q.QLoadCol('select code from ref_work_schedules where active = 1 order by code', []);
+    va4 := Q.QLoadCol('select id from ref_work_schedules where active = 1 order by code', []);
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntComboLk, 'График:','1:50']],
@@ -1176,8 +1176,8 @@ begin
   else if Mode = mbtWorkerScedule then begin
     if d = -1 then
       d := 1;
-    va3 := Q.QLoadToVarDynArrayOneCol('select code from ref_work_schedules where active = 1 order by code', []);
-    va4 := Q.QLoadToVarDynArrayOneCol('select id from ref_work_schedules where active = 1 order by code', []);
+    va3 := Q.QLoadCol('select code from ref_work_schedules where active = 1 order by code', []);
+    va4 := Q.QLoadCol('select id from ref_work_schedules where active = 1 order by code', []);
     va1 := [VarArrayOf([null, VarArrayOf(va3), VarArrayOf(va4)])];
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~' + st, 500, 80,
       [[cntComboLk, 'График:','0:50']],
@@ -1353,7 +1353,7 @@ begin
     [FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt'), FTurv.Cells[pos].G(d, 'id_employee'), FTurv.Cells[pos].G(d, 'id_employee_properties'), FTurv.Cells[pos].G(d, 'dt')]
   );
   //запишем данные в основную таблицу
-  st := Q.QSIUDSql('Q', 'w_turv_day', A.Implode(Fields, ';')) + ' where id_employee_properties = :ide$i and dt = :dt$d';
+  st := Q.QGetSql('Q', 'w_turv_day', A.Implode(Fields, ';')) + ' where id_employee_properties = :ide$i and dt = :dt$d';
   Fields := Fields + ['id_employee_properties$i', 'dt$d'];
   Values := [];
   for i := 0 to High(Fields) do

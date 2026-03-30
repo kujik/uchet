@@ -349,7 +349,7 @@ var
   i: Integer;
   va: TVarDynArray;
 begin
-  va := Q.QLoadToVarDynArrayOneCol('select hours from w_schedule_templates where id_schedule = :id$i order by pos', [ID]);
+  va := Q.QLoadCol('select hours from w_schedule_templates where id_schedule = :id$i order by pos', [ID]);
   SetLength(FTemplate, 1);
   SetLength(FTemplate[0], 33);
   FTemplate[0][0] := 'Время работы:';
@@ -384,11 +384,11 @@ begin
     y := FData[Yn].Year;
     tbcYear.Tabs[Yn] := IntToStr(y);
     //часы за каждый день года
-    va1 := Q.QLoadToVarDynArray2('select dt, hours from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
+    va1 := Q.QLoad('select dt, hours from w_schedule_hours where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
     //согласования и итоговые часы за каждый месяц
-    va2 := Q.QLoadToVarDynArray2('select dt, hours, approved from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
+    va2 := Q.QLoad('select dt, hours, approved from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]);
     //получим календарь за этот месяц  (1-выходной, 2-сокращенный, 3-рабочий)
-    va3 := Q.QLoadToVarDynArray2('select dt, type, descr from ref_holidays where extract(year from dt) = :year$i', [y]);
+    va3 := Q.QLoad('select dt, type, descr from ref_holidays where extract(year from dt) = :year$i', [y]);
     SetLength(FData[Yn].Hours, 0);
     SetLength(FData[Yn].Hours, 12);
     SetLength(FData[Yn].Holydays, 12);

@@ -63,7 +63,7 @@ begin
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[-mbtCustom_Revision,User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions,1,'Журнал ревизий'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtCustom_JRevisions]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbFormat', '', 50, yrefC, 400);
-  FFormats:=Q.QLoadToVarDynArray2(
+  FFormats:=Q.QLoad(
     'select name, id from (select ''[все]'' as name, -1000 as id, 0 as srt from dual union all select name, id, 1 as srt from v_sgp_sell_formats order by srt, name)', []
   );
   Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbFormat')), FFormats);

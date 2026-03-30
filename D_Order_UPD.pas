@@ -77,7 +77,7 @@ function TDlg_Order_UPD.ShowDialog(aID: Variant): Boolean;
 begin
   Result:=False;
   ID:= aID;
-  va2:=Q.QLoadToVarDynArray2('select id, dt_upd_reg, dt_upd, upd, prefix, dt_end, dt_beg, id_type from orders where id = :id$i', [ID]);
+  va2:=Q.QLoad('select id, dt_upd_reg, dt_upd, upd, prefix, dt_end, dt_beg, id_type from orders where id = :id$i', [ID]);
   //выходим без диалога для заказов не того префикса, если заказ не найден, если рекламация
   if (Length(va2) = 0)or not A.InArray(va2[0][4], ['М','О','Ф'])or(va2[0][7] = 2) then Exit;
   //если заказ закрыт или нет прав - откроем на просмотр

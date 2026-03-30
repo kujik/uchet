@@ -36,7 +36,7 @@ begin
   {$ENDIF}
   if Module.DevFileExists then
     Exit;
-  var va := Q.QLoadToVarDynArrayOneRow('select module_version, check_module_version from adm_modules where id = :id$i', [cMainModule]) + [Module.VersionString];
+  var va := Q.QLoadRow0('select module_version, check_module_version from adm_modules where id = :id$i', [cMainModule]) + [Module.VersionString];
   if (va[1] <> 1) or (va[2] = va[0].AsString) then
     Exit;
   FrmXWNonActualVersion := TFrmXWNonActualVersion.Create(nil);

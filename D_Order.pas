@@ -573,7 +573,7 @@ begin
         S.ConcatStP(FieldsL, FieldsArr[i][cFieldName], ', ');
     end;
     //получим данные из основной таблицы
-    va1 := Q.QLoadToVarDynArray2('select ' + FieldsL + ' from v_orders where id = :id$i', [ID]);
+    va1 := Q.QLoad('select ' + FieldsL + ' from v_orders where id = :id$i', [ID]);
     //заполним начальные значения полей
     j := 0;
     for i := 0 to High(FieldsArr) do
@@ -664,7 +664,7 @@ begin
   Id_Org_Old := FieldsArr[GetFieldsArrPos('id_organization')][cBegValue];
 
   if FNewOrderType = 1 then begin
-    FOrderTypes := Q.QLoadToVarDynArray2(
+    FOrderTypes := Q.QLoad(
       'select id, need_ref, is_complaint, (select count(*) from order_reglaments where instr('','' || ids_types || '','',  '','' || t.id || '','') > 0 and active = 1) '+
       'from v_order_types t '+
       'where (active = 1 or id = :id$i) order by posall',
@@ -681,17 +681,17 @@ begin
   Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], cmb_Organization, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_Organization, cntComboLK, 1);
-  Organizations := Q.QLoadToVarDynArray2('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
+  Organizations := Q.QLoad('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [S.NInt(FieldsArr[GetFieldsArrPos('area'), cBegValue])], cmb_Area, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [FieldsArr[GetFieldsArrPos('project'), cBegValue]], cmb_Project, cntComboE);
-  Customers := Q.QLoadToVarDynArray2('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
+  Customers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
   cmb_CustomerName.Images := Il_Columns;
   cmb_CustomerMan.Images := Il_Columns;
   cmb_CustomerLegalName.Images := Il_Columns;
   for i := 0 to High(Customers) do
     cmb_CustomerName.Items.Add(Customers[i][0]);
-  CustomerContacts := Q.QLoadToVarDynArray2('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
-  CustomerLegal := Q.QLoadToVarDynArray2('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
+  CustomerContacts := Q.QLoad('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
+  CustomerLegal := Q.QLoad('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
 
   //if not(Mode in [fDelete, fView]) then
   GetEstimateList;
@@ -1272,7 +1272,7 @@ begin
     Fields := Fields + ';path$s';
     Values := Values + [OrderPath];
     SqlMode := Q.QFModeToIUD(Mode);
-    res := Q.QIUD(SqlMode, 'orders', '', Fields, Values);
+    res := Q.QSave(SqlMode, 'orders', '', Fields, Values);
   //если вставка запрос вернул айди
     if SqlMode = 'i' then ID := res;
   //для шаблона айди будет меньше 0, но -1 это признак ошибки, т.е. меньше -1 это нормаs
@@ -1591,7 +1591,7 @@ var
   st: string;
 begin
   //причины рекламаций  по данному заказу
-  va2 := Q.QLoadToVarDynArray2('select id, id_complaint_reason from order_complaints where id_order = :id$i', [ID]);
+  va2 := Q.QLoad('select id, id_complaint_reason from order_complaints where id_order = :id$i', [ID]);
   st := '';
   //строка айди комплайнтов, которые есть по заказу, чтобы загрузить их в случае, если они уже не активны в справочнике
   for i := 0 to High(va2) do
@@ -1599,7 +1599,7 @@ begin
   if st <> '' then
     st := ' or id in (' + st + ')';
   //справочник причин рекламаций
-  Complaints := Q.QLoadToVarDynArray2('select id, name, null, null from ref_complaint_reasons ' + 'where active = 1' + st + 'order by name', []                          //:ids$s = "102,102" - нельзя пертедать в виде параметра, происходит ошибка
+  Complaints := Q.QLoad('select id, name, null, null from ref_complaint_reasons ' + 'where active = 1' + st + 'order by name', []                          //:ids$s = "102,102" - нельзя пертедать в виде параметра, происходит ошибка
   );
   for i := 0 to High(Complaints) do begin
     j := A.PosInArray(Complaints[i][0], va2, 1);
@@ -1655,7 +1655,7 @@ begin
   end;}
   //загрузим весь массив стандртных смет
   //если новый заказ то только активные (это кривовато но пока так!!!)
-  EstimateDirs := Q.QLoadToVarDynArray2('select f.name || ''\'' || e.name || '''' as estimate, e.id as id, e.prefix ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.id > 1 ' + S.IIFStr(Mode = fAdd, 'and e.active = 1 and f.active = 1', '') + 'order by 1 asc', []);
+  EstimateDirs := Q.QLoad('select f.name || ''\'' || e.name || '''' as estimate, e.id as id, e.prefix ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.id > 1 ' + S.IIFStr(Mode = fAdd, 'and e.active = 1 and f.active = 1', '') + 'order by 1 asc', []);
 end;
 
 procedure TDlg_Order.SetEstimateList(PreserveValue: Boolean = False);
@@ -1726,7 +1726,7 @@ begin
   ['name0001', 0,  1,1,1,0,0,0,0,0,0,  0,   null],
   ['name0002sgp', 1,  0,0,0,0,0,0,0,0,0,  0,   1000]
   ];}
-{  StdItems:=QLoadToVarDynArray2(
+{  StdItems:=QLoad(
     'select name, id_nomencl from dv.nomenclatura where id_group = 2996 order by name asc',
     null
   );  }
@@ -1735,8 +1735,8 @@ begin
   StdItems := [];
   v := Cth.GetControlValue(cmb_EstimatePath);
   if S.NSt(v) = '' then Exit;
-//  StdItems := Q.QLoadToVarDynArray2('select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp ' + 'from or_std_items where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' + 'order by name asc', [Cth.GetControlValue(cmb_EstimatePath)]);
-  StdItems := Q.QLoadToVarDynArray2(
+//  StdItems := Q.QLoad('select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp ' + 'from or_std_items where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' + 'order by name asc', [Cth.GetControlValue(cmb_EstimatePath)]);
+  StdItems := Q.QLoad(
     'select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp, wo_estimate ' +
     'from or_std_items '+
     'where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' +
@@ -1778,13 +1778,13 @@ var
   st: string;
 begin
   if Mode <> fAdd then
-    va2 := Q.QLoadToVarDynArray2('select distinct id_kns from order_items where id_kns is not null and id_kns >= 0 and id_order = :ID$i', [FieldsArr[0][cBegValue]]);
+    va2 := Q.QLoad('select distinct id_kns from order_items where id_kns is not null and id_kns >= 0 and id_order = :ID$i', [FieldsArr[0][cBegValue]]);
   st := '';
   for i := 0 to High(va2) do
     S.ConcatStP(st, VarToStr(va2[i][0]), ',');
   if st <> '' then
     st := ' or (id in (' + st + ')) ';
-  va := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1)' + st + 'order by name asc', [myjobKNS]);
+  va := Q.QLoad('select name, id from adm_users where (job = :id_job$i and active = 1)' + st + 'order by name asc', [myjobKNS]);
   Gh.GetGridColumn(DBGridEh1, 'kns').PickList.Add('[нет]');
   Gh.GetGridColumn(DBGridEh1, 'kns').KeyList.Add('-100');
   Gh.GetGridColumn(DBGridEh1, 'kns').PickList.Add('[конструктор]');
@@ -1794,13 +1794,13 @@ begin
     Gh.GetGridColumn(DBGridEh1, 'kns').KeyList.Add(S.NSt(va[i][1]));
   end;
   if Mode <> fAdd then
-    va2 := Q.QLoadToVarDynArray2('select distinct id_thn from order_items where id_thn is not null and id_thn >= 0 and id_order = :ID$i', [FieldsArr[0][cBegValue]]);
+    va2 := Q.QLoad('select distinct id_thn from order_items where id_thn is not null and id_thn >= 0 and id_order = :ID$i', [FieldsArr[0][cBegValue]]);
   st := '';
   for i := 0 to High(va2) do
     S.ConcatStP(st, VarToStr(va2[i][0]), ',');
   if st <> '' then
     st := ' or (id in (' + st + ')) ';
-  va := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1)' + st + 'order by name asc', [myjobTHN]);
+  va := Q.QLoad('select name, id from adm_users where (job = :id_job$i and active = 1)' + st + 'order by name asc', [myjobTHN]);
   Gh.GetGridColumn(DBGridEh1, 'thn').PickList.Add('[нет]');
   Gh.GetGridColumn(DBGridEh1, 'thn').KeyList.Add('-100');
   Gh.GetGridColumn(DBGridEh1, 'thn').PickList.Add('[технолог]');
@@ -2663,7 +2663,7 @@ begin
             va[3] := id_itm_izdel;
         end;              *)
       //запись строки в таблицу позиций заказа
-        Res := Q.QIUD(S.IIFStr(va[0] = null, 'i', 'u')[1], 'order_items', '', Fields, VarArrayOf(va));
+        Res := Q.QSave(S.IIFStr(va[0] = null, 'i', 'u')[1], 'order_items', '', Fields, VarArrayOf(va));
         if Res < 0 then  Break;
       //добавим в массив айди этой позиции в списке изделий заказа,
       //для вызова после сохранения заказа процедуру коррекции смет, по данным позициям
@@ -2761,7 +2761,7 @@ begin
   //строка полей для запроса
   st := A.Implode(Fdb, ',');
   //запрос на чтение
-  va1 := Q.QLoadToVarDynArray2('select ' + st + ' from v_order_items where id_order = :id_order$i order by pos', [FieldsArr[0][cBegValue]]);
+  va1 := Q.QLoad('select ' + st + ' from v_order_items where id_order = :id_order$i order by pos', [FieldsArr[0][cBegValue]]);
   //массив старых значений, размерности его и загруженного совпадаю, но не делаем присваивание так ка при загрузке в мемтейбл может быть пересчет значений
   SetLength(OldTableValues, Length(va1));
   MemTableEh1.DisableControls;
@@ -3667,7 +3667,7 @@ begin
   st := '';
   //так почему-то странная ошибка not BCD value
   //v:=QSelectOneRow('select id_group from dv.groups where groupname = :name$s', Group_NomFromCAD_Name)[0];
-  ar2 := q.QLoadToVarDynArray2('select id_group from dv.groups where groupname = :name$s', [Group_NomFromCAD_Name]);
+  ar2 := q.QLoad('select id_group from dv.groups where groupname = :name$s', [Group_NomFromCAD_Name]);
   if ar2[0, 0] = null then
     st := 'Группа ' + Group_NomFromCAD_Name + ' в ИТМ не найдена.'
   else if ar2[0, 0] <> Group_NomFromCAD_Id then

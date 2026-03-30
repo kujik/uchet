@@ -80,7 +80,7 @@ begin
   end
   else begin
     FUserIDs := S.NSt(v[1]);
-    vn := Q.QLoadToVarDynArray2('select name from adm_users where id in (' + S.IIFStr(FUserIDs = '', '-999', FUserIDs) + ') order by name', []);
+    vn := Q.QLoad('select name from adm_users where id in (' + S.IIFStr(FUserIDs = '', '-999', FUserIDs) + ') order by name', []);
     FNames := '';
     for i := 0 to High(vn) do
       S.ConcatStP(FNames, vn[i][0], ';');

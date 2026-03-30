@@ -202,14 +202,14 @@ begin
   OrderArchiveFilePath:= v[1];
   OrderCurrentFilePath:= v[2];
   //OrderEstimateFilePath:= v[3];
-  CfgPc:=Q.QLoadToVarDynArray2('select ' + mycfgPCsum_autoagreed + ',' + mycfgPCsum_need_req + ' from sn_calendar_cfg', []);
+  CfgPc:=Q.QLoad('select ' + mycfgPCsum_autoagreed + ',' + mycfgPCsum_need_req + ' from sn_calendar_cfg', []);
   CfgPc:=CfgPc + [[mycfgPCsum_autoagreed, mycfgPCsum_need_req]];
 {  PC_AutoAgreed:= v[0];
   PC_ReqSum:= v[1];}
   CfgPick:=Q.QLoadRow('select ' + mycfgKPick_font_size + ' from pick_cfg', []); //, path_to_files
   CfgPick:=CfgPick + [[mycfgKPick_font_size]];
 //  Pick_FilePath:= v[1];
-  CfgW:=Q.QLoadToVarDynArray2('select ' +
+  CfgW:=Q.QLoad('select ' +
     A.Implode([
       mycfgWtime_autoagreed, mycfgWtime_dinner_1, mycfgWtime_dinner_2, mycfgWtime_beg_2, mycfgWtime_beg_diff_2, mycfgWpath_to_payrolls
       ], ',') +

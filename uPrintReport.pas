@@ -259,7 +259,7 @@ begin
   try
   frxReport1.LoadFromFile(PrintReport.GetReportFileFr3('Pick_Item'), True);
   FieldNames:='id;name;article;colorname;description;wi;di;hi;wp;dp;hp;weight;filepath';
-  v:=Q.QLoadRow(Q.QSIUDSql('s', 'v_pick_items', FieldNames), [ID]);
+  v:=Q.QLoadRow(Q.QGetSql('s', 'v_pick_items', FieldNames), [ID]);
   if v[0] = null then begin MyWarningMessage('Это изделие не найдено в базе данных!'); exit; end;
   SetMemo('Наименование',v[1]);
   SetMemo('Артикул',v[2]);
@@ -339,7 +339,7 @@ st:=MemTableEh1.FieldByName('qnt_p').AsString;
       va2:=va2 + [[MemTableEh1.FieldByName('slash').AsString, MemTableEh1.FieldByName('itemname').AsString]];
     end;
   end;
-//  va2:=QLoadToVarDynArray2('select slash, itemname from v_order_items where id_order = :id_order$i', ID);
+//  va2:=QLoad('select slash, itemname from v_order_items where id_order = :id_order$i', ID);
   //количество страниц, включая неполные
   e:=Copyes / CntOnPage;
   if e > trunc(e) then pages:=trunc(e)+1 else pages:=trunc(e);

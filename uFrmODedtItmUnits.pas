@@ -70,7 +70,7 @@ begin
   if Mode = fDelete then
     Exit;
   st1 := S.ToUpper(StringReplace(StringReplace(edt_Name_Unit.Text, ' ', '', [rfReplaceAll]), '.', '', [rfReplaceAll]));
-  va := Q.QLoadToVarDynArrayOneCol('select name_unit from dv.unit where id_unit <> :id$i', [id]);
+  va := Q.QLoadCol('select name_unit from dv.unit where id_unit <> :id$i', [id]);
   i := 0;
   for i := 0 to High(va) do
     if st1 = S.ToUpper(StringReplace(StringReplace(va[i], ' ', '', [rfReplaceAll]), '.', '', [rfReplaceAll])) then

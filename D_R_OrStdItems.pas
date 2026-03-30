@@ -149,7 +149,7 @@ begin
   if ID_Estimate = 1 then va[3]:=1;
   //читаем из бд
   if Mode <> fAdd then begin
-    va:=Q.QSelectOneRow(Q.QSIUDSql('s', 'or_std_items', Fields), [ID]);
+    va:=Q.QSelectOneRow(Q.QGetSql('s', 'or_std_items', Fields), [ID]);
     if va[0] = null then begin
       MsgRecordIsDeleted;
       Exit;
@@ -324,7 +324,7 @@ begin
     Exit;
   end;
   //сохраним изделие в таблице
-  res:= Q.QIUD(Q.QFModeToIUD(Mode), 'or_std_items', '', Fields,
+  res:= Q.QSave(Q.QFModeToIUD(Mode), 'or_std_items', '', Fields,
     [ID, ID_Estimate, Trim(edt_name.Text), Cth.GetControlValue(chb_Resale),
     Cth.GetControlValue(chb_R_1), Cth.GetControlValue(chb_R_2), Cth.GetControlValue(chb_R_3), Cth.GetControlValue(chb_R_4), Cth.GetControlValue(chb_R_5), Cth.GetControlValue(chb_R_6),
     Cth.GetControlValue(nedt_Price), Cth.GetControlValue(nedt_PricePP), Cth.GetControlValue(chb_SetOfPan)]

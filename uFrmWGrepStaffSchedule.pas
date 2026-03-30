@@ -174,13 +174,13 @@ begin
     Q.QSetContextValue('staff_schedule_area', '');
   end;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
-  Q.QLoadFromQuery(
+  Q.QLoad(
     'select rownum, 0 as is_title, id_job, id_division, office, job, division, qnt, qnt_plan, qnt_need, schedule, '+
     'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
     'from v_staff_schedule',
   [], na);
   dt2 := Turv.GetTurvBegDate(Turv.GetTurvBegDate(Turv.GetTurvBegDate(Date)));
-  ArSalary := Q.QLoadToVarDynArray2(
+  ArSalary := Q.QLoad(
     'select pi.id_job, round(avg((nvl(itog1, 0) - nvl(otpusk,0) - nvl(bl,0) - nvl(penalty,0)) / turv * norm) * 2) sumall ' +
     'from v_payroll_item pi, v_staff_schedule ss ' +
     'where ' +
@@ -192,7 +192,7 @@ begin
     [EncodeDate(2025, 5, 1), EncodeDate(2025, 7, 15)]
   );
 {
-  ArSalaryPlan := Q.QLoadToVarDynArray2(
+  ArSalaryPlan := Q.QLoad(
     'select id_division, id_job, value from ref_staff_schedule where dt = ( '+
     'select max(dt) from ref_staff_schedule '+
     'where dt < :dt$d and type = 2 '+
@@ -285,7 +285,7 @@ var
   EmplCn: TVarDynArray;
   e1, e2: Extended;
 begin
-  va2:=Q.QLoadToVarDynArray2('select id, name from ref_jobs', []);
+  va2:=Q.QLoad('select id, name from ref_jobs', []);
   //выберем файл
   MyData.OpenDialog1.Filter := 'файлы Excel (*.xlsx)|*.xlsx';
   if not MyData.OpenDialog1.Execute then
@@ -293,7 +293,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  EmplCn := Q.QLoadCol('select id from ref_workers where concurrent_employee = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];

@@ -82,7 +82,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_employee, personnel_number, dt, employee, is_finalized from v_w_advance_transfer where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_employee, personnel_number, dt, employee, is_finalized from v_w_advance_transfer where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -160,7 +160,7 @@ begin
   //обновим в бд все строки таблицы
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_advance_transfer_item', '', 'id$i;id_advance_transfer$i', [-1, ID]);
+      var idn := Q.QSave('i', 'w_advance_transfer_item', '', 'id$i;id_advance_transfer$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     f := A.Explode(cFieldsS, ';');
@@ -170,7 +170,7 @@ begin
     for j := 0 to High(f) do begin
       va := va + [Frg1.GetValue(A.Explode(f[j], '$')[0], i, False)];
     end;
-    Q.QIUD('u', 'w_advance_transfer_item', '', cFieldsS, va);
+    Q.QSave('u', 'w_advance_transfer_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
   Result := Q.CommitSuccess;
@@ -220,7 +220,7 @@ function TFrmWGedtAdvanceTransfer.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_advance_transfer_item',
+  Q.QLoad(Q.QGetSql('a', 'v_w_advance_transfer_item',
     cFieldsS + ';' + cFieldsL) + ' where id_advance_transfer = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, personnel_number',
     [ID], na
   );
@@ -251,7 +251,7 @@ begin
   flds2 := ['employee', 'personnel_number'];
 
   if FPayrollParams.G('id_employee') <> null then
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, personnel_number, max(employee) as employee, sum(total_pay) as total_pay, null as temp ' +
       'from v_w_advance_calc_item where id_employee = :p1$i and personnel_number = :p3$s and dt = :dt$d and id_target_employee is not null ' +
       'group by id_employee, personnel_number order by employee',
@@ -259,7 +259,7 @@ begin
       na1
     )
   else
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, personnel_number, ' +
       'max(employee) as employee, sum(total_pay) as total_pay, null as temp ' +
       'from v_w_advance_calc_item where dt = :dt$d and id_target_employee is null ' +

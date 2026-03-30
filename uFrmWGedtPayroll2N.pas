@@ -137,7 +137,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_departament, id_employee, id_organization, personnel_number, dt1, dt2, departament, employee, is_office, calc_method, overtime_method, is_finalized from v_w_payroll_calc where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_departament, id_employee, id_organization, personnel_number, dt1, dt2, departament, employee, is_office, calc_method, overtime_method, is_finalized from v_w_payroll_calc where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -293,11 +293,11 @@ function TFrmWGedtPayroll2N.GetDataFromDb: Integer;
 var
   na, nadel : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
+  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
   if FPayrollParams.G('id_employee') = null then begin
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select '+
       '  c.id_employee, c.id_organization, c.personnel_number '+
       'from '+
@@ -332,7 +332,7 @@ begin
   if Frg1.GetCount(False) <> 0 then
     Exit;
   if FPayrollParams.G('id_employee') = null then begin
-    Q.QLoadFromQuery('select ' +
+    Q.QLoad('select ' +
      'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
      'employee, organization, job, schedulecode, ' +
      'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
@@ -343,7 +343,7 @@ begin
      'order by job, employee, schedulecode, organization, personnel_number',
       [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na
     );
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select '+
       '  c.id_employee, c.id_organization, c.personnel_number '+
       'from '+
@@ -365,7 +365,7 @@ begin
         end;
   end
   else begin
-    Q.QLoadFromQuery('select ' +
+    Q.QLoad('select ' +
      'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
      'employee, organization, job, schedulecode, ' +
      'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
@@ -392,7 +392,7 @@ var
 begin
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     //if Frg1.GetValue('from_first_period', i ,False) = 1 then begin
-      Q.QLoadFromQuery('select ' +
+      Q.QLoad('select ' +
        'id_employee, id_job, id_schedule, id_organization, personnel_number, monthly_hours_norm, period_hours_norm as period_hours_norm1, ' +
        'employee, organization, job, schedulecode, ' +
        'hours_worked as hours_worked1, overtime as overtime1, ors as ors1, ors_pay as ors_pay1, base_pay as base_pay1, ext_pay as ext_pay1, total_pay as total_pay1, ' +
@@ -426,7 +426,7 @@ var
 begin
   if (FPayrollParams.G('calc_method') <> null) and (FPayrollParams.G('overtime_method') <> null) then
     Exit;
-  Q.QLoadFromQuery('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
+  Q.QLoad('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt1 = :dt1$d and id_employee is null',
 //    [FPayrollParams.G('id_departament'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)], na);
     [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt1'), -1)], na);
   if na.Count = 0 then
@@ -484,7 +484,7 @@ begin
   if FPayrollParams.G('id_employee') = null then begin
 //    va2 := Q.QSelectOneCol(('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
     //статусы работников, по которым есть ведомости увольнения (за первый период для ведомости1 и за любой для вендомости2)
-    va := Q.QLoadToVarDynArrayOneCol(
+    va := Q.QLoadCol(
       'select '+
       '  p.id '+
       'from '+
@@ -501,7 +501,7 @@ begin
     if Length(va) <> 0 then
       WhereSt := 'and not id in (' + A.Implode(va, ',') + ')';
       FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 1);
-{    Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_departament = :id_departament$i and dt1 := dt1$d',
+{    Q.QLoad(Q.QGetSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_departament = :id_departament$i and dt1 := dt1$d',
       [FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')], POld
     );}
 
@@ -1015,7 +1015,7 @@ begin
     Q.QExecSql('delete from w_payroll_calc_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_payroll_calc_item', '', 'id$i;id_payroll_calc$i', [-1, ID]);
+      var idn := Q.QSave('i', 'w_payroll_calc_item', '', 'id$i;id_payroll_calc$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     f := A.Explode(cFieldsS, ';');
@@ -1025,7 +1025,7 @@ begin
     for j := 0 to High(f) do begin
       va := va + [Frg1.GetValue(A.Explode(f[j],'$')[0], i, False)];
     end;
-    Q.QIUD('u', 'w_payroll_calc_item', '', cFieldsS, va);
+    Q.QSave('u', 'w_payroll_calc_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
 end;

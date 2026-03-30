@@ -92,9 +92,9 @@ begin
  dt1 := Frg1.GetControlValue('edtd1');
   dt2 := Frg1.GetControlValue('edtd2');
   //профессии   0-айди, 1-наименование, 2-количество, 3-приняты, 4-уволены, 5-потребность, 6-дата размещенияя заявки
-  jobs := Q.QLoadToVarDynArray2('select id, name, 0, 0, 0, 0, null from ref_jobs order by name', []);
+  jobs := Q.QLoad('select id, name, 0, 0, 0, 0, null from ref_jobs order by name', []);
   //запрос. сортировка принципиальна
-  v := Q.QLoadToVarDynArray2('select id_division, id_worker, workername, id_job, job, status, dt from v_j_worker_status order by workername, dt, job, id_division', []);
+  v := Q.QLoad('select id_division, id_worker, workername, id_job, job, status, dt from v_j_worker_status order by workername, dt, job, id_division', []);
   //проходим по массиву статусов, отсортирован по работнику, потом по дате
   for i := 0 to High(v) do begin
     //только до второй даты - тк мы получаем состав подразделений на конечную дату, а движение кадров за период между датами
@@ -124,7 +124,7 @@ begin
     end;
   end;
   //получим все вакансии
-  vac := Q.QLoadToVarDynArray2('select id_job, qnt, dt_beg, dt_end from j_vacancy order by id_job, dt_beg', []);
+  vac := Q.QLoad('select id_job, qnt, dt_beg, dt_end from j_vacancy order by id_job, dt_beg', []);
   for i := 0 to High(vac) do begin
     //не вносим, если конечная дата раньше начала периода, или же начальная после конца периода
     if not ((vac[i][2] > dt2) or (vac[i][3] <> null) and (vac[i][3] < dt1)) then begin

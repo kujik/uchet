@@ -120,7 +120,7 @@ begin
   edtPwd.Enabled := chbChPwd.Checked;
   edtPwd2.Enabled := chbChPwd.Checked;
   SetEmailAddr;
-  va2 := Q.QLoadToVarDynArray2('select id_role from adm_user_roles where id_user = :id$i', [S.IIf(UMode = fAdd, -9999, FrgUsers.Id)]);
+  va2 := Q.QLoad('select id_role from adm_user_roles where id_user = :id$i', [S.IIf(UMode = fAdd, -9999, FrgUsers.Id)]);
   for i := 0 to FrgUserRoles.GetCount(False) - 1 do
     FrgUserRoles.SetValue('value', i, False, S.IIf(A.PosInArray(FrgUserRoles.GetValue('id', i, False), va2, 0) >= 0, 1, 0));
   FrgUserRoles.DbGridEh1.Repaint;
@@ -169,7 +169,7 @@ begin
     email := '';
     emailauto := 1;
   end;
-  res := Q.QIUD(VartoStr(S.IIf(UMode = fEdit, 'u', S.IIf((UMode = fAdd) or (UMode = fCopy), 'i', 'd')))[1],
+  res := Q.QSave(VartoStr(S.IIf(UMode = fEdit, 'u', S.IIf((UMode = fAdd) or (UMode = fCopy), 'i', 'd')))[1],
     'adm_users', 'sq_adm_users', 'id;name;login;active;autologin;job;email;emailauto;job_comm;idletime',
     [id, edtname.value, edtlogin.value, Cth.GetControlValue(chbActive), Cth.GetControlValue(chbAutoLogin),
     cmbJob.ItemIndex, email, emailauto, Cth.GetControlValue(edtJobComm), Cth.GetControlValue(nedtIdle)
@@ -204,7 +204,7 @@ begin
     Exit;
   Cth.SetControlValue(FrgRights, 'LbRoleName', 'Роль: ' + FrgRoles.GetValue('name'));
   LastRoleID := FrgRoles.ID;
-  va2 := Q.QLoadToVarDynArray2('select rights from adm_roles where id=:id$i', [LastRoleID]);
+  va2 := Q.QLoad('select rights from adm_roles where id=:id$i', [LastRoleID]);
   for i := 0 to FrgRights.GetCount(False) - 1 do
     if S.InCommaStr(FrgRights.GetValue('rname', i, False), VarToStr(va2[0][0]))
       then FrgRights.SetValue('value', i, False, 1)
@@ -304,23 +304,23 @@ begin
     Exit;
   idr := FrgRoles.ID;
   if Tag = mbtCopy then begin
-    va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles where id = :id$i', [FrgRoles.ID]);
-    idr := Q.QIUD('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, va2[0][1] + ' (копия)', va2[0][2]]);
+    va2 := Q.QLoad('select id, name, rights from adm_roles where id = :id$i', [FrgRoles.ID]);
+    idr := Q.QSave('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, va2[0][1] + ' (копия)', va2[0][2]]);
     b := True;
   end;
   if Tag = mbtAdd then begin
-    idr := Q.QIUD('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, 'Новая роль', '']);
+    idr := Q.QSave('i', 'adm_roles', 'sq_adm_roles', 'id$i;name$s;rights$s', [-100, 'Новая роль', '']);
     b := True;
   end;
   if Tag = mbtDelete then begin
     if MyQuestionMessage('Удалить роль?') <> mrYes then
       Exit;
-    idr := Q.QIUD('d', 'adm_roles', '', 'id$i', [FrgRoles.ID]);
+    idr := Q.QSave('d', 'adm_roles', '', 'id$i', [FrgRoles.ID]);
     b := True;
   end;
   if not b then
     Exit;
-  va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
+  va2 := Q.QLoad('select id, name, rights from adm_roles order by name', []);
   FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
   FrgRoles.RePaint;
   FrgRoles.MemTableEh1.Locate('id', idr, []);
@@ -335,7 +335,7 @@ begin
   if idr <= 0 then
     Exit;
   Q.QExecSql('update adm_roles set name = :name$s where id = :id$i', [Value, idr]);
-  va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
+  va2 := Q.QLoad('select id, name, rights from adm_roles order by name', []);
   FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
   FrgRoles.RePaint;
   FrgRoles.MemTableEh1.Locate('id', idr, []);
@@ -420,7 +420,7 @@ begin
   FrgUserRoles.Opt.Caption := 'Роли пользователя';
   FrgUserRoles.Opt.SetDataMode(myogdmFromArray);
   FrgUserRoles.Prepare;
-  va2 := Q.QLoadToVarDynArray2('select id, name, 0 as value from adm_roles order by name', []);
+  va2 := Q.QLoad('select id, name, 0 as value from adm_roles order by name', []);
   FrgUserRoles.LoadSourceDataFromArray(va2, '', '', True);
 
   pnlRTop.Height := FrgUsers.pnlTop.Height;
@@ -443,7 +443,7 @@ begin
   FrgRoles.Opt.SetButtons(1,[[mbtEdit],[mbtAdd],[mbtCopy],[mbtDelete]]);
   FrgRoles.Opt.SetDataMode(myogdmFromArray);
   FrgRoles.Prepare;
-  va2 := Q.QLoadToVarDynArray2('select id, name, rights from adm_roles order by name', []);
+  va2 := Q.QLoad('select id, name, rights from adm_roles order by name', []);
   FrgRoles.LoadSourceDataFromArray(va2, '', '', True);
 
   FrgRights.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef + [myogGridLabels];

@@ -128,7 +128,7 @@ begin
 
   //читаем данные из вьюхи
   Fields:='id;dt;modulename;ver;compile_dt;userlogin;general;mashineinfo;message;sql;sqlparams;stack;handled;ide;username;fullreportc;pictc';
-  ErrorArr:= Q.QLoadToVarDynArrayOneRow(Q.QSIUDsql('s', 'v_adm_error_log', Fields), [ID]);
+  ErrorArr:= Q.QLoadRow0(Q.QGetSql('s', 'v_adm_error_log', Fields), [ID]);
 
   //в статусбар
   SetStatusBar('$0000FFОшибка: $000000[$FF0000' + VaRToStr(ErrorArr[cmyerrModule]) +

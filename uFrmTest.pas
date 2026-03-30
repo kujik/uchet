@@ -213,7 +213,7 @@ var
   Param: TParam;
   v, v1, v2: Variant;
 begin
-{  v:=QIUD('i', 'test1', '', 'id$i;account', VarArrayOf([-1, '00test10000']));
+{  v:=QSave('i', 'test1', '', 'id$i;account', VarArrayOf([-1, '00test10000']));
   v1:=MyData.QOra.Parameters[1].Name;
   v2:=MyData.QOra.Parameters[1].value;
   v2:=QGetReturnValues('id')[0];
@@ -280,7 +280,7 @@ begin
   if MyQuestionMessage('Заполнить таблицу этапов заказа?') <> mrYes Then Exit;
 {  QBeginTrans;
   Randomize;
-  ar2:=QLoadToVarDynArray2('select id, qnt, dt_beg from v_order_items where qnt > 0 and dt_end is null', null);
+  ar2:=QLoad('select id, qnt, dt_beg from v_order_items where qnt > 0 and dt_end is null', null);
   QExecSql('delete from order_item_stages', null);
   for i:=0 to High(ar2) do begin
     for j:=1 to 10 do begin
@@ -316,7 +316,7 @@ begin
 {  try
   if MyQuestionMessage('Заполнить таблицу платежей по заказам?') <> mrYes Then Exit;
   QBeginTrans;
-  ar2:=QLoadToVarDynArray2('select id_order, dt, sum(sum) from sn_order_payments where dt < :dt$d group by id_order, dt', EncodeDate(2024,05,19));
+  ar2:=QLoad('select id_order, dt, sum(sum) from sn_order_payments where dt < :dt$d group by id_order, dt', EncodeDate(2024,05,19));
   QExecSql('delete from or_payments', null);
   //QExecSql('delete from or_payments_n', null);
   repeat
@@ -326,7 +326,7 @@ begin
   end;
   if res < 0 then break;
   ar2:=[];
-  ar2:=QLoadToVarDynArray2('select id_order, sum(sum) from or_payments group by id_order', null);
+  ar2:=QLoad('select id_order, sum(sum) from or_payments group by id_order', null);
   for i:= 0 to High(ar2) do begin
     res:=QExecSql('update orders set pay = :pay$f where id = :id_order$i', VarArrayOf([ar2[i][1],ar2[i][0]]));
     if res < 0 then break;
@@ -350,7 +350,7 @@ begin
   if MyQuestionMessage('Заполнить таблицу приемки/отгрузки по СГП?') <> mrYes Then Exit;
   QBeginTrans;
   Randomize;
-  ar2:=QLoadToVarDynArray2('select id, qnt, dt_end, sgp, id_order, id_organization from v_order_items where id_order > 0 and qnt > 0 and dt_end is not null', null);
+  ar2:=QLoad('select id, qnt, dt_end, sgp, id_order, id_organization from v_order_items where id_order > 0 and qnt > 0 and dt_end is not null', null);
   QExecSql('delete from order_item_stages', null);
   va2:=[]; va3:=[];
   for i:=0 to High(ar2) do begin
@@ -371,7 +371,7 @@ begin
       va3:=va3 + [ar2[i][4]];
     end;
   end;
-  ar2:=QLoadToVarDynArray2('select id, dt_end, id_organization from v_orders where id > 0 and dt_end is not null', null);
+  ar2:=QLoad('select id, dt_end, id_organization from v_orders where id > 0 and dt_end is not null', null);
   for i:=0 to High(ar2) do begin
 //    QExecSql('update orders set dt_to_sgp = :dt1$d, dt_from_sgp = :dt2$d where id = :id$i',
 //      VarArrayOf([ar2[i][1],  S.IIf(ar2[i][2] = -1, null,ar2[i][1]), ar2[i][0]])
@@ -403,14 +403,14 @@ var
   Res:Integer;
 begin
   if MyQuestionMessage('Преобразовать Д/К (стд)?') <> mrYes Then Exit;
-  ar2:=Q.QLoadToVarDynArray2('select id, name, null from or_std_items where id_or_format_estimates = 1', []);
+  ar2:=Q.QLoad('select id, name, null from or_std_items where id_or_format_estimates = 1', []);
   Q.QBeginTrans;
   Res:=-1;
   repeat
   if Q.QExecSql('update or_std_items set id_or_format_estimates = 0, resale = 0, price = null, price_pp = null, name =''ДК_'' || name where id_or_format_estimates = 1', [] ) < 0
     then Break;
   for i:=0 to High(ar2) do begin
-    ar2[i][2]:=Q.QIUD('i','bcad_nomencl','','id$i;name$s', [-1, ar2[i][1]]);
+    ar2[i][2]:=Q.QSave('i','bcad_nomencl','','id$i;name$s', [-1, ar2[i][1]]);
     Res:=ar2[i][2];
     if Res < 0 then Break;
   end;
@@ -443,12 +443,12 @@ var
   Res:Integer;
 begin
   if MyQuestionMessage('Преобразовать Д/К (НЕ стд)?') <> mrYes Then Exit;
-  ar2:=Q.QLoadToVarDynArray2('select id_std_item, max(itemname), null from v_order_items where nstd = 1 and resale = 1 group by id_std_item', []);
+  ar2:=Q.QLoad('select id_std_item, max(itemname), null from v_order_items where nstd = 1 and resale = 1 group by id_std_item', []);
   Q.QBeginTrans;
   Res:=-1;
   repeat
   for i:=0 to High(ar2) do begin
-    ar2[i][2]:=Q.QIUD('i','bcad_nomencl','','id$i;name$s', [-1, ar2[i][1] + '_']);
+    ar2[i][2]:=Q.QSave('i','bcad_nomencl','','id$i;name$s', [-1, ar2[i][1] + '_']);
     Res:=ar2[i][2];
     if Res < 0 then Break;
   end;
@@ -477,7 +477,7 @@ var
   Res:Integer;
 begin
   if MyQuestionMessage('Задать мин партии?') <> mrYes Then Exit;
-  ar2:=Q.QLoadToVarDynArray2('select id_nomencl, max(minpart) minpart_max from dv.namenom_supplier ns group by id_nomencl', []);
+  ar2:=Q.QLoad('select id_nomencl, max(minpart) minpart_max from dv.namenom_supplier ns group by id_nomencl', []);
   for i:=0 to High(ar2) do begin
     if ar2[i][0] = null then Continue;
     Q.QExecSql('insert into spl_itm_nom_props (id) select :id1$i from dual where not exists (select null from spl_itm_nom_props where id = :id2$i)', [ar2[i][0], ar2[i][0]]);
@@ -594,8 +594,8 @@ Exit;
 
   //try
  // ar2[1000][100]:=0;
-  //ar2:=QLoadToVarDynArray2('select id_group from dv.groups where groupname = ''Номенклатура из CAD''', null);
-//  ar2:=QLoadToVarDynArray2('select id_group from dv.groups where groupname = :groupname$i', 'dddd');
+  //ar2:=QLoad('select id_group from dv.groups where groupname = ''Номенклатура из CAD''', null);
+//  ar2:=QLoad('select id_group from dv.groups where groupname = :groupname$i', 'dddd');
   //ar2[1000][100]:=0;
   //finally
  //end;
@@ -610,7 +610,7 @@ Exit;
   Exit;
 
 
-//  ar2:=QLoadToVarDynArray2('select id_group from dv.groups where groupname = :groupname$i', 'dddd'); exit;
+//  ar2:=QLoad('select id_group from dv.groups where groupname = :groupname$i', 'dddd'); exit;
 
 
   ar2:=Turv.GetDaysFromCalendar(EncodeDate(2024,3,8), EncodeDate(2024,3,15));
@@ -709,7 +709,7 @@ end;
   //Dlg_Grid1.ShowDialog('Соискатели', 400, 200, [['job', ftString, 400, 'Должность', 150, True], ['job1', ftString, 400, 'Должность 222', 250, True]], [['aaaaaaaa','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww213423345345345'], ['sdffsdfsdfsd', '3']]);
   exit;
 
-//QIUD('u', 'payroll', 'sq_payroll', 'id;id_method$i', [1, null]);
+//QSave('u', 'payroll', 'sq_payroll', 'id;id_method$i', [1, null]);
 //exit;
 
 {  oSmtp := TMail.Create(Application);
@@ -1192,7 +1192,7 @@ exit;
     );
 
 if i < 30000 then begin
-      QIUD('i', 'j_candidates', 'sq_j_candidates', 'id;f$s;i$s;o$s;dt_birth$d;dt$d;dt1$d;dt2$d;id_status$i;phone;comm$s',
+      QSave('i', 'j_candidates', 'sq_j_candidates', 'id;f$s;i$s;o$s;dt_birth$d;dt$d;dt1$d;dt2$d;id_status$i;phone;comm$s',
         [
         -1,
         st1, st2, st3, dtr, dtobr,
@@ -1216,7 +1216,7 @@ end;
 
 exit;
 
-      QIUD('i', 'j_candidates', 'sq_j_candidates', 'id;f$s;i$s;o$s;dt_birth$d;dt$d;dt1$d;dt2$d;;id_status$i;comm$s',
+      QSave('i', 'j_candidates', 'sq_j_candidates', 'id;f$s;i$s;o$s;dt_birth$d;dt$d;dt1$d;dt2$d;;id_status$i;comm$s',
         [
         -1
         ],
@@ -1360,7 +1360,7 @@ begin
   end;
   orgn := ['ООО "МЕРКУРИЙ"','ООО "ОМЕГА"','ООО "Промсервис"'];
   orgid := [1,3,6];
-  ar2 := Q.QLoadToVarDynArray2('select id, workername from v_ref_workers', []);
+  ar2 := Q.QLoad('select id, workername from v_ref_workers', []);
   for i := 0 to High(ar) do begin
     for j := 0 to High(ar2) do begin
       if ar[i][0] = ar2[j][1] then begin
@@ -1387,13 +1387,13 @@ var
 begin
   RouteFields := ['КС','МТ','СТ','РК','ПГ','ЛК','КМ'];
 
-  va1 := Q.QLoadToVarDynArray2('select id, code from work_cell_types', []);
+  va1 := Q.QLoad('select id, code from work_cell_types', []);
   for i := 0 to High(RouteFields) do
     if A.PosInArray(RouteFields[i], va1, 1) < 0 then begin
       MyWarningMessage(RouteFields[i]);
       Exit;
     end;
-  va2 := Q.QLoadToVarDynArray2('select id, r1,r2,r3,r4,r5,r6,r7 from or_std_items', []);
+  va2 := Q.QLoad('select id, r1,r2,r3,r4,r5,r6,r7 from or_std_items', []);
   Q.QExecSql('delete from or_std_item_route', []);
   for i := 0 to High(va2) do begin
     st := '';
@@ -1535,7 +1535,7 @@ Turv.SaveAllTurvToExportTable; Exit;
 
   Wh.ExecReference(myfrm_Rep_SnCalendar_AccMontage);exit;
 
-  q.qloadtovardynarray2('select id_act,id_docstate,actnum,actdate,numzakaz,zakazname,itogo,comments,zakazcostend,firm,doc_owner,doc_date from dv.v_acts', []);
+  q.QLoad('select id_act,id_docstate,actnum,actdate,numzakaz,zakazname,itogo,comments,zakazcostend,firm,doc_owner,doc_date from dv.v_acts', []);
   myinfomessage('!!!');exit;
 
 

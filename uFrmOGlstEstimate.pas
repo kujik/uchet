@@ -116,7 +116,7 @@ begin
       for i := 0 to Min(Length(TVarDynArray(AddParam)), 10) - 1 do
         va := va + [TVarDynArray(AddParam)[i]];
       A.VarDynArraySort(va);
-      va2 := Q.QLoadToVarDynArray2('select ornum from v_orders where id in (' + A.Implode(va, ',') + ') order by ornum', []);
+      va2 := Q.QLoad('select ornum from v_orders where id in (' + A.Implode(va, ',') + ') order by ornum', []);
       FCapt := A.Implode(A.VarDynArray2ColToVD1(va2, 0), ', ') + S.IIf(j <= 0, '', ' и еще ' + IntToStr(j));
     end;
   end;
@@ -297,7 +297,7 @@ begin
   Gh.GridFilterClear(Frg1.DBGridEh1);
   va2 := [];
   if TDBComboBoxEh(Frg1.FindComponent('CbStock')).Text <> '' then
-    va2 := Q.QLoadToVarDynArray2('select name from v_itm_ext_nomencl where skladname = :skladname$s', [TDBComboBoxEh(Frg1.FindComponent('CbStock')).Text]);
+    va2 := Q.QLoad('select name from v_itm_ext_nomencl where skladname = :skladname$s', [TDBComboBoxEh(Frg1.FindComponent('CbStock')).Text]);
   Frg1.MemTableEh1.DisableControls;
   recno := Frg1.MemTableEh1.RecNo;
   for i := 1 to Frg1.MemTableEh1.RecordCount do begin

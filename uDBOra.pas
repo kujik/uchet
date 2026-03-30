@@ -303,7 +303,7 @@ begin
   var LAFieldValuesArr := S.SQLSplitto1000(AFieldValues);
   for var i := 0 to High(LAFieldValuesArr) do begin
     var LAFieldValues := LAFieldValuesArr[i].Implode(',', True);
-    Result := Q.QExecSql(QSIUDSql('Q', ATable, AFieldToSet) + ' where ' + AField + ' in (' +  LAFieldValues + ')', AFieldValuesToSet);
+    Result := Q.QExecSql(QGetSql('Q', ATable, AFieldToSet) + ' where ' + AField + ' in (' +  LAFieldValues + ')', AFieldValuesToSet);
   end;
 end;
 

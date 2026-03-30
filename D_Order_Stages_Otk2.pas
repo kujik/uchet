@@ -133,7 +133,7 @@ begin
   MemTableEh1.DisableControls;
   //удалим то что удаляли по кнопке
   for i:=0 to High(DeletedItems) do begin
-    res:=Q.QIUD('d', 'or_otk_rejected', '', 'id$i', [DeletedItems[i]]);
+    res:=Q.QSave('d', 'or_otk_rejected', '', 'id$i', [DeletedItems[i]]);
     if res < 0 then Break;
   end;
   if res >= 0 then
@@ -147,7 +147,7 @@ begin
       if (MemTableEh1.FieldByName('id').Value <> null)and(MemTableEh1.FieldByName('qnt').AsFloat <> 0) then smode:= 'u';
       //новая с ненулевым - инсерт
       if (MemTableEh1.FieldByName('id').Value = null)and(MemTableEh1.FieldByName('qnt').AsFloat <> 0) then smode:= 'i';
-      res:=Q.QIUD(smode, 'or_otk_rejected', '', 'id$i;id_order_item$i;dt$d;qnt$f;id_reason$i;comm$s',
+      res:=Q.QSave(smode, 'or_otk_rejected', '', 'id$i;id_order_item$i;dt$d;qnt$f;id_reason$i;comm$s',
         [
           MemTableEh1.FieldByName('id').AsInteger,
           id_order_item,
@@ -375,7 +375,7 @@ begin
   MemTableEh1.ReadOnly:=False;
   //получим список причин отказа -все активные, и те неактивные, по которым есть уже записи для данного изделия заказа
   Gh.GetGridColumn(DBGridEh1, 'reason').LimitTextToListValues:=False;
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
     'select name, id from ref_otk_reject_reasons where '+
     'active = 1 or (id in (select id_reason from or_otk_rejected where id_order_item = :id_order_item$i)) '+
     'order by name',

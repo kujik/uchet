@@ -208,7 +208,7 @@ begin
   end;
 
   mem_PrevInstalllcomment.Text:='';
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
     'select dt, compile_dt, ver, comm from adm_install_log where id_module = :id$i order by dt desc',
     [Cth.Getcontrolvalue(cmb_module)]
   );
@@ -284,7 +284,7 @@ begin
     mem_Users.ControlLabel.Caption := 'Сессии';
     Exit;
   end;
-  va := Q.QLoadToVarDynArray2('select osuser from v$session where username = :username$s and module = :module$s group by username, module, machine, osuser order by osuser', [S.ToUpper(Q.CurrentShema), cmb_Module.Text + '.exe']);
+  va := Q.QLoad('select osuser from v$session where username = :username$s and module = :module$s group by username, module, machine, osuser order by osuser', [S.ToUpper(Q.CurrentShema), cmb_Module.Text + '.exe']);
   mem_Users.Text := A.Implode(A.VarDynArray2ColToVD1(va, 0), ', ');
   mem_Users.ControlLabel.Font.Color := S.IIf(Length(va) = 0, clblue, clRed);
   mem_Users.ControlLabel.Caption := S.IIf(Length(va) = 0, 'Модуль не запущен.', 'Модуль открыт у следующих пользователей (' + IntToStr(Length(va)) + ')');

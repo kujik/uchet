@@ -624,11 +624,11 @@ var
   va2: TVarDynArray2;
   i: Integer;
 begin
-  va2:= Q.QLoadToVarDynArray2('select templatename from v_orders where id <= -1 order by templatename asc', []);
+  va2:= Q.QLoad('select templatename from v_orders where id <= -1 order by templatename asc', []);
   if Length(va2) = 0
     then begin MyInfoMessage('Не найдено ни одного шаблона!'); Exit; end;
   van:=A.VarDynArray2ColToVD1(va2, 0);
-  vaid:=A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select id from v_orders where id <= -1 order by templatename asc', []), 0);
+  vaid:=A.VarDynArray2ColToVD1(Q.QLoad('select id from v_orders where id <= -1 order by templatename asc', []), 0);
   if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Шаблон заказа', 820, 85, [
 //  if Dlg_BasicInput.ShowDialog(Self, 'Создать заказ из шаблона', 820, 85, fAdd, [
     [cntComboLK, 'Шаблон заказа','1:500:0']
@@ -653,9 +653,9 @@ procedure TFrmOGjrnOrders.LoadKnsAndThnList;
 var
   va2: TVarDynArray2;
 begin
-  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -101 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobKNS, Frg1.ID]);
+  va2 := Q.QLoad('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -101 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobKNS, Frg1.ID]);
   Frg2.Opt.SetPick('id_kns', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
-  va2 := Q.QLoadToVarDynArray2('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -102 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobTHN, Frg1.ID]);
+  va2 := Q.QLoad('select name, id from adm_users where (job = :id_job$i and active = 1) or id = -100 or id = -102 or id in (select distinct id_kns from order_items where id_order = :id_order$i) order by name', [myjobTHN, Frg1.ID]);
   Frg2.Opt.SetPick('id_thn', A.VarDynArray2ColToVD1(va2, 0), A.VarDynArray2ColToVD1(va2, 1), True);
   Frg2.SetColumnsPropertyes;
 end;

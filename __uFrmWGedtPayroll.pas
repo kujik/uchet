@@ -114,7 +114,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_division, id_worker, dt1, dt2, divisionname, workername, office, id_method, commit from v_payroll where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_division, id_worker, dt1, dt2, divisionname, workername, office, id_method, commit from v_payroll where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -270,7 +270,7 @@ begin
         end;
     until not changed;
     //загрузим айди работников, по которым созданя за этот период отдельные ведомости
-    vadel := Q.QLoadToVarDynArray2('select id_worker from v_payroll where id_worker is not null and dt1 = :dt1$d', [FPayrollParams.G('dt1')]);
+    vadel := Q.QLoad('select id_worker from v_payroll where id_worker is not null and dt1 = :dt1$d', [FPayrollParams.G('dt1')]);
   end
   else begin
     //удалим все строки, кроме работника по которому ведомость
@@ -280,7 +280,7 @@ begin
     end;
   end;
   //загрузим работников из прошлой ведомости по этому же подразделению (по всему подразделению)
-  va1:=Q.QLoadToVarDynArray2(
+  va1:=Q.QLoad(
     'select id_worker, blank, ball_m, salary_plan_m, salary_const_m from payroll_item where id_division = :id_division$i and dt = :dt1$d',
     [FPayrollParams.G('id_division'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1))]
   );
@@ -310,7 +310,7 @@ begin
   Q.QBeginTrans(True);
   for i := 0 to High(va) do begin
     if not A.PosInArray(va[i][2], vadel, 0) >=0 then
-      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d;blank$f;ball_m$f;salary_plan_m$f;salary_const_m$f',
+      Q.QSave('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d;blank$f;ball_m$f;salary_plan_m$f;salary_const_m$f',
         [-1, ID, Integer(FPayrollParams.G('id_division')), Integer(va[i][2]), Integer(va[i][4]), FPayrollParams.G('dt1'), va[i][5], va[i][6], va[i][7], va[i][8]],
         False
       );
@@ -328,7 +328,7 @@ function TFrmWGedtPayroll.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(
+  Q.QLoad(
     'select workername, job, id, id_worker, id_job, blank, ball_m, turv, ball, premium_m_src, premium, premium_p, premium_m, '+
     'otpusk, bl, penalty, itog1, ud, ndfl, fss, pvkarta, karta, itog, id_schedule, schedule, norm, norm_m, banknotes, org_name, personnel_number, '+
     'salary_plan_m, salary_const_m, salary_incentive_m, ors, ors_sum, ball_add '+
@@ -354,7 +354,7 @@ var
 begin
   ClearFilter;
   //загрузим айди работников, по которым созданя за этот период отдельные ведомости
-  vadel := Q.QLoadToVarDynArray2(
+  vadel := Q.QLoad(
     'select id_worker from v_payroll where id_worker is not null and dt1 = :dt1$d',
     [FPayrollParams.G('dt1')]
   );
@@ -365,7 +365,7 @@ begin
     SetLength(va[i], 15);
     //по каждому работнику (точнее, по каждой строке, тк при разных должностях несколько строк на одного работника)
     //читаем данные из таблицы турв за период, указанный для данной строки
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select worktime1, worktime2, worktime3, id_turvcode2, id_turvcode3, premium, penalty from turv_day '+
       'where id_division = :id_division$i and id_worker = :id_worker$i and dt >= :dt1$d  and dt <= :dt2$d',
       [FPayrollParams.G('id_division'), va[i][2], va[i][0], va[i][1]]
@@ -431,12 +431,12 @@ begin
 
   //получим из ТУРВ премии за текущий период (для работника за весь турв, но в турве могут быть несколько строк на одного работника, тут получим суммарную)
   //айди графика получит случайно из всех тех что были у работника в периоде//!!!
-  va1 := Q.QLoadToVarDynArray2(
+  va1 := Q.QLoad(
     'select id_worker, nvl(sum(premium),0), max(id_schedule_active), max(schedule) from v_turv_workers where id_division = :id_division$i and dt1 = :dt1$d group by id_worker',
     [FPayrollParams.G('id_division'), FPayrollParams.G('dt1')]
   );
   //загрузим нормы по всенм графикам за оба периода месяца к данной ведомости
-  norms := Q.QLoadToVarDynArray2(
+  norms := Q.QLoad(
     'select id_work_schedule, dt, hours from ref_working_hours where dt = :dt1$d or dt = :dt2$d order by id_work_schedule, dt',
     [EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 16)]
   );
@@ -856,7 +856,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  EmplCn := Q.QLoadCol('select id from ref_workers where concurrent_employee = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];
@@ -965,7 +965,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from ref_workers where concurrent_employee = 1', []);
+  EmplCn := Q.QLoadCol('select id from ref_workers where concurrent_employee = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];
@@ -1432,9 +1432,9 @@ var
   rn, i: Integer;
   st: string;
 begin
-  va1 := Q.QLoadToVarDynArrayOneCol('select name from payroll_method order by name', []);
-  va2 := Q.QLoadToVarDynArrayOneCol('select id from payroll_method order by name', []);
-  va3 := Q.QLoadToVarDynArrayOneCol('select comm from payroll_method order by name', []);
+  va1 := Q.QLoadCol('select name from payroll_method order by name', []);
+  va2 := Q.QLoadCol('select id from payroll_method order by name', []);
+  va3 := Q.QLoadCol('select comm from payroll_method order by name', []);
   st := 'Выберите метод расчета заработной платы'#13#10'(выбранный метод сохранится и будет использоваться и в будущих ведомостях):'#13#10#13#10;
   for i := 0 to High(va1) do
     st := st + va1[i] + #13#10'  ' + va3[i] + #13#10#13#10;
@@ -1476,7 +1476,7 @@ begin
     Frg1.MemTableEh1.RecNo := i;
     id1 := s.NNum(Frg1.MemTableEh1.FieldByName('id').AsVariant);
     if id1 = 0 then begin
-      Q.QIUD('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d',
+      Q.QSave('i', 'payroll_item', 'sq_payroll_item', 'id$i;id_payroll$i;id_division$i;id_worker$i;id_job$i;dt$d',
         [-1, ID, FPayrollParams.G('id_division'), Frg1.MemTableEh1.FieldByName('id_worker').AsInteger, Frg1.MemTableEh1.FieldByName('id_job').AsInteger, FPayrollParams.G('dt1')]
       );
       Frg1.MemTableEh1.Edit;
@@ -1485,7 +1485,7 @@ begin
       Frg1.MemTableEh1.Edit;
     end;
         //lastgeneraateid
-    Q.QIUD('u', 'payroll_item', 'sq_payroll_item',
+    Q.QSave('u', 'payroll_item', 'sq_payroll_item',
       'id;blank$f;ball_m$f;turv$f;ball$f;premium_m_src$f;premium_m$f;premium$f;premium_p$f;otpusk$f;bl$f;penalty$f;'+
       'itog1$f;ud$f;ndfl$f;fss$f;pvkarta$f;karta$f;itog$f;id_schedule$i;norm$f;norm_m$f;banknotes$s;'+
       'salary_plan_m$f;salary_const_m$f;salary_incentive_m$f;ors;ors_sum$f;ball_add$f',

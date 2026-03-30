@@ -97,7 +97,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_employee, id_organization, personnel_number, dt1, dt2,  employee, is_finalized from v_w_payroll_transfer where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_employee, id_organization, personnel_number, dt1, dt2,  employee, is_finalized from v_w_payroll_transfer where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -208,7 +208,7 @@ function TFrmWGedtPayrollTransfer.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_transfer = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, organization, personnel_number',
+  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_transfer = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);
@@ -234,7 +234,7 @@ begin
     Q.QExecSql('delete from w_payroll_transfer_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_payroll_transfer_item', '', 'id$i;id_payroll_transfer$i', [-1, ID]);
+      var idn := Q.QSave('i', 'w_payroll_transfer_item', '', 'id$i;id_payroll_transfer$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     f := A.Explode(cFieldsS, ';');
@@ -244,7 +244,7 @@ begin
     for j := 0 to High(f) do begin
       va := va + [Frg1.GetValue(A.Explode(f[j],'$')[0], i, False)];
     end;
-    Q.QIUD('u', 'w_payroll_transfer_item', '', cFieldsS, va);
+    Q.QSave('u', 'w_payroll_transfer_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
 end;
@@ -387,7 +387,7 @@ begin
   flds2 := ['employee', 'organization', 'personnel_number'];
 
   if FPayrollParams.G('id_employee') <> null then
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, id_organization, personnel_number, max(employee) as employee, max(organization) as organization, sum(total_pay) as total_pay, sum(ors_pay) as ors_pay, null as temp ' +
       'from v_w_payroll_calc_item where id_employee = :p1$i and nvl(id_organization, -100) = nvl(:p2$i, -100) and nvl(personnel_number, -100) = nvl(:p3$s, -100) and dt1 = :dt1$d and id_target_employee is not null ' +
       'group by id_employee, id_organization, personnel_number order by employee',
@@ -395,7 +395,7 @@ begin
       na1
     )
   else
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, id_organization, personnel_number, ' +
       'max(employee) as employee, max(organization) as organization, sum(total_pay) as total_pay, sum(ors_pay) as ors_pay, null as temp ' +
       'from v_w_payroll_calc_item where dt1 = :dt1$d and id_target_employee is null ' +
@@ -560,7 +560,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];
@@ -658,7 +658,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];
@@ -748,7 +748,7 @@ begin
   if not CreateTXlsMemFileEhFromExists(MyData.OpenDialog1.FileName, True, '$2', XlsFile, st) then
     Exit;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
   sh := XlsFile.Workbook.Worksheets[0];
@@ -838,7 +838,7 @@ begin
     Exit;
 //      for i := 0 to MyData.FileOpenDialog1.Files.Count - 1 do
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
   //загрузим в массив данные из эксель со второй строки до первой пустой
   ArXls := [];
 
@@ -1024,7 +1024,7 @@ begin
     XlsFile.Free;
   end;
   //получим список совместителей
-  EmplCn := Q.QLoadToVarDynArrayOneCol('select id from w_employees where is_concurrent = 1', []);
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
   //пройдем по списку работников в ведомости
   b1 := False;
   b2 := False;

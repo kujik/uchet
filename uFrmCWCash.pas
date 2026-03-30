@@ -286,7 +286,7 @@ begin
     va1, va2, [['']], nil
   ) <= 0 then Exit;
   va1 := [Fr.GetValue('id_'), S.IIf(Fr.Name = 'Frg2', -CashNo, va2[1]), S.IIf(Fr.Name = 'Frg1', -CashNo, va2[1]), va2[0], va2[2], va2[3]];
-  if Q.QIUD(Q.QFModeToIUD(Mode), 'sn_cash_payments', 'sq_sn_cash_payments', 'id$i;source$i;receiver$i;dt$d;sum$f;comm$s', va1) <> -1 then begin
+  if Q.QSave(Q.QFModeToIUD(Mode), 'sn_cash_payments', 'sq_sn_cash_payments', 'id$i;source$i;receiver$i;dt$d;sum$f;comm$s', va1) <> -1 then begin
     Fr.RefreshGrid;
     SetAmounts;
   end;

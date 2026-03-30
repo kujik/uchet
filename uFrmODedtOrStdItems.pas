@@ -60,7 +60,7 @@ var
 begin
   Caption:='Стандартное изделие';
 
-  va1 := Q.QLoadToVarDynArray2('select code, id from work_cell_types where pos is not null order by pos', []);
+  va1 := Q.QLoad('select code, id from work_cell_types where pos is not null order by pos', []);
 
   for i:=0 to High(va1) do begin
     Cth.CreateControls(pnlFrmClient, cntCheck, va1[i][0], 'chb_r_' + S.NSt(va1[i][1]), '', 0, edt_name.Left + i * 50, edt_name.Top + edt_name.Height + MY_FORMPRM_H_EDGES);
@@ -111,7 +111,7 @@ begin
   Result := inherited;
   if not Result then
     Exit;
-  va2 := Q.QLoadToVarDynArray2('select id_work_cell_type from or_std_item_route where id_or_std_item = :id$i', [ID]);
+  va2 := Q.QLoad('select id_work_cell_type from or_std_item_route where id_or_std_item = :id$i', [ID]);
   FRcount := High(va2);
   for i := 0 to High(va2) do
     TDBCheckBoxEh(Self.FindComponent('chb_r_' + S.NSt(va2[i][0]))).Checked := True;

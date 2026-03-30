@@ -318,12 +318,12 @@ begin
   if ts_1.TabVisible then begin
     //продажа, выборка по начальной дате
     //розница, по префиксам О и Н
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''О'', ''Н'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum1ri)), round(sum(sum1ra)), round(sum(sum1rd)), round(sum(sum1rm)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -342,12 +342,12 @@ begin
     nedt_1_R2.Value:=RoundTo(nedt_1_R.Value / nedt_1_R3.Value * 100, -2);
 
     //опт, по префиксам М и Ф
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''М'', ''Ф'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum1oi)), round(sum(sum1oa)), round(sum(sum1od)), round(sum(sum1om)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -374,12 +374,12 @@ begin
   if ts_2.TabVisible then begin
     //отгрузка, выборка по дате отгрузки с СГП
     //розница, по префиксам О и Н
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''О'', ''Н'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum2ri)), round(sum(sum2ra)), round(sum(sum2rd)), round(sum(sum2rm)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -398,12 +398,12 @@ begin
     nedt_2_R2.Value:=RoundTo(nedt_2_R.Value / nedt_2_R3.Value * 100, -2);
 
     //опт, по префиксам М и Ф
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''М'', ''Ф'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum2oi)), round(sum(sum2oa)), round(sum(sum2od)), round(sum(sum2om)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -429,12 +429,12 @@ begin
 
   if ts_4.TabVisible then begin
     //реализация, выборка по дате завершения заказа, планы такие же как по отгрузке
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''О'', ''Н'') and dt_end >= :dtb$d and dt_end <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum2ri)), round(sum(sum2ra)), round(sum(sum2rd)), round(sum(sum2rm)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -452,12 +452,12 @@ begin
     nedt_4_R2.Value:=RoundTo(nedt_4_R.Value / nedt_4_R3.Value * 100, -2);
 
     //опт, по префиксам М и Ф
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
       'where id > 0 and prefix in (''М'', ''Ф'') and dt_end >= :dtb$d and dt_end <= :dte$d',
       [DtB, DtE]
     );
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select round(sum(sum2oi)), round(sum(sum2oa)), round(sum(sum2od)), round(sum(sum2om)) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -487,8 +487,8 @@ begin
     //берется дата поступления на сгп по каждому слешу, обсчет идет по заказам частично, по мере изготовления изделий
     //вьюха без параметров, т.к. начальная и конечная дата выборки передаются через контекст сесии
     //получаем сумму изготовленных изделий за период, и сумму за переод же, но только тех, которые изготовлены в срок (ранее плановой даты отгрузки)
-    va1:=Q.QLoadToVarDynArray2('select sum(sum_i), sum(sum_i_ok), sum(sum_a), sum(sum_a_ok) from v_order_finreport_1', []);
-    va2:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad('select sum(sum_i), sum(sum_i_ok), sum(sum_a), sum(sum_a_ok) from v_order_finreport_1', []);
+    va2:=Q.QLoad(
       'select round(sum(sum3i)), round(sum(sum3a)), max(prc3i), max(prc3a) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
     );
@@ -513,7 +513,7 @@ begin
     //сумма изделии и дк без ндс с учетом скидок по производстенным паспортам, и нестандартных изделий по всем остальным,
     //только по незавершенным паспортам, по непринятому на сгп остатку
     Cth.SetControlValue(Ne5Selling, Q.QLoadValue('select sum(sum_i) + sum(sum_a) from v_order_finreport_inprod',[]));
-    va2:=Q.QLoadToVarDynArray2('select sum_in_prod, sum_in_stock, sum_rezerv, sum_onway, sum_need, sum_need_p, sum_needcurr from v_nom_for_orders_in_prod_fin', []);
+    va2:=Q.QLoad('select sum_in_prod, sum_in_stock, sum_rezerv, sum_onway, sum_need, sum_need_p, sum_needcurr from v_nom_for_orders_in_prod_fin', []);
     for i:=0 to High(va2[0]) do
       TDBNumberEditEh(FindComponent('nedt_5_' + InttoStr(i + 1))).Value := va2[0][i];
   end;

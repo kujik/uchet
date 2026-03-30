@@ -3037,7 +3037,7 @@ procedure TFrDBGridEh.LoadSourceDataFromSql(ASqlParams: TVarDynArray; AEmptyBefo
 begin
   InLoadData := true;
   MemTableEh1.ReadOnly := False;
-  Q.QLoadToMemTableEh(Q.QSIUDSql('s', Opt.Sql.View, Opt.Sql.FieldNames), ASqlParams, MemTableEh1, '', 0);
+  Q.QLoadToMemTableEh(Q.QGetSql('s', Opt.Sql.View, Opt.Sql.FieldNames), ASqlParams, MemTableEh1, '', 0);
   InLoadData := False;
   ChangeSelectedData;
 end;
@@ -3059,7 +3059,7 @@ procedure TFrDBGridEh.LoadData(AParams: TVarDynArray);
 begin
   InLoadData := True;
   SetDataDriverCommandSelect;
-  Q.QLoadFromQuery(ADODataDriverEh1.SelectSQL.Text, AParams, DBGridEh1, True);
+  Q.QLoad(ADODataDriverEh1.SelectSQL.Text, AParams, DBGridEh1, True);
   MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
@@ -3071,7 +3071,7 @@ begin
   if ASql = '*' then
     LoadData(AParams)
   else
-    Q.QLoadFromQuery(ASql, AParams, DBGridEh1, True);
+    Q.QLoad(ASql, AParams, DBGridEh1, True);
   MemTableEh1.First;
   InLoadData := False;
   ChangeSelectedData;
@@ -3942,7 +3942,7 @@ begin
   if pos('id;', st) = 1 then begin
     st := 'to_char(id) as id' + Copy(st, 3);
   end;
-  st := Q.QSIUDSql('a', FOpt.SQL.View, st);
+  st := Q.QGetSql('a', FOpt.SQL.View, st);
   sts := FOpt.SQL.Select;
   if (myogLoadAfterVisible in Options) and (tmrAfterCreate.Enabled)
     then stwa := 'where 1 = 2'
@@ -3995,17 +3995,17 @@ begin
   SetDataDriverCommandSelect;
   if Opt.SQL.Update <> '=' then
     if Opt.SQL.Update = '*' then
-      ADODataDriverEh1.UpdateCommand.CommandText.Text := Q.QSIUDSql('u', Opt.SQL.Table, st)
+      ADODataDriverEh1.UpdateCommand.CommandText.Text := Q.QGetSql('u', Opt.SQL.Table, st)
     else if Opt.SQL.Update = '' then
       ADODataDriverEh1.UpdateCommand.CommandText.Text := 'select 1 from dual';
   if Opt.SQL.Insert <> '=' then
     if Opt.SQL.Insert = '*' then
-      ADODataDriverEh1.InsertCommand.CommandText.Text := Q.QSIUDSql('i', Opt.SQL.Table, st)
+      ADODataDriverEh1.InsertCommand.CommandText.Text := Q.QGetSql('i', Opt.SQL.Table, st)
     else if Opt.SQL.Insert = '' then
       ADODataDriverEh1.InsertCommand.CommandText.Text := 'select 1 from dual';
   if Opt.SQL.Delete <> '=' then
     if Opt.SQL.Delete = '*' then
-      ADODataDriverEh1.DeleteCommand.CommandText.Text := Q.QSIUDSql('d', Opt.SQL.Table, st)
+      ADODataDriverEh1.DeleteCommand.CommandText.Text := Q.QGetSql('d', Opt.SQL.Table, st)
     else if Opt.SQL.Delete = '' then
       ADODataDriverEh1.DeleteCommand.CommandText.Text := 'select 1 from dual';
   //читаем все данные
@@ -4085,7 +4085,7 @@ procedure TFrDBGridEh.ReadGridLabels;
 begin
   if not (myogGridLabels in Options) then
     Exit;
-  FGridLabelsIds := Q.QLoadToVarDynArray2('select tablerow, labelnum from grid_labels where doc = :doc$s and id_user = :id_user$i and tablenum = 1', [TFrmBasicMdi(Owner).FormDoc, User.GetId]);
+  FGridLabelsIds := Q.QLoad('select tablerow, labelnum from grid_labels where doc = :doc$s and id_user = :id_user$i and tablenum = 1', [TFrmBasicMdi(Owner).FormDoc, User.GetId]);
 end;
 
 procedure TFrDBGridEh.ShowColumnInfo;

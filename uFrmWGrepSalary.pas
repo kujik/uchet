@@ -165,7 +165,7 @@ var
   va: TVarDynArray2;
   dt: TDateTime;
 begin
-  va := Q.QLoadToVarDynArray2('select distinct dt from rep_salary order by dt desc', []);
+  va := Q.QLoad('select distinct dt from rep_salary order by dt desc', []);
   dt := Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
   if (High(va) = -1) then
     va := [[dt]]   //хотя бы одна дата должна быть

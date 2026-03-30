@@ -498,7 +498,7 @@ begin
   //айди поставщика - в переменную контекста
   Q.QSetContextValue('semiproduct_supplier', Cth.GetControlValue(Frg1, 'CbType'));
   //запрос загрузки данных
-  va2 := Q.QLoadToVarDynArray2(
+  va2 := Q.QLoad(
     'select id, id_order, id_order_item, id_nomencl, id_unit, dt_beg, dt_otgr, null as filter, '+
     'ornum, project, slash, itemname, ordercaption, itemcaption, name, '+
     'qnt_in_order, qnt_in_order_diff, null as qnt_in_demand, qnt_in_demand_old, '+
@@ -734,7 +734,7 @@ var
     i, j: Integer;
   begin
     Result := False;
-    IdDemand := Q.QIUD('i', 'dv.demand', '', 'id_demand$i;id_category$i;id_docstate$i;comments$s;control_date$d',
+    IdDemand := Q.QSave('i', 'dv.demand', '', 'id_demand$i;id_category$i;id_docstate$i;comments$s;control_date$d',
       [-1, 3, 1, TDBComboBoxEh(Frg1.FindComponent('CbType')).Text + ' к ' + StO + ' (отгр. ' + DateToStr(DtO)+ ')', Date]
     );
     if IdDemand < 0 then
@@ -847,7 +847,7 @@ begin
     end;
     if (i = 0) or not b {or (k = i)} then begin
       //если не нашли, делаем запрос для проверки
-      va2 := Q.QLoadToVarDynArray2(
+      va2 := Q.QLoad(
         'select id_std_item, id_template, dt_estimate from v_semiproducts_get_std_item where name = :name$s',
         [Frg1.GetValue('name', i, False)]  //было k!
       );

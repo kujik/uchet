@@ -240,7 +240,7 @@ begin
   y := Frg1.GetControlValue('CbYear');
   if y = null then
     Exit;
-  va2 := Q.QLoadToVarDynArray2(sql, [y, y]);
+  va2 := Q.QLoad(sql, [y, y]);
   Frg1.LoadSourceDataFromArray(va2);
   Frg1.Repaint;
   Frg1.SetStatusBarCaption('Задолженность на сегодня: ' + FormatFloat('###,###,####,##0', S.NNum(

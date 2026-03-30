@@ -153,27 +153,35 @@ type
     //возвращаем айди из переданной секвенции
     function QSelectId(sequence: string): LongInt;
 
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean; overload;
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray2): Boolean; overload;
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean; overload;
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TDBGridEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
-    function QLoadFromQuery(Sql: string; ParamValues: TVarDynArray): TVarDynArray2; overload;
-
-    //возвращаем первую строку запроса
-    //передается текст запроса, массив параметров
-    //возвращается ВСЕГДА МАССИВ по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут нулл!!!
-    function QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
-    function QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
-    //загружаем результат запроса в вариантный двухмерный массив
-    function QLoadToVarDynArray2(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
     //загружаем результат запроса в вариантный двухмерный массив, содержащий чередующиеся имена параметров и их значения
     function QLoadToRec(Sql: string; ParamValues: TVarDynArray; OneRow: Boolean = False): TNamedArr;
+    //выполняет загрузку данных из БД в TNamedArr
+    //передается либо готовый запрос, либо строка для конструирования запроса (ее признаком является позиция ";" в строке до первой кавычки):
+    //"имя_таблицы;{условие (where...|*|+);}имена_полей"
+    //условие определяется на основе слова-признака, если его нет, следующие слова считаются полями
+    //если условие не передано, таблица читается по айди (первое поле), если * то вся, начинается с where - испольуется как есть
+    //использовать ";" в условии нельзя (поломает логику разбора, на наличие литералов проверки нет)
+    //если установлено OneRow, читает только одну строку (при отсутствии данных вернет пустую запись)
+    function QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean; overload;
+    function QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray2): Boolean; overload;
+    function QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean; overload;
+    function QLoad(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
+    function QLoad(Sql: string; ParamValues: TVarDynArray; Res: TDBGridEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean; overload;
+    function QLoad(Sql: string; ParamValues: TVarDynArray): TVarDynArray2; overload;
+    //возвращаем первую строку запроса
+    //возвращается всегда вариантный массив по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут null
+    function QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
+    //возвращаем первую строку запроса; если записей нет, вернет пустой массив
+    function QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+    //вернет всегда значение первого поля первой строки запроса; если запрос не вернул данных, то вернет null
+    function QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
+    //загружаем результат запроса в вариантный двухмерный массив
+//    function QLoad(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
     //загружаем одну строку в вариантный одномерный массив
     //если данные не выбраны, массив будет нулевой длины
-    function QLoadToVarDynArrayOneRow(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+//    function QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
     //загружаем одно поле (столбец) из полученных строк в вариантный одномерный массив
-    function QLoadToVarDynArrayOneCol(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+    function QLoadCol(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
     //запись результатов запроса селект в мемтаблеех
     //передается запрос, параметры запроса,
     //строка наименований столбцов мемтейбл через ;, признак добавления данных в таблицу - добавляется в позицию (2), в конец (1) или очищается (0).
@@ -199,7 +207,7 @@ type
     //если передать сиквенс = '-' ии 'id', то айди не генерируется, а берется из первого поля
     //для вставки всегда подразумевается первый параметр (поле) числовым, и возвращается значение этого параметра
     //в случае ошибки возвращается -1, иначе для инзерт - значение айди, для остальных - количество обработанных строк
-    function QIUD(Mode: string; Table: string; Sequence: string; FieldsSt: string; Values: TVarDynArray; ShowError: Boolean = True): Integer;
+    function QSave(Mode: string; Table: string; Sequence: string; FieldsSt: string; Values: TVarDynArray; ShowError: Boolean = True): Integer;
     //выполнение хранимой процедуры Oracle
     //передается имя процедуры, параметры (или в строке через ;, или в VarArrayOf), значения всех параметров (или одно, или в VarArrayOf)
     //каждый параметра должне после ; содержать первой буквой тип параметра, второй - направлние данных (I - входящий, B - InOut, O - выходной)
@@ -251,7 +259,7 @@ type
     //возвращает строковый модификатор параметра из его строкового названия
     //если не задан возвращает ''
     function QGetParamTypeCharFromName(ParamName: string): string;
-    //вернуть режим скл, использующийся в QIUD, в зависимости от режима диалогового окна
+    //вернуть режим скл, использующийся в QSave, в зависимости от режима диалогового окна
     function QFModeToIUD(fMode: TDialogType): char;
     //вернуть количество затронутых запросом строк
     function QRowsAffected: Integer;
@@ -262,7 +270,7 @@ type
     //формирует из списка полей через ; и имени таблицы строку скл-запроса для селект/инзерт/апдейт/делит
     //айди передается всегда крайним левым значением в строке полей
     //поля могут быть переданы с модификатором, в этом случае в качестве имен в таблице используется левая часть имени до $, правая определяет тип
-    function QSIUDSql(Mode: string; Table, FieldsSt: string): string;
+    function QGetSql(Mode: string; Table, FieldsSt: string): string;
 
     {функции логирования}
 
@@ -577,7 +585,7 @@ begin
 end;
 
 function TmyDB.QFModeToIUD(fMode: TDialogType): char;
-//вернуть режим скл, использующийся в QIUD, в зависимости от режима диалогового окна
+//вернуть режим скл, использующийся в QSave, в зависимости от режима диалогового окна
 begin
   Result := '-';
   case fMode of
@@ -664,7 +672,7 @@ begin
   end;
 end;
 
-function TmyDB.QSIUDSql(Mode: string; Table, FieldsSt: string): string;
+function TmyDB.QGetSql(Mode: string; Table, FieldsSt: string): string;
 //формирует из списка полей через ; и имени таблицы строку скл-запроса для селект/инзерт/апдейт/делит
 //айди передается всегда крайним левым значением в строке полей
 //поля могут быть переданы с модификатором, в этом случае в качестве имен в таблице используется левая часть имени до $, правая определяет тип
@@ -951,7 +959,7 @@ begin
   Result := QExecSql(Sql, [], ShowErrors);
 end;
 
-function TmyDB.QIUD(Mode: string; Table: string; Sequence: string; FieldsSt: string; Values: TVarDynArray; ShowError: Boolean = True): Integer;
+function TmyDB.QSave(Mode: string; Table: string; Sequence: string; FieldsSt: string; Values: TVarDynArray; ShowError: Boolean = True): Integer;
 //выполняет SQL-запрос на вставку/изменение/удаление данных
 //передается режим работы, имя таблицы, имя секвенции,
 //строка полей через ; (слева всегда должно быть поле айди, поля могут быть в виде имя_поля$тип),
@@ -974,7 +982,7 @@ begin
     Exit;
   A.ExplodeP(FieldsSt, ';', Fields);
   Mode := UpperCase(Mode);
-  sql := QSIUDSql(Mode, Table, FieldsSt);
+  sql := QGetSql(Mode, Table, FieldsSt);
   if Mode = 'U' then begin
     Params := VarArrayCreate([0, High(Fields)], varVariant);
     for i := 1 to high(Fields) do
@@ -1014,7 +1022,7 @@ begin
   end;
 end;
 
-function TmyDB.QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
+(*function TmyDB.QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
 //возвращаем первую строку запроса
 //передается текст запроса, массив параметров
 //возвращается ВСЕГДА МАССИВ по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут нулл!!!
@@ -1052,19 +1060,10 @@ begin
   end;
   ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
   QClose;
-end;
+end;     *)
 
-function TmyDB.QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
-var
-  Res: Variant;
-begin
-  Result := Null;
-  Res := QLoadRow(Sql, ParamValues);
-//  if Length(Res) > 0 then
-  Result := Res[0];
-end;
-
-function TmyDB.QLoadToVarDynArray2(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
+(*
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
 //загружаем результат запроса в вариантный двухмерный массив
 var
   res, i, j: Integer;
@@ -1085,50 +1084,37 @@ begin
   end;
   QClose;
 end;
-
+*)
 
 function TmyDB.QLoadToRec(Sql: string; ParamValues: TVarDynArray; OneRow: Boolean = False): TNamedArr;
 //загружаем результат запроса в вариантный двухмерный массив, содержащий чередующиеся имена параметров и их значения
 var
   res, i, j: Integer;
 begin
-  Result.Create;
-  FLastReceivedFiedNames := [];
-  if QOpen(Sql, ParamValues) < 0 then
-    Exit;
-  if Length(FLastReceivedFiedNames) = 0 then
-    for i := 0 to AdoQuery.FieldCount - 1 do
-      FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
-  while not AdoQuery.EOF do begin
-    SetLength(Result.V, Length(Result.V) + 1);
-    SetLength(Result.V[High(Result.V)], AdoQuery.FieldCount);
-    for i := 0 to AdoQuery.FieldCount - 1 do
-      Result.V[High(Result.V)][i] := AdoQuery.Fields[i].AsVariant;
-    AdoQuery.Next;
-  end;
-  Result.FFull := FLastReceivedFiedNames;
-  Result.F := FLastReceivedFiedNames;
-  for j := 0 to High(Result.F) do begin
-    i := Pos('$', Result.F[j]);
-    if i > 0 then
-      Result.F[j] := Copy(Result.F[j], 1, i - 1);
-  end;
-  QClose;
-end;
-
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean;
-var
-  va, va1: TVarDynArray;
-  SqlM: string;
-begin
-  Result := False;
   try
-    if pos(';', Sql) > 0 then begin
-      va := A.Explode(Sql, ';');
-      va1 := Copy(va, 2);
-      Sql := QSIUDSql(S.IIf(va[1] = '', 's', 'a'),va1[0],  A.Implode(va1, ';')) + S.IIfStr(va[1] <> '', ' ' + va[1]);
+    Result.Create;
+    FLastReceivedFiedNames := [];
+    if QOpen(Sql, ParamValues) < 0 then
+      Exit;
+    if Length(FLastReceivedFiedNames) = 0 then
+      for i := 0 to AdoQuery.FieldCount - 1 do
+        FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
+    while not AdoQuery.EOF do begin
+      SetLength(Result.V, Length(Result.V) + 1);
+      SetLength(Result.V[High(Result.V)], AdoQuery.FieldCount);
+      for i := 0 to AdoQuery.FieldCount - 1 do
+        Result.V[High(Result.V)][i] := AdoQuery.Fields[i].AsVariant;
+      if OneRow then
+        Break;
+      AdoQuery.Next;
     end;
-  Res := QLoadToRec(Sql, ParamValues);
+    Result.FFull := FLastReceivedFiedNames;
+    Result.F := FLastReceivedFiedNames;
+    for j := 0 to High(Result.F) do begin
+      i := Pos('$', Result.F[j]);
+      if i > 0 then
+        Result.F[j] := Copy(Result.F[j], 1, i - 1);
+    end;
   except
     on E: Exception do begin
       Errors.SetErrorCapt(Self.Name, 'Oшибка при загрузке данных из БД');
@@ -1136,57 +1122,129 @@ begin
       Errors.SetErrorCapt;
     end;
   end;
+  QClose;
+end;
+
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr; OneRow: Boolean = False): Boolean;
+//выполняет загрузку данных из БД в TNamedArr
+//передается либо готовый запрос, либо строка для конструирования запроса (ее признаком является позиция ";" в строке до первой кавычки):
+//"имя_таблицы;{условие (where...|*|+);}имена_полей"
+//условие определяется на основе слова-признака, если его нет, следующие слова считаются полями
+//если условие не передано, таблица читается по айди (первое поле), если * то вся, начинается с where - испольуется как есть
+//использовать ";" в условии нельзя (поломает логику разбора, на наличие литералов проверки нет)
+//если установлено OneRow, читает только одну строку (при отсутствии данных вернет пустую запись)
+var
+  LParams, LFields: TVarDynArray;
+  LWhere: string;
+  SqlM: string;
+begin
+  Result := False;
+  if pos(';', Sql) > 0 then begin
+    LParams := A.Explode(Sql, ';');
+    if (LParams[1] = '') then
+      LParams[1] := '*';
+    if (LParams[1] = '') or (Pos('where ', LParams[1]) = 1) or (Pos('+', LParams[1]) = 1) or (Pos('*', LParams[1]) = 1) then
+      LWhere := LParams[1]
+    else
+      LWhere := '';
+    LFields := Copy(LParams, S.IIf(LWhere <> '', 2, 1).AsInteger);
+    Sql := QGetSql(S.IIf((LWhere = '*') or (Pos('where ', LWhere) = 1), 'a', 's'), LParams[0], A.Implode(LFields, ';')) + S.IIfStr((LWhere <> '') and (LWhere <> '*'), ' ' + LWhere);
+  end;
+  Res := QLoadToRec(Sql, ParamValues);
   Result := Res.Count > 0;
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray2): Boolean;
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray2): Boolean;
 var
   na: TNamedArr;
 begin
-  Result := QLoadFromQuery(Sql, ParamValues, na);
+  Result := QLoad(Sql, ParamValues, na);
   Res := na.V;
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean;
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray; var Res: TVarDynArray): Boolean;
 var
   na: TNamedArr;
 begin
-  Result := QLoadFromQuery(Sql, ParamValues, na);
+  Result := QLoad(Sql, ParamValues, na);
   if na.Count > 0 then
     Res := A.VarDynArray2RowToVD1(na.V, 0)
   else
     Res := [null];
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean;
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray; Res: TMemTableEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean;
 var
   na: TNamedArr;
 begin
-  Result := QLoadFromQuery(Sql, ParamValues, na);
+  Result := QLoad(Sql, ParamValues, na);
   Mth.LoadMemTableFromNamedArray(Res, na, ByFieldNames, ClearTable);
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray; Res: TDBGridEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean;
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray; Res: TDBGridEh; ByFieldNames: Boolean = True; ClearTable: Boolean = True): Boolean;
 var
   na: TNamedArr;
 begin
-  Result := QLoadFromQuery(Sql, ParamValues, na);
+  Result := QLoad(Sql, ParamValues, na);
   Mth.LoadGridFromNamedArray(Res, na, ByFieldNames, ClearTable);
 end;
 
-function TmyDB.QLoadFromQuery(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
+function TmyDB.QLoad(Sql: string; ParamValues: TVarDynArray): TVarDynArray2;
 var
   na: TNamedArr;
 begin
-  QLoadFromQuery(Sql, ParamValues, na);
+  QLoad(Sql, ParamValues, na);
   Result := na.V;
+end;
+
+function TmyDB.QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
+var
+  na: TNamedArr;
+  i: Integer;
+begin
+  QLoad(Sql, ParamValues, na, True);
+  Result := VarArrayCreate([0, na.FieldsCount - 1], varVariant);
+  if Length(na.V) = 0 then
+    for i := 0 to High(na.F) do
+      Result[i] := Null
+  else
+    for i := 0 to High(na.F) do
+      Result[i] := na.V[0][i];
+end;
+
+function TmyDB.QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+var
+  na: TNamedArr;
+begin
+  QLoad(Sql, ParamValues, na, True);
+  Result := na.V[0];
+end;
+
+function TmyDB.QLoadValue(Sql: string; ParamValues: TVarDynArray): Variant;
+var
+  na: TNamedArr;
+begin
+  Result := Null;
+  QLoad(Sql, ParamValues, na, True);
+  if na.Count > 0 then
+    Result := na.V[0][0];
+end;
+
+function TmyDB.QLoadCol(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+//загружаем одно поле (столбец) из полученных строк в вариантный одномерный массив
+var
+  na: TNamedArr;
+begin
+  QLoad(Sql, ParamValues, na, True);
+  Result := A.VarDynArray2ColToVD1()
 end;
 
 
 
 
+(*
 
-function TmyDB.QLoadToVarDynArrayOneRow(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+function TmyDB.QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
 //загружаем одну строку в вариантный одномерный массив
 var
   res, i, j: Integer;
@@ -1206,8 +1264,10 @@ begin
   end;
   QClose;
 end;
+*)
 
-function TmyDB.QLoadToVarDynArrayOneCol(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
+(*
+function TmyDB.QLoadCol(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
 //загружаем одно поле (столбец) из полученных строк в вариантный одномерный массив
 var
   res, i, j: Integer;
@@ -1226,6 +1286,7 @@ begin
   end;
   QClose;
 end;
+*)
 
 function TmyDB.QLoadToMemTableEh(Sql: string; ParamValues: TVarDynArray; MemTableEh: TMemTableEh; FieldNames: string = ''; Append: Byte = 0): Integer;
 //запись результатов запроса селект в мемтаблеех

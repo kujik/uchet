@@ -261,7 +261,7 @@ country - двухбуквенный код страны
 //  text;//ChildNodes['holideys1'].text;//ChildNodes[1].Text;
 //  ShowMessage(st);
   if Length(a2) > 0 then begin
-    a3:=Q.QLoadToVarDynArray2('select dt, type, descr from ref_holidays where extract(year from dt) = :year order by dt', [S.VarToInt(Year)]);
+    a3:=Q.QLoad('select dt, type, descr from ref_holidays where extract(year from dt) = :year order by dt', [S.VarToInt(Year)]);
     b:=Length(a2) <> Length(a3);
     if not b then
       for i:=0 to High(a2) do
@@ -305,7 +305,7 @@ begin
 //  dt:=Turv.GetTurvBegDate(Date);
 //  dt:=EncodeDate(2023, 6, 16);
   //получим список турв
-  ar1:=Q.QLoadToVarDynArray2(
+  ar1:=Q.QLoad(
     'select dt1, dt2, id_division, name, editusers, 0 from v_turv_period where dt1 = :dt$d',
     [dt]
   );
@@ -410,7 +410,7 @@ begin
   //для отладки!
 //  dt:=EncodeDate(2023, 6, 16);
   //получим пользователей, у которых есть правая на внесение времени парсека
-  ar1:=Q.QLoadToVarDynArray2(
+  ar1:=Q.QLoad(
     'select ur.id_user from adm_roles r, adm_user_roles ur where r.id = ur.id_role and '','' || r.rights || '','' like :v$t',
     ['%,' + rW_J_Turv_TP + ',%']
   );
@@ -420,7 +420,7 @@ begin
   //получим время автосогласования
   autoagreedtime:=Q.QLoadValue('select time_autoagreed from workers_cfg', []);
   //получим список турв
-  ar1:=Q.QLoadToVarDynArray2(
+  ar1:=Q.QLoad(
     'select dt1, dt2, id_division, name, editusers, 0 from v_turv_period where dt1 = :dt$d',
     [dt]
   );
@@ -436,7 +436,7 @@ begin
     //цикл по всем работникам (строкам) турв)
     for i:= 0 to High(ar2) do begin
       //получим данные строки по дням
-      va1:=Q.QLoadToVarDynArray2(
+      va1:=Q.QLoad(
         'select dt, worktime1, id_turvcode1, worktime2, id_turvcode2, worktime3, id_turvcode3 from turv_day  where '+
         'id_worker = :id_worker$i and dt >= :dtbeg$d and dt <= :dtend$d order by dt',
         [ar2[i][2], ar2[i][0], ar2[i][1]]
@@ -600,7 +600,7 @@ var
   body: string;
   addr: string;
 begin
-  va:=Q.QLoadToVarDynArray2(
+  va:=Q.QLoad(
     'select org || '' '' || num as ordernum, project, customer, dt_beg, dt_otgr, constructor '+
     'from uchet.v_to_orders_list_current2 where (dt_smeta is null) and (dt_end is null) order by ordernum',
     []
@@ -646,7 +646,7 @@ begin
     //перенесем в архив заказы, которые завершены ранее /2 недель/ назад, и еще не в архиве
     dt1:=IncDay(Date, -vtimes[0]);
  //   dt1:=IncDay(Date, -88);
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select id, path, dt_beg, dt_end from v_orders where nvl(in_archive, 0) <> 1 and dt_end is not null and dt_end < :dt1$d',
       [dt1]
     );
@@ -665,7 +665,7 @@ begin
   if S.NNum(vtimes[0])>= 10 then begin
     //признаком перемещенного заказа является нулевое значение времени в дате завершения
     dt1:=IncDay(Date, -vtimes[0]);
-    va1:=QLoadToVarDynArray2(
+    va1:=QLoad(
       'select id_order, path, dt_beg, dt_end from uchet.v_to_orders_list_current where to_char(dt_end, :mask$s) <> :0$s and dt_end < :dt1$d',
       VarArrayOf(['HH24:MI:SS', '00:00:00', dt1])
     );
@@ -688,7 +688,7 @@ begin
     //проверяем именно остаток restsum а не статус, тк он будет не оплачен если сумма платежей 0,
     //и при этом макс дата платежа должна быть пустой или же раньше ревизии кассы
     dt1:=IncDay(Date, -vtimes[1]);
-    va1:=QLoadToVarDynArray2(
+    va1:=QLoad(
       'select id_order, path, dt_beg, dt_end from v_sn_orders '+
       'where dt_end is not null and to_char(dt_end, :mask$s) = :0$s and org = ''Н'' and '+
       'restsum <= 0 and dt_end < :dt1$d and dt_end < (select dt from sn_cash_revision_dt) and '+
@@ -726,7 +726,7 @@ begin
     //удаляем счета за наличный расчет
     //счет должен быть полностью оплачен и последняя дата платежа должна быть раньше целевой даты и даты ревизии кассы
     dt1:=IncDay(Date, -vtimes[2]);
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select id, filename, type, maxdtpaid, dt from v_sn_calendar_accounts where '+
       'type <> 1 and paimentstatus = ''полностью'' and maxdtpaid < :dt1$d and '+
       'maxdtpaid < (select dt from sn_cash_revision_dt) order by maxdtpaid asc',
@@ -800,14 +800,14 @@ begin
   //неделю назад в качестве конечной
   //вставить строку в таблицу, айди из последовательности
   //sq_closed_period_id
-  va2 := Q.QLoadToVarDynArray2('select max(end_date) from dv.closed_period', []);
+  va2 := Q.QLoad('select max(end_date) from dv.closed_period', []);
   if Length(va2) = 0
     then dt1 := IncMonth(Date, -1)
     else dt1 := IncDay(VarToDateTime(va2[0][0]), 1);
   dt2 := GetLastSunday(Date);
   if dt1 >= dt2 then
     Exit;
-  Q.QIUD('i', 'dv.closed_period', 'dv.sq_closed_period_id', 'id_closed_period$i;period_name$s;start_date$d;end_date$d;is_closed$i',
+  Q.QSave('i', 'dv.closed_period', 'dv.sq_closed_period_id', 'id_closed_period$i;period_name$s;start_date$d;end_date$d;is_closed$i',
     [-1, 'Новый период', dt1, dt2, 1]
   );
 end;
@@ -822,7 +822,7 @@ var
 begin
   //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
   IdSch := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', []), 36327);
-  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
+  Q.QLoad('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
   IdSchN := Q.QLoadValue('select max(id_schet) from dv.sp_schet', []);
   //сохраним айди обработанного счета
   Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
@@ -882,8 +882,8 @@ var
   st, css: string;
   e: Extended;
 begin
-  Q.QLoadFromQuery('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day /*where monitor_price = 1*/ order by name asc', [], na);
-  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
+  Q.QLoad('select name, price_check, price, name_unit, qnt, sum, sum_diff, dt, num from v_prices_from_sp_schet_day /*where monitor_price = 1*/ order by name asc', [], na);
+  va := Q.QLoadCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   st := '';
   //va:=[222222];
   //не получается сделать границы. появлялись при вставке данных тегов в td, но после пропадали, не воспроизводится

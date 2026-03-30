@@ -162,7 +162,7 @@ begin
 
   if Mode = fAdd then begin
     if AddParam <> null then begin
-      va2:=Q.QLoadToVarDynArray2(
+      va2:=Q.QLoad(
         'select id as id_template, templatename, project as projectname, id_or_format_estimates, (select name from or_formats where id = id_format) as formatname from orders where id = :id$i',
         [AddParam]
       );
@@ -345,13 +345,13 @@ var
   b: Boolean;
   i, j: Integer;
 begin
-    va1 := Q.QLoadToVarDynArray2(
+    va1 := Q.QLoad(
       'select null, id_std_item, 0, itemname, price from v_order_items where id_order = :id$i order by pos',
       [F.GetProp('id_template', fvtVBeg)]
     );
     va2 := [];
     if (Mode <> fAdd) then begin
-      va2 := Q.QLoadToVarDynArray2(
+      va2 := Q.QLoad(
         'select id, id_std_item, 0, itemname, itemprice, '+
         'qnt1, null, qnt2, null, qnt3, null, qnt4, null, qnt5, null, qnt6, null, '+
         'qnt7, null, qnt8, null, qnt9, null, qnt10, null, qnt11, null, qnt12, null,'+
@@ -402,7 +402,7 @@ begin
       else if Frg1.GetValue('ch', i) = 1
         then SaveMode := 'u';
     if SaveMode = '' then Continue;
-    if Q.QIUD(
+    if Q.QSave(
       SaveMode, 'planned_order_items', '',
       'id$i;id_std_item$i;id_planned_order$i;comm$s;qnt1$i;qnt2$i;qnt3$i;qnt4$i;qnt5$i;qnt6$i;qnt7$i;qnt8$i;qnt9$i;qnt10$i;qnt11$i;qnt12$i',
       [Frg1.GetValue('id', i), Frg1.GetValue('id_std_item', i), ID, Frg1.GetValue('comm', i),
@@ -428,7 +428,7 @@ begin
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
     end;
-  CtrlValues := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', View, FieldsSt), [id]);
+  CtrlValues := Q.QLoadRow0(Q.QGetSql('s', View, FieldsSt), [id]);
   for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       F.SetPropP(i, CtrlValues[i], fvtVBeg);
@@ -458,7 +458,7 @@ begin
     end;
   //сохраняем заголовочную часть
   Q.QBeginTrans(True);
-  res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSave2, CtrlValues2);
+  res := Q.QSave(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSave2, CtrlValues2);
   IdAfterInsert:= res;
   if not (Mode in [fEdit, fDelete]) then
     ID := res;

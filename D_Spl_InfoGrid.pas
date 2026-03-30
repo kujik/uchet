@@ -93,7 +93,7 @@ begin
   {(*}
   DBGridEh1.RowDetailPanel.Active:=False;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_MinPart then begin
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
     'select n.id_supplier, k.full_name, n.name_pos, u.name_unit, n.base_unit_k, n.minpart '+
     'from dv.namenom_supplier n, dv.kontragent k, dv.unit u '+
     'where id_nomencl = :id$i and n.id_supplier = k.id_kontragent and n.id_base_unit = u.id_unit',
@@ -115,7 +115,7 @@ begin
     ColumnsVerifications := ['', '', '', '', '', '0:1000000:0'];
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Rezerv then begin
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
       'select /*stockdate, */ numdoc, area_short, project, dt_beg, dt_otgr, rashod from v_spl_rezerv_detail where id_nomencl = :id$i order by stockdate desc',
       [id]
     );
@@ -137,7 +137,7 @@ begin
   {*)}
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_OnWay then begin
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id, date_registr, num, name_org, quantity_suppl, unit_suppl, nvl(quantity_main,0), nvl(fact_quantity,0), nvl(quantity_main, 0) - nvl(fact_quantity, 0) as rest '+
       'from v_spl_onway_detail where id_n = :id$i order by date_registr',
       [id]
@@ -175,7 +175,7 @@ begin
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Consumption then begin
   //документы по расходу за выбранный период
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id, id_doc, doctypename, docnum, dt, scladname, comm, qnt '+
       'from v_spl_consumption '+
       'where id_nomencl = :id$i and dt >= trunc(sysdate) - :d$i + 1 and doctype <> 2 /*05-09-24 убираем акты списания*/'+
@@ -203,7 +203,7 @@ begin
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_QntOnStore then begin
   //количество на складах
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
       'select skladname, qnt from v_itm_qntonstore '+
       'where id_nomencl = :id$i and id_sklad is not null and (not id_sklad in (842, 922)) '+
       'order by skladname',
@@ -221,7 +221,7 @@ begin
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Incoming then begin
   //документы по приходу за выбранный период (по приходным накладным)
-  va2:=Q.QLoadToVarDynArray2(
+  va2:=Q.QLoad(
       'select td, numdoc, stockdate, basis, prihod from v_itm_movenomencl '+
       'where id_nomencl = :id$i and doctype in (1/*, 5*/) and stockdate >= trunc(sysdate) - :d$i + 1 '+
       'order by stockdate desc',
@@ -248,7 +248,7 @@ begin
    и наоборот будет верный приход при фильтре "На склад"
   }
 
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id_stock, id_doc, doctype, td, numdoc, stockdate, skladsrc, skladdest, basis, dt_beg, dt_otgr, project, prihod, rashod, comments '+   //sourcedoc
       'from v_itm_movenomencl where id_nomencl = :id$i and stockdate >= :dt$d order by stockdate',
       [id, EncodeDate(2024, 01, 01)]
@@ -281,7 +281,7 @@ begin
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_DiffInOrder then begin
   //НЕ РАБОТАЕТ!!!
   //документы по движению по номенклатуре за весь период, все документы движдения (приходны, расходные, авр, акты списания, постановка в резерв)
-    va:=Q.QLoadToVarDynArrayOneCol(
+    va:=Q.QLoadCol(
       'select basis from ( '+
       'select sum(prihod + (case when doctype = 3 then 0 else rashod end)) as moves, basis from v_itm_movenomencl ' +
       'where id_nomencl = :id$i and stockdate >= :dt$d and doctype in (-1,2,3,4,-5,-6) and not (doctype = 3 and rashod < 0) ' +
@@ -291,7 +291,7 @@ begin
     );
     if Length(va) = 0 then va:= [-1];
     st:= '''' + A.Implode(va, ''',''') + '''';
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id_stock, id_doc, doctype, td, numdoc, stockdate, skladsrc, skladdest, basis, dt_beg, dt_otgr, project, prihod, rashod, comments '+   //sourcedoc
       'from v_itm_movenomencl where id_nomencl = :id$i and stockdate >= :dt$d  and doctype in (-1,2,3,4,-5,-6) and not (doctype = 3 and rashod < 0) '+
       'and basis in (' + st + ') '+
@@ -325,7 +325,7 @@ begin
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_SpSchetList then begin
   //список счетов по данной номенклатуре
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id_schet, date_registr, num, name_org, name, quantity, unit, price '+
       'from v_spl_schetbynomencl where id_nomencl = :id$i order by date_registr',
       [id]
@@ -359,7 +359,7 @@ begin
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_InBillList then begin
   //список приходных накладных по данной номенклатуре
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id_inbill, inbilldate, inbillnum, name_org, ibquantity, fact_quantity, name_unit, price, price_itogo '+
       'from v_spl_nom_inbills where id_nomencl = :id$i order by inbilldate',
       [id]
@@ -384,7 +384,7 @@ begin
   Gh.SetGridInCellButtons(DBGridEh1, 'inbillnum', 'Открыть приходную накладную', CellButtonClick);
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_OnDemand then begin
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id_demand, demand_date, docstate, quantity '+
       'from v_spl_nomencl_on_demand '+
       'where id_nomencl = :id$i and demand_date > sysdate - (select on_demand_days from spl_minremains_params) '+
@@ -413,7 +413,7 @@ begin
       else if AddParam[1] < 0
         then st := S.NSt(Q.QLoadValue('select or' + VarToStr(-AddParam[1]) + ' from planned_order_estimate3 where name = :name$s', [AddParam[0]]));
     if st = '' then st := '0';
-    va2:=Q.QLoadToVarDynArray2(
+    va2:=Q.QLoad(
       'select id, num, projectname, dt_start, dt_end '+
       'from v_planned_orders '+
       'where id in (' + st + ') '+
@@ -444,7 +444,7 @@ var
 begin
   inherited;
   if (FormDoc = myfrm_Dlg_Spl_InfoGrid_OnWay)and(FieldNameCurr = 'num') then begin
-    va:=Q.QLoadToVarDynArrayOneRow(
+    va:=Q.QLoadRow0(
       'select filename from sn_calendar_accounts where account = :account$s and accountdt = :dt$d',
       [MemTableEh1.FieldByName('num').Value, MemTableEh1.FieldByName('date_registr').Value]
     );
@@ -452,7 +452,7 @@ begin
       then Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(VarToStr(va[0])), 'Файл счета не найден!');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Rezerv then begin
-    va:=Q.QLoadToVarDynArrayOneRow(
+    va:=Q.QLoadRow0(
       'select id from v_orders where ornum = :ornum$s',
       [MemTableEh1.FieldByName('ornum').Value]
     );

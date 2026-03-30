@@ -200,7 +200,7 @@ function TForm_MdiDialogTemplate.Load(): Boolean;
 //по уже подготовленным глобальным переменным, также в глобальную CtrlValues
 //результат пока не влияет ни на что, если не был получен массив, далее проверяется и выдается сообщениеоб удаленной строке
 begin
-  CtrlValues := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', View, Fields), [id]);
+  CtrlValues := Q.QLoadRow0(Q.QGetSql('s', View, Fields), [id]);
   Result := True;
 end;
 
@@ -233,7 +233,7 @@ begin
       Delete(CtrlValues2, i, 1);
     end;
   FieldsSaveNew:= A.Implode(FieldsSave2, ';');
-  res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSaveNew, CtrlValues2);
+  res := Q.QSave(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSaveNew, CtrlValues2);
   IdAfterInsert:= res;
   Result := res <> -1;
 end;
@@ -384,7 +384,7 @@ begin
 
   if Mode = fAdd then
     CtrlValues := CtrlValuesDefault
-  else    //только читает:     CtrlValues := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', View, Fields), [id]);
+  else    //только читает:     CtrlValues := Q.QLoadRow0(Q.QGetSql('s', View, Fields), [id]);
     Load;
   //если строка не найдена, выдадим сообщение и выйдем
   if Length(CtrlValues) = 0 then begin

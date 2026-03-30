@@ -234,7 +234,7 @@ var
   pns: string;
 begin
   Exit;
-  va21 := Q.QLoadToVarDynArray2('select id_employee, is_hired, is_terminated, personnel_number, id_organization, id from w_employee_properties order by id_employee, id', []);
+  va21 := Q.QLoad('select id_employee, is_hired, is_terminated, personnel_number, id_organization, id from w_employee_properties order by id_employee, id', []);
   var pn := 0;
   for var i := 0 to High(va21) do begin
     if va21[i][4] = null then begin

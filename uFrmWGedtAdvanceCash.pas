@@ -80,7 +80,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoadFromQuery('select id, id_employee, id_departament, dt, employee, departament from v_w_advance_cash where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_employee, id_departament, dt, employee, departament from v_w_advance_cash where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -147,7 +147,7 @@ begin
     Q.QExecSql('delete from w_advance_cash_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_advance_cash_item', '', 'id$i;id_advance_cash$i', [-1, ID]);
+      var idn := Q.QSave('i', 'w_advance_cash_item', '', 'id$i;id_advance_cash$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     f := A.Explode(cFieldsS, ';');
@@ -157,7 +157,7 @@ begin
     for j := 0 to High(f) do begin
       va := va + [Frg1.GetValue(A.Explode(f[j],'$')[0], i, False)];
     end;
-    Q.QIUD('u', 'w_advance_cash_item', '', cFieldsS, va);
+    Q.QSave('u', 'w_advance_cash_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
   Result := Q.CommitSuccess;
@@ -199,7 +199,7 @@ function TFrmWGedtAdvanceCash.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_advance_cash_item', cFieldsS + ';' + cFieldsL) + ' where id_advance_cash = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, job',
+  Q.QLoad(Q.QGetSql('a', 'v_w_advance_cash_item', cFieldsS + ';' + cFieldsL) + ' where id_advance_cash = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, job',
     [ID], na
   );
   Frg1.LoadData(na);
@@ -244,7 +244,7 @@ begin
   dt2:= EncodeDate(YearOf(dt1), MonthOf(dt1), 15);
 
   if FPayrollParams.G('id_employee') = null then begin
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
       'from v_w_advance_transfer_item where dt = :dt$d and id_target_employee is null ' +
       'group by id_employee '+
@@ -252,7 +252,7 @@ begin
       [dt1],
       na1
     );
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, id_departament, id_job, departament, job from v_w_employee_properties where dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) order by employee, id desc', [dt2, dt1], na2
     );
     for i := 0 to na1.High do begin
@@ -273,7 +273,7 @@ begin
     end;
   end
   else begin
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
       'from v_w_advance_transfer_item where dt = :dt$d and id_target_employee = :ide$i ' +
       'group by id_employee '+
@@ -281,7 +281,7 @@ begin
       [dt1, FPayrollParams.G('id_employee')],
       na1
     );
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_employee, id_departament, id_job, departament, job from v_w_employee_properties where dt_beg <= :dt_end$d and (dt_end is null or dt_end >= :dt_beg$d) and id_departament = :id_departament$i order by employee, id desc',
       [dt2, dt1, FPayrollParams.G('id_departament')], na2
     );

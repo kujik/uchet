@@ -286,7 +286,7 @@ begin
   gr := S.NInt(Frg1.GetControlValue('CbEstimate'));
   if gr <= 1 then
     Exit;  //для нестандарных изделия (формат Общий) и Доп комплектации копирование недопустимо
-  va2 := Q.QLoadToVarDynArray2('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format > 1 and e.id_format = f.id and e.active = 1 and f.active = 1 ' + 'and e.id <>:id$i ' + 'order by 1 asc', [gr]);
+  va2 := Q.QLoad('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format > 1 and e.id_format = f.id and e.active = 1 and f.active = 1 ' + 'and e.id <>:id$i ' + 'order by 1 asc', [gr]);
   va := [];
   vak := [];
   vav := [];
@@ -301,13 +301,13 @@ begin
     Fields := 'id$i;id_or_format_estimates$i;name$s;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;r9$i;resale$i;price$f;price_pp$f;setofpan$i';
     if MyQuestionMessage('Будут скопированы изделия из справочника'#13#10 + '"' + vav[A.PosInArray(va[0], vak)] + '"'#13#10 + '(кроме тех, что уже существуют).'#13#10'Продолжить?') <> mrYes then
       Exit;
-    va2 := Q.QLoadToVarDynArray2(Q.QSIUDSql('A', 'or_std_items', Fields) + ' where id_or_format_estimates = :ide$i', [va[0]]);
+    va2 := Q.QLoad(Q.QGetSql('A', 'or_std_items', Fields) + ' where id_or_format_estimates = :ide$i', [va[0]]);
     for i := 0 to High(va2) do begin
       j := Q.QLoadValue('select count(*) from or_std_items where lower(name) = lower(:name$s) and id_or_format_estimates = :ide$i', [va2[i][2], gr]);
       if j > 0 then
         Continue;
       va2[i][1] := gr;
-      Q.QIUD('i', 'or_std_items', '', Fields, TVarDynArray(va2[i]));
+      Q.QSave('i', 'or_std_items', '', Fields, TVarDynArray(va2[i]));
       Frg1.RefreshGrid;
     end;
   end;

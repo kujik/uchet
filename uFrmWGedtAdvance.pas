@@ -100,7 +100,7 @@ begin
   //возьмем блокировку
   if FormDbLock = fNone then Exit;
   //поля смой записи ведомости
-  Q.QLoadFromQuery('select id, id_departament, id_employee, personnel_number, dt, departament, employee, is_office, is_finalized from v_w_advance_calc where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_departament, id_employee, personnel_number, dt, departament, employee, is_office, is_finalized from v_w_advance_calc where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -210,7 +210,7 @@ begin
   for i := 0 to Frg1.GetCount(False) - 1 do begin
     //если строка не была прочитана ранее из бд - вставим
     if Frg1.GetValueI('id', i, False) = 0 then begin
-      var idn := Q.QIUD('i', 'w_advance_calc_item', '', 'id$i;id_advance_calc$i', [-1, ID]);
+      var idn := Q.QSave('i', 'w_advance_calc_item', '', 'id$i;id_advance_calc$i', [-1, ID]);
       Frg1.SetValue('id', i, False, idn);
     end;
     //обновим все сохраняемые поля грида для строки
@@ -221,7 +221,7 @@ begin
     for j := 0 to High(f) do begin
       va := va + [Frg1.GetValue(A.Explode(f[j], '$')[0], i, False)];
     end;
-    Q.QIUD('u', 'w_advance_calc_item', '', cFieldsS, va);
+    Q.QSave('u', 'w_advance_calc_item', '', cFieldsS, va);
   end;
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
@@ -283,7 +283,7 @@ function TFrmWGedtAdvance.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoadFromQuery(Q.QSIUDSql('a', 'v_w_advance_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_advance_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, personnel_number',
+  Q.QLoad(Q.QGetSql('a', 'v_w_advance_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_advance_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);
@@ -332,7 +332,7 @@ begin
   if FPayrollParams.G('id_employee') = null then begin
     //статусы работников, по которым есть ведомости увольнения
     va := [];
-    va := Q.QLoadToVarDynArrayOneCol(
+    va := Q.QLoadCol(
       'select '+
       '  p.id '+
       'from '+
@@ -361,7 +361,7 @@ begin
   end;
   //загрузим дванные по зарплате из предыдущей ведомости по этому подраздделению
   //!!!
-  Q.QLoadFromQuery(
+  Q.QLoad(
     'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt1 = :dt1$d',
     [FPayrollParams.G('id_departament'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt'), -1))],
     naprev

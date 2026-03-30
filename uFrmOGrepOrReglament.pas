@@ -72,7 +72,7 @@ end;
 
 procedure TFrmOGrepOrReglament.LoadReglament;
 begin
-  Q.QLoadFromQuery('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg, o.dt_otgr, o.project from order_reglaments r, v_orders o where r.id = o.id_reglament and o.id = :id$i', [ID], FReglament);
+  Q.QLoad('select r.id, r.name, r.deadline, r.sn_1, r.sn_2, r.sn_3, r.sn_4, o.ornum, o.dt_beg, o.dt_otgr, o.project from order_reglaments r, v_orders o where r.id = o.id_reglament and o.id = :id$i', [ID], FReglament);
   if FReglament.Count = 0 then
     Exit;
   lblOrder.Caption := FReglament.G(0, 'ornum').AsString + FReglament.G(0, 'project').AsString + ' (' + FReglament.G(0, 'dt_beg').AsString + ' - ' + FReglament.G(0, 'dt_otgr').AsString + ')';
@@ -121,7 +121,7 @@ var
   va2: TVarDynArray2;
 begin
   //читаем всю таблицу по участкам для данного регламента
-  va2 := Q.QLoadToVarDynArray2('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [FReglament.G(0, 'id')]);
+  va2 := Q.QLoad('select id_work_cell_type, day_beg, day_end, color from order_reglament_items where id_reglament = :id_reglament$i', [FReglament.G(0, 'id')]);
   //установим дни и цвета для участков
   for i := 0 to High(va2) do
     for j := 0 to Frg1.GetCount(False) - 1 do

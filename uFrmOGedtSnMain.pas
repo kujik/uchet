@@ -103,7 +103,7 @@ var
   i, j: Integer;
 begin
   Caption := 'Формирование заявок на снабжение';
-  FDays:=Q.QLoadToVarDynArrayOneRow('select d0,d1,d2,d3,d4,d5,d6,prc_min_ost, prc_qnt, prc_need_m, planned_dt from spl_minremains_params', []);
+  FDays:=Q.QLoadRow0('select d0,d1,d2,d3,d4,d5,d6,prc_min_ost, prc_qnt, prc_need_m, planned_dt from spl_minremains_params', []);
 
   Q.QExecSql('delete from spl_remains_enter', []);
   FPrcMinOst:=FDays[7];
@@ -117,7 +117,7 @@ begin
   for i := 0 to High(FDays) - 1 do
     FPeriodNames := FPeriodNames + [S.iif(FDays[i] < 0, 'нет', S.GetDaysCountToName(FDays[i]))];    //!!! ошибка при уборке периода в настройках
   //данные для кастомного отображения "в пути" (если onway_custom = 1) - важно порядок dt2, dt1, они в базе перепутаны логически(
-  FCustomOnWay:=Q.QLoadToVarDynArrayOneRow('select onway_custom, onway_dt2, onway_dt1, onway_old_days from spl_minremains_params', []);
+  FCustomOnWay:=Q.QLoadRow0('select onway_custom, onway_dt2, onway_dt1, onway_old_days from spl_minremains_params', []);
   //поля
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible, myogIndicatorCheckboxes, myogMultiSelect];
   va2 := [
@@ -479,7 +479,7 @@ begin
     FillFromPlanned;
   end
   else if Tag = 1001 then begin
-    va1 := Q.QLoadToVarDynArrayOneCol('select caption from v_spl_history_contents', []);
+    va1 := Q.QLoadCol('select caption from v_spl_history_contents', []);
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~История состояния СН', 50 + 200, 50,
       [[cntComboL, 'Дата:','1:500']],
       [VarArrayOf(['', VarArrayOf(va1)])],
@@ -492,8 +492,8 @@ begin
     ClearInvalidReserve;
   end
  {  else if Tag = 1003 then begin
-    va1 := Q.QLoadToVarDynArrayOneCol('select ornum from v_orders where id > 0 and id_itm is not null order by id', []);
-    va2 := Q.QLoadToVarDynArrayOneCol('select id from v_orders where id > 0 and id_itm is not null order by id', []);
+    va1 := Q.QLoadCol('select ornum from v_orders where id > 0 and id_itm is not null order by id', []);
+    va2 := Q.QLoadCol('select id from v_orders where id > 0 and id_itm is not null order by id', []);
     if TFrmBasicInput.ShowDialog(Parent, '', [], fAdd, '~Заказ для фильтра', 50 + 100, 50,
       [[cntComboLK, 'Заказ:','0:500']],
       [VarArrayOf([null, VarArrayOf(va1), VarArrayOf(va2)])],
@@ -505,7 +505,7 @@ begin
       Frg1.Opt.Caption := Caption;
     end
     else begin
-      va1 := Q.QLoadToVarDynArrayOneRow('select id_itm, ornum from v_orders where id = :id$i', [va2[0]]);
+      va1 := Q.QLoadRow0('select id_itm, ornum from v_orders where id = :id$i', [va2[0]]);
       Frg1.Opt.SetWhere(' where id in (select id_nomencl from dv.nomenclatura_in_izdel where id_nomizdel_parent_t is not null and id_zakaz = ' + va1[0].AsString + ')');
       Frg1.Opt.Caption := Caption + ' (' + va1[1].AsString + ')';
     end;
@@ -712,7 +712,7 @@ begin
     if (Fr.CurrField = 'to_order'){ and not MemTableEh1.ReadOnly} then begin
       i := S.Iif(Fr.MemTableEh1.FieldByName(Fr.CurrField).AsInteger = 0, 1, 0);
       Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 5, S.NullIfEmpty(Value)]));
-      va2 := Q.QLoadToVarDynArray2('select to_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
+      va2 := Q.QLoad('select to_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
       if (Length(va2) = 0) or (va2[0][0] <> S.NullIfEmpty(Value)) then begin
         MyWarningMessage('Не удалось установить значение!');
         Fr.MemTableEh1.Cancel;
@@ -729,7 +729,7 @@ begin
       if not (S.IsNumber(Value, 0, 1000000) or (VarToStr(Value) = '')) then
         Break;
       Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 4, S.NullIfEmpty(Value)]));
-      va2 := Q.QLoadToVarDynArray2('select qnt_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
+      va2 := Q.QLoad('select qnt_order from spl_itm_nom_props where id = :id$i', [Fr.ID]);
       if (Length(va2) = 0) or (va2[0][0] <> S.NullIfEmpty(Value)) then begin
         MyWarningMessage('Не удалось установить значение!');
         Fr.MemTableEh1.Cancel;
@@ -966,7 +966,7 @@ procedure TFrmOGedtSnMain.SetCategoryes;
 var
   i: Integer;
 begin
-  FCategoryes:=Q.QLoadToVarDynArray2('select name, id, useravail from spl_categoryes order by name', []);
+  FCategoryes:=Q.QLoad('select name, id, useravail from spl_categoryes order by name', []);
   FCategoryesSelf:=[];
   for i:=0 to High(FCategoryes) do
     if S.InCommaStr(IntToStr(User.GetId), FCategoryes[i, 2]) then begin
@@ -1198,7 +1198,7 @@ begin
   if MyQuestionMessage('Плановая потребность рассчитана на ' + DateTimeToStr(FPlannedDt) + #13#10'Обновить?') <> mrYes then
     Exit;
   Orders.CrealeEstimateOnPlannesOrders(Now, True);
-  FPlannedDt:=Q.QLoadToVarDynArrayOneRow('select planned_dt from spl_minremains_params', [])[0];
+  FPlannedDt:=Q.QLoadRow0('select planned_dt from spl_minremains_params', [])[0];
   Frg1.RefreshGrid;
 end;
 
@@ -1299,7 +1299,7 @@ begin
     Result := False;
     Exit;
   end;
-  va2 := Q.QLoadToVarDynArray2(
+  va2 := Q.QLoad(
     'select v.name, v.need from v_spl_minremains v, spl_itm_nom_props p where v.id = p.id and nvl(v.need, 0) < 0 and p.to_order <> 1 and p.id_category = :id_category$i',
     [id_category]
   );
@@ -1367,7 +1367,7 @@ begin
   ) <> mrYes then
     Exit;
   //получим непустые (но нулевые установим!) плановые потребности за этот месяц
-  va2 := Q.QLoadToVarDynArray2('select id_nomencl, qnt' + va[0] + ' from planned_order_estimate3 where id_nomencl is not null and qnt' + va[0] + ' is not null', []);
+  va2 := Q.QLoad('select id_nomencl, qnt' + va[0] + ' from planned_order_estimate3 where id_nomencl is not null and qnt' + va[0] + ' is not null', []);
   //пройдем пор полученному массиву и установим целевые значения (окрушляем до десятых)
   Q.QBeginTrans(True);
   for i := 0 to High(va2) do begin
@@ -1431,7 +1431,7 @@ begin
     MyInfoMessage('Нет подвисших резервов.');
     Exit;
   end;
-  va := Q.QLoadToVarDynArrayOneCol('select info from v_reservpos_completed_orders2', []);
+  va := Q.QLoadCol('select info from v_reservpos_completed_orders2', []);
   if MyQuestionMessage('В резерве зависли следующие (' + IntToStr(i) + ') позиции по закрытым в Учете заказам:'#13#10+
     '(Нажмите "Да" чтобы очистить резервы)'#13#10 + A.Implode(va, #13#10), 1) <> mrYes then
     Exit;
@@ -1451,12 +1451,12 @@ var
   st, st1, css: string;
   e: Extended;
 begin
-  Q.QLoadFromQuery(
+  Q.QLoad(
      'select name, price_check, name_unit, qnt, qnt_onway, rezerv, need, qnt_order, qnt_order * price_check as sum, qnt_order + need as excess, nullif(greatest(-1, round((qnt_order + need) * price_check)), -1) as exceed_sum,  qnt1, qnt3 '+
      'from v_spl_minremains where to_order = 1 and id_category = :id_category$i order by name asc',
      [Frg1.GetControlValue('CbCategory')], na
   );
-  va := Q.QLoadToVarDynArrayOneCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
+  va := Q.QLoadCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   st := '';
   if na.Count = 0 then
     Exit;

@@ -124,7 +124,7 @@ begin
     Q.QExecSql('update adm_main_settings set filespath = :fp, ordercurrentpath = :ocp, orderarchivepath = :oap', [edt_PathToFiles.text, edt_ZCurrent.text, edt_ZArchive.text]);
   end;
   if b21 then begin
-    Q.QExecSql(Q.QSIUDSql('q','adm_main_settings', 'emaildomain;emailuser;emailserver;emaillogin;emailpassword'),
+    Q.QExecSql(Q.QGetSql('q','adm_main_settings', 'emaildomain;emailuser;emailserver;emaillogin;emailpassword'),
       [edt_EMailDomain.Text, edt_EMailUser.Text,edt_EMailServer.Text,edt_EMailLogin.Text,edt_EMailPassword.Text]
     );
   end;
@@ -136,7 +136,7 @@ begin
     MI5.Save;
   end;
   if b3 then begin
-    Q.QExecSql(Q.QSIUDSql('q','adm_delete_old','or_to_archive;orders_n;accounts_n;turv;payrolls'),
+    Q.QExecSql(Q.QGetSql('q','adm_delete_old','or_to_archive;orders_n;accounts_n;turv;payrolls'),
       [nedt_MoveToArchive.Value, nedt_DeleteOrders.Value, nedt_DeleteAccounts.Value, nedt_DeleteTurv.Value, nedt_DeletePayrolls.Value]
     );
   end;

@@ -150,7 +150,7 @@ begin
     CtrlValues:=CtrlValues + [v];
   end;
   //вставим или обновим строку
-  res:= Q.QIUD(
+  res:= Q.QSave(
     S.IIFStr(Q.QLoadValue('select count(*) from or_montage where id = :id$i', [CtrlValues[0]]) = 0, 'i', 'u')[1],
     'or_montage', 'id', Fields, VarArrayOf(CtrlValues)
     );
@@ -229,7 +229,7 @@ begin
   //соотвествующий им контролы, кроме левого - id
   Ctrls:=[nil, dedt_Beg, dedt_End, chb_RC, chb_RI, mem_Comm, nil];
   //для добавления инициализация значений полей, для других режимов из запроса в базе
-  BegValues:=Q.QLoadRow(Q.QSIUDSql('s', 'or_montage', Fields), [ID]);
+  BegValues:=Q.QLoadRow(Q.QGetSql('s', 'or_montage', Fields), [ID]);
   OrderIsEnding:=Q.QLoadRow('select dt_end from v_orders where id = :id$i', [ID])[0] <> null;
   lbl_Caption.Caption:=S.NSt(Q.QLoadRow('select ornum from v_orders where id = :id$i', [ID])[0]);
   if BegValues[0] = null

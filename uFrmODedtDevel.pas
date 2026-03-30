@@ -63,7 +63,7 @@ begin
     cmb_Id_Kns,
     cntComboLK
   );
-  FHours := Q.QLoadToVarDynArray2('select hours, id from ref_develtypes where developer = :d$i', [FDeveloper]);
+  FHours := Q.QLoad('select hours, id from ref_develtypes where developer = :d$i', [FDeveloper]);
   Result:=True;
 end;
 

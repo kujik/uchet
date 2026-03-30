@@ -94,7 +94,7 @@ var
 begin
   st:='';
   if Frg1.GetControlValue('ChbMyOnly') = 1 then begin
-    va1:=Q.QLoadToVarDynArray2(
+    va1:=Q.QLoad(
       'select workername from v_j_worker_status where IsStInCommaSt(:userid$i, editusers) = 1',
       [User.GetId]
     );
@@ -146,7 +146,7 @@ end;
 
 procedure TFrmWGjrnParsec.RefreshGrid;
 begin
-//  Frg1.LoadSourceDataFromArray(myDBParsec.QLoadToVarDynArray2(GetSql, []), '', True);
+//  Frg1.LoadSourceDataFromArray(myDBParsec.QLoad(GetSql, []), '', True);
 end;
 
 

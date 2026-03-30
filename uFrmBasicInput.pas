@@ -455,7 +455,7 @@ begin
       Result := False;
       Fields := IdField + ';' + Fields;
       FieldsSave := IdField + ';' + FieldsSave;
-      v := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', View, Fields), [ID]);
+      v := Q.QLoadRow0(Q.QGetSql('s', View, Fields), [ID]);
       if Length(v) = 0 then begin
         MsgRecordIsDeleted;
         Exit;
@@ -555,7 +555,7 @@ begin
   CtrlValues2 := [S.IIf(Mode in [fEdit, fDelete], ID, -1)] + CtrlValues2;
 //  FieldsSaveNew:= IdField + ';' + A.Implode(FieldsSave2, ';');
   FieldsSaveNew:= A.Implode(FieldsSave2, ';');
-  res := Q.QIUD(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSaveNew, CtrlValues2);
+  res := Q.QSave(Q.QFModeToIUD(Mode), Table, Sequence, FieldsSaveNew, CtrlValues2);
   Result := res <> -1;
   //обновим айди
   if Result and (Mode in [fAdd, fCopy]) then

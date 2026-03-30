@@ -165,14 +165,14 @@ begin
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по продажам (розница)', '$0000FFЖдите!  ', True);
   nedt_1_R.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_order_items where (id_order > 0) and (ornum like ''О%'' or ornum like ''Н%'') and (dt_beg >= :FDtB$d) and (dt_beg <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_order_items where (id_order > 0) and (ornum like ''О%'' or ornum like ''Н%'') and (dt_beg >= :FDtB$d) and (dt_beg <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_1_R.Value := S.NNum(va1[0]);
   //опт, по префиксам М и Ф
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по продажам (опт)', '$0000FFЖдите!  ', True);
   nedt_1_O.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_orders where (id > 0) and (ornum like ''М%'' or ornum like ''Ф%'') and (dt_beg >= :FDtB$d) and (dt_beg <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_orders where (id > 0) and (ornum like ''М%'' or ornum like ''Ф%'') and (dt_beg >= :FDtB$d) and (dt_beg <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_1_O.Value := S.NNum(va1[0]);
   nedt_1_I.Value := nedt_1_R.Value + nedt_1_O.Value;
@@ -181,13 +181,13 @@ begin
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по отгрузке (розница)', '$0000FFЖдите!  ', True);
   nedt_2_R.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_orders where (id > 0) and (prefix in (''Н'',''О'')) and (dt_from_sgp >= :FDtB$d) and (dt_from_sgp <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_orders where (id > 0) and (prefix in (''Н'',''О'')) and (dt_from_sgp >= :FDtB$d) and (dt_from_sgp <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_2_R.Value := S.NNum(va1[0]);
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по отгрузке (опт)', '$0000FFЖдите!  ', True);
   nedt_2_O.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_orders where (id > 0) and (prefix in (''М'',''Ф'')) and (dt_from_sgp >= :FDtB$d) and (dt_from_sgp <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_orders where (id > 0) and (prefix in (''М'',''Ф'')) and (dt_from_sgp >= :FDtB$d) and (dt_from_sgp <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_2_O.Value := S.NNum(va1[0]);
   nedt_2_I.Value := nedt_2_R.Value + nedt_2_O.Value;
@@ -196,13 +196,13 @@ begin
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по реализации (розница)', '$0000FFЖдите!  ', True);
   nedt_3_R.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_orders where (id > 0) and (prefix in (''Н'',''О'')) and (dt_end >= :FDtB$d) and (dt_end <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_orders where (id > 0) and (prefix in (''Н'',''О'')) and (dt_end >= :FDtB$d) and (dt_end <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_3_R.Value := S.NNum(va1[0]);
   RefreshStatusBar(' $000000формирование отчета: $FF0000данные по реализации (опт)', '$0000FFЖдите!  ', True);
   nedt_3_O.Value := 0;
   Application.ProcessMessages;
-  va1 := Q.QLoadToVarDynArrayOneRow('select sum(sum0) from v_orders where (id > 0) and (prefix in (''М'',''Ф'')) and (dt_end >= :FDtB$d) and (dt_end <= :FDtE$d)', [FDtB, FDtE]);
+  va1 := Q.QLoadRow0('select sum(sum0) from v_orders where (id > 0) and (prefix in (''М'',''Ф'')) and (dt_end >= :FDtB$d) and (dt_end <= :FDtE$d)', [FDtB, FDtE]);
   if Length(va1) > 0 then
     nedt_3_O.Value := S.NNum(va1[0]);
   nedt_3_I.Value := nedt_3_R.Value + nedt_3_O.Value;

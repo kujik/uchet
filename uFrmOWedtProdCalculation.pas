@@ -122,7 +122,7 @@ var
   LAssembly: TVarDynArray;
 begin
   FTablesData := [['','']];
-  LAssembly := Q.QLoadToVarDynArrayOneCol('select name from prod_calc_refs where type = ''assembly'' order by id', []);
+  LAssembly := Q.QLoadCol('select name from prod_calc_refs where type = ''assembly'' order by id', []);
   for var i := 1 to 5 do begin
     GetGridParams(i, LName, LTable, LFields);
     TTabSheet(Self.FindComponent('ts' + IntToStr(i))).Caption := LName;
@@ -140,13 +140,13 @@ begin
     LFieldsSt := Frg.GetFieldNamesEx('1', True).Implode(';');
     Frg.SetInitData([]);
     if Mode <> fAdd then
-      Q.QLoadFromQuery('select * from ' + 'v_' + LTable + ' where id_prod_calc_item = :id$i order by name', [ID], LData);
+      Q.QLoad('select * from ' + 'v_' + LTable + ' where id_prod_calc_item = :id$i order by name', [ID], LData);
     FTablesData := FTablesData + [[LTable, LFieldsSt]];
     Frg.SetInitData(LData);
     if  i = 1 then begin
       Frg1.Opt.SetPick('facing_id_banding_type', ['Авто', 'С 1й стороны', 'С 2х сторон'], [3, 1, 2], True, True);
-      Frg1.Opt.SetPick('panel_type', Q.QLoadToVarDynArrayOneCol('select name from prod_calc_refs where type = ''panel_type'' order by id', []), [], False, True);
-      Frg1.Opt.SetPick('panel_position', Q.QLoadToVarDynArrayOneCol('select name from prod_calc_refs where type = ''panel_position'' order by id', []), [], False, True);
+      Frg1.Opt.SetPick('panel_type', Q.QLoadCol('select name from prod_calc_refs where type = ''panel_type'' order by id', []), [], False, True);
+      Frg1.Opt.SetPick('panel_position', Q.QLoadCol('select name from prod_calc_refs where type = ''panel_position'' order by id', []), [], False, True);
     end;
     Frg.Opt.SetPick('assembly', LAssembly, [], False, True);
     Frg.Prepare;
@@ -444,7 +444,7 @@ begin
     for var j := 0 to Frg.GetCount(False) - 1 do begin
 //      if Frg.GetValueI('changed', j, False) = 1 then
       if Frg.IsRowChanged(j, False) then
-        Q.QIUD(S.IIf(Frg.GetValueI('id', j, False) >= MY_IDS_INSERTED_MIN, 'i', 'u'), FTablesData[i][0], '', FTablesData[i][1] + ';id_prod_calc_item$i', Frg.GetValuesArr(FTablesData[i][1].AsString, j, False) + [ID]);
+        Q.QSave(S.IIf(Frg.GetValueI('id', j, False) >= MY_IDS_INSERTED_MIN, 'i', 'u'), FTablesData[i][0], '', FTablesData[i][1] + ';id_prod_calc_item$i', Frg.GetValuesArr(FTablesData[i][1].AsString, j, False) + [ID]);
     end;
   end;
 end;

@@ -169,7 +169,7 @@ var
   arst: TVarDynArray2;
 begin
   Result:= 100;
-  va:= Q.QLoadToVarDynArray2('select dt_end, id_status_itm, status_itm from v_orders where id = :id$i', [IdOrder]);
+  va:= Q.QLoad('select dt_end, id_status_itm, status_itm from v_orders where id = :id$i', [IdOrder]);
   if Length(va) = 0 then Exit;
   Result:= 0;
   if va[0][0] <> null
@@ -187,8 +187,8 @@ end;
 procedure TOrders.LoadBcadGroups(Force: Boolean = False);
 begin
   if (Force) or (Length(BcadGroups) = 0) or (Length(BcadUnits) = 0) then begin
-    FBcadGroups := Q.QLoadToVarDynArray2('select name, id, is_production from bcad_groups order by name', []);
-    FBcadUnits := Q.QLoadToVarDynArray2('select name, id from bcad_units order by name', []);
+    FBcadGroups := Q.QLoad('select name, id, is_production from bcad_groups order by name', []);
+    FBcadUnits := Q.QLoad('select name, id from bcad_units order by name', []);
   end;
 end;
 
@@ -389,7 +389,7 @@ var
   HasestimateUpload: Boolean;
 begin
   //получим массив изделий в заказе
-  va1 := Q.QLoadToVarDynArray2('select id, nstd, 0 as resale, id_std_item, id_order_itm, sync_with_itm from v_order_items where id_order = :id_order$i', [IdOrder]);
+  va1 := Q.QLoad('select id, nstd, 0 as resale, id_std_item, id_order_itm, sync_with_itm from v_order_items where id_order = :id_order$i', [IdOrder]);
 //  exit;
   if Length(va1) = 0 then
     Exit;
@@ -622,14 +622,14 @@ begin
       if IdEstimate = null then
         Break
       else
-        Res := Q.QIUD('d', 'estimates', '', 'id$i', [IdEstimate]);
+        Res := Q.QSave('d', 'estimates', '', 'id$i', [IdEstimate]);
       if Res = -1 then
         Break;
     end
     else begin
     //во всех остальных случаях
     //создадим смету
-      Res := Q.QIUD(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
+      Res := Q.QSave(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
        'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
        [IdEstimate, IdStdItem, IdOrderItem, IsEstimateEmpty, Date]);
       if Res = -1 then Break;
@@ -773,8 +773,8 @@ const
 
   procedure LoadMaterials;
   begin
-    Groups := Q.QLoadToVarDynArray2('select id, name_bcad from material_groups order by name', []);
-    Materials := Q.QLoadToVarDynArray2('select id, id_group, name, dim from materials order by name', []);
+    Groups := Q.QLoad('select id, name_bcad from material_groups order by name', []);
+    Materials := Q.QLoad('select id, id_group, name, dim from materials order by name', []);
   end;
 
   function SetGroup(Name: string): Integer;
@@ -791,7 +791,7 @@ const
       end;
     end;
     if i > High(Groups) then begin
-      Result := Q.QIUD('i', 'material_groups', '', 'id$i;name_bcad$s', [0, Name]);
+      Result := Q.QSave('i', 'material_groups', '', 'id$i;name_bcad$s', [0, Name]);
       if Result = -1 then
         Exit;
       SetLength(Groups, Length(Groups) + 1);
@@ -813,7 +813,7 @@ const
       end;
     end;
     if i > High(Materials) then begin
-      Result := Q.QIUD('i', 'materials', '', 'id$i;id_group$i;name$s;dim$s', [0, ID_Group, Name, dim]);
+      Result := Q.QSave('i', 'materials', '', 'id$i;id_group$i;name$s;dim$s', [0, ID_Group, Name, dim]);
       if Result = -1 then
         Exit;
       SetLength(Materials, Length(Materials) + 1);
@@ -1140,11 +1140,11 @@ begin
   SetLength(OrList, 0);
   if IdOrder > 0 then begin
     //если задан конкретный заказ, то получим данные по нему
-    OrList := Q.QLoadToVarDynArray2('select id_order, org, num, year, path from uchet.to_orders where dt_end is null and dt_smeta is not null and extract(year from dt_smeta) <> 2000 and id_order = :id$i order by id_order', [IdOrder]);
+    OrList := Q.QLoad('select id_order, org, num, year, path from uchet.to_orders where dt_end is null and dt_smeta is not null and extract(year from dt_smeta) <> 2000 and id_order = :id$i order by id_order', [IdOrder]);
   end
   else begin
     //если передан 0, то получим массив всех незавершенных заказов
-    OrList := Q.QLoadToVarDynArray2('select id_order, org, num, year, path from uchet.to_orders where dt_end is null and dt_smeta is not null and extract(year from dt_smeta) <> 2000 order by id_order', []);
+    OrList := Q.QLoad('select id_order, org, num, year, path from uchet.to_orders where dt_end is null and dt_smeta is not null and extract(year from dt_smeta) <> 2000 order by id_order', []);
   end;
   //пройдем по всеем заказам
   for OrNum := 0 to High(OrList) do begin
@@ -1155,7 +1155,7 @@ begin
     if not DirectoryExists('r:\z\2023\' + OrList[OrNum][4] + '') then
       Continue;
     //получим массив слэшей по заказу из БД
-    OrSlashUchet := Q.QLoadToVarDynArray2('select pos, name, qnt, 0 ' + 'from uchet.v_to_passport_items ' + 'where id_beg <= 999999 and id_beg_i <= 999999 and id_end >= 999999 and id_end_i >= 999999 and qnt > -1 and id_order = :id$i ' + 'order by pos', [OrList[OrNum, 0]]);
+    OrSlashUchet := Q.QLoad('select pos, name, qnt, 0 ' + 'from uchet.v_to_passport_items ' + 'where id_beg <= 999999 and id_beg_i <= 999999 and id_end >= 999999 and id_end_i >= 999999 and qnt > -1 and id_order = :id$i ' + 'order by pos', [OrList[OrNum, 0]]);
     OrSlashCnt := 0;
     for i := 0 to High(OrSlashUchet) do
       if OrSlashUchet[i][2] > 0 then
@@ -1167,7 +1167,7 @@ begin
     end
     else
       LogSt := LogSt + 'СН\';
-    FilesArrDB := Q.QLoadToVarDynArray2('select id, filename, filedt, 0 from order_files where id_order = :id_order$i', [OrList[OrNum, 0]]);
+    FilesArrDB := Q.QLoad('select id, filename, filedt, 0 from order_files where id_order = :id_order$i', [OrList[OrNum, 0]]);
 //    OrdersPath:='r:\z\2023\';
     OrderPath := OrdersPath + '\' + OrList[OrNum][4] + '\';
 //    OrderPathLength:=Length(OrdersPath) + Length(OrList[OrNum][4]) + 2;
@@ -1249,7 +1249,7 @@ begin
       //пройдем по массиву файлов, и те для которых были изменения сохраним в БД
       for i := 0 to High(FilesArrDB) do begin
         if FilesArrDB[i][3] <> 1 then begin
-          Res := Q.QIUD(VarToStr(S.Decode([FilesArrDB[i][3], 0, 'd', 2, 'u', 3, 'i']))[1], 'order_files', '', 'id$i;id_order$i;filename$s;filedt$d;filetype$i', [FilesArrDB[i][0], OrList[OrNum, 0], FilesArrDB[i][1], FilesArrDB[i][2], 0]);
+          Res := Q.QSave(VarToStr(S.Decode([FilesArrDB[i][3], 0, 'd', 2, 'u', 3, 'i']))[1], 'order_files', '', 'id$i;id_order$i;filename$s;filedt$d;filetype$i', [FilesArrDB[i][0], OrList[OrNum, 0], FilesArrDB[i][1], FilesArrDB[i][2], 0]);
           if Res = -1 then
             Break;
         end;
@@ -1262,11 +1262,11 @@ begin
         SmetaArr[2][i] := [];
       end;
       //загрузим массив айди смет по слешам
-      a1 := Q.QLoadToVarDynArray2('select id, or_slash from order_smeta where id_order = :id_order$i', [OrList[OrNum, 0]]);
+      a1 := Q.QLoad('select id, or_slash from order_smeta where id_order = :id_order$i', [OrList[OrNum, 0]]);
       for i := 0 to High(a1) do        //в массив айди сметы, признак загрузки из общей СН, признак загрузки из отдельной
         SmetaArrH[S.VarToInt(a1[i][0])] := [a1[i][0], 0, 0];
       //загрузим из таблицы материалов смет все материалы из всех слешей по данному заказу
-      a1 := Q.QLoadToVarDynArray2('select m.id, s.or_slash, m.id_material, m.qnt, m.deleted from order_smeta_materials m, order_smeta s where m.id_smeta = s.id and s.id_order = :id_order$i', [OrList[OrNum, 0]]);
+      a1 := Q.QLoad('select m.id, s.or_slash, m.id_material, m.qnt, m.deleted from order_smeta_materials m, order_smeta s where m.id_smeta = s.id and s.id_order = :id_order$i', [OrList[OrNum, 0]]);
       //заполним массив массивов смет
       //в первой размерности сметы для общей сн, во всторой для отдельных, это нужно так как
       //могут встретиться одновременно и те и другие файлы по одному слэшу, в этом случае общая сн перекрывает частные
@@ -1319,7 +1319,7 @@ const
   caSlash = 7;
 begin
   Result := False;
-  vor := Q.QLoadToVarDynArray2('select ornum, customer, dt_otgr, dt_aggr_estimate, id_or_format_estimates from v_orders where id = :id_order$i', [IdOrder]);
+  vor := Q.QLoad('select ornum, customer, dt_otgr, dt_aggr_estimate, id_or_format_estimates from v_orders where id = :id_order$i', [IdOrder]);
   if Length(vor) = 0 then
     exit;
   if MyQuestionMessage(S.IIFStr(vor[0][3] = null, 'Создать', 'Изменить') + ' общую смету для заказа ' + vor[0][0] + '?') <> mrYes then
@@ -1327,12 +1327,12 @@ begin
   vres := [];
   vslash := [];
   cntest := -1;
-  voritems := Q.QLoadToVarDynArray2('select id, pos, slash, qnt, nstd, itemname from v_order_items where id_order = :id_order$i and qnt <> 0 order by pos', [IdOrder]);
+  voritems := Q.QLoad('select id, pos, slash, qnt, nstd, itemname from v_order_items where id_order = :id_order$i and qnt <> 0 order by pos', [IdOrder]);
   vexclitems := [];
   EstFiles := [];
   for i := 0 to High(voritems) do begin
     //проходим по всем изделиям заказа
-    vest := Q.QLoadToVarDynArray2('select id, groupname, name, unit, qnt1, qnt, comm from v_estimate where deleted = 0 and id_order_item = :id$i', [voritems[i][0]]);
+    vest := Q.QLoad('select id, groupname, name, unit, qnt1, qnt, comm from v_estimate where deleted = 0 and id_order_item = :id$i', [voritems[i][0]]);
     if Length(vest) = 0 then begin
       //если нет сметы - добавляем в список незагруженных и пропускаем
       vexclitems := vexclitems + [voritems[i][1]];
@@ -1502,13 +1502,13 @@ var
   FilesToSend, FilesToCopy: string;
   InArchive: Variant;
 begin
-  va1 := Q.QLoadToVarDynArray2('select ornum, path, dt_beg, in_archive from v_orders where id = :id$i', [IdOrder]);
+  va1 := Q.QLoad('select ornum, path, dt_beg, in_archive from v_orders where id = :id$i', [IdOrder]);
   OrderNum := va1[0][0];
   OrderPath := va1[0][1];
   Dt_Beg := va1[0][2];
   InArchive := va1[0][3];
   if IdOrItem <> null then begin
-    va2 := Q.QLoadToVarDynArray2('select slash from v_order_items where id = :id$i', [IdOrItem]);
+    va2 := Q.QLoad('select slash from v_order_items where id = :id$i', [IdOrItem]);
     Slash := va2[0][0];
   end;
   FilesToSend := S.IIf(IdOrItem = null, 'Заявка СН общая ' + OrderNum, 'Смета ' + Slash) + ExtractFileExt(FileName);
@@ -1558,8 +1558,8 @@ var
 const
   MaxSize = 20971520; //20*1024*1024
 begin
-//  va1:=QLoadToVarDynArray2('select slash, id_order from v_order_items where id = :id$i', IdOrItem);
-  va2 := Q.QLoadToVarDynArray2('select ornum, path, dt_beg, in_archive from v_orders where id = :id$i', [IdOrder]);
+//  va1:=QLoad('select slash, id_order from v_order_items where id = :id$i', IdOrItem);
+  va2 := Q.QLoad('select ornum, path, dt_beg, in_archive from v_orders where id = :id$i', [IdOrder]);
   //диалог выбора, можно несколько
   MyData.OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
   MyData.OpenDialog1.Filter := '';
@@ -1636,9 +1636,9 @@ begin
   Result := '';
   if OrderName = '' then begin
     if IdOrderItem <> null then
-      va := Q.QLoadToVarDynArray2('select slash, customer, project, area from v_order_items where id = :id$i', [IdOrderItem])
+      va := Q.QLoad('select slash, customer, project, area from v_order_items where id = :id$i', [IdOrderItem])
     else
-      va := Q.QLoadToVarDynArray2('select ornum, customer, project, area from v_orders where id = :id$i', [IdOrder]);
+      va := Q.QLoad('select ornum, customer, project, area from v_orders where id = :id$i', [IdOrder]);
     if Length(va) = 0 then
       Exit;
     Area:= '';
@@ -1669,7 +1669,7 @@ begin
   Result := False;
   Dir := '';
 
-  Q.QLoadFromQuery('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem], na);
+  Q.QLoad('select pos, slash, path, dt_beg, dt_end, fullitemname, id_thn, qnt, dt_thn, in_archive, id_kns, dt_kns from v_order_items where id = :id$i', [IdOrItem], na);
   if na.G('qnt').AsInteger = 0 then
     Exit;
   if SenderIsThn and ((na.G('id_thn') = null) or (na.G('id_thn') = -100)) then
@@ -1785,11 +1785,11 @@ begin
     //отправим задачу на выполнение
     Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
     if SenderIsThn then begin
-      Q.QIUD('u', 'order_items', '', 'id$i;dt_thn$d;dt_thn_last$d', [IdOrItem, S.IIf(na.G('dt_thn') = null, Date, na.G('dt_thn')), Date]);
+      Q.QSave('u', 'order_items', '', 'id$i;dt_thn$d;dt_thn_last$d', [IdOrItem, S.IIf(na.G('dt_thn') = null, Date, na.G('dt_thn')), Date]);
       ToOrderAudit(ORDER_AUDIT_THN_DOC, S.IIf(na.G('dt_thn') = null, 0, 1), na.G('slash'));
     end
     else begin
-      Q.QIUD('u', 'order_items', '', 'id$i;dt_kns$d;dt_kns_last$d;wo_kns', [IdOrItem, S.IIf(na.G('dt_kns') = null, Date, na.G('dt_kns')), Date, 1]);
+      Q.QSave('u', 'order_items', '', 'id$i;dt_kns$d;dt_kns_last$d;wo_kns', [IdOrItem, S.IIf(na.G('dt_kns') = null, Date, na.G('dt_kns')), Date, 1]);
       ToOrderAudit(ORDER_AUDIT_KNS_DOC, S.IIf(na.G('dt_kns') = null, 0, 1), na.G('slash'));
     end;
     MyInfoMessage('Данные отправлены на сервер.');
@@ -1810,18 +1810,18 @@ begin
   OrItems := [];
   if Developer = 1 then begin
     if IdOrItem <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns from v_order_items where id = :id$i', [IdOrItem]);
+      OrItems := Q.QLoad('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns from v_order_items where id = :id$i', [IdOrItem]);
     end
     else if IdOrder <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
+      OrItems := Q.QLoad('select 1, id, slash, fullitemname, dt_beg, customer, project, id_kns ' + 'from v_order_items ' + 'where id_order = :id$i and id_kns <> -100 and qnt > 0', [IdOrder]);
     end;
   end
   else begin
     if IdOrItem <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn from v_order_items where id = :id$i', [IdOrItem]);
+      OrItems := Q.QLoad('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn from v_order_items where id = :id$i', [IdOrItem]);
     end
     else if IdOrder <> null then begin
-      OrItems := Q.QLoadToVarDynArray2('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn ' + 'from v_order_items ' + 'where id_order = :id$i and id_thn <> -101 and qnt > 0', [IdOrder]);
+      OrItems := Q.QLoad('select 1, id, slash, fullitemname, dt_beg, customer, project, id_thn ' + 'from v_order_items ' + 'where id_order = :id$i and id_thn <> -101 and qnt > 0', [IdOrder]);
     end;
   end;
   if Length(OrItems) = 0 then begin
@@ -1831,7 +1831,7 @@ begin
   //если есть запись с типом Запуск для КНС - не будем вносить
   DevItems := [];
   if Developer = 1 then
-    DevItems := A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select slash from j_development where developer = :developer$i and id_develtype = 5 and slash is not null', [Developer]), 0);
+    DevItems := A.VarDynArray2ColToVD1(Q.QLoad('select slash from j_development where developer = :developer$i and id_develtype = 5 and slash is not null', [Developer]), 0);
   k := 0;
   for i := 0 to High(OrItems) do
     if A.InArray(OrItems[i][2], DevItems) then
@@ -1846,7 +1846,7 @@ begin
     Exit;
   for i := 0 to High(OrItems) do
     if OrItems[i][0] = 1 then begin
-      Q.QIUD('i', 'j_development', '', 'id$i;developer$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_kns$i;id_status$i',
+      Q.QSave('i', 'j_development', '', 'id$i;developer$i;id_develtype$i;slash$s;name$s;project$s;dt_beg$d;id_kns$i;id_status$i',
         [-1, Developer, S.IIf((Developer = 1), 5{запуск}, null), OrItems[i][2], OrItems[i][3], OrItems[i][5] + ' [' + OrItems[i][6] + ']', OrItems[i][4], S.IIf((Developer = 1) or (OrItems[i][7].AsIntegerM < 0), null, OrItems[i][7]), 1]);
     end;
   MyInfoMessage('Готово!'#13#10'Обновите ' + Caption + '.');
@@ -2088,8 +2088,8 @@ begin
     'В ИТМ заказов ' + IntToStr(c1) + 'шт., а в Учете ' + IntToStr(c2) + 'шт.'#13#10 +
     'Установить признак синхронизации заказвов с ИТМ исходя из их наличия в базе ИТМ?'
   ) <> mrYes then Exit;
-  va1:=Q.QLoadToVarDynArray2('select id_zakaz from dv.zakaz', []);
-  va2:=Q.QLoadToVarDynArray2('select id, nvl(id_itm, 0) from orders', []);
+  va1:=Q.QLoad('select id_zakaz from dv.zakaz', []);
+  va2:=Q.QLoad('select id, nvl(id_itm, 0) from orders', []);
   //Q.QExecSql('update orders set sync_with_itm = 0 where not (nvl(id_itm, 0) in (' + A.Implode(va, ',') + ')', []); //так нельзя, максимум в перечислении 1000шт
   for i:=0 to High(va2) do
     if A.PosInArray(va2[i][1], va1, 0) = -1
@@ -2158,8 +2158,8 @@ begin
 //mode:=True;
   Result := False;
   if not Mode then begin
-    van:=Q.QLoadToVarDynArrayOneCol('select templatename from v_orders where id <= -1 and id_organization = -1 order by templatename asc', []);
-    vaid:=Q.QLoadToVarDynArrayOneCol('select id from v_orders where id <= -1 and id_organization = -1 order by templatename asc', []);
+    van:=Q.QLoadCol('select templatename from v_orders where id <= -1 and id_organization = -1 order by templatename asc', []);
+    vaid:=Q.QLoadCol('select id from v_orders where id <= -1 and id_organization = -1 order by templatename asc', []);
     if TFrmBasicInput.ShowDialog(Parent, 'Dbi_SeletOrderTemplate', [dbioSizeable], fAdd, '~Выбор шаблона заказа', 320, 85,
 //      [[cntComboLK, 'Шаблон заказа','0:500']],
       [[cntComboLK, 'Шаблон заказа','1:500']],
@@ -2174,11 +2174,11 @@ begin
     Id := va[0];
   end;
   Exit;
-  va2:= Q.QLoadToVarDynArray2('select templatename from v_orders where id <= -1 order by templatename asc', []);
+  va2:= Q.QLoad('select templatename from v_orders where id <= -1 order by templatename asc', []);
   if Length(va2) = 0
     then begin MyInfoMessage('Не найдено ни одного шаблона!'); Exit; end;
   van:=A.VarDynArray2ColToVD1(va2, 0);
-  vaid:=A.VarDynArray2ColToVD1(Q.QLoadToVarDynArray2('select id from v_orders where id <= -1 order by templatename asc', []), 0);
+  vaid:=A.VarDynArray2ColToVD1(Q.QLoad('select id from v_orders where id <= -1 order by templatename asc', []), 0);
   if TFrmBasicInput.ShowDialog(Parent, '', [{dbioSizeable}], fAdd, '~Выбор шаблона заказа', 470, 150, [
     [cntComboLK, 'Шаблон заказа','1:500:0',150],
     [cntnedit, 'Шаблон заказа','1:5000:0',1],
@@ -2254,7 +2254,7 @@ begin
   end;
 
   //массив из шаблонов паспортов, строки не ранее начального и не позднее конечного года
-  OrItems := Q.QLoadToVarDynArray2(
+  OrItems := Q.QLoad(
     'select id_std_item, dt_start, dt_end, o.id, '+
     'qnt1, qnt2, qnt3, qnt4, qnt5, qnt6, qnt7, qnt8, qnt9, qnt10, qnt11, qnt12 '+
     'from planned_orders o, planned_order_items i '+
@@ -2302,7 +2302,7 @@ begin
       EstimatesMonth[i] := Copy(EstimatesMonth[i - 1])
     else
     //загрузим сменту из бд
-    EstimatesMonth[i] := Q.QLoadToVarDynArray2(
+    EstimatesMonth[i] := Q.QLoad(
       'select name, unit, qnt1_itm, '+
       'null, '+
       '0,0,0,0,0,0,0,0,0,0,0,0, '+                                        //количества
@@ -2360,7 +2360,7 @@ begin
     Q.QBeginTrans(True);
     Q.QExecSql('delete from planned_order_estimate3', []);
     for i := 0 to High(Estimate12) do begin
-      Q.QIUD(
+      Q.QSave(
         'i', 'planned_order_estimate3' , '-' , 'id_nomencl$i;name$s;qnt1$f;qnt2$f;qnt3$f;or1$s;or2$s;or3$s',
         [0, Estimate12[i][0],
          Estimate12[i][cEs12 + 1], Estimate12[i][cEs12 + 2], Estimate12[i][cEs12 + 3],
@@ -2384,7 +2384,7 @@ begin
       va := [0 ,Estimate12[i][0]];
       for j := cEs12 + 1 to cEs12 + 0 + 12 + 12 do
         va := va + [Estimate12[i][j]];
-      Q.QIUD(
+      Q.QSave(
         'i', 'planned_order_estimate12' , '-' ,
         'id$i;name$s;'+
         'qnt1$f;qnt2$f;qnt3$f;qnt4$f;qnt5$f;qnt6$f;qnt7$f;qnt8$f;qnt9$f;qnt10$f;qnt11$f;qnt12$f;'+
@@ -2409,7 +2409,7 @@ var
   qnt: Variant;
   dt, dt2: TDateTime;
 begin
-  va2 := Q.QLoadToVarDynArray2(
+  va2 := Q.QLoad(
     'select '+
     'p.id, e.qnt1, e.qnt2, e.qnt3, 0, p.planned_need_days '+
     'from spl_itm_nom_props p, planned_order_estimate3 e '+
@@ -2653,7 +2653,7 @@ begin
   if (DocType = '') then
     Exit;
   if S.NSt(DocId) = '' then begin
-    va2 := Q.QLoadToVarDynArray2(
+    va2 := Q.QLoad(
       'select id, doctype, id_doc, commentsfull, user_windows from v_itm_log where id < :id$i and  id > :id0$i and doctype = :dt$s and name = :nm$s ' +
       'and (id_doc is not null or commentsfull is not null) and comments = ''Открытие формы'' order by id desc',
       [va[0], va[0] - 100, va[1], va[4]]
@@ -2898,7 +2898,7 @@ end;
 
 procedure TOrders.ToOrderAudit(const AType: Integer; AIsCorrection: Boolean; const AName: string; const AChanges: string = '');
 begin
-  Q.QIUD('i', 'orders_audit', '', 'id$i;id_user$i;is_correction$i;dt$d;type$i;name$s;changes$s', [-1, User.GetId, S.IIf(AIsCorrection, 1, 0), Now, AType, AName, Copy(AChanges, 1, 4000)]);
+  Q.QSave('i', 'orders_audit', '', 'id$i;id_user$i;is_correction$i;dt$d;type$i;name$s;changes$s', [-1, User.GetId, S.IIf(AIsCorrection, 1, 0), Now, AType, AName, Copy(AChanges, 1, 4000)]);
 end;
 
 begin

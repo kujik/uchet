@@ -74,7 +74,7 @@ begin
     Q.QExecSql('delete from ref_estimate_replace where id_old = :id_old$i', [id]);
     if mode = fEdit then Mode := fAdd;
   end;
-  if Q.QIUD(Q.QFModeToIUD(Mode),
+  if Q.QSave(Q.QFModeToIUD(Mode),
     'ref_estimate_replace', '-', 'id_old$i;id_new$i',
     [id1, S.IIf(id2 = -1, null, id2)]
   ) < 0
@@ -101,7 +101,7 @@ begin
   Mode:=AMode;
   Cth.SetDialogForm(Self, Mode, 'Автозамена номенклатуры');
   if Mode <> fAdd
-    then va:=Q.QLoadToVarDynArrayOneRow('select id_old, oldname, id_new, newname from v_ref_estimate_replace where id_old = :id$i', [ID])
+    then va:=Q.QLoadRow0('select id_old, oldname, id_new, newname from v_ref_estimate_replace where id_old = :id$i', [ID])
     else va:=[-1, '', -1, ''];
   //выходим без диалога для заказов не того префикса, если заказ не найден, если рекламация
   if (Length(va) = 0)and(Mode <> fAdd) then Exit;

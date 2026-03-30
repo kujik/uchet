@@ -121,7 +121,7 @@ begin
   else begin}
   st1 := StRep(edt_name_org.Text);
   //получис наименования всех поставщиков (при редактировании - кроме текущего)
-  va := Q.QLoadToVarDynArrayOneCol('select name_org from dv.kontragent where id_kontragent <> :id$i', [S.IIf(Mode = fEdit, id, -100000)]);
+  va := Q.QLoadCol('select name_org from dv.kontragent where id_kontragent <> :id$i', [S.IIf(Mode = fEdit, id, -100000)]);
   for i := 0 to High(va) do begin
     //проверка на такое же название (в бд условия уникальности нет!)
     if edt_name_org.Text = S.NSt(va[i]) then begin

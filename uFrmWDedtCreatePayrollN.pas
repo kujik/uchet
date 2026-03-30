@@ -84,9 +84,9 @@ begin
     if MyQuestionMessage('Создать расчетные ведомости за период ' + DateToStr(dt1) + ' - ' + DateToStr(dt2) + '?') <> mrYes then
       Exit;
     //получим список созданных турв за период
-    va1 := Q.QLoadToVarDynArray2('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dt1]);
+    va1 := Q.QLoad('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dt1]);
     //получим список ведомостей по зп, по полным подразделениям за этот период
-    va2 := Q.QLoadToVarDynArray2('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dt1]);
+    va2 := Q.QLoad('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dt1]);
     for i := 0 to High(va1) do begin
       if A.PosInArray(va1[i][0], va2, 0) = -1 then begin
         //если ведомость еще не создана
@@ -95,7 +95,7 @@ begin
           S.ConcatStP(Msg, va1[i][1], #13#10);
         //создаем зарплатную ведомость, если все же во время между проверками уже такая была создана, то будет ошибка уникального индекса, здесь ее не выводим
         //if Integer(va1[i, 0]) in [4,5] then  //!!! ИТ, бухгалтерия
-        if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dt1, dt2], False) <> -1 then
+        if Q.QSave('i', 'w_payroll_calc', '', 'id$i;id_departament$i;dt1$d;dt2$d', [0, Integer(va1[i, 0]), dt1, dt2], False) <> -1 then
           inc(Cnt);  //увеличим количество созданных
       end;
     end;
@@ -113,28 +113,28 @@ begin
     //(если были переходы в пределах такого периода в разныве подразделдения, то создастся по каждому подразделению)
     //!!! не совсем корректно!
 {    var ide := Q.QSelectOneRow('select distinct id_employee from v_w_employee_properties where employee_st = :p$s', [cmbWorker.Text])[0];
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
       'where id_employee = :id_employee$i and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
       'group by id_departament, id_employee, id_organization, personnel_number' ,
       [ide, dt1, dt2], va1
     );}
     //получим список нужных ведомостей (сгруппированных по подразделению и статусу работника)
-    Q.QLoadFromQuery(
+    Q.QLoad(
       'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
       'where employee_st = :employee_st$s and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
       'group by id_departament, id_employee, id_organization, personnel_number' ,
       [cmbWorker.Text, dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], va1
     );
     //получим список всех ведомостей по зп, по уволенным за этот период
-    va2 := Q.QLoadToVarDynArray2('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);
+    va2 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);
     var b := True;
     for i := 0 to High(va1) do
       if A.PosRowInArray(va1, va2, i) <> -1 then
         b := False;
     if b then begin
       //получим ведомости по полным подразделениям, в которых присутствует работник с данным статусом
-      Q.QLoadFromQuery(
+      Q.QLoad(
         'select id, id_target_departament, is_finalized from v_w_payroll_calc_item where id_target_employee is null and dt1 = :dt1$d and id_employee = :id_employee$i ' +
         'and nvl(id_organization, -100) = nvl(:id_organization$i, -100) and nvl(personnel_number, -100) = nvl(:personnel_number$s, -100)',
         [dt1, va1[0][1], va1[0][2], va1[0][3]], va3
@@ -161,7 +161,7 @@ begin
           //проверим, нет ли уже такой ведомсти
           if A.PosRowInArray(va1, va2, i) = -1 then begin
             //создаем
-            if Q.QIUD('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+            if Q.QSave('i', 'w_payroll_calc', '', 'id$i;id_departament$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
               inc(Cnt);  //увеличим количество созданных
           end;
         end;

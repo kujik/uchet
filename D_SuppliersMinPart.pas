@@ -100,7 +100,7 @@ begin
       '')
     );
     if qmode <> '' then
-      Q.QIUD(qmode, 'dv.namenom_supplier', '',
+      Q.QSave(qmode, 'dv.namenom_supplier', '',
         'id_pos_supplier$i;id_nomencl$i;id_supplier$i;name_pos$s;artikul_sp$s;id_base_unit$i;base_unit_k$f;is_default$i;addcomment$s;httplink$s',
         [ MemTableEh1.FieldByName('id').Value,
           id,
@@ -153,7 +153,7 @@ end;
 function TDlg_SuppliersMinPart.SetPickLists: Boolean;
 begin
   Gh.SetGridColumnPickList(DBGridEh1, 'id_supplier',
-    Q.QLoadToVarDynArray2(
+    Q.QLoad(
       'select k.name_org, k.id_kontragent '+  //k.name_org
       'from dv.kontragent k, dv.kontragent_pri_kon_post kp '+
       'where k.id_kontragent = kp.id_kontragent (+) /*and kp.id_type = 1*/ '+
@@ -161,7 +161,7 @@ begin
       , 0, 1, True
   );
   Gh.SetGridColumnPickList(DBGridEh1, 'id_unit',
-    Q.QLoadToVarDynArray2('select name_unit, id_unit from dv.unit order by name_unit', [])
+    Q.QLoad('select name_unit, id_unit from dv.unit order by name_unit', [])
     , 0, 1, True
   );
 end;

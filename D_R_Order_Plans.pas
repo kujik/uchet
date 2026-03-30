@@ -127,7 +127,7 @@ var
 begin
   Result:=False;
   IsEmpty:=False;
-  va1:=Q.QLoadToVarDynArray2(Q.QSIUDSql('s', 'order_plans', A.Implode(Fields, ';')), [DtB]);
+  va1:=Q.QLoad(Q.QGetSql('s', 'order_plans', A.Implode(Fields, ';')), [DtB]);
   //'select ' + A.Implode(Fields, ', ') +' from order_plans where dt = :dt$d', DtB);
   if Length(va1) = 0 then begin
     IsEmpty:=True;
@@ -164,7 +164,7 @@ begin
     end;
   end;
   va[0]:=DtB;
-  Q.QIUD(S.IIFStr(IsEmpty, 'i','u')[1], 'order_plans', '-', A.Implode(Fields, ';'), va);
+  Q.QSave(S.IIFStr(IsEmpty, 'i','u')[1], 'order_plans', '-', A.Implode(Fields, ';'), va);
   Result:=True;
 end;
 

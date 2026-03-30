@@ -231,7 +231,7 @@ begin
       Exit;
     MemTableEh1.Edit;
     MemTableEh1.FieldByName('name').Value := Wh.SelectDialogResult[2];
-    va := Q.QLoadToVarDynArrayOneRow('select max(id_group), max(id_unit) from v_bcad_nomencl_add where name = :name$s', [MemTableEh1.FieldByName('name').Value]);
+    va := Q.QLoadRow0('select max(id_group), max(id_unit) from v_bcad_nomencl_add where name = :name$s', [MemTableEh1.FieldByName('name').Value]);
     if Length(va) <> 0 then begin
       MemTableEh1.FieldByName('idgroup').Value := va[0];
       MemTableEh1.FieldByName('idunit').Value := va[1];
@@ -337,8 +337,8 @@ begin
   {*)}
   ColumnsVerifications := ['1:1000', '1:1000', '1:50:TP', '0:999999:5:N'{недопустимо пустое кол-во}, '', '0:1000::TP'];  //TP - ????
   FieldsNoRepaeted := 'name';
-//  Gh.SetGridColumnPickList(DBGridEh1, 'group', Q.QLoadToVarDynArrayOneCol('select name from bcad_groups order by name', []), [], True);
-//  Gh.SetGridColumnPickList(DBGridEh1, 'unit', Q.QLoadToVarDynArrayOneCol('select name from bcad_units order by name', []), [], True);
+//  Gh.SetGridColumnPickList(DBGridEh1, 'group', Q.QLoadCol('select name from bcad_groups order by name', []), [], True);
+//  Gh.SetGridColumnPickList(DBGridEh1, 'unit', Q.QLoadCol('select name from bcad_units order by name', []), [], True);
   Gh.SetGridColumnPickList(DBGridEh1, 'idgroup', A.VarDynArray2ColToVD1(Orders.BcadGroups, 0), A.VarDynArray2ColToVD1(Orders.BcadGroups, 1), True);
   Gh.SetGridColumnPickList(DBGridEh1, 'idunit', A.VarDynArray2ColToVD1(Orders.BcadUnits, 0), A.VarDynArray2ColToVD1(Orders.BcadUnits, 1), True);
   Gh.SetGridInCellButtons(DBGridEh1, 'name;name', 'Выбрать из справочника номенклатуры;Выбрать из справочника стандартных изделий', CellButtonClick);

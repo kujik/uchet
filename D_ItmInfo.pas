@@ -189,7 +189,7 @@ begin
   Q.QBeginTrans(True);
   //получим максимальное значение артикула (из тех, в котором последние 4 символа есть цифры)
   //нужно, так как иначе неверно работает, если были внесены позиции с артикулом вручную - счетчик в этом случае не обновляется
-  va1:= Q.QLoadToVarDynArrayOneCol('select artikul from dv.nomenclatura where id_group = :id_group$i', [AIdGroup]);
+  va1:= Q.QLoadCol('select artikul from dv.nomenclatura where id_group = :id_group$i', [AIdGroup]);
   va2:=[];
   for i:= 0 to High(va1) do begin
     j:= StrToIntDef(S.Right(S.NSt(va1[i]), 4), -1);

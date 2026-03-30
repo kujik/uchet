@@ -106,7 +106,7 @@ begin
     VarArrayOf([IDAccount, id])
     )[0];
     }
-    va2 := Q.QLoadToVarDynArray2(//      'select nvl(prc,0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ', '+
+    va2 := Q.QLoad(//      'select nvl(prc,0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ', '+
 //      'select nvl(prc,0) ' + S.IIf((pgc_Main.ActivePage = ts_Orders), 'id_order', 'id_acc') + ', '+
       'select nvl(prc,0), a.dt, a.account, a.supplier ' +
       'from '+

@@ -258,20 +258,20 @@ begin
   //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], cmb_id_organization, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_id_organization, cntComboLK, 1);
-  //Organizations := Q.QLoadToVarDynArray2('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
+  //Organizations := Q.QLoad('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], cmb_Area, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], cmb_Project, cntComboE);
   Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], cmb_id_or_format_estimates, cntComboLK);
 
 
-{  Customers := Q.QLoadToVarDynArray2('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
+{  Customers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
   cmb_CustomerName.Images := Il_Columns;
   cmb_CustomerMan.Images := Il_Columns;
   cmb_CustomerLegalName.Images := Il_Columns;
   for i := 0 to High(Customers) do
     cmb_CustomerName.Items.Add(Customers[i][0]);
-  CustomerContacts := Q.QLoadToVarDynArray2('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
-  CustomerLegal := Q.QLoadToVarDynArray2('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
+  CustomerContacts := Q.QLoad('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
+  CustomerLegal := Q.QLoad('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
 
   //if not(Mode in [fDelete, fView]) then
   GetEstimateList;
@@ -289,7 +289,7 @@ begin
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
     end;
-  CtrlValues := Q.QLoadToVarDynArrayOneRow(Q.QSIUDSql('s', 'v_orders', FieldsSt), [id]);
+  CtrlValues := Q.QLoadRow0(Q.QGetSql('s', 'v_orders', FieldsSt), [id]);
   j := 0;
   for i := 0 to F.Count do
     if F.GetProp(i, fvtFNameL) <> '' then begin
@@ -382,7 +382,7 @@ begin
   Result := False;
   Result := True;
   WorkCellAreas := [];
-  Q.QLoadFromQuery('select id, code, posstd, refers_to_prod_area from v_work_cell_types order by posall asc', [], WorkCellTypes);
+  Q.QLoad('select id, code, posstd, refers_to_prod_area from v_work_cell_types order by posall asc', [], WorkCellTypes);
   for i := 0 to WorkCellTypes.Count - 1 do begin
     if WorkCellTypes.G(i, 'refers_to_prod_area') = 1 then
       WorkCellAreas := WorkCellAreas + [[]]
