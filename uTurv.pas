@@ -3569,19 +3569,24 @@ procedure TTurv.SaveAllTurvToExportTable;
 //сохранение данных всех турв в экспортную таблицу для их использования в таблицах эксель
 var
   LTurv: TTurvData;
-  LIds: TVarDynArray;
+  LIds, LDeps: TVarDynArray;
   i: Integer;
 begin
   ShowWaitForm('Подготовка данных ТУРВ для использования в таблицах Excel...');
   LIds := Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   LIds := LIds + Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(Date)]);
   for i := 0 to High(LIds) do begin
-   LTurv.Create(LIds[i], '', 'id_employee');
+    LTurv.Create(LIds[i], '', 'id_employee');
 //    try
     LTurv.UpdateExportTable;
 //    except
 //    end;
     LTurv := Default(TTurvData);
+  end;
+Exit;
+  LDeps := Q.QLoadCol('select distinct id_departament from w_turv_period where dt1 = :dt1$d or dt1 = :dt2$d', [GetTurvBegDate(Date), GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
+  for i := 0 to High(LIds) do begin
+    LTurv.Create(LIds[i], '', 'id_employee');
   end;
 end;
 

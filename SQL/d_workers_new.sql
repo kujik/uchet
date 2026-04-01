@@ -861,7 +861,52 @@ where
   t.id_departament = d.id
   and t.id_employee = e.id
   and t.id_job = j.id
+;
+
+create table w_turv_month_export(  
+  id number(11),                   
+  id_departament number(11),        --подразделение
+  dt1 date,                         --дата начала периода ТУРВ
+  id_employee number(11),
+  id_job number(11),
+  d1 varchar2(10), d2 varchar2(10), d3 varchar2(10), d4 varchar2(10), d5 varchar2(10), d6 varchar2(10), d7 varchar2(10), d8 varchar2(10), d9 varchar2(10), d10 varchar2(10), d11 varchar2(10), d12 varchar2(10), d13 varchar2(10), d14 varchar2(10), d15 varchar2(10), d16 varchar2(10),
+  d17 varchar2(10), d18 varchar2(10), d19 varchar2(10), d20 varchar2(10), d21 varchar2(10), d22 varchar2(10), d23 varchar2(10), d24 varchar2(10), d25 varchar2(10), d26 varchar2(10), d27 varchar2(10), d28 varchar2(10), d29 varchar2(10), d30 varchar2(10), d31 varchar2(10),
+  hours number,
+  premium number,
+  penalty number,
+  constraint pk_w_turv_month_export  primary key (id),
+  constraint fk_w_turv_month_export_dep foreign key (id_departament) references w_departaments(id),
+  constraint fk_w_tur_month_export_empl foreign key (id_employee) references w_employees(id),
+  constraint fk_w_turv_month_export_job foreign key (id_job) references w_jobs(id)
+);
+
+create unique index idx_w_turv_month_export_uk on w_turv_month_export(id_departament, dt1, id_employee);
+create index idx_w_turv_month_export_1 on w_turv_month_export(id_departament, dt1); 
+
+create sequence sq_w_turv_month_export start with 1 nocache;
+
+create or replace trigger trg_w_turv_month_export_bi_r before insert on w_turv_export for each row
+begin
+  select nvl(:new.id, sq_w_turv_month_export.nextval) into :new.id from dual;
+end;
+
+create or replace view v_w_turv_month_export as
+select
+  t.*,
+  d.name as departament,
+  e.name as employee,
+  j.name as job
+from
+  w_turv_month_export t,  
+  w_departaments d, 
+  v_w_employees e,
+  w_jobs j
+where
+  t.id_departament = d.id
+  and t.id_employee = e.id
+  and t.id_job = j.id
 ;  
+  
 
 select * from v_w_turv_export;
    

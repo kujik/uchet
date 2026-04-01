@@ -700,6 +700,8 @@ alter table order_items add dt_est date;
 alter table order_items add dt_est_last date;
 alter table order_items add dt_kns_last date;
 alter table order_items add dt_thn_last date;
+alter table order_items add dt_doc date;
+
 
 create table order_items (
   id number(11),
@@ -745,6 +747,7 @@ create table order_items (
   labor_intensity number,              --трудоемкость, мин.
   dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
+  dt_doc date,                         --дата выдачи бумажных документов по заказу технологами
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),
