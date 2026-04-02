@@ -2,19 +2,19 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
   Caption = 'FrmWDedtEmployeeProperties'
   ClientHeight = 424
   ClientWidth = 494
-  ExplicitWidth = 510
-  ExplicitHeight = 463
+  ExplicitWidth = 506
+  ExplicitHeight = 462
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 494
     Height = 408
-    ExplicitWidth = 494
-    ExplicitHeight = 408
+    ExplicitWidth = 490
+    ExplicitHeight = 407
     inherited pnlFrmClient: TPanel
-      Width = 488
-      Height = 360
-      ExplicitWidth = 484
-      ExplicitHeight = 359
+      Width = 484
+      Height = 359
+      ExplicitWidth = 480
+      ExplicitHeight = 358
       object cmb_id_mode: TDBComboBoxEh
         Left = 90
         Top = 8
@@ -50,7 +50,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
       object cmb_id_departament: TDBComboBoxEh
         Left = 90
         Top = 62
-        Width = 397
+        Width = 393
         Height = 21
         ControlLabel.Width = 80
         ControlLabel.Height = 13
@@ -63,12 +63,12 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 2
         Text = 'DBComboBoxEh1'
         Visible = True
-        ExplicitWidth = 393
+        ExplicitWidth = 389
       end
       object cmb_id_job: TDBComboBoxEh
         Left = 90
         Top = 89
-        Width = 397
+        Width = 393
         Height = 21
         ControlLabel.Width = 57
         ControlLabel.Height = 13
@@ -81,7 +81,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 3
         Text = 'cmb_id_job'
         Visible = True
-        ExplicitWidth = 393
+        ExplicitWidth = 389
       end
       object cmb_id_schedule: TDBComboBoxEh
         Left = 92
@@ -102,7 +102,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
       object edt_comm: TDBEditEh
         Left = 90
         Top = 220
-        Width = 395
+        Width = 391
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 67
@@ -115,11 +115,12 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 5
         Text = 'DBEditEh1'
         Visible = True
+        ExplicitWidth = 387
       end
       object cmb_id_organization: TDBComboBoxEh
         Left = 92
         Top = 170
-        Width = 392
+        Width = 388
         Height = 21
         ControlLabel.Width = 66
         ControlLabel.Height = 13
@@ -132,6 +133,7 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
         TabOrder = 6
         Text = 'cmb_id_job'
         Visible = True
+        ExplicitWidth = 384
       end
       object edt_personnel_number: TDBEditEh
         Left = 92
@@ -167,36 +169,36 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 365
-      Width = 488
-      ExplicitTop = 364
-      ExplicitWidth = 484
+      Top = 364
+      Width = 484
+      ExplicitTop = 363
+      ExplicitWidth = 480
       inherited bvlFrmBtnsTl: TBevel
-        Width = 486
+        Width = 482
         ExplicitWidth = 486
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 486
+        Width = 482
         ExplicitWidth = 486
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 486
-        ExplicitWidth = 482
+        Width = 482
+        ExplicitWidth = 478
         inherited pnlFrmBtnsMain: TPanel
-          Left = 387
-          ExplicitLeft = 383
+          Left = 383
+          ExplicitLeft = 379
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 159
-          ExplicitLeft = 155
+          Left = 155
+          ExplicitLeft = 151
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 288
-          ExplicitLeft = 284
+          Left = 284
+          ExplicitLeft = 280
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 19
-          ExplicitWidth = 15
+          Width = 15
+          ExplicitWidth = 11
         end
       end
     end
@@ -204,11 +206,15 @@ inherited FrmWDedtEmployeeProperties: TFrmWDedtEmployeeProperties
   inherited pnlStatusBar: TPanel
     Top = 408
     Width = 494
-    ExplicitTop = 408
-    ExplicitWidth = 494
+    ExplicitTop = 407
+    ExplicitWidth = 490
     inherited lblStatusBarR: TLabel
-      Left = 425
-      ExplicitLeft = 425
+      Left = 421
+      Height = 14
+      ExplicitLeft = 421
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

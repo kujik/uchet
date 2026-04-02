@@ -946,6 +946,7 @@ const
   myfrm_R_Itm_Nomencl_SEL='R_Itm_Nomencl_SEL';
   myfrm_Rep_Orders_Overdue_Kns_Thn='Rep_Orders_Overdue_Kns_Thn';
   myfrm_J_Pdo_Order_Stage_Dates='J_Pdo_Order_Stage_Dates';
+  myfrm_Rep_Orders_Audit='Rep_Orders_Audit';
 
 
   //диалоги
@@ -1724,10 +1725,12 @@ const
   rOr_J_Pdo_Order_Stage_Dates='6-146';
   rOr_J_Pdo_Order_Stage_Dates_Ch='6-147';
   rOr_D_Order_Estimate_All='6-148';
+  rOr_D_Order_InputDocDate='6-149';
+  rOr_Rep_Orders_Audit='6-150';
 
 
   const
-  URights : array [0..258] of array [0..3] of string = (
+  URights : array [0..260] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1864,6 +1867,7 @@ const
     (rOr_D_Order_SetUnCompleted,'Модуль "Заказы"','Журналы: Заказы','Снять отметку закрытия заказа'),
     (rOr_D_Order_SetCanceled,'Модуль "Заказы"','Журналы: Заказы','Отметить заказ отмененным или снять отметку'),
     (rOr_D_Order_EnteringUPD,'Модуль "Заказы"','Журналы: Заказы','Ввод данных УПД'),
+    (rOr_D_Order_InputDocDate,'Модуль "Заказы"','Журналы: Заказы','Отметка получения документов ТХН по заказу'),
     (rOr_D_Order_SetCompletedM,'Модуль "Заказы"','Журналы: Заказы','Отметитка завершения заказа менеджером (свой заказ)'),
     (rOr_D_Order_SetCompletedMA,'Модуль "Заказы"','Журналы: Заказы','Отметитка завершения заказа менеджером (любой заказ)'),
     (rOr_D_Order_SetSn,'Модуль "Заказы"','Журналы: Заказы','Отметка заказа как обработанным снабжением'),
@@ -1982,6 +1986,7 @@ const
     (rOr_Rep_PlannedMaterials_Calc,'Модуль "Заказы"','Отчеты','Отчет "Годовая потребность в материалах", перерасчет данных'),
     (rOr_J_SplDealsMonitoring,'Модуль "Заказы"','Отчеты','Мониторинг сделок снабжения'),
     (rOr_Rep_Orders_Overdue_Kns_Thn,'Модуль "Заказы"','Отчеты','Выполнение сроков конструкторами/технологами'),
+    (rOr_Rep_Orders_Audit,'Модуль "Заказы"','Отчеты','Журнал операций по заказам'),
     (rOr_Other_Order_FindEstimate,'Модуль "Заказы"','Сервис: Поиск сметы по сметной позиции', 'Доступ'),
     (rOr_Other_ItmInfo,'Модуль "Заказы"','Сервис: Информация по ИТМ', 'Доступ'),
     (rOr_Other_ItmExtNomencl,'Модуль "Заказы"','Сервис: Расширенный справочник номенклатуры ИТМ', 'Доступ'),

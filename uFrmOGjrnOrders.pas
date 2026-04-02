@@ -31,6 +31,7 @@ type
     procedure Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean); override;
     //события второго (детального) фрейма грида
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+    procedure Frg2CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
@@ -189,6 +190,7 @@ begin
     ['control_assembly','Контр. сборка','40','pic'],
     ['dt_kns','Документы КНС','80'],
     ['dt_thn','Документы ТХН','80'],
+    ['dt_doc$d','Документы к заказу','80', 'chbt=+', User.Role(rOr_D_Order_InputDocDate), 'e', User.Role(rOr_D_Order_InputDocDate)],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
     ['qnt_panels_w_drill_all','Сверловка, панелей','80', 'f=f:'],
@@ -552,6 +554,14 @@ begin
         end;
       end
     else inherited;
+  end;
+end;
+
+procedure TFrmOGjrnOrders.Frg2CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if (Fr.CurrField = 'dt_doc') and (Fr.GetValueI('id_thn') <> -100) and (Frg1.GetValue('dt_end') = null) then begin
+    Q.QExecSql('update order_items set dt_doc = :dt$d where dt_doc is null and id = :id$i', [Date, Fr.ID]);
+    Fr.RefreshRecord;
   end;
 end;
 

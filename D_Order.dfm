@@ -29,6 +29,7 @@ inherited Dlg_Order: TDlg_Order
     Height = 41
     Align = alTop
     TabOrder = 0
+    ExplicitWidth = 1260
     DesignSize = (
       1264
       41)
@@ -136,6 +137,7 @@ inherited Dlg_Order: TDlg_Order
       MaxLength = 400
       TabOrder = 5
       Visible = True
+      ExplicitWidth = 25
     end
     object edt_ids_order_properties: TDBEditEh
       Left = 607
@@ -153,6 +155,7 @@ inherited Dlg_Order: TDlg_Order
       MaxLength = 400
       TabOrder = 6
       Visible = True
+      ExplicitWidth = 25
     end
   end
   object pnl_Bottom: TPanel [2]

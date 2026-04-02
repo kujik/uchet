@@ -251,8 +251,7 @@ var
 implementation
 
 uses
-  StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2,
-  uFrmOGselOrReglament, uWindows, D_LoadKBLog, uSys, uOrders, uFrmBasicMdi;
+  System.StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2, uFrmOGselOrReglament, uWindows, D_LoadKBLog, uSys, uOrders, uFrmBasicMdi;
 
 const
   cControl = 0;
@@ -2832,7 +2831,7 @@ begin
   SetSumInHeader;
 end;
 
-procedure TDlg_Order.GetChangesText(AFullText: Boolean = false);
+procedure TDlg_Order.GetChangesText(AFullText: Boolean = False);
 //получим текстовое описание изменений в паспорте
 var
   i, j, k, RecNo: Integer;
@@ -2842,8 +2841,10 @@ var
   FieldsNoUsed: TVarDynArray;
   UsedComponents: TVarDynArray;
 begin
-  DifferencesText := '';
-  DifferencesAllText := '';
+  if AFullText then
+    DifferencesAllText := ''
+  else
+    DifferencesText := '';
 
   //только по этим полям заголовка проверяются изменения
   UsedComponents := [

@@ -157,7 +157,7 @@ var
   va2: TVarDynArray2;
 begin
   //загружаем комбобоксы
-  Cth.AddToComboBoxEh(cmb_id_organization, [['Ѕез оформлени€', '-1000']]);
+  Cth.AddToComboBoxEh(cmb_id_organization, [['нет', '-1000']]);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where active = 1 and id > 0 or id = :id_old$i order by name asc', [F.GetPropB('id_organization')], cmb_id_organization, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from w_jobs where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_job')], cmb_id_job, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from w_departaments where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_departament')], cmb_id_departament, cntComboLK);
@@ -275,13 +275,18 @@ begin
     SetControlsState;
   if Sender = cmb_id_organization then begin
     if cmb_id_organization.Value = '-1000' then begin
-      edt_personnel_number.Text := '¬ременный';
-      edt_personnel_number.ReadOnly := True;
+      if F.GetPropB('personnel_number') = null then
+        edt_personnel_number.Text := '¬ременный'
+      else
+        edt_personnel_number.Text := F.GetPropB('personnel_number');
+      SetControlsEditable([edt_personnel_number], False);
+  //    edt_personnel_number.ReadOnly := True;
     end
     else begin
       if edt_personnel_number.Text = '¬ременный' then
         edt_personnel_number.Text := '';
-      edt_personnel_number.ReadOnly := False;
+    //  edt_personnel_number.ReadOnly := False;
+      SetControlsEditable([edt_personnel_number], True);
     end;
   end;
   inherited;
@@ -297,14 +302,17 @@ begin
   SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
   if Mode = fEdit then
     Exit;
-  //заблокирем изменение организации и табельного номера, если это не прием
-  if FIdMode <> 1 then begin
+  //заблокирем изменение организации и табельного номера
+  //изменение допустимо при приеме, и при переводе, если ранее не была прив€зана организаци€
+  //(дл€ возмождности переводить неофициальщиков в официалку без увольнени€)
+  if (GetControlValue('cmb_id_mode').AsInteger <> 1) and not ((GetControlValue('cmb_id_mode').AsInteger = 2) and (F.GetPropB('id_organization') = null)) then
     SetControlsEditable([cmb_id_organization, edt_personnel_number], False);
+    if cmb_id_organization.Value = '-1000' then
+    SetControlsEditable([edt_personnel_number], False);
 {    if (FIdLast <> null) and (FLastRec.G('id_organization') <> null) then
       SetControlsEditable([cmb_id_organization], False);
     if (FIdLast <> null) and (FLastRec.G('personnel_number') <> null) then
       SetControlsEditable([edt_personnel_number], False);}
-  end;
   if GetControlValue('cmb_id_mode').AsString <> '3' then
     Exit;
   Exit;

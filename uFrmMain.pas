@@ -509,8 +509,9 @@ end;
 procedure TFrmMain.DefineMainMenu;
 begin
   {$IFDEF  TURV}
-  var LAccesToPayrollCalculations := User.IsDeveloper or (Q.QSelectOneRow('select count(*) from w_departaments where id_head = :id$i', [User.GetID])[0] > 0);
+  var LAccesToPayrollCalculations := User.IsDeveloper or (Q.QLoadValue('select count(*) from w_departaments where id_head = :id$i', [User.GetID]) > 0);
   {$ENDIF}
+
   MenuDef := [
     //общее меню
     ['='],
@@ -712,10 +713,9 @@ begin
     ['Общая смета по выбранным заказам', '_', User.Roles([], [rOr_Rep_Orders_QntItems])],
     [],
     ['Выполнение сроков конструкторами/технологами', myfrm_Rep_Orders_Overdue_Kns_Thn, User.Roles([], [rOr_Rep_Orders_Overdue_Kns_Thn])],
+    ['Журнал действий по заказам', myfrm_Rep_Orders_Audit, User.Roles([], [rOr_Rep_Orders_Audit])],
     [],
     ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
-    //[],
-    //['Отчет по транспортным счетам', myfrm_Rep_SnCalendar_Transport, A.InArray(User.GetLogin, ['sprokopenko','sa','dir_proizv','assistant'])],     //!!!временно
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

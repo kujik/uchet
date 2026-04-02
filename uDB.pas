@@ -1236,7 +1236,7 @@ var
   na: TNamedArr;
 begin
   QLoad(Sql, ParamValues, na, True);
-  Result := A.VarDynArray2ColToVD1()
+  Result := A.VarDynArray2ColToVD1(na.V, 0);
 end;
 
 
