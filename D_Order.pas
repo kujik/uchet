@@ -1005,7 +1005,7 @@ begin
       os := SetTask;                            //задачу серверному процессу, если это не шаблон
     //при редактировании запишем в лог аудита
     if os and (Mode <> fDelete) and not IsTemplate and (DifferencesAllText <> '') then
-      Orders.ToOrderAudit(ORDER_AUDIT_ORDER, Mode <> fAdd, edt_OrderNum.Text, DifferencesAllText);
+      Orders.ToOrderAudit(ORDER_AUDIT_ORDER, Mode <> fAdd, edt_OrderNum.Text, S.IIFStr(Mode <> fAdd, DifferencesAllText));
     OrderSaved := os;
     Q.QCommitOrRollback(OrderSaved);  //фиксируем транзакцию
     Q.DBLock(False, 'ordercreate', Cth.GetControlValue(cmb_Organization),'');

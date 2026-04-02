@@ -885,7 +885,8 @@ create index idx_w_turv_month_export_1 on w_turv_month_export(id_departament, dt
 
 create sequence sq_w_turv_month_export start with 1 nocache;
 
-create or replace trigger trg_w_turv_month_export_bi_r before insert on w_turv_export for each row
+--drop trigger trg_w_turv_month_export_bi_r;
+create or replace trigger trg_w_turv_month_export_bi_r before insert on w_turv_month_export for each row
 begin
   select nvl(:new.id, sq_w_turv_month_export.nextval) into :new.id from dual;
 end;

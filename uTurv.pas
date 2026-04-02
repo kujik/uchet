@@ -172,6 +172,7 @@ type
     function  CellState(ARow, ADay: Integer): Integer ;
     procedure LoadFromParsec;
     procedure UpdateExportTable;
+    procedure UpdateMonthExportTable;
   end;
 
 
@@ -671,10 +672,12 @@ begin
     else
       j := DaysBetween(FList.GetValue(i, 'dt_beg'), DtBeg) + 1;
     FRows[p].Seg.SetValue(p2, 'c1', j);
+//    if FList.GetValue(i, 'dt_end') = null then
     if FList.GetValue(i, 'dt_end') = null then
-      j := 16
+      j := FDaysCount
+//      j := DaysBetween(DtEnd, DtBeg) + 1  //--16
     else
-      j := Min(16, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
+      j := Min(FDaysCount, DaysBetween(FList.GetValue(i, 'dt_end'), DtBeg) + 1);
     FRows[p].Seg.SetValue(p2, 'c2', j);
   end;
   //загрузим в данные в массив ячеек (дней), где номер строки соотвествует строке в FList,
@@ -690,7 +693,7 @@ begin
         Break;
       end;
     //создадим запись для дня в ячейке
-    FCells[i].Create(FDays.FFull, 17);
+    FCells[i].Create(FDays.FFull, FDaysCount + 2); //!!!
     FCells[i].SetNull;
     //загрузим данные по дням (только те дни, кторые загружены из бд!)
     for j := 0 to FDays.Count - 1 do begin
@@ -698,7 +701,14 @@ begin
       if ep = FList.G(i, 'id') then begin
         //копируем все поля из исходного сплошного массива дней в ячейку целевого массива,  при условии по айди статуса
         for k := 0 to High(FDays.V[0]) do
+//        try
           FCells[i].V[DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1][k] := FDays.V[j][k];
+{        except
+var ddddd:=DaysBetween(FDays.G(j, 'dt'), DtBeg) + 1;
+var vvv :=High(FCells[i].V);
+var vvv1 :=High(FDays.V[0]);
+
+        end;}
       end;
     end;
     //пройдем по всем ячейкам
@@ -1372,6 +1382,79 @@ begin
       Q.QSave(S.IIf(vaTurv[i][0] = -2, 'i', 'u'), 'w_turv_export', '', Flds, A.VarDynArray2RowToVD1(vaTurv, i));
   Q.QCommitTrans;
 end;
+
+procedure TTurvData.UpdateMonthExportTable;
+//загрузим турв в промежуточную таблицу (колонки по дням с итоговым временем или кодом, и  итоговые колонки) для экспорта в эксель
+var
+  i, j, k, pos: Integer;
+  b: Boolean;
+  vaTurv, vaTable: TVarDynArray2;
+  IdsDel, Flds: string;
+begin
+  //if FTitle.G('id_departament') <> 20 then Exit; //бух
+  //поля
+  Flds := 'id$i;id_departament$i;dt1$d;id_employee$i;id_job$i;'+
+    'd1$s;d2$s;d3$s;d4$s;d5$s;d6$s;d7$s;d8$s;d9$s;d10$s;d11$s;d12$s;d13$s;d14$s;d15$s;d16$s;d17$s;d18$s;d19$s;d20$s;d21$s;d22$s;d23$s;d24$s;d25$s;d26$s;d27$s;d28$s;d29$s;d30$s;d31$s;'+
+    'hours$f;premium$f;penalty$f';
+  //загружаем из бд по этому департаменту и периоду
+  vaTable := Q.QLoad(
+    Q.QGetSql('a', 'w_turv_month_export', Flds) + ' where id_departament = :id_departament$i and dt1 = :dt1$d',
+    [FDepartament, FDtBeg]
+  );
+  //загрузим аналогичные данные из турв
+  vaTurv := [];
+  for i := 0 to Count - 1 do begin
+    vaTurv := vaTurv + [[]];
+    SetLength(vaTurv[High(vaTurv)], 4 + 31 + 3 + 1);
+    //поля и итоги
+    vaTurv[i][0] := -1;
+    vaTurv[i][1] := FDepartament;
+    vaTurv[i][2] := FDtBeg;
+    vaTurv[i][3] := List.G(R(i)[0], 'id_employee');
+    vaTurv[i][4] := List.G(R(i)[0], 'id_job');
+    vaTurv[i][5 + 31] := Rows[i].Totals.G('worktime');
+    vaTurv[i][5 + 32] := Rows[i].Totals.G('premium');
+    vaTurv[i][5 + 33] := Rows[i].Totals.G('penalty');
+
+    //данные по дням
+    for j := 1 to FDaysCount do begin
+      vaTurv[i][4 + j] := GetResultDayValue(i, j);
+    end;
+    //есть ли строка с этим работником уже в бд, -2 будет значить что нет
+    j := A.PosInArray(vaTurv[i][3], vaTable, 3);
+    if j < 0 then
+      vaTurv[i][0] := -2
+    else begin
+      //если есть, правим, изменились ли какие-то данные
+      b := False;
+      for k := 1 to High(vaTurv[i]) do begin
+        if vaTurv[i][k].AsString <> vaTable[j][k].AsString then begin
+          b := True;
+          Break;
+        end;
+      end;
+      //если изменились, проставим айди из БД
+      if b then
+        vaTurv[i][0] := vaTable[j][0];
+    end;
+  end;
+  //получим список айди из бд для работников, которых теперь нет в турв
+  IdsDel := '';
+  for i := 0 to High(vaTable) do
+    if A.PosInArray(vaTable[i][3], vaTurv, 3) < 0 then
+      S.ConcatStP(IdsDel, vaTable[i][0], ',');
+  Q.QBeginTrans(True);
+  //еслит есть таковые, то удалим эти строки
+  if IdsDel <> '' then
+    Q.QExecSql('delete from w_turv_month_export where id in (' + IdsDel + ')', []);
+  //обработаем массив данных из турв
+  //в итоге нам надо исходя из колонки айди, при -2 - вставить строку, при -1 (данные не изменились) ничего не делать, иначе обновить
+  for i := 0 to High(vaTurv) do
+    if vaTurv[i][0] <> -1 then
+      Q.QSave(S.IIf(vaTurv[i][0] = -2, 'i', 'u'), 'w_turv_month_export', '', Flds, A.VarDynArray2RowToVD1(vaTurv, i));
+  Q.QCommitTrans;
+end;
+
 
 
 
@@ -3572,21 +3655,24 @@ var
   LIds, LDeps: TVarDynArray;
   i: Integer;
 begin
+
   ShowWaitForm('Подготовка данных ТУРВ для использования в таблицах Excel...');
   LIds := Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   LIds := LIds + Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(Date)]);
+  //LIds := Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d and id_departament = 5', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);  //test
   for i := 0 to High(LIds) do begin
     LTurv.Create(LIds[i], '', 'id_employee');
-//    try
     LTurv.UpdateExportTable;
-//    except
-//    end;
     LTurv := Default(TTurvData);
   end;
-Exit;
+
   LDeps := Q.QLoadCol('select distinct id_departament from w_turv_period where dt1 = :dt1$d or dt1 = :dt2$d', [GetTurvBegDate(Date), GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
-  for i := 0 to High(LIds) do begin
-    LTurv.Create(LIds[i], '', 'id_employee');
+  for i := 0 to High(LDeps) do begin
+    //if LDeps[i] <> 5 then Continue;
+    LTurv.Create(null, '', 'id_employee', StartOfTheMonth(Date), EndOfTheMonth(Date), LDeps[i]);
+    LTurv.Create(null, '', 'id_employee', StartOfTheMonth(IncMonth(Date, -1)), EndOfTheMonth(IncMonth(Date, -1)), LDeps[i]);
+    LTurv.UpdateMonthExportTable;
+    LTurv := Default(TTurvData);
   end;
 end;
 

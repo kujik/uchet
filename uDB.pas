@@ -971,7 +971,7 @@ function TmyDB.QSave(Mode: string; Table: string; Sequence: string; FieldsSt: st
 //для вставки всегда подразумевается первый параметр (поле) числовым, и возвращается значение этого параметра
 //в случае ошибки возвращается -1, иначе для инзерт - значение айди, для остальных - количество обработанных строк
 var
-  Fields: TVarDynArray;
+  Fields, ParamsDeb: TVarDynArray;
   Params: Variant;
   i, j: Integer;
   St, St1, sql: string;
@@ -1000,12 +1000,16 @@ begin
       id := QSelectId(Sequence);
       Params[0] := id;
     end;
+{    if AutoId and (Sequence = '') then begin
+      Params[0] := -1;
+    end;}
     if not AutoId then begin
       id := Values[0];
       Params[0] := id;
     end;
 // Sys.SaveTextToFile('r:\1', sql);
 // Sys.SaveTextToFile('r:\2', A.Implode(Params, '; '));
+    ParamsDeb := Params;
     Result := QExecSql(sql + S.IIf(Sequence = '', ' returning ' + A.ExplodeV(Fields[0], '$')[0] + ' into :' + A.ExplodeV(Fields[0], '$')[0] + '$ir', ''), Params, ShowError);
     if Result >= 0 then
       if Sequence <> '' then

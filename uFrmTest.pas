@@ -1479,8 +1479,8 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
-Exit;
-Turv.LoadDataFromParsec; Exit;
+//Exit;
+Turv.SaveAllTurvToExportTable; Exit;
 //  ShowWaitForm('111111111111', nil, True, 1);
   ShowWaitForm;
   Sleep(3000);

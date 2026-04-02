@@ -432,10 +432,10 @@ object FrmTest: TFrmTest
     Padding.Right = 4
     Padding.Bottom = 4
     TabOrder = 29
-    ExplicitTop = 659
-    ExplicitWidth = 1197
+    ExplicitTop = 657
+    ExplicitWidth = 1189
     object Panel2: TPanel
-      Left = 1152
+      Left = 1144
       Top = 4
       Width = 41
       Height = 44
@@ -450,7 +450,7 @@ object FrmTest: TFrmTest
       end
     end
     object Panel3: TPanel
-      Left = 1053
+      Left = 1045
       Top = 4
       Width = 99
       Height = 44
@@ -459,7 +459,7 @@ object FrmTest: TFrmTest
       TabOrder = 1
     end
     object Panel4: TPanel
-      Left = 954
+      Left = 946
       Top = 4
       Width = 99
       Height = 62
@@ -468,7 +468,7 @@ object FrmTest: TFrmTest
       TabOrder = 2
     end
     object Panel5: TPanel
-      Left = 855
+      Left = 847
       Top = 4
       Width = 99
       Height = 44
@@ -477,7 +477,7 @@ object FrmTest: TFrmTest
       TabOrder = 3
     end
     object Panel6: TPanel
-      Left = 726
+      Left = 718
       Top = 4
       Width = 129
       Height = 44
