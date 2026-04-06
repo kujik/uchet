@@ -1789,7 +1789,7 @@ begin
       ToOrderAudit(ORDER_AUDIT_THN_DOC, S.IIf(na.G('dt_thn') = null, 0, 1), na.G('slash'));
     end
     else begin
-      Q.QSave('u', 'order_items', '', 'id$i;dt_kns$d;dt_kns_last$d;wo_kns', [IdOrItem, S.IIf(na.G('dt_kns') = null, Date, na.G('dt_kns')), Date, 1]);
+      Q.QSave('u', 'order_items', '', 'id$i;dt_kns$d;dt_kns_last$d;wo_kns', [IdOrItem, S.IIf(na.G('dt_kns') = null, Date, na.G('dt_kns')), Date, 0]);
       ToOrderAudit(ORDER_AUDIT_KNS_DOC, S.IIf(na.G('dt_kns') = null, 0, 1), na.G('slash'));
     end;
     MyInfoMessage('Данные отправлены на сервер.');

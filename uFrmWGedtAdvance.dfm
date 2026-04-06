@@ -5,9 +5,9 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Height = 521
-    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
       Height = 472
+      ExplicitWidth = 782
       inherited pnlBottom: TPanel
         Top = 426
       end
@@ -16,10 +16,18 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
       end
       inherited pnlGrid1: TPanel
         Height = 417
+        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
           Height = 415
+          ExplicitWidth = 770
           inherited pnlGrid: TPanel
             Height = 361
+            inherited DbGridEh1: TDBGridEh
+              Width = 762
+            end
+            inherited pnlStatusBar: TPanel
+              Width = 762
+            end
           end
           inherited pnlLeft: TPanel
             Height = 361
@@ -45,8 +53,17 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
       end
       inherited pnlFrg2: TPanel
         Top = 431
+        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 780
+          inherited pnlGrid: TPanel
+            inherited DbGridEh1: TDBGridEh
+              Width = 772
+            end
+            inherited pnlStatusBar: TPanel
+              Width = 772
+            end
+          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -79,6 +96,13 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
   end
   inherited pnlStatusBar: TPanel
     Top = 521
+    inherited lblStatusBarR: TLabel
+      Left = 723
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
   end
   object PrintDBGridEh1: TPrintDBGridEh
     DBGridEh = Frg1.DbGridEh1

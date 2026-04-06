@@ -1,28 +1,8 @@
 {
-зарплатная ведомость
-
-  первоначально создается запись в таблице ведомостей по данному подразделений (и, возможно, одному работнику) за данный период
-(создается в Dlg_CreatePayroll)
-  при первом открытии заполняется строками на основе ТУРВ, строки с одинаковым работником объединяются, должность пишется первая,
-работники, по которым есть индивидуальные ведомости не вносятся. расчетные данные заполняются пустыми. но бланка и оклад берутся
-из предыдущей ведомости (за прошлый период) по данному подразделению (по всему подразделению). метод расчета берется также из
-этой ведомости.
-  при нажатии кнопки турв - корректируется список (добавляются записи, которых еще не было, если по ним нет индивидуальных ведомостей,
-удаляются из сетки, но не из БД, записи, для которых больше нет строки в турв). загружаются данные по рабочим часам, премиям, штрафам,
-графику работы и нормам за месц и текущий период для работника и пересчитывается сетка.
-  данные в сетке (все) - целые, втч турв, а итог округляется до 100р
-  данные сохраняются при закрытии ведомости, включая и изменение настроек, и изменение списка работников в ведомости
-
-
-ID	NAME	COMM
-14	Сборка/станки/реклама/покраска	оклада нет, баллы выгрузка, премии за период нет
-13	Конструктора/технологи	оклада нет, баллы выгрузка, премии за период нет
-12	Офис, мастер, ОТК	оклад, баллы до нормы, премия за период вручную
-11	Наладчик/электрик	оклад, баллы полностью, премия за период вручную
-10	Грузчик/упаковщик	оклад, баллы до нормы, премия за отчетный период (формула), премия за переработку (формула)
+зарплатная расчетная ведомость
 }
 
-unit uFrmWGedtPayrollN;
+unit uFrmWGedtPayrollCalc;
 
 interface
 
@@ -30,51 +10,45 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls,
   ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd,
   MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math, DateUtils, Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uTurv, uNamedArr
   ;
 
 type
-  TFrmWGedtPayrollN = class(TFrmBasicGrid2)
+  TFrmWGedtPayrollCalc = class(TFrmBasicGrid2)
     PrintDBGridEh1: TPrintDBGridEh;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FPayrollParams: TNamedArr;
-    FIsEditable: Boolean;
     FDeletedWorkers: TVarDynArray;
-    FColWidth: Integer;
-    FIsWorkingHoursDefined: Boolean;
     FTurv: TTurvData;
-    FIdTurv: Variant;
-    FIsChanged: Boolean;
-    FIsListChanged: Boolean;
     FIsEditableAdd, FIsEditableAll: Boolean;
-    FIsSecondPeriod: Boolean;
     function  PrepareForm: Boolean; override;
+    function  Save: Boolean; override;
+    //события грида
+    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
+    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+    //методы класса
     function  GetDataFromDb: Integer;
     function  GetDataFromTurv: Integer;
+    procedure LoadPrevCalcMethods;
+    procedure SetPayrollMethod;
     procedure GetDataFromExcel;
+    function  GetCaption(Colored: Boolean = False): string;
     procedure SetButtons;
     procedure SetColumns;
-    function  GetCaption(Colored: Boolean = False): string;
-    procedure CalculateAll;
-    procedure CalculateRow(Row:Integer);
+    procedure SetEditableAll;
     procedure CommitPayroll;
     procedure PrintGrid;
     procedure ExportToXlsxA7;
-    procedure SetPayrollMethod;
-    procedure SavePayroll;
-    procedure SetEditableAll;
+    //procedure SavePayroll;
+    procedure CalculateAll;
+    procedure CalculateRow(Row:Integer);
 
-    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
-    procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
-    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
-    procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
-    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
   public
   end;
 
 var
-  FrmWGedtPayrollN: TFrmWGedtPayrollN;
+  FrmWGedtPayrollCalc: TFrmWGedtPayrollCalc;
 
 implementation
 
@@ -98,6 +72,7 @@ const
   cmbtCard = 1002;
   cmbRecalculate = 1005;
   cmbSetEditable = 1006;
+  cmbDeleteRow = 1007;
 
   cMOffice = 1;
   cMWorkshop = 2;
@@ -107,15 +82,16 @@ const
   cO10 = 2;
   cO15 = 3;
 
+  cColWidth = 45;
 
   cFieldsS =
     'id$i;id_employee$i;id_job$i;id_schedule$i;id_organization$i;personnel_number$s;' +
-    'monthly_hours_norm$f;period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;ors_pay$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
+    'period_hours_norm$f;hours_worked$f;overtime$f;planned_pay$f;fixed_pay$f;variable_pay$f;ors$f;ors_pay$f;base_pay$f;ext_pay$f;overtime_pay$f;' +
     'personal_pay$f;daily_bonus$f;extra_bonus$f;night_pay$f;milk_compensation$f;non_work_pay$f;penalty$f;correction$f;total_pay$f';
   cFieldsL =
-    'employee$s;organization$s;job$s;schedulecode$s;changed$i;temp$i';
+    'employee$s;organization$s;job$s;schedulecode$s;temp$i';
 
-function TFrmWGedtPayrollN.PrepareForm: Boolean;
+function TFrmWGedtPayrollCalc.PrepareForm: Boolean;
 var
   i, j, w1: Integer;
   v: Variant;
@@ -128,22 +104,18 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoad('select id, id_departament, id_employee, id_organization, personnel_number, dt1, dt2, departament, employee, is_office, calc_method, overtime_method, is_finalized from v_w_payroll_calc where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_departament, id_employee, id_organization, personnel_number, dt, dt1, dt2, departament, employee, is_office, calc_method, overtime_method, is_finalized from v_w_payroll_calc where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
   end;
-  //айди ТУРВ за данный период по данному подразделению
-  FIdTurv := Q.QSelectOneRow('select id from w_turv_period where id_departament = :idd$i and dt1 = :dr1$d' ,[FPayrollParams.G('id_departament'), FPayrollParams.G('dt1')])[0];
-  FIsSecondPeriod := DayOf(FPayrollParams.G('dt1')) = 16;
 
   FDeletedWorkers := [];
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize] - [myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogHasStatusBar] - [myogColumnFilter];
 
   //определим поля
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
-  FColWidth := 45;
-  wcol := IntToStr(FColWidth) + ';r';
+  wcol := IntToStr(cColWidth) + ';r';
   fcol := 'f=###,###,###:';
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
@@ -160,8 +132,7 @@ begin
     ['job$s', '!Должность', '150;h'],
     ['schedulecode$s', '!График', '70'],
 
-    ['monthly_hours_norm$f', 'ТУРВ|Норма отработанных часов за месяц', 90],
-    ['period_hours_norm$f', '!Норма отработанных часов за период', 90],
+    ['period_hours_norm$f', 'ТУРВ|Норма отработанных часов за период', 90],
     ['hours_worked$f', '!Отработано за период', 90],
     ['overtime$f', '!Из них переработка', 90],
 
@@ -184,21 +155,24 @@ begin
     ['total_pay$f', '~Итого' + sLineBreak + ' начислено', wcol, fcol]
 //    ['$f', '', wcol, fcol],
   ]);
-  Frg1.Opt.SetGridOperations('u');
+  Frg1.Opt.ButtonsNoAutoState := [0];
+  Frg1.Opt.SetGridOperations('ud');
   Frg1.Opt.SetButtons(1, [
-    [mbtSettings],[],[mbtCustom_Turv],[mbtCustom_Payroll],
-    //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
+    [mbtSettings], [], [mbtCustom_Turv],[mbtCustom_Payroll],
+    [-cmbDeleteRow, True, 'Удалить строку'],
+    [-cmbRecalculate, True, 'Пересчитать все'],
+    [-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
+    [-mbtExcel, AddParam = null],
     [],[mbtLock],
-    [], [-mbtExcel, True],
-    [],[-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
-    [],[-cmbRecalculate, True, 'Пересчитать все'],
     [],[mbtCtlPanel]
   ]);
-  Frg1.Opt.ButtonsNoAutoState := [0];
 
   Frg1.CreateAddControls('1', cntLabelClr, GetCaption(True), 'lblDivision', '', 4, yrefT, 800);
   Frg1.CreateAddControls('1', cntLabelClr, '', 'lblInfo', '', 4, yrefB, 800);
   Frg1.SetInitData([], '');
+
+  FQueryCloseMessage := 'Ведомость была изменена!'#13#10'Сохранить данные?';
+  FOpt.RequestWhereClose := cqYNC;
 
   Frg1.InfoArray := [[
     'Расчетная ведомость.'#13#10#13#10+
@@ -226,6 +200,8 @@ begin
 
   //прочитаем из БД ведомость
   GetDataFromDb;
+  //загрузим метод расчета из турв прошлого месяца того же периода
+  LoadPrevCalcMethods;
   //если ведомость пуста- выполним первоначальную загрузка по данным турв
   if Frg1.GetCount(False) = 0 then
     GetDataFromTurv;
@@ -234,40 +210,18 @@ begin
   Result:=True;
 end;
 
-procedure TFrmWGedtPayrollN.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  rn, i, res: Integer;
-  changed: Boolean;
-begin
-  inherited;
-  //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
-  if FInPrepare then
-   Exit;
-  if FIsChanged then begin
-    res:=myMessageDlg('Зарплатная ведомость была изменена!'#13#10'Сохранить данные?', mtConfirmation, mbYesNoCancel);
-    if res = mrYes then begin
-      SavePayroll;
-      RefreshParentForm;
-    end
-    else if res = mrCancel then begin
-      Action:=caNone;
-      Exit;
-    end;
-  end;
-end;
-
-function TFrmWGedtPayrollN.GetDataFromDb: Integer;
+function TFrmWGedtPayrollCalc.GetDataFromDb: Integer;
 //прочитаем ведомость (все данные) из БД и заполним ими сетку
 var
   na : TNamedArr;
 begin
-  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i order by job, employee, schedulecode, organization, personnel_number',
+  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);
 end;
 
-function TFrmWGedtPayrollN.GetDataFromTurv: Integer;
+function TFrmWGedtPayrollCalc.GetDataFromTurv: Integer;
 //читаем данные из ТУРВ по нажатию соотв кнопки
 var
   i, j, k, r: Integer;
@@ -275,7 +229,7 @@ var
   v1, v2: Variant;
   b: Boolean;
   NoData: Boolean;
-  na, na2: TNamedArr;
+  na, na2, naprev: TNamedArr;
   MsgDel, MsgIns, MsgChg: string;
   flds: TVarDynArray2;
   flds1, flds2: TVarDynArray;
@@ -299,7 +253,6 @@ begin
     ['schedulecode', '', 1, 0, 0],
     ['organization', '', 1, 0, 0],
     ['personnel_number', '', 1, 0, 0],
-    ['monthly_hours_norm', '', 1, 1, 0],
     ['period_hours_norm', '', 1, 1, 0],
     ['milk_compensation', '', 2, 1, 1],
     ['worktime', 'hours_worked', 2, 1, 0],
@@ -313,8 +266,7 @@ begin
   //строки в ведомости сгруппированы по f1
   var GroupingSt := 'job;employee;schedulecode;organization;personnel_number';
   if FPayrollParams.G('id_employee') = null then begin
-//    va2 := Q.QSelectOneCol(('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
-    //статусы работников, по которым есть ведомости увольнения (за первый период для ведомости1 и за любой для вендомости2)
+    //статусы работников, по которым есть ведомости увольнения за этот период
     va := Q.QLoadCol(
       'select '+
       '  p.id '+
@@ -325,19 +277,33 @@ begin
       '  c.id_employee = p.id_employee '+
       '  and c.id_organization = p.id_organization '+
       '  and c.personnel_number = p.personnel_number '+
-      '  and (c.dt1 = :dt1$d or c.dt1 = :dt2$d)',
-      [FPayrollParams.G('dt1'), EncodeDate(YearOf(FPayrollParams.G('dt1')), MonthOf(FPayrollParams.G('dt1')), 1)]
+      '  and c.dt = :dt1$d',
+      [FPayrollParams.G('dt')]
     );
     WhereSt := '';
     if Length(va) <> 0 then
       WhereSt := 'and not id in (' + A.Implode(va, ',') + ')';
-    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 1)
+//    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 1);
+    FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 1);
   end
   else begin
     WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and nvl(id_organization, -100) = nvl(''' + FPayrollParams.G('id_organization').AsString + ''', -100) ' +
     'and nvl(personnel_number, -100) = nvl(''' + FPayrollParams.G('personnel_number').AsString + ''', -100)';
-    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);               //по всем, я не только уволенным
+//    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);               //по всем, я не только уволенным
+    FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 0);
   end;
+  //получим данные по плановой зарплате и фиксированной части из прошлой ведомости
+{  Q.QLoad(
+    'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt = :dt1$d',
+    [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt'), -1)], naprev
+  );}
+
+  //временно!!!
+  Q.QLoad(
+    'select i.id_employee, id_job, planned_pay, fixed_pay from temp_w_payroll_calc_item i, temp_w_payroll_calc p where i.id_payroll_calc = p.id and p.dt1 = :dt1$d',
+    [EncodeDate(2026, 02, 16)], naprev
+  );
+
 
   NoData := Frg1.GetCount = 0;
 
@@ -379,7 +345,7 @@ begin
       //в массив удаленных - только те, которые загружены из БД
       if na.G(i, 'id') <> null then
         FDeletedWorkers := FDeletedWorkers + [na.G(i, 'id')];
-      FIsChanged := True;
+      Frg1.SetState(True, null, null);
     end;
   end;
 
@@ -400,6 +366,7 @@ begin
       na2 := FTurv.CalculateTotals(i);
       //айдишники
       for k := 0 to High(flds1) do
+   //     na.SetValue(i, flds1[k], FTurv.List.G(r, st));
         na.SetValue(na.High, flds1[k], FTurv.List.G(r, flds1[k]));
       //остальные поля
       for k := 0 to High(flds) do
@@ -445,8 +412,20 @@ begin
         st1 := '';
         for k := 0 to High(flds2) do
           S.ConcatStP(st1, na.G(i, flds2[k]).AsString, ' | ');
-        S.ConcatStP(MsgChg, st1 + #13#10 + st2);
+        S.ConcatStP(MsgChg, st1 + #13#10 + st2, #13#10);
       end;
+    end;
+  end;
+
+  for i := 0 to na.High do
+  for j:= 0 to naprev.High do begin
+
+    if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
+      if na.G(i, 'planned_pay') = null then
+        na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
+      if na.G(i, 'fixed_pay') = null then
+        na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
+      Break;
     end;
   end;
 
@@ -459,7 +438,7 @@ begin
     MyInfoMessage('ТУРВ загружен, изменений в ведомости не было.');
   end
   else begin
-    FIsChanged := True;
+    Frg1.SetState(True, null, null);
     MyInfoMessage(
       'ТУРВ загружен.'#13#10#13#10 +
       S.IIFStr(MsgIns <> '', 'Внесены записи:'#13#10 + MsgIns + #13#10#13#10) +
@@ -468,50 +447,30 @@ begin
       1
     );
   end;
-
-
-
-//      for k := 0 to High(flds2) do
-//        S.ConcatStP(st1, FTurv.List.G(r, flds2[k]).AsString, ' | ');
-
-(*
-  //загрузим работников из прошлой ведомости по этому же подразделению (по всему подразделению)
-  va1:=Q.QLoad(
-    'select id_employee, base_salarym, planned_monthly_payroll, fixed_compensation from payroll_item where id_division = :id_division$i and dt = :dt1$d',
-    [FPayrollParams.G('id_departament'), Turv.GetTurvBegDate(IncDay(FPayrollParams.G('dt1'), -1))]
-  );
-  //заполним но бланка и баллы за период (оклад), а также планируемую и постоянную часть з/п при использоваении ОРС из прошлого периода
-  for i := 0 to High(va) do begin
-    j := A.PosInArray(va[i][2], va1, 0);
-    SetLength(va[i], 9);
-    if j >= 0 then begin
-      va[i][5] := va1[j][1];
-      va[i][6] := va1[j][2];
-      va[i][7] := va1[j][3];
-      va[i][8] := va1[j][4];
-    end
-    else begin
-      va[i][5] := null;
-      va[i][6] := null;
-      va[i][7] := null;
-      va[i][8] := null;
-    end;
-  end;
-*)
-
 end;
 
-procedure TFrmWGedtPayrollN.GetDataFromExcel;
+procedure TFrmWGedtPayrollCalc.LoadPrevCalcMethods;
+//получим метод расчета и учета переработок из предыдущей ведомости
+var
+  na: TNamedArr;
+begin
+  if (FPayrollParams.G('calc_method') <> null) and (FPayrollParams.G('overtime_method') <> null) then
+    Exit;
+  Q.QLoad('select calc_method, overtime_method from v_w_payroll_calc where id_departament = :id_departament$i and dt = :dt1$d and id_employee is null',
+    [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt'), -1)], na);
+  if na.Count = 0 then
+    Exit;
+  FPayrollParams.SetValue('calc_method', na.G('calc_method'));
+  FPayrollParams.SetValue('overtime_method', na.G('overtime_method'));
+end;
+
+
+procedure TFrmWGedtPayrollCalc.GetDataFromExcel;
 var
   i, j, k, emp: Integer;
   va, va1, vadel: TVarDynArray2;
   st, st1, st2, w, FileName, err, fio: string;
-  v, v1, v2: Variant;
-  buf: Variant;
-  changed: Boolean;
-  size: Integer;
   e, e1, e2, e3: extended;
-  rn: Integer;
   b, b2, res: Boolean;
   XlsFile: TXlsMemFileEh;
   cr: IXlsFileCellsRangeEh;
@@ -564,19 +523,14 @@ begin
       end;
       err := 'При загрузке были ошибки!';
       //заполним таблицу
-      rn := Frg1.MemTableEh1.RecNo;
-      //проход по мемтейбл
-      i := 1;
-      Mth.Post(Frg1.MemTableEh1);
-      Frg1.MemTableEh1.Edit;
+      i := 0;
       //номер записи с единицы!!!
-      while i <= Frg1.MemTableEh1.RecordCount do begin
-        Frg1.MemTableEh1.RecNo := i;
-        fio := Frg1.MemTableEh1.FieldByName('employee').AsString;
+      while i < Frg1.GetCount(False) do begin
+        fio := Frg1.GetValue('employee', i, False).AsString;
         emp := 0;
         j := 0;
         st1 := '';
-        while emp < 300 do begin
+        while emp < 1000 do begin
           st1 := S.NSt(sh.Cells[cFIO - 1, j].Value);
           if st1 = '' then
             inc(emp)
@@ -588,14 +542,10 @@ begin
         end;
         if st1 = fio then begin
           e := Round(sh.Cells[cSum - 1, j].Value);
-          if Frg1.MemTableEh1.FieldByName('ext_pay').AsVariant <> e then begin
-            if Frg1.MemTableEh1.FieldByName('ext_pay').AsVariant <> null then
-              st := st + fio + ': Изменен столбец Баллы с ' + Frg1.MemTableEh1.FieldByName('ext_pay').AsString + ' на ' + VarToStr(e) + #13#10;
-            Frg1.MemTableEh1.Edit;
-            Frg1.MemTableEh1.FieldByName('ext_pay').Value := e;
-            FIsChanged := True;
-            Frg1.MemTableEh1.Post;
-            Frg1.MemTableEh1.Edit;
+          if Frg1.GetValue('ext_pay').AsVariant <> e then begin
+            if Frg1.GetValue('ext_pay', i, False).AsVariant <> null then
+              st := st + fio + ': Изменен столбец Баллы с ' + Frg1.GetValue('ext_pay', i, False).AsString + ' на ' + VarToStr(e) + #13#10;
+            Frg1.SetValue('ext_pay', i, False, e);
             b := True;
           end;
         end
@@ -620,8 +570,8 @@ begin
     XlsFile.Free;
   if (err <> '') and (not res) then
     MyWarningMessage(err);
-  //вернем позицию в гридеFrg1.MemTableEh1.RecNo:=rn;
   //пересчитаем таблицу
+  Frg1.InvalidateGrid;
   CalculateAll;
   Frg1.DBGridEh1.SetFocus;
   //выведем сообщение
@@ -630,7 +580,7 @@ begin
 end;
 
 
-procedure TFrmWGedtPayrollN.SetButtons;
+procedure TFrmWGedtPayrollCalc.SetButtons;
 var
   i: Integer;
   NoNorms: Boolean;
@@ -640,6 +590,7 @@ begin
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, False);
+  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
 {  NoNorms:= False;
   for i := 0 to Frg1.GetCount(False) - 1 do
@@ -666,7 +617,8 @@ begin
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('calc_method')) in [cMMotivation]);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('is_finalized') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);
@@ -674,7 +626,7 @@ begin
   Frg1.DbGridEh1.Invalidate;
 end;
 
-procedure TFrmWGedtPayrollN.SetColumns;
+procedure TFrmWGedtPayrollCalc.SetColumns;
 begin
   //теги (1-редактирования кроме расчета по мотивации, 2-дополнительное редактирование,3-редактировать всегда)
   Frg1.Opt.SetColFeature('*', 'e', False, False);
@@ -688,24 +640,24 @@ begin
   Frg1.SetColumnsVisible;
 end;
 
-function TFrmWGedtPayrollN.GetCaption(Colored: Boolean = False): string;
+function TFrmWGedtPayrollCalc.GetCaption(Colored: Boolean = False): string;
 begin
   Result := S.IIFStr(Colored, '$FF0000') + S.IIf(FPayrollParams.G('employee') <> null, FPayrollParams.G('employee') + ' (' + FPayrollParams.G('departament') + ')', FPayrollParams.G('departament')) +
     S.IIFStr(Colored, '$000000') + ' с' + S.IIFStr(Colored, '$FF00FF') +' ' + DateToStr(FPayrollParams.G('dt1')) +
     S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(FPayrollParams.G('dt2'));
 end;
 
-procedure TFrmWGedtPayrollN.CommitPayroll;
+procedure TFrmWGedtPayrollCalc.CommitPayroll;
 begin
   if MyQuestionMessage(S.IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
     Exit;
   FPayrollParams.SetValue(0, 'is_finalized', IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 0, 1));
-  FIsChanged := True;
+  Frg1.SetState(True, null, null);
   SetButtons;
 end;
 
 
-procedure TFrmWGedtPayrollN.PrintGrid;
+procedure TFrmWGedtPayrollCalc.PrintGrid;
 //печать грида
 var
   BeforeGridText: TStringsEh;
@@ -775,7 +727,7 @@ begin
   Gh.SetGridOptionsTitleAppearance(Frg1.DBGridEh1, True);
 end;
 
-procedure TFrmWGedtPayrollN.ExportToXlsxA7;     //!!! not work
+procedure TFrmWGedtPayrollCalc.ExportToXlsxA7;     //!!! not work
 var
   i, j, rn, x, y, y1, y2: Integer;
   Rep: TA7Rep;
@@ -836,7 +788,7 @@ begin
   Gh.GetGridColumn(Frg1.DBGridEh1, 'sign').Visible := False;
 end;
 
-procedure TFrmWGedtPayrollN.SetPayrollMethod;
+procedure TFrmWGedtPayrollCalc.SetPayrollMethod;
 var
   va, va1, va2, va3: TVarDynArray;
   n: Variant;
@@ -844,13 +796,47 @@ var
   st: string;
 begin
   if not FrmWDedtPayrollCalcMethod.ShowDialog(FPayrollParams) then Exit;
-  FIsChanged := True;
+  Frg1.SetState(True, null, null);
   //пересчитаем ведомость
   CalculateAll;
   SetButtons;
 end;
 
-procedure TFrmWGedtPayrollN.SavePayroll;
+function TFrmWGedtPayrollCalc.Save: Boolean;
+//сохраним ведомость
+var
+  i, j: Integer;
+  f, fn, va: TVarDynArray;
+begin
+  Result := False;
+  Q.QBeginTrans(True);
+  Q.QExecSql('update w_payroll_calc set calc_method = :p1$i, overtime_method = :p2$i, is_finalized = :p3$i where id = :id$i', [FPayrollParams.G('calc_method'), FPayrollParams.G('overtime_method'), FPayrollParams.G('is_finalized'), ID]);
+  //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
+  if Length(FDeletedWorkers) > 0 then
+    Q.QExecSql('delete from w_payroll_calc_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
+  //обновим в бд все строки таблицы
+  for i := 0 to Frg1.GetCount(False) - 1 do begin
+    //если строка не была прочитана ранее из бд - вставим
+    if Frg1.GetValueI('id', i, False) = 0 then begin
+      var idn := Q.QSave('i', 'w_payroll_calc_item', '', 'id$i;id_payroll_calc$i', [-1, ID]);
+      Frg1.SetValue('id', i, False, idn);
+    end;
+    //обновим все сохраняемые поля грида для строки
+    f := A.Explode(cFieldsS, ';');
+    va := [];
+    for j := 0 to High(f) do
+      fn := A.Explode(f[j], '$');
+    for j := 0 to High(f) do begin
+      va := va + [Frg1.GetValue(A.Explode(f[j], '$')[0], i, False)];
+    end;
+    Q.QSave('u', 'w_payroll_calc_item', '', cFieldsS, va);
+  end;
+  Q.QCommitTrans;
+  Result := Q.CommitSuccess;
+end;
+
+(*
+procedure TFrmWGedtPayrollCalc.SavePayroll;
 var
   i, j: Integer;
   f, fn, va: TVarDynArray;
@@ -877,46 +863,38 @@ begin
   end;
   Q.QCommitOrRollback(True);
 end;
+*)
 
-procedure TFrmWGedtPayrollN.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+procedure TFrmWGedtPayrollCalc.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
   if A.InArray(FieldName, ['employee', 'job', 'organization', 'personnel_number', 'schedulecode']) then
-      Params.Background := clmyGray;
+    Params.Background := clmyGray;
   if A.InArray(FieldName, ['total_pay', 'base_pay']) then
-      Params.Background := RGB(220, 255, 190);
-  if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg2.GetValueF(FieldName) < 0) then
-      Params.Background := clRed;
+    Params.Background := RGB(220, 255, 190);
+  if A.InArray(FieldName, ['total_pay', 'base_pay']) and (Frg1.GetValueF(FieldName) < 0) then
+    Params.Background := clRed;
 end;
 
-procedure TFrmWGedtPayrollN.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
-//при ручном вводе в ячейке - проставим признак изменения строки
-begin
-  FIsChanged := True;
-  Frg1.SetValue('changed', 1);
-end;
 
-procedure TFrmWGedtPayrollN.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
-begin
-  if Mode <> dbgvCell then
-    Exit;
-  CalculateRow(Row - 1);
-end;
-
-procedure TFrmWGedtPayrollN.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
-begin
-end;
-
-procedure TFrmWGedtPayrollN.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+procedure TFrmWGedtPayrollCalc.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   Handled := True;
   case Tag of
     cmbSetEditable:
       SetEditableAll;
-    cmbRecalculate: begin
-      CalculateAll;
-      FIsChanged := True;
-      Frg1.InvalidateGrid;
-    end;
+    cmbDeleteRow:
+      if MyQuestionMessage('Удалить строку?') = mrYes then begin
+        FDeletedWorkers := FDeletedWorkers + [Frg1.GetValue('id')];
+        Frg1.DeleteRow;
+        Frg1.InvalidateGrid;
+        Frg1.SetState(True, null, null);
+      end;
+    cmbRecalculate:
+      begin
+        CalculateAll;
+        Frg1.SetState(True, null, null);
+        Frg1.InvalidateGrid;
+      end;
     mbtCustom_Turv:
       if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
         GetDataFromTurv;
@@ -937,8 +915,7 @@ begin
   if Handled then
     SetButtons;
 end;
-
-procedure TFrmWGedtPayrollN.SetEditableAll;
+procedure TFrmWGedtPayrollCalc.SetEditableAll;
 begin
   if Frg1.DbGridEh1.ReadOnly then
     Exit;
@@ -949,7 +926,7 @@ begin
   SetColumns;
 end;
 
-procedure TFrmWGedtPayrollN.CalculateAll;
+procedure TFrmWGedtPayrollCalc.CalculateAll;
 var
   i: Integer;
 begin
@@ -957,7 +934,7 @@ begin
     CalculateRow(i);
 end;
 
-procedure TFrmWGedtPayrollN.CalculateRow(Row: Integer);
+procedure TFrmWGedtPayrollCalc.CalculateRow(Row: Integer);
 var
   i: Integer;
   v1, v2, v3: Variant;
@@ -976,8 +953,9 @@ begin
   if (M = -1) or (O = -1) then
     Exit;
 
-  ENormM := Frg1.GetValue('monthly_hours_norm', Row, False);
+//  ENormM := Frg1.GetValue('monthly_hours_norm', Row, False);
   ENormP := Frg1.GetValue('period_hours_norm', Row, False);
+  ENormM := ENormP;
   EHours := Frg1.GetValue('hours_worked', Row, False);
   EOvertime := Frg1.GetValue('overtime', Row, False);
 
@@ -1012,7 +990,6 @@ begin
         EOrs := 120;
     end;
     EOrs := EOrs / 100;
-//var st := Frg1.GetValue('planned_pay', Row, False);
     if (Frg1.GetValue('planned_pay', Row, False).AsFloat <> 0) and (Frg1.GetValue('fixed_pay', Row, False) <> null) then begin
       Frg1.SetValue('variable_pay', Row, False, S.NullIf0(Frg1.GetValueF('planned_pay', Row, False) - Frg1.GetValueF('fixed_pay', Row, False)));
       //Итого начислено: Расчет = (постоянная часть / норма рабочих часов за месяц * отработанные часы ) + (стимулирующая выплата * ОРС  / норма рабочих часов за месяц * отработанные часы)
@@ -1040,41 +1017,31 @@ begin
       v1 := S.NullIf0(Round(v1.AsFloat));
       Frg1.SetValue(flds[i], Row, False, v1)
     end;
-    VTotal := VTotal + v1.AsFloat;
+    if flds[i] = 'penalty' then
+      VTotal := VTotal - v1.AsFloat
+    else
+      VTotal := VTotal + v1.AsFloat;
   end;
   //VTotal := RoundTo(VTotal, 2);
   VTotal := VTotal + Frg1.GetValue('ext_pay', Row, False).AsFloat;
   Frg1.SetValue('total_pay', Row, False, VTotal);
 end;
 
-
+procedure TFrmWGedtPayrollCalc.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+//вызывается после ручного изменения ячейки. установим статус изменения грида и пересчитаем строку
+var
+  i: Integer;
+begin
+  Fr.SetState(True, null, null);
+  CalculateRow(-1);
+  //продублируем плановую и фиксированную выплату для всех строк с этим же работником при той же должности
+  if (FieldName = 'planned_pay') or (FieldName = 'fixed_pay') then
+   for i := 0 to Fr.GetCount(False) - 1 do
+     if (i <> Fr.RecNo - 1) and (Fr.GetValue('id_employee') = Fr.GetValue('id_employee', i, False)) and (Fr.GetValue('id_job') = Fr.GetValue('id_job', i, False)) and (Fr.GetValue(FieldName) = Fr.GetValue(FieldName, i, False)) then begin
+       Fr.SetValue(FieldName, i, False, Fr.GetValue(FieldName));
+       CalculateRow(i);
+     end;
+end;
 
 
 end.
-
-  if (CalcMode = 16) then begin
-    //орс
-    Frg1.SetValue('salary_incentive_m', Row, False, null);
-    Frg1.SetValue('ors_sum', Row, False, null);
-    if (Frg1.GetValueF('salary_plan_m', Row, False) <> null) and (Frg1.GetValueF('salary_const_m', Row, False) <> null) then begin
-      Frg1.SetValue('salary_incentive_m', Row, False, Frg1.GetValueF('salary_plan_m', Row, False) - Frg1.GetValueF('salary_const_m', Row, False));
-      e4 := Frg1.GetValueF('norm_m', Row, False);
-      e5 := RoundTo(Frg1.GetValueF('ors', Row, False), -2);
-      if (e5 < 95) then
-        e5 := e5
-      else if (e5 >= 95) and (e5 <= 100) then
-        e5 := 100
-      else if (e5 >= 100) and (e5 <= 105) then
-        e5 := 105
-      else if (e5 >= 105) and (e5 <= 110) then
-        e5 := 110
-      else if (e5 > 110) then
-        e5 := 120;
-      e5 := e5 / 100;
-      if (Frg1.GetValueF('ors', Row, False) <> null) then begin
-        e3 := Frg1.GetValueF('salary_const_m', Row, False) / e4 * e2 +  Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * e2;
-        Frg1.SetValue('ors_sum', Row, False, Round(Frg1.GetValueF('salary_incentive_m', Row, False) * e5 / e4 * Min(Frg1.GetValueF('norm', Row, False), e2)));
-      end;
-    end;
-  end;
-

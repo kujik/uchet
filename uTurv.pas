@@ -78,6 +78,8 @@ type
     function CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
     function DeletePayrollCalculations(AId: Variant): Boolean;
     function  GetArrOfTurvPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
+    function  GetArrOfMonthPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
+    function  CreateAllPayrolCalc: Boolean;
     function  CreateAllAdvanceTransfers: Boolean;
     function  CreateAllPayrollTransfers: Boolean;
     function  CreateAllAdvanceCash: Boolean;
@@ -817,6 +819,7 @@ begin
       end;
 
       //итоговое рабочее время; если заданы время или код согласованные, берем согласованное время, иначе по парсеку
+//var qqqq:=S.IIf((FCells[pos].G(i, 'worktime3') = null) and (FCells[pos].G(i, 'id_turvcode3') = null), FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat);
       Result.SetValue(0, 'worktime', Result.G('worktime').AsFloat + S.IIf((FCells[pos].G(i, 'worktime3') = null) and (FCells[pos].G(i, 'id_turvcode3') = null), FCells[pos].G(i, 'worktime2').AsFloat, FCells[pos].G(i, 'worktime3').AsFloat));
       //суммарные дневные премии
       Result.SetValue(0, 'premium', Result.G('premium').AsFloat + FCells[pos].G(i, 'premium').AsFloat);
@@ -3416,6 +3419,44 @@ begin
   end;
 end;
 
+function TTurv.GetArrOfMonthPeriodStrings(ADate: TDateTime; APeriodCount: Integer): TVarDynArray;
+var
+  CurrentStart, CurrentEnd: TDateTime;
+  i: Integer;
+  TargetPeriodIndex: Integer;
+begin
+  Result := [];
+  if APeriodCount <= 0 then
+    Exit;
+  CurrentStart := EncodeDate(YearOf(ADate), MonthOf(ADate), 1);
+  CurrentEnd := EndOfTheMonth(ADate);
+  for i := 0 to APeriodCount - 1 do begin
+    Result := Result + [FormatDateTime('dd.mm.yyyy', CurrentStart) + ' - ' + FormatDateTime('dd.mm.yyyy', CurrentEnd)];
+    CurrentEnd := EndOfTheMonth(IncMonth(CurrentStart, -1));
+    CurrentStart := EncodeDate(YearOf(CurrentEnd), MonthOf(CurrentEnd), 1);
+  end;
+end;
+
+function TTurv.CreateAllPayrolCalc: Boolean;
+var
+  dt, dt1, dt2, dt3: TDateTime;
+  i, j: Integer;
+  va1, va2: TVarDynArray2;
+  va: TVarDynArray;
+  Cnt: Integer;
+  Msg: string;
+  IdEmpl, IdDep, IdOrg: Variant;
+  EmplInfo: TNamedArr;
+  LEmpl: TVarDynArray;
+begin
+{  dt1 := StartOfTheMonth(Date);
+  dt2 := EndOfTheMonth(Date);
+  dt3 := Turv.GetTurvEndDate(IncDay(dt2, 1));
+  //список уволенных за период с начала месяца до
+  LEmpl := Q.QLoadCol(
+  'select distinct employee_st from v_w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d order by employee_st', [dt1, dt3]);}
+end;
+
 function TTurv.CreateAllAdvanceTransfers: Boolean;
 var
   dt, dt1, dt2: TDateTime;
@@ -3476,7 +3517,7 @@ var
   EmplInfo: TNamedArr;
 begin
   if TFrmBasicInput.ShowDialog(Application, '', [], fAdd, '~Создать ведомости', 185, 45, [[cntComboL,'Период','1:400:0', 135]],
-    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfTurvPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
+    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfMonthPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
   Exit;
   S.GetDatesFromPeriodString(va[0], dt1, dt2);
 {  dt := EncodeDate(2026, 01, 01); //!!!
@@ -3487,19 +3528,19 @@ begin
   Cnt := 0;
   Msg := '';
   //если есть расчетные ведомости за период по подразделениям, а общая ведомость к перечислению не создана - создадим
-  if (Q.QLoadValue('select count(id) from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1]) <> 0) and
-    (Q.QLoadValue('select count(id) from w_payroll_transfer where id_employee is null and dt1 = :dt1$d', [dt1]) = 0)
+  if (Q.QLoadValue('select count(id) from w_payroll_calc where id_employee is null and dt = :dt1$d', [dt1]) <> 0) and
+    (Q.QLoadValue('select count(id) from w_payroll_transfer where id_employee is null and dt = :dt1$d', [dt1]) = 0)
     then begin
-      if Q.QSave('i', 'w_payroll_transfer', '', 'id$i;dt1$d;dt2$d', [0, dt1, dt2]) <> -1 then
+      if Q.QSave('i', 'w_payroll_transfer', '', 'id$i;dt$d', [0, dt1]) <> -1 then
         inc(Cnt);
     end;
   //ведомости по уволенным работникам - сгруппированы по работнику и периоду работы
-  va1 := Q.QLoad('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
-  va2 := Q.QLoad('select id_employee, id_organization, personnel_number from w_payroll_transfer where id_employee is not null and dt1 = :dt1$d', [dt1]);
+  va1 := Q.QLoad('select id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt = :dt1$d group by id_employee, id_organization, personnel_number', [dt1]);
+  va2 := Q.QLoad('select id_employee, id_organization, personnel_number from w_payroll_transfer where id_employee is not null and dt = :dt1$d', [dt1]);
     for i := 0 to High(va1) do begin
       if (A.PosRowInArray(va1, va2, i) = -1) then begin
         //если ведомость еще не создана
-        if Q.QSave('i', 'w_payroll_transfer', '', 'id$i;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], dt1, dt2], False) <> -1 then
+        if Q.QSave('i', 'w_payroll_transfer', '', 'id$i;id_employee$i;id_organization$i;personnel_number$s;dt$d', [0, va1[i][0], va1[i][1], va1[i][2], dt1], False) <> -1 then
           inc(Cnt);
       end;
     end;
@@ -3623,9 +3664,6 @@ procedure TTurv.ExtendPersBonuses;
 begin
   Q.QCallStoredProc('P_extend_pers_bonuses', '', []);
 end;
-
-//w_employee_properties
-
 
 procedure TTurv.LoadDataFromParsec;
 //заагрзука данных из парсек и сохраниение их в турв, новый вариантт 2025г

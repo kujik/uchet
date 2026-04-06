@@ -200,6 +200,7 @@ procedure LoadBitmap(ImageList: TImageList; Number: Integer; Bitmap: TBitmap);
 procedure SetEditButtonPictures(AEditButton: TEditButtonEh; APictureIndex: Integer; AHint: string = '');
 procedure SetEditButtons(AControl: TObject; AButtons: TVarDynArray2);
 procedure FillComboBoxWithBiweeklyPeriods(ComboBox: TDBComboBoxEh; ADate: TDateTime; APeriodCount: Integer);
+procedure FillComboBoxWithMonthlyPeriods(ComboBox: TDBComboBoxEh; ADate: TDateTime; APeriodCount: Integer);
 function GetEditButtonStyleEh(AStyle: TMyEditButtonStyleEh): TEditButtonStyleEh;
 
     procedure SetControlValue(c: TControl; v: Variant); overload;
@@ -4712,6 +4713,61 @@ begin
 end;
 
 
+procedure TControlsHelper.FillComboBoxWithMonthlyPeriods(ComboBox: TDBComboBoxEh; ADate: TDateTime; APeriodCount: Integer);
+var
+  Periods: TStringList;
+  CurrentStart, CurrentEnd: TDateTime;
+  i: Integer;
+  TargetPeriodIndex: Integer;
+begin
+  if APeriodCount <= 0 then
+    Exit;
+  Periods := TStringList.Create;
+  try
+    // Начинаем с месяца, содержащего ADate
+    CurrentStart := StartOfTheMonth(ADate);
+    CurrentEnd := EndOfTheMonth(ADate);
+    // Добавляем периоды в обратном порядке (от самого нового к старому)
+    for i := 0 to APeriodCount - 1 do
+    begin
+      Periods.Insert(0, FormatDateTime('dd.mm.yyyy', CurrentStart) + ' - ' + FormatDateTime('dd.mm.yyyy', CurrentEnd));
+      // Переходим к предыдущему месяцу
+      CurrentStart := IncMonth(CurrentStart, -1);
+      CurrentEnd := EndOfTheMonth(CurrentStart);
+    end;
+    // Находим индекс периода, содержащего ADate (должен быть последним, но проверим)
+    TargetPeriodIndex := -1;
+    for i := 0 to Periods.Count - 1 do
+    begin
+      // Парсим даты из строки (предполагаем формат dd.mm.yyyy)
+      CurrentStart := StrToDate(Copy(Periods[i], 1, 10));
+      CurrentEnd := StrToDate(Copy(Periods[i], 14, 10));
+      if (ADate >= CurrentStart) and (ADate <= CurrentEnd) then
+      begin
+        TargetPeriodIndex := i;
+        Break;
+      end;
+    end;
+    // Заполняем ComboBox
+    ComboBox.Items.BeginUpdate;
+    try
+      ComboBox.Items.Clear;
+      if TargetPeriodIndex >= 0 then
+      begin
+        ComboBox.Items.Add(Periods[TargetPeriodIndex]); // сначала нужный период
+        for i := Periods.Count - 1 downto 0 do
+          if i <> TargetPeriodIndex then
+            ComboBox.Items.Add(Periods[i]);
+      end
+      else
+        ComboBox.Items.AddStrings(Periods); // на случай, если что-то пошло не так
+    finally
+      ComboBox.Items.EndUpdate;
+    end;
+  finally
+    Periods.Free;
+  end;
+end;
 
 
 

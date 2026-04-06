@@ -117,7 +117,7 @@ uses
 
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
-  uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash,
+  uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
 
 
   D_Order,
@@ -933,10 +933,11 @@ begin
     TFrmWGedtAdvance.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_PayrollCalc then begin
-    if TVarDynArray(AAddParam)[0] = 1 then
+    TFrmWGedtPayrollCalc.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1])
+{    if TVarDynArray(AAddParam)[0] = 1 then
       TFrmWGedtPayrollN.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1])
     else
-      TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1]);
+      TFrmWGedtPayroll2N.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, TVarDynArray(AAddParam)[1]);}
   end
   else if F = myfrm_Dlg_AdvanceTransfer then begin
     TFrmWGedtAdvanceTransfer.Show(AOwner, F, [myfoDialog, myfoSizeable, myfoMulticopy, myfoEnableMaximize], fMode, AId, AAddParam);

@@ -191,6 +191,8 @@ uses
   uFrmWGedtPayrollN in 'uFrmWGedtPayrollN.pas' {FrmWGedtPayrollN},
   uFrmWGedtPayroll2N in 'uFrmWGedtPayroll2N.pas' {FrmWGedtPayroll2N},
   uFrmWDedtCreatePayrollN in 'uFrmWDedtCreatePayrollN.pas' {FrmWDedtCreatePayrollN},
+  uFrmWDedtCreatePayrollCalc in 'uFrmWDedtCreatePayrollCalc.pas' {FrmWDedtCreatePayrollCalc},
+  uFrmWGedtPayrollCalc in 'uFrmWGedtPayrollCalc.pas' {FrmWGedtPayrollCalc},
   uFrmWDedtCreateAdvance in 'uFrmWDedtCreateAdvance.pas' {FrmWDedtCreateAdvance},
   uFrmWGedtPayrollTransfer in 'uFrmWGedtPayrollTransfer.pas' {FrmWGedtPayrollTransfer},
   uFrmWGedtAdvanceTransfer in 'uFrmWGedtAdvanceTransfer.pas' {FrmWGedtAdvanceTransfer},

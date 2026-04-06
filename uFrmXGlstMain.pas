@@ -93,6 +93,7 @@ uses
   uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
   uFrmWDedtCreatePayrollN,
+  uFrmWDedtCreatePayrollCalc,
   uFrmWDedtCreateAdvance
   ;
 
@@ -898,8 +899,8 @@ v:=True;
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий месяц', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый месяц', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Подразделения', 'ChbDivisions', '', 120, yrefT, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Уволенные', 'ChbEmployees', '', 120, yrefB, 150);
     Frg1.InfoArray:=[
@@ -1346,8 +1347,8 @@ v:=True;
       ['username$s','Работник','100'],
       ['typename$s','Вид объекта','120'],
       ['name$s','Объект','100'],
-      ['dt_date$d','Дата собыития','80'],
-      ['dt_time$d','Время собыития','80'],
+      ['dt_date$d','Дата события','80'],
+      ['dt_time$d','Время события','80'],
       ['correction$i','Добавление/ изменение','60', 'pic=добавление;изменение:7;1'],
       ['changes$s','Изменения','400']
     ]);
@@ -2487,7 +2488,8 @@ begin
     if (FormDoc = myfrm_j_AdvanceCash) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_AdvanceCash, Self, [], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode = fAdd) then
-      TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
+//      TFrmWDedtCreatePayrollN.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
+      TFrmWDedtCreatePayrollCalc.Show(Self, '', [myfoDialog], fAdd, Fr.ID, null);
     if (FormDoc = myfrm_J_PayrollCalculations) and (fMode in [fEdit, fView]) then
       Wh.ExecDialog(myfrm_Dlg_PayrollCalc, Self, [], fMode, Fr.ID, VarArrayOf([S.IIf(DayOf(Fr.GetValue('dt1')) = 1, 1 ,2), null]));
     if (FormDoc = myfrm_J_PayrollTransfer) and (fMode in [fEdit, fView]) then
@@ -2881,7 +2883,7 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash]) then begin
+  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations]) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
@@ -2890,7 +2892,7 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-  else if (FormDoc = myfrm_J_PayrollCalculations) or (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
+  else if (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
       S.IfNotEmptyStr(A.ImplodeNotEmpty([

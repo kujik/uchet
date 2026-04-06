@@ -912,24 +912,11 @@ where
 select * from v_w_turv_export;
    
 --------------------------------------------------------------------------------
---методы расчета З/П
---пока определяются просто значением АйДи
-/*
-drop table w_payroll_calculation_methods cascade constraints;
-create table w_payroll_calculation_methods(
-  id number(11),
-  name varchar2(400),
-  comm varchar2(4000),
-  constraint pk_w_payroll_calculation_mtds primary key (id)
-);  
-
-insert into w_payroll_calculation_methods select * from payroll_method;
-*/
 
 --------------------------------------------------------------------------------
---drop table w_payroll_calc cascade constraints;
-alter table w_payroll_calc add id_organization number(11); --айди организации
-alter table w_payroll_calc add personnel_number varchar2(10);  --табельный номер 
+--drop table w_payroll_calc_item cascade constraints;
+--alter table w_payroll_calc drop column 
+--alter table w_payroll_calc add id_organization number(11); --айди организации
 create table w_payroll_calc ( 
   id number(11),
   id_departament number(11), --айди подразделения
@@ -938,8 +925,7 @@ create table w_payroll_calc (
   personnel_number varchar2(10),  --табельный номер 
   calc_method number(11),    --общий метод расчета   
   overtime_method number(11),--метод учета переработки    
-  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
-  dt2 date,                  --дата конца ведомости
+  dt date,                  --дата начала ведомости, по полмесяца, как в турв
   is_finalized number(1),    --период закрыт
   constraint pk_w_payroll_calc primary key (id),
   constraint fk_w_payroll_calc_div foreign key (id_departament) references w_departaments(id),
@@ -948,7 +934,7 @@ create table w_payroll_calc (
 
 --уникальный индекс по подразделению/работнику/дате начала
 drop index idx_w_payroll_calc_uq;
-create unique index idx_w_payroll_calc_uq on w_payroll_calc(id_departament, id_employee, id_organization, personnel_number, dt1);
+create unique index idx_w_payroll_calc_uq on w_payroll_calc(id_departament, id_employee, id_organization, personnel_number, dt);
 
 create sequence sq_w_payroll_calc start with 1000 nocache;
 
@@ -961,6 +947,8 @@ end;
 create or replace view v_w_payroll_calc as 
 select
   p.*,
+  p.dt as dt1,
+  last_day(p.dt) as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   d.name as departament,
@@ -985,18 +973,9 @@ where
 
 --данные зарплатной ведомости для конкретного работника из ведомости
 --данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
---alter table w_payroll_calc_item drop column personnel_number;
-alter table w_payroll_calc_item add ors_pay1 number;
-alter table w_payroll_calc_item add ors1 number;
-alter table w_payroll_calc_item add period_hours_norm1 number;
-alter table w_payroll_calc_item add hours_worked1 number;
-alter table w_payroll_calc_item add overtime1 number;
-alter table w_payroll_calc_item add total_pay1 number;
-alter table w_payroll_calc_item add from_first_period number;
-alter table w_payroll_calc_item add base_pay1 number;
-alter table w_payroll_calc_item add base_pay2 number;
-alter table w_payroll_calc_item add ext_pay1 number;
-alter table w_payroll_calc_item add adjustments_total1 number;
+--drop table w_payroll_calc_item cascade constraints;
+alter table w_payroll_calc_item drop column hours_norm;
+alter table w_payroll_calc_item add period_hours_norm number;
 
 create table w_payroll_calc_item(
   id number(11),
@@ -1006,8 +985,7 @@ create table w_payroll_calc_item(
   id_schedule number(11),         --айди графика
   id_organization number(11),     --айди организации, в которой числится работник
   personnel_number varchar2(10),  --табельный номер 
-  monthly_hours_norm number,      --норма за месяц, по данной строке табеля для работника
-  period_hours_norm number,       --норма за период ведомости, по данной строке табеля для работника     
+  period_hours_norm number,             --норма за месяц, по данной строке табеля для работника
   hours_worked number,            --отработано по турв
   overtime number,                --количество часов переработки (приведенное)
   planned_pay number,             --плановое начисление
@@ -1034,6 +1012,9 @@ create table w_payroll_calc_item(
   constraint fk_w_payroll_calc_i_sch foreign key (id_schedule) references w_schedules(id),
   constraint fk_w_payroll_calc_i_org foreign key (id_organization) references ref_sn_organizations(id)
 );  
+
+create table temp_w_payroll_calc as select * from w_payroll_calc;
+create table temp_w_payroll_calc_item as select * from w_payroll_calc_item;
   
 --drop sequence sq_w_payroll_calculations_item;
 create sequence sq_w_payroll_calc_item start with 100000 nocache;
@@ -1059,8 +1040,8 @@ select
   p.id_organization as id_target_organization,
   p.personnel_number as target_personnel_number,
   p.is_finalized,
-  p.dt1,
-  p.dt2,
+  p.dt,
+  --p.dt2,
   p.calc_method,
   p.overtime_method,
   --f_fio(e.f, e.i, e.o) as employee,
@@ -1106,15 +1087,16 @@ WHERE cnt > 1
   AND min_pay IS NOT NULL;
 
 
---------------------------------------------------------------------------------
 
+--------------------------------------------------------------------------------
+--drop table w_payroll_transfer cascade constraints;
+--drop table w_payroll_transfer_item cascade constraints;
 create table w_payroll_transfer ( 
   id number(11),
   id_employee number(11),    --айди раболтника 
   id_organization number(11), --айди организации
   personnel_number varchar2(10),  --табельный номер 
-  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
-  dt2 date,                  --дата конца ведомости
+  dt date,                   --дата начала ведомости, по полмесяца, как в турв
   is_finalized number(1),    --период закрыт
   constraint pk_w_payroll_transfer primary key (id),
   constraint fk_w_payroll_transfer_empl foreign key (id_employee) references w_employees(id)
@@ -1134,6 +1116,8 @@ end;
 create or replace view v_w_payroll_transfer as 
 select
   p.*,
+  p.dt as dt1,
+  last_day(p.dt) as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   f_fio(e.f, e.i, e.o) as employee,
   o.name as organization
@@ -1146,7 +1130,7 @@ where
   and p.id_organization = o.id (+)
 ;
 
-alter table w_payroll_transfer_item add correction number; 
+--alter table w_payroll_transfer_item add correction number; 
 create table w_payroll_transfer_item(
   id number(11),
   id_payroll_transfer number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -1163,6 +1147,7 @@ create table w_payroll_transfer_item(
   pay_fss number,         -- выплата в ФСС (например, больничный)
   pay_adv number,         -- промежуточная (авансовая) выплата
   pay_card number,        -- перечислено на карту
+  advance number,         --сумма аванса
   correction number,              --ручная корректировка начисления, вводится в ведомости
   pay_cash number,        -- итого к выдаче наличными  
   constraint pk_w_payroll_transfer_item primary key (id),
@@ -1189,8 +1174,8 @@ end;
 create or replace view v_w_payroll_transfer_item as 
 select
   i.*,
-  p.dt1,
-  p.dt2,
+  p.dt,
+--  p.dt2,
   p.id_employee as id_target_employee,
   e.name as employee,
   --e.is_concurrent,
