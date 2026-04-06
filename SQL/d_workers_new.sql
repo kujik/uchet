@@ -973,7 +973,7 @@ where
 
 --данные зарплатной ведомости для конкретного работника из ведомости
 --данные сопоставляются с турв по подразделению, айди работника, должности, расписания, организации, и табельному номеру
---drop table w_payroll_calc_item cascade constraints;
+--drop table w_pa yroll_calc_item cascade constraints;
 alter table w_payroll_calc_item drop column hours_norm;
 alter table w_payroll_calc_item add period_hours_norm number;
 
@@ -1089,8 +1089,6 @@ WHERE cnt > 1
 
 
 --------------------------------------------------------------------------------
---drop table w_payroll_transfer cascade constraints;
---drop table w_payroll_transfer_item cascade constraints;
 create table w_payroll_transfer ( 
   id number(11),
   id_employee number(11),    --айди раболтника 
@@ -1198,14 +1196,17 @@ where
 
 
 --------------------------------------------------------------------------------
+--drop t able w_payroll_cash cascade constraints;
+--drop ta le w_payroll_cash_item cascade constraints;
+
+
 create table w_payroll_cash ( 
   id number(11),
   id_departament number(11), --айди подразделения
   id_employee number(11),    --айди раболтника 
   id_organization number(11), --айди организации
   personnel_number varchar2(10),  --табельный номер 
-  dt1 date,                  --дата начала ведомости, по полмесяца, как в турв
-  dt2 date,                  --дата конца ведомости
+  dt date,                  --дата начала ведомости, по полмесяца, как в турв
   is_finalized number(1),    --период закрыт
   constraint pk_w_payroll_cash primary key (id),
   constraint fk_w_payroll_cash_div foreign key (id_departament) references w_departaments(id),
@@ -1228,6 +1229,8 @@ end;
 create or replace view v_w_payroll_cash as 
 select
   p.*,
+  p.dt as dt1,
+  last_day(p.dt) as dt2,
   case when p.is_finalized = 1 then 'Закрыта' else '' end as finalized,
   d.name as departament,  
   f_fio(e.f, e.i, e.o) as employee,
@@ -1281,8 +1284,8 @@ end;
 create or replace view v_w_payroll_cash_item as 
 select
   i.*,
-  p.dt1,
-  p.dt2,
+  p.dt as dt1,
+  last_day(p.dt) as dt2,
   e.name as employee,
   j.name as job,
   o.name as organization,

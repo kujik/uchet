@@ -1,25 +1,26 @@
 inherited FrmODedtDevel: TFrmODedtDevel
   Caption = 'FrmODedtDevel'
-  ClientHeight = 403
+  ClientHeight = 419
   ClientWidth = 829
   ExplicitWidth = 841
-  ExplicitHeight = 441
+  ExplicitHeight = 457
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 829
-    Height = 387
+    Height = 403
     ExplicitWidth = 825
     ExplicitHeight = 386
     inherited pnlFrmClient: TPanel
       Width = 819
-      Height = 338
-      ExplicitWidth = 815
-      ExplicitHeight = 337
+      Height = 354
+      ExplicitTop = 6
+      ExplicitWidth = 819
+      ExplicitHeight = 354
       object mem_Comm: TDBMemoEh
         Left = 84
-        Top = 224
+        Top = 248
         Width = 647
-        Height = 71
+        Height = 87
         ControlLabel.Width = 67
         ControlLabel.Height = 13
         ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
@@ -33,8 +34,6 @@ inherited FrmODedtDevel: TFrmODedtDevel
         TabOrder = 0
         Visible = True
         WantReturns = True
-        ExplicitWidth = 643
-        ExplicitHeight = 70
       end
       object nedt_Hours: TDBNumberEditEh
         Left = 84
@@ -198,9 +197,47 @@ inherited FrmODedtDevel: TFrmODedtDevel
         TabOrder = 10
         Visible = True
       end
+      object nedt_qnt: TDBNumberEditEh
+        Left = 84
+        Top = 221
+        Width = 45
+        Height = 21
+        ControlLabel.Width = 80
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1050#1086#1083'-'#1074#1086' '#1080#1079#1076#1077#1083#1080#1081
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        currency = False
+        DynProps = <>
+        EditButton.DefaultAction = True
+        EditButtons = <>
+        MaxValue = 500.000000000000000000
+        TabOrder = 11
+        Value = 12235123.050000000000000000
+        Visible = True
+      end
+      object nedt_hours_total: TDBNumberEditEh
+        Left = 280
+        Top = 221
+        Width = 45
+        Height = 21
+        ControlLabel.Width = 146
+        ControlLabel.Height = 13
+        ControlLabel.Caption = #1048#1090#1086#1075#1086' '#1074#1088#1077#1084#1077#1085#1080' '#1085#1072' '#1079#1072#1076#1072#1095#1091', '#1095'.'
+        ControlLabel.Visible = True
+        ControlLabelLocation.Position = lpLeftCenterEh
+        currency = False
+        DynProps = <>
+        EditButton.DefaultAction = True
+        EditButtons = <>
+        MaxValue = 500.000000000000000000
+        TabOrder = 12
+        Value = 12235123.050000000000000000
+        Visible = True
+      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 343
+      Top = 359
       Width = 819
       ExplicitTop = 342
       ExplicitWidth = 815
@@ -235,7 +272,7 @@ inherited FrmODedtDevel: TFrmODedtDevel
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 387
+    Top = 403
     Width = 829
     ExplicitTop = 386
     ExplicitWidth = 825

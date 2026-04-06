@@ -12,33 +12,29 @@ uses
 type
   TFrmWGedtPayrollCash = class(TFrmBasicGrid2)
     PrintDBGridEh1: TPrintDBGridEh;
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FPayrollParams: TNamedArr;
-    FIsEditable: Boolean;
     FDeletedWorkers: TVarDynArray;
-    FColWidth: Integer;
-    FIsChanged: Boolean;
     FIsEditableAdd, FIsEditableAll: Boolean;
     function  PrepareForm: Boolean; override;
+    function  Save: Boolean; override;
+
+    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
+    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+
     function  GetDataFromDb: Integer;
     function  GetCaption(Colored: Boolean = False): string;
     procedure SetButtons;
     procedure SetColumns;
-    procedure SavePayroll;
     function  GetDataFromCalc: Integer;
     procedure CommitPayroll;
     procedure CalculateAll;
     procedure CalculateRow(Row:Integer);
     procedure CalculateBanknotes;
     procedure PrintGrid;
-//    procedure ExportToXlsxA7;
     procedure SetEditableAll;
 
-    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
-    procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
-    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
-    procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
   public
   end;
 
@@ -69,8 +65,7 @@ uses
 const
 
   cFieldsS =
-    'id$i;id_employee$i;id_job$i;' +
-    'pay_cash$f;banknotes$s';
+    'id$i;id_employee$i;id_job$i;pay_cash$f;banknotes$s';
   cFieldsL =
     'employee$s;job$s;changed$i;temp$i';
 
@@ -78,6 +73,8 @@ const
   cmbtCard = 1002;
   cmbt1C = 1003;
   cmbtEditAll = 1004;
+
+  cColWidth = 45;
 
 
 function TFrmWGedtPayrollCash.PrepareForm: Boolean;
@@ -93,18 +90,17 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoad('select id, id_employee, id_departament, dt1, dt2, employee, departament from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_employee, id_departament, dt, dt1, dt2, employee, departament from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
   end;
 
   FDeletedWorkers := [];
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind] - [myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind, myogHasStatusBar] - [myogColumnFilter];
 
   //определим поля
-  FColWidth := 45;
-  wcol := IntToStr(FColWidth) + ';r';
+  wcol := IntToStr(cColWidth) + ';r';
   Frg1.Opt.SetFields([
     ['id$i', '_id','40'],
     ['id_employee$i', '_id_employee', wcol],
@@ -120,15 +116,6 @@ begin
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
     [mbtRefresh, Mode = fEdit, 'Обновить данные'], [], [mbtPrintGrid],
-{    [mbtDividorM],
-    [cmbt1C, True, True, 'Загрузка данных из 1С', '1c'],
-    [cmbtCard, True, True, 'Загрузить НДФЛ и карты', 'card'],
-    [cmbtDeduction, True, True, 'Загрузить удержания', 'r_minus'],
-    [mbtDividorM],
-    //[mbtDividorM],[mbtPrint],[mbtPrintGrid],[mbtDividorM],
-    [],[mbtLock],
-    [], [-mbtExcel, True],
-    [],[-cmbtEditAll, True, 'Разрешить редактирование всех полей'],}
     [],[mbtCtlPanel]
   ]);
   Frg1.Opt.ButtonsNoAutoState := [0];
@@ -138,8 +125,10 @@ begin
   Frg1.SetInitData([], '');
 
   Frg1.InfoArray := [[
-    'Ведомость к перечислению.'#13#10#13#10
+    'Ведомость к выдаче.'#13#10#13#10
   ]];
+  FQueryCloseMessage := 'Ведомость была изменена!'#13#10'Сохранить данные?';
+  FOpt.RequestWhereClose := cqYNC;
   Result := inherited;
   if not Result then
     Exit;
@@ -159,30 +148,6 @@ begin
   Result:=True;
 end;
 
-procedure TFrmWGedtPayrollCash.FormClose(Sender: TObject; var Action: TCloseAction);
-var
-  rn, i, res: Integer;
-  changed: Boolean;
-begin
-  inherited;
-  //выйдем, если закрытие происходит при подготовке данных, например, из-за нарушения блокировки
-  if FInPrepare then
-   Exit;
-  if FIsChanged then begin
-    res:=myMessageDlg('Ведомость была изменена!'#13#10'Сохранить данные?', mtConfirmation, mbYesNoCancel);
-    if res = mrYes then begin
-      SavePayroll;
-      RefreshParentForm;
-    end
-    else if res = mrCancel then begin
-      Action:=caNone;
-      Exit;
-    end;
-  end;
-end;
-
-
-
 function TFrmWGedtPayrollCash.GetDataFromDb: Integer;
 //прочитаем ведомость (все данные) из БД и заполним ими сетку
 var
@@ -201,13 +166,13 @@ begin
     S.IIFStr(Colored, '$000000') + ' по ' + S.IIFStr(Colored,  '$FF00FF') + DateToStr(FPayrollParams.G('dt2'));
 end;
 
-procedure TFrmWGedtPayrollCash.SavePayroll;
+function TFrmWGedtPayrollCash.Save: Boolean;
 var
   i, j: Integer;
   f, fn, va: TVarDynArray;
 begin
+  Result := False;
   Q.QBeginTrans(True);
-  //удалим из БД всех, кого удаляли из списка при нажатии кнопки ТУРВ
   if Length(FDeletedWorkers) > 0 then
     Q.QExecSql('delete from w_payroll_cash_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
@@ -225,6 +190,7 @@ begin
     Q.QSave('u', 'w_payroll_cash_item', '', cFieldsS, va);
   end;
   Q.QCommitOrRollback(True);
+  Result := Q.CommitSuccess;
 end;
 
 procedure TFrmWGedtPayrollCash.SetButtons;
@@ -292,17 +258,12 @@ begin
       Params.Background := clRed;
 end;
 
-procedure TFrmWGedtPayrollCash.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
-begin
-  FIsChanged := True;
-  Frg1.SetValue('changed', 1);
-end;
 
-procedure TFrmWGedtPayrollCash.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+procedure TFrmWGedtPayrollCash.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+//вызывается после ручного изменения ячейки. установим статус изменения грида и пересчитаем строку
 begin
-  if Mode <> dbgvCell then
-    Exit;
-  CalculateRow(Row - 1);
+  Fr.SetState(True, null, null);
+  CalculateRow(-1);
 end;
 
 
@@ -365,10 +326,10 @@ begin
   if FPayrollParams.G('id_employee') = null then begin
     Q.QLoad(
       'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
-      'from v_w_payroll_transfer_item where dt1 = :dt1$d and id_target_employee is null ' +
+      'from v_w_payroll_transfer_item where dt = :dt$d and id_target_employee is null ' +
       'group by id_employee '+
       'order by id_employee',
-      [FPayrollParams.G('dt1')],
+      [FPayrollParams.G('dt')],
       na1
     );
     Q.QLoad(
@@ -394,10 +355,10 @@ begin
   else begin
     Q.QLoad(
       'select max(employee) as employee, id_employee, null as id_departament, null as id_job, null as departament, null as job, sum(pay_cash) as pay_cash, null as temp ' +
-      'from v_w_payroll_transfer_item where dt1 = :dt1$d and id_target_employee = :ide$i ' +
+      'from v_w_payroll_transfer_item where dt = :dt$d and id_target_employee = :ide$i ' +
       'group by id_employee '+
       'order by id_employee',
-      [FPayrollParams.G('dt1'), FPayrollParams.G('id_employee')],
+      [FPayrollParams.G('dt'), FPayrollParams.G('id_employee')],
       na1
     );
     Q.QLoad(
@@ -461,7 +422,7 @@ begin
       //в массив удаленных - только те, которые загружены из БД
       if na.G(i, 'id') <> null then
         FDeletedWorkers := FDeletedWorkers + [na.G(i, 'id')];
-      FIsChanged := True;
+      Frg1.SetState(True, null, null);
     end;
   end;
 
@@ -517,7 +478,7 @@ begin
     MyInfoMessage('Изменений в ведомости не было.');
   end
   else begin
-    FIsChanged := True;
+    Frg1.SetState(True, null, null);
     MyInfoMessage(
       'Данные обновлены.'#13#10#13#10 +
       S.IIFStr(MsgIns <> '', 'Внесены записи:'#13#10 + MsgIns + #13#10#13#10) +
@@ -661,6 +622,5 @@ begin
   end;
   Frg1.DBGridEh1.FieldColumns['banknotes'].Footer.Value := A.Implode(va2, ',');
 end;
-
 
 end.

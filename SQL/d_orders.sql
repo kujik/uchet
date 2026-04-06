@@ -571,6 +571,8 @@ create or replace view v_orders as (
     timemsqnt.qnt_to_sgp as qnt_to_sgp,
     timemsqnt.qnt_boards_m2,
     timemsqnt.qnt_edges_m,
+    timemsqnt.qnt_glass_m2,
+    timemsqnt.qnt_paint_kg,
     timemsqnt.qnt_panels_w_drill_all,
     --опережение или просрочка, по принятию на сгп по отношению к плановой дате отгрузки, в том случае если для заказа есть технолог
     case when nvl(othn.cnt, 0) = 0 
@@ -600,7 +602,8 @@ create or replace view v_orders as (
     (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
     (select max(id_order) as id_order, count(*) as qnt_xml_no from order_items where is_xml_loaded = 0 and qnt <> 0 group by id_order) oxml,
     (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp,
-     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_panels_w_drill,0) * qnt) as qnt_panels_w_drill_all 
+     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_glass_m2,0)) as qnt_glass_m2, sum(nvl(qnt_paint_kg,0)) as qnt_paint_kg, 
+     sum(nvl(qnt_panels_w_drill,0) * qnt) as qnt_panels_w_drill_all 
      from order_items group by id_order) timemsqnt,
     dv.zakaz z,
     dv.status_zakaza sz,
@@ -700,7 +703,7 @@ alter table order_items add dt_est date;
 alter table order_items add dt_est_last date;
 alter table order_items add dt_kns_last date;
 alter table order_items add dt_thn_last date;
-alter table order_items add dt_doc date;
+alter table order_items add qnt_paint_kg number;
 
 
 create table order_items (
@@ -742,6 +745,8 @@ create table order_items (
   qnt_to_sgp number default 0,       -- количество принятых на сгп изделий по слэшу 
   qnt_boards_m2 number,              -- метраж плитных материалов 
   qnt_edges_m number,                -- метраж кромки
+  qnt_glass_m2 number,               -- метраж стекла/зеркала
+  qnt_paint_kg number,               -- вес краски/эмали/лака
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   is_xml_loaded number default 0,      --загружен xml
   labor_intensity number,              --трудоемкость, мин.
@@ -2088,6 +2093,60 @@ where
   group by oi.id
 ;
 
+create or replace view v_orders_glass_m2 as
+select
+--количество стекла и зеркала  по заказам
+  oi.id,
+  max(oi.id_order) as id_order,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (2278 /*Зеркало*/, 2277 /*Стекло*/)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+
+create or replace view v_orders_paint_kg as
+select
+--количество стекла и зеркала  по заказам
+  oi.id,
+  max(oi.id_order) as id_order,
+  sum(ei.qnt_itm) as qnt
+from 
+  v_order_items oi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl bn,
+  dv.nomenclatura n
+where
+  oi.id = e.id_order_item
+  and ei.id_estimate (+) = e.id
+  and ei.id_name = bn.id
+  and n.name = bn.name 
+  and n.id_group in ( 
+    select id_group
+    from dv.groups
+    start with id_group in (2475 /*Лак*/, 2807 /*Эмаль\краска*/)  
+    connect by prior id_group = id_parentgroup   
+  )
+  group by oi.id
+;
+
+
 /*
 create or replace view v_orders_boards_m2 as
 select
@@ -2144,28 +2203,6 @@ begin
   when matched then
       update set t1.dt_to_prod = t2.dt;
 
-/*
-  update orders set has_prod = 0;
-  merge into orders t1
-  using (select id_zakaz from v_orders_has_prod) t2
-  on (t1.id_itm = t2.id_zakaz)
-  when matched then
-      update set t1.has_prod = 1;
-
-  update orders set qnt_boards_m2 = null;
-  merge into orders t1
-  using (select id_zakaz, qnt from v_orders_boards_m2) t2
-  on (t1.id_itm = t2.id_zakaz)
-  when matched then
-      update set t1.qnt_boards_m2 = t2.qnt;
-
-  update orders set qnt_edges_m = null;
-  merge into orders t1
-  using (select id_zakaz, qnt from v_orders_edges_m) t2
-  on (t1.id_itm = t2.id_zakaz)
-  when matched then
-      update set t1.qnt_edges_m = t2.qnt;
-  */
   update order_items set qnt_boards_m2 = null;
   merge into order_items t1
   using (select id, qnt from v_orders_boards_m2) t2
@@ -2179,6 +2216,20 @@ begin
   on (t1.id = t2.id)
   when matched then
       update set t1.qnt_edges_m = t2.qnt;
+      
+  update order_items set qnt_glass_m2 = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_glass_m2) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_glass_m2 = t2.qnt;
+      
+  update order_items set qnt_paint_kg = null;
+  merge into order_items t1
+  using (select id, qnt from v_orders_paint_kg) t2
+  on (t1.id = t2.id)
+  when matched then
+      update set t1.qnt_paint_kg = t2.qnt;
 
 end;
 /
@@ -2202,6 +2253,21 @@ begin
   on (t1.id = t2.id and t1.id_order = AIdOrder)
   when matched then
       update set t1.qnt_edges_m = t2.qnt;
+
+  update order_items set qnt_glass_m2 = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_glass_m2 where id_order = AIdOrder) t2
+  on (t1.id = t2.id and t1.id_order = AIdOrder)
+  when matched then
+      update set t1.qnt_glass_m2 = t2.qnt;
+
+  update order_items set qnt_paint_kg = null where id_order = AIdOrder;
+  merge into order_items t1
+  using (select id, qnt from v_orders_paint_kg where id_order = AIdOrder) t2
+  on (t1.id = t2.id and t1.id_order = AIdOrder)
+  when matched then
+      update set t1.qnt_paint_kg = t2.qnt;
+
 end;
 /      
 

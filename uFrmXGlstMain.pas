@@ -776,9 +776,13 @@ v:=True;
     v:=v or (Q.QLoadValue('select max(IsStInCommaSt(:id$i, ids_editusers)) from w_departaments', [User.GetId]) = 1);
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit, v],[mbtAdd, 1],[mbtDelete, v and (User.IsDeveloper or User.IsDataEditor or User.Role(rW_J_Turv_TP))],[-1000, User.Role(rW_J_Turv_Commit), 'Закрыть все за прошлый период'],[],[mbtGridFilter],[],[mbtGridSettings],[mbtTest],[],[mbtCtlPanel]]); //!T
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
-    Frg1.CreateAddControls('1', cntCheck, 'Только свои ТУРВ', 'ChbSelf', '', -1, yrefC, 150);
+//    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 120);
+//    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 120);
+    Frg1.CreateAddControls('1', cntCheck, DateToStr(Turv.GetTurvBegDate(Date)), 'ChbPeriod1', '', 4, yrefT, 100);
+    Frg1.CreateAddControls('1', cntCheck, DateToStr(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))), 'ChbPeriod2', '', -1, yrefT, 100);
+    Frg1.CreateAddControls('1', cntCheck, DateToStr(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1))), 'ChbPeriod3', '', -1, yrefT, 100);
+    Frg1.CreateAddControls('1', cntCheck, DateToStr(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1)), -1))), 'ChbPeriod4', '', -1, yrefT, 100);
+    Frg1.CreateAddControls('1', cntCheck, 'Только свои ТУРВ', 'ChbSelf', '', 4, yrefB, 150);
     Frg1.InfoArray:=[
     ['caption'],
     ['В колонке Завершен отображается статус закрытия ТУРВ (если там есть галочка, то его нельзя менять.'#13#10+
@@ -930,8 +934,8 @@ v:=True;
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий месяц', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый месяц', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Групповые', 'ChbDivisions', '', 130, yrefT, 150);
     Frg1.CreateAddControls('1', cntCheck, 'По уволенным', 'ChbEmployees', '', 130, yrefB, 150);
     Frg1.InfoArray:=[
@@ -954,12 +958,12 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_w_payroll_cash', 'w_payroll_cash');
     Frg1.Opt.SetButtons(1, [
-      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],{[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],} //[mbtDelete, 1],
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
-    Frg1.CreateAddControls('1', cntCheck, 'Текущий период', 'ChbCurrent', '', 4, yrefT, 110);
-    Frg1.CreateAddControls('1', cntCheck, 'Прошлый период', 'ChbPrevious', '', 4, yrefB, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Текущий месяц', 'ChbCurrent', '', 4, yrefT, 110);
+    Frg1.CreateAddControls('1', cntCheck, 'Прошлый месяц', 'ChbPrevious', '', 4, yrefB, 110);
     Frg1.CreateAddControls('1', cntCheck, 'Подразделения', 'ChbDivisions', '', 120, yrefT, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Уволенные', 'ChbEmployees', '', 120, yrefB, 150);
     Frg1.InfoArray:=[
@@ -1642,8 +1646,9 @@ v:=True;
       ['dt_end','Дата сдачи','80'],
       ['status','Статус','80'],
       ['hours','Часы','80','f=f:'],
-      //['cnt','Сделка','80','f=f:'],
-      //['time','Часы','80','f=f:'],
+      ['cnt','Сделка','80','f=f:'],
+      ['qnt','Количество изделий','100'],
+      ['hours_total','Итого времени на задачу','80','f=f:'],
       ['comm','Комментарий','300;h']
     ]);
     Frg1.Opt.SetTable('v_j_development');
@@ -2878,12 +2883,15 @@ begin
       S.IIfStr(not User.Role(rW_J_Turv_VAll), 'dt1 >= sysdate - 93'),  //турв за последние 3 месяца
       S.IIfStr(Fr.GetControlValue('ChbSelf') = 1, 'IsStInCommaSt(' + IntToStr(User.GetId) + ', ids_editusers) = 1'),
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
-        S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
-        S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
+        S.IIfStr(Fr.GetControlValue('ChbPeriod1') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(Date)) + ''''),
+        S.IIfStr(Fr.GetControlValue('ChbPeriod2') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + ''''),
+        S.IIfStr(Fr.GetControlValue('ChbPeriod3') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1))) + ''''),
+        S.IIfStr(Fr.GetControlValue('ChbPeriod4') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1)), -1))) + '''')
+        ],
         ' or '), '('#0')')], ' and '
     );
   end
-  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations]) then begin
+  else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
@@ -2892,7 +2900,7 @@ begin
         ' or '), '('#0')')], ' and '
     );
   end
-  else if (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
+{  else if (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin
     st := S.IfNotEmptyStr(A.ImplodeNotEmpty([S.IIfStr(Fr.GetControlValue('ChbDivisions') = 1, 'id_employee is null'), S.IIfStr(Fr.GetControlValue('ChbEmployees') = 1, 'id_employee is not null')], ' or '), '('#0')', '1 = 2');
     SqlWhere:= A.ImplodeNotEmpty([SqlWhere, st,
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
@@ -2900,7 +2908,7 @@ begin
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt1 = ''' + S.SQLdate(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1))) + '''')],
         ' or '), '('#0')')], ' and '
     );
-  end
+  end}
   else if (FormDoc = myfrm_J_PayrollsForWorker) then begin
     var idempl := Q.QLoadValue('select id_employee from v_w_employee_properties where employee_st = :est$s', [Cth.GetControlValue(Fr, 'cmbEmployee')]);
     Fr.SetSqlParameters('id_employee$i;dt1$d;is_finalized$i', [idempl, S.IIf(User.IsDeveloper, IncYear(Date, -10), Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1)), -1))), S.IIf(User.IsDeveloper, 0, 1)]);

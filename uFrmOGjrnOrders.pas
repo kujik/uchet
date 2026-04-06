@@ -115,6 +115,8 @@ begin
     ['early_or_late$i','Опережение / просрочка','70'],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
+    ['qnt_glass_m2$f','Стекло, м2','80', 'f=f:'],
+    ['qnt_paint_kg$f','Краска, кг.','80', 'f=f:'],
     ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
     ['dt_upd_reg$d','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
     ['dt_upd$d','Дата УПД',''],
@@ -190,9 +192,12 @@ begin
     ['control_assembly','Контр. сборка','40','pic'],
     ['dt_kns','Документы КНС','80'],
     ['dt_thn','Документы ТХН','80'],
-    ['dt_doc$d','Документы к заказу','80', 'chbt=+', User.Role(rOr_D_Order_InputDocDate), 'e', User.Role(rOr_D_Order_InputDocDate)],
+//    ['dt_doc$d','Документы к заказу','80', 'chbt=+', User.Role(rOr_D_Order_InputDocDate), 'e', User.Role(rOr_D_Order_InputDocDate)],
+    ['dt_doc$d','Документы к заказу','80', 'bt=Проставить текущую дету:1:l', User.Role(rOr_D_Order_InputDocDate), 'e', User.Role(rOr_D_Order_InputDocDate)],
     ['qnt_boards_m2$f','Плитные, м2','80', 'f=f:'],
     ['qnt_edges_m$f','Кромка, п.м.','80', 'f=f:'],
+    ['qnt_glass_m2$f','Стекло, м2','80', 'f=f:'],
+    ['qnt_paint_kg$f','Краска, кг.','80', 'f=f:'],
     ['qnt_panels_w_drill_all','Сверловка, панелей','80', 'f=f:'],
     ['labor_intensity','Трудо-'#13#10'емкость, на ед.','65'],
     ['labor_intensity_total$i','Трудо-'#13#10'емкость, всего','65','f=#:'],
@@ -603,7 +608,13 @@ begin
       Exit;
     Fr.SetValue('id_thn', Value);
     Q.QExecSql('update order_items set id_thn = :id_thn$i where id = :id$i', [Value, Fr.ID]);
-  end;
+  end
+  else if (Fr.CurrField = 'dt_doc') then begin
+    if Value.AsString = '' then
+      Value := null;
+    Fr.SetValue('dt_doc', Value);
+    Q.QExecSql('update order_items set dt_doc = :dt$d where id = :id$i', [Value, Fr.ID]);
+  end
 end;
 
 procedure TFrmOGjrnOrders.Frg2SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);

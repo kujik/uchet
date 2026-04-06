@@ -3615,7 +3615,7 @@ var
   EmplInfo: TNamedArr;
 begin
   if TFrmBasicInput.ShowDialog(Application, '', [], fAdd, '~Создать ведомости', 185, 45, [[cntComboL,'Период','1:400:0', 135]],
-    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfTurvPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
+    [VarArrayOf([null, VarArrayOf(Turv.GetArrOfMonthPeriodStrings(Date, 5))])], va, [['']], nil) < 0 then
   Exit;
   S.GetDatesFromPeriodString(va[0], dt1, dt2);
 {
@@ -3628,24 +3628,24 @@ begin
   Msg := '';
   //по работающим (по подразделениям)
   //создадим ведомости по всем подразделениям, которые есть в расчетных
-  va1 := Q.QLoad('select id_departament from w_payroll_calc where id_employee is null and dt1 = :dt1$d', [dt1]);
-  va2 := Q.QLoad('select id_departament from w_payroll_cash where id_employee is null and dt1 = :dt1$d', [dt1]);
+  va1 := Q.QLoad('select id_departament from w_payroll_calc where id_employee is null and dt = :dt$d', [dt1]);
+  va2 := Q.QLoad('select id_departament from w_payroll_cash where id_employee is null and dt = :dt$d', [dt1]);
   for i := 0 to High(va1) do begin
     if (A.PosRowInArray(va1, va2, i) = -1) then begin
-      if Q.QSave('i', 'w_payroll_cash', '', 'id$i;id_departament;dt1$d;dt2$d', [0, va1[i][0], dt1, dt2], False) <> -1 then
+      if Q.QSave('i', 'w_payroll_cash', '', 'id$i;id_departament;dt$d', [0, va1[i][0], dt1], False) <> -1 then
         inc(Cnt);  //увеличим количество созданных
     end;
   end;
   //выберем данные по уволенным
   //строка соответствует периоду работы, подразделение берется на момент увольнения
-  va1 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt1 = :dt1$d', [dt1]);
-  va2 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_cash where dt1 = :dt1$d', [dt1]);
-  va3 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1,  Turv.GetTurvEndDate(IncDay(dt2, 1))]);
+  va1 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt = :dt$d', [dt1]);
+  va2 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_cash where dt = :dt$d', [dt1]);
+  va3 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1,  dt2]);
   for i := 0 to High(va1) do begin
     if (A.PosRowInArray(va1, va2, i) = -1) and (A.PosRowInArray(va1, va3, i) > -1) then begin
       //если ведомость еще не создана, и с такими параметрами есть в списке уволенных за периода
       //(таким образом исключаем ведомости с промежуточными подразделениями, т.е. если бли переходы по ним в течении периода работы, то будет создана только ведомость с подразделением на момент увольнения)
-      if Q.QSave('i', 'w_payroll_cash', '', 'id$i;id_departament;id_employee$i;id_organization$i;personnel_number$s;dt1$d;dt2$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1, dt2], False) <> -1 then
+      if Q.QSave('i', 'w_payroll_cash', '', 'id$i;id_departament;id_employee$i;id_organization$i;personnel_number$s;dt$d', [0, va1[i][0], va1[i][1], va1[i][2], va1[i][3], dt1], False) <> -1 then
         inc(Cnt);  //увеличим количество созданных
     end;
   end;

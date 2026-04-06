@@ -36,7 +36,7 @@ insert into ref_develtypes (name) values ('');
 */
 
 --таблица журнала рахработки проектов (кнс)
---alter table j_development add developer number;
+--alter table j_development add qnt number(4);
 create table j_development (
   id number(11),
   developer number,                   --1 - кнс, 2 - тхн
@@ -49,7 +49,8 @@ create table j_development (
   dt_end date,                  --дата окончиния разработки, автоматически ставится при выборе статуса Готово
   id_status number(3),          --номер статуса, без таблицы (1=новый, 2=в работе, 3=остановлен, 4=на согласовании, 5=завис, 100=готово)         
   cnt number(11,1),             --сделка (мож быть например число панелей, или другие подобные величины, число)
-  time number(11,1),            --время работы по проекту, в часах !!!
+  time number(11,1),            --время работы по проекту, в часах !!! - no use
+  qnt number(4),
   id_kns number(11),            --айди конструктора !!!
   comm varchar2(4000),          --комментарий
   constraint pk_j_development primary key (id),
@@ -71,6 +72,7 @@ end;
 create or replace view v_j_development as 
 select
   d.*,
+  nvl(t.hours, 0) * nvl(d.qnt, 1) as hours_total,
   t.name as develtype,
   t.hours,
   u.name as constr,
