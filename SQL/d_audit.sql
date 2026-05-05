@@ -191,5 +191,5 @@ where
   and oi.id_std_item = s.id (+) 
   and o.id_reglament = r.id
   and ri.id_reglament = r.id and ri.id_work_cell_type = 5  --ïðèåìêà íà ÑÃÃ
-  and u.id = oi.id_thn and u.id > 0 
+  and u.id = t.id_user and u.id > 0 
 ;

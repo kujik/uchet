@@ -36,7 +36,8 @@ var
 implementation
 
 uses
-  uTurv
+  uTurv,
+  uWaitForm
   ;
 
 {$R *.dfm}
@@ -55,19 +56,19 @@ begin
     ['sum2','ћинимальна€ зарплата','80','f=r','e=0:9999999:0',User.Role(rW_Rep_Salary_Ch) or User.IsDeveloper],
     ['sum3','ћаксимальна€ зарплата','80','f=r','e=0:9999999:0',User.Role(rW_Rep_Salary_Ch) or User.IsDeveloper]
   ]);
-  Frg1.Opt.SetTable('v_rep_salary', '', 'rownum', False, False); //нельз€ обновл€ть строку, так как у нас нет реального айди
+  Frg1.Opt.SetTable('v_w_rep_salary', '', 'rownum', False, False); //нельз€ обновл€ть строку, так как у нас нет реального айди
   Frg1.Opt.SetWhere('where dt = :dt$d');
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGo,User.Role(rW_Rep_Salary_Ch) or User.IsDeveloper],[],[mbtExcel],[mbtPrintGrid],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.CreateAddControls('1', cntComboL, 'ƒата', 'CbDates', ':', 60, yrefC, 85);
-  Frg1.CreateAddControls('1', cntNEditS, 'ѕериод расчета'#13#10'(по 2 недели)', 'NePeriod', '2:24:0:N', 250, yrefC, 45);
+  Frg1.CreateAddControls('1', cntNEditS, 'ѕериод расчета'#13#10'(мес€цев)', 'NePeriod', '2:24:0:N', 250, yrefC, 45);
   CreateDatesList;
   Frg1.InfoArray:=[[
     'ќтчет по заработной плате.'#13#10#13#10+
     'ƒл€ формировани€ отчета выберите из списка дату'#13#10+
-    '(дата в выпадающем списке соответствует началу последнего учитываемого периода, составл€ющего половину мес€ца).'#13#10+
+    '(дата в выпадающем списке соответствует началу последнего учитываемого периода, составл€ющего один мес€ц).'#13#10+
     '¬ отчете отображаютс€ все должности, и по каждой 4 значени€:'#13#10+
-    '—редн€€ (по итогам 3 мес€цев) зарплата дл€ данной должности на предпри€тии;'#13#10+
+    '—редн€€ (за последние мес€цы - как задоно в поле ѕериод расчета) зарплата дл€ данной должности на предпри€тии;'#13#10+
     '—редн€€ зарплата по городу, по итогам мониторинга сотрудниками ќ ,'#13#10+
     'а также ммнимальные и максимальные значени€ зарплат по городу.'#13#10+
     ''#13#10+
@@ -86,7 +87,7 @@ end;
 
 procedure TFrmWGrepSalary.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 var
-  dt1, dt2, dt3: TDateTime;
+  LDtBeg, LDtPrev, LDtEnd: TDateTime;
   i: Integer;
 begin
   if (Tag = mbtGo) then begin
@@ -97,31 +98,49 @@ begin
       Exit;
     end;
     //if MyQuestionMessage('—формировать отчет?') <> mrYes then Exit;
-    dt1:=StrtoDate(Fr.GetControlValue('CbDates'));
+    LDtEnd:=StrtoDate(Fr.GetControlValue('CbDates'));
+    LDtPrev:=StartOfTheMonth(IncDay(LDtEnd, -1));
+    LDtBeg:=IncMonth(LDtEnd, -Fr.GetControlValue('NePeriod').AsInteger);
+{
     dt2:=Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(dt1), -1));
     dt3:=dt2;
     for i:=3 to Round(Fr.GetControlValue('NePeriod')) do
       dt3:=Turv.GetTurvBegDate(IncDay(dt3, -1));
 //    dt3:=Turv.GetTurvBegDate(IncDay(dt2, -1));
-//    dt3:=Turv.GetTurvBegDate(IncDay(dt3, -1));
-    if MyQuestionMessage('—формировать отчет?'#13#10'—редн€€ з/п будет рассчитана за период с ' + DateToStr(dt3) + ' по ' + DateToStr(Turv.GetTurvEndDate(dt1)) + ')') <> mrYes then
+//    dt3:=Turv.GetTurvBegDate(IncDay(dt3, -1));}
+    if MyQuestionMessage('—формировать отчет?'#13#10'—редн€€ з/п будет рассчитана за период с ' + DateToStr(LDtBeg) + ' по ' + DateToStr(LDtEnd) + ')') <> mrYes then
       Exit;
+    ShowWaitForm('–асчЄт...');
     Q.QExecSql(
-      'insert into rep_salary (id_job, dt) ' +
-      'select id, :dt1$d as j from ref_jobs where not exists (select 1 from rep_salary where id_job = id and dt = :dt2$d)',
-      [dt1, dt1]
+      'insert into w_rep_salary (id_job, dt) ' +
+      'select id, :dt1$d as j from w_jobs where not exists (select 1 from w_rep_salary where id_job = id and dt = :dt2$d)',
+      [LDtEnd, LDtEnd]
     );
     Q.QExecSql(
-      'update rep_salary s0 set ' +
-      'sum1 = (select sum1 from rep_salary s1 where dt = :dt1$d and s0.id_job = s1.id_job), ' +
-      'sum2 = (select sum2 from rep_salary s1 where dt = :dt2$d and s0.id_job = s1.id_job), ' +
-      'sum3 = (select sum3 from rep_salary s1 where dt = :dt3$d and s0.id_job = s1.id_job) ' +
+      'update w_rep_salary s0 set ' +
+      'sum1 = (select sum1 from w_rep_salary s1 where dt = :dt1$d and s0.id_job = s1.id_job), ' +
+      'sum2 = (select sum2 from w_rep_salary s1 where dt = :dt2$d and s0.id_job = s1.id_job), ' +
+      'sum3 = (select sum3 from w_rep_salary s1 where dt = :dt3$d and s0.id_job = s1.id_job) ' +
       'where sum1 is null and sum2 is null and sum3 is null and dt = :dtcurr$d',
-      [dt2, dt2, dt2, dt1]
+      [LDtPrev, LDtPrev, LDtPrev, LDtEnd]
     );
+    Q.QExecSql(
+      'update w_rep_salary s0 set sum0 = (' +
+      'select round(avg((total_pay - nvl(non_work_pay,0) - nvl(penalty,0)) / hours_worked * period_hours_norm)) sumall ' +
+      'from v_w_payroll_calc_item pi ' +
+      'where ' +
+      'nvl(total_pay, 0) <> 0 and nvl(hours_worked,0) <> 0 ' +
+      'and s0.id_job = pi.id_job ' +
+      'and dt >= :dtbeg$d ' +
+      'and dt <= :dtend$d ' +
+      ') where s0.dt = :dt$d ' ,
+      [LDtBeg, LDtEnd, LDtEnd]
+    );
+{
+!!!
 
     Q.QExecSql(
-      'update rep_salary s0 set sum0 = (' +
+      'update w_rep_salary s0 set sum0 = (' +
       'select round(avg((itog1 - nvl(otpusk,0) - nvl(bl,0) - nvl(penalty,0)) / turv * norm) * 2) sumall ' +
       'from v_payroll_item pi ' +
       'where ' +
@@ -130,8 +149,8 @@ begin
       'and dt >= :dtbeg$d ' +
       'and dt <= :dtend$d ' +
       ') where s0.dt = :dt$d ' ,
-      [dt3, dt1, dt1]
-    );
+      [LDtBeg, LDtEnd, LDtEnd]
+    );}
     //здесь дата dt идет на начало периода турв
     MyInfoMessage('ƒанные обновлены.');
     Fr.RefreshGrid;
@@ -155,7 +174,7 @@ end;
 procedure TFrmWGrepSalary.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
   Q.QExecSQL(
-    'update rep_salary set ' + FieldName + ' = :sum$i where dt = :dt$d and id_job = :job$i', [Value, Fr.GetValueI('dt'), Fr.GetValueI('id_job')]
+    'update w_rep_salary set ' + FieldName + ' = :sum$i where dt = :dt$d and id_job = :job$i', [Value, Fr.GetValueI('dt'), Fr.GetValueI('id_job')]
   );
 end;
 
@@ -165,6 +184,12 @@ var
   va: TVarDynArray2;
   dt: TDateTime;
 begin
+  va := [[StartOfTheMonth(Date)]];
+  while va[High(va)][0] > EncodeDate(2026, 03, 01) do
+    va := va + [[StartOfTheMonth(IncDay(va[High(va)][0], -1))]];
+  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbDates')), va);
+{
+
   va := Q.QLoad('select distinct dt from rep_salary order by dt desc', []);
   dt := Turv.GetTurvBegDate(IncDay(Turv.GetTurvBegDate(Date), -1));
   if (High(va) = -1) then
@@ -172,7 +197,7 @@ begin
   else
     while va[0][0] < dt do     //добавим в список все даты начала турв до предпоследнего, большие последней даты отчета
       va := [[Turv.GetTurvBegDate(IncDay(va[0][0], 19))]] + va;
-  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbDates')), va);
+  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbDates')), va);}
 end;
 
 

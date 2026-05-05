@@ -271,6 +271,8 @@ begin
 end;
 
 procedure TDlg_NewEstimateInput.DBGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
+var
+  st: string;
 begin
   inherited;
   if MemTableEh1.RecNo <= 0 then
@@ -288,6 +290,11 @@ begin
       Background := clRed
     else if MemTableEh1.FieldByName('qnt1').Value > MemTableEh1.FieldByName('qnts').Value then
       Background := clYellow;
+  end;
+  if (Column.FieldName = 'name') then begin
+    st := MemTableEh1.FieldByName('name').Value.AsString;
+    if (Trim(st) <> st) or (Pos('  ', st) > 0) then
+      Background := clRed
   end;
 end;
 

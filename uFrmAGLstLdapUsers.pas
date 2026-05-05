@@ -20,7 +20,13 @@ type
     function  PrepareForm: Boolean; override;
     procedure GetData;
     procedure CreateABook;
+    procedure Test;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
+    procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
+    procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
+    //procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
+    procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
+
   end;
 
 var
@@ -28,21 +34,43 @@ var
 
 implementation
 
+uses
+  System.Win.ComObj, Winapi.ActiveX, Winapi.ShellAPI,
+  uLdapHelper, uAdUpdater;
+
 {$R *.dfm}
+
+const
+  // Значения флагов авторизации для Active Directory (Источник: iads.h)
+  ADS_SECURE_AUTHENTICATION = $00000001; // 0x1
+  ADS_USE_ENCRYPTION         = $00000002; // 0x2
+  ADS_USE_SSL                = $00000002; // 0x2
+  ADS_READONLY_SERVER        = $00000004; // 0x4
+  ADS_PROMPT_CREDENTIALS     = $00000008; // 0x8
+  ADS_NO_AUTHENTICATION      = $00000010; // 0x10
+  ADS_FAST_BIND              = $00000020; // 0x20
+  ADS_USE_SIGNING            = $00000040; // 0x40
+  ADS_USE_SEALING            = $00000080; // 0x80
+  ADS_USE_DELEGATION         = $00000100; // 0x100
+  ADS_PROPERTY_CLEAR = 1;
+
 
 function TFrmAGLstLdapUsers.PrepareForm: Boolean;
 begin
   Caption:='Пользователи AD';
   Frg1.Opt.SetFields([
    // ['login$s','Логин','120'],
+    ['adspath$s','_путь','120'],
+    ['distinguishedname$s','_distinguishedName','120'],
     ['ab$i','X','30', 'pic'],
-    ['name$s','Отображаемое имя','120'],
+    ['name$s','Значение','120'],
+    ['displayname$s','Отображаемое имя','120'],
     ['sn$s','Фамилия','120'],
     ['givenname$s','Имя','120'],
     ['description$s','Отчество','120'],
     ['company$s','Организация','120'],
     ['department$s','Отдел','120'],
-    ['title$s','Должность','200;h'],
+    ['title$s','Должность','200;h','e=0:400::T', False],
     ['mail$s','Электронная почта','120'],
     ['telephoneNumber$s','Телефон городской','120'],
     ['ipphone$s','Телефон внутренний','120'],
@@ -50,7 +78,7 @@ begin
     ['office$s','Комната','200;h'],
     ['www$s','Веб-страница','120']
   ]);
-  Frg1.Opt.SetButtons(1, [[mbtGo, True]]);
+  Frg1.Opt.SetButtons(1, [[mbtGo, True], [mbtTest, False]]);
   Frg1.InfoArray:=[['']];
   Frg1.SetInitData([]);
   GetData;
@@ -108,15 +136,19 @@ begin
 {  ADOQuery1.SQL.Text:=
     'SELECT sn,givenName,initials,description,comment,name,wWWHomePage,physicalDeliveryOfficeName,telephoneNumber,mail,title,department,company,ipPhone,mobile '+
     'FROM ''LDAP://DC=fresh,DC=local'' WHERE objectCategory=''user''';}
+//objectGUID
   ADOQuery1.SQL.Text:=
-    'SELECT sn,givenName,initials,description,comment,name,wWWHomePage,physicalDeliveryOfficeName,telephoneNumber,mail,title,department,company,ipPhone,mobile '+
+    'SELECT ADsPath,distinguishedName,sn,givenName,initials,description,comment,name,displayName,wWWHomePage,physicalDeliveryOfficeName,telephoneNumber,mail,title,department,company,ipPhone,mobile '+
     'FROM ''LDAP://10.1.1.11/DC=fresh,DC=local'' WHERE objectCategory=''user''';
   ADOQuery1.Open;
   ADOQuery1.First;
   while not ADOQuery1.Eof do begin
     va2 := va2 + [[
+      ADOQuery1.FieldByName('ADsPath').AsString,
+      ADOQuery1.FieldByName('distinguishedName').AsString,
       S.IIf((ADOQuery1.FieldByName('mail').AsString <> '') and (ADOQuery1.FieldByName('physicalDeliveryOfficeName').AsString <> '-'), 1, 0),
       ADOQuery1.FieldByName('name').AsString,
+      ADOQuery1.FieldByName('displayName').AsString,
       ADOQuery1.FieldByName('sn').AsString,
       ADOQuery1.FieldByName('givenName').AsString,
       GetAttributeArray(ADOQuery1.FieldByName('description'))[0],
@@ -172,14 +204,215 @@ begin
   {$ENDIF}
 end;
 
+{function SetADAttribute(const ADsPath, AdminUser, AdminPassword, AttrName, AttrValue: string): Boolean;
+var
+  StartupInfo: TStartupInfo;
+  ProcessInfo: TProcessInformation;
+  sCommandLine: string;
+  ExitCode: DWORD;
+begin
+  Result := False;
+  // Формируем командную строку так же, как вы делали для ShellExecuteEx
+  sCommandLine := Format('"%s" "%s" "%s" "%s" "%s"',
+    [ADsPath, AdminUser, AdminPassword, AttrName, AttrValue]);
+  sCommandLine :=
+    '"LDAP://10.1.1.111/CN=test_1c,CN=Users,DC=fresh,DC=local" "FRESH\sprokopenko" "19-kujikirikus" "title" "job"';
+
+  FillChar(StartupInfo, SizeOf(StartupInfo), 0);
+  StartupInfo.cb := SizeOf(StartupInfo);
+  StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
+  StartupInfo.wShowWindow := SW_HIDE;
+  StartupInfo.wShowWindow := SW_SHOWNORMAL;  // Показываем окно
+
+  FillChar(ProcessInfo, SizeOf(ProcessInfo), 0);
+
+  // Создаём процесс
+  if CreateProcess(
+//    PChar(ExtractFilePath(ParamStr(0)) + '\ADHelper.exe'), // Полный путь к вашей программе
+    PChar('R:\Projects\Uchet\ADHelper.exe'), // Полный путь к вашей программе
+    PChar(sCommandLine),                                  // Аргументы командной строки
+    nil,                                                  // Безопасность процесса
+    nil,                                                  // Безопасность потока
+    False,                                                // Не наследовать дескрипторы
+    //CREATE_NO_WINDOW,                                     // Не показывать окно (важно для консольных приложений!)
+    0,
+    nil,                                                  // Использовать переменные окружения родителя
+    PChar(ExtractFilePath(ParamStr(0))),                  // Явно задаём рабочую папку (папка вашей программы)
+    StartupInfo,
+    ProcessInfo) then
+  begin
+    // Ждём завершения процесса
+    WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    // Получаем код возврата
+    GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
+    Result := (ExitCode = 0);
+    // Закрываем дескрипторы
+    CloseHandle(ProcessInfo.hProcess);
+    CloseHandle(ProcessInfo.hThread);
+  end;
+end;  }
+
+
+function SetADAttribute(const ADsPath, AdminUser, AdminPassword, AttrName, AttrValue: string): Boolean;
+var
+  SEInfo: TShellExecuteInfo;
+  ExitCode: DWORD;
+begin
+//MyInfoMessage(Format('"%s" "%s" "%s" "%s" "%s"', [ADsPath, AdminUser, AdminPassword, AttrName, AttrValue]));// Exit;
+  FillChar(SEInfo, SizeOf(SEInfo), 0);
+  SEInfo.cbSize := SizeOf(SEInfo);
+  SEInfo.fMask := SEE_MASK_NOCLOSEPROCESS;
+  SEInfo.Wnd := 0;
+  SEInfo.lpFile := PChar(ExtractFilePath(ParamStr(0)) + 'ADHelper.exe');
+  SEInfo.lpParameters := PChar(Format('"%s" "%s" "%s" "%s" "%s"', [ADsPath, AdminUser, AdminPassword, AttrName, AttrValue]));
+  SEInfo.nShow := SW_HIDE;
+  if ShellExecuteEx(@SEInfo) then
+  begin
+    WaitForSingleObject(SEInfo.hProcess, INFINITE);
+    GetExitCodeProcess(SEInfo.hProcess, ExitCode);
+    Result := (ExitCode = 0);
+    CloseHandle(SEInfo.hProcess);
+  end
+  else
+    Result := False;
+end;
+
+{procedure UpdateUserTitle(const ADistinguishedName: string; const Server, AdminUser, AdminPassword: WideString; const NewTitle: string);
+var
+  LdapHandle: TLDAPHandle;
+  sUserDN: string;
+begin
+  // 1. Получаем Distinguished Name (DN) пользователя из текущей записи ADOQuery1
+  //    Предполагается, что в SQL-запросе уже есть поле distinguishedName
+  sUserDN := ADistinguishedName; //ADOQuery1.FieldByName('distinguishedName').AsString;
+  if sUserDN = '' then
+    raise Exception.Create('Не удалось получить Distinguished Name пользователя. Убедитесь, что поле distinguishedName присутствует в запросе.');
+
+  // 2. Подключаемся к контроллеру домена через LDAP
+  LdapHandle := LdapConnect(Server, AdminUser, AdminPassword);
+  if LdapHandle = nil then
+    raise Exception.Create('Не удалось подключиться к LDAP: ' + LdapGetLastError);
+  try
+    // 3. Изменяем атрибут title
+    if not LdapSetAttribute(LdapHandle, sUserDN, 'title', NewTitle) then
+      raise Exception.Create('Ошибка при изменении атрибута title: ' + LdapGetLastError);
+  finally
+    LdapDisconnect(LdapHandle);
+  end;
+end;   }
+
+procedure TFrmAGLstLdapUsers.Test;
+begin
+  if not SetADAttribute(
+      Frg1.GetValueS('adspath'),
+      'FRESH\sprokopenko',           // Учётная запись администратора (домен\пользователь)
+      '19-',                 // Пароль
+      'title',
+      'job'                 // Новое значение должности
+    )
+    then MyInfoMessage('Error');
+end;
+
+{
+procedure TFrmAGLstLdapUsers.Test;
+begin
+//''LDAP://10.1.1.11/DC=fresh,DC=local''
+  try
+    UpdateUserTitle(
+      Frg1.GetValueS('distinguishedname'),                       // TADOQuery с данными пользователей
+      '10.1.1.11',                     // IP или имя контроллера домена
+//      '''LDAP://10.1.1.11/DC=fresh,DC=local''',
+      'FRESH\sprokopenko',           // Учётная запись администратора (домен\пользователь)
+      '19-',                 // Пароль
+      'job'                 // Новое значение должности
+    );
+    ShowMessage('Должность успешно обновлена!');
+    ADOQuery1.Requery();               // Обновляем данные в DBGrid
+  except
+    on E: Exception do
+      ShowMessage('Ошибка: ' + E.Message);
+  end;
+end;}
+
+{
+procedure TFrmAGLstLdapUsers.Test;
+var
+  sADsPath: string;
+  aAttr: array of string;
+  aVals: array of Variant;
+begin
+  // Получаем ADsPath выбранной записи
+//  sADsPath := ADOQuery1.FieldByName('ADsPath').AsString;
+
+  sADsPath := Frg1.GetValue('adspath');
+
+  // Формируем массивы атрибутов и новых значений
+  SetLength(aAttr, 2);
+  SetLength(aVals, 2);
+  aAttr[0] := 'title';
+  aVals[0] := 'job';        // новая должность
+//  aAttr[1] := 'telephoneNumber';
+//  aVals[1] := edtNewPhone.Text;        // новый телефон
+
+  try
+    UpdateADAttributes(
+      sADsPath,
+      'FRESH\sprokopenko',        // глобальная переменная или поле класса, хранящее 'fresh\admin'
+      '19-',    // пароль администратора
+      aAttr,
+      aVals
+    );
+    ShowMessage('Атрибуты успешно обновлены');
+  except
+    on E: Exception do
+      ShowMessage('Ошибка: ' + E.Message);
+  end;
+end;  }
 
 procedure TFrmAGLstLdapUsers.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   if Tag = mbtGo then
     CreateABook
+  else if Tag = mbtTest then
+    Test
   else
     inherited;
 end;
+
+procedure TFrmAGLstLdapUsers.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+begin
+  if FieldName = 'displayname' then begin
+    if Fr.GetValueS('displayname') <> Fr.GetValueS('name') then
+      Params.Background := clmyYelow;
+    if not ((Fr.GetValueS('displayname') = Fr.GetValueS('givenname')) or (Fr.GetValueS('displayname') = Fr.GetValueS('sn') + ' ' + Fr.GetValueS('givenname'))) then
+      Params.Font.Color := clRed;
+  end;
+end;
+
+procedure TFrmAGLstLdapUsers.Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+begin
+  Value := Trim(Value.AsString);
+  if SetADAttribute(
+      Frg1.GetValueS('adspath'),
+      'FRESH\sprokopenko',           // Учётная запись администратора (домен\пользователь)
+      '19-',                 // Пароль
+      Fr.CurrField,
+      Value.AsString                 // Новое значение должности
+    )
+    then begin
+      Fr.SetValue(Fr.CurrField, Value);
+    end
+    else
+      MyInfoMessage('Error');
+    Handled := True;
+end;
+
+procedure TFrmAGLstLdapUsers.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+begin
+  inherited;
+end;
+
+
 
 
 

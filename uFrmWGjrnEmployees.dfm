@@ -1,32 +1,15 @@
 inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
   Caption = 'FrmWGjrnEmployees'
-  ClientHeight = 537
-  ExplicitWidth = 808
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Height = 521
-    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      Height = 472
-      inherited pnlBottom: TPanel
-        Top = 426
-      end
-      inherited pnlLeft: TPanel
-        Height = 417
-      end
+      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        Height = 417
+        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          Height = 415
-          inherited pnlGrid: TPanel
-            Height = 361
-          end
-          inherited pnlLeft: TPanel
-            Height = 361
-          end
-          inherited pnlBottom: TPanel
-            Top = 415
-          end
+          ExplicitWidth = 774
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -42,9 +25,9 @@ inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 431
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          ExplicitWidth = 784
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -61,15 +44,14 @@ inherited FrmWGjrnEmployees: TFrmWGjrnEmployees
           end
         end
       end
-      inherited pnlRight: TPanel
-        Height = 417
-      end
-    end
-    inherited pnlFrmBtns: TPanel
-      Top = 477
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 521
+    inherited lblStatusBarR: TLabel
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
   end
 end

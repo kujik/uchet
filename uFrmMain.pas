@@ -607,6 +607,7 @@ begin
 
     ['Журналы'],
     ['Работники', myfrm_R_Workers, User.Role(rW_R_Workers_V)],
+    ['Статусы работников', myfrm_J_WorkerStatus, User.Role(rW_J_WorkerStatus_V)],
     [],
     ['Табели учёта рабочего времени', myfrm_J_Turv, User.Role(rW_J_Turv)],
     ['Персональные надбавки', myfrm_J_PersBonus, User.Roles([], [rW_J_PersBonus_V, rW_J_PersBonus_Ch])],
@@ -638,7 +639,7 @@ begin
     ['Штатное расписание', myfrm_Rep_StaffSchedule, User.Roles([], [rW_Rep_StaffSchedule_V, rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C])],
     [],
     ['Отчет о кадровом составе', myfrm_Rep_W_Personnel_1, User.Role(rW_Rep_Personnel_1)],
-    ['Отчет по подбору персонала', myfrm_Rep_W_Personnel_2, User.Role(rW_Rep_Personnel_2)],
+ //   ['Отчет по подбору персонала', myfrm_Rep_W_Personnel_2, User.Role(rW_Rep_Personnel_2)],
     [],
     ['Отчет по заработной плате', myfrm_Rep_Salary, User.Roles([], [rW_Rep_Salary_V, rW_Rep_Salary_Ch])],
     [],

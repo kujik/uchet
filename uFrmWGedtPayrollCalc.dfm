@@ -1,40 +1,15 @@
 inherited FrmWGedtPayrollCalc: TFrmWGedtPayrollCalc
   Caption = 'FrmWGedtPayrollCalc'
-  ClientHeight = 537
-  ExplicitWidth = 808
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Height = 521
     inherited pnlFrmClient: TPanel
-      Height = 472
-      ExplicitWidth = 782
-      inherited pnlBottom: TPanel
-        Top = 426
-      end
-      inherited pnlLeft: TPanel
-        Height = 417
-      end
+      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        Height = 417
-        ExplicitWidth = 772
+        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          Height = 415
-          ExplicitWidth = 770
-          inherited pnlGrid: TPanel
-            Height = 361
-            inherited DbGridEh1: TDBGridEh
-              Width = 762
-            end
-            inherited pnlStatusBar: TPanel
-              Width = 762
-            end
-          end
-          inherited pnlLeft: TPanel
-            Height = 361
-          end
-          inherited pnlBottom: TPanel
-            Top = 415
-          end
+          ExplicitWidth = 774
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -52,18 +27,9 @@ inherited FrmWGedtPayrollCalc: TFrmWGedtPayrollCalc
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 431
-        ExplicitWidth = 782
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
-          inherited pnlGrid: TPanel
-            inherited DbGridEh1: TDBGridEh
-              Width = 772
-            end
-            inherited pnlStatusBar: TPanel
-              Width = 772
-            end
-          end
+          ExplicitWidth = 784
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -80,13 +46,9 @@ inherited FrmWGedtPayrollCalc: TFrmWGedtPayrollCalc
           end
         end
       end
-      inherited pnlRight: TPanel
-        Height = 417
-      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 477
-      ExplicitWidth = 782
+      ExplicitWidth = 786
       inherited bvlFrmBtnsTl: TBevel
         ExplicitWidth = 788
       end
@@ -94,19 +56,16 @@ inherited FrmWGedtPayrollCalc: TFrmWGedtPayrollCalc
         ExplicitWidth = 788
       end
       inherited pnlFrmBtnsContainer: TPanel
-        ExplicitWidth = 780
+        ExplicitWidth = 784
         inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = 453
+          ExplicitLeft = 457
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 521
     inherited lblStatusBarR: TLabel
-      Left = 723
       Height = 14
-      ExplicitLeft = 723
     end
     inherited lblStatusBarL: TLabel
       Height = 14

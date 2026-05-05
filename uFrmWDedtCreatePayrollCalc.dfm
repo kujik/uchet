@@ -9,12 +9,12 @@ inherited FrmWDedtCreatePayrollCalc: TFrmWDedtCreatePayrollCalc
     Width = 499
     Height = 171
     ExplicitWidth = 495
-    ExplicitHeight = 191
+    ExplicitHeight = 170
     inherited pnlFrmClient: TPanel
       Width = 489
       Height = 122
       ExplicitWidth = 485
-      ExplicitHeight = 142
+      ExplicitHeight = 121
       object pgcMain: TPageControl
         Left = 0
         Top = 0
@@ -102,7 +102,7 @@ inherited FrmWDedtCreatePayrollCalc: TFrmWDedtCreatePayrollCalc
     inherited pnlFrmBtns: TPanel
       Top = 127
       Width = 489
-      ExplicitTop = 147
+      ExplicitTop = 126
       ExplicitWidth = 485
       inherited bvlFrmBtnsTl: TBevel
         Width = 487
@@ -137,7 +137,7 @@ inherited FrmWDedtCreatePayrollCalc: TFrmWDedtCreatePayrollCalc
   inherited pnlStatusBar: TPanel
     Top = 171
     Width = 499
-    ExplicitTop = 191
+    ExplicitTop = 170
     ExplicitWidth = 495
     inherited lblStatusBarR: TLabel
       Left = 426

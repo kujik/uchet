@@ -477,7 +477,7 @@ begin
       FTurvCodeW := FTurvCodes.G(j, 'id');
     if FTurvCodes.G(j, 'code') = 'ќ“' then
       FTurvCodeOT := FTurvCodes.G(j, 'id');
-    if FTurvCodes.G(j, 'code') = 'ЅЋ' then
+    if FTurvCodes.G(j, 'code') = 'Ѕ' then
       FTurvCodeBL := FTurvCodes.G(j, 'id');
   end;
 end;
@@ -3640,7 +3640,9 @@ begin
   //строка соответствует периоду работы, подразделение беретс€ на момент увольнени€
   va1 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt = :dt$d', [dt1]);
   va2 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_cash where dt = :dt$d', [dt1]);
-  va3 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1,  dt2]);
+  //по уволенным захватываем начало следующего периода, так как по ним могли быть сформироываны ведомости уже в текущем периоде - иначе по ним ведомсти к выдааче не создадутс€!
+  va3 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_employee_properties where is_terminated = 1 and dt_beg >= :dt1$d and dt_beg <= :dt2$d', [dt1, Turv.GetTurvEndDate(IncDay(dt2))]);
+//  va3 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from w_payroll_calc where id_employee is not null and dt = :dt$d', [dt1]);
   for i := 0 to High(va1) do begin
     if (A.PosRowInArray(va1, va2, i) = -1) and (A.PosRowInArray(va1, va3, i) > -1) then begin
       //если ведомость еще не создана, и с такими параметрами есть в списке уволенных за периода
@@ -3708,6 +3710,8 @@ begin
   for i := 0 to High(LDeps) do begin
     //if LDeps[i] <> 5 then Continue;
     LTurv.Create(null, '', 'id_employee', StartOfTheMonth(Date), EndOfTheMonth(Date), LDeps[i]);
+    LTurv.UpdateMonthExportTable;
+    LTurv := Default(TTurvData);
     LTurv.Create(null, '', 'id_employee', StartOfTheMonth(IncMonth(Date, -1)), EndOfTheMonth(IncMonth(Date, -1)), LDeps[i]);
     LTurv.UpdateMonthExportTable;
     LTurv := Default(TTurvData);

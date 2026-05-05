@@ -589,6 +589,7 @@ begin
     myfrm_R_PersBonus,
     myfrm_J_PersBonus,
     myfrm_J_PayrollsForWorker,
+    rW_J_WorkerStatus_V,
 
     {заказы}
     myfrm_R_StdProjects,

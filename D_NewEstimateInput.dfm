@@ -1,29 +1,32 @@
 inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
   Caption = 'Dlg_NewEstimateInput'
-  ClientHeight = 431
-  ExplicitHeight = 470
+  ClientWidth = 747
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
-    Top = 412
-    ExplicitTop = 412
+    Width = 747
+    ExplicitTop = 411
     ExplicitWidth = 743
     inherited lbl_StatusBar_Right: TLabel
       Left = 660
+      Height = 17
       ExplicitLeft = 660
+    end
+    inherited lbl_StatusBar_Left: TLabel
+      Height = 17
     end
   end
   inherited pnl_Buttons: TPanel
-    Top = 379
-    ExplicitTop = 380
+    Width = 747
+    ExplicitTop = 378
     ExplicitWidth = 743
     inherited chb_NoClose: TCheckBox
-      Left = 241
+      Left = 237
       Top = 6
-      ExplicitLeft = 237
+      ExplicitLeft = 233
       ExplicitTop = 6
     end
     object Bt_Load: TBitBtn
-      Left = 466
+      Left = 462
       Top = 2
       Width = 25
       Height = 25
@@ -31,10 +34,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 5
       OnClick = Bt_LoadClick
-      ExplicitLeft = 462
+      ExplicitLeft = 458
     end
     object Bt_LoadSelf: TBitBtn
-      Left = 435
+      Left = 431
       Top = 2
       Width = 25
       Height = 25
@@ -42,10 +45,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 6
       OnClick = Bt_LoadSelfClick
-      ExplicitLeft = 431
+      ExplicitLeft = 427
     end
     object Bt_PasteEstimate: TBitBtn
-      Left = 404
+      Left = 400
       Top = 2
       Width = 25
       Height = 25
@@ -53,10 +56,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 7
       OnClick = Bt_PasteEstimateClick
-      ExplicitLeft = 400
+      ExplicitLeft = 396
     end
     object Bt_CopyEstimate: TBitBtn
-      Left = 373
+      Left = 369
       Top = 2
       Width = 25
       Height = 25
@@ -65,15 +68,16 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       TabOrder = 8
       Visible = False
       OnClick = Bt_CopyEstimateClick
-      ExplicitLeft = 369
+      ExplicitLeft = 365
     end
   end
   inherited pnl_Bottom: TPanel
-    Top = 354
-    ExplicitTop = 354
+    Width = 747
+    ExplicitTop = 353
     ExplicitWidth = 743
   end
   inherited pnl_Top: TPanel
+    Width = 747
     Height = 33
     ExplicitWidth = 743
     ExplicitHeight = 33
@@ -102,13 +106,14 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
   end
   inherited pnl_Client: TPanel
     Top = 33
-    Height = 321
+    Width = 747
+    Height = 320
     ExplicitTop = 33
     ExplicitWidth = 743
-    ExplicitHeight = 321
+    ExplicitHeight = 320
     inherited DBGridEh1: TDBGridEh
       Width = 747
-      Height = 322
+      Height = 320
       OnGetCellParams = DBGridEh1GetCellParams
       OnKeyDown = DBGridEh1KeyDown
     end

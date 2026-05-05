@@ -2738,7 +2738,7 @@ begin
     end;
     if (va[0].AsInteger = 1) then begin
       //для стандартного изделия обновим из справочника изделий
-      if MyQuestionMessage('Обнивить XML на основании справочника стандартных изделий?') <> mrYes then
+      if MyQuestionMessage('Обновить XML на основании справочника стандартных изделий?') <> mrYes then
         Exit;
       Q.QExecSql(
         'update order_items i set '+

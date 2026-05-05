@@ -1224,7 +1224,7 @@ begin
       if (FieldsArr[i][cFieldName] = 'ndsd') then begin
         FieldsArr[i][cNewValue] := 1;
         if cmb_Organization.ItemIndex > 0 then
-          FieldsArr[i][cNewValue] := S.IIfV(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 1.20, 1);
+          FieldsArr[i][cNewValue] := S.IIfV(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 1.22, 1);
       end;
     end;
     for i := 0 to High(FieldsArr) do
@@ -2175,7 +2175,7 @@ begin
   nds := 0;
   //возьмем ндс из массива ораганизаций, при этом данные в массиве сдвинуты вниз, в нем нет первой строки комбобокса ѕроизводство
   if (cmb_Organization.ItemIndex > 0) and (cmb_Organization.ItemIndex <= High(Organizations) + 1) then
-    nds := S.IIf(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 20, 0);
+    nds := S.IIf(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 22, 0);
   nedt_SumWoNds.Value := RoundTo(nedt_Sum.Value / ((nds + 100) / 100), -2);
 {  nedt_AddCompl.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_resale').Footer.SumValue;
   nedt_Discount.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_discount').Footer.SumValue;

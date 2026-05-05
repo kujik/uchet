@@ -847,7 +847,7 @@ begin
       '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
       st + '</table><br>';
     CreateTaskRoot(myTskOpMailHtml, [
-      ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+      ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
 //      ['to', 'sprokopenko@fr-mix.ru'],
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
       ['body', st],
@@ -911,7 +911,7 @@ begin
   if st = '' then
     Exit;
   CreateTaskRoot(myTskOpMailHtml, [
-    ['to', 'slarencov@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,snab2@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+    ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
  //   ['to', 'sprokopenko@fr-mix.ru'],
     ['subject', 'Счета снабжения за вчерашний день'],
     ['body', st + '<br>'],

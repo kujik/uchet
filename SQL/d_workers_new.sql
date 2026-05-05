@@ -437,6 +437,9 @@ begin
 end;
 /
 
+select * from w_employee_pers_bonus where id_employee = 630 and id = 34;  --крылов
+select * from v_w_employee_pers_bonus where id_employee = 630;
+
 create or replace trigger trg_w_employee_pers_b_biu_r before insert or update on w_employee_pers_bonus for each row
 begin
   if not F_Check_w_employee_pers_bonus(:new.id, :new.id_employee, :new.id_pers_bonus, :new.dt_beg, :new.dt_end) then
@@ -676,6 +679,9 @@ select
   d.name as departament,
   d.ids_editusers,
   d.id_head,
+  d.is_office,
+  d.id_prod_area,
+  a.shortname as area_shortname,  
   j.name as job,
   s.code as schedulecode,
   decode(ep.is_foreman, 1, 'бригадир', null) as foreman, 
@@ -687,6 +693,7 @@ from
   w_employees e,
   w_employee_properties ep,
   w_departaments d,
+  ref_production_areas a,
   w_jobs j,
   ref_sn_organizations o,
   w_schedules s,
@@ -695,6 +702,7 @@ from
 where  
   ep.id_employee = e.id and
   ep.id_departament = d.id (+) and
+  a.id (+) = d.id_prod_area and
   ep.id_job = j.id (+) and
   ep.id_organization = o.id (+) and
   ep.id_schedule = s.id (+) and
@@ -711,7 +719,108 @@ select distinct employee from v_w_employee_properties where is_terminated = 1 an
 
 --в случае незанесения айди работника в таблицу по днямм, проставим эту информацию (т.к. она избыточна и соответственно имеется)
 update w_turv_day d set id_employee = (select id_employee from w_employee_properties p where p.id = d.id_employee_properties) where d.id_employee is null; 
-  
+
+
+drop view v_employee_status; 
+create or replace view v_w_employee_status as
+with base as (
+--вью для сплошного отображения стутусов работника, с отоьбражением полей из текущего и предыдущего статуса
+    select
+        id,
+        dt,
+        dt_beg,
+        dt_end,
+        id_employee,
+        is_hired,
+        is_terminated,
+        id_organization,
+        personnel_number,
+        id_departament,
+        id_job,
+        id_schedule,
+        is_concurrent,
+        is_foreman,
+        is_trainee,
+        grade,
+        comm,
+        id_manager,
+        -- предыдущие значения (lag)
+        lag(id)          over (partition by id_employee order by id) as prev_id,
+        lag(dt)          over (partition by id_employee order by id) as prev_dt,
+        lag(dt_beg)      over (partition by id_employee order by id) as prev_dt_beg,
+        lag(dt_end)      over (partition by id_employee order by id) as prev_dt_end,
+        lag(is_hired) over (partition by id_employee order by id) as prev_is_hired,
+        lag(is_terminated) over (partition by id_employee order by id) as prev_is_terminated,
+        lag(id_organization) over (partition by id_employee order by id) as prev_id_organization,
+        lag(personnel_number) over (partition by id_employee order by id) as prev_personnel_number,
+        lag(id_departament) over (partition by id_employee order by id) as prev_id_departament,
+        lag(id_job) over (partition by id_employee order by id) as prev_id_job,
+        lag(id_schedule) over (partition by id_employee order by id) as prev_id_schedule,
+        lag(is_concurrent) over (partition by id_employee order by id) as prev_is_concurrent,
+        lag(is_foreman) over (partition by id_employee order by id) as prev_is_foreman,
+        lag(is_trainee) over (partition by id_employee order by id) as prev_is_trainee,
+        lag(grade) over (partition by id_employee order by id) as prev_grade,
+        lag(comm) over (partition by id_employee order by id) as prev_comm,
+        lag(id_manager) over (partition by id_employee order by id) as prev_id_manager
+    from w_employee_properties
+)
+select
+    --текущие
+    t.id, id_employee, f_fio(e.f, e.i, e.o) as name, dt, dt_beg, dt_end, is_hired, is_terminated, t.comm, id_manager,
+    case when is_terminated = 1 then null else t.id_organization end as id_organization,
+    case when is_terminated = 1 then null else o.name end as organization,
+    case when is_terminated = 1 then null else t.personnel_number end as personnel_number,
+    case when is_terminated = 1 then null else id_departament end as id_departament,
+    case when is_terminated = 1 then null else d.name end as departament,
+    case when is_terminated = 1 then null else id_job end as id_job,
+    case when is_terminated = 1 then null else j.name end as job,
+    case when is_terminated = 1 then null else id_schedule end as id_schedule,
+    case when is_terminated = 1 then null else s.code end as schedule,
+    case when is_terminated = 1 then null else is_foreman end as is_foreman,
+    case when is_terminated = 1 then null else is_trainee end as is_trainee,
+    case when is_terminated = 1 then null else grade end as grade,
+    case 
+        when is_hired = 1 then 'принят'
+        when is_terminated = 1 then 'уволен'
+        else 'переведен'
+    end as status,
+    --поля предыдущего статуса
+    case when is_hired = 1 then null else prev_id end as prev_id,
+    case when is_hired = 1 then null else prev_dt end as prev_dt,
+    case when is_hired = 1 then null else prev_dt_beg end as prev_dt_beg,
+    case when is_hired = 1 then null else prev_dt_end end as prev_dt_end,
+    case when is_hired = 1 then null else prev_id_organization end as prev_id_organization,
+    case when is_terminated = 1 then null else po.name end as prev_organization,
+    case when is_hired = 1 then null else prev_personnel_number end as prev_personnel_number,
+    case when is_hired = 1 then null else prev_id_departament end as prev_id_departament,
+    case when is_terminated = 1 then null else pd.name end as prev_departament,
+    case when is_hired = 1 then null else prev_id_job end as prev_id_job,
+    case when is_terminated = 1 then null else pj.name end as prev_job,
+    case when is_hired = 1 then null else prev_id_schedule end as prev_id_schedule,
+    case when is_terminated = 1 then null else ps.code end as prev_schedule,
+    case when is_hired = 1 then null else prev_is_foreman end as prev_is_foreman,
+    case when is_hired = 1 then null else prev_is_trainee end as prev_is_trainee,
+    case when is_hired = 1 then null else prev_grade end as prev_grade,
+    case when is_hired = 1 then null else prev_comm end as prev_comm,
+    case when is_hired = 1 then null else prev_id_manager end as prev_id_manager,
+    case 
+        when is_hired = 1 then null
+        when prev_is_hired = 1 then 'принят'
+        when prev_is_terminated = 1 then 'уволен'
+        else 'переведен'
+    end as prev_status
+from base t  
+left outer join w_employees e on t.id_employee = e.id
+left outer join w_departaments d on t.id_departament = d.id
+left outer join w_jobs j on t.id_job = j.id
+left outer join ref_sn_organizations o on t.id_organization = o.id
+left outer join w_schedules s on t.id_schedule = s.id
+left outer join w_departaments pd on t.prev_id_departament = pd.id
+left outer join w_jobs pj on t.prev_id_job = pj.id
+left outer join ref_sn_organizations po on t.prev_id_organization = po.id
+left outer join w_schedules ps on t.prev_id_schedule = ps.id
+; 
+
 --------------------------------------------------------------------------------
 
 --таблица турв по подразделению за период
@@ -766,7 +875,7 @@ where
 
 --------------------------------------------------------------------------------
 
-alter table w_turv_day add begendtime2 varchar2(100);;
+alter table w_turv_day add constraint fk_w_turv_day_emp_prop foreign key (id_employee_properties) references w_employee_properties(id) on delete cascade;
 --alter  table w_turv_day add constraint  fk_turv_day_turvcode2 foreign key (id_turvcode2) references ref_turvcodes(id);
 --таблица турв для конкретного работника за конкретный день
 create table w_turv_day(
@@ -795,7 +904,7 @@ create table w_turv_day(
   settime3 number(1),               --1, когда время по парсеку worktime2 установлено 
   constraint pk_w_turv_day primary key (id),
   constraint fk_w_turv_day_employee foreign key (id_employee) references w_employees(id),
-  constraint fk_w_turv_day_emp_prop foreign key (id_employee_properties) references W_employee_properties(id), 
+  constraint fk_w_turv_day_emp_prop foreign key (id_employee_properties) references w_employee_properties(id) on delete cascade, 
   constraint fk_W_turv_day_turvcode1 foreign key (id_turvcode1) references w_turvcodes(id),
   constraint fk_w_turv_day_turvcode2 foreign key (id_turvcode2) references w_turvcodes(id),
   constraint fk_w_turv_day_turvcode3 foreign key (id_turvcode3) references w_turvcodes(id)
@@ -906,10 +1015,209 @@ where
   t.id_departament = d.id
   and t.id_employee = e.id
   and t.id_job = j.id
-;  
+;
+
+
+--------------------------------------------------------------------------------
+--отчет по заработной плате, хранится на каждый период турв
+create table w_rep_salary(
+  dt date,                     --дата отчета (точнее, окончания периода турв, данные зже берутся еще на период раньше
+  id_job number(11),           --должность
+  sum0 number(7),              --наша з/п
+  sum1 number(7),              --средняя по городу
+  sum2 number(7),              --минимальная  
+  sum3 number(7),              --максимальная 
+  constraint pk_w_rep_salary primary key (dt, id_job),
+  constraint fk_w_rep_salary_id_job foreign key (id_job) references w_jobs(id) 
+);  
+
+--вью для отчета по заработной плате
+create or replace view v_w_rep_salary as
+select
+  j.name as job,
+  s.*
+from
+  w_rep_salary s,
+  w_jobs j
+where
+  s.id_job = j.id
+;
+
+--------------------------------------------------------------------------------
+--штатное расисание
+--------------------------------------------------------------------------------
+
+--таблица содержит плановое количество работников, среднюю зарплату по городу и плановую зарплату,
+--сгруппированные по подразделениям, должностям и дате периода 
+--drop  table w_ref_staff_schedule cascade constraints; 
+create table w_ref_staff_schedule(
+  id_job number,
+  id_departament number,
+  dt date,
+  type number,            --тип значения
+  value number,           --значения
+  --constraint pk_ref_workers_needed primary key (id_job, id_division),
+  constraint fk_w_ref_staff_schedule_job foreign key (id_job) references w_jobs(id),
+  constraint fk_w_ref_staff_schedule_div foreign key (id_departament) references w_departaments(id)
+);  
+
+ 
+
+create or replace view v_w_staff_schedule as
+select
+  --штатное расписание на заданную дату:
+  --профессии, итоговое количестов работников данной профессии по отделам и всего (пуста стока division),
+  --текущая потребность по профессиии для каждого отдела
+  t.id_job, 
+  t.id_departament,
+  j.name as job,
+  d.name as departament,
+  --t.area_name,
+  t.area_shortname,
+  --decode(t.office, 1, 'офис', 'цех') as office,
+  d.is_office,
+  case when d.is_office = 1 then 'офис' when d.is_office = 0 then 'цех' end as office,
+  t.qnt,
+  qn.value as qnt_plan,
+  decode(qn.value, null, null, qn.value - t.qnt) as qnt_need,
+  t.schedulecode as schedule,
+  slp.value as salary_plan,
+  sls.value as salary_sity
+from  
+/*  (select 
+    id_job, 
+    id_departament,
+    count(1)  as qnt,
+    max(office) as office,
+    max(area_shortname) as area_shortname,
+    max(nvl(schedule, ' ')) as schedule
+  from 
+    v_turv_workers
+  where
+    id_departament > 3  --исключаем тестовые
+    and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
+  group by
+    rollup(id_job, id_departament)
+  ) t,*/
+  (select 
+    id_job, 
+    id_departament,
+    sum(qnt) as qnt,
+    max(is_office) as is_office,
+    max(area_shortname) as area_shortname,
+    max(nvl(schedulecode, ' ')) as schedulecode
+  from 
+    v_w_staff_schedule_add
+  group by
+    rollup(id_job, id_departament)
+  ) t,
+  w_jobs j,
+  w_departaments d,
+  --ref_workers_needed wn,
+  (select id_departament, id_job, value from ( 
+    select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
+      from w_ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 1
+  ) where rn = 1) qn,
+  (select id_departament, id_job, value from ( 
+    select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
+      from w_ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 2
+  ) where rn = 1) slp,
+  (select id_departament, id_job, value from ( 
+    select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
+      from w_ref_staff_schedule
+      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 3
+  ) where rn = 1) sls
+where
+  j.active = 1
+  and t.id_job = j.id  (+)
+  and t.id_departament = d.id(+)
+  --and t.id_job = wn.id_job(+)
+  --and t.id_departament = wn.id_departament(+)
+  and qn.id_departament (+) = t.id_departament and qn.id_job (+) = t.id_job
+  and slp.id_job (+) = t.id_job  
+  and sls.id_job (+) = t.id_job  
+order by
+  j.name, d.name       
+; 
+
+create or replace view v_w_staff_schedule_add as
+ select
+  --вспомогательное представление для штатного расписания
+  --возвращает данные по фактически работающему персоналу и данные по требуемым сспециальностям 
+    --rownum as rn,
+    id_job, 
+    id_departament,
+    is_office,
+    1 as qnt,
+    area_shortname,
+    schedulecode
+  from 
+    v_w_employee_properties
+  where
+    id_departament > 3 and  --исключаем тестовые
+    is_terminated <> 1
+    and dt_beg <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and nvl(dt_end, sysdate) >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = is_office) 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname)
+;
+
+/*
+--create or replace view v_w_staff_schedule_add as
+select * from
+ ( select
+  --вспомогательное представление для штатного расписания
+  --возвращает данные по фактически работающему персоналу и данные по требуемым сспециальностям 
+    --rownum as rn,
+    id_job, 
+    id_departament,
+    is_office,
+    1 as qnt,
+    area_shortname
+    --max((nvl(schedulecode, ' '))) as schedulecode
+  from 
+    v_w_employee_properties
+  where
+    id_departament > 3 and  --исключаем тестовые
+    is_terminated <> 1
+    and dt_beg <= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and nvl(dt_end, sysdate) >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = is_office) 
+    and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname)
+--исключаем переходы по графику работы и другие (которыых пока нет)     
+--group by id_employee, id_job, id_departament, is_office, area_shortname
+) 
+;   
+*/
+
+select * from v_w_staff_schedule_add where id_job = 22;
+
+create or replace view v_w_staff_schedule_add_jobs as
+  select
+    n.id,
+    id_job, 
+    id_departament,
+    j.name as job,
+    d.name as departament
+  from 
+    w_ref_workers_needed n,
+    v_w_departaments d,
+    w_jobs j
+  where
+    d.id = n.id_departament
+    and j.id = n.id_job
+;    
+
+
+select * from v_w_staff_schedule_add_jobs;
+     
   
 
-select * from v_w_turv_export;
    
 --------------------------------------------------------------------------------
 
@@ -1041,7 +1349,8 @@ select
   p.personnel_number as target_personnel_number,
   p.is_finalized,
   p.dt,
-  --p.dt2,
+  p.dt as dt1,
+  last_day(p.dt) as dt2,
   p.calc_method,
   p.overtime_method,
   --f_fio(e.f, e.i, e.o) as employee,
@@ -1145,7 +1454,8 @@ create table w_payroll_transfer_item(
   pay_fss number,         -- выплата в ФСС (например, больничный)
   pay_adv number,         -- промежуточная (авансовая) выплата
   pay_card number,        -- перечислено на карту
-  advance number,         --сумма аванса
+  advance number,         --сумма аванса по неофициальщиикам
+  advance_official number,         --сумма аванса официальная
   correction number,              --ручная корректировка начисления, вводится в ведомости
   pay_cash number,        -- итого к выдаче наличными  
   constraint pk_w_payroll_transfer_item primary key (id),
@@ -1356,16 +1666,16 @@ select
   max(d.name) as departament,
   max(d.code) as departament_code,
   max(a.shortname) || ' - ' || decode(max(d.is_office), 1, 'офис', 'цех') || '' as area,
- sum(total_pay) as total_pay, sum(deduct_enf) as deduct_enf, sum(deduct_ndfl) as deduct_ndfl, sum(pay_fss) as pay_fss, sum(pay_card) as pay_card, sum(pay_adv) as pay_adv, sum(pay_cash) as pay_cash 
+  sum(total_pay) as total_pay, sum(deduct_enf) as deduct_enf, sum(deduct_ndfl) as deduct_ndfl, sum(pay_fss) as pay_fss, sum(pay_card) as pay_card, sum(pay_adv) as pay_adv, sum(pay_cash) as pay_cash, sum(advance) as advance 
 from 
   (select
     pt.dt1,
     pt.dt2,
     id_departament,
     pti.id_employee,
-    total_pay, deduct_enf, deduct_ndfl, pay_fss, pay_card, pay_adv, pay_cash
+    total_pay, deduct_enf, deduct_ndfl, pay_fss, pay_card, pay_adv, pay_cash, nvl(advance_official, 0) + nvl(advance, 0) as advance  
   from  
-    w_payroll_transfer pt,
+    v_w_payroll_transfer pt,
     w_payroll_transfer_item pti,
     (select 
       pc.dt1,
@@ -1373,7 +1683,7 @@ from
       max(pc.id_departament) as id_departament
     from
       w_payroll_cash_item pci,
-      w_payroll_cash pc
+      v_w_payroll_cash pc
     where
       pci.id_payroll_cash = pc.id
     group by
@@ -1968,6 +2278,10 @@ ORDER BY personnel_number;
       where id_organization is null   and is_terminated <> 1  and id_departament = 55; 
 
       select * from v_w_employee_properties where is_terminated <> 1  and id_departament = 55 and id =1948;
+      
+      
+      
+      select id_employee, null as id_organization, personnel_number, pay_cash from v_w_advance_transfer_item where id_employee = 10015;
       
 
 

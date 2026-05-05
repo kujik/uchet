@@ -1,25 +1,20 @@
 inherited FrmWGrepSalary: TFrmWGrepSalary
   Caption = 'FrmWGrepSalary'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitWidth = 796
-    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 782
       inherited pnlBottom: TPanel
-        ExplicitTop = 424
+        ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
-        ExplicitHeight = 415
+        ExplicitHeight = 417
       end
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 770
           inherited pnlGrid: TPanel
-            ExplicitHeight = 359
+            ExplicitHeight = 361
             inherited DbGridEh1: TDBGridEh
               Width = 762
               Height = 337
@@ -30,10 +25,10 @@ inherited FrmWGrepSalary: TFrmWGrepSalary
             end
           end
           inherited pnlLeft: TPanel
-            ExplicitHeight = 359
+            ExplicitHeight = 361
           end
           inherited pnlBottom: TPanel
-            ExplicitTop = 413
+            ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -52,9 +47,8 @@ inherited FrmWGrepSalary: TFrmWGrepSalary
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          ExplicitWidth = 784
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               Width = 772
@@ -80,11 +74,10 @@ inherited FrmWGrepSalary: TFrmWGrepSalary
         end
       end
       inherited pnlRight: TPanel
-        ExplicitHeight = 415
+        ExplicitHeight = 417
       end
     end
     inherited pnlFrmBtns: TPanel
-      ExplicitTop = 475
       inherited pnlFrmBtnsContainer: TPanel
         ExplicitWidth = 780
         inherited pnlFrmBtnsChb: TPanel
@@ -94,13 +87,10 @@ inherited FrmWGrepSalary: TFrmWGrepSalary
     end
   end
   inherited pnlStatusBar: TPanel
-    ExplicitTop = 519
+    ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 723
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 723
     end
   end
 end

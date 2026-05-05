@@ -805,6 +805,7 @@ begin
     Application.ShowException(E);
     end;
   end;
+//Q.QRollbackTrans;
   Q.QCommitOrRollback(not Err);
   Q.DBLock(False, 'ordercreate', '-1', '');
   //Frg1.EndOperation;
