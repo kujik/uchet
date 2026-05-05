@@ -92,10 +92,10 @@ end;
 procedure TFrmCDedtCashRevision.Save;
 begin
   Q.QBeginTrans(True);
-  Q.QExecSql('update sn_cash_revision_dt set dt = :dt', [Cth.GetControlValue(dedtDate)]);
-  Q.QExecSql('update sn_cash_revision_sum set sum = :sum where id=-1', [Cth.GetControlValue(nedtCash1)]);
-  Q.QExecSql('update sn_cash_revision_sum set sum = :sum where id=-2', [Cth.GetControlValue(nedtCash2)]);
-  Q.QExecSql('update sn_cash_revision_sum set sum = :sum where id=-9', [Cth.GetControlValue(nedtDeposit)]);
+  Q.QExecSql('update sn_cash_revision_dt set dt = :dt$d', [Cth.GetControlValue(dedtDate)]);
+  Q.QExecSql('update sn_cash_revision_sum set sum = :sum$f where id=-1', [Cth.GetControlValue(nedtCash1)]);
+  Q.QExecSql('update sn_cash_revision_sum set sum = :sum$f where id=-2', [Cth.GetControlValue(nedtCash2)]);
+  Q.QExecSql('update sn_cash_revision_sum set sum = :sum$f where id=-9', [Cth.GetControlValue(nedtDeposit)]);
   Q.QCommitOrRollback;
 end;
 

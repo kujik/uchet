@@ -44,7 +44,7 @@ create table sn_calendar_accounts(
   constraint fk_sn_calendar_accounts_spl foreign key (id_supplier) references ref_suppliers(id)
 );
 
-
+--delete from sn_calendar_accounts where dt < date '2026-04-01' and id_expenseitem in (162, 171,172); 
 --pdate sn_calendar_accounts set nds = 0 where type = 2 or accounttype <> 0; 
 --pdate sn_calendar_accounts set nds = 20 where type = 1 and accounttype = 0; 
 

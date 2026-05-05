@@ -2,19 +2,19 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
   Caption = 'FrmCDedtCashRevision'
   ClientHeight = 180
   ClientWidth = 179
-  ExplicitWidth = 195
-  ExplicitHeight = 219
+  ExplicitWidth = 191
+  ExplicitHeight = 218
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 179
     Height = 164
-    ExplicitWidth = 183
-    ExplicitHeight = 165
+    ExplicitWidth = 175
+    ExplicitHeight = 163
     inherited pnlFrmClient: TPanel
-      Width = 177
-      Height = 117
-      ExplicitWidth = 173
-      ExplicitHeight = 116
+      Width = 169
+      Height = 115
+      ExplicitWidth = 165
+      ExplicitHeight = 114
       object dedtDate: TDBDateTimeEditEh
         Left = 56
         Top = 8
@@ -94,32 +94,32 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 122
-      Width = 177
-      ExplicitTop = 121
-      ExplicitWidth = 173
+      Top = 120
+      Width = 169
+      ExplicitTop = 119
+      ExplicitWidth = 165
       inherited bvlFrmBtnsTl: TBevel
-        Width = 175
+        Width = 167
         ExplicitWidth = 179
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 175
+        Width = 167
         ExplicitWidth = 179
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 175
-        ExplicitWidth = 171
+        Width = 167
+        ExplicitWidth = 163
         inherited pnlFrmBtnsMain: TPanel
-          Left = 76
-          ExplicitLeft = 72
+          Left = 68
+          ExplicitLeft = 64
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = -152
-          ExplicitLeft = -156
+          Left = -160
+          ExplicitLeft = -164
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = -23
-          ExplicitLeft = -27
+          Left = -31
+          ExplicitLeft = -35
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 26
@@ -131,11 +131,15 @@ inherited FrmCDedtCashRevision: TFrmCDedtCashRevision
   inherited pnlStatusBar: TPanel
     Top = 164
     Width = 179
-    ExplicitTop = 165
-    ExplicitWidth = 183
+    ExplicitTop = 163
+    ExplicitWidth = 175
     inherited lblStatusBarR: TLabel
-      Left = 114
-      ExplicitLeft = 114
+      Left = 106
+      Height = 14
+      ExplicitLeft = 106
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer
