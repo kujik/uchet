@@ -1077,7 +1077,11 @@ create or replace view v_sn_calendar_payments as select
   where
     p.id_account = a.id;
     
-select * from v_sn_calendar_payments;    
+select * from v_sn_calendar_payments;
+
+select id, pstatus, useravail, userid, 0 as x from v_sn_calendar_payments where pid in (55080);
+
+
     
 --статистика по дням, суммы планируемого платежа и оплаченная сумма
 create or replace view v_sn_calendar_datereport as select

@@ -429,13 +429,34 @@ begin
     and ( 
             (p_dt_end is null and p_dt_beg <= dt_end) or           -- новая запись бессрочная: старая не должна начинаться до или в p_dt_beg
             (p_dt_end is not null and dt_end is null and p_dt_end >= dt_beg) or  --новая с датой окончания, старая бессрочная
-            (p_dt_end is null and p_dt_end is null) or                           --обе бессрочные 
+            (p_dt_end is null and dt_end is null) or                           --обе бессрочные 
             (p_dt_end is not null and dt_end is not null and 
              p_dt_beg <= dt_end and dt_beg <= p_dt_end)            -- обе записи срочные: стандартное пересечение
     );      
   return (l_count = 0);
 end;
 /
+
+
+  select count(*)
+  from w_employee_pers_bonus
+  where id_employee = 630
+    and id_pers_bonus = 4
+    and id != nvl(69, -1)  -- исключаем саму себя при update
+    and ( 
+            (null is null and date '2025-01-01' <= dt_end) or           -- новая запись бессрочная: старая не должна начинаться до или в p_dt_beg
+            (null is not null and dt_end is null and null >= dt_beg) or  --новая с датой окончания, старая бессрочная
+            (p_dt_end is null and p_dt_end is null) or                           --обе бессрочные 
+            (p_dt_end is not null and dt_end is not null and 
+             p_dt_beg <= dt_end and dt_beg <= p_dt_end)            -- обе записи срочные: стандартное пересечение
+    );      
+
+begin
+  if F_Check_w_employee_pers_bonus(69,630,4,date '2025-01-01',null) then
+  null;
+  end if; 
+end;
+/ 
 
 select * from w_employee_pers_bonus where id_employee = 630 and id = 34;  --крылов
 select * from v_w_employee_pers_bonus where id_employee = 630;
@@ -1437,7 +1458,7 @@ where
   and p.id_organization = o.id (+)
 ;
 
---alter table w_payroll_transfer_item add correction number; 
+alter table w_payroll_transfer_item add pay_adv3 number; 
 create table w_payroll_transfer_item(
   id number(11),
   id_payroll_transfer number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -1453,6 +1474,8 @@ create table w_payroll_transfer_item(
   deduct_ndfl number,     -- НДФЛ
   pay_fss number,         -- выплата в ФСС (например, больничный)
   pay_adv number,         -- промежуточная (авансовая) выплата
+  pay_adv2 number,         -- промежуточная выплата
+  pay_adv3 number,         -- промежуточная выплата
   pay_card number,        -- перечислено на карту
   advance number,         --сумма аванса по неофициальщиикам
   advance_official number,         --сумма аванса официальная

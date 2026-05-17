@@ -30,6 +30,7 @@ type
     FBcadGroups: TVarDynArray2;
     FBcadUnits: TVarDynArray2;
     LastThnDocsDirectory: string;
+    FViewAllOrders: Boolean;
   public
     //даты, с которых ведется ввод данных по этим категориям
     //используются для проверки условий завершения заказа
@@ -40,7 +41,9 @@ type
     fDaysToSgp, fDaysFromSgp, fDaysMontage, fDaysOtk: Integer;
     property BcadGroups: TVarDynArray2 read FBcadGroups;
     property BcadUnits: TVarDynArray2 read FBcadUnits;
+    property ViewAllOrders: Boolean read FViewAllOrders;
     constructor Create;
+    procedure SetViewAllOrders(AMode: Boolean);
     procedure LoadBcadGroups(Force: Boolean = False);
     procedure Test;
     //проверяет статус заказа в Учете и ИТМ.
@@ -71,6 +74,7 @@ type
     function OrderItemsToDevel(IdOrder, IdOrItem: Variant; Developer: Integer): Boolean;
     function FinalizeOrder(IdOrder: Variant; OpMode: Integer; Mode: Integer = 1; Silent: Boolean = True): Integer;
     function FinalizeOrderM(IdOrder: Variant): Integer;
+    function FinalizeOrdersM(Ids: TVarDynArray): Boolean;
     //переименование номенклатурных позиций в базах Учета и ИТМ
     //на данный момент исходным является айди номенклатуры в ИТМ
     //переименовывает, только если тип номенклатуры Материалы, и если целевой номенклатуры
@@ -92,6 +96,9 @@ type
     function  AddOrItemXMLFile(AParent: TForm; AIdStdItem: Variant; AIdOrItem: Variant): Boolean;
     procedure ParseOrItemXML(const FileName: string; var PanelsWDrilling: Integer);
     procedure ToOrderAudit(const AType: Integer; AIsCorrection: Boolean; const AName: string; const AChanges: string = '');
+    function GetProductionOperations(AArea: Integer): TVarDynArray;
+    function SetLaborIntensity(AOwner: TComponent; AId: Variant;  AAreaId: Integer;  AIsStdItem: Boolean): Boolean;
+    function SetLaborCost(AOwner: TComponent; AAreaId: Integer): Boolean;
 end;
 
 var
@@ -1913,6 +1920,75 @@ begin
   Result := 1;
 end;
 
+function TOrders.FinalizeOrdersM(Ids: TVarDynArray): Boolean;
+//инвертирует отметку завершения заказа менеджером
+//при этом проверяет права доступа и тип заказа, а также зависимости
+//возвращает:
+// -2 = ошибка, -1 = заказ не может быть завершен, 0 = заказ уже завершен, 1 = заказ успешно завершен
+var
+  va2, va3: TVarDynArray;
+  Mode: Boolean;
+  IsRecl: Boolean;
+  Result1, IdOrder: Integer;
+  na: TNamedArr;
+begin
+  Result1 := -2;
+  if not User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]) then
+    Exit;
+  Q.QLoad(
+    'select '+
+    'id, prefix, ornum, dt_beg, dt_end, dt_to_sgp, dt_from_sgp, dt_upd, dt_end_manager, dt_montage_beg, id_type, id_manager, is_complaint '+
+    'from orders o, where id in (' + Ids.Implode(',') + ')',
+    [], na
+  );
+  //позволим менять статутс закрытия менеджера только сотрудникам, оформившим заказа,
+  //или с соотвествующим правом, или с правами администратора данных
+  if (User.GetId <> va2[11]) and not User.IsDataEditor and not User.Role(rOr_D_Order_SetCompletedMA) then
+    Exit;
+  //нельзя менять статус у уже закрытого заказа
+  //можно менять у заказов, 'М','О','Ф' (одинаково), и 'Н' (если отгружен полностью)
+  //П по рекламации менедежерам вообще нельзя закрыть
+  if (va2[0] = null) or (va2[4] <> null) or not (A.InArray(va2[1], ['М', 'О', 'Ф']) or ((va2[1] = 'Н') and (va2[12] = 1))) then
+    Exit;
+  //режим
+  Mode := va2[8] = null;
+  Result1 := -1;
+  if va2[10] <> 2 then begin
+    //все проверки только для новых заказов
+    //рекламации проставляются без проверок
+    //!сейчас нет обработки заказа типа Эксперимент, доделать, пока идут по общему
+    if Mode and (va2[6] = null) then begin
+      MyWarningMessage('Этот заказ еще не отгружен!'#13#10'Завершение невозможно!');
+      Exit;
+    end;
+    //нет упд, не даем установить завершенным, но можно снять
+    //но для рекламаций это не проверяем
+    if Mode and (va2[7] = null) and (va2[12] <> 1) then begin
+      MyWarningMessage('По этому заказу еще не получен УПД!'#13#10'Завершение невозможно!');
+      Exit;
+    end;
+    //предупреждение, если не окончен монтаж
+    if Mode and (va2[9] <> null) and (va2[12] <> 1) then begin
+      va3 := Q.QLoadRow('select dt_end from or_montage where id = :id$i', [IdOrder]);
+      if (va3[0] = null) then begin
+        MyWarningMessage('Монтаж этого заказа еще не завершен!'#13#10'Завершение невозможно!');
+        Exit;
+      end;
+    end;
+  end;
+  Result1 := -2;
+  if MyQuestionMessage(S.IIFStr(Mode, 'Поставить', 'Снять') + ' отметку завершения заказа менеджером?') <> mrYes then
+    Exit;
+  //меняем отметку завершения
+  if Q.QExecSql('update orders set dt_end_manager = :dt_end$d where id = :id$i', [S.IIf(Mode, Date, null), IdOrder]) = -1 then
+    Exit;
+  //автоматически попробуем завершить заказ
+  if Mode then
+    FinalizeOrder(IdOrder, myOrFinalizeManager, 1, True);
+  Result1 := 1;
+end;
+
+
 function TOrders.FinalizeOrder(IdOrder: Variant; OpMode: Integer; Mode: Integer = 1; Silent: Boolean = True): Integer;
 //завершает (или снимает отметку завершения) выбранный заказ
 //OpMode - для лога, при каком дейтвии завершается
@@ -2896,13 +2972,88 @@ begin
   ;
 end;
 
+procedure TOrders.SetViewAllOrders(AMode: Boolean);
+begin
+  FViewAllOrders := AMode;
+end;
+
 procedure TOrders.ToOrderAudit(const AType: Integer; AIsCorrection: Boolean; const AName: string; const AChanges: string = '');
 begin
   Q.QSave('i', 'orders_audit', '', 'id$i;id_user$i;is_correction$i;dt$d;type$i;name$s;changes$s', [-1, User.GetId, S.IIf(AIsCorrection, 1, 0), Now, AType, AName, Copy(AChanges, 1, 4000)]);
 end;
 
+function TOrders.GetProductionOperations(AArea: Integer): TVarDynArray;
+begin
+  Result := [];
+  if AArea = 0 then
+    Result := ['Прочие', 'Распил', 'Кромка', 'Сверловка', 'ЧПУ', 'Стекло', 'Камень', 'Реклама', 'Сборка', 'Лакокраска', 'Электрика', 'Упаковка'];
+  if AArea = 2 then
+    Result := ['Раскрой', 'Гибка', 'Сварка', 'Зачистка', 'Подготовка к покраске', 'Покраска', 'Сборка'];
+end;
+
+function TOrders.SetLaborIntensity(AOwner: TComponent; AId: Variant;  AAreaId: Integer;  AIsStdItem: Boolean): Boolean;
+//ввод трудоемкости по учаткам для стандартных изделий или изделий в заказе
+var
+  i, j: Integer;
+  names, vin, vout: TVarDynArray;
+  vctrls: TVarDynArray2;
+  Id, IdH: Variant;
+  st1, st2, table: string;
+begin
+  Result := False;
+  names :=  GetProductionOperations(AAreaId);
+  if  AIsStdItem then table := 'or_std_labor_intensity' else  table := 'or_labor_intensity';
+  st1 := '';
+  st2 := '';
+  for i := 1 to High(names) do begin
+    S.ConcatStP(st1, 'i' + IntToStr(i + 1), ', ');
+    S.ConcatStP(st2, 'i' + IntToStr(i + 1) + ' = :i' + IntToStr(i + 1) + '$i', ', ');
+  end;
+  vin := Q.QLoadRow('select ' + st1 + ', i1 from ' + table + ' where id = :id$i and id_area = :id_area$i', [AId, AAreaId]);
+  vctrls := [];
+  for i := 1 to High(names) do
+    vctrls := vctrls + [[cntNEdit, names[i], '0:100000:0']];
+  vctrls := vctrls + [[cntNEdit, names[0], '0:100000:0']];
+  if TFrmBasicInput.ShowDialog(AOwner, '', [], S.IIf(User.Role(rOr_R_StdItems_Set_Labor), fEdit, fView), '~Трудоемкость, мин.', 280, 150,
+    vctrls, vin, vout, [['Трудоемкость по операциям в минутах.']], nil
+  ) < 0 then Exit;
+  Q.QExecSql('update ' + table + ' set ' + st2 + ', i1 = :i1$i where id = :id$i and id_area = :id_area$i', vout + [AId, AAreaId]);
+  Result := True;
+end;
+
+function TOrders.SetLaborCost(AOwner: TComponent; AAreaId: Integer): Boolean;
+//ввод
+var
+  i, j: Integer;
+  names, vin, vout: TVarDynArray;
+  vctrls: TVarDynArray2;
+  Id, IdH: Variant;
+  st1, st2, table: string;
+begin
+  Result := False;
+  names :=  GetProductionOperations(AAreaId);
+  table := 'or_std_labor_intensity_cost';
+  st1 := '';
+  st2 := '';
+  for i := 1 to High(names) do begin
+    S.ConcatStP(st1, 'p' + IntToStr(i + 1), ', ');
+    S.ConcatStP(st2, 'p' + IntToStr(i + 1) + ' = :p' + IntToStr(i + 1) + '$p', ', ');
+  end;
+  vin := Q.QLoadRow('select ' + st1 + ', p1 from ' + table + ' where id_area = :id_area$i', [AAreaId]);
+  vctrls := [];
+  for i := 1 to High(names) do
+    vctrls := vctrls + [[cntNEdit, names[i], '0:100000:2']];
+  vctrls := vctrls + [[cntNEdit, names[0], '0:100000:2']];
+  if TFrmBasicInput.ShowDialog(AOwner, '', [], S.IIf(User.Role(rOr_R_StdItems_Set_Labor), fEdit, fView), '~Стоимость работы.', 280, 150,
+    vctrls, vin, vout, [['Стоимость работы по операциям, руб/мин.']], nil
+  ) < 0 then Exit;
+  Q.QExecSql('update ' + table + ' set ' + st2 + ', p1 = :p1$p where id_area = :id_area$i', vout + [AAreaId]);
+  Result := True;
+end;
+
+
+
+
 begin
   Orders := TOrders.Create;
-//  ParseXMLFile('r:\projects\uchet\test\Шкаф табачный, 1250х400х2100мм, 144SKU, ЛДСП RAL 7035 M02.xml');
-//  ParseXMLFile('r:\projects\uchet\test\drill.xml');
 end.

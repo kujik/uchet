@@ -168,7 +168,6 @@ uses
   uFrmOWrepItmInfo in 'uFrmOWrepItmInfo.pas' {FrmOWrepItmInfo},
   uFrmOWrepOrdersPrimeCost in 'uFrmOWrepOrdersPrimeCost.pas' {FrmOWrepOrdersPrimeCost},
   uFrmWDedtDivision in 'uFrmWDedtDivision.pas' {FrmWDedtDivision},
-//  uFrmWDedtWorkerStatus in 'uFrmWDedtWorkerStatus.pas' {FrmWDedtWorkerStatus},
   uFrmXDedtMailingCustomAddr in 'uFrmXDedtMailingCustomAddr.pas' {FrmXDedtMailingCustomAddr},
   uFrmXGsesUsersChoice in 'uFrmXGsesUsersChoice.pas' {FrmXGsesUsersChoice},
   uFrmWWsrvTurvComment in 'uFrmWWsrvTurvComment.pas' {FrmWWsrvTurvComment},
@@ -203,7 +202,9 @@ uses
   uFrmOGjrnProdCalculations in 'uFrmOGjrnProdCalculations.pas' {FrmOGjrnProdCalculations},
   uFrmCDedtExpenseItem in 'uFrmCDedtExpenseItem.pas' {FrmCDedtExpenseItem},
   uFrmOWedtProdCalculation in 'uFrmOWedtProdCalculation.pas' {FrmOWedtProdCalculation},
-  uFrmXWNonActualVersion in 'uFrmXWNonActualVersion.pas' {FrmXWNonActualVersion};
+  uFrmXWNonActualVersion in 'uFrmXWNonActualVersion.pas' {FrmXWNonActualVersion},
+  uSnCalendar in 'uSnCalendar.pas',
+  uFrmODEdtInputOrderAccount in 'uFrmODEdtInputOrderAccount.pas' {FrmODEdtInputOrderAccount};
 
 var
   MT: Integer;
@@ -365,6 +366,7 @@ begin
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
   Application.CreateForm(TFrmWDedtPayrollCalcMethod, FrmWDedtPayrollCalcMethod);
+  Application.CreateForm(TFrmODEdtInputOrderAccount, FrmODEdtInputOrderAccount);
 
   Application.Run;
 

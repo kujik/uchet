@@ -79,6 +79,7 @@ uses
   uWindows,
   uOrders,
   uTurv,
+  uSnCalendar,
 
   D_Order,
   D_OrderPrintLabels,
@@ -285,7 +286,7 @@ begin
   //платежный календарь - платежи
   else if FormDoc = myfrm_J_Payments then begin
     Caption:='Платежи';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['to_char(pid) as pid$i','_id','40'],
       ['id as aid$i','_aid','40'],
@@ -312,7 +313,8 @@ begin
     Frg1.Opt.SetTable('v_sn_calendar_payments');
     Frg1.Opt.FilterRules := [[], ['accountdt;dt;pdt']];
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtView], [mbtEdit, User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat, rPC_A_ChAll])], [mbtAdd, 1],
-      [mbtCopy,1], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard],[],[-mbtCustom_RunPayments],[],[mbtGridFilter], [], [mbtGridSettings]]);
+      [mbtCopy,1], [mbtDelete,1], [], [-mbtCustom_AccountToClipboard],[],[-mbtCustom_RunPayments],
+      [-1001, 'Перенести дату платежей', User.Roles([],[rPC_A_ChSelf, rPC_A_ChSelfCat, rPC_A_ChAll])], [],[mbtGridFilter], [], [mbtGridSettings]]);
     Frg1.Opt.SetButtonsIfEmpty([mbtAdd_Account_TO, mbtAdd_Account_TS, mbtAdd_Account_M]);
   end
   //платежный календарь - группы статей расходов
@@ -2641,18 +2643,10 @@ begin
       Fr.RefreshGrid;
     end;
   end
-  else if (FormDoc = myfrm_J_Payments)and(Tag = 1001) then begin  //!!!
+  else if (FormDoc = myfrm_J_Payments)and(Tag = 1001) then begin
     //перенати отмеченные платежи на указанную дату
-    va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
-    if (Length(va) > 0) then begin
-      if MyQuestionMessage('Проставить для ' + S.GetEndingFull(Length(va), ' ведомост', 'и', 'ей', 'ей' ) + ' статус "Закрыта" ?') <> mrYes then
-        Exit;
-      for i := 0 to High(va) do
-        Q.QExecSql('update ' + Frg1.Opt.Sql.Table + ' set is_finalized = 1 where id = :id$i', [va[i]]);
+    if SnCalendar.PaymentsDateChange(Fr.GetSetlectedIds) then
       Fr.RefreshGrid;
-    end
-    else
-      MyInfoMessage('Отметьте те платежи, которые нужено перенети.'#13#10);
   end
 
   else if A.InArray(FormDoc, [myfrm_J_AdvanceCalculations, myfrm_J_AdvanceTransfer, myfrm_J_AdvanceCash, myfrm_J_PayrollCalculations, myfrm_J_PayrollTransfer, myfrm_J_PayrollCash]) and (Tag = mbtLock) then begin
@@ -2816,7 +2810,7 @@ begin
     //редактирование всех
     if (User.Roles([], [rPC_A_ChAll])) then b2:= True;
     //редактирование по категории
-    if (not b2) and (User.Roles([], [rPC_A_ChSelfCat])) and (S.NNum(Fr.GetValue('useravail')) = 1) then b2:= True;
+    if (not b2) and (User.Roles([], [rPC_A_ChSelfCat])) and (S.NNum(Fr.GetValue('useravail')) = 1) then b2:= True;     //в поле уже флаг = 1 если айди юзера есть в строке, возвращает функция в бд
     //редактирование только своих
     if (not b2) and (User.Roles([], [rPC_A_ChSelf])) and (S.NSt(Fr.GetValue('username')) = User.GetName) then b2:= True;
     //удаление только несогласованных и не оплеченных

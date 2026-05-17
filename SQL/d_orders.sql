@@ -329,7 +329,7 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 
-alter table orders add id_reglament number(11);
+alter table orders add dt_account date;
 --alter table orders add ids_order_properties varchar2(4000);
 --alter table orders add has_prod number(1) default 0;
 /*alter table orders add qnt_boards_m2 number;
@@ -413,6 +413,8 @@ create table orders (
   dt_from_sgp date,                  -- дата отгрузки с сгп всего заказа  
   dt_upd_reg date,                   -- дата регистрации упд (внесение данныых по нему) 
   dt_upd date,                       -- дата УПД (из документа)
+  dt_account date,                   -- дата счета
+  dt_account_reg date,               -- дата регистрации счета 
   upd varchar2(20),                  -- номер УПД 
   pay number(12,2),                  -- суммарный платеж по заказу (поступление денег в кассу)
   pay_n number(12,2),                -- суммарный промежуточный платеж по заказу (по заказам Н)
@@ -750,6 +752,13 @@ create table order_items (
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   is_xml_loaded number default 0,      --загружен xml
   labor_intensity number,              --трудоемкость, мин.
+/*  cutting_time number,                 --раскрой
+  bending_time number,                 --гибка
+  welding_time number,                 --сварка
+  grinding_time number,                --зачистка
+  prep_painting_time number,           --подготовка к покраске
+  painting_time number,                --покраска
+  assembly_time number,                --сбрка*/
   dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_doc date,                         --дата выдачи бумажных документов по заказу технологами
@@ -1090,13 +1099,14 @@ end;
 -- справочник стандартных изделий
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
-alter table or_std_items add labor_intensity number;
+alter table or_std_items add price_check number(12,2);
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы (КБ/Производство)
   name varchar2(400),                  --наименование изделия
   price number(12,2),                  --цена
   price_pp number(12,2),               --цена перепродажи, входит в итоговую цену, не больше ее (всегда равна в случае д/к)
+  price_check number(12,2),            --контрольная цена (имеется ввиду себестоимость) 
   wo_estimate number(1) default 0,     --если 1, то смета не требуется (по факту требуется запись в estimates с полем isempty = 1)
   type_of_semiproduct number(11),      --тип полуфабриката, соотвествует одному из участков
   barcode_c varchar2(100),             --штрих-код
@@ -1135,6 +1145,15 @@ begin
 end;
 /
 
+create or replace trigger trg_or_std_items_ai_r
+  after insert on or_std_items for each row
+begin
+  insert into or_std_labor_intensity (id, id_area) values (:new.id, 0);
+  insert into or_std_labor_intensity (id, id_area) values (:new.id, 2);
+end;
+/
+
+
 create or replace view v_or_std_items as (
   select
     i.*,
@@ -1153,18 +1172,28 @@ create or replace view v_or_std_items as (
        from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
        where id_or_std_item = i.id
     ), ', ') as route,
-    fi.is_semiproduct
+    fi.is_semiproduct,
+    i0.labor_intensity as labor_intensity_0,
+    i0.labor_cost as labor_cost_0,
+    round(i0.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) as labor_percent_0,
+    i2.labor_intensity as labor_intensity_2,
+    i2.labor_cost as labor_cost_2,
+    round(i2.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) as labor_percent_2
   from
     or_std_items i,
     estimates e,
     or_format_estimates fi,
     or_formats orf,
-    v_fin_stditem_raw_prices prc
+    v_fin_stditem_raw_prices prc,
+    v_or_std_labor_intensity i0,
+    v_or_std_labor_intensity i2
   where
    i.id = e.id_std_item (+)
    and orf.id = fi.id_format 
    and i.id_or_format_estimates = fi.id
    and prc.id(+) = i.id
+   and i0.id = i.id and i0.id_area = 0
+   and i2.id = i.id and i2.id_area = 2
 );   
 
 ((select i.id_or_std_item, t.code, t.pos, row_number() over (order by t.pos) no from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type));
@@ -2337,13 +2366,124 @@ group by id_zakaz
 ---------------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------------
 
+--таблицы трудоемкости по стандартным изделиям и заказам
+
+--drop  table or_std_labor_intensity cascade constraints;
+create table or_std_labor_intensity (
+  id number(11),                   --айди, оно же изделия
+  id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
+  i0 number,                       --трудоемкость суммарная
+  i1 number,                       --трудоемкости по участкам ( 1 = прочие)
+  i2 number,                       --трудоемкости по участкам
+  i3 number,
+  i4 number,
+  i5 number,
+  i6 number,
+  i7 number,
+  i8 number,
+  i9 number,
+  i10 number,
+  i11 number,
+  i12 number,
+  i13 number,
+  i14 number,
+  i15 number,
+  constraint pk_or_std_labor_intensity primary key (id, id_area),
+  constraint fk_or_std_labor_intensity_id foreign key (id) references or_std_items(id) on delete cascade
+);  
+
+insert into or_std_labor_intensity (id, id_area, i0) select i.id, 0, i.labor_intensity from or_std_items i;
+insert into or_std_labor_intensity (id, id_area) select i.id, 2 from or_std_items i;
+  
+create table or_labor_intensity (
+  id number(11),
+  id_area number,
+  i0 number,
+  i1 number,
+  i2 number,
+  i3 number,
+  i4 number,
+  i5 number,
+  i6 number,
+  i7 number,
+  i8 number,
+  i9 number,
+  i10 number,
+  i11 number,
+  i12 number,
+  i13 number,
+  i14 number,
+  i15 number,
+  constraint pk_or_labor_intensity primary key (id, id_area),
+  constraint fk_or_labor_intensity_id foreign key (id) references order_items(id) on delete cascade
+);  
+
+create table or_std_labor_intensity_cost (
+  id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
+  p1 number,                       --стоимость минуты по операции
+  p2 number,                       
+  p3 number,
+  p4 number,
+  p5 number,
+  p6 number,
+  p7 number,
+  p8 number,
+  p9 number,
+  p10 number,
+  p11 number,
+  p12 number,
+  p13 number,
+  p14 number,
+  p15 number,
+  constraint pk_or_std_labor_intensity_cost primary key (id_area)
+);
+
+insert into or_std_labor_intensity_cost (id_area) values (0);
+insert into or_std_labor_intensity_cost (id_area) values (2);
 
 
-
-
-
-
-
+create or replace view v_or_std_labor_intensity as
+select
+  i.*,
+  nvl(i.i1, 0) +
+  nvl(i.i2, 0) +
+  nvl(i.i3, 0) +
+  nvl(i.i4, 0) +
+  nvl(i.i5, 0) +
+  nvl(i.i6, 0) +
+  nvl(i.i7, 0) +
+  nvl(i.i8, 0) +
+  nvl(i.i9, 0) +
+  nvl(i.i10, 0) +
+  nvl(i.i11, 0) +
+  nvl(i.i12, 0) +
+  nvl(i.i13, 0) +
+  nvl(i.i14, 0) +
+  nvl(i.i15, 0) 
+  as labor_intensity,
+  
+  nvl(i.i1, 0) * nvl(p1, 0) + 
+  nvl(i.i2, 0) * nvl(p2, 0) + 
+  nvl(i.i3, 0) * nvl(p3, 0) + 
+  nvl(i.i4, 0) * nvl(p4, 0) + 
+  nvl(i.i5, 0) * nvl(p5, 0) + 
+  nvl(i.i6, 0) * nvl(p6, 0) + 
+  nvl(i.i7, 0) * nvl(p7, 0) + 
+  nvl(i.i8, 0) * nvl(p8, 0) + 
+  nvl(i.i9, 0) * nvl(p9, 0) + 
+  nvl(i.i10, 0) * nvl(p10, 0) + 
+  nvl(i.i11, 0) * nvl(p11, 0) + 
+  nvl(i.i12, 0) * nvl(p12, 0) + 
+  nvl(i.i13, 0) * nvl(p13, 0) + 
+  nvl(i.i14, 0) * nvl(p14, 0) + 
+  nvl(i.i15, 0) * nvl(p15, 0)
+  as labor_cost 
+from
+  or_std_labor_intensity i,  
+  or_std_labor_intensity_cost c
+where
+  c.id_area = i.id_area
+;    
 
 
 
@@ -2676,4 +2816,54 @@ select id, need_ref, is_complaint, (select count(*) from order_reglaments where 
 
 select * from v_order_items where id_order = 11674;
 select * from v_orders_list where id_order = 11674;
+
+
+
+--delete from orders where id_organization = 7 and dt_beg < date '2026-01-01';
+
+update orders set 
+id_customer = null, 
+id_customer_contact = null,
+id_customer_org = null,
+id_manager = -103,
+address = null,
+cost = null,
+cost_nds = null,
+cost_wo_nds = null,
+cost_av = null,
+cost_i_0 = null,
+cost_d_0 = null,
+cost_m_0 = null,
+cost_a_0 = null,
+cost_i = null,
+cost_i_nosgp = null,
+cost_d = null,
+cost_m = null,
+cost_a = null,
+m_i = null,
+m_d = null,
+m_m = null,
+m_a = null,
+d_i = null,
+d_d = null,
+d_m = null,
+d_a = null,
+pay = null,
+comm = null
+where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null
+;
+
+delete from or_payments
+where
+id_order in (
+select id from orders where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null)
+;
+
+update order_items set
+price = 0, price_pp = 0
+where
+id_order in (
+select id from orders where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null)
+;
+
 

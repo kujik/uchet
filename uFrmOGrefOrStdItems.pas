@@ -25,6 +25,7 @@ type
     FItemId: Integer;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
+    procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
@@ -62,12 +63,19 @@ begin
     ['price$f','Цена','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['price_pp$f','Перепродажа','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['priceraw$f','Цена по смете','70','f=r'],
+    ['price_check$f','Контрольная цена','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['route2','Производственный маршрут','120'],
 //    ['route','Производственный маршрут','120'],
     ['qnt_panels_w_drill','Сверловка, панелей','80'],
     ['dt_estimate','Смета','75'],
     ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
-    ['labor_intensity','Трудо-'#13#10'емкость','65'],
+//    ['labor_intensity','Трудо-'#13#10'емкость','65'],
+    ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+    ['labor_cost_0','!Стоимость','75'],
+    ['labor_percent_0','!%','65'],
+    ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+    ['labor_cost_2','!Стоимость','75'],
+    ['labor_percent_2','!%','65'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
@@ -75,7 +83,8 @@ begin
   Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
     [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
     [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
-    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
+//    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
+    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
     [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[mbtTest]]
   );
   Frg1.Opt.SetButtonsIfEmpty([1000]);
@@ -91,6 +100,11 @@ begin
     'непосредственно изменяя значение цены в ячейке таблицы'#13#10+
     '(цена перепродажи не может быть более цены изделия, а в случае дополнительной комплектации, обе цены равны).'#13#10+
     'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
+    'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается стоимость работы.'#13#10+
+    '(если не введена, то расчет идет по цене по смете).'#13#10+
+    'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
+    'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10+
+    ''#13#10+
     'Наименования язделий не могут совпадать с наименованиями дополнительной комплектации, и не могут повторяться внутри одного формата.'#13#10+
     'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвочнике Стандартные форматы паспортов.'#13#10+
     'При переименовании изделия, в Учете позиции во всех ранее созданных заказах будут обновлены,'#13#10+
@@ -158,8 +172,12 @@ begin
       Fr.RefreshRecord;
   end
   else if (Tag = 1002) then begin
-    if Orders.InputLaborIntensity(Self, Fr.ID, null) then
-      Fr.RefreshRecord;
+    if A.InArray(Fr.CurrField, ['labor_cost_0', 'labor_cost_2']) then
+      if Orders.SetLaborCost(Self, S.IIf(Fr.CurrField = 'labor_cost_0', 0, 2).AsInteger) then
+        Fr.RefreshGrid;
+
+//    if Orders.InputLaborIntensity(Self, Fr.ID, null) then
+//      Fr.RefreshRecord;
   end
 (*//!!!es else if (Tag = mbtViewEstimate) then begin
     //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
@@ -191,6 +209,16 @@ begin
     inherited;
 end;
 
+procedure TFrmOGrefOrStdItems.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if Fr.CurrField = 'labor_intensity_0' then
+   if Orders.SetLaborIntensity(Self, Fr.ID, 0, True) then
+     Fr.RefreshRecord;
+  if Fr.CurrField = 'labor_intensity_2' then
+   if Orders.SetLaborIntensity(Self, Fr.ID, 2, True) then
+     Fr.RefreshRecord;
+end;
+
 procedure TFrmOGrefOrStdItems.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
 begin
   if Fr.IsPrepared then
@@ -210,10 +238,14 @@ end;
 
 procedure TFrmOGrefOrStdItems.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
-  //запишем цену (поля 'price', 'price_pp')
-  Q.QCallStoredProc('p_SetStdItemPrice', 'IdStdItem$i;PriceNew$f;PriceType$i',
-    [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 1, 2])]
-  );
+  if FieldName = 'price_check' then
+    //сохраним контролдьную цену
+    Q.QExecSql('update or_std_items set price_check = :p$f where id = :id$i', [Value, Fr.Id])
+  else
+    //запишем цену (поля 'price', 'price_pp')
+    Q.QCallStoredProc('p_SetStdItemPrice', 'IdStdItem$i;PriceNew$f;PriceType$i',
+      [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 1, 2])]
+    );
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);

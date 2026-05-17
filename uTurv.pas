@@ -815,6 +815,10 @@ begin
         var va2 := A.Explode(va1[j], #2);
         if (StrToDate(va2[3]) <= dt) and ((va2[4].AsString = '') or (StrToDate(va2[4]) >= dt)) then begin
           Result.SetValue('personal_pay', Result.G('personal_pay').AsFloat + va2[5].AsFloat  * v1.AsFloat / FList.G(R(Row)[0], 'monthly_hours_norm'));
+//var rrrrr :=va2[5].AsFloat  * v1.AsFloat / FList.G(R(Row)[0], 'monthly_hours_norm');
+//    var qqq := Result.G('personal_pay').AsFloat;
+//    if qqq <> 0 then
+//      var bbb:=1;
         end;
       end;
 
@@ -838,7 +842,7 @@ begin
     else
       Result.SetValue('milk_compensation', 0);
     Result.SetValue('personal_pay', Round(Result.G('personal_pay').AsFloat));
-
+  
     //установим строку в общщих итогах
     FRows[Row].Totals := Result;
   end;
@@ -2864,7 +2868,7 @@ var
 begin
   Result := False;
   try
-    TFrmBasicInput.ShowDialogDB3(AOwner, '', [dbioModal, dbioStatusBar], AMode, AId, 'w_employee_pers_bonus', 'Персональная надбавка', 600, 70, [
+    res := TFrmBasicInput.ShowDialogDB3(AOwner, '', [dbioModal, dbioStatusBar], AMode, AId, 'w_employee_pers_bonus', 'Персональная надбавка', 600, 70, [
       ['id_pers_bonus$i', cntComboLK, 'Вид надбавки','1:400'],
       ['dt_beg$d', cntDEdit, 'C',':'],
       ['dt_end$d', cntDEdit, 'По',':']],
@@ -2872,16 +2876,19 @@ begin
       ['select name, id from w_pers_bonus where active = 1 order by name'],
       [['caption dlgedit']]
     );
-    if AMode = fAdd then
-      res := Q.QExecSql('update w_employee_pers_bonus set id_employee = :ide$i where id_employee is null', [AIdEmpl]);
+    if res = -1 then
+      Exit;
+    if (AMode = fAdd) and (res <> -1) then
+      res := Q.QExecSql('update w_employee_pers_bonus set id_employee = :ide$i where id_employee is null', [AIdEmpl], False);
   except
+    res := -1;
+  end;
+  Result := (res <> -1) and (AMode <> fView);
+  if res < 0 then begin
     Q.QExecSql('delete from w_employee_pers_bonus where id_employee is null', [AIdEmpl], False);
-    Result := res <> -1;
     MyWarningMessage('Диапазон дат перекрывается с существующей записью для данного работника и вида надбавки.'#13#10'Данные не изменены!');
-    Exit;
   end;
   Q.QExecSql('delete from w_employee_pers_bonus where id_employee is null', [AIdEmpl]);
-  Result := AMode <> fView;
 end;
 
 function TTurv.CreateAllTurvForDate(AOwner: TComponent; ADt: Variant): Boolean;
@@ -2921,7 +2928,7 @@ end;
 
 function TTurv.ExecureRefPersBonusDialog(AOwner: TComponent; AId: Variant; AMode: TDialogType): Boolean;
 //диалог ввода для справочника первоняльных надбавок
-//данные надбавки и суммы за текущий и следующий месяц
+//данные надбавки и суммы за прошлый, текущий и следующий месяц
 var
   i, j: Integer;
   va11, va12, va13: TVarDynArray;
@@ -2929,24 +2936,24 @@ var
   Id, IdH: Variant;
 begin
   Result := False;
-  va11 := [{EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1), }EncodeDate(YearOf(IncMonth(Date, 0)), MonthOf(IncMonth(Date, 0)), 1), EncodeDate(YearOf(IncMonth(Date, +1)), MonthOf(IncMonth(Date, +1)), 1) ];
+  va11 := [EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1), EncodeDate(YearOf(IncMonth(Date, 0)), MonthOf(IncMonth(Date, 0)), 1), EncodeDate(YearOf(IncMonth(Date, +1)), MonthOf(IncMonth(Date, +1)), 1) ];
 //  va11 := Q.QSelectOneRow('select dt1, dt2, dt3, dt4 from v_w_schedules where rownum = 1', []);
-  va12 := Q.QLoadRow('select name, sum2, sum3, comm, active from v_w_pers_bonus where id = :id$i', [AId]);
+  va12 := Q.QLoadRow('select name, sum1, sum2, sum3, comm, active from v_w_pers_bonus where id = :id$i', [AId]);
   if va12[0] = null then
-    va12 := ['', null, null, null, 1];
-  for i := 0 to 1 do
+    va12 := ['', null, null, null, null, 1];
+  for i := 0 to 2 do
     va2 := va2 + [[cntNEdit, 'С ' + DateToStr(va11[i]), '1:100000:2']];
     if TFrmBasicInput.ShowDialog(AOwner, '', [], AMode, 'Надбавка', 370, 80,
       [[cntEdit, 'Наименование', '1:400::T']] + va2 +  [[cntEdit, 'Комментарий', '0:4000::T'], [cntCheckX, 'Используется', '']],
       va12,
       va13, [['Добавьте или отредактируйте запись для вида персональной надбавки.'#13#10'Задайте суммы надбаки для текущего и следующего месяца.']], nil
     ) < 0 then Exit;
-  Id := Q.QSave(Q.QFModeToIUD(AMode), 'w_pers_bonus', '', 'id$i;name$s;comm;active$i', [AId, va13[0], va13[3], va13[4]]);
+  Id := Q.QSave(Q.QFModeToIUD(AMode), 'w_pers_bonus', '', 'id$i;name$s;comm;active$i', [AId, va13[0], va13[4], va13[5]]);
   if Id = -1 then
     Exit;
   if AMode = fAdd then
     AId := Id;
-  for i := 0 to 1 do begin
+  for i := 0 to 2 do begin
     Q.QExecSql('delete from w_pers_bonus_sum where id_pers_bonus = :id$i and dt = :dt$d', [AId, va11[i]]);
     Q.QExecSql('insert into w_pers_bonus_sum (id_pers_bonus, dt, sum) values (:id$i, :dt$d, :sum$f)', [AId, va11[i], va13[1 + i]]);
   end;

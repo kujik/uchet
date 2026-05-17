@@ -3,8 +3,8 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
   Caption = 'Dlg_Order_UPD'
   ClientHeight = 117
   ClientWidth = 202
-  ExplicitWidth = 218
-  ExplicitHeight = 156
+  ExplicitWidth = 214
+  ExplicitHeight = 155
   TextHeight = 13
   object Img_Info: TImage
     Left = 3
@@ -15,7 +15,7 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     ExplicitTop = 85
   end
   object Bt_Ok: TBitBtn
-    Left = 34
+    Left = 30
     Top = 84
     Width = 75
     Height = 25
@@ -25,11 +25,11 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     ModalResult = 1
     TabOrder = 0
     OnClick = Bt_OkClick
-    ExplicitLeft = 42
-    ExplicitTop = 85
+    ExplicitLeft = 26
+    ExplicitTop = 83
   end
   object Bt_Cancel: TBitBtn
-    Left = 115
+    Left = 111
     Top = 84
     Width = 75
     Height = 25
@@ -38,8 +38,8 @@ inherited Dlg_Order_UPD: TDlg_Order_UPD
     Caption = 'Bt_Cancel'
     ModalResult = 2
     TabOrder = 1
-    ExplicitLeft = 123
-    ExplicitTop = 85
+    ExplicitLeft = 107
+    ExplicitTop = 83
   end
   object dedt_Upd_Reg: TDBDateTimeEditEh
     Left = 72

@@ -79,6 +79,7 @@ insert into adm_users (id, name, login) values (0, 'Администратор', 'Администрат
 insert into adm_users (id, name, login, active, emailauto) values (-100, '[нет]', '', 0, 0);
 insert into adm_users (id, name, login, active, emailauto) values (-101, '[конструктор]', '', 0, 0);
 insert into adm_users (id, name, login, active, emailauto) values (-102, '[технолог]', '', 0, 0);
+insert into adm_users (id, name, login, active, emailauto) values (-103, 'X', '', 0, 0);
 
 --update adm_users set pwd = get_hash_val('9987') where id = 0;
 

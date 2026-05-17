@@ -1,5 +1,8 @@
 {
 зарплатная расчетная ведомость
+
+!!!сделать изключение пользователей, по которым есть отдельные расчетныые ведомости, из общей при загрузке турв
+(сейчас исключаются только уволенные за тот же период по статусу!!!)
 }
 
 unit uFrmWGedtPayrollCalc;
@@ -293,16 +296,26 @@ begin
     FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 0);
   end;
   //получим данные по плановой зарплате и фиксированной части из прошлой ведомости
-{  Q.QLoad(
+  Q.QLoad(
     'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt = :dt1$d',
     [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt'), -1)], naprev
-  );}
-
+  );
+{
   //временно!!!
   Q.QLoad(
     'select i.id_employee, id_job, planned_pay, fixed_pay from temp_w_payroll_calc_item i, temp_w_payroll_calc p where i.id_payroll_calc = p.id and p.dt1 = :dt1$d',
-    [EncodeDate(2026, 02, 16)], naprev
-  );
+    [IncMonth(FPayrollParams.G('dt1'), -1)], naprev
+  );}
+
+{  for i:=0 to FTurv.List.high do begin
+     var st:=FTurv.List.G(i, 'employee');
+//     var ppp:=FTurv.List.G(i, 'personal_pay');
+  end;
+  for i:=0 to FTurv.Count - 1 do begin
+     FTurv.CalculateTotals(i);
+//     var st:=FTurv.rows[i].G(i, 'employee');
+     var ppp:=FTurv.Rows[i].Totals.G('personal_pay');
+  end;}
 
 
   NoData := Frg1.GetCount = 0;

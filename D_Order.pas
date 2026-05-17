@@ -1544,7 +1544,9 @@ begin
       //вид оплаты соотвествует признаку кешлесс в массиве организаций
       Cth.SetErrorMarker(cmb_CashType, (b and (cmb_CashType.Value = '2')) or (not b and (cmb_CashType.Value <> '2')) or (cmb_CashType.ItemIndex = -1));
       //счет только для вырианта Безнал (не б/н без счета!!)
-      Cth.SetErrorMarker(edt_Account, (edt_Account.Text = '') and (cmb_CashType.Value = '1') or (edt_Account.Text <> '') and (cmb_CashType.Value <> '1'))
+      //!!!2026-05-13 убрал проверку отстутсвия номера счета по безналу, счет будет вводиться бухгалтером из журнала заказов
+//      Cth.SetErrorMarker(edt_Account, (edt_Account.Text = '') and (cmb_CashType.Value = '1') or (edt_Account.Text <> '') and (cmb_CashType.Value <> '1'))
+      Cth.SetErrorMarker(edt_Account, (edt_Account.Text <> '') and (cmb_CashType.Value <> '1'))
     end;
   end;
 //      SetInvalidIfEmpty(dedt_Otgr, False);//(FieldsArr[i][cVerify] = 0) or ((S.VarToInt(FieldsArr[i][cVerify]) in [2, 3]) and (cmb_Organization.Value = '-1')));

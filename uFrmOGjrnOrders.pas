@@ -11,6 +11,7 @@ uses
 
 type
   TFrmOGjrnOrders = class(TFrmBasicGrid2)
+    procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     function  OpenFromTemplate: Integer;
     procedure ViewInfo1;
@@ -60,7 +61,8 @@ uses
   D_OrderPrintLabels,
   uFrmOGrefOrStdItems,
   uFrmXDedtGridFilter,
-  uFrmBasicInput
+  uFrmBasicInput,
+  uFrmODEdtInputOrderAccount
   ;
 
 
@@ -118,11 +120,13 @@ begin
     ['qnt_glass_m2$f','Стекло, м2','80', 'f=f:'],
     ['qnt_paint_kg$f','Краска, кг.','80', 'f=f:'],
     ['qnt_panels_w_drill_all$i','Сверловка, панелей','80', 'f=f:'],
-    ['dt_upd_reg$d','Регистрация УПД','', 'bt=Ввод УПД', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД', not User.Role(rOr_D_Order_EnteringUPD)],
+    ['dt_upd_reg$d','Регистрация УПД','', 'bt=Ввод УПД:У', User.Role(rOr_D_Order_EnteringUPD), 'bt=Просмотр УПД:У', not User.Role(rOr_D_Order_EnteringUPD)],
     ['dt_upd$d','Дата УПД',''],
     ['upd$s','Номер УПД','80'],
     ['pay$f','Оплачено','f=r:','null',not User.Role(rOr_J_Orders_Payments_V)],
     ['pay_n$f','Промежуточная оплата','f=r:','null',not User.Role(rOr_J_Orders_PaymentsN_V)],
+    ['dt_account_reg$d','Регистрация счета','', 'bt=Ввод счета:С', User.Role(rOr_D_Order_EnteringAccount), 'bt=Просмотр счета:С', not User.Role(rOr_D_Order_EnteringAccount)],
+    ['dt_account$d','Дата счета',''],
     ['account$s','Счет','100'],
     ['cost_i_wo_nds$f','Стоимость изделий','80','f=r:','t=1'],
     ['cost_i_nosgp_wo_nds$f','Стоимость в производстве','f=r:','80','t=1'],
@@ -351,6 +355,10 @@ begin
     if Dlg_Order_UPD.ShowDialog(Fr.id)
       then Fr.RefreshRecord;
   end
+  else if Fr.CurrField = 'dt_account_reg' then begin
+    if FrmODEdtInputOrderAccount.ShowDialog(Self, Fr.id)
+      then Fr.RefreshRecord;
+  end
   else if Fr.CurrField = 'ornum' then begin
     if TCellButtonEh(Sender).Hint = 'Регламент' then
       Wh.ExecDialog(myfrm_Dlg_Rep_OrderReglament, Self, [], fNone, Fr.ID, null)
@@ -388,6 +396,7 @@ begin
   SqlWhere := A.ImplodeNotEmpty([
     S.IIfStr(Cth.GetControlValue(Fr, 'ChbNoClosed') = 1, 'dt_end is null'),
     S.IIfStr(Cth.GetControlValue(Fr, 'ChbInProd') = 1, 'qnt_in_prod <> 0'),
+    S.IIfStr(not Orders.ViewAllOrders, '(id_organization <> 7 or dt_end is null)'),
     SqlWhere
     ]
     , ' and '
@@ -470,6 +479,15 @@ begin
         then Params.Background:=clmyGreen
           else if (Fr.GetValue('early_or_late') = 0)
           then Params.Background:=clmyBlue;
+end;
+
+procedure TFrmOGjrnOrders.Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = Ord('W')) and (Shift = [ssCtrl, ssAlt]) then begin
+    Orders.SetViewAllOrders(not Orders.ViewAllOrders);
+    Frg1.RefreshGrid;
+  end;
+  inherited;
 end;
 
 procedure TFrmOGjrnOrders.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
