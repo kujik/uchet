@@ -135,6 +135,8 @@ const
   ORDER_AUDIT_KNS_DOC = 3;
   ORDER_AUDIT_THN_DOC = 4;
 
+  PW_ODERS_VIEW_ALL = 'bn-78-nm-90';
+
 
 implementation
 

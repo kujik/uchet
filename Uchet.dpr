@@ -204,7 +204,8 @@ uses
   uFrmOWedtProdCalculation in 'uFrmOWedtProdCalculation.pas' {FrmOWedtProdCalculation},
   uFrmXWNonActualVersion in 'uFrmXWNonActualVersion.pas' {FrmXWNonActualVersion},
   uSnCalendar in 'uSnCalendar.pas',
-  uFrmODEdtInputOrderAccount in 'uFrmODEdtInputOrderAccount.pas' {FrmODEdtInputOrderAccount};
+  uFrmODEdtInputOrderAccount in 'uFrmODEdtInputOrderAccount.pas' {FrmODEdtInputOrderAccount},
+  uFrmXDinputPwd in 'uFrmXDinputPwd.pas' {FrmXDinputPwd};
 
 var
   MT: Integer;
@@ -367,6 +368,7 @@ begin
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);
   Application.CreateForm(TFrmWDedtPayrollCalcMethod, FrmWDedtPayrollCalcMethod);
   Application.CreateForm(TFrmODEdtInputOrderAccount, FrmODEdtInputOrderAccount);
+  Application.CreateForm(TFrmXDinputPwd, FrmXDinputPwd);
 
   Application.Run;
 

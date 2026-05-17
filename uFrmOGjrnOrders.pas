@@ -62,7 +62,8 @@ uses
   uFrmOGrefOrStdItems,
   uFrmXDedtGridFilter,
   uFrmBasicInput,
-  uFrmODEdtInputOrderAccount
+  uFrmODEdtInputOrderAccount,
+  uFrmXDinputPwd
   ;
 
 
@@ -396,7 +397,7 @@ begin
   SqlWhere := A.ImplodeNotEmpty([
     S.IIfStr(Cth.GetControlValue(Fr, 'ChbNoClosed') = 1, 'dt_end is null'),
     S.IIfStr(Cth.GetControlValue(Fr, 'ChbInProd') = 1, 'qnt_in_prod <> 0'),
-    S.IIfStr(not Orders.ViewAllOrders, '(id_organization <> 7 or dt_end is null)'),
+    S.IIfStr(not Orders.ViewAllOrders, '(id_organization <> 7 or nvl(in_archive, 0) = 0)'),
     SqlWhere
     ]
     , ' and '
@@ -482,10 +483,19 @@ begin
 end;
 
 procedure TFrmOGjrnOrders.Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  res: Integer;
 begin
   if (Key = Ord('W')) and (Shift = [ssCtrl, ssAlt]) then begin
-    Orders.SetViewAllOrders(not Orders.ViewAllOrders);
-    Frg1.RefreshGrid;
+    res := FrmXDinputPwd.ShowDialog(Self, [PW_ODERS_VIEW_ALL, '']);
+    if res = 0 then begin
+      Orders.SetViewAllOrders(True);
+      Frg1.RefreshGrid;
+    end
+    else if res = 1 then begin
+      Orders.SetViewAllOrders(False);
+      Frg1.RefreshGrid;
+    end;
   end;
   inherited;
 end;
