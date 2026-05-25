@@ -48,6 +48,7 @@ type
     procedure InputDialog(Mode : Integer);
     procedure SaveDayToDB(r, d: Integer);
     procedure ExportToXlsxA7(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
+    procedure ExportToXlsxA7New(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
     procedure SundaysToTurv(AMode: Integer);
 //    procedure SendEMailToHead;
 
@@ -1008,12 +1009,16 @@ begin
     if FRgsEdit2 then begin
       if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Ýêñïîðò â Excel', 270, 50, [
         [cntComboLK,'Øàáëîí','1:500:0', 210],
-        [cntDTEdit,'Äàòà ñ','' + S.DateTimeToIntStr(FTurv.DtBeg) + ':' + S.DateTimeToIntStr(FTurv.DtEnd), 90],
-        [cntDTEdit,'ïî ','' + S.DateTimeToIntStr(FTurv.DtBeg) + ':' + S.DateTimeToIntStr(FTurv.DtEnd), 90, 170]],
-        [VarArrayOf(['0', VarArrayOf(['ÒÓÐÂ ïî Parsec']), VarArrayOf(['0'])]), FTurv.DtBeg, FTurv.DtEnd],
+//    [cntDTEdit,'Äàòà ñ','' + S.DateTimeToIntStr(FTurv.DtBeg) + ':' + S.DateTimeToIntStr(FTurv.DtEnd), 90],
+//      [cntDTEdit,'ïî ','' + S.DateTimeToIntStr(FTurv.DtBeg) + ':' + S.DateTimeToIntStr(FTurv.DtEnd), 90, 170]],
+        [cntDTEdit,'Äàòà ñ','*', 90],
+        [cntDTEdit,'ïî ','*', 90, 170]],
+//        [VarArrayOf(['0', VarArrayOf(['ÒÓÐÂ ïî Parsec']), VarArrayOf(['0'])]), FTurv.DtBeg, FTurv.DtEnd],
+        [VarArrayOf(['0', VarArrayOf(['ÒÓÐÂ']), VarArrayOf(['0'])]), FTurv.DtBeg, FTurv.DtEnd],
         va, [['']],  nil
       ) >=0
-      then ExportToXlsxA7(Integer(va[0]), va[1], va[2], True);
+//      then ExportToXlsxA7(Integer(va[0]), va[1], va[2], True);
+      then ExportToXlsxA7New(Integer(va[0]), va[1], va[2], True);
     end;
   end
   else begin
@@ -1431,6 +1436,83 @@ begin
   Rep.Free;
   Exit;
 end;
+
+procedure TFrmWGEdtTurvN.ExportToXlsxA7New(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
+var
+  i, j, d1, d2, dend, x, y: Integer;
+  sm, sum, sumall: Double;
+  v, v1: Variant;
+  Rep: TA7Rep;
+  FileName: string;
+  dt1, dt2: TDateTime;
+  b: Boolean;
+  Range: Variant;
+  st: string;
+  color: Integer;
+  LTurv: TTurvData;
+begin
+  if Date2 < Date1 then
+    Exit;
+  dt1 := Date1;
+  dt2 := Date2;
+  d2 := trunc(dt2 - dt1 + 1);
+  if d2 > 31 then
+    Exit;
+  if d2 <= 16 then begin
+    FileName := 'ÒÓÐÂ 16';
+    dend := 16;
+  end
+  else begin
+    FileName := 'ÒÓÐÂ 31';
+    dend := 31;
+  end;
+  FileName := Module.GetReportFileXlsx(FileName);
+  if FileName = '' then
+    Exit;
+  Rep := TA7Rep.Create;
+  try
+    Rep.OpenTemplate(FileName);
+  except
+    Rep.Free;
+    Exit;
+  end;
+  var ssort := 'job;employee;schedulecode;organization;personnel_number';
+  var sgroup := 'schedulecode;job;organization;employee';
+  LTurv.Create(null, ssort, sgroup, dt1, dt2, FTurv.Title.G('id_departament'));
+  Rep.PasteBand('HEADER');
+  Rep.SetValue('#MONTH#', DateToStr(dt1) + ' - ' + DateToStr(dt2));
+  for j := 1 to dend do begin
+    b := (j <= d2);
+    Rep.ExcelFind('#d' + IntToStr(j) + '#', x, y, xlValues);
+    Rep.TemplateSheet.Columns[x].Hidden := not b;
+    if b then
+      Rep.SetValue('#d' + IntToStr(j) + '#', IntToStr(DayOf(dt1 + j - 1)));
+  end;
+  for i := 0 to LTurv.Count - 1 do begin
+    Rep.PasteBand('TABLE');
+    Rep.SetValue('#N#', i + 1);
+    Rep.SetValue('#FIO#', LTurv.GetListTitleString(i, 'name'));
+    Rep.SetValue('#JOB#', LTurv.GetListTitleString(i, 'job'));
+    Rep.SetValueAsText('#SCHEDULE#', LTurv.GetListTitleString(i, 'schedulecode'));
+    Rep.SetValue('#NORM#', LTurv.GetListTitleString(i, 'period_hours_norm'));
+    var na := LTurv.CalculateTotals(i);
+    Rep.SetValue('#ITOG#', na.G('worktime'));
+    Rep.SetValue('#OVERTIME#', na.G('overtime'));
+    for j := 1 to d2 do begin
+      v := LTurv.GetDayCell(i, j, 0, Color, st, True);
+      Rep.SetValue('#d' + IntToStr(j) + '#', v);
+    end;
+    for j := d2 + 1 to dend do
+      Rep.SetValue('#d' + IntToStr(j) + '#', '');
+  end;
+//  Rep.PasteBand('FOOTER');
+//  Rep.SetValue('#äîïîëíåíèå#',mem_Comm.Text);
+  Rep.DeleteCol1;
+  Rep.Show;
+  Rep.Free;
+  Exit;
+end;
+
 
 procedure TFrmWGEdtTurvN.SundaysToTurv(AMode: Integer);
 var

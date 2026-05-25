@@ -715,7 +715,7 @@ begin
 
   //(пере)покажем форму
   //вызов не может быть вынесен из конструктора в фуункции класса
-  if not PrepareCreatedForm(AOwner, ADoc, '', AMode, Aid, [], AMyFormOptions, False) then
+  if not PrepareCreatedForm(AOwner, ADoc, '', AMode, Aid, FOpt.InfoArray, AMyFormOptions, False) then
     Exit;
   FAddParam := AAddParam;
   ShowForm(Self);

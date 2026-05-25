@@ -634,7 +634,9 @@ begin
 end;
 /
 
---select * from or_std_items where name ='Стол кухонный_опора КБ.02.01.00_М01 RAL 9005';
+select F_TestEstimateItem(103, 'Кофейная тумба. Стенка задняя МАГ.94.01.00_М02 Ral 7039 гладкая') from dual;
+
+select * from v_or_std_items where name ='Кофейная тумба. Стенка задняя МАГ.94.01.00_М02 Ral 7039 гладкая';
 --delete from or_std_items where name ='Стол кухонный_опора КБ.02.01.00_М01 RAL 9005';
 
 

@@ -154,6 +154,7 @@ begin
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
    [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
+   [-1006, User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]), 'Поставить отметку завершения менеджером'], [],
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate_All), 'Обновить все сметы по заказу'],
    [-mbtCustom_CreateAggregateEstimate, 1],
    [-1001, True, 'Пересчитать данные для производства'], [],
@@ -253,7 +254,8 @@ var
   i, j: Integer;
 begin
   if Tag = mbtTest then begin
-    TFrmOWOrder.Show( Self, '_order', [myfodialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
+    Orders.EraseOutdatedOrders(Self);
+//    TFrmOWOrder.Show( Self, '_order', [myfodialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
 {    Fr.setstate(null, True, 'wqdwqsdfwefsdfsdfgsdgsdfgdfsgdfsgsdfgdfgdfgfd');exit;
 //    Fr.MemTableEh1.Close;
     Fr.Opt.SetColFeature('estimates', 'pic=+;1', True, True);
@@ -332,6 +334,10 @@ begin
     Q.QCallStoredProc('P_SetOrderProdData', ':id$i', [Fr.ID]);
     Q.QCommitOrRollback(True);
     Fr.RefreshRecord;
+  end
+  else if (Tag = 1006) then begin
+    if Orders.FinalizeOrdersM(Fr.GetSetlectedIds) then
+      Fr.RefreshGrid;
   end
   else if Fmode <> fNone then begin
     //диалог ввода заказа

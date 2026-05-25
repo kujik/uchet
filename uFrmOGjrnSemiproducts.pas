@@ -347,12 +347,8 @@ begin
   //выйдем на этапе загрузки
   if not Fr.IsPrepared then
     Exit;
-  //выйдей если уже в этом событии
-  if Fr.InAddControlChange then
-    Exit;
   if FInSaveData then
     Exit;
-  Fr.InAddControlChange := True;
   if TControl(Sender).Name = 'CbType' then begin
     //выбор типа полуфабриката - загрузим данные
     LoadData;
@@ -371,7 +367,6 @@ begin
   if A.InArray(TControl(Sender).Name, ['ChbViewAll', 'ChbViewNew', 'ChbViewChanged', 'ChbViewCompleted', 'ChbViewNeededOnly']) then
     //для любой галки фильрации заказов по статусом - вызовем событие фильтра (не DefaulApplyFilter !)
     Frg1DbGridEh1ApplyFilter(Fr.DbGridEh1);
-  Fr.InAddControlChange := False;
 end;
 
 procedure TFrmOGjrnSemiproducts.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);

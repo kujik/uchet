@@ -2670,6 +2670,10 @@ begin
       //для вызова после сохранения заказа процедуру коррекции смет, по данным позициям
         ItemsToEstimateChange := ItemsToEstimateChange + [S.IIfV(va[0] = null, Res, va[0])];
       //CreateEstimateToItem(i, S.IIfV(va[0] = null, Res, MemTableEh1.FieldByName('id').Value), va[2], va[3]);
+      end
+      else if (Mode = fEdit) and (va[0] <> null) and not chgr and (Length(DeletedItems) > 0) then begin
+        //поправим поле Pos для неизмененных позиций, если было удаление строк
+        Res := Q.QSave('u', 'order_items', '', 'id$i;pos$i', [va[0], i]);
       end;
     end;
     if Res < 0 then  Break;

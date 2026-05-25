@@ -22,7 +22,6 @@ END;
 /
 */
 
-drop function get_context_value;
 CREATE OR REPLACE FUNCTION f_set_context_value (
   par IN VARCHAR2,
   val IN VARCHAR2 

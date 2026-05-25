@@ -2,6 +2,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
   Caption = 'FrmOGjrnSemiproducts'
   ClientWidth = 792
   ExplicitWidth = 804
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 792
@@ -36,6 +37,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
             end
             inherited pnlStatusBar: TPanel
               Width = 758
+              ExplicitWidth = 754
             end
           end
           inherited pnlTop: TPanel
@@ -80,6 +82,7 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
             end
             inherited pnlStatusBar: TPanel
               Width = 768
+              ExplicitWidth = 764
             end
           end
           inherited pnlTop: TPanel
@@ -120,12 +123,27 @@ inherited FrmOGjrnSemiproducts: TFrmOGjrnSemiproducts
       ExplicitWidth = 778
       inherited bvlFrmBtnsTl: TBevel
         Width = 780
+        ExplicitWidth = 780
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 780
+        ExplicitWidth = 780
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 780
+        ExplicitWidth = 776
+        inherited pnlFrmBtnsMain: TPanel
+          Left = 681
+        end
+        inherited pnlFrmBtnsChb: TPanel
+          Left = 453
+        end
+        inherited pnlFrmBtnsR: TPanel
+          Left = 582
+        end
+        inherited pnlFrmBtnsC: TPanel
+          Width = 313
+        end
       end
     end
   end

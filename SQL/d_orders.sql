@@ -1172,13 +1172,17 @@ create or replace view v_or_std_items as (
        from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
        where id_or_std_item = i.id
     ), ', ') as route,
+    --процент стоимости материалов
+    case when nvl(i.price, 0) = 0 then null else round(nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) / nvl(i.price, 0) * 100, 2) end as material_percent,
     fi.is_semiproduct,
     i0.labor_intensity as labor_intensity_0,
     i0.labor_cost as labor_cost_0,
-    round(i0.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) as labor_percent_0,
+    --процент стоимости работы
+    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_0,
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
-    round(i2.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) as labor_percent_2
+    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2
+--    case when nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) = 0 then null else round(i2.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) end as labor_percent_2 
   from
     or_std_items i,
     estimates e,
@@ -2368,7 +2372,7 @@ group by id_zakaz
 
 --таблицы трудоемкости по стандартным изделиям и заказам
 
---drop  table or_std_labor_intensity cascade constraints;
+alter table or_std_labor_intensity add i16 number;
 create table or_std_labor_intensity (
   id number(11),                   --айди, оно же изделия
   id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
@@ -2388,6 +2392,7 @@ create table or_std_labor_intensity (
   i13 number,
   i14 number,
   i15 number,
+  i16 number,
   constraint pk_or_std_labor_intensity primary key (id, id_area),
   constraint fk_or_std_labor_intensity_id foreign key (id) references or_std_items(id) on delete cascade
 );  
@@ -2418,6 +2423,7 @@ create table or_labor_intensity (
   constraint fk_or_labor_intensity_id foreign key (id) references order_items(id) on delete cascade
 );  
 
+alter table or_std_labor_intensity_cost add p16 number;  
 create table or_std_labor_intensity_cost (
   id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
   p1 number,                       --стоимость минуты по операции
@@ -2435,6 +2441,7 @@ create table or_std_labor_intensity_cost (
   p13 number,
   p14 number,
   p15 number,
+  p16 number,
   constraint pk_or_std_labor_intensity_cost primary key (id_area)
 );
 
@@ -2459,7 +2466,8 @@ select
   nvl(i.i12, 0) +
   nvl(i.i13, 0) +
   nvl(i.i14, 0) +
-  nvl(i.i15, 0) 
+  nvl(i.i15, 0) + 
+  nvl(i.i16, 0) 
   as labor_intensity,
   
   nvl(i.i1, 0) * nvl(p1, 0) + 
@@ -2476,7 +2484,8 @@ select
   nvl(i.i12, 0) * nvl(p12, 0) + 
   nvl(i.i13, 0) * nvl(p13, 0) + 
   nvl(i.i14, 0) * nvl(p14, 0) + 
-  nvl(i.i15, 0) * nvl(p15, 0)
+  nvl(i.i15, 0) * nvl(p15, 0) +
+  nvl(i.i16, 0) * nvl(p16, 0)
   as labor_cost 
 from
   or_std_labor_intensity i,  
@@ -2819,51 +2828,5 @@ select * from v_orders_list where id_order = 11674;
 
 
 
---delete from orders where id_organization = 7 and dt_beg < date '2026-01-01';
-
-update orders set 
-id_customer = null, 
-id_customer_contact = null,
-id_customer_org = null,
-id_manager = -103,
-address = null,
-cost = null,
-cost_nds = null,
-cost_wo_nds = null,
-cost_av = null,
-cost_i_0 = null,
-cost_d_0 = null,
-cost_m_0 = null,
-cost_a_0 = null,
-cost_i = null,
-cost_i_nosgp = null,
-cost_d = null,
-cost_m = null,
-cost_a = null,
-m_i = null,
-m_d = null,
-m_m = null,
-m_a = null,
-d_i = null,
-d_d = null,
-d_m = null,
-d_a = null,
-pay = null,
-comm = null
-where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null
-;
-
-delete from or_payments
-where
-id_order in (
-select id from orders where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null)
-;
-
-update order_items set
-price = 0, price_pp = 0
-where
-id_order in (
-select id from orders where id_organization = 7 and dt_beg < date '2025-04-01' and dt_end is not null)
-;
 
 

@@ -546,6 +546,7 @@ var
 begin
   for i := 0 to Frg1.GetCount(False) - 1 do
     CalculateRow(i);
+  Frg1.InvalidateGrid;
 end;
 
 procedure TFrmWGedtPayrollTransfer.CalculateRow(Row: Integer);

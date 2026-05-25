@@ -1099,6 +1099,7 @@ select
   d.is_office,
   case when d.is_office = 1 then 'офис' when d.is_office = 0 then 'цех' end as office,
   t.qnt,
+  t.qnt_wo_org,
   qn.value as qnt_plan,
   decode(qn.value, null, null, qn.value - t.qnt) as qnt_need,
   t.schedulecode as schedule,
@@ -1127,6 +1128,7 @@ from
     id_job, 
     id_departament,
     sum(qnt) as qnt,
+    sum(qnt_wo_org) as qnt_wo_org,
     max(is_office) as is_office,
     max(area_shortname) as area_shortname,
     max(nvl(schedulecode, ' ')) as schedulecode
@@ -1166,6 +1168,8 @@ order by
   j.name, d.name       
 ; 
 
+select * from v_w_staff_schedule;
+
 create or replace view v_w_staff_schedule_add as
  select
   --вспомогательное представление для штатного расписания
@@ -1175,6 +1179,7 @@ create or replace view v_w_staff_schedule_add as
     id_departament,
     is_office,
     1 as qnt,
+    case when id_organization is null then 1 else 0 end as qnt_wo_org,
     area_shortname,
     schedulecode
   from 
