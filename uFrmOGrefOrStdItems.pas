@@ -62,12 +62,11 @@ begin
     ['name','Наименование','500;h'],
     ['price$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['price_pp$f','Перепродаж (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['priceraw$f','Цена по смете (с НДС)','70','f=r'],
-    ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r'],
-    ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['material_percent','Стоимость материалов (без НДС), %','75'],
+    ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
+    ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
+    ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch), 't=1'],
+    ['material_percent','Стоимость материалов (без НДС), %','75', 't=1'],
     ['route2','Производственный маршрут','120'],
-//    ['route','Производственный маршрут','120'],
     ['qnt_panels_w_drill','Сверловка, панелей','80'],
     ['dt_estimate','Смета','75'],
     ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
@@ -77,6 +76,7 @@ begin
     ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
     ['labor_cost_2','!Стоимость','75'],
     ['labor_percent_2','!%','65'],
+    ['labor_percent','Трудо-'#13#10'емкость общая, %','65'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
@@ -86,11 +86,12 @@ begin
     [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
 //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
     [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
-    [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy'],[mbtTest]]
+    [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']]
   );
   Frg1.Opt.SetButtonsIfEmpty([1000]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
   Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
+  Frg1.CreateAddControls('1', cntCheck, 'Скрыть цены по смете', 'ChbHidePrice0', '', -1, yrefC, 140);
   SetCbEstimate;
   Frg1.InfoArray:=[
     [Caption + '.'#13#10+
@@ -233,6 +234,8 @@ end;
 procedure TFrmOGrefOrStdItems.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
   Fr.SetSqlParameters('id_or_format_estimates$i', [Cth.GetControlValue(Fr, 'CbEstimate')]);
+  Fr.Opt.SetColFeature('1', 'null', Fr.GetControlValue('ChbHidePrice0') = 1 , False);
+  Fr.Opt.SetColFeature('1', 'i', Fr.GetControlValue('ChbHidePrice0') = 1 , False);
 end;
 
 procedure TFrmOGrefOrStdItems.FormDestroy(Sender: TObject);

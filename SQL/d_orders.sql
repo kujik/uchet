@@ -1389,7 +1389,8 @@ create or replace view v_or_std_items as (
 
 
 create or replace view v_or_std_items as
-select
+  select
+  --вью для справочника стандартныых изделий
     i.*,
     fi.prefix,
     fi.id_format,
@@ -1411,15 +1412,17 @@ select
     case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_0,
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
-    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2
-from
+    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2,
+    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / nvl(i.price, 0) * 100, 2) end as labor_percent
+  from
     or_std_items i
     left join estimates e on i.id = e.id_std_item
     join or_format_estimates fi on i.id_or_format_estimates = fi.id
     join or_formats orf on fi.id_format = orf.id
     join v_or_std_labor_intensity i0 on i.id = i0.id and i0.id_area = 0
     join v_or_std_labor_intensity i2 on i.id = i2.id and i2.id_area = 2
-    join (select id, f_get_stditem_raw_price(id) as priceraw from or_std_items) prc on prc.id = i.id;
+    join (select id, f_get_stditem_raw_price(id) as priceraw from or_std_items) prc on prc.id = i.id
+  ;
     
     
     

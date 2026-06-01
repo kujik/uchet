@@ -1055,41 +1055,41 @@ order by
   name_format, name_otgr
 ;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-select * from or_std_items;
-
-
-
-    select
-      b.name as b_name
-    from
-      or_std_items i,
-      or_format_estimates fi,
-      estimates e,
-      estimate_items ei,
-      bcad_nomencl b
-    where
-      id_or_format_estimates = fi.id
-      and e.id_std_item = i.id
-      and ei.id_estimate = e.id
-      and b.id = ei.id_name
-      and b.name = i.name
+--------------------------------------------------------------------------------
+--запрос позиций, по которым сметное наименование соввпадает с наименованием изделия
+--для смет по стандартным изделиям для заказов (нарушает расчет цены)
+select
+  b.name as b_name
+from
+  or_std_items i,
+  or_format_estimates fi,
+  estimates e,
+  estimate_items ei,
+  bcad_nomencl b
+where
+  id_or_format_estimates = fi.id
+  and e.id_std_item = i.id
+  and ei.id_estimate = e.id
+  and b.id = ei.id_name
+  and b.name = i.name
 ;      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     
 
