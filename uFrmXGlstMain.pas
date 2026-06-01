@@ -535,6 +535,7 @@ begin
     ]];
   end
 
+
   {РАБОТНИКИ}
 
   else if FormDoc = myfrm_J_WorkerStatus then begin
@@ -2337,6 +2338,31 @@ v:=True;
     Frg1.InfoArray:=[
     ];
   end
+  else if FormDoc = myfrm_Rep_Purchase_Prices then begin
+    Caption:='Отчет по закупочным ценам.';
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['name$s','Наименование','300;h'],
+      ['qnt$f','Количество','90'],
+      ['name_unit$s','Ед. изм.','90'],
+      ['price_check$f','Контрольная цена','120'],
+      ['weighted_avg_price$f','Средневзвешенная цена закупки','120'],
+      ['price_diff$f','Разница цен','90']
+    ]);
+    Frg1.Opt.SetTable('v_spl_rep_purchase_price');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+    Frg1.CreateAddControls('1', cntDEdit, 'Дата с:', 'DeBeg', '', 60, yrefC, 100);
+    Frg1.CreateAddControls('1', cntDEdit, 'по: ', 'DeEnd', '', 190, yrefC, 100);
+    Frg1.InfoArray:=[
+      [Caption+ #13#10+
+      'Отображается список закупленной номенклатуры за выбранный период'#13#10+
+      '(по данным приходных накладных),'#13#10+
+      'количество закупки, контрольная и средневзвешенная закупочная цена,'#13#10+
+      'а также разница между закупочной и контрольной ценами.'#13#10+
+      ''#13#10
+    ]];
+  end
   ;
 
   //--------------------------------------------------
@@ -3130,6 +3156,18 @@ begin
       if TControl(Sender).Name <> 'ChbAll' then
         TDBCheckBoxEh(Fr.FindComponent('ChbAll')).Checked := False;
     end;}
+  end
+  else if FormDoc = myfrm_Rep_Purchase_Prices then begin
+    if (TControl(Sender).Name = 'DeBeg') and S.IsDateTime(S.NSt(Fr.GetControlValue('DeBeg'))) then begin
+      Q.QSetContextValue('rep_purchase_price_dt1', Fr.GetControlValue('DeBeg'));
+      if Fr.IsPrepared then
+        Fr.RefreshGrid;
+    end;
+    if (TControl(Sender).Name = 'DeEnd') and S.IsDateTime(S.NSt(Fr.GetControlValue('DeEnd'))) then begin
+      Q.QSetContextValue('rep_purchase_price_dt2', Fr.GetControlValue('DeEnd'));
+      if Fr.IsPrepared then
+        Fr.RefreshGrid;
+    end;
   end;
 
   //обновить грида для этих документов для любого контрола
@@ -3197,7 +3235,15 @@ begin
         Params.Background := clmyPink
       else if (Fr.GetValueF('deal_sum_np') < 0) then
         Params.Background := clmyGreen;
+  end
+  else if FormDoc = myfrm_Rep_Purchase_Prices then begin
+    if (FieldName = 'price_diff') then
+      if (Fr.GetValueF('price_diff') > 0) then
+        Params.Background := clmyPink
+      else if (Fr.GetValueF('price_diff') < 0) then
+        Params.Background := clmyGreen;
   end;
+
 end;
 
 procedure TFrmXGlstMain.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);

@@ -2311,8 +2311,38 @@ where
   and u.id_unit = n.id_unit
   and s.control_date is not null
   and s.date_registr >= trunc(sysdate) - 3 and s.date_registr < trunc(sysdate)
-; 
+;
 
+
+--------------------------------------------------------------------------------
+--отчет по ценам запкупки 
+create or replace view v_spl_rep_purchase_price as
+select 
+--отчет по ценам запкупки 
+  ss.id_nomencl as id,
+  max(n.name) as name,
+  max(p.price_check) as price_check,
+  --средневзвешенная цена
+  round(sum(fact_quantity * ibprice) / sum(fact_quantity), 2) as weighted_avg_price,
+  round(sum(fact_quantity * ibprice) / sum(fact_quantity), 2) - max(p.price_check) as price_diff, 
+  sum(fact_quantity) as qnt,
+  max(u.name_unit) as name_unit
+from 
+  dv.in_bill_spec ss,
+  dv.in_bill s,
+  dv.nomenclatura n,
+  dv.unit u,
+  spl_itm_nom_props p
+where 
+--  s.inbilldate > date '2026-04-01' and
+  s.inbilldate >= get_context('rep_purchase_price_dt1') and s.inbilldate <= get_context('rep_purchase_price_dt2')
+  and s.id_inbill = ss.id_inbill
+  and ss.id_nomencl = n.id_nomencl
+  and ss.id_nomencl = p.id (+)
+  and n.id_unit = u.id_unit 
+  and ss.fact_quantity > 0          
+  and ss.ibprice is not null    
+group by ss.id_nomencl;
 
 
 

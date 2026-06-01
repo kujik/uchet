@@ -558,6 +558,8 @@ begin
     ['Установщик модулей Учета', myfrm_Adm_Installer, User.IsDeveloper],
     [],
     ['Удаление файлов и папок на сервере', myfrm_Adm_DeleteOnServer, User.Role(rAdm_Other_DeleteOnServer)],
+    ['Удаление устаревших заказов', myfrm_Dlg_DeleteOutdatedOrders, User.Role(rAdm_DeleteOutdatedOrdersAndAccounts)],
+    ['Удаление устаревших счетов', myfrm_Dlg_DeleteOutdatedAccounts, User.Role(rAdm_DeleteOutdatedOrdersAndAccounts)],
     [],
     ['Просмотр сессий', myfrm_Dlg_Adm_Sessions, User.Role(rAdm_Installer)],
     [],
@@ -717,6 +719,7 @@ begin
     ['Журнал действий по заказам', myfrm_Rep_Orders_Audit, User.Roles([], [rOr_Rep_Orders_Audit])],
     [],
     ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
+    ['Отчет по закупочным ценам.', myfrm_Rep_Purchase_Prices, User.Roles([], [rOr_Rep_Purchase_Prices])],
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

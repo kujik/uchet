@@ -59,10 +59,22 @@ select dbms_lob.getlength(lob_column_name) from your_Table;
 
 update adm_error_log set pictc = null;
 
+
+
 /*
 СОБРАТЬ СТАТИСТИКУ ПО СХЕМЕ
 */
 exec dbms_stats.gather_schema_stats('UCHET22');
+
+/*
+ПЕРЕНКОМПИЛИРОВАТЬ НЕВАЛИДНЫЕ ОБЪЕКТЫ СХЕМЫ
+*/
+begin
+  sys.dbms_utility.compile_schema(schema => user11);
+  -- аргумент compile_all => false (по умолчанию) компилирует только невалидные объекты[reference:4]
+end;
+/
+
 
 
 /*

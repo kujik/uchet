@@ -226,51 +226,6 @@ from
   v_order_items_all
   where id_order > 0
 ;      
-/*
-
-select
-  i.id,                --айди изделия
-  i.id_std_item,       --айди стандартного изделия 
-  o.id_format,         --айди формата
-  o.id_organization,   --айди организации, -1 == производство
-  o.dt_beg,            --дата оформления заказа
-  o.dt_end,            --фактическая дата закрытия заказа в Учете
-  o.dt_otgr,           --плановая дата отгрузки
-  s.name as itemname,  --наименование слэша (без префикса)
-  i.id_order,          --айди азказа
-  i.qnt,               --количестов по слеешу в заказе  
-  o.ornum || '_' || substr('000000' || i.pos, -3) as slash,   --№ слэша
-  p.dt_beg as dt_base_beg                                     --дата отсечки из настроек отчета по сгп
-from
-  order_items i,
-  orders o,
-  or_std_items s,
-  sgp_params p
-where
-  o.id = i.id_order
-  and s.id = i.id_std_item
- -- and o.id > 0
-;  
-    
-*/
-
-
-/*
-create or replace view v_sgp_sell_formats as
---список форматов стандартных изделий, для по которому формируем состояние СГП
-select
-  fe.id,
-  orf.name || ' (' ||  fe.name || ')' as name 
-from
-  --or_std_items si,
-  or_format_estimates fe,
-  or_formats orf
-where
-  not lower(fe.name) like '%производство%'
-  and orf.id > 1
-  and orf.id = fe.id_format
-;
-*/
 
 create or replace view v_sgp_sell_formats as
 --список форматов стандартных изделий, для по которому формируем состояние СГП
@@ -980,24 +935,6 @@ group by
   ssi.id  
 ;  
 
-select * from dv.stock;
-  
-        dv.stock s
-      on s.doctype = 1 and s.id_spec = ibs.id_ibspec
-round(s.summa / decode(nvl(s.quantity, 1), 0 ,1, s.quantity), 2) as price_main
-  
-  (select id_format, itemname, sum(qnt) as qnt
-    from 
-      v_order_items__
-    where
-      id_organization = -1  --производство
-      and dt_beg >= dt_base_beg
-    group by id_format, itemname
-  ) oi
-  on oi.id_format = ssi. and oi.itemname = ssi.name   
-;
-  
-  
   
   
   

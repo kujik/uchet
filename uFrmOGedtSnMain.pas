@@ -441,6 +441,7 @@ begin
       Q.QBeginTrans(True);
       Q.QUpdateRows('dv.nomenclatura', 'id_nomencl', LIds, 'min_ostatok$f', [null]);
       Q.QCommitTrans;
+      Frg1.RefreshGrid;
     end;
   end
   else if Tag = 1005 then begin
@@ -455,6 +456,7 @@ begin
         Q.QBeginTrans(True);
         Q.QUpdateRows('spl_itm_nom_props', 'id', LIds, 'active$f', [S.IIf(LRes = mrYes, 1, 0)]);
         Q.QCommitTrans;
+        Frg1.RefreshGrid;
       end;
     end;
   end

@@ -3,6 +3,7 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
   ClientWidth = 792
   OnDestroy = FormDestroy
   ExplicitWidth = 804
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 792

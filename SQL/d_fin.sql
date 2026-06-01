@@ -1,3 +1,33 @@
+/*
+для стандартных изделий, изделитй заказа и сметныых позиций при просмотре сметы используем функции получения цены
+для всех видов документов цены получаются одинаково
+
+исходная цена номенклатуры получается из итм из sstock
+(select
+   row_number() over (partition by doctype, id_nomencl order by stockdate desc) as rn,
+   id_nomencl, quantity, summa
+ from dv.stock
+ where doctype = 1) s
+where s.rn = 1
+это последняя по времени цена поступления по ПН
+
+функции типа
+f_get_order_item_raw_price
+разворачивают изделия, при этом изделием будет считать строка с именем, найденная
+в наименованиях стандартныых изделий как с префиксом так и без префикса
+(практикуест по МТ, строка находится в группе крепеж кк материал и не и меет префикса в этом названии, 
+но есть такая же в стандартных изделиях и по ней есть смета)
+
+изделия разворачиваются рекурсивно, то есть например в отгрузочных - производственное, в проиизводстенном - полуфабррикаты.
+глубина рекурсии ограничена 10, если превысит то будет ошибка.
+
+
+
+
+
+*/
+
+
 create table order_plans (
   dt date not null,         --дата, первое число месяца
   sum1ri number,            --для продажи, по рознице, сумма изделий  
@@ -235,7 +265,295 @@ where
   o.id = i.id_order
   and i.area = 3 and
   o.dt_to_sgp >= '01/08/2025' and o.dt_to_sgp < '01/09/2025'
-;    
-  
-  
+;
+
+
+
+
+create or replace function f_get_estitem_raw_price(
+  p_id in number,    -- обязательный: идентификатор строки сметы (estimate_items.id)
+  depth in number default 1   -- необязательный: текущая глубина рекурсии (по умолчанию 1)
+) return number is
+  /*
+    Функция возвращает закупочную цену за единицу для позиции сметы.
+    Если номенклатура является вложенным изделием, рекурсивно вызывает
+    f_get_stditem_raw_price. В противном случае берёт цену из последнего
+    поступления (stock). Глубина рекурсии ограничена 10 для защиты от циклов.
+  */
+  v_price number;
+  v_child_id number;
+  v_name varchar2(1000);
+  c_max_depth constant number := 10;
+begin
+  -- проверка глубины рекурсии
+  if depth > c_max_depth then
+    raise_application_error(-20001, 'превышена глубина рекурсии (' || c_max_depth || ') для estimate_items id ' || p_id);
+  end if;
+
+  -- получаем имя номенклатуры из bcad_nomencl
+  select b.name
+  into v_name
+  from estimate_items ei, bcad_nomencl b
+  where ei.id = p_id and b.id = ei.id_name;
+
+  -- проверяем, не является ли данная номенклатура вложенным изделием
+  begin
+    select i2.id
+    into v_child_id
+    from or_std_items i2, or_format_estimates fi2
+    where i2.id_or_format_estimates = fi2.id (+)
+      and ((case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = v_name
+           or i2.name = v_name)
+      and rownum = 1;
+
+    -- рекурсивный вызов для вложенного изделия (глубина увеличивается)
+    v_price := f_get_stditem_raw_price(v_child_id, depth + 1);
+  exception
+    when no_data_found then
+      -- не изделие – берём цену из последнего поступления (stock)
+      begin
+        select round(s.summa / decode(nvl(s.quantity, 1), 0, 1, s.quantity), 2)
+        into v_price
+        from
+          estimate_items ei,
+          bcad_nomencl b,
+          dv.nomenclatura n,
+          (select
+             row_number() over (partition by doctype, id_nomencl order by stockdate desc) as rn,
+             id_nomencl, quantity, summa
+           from dv.stock
+           where doctype = 1) s
+        where
+          ei.id = p_id
+          and b.id = ei.id_name
+          and n.name = b.name
+          and s.id_nomencl = n.id_nomencl
+          and s.rn = 1;
+      exception
+        when no_data_found then
+          v_price := null;
+      end;
+  end;
+  return v_price;
+end f_get_estitem_raw_price;
+/
+
+create or replace function f_get_stditem_raw_price(
+  aid in number,           -- обязательный: идентификатор изделия (or_std_items.id)
+  depth in number default 1 -- необязательный: текущая глубина рекурсии (по умолчанию 1)
+) return number is
+  /*
+    Функция возвращает полную стоимость изделия (суммарную стоимость всех материалов и подузлов)
+    на основе его сметы. Если в смете встречается материал, который является другим изделием,
+    функция рекурсивно вызывает себя для этого изделия. Глубина рекурсии ограничена 10 уровнями.
+    Для обычных материалов цена берётся из последнего поступления (stock).
+  */
+  lsum number := 0;
+  v_child_id number;
+  c_max_depth constant number := 10;
+begin
+  -- проверка глубины рекурсии (защита от циклов)
+  if depth > c_max_depth then
+    raise_application_error(-20001, 'превышена максимальная глубина рекурсии (' || c_max_depth || ') для изделия id ' || aid);
+  end if;
+
+  -- цикл по всем позициям сметы, входящим в данное изделие
+  for rec in (
+    select
+      ei.qnt1_itm,
+      b.name as b_name
+    from
+      or_std_items i,
+      or_format_estimates fi,
+      estimates e,
+      estimate_items ei,
+      bcad_nomencl b
+    where
+      i.id = aid
+      and i.id_or_format_estimates = fi.id
+      and e.id_std_item = i.id
+      and ei.id_estimate = e.id
+      and b.id = ei.id_name
+  ) loop
+    begin
+      -- проверяем, не является ли текущая номенклатура вложенным изделием
+      select i2.id
+      into v_child_id
+      from
+        or_std_items i2,
+        or_format_estimates fi2
+      where
+        i2.id_or_format_estimates = fi2.id (+)
+        and ((case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = rec.b_name
+             or i2.name = rec.b_name)
+        and rownum = 1;
+
+      -- рекурсивный вызов для вложенного изделия (глубина увеличивается)
+       if v_child_id <> aid then
+         lsum := lsum + round(rec.qnt1_itm * f_get_stditem_raw_price(v_child_id, depth + 1));
+       end if;
+    exception
+      when no_data_found then
+        -- не изделие – получаем цену из последнего поступления (stock)
+        declare
+          v_price number;
+          v_qty   number;
+          v_nom_id number;
+        begin
+          select n.id_nomencl
+          into v_nom_id
+          from dv.nomenclatura n
+          where n.name = rec.b_name
+            and rownum = 1;
+
+          select summa, quantity
+          into v_price, v_qty
+          from (
+            select summa, quantity
+            from dv.stock
+            where doctype = 1
+              and id_nomencl = v_nom_id
+            order by stockdate desc
+          )
+          where rownum = 1;
+
+          lsum := lsum + nvl(round(rec.qnt1_itm * v_price / (case when nvl(v_qty, 1) = 0 then 1 else v_qty end)), 0);
+        exception
+          when no_data_found then
+            null; -- если нет цены – вклад нулевой
+        end;
+    end;
+  end loop;
+  return lsum;
+end f_get_stditem_raw_price;
+/
+
+create or replace function f_get_order_item_raw_price(
+  p_id in number,
+  depth in number default 1
+) return number is
+  lsum number := 0;
+  v_child_id number;
+  v_qnt1_itm number;
+  v_order_qnt number;
+  v_name varchar2(1000);
+  c_max_depth constant number := 10;
+begin
+  -- защита от бесконечной рекурсии
+  if depth > c_max_depth then
+    raise_application_error(-20001, 'превышена глубина рекурсии (' || c_max_depth || ') для order_item id ' || p_id);
+  end if;
+
+  -- получаем количество заказанных изделий
+  begin
+    select oi.qnt
+    into v_order_qnt
+    from order_items oi
+    where oi.id = p_id;
+  exception
+    when no_data_found then
+      return 0;
+  end;
+
+  -- если количество равно нулю, сразу выходим
+  if v_order_qnt = 0 then
+    return 0;
+  end if;
+
+  -- получаем данные из сметы: наименование номенклатуры, количество на изделие
+  begin
+    select 
+      b.name,
+      ei.qnt1_itm
+    into 
+      v_name,
+      v_qnt1_itm
+    from 
+      order_items oi,
+      estimates e,
+      estimate_items ei,
+      bcad_nomencl b
+    where 
+      oi.id = p_id
+      and e.id_order_item = oi.id
+      and ei.id_estimate = e.id
+      and b.id = ei.id_name
+      and rownum = 1;
+  exception
+    when no_data_found then
+      return 0;  -- нет сметы – стоимость 0
+  end;
+
+  -- проверяем, не является ли данная номенклатура стандартным изделием (вложенным)
+  begin
+    select i2.id
+    into v_child_id
+    from or_std_items i2, or_format_estimates fi2
+    where i2.id_or_format_estimates = fi2.id (+)
+      and ((case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = v_name
+           or i2.name = v_name)
+      and rownum = 1;
+
+    -- рекурсивный вызов для вложенного изделия (защита от самоцитирования)
+    if v_child_id is not null and v_child_id != p_id then
+      lsum := v_qnt1_itm * v_order_qnt * f_get_stditem_raw_price(v_child_id, depth + 1);
+    else
+      lsum := 0;
+    end if;
+  exception
+    when no_data_found then
+      -- не изделие – берём цену из последнего поступления (stock)
+      declare
+        v_price number;
+        v_qty   number;
+        v_nom_id number;
+      begin
+        select n.id_nomencl
+        into v_nom_id
+        from dv.nomenclatura n
+        where n.name = v_name
+          and rownum = 1;
+
+        select summa, quantity
+        into v_price, v_qty
+        from (
+          select summa, quantity
+          from dv.stock
+          where doctype = 1
+            and id_nomencl = v_nom_id
+          order by stockdate desc
+        )
+        where rownum = 1;
+
+        lsum := v_qnt1_itm * v_order_qnt * nvl(round(v_price / (case when nvl(v_qty, 1) = 0 then 1 else v_qty end), 2), 0);
+      exception
+        when no_data_found then
+          lsum := 0;
+      end;
+  end;
+
+  return round(lsum, 2);
+end f_get_order_item_raw_price;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+8073 --!!! Кушетка (80400665) зацикливание!!!
+
+
+select f_temp1(5980) from dual;
+--
+select f_temp1(8187) from dual;
+
+
 

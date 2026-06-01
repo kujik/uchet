@@ -283,6 +283,8 @@ end;
 
 insert into or_formats (name, active) values ('ТШ', 1);
 insert into or_formats (id, name, active) values (0, 'Общий', 1);
+update or_formats set active = 0 where id not in (select distinct id_format from orders where dt_beg >= date '2026-01-01');
+update or_formats set active = 1;
 
 --------------------------------------------------------------------------------
 -- Справочник типов смет для стандартных форматов
@@ -330,13 +332,6 @@ from
 --alter table orders drop column attention;
 
 alter table orders add dt_account date;
---alter table orders add ids_order_properties varchar2(4000);
---alter table orders add has_prod number(1) default 0;
-/*alter table orders add qnt_boards_m2 number;
-alter table orders add qnt_edges_m number;
-alter table orders add qnt_panels_w_drill number;
-alter table orders add has_prod number(1) default 0;
-*/
 alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
 alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
@@ -441,6 +436,18 @@ create table orders (
 --create unique index idx_order_num on or_formats(lower(name));
 create unique index idx_orders_templatename on orders(lower(templatename));
 create index idx_orders_dt_beg on orders(dt_beg);
+create index idx_orders_dt_end on orders(dt_end);
+create index idx_orders_id_customer on orders(id_customer);
+create index idx_orders_or_reference on orders(or_reference);
+create index idx_orders_id_organization on orders(id_organization);
+create index idx_orders_id_customer_contact on orders(id_customer_contact);
+create index idx_orders_id_customer_org on orders(id_customer_org);
+create index idx_orders_id_format on orders(id_format);
+create index idx_orders_id_manager on orders(id_manager);
+create index idx_orders_area on orders(area);
+create index idx_orders_id_type2 on orders(id_type2);
+create index idx_orders_ornum on orders(ornum);   -- для ob
+
 
 create sequence sq_orders nocache;
 create sequence sq_orders_template nocache;
@@ -488,152 +495,177 @@ select f_order_getnewnum(null, 1) from dual;
 
 
 
---update orders set ndsd = 1;
---update orders set ndsd = 1.2 where nvl(cost, 0) > nvl(cost_wo_nds, 0); 
-
-
-create or replace view v_orders as (
-  select
-  --базовая информацияпо заказу
-    o.*,
-    ro.name as organization,
-    rc.name as customer,
-    rcc.name as customerman, 
-    rcc.contact as customercontact,
-    rcl.legalname as customerlegal,
-    rcl.inn as customerinn,
-    au.name as managername,
-    (case when o.id_type2 is not null then ot.name else
-        (case 
-          when o.id_type = 1 then 'Новый'
-          when o.id_type = 2 then 'Рекламация'
-          when o.id_type = 3 then 'Эксперимент'
-          else ''
-         end)
-    end) as typename,
-    (case when (o.id_type = 2) or (ot.name like 'Рекламация%') then 1 else 0 end) as is_complaint,
-    pa.shortname as area_short,
-    decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
-    f.name as format,
-    ob.dt_beg as ref_dt_beg, 
-    ob.dt_otgr as ref_dt_otgr, 
-    (case 
-      when o.cashtype = 2 then 'наличные'
-      when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
-      when o.cashtype = 1 and o.account is not null then 'безнал'
+create or replace view v_orders as
+with
+  -- единая агрегация по позициям заказа (все показатели за один проход)
+  order_items_agg as (
+    select
+      i.id_order,
+      -- okns: количество уникальных kns
+      count(distinct case when i.qnt > 0 and i.id_kns is not null and i.id_kns != -100 then i.id_kns end) as cnt_kns,
+      -- othn: количество уникальных thn
+      count(distinct case when i.qnt > 0 and i.id_thn is not null and i.id_thn != -100 then i.id_thn end) as cnt_thn,
+      -- oknsdt: максимальная дата kns, количество заполненных dt_kns, общее количество kns
+      max(case when i.qnt > 0 and i.id_kns is not null and i.id_kns != -100 then i.dt_kns end) as dt_kns_max,
+      count(case when i.qnt > 0 and i.id_kns is not null and i.id_kns != -100 and i.dt_kns is not null then 1 end) as dt_kns_cnt,
+      count(case when i.qnt > 0 and i.id_kns is not null and i.id_kns != -100 then 1 end) as cnt_kns_total,
+      -- othndt: аналогично для thn
+      max(case when i.qnt > 0 and i.id_thn is not null and i.id_thn != -100 then i.dt_thn end) as dt_thn_max,
+      count(case when i.qnt > 0 and i.id_thn is not null and i.id_thn != -100 and i.dt_thn is not null then 1 end) as dt_thn_cnt,
+      count(case when i.qnt > 0 and i.id_thn is not null and i.id_thn != -100 then 1 end) as cnt_thn_total,
+      -- osn: количество позиций без dt_sn
+      --count(case when i.qnt != 0 and i.dt_sn is null then 1 end) as qnt_sn_no,
+      -- oxml: количество позиций без xml
+      count(case when i.qnt != 0 and nvl(i.is_xml_loaded, 0) = 0 then 1 end) as qnt_xml_no,
+      -- timemsqnt: агрегаты количества и материалов
+      sum(case when i.qnt > 0 then 1 else 0 end) as qnt_slashes,
+      sum(i.qnt) as qnt_items,
+      sum(case when nvl(i.sgp, 0) = 1 then 0 else i.qnt end) - sum(i.qnt_to_sgp) as qnt_in_prod,
+      sum(i.qnt_to_sgp) as qnt_to_sgp,
+      sum(nvl(i.qnt_boards_m2, 0)) as qnt_boards_m2,
+      sum(nvl(i.qnt_edges_m, 0)) as qnt_edges_m,
+      sum(nvl(i.qnt_glass_m2, 0)) as qnt_glass_m2,
+      sum(nvl(i.qnt_paint_kg, 0)) as qnt_paint_kg,
+      sum(nvl(i.qnt_panels_w_drill, 0) * i.qnt) as qnt_panels_w_drill_all
+    from order_items i
+    group by i.id_order
+  ),
+  -- уникальные технологи для заказа (без row_number, просто distinct + listagg)
+/*  thn_list as (
+    select
+      i.id_order,
+      listagg(u.name, '; ') within group (order by u.name) as thn_names
+    from (select distinct id_order, id_thn from order_items where qnt > 0 and id_thn is not null and id_thn != -100) i
+    join adm_users u on u.id = i.id_thn
+    group by i.id_order
+  ),
+  -- уникальные конструкторы
+  kns_list as (
+    select
+      i.id_order,
+      listagg(u.name, '; ') within group (order by u.name) as kns_names
+    from (select distinct id_order, id_kns from order_items where qnt > 0 and id_kns is not null and id_kns != -100) i
+    join adm_users u on u.id = i.id_kns
+    group by i.id_order
+  ),
+ */
+  -- рекламации
+  complaints_list as (
+    select
+      o.id_order,
+      listagg(r.name, '; ') within group (order by r.name) as complaints_names
+    from order_complaints o
+    join ref_complaint_reasons r on r.id = o.id_complaint_reason
+    group by o.id_order
+  )
+-- основной запрос
+select
+  o.*,
+  ro.name as organization,
+  rc.name as customer,
+  rcc.name as customerman,
+  rcc.contact as customercontact,
+  rcl.legalname as customerlegal,
+  rcl.inn as customerinn,
+  au.name as managername,
+  case
+    when o.id_type2 is not null then ot.name
+    else case
+      when o.id_type = 1 then 'Новый'
+      when o.id_type = 2 then 'Рекламация'
+      when o.id_type = 3 then 'Эксперимент'
       else ''
-    end) as cashtypename,
-    (case 
-      when o.cashtype = 1 and o.account is null then 0
-      else o.cashtype
-    end) as cashtype_add,
-    round(nvl(o.cost_i, 0) / o.ndsd, 2) cost_i_wo_nds,
-    round(nvl(o.cost_i_nosgp, 0) / o.ndsd, 2) cost_i_nosgp_wo_nds,
-    round(nvl(o.cost_a, 0) / o.ndsd, 2) cost_a_wo_nds,
-    round(nvl(o.cost_d, 0) / o.ndsd, 2) cost_d_wo_nds,
-    round(nvl(o.cost_m, 0) / o.ndsd, 2) cost_m_wo_nds,
-    (case when o.dt_cancel is null then 0 else 1 end) as cancel, 
-    o.dt_beg + trunc(((o.dt_otgr - o.dt_beg) / 2)) as dt_pnr,  -- плановая дата начала распила
-   (select 
-       listagg(oc.name,  '; ') within group (order by oc.name) 
-       from ((select o.id, o.id_order, r.name from order_complaints o, ref_complaint_reasons r where o.id_complaint_reason = r.id) oc ) 
-       where id_order = o.id
-    ) complaints,
-    (select 
-       regexp_replace(listagg(case when no <= 250 then t.name || ';' else '' end) within group (order by t.name), '([^;]+)(;\1)+', '\1' )
-       from ((select i.id_order, u.name, row_number() over (order by u.name) no from order_items i, adm_users u where i.qnt <> 0 and u.id = i.id_thn and i.id_thn <> -100) t ) 
-       where id_order = o.id
-    ) as thn,
-    decode(nvl(othn.cnt, 0), 0,  '', '[технолог]') as to_thn,
-    (select 
-       regexp_replace(listagg(case when no <= 250 then t.name || ';' else '' end) within group (order by t.name), '([^;]+)(;\1)+', '\1' )
-       from ((select i.id_order, u.name, row_number() over (order by u.name) no from order_items i, adm_users u where i.qnt <> 0 and u.id = i.id_kns and i.id_kns <> -100) t ) 
-       where id_order = o.id
-    ) as kns,
-    decode(nvl(okns.cnt, 0), 0,  '', '[конструктор]') as to_kns,
-    he.estimates,
-    he.dt_estimate_max,
-    osn.qnt_sn_no,
-    decode(nvl(osn.qnt_sn_no, 0), 0, '+', '-') as sn_status,
-    decode(nvl(oxml.qnt_xml_no, 0), 0, '+', '-') as xml_status,
-    decode(othndt.dt_thn_cnt, othndt.cnt, othndt.dt_thn_max, null) as dt_thn_max,
-    decode(oknsdt.dt_kns_cnt, oknsdt.cnt, oknsdt.dt_kns_max, null) as dt_kns_max,
-    trunc(o.dt_aggr_estimate - o.dt_beg) as days_aggr_estimate,
-    --opc.sum0
-    --0 as sum0
-    --(select sum0 from v_order_primecost_itm where id_zakaz(+) = o.id_itm) as sum0
-    F_GetCostOrderItemsFromItm(o.id, null) as sum0,
-    --статус заказа в итм (выполнен = 30)
-    sz.id_status as id_status_itm,
-    sz.statusname as status_itm,
-    trunc(rsv.dt_reserve) as dt_reserve,
-    timemsqnt.qnt_slashes as qnt_slashes,
-    timemsqnt.qnt_items as qnt_items,
-    timemsqnt.qnt_in_prod as qnt_in_prod,
-    timemsqnt.qnt_to_sgp as qnt_to_sgp,
-    timemsqnt.qnt_boards_m2,
-    timemsqnt.qnt_edges_m,
-    timemsqnt.qnt_glass_m2,
-    timemsqnt.qnt_paint_kg,
-    timemsqnt.qnt_panels_w_drill_all,
-    --опережение или просрочка, по принятию на сгп по отношению к плановой дате отгрузки, в том случае если для заказа есть технолог
-    case when nvl(othn.cnt, 0) = 0 
-      then null
-      else 
-        decode (o.dt_to_sgp, null, trunc(sysdate) - o.dt_otgr, o.dt_to_sgp - o.dt_otgr)
-    end as early_or_late 
-
-  from
-    orders o,
-    orders ob,
-    ref_sn_organizations ro,
-    ref_customers rc,
-    ref_customer_contact rcc,
-    ref_customer_legal rcl,
-    or_formats f,
-    ref_production_areas pa, 
-    adm_users au,
-    v_order_hasestimate he,
-    --v_order_primecost_itm opc,
-    (select max(id_order) as id_order, count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) okns, 
-    (select max(id_order) as id_order, count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othn,
-    (select max(id_order) as id_order, max(dt_kns) as dt_kns_max, sum(decode(dt_kns, null, 0, 1)) as dt_kns_cnt, 
-       count(id_kns) as cnt from order_items where qnt > 0 and id_kns is not null and id_kns <> -100 group by id_order) oknsdt,
-    (select max(id_order) as id_order, max(dt_thn) as dt_thn_max, sum(decode(dt_thn, null, 0, 1)) as dt_thn_cnt, 
-       count(id_thn) as cnt from order_items where qnt > 0 and id_thn is not null and id_thn <> -100 group by id_order) othndt,
-    (select max(id_order) as id_order, count(*) as qnt_sn_no from order_items where dt_sn is null and qnt <> 0 group by id_order) osn,
-    (select max(id_order) as id_order, count(*) as qnt_xml_no from order_items where is_xml_loaded = 0 and qnt <> 0 group by id_order) oxml,
-    (select id_order, sum(case when qnt > 0 then 1 else 0 end) qnt_slashes, sum(qnt) as qnt_items, sum(case when nvl(sgp, 0) = 1 then 0 else qnt end) - sum(qnt_to_sgp) as qnt_in_prod, sum(qnt_to_sgp) as qnt_to_sgp,
-     sum(nvl(qnt_boards_m2,0)) as qnt_boards_m2, sum(nvl(qnt_edges_m,0)) as qnt_edges_m, sum(nvl(qnt_glass_m2,0)) as qnt_glass_m2, sum(nvl(qnt_paint_kg,0)) as qnt_paint_kg, 
-     sum(nvl(qnt_panels_w_drill,0) * qnt) as qnt_panels_w_drill_all 
-     from order_items group by id_order) timemsqnt,
-    dv.zakaz z,
-    dv.status_zakaza sz,
-    (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv,
-    order_types ot
-  where
-    ob.ornum (+) = o.or_reference and
-    ro.id(+) = o.id_organization and
-    rc.id(+) = o.id_customer and  
-    rcc.id(+) = o.id_customer_contact and  
-    rcl.id(+) = o.id_customer_org and
-    f.id(+) = o.id_format and 
-    au.id(+) = o.id_manager and
-    pa.id(+) = o.area and
-    --opc.id_zakaz(+) = o.id_itm and
-    he.id_order (+) = o.id
-    and okns.id_order (+) = o.id
-    and othn.id_order (+) = o.id
-    and oknsdt.id_order (+) = o.id
-    and othndt.id_order (+) = o.id
-    and osn.id_order (+) = o.id
-    and oxml.id_order (+) = o.id
-    and z.id_zakaz (+) = o.id_itm
-    and sz.id_status (+) = z.id_status
-    and rsv.id_doc (+) = o.id_itm
-    and timemsqnt.id_order (+) = o.id 
-    and ot.id (+) = o.id_type2
-);
+    end
+  end as typename,
+  case when (o.id_type = 2) or (ot.name like 'Рекламация%') then 1 else 0 end as is_complaint,
+  pa.shortname as area_short,
+  decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
+  f.name as format,
+  ob.dt_beg as ref_dt_beg,
+  ob.dt_otgr as ref_dt_otgr,
+  case
+    when o.cashtype = 2 then 'наличные'
+    when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
+    when o.cashtype = 1 and o.account is not null then 'безнал'
+    else ''
+  end as cashtypename,
+  case when o.cashtype = 1 and o.account is null then 0 else o.cashtype end as cashtype_add,
+  round(nvl(o.cost_i, 0) / o.ndsd, 2) as cost_i_wo_nds,
+  round(nvl(o.cost_i_nosgp, 0) / o.ndsd, 2) as cost_i_nosgp_wo_nds,
+  round(nvl(o.cost_a, 0) / o.ndsd, 2) as cost_a_wo_nds,
+  round(nvl(o.cost_d, 0) / o.ndsd, 2) as cost_d_wo_nds,
+  round(nvl(o.cost_m, 0) / o.ndsd, 2) as cost_m_wo_nds,
+  case when o.dt_cancel is null then 0 else 1 end as cancel,
+  o.dt_beg + trunc(((o.dt_otgr - o.dt_beg) / 2)) as dt_pnr,
+  cl.complaints_names as complaints,
+  --tl.thn_names as thn,
+  case when nvl(agg.cnt_thn, 0) = 0 then '' else '[технолог]' end as to_thn,
+  --kl.kns_names as kns,
+  case when nvl(agg.cnt_kns, 0) = 0 then '' else '[конструктор]' end as to_kns,
+  he.estimates,
+  he.dt_estimate_max,
+  --agg.qnt_sn_no,
+  --decode(nvl(agg.qnt_sn_no, 0), 0, '+', '-') as sn_status,
+  decode(nvl(agg.qnt_xml_no, 0), 0, '+', '-') as xml_status,
+  case when agg.dt_thn_cnt = agg.cnt_thn_total then agg.dt_thn_max else null end as dt_thn_max,
+  case when agg.dt_kns_cnt = agg.cnt_kns_total then agg.dt_kns_max else null end as dt_kns_max,
+  trunc(o.dt_aggr_estimate - o.dt_beg) as days_aggr_estimate,
+  F_GetCostOrderItemsFromItm(o.id, null) as sum0,
+  --0 as sum0,
+  sz.id_status as id_status_itm,
+  sz.statusname as status_itm,
+  trunc(rsv.dt_reserve) as dt_reserve,
+  agg.qnt_slashes,
+  agg.qnt_items,
+  agg.qnt_in_prod,
+  agg.qnt_to_sgp,
+  agg.qnt_boards_m2,
+  agg.qnt_edges_m,
+  agg.qnt_glass_m2,
+  agg.qnt_paint_kg,
+  agg.qnt_panels_w_drill_all,
+  case
+    when nvl(agg.cnt_thn, 0) = 0 then null
+    else decode(o.dt_to_sgp, null, trunc(sysdate) - o.dt_otgr, o.dt_to_sgp - o.dt_otgr)
+  end as early_or_late
+from
+  orders o,
+  orders ob,
+  ref_sn_organizations ro,
+  ref_customers rc,
+  ref_customer_contact rcc,
+  ref_customer_legal rcl,
+  or_formats f,
+  ref_production_areas pa,
+  adm_users au,
+  v_order_hasestimate he,
+  order_items_agg agg,
+  --thn_list tl,
+  --kns_list kl,
+  complaints_list cl,
+  dv.zakaz z,
+  dv.status_zakaza sz,
+  (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv,
+  order_types ot
+where
+  ob.ornum (+) = o.or_reference
+  and ro.id (+) = o.id_organization
+  and rc.id (+) = o.id_customer
+  and rcc.id (+) = o.id_customer_contact
+  and rcl.id (+) = o.id_customer_org
+  and f.id (+) = o.id_format
+  and au.id (+) = o.id_manager
+  and pa.id (+) = o.area
+  and he.id_order (+) = o.id
+  and agg.id_order (+) = o.id
+  --and tl.id_order (+) = o.id
+  --and kl.id_order (+) = o.id
+  and cl.id_order (+) = o.id
+  and z.id_zakaz (+) = o.id_itm
+  and sz.id_status (+) = z.id_status
+  and rsv.id_doc (+) = o.id_itm
+  and ot.id (+) = o.id_type2
+;
 
 create or replace view v_orders_list as 
 select
@@ -696,16 +728,7 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
---alter table order_items add disassembled number default 0;
---alter table order_items add control_assembly number default 0;  
---alter table order_items add qnt_to_sgp number default 0; 
---alter table order_items add constraint fk_order_items_std_item foreign key (id_std_item) references or_std_items(id);
---alter table order_items drop column id_itm_group;
-alter table order_items add dt_est date;
-alter table order_items add dt_est_last date;
-alter table order_items add dt_kns_last date;
-alter table order_items add dt_thn_last date;
-alter table order_items add qnt_paint_kg number;
+--alter table order_items add qnt_paint_kg number;
 
 
 create table order_items (
@@ -752,13 +775,6 @@ create table order_items (
   qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   is_xml_loaded number default 0,      --загружен xml
   labor_intensity number,              --трудоемкость, мин.
-/*  cutting_time number,                 --раскрой
-  bending_time number,                 --гибка
-  welding_time number,                 --сварка
-  grinding_time number,                --зачистка
-  prep_painting_time number,           --подготовка к покраске
-  painting_time number,                --покраска
-  assembly_time number,                --сбрка*/
   dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_doc date,                         --дата выдачи бумажных документов по заказу технологами
@@ -773,6 +789,26 @@ create unique index idx_order_items_pos on order_items(id_order, pos);
 create index idx_order_items_id_order on order_items(id_order);
 create index idx_order_items_id_std_item on order_items(id_std_item);
 create index idx_order_items_id_order on order_items(id_order);
+create index idx_order_items_id_thn on order_items(id_thn);
+create index idx_order_items_id_kns on order_items(id_kns);
+create index idx_order_items_id_order_qnt on order_items(id_order, qnt);
+
+create index idx_order_items_covering on order_items(
+  id_order,
+  qnt,
+  id_kns,
+  id_thn,
+  dt_kns,
+  dt_thn,
+  is_xml_loaded,
+  qnt_to_sgp,
+  sgp,
+  qnt_boards_m2,
+  qnt_edges_m,
+  qnt_glass_m2,
+  qnt_paint_kg,
+  qnt_panels_w_drill
+);
 
 create sequence sq_order_items nocache;
 
@@ -783,7 +819,7 @@ begin
 end;
 /
 
-
+/*
 create or replace view v_order_items as (
   select
     i.*,
@@ -849,6 +885,154 @@ create or replace view v_order_items as (
    i.id_itm = n.id_nomencl (+) and
    i.id_itm = niz.id_nomizdel_parent_t (+)
 );
+
+
+
+create or replace view v_order_items as (
+  select
+    i.*,
+    o.ornum,
+    o.id_organization,
+    o.area,
+    rc.name as customer,    
+    o.project,
+    o.or_reference,
+    ob.dt_beg as ref_dt_beg, 
+    ob.dt_otgr as ref_dt_otgr, 
+    o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
+    o.id_itm as id_order_itm,
+    o.sync_with_itm,
+    o.dt_beg,
+    o.dt_end,
+    o.dt_otgr,
+    o.path,
+    o.in_archive,
+    uk.name as kns,
+    ut.name as thn,
+    s.name as itemname,
+    (case 
+      when ee.id > 0 then ee.prefix
+      else ''
+    end) prefix, 
+    (case 
+      when ee.id > 0 then ee.prefix || '_'
+      else ''
+    end) || s.name  as fullitemname,  --наименование с префиксом формата, только для стандартных изделий и стандартной д/к
+    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
+    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
+    es.dt as dt_estimate,
+    F_GetCostOrderItemsFromItm(o.id, i.id) as sum0,
+    (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
+     round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
+    niz.cnt as has_itm_est,
+    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
+    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
+    cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total
+  from
+    order_items i,
+    orders o,
+    orders ob,
+    ref_customers rc,
+    or_std_items s,
+    or_format_estimates fe, 
+    or_format_estimates ee, 
+    adm_users uk,
+    adm_users ut,
+    estimates es,
+    dv.nomenclatura n,
+    (select id_nomizdel_parent_t, count(*) as cnt from dv.nomenclatura_in_izdel group by id_nomizdel_parent_t) niz
+ where
+   i.id_order = o.id and
+   ob.ornum (+) = o.or_reference and
+   rc.id(+) = o.id_customer and  
+   i.id_std_item = s.id (+) and
+   s.id_or_format_estimates = ee.id (+) and
+   o.id_or_format_estimates = fe.id (+) and
+   i.id_kns = uk.id (+) and
+   i.id_thn = ut.id (+) and
+   i.id = es.id_order_item (+) and
+   i.id_itm = n.id_nomencl (+) and
+   i.id_itm = niz.id_nomizdel_parent_t (+)
+);
+*/
+
+create or replace view v_order_items as
+with
+--вью изделии в заказах
+  -- материализуем агрегацию по входящим изделиям (если таблица большая)
+  niz_agg as (
+    select id_nomizdel_parent_t, count(*) as cnt
+    from dv.nomenclatura_in_izdel
+    group by id_nomizdel_parent_t
+  ),
+  -- один раз вычисляем маршрут для каждого id (если F_OrItemRoute детерминирована)
+  routes as (
+    select
+      i.id,
+      F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route_val
+    from order_items i
+  )
+select
+  i.*,
+  o.ornum,
+  o.id_organization,
+  o.area,
+  rc.name as customer,
+  o.project,
+  o.or_reference,
+  ob.dt_beg as ref_dt_beg,
+  ob.dt_otgr as ref_dt_otgr,
+  o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
+  o.id_itm as id_order_itm,
+  o.sync_with_itm,
+  o.dt_beg,
+  o.dt_end,
+  o.dt_otgr,
+  o.path,
+  o.in_archive,
+  uk.name as kns,
+  ut.name as thn,
+  s.name as itemname,
+  case when ee.id > 0 then ee.prefix else '' end as prefix,
+  case when ee.id > 0 then ee.prefix || '_' else '' end || s.name as fullitemname,
+  r.route_val as route,
+  r.route_val as route2,   -- используем тот же результат
+  es.dt as dt_estimate,
+  f_get_order_item_raw_price(i.id) as sum0,
+  --F_GetCostOrderItemsFromItm(o.id, i.id) as sum0,
+  (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
+   round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
+  niz.cnt as has_itm_est,
+  case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
+  nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
+  cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total
+from
+  order_items i,
+  orders o,
+  orders ob,
+  ref_customers rc,
+  or_std_items s,
+  or_format_estimates ee,
+  adm_users uk,
+  adm_users ut,
+  estimates es,
+  dv.nomenclatura n,
+  niz_agg niz,
+  routes r
+where
+  i.id_order = o.id
+  and ob.ornum (+) = o.or_reference
+  and rc.id (+) = o.id_customer
+  and i.id_std_item = s.id (+)
+  and s.id_or_format_estimates = ee.id (+)
+  and i.id_kns = uk.id (+)
+  and i.id_thn = ut.id (+)
+  and i.id = es.id_order_item (+)
+  and i.id_itm = n.id_nomencl (+)
+  and i.id_itm = niz.id_nomizdel_parent_t (+)
+  and r.id (+) = i.id
+;
+
 
 select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY'); 
 
@@ -1153,27 +1337,29 @@ begin
 end;
 /
 
-
+/*
 create or replace view v_or_std_items as (
   select
     i.*,
     fi.prefix,
     fi.id_format,
     fi.type,
+    fi.name as or_format_estimate_name,  
     orf.name as or_format_name,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
     --F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
     F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
-    prc.sum as priceraw
-    ,rtrim(
-    (select 
-       regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
-       from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
-       where id_or_std_item = i.id
-    ), ', ') as route,
+    prc.sum as priceraw,
+    prc.sum / 1.22 as priceraw_wo_nds,
+--    ,rtrim(
+--    (select 
+--       regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
+--       from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
+--       where id_or_std_item = i.id
+--    ), ', ') as route,
     --процент стоимости материалов
-    case when nvl(i.price, 0) = 0 then null else round(nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) / nvl(i.price, 0) * 100, 2) end as material_percent,
+    case when nvl(i.price, 0) = 0 then null else round(nvl(decode(i.price_check, null, prc.sum / 1.22, i.price_check), 0) / nvl(i.price, 0) * 100, 2) end as material_percent,
     fi.is_semiproduct,
     i0.labor_intensity as labor_intensity_0,
     i0.labor_cost as labor_cost_0,
@@ -1199,10 +1385,52 @@ create or replace view v_or_std_items as (
    and i0.id = i.id and i0.id_area = 0
    and i2.id = i.id and i2.id_area = 2
 );   
+*/
 
+
+create or replace view v_or_std_items as
+select
+    i.*,
+    fi.prefix,
+    fi.id_format,
+    fi.type,
+    fi.name as or_format_estimate_name,  
+    orf.name as or_format_name,
+    decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
+    f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
+    e.dt as dt_estimate,
+    prc.priceraw,
+    prc.priceraw / 1.22 as priceraw_wo_nds,
+    case 
+        when nvl(i.price, 0) = 0 then null 
+        else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / nvl(i.price, 0) * 100, 2) 
+    end as material_percent,
+    fi.is_semiproduct,
+    i0.labor_intensity as labor_intensity_0,
+    i0.labor_cost as labor_cost_0,
+    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_0,
+    i2.labor_intensity as labor_intensity_2,
+    i2.labor_cost as labor_cost_2,
+    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2
+from
+    or_std_items i
+    left join estimates e on i.id = e.id_std_item
+    join or_format_estimates fi on i.id_or_format_estimates = fi.id
+    join or_formats orf on fi.id_format = orf.id
+    join v_or_std_labor_intensity i0 on i.id = i0.id and i0.id_area = 0
+    join v_or_std_labor_intensity i2 on i.id = i2.id and i2.id_area = 2
+    join (select id, f_get_stditem_raw_price(id) as priceraw from or_std_items) prc on prc.id = i.id;
+    
+    
+    
+    
+    
 ((select i.id_or_std_item, t.code, t.pos, row_number() over (order by t.pos) no from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type));
 
-select count(*) from v_or_std_items;
+--список всех стаандартных изделий
+select or_format_name, or_format_estimate_name, prefix, name from v_or_std_items where id_format <> 0 order by or_format_name, or_format_estimate_name, name;
+--список стандартных изделий, запцущенныых по заказам текущего года
+select or_format_name, or_format_estimate_name, prefix, name from v_or_std_items where id_format <> 0 and id_format in (select distinct id_or_format_estimates from orders where dt_beg >= date '2026-01-01') order by or_format_name, or_format_estimate_name, name;
 
 select route, route2 from v_or_std_items;
 
@@ -2749,7 +2977,8 @@ WHERE id_order_dv IN (
 )
 ORDER BY id_order_dv;
 
-
+--------------------------------------------------------------------------------
+--выгрузка станлдартных изделий
 
 
 

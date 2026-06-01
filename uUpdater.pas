@@ -31,13 +31,16 @@ unit uUpdater;
 
 interface
 
+uses
+  uString;
+
 procedure CheckForUpdatesAndRunUpdater;
+function SyncFilesFromServer(const AFileList: TVarDynArray): Boolean;
 
 implementation
 
 uses
-  System.SysUtils, System.IOUtils, System.Classes, Winapi.Windows, Winapi.ShellAPI,
-  uData;
+  System.SysUtils, System.IOUtils, System.Classes, Winapi.Windows, Winapi.ShellAPI, uData;
 
 function GetAllParams: string;
 var
@@ -196,6 +199,62 @@ begin
       MessageBox(0, PChar('Ошибка при обновлении программы ' + ExeBaseName + '.'#13#10'Программа будет завершена.'), 'Ошибка', MB_OK + MB_ICONERROR);
       Halt(1);
     end;
+  end;
+end;
+
+function SyncFilesFromServer(const AFileList: TVarDynArray): Boolean;
+var
+  ExeDir, UpdaterDir, UpdaterDirFile, ServerBasePath, ServerAppDir: string;
+  LocalFile, ServerFile, FileName: string;
+  i: Integer;
+  NeedSync: Boolean;
+begin
+  Result := False;
+  ExeDir := ExtractFilePath(ParamStr(0));
+  UpdaterDir := ExeDir + 'Updater' + PathDelim;
+  UpdaterDirFile := UpdaterDir + 'updater.dir';
+
+  if not TFile.Exists(UpdaterDirFile) then
+    Exit;
+
+  try
+    with TStringList.Create do
+    try
+      LoadFromFile(UpdaterDirFile, TEncoding.ANSI);
+      if Count = 0 then Exit;
+      ServerBasePath := Trim(Strings[0]);
+    finally
+      Free;
+    end;
+
+    ServerBasePath := IncludeTrailingPathDelimiter(ServerBasePath);
+    ServerAppDir := ServerBasePath + 'Application' + PathDelim;
+
+    for i := 0 to High(AFileList) do
+    begin
+      FileName := AFileList[i].AsString;
+      if FileName = '' then Continue;
+
+      LocalFile := ExeDir + FileName;
+      ServerFile := ServerAppDir + FileName;
+
+      // Если исходного файла нет на сервере — считаем ошибкой
+      if not TFile.Exists(ServerFile) then
+        Exit;   // возвращаем False
+
+      NeedSync := (not TFile.Exists(LocalFile)) or
+                  (TFile.GetLastWriteTime(LocalFile) <> TFile.GetLastWriteTime(ServerFile));
+
+      if NeedSync then
+      begin
+        ForceDirectories(ExtractFilePath(LocalFile));
+        TFile.Copy(ServerFile, LocalFile, True);
+      end;
+    end;
+
+    Result := True;
+  except
+    Result := False;
   end;
 end;
 

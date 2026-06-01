@@ -109,6 +109,8 @@ uses
   V_MDI, V_Normal, uFrmBasicMdi,
   uFrmMain,
   uTurv,
+  uSnCalendar,
+  uOrders,
 
   uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
 
@@ -565,6 +567,7 @@ begin
     myfrm_Rep_SnCalendarByDate,
     myfrm_Rep_SnCalendar_Transport,
     myfrm_Rep_SnCalendar_AccMontage,
+    myfrm_Rep_Purchase_Prices,
 
     {работники}
     myfrm_R_TurvCodes,
@@ -766,6 +769,12 @@ begin
   end
   else if F = myfrm_Dlg_ExportTurvToXls then begin
     Turv.SaveAllTurvToExportTable;
+  end
+  else if F = myfrm_Dlg_DeleteOutdatedAccounts then begin
+    SnCalendar.EraseOutdatedAccounts(AOwner);
+  end
+  else if F = myfrm_Dlg_DeleteOutdatedOrders then begin
+    Orders.EraseOutdatedOrders(AOwner);
   end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');

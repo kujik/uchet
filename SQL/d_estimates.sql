@@ -748,7 +748,7 @@ create or replace view v_estimate as (
     ei.id_estimate = e.id
 );
 */
-
+/*
 create or replace view v_estimate as (
   select
     ei.*,
@@ -793,6 +793,49 @@ create or replace view v_estimate as (
     ei.id_estimate = e.id
 );
 
+*/
+create or replace view v_estimate as
+select
+  ei.*,
+  bn.name as bname,
+  case
+    when si.name is not null
+      then decode(fe.prefix, '', '', fe.prefix || '_') || si.name
+    else bn.name
+  end as name,
+  bg.name as groupname,
+  bu.name as unit,
+  bc.name as comm,
+  fe.prefix,
+  e.id_order_item,
+  e.id_std_item,
+  prc.price,
+  ei.qnt1_itm * nvl(prc.price, 0) as sum1,
+  2 as cidsemiproduct,
+  103 as cidkrep,
+  104 as cidproduct,
+  1 as cidstuff
+from
+  estimate_items ei,
+  bcad_nomencl bn,
+  bcad_units bu,
+  bcad_comments bc,
+  bcad_groups bg,
+  or_std_items si,
+  or_format_estimates fe,
+  estimates e,
+  (select id, f_get_estitem_raw_price(id) as price from estimate_items) prc
+where
+  ei.id_name = bn.id (+)
+  and ei.id_unit = bu.id (+)
+  and ei.id_comment = bc.id (+)
+  and ei.id_group = bg.id (+)
+  and ei.id_or_std_item = si.id (+)
+  and si.id_or_format_estimates = fe.id (+)
+  and ei.id_estimate = e.id (+)
+  and prc.id (+) = ei.id
+;
+
 create or replace view v_estimate_add as 
 select
   e.*,
@@ -804,7 +847,7 @@ where
   e.name = n.name (+) 
 ;
 
-create or replace view vv_aggregate_estimate_add as 
+/*create or replace view v_aggregate_estimate_add as 
 select
   e.*,
   n.artikul
@@ -814,7 +857,7 @@ from
 where
   e.name = n.name (+) 
 ;
-
+*/
 alter table estimate_items drop column id_name_resale;
 
 
@@ -895,8 +938,8 @@ select
   sum(e.qnt_itm) as qnt_itm
 from
   v_estimate_add e,
-  v_orders o,
-  v_order_items i
+  orders o,
+  order_items i
 where
   i.id_order = o.id and
   e.id_order_item = i.id
@@ -1029,6 +1072,26 @@ order by
 
 
 select * from or_std_items;
+
+
+
+    select
+      b.name as b_name
+    from
+      or_std_items i,
+      or_format_estimates fi,
+      estimates e,
+      estimate_items ei,
+      bcad_nomencl b
+    where
+      id_or_format_estimates = fi.id
+      and e.id_std_item = i.id
+      and ei.id_estimate = e.id
+      and b.id = ei.id_name
+      and b.name = i.name
+;      
+
+    
 
 
 

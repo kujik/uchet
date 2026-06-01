@@ -1151,3 +1151,9 @@ insert into ref_production_areas (id, name, shortname, order_prefix, active) val
 insert into ref_production_areas (id, name, shortname, order_prefix, active) values (2, 'Деминская', 'ДМ', 'ДМ', 1);  
 insert into ref_production_areas (id, name, shortname, order_prefix, itm_suffix, active) values (3, 'Металл Деминская', 'МТ', 'МТ', 'МТ', 1);  
 
+
+--------------------------------------------------------------------------------
+create table adm_ldap_users_ext (
+  guid varchar2(256),       --objectguid
+  comm varchar2(1000)       --произвольный комментарий
+);  

@@ -405,3 +405,11 @@ select pos from order_items i, orders o where o.id = i.id_order and o.templatena
 order_stages
 v_order_finreport_inprod
 */
+
+
+--------------------------------------------------------------------------------
+v_order_items
+v_aggregate_estimate
+v_estimate
+f_get_estitem_raw_price
+v_order_items

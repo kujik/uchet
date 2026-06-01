@@ -385,7 +385,8 @@ type
     //проверяет, задано ли значение переменной типа Variant
     function VarIsClear(const AValue: Variant): Boolean;
     //возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
-    procedure GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
+//    procedure GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
+    procedure GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
     procedure GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
   end;
 
@@ -2252,6 +2253,43 @@ begin
   Result := not (VarIsEmpty(AValue) or VarIsNull(AValue));
 end;
 
+procedure TMyStringHelper.GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
+//возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
+//('Сегодня', 'Вчера', 'Эта неделя', 'Прошлая неделя', 'Эти две недели', 'Прошлые две недели', 'Этот месяц', 'Прошлый месяц', ==7
+//'Этот квартал', 'Прошлый квартал','Этот год', 'Прошлый год');
+var
+  i, d, d1, d2, p, y, q, m: Integer;
+  dt: TDateTime;
+  sa: TStringDynArray;
+begin
+  dt := Date;
+  dt1 := Date;
+  dt2 := Date;
+  if VarType(Period) = varInteger
+    then p := Period
+    else begin
+      p := 0;
+      for p := 1 to High(DatePeriods) do
+        if ToUpper(Period) = ToUpper(DatePeriods[p])
+          then Break;
+    end;
+  if (p <= 0) or (p > High(DatePeriods)) then
+    Exit;
+  case p of
+    1: begin dt1 := IncDay(Date, -1); dt2 := dt1; end;
+    2: begin dt1 := Date - (DayOfWeek(dt) - 2); dt2 := Date - (DayOfWeek(dt) - 2) + 6; end;
+    3: begin dt1 := Date - (DayOfWeek(dt) - 2) - 7; dt2 := Date - (DayOfWeek(dt) - 2) + 6 - 7; end;
+    4: begin d := IIf(DayOf(dt) < 16, 1, 16); d2 := Min(d + 15, DaysInMonth(Date)); dt1 := EncodeDate(YearOf(dt), MonthOf(Dt), d); dt2 := EncodeDate(YearOf(dt), MonthOf(Dt), d2); end;
+    5: begin dt := IncDay(dt, -14); d := IIf(DayOf(dt) < 16, 1, 16); d2 := Min(d + 15, DaysInMonth(dt)); dt1 := EncodeDate(YearOf(dt), MonthOf(Dt), d); dt2 := EncodeDate(YearOf(dt), MonthOf(Dt), d2); end;
+    6: begin dt1 := EncodeDate(YearOf(Date), MonthOf(Date), 1); dt2 := EncodeDate(YearOf(Date), MonthOf(Date), DaysInMonth(Date)); end;
+    7: begin dt := IncMonth(Date, -1);  dt1 := EncodeDate(YearOf(dt), MonthOf(dt), 1); dt2 := EncodeDate(YearOf(dt), MonthOf(dt), DaysInMonth(dt)); end;
+    8: begin Q := (MonthOf(dt) - 1) div 3 + 1; M := (Q - 1) * 3 + 1; dt1 := EncodeDate(YearOf(dt), M, 1); dt2 := EndOfTheMonth(EncodeDate(YearOf(dt), M + 2, 1)); end;
+    9: begin Q := (MonthOf(dt) - 1) div 3 + 1; M := (Q - 1) * 3 + 1; dt1 := EncodeDate(YearOf(dt), M, 1); dt2 := EndOfTheMonth(EncodeDate(YearOf(dt), M + 2, 1)); dt1 := IncMonth(dt1, -3); dt2 := IncMonth(dt2, -3); end;
+    10: begin dt1 := EncodeDate(YearOf(Date), 1, 1); dt2 := EncodeDate(YearOf(Date), 12, 31); end;
+    11: begin dt1 := EncodeDate(YearOf(Date) - 1, 1, 1); dt2 := EncodeDate(YearOf(Date) - 1, 12, 31); end;
+  end;
+end;
+(*
 procedure TMyStringHelper.GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
 //возвращает даты начала и конца периода по массиву DatePeriods (по номеру элемента или названию). если не найдено - возвращает сегодня
 var
@@ -2343,7 +2381,7 @@ begin
         ADateTo := EncodeDate(YearOf(AStartDate) - 1, 12, 31);
       end;
   end;
-end;
+end;*)
 
 procedure TMyStringHelper.GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
 begin

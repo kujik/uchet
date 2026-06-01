@@ -947,6 +947,7 @@ const
   myfrm_Rep_Orders_Overdue_Kns_Thn='Rep_Orders_Overdue_Kns_Thn';
   myfrm_J_Pdo_Order_Stage_Dates='J_Pdo_Order_Stage_Dates';
   myfrm_Rep_Orders_Audit='Rep_Orders_Audit';
+  myfrm_Rep_Purchase_Prices='Rep_Purchase_Prices';
 
 
   //диалоги
@@ -1053,6 +1054,8 @@ const
   myfrm_Dlg_AdvanceCash ='Dlg_AdvanceCash';
   myfrm_Dlg_ProdCalculation='Dlg_ProdCalculation';
   myfrm_Dlg_ExportTurvToXls='Dlg_ExportTurvToXls';
+  myfrm_Dlg_DeleteOutdatedOrders='Dlg_DeleteOutdatedOrders';
+  myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
 
 const
   DefHorizMargin = 5;
@@ -1476,6 +1479,10 @@ const
   rAdm_Installer = '0-10';
   rAdm_ActiveDirectoryUsers = '0-11';
   rAdm_LanUsers = '0-12';
+  rAdm_ActiveDirectoryUsers_Ch = '0-13';
+  rAdm_ActiveDirectoryUsers_ChAll = '0-14';
+  rAdm_ActiveDirectoryUsers_ABook = '0-15';
+  rAdm_DeleteOutdatedOrdersAndAccounts = '0-16';
 
   rPC_R_Exp_Change = '1-01';
   rPC_R_Sp_Add = '1-02';
@@ -1574,6 +1581,9 @@ const
   rW_R_PersBonus_Ch='2-26';
   rW_J_PersBonus_V='2-27';
   rW_J_PersBonus_Ch='2-28';
+  rW_ActiveDirectoryUsers_Ch = '2-101';
+  rW_ActiveDirectoryUsers_ChAll = '2-102';
+  rW_ActiveDirectoryUsers_ABook = '2-103';
 
   rProd_R_Materials_V = '5-01';
   rProd_J_Otk_V = '5-02';
@@ -1728,10 +1738,11 @@ const
   rOr_D_Order_InputDocDate='6-149';
   rOr_Rep_Orders_Audit='6-150';
   rOr_D_Order_EnteringAccount='6-151';
+  rOr_Rep_Purchase_Prices='6-152';
 
 
   const
-  URights : array [0..261] of array [0..3] of string = (
+  URights : array [0..269] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1743,11 +1754,15 @@ const
     (rAdm_Other_SessionManager,'','Разное','Просмотр сессий и принудительное завершение работы пользователей'),
     (rAdm_Other_Tasks,'','Разное','Управеление фоновыми задачами'),
     (rAdm_Other_DeleteOnServer,'','Разное','Удаление файлов и папок на сервере'),
+    (rAdm_DeleteOutdatedOrdersAndAccounts,'','Разное','Удаление старых счетов и заказов'),
     (rAdm_Itm_CopyUserRights,'','Разное','Копирование прав пользователя для ИТМ'),
     (rAdm_Settings_Main,'','Настройки','Общие настройки приложения'),
     (rAdm_Settings_Modules,'','Настройки','Настройки модулей'),
     (rAdm_Installer,'','Разное','Установщик модулей Учета'),
-    (rAdm_ActiveDirectoryUsers,'','Разное','Пользователи AD'),
+    (rAdm_ActiveDirectoryUsers,'','Разное','Пользователи AD, просмотр'),
+    (rAdm_ActiveDirectoryUsers_Ch,'','Разное','Пользователи AD, редактирование именных записей'),
+    (rAdm_ActiveDirectoryUsers_ChAll,'','Разное','Пользователи AD, редактирование всех записей'),
+    (rAdm_ActiveDirectoryUsers_ABook,'','Разное','Пользователи AD, обновление адресной книги'),
     (rAdm_LanUsers,'','Разное','Пользователи компьютеров'),
 
 
@@ -1819,6 +1834,9 @@ const
     (rW_R_Holideys_V,'Модуль "Работники"','Справочник: Производственный календарь','Доступ к справочнику'),
     (rW_R_Holideys_Ch,'Модуль "Работники"','Справочник: Производственный календарь','Добавление, изменение, удаление'),
     (rW_ActiveDirectoryUsers,'Модуль "Работники"','Справочник: Пользователи AD','Доступ к справочнику'),
+    (rW_ActiveDirectoryUsers_Ch,'Модуль "Работники"','Справочник: Пользователи AD', 'Редактирование именных записей'),
+    (rW_ActiveDirectoryUsers_ChAll,'Модуль "Работники"','Справочник: Пользователи AD', 'Редактирование всех записей'),
+    (rW_ActiveDirectoryUsers_ABook,'Модуль "Работники"','Справочник: Пользователи AD', 'Обновление адресной книги'),
     (rW_R_Workers_V,'Модуль "Работники"','Журналы: Работники','Просмотр журнала'),
     (rW_R_Workers_Ch,'Модуль "Работники"','Журналы: Работники','Добавление, изменение, удаление работников'),
     (rW_J_WorkerStatus_Ch,'Модуль "Работники"','Журналы: Работники','Прприем, перевод, увольнение'),
@@ -1989,6 +2007,7 @@ const
     (rOr_J_SplDealsMonitoring,'Модуль "Заказы"','Отчеты','Мониторинг сделок снабжения'),
     (rOr_Rep_Orders_Overdue_Kns_Thn,'Модуль "Заказы"','Отчеты','Выполнение сроков конструкторами/технологами'),
     (rOr_Rep_Orders_Audit,'Модуль "Заказы"','Отчеты','Журнал операций по заказам'),
+    (rOr_Rep_Purchase_Prices,'Модуль "Заказы"','Отчеты','Отчет по закупочным ценам'),
     (rOr_Other_Order_FindEstimate,'Модуль "Заказы"','Сервис: Поиск сметы по сметной позиции', 'Доступ'),
     (rOr_Other_ItmInfo,'Модуль "Заказы"','Сервис: Информация по ИТМ', 'Доступ'),
     (rOr_Other_ItmExtNomencl,'Модуль "Заказы"','Сервис: Расширенный справочник номенклатуры ИТМ', 'Доступ'),

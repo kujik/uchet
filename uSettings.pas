@@ -929,10 +929,14 @@ begin
     //но в программе в дбгридех исчезают в отображегнии столбцы слева и в €чейках оказываютс€ не те данные, хот€ при этом соотвествие и количество
     //в определении полей и гриде также сохран€ютс€ (провер€ем  Grid.TestCompareFC;)
     //случилось только в деитальной таблице заказов у двоих пользователей при изменении в коде определени€ полей.
-    for i := High(va) downto 0 do begin
+//    for i := High(va) downto 0 do begin
+    try
+    for i := 0 to High(va) do begin
       j := Grid.DbGridEh1.FindFieldColumn(va[i]).Index;
       if j <> i then
         Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
+    end;
+    except
     end;
 
     Grid.Options := Grid.Options + oplus - ominus;

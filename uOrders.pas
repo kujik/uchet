@@ -3070,7 +3070,7 @@ begin
   vin := [IncMonth(dtcash, -1)];
   if TFrmBasicInput.ShowDialog(AOwner, '', [], FEdit, '~Очистка старых заказов.', 220, 140,
     [[cntDTEdit,'Очистить заказы ранее: ', S.DateTimeToIntStr(EncodeDate(2026, 01, 01)) + ':' + S.DateTimeToIntStr(dtcash), 90, 0]],
-    vin, vout, [['Будут очищены заказы Ника, начатые ранее введенной даты, полностью оплаченные ранее этой же даты, и завершенные.']], nil
+    vin, vout, [['Будут очищены заказы Ника, начатые не позднее введенной даты, полностью оплаченные ранее этой же даты, и завершенные.']], nil
   ) < 0 then Exit;
   Q.QSetContextValue('delete_orders_dt', vout[0]);
   cnt := Q.QLoadValue('select count(*) from v_get_outdated_orders', []);
@@ -3083,15 +3083,20 @@ begin
   else if MyQuestionMessage('Будут безвозвратно очищены данные по ' + S.GetEndingFull(cnt, 'заказ', 'у', 'ам', 'ам') + '.'#13#10'Продолжить?') <> mrYes then
     Exit;
   ShowWaitForm('Очистка заказов...');
-  Q.QLoad('select dt_beg, path, in_archive from orders where id in (select id from v_get_outdated_orders)', [], na);
+  Q.QLoad('select dt_beg, path, in_archive from orders where id in (select id from v_get_outdated_orders) order by dt_beg', [], na);
   dirs := '';
   for i := 0 to na.High do
     S.ConcatStP(dirs, Module.GetPath_Order(IntToStr(YearOf(na.G(i, 'dt_beg'))), na.G(i, 'in_archive')) + '\' + na.G(i, 'path'), #13#10);
   dirs := StringReplace(dirs, '\', '/', [rfReplaceAll]);
+  dirs := StringReplace(dirs, '//10.1.1.14/', 'Zakaz_all/', [rfReplaceAll]);
   if MyQuestionMessage('Будут очищены перечисленные ниже заказы. Продолжить?'#13#10#13#10 + dirs, 1) <> mrYes then
     Exit;
   ShowWaitForm('Очистка заказов...');
-Exit;
+  Q.QBeginTrans(True);
+  Q.QCallStoredProc('p_clear_outdated_order', '', []);
+  Q.QCommitTrans;
+  if Q.PackageMode <> 1 then
+    Exit;
   Tasks.CreateTaskRoot(mytskopDeleteDirectoriesFromList, [
     ['directories', dirs]
   ]);

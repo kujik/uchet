@@ -1,6 +1,7 @@
 {
 диалог запроса пароля
 передается массив допустимых паролей, диалог возвращает номер введенного, при ошибке выдает сообщение, при отмене вернет -1
+если вызван ShowDialogP, то по Ок всегда выйдет с результатом, равным введенному тексту
 }
 
 unit uFrmXDinputPwd;
@@ -23,6 +24,7 @@ type
     procedure VerifyBeforeSave; override;
   public
     function ShowDialog(AOwner: TObject; APwds: TVarDynArray): Integer;
+    function ShowDialogP(AOwner: TObject): string;
   end;
 
 var
@@ -45,12 +47,28 @@ begin
   FPwds := APwds;
   edtPwd.Text := '';
   if ShowModal = mrOk then
-    Result := A.PosInArray(edtPwd.Text, APwds);
+    if (Length(FPwds) > 0) then
+      Result := A.PosInArray(edtPwd.Text, APwds)
+    else
+      Result := 0;
 end;
+
+function TFrmXDinputPwd.ShowDialogP(AOwner: TObject): string;
+begin
+  Result := '';
+  PrepareCreatedForm(AOwner, Self.Name, '~*', fEdit, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB]);
+  FPwds := [];
+  edtPwd.Text := '';
+  if ShowModal = mrOk then
+    Result := edtPwd.Text
+  else
+    Result := '';
+end;
+
 
 procedure TFrmXDinputPwd.VerifyBeforeSave;
 begin
-  if not A.InArray(edtPwd.Text, FPwds) then
+  if (Length(FPwds) > 0) and not A.InArray(edtPwd.Text, FPwds) then
     FErrorMessage := 'Ошибка!';
 end;
 

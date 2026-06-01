@@ -60,17 +60,17 @@ begin
     ['id_or_format_estimates','_id_format_est',''],
     ['wo_estimate','_wo_estimate',''],
     ['name','Наименование','500;h'],
-    ['price$f','Цена','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['price_pp$f','Перепродажа','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['priceraw$f','Цена по смете','70','f=r'],
-    ['price_check$f','Контрольная цена','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['material_percent','Стоимость материалов, %','75'],
+    ['price$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
+    ['price_pp$f','Перепродаж (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
+    ['priceraw$f','Цена по смете (с НДС)','70','f=r'],
+    ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r'],
+    ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
+    ['material_percent','Стоимость материалов (без НДС), %','75'],
     ['route2','Производственный маршрут','120'],
 //    ['route','Производственный маршрут','120'],
     ['qnt_panels_w_drill','Сверловка, панелей','80'],
     ['dt_estimate','Смета','75'],
     ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
-//    ['labor_intensity','Трудо-'#13#10'емкость','65'],
     ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
     ['labor_cost_0','!Стоимость','75'],
     ['labor_percent_0','!%','65'],
@@ -90,6 +90,7 @@ begin
   );
   Frg1.Opt.SetButtonsIfEmpty([1000]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
+  Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
   SetCbEstimate;
   Frg1.InfoArray:=[
     [Caption + '.'#13#10+
@@ -222,8 +223,11 @@ end;
 
 procedure TFrmOGrefOrStdItems.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
 begin
-  if Fr.IsPrepared then
-    Fr.RefreshGrid;
+  if not Fr.IsPrepared then
+    Exit;
+  if TControl(Sender).Name = 'chbAll' then
+    SetCbEstimate;
+  Fr.RefreshGrid;
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
@@ -274,9 +278,10 @@ begin
   Q.QLoadToDBComboBoxEh(
     'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id '+
     'from or_formats f, or_format_estimates e '+
-    'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))'+
+    'where e.id_format = f.id and e.active >= :c1$i and f.active >= :c2$i and ((e.id_format > 1)or(e.id_format = 0))'+
     'order by 1 asc',
-    [], TDBComboBoxEh(Frg1.FindComponent('CbEstimate')), cntComboLK
+    [S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0), S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0)],
+    TDBComboBoxEh(Frg1.FindComponent('CbEstimate')), cntComboLK
   );
   TDBComboBoxEh(Frg1.FindComponent('CbEstimate')).ItemIndex:=0;  //нужно в случае первого запуска у пользователя, если значение комбобокса не чиатеся из бд, или он был очищен перед закрытием журнала
 end;

@@ -20,12 +20,4 @@ inherited FrmXDinputPwd: TFrmXDinputPwd
       end
     end
   end
-  inherited pnlStatusBar: TPanel
-    inherited lblStatusBarR: TLabel
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
-    end
-  end
 end

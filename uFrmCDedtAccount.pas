@@ -1023,8 +1023,8 @@ begin
   Result := '';
   if (Cth.GetControlValue(edt_Account) = '') or (Mode = fDelete) then
     Exit;
-  if Q.QLoadValue('select account from sn_calendar_accounts where id_supplier = :id_supplier and id <> :id and account = :account and extract (year from accountdt) = :year$i',
-    [Cth.GetControlValue(cmb_id_Supplier).AsIntegerM, s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))]) = null then
+  if Q.QLoadValue('select count(*) from sn_calendar_accounts where id_supplier = :id_supplier$i and id <> :id$i and account = :account$s and extract (year from accountdt) = :year$i',
+    [Cth.GetControlValue(cmb_id_Supplier).AsIntegerM, s.IIfInt(Mode = fEdit, ID, -1000), edt_Account.Text, YearOf(s.IIfV(Cth.DteValueIsDate(edt_Account), dedt_AccountDt.Value, Date))]) = 0 then
     Exit;
   Result := '?Счет с таким же номером у этого поставщика уже есть.'#13#10'Нажнажмите "Да" чтобы сохранить данные, или "Нет" чтобы продолжить редактирование.';
 end;

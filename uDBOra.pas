@@ -49,7 +49,7 @@ type
     //очистить все блокироки для текущего пользователя
     procedure DBLock_ClearAll;
     procedure OraError(msg: string);
-    //ставляем в таблицу строки, которых еще нет в по значениям полей AField, переданных в AFieldValues (сколько угодно значений)
+    //вставляем в таблицу строки, которых еще нет в по значениям полей AField, переданных в AFieldValues (сколько угодно значений)
     //TODO - реализовать поддержку типов, сейчас всегда числа!
     function  QInsertRowsIfNotExists(const ATable, AField: string; AFieldValues: TVarDynArray): Integer;
     function  QInsertRowIfNotExists(ATable, AFieldsSearch, AFieldsAll: string; const AFieldValuesAll: TVarDynArray): Integer;
