@@ -1413,6 +1413,8 @@ create or replace view v_or_std_items as
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
     case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2,
+    i0.labor_intensity + i2.labor_intensity as labor_intensity,
+    i0.labor_cost + i2.labor_cost as labor_cost,
     case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / nvl(i.price, 0) * 100, 2) end as labor_percent
   from
     or_std_items i

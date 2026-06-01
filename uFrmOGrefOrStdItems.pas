@@ -61,7 +61,7 @@ begin
     ['wo_estimate','_wo_estimate',''],
     ['name','Наименование','500;h'],
     ['price$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
-    ['price_pp$f','Перепродаж (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
+    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch)],
     ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
     ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
     ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Ch), 't=1'],
@@ -76,7 +76,9 @@ begin
     ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
     ['labor_cost_2','!Стоимость','75'],
     ['labor_percent_2','!%','65'],
-    ['labor_percent','Трудо-'#13#10'емкость общая, %','65'],
+    ['labor_intensity_total','Общая|Трудо-'#13#10'емкость','65'],
+    ['labor_cost','!Стоимость','75'],
+    ['labor_percent','!%','65'],
     ['by_sgp','Учет по СГП','40','pic']
   ]);
   Frg1.Opt.SetTable('v_or_std_items');
