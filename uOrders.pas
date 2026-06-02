@@ -479,7 +479,7 @@ var
   va1: TVarDynArray;
   IsOrItemStd: Boolean;
   OrQnt: Variant;
-  OrItemIdItm, OrItemName, OrSlash, OrFullItemName, OrderIdItm, OrderIdUchet, IsEstimateEmpty, OrSyncWithITM, OrDtEst: Variant;
+  OrItemIdItm, OrItemName, OrSlash, OrFullItemName, OrderIdItm, OrderIdUchet, OrStdPrefix, IsEstimateEmpty, OrSyncWithITM, OrDtEst: Variant;
   b: Boolean;
   InputType: Integer;
   v: Variant;
@@ -498,9 +498,11 @@ begin
       dt1 := S.NSt(va1[1]);
     if S.IsDateTime(S.NSt(dt1)) then
       dt1 := DateTimeToStr(VarToDateTime(dt1));
-    va1 := Q.QLoadRow('select name, wo_estimate from or_std_items where id = :id$i', [IdStdItem]);
+    va1 := Q.QLoadRow('select name, wo_estimate, fullname from v_or_std_items where id = :id$i', [IdStdItem]);
     OrName := va1[0];
+    OrItemName := OrName;
     IsEstimateEmpty := va1[1];
+    OrFullItemName := va1[2];
     IsOrItemStd := False;
     if not Silent then begin
       if IdEstimate = null then begin
@@ -608,7 +610,7 @@ begin
     if OpenEditEstimateDialog then begin
       //диалог-сетка для ввода сметы
       Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable],
-        fAdd, IdEstimate, VararrayOf([IdEstimate, S.IIf(IdStdItem <> null, 0, 1), OrName])
+        fAdd, IdEstimate, VararrayOf([IdEstimate, S.IIf(IdStdItem <> null, 0, 1), OrName, OrItemName, OrFullItemName])
       );
       //обязательно! иначе виснем на следующем диалоговом окне!
       Application.ProcessMessages;

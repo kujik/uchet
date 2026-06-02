@@ -294,7 +294,10 @@ begin
   if (Column.FieldName = 'name') then begin
     st := MemTableEh1.FieldByName('name').Value.AsString;
     if (Trim(st) <> st) or (Pos('  ', st) > 0) then
-      Background := clRed
+      Background := clRed;
+    //совпадение с именем или полным именем с префиксом изделия (стандартного или заказа)
+    if (st = AddParam[3]) or (st = AddParam[4]) then
+      Background := clRed;
   end;
 end;
 

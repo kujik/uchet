@@ -20,13 +20,13 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
     ExplicitTop = 378
     ExplicitWidth = 743
     inherited chb_NoClose: TCheckBox
-      Left = 237
+      Left = 233
       Top = 6
-      ExplicitLeft = 233
+      ExplicitLeft = 229
       ExplicitTop = 6
     end
     object Bt_Load: TBitBtn
-      Left = 462
+      Left = 458
       Top = 2
       Width = 25
       Height = 25
@@ -34,10 +34,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 5
       OnClick = Bt_LoadClick
-      ExplicitLeft = 458
+      ExplicitLeft = 454
     end
     object Bt_LoadSelf: TBitBtn
-      Left = 431
+      Left = 427
       Top = 2
       Width = 25
       Height = 25
@@ -45,10 +45,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 6
       OnClick = Bt_LoadSelfClick
-      ExplicitLeft = 427
+      ExplicitLeft = 423
     end
     object Bt_PasteEstimate: TBitBtn
-      Left = 400
+      Left = 396
       Top = 2
       Width = 25
       Height = 25
@@ -56,10 +56,10 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       Caption = 'Bt_Add'
       TabOrder = 7
       OnClick = Bt_PasteEstimateClick
-      ExplicitLeft = 396
+      ExplicitLeft = 392
     end
     object Bt_CopyEstimate: TBitBtn
-      Left = 369
+      Left = 365
       Top = 2
       Width = 25
       Height = 25
@@ -68,7 +68,7 @@ inherited Dlg_NewEstimateInput: TDlg_NewEstimateInput
       TabOrder = 8
       Visible = False
       OnClick = Bt_CopyEstimateClick
-      ExplicitLeft = 365
+      ExplicitLeft = 361
     end
   end
   inherited pnl_Bottom: TPanel

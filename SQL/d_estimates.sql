@@ -1061,7 +1061,7 @@ order by
 select
   b.name as b_name
 from
-  or_std_items i,
+  v_or_std_items i,
   or_format_estimates fi,
   estimates e,
   estimate_items ei,
@@ -1071,7 +1071,7 @@ where
   and e.id_std_item = i.id
   and ei.id_estimate = e.id
   and b.id = ei.id_name
-  and b.name = i.name
+  and ((b.name = i.name) or (b.name = i.fullname)) 
 ;      
 
 
