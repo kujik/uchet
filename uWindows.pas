@@ -120,6 +120,7 @@ uses
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
+  uFrmWGrepTurv,
 
 
   D_Order,
@@ -763,6 +764,9 @@ begin
   end
   else if F = myfrm_Dlg_Rep_EstimatePrices then begin
     TFrmOGrepEstimatePrices.Show(AOwner, F, MyFormOptions + [myfoSizeable], fNone, null, null);
+  end
+  else if F = myfrm_Rep_Turv then begin
+    TFrmWGrepTurv.Show(AOwner, F, MyFormOptions, fView, null, AAddParam);
   end
   else if F = myfrm_R_Workers then begin
     TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fView, null, null);

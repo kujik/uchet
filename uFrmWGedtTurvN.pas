@@ -50,11 +50,6 @@ type
     procedure ExportToXlsxA7(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
     procedure ExportToXlsxA7New(Doc: Integer; Date1, Date2: Variant; AutoOpen: Boolean);
     procedure SundaysToTurv(AMode: Integer);
-//    procedure SendEMailToHead;
-
-
-
-
 
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); override;
@@ -78,7 +73,8 @@ uses
   uLabelColors2,
   uFrmBasicInput,
   uFrmWWsrvTurvComment,
-  uExcel
+  uExcel,
+  uWindows
   ;
 
 {$R *.dfm}
@@ -97,19 +93,6 @@ begin
   var sgroup := 'schedulecode;job;organization;employee';
   //var sgroup := 'job;employee;schedulecode;organization;personnel_number';
   FTurv.Create(ID, ssort, sgroup);
-  //FTurv.LoadFromParsec;
-
-{
-  FTurv.Create(ID);
-  FTurv.LoadTurvCodes;
-  FTurv.LoadList;
-  FTurv.LoadDays;
-  FTurv.LoadSchedules;
-//  FTurv.SortAndGroup(['job','employee'], ['job']);
-  FTurv.SortAndGroup(['job'], []);  //сортировка по должности
-  }
-//  FTurv.LoadFromParsec;
-
 
   if FTurv.Count = 0 then begin
     MyInfoMessage('В этом табеле нет ни одной записи!');
@@ -204,6 +187,8 @@ begin
     [mbtLock, FRgsCommit and (FTurv.IsFinalized or (Mode = fEdit)), True, S.IIFStr(FTurv.IsFinalized, 'Отменить закрытие периода', 'Закрыть период')],
     [],
     [mbtPrint],
+    [],
+    [-1005, 'Отчет по ТУРВ'],
     [],
     [mbtCtlPanel]
   ]);
@@ -1019,6 +1004,17 @@ begin
       ) >=0
 //      then ExportToXlsxA7(Integer(va[0]), va[1], va[2], True);
       then ExportToXlsxA7New(Integer(va[0]), va[1], va[2], True);
+    end;
+  end
+  else if Tag = 1005 then begin
+    if FRgsEdit2 then begin
+      if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Экспорт в Excel', 270, 50, [
+        [cntDTEdit,'Дата с','*', 90],
+        [cntDTEdit,'по ','*', 90, 170]],
+        [FTurv.DtBeg, FTurv.DtEnd],
+        va, [['']],  nil
+      ) >=0
+      then Wh.ExecReference(myfrm_Rep_Turv, Self, [], VarArrayOf([FTurv.Departament, va[0], va[1]]));
     end;
   end
   else begin

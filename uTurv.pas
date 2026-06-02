@@ -204,7 +204,7 @@ begin
   FDtBeg := ADtBeg;
   FWherePart := AWherePart;
   if AId <> null then begin
-    Q.QLoad('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, is_office, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status, name from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
+    Q.QLoad('select id, id_departament, code, name, dt1, dt2, is_finalized, finalized, is_office, ids_editusers, IsStInCommaSt(:id_user$i, ids_editusers) as rgse, status from v_w_turv_period where id = :id$i', [User.GetId, AId], FTitle);
     FDepartament := FTitle.G('id_departament');
     if ADtBeg = 0.0 then
       FDtBeg := FTitle.G('dt1');

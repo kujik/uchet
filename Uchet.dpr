@@ -205,7 +205,8 @@ uses
   uFrmXWNonActualVersion in 'uFrmXWNonActualVersion.pas' {FrmXWNonActualVersion},
   uSnCalendar in 'uSnCalendar.pas',
   uFrmODEdtInputOrderAccount in 'uFrmODEdtInputOrderAccount.pas' {FrmODEdtInputOrderAccount},
-  uFrmXDinputPwd in 'uFrmXDinputPwd.pas' {FrmXDinputPwd};
+  uFrmXDinputPwd in 'uFrmXDinputPwd.pas' {FrmXDinputPwd},
+  uFrmWGrepTurv in 'uFrmWGrepTurv.pas' {FrmWGrepTurv};
 
 var
   MT: Integer;
