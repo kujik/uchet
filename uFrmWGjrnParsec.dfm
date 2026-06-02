@@ -1,17 +1,19 @@
 inherited FrmWGjrnParsec: TFrmWGjrnParsec
   Caption = 'FrmWGjrnParsec'
   ClientHeight = 538
-  ExplicitWidth = 812
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Height = 522
+    ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
       Height = 473
       inherited pnlBottom: TPanel
         Top = 427
+        ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
         Height = 418
+        ExplicitHeight = 417
       end
       inherited pnlGrid1: TPanel
         Height = 418
@@ -19,12 +21,21 @@ inherited FrmWGjrnParsec: TFrmWGjrnParsec
           Height = 416
           inherited pnlGrid: TPanel
             Height = 362
+            ExplicitHeight = 361
+            inherited DbGridEh1: TDBGridEh
+              Height = 339
+            end
+            inherited pnlStatusBar: TPanel
+              Top = 340
+            end
           end
           inherited pnlLeft: TPanel
             Height = 362
+            ExplicitHeight = 361
           end
           inherited pnlBottom: TPanel
             Top = 416
+            ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -64,6 +75,7 @@ inherited FrmWGjrnParsec: TFrmWGjrnParsec
       end
       inherited pnlRight: TPanel
         Height = 418
+        ExplicitHeight = 417
       end
     end
     inherited pnlFrmBtns: TPanel
@@ -78,5 +90,12 @@ inherited FrmWGjrnParsec: TFrmWGjrnParsec
   end
   inherited pnlStatusBar: TPanel
     Top = 522
+    ExplicitTop = 521
+    inherited lblStatusBarR: TLabel
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
   end
 end

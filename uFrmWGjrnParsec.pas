@@ -95,14 +95,14 @@ begin
   st:='';
   if Frg1.GetControlValue('ChbMyOnly') = 1 then begin
     va1:=Q.QLoad(
-      'select workername from v_j_worker_status where IsStInCommaSt(:userid$i, editusers) = 1',
+      'select employee from v_w_employee_properties where IsStInCommaSt(:userid$i, ids_editusers) = 1',
       [User.GetId]
     );
     for i:=0 to High(va1) do st:=st + ',''' + va1[i][0] + '''';
     Delete(st, 1, 1);
     if st = ''
-      then st:='~1'
-      else st:=' concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) in (' + st + ') and ';
+      then st:='111';
+    st:=' concat(p.last_name, '' '', p.first_name, '' '', p.middle_name) in (' + st + ') and ';
   end;
   if Frg1.GetControlValue('ChbGroup') = 1
     then st2:='590144'

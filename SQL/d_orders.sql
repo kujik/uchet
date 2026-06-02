@@ -1427,19 +1427,6 @@ create or replace view v_or_std_items as
   ;
     
     
-    
-    
-    
-((select i.id_or_std_item, t.code, t.pos, row_number() over (order by t.pos) no from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type));
-
---список всех стаандартных изделий
-select or_format_name, or_format_estimate_name, prefix, name from v_or_std_items where id_format <> 0 order by or_format_name, or_format_estimate_name, name;
---список стандартных изделий, запцущенныых по заказам текущего года
-select or_format_name, or_format_estimate_name, prefix, name from v_or_std_items where id_format <> 0 and id_format in (select distinct id_or_format_estimates from orders where dt_beg >= date '2026-01-01') order by or_format_name, or_format_estimate_name, name;
-
-select route, route2 from v_or_std_items;
-
-
 create or replace procedure P_SetStdItemPrice(
 --установка цены всего изделия и перепродажи для него (включаемая) в позиции справочника стандартных изделий
   IdStdItem number,  --айди стандартного изделия                      
@@ -3059,6 +3046,46 @@ select id, need_ref, is_complaint, (select count(*) from order_reglaments where 
 
 select * from v_order_items where id_order = 11674;
 select * from v_orders_list where id_order = 11674;
+
+
+
+--------------------------------------------------------------------------------
+-- получение информации по заказам и стандартным изделиям
+--------------------------------------------------------------------------------
+
+--список всех стаандартных изделий
+select or_format_name, or_format_estimate_name, prefix, name from v_or_std_items where id_format <> 0 order by or_format_name, or_format_estimate_name, name;
+--список стандартных изделий, запцущенныых по заказам текущего года
+select 
+  or_format_name, or_format_estimate_name, prefix, name
+from 
+  v_or_std_items i
+where 
+  id_format in (select distinct id_or_format_estimates from orders where dt_beg >= date '2026-01-01') 
+order by 
+  or_format_name, or_format_estimate_name, name
+;
+--список отгруженных с сгп в этом году, по заказам этого же года
+--(последнее по факту лишнее сравнение наверное!)
+select 
+  or_format_name, or_format_estimate_name, prefix, name, sum(s.qnt) as qnt 
+from 
+  v_or_std_items i,
+  order_items oi,
+  (select id_order_item, sum(qnt) as qnt from order_item_stages where dt >= date '2026-01-01' and id_stage = 3 group by id_order_item) s
+where 
+  oi.id_std_item = i.id
+  and s.id_order_item = oi.id
+  and id_format <> 0 
+  and id_format in (select distinct id_or_format_estimates from orders where dt_beg >= date '2026-01-01') 
+  and s.qnt > 0
+group by 
+  or_format_name, or_format_estimate_name, name, prefix
+order by 
+  or_format_name, or_format_estimate_name, name
+;
+
+
 
 
 
