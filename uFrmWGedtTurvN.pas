@@ -1488,6 +1488,7 @@ begin
     if b then
       Rep.SetValue('#d' + IntToStr(j) + '#', IntToStr(DayOf(dt1 + j - 1)));
   end;
+  sumall := 0;
   for i := 0 to LTurv.Count - 1 do begin
     Rep.PasteBand('TABLE');
     Rep.SetValue('#N#', i + 1);
@@ -1498,6 +1499,7 @@ begin
     var na := LTurv.CalculateTotals(i);
     Rep.SetValue('#ITOG#', na.G('worktime'));
     Rep.SetValue('#OVERTIME#', na.G('overtime'));
+    sumall := sumall + na.G('worktime');
     for j := 1 to d2 do begin
       v := LTurv.GetDayCell(i, j, 0, Color, st, True);
       Rep.SetValue('#d' + IntToStr(j) + '#', v);
@@ -1505,7 +1507,8 @@ begin
     for j := d2 + 1 to dend do
       Rep.SetValue('#d' + IntToStr(j) + '#', '');
   end;
-//  Rep.PasteBand('FOOTER');
+  Rep.PasteBand('FOOTER');
+  Rep.SetValue('#ITOG#', sumall);
 //  Rep.SetValue('#дополнение#',mem_Comm.Text);
   Rep.DeleteCol1;
   Rep.Show;
