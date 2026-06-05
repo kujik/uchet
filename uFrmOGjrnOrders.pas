@@ -171,7 +171,8 @@ begin
   Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
 
 //  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Только производственные', 'prod'], ['Тест', '', True], ['Тест2'], ['ТТТТТТТТ', False]];
-  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_Sum)]];
+  //просмотр себестоимости
+  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_PrimeCost)]];
 
   Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];// - [myogIndicatorcolumn, myogIndicatorCheckBoxes, myogSaveOptions];
   Frg2.Opt.SetFields([

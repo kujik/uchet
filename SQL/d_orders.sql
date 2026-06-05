@@ -610,8 +610,8 @@ select
   case when agg.dt_thn_cnt = agg.cnt_thn_total then agg.dt_thn_max else null end as dt_thn_max,
   case when agg.dt_kns_cnt = agg.cnt_kns_total then agg.dt_kns_max else null end as dt_kns_max,
   trunc(o.dt_aggr_estimate - o.dt_beg) as days_aggr_estimate,
-  F_GetCostOrderItemsFromItm(o.id, null) as sum0,
-  --0 as sum0,
+  --F_GetCostOrderItemsFromItm(o.id, null) as sum0,
+  0 as sum0,
   sz.id_status as id_status_itm,
   sz.statusname as status_itm,
   trunc(rsv.dt_reserve) as dt_reserve,
@@ -666,6 +666,8 @@ where
   and rsv.id_doc (+) = o.id_itm
   and ot.id (+) = o.id_type2
 ;
+
+SELECT /*+ PARALLEL(4) */ * FROM v_orders;
 
 create or replace view v_orders_list as 
 select
@@ -2714,35 +2716,54 @@ where
   c.id_area = i.id_area
 ;    
 
+--------------------------------------------------------------------------------
+-- финансовый отчет по запущенным за прошлый день заказам
+--------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-delete from orders where id = 7843;
-
-select instr(',' || '4063=12,4064=123' || ',', ',' || '4063' || '=') from dual;
-      select instr(',' || '4063=12,4064=123' || ',', ',', 1 + 1) from dual;
-
- select path from orders where id = -99;
- 
-select id, ornum, area_short as area, typename as id_type, or_reference, project, customer, customerlegal, customerman, customercontact, address,
-address, account, organization as id_organization, dt_beg, dt_otgr, dt_montage_beg, managername, comm, ch
-from v_orders where id = 7956;
-
-select * from v_orders where id = 7956;
-select pos, slash, fullitemname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, kns, thn, comm from v_order_items where id_order = 7956;
+create or replace view v_orders_fin_monitoring as
+select
+  t.order_type,
+  t.ornums,
+  t.customer,
+  t.fullname,
+  t.qnt,
+  t.price,
+  round(t.price * t.qnt, 2) as summ,
+  t.sum0,
+  t.labor_intensity_0,
+  t.labor_cost_0,
+  t.labor_intensity_2,
+  t.labor_cost_2,
+  t.sum0 + t.labor_cost_0 + labor_cost_2 as prime_cost,
+  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
+from (  
+select
+  decode(oi.id_organization, -1, -1, 0) as order_type,
+  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
+  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
+  si.fullname,
+  sum(oi.qnt) as qnt,
+  round(oi.cost_wo_nds / oi.qnt, 2) as price,
+  sum(round(oi.sum0 / 1.22, 2)) as sum0,
+  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
+  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
+  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
+  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
+from
+  v_order_items oi,
+  v_or_std_items si
+where
+  oi.id_std_item = si.id
+  and qnt <> 0
+  --and oi.id_organization <> -1
+  and oi.dt_beg = trunc(sysdate) - 1
+group by
+  si.fullname, round(oi.cost_wo_nds / oi.qnt, 2), decode(oi.id_organization, -1, -1, 0)  
+order by
+  si.fullname
+) t    
+;      
+  
 
 
 

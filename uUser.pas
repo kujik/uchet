@@ -115,13 +115,11 @@ end;
 function  TUser.IsDeveloper: Boolean;
 begin
   Result:=Role(rAdm_Other_IsDeveloper);
-//  Result:=GetLogin='sprokopenko';
 end;
 
 function  TUser.IsDataEditor: Boolean;
 begin
   Result:=Role(rAdm_Other_IsDataEditor);
-//  Result:=GetLogin='sprokopenko';
 end;
 
 //получить логин текущего пользователя компьютера

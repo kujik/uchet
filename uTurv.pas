@@ -842,7 +842,7 @@ begin
     else
       Result.SetValue('milk_compensation', 0);
     Result.SetValue('personal_pay', Round(Result.G('personal_pay').AsFloat));
-  
+
     //установим строку в общщих итогах
     FRows[Row].Totals := Result;
   end;
@@ -2004,7 +2004,6 @@ begin
       st1:=st1+S.NSt(Result[i][1]) + '  [' + S.NSt(Result[i][3]) + ',  ' + S.NSt(Result[i][4])  +']' + #13#10;
     st1:='Следующие работники (которые сейчас работают в компании) отсутствуют в базе Parsec:'#13#10#13#10 + st1;
     Tasks.CreateTaskRoot(mytskopmail, [
-//      ['to', 'sprokopenko@fr-mix.ru'],
     ['to', st],
     ['subject', 'Не все работники есть в Parsec!'],
     ['body', st1],

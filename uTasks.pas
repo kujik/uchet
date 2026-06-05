@@ -43,15 +43,19 @@ type
   TTasks = class
   private
   public
-    function CreateTaskDir: string;
-    function FinalizeTaskDir(TaskDir: string): Boolean;
-    function CreateTaskRoot(Operation: TMyTskOpTypes; Fields: TVarDynArray2; ForTesting: Boolean = False; AutoRun: Boolean = True): string;
-    function TestTaskRootComplete(TaskDir:string):Boolean;
-    function GetProductionCalendar(Year: Variant): Integer;
-    function TestTurvComplete: Integer;
-    function TestTurvDifferences: Integer;
+    //вернуть адрес почтовой рассылки
+    //в тестовом режиме (запуск приложенния с параметром /test) всегда возвращает почту разработчика
+    function  GetMailingAddr(AMaining: Integer): string;
+    function  CreateTaskDir: string;
+    function  FinalizeTaskDir(TaskDir: string): Boolean;
+    function  CreateTaskRoot(Operation: TMyTskOpTypes; Fields: TVarDynArray2; ForTesting: Boolean = False; AutoRun: Boolean = True): string;
+    function  TestTaskRootComplete(TaskDir:string):Boolean;
+    function  GetProductionCalendar(Year: Variant): Integer;
+    function  TestTurvComplete: Integer;
+    function  TestTurvDifferences: Integer;
     function  SplMonitorPrices: Integer;
     function  SplMonitorReportDay: Integer;
+    procedure ReportForYesterdayOrders;
     procedure SmetaReport;
     procedure DeleteOldData;
     procedure CalcPlannedOrders;
@@ -64,9 +68,15 @@ type
 var
   Tasks: TTasks;
 
+const
+  TASK_MAILING_ORDERS = 1;
+  TASK_MAILING_ATTACH_ESTIMATE_SN = 3;
+  TASK_MAILING_NO_ESTIMATE = 4;
+  TASK_MAILING_ATTACH_THN = 5;
+  TASK_MAILING_ORDERS_FIN = 6;
+  TASK_MAILING_MONITORING_SN = 7;
 
 implementation
-
 
 uses
   ZLib,
@@ -79,27 +89,39 @@ uses
   Dialogs,
   XmlDoc,
   Xml.XMLIntf,
-
-
+  uHtmlUtils,
   uOrders
 
   ;
 
 
-
+function TTasks.GetMailingAddr(AMaining: Integer): string;
+//вернуть адрес почтовой рассылки
+//в тестовом режиме (запуск приложенния с параметром /test) всегда возвращает почту разработчика
+begin
+  if Q.QLoadValue('select count(*) from adm_mailing where id = :i$i', [AMaining]) <> 0 then begin
+    if Module.InTestmode then
+      Result := DEVELOPER_MAIL
+    else
+      Result := Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [AMaining]).AsString
+  end
+  else
+    raise Exception.Create('Не существует почтовая рассылка с кодом ' + IntToStr(AMaining));
+end;
 
 function TTasks.CreateTaskDir: string;
 var
   st: string;
 begin
-  Result:='';
+  Result := '';
   try
-    st:=Module.GetPath_Tasks + '\' + FormatDateTime('yyyy.mm.dd_hh-mm-ss,zzzzzz', Now);
-    if not ForceDirectories(st + '\Files') then Exit;
+    st := Module.GetPath_Tasks + '\' + FormatDateTime('yyyy.mm.dd_hh-mm-ss,zzzzzz', Now);
+    if not ForceDirectories(st + '\Files') then
+      Exit;
   except
     Exit;
   end;
-  Result:=st;
+  Result := st;
 end;
 
 function TTasks.FinalizeTaskDir(TaskDir: string): Boolean;
@@ -141,7 +163,7 @@ begin
   b:= False;
   for i:=0 to High(Fields) do begin
     if Fields[i][0] = 'user-name' then b:=True;
-    if Module.InTestmode and (Fields[i][0] = 'to') then Fields[i][1]:= 'sprokopenko@fr-mix.ru';
+    if Module.InTestmode and (Fields[i][0] = 'to') then Fields[i][1]:= DEVELOPER_MAIL;
     if not Sys.SaveTextToFile(TaskDir + '\__' + Fields[i][0], Fields[i][1])
        then Exit;
   end;
@@ -378,7 +400,7 @@ begin
     Delete(ar3[i], 0, 1);
     st1:=A.Implode(ar3[i], #13#10);
     CreateTaskRoot(mytskopmail, [
-//      ['to', 'sprokopenko@fr-mix.ru'],
+//      ['to', DEVELOPER_LOGIN],
       ['to', st],
       ['subject', 'Не полностью заполнен ТУРВ!'],
       ['body', st2 + ', ' + 'Вы должны до конца заполнить (так, чтобы не было красных и пустых ячеек) следующие ТУРВ:'#13#10 + st1],
@@ -484,7 +506,7 @@ begin
     if st0 <> '' then
       st:=st + #13#10 + 'Важно: для этого ТУРВ еще заполнены не все времена по Parsec!!!';
     //письмо пользователю, заполняющему данные по парсек
-//    ok_user:='sprokopenko@fr-mix.ru';
+//    ok_user:=DEVELOPER_MAIL;
     if ok_user <> '' then
       CreateTaskRoot(mytskopmail, [
         ['to', ok_user],
@@ -848,7 +870,6 @@ begin
       st + '</table><br>';
     CreateTaskRoot(myTskOpMailHtml, [
       ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
-//      ['to', 'sprokopenko@fr-mix.ru'],
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
       ['body', st],
       ['user-name', 'Учёт']]
@@ -911,15 +932,90 @@ begin
   if st = '' then
     Exit;
   CreateTaskRoot(myTskOpMailHtml, [
-    ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
- //   ['to', 'sprokopenko@fr-mix.ru'],
+//    ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+    ['to', GetMailingAddr(TASK_MAILING_MONITORING_SN)],  //адреса через запятую
     ['subject', 'Счета снабжения за вчерашний день'],
     ['body', st + '<br>'],
     ['user-name', 'Учёт']
   ]);
 end;
 
+procedure TTasks.ReportForYesterdayOrders;
+var
+  i,j: Integer;
+  IdSch, IdSchN, IdIb, IdIbN: Integer;
+  na: TNamedArr;
+  va: TVarDynArray;
+  st, css: string;
+  e: Extended;
+  Fields: TVarDynArray2;
+  Tbl: THTMLTable;
+  HTML: string;
+begin
+  Fields := [
+    ['rownum', '№'],
+    ['ornums', 'Заказы'],
+    ['customer', 'Покупатели'],
+    ['fullname', 'Изделие'],
+    ['qnt', 'Количество'],
+    ['price', 'Цена продажи'],
+    ['summ', 'Сумма продажи', 'b', 's'],
+    ['sum0', 'Себестоимость по смете', 's'],
+    ['labor_cost_0', 'Трудозатраты по ПЩ', 's'],
+    ['labor_cost_2', 'Трудозатраты по ЛОК', 's'],
+    ['prime_cost', 'Затраты всего, сумма', 's'],
+    ['prime_cost_percent', 'Затраты всего, %']
+  ];
+  Q.QLoad('select ' + Fields.Col(0).Implode(', ') + ' from v_orders_fin_monitoring where order_type = -1 and rownum = 1', [], na);
+  Tbl.InitDefaults;
+  Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+  HTML := Tbl.GenerateEmail(na, Fields);
+  st := '<tr>' + A.Implode(Fields.Col(1), '<td>', '</td>', False) + '</tr>';
+  for i:=0 to na.Count- 1 do begin
+    st := '<tr>' + A.Implode(na.GetRow(i), '<td>', '</td>', False) + '</tr>';
+  end;
+    st :=
+      '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
+      '<table border = "1">'+
+      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
+      st + '</table><br>' + 'Всего по счетам: <b>' + FloatToStr(Round(e)) + 'р.</b>';
 
+(*
+  //va:=[222222];
+  //не получается сделать границы. появлялись при вставке данных тегов в td, но после пропадали, не воспроизводится
+  //<span ></span> <!-- -->
+  if na.Count > 0 then begin
+    e := 0;
+    for i:=0 to na.Count- 1 do begin
+      st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString +
+        '</td><td>' + na.G(i,'name_unit').AsString + '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' +
+        S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '<b>') + na.G(i,'sum_diff').AsString + S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '</b>') +
+        '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
+      e := e + na.G(i,'sum').AsFloat;
+    end;
+    st :=
+      '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
+      '<table border = "1">'+
+      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
+      st + '</table><br>' + 'Всего по счетам: <b>' + FloatToStr(Round(e)) + 'р.</b>';
+  end
+  else
+    st := 'За вчерашний день на было создано ни одного счета.<br>';
+  if Length(va) > 0 then begin
+    st := S.IIFStr(st <> '', st + '<br><br>----------------------------------<br><b>') + 'Были приходные накладные без основания за вчерашний день:</b><br>Номера: ' + A.Implode(va,', ') + '<br>';
+  end;
+  if st = '' then
+    Exit;*)
+  //HTML := StringReplace(HTML, #13#10, '', [rfReplaceAll]);
+  CreateTaskRoot(myTskOpMailHtml, [
+    ['to', 'sprokopenko@fr-mix.ru'],
+    ['subject', 'Отчет по запущенным заказам за вчерашний день.'],
+    ['body', HTML + '<br>'],
+//    ['body', st + '<br>'],
+    ['user-name', 'Учёт']
+  ]);
+  sys.SaveTextToFile('r:\11', html);
+end;
 
 procedure TTasks.HourlyTasks;
 begin

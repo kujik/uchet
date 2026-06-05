@@ -228,7 +228,7 @@ begin
   RegisterExceptActionHandler(ExceptActionHandler, stTrySyncCallOnSuccess);
   madSettings.AppendBugReports := True;
   madSettings.ShowPleaseWaitBox := True;
-  madSettings.MailAddr := 'sprokopenko@fr-mix.ru';
+  madSettings.MailAddr := DEVELOPER_MAIL;
   madSettings.MailFrom := 'uchet@fr-mix.ru';
   if User <> nil then
     madSettings.MailFrom := User.GetLogin + '@fr-mix.ru';
@@ -248,7 +248,7 @@ begin
   madSettings.PrintBtnCaption := 'Показать запрос';
   madSettings.SendInBackground := True;
   madSettings.AutoSend := False;
-//  madSettings.AutoSend:=not(Module.RunFromIDE or (User.GetLogin = 'sprokopenko'));
+//  madSettings.AutoSend:=not(Module.RunFromIDE or (User.GetLogin = DEVELOPER_LOGIN));
   madSettings.BugReportFile := 'uchet' + '.bug';
   if User <> nil then
     madSettings.BugReportFile := User.GetLogin + '.bug';

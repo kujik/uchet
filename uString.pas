@@ -325,6 +325,9 @@ type
     procedure ConcatStrP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: string; const APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
+    //Функция возвращает строку, обрамлённую левой и правой частями.
+    function  WrapStr(const AString, ALeft, ARight: string; AIgnoreEmpty: Boolean = False): string;
+    procedure WrapStrP(const AString, ALeft, ARight: string; var ResultStr: string; AIgnoreEmpty: Boolean = False);
 
     //-------------------------- функции для sql-запросов
 
@@ -418,7 +421,8 @@ type
     procedure ExplodeP(const AValue: Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean; var AArray: TStringDynArray); overload; //+++
     //сливаем одномерный вариантный массив в строку через разделитель;
     //если IgnoreEmpty установлен, то игнорируем пустые значения массива
-    function Implode(const AArray: array of Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
+    function Implode(const AArray: array of Variant; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload;
+    function Implode(const AArray: array of Variant; const ADelimiterLeft: string; const ADelimiterRight: string; const AIgnoreEmpty: Boolean): string; overload;
     //сливаем одномерный строковый массив в строку через разделитель;
     //если IgnoreEmpty установлен, то игнорируем пустые значения массива
     function Implode(const AArray: TStringDynArray; const ADelimiter: string; const AIgnoreEmpty: Boolean = False): string; overload; //+++
@@ -548,6 +552,8 @@ type
     function RemoveDuplicates: TVarDynArray;
     //добавляет элемент в конец массива, если такого элемента в нем еще нет
     procedure Add(const AValue: Variant);
+    //суммируем массив, пустые строки и не числа пропускаются.
+    function Sum: Extended;
   end;
 
   //============================================================================
@@ -1744,6 +1750,7 @@ function TMyStringHelper.CompareStI(const AStr1, AStr2: string): Boolean;
 begin
   Result := SameText(AStr1, AStr2);
 end;
+
 //==============================================================================
 //Конкатенация строк
 //==============================================================================
@@ -1801,6 +1808,26 @@ procedure TMyStringHelper.ConcatStP(var AMain: Variant; const APart, ADelimiter:
 //процедура. добавляет строку StPart к StAll через разделитеть. если задано IfNotEmpty, то пустая строка не присоединяется
 begin
   ConcatStrP(AMain, APart, ADelimiter, AIgnoreEmpty);
+end;
+
+function TMyStringHelper.WrapStr(const AString, ALeft, ARight: string; AIgnoreEmpty: Boolean = False): string;
+// Функция возвращает строку, обрамлённую левой и правой частями.
+// Если AIgnoreEmpty = True и AString пуста, возвращается пустая строка.
+begin
+  if AIgnoreEmpty and (AString = '') then
+    Result := ''
+  else
+    Result := ALeft + AString + ARight;
+end;
+
+procedure TMyStringHelper.WrapStrP(const AString, ALeft, ARight: string; var ResultStr: string; AIgnoreEmpty: Boolean = False);
+// Процедура заменяет переданную переменную ResultStr на обрамлённую строку.
+// Если AIgnoreEmpty = True и AString пуста, ResultStr становится пустой.
+begin
+  if AIgnoreEmpty and (AString = '') then
+    ResultStr := ''
+  else
+    ResultStr := ALeft + AString + ARight;
 end;
 
 //==============================================================================
@@ -2541,6 +2568,36 @@ begin
       if sb.Length > 0 then
         sb.Append(ADelimiter);
       sb.Append(s);
+    end;
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+end;
+
+function TMyArrayHelper.Implode(const AArray: array of Variant; const ADelimiterLeft: string; const ADelimiterRight: string; const AIgnoreEmpty: Boolean): string;
+// Сливаем одномерный вариантный массив в строку, каждый элемент обрамляется левым и правым разделителями.
+// Пример: Implode([1,2,3], '(', ')') -> '(1)(2)(3)'
+// Если AIgnoreEmpty = True, пустые строки и Null пропускаются.
+var
+  sb: TStringBuilder;
+  i: Integer;
+  s: string;
+begin
+  sb := TStringBuilder.Create;
+  try
+    for i := 0 to High(AArray) do
+    begin
+      // Преобразуем в строку с учётом Null
+      if VarIsNull(AArray[i]) then
+        s := ''
+      else
+        s := VarToStr(AArray[i]);
+
+      if AIgnoreEmpty and (s = '') then
+        Continue;
+
+      sb.Append(ADelimiterLeft).Append(s).Append(ADelimiterRight);
     end;
     Result := sb.ToString;
   finally
@@ -3537,6 +3594,16 @@ begin
   if not Self.Found(AValue) then
     Self := Self + [AValue];
 end;
+
+function TVarDynArrayHelper.Sum: Extended;
+//суммируем массив, пустые строки и не числа пропускаются.
+begin
+  Result := 0;
+  for var i := 0 to High(Self) do
+    if Self[i].IsNumeric then
+      Result := Result + Self[i];
+end;
+
 
 
 //==============================================================================

@@ -226,6 +226,17 @@ create table adm_main_settings (
   emailname varchar2(200)                --отображаемое имя пользователя, Учет  
 );
 
+create or replace view v_adm_all_settings as
+select
+--пердставление, объединяющее настройки, для удобства обработки в программе
+  1 as id,
+  m.*,
+  d.*
+from  
+  adm_main_settings m,
+  adm_delete_old d
+;  
+
 create or replace trigger trg_adm_main_settings_au 
 after update
 of emaildomain
@@ -656,8 +667,10 @@ create table adm_mailing (
 insert into adm_mailing (id, comm) values (1, 'Рассылка при создании и изменении паспорта, для Учета-excel'); 
 insert into adm_mailing (id, comm, userids) values (2, 'Рассылка при создании и изменении паспорта, для ИТМ', '33'); 
 insert into adm_mailing(id, comm) values (3, 'Рассылка при прикреплении сметы и документов для снабжения, для Учета-excel');
-insert into adm_mailing(id, comm) values (4, 'Рассылка по заказм, для которых не созданы сметы');
+insert into adm_mailing(id, comm) values (4, 'Рассылка по заказам, для которых не созданы сметы');
 insert into adm_mailing(id, comm) values (5, 'Рассылка при прикреплении документов технологов');
+insert into adm_mailing(id, comm) values (6, 'Рассылка по заказам финансовая');
+insert into adm_mailing(id, comm) values (7, 'Мониторинг сделок снабжения');
 
 
 create or replace trigger trg_adm_mailing_bu

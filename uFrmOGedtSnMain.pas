@@ -1477,7 +1477,6 @@ begin
     st + '</table><br>' + 'Менеджер: <b>' + User.GetName + '</b>';
   Tasks.CreateTaskRoot(myTskOpMailHtml, [
     ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
-//    ['to', 'sprokopenko@fr-mix.ru'],
     ['subject', 'Создана заявка на закупку материалов'],
     ['body', st + '<br>'],
     ['user-name', 'Учёт']

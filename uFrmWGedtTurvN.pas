@@ -1007,16 +1007,14 @@ begin
     end;
   end
   else if Tag = 1005 then begin
-    if FRgsEdit2 then begin
-      if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Экспорт в Excel', 270, 50, [
-        [cntDTEdit,'Дата с','*', 90],
-        [cntDTEdit,'по ','*', 90, 170]],
-        [FTurv.DtBeg, FTurv.DtEnd],
-        va, [['']],  nil
-      ) >=0
+    if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, 'Сформировать отчет', 270, 50, [
+      [cntDTEdit,'Дата с','*', 90],
+      [cntDTEdit,'по ','*', 90, 170]],
+      [FTurv.DtBeg, FTurv.DtEnd],
+      va, [['']],  nil
+    ) >=0
       then Wh.ExecReference(myfrm_Rep_Turv, Self, [], VarArrayOf([FTurv.Departament, va[0], va[1]]));
-    end;
-  end
+ end
   else begin
     Handled := False;
     inherited;

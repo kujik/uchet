@@ -1422,6 +1422,7 @@ var
   i: Integer;
   st: string;
 begin
+Tasks.ReportForYesterdayOrders;Exit;
 va:=[1,2];
 va.Add(2);
 va.Add(3);
@@ -1479,6 +1480,12 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+  Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
+
+  Q.QLoad('SELECT /*+ PARALLEL(4) */ * FROM v_orders', [], na);
+  myinfomessage('!!!');
+  exit;
+
 //Exit;
 Turv.SaveAllTurvToExportTable; Exit;
 //  ShowWaitForm('111111111111', nil, True, 1);

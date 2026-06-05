@@ -112,7 +112,7 @@ uses
   uSnCalendar,
   uOrders,
 
-  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers,
+  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmADedtMainSettings,
 
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
@@ -779,6 +779,9 @@ begin
   end
   else if F = myfrm_Dlg_DeleteOutdatedOrders then begin
     Orders.EraseOutdatedOrders(AOwner);
+  end
+  else if F = myfrm_Dlg_MainSettings then begin
+    TFrmADedtMainSettings.Show(AOwner, F, MyFormOptions, fEdit, null, null);
   end
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');

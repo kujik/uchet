@@ -206,7 +206,9 @@ uses
   uSnCalendar in 'uSnCalendar.pas',
   uFrmODEdtInputOrderAccount in 'uFrmODEdtInputOrderAccount.pas' {FrmODEdtInputOrderAccount},
   uFrmXDinputPwd in 'uFrmXDinputPwd.pas' {FrmXDinputPwd},
-  uFrmWGrepTurv in 'uFrmWGrepTurv.pas' {FrmWGrepTurv};
+  uFrmWGrepTurv in 'uFrmWGrepTurv.pas' {FrmWGrepTurv},
+  uFrmADedtMainSettings in 'uFrmADedtMainSettings.pas' {FrmADedtMainSettings},
+  uHtmlUtils in 'uHtmlUtils.pas';
 
 var
   MT: Integer;

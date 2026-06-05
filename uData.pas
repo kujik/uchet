@@ -633,7 +633,9 @@ type
 
 
 
-
+const
+  DEVELOPER_LOGIN = 'sprokopenko';
+  DEVELOPER_MAIL = DEVELOPER_LOGIN + '@fr-mix.ru';
 
 const
   UTitle = 'Ó÷¸ò';
@@ -1057,6 +1059,7 @@ const
   myfrm_Dlg_ExportTurvToXls='Dlg_ExportTurvToXls';
   myfrm_Dlg_DeleteOutdatedOrders='Dlg_DeleteOutdatedOrders';
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
+  myfrm_Dlg_MainSettings='Dlg_MainSettings';
 
 const
   DefHorizMargin = 5;
