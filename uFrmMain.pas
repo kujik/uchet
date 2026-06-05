@@ -548,7 +548,7 @@ begin
     ['Копировать права доступа ИТМ', '_', User.Role(rAdm_Itm_CopyUserRights)],
 
     ['Настройки'],
-    ['Основные настройки', '_', User.Role(rAdm_Settings_Main)],
+    ['Основные настройки', myfrm_Dlg_MainSettings, User.Role(rAdm_Settings_Main)],
     ['Настройки модулей', '_', User.Role(rAdm_Settings_Modules)],
 
     ['Сервис'],

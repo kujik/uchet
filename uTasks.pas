@@ -55,7 +55,7 @@ type
     function  TestTurvDifferences: Integer;
     function  SplMonitorPrices: Integer;
     function  SplMonitorReportDay: Integer;
-    procedure ReportForYesterdayOrders;
+    procedure ReportForYesterdayOrders(AOrderTypes: Boolean);
     procedure SmetaReport;
     procedure DeleteOldData;
     procedure CalcPlannedOrders;
@@ -869,7 +869,7 @@ begin
       '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
       st + '</table><br>';
     CreateTaskRoot(myTskOpMailHtml, [
-      ['to', 'ruk_snab@fr-mix.ru,oorlova@fr-mix.ru,aborovikov@fr-mix.ru,agerasimchuk@fr-mix.ru,snab1@fr-mix.ru,eveselova@fr-mix.ru,dir_proizv@fr-mix.ru,assistant@fr-mix.ru,sa@fr-mix.ru'],  //адреса через запятую
+      ['to', GetMailingAddr(TASK_MAILING_MONITORING_SN)],
       ['subject', 'За последний час были выставлены счета по завышенным ценам!'],
       ['body', st],
       ['user-name', 'Учёт']]
@@ -940,18 +940,16 @@ begin
   ]);
 end;
 
-procedure TTasks.ReportForYesterdayOrders;
+procedure TTasks.ReportForYesterdayOrders(AOrderTypes: Boolean);
+//финансовый отчет по производственным или отгрузочным заказам, запущенным за вчерашний день
+//true - О, false - П
 var
-  i,j: Integer;
-  IdSch, IdSchN, IdIb, IdIbN: Integer;
   na: TNamedArr;
-  va: TVarDynArray;
-  st, css: string;
-  e: Extended;
   Fields: TVarDynArray2;
   Tbl: THTMLTable;
-  HTML: string;
+  HTML, Title: string;
 begin
+  Title := 'Отчет по ' + S.IIf(AOrderTypes, 'отгрузочным', 'производственным') + ' заказам за вчерашний день.';
   Fields := [
     ['rownum', '№'],
     ['ornums', 'Заказы'],
@@ -959,63 +957,34 @@ begin
     ['fullname', 'Изделие'],
     ['qnt', 'Количество'],
     ['price', 'Цена продажи'],
-    ['summ', 'Сумма продажи', 'b', 's'],
+    ['summ', 'Сумма продажи', 's'],
     ['sum0', 'Себестоимость по смете', 's'],
     ['labor_cost_0', 'Трудозатраты по ПЩ', 's'],
     ['labor_cost_2', 'Трудозатраты по ЛОК', 's'],
-    ['prime_cost', 'Затраты всего, сумма', 's'],
+    ['prime_cost', 'Затраты всего, сумма', 's', 'r', 'b'],
     ['prime_cost_percent', 'Затраты всего, %']
   ];
-  Q.QLoad('select ' + Fields.Col(0).Implode(', ') + ' from v_orders_fin_monitoring where order_type = -1 and rownum = 1', [], na);
-  Tbl.InitDefaults;
-  Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
-  HTML := Tbl.GenerateEmail(na, Fields);
-  st := '<tr>' + A.Implode(Fields.Col(1), '<td>', '</td>', False) + '</tr>';
-  for i:=0 to na.Count- 1 do begin
-    st := '<tr>' + A.Implode(na.GetRow(i), '<td>', '</td>', False) + '</tr>';
+  Q.QLoad('select ' + Fields.Col(0).Implode(', ') + ' from v_orders_fin_monitoring where order_type = :p$i', [S.IIf(AOrderTypes, 0, -1)], na);
+  if na.Count = 0 then
+    HTML := 'Вчера ' + S.IIf(AOrderTypes, 'отгрузочных', 'производственных') + ' заказов запущено не было.'
+  else begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := Title + '<br>' + Tbl.GenerateEmail(na, Fields);
   end;
-    st :=
-      '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
-      '<table border = "1">'+
-      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
-      st + '</table><br>' + 'Всего по счетам: <b>' + FloatToStr(Round(e)) + 'р.</b>';
-
-(*
-  //va:=[222222];
-  //не получается сделать границы. появлялись при вставке данных тегов в td, но после пропадали, не воспроизводится
-  //<span ></span> <!-- -->
-  if na.Count > 0 then begin
-    e := 0;
-    for i:=0 to na.Count- 1 do begin
-      st := st + '<tr><td>' + na.G(i,'name').AsString + '</td><td>' + na.G(i,'price').AsString + '</td><td>' + na.G(i,'price_check').AsString +
-        '</td><td>' + na.G(i,'name_unit').AsString + '</td><td>' + na.G(i,'qnt').AsString + '</td><td>' + na.G(i,'sum').AsString + '</td><td>' +
-        S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '<b>') + na.G(i,'sum_diff').AsString + S.IIFStr(na.G(i,'sum_diff').AsFloat > 0, '</b>') +
-        '</td><td>' + na.G(i,'num').AsString + ' от ' + na.G(i,'dt').AsString + '</td></tr>';
-      e := e + na.G(i,'sum').AsFloat;
-    end;
-    st :=
-      '<b>Номенклатура по счетам за вчерашний день:</b><br>' +
-      '<table border = "1">'+
-      '<tr><td><b>Наименование</b></td><td><b>Цена</b></td><td><b>Контрольная цена</b></td><td><b>Ед. изм.</b></td><td><b>Кол-во</b></td><td><b>Сумма по счету</b></td><td><b>Разница с контрольной</b></td><td><b>Счет</b></td></tr>' +
-      st + '</table><br>' + 'Всего по счетам: <b>' + FloatToStr(Round(e)) + 'р.</b>';
-  end
-  else
-    st := 'За вчерашний день на было создано ни одного счета.<br>';
-  if Length(va) > 0 then begin
-    st := S.IIFStr(st <> '', st + '<br><br>----------------------------------<br><b>') + 'Были приходные накладные без основания за вчерашний день:</b><br>Номера: ' + A.Implode(va,', ') + '<br>';
-  end;
-  if st = '' then
-    Exit;*)
-  //HTML := StringReplace(HTML, #13#10, '', [rfReplaceAll]);
   CreateTaskRoot(myTskOpMailHtml, [
-    ['to', 'sprokopenko@fr-mix.ru'],
-    ['subject', 'Отчет по запущенным заказам за вчерашний день.'],
+    ['to', GetMailingAddr(TASK_MAILING_ORDERS_FIN)],
+    ['subject', Title],
     ['body', HTML + '<br>'],
-//    ['body', st + '<br>'],
     ['user-name', 'Учёт']
   ]);
-  sys.SaveTextToFile('r:\11', html);
 end;
+
+{  st := '<tr>' + A.Implode(Fields.Col(1), '<td>', '</td>', False) + '</tr>';
+  for i:=0 to na.Count- 1 do begin
+    st := '<tr>' + A.Implode(na.GetRow(i), '<td>', '</td>', False) + '</tr>';
+  end;}
+
 
 procedure TTasks.HourlyTasks;
 begin
@@ -1026,6 +995,8 @@ begin
   Q.QCommitOrRollback(True);
   if HourOf(Now) = 9 then begin
     SplMonitorReportDay;
+    ReportForYesterdayOrders(True);
+    ReportForYesterdayOrders(False);
   end;
   Turv.LoadDataFromParsec;
   Turv.SaveAllTurvToExportTable;

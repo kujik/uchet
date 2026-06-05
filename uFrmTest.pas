@@ -1422,7 +1422,7 @@ var
   i: Integer;
   st: string;
 begin
-Tasks.ReportForYesterdayOrders;Exit;
+Tasks.ReportForYesterdayOrders(true);Exit;
 va:=[1,2];
 va.Add(2);
 va.Add(3);

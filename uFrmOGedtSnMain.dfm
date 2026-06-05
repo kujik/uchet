@@ -2,7 +2,6 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
   Caption = 'FrmOGedtSnMain'
   ClientWidth = 792
   ExplicitWidth = 804
-  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 792
@@ -260,15 +259,19 @@ inherited FrmOGedtSnMain: TFrmOGedtSnMain
         ExplicitWidth = 776
         inherited pnlFrmBtnsMain: TPanel
           Left = 681
+          ExplicitLeft = 677
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 453
+          ExplicitLeft = 449
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 582
+          ExplicitLeft = 578
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 313
+          ExplicitWidth = 309
         end
       end
     end
