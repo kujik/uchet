@@ -90,6 +90,8 @@ uses
   uFrmODedtNomenclFiles,
   uExcel,
   uSys,
+  uHtmlUtils,
+  uExportToXlsx,
   uFrmBasicInput
   ;
 
@@ -1446,45 +1448,52 @@ end;
 procedure TFrmOGedtSnMain.SendMail;
 //рассылка с информацией о заявке
 var
-  i, j: Integer;
-  IdSch, IdSchN, IdIb, IdIbN: Integer;
+  i,j: Integer;
   na: TNamedArr;
   va: TVarDynArray;
-  st, st1, css: string;
-  e: Extended;
+  Summ: Extended;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title: string;
+  TopSt: string;
 begin
+  Title := 'Создана заявка на закупку материалов';
+  TopSt := StringReplace('Заявка на закупку материалов от ' + DateTimeToStr(Now), ':', '_', [rfReplaceAll]);
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['price_check$f', 'Контрольная цена', '80', 'r'],
+    ['name_unit$s', 'Ед. изм.', '80', 'r'],
+    ['qnt$f', 'Остаток', '80', 'r'],
+    ['qnt_onway$f', 'В пути', '80', 'r'],
+    ['rezerv$f', 'Резерв', '80', 'r'],
+    ['need$f', 'Потребность', '80', 'r'],
+    ['qnt_order$f', 'Кол-во к заказу', '80', 'r'],
+    ['sum$f', 'Сумма заказа', '80', 'f=#:', 'r', 's'],
+    ['excess$f', 'Превышение, количество', '80', 'r'],
+    ['exceed_sum$f', 'Превышение, сумма', '80', 'f=#:', 'r', 's'],
+    ['qnt1$f', 'Расход за месяц', '80', 'r'],
+    ['qnt3$f', 'Расход за квартал', '80', 'r']
+  ];
   Q.QLoad(
-     'select name, price_check, name_unit, qnt, qnt_onway, rezerv, need, qnt_order, qnt_order * price_check as sum, qnt_order + need as excess, nullif(greatest(-1, round((qnt_order + need) * price_check)), -1) as exceed_sum,  qnt1, qnt3 '+
-     'from v_spl_minremains where to_order = 1 and id_category = :id_category$i order by name asc',
+     'select ' +
+     'name, price_check, name_unit, qnt, qnt_onway, rezerv, need, qnt_order, qnt_order * price_check as sum, qnt_order + need as excess, ' +
+     'nullif(greatest(-1, round((qnt_order + need) * price_check)), -1) as exceed_sum,  qnt1, qnt3 '+
+     'from v_spl_minremains ' +
+     'where to_order = 1 and id_category = :id_category$i '+
+     'order by name asc',
      [Frg1.GetControlValue('CbCategory')], na
   );
-  va := Q.QLoadCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
-  st := '';
   if na.Count = 0 then
     Exit;
-  st := '';
-  for i:=0 to na.Count- 1 do begin
-    st1 := '';
-    for j := 0 to High(na.F) do
-      S.ConcatStP(st1, '<td>' + na.G(i, na.F[j]).AsString + '</td>', '');
-    S.ConcatStP(st, '<tr>' + st1 + '</tr>');
-  end;
-  st :=
-    '<b>Номенклатура к заказу:</b><br>' +
-    '<table border = "1">'+
-    '<tr><td><b>Наименование</b></td><td><b>Контрольная цена</b></td><td><b>ед.Изм</b></td><td><b>Остаток</b></td><td><b>В пути</b></td><td><b>Резерв</b></td></td><td><b>Потребность</b></td>'+
-    '<td><b>Кол-во к заказу</b></td><td><b>Сумма заказа</b></td><td><b>Превышение, количество</b></td><td><b>Превышение, сумма</b></td><<td><b>Расход за месяц</b></td><td><b>Расход за квартал</b></td></tr>' +
-    st + '</table><br>' + 'Менеджер: <b>' + User.GetName + '</b>';
-  Tasks.CreateTaskRoot(myTskOpMailHtml, [
-    ['to', Tasks.GetMailingAddr(TASK_MAILING_MONITORING_SN)],
-    ['subject', 'Создана заявка на закупку материалов'],
-    ['body', st + '<br>'],
-    ['user-name', 'Учёт']
-  ]);
+  HTML := '';
+  Tbl.InitDefaults;
+  Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+  HTML := '<b>' + TopSt + '</b><br><b>Номенклатура к заказу:</b><br>' + Tbl.GenerateEmail(na, Fields) + '<br>';
+  FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+  ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
 end;
-
-
-
 
 
 

@@ -1940,8 +1940,8 @@ select
   u.name_unit,
   s.id_schet,
   s.control_date as dt,
-
   s.num,
+  s.num || ' от ' || to_char(s.control_date, 'DD-MON-YYYY') as num_w_dt,
   round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
   round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
   round((round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum_diff, 
@@ -1967,6 +1967,8 @@ where
   and round(ss.price * nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check > 0  
 ;
 
+select * from v_prices_from_sp_schet where id_schet > 47900 order by id_schet desc;
+
 create or replace view v_prices_from_sp_schet_day as
 select
 --выборка номенклатуры по счетам за вчерашний день
@@ -1976,6 +1978,7 @@ select
   s.control_date as dt,
   s.date_registr,
   s.num,
+  s.num || ' от ' || to_char(s.control_date, 'DD-MON-YYYY') as num_w_dt,
   round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2) as qnt,
   round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) as price,
   round((round(ss.price / nvl(ss.kp_unit_sp, 1) / 1, 2) - p.price_check) * round(ss.quantity * nvl(ss.kp_unit_sp, 1), 2)) as sum_diff, 
@@ -2000,6 +2003,7 @@ where
   and s.control_date is not null
   and s.date_registr >= trunc(sysdate) - 3 and s.date_registr < trunc(sysdate)
 ; 
+
 
 /*
  1

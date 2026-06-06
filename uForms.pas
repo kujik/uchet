@@ -1500,7 +1500,7 @@ begin
   ExportOptions.IsExportTitle := True;
   ExportOptions.IsExportFooter := True;
   ExportOptions.IsExportFontFormat := FontFormat;
-  ExportOptions.IsExportFillColor := False;
+  ExportOptions.IsExportFillColor := FontFormat;
   ExportOptions.IsCreateAutoFilter := CreateAutoFilter;
   ExportOptions.IsExportFreezeZones := True;
   ExportOptions.IsFooterSumsAsFormula := True;

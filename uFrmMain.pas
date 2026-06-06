@@ -93,7 +93,8 @@ implementation
 uses
   uFrmXWAbout, uData, uDBOra, V_MDI, uFrmBasicMdi,
 
-  uWindows, uTasks,
+  uWindows,
+  uServerTasks,
   D_SetPassword,
   D_MainSettings, D_ModuleSettings, D_Rep_Smeta,
 
@@ -205,7 +206,7 @@ begin
     Exit;
   if (Module.RunFromIDE) and (MyQuestionMessage('Выполнить задачу ' + ParamStr(1) + '?') <> mrYes) then
     Exit;
-  Tasks.Run;
+  TasksS.Run;
   {$ENDIF}
 end;
 

@@ -72,6 +72,7 @@ uses
   uFrmMain,
   uSys,
   uTasks,
+  uServerTasks,
   uErrors,
   uFrmBasicInput,
   uPrintReport,
@@ -2703,7 +2704,7 @@ begin
   end
   else if (FormDoc = myfrm_R_Holideys) and (Tag = mbtCustom_LoadFromInet) and (S.Nst(Fr.GetControlValue('CbYear')) <> '') and
     (MyQuestionMessage('Загрузить производственный календарь из сети Интернет'#13#10'(с сайта http://xmlcalendar.ru)?'#13#10'При этом данные будут заменены.') = mrYes) then begin
-     case Tasks.GetProductionCalendar(S.NInt(Fr.GetControlValue('CbYear'))) of
+     case TasksS.GetProductionCalendar(S.NInt(Fr.GetControlValue('CbYear'))) of
        1: begin
            Fr.RefreshGrid;
            MyInfoMessage('Календарь успешно загружен.')

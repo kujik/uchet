@@ -130,18 +130,15 @@ uses
   uDBOra,
   uWindows,
   uMessages,
-  //~F_D_Turv,
   uData,
   uString,
   uTurv,
   uExcel,
-  //D_Grid1,
-  //D_CandidatesFromWorkerStatus,
   ZLib,
   uTasks,
   uOrders,
-
-
+  uExportToXlsx,
+  uServerTasks,
 
 
   F_TestTree,
@@ -675,7 +672,7 @@ end;
 
   exit;
 
-  Tasks.TestTurvComplete;
+//  TasksS.TestTurvComplete;
   exit;
 
 
@@ -688,7 +685,7 @@ end;
 //  Thunderbird('sprokopenko@fr-mix.ru', '+test', 'учет'#13#10'assafsadfsd', ''); exit;
 //  testsql1;  exit;
 
-  Tasks.TestTurvDifferences;
+//  TasksS.TestTurvDifferences;
 //  Tasks.TestTurvComplete;
   exit;
 
@@ -1422,7 +1419,9 @@ var
   i: Integer;
   st: string;
 begin
-Tasks.ReportForYesterdayOrders(true);Exit;
+//TasksS.ReportForYesterdayOrders(True); Exit;
+//TasksS.ReportForYesterdayOrders(False);Exit;
+TasksS.ReportForHorlySupplyDeals;Exit;
 va:=[1,2];
 va.Add(2);
 va.Add(3);
@@ -1480,6 +1479,7 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+//FrmExportToXlsx.RunExport;Exit;
   Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
 
   Q.QLoad('SELECT /*+ PARALLEL(4) */ * FROM v_orders', [], na);

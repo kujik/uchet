@@ -208,7 +208,9 @@ uses
   uFrmXDinputPwd in 'uFrmXDinputPwd.pas' {FrmXDinputPwd},
   uFrmWGrepTurv in 'uFrmWGrepTurv.pas' {FrmWGrepTurv},
   uFrmADedtMainSettings in 'uFrmADedtMainSettings.pas' {FrmADedtMainSettings},
-  uHtmlUtils in 'uHtmlUtils.pas';
+  uHtmlUtils in 'uHtmlUtils.pas',
+  uExportToXlsx in 'uExportToXlsx.pas' {FrmExportToXlsx},
+  uServerTasks in 'uServerTasks.pas';
 
 var
   MT: Integer;
@@ -372,6 +374,7 @@ begin
   Application.CreateForm(TFrmWDedtPayrollCalcMethod, FrmWDedtPayrollCalcMethod);
   Application.CreateForm(TFrmODEdtInputOrderAccount, FrmODEdtInputOrderAccount);
   Application.CreateForm(TFrmXDinputPwd, FrmXDinputPwd);
+  Application.CreateForm(TFrmExportToXlsx, FrmExportToXlsx);
 
   Application.Run;
 

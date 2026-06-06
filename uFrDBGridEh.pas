@@ -962,8 +962,8 @@ type
     procedure LoadSourceDataFromArray(AValues: TVarDynArray2; AFieldNames: string = ''; AArrayColumns: string = ''; AEmptyBefore: Boolean = true);
     procedure LoadData(AParams: TVarDynArray); overload;
     procedure LoadData(ASql: string; AParams: TVarDynArray; AEmptyTable: Boolean = true); overload;
-    procedure LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = true); overload;
-    procedure LoadData(AValues: TNamedArr; AEmptyTable: Boolean = true); overload;
+    procedure LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = True); overload;
+    procedure LoadData(AValues: TNamedArr; AEmptyTable: Boolean = True); overload;
 
 
     //читает данные дополнительно созданных контролов из файла настроек пользователя, если не были уже прочитаы, или Force
@@ -3077,7 +3077,7 @@ begin
   ChangeSelectedData;
 end;
 
-procedure TFrDBGridEh.LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = true);
+procedure TFrDBGridEh.LoadData(AValues: TVarDynArray2; AArrayFields: string; AArrayColumns: string; AEmptyTable: Boolean = True);
 begin
   InLoadData := True;
   MemTableEh1.ReadOnly := False;
@@ -3087,7 +3087,7 @@ begin
   ChangeSelectedData;
 end;
 
-procedure TFrDBGridEh.LoadData(AValues: TNamedArr; AEmptyTable: Boolean = true);
+procedure TFrDBGridEh.LoadData(AValues: TNamedArr; AEmptyTable: Boolean = True);
 begin
   InLoadData := True;
   Mth.LoadGridFromNamedArray(DBGridEh1, AValues, True, AEmptyTable);
@@ -3359,6 +3359,8 @@ begin
         va[0] := '###,###,##0.00';
       if va[0] = 'f' then
         va[0] := '###,###,###0.###';
+      if va[0] = 'q' then
+        va[0] := '0.###';
       if va[1] = '' then
         va[1] := va[0];
       if va[1] = 't' then
@@ -3367,6 +3369,8 @@ begin
         va[1] := '###,###,##0.00';
       if va[1] = 'f' then
         va[1] := '###,###,###0.###';
+      if va[1] = 'q' then
+        va[1] := '0.###';
       if va[1] = '' then
         va[1] := va[0];
       Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, col.FieldName, VarToStr(va[0]));

@@ -1123,7 +1123,7 @@ begin
     on E: Exception do begin
       Errors.SetErrorCapt(Self.Name, 'Oшибка при загрузке данных из БД');
       Application.ShowException(E);
-      Errors.SetErrorCapt;
+      Errors.SetErrorCapt;                                                                                    m
     end;
   end;
   QClose;

@@ -84,11 +84,7 @@ var
 implementation
 
 uses
-
-
-
   uErrors,
-
   uWindows
   ;
 

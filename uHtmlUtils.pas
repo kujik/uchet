@@ -63,12 +63,12 @@
       'p'  – значение умножается на 100 и добавляется знак '%'. Работает с числами.
 
     Пользовательский формат:
-      'f=...' – задаёт формат для FormatFloat или FormatDateTime.
+      'f:...' – задаёт формат для FormatFloat или FormatDateTime.
                 Примеры: 'f=0.00', 'f=0', 'f=dd/mm/yyyy', 'f=hh:nn'.
                 Переопределяет глобальные форматы.
 
     CSS класс колонки:
-      'class=имя_класса' – добавляет атрибут class="имя_класса" в тег <th>.
+      'class:имя_класса' – добавляет атрибут class="имя_класса" в тег <th>.
                            Можно использовать для стилизации через внешний CSS.
 
   Примечания:
@@ -114,6 +114,14 @@ type
     IsDateTime: Boolean;
   end;
 
+  TCellFormatter = reference to function(
+    ARow: Integer;           // индекс строки (0-based)
+    ACol: Integer;           // индекс колонки (0-based)
+    const AValue: Variant;   // исходное значение ячейки
+    const AFormattedValue: string  // уже отформатированное значение (число, дата)
+
+  ): string;                 // должна вернуть HTML-код для ячейки (теги, цвет)
+
   THTMLTable = record
   private
     FOptions: THTMLTableOptions;
@@ -137,8 +145,7 @@ type
     // Обычная генерация (с поддержкой CSS)
     function Generate(const Data: TNamedArr; const Config: TVarDynArray2): string;
     // Генерация для почтовых клиентов (без CSS, только атрибуты)
-    function GenerateEmail(const Data: TNamedArr; const Config: TVarDynArray2;
-      const Border: Integer = 1; const CellPadding: Integer = 2; const CellSpacing: Integer = 0): string;
+    function GenerateEmail(const Data: TNamedArr; const Config: TVarDynArray2; const Border: Integer = 1; const CellPadding: Integer = 2; const CellSpacing: Integer = 0; const CellFormatter: TCellFormatter = nil): string;
   end;
 
 implementation
@@ -246,9 +253,9 @@ begin
       Result.IsDateTime := True
     else if FlagStr = 'p' then
       Result.IsPercent := True
-    else if (Pos('f=', FlagStr) = 1) then
+    else if (Pos('f:', FlagStr) = 1) then
       Result.FormatStr := Copy(FlagStr, 3, MaxInt)
-    else if (Pos('class=', FlagStr) = 1) then
+    else if (Pos('class:', FlagStr) = 1) then
       Result.CssClass := Copy(FlagStr, 7, MaxInt);
   end;
 end;
@@ -475,8 +482,7 @@ end;
 //   CellSpacing - расстояние между ячейками (по умолч. 0)
 //
 // Возвращает: строка с HTML-кодом таблицы.
-function THTMLTable.GenerateEmail(const Data: TNamedArr; const Config: TVarDynArray2;
-  const Border, CellPadding, CellSpacing: Integer): string;
+function THTMLTable.GenerateEmail(const Data: TNamedArr; const Config: TVarDynArray2; const Border: Integer = 1; const CellPadding: Integer = 2; const CellSpacing: Integer = 0; const CellFormatter: TCellFormatter = nil): string;
 var
   Cols: TArray<TColumnInfo>;     // массив с информацией о колонках
   i, j, rowCount, colCount: Integer;
@@ -545,6 +551,10 @@ begin
         // Форматируем значение как строку (числа, даты, проценты, Null)
         cellValue := FormatCellValue(value, Cols[j]);
         cellValue := HtmlEncode(cellValue);
+
+        // каллбэк-функция для форматирования значений
+        if Assigned(CellFormatter) then
+          cellValue := CellFormatter(i, j, value, cellValue);  // i = row, j = col
 
         // Если для колонки установлен флаг 'b' (жирный), оборачиваем в <b>
         if fsBold in Cols[j].FontStyle then
