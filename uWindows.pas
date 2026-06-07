@@ -118,14 +118,14 @@ uses
   uFrmCDedtExpenseItem,
 
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
-  uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollN, uFrmWGedtPayroll2N, uFrmWGedtPayrollTransfer,
+  uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
   uFrmWGrepTurv,
 
 
   D_Order,
   D_ItmInfo, D_J_Montage,
-  D_R_OrStdItems, D_NewEstimateInput,
+  D_NewEstimateInput,
   D_SuppliersMinPart,
   D_Spl_InfoGrid,
   F_Adm_Installer,

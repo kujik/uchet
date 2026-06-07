@@ -44,7 +44,7 @@ var
 implementation
 
 uses
-  System.Win.ComObj, Winapi.ActiveX, Winapi.ShellAPI, uLdapHelper, uAdUpdater, uDBOra, uFrmXDinputPwd, uUpdater, uWaitForm;
+  System.Win.ComObj, Winapi.ActiveX, Winapi.ShellAPI, uAdUpdater, uDBOra, uFrmXDinputPwd, uUpdater, uWaitForm;
 
 {$R *.dfm}
 
@@ -320,7 +320,7 @@ var
   sParams: string;
   sExePath: string;
 begin
-  Result := False;
+ Result := False;
   // ‘ормируем параметры с правильными кавычками
   sParams := Format('"%s" "%s" "%s" "%s"',
     [ObjectGUID, AttrName, AttrValue, PasswordPart2]);

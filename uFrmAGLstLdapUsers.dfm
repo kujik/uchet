@@ -1,13 +1,13 @@
 inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
   Caption = 'FrmAGLstLdapUsers'
+  ExplicitWidth = 808
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 776
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               inherited RowDetailData: TRowDetailPanelControlEh
@@ -33,9 +33,8 @@ inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          ExplicitWidth = 780
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               inherited RowDetailData: TRowDetailPanelControlEh
@@ -61,13 +60,24 @@ inherited FrmAGLstLdapUsers: TFrmAGLstLdapUsers
         end
       end
     end
-  end
-  inherited pnlStatusBar: TPanel
-    inherited lblStatusBarR: TLabel
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+    inherited pnlFrmBtns: TPanel
+      inherited bvlFrmBtnsTl: TBevel
+        Width = 788
+      end
+      inherited bvlFrmBtnsB: TBevel
+        Width = 788
+      end
+      inherited pnlFrmBtnsContainer: TPanel
+        Width = 788
+        ExplicitWidth = 788
+        inherited pnlFrmBtnsMain: TPanel
+          Left = 689
+        end
+        inherited pnlFrmBtnsChb: TPanel
+          Left = 461
+          ExplicitLeft = 461
+        end
+      end
     end
   end
   object ADOConnection1: TADOConnection

@@ -1746,7 +1746,7 @@ const
   rOr_R_StdItems_Set_Prices='6-153';
 
   const
-  URights : array [0..290] of array [0..3] of string = (
+  URights : array [0..270] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
