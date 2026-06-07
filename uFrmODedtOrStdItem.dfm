@@ -8,12 +8,12 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
   inherited pnlFrmMain: TPanel
     Width = 837
     Height = 332
-    ExplicitWidth = 776
+    ExplicitWidth = 833
     ExplicitHeight = 331
     inherited pnlFrmClient: TPanel
       Width = 827
       Height = 283
-      ExplicitWidth = 766
+      ExplicitWidth = 823
       ExplicitHeight = 282
       object nedt_Price: TDBNumberEditEh
         Left = 85
@@ -100,7 +100,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
       Top = 288
       Width = 827
       ExplicitTop = 287
-      ExplicitWidth = 766
+      ExplicitWidth = 823
       inherited bvlFrmBtnsTl: TBevel
         Width = 825
         ExplicitWidth = 768
@@ -111,22 +111,22 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 825
-        ExplicitWidth = 764
+        ExplicitWidth = 821
         inherited pnlFrmBtnsMain: TPanel
           Left = 726
-          ExplicitLeft = 665
+          ExplicitLeft = 722
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 498
-          ExplicitLeft = 437
+          ExplicitLeft = 494
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 627
-          ExplicitLeft = 566
+          ExplicitLeft = 623
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 358
-          ExplicitWidth = 297
+          ExplicitWidth = 354
         end
       end
     end
@@ -135,11 +135,11 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
     Top = 332
     Width = 837
     ExplicitTop = 331
-    ExplicitWidth = 776
+    ExplicitWidth = 833
     inherited lblStatusBarR: TLabel
       Left = 764
       Height = 14
-      ExplicitLeft = 707
+      ExplicitLeft = 764
     end
     inherited lblStatusBarL: TLabel
       Height = 14

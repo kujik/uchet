@@ -1,3 +1,10 @@
+{
+Редактирование стандартного изделия.
+В дополнительном параметре всегда передается айди сметной группы (id_or_format_estimates).
+Редактировать цену можно только обладая правом на это.
+}
+
+
 unit uFrmODedtOrStdItem;
 
 interface
@@ -25,7 +32,7 @@ type
     FIdEstimateGroup: Variant;
     FPrefix: string ;
     FIsRouteChanged: Boolean;
-    FIdEstimate: Variant;
+    FIdOrFormatEstimate: Variant;
     function  Prepare: Boolean; override;
     procedure ControlOnChange(Sender: TObject); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
@@ -77,11 +84,13 @@ begin
   Table := 'or_std_items';
   FOpt.UseChbNoClose:= True;
   //Opt.RequestWhereClose:= cqYNC;
-  FOpt.InfoArray:= [
-    ['Ввод параметров стандартного изделия.'#13#10+
-     ''#13#10
-    ]
-  ];
+  FOpt.InfoArray:= [[
+     'Ввод параметров стандартного изделия.'#13#10+
+     'Введите или измените все необходимые данные.'#13#10+
+     'При изменении наименования оно будет автоматически изменено во всех изделиях Учета и ИТМ'#13#10+
+     '(но если такое наименование есть в качестве позиции в смете, то там оно изменено не будет!)'#13#10+
+     'При изменении маршрута или цен по изделию, они будут скорректированы во всех шаблонах папортов.'#13#10
+  ]];
 
   Result := inherited;
   if not Result then
@@ -90,10 +99,15 @@ begin
     FNameOld := S.NSt(F.GetPropB('name'));
     FWoEstimateOld:=S.NInt(F.GetPropB('wo_estimate'));
     FIdEstimateGroup := AddParam;
-    FIdEstimate := AddParam;
-    FPrefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [FIdEstimate]).AsString;
+    FIdOrFormatEstimate := AddParam;
+    F.SetProp('id_or_format_estimates$i',FIdOrFormatEstimate);
+    FPrefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [FIdOrFormatEstimate]).AsString;
   end;
-  //SetRoute;
+  if (Mode = fEdit) and not User.Role(rOr_R_StdItems_Set_Prices) then begin
+    nedt_Price.ReadOnly := True;
+    nedt_Price_PP.ReadOnly := True;
+  end;
+  SetRoute;
 end;
 
 procedure TFrmODedtOrStdItem.ControlOnChange(Sender: TObject);
