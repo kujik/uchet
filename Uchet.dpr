@@ -207,8 +207,8 @@ uses
   uHtmlUtils in 'uHtmlUtils.pas',
   uExportToXlsx in 'uExportToXlsx.pas' {FrmExportToXlsx},
   uServerTasks in 'uServerTasks.pas',
-  uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem};
-
+  uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
+  uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog};
 
 var
   MT: Integer;
@@ -373,6 +373,7 @@ begin
   Application.CreateForm(TFrmODEdtInputOrderAccount, FrmODEdtInputOrderAccount);
   Application.CreateForm(TFrmXDinputPwd, FrmXDinputPwd);
   Application.CreateForm(TFrmExportToXlsx, FrmExportToXlsx);
+  Application.CreateForm(TFrmChooseDialog, FrmChooseDialog);
 
   Application.Run;
 

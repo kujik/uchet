@@ -170,7 +170,8 @@ type
     function QLoad(Sql: string; ParamValues: TVarDynArray): TVarDynArray2; overload;
     //возвращаем первую строку запроса
     //возвращается всегда вариантный массив по количеству полей, если запрос не вернуул ни одной строки то все элементы массива будут null
-    function QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant;
+    function QLoadRow(Sql: string; ParamValues: TVarDynArray): Variant; overload;
+    procedure QLoadRow(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr); overload;
     //возвращаем первую строку запроса; если записей нет, вернет пустой массив
     function QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;
     //вернет всегда значение первого поля первой строки запроса; если запрос не вернул данных, то вернет null
@@ -1214,6 +1215,11 @@ begin
   else
     for i := 0 to High(na.F) do
       Result[i] := na.V[0][i];
+end;
+
+procedure TmyDB.QLoadRow(Sql: string; ParamValues: TVarDynArray; var Res: TNamedArr);
+begin
+  QLoad(Sql, ParamValues, Res, True);
 end;
 
 function TmyDB.QLoadRow0(Sql: string; ParamValues: TVarDynArray): TVarDynArray;

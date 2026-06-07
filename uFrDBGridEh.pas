@@ -1071,6 +1071,8 @@ type
     //выгрузить данные в массив TVarDynArray2
     function ExportToVa2(AFields: string = ''; AFiltered: Boolean = True): TVarDynArray2;
     function ExportToNa(AFields: string = ''; AFiltered: Boolean = True): TNamedArr;
+    //загрузить в стороку грида (по умолчанию - в текущую) найденные поля из TNamedArr
+    procedure LoadRow(AData: TNamedArr; ARow: Integer = -1; AFiltered: Boolean = False);
  end;
 
 
@@ -4161,6 +4163,14 @@ begin
     for var j := 0 to High(va) do
       Result.V[i][j] := GetValue(va[j], i, AFiltered);
   end;
+end;
+
+procedure TFrDBGridEh.LoadRow(AData: TNamedArr; ARow: Integer = -1; AFiltered: Boolean = False);
+//загрузить в стороку грида (по умолчанию - в текущую) найденные поля из TNamedArr
+begin
+  for var i := 0 to AData.FieldsCount - 1 do
+    if IsFieldExists(AData.GetFieldNames[i]) then
+      SetValue(AData.GetFieldNames[i], S.Iif(ARow = - 1, RecNo - 1, ARow), AFiltered, AData.G(AData.GetFieldNames[i]));
 end;
 
 

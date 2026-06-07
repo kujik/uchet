@@ -61,6 +61,64 @@ order by
 ;
 
 
+--create or replace view v_orders_fin_monitoring as 
+select
+--финансовый отчет по запущенным за вчерашний день заказам
+--вызывается отдельно для производства и продажи t.order_type
+--сгруппирован по изделиям и продажной цене (идет накопительно по изделиям, но при разной цене выделяются строки)
+--все цены без ндс  
+  --t.order_type,  -- -1 П, 0 - О
+  --t.dt_beg,
+  t.ornums as "Заказы",
+  t.customer as "Покупатели",
+  t.fullname as "Изделие",
+  t.qnt as "Количество",
+  t.price as "Цена продажи",
+  t.price_std as "Цена по справочнику",   --цена в справочнике
+  case when t.price_std > t.price then t.price - t.price_std else null end as "Занижение цены",  
+  round(t.price * t.qnt, 2) as "Сумма продажи",
+  t.sum0 as "Себестоимость по смете",
+  case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as "Себестоимость по смете, %",
+  t.labor_cost_0 as "Трудозатраты по ПЩ",
+  case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as "Трудозатрты ПЩ, %",
+  t.labor_cost_2 as "Трудозатраты по ЛОК",
+  case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as "Трудозатраты по ЛОК, %",
+  t.sum0 + t.labor_cost_0 + labor_cost_2 as "Затраты всего, сумма",
+  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as "Затраты всего, %"
+from (  
+select
+  decode(oi.id_organization, -1, -1, 0) as order_type,
+  max(dt_beg) as dt_beg,
+  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
+  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
+  si.fullname,
+  --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
+  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
+  sum(oi.qnt) as qnt,
+  round(oi.cost_wo_nds / oi.qnt, 0) as price,
+  sum(round(oi.sum0 / 1.22, 0)) as sum0,
+  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
+  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
+  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
+  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
+from
+  v_order_items oi,
+  v_or_std_items si
+where
+  oi.id_std_item = si.id
+  and qnt <> 0
+--  and oi.id_organization <> -1  --!!
+  and oi.id_organization = -1  --!!
+  and oi.dt_end is null
+group by
+  si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
+order by
+  si.fullname
+) t    
+;
+
+
+
 --------------------------------------------------------------------------------
 --материализованное представление финансового отчета по заказам
 create materialized view vь_orders_fin_monitoring as
@@ -121,7 +179,7 @@ where
   );
 
 --------------------------------------------------------------------------------
-create or replace view v_stditems_fin_monitoring as --!!!
+create or replace view v_stditems_fin_monitoring as 
 with
   --отображает текущее состояние финансовых параметров по стандартным изделиям,
   --и их состояние на вчерашний день (точнее, из материализованного представления)
@@ -148,6 +206,9 @@ with
       union
       --стандартные изделия, затрагиваемые изменением стоимости работы
       select id from v_std_items_changed_cost_labor
+      union
+      --стандартные изделия, по которым была изменена цена
+      select id from or_std_items where dt_changed_price > trunc(sysdate) - 1
     )
   ),
   all_data as (
@@ -185,66 +246,7 @@ with
   select * from all_data     
 ; 
 
--------------------------------------------------------------------------------
---материализованное представление по финансовым показателям заказов за вчерашний день
-
-drop materialized view vm_orders_fin_monitoring;
-create materialized view vm_orders_fin_monitoring as
-select
---финансовый отчет по запущенным за вчерашний день заказам
---вызывается отдельно для производства и продажи t.order_type
---сгруппирован по изделиям и продажной цене (идет накопительно по изделиям, но при разной цене выделяются строки)
---все цены без ндс  
-  t.order_type,  -- -1 П, 0 - О
-  t.ornums,
-  t.customer,
-  t.fullname,
-  t.qnt,
-  t.price,
-  t.price_std,   --цена в справочнике
-  case when t.price_std > t.price then t.price - t.price_std else null end as price_diff,  --разница между продажной и справочной
-  round(t.price * t.qnt, 2) as summ,
-  t.sum0,
-  t.labor_intensity_0,
-  t.labor_cost_0,
-  t.labor_intensity_2,
-  t.labor_cost_2,
-  t.sum0 + t.labor_cost_0 + labor_cost_2 as prime_cost,
-  case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as sum0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as labor_cost_0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as labor_cost_2_percent,
-  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
-from (  
-select
-  decode(oi.id_organization, -1, -1, 0) as order_type,
-  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
-  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
-  si.fullname,
-  --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
-  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
-  sum(oi.qnt) as qnt,
-  round(oi.cost_wo_nds / oi.qnt, 0) as price,
-  sum(round(oi.sum0 / 1.22, 0)) as sum0,
-  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
-  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
-  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
-  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
-from
-  v_order_items oi,
-  v_or_std_items si
-where
-  oi.id_std_item = si.id
-  and qnt <> 0
-  --and oi.id_organization <> -1  --!!
-  and oi.dt_end is null or dt_end = trunc(sysdate) - 7
-group by
-  si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
-order by
-  si.fullname
-) t    
-;      
-      
-exec dbms_mview.refresh('vm_orders_fin_monitoring', 'c');  
+select * from v_stditems_fin_monitoring;
 
 
 create table orders_fin_monitoring_snapshot (
@@ -316,7 +318,8 @@ with
     select /*+ materialize */ distinct oi.id
     from order_items oi
     join estimates e on e.id_order_item = oi.id
-    where e.dt_changed > trunc(sysdate) - 1
+    where 
+      (e.dt_create > trunc(sysdate) - 1) or (e.dt_changed > trunc(sysdate) - 1) or (e.dt_changed_depend > trunc(sysdate) - 1) 
   ),
   -- текущие данные с хинтами push_pred и no_merge
   current_data as (
@@ -373,13 +376,15 @@ with
     select
       s.*
     from
-      orders_fin_monitoring_snapshot s,
+      vm_orders_fin_monitoring s,
+      --orders_fin_monitoring_snapshot s,
       (select distinct order_type, fullname, price from current_data) c
     where
-      s.snapshot_date = trunc(sysdate) - 0
-      and s.order_type = c.order_type
+      --s.snapshot_date = trunc(sysdate) - 0
+      s.order_type = c.order_type
       and s.fullname = c.fullname
-      and s.price = c.price  )
+      and s.price = c.price  
+  )
  select *     
 from
   current_data o,
@@ -387,7 +392,8 @@ from
 where
   old.order_type (+) = o.order_type 
   and old.fullname (+) = o.fullname
-  and old.price (+) = o.price;
+  and old.price (+) = o.price
+  and o.sum0 <> old.sum0
 ;      
       
 /*select
@@ -439,3 +445,13 @@ from
     where
       s.snapshot_date = trunc(sysdate) ;
 ;*/
+
+
+    select oi.ornum
+    from v_order_items oi
+    join estimates e on e.id_order_item = oi.id
+    where e.dt_changed > trunc(sysdate) - 1;
+
+select * from m
+
+

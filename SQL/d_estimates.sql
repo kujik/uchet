@@ -220,11 +220,12 @@ end;
 --alter table estimate_items drop column id_name_resale_std;
 --alter table estimate_items add contract number(1) default 0;
 --alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
---alter table estimate_items add id_dependent_estimate number(11);
+alter table estimate_items add or_std_item_cnt number;
 create table estimate_items(
   id number(11),
   id_estimate number(11),                      --родительская смета
-  id_or_std_item number(11),                   --айди стандартного изделия, если смета является стандартным изделием
+  id_or_std_item number(11),                   --айди стандартного изделия, если сметная позиция является стандартным изделием
+  or_std_item_cnt number,
   id_group number(11),                         --группа бкад
   id_name number(11),                          --наименование бкад
   id_unit number(11),                          --единица измерения
@@ -292,6 +293,7 @@ begin
 end;
 /
 
+drop trigger trg_estimate_items_dep_id;
 create or replace trigger trg_estimate_items_dep_id
   before insert or update of id_name on estimate_items
   for each row
@@ -842,6 +844,22 @@ where
   e.name = n.name (+) 
 ;
 
+create or replace view v_estimate_for_edit_dlg as --!!!
+select
+--вью для редактора сметы
+  e.*,
+  case when e.id_or_std_item is not null then 1 else 0 end as is_std_item,
+  n.artikul,
+  s.qnt as qnt_on_stock
+from
+  v_estimate e,
+  dv.nomenclatura n,
+  v_spl_qntonstocks_sum_2 s
+where
+  e.name = n.name (+)
+  and e.name = s.name (+) 
+;
+
 alter table estimate_items drop column id_name_resale;
 
 
@@ -1172,25 +1190,180 @@ begin
 end;
 /
 
+
+
+
+
+select 
+  e.id_estimate,
+  e.id_name,
+  ed.id,
+  e.name,
+  i.fullname 
+from 
+  v_estimate e, estimates ed, v_or_std_items i
+where
+ e.id_dependent_estimate is not null
+ and ed.id = e.id_dependent_estimate 
+ and ed.id_std_item = i.id
+ and e.name <> i.fullname;
  
+ and e.id_dependent_estimate = (select f_get_dependent_estimate(2760, 96074) from dual); 
+; 
+
+select f_get_dependent_estimate(2760, 96074) from dual;
 
 
+/*
+
+===============================================================================
+
+*/
+
+--------------------------------------------------------------------------------
+-- обновляем связи сметных позиций со стандартными изделиями
+-- работает очень быстро!
+create or replace procedure p_update_estimate_items_ref as
+begin
+  -- Сброс всех значений перед пересчётом
+  update estimate_items
+  set id_or_std_item = null,
+      or_std_item_cnt = 0;
+
+  -- Обновление строк, для которых есть совпадения
+  merge into estimate_items ei
+  using (
+    with matches as (
+      select 
+        ei.id as estimate_item_id,
+        i.id as std_item_id,
+        case 
+          when (case when fi.id = 0 then '' else fi.prefix || '_' end) || i.name = bn.name then 1
+          when i.name = bn.name then 2
+        end as match_type
+      from estimate_items ei
+      join bcad_nomencl bn on bn.id = ei.id_name
+      cross join or_std_items i
+      left join or_format_estimates fi on i.id_or_format_estimates = fi.id
+      where ( (case when fi.id = 0 then '' else fi.prefix || '_' end) || i.name = bn.name
+              or i.name = bn.name )
+    ),
+    ranked as (
+      select 
+        estimate_item_id,
+        std_item_id,
+        match_type,
+        row_number() over (partition by estimate_item_id order by match_type, std_item_id desc) as rn,
+        count(*) over (partition by estimate_item_id, match_type) as cnt
+      from matches
+    )
+    select 
+      estimate_item_id,
+      std_item_id as id_or_std_item,
+      cnt as or_std_item_cnt
+    from ranked
+    where rn = 1
+  ) src
+  on (ei.id = src.estimate_item_id)
+  when matched then
+    update set 
+      ei.id_or_std_item = src.id_or_std_item,
+      ei.or_std_item_cnt = src.or_std_item_cnt;
+
+  commit;
+end;
+/
+exec p_update_estimate_items_ref; 
 
 
+--------------------------------------------------------------------------------
+--обновляем поле, содержащее айди сметы, зависящей от данной позиции
+--работает быстро
+create or replace procedure p_update_dependent_estimate as
+begin
+  -- сбрасываем старые значения
+  update estimate_items set id_dependent_estimate = null;
+
+  -- для каждой позиции, которая является стандартным изделием,
+  -- находим смету (id_estimate), в которой это изделие используется как комплектующее
+  merge into estimate_items ei
+  using (
+    select
+      ei.id as item_id,
+      max(ei2.id_estimate) as dep_est_id
+    from estimate_items ei
+    join estimate_items ei2 on ei2.id_or_std_item = ei.id_or_std_item
+    where ei.id_or_std_item is not null
+      and ei2.id_estimate != ei.id_estimate   -- не та же самая смета
+    group by ei.id
+  ) src
+  on (ei.id = src.item_id)
+  when matched then
+    update set ei.id_dependent_estimate = src.dep_est_id;
+
+  commit;
+end;
+/
+
+exec p_update_dependent_estimate;
 
 
+--update estimates set dt_changed_depend = null;;
 
 
+exec p_update_estimates_depend_dt;
 
+--------------------------------------------------------------------------------
+--обновляет рекурсивно дату изменения влияющей сметы для всех смет, если она 
+--стала больше текущей.
+--влияет создание, изменение, илли иззменение влияющей сметы для той, от кторой завист эта
 
+create or replace procedure p_update_estimates_depend_dt as
+  v_updated number;
+begin
+  for i in 1..10 loop
+    v_updated := 0;
 
+    for rec in (
+      select
+        e.id,
+        max(
+          greatest(
+            nvl(est.dt_create, to_date('1900-01-01', 'yyyy-mm-dd')),
+            nvl(est.dt_changed, to_date('1900-01-01', 'yyyy-mm-dd')),
+            nvl(est.dt_changed_depend, to_date('1900-01-01', 'yyyy-mm-dd'))
+          )
+        ) as max_influence_date
+      from estimates e
+      join estimate_items ei on ei.id_estimate = e.id
+      join or_std_items osi on osi.id = ei.id_or_std_item
+      join estimates est on est.id_std_item = osi.id
+      where ei.id_or_std_item is not null
+      group by e.id
+    ) loop
+      update estimates
+      set dt_changed_depend = rec.max_influence_date
+      where id = rec.id
+        and (rec.max_influence_date <> date '1900-01-01')
+        and (dt_changed_depend is null or rec.max_influence_date > dt_changed_depend);
+      v_updated := v_updated + sql%rowcount;
+    end loop;
 
+    commit;
+    exit when v_updated = 0;
+  end loop;
 
-
+  update scheduler_sync_control
+  set last_run_at = sysdate
+  where job_name = 'p_update_estimates_depend_dt';
+  commit;
+end;
+/
 
 
 
     
+
 
 
 

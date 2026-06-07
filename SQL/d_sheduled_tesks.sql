@@ -25,8 +25,8 @@ begin
     job_name        => 'vm_orders_fin_monitoring_job',
     job_type        => 'plsql_block',
     job_action      => 'begin dbms_mview.refresh(''vm_orders_fin_monitoring'', ''c''); end;',
-    start_date      => trunc(systimestamp) + 5/24 + 18/(24*60),  
-    repeat_interval => 'freq=daily; byhour=5; byminute=15; bysecond=0;', 
+    --start_date      => trunc(systimestamp) + 5/24 + 18/(24*60),  
+    repeat_interval => 'freq=daily; byhour=2; byminute=05; bysecond=0;', 
     enabled         => true,
     comments        => 'обновление vm_orders_fin_monitoring'
   );
@@ -39,8 +39,8 @@ begin
     job_name        => 'vm_or_std_items_job',
     job_type        => 'plsql_block',
     job_action      => 'begin dbms_mview.refresh(''vm_or_std_items'', ''c''); end;',
-    start_date      => trunc(systimestamp) + 5/24 + 50/(24*60),  
-    repeat_interval => 'freq=daily; byhour=2; byminute=15; bysecond=0;', 
+    --start_date      => trunc(systimestamp) + 5/24 + 50/(24*60),  
+    repeat_interval => 'freq=daily; byhour=2; byminute=30; bysecond=0;', 
     enabled         => true,
     comments        => 'обновление vm_or_std_items'
   );

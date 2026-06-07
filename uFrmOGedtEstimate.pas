@@ -50,7 +50,8 @@ implementation
 
 uses
   uOrders,
-  uWindows
+  uWindows,
+  uNamedArr
   ;
 
 {$R *.dfm}
@@ -73,7 +74,7 @@ begin
   if AddParam = 1 then begin
     FIdOfStdItem := ID;
     FIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id$i', [ID]);
-    FName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [ID])[0];
+    FName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [ID]);
   end
   else begin
     FIdOfStdItem := Q.QLoadValue('select id_std_item from order_items where id = :id$i', [ID]);
@@ -99,15 +100,21 @@ begin
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_or_std_item$i','_id_or_std_item','40'],
+    ['id_dependent_estimate$i','_id_estimate','40'],
+    ['is_std_item$i','Изд.','40','pic'],
     ['id_group$i','Группа','250;w;L','e=1:100000::TP'],
-    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 2, ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 1, ';Выбрать производственное изделие:И:::009') ],
+//    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 2, ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 1, ';Выбрать производственное изделие:И:::009') ],
+    ['name$s','Наименование','400;w;h','e=1:1000','bt=Выбрать материал:М:::090' +  ';Выбрать изделие:И:::009'],
     ['id_unit$i','Ед.изм.','100;L','e=0:1000000::TP'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N'], {недопустимо пустое кол-во}
-    ['null as purchase$i','Покупка','80','chb','e'],
+    ['qnt_on_stock$f','На складе','80'],
+    //['null as purchase$i','Покупка','80','chb','e'],
     ['comm$s','Дополнение','300;w;h','e=0:1000::TP'],
-    ['null as flags$s','_flags','40']
+    ['null as flags$s','_flags','40'],
+    ['null as errtype$s','_flags','40'],
+    ['null as errinfo$s','_flags','40']
   ]);
-  Frg1.Opt.SetTable('v_estimate', 'estimate_items');
+  Frg1.Opt.SetTable('v_estimate_for_edit_dlg', 'estimate_items');
   Frg1.Opt.SetGridOperations('uaid');
   Frg1.Opt.SetWhere('where id_estimate = :id$i order by id_group');
   Frg1.SetInitData('*', [FIdEstimate]);
@@ -141,10 +148,10 @@ begin
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
-    [mbtDividorA],[-4],
-    [-1001, FTypeOfItem <> 2, 'Создать полуфабрикат'],
-    [-1002, FTypeOfItem <> 2, 'Редактировать смету полуфабриката']],
-    cbttBSmall, pnlFrmBtnsR
+    [mbtDividorA],[-4]
+//    [-1001, FTypeOfItem <> 2, 'Создать полуфабрикат'],
+//    [-1002, FTypeOfItem <> 2, 'Редактировать смету полуфабриката']
+    ], cbttBSmall, pnlFrmBtnsR
   );
   Result := True;
 end;
@@ -197,6 +204,13 @@ begin
       Exit;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
+  end
+  else if TCellButtonEh(Sender).Hint = 'Выбрать изделие' then begin
+    Wh.ExecReference(myfrm_R_OrderStdItems_SEL, Self, [myfoDialog, myfoModal], null);
+    if Length(Wh.SelectDialogResult) = 0 then
+      Exit;
+    Frg1.SetValue('name', Wh.SelectDialogResult[1]);
+    LoadItemFromDB(Frg1.RecNo - 1);
   end;
   VerifyRow(Fr.RecNo - 1);
   VerifyTable;
@@ -221,7 +235,7 @@ end;
 procedure TFrmOGedtEstimate.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 //подсветим ошибки и предупреждения
 begin
-  if Fr.GetValueS('flags') = '' then
+{  if Fr.GetValueS('flags') = '' then
     Exit;
   if Fr.GetValueS('flags')[1] = '0' then
     Params.Background := clYellow
@@ -230,7 +244,30 @@ begin
   else if Fr.GetValueS('flags')[1] = '2' then
     Params.Background := RGB(255, 0, 255)
   else if Fr.GetValueS('flags')[1] = '3' then
-    Params.Background := RGB(100, 0, 255);
+    Params.Background := RGB(100, 0, 255);}
+  if Fr.GetValueS('flags') <> '' then begin
+    if Fr.GetValueS('flags')[1] = '0' then
+      Params.Background := RGB(255, 255, 150)
+    else if Fr.GetValueS('flags')[1] = '0' then
+      Params.Background := RGB(255, 150, 150)
+    else if Fr.GetValueS('flags')[31] = '0' then
+      Params.Background := RGB(255, 150, 150);
+  end;
+  if (FieldName = 'qnt_on_stock') and (Fr.GetValue('qnt_on_stock') <> null) and (Fr.GetValue('qnt1') <> null) then begin
+    if Fr.GetValueF('qnt_on_stock') = 0 then
+      Params.Background := clRed
+    else if Fr.GetValueF('qnt1') > Fr.GetValueF('qnt_on_stock') then
+      Params.Background := clYellow;
+  end;
+  if (FieldName = 'name') then begin
+    var st := Fr.GetValueS('name');
+    if (Trim(st) <> st) or (Pos('  ', st) > 0) then
+      Params.Background := clRed;
+    //совпадение с именем или полным именем с префиксом изделия (стандартного или заказа)
+//    if (st = AddParam[3]) or (st = AddParam[4]) then
+//      Background := clRed;
+  end;
+
 end;
 
 procedure TFrmOGedtEstimate.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
@@ -252,10 +289,15 @@ end;
 
 procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);
 //проверим на ошибки (типа: это по группе материал, но есть в справочнике стд.изд.), запросив БД. сохраним результат в служебном столбце
-var
-  st: string;
 begin
-  Frg1.SetValue('flags', Row, False, S.NSt(Q.QLoadValue('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), FGroupOfItem])));
+//  Frg1.SetValue('flags', Row, False, S.NSt(Q.QLoadValue('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValue('id_group', Row, False), Frg1.GetValue('name', Row, False), FGroupOfItem])));
+  if (Frg1.GetValueI('id_group', Row, False) = 0) or (Frg1.GetValueS('name', Row, False) = '') then
+    Exit;
+  Frg1.SetValue('flags', Row, False,
+    Q.QLoadValue('select F_TestEstimateItem(:g$i, :n$s) from dual',
+      [Frg1.GetValueI('id_group', Row, False), Frg1.GetValueS('name', Row, False)]
+    )
+  );
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -390,8 +432,20 @@ procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
 //загрузим из базы информацию по данному наименованию сметной позиции
 var
   i, j: Integer;
-  va: TVarDynArray;
+  na: TNamedArr;
 begin
+  Q.QLoadRow('select id, id_group, id_unit, qnt_on_stock, id_dependent_estimate, is_std_item, id_or_std_item from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, False)], na);
+  if na.Count > 0 then
+    Frg1.LoadRow(na, Row);
+{  if va[0] <> null then begin
+    Frg1.SetValue('id_group', va[1]);
+    Frg1.SetValue('id_unit', va[2]);
+    Frg1.SetValue('qnt_on_stock', va[3]);
+    Frg1.SetValue('id_dependent_estimate', va[4]);
+    Frg1.SetValue('is_std_item', va[5]);
+  end;}
+{
+
   va := Q.QLoadRow('select id, is_semiproduct from v_or_std_items where fullname = :fullname$s', [Frg1.GetValue('name', Row, False)]);
   if va[0] <> null then begin
     //это изделие
@@ -408,7 +462,7 @@ begin
   end;
   //очистим галку покупной, если это не полуфабрикат
   if Frg1.GetValue('id_group') <> Group_Semiproducts_Id then
-    Frg1.SetValue('purchase', 0);
+    Frg1.SetValue('purchase', 0);}
 end;
 
 

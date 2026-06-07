@@ -373,7 +373,11 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     //устанавливает или сбрасывае курсов в  виде песочныч часво
     procedure SetWaitCursor(Wait: Boolean = True);
     procedure SetDoubleBuffered(AControl: TWinControl; Enable: Boolean);
-  end;
+    //рассчитать ширину текста без переноса
+    function GetTextWidth(const AText: string; const AFont: TFont): Integer;
+    //рассчитать высоту текста с переносом
+    function GetWordWrapHeight(const AText: string; const AFont: TFont; const AWidth: Integer): Integer;
+end;
 
 var
   Cth: TControlsHelper;
@@ -3766,8 +3770,36 @@ begin
       SetDoubleBuffered(TWinControl(AControl.Controls[i]), Enable);
 end;
 
+function TControlsHelper.GetTextWidth(const AText: string; const AFont: TFont): Integer;
+//рассчитать ширину текста без переноса
+var
+  bmp: TBitmap;
+begin
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font := AFont;
+    Result := bmp.Canvas.TextWidth(AText);
+  finally
+    bmp.Free;
+  end;
+end;
 
-
+function TControlsHelper.GetWordWrapHeight(const AText: string; const AFont: TFont; const AWidth: Integer): Integer;
+//рассчитать высоту текста с переносом
+var
+  bmp: TBitmap;
+  R: TRect;
+begin
+  bmp := TBitmap.Create;
+  try
+    bmp.Canvas.Font := AFont;
+    R := Rect(0, 0, AWidth, 0);
+    DrawText(bmp.Canvas.Handle, PChar(AText), Length(AText), R, DT_CALCRECT or DT_WORDBREAK);
+    Result := R.Bottom - R.Top;
+  finally
+    bmp.Free;
+  end;
+end;
 
 //==============================================================================
 //  TTableHelper

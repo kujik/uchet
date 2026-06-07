@@ -90,7 +90,7 @@ begin
 //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
     [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
     [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
-//    ,[mbtTest]
+    ,[mbtTest, User.IsDeveloper]
   ]);
   Frg1.Opt.SetButtonsIfEmpty([1000]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
@@ -145,7 +145,7 @@ begin
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
   end
   else if (Tag = mbtTest) then begin
-    TFrmODedtOrStdItem.Show(Self, 'dddd', [myfoDialog], fEdit, Fr.ID, Fr.GetControlValue('CbEstimate'))
+    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable], fEdit, Fr.ID, 1);
   end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)

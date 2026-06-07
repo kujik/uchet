@@ -139,6 +139,7 @@ uses
   uOrders,
   uExportToXlsx,
   uServerTasks,
+  uFrmChooseDialog,
 
 
   F_TestTree,
@@ -1479,6 +1480,8 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+var ln := Cth.GetTextWidth('sdfsdfsd', frmmain.Font);
+  FrmChooseDialog.ShowDialog('Test', 'отступы между кнопками и по веритикали и по горизонтали для панелей из TSpeedButton', ['выбор 1', 'самый-самый правильный выбора','1','1','1','1','1'], [['ququ']]); exit;
 //FrmExportToXlsx.RunExport;Exit;
   Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
 
