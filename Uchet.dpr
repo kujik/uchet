@@ -146,7 +146,6 @@ uses
   uFrmOGjrnOrderStages in 'uFrmOGjrnOrderStages.pas' {FrmOGjrnOrderStages},
   uFrmOGrepItemsInOrder in 'uFrmOGrepItemsInOrder.pas' {FrmOGrepItemsInOrder},
   uFrmODrepFinByOrders in 'uFrmODrepFinByOrders.pas' {FrmODrepFinByOrders},
-  uFrmODedtOrStdItems in 'uFrmODedtOrStdItems.pas' {FrmODedtOrStdItems},
   uFrmOGedtSnByAreas in 'uFrmOGedtSnByAreas.pas' {FrmOGedtSnByAreas},
   uFrmBasicGrid2 in 'uFrmBasicGrid2.pas' {FrmBasicGrid2},
   uFrmOGlstEstimate in 'uFrmOGlstEstimate.pas' {FrmOGlstEstimate},
@@ -210,7 +209,9 @@ uses
   uFrmADedtMainSettings in 'uFrmADedtMainSettings.pas' {FrmADedtMainSettings},
   uHtmlUtils in 'uHtmlUtils.pas',
   uExportToXlsx in 'uExportToXlsx.pas' {FrmExportToXlsx},
-  uServerTasks in 'uServerTasks.pas';
+  uServerTasks in 'uServerTasks.pas',
+  uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem};
+
 
 var
   MT: Integer;

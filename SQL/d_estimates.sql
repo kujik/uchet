@@ -304,7 +304,7 @@ end;
 /
 
  
---!!!вызывает ошибки при удалении в ора11хе!!!
+--вызывает ошибки при удалении в ора11хе!!!
 drop trigger trg_estimate_items_master;
 create or replace trigger trg_estimate_items_master
   for insert or update or delete on estimate_items
@@ -519,7 +519,6 @@ begin
 end;
 / 
 
-
 create or replace procedure P_CopyEstimate ( 
 --копируем смету на стандартное изделие в записи дл€ заказа
   IdEstimate in number,       --запись в estimates должна быть создана
@@ -673,17 +672,17 @@ end;
 
 
 
-create or replace procedure P_DeleteFreeEstimate (
+create or replace procedure p_deletefreeestimate (
 --удалим запись по смете, в которой нет позиций, если только она не обозначена как пуста€ смета
   IdEstimate in number
 )   
 is
 begin
-  delete from estimates where id = IdEstimate and isempty <> 1 and (select count(*) from estimate_items where id_estimate = IdEstimate) = 0;
+  delete from estimates where 
+    id = IdEstimate and isempty <> 1 and (select count(*) from estimate_items where id_estimate = IdEstimate) = 0;
 end;  
 
-
-
+-------------------------------------------------------------------------------
 create or replace function F_TestEstimateItem(
 --проверим правильность и новизну сметной позиции, вернем в строке
 --1й символ = 0 если нет такой позци€ в справочнике номенклатуры бкад
@@ -790,100 +789,6 @@ begin
 end;
 /
 
-
-
---------------------------------------------------------------------------------
-/*
-create or replace view v_estimate as (
-  select
-    ei.*,
-    bn.name as bname,
-    (case 
-      when bn.name is not null then bn.name else si.name end
-    ) as name,
-    (case 
-      when si.name is not null 
-        then decode(fe.prefix, '', '', fe.prefix || '_') || si.name
-        else bn.name
-      end 
-    ) as fullname,
-    bg.name as groupname,
-    bu.name as unit,
-    bc.name as comm,
-    fe.prefix as prefix,
-    e.id_order_item,
-    e.id_std_item,
-    prc.price,
-    prc.sum as sum1
-  from
-    estimate_items ei,
-    bcad_nomencl bn,
-    bcad_units bu,
-    bcad_comments bc,
-    bcad_groups bg,
-    or_std_items si,
-    or_std_items sii,
-    or_format_estimates fe,
-    v_fin_estitem_raw_prices prc,    
-    estimates e
-  where
-    ei.id_name = bn.id (+) and
-    ei.id_name_resale = si.id (+) and
-    ei.id_unit = bu.id (+) and
-    ei.id_comment = bc.id (+) and
-    ei.id_group = bg.id (+) and
-    si.id_or_format_estimates = fe.id (+) and
-    ei.id_or_std_item = sii.id (+) and
-    ei.id = prc.id (+) and
-    ei.id_estimate = e.id
-);
-*/
-/*
-create or replace view v_estimate as (
-  select
-    ei.*,
-    bn.name as bname,
-    (case 
-      when si.name is not null 
-        then decode(fe.prefix, '', '', fe.prefix || '_') || si.name
-        else bn.name
-      end 
-    ) as name,
-    --!!!decode(fe.type, null, bg.name, 2, (select name from bcad_groups t where t.id = 2), (select name from bcad_groups t where t.id = 104)) as groupname, 
-    bg.name as groupname,
-    bu.name as unit,
-    bc.name as comm,
-    fe.prefix as prefix,
-    e.id_order_item,
-    e.id_std_item,
-    prc.price,
-    prc.sum as sum1,
-    2 as cidsemiproduct,
-    103 as cidkrep,    
-    104 as cidproduct,
-    1 as cidstuff
-  from
-    estimate_items ei,
-    bcad_nomencl bn,
-    bcad_units bu,
-    bcad_comments bc,
-    bcad_groups bg,
-    or_std_items si,
-    or_format_estimates fe,
-    v_fin_estitem_raw_prices prc,    
-    estimates e
-  where
-    ei.id_name = bn.id (+) and
-    ei.id_unit = bu.id (+) and
-    ei.id_comment = bc.id (+) and
-    ei.id_group = bg.id (+) and
-    si.id_or_format_estimates = fe.id (+) and
-    ei.id_or_std_item = si.id (+) and
-    ei.id = prc.id (+) and
-    ei.id_estimate = e.id
-);
-
-*/
 create or replace view v_estimate as
 select
   ei.*,
@@ -937,17 +842,6 @@ where
   e.name = n.name (+) 
 ;
 
-/*create or replace view v_aggregate_estimate_add as 
-select
-  e.*,
-  n.artikul
-from
-  v_aggregate_estimate e,
-  dv.nomenclatura n
-where
-  e.name = n.name (+) 
-;
-*/
 alter table estimate_items drop column id_name_resale;
 
 
@@ -964,8 +858,6 @@ from
 ;    
 
 
-
-        
 
 
 create or replace view v_findinestimate_std as
@@ -1060,52 +952,7 @@ where
 )  
 ;       
 
-
-
-
-select 1 as id, max(groupname) as groupname, max(name) as name, max(unit) as unit, sum(qnt) as qnt, 0 as chb from v_aggregate_estimate_or1 where pos in (1,4) group by name;
-
-select to_char(rownum) as id, max(groupname) as groupname, max(name) as name, max(unit) as unit, sum(qnt) as qnt, 0 as chb from v_aggregate_estimate_or1 where pos in (1,4) and id_order = 1234 group by name;
-
- 
-        
-
-select * from v_aggregate_estimate_or1 where id_order = 1199 and id_order_item = 35127;
---select * from v_estimate;-- where id_order = 180;
-  
-
-
-select name from dv.nomenclatura where id_nomencl = 14984;
-
-
-select id;groupname;name;unit;qnt1;qnt;comm from v_estimate where deleted = 0 and id_order_item = :id$i
-
-id_zakaz = 7290
-id_nominizdel = 15066
-id_nomencl = 15004 позици€ в смете
-
-declare
-IdSpec number;
-begin
---P_DeleteFreeEstimate(123);
---      DV.P_SyncSpecIzdel(IdZakaz, IdParentIzdel, FullName, Unit, Qnt, Comment, IdSpec);
---      DV.P_SyncSpecIzdel(7290, 15066, '“≈—“1', 'шт.', 2, 10, IdSpec);
-end;
-/      
-
-SELECT ceil(0.009*10)/10 "Round" FROM DUAL;
-select * from dv.nomenclatura_in_izdel where id_zakaz = 7294; --15023
---у дочерней номенклатуры (сметных позиций) есть id_nomizdel_parent_t <> null
-
-select * from estimate_items where id = 10570;
-
-select to_char(rownum) as id, groupname, name, unit, qnt from v_aggregate_estimate where id_order = 180;
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 create or replace view v_std_items_errors as
 select
 --проверка несоответстви€ наименований в сметах отгрузочных стандартных изделий самим издели€м
@@ -1146,6 +993,7 @@ order by
 ;
 
 --------------------------------------------------------------------------------
+--!query
 --запрос позиций, по которым сметное наименование соввпадает с наименованием издели€
 --дл€ смет по стандартным издели€м дл€ заказов (нарушает расчет цены)
 select
@@ -1164,9 +1012,61 @@ where
   and ((b.name = i.name) or (b.name = i.fullname)) 
 ;
 
+--------------------------------------------------------------------------------
+create or replace procedure p_update_estimates_depend_dt is
+-- процедура обновлени€ пол€ dt_changed_depend в таблице estimates
+-- находит все сметы, которые завис€т от изменЄнных смет (через цепочку стандартных изделий)
+-- и проставл€ет им текущую дату в dt_changed_depend
+-- запускаетс€ по расписанию (раз в 5 мин)
+  v_last_run date;
+  v_now      date := sysdate;
+  v_root_id  estimates.id%type;
+  cursor c_changed is
+    select id from estimates where dt_changed > v_last_run;
+  cursor c_deps(p_child_id number) is
+    select distinct connect_by_root child_id as root_id
+    from (
+      select ei.id_estimate as parent_id, ei.id_dependent_estimate as child_id
+      from estimate_items ei
+      where ei.id_dependent_estimate is not null
+    )
+    start with child_id = p_child_id
+    connect by nocycle prior parent_id = child_id;
+begin
+  -- получить врем€ последнего запуска (как выше)
+  begin
+    select last_run_at into v_last_run
+      from scheduler_sync_control
+      where job_name = 'p_update_estimates_depend_dt';
+  exception
+    when no_data_found then
+      insert into scheduler_sync_control (job_name, last_run_at)
+        values ('p_update_estimates_depend_dt', date '1900-01-01');
+      commit;
+      v_last_run := date '1900-01-01';
+  end;
 
+  for ch in c_changed loop
+    for dep in c_deps(ch.id) loop
+      update estimates
+        set dt_changed_depend = v_now
+        where id = dep.root_id
+          and (dt_changed_depend is null or dt_changed_depend < v_now);
+    end loop;
+  end loop;
 
+  update scheduler_sync_control
+    set last_run_at = v_now
+    where job_name = 'p_update_estimates_depend_dt';
 
+  commit;
+
+exception
+  when others then
+    rollback;
+    raise;
+end p_update_estimates_depend_dt;
+/
 
 -- ======================================================================
 -- функци€, возвращающа€ id сметы дл€ записи estimate_items

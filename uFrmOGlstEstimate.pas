@@ -52,7 +52,7 @@ begin
     Caption := 'Смета';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['id_dependent_estimate $i','_dep','40'],
+//      ['id_dependent_estimate $i','_dep','40'],
       ['groupname','Группа','200'],
       ['artikul','Артикул','120'],
       ['name','Наименование','300;h'],

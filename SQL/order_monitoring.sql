@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 select * from v_orders_fin_monitoring;
-create or replace view v_orders_fin_monitoring as --!!!
+create or replace view v_orders_fin_monitoring as 
 select
 --финансовый отчет по запущенным за вчерашний день заказам
 --вызывается отдельно для производства и продажи t.order_type
@@ -60,6 +60,13 @@ order by
 ) t    
 ;
 
+
+--------------------------------------------------------------------------------
+--материализованное представление финансового отчета по заказам
+create materialized view vь_orders_fin_monitoring as
+  select * from v_orders_fin_monitoring; 
+  
+select * from vь_orders_fin_monitoring;  
 
 --------------------------------------------------------------------------------
 -- финансовый отчет по изменениям в стандартных изделиях

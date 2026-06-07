@@ -45,7 +45,8 @@ implementation
 uses
   uWindows,
   uOrders,
-  uFrmOGedtEstimate
+  uFrmOGedtEstimate,
+  uFrmODedtOrStdItem
   ;
 
 {$R *.dfm}
@@ -88,8 +89,9 @@ begin
     [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
 //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
     [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
-    [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']]
-  );
+    [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
+//    ,[mbtTest]
+  ]);
   Frg1.Opt.SetButtonsIfEmpty([1000]);
   Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
   Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
@@ -140,10 +142,10 @@ begin
       Exit;
     if Fr.IsEmpty and (fMode <> fAdd) then
       Exit;
-//  if (Tag = mbtTest) or (Fr.GetControlValue('CbEstimate') = 35) then                                             //!!!
-//    TFrmODedtOrStdItems.Show(Self, 'dddd', [myfoDialog], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'))
- // else
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
+  end
+  else if (Tag = mbtTest) then begin
+    TFrmODedtOrStdItem.Show(Self, 'dddd', [myfoDialog], fEdit, Fr.ID, Fr.GetControlValue('CbEstimate'))
   end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)

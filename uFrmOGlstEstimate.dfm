@@ -2,7 +2,6 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
   Caption = 'FrmOGlstEstimate'
   ClientWidth = 792
   ExplicitWidth = 804
-  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 792
@@ -32,6 +31,7 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
             end
             inherited pnlStatusBar: TPanel
               Width = 758
+              ExplicitWidth = 754
             end
           end
           inherited pnlTop: TPanel
@@ -76,6 +76,7 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
             end
             inherited pnlStatusBar: TPanel
               Width = 768
+              ExplicitWidth = 764
             end
           end
           inherited pnlTop: TPanel
@@ -125,9 +126,18 @@ inherited FrmOGlstEstimate: TFrmOGlstEstimate
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 780
-        ExplicitWidth = 780
+        ExplicitWidth = 776
+        inherited pnlFrmBtnsMain: TPanel
+          Left = 681
+        end
         inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = 449
+          Left = 453
+        end
+        inherited pnlFrmBtnsR: TPanel
+          Left = 582
+        end
+        inherited pnlFrmBtnsC: TPanel
+          Width = 313
         end
       end
     end

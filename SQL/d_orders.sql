@@ -730,8 +730,7 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
---alter table order_items add qnt_paint_kg number;
-
+--alter table order_items add dt_create date; 
 
 create table order_items (
   id number(11),
@@ -739,6 +738,8 @@ create table order_items (
   pos number(11),                    --позици€ в паспорте
   id_itm number(11), 
   id_std_item number(11),            --айди наименовани€ издели€ в or_std_item (и дл€ стандартных и нестандартных)  
+  dt_create date,                    --дата создани€ записи  
+  dt_changed date,                   --дата изменени€ количества либо цены издели€ (без учета скидки!!!), дл€ финансового мониторинга   
   std number(1),                     --1 дл€ стандартных изделий
   nstd number(1),                    --иначе, 1 дл€ нестандартных изделий 
   sgp number(1),                     --отгрузка позиции с сгп
@@ -814,151 +815,25 @@ create index idx_order_items_covering on order_items(
 
 create sequence sq_order_items nocache;
 
-create or replace trigger trg_order_items_bi_r
+create or replace trigger trg_order_items_bi_r 
   before insert on order_items for each row
 begin
-  select sq_order_items.nextval into :new.id from dual;
+  :new.id := sq_order_items.nextval;
+  :new.dt_create := sysdate;
 end;
 /
 
-/*
-create or replace view v_order_items as (
-  select
-    i.*,
-    o.ornum,
-    o.id_organization,
-    o.area,
-    o.customer,
-    o.project,
-    o.or_reference,
-    o.ref_dt_beg,
-    o.ref_dt_otgr,
-    o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
-    o.id_itm as id_order_itm,
-    o.sync_with_itm,
-    o.dt_beg,
-    o.dt_end,
-    o.dt_otgr,
-    o.path,
-    o.in_archive,
-    uk.name as kns,
-    ut.name as thn,
-    s.name as itemname,
-    (case 
-      when ee.id > 0 then ee.prefix
-      --when i.resale = 1 then 'ƒ '
-      else ''
-    end) prefix, 
-    (case 
-      when ee.id > 0 then ee.prefix || '_'
-      else ''
-    end) || s.name  as fullitemname,  --наименование с префиксом формата, только дл€ стандартных изделий и стандартной д/к
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
---    F_OrItemRoute2(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9,i.resale) as route2,
-    es.dt as dt_estimate,
---    (select sum0 from v_order_items_primecost_itm where id_itm(+) = i.id_itm) as sum0
-    F_GetCostOrderItemsFromItm(o.id, i.id) as sum0,
-    (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
-     round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
-    niz.cnt as has_itm_est,
-    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
-    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
-    cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total
-  from
-    order_items i,
-    v_orders o,
-    or_std_items s,
-    or_format_estimates fe, 
-    or_format_estimates ee, 
-    adm_users uk,
-    adm_users ut,
-    estimates es,
-    dv.nomenclatura n,
-    (select id_nomizdel_parent_t, count(*) as cnt from dv.nomenclatura_in_izdel group by id_nomizdel_parent_t) niz
- where
-   i.id_order = o.id and
-   i.id_std_item = s.id (+) and
-   s.id_or_format_estimates = ee.id (+) and
-   o.id_or_format_estimates = fe.id (+) and
-   i.id_kns = uk.id (+) and
-   i.id_thn = ut.id (+) and
-   i.id = es.id_order_item (+) and
-   i.id_itm = n.id_nomencl (+) and
-   i.id_itm = niz.id_nomizdel_parent_t (+)
-);
+create or replace trigger trg_order_items_dt_ch_bu_r 
+  before update on order_items for each row
+begin
+  if (nvl(:new.price, 0) <> nvl(:old.price, 0)) or (nvl(:new.qnt, 0) <> nvl(:old.qnt, 0)) then
+    :new.dt_changed := sysdate;
+  end if;
+end;
+/
 
 
-
-create or replace view v_order_items as (
-  select
-    i.*,
-    o.ornum,
-    o.id_organization,
-    o.area,
-    rc.name as customer,    
-    o.project,
-    o.or_reference,
-    ob.dt_beg as ref_dt_beg, 
-    ob.dt_otgr as ref_dt_otgr, 
-    o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
-    o.id_itm as id_order_itm,
-    o.sync_with_itm,
-    o.dt_beg,
-    o.dt_end,
-    o.dt_otgr,
-    o.path,
-    o.in_archive,
-    uk.name as kns,
-    ut.name as thn,
-    s.name as itemname,
-    (case 
-      when ee.id > 0 then ee.prefix
-      else ''
-    end) prefix, 
-    (case 
-      when ee.id > 0 then ee.prefix || '_'
-      else ''
-    end) || s.name  as fullitemname,  --наименование с префиксом формата, только дл€ стандартных изделий и стандартной д/к
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
-    es.dt as dt_estimate,
-    F_GetCostOrderItemsFromItm(o.id, i.id) as sum0,
-    (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
-     round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
-    niz.cnt as has_itm_est,
-    case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
-    nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
-    cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total
-  from
-    order_items i,
-    orders o,
-    orders ob,
-    ref_customers rc,
-    or_std_items s,
-    or_format_estimates fe, 
-    or_format_estimates ee, 
-    adm_users uk,
-    adm_users ut,
-    estimates es,
-    dv.nomenclatura n,
-    (select id_nomizdel_parent_t, count(*) as cnt from dv.nomenclatura_in_izdel group by id_nomizdel_parent_t) niz
- where
-   i.id_order = o.id and
-   ob.ornum (+) = o.or_reference and
-   rc.id(+) = o.id_customer and  
-   i.id_std_item = s.id (+) and
-   s.id_or_format_estimates = ee.id (+) and
-   o.id_or_format_estimates = fe.id (+) and
-   i.id_kns = uk.id (+) and
-   i.id_thn = ut.id (+) and
-   i.id = es.id_order_item (+) and
-   i.id_itm = n.id_nomencl (+) and
-   i.id_itm = niz.id_nomizdel_parent_t (+)
-);
-*/
-
-create or replace view v_order_items as
+create or replace view v_order_items as 
 with
 --вью изделии в заказах
   -- материализуем агрегацию по вход€щим издели€м (если таблица больша€)
@@ -1276,16 +1151,13 @@ begin
 end;
 /
 
-
-
-
         
 
 --------------------------------------------------------------------------------
 -- справочник стандартных изделий
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектаци€ (с 20224-06 убрана)
-alter table or_std_items add price_check number(12,2);
+--alter table or_std_items add dt_changed_price date;
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы ( Ѕ/ѕроизводство)
@@ -1301,6 +1173,7 @@ create table or_std_items (
   qnt_panels_w_drill number,
   is_xml_loaded number default 0,      --загружен xml
   labor_intensity number,              --трудоемкость, мин.
+  dt_changed_price date,               --дата.врем€ изменени€ продажной цены издели€
   
   r1 number(1),                        --производственный маршрут
   r2 number(1),
@@ -1331,13 +1204,26 @@ begin
 end;
 /
 
-create or replace trigger trg_or_std_items_ai_r
+create or replace trigger trg_or_std_items_ai_r 
   after insert on or_std_items for each row
 begin
+  --создаем строки в таблице трудоемкости по стандартному изделию дл€ обеих плозадок
   insert into or_std_labor_intensity (id, id_area) values (:new.id, 0);
   insert into or_std_labor_intensity (id, id_area) values (:new.id, 2);
 end;
 /
+
+create or replace trigger trg_or_std_items_bu_price_r 
+  before update on or_std_items for each row
+--триггер дл€ обновлени€ даты при изменении price
+begin
+  --обновл€ем поле только если значение price действительно изменилось
+  if nvl(:new.price, 0) <> nvl(:old.price, 0) then
+    :new.dt_changed_price := sysdate;
+  end if;
+end;
+/
+
 
 /*
 create or replace view v_or_std_items as (
@@ -1390,7 +1276,7 @@ create or replace view v_or_std_items as (
 */
 
 
-create or replace view v_or_std_items as --!!!
+create or replace view v_or_std_items as 
   select
   --вью дл€ справочника стандартныых изделий
     i.*,
@@ -2594,8 +2480,7 @@ group by id_zakaz
 
 --таблицы трудоемкости по стандартным издели€м и заказам
 
-alter table or_std_labor_intensity add i16 number;
-alter table or_std_labor_intensity add dt_changed date; --!!!  
+--alter table or_std_labor_intensity add i16 number;
 create table or_std_labor_intensity (
   id number(11),                   --айди, оно же издели€
   dt_changed date,                 --дфтф изменени€ записи
@@ -2621,7 +2506,7 @@ create table or_std_labor_intensity (
   constraint fk_or_std_labor_intensity_id foreign key (id) references or_std_items(id) on delete cascade
 );  
 
-create or replace trigger trg_or_std_labor_int_bu_r --!!!
+create or replace trigger trg_or_std_labor_int_bu_r 
   before update on or_std_labor_intensity
   for each row
 --фиксируем обновление трудоемкости по данному стандартному изделиию
@@ -2675,21 +2560,6 @@ create table or_labor_intensity (
 );  
 
 alter table or_std_labor_intensity_cost add p16 number;
-alter table or_std_labor_intensity_cost add dt_changed1 date; --!!!
-alter table or_std_labor_intensity_cost add dt_changed2 date;
-alter table or_std_labor_intensity_cost add dt_changed3 date;
-alter table or_std_labor_intensity_cost add dt_changed4 date;
-alter table or_std_labor_intensity_cost add dt_changed5 date;
-alter table or_std_labor_intensity_cost add dt_changed6 date;
-alter table or_std_labor_intensity_cost add dt_changed7 date;
-alter table or_std_labor_intensity_cost add dt_changed8 date;
-alter table or_std_labor_intensity_cost add dt_changed9 date;
-alter table or_std_labor_intensity_cost add dt_changed10 date;
-alter table or_std_labor_intensity_cost add dt_changed11 date;
-alter table or_std_labor_intensity_cost add dt_changed12 date;
-alter table or_std_labor_intensity_cost add dt_changed13 date;
-alter table or_std_labor_intensity_cost add dt_changed14 date;
-alter table or_std_labor_intensity_cost add dt_changed15 date;
 alter table or_std_labor_intensity_cost add dt_changed16 date;  
 create table or_std_labor_intensity_cost (
   id_area      number,      -- айди производственной площадки (0-ѕў, 2-Ћок)
@@ -2729,7 +2599,7 @@ create table or_std_labor_intensity_cost (
 );
 
 
-create or replace trigger trg_or_std_labor_int_cost_bu_r --!!!
+create or replace trigger trg_or_std_labor_int_cost_bu_r 
   before update on or_std_labor_intensity_cost
   for each row
 begin
@@ -2811,29 +2681,6 @@ where
 
 
 
-select 
-  count(i.qnt) as qnt_slash,
-  sum(i.qnt) as qnt_items,
-  sum(case when i.sgp <> 1 then i.qnt - s.qnt end) as qnt_wo_otk,
-  count(distinct(i.id_order)) as qnt_orders
-from
-  order_items i,
-  orders o,
-  (select id_order_item, sum(qnt4) as qnt from v_order_item_stages1 group by id_order_item) s
-where
-  i.id_order > 0 and i.qnt > 0
-  and s.id_order_item (+) = i.id
-  and o.id = i.id_order
-  and o.dt_beg >= '01/01/2025'  
---group by id_order  
-;    
-
-
-
-
-
-
-
 
 
 
@@ -2854,8 +2701,6 @@ where
 
 
 --------------------------------------------------------------------------------
---OK
-
 --таблица по типам заказов (рекламаци€, дозаказ...)
 alter table order_types add is_complaint number(1);
 create table order_types (

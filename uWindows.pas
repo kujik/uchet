@@ -139,7 +139,7 @@ uses
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
-  uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory,
+  uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation,
 
@@ -1035,8 +1035,8 @@ begin
     TFrmOWrepOrdersPrimeCost.Show(AOwner, F, MyFormOptions, fNone, null, null);
   end
   else if F = myfrm_Dlg_R_OrderStdItems then begin
-    Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
-    //!!!es TFrmODedtOrStdItems.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    //Form := TDlg_R_OrStdItems.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
+    TFrmODedtOrStdItem.Show(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
   end
   else if F = myfrm_Dlg_NewEstimateInput then begin
     Form := TDlg_NewEstimateInput.Create(AOwner, F, MyFormOptions, fMode, AId, AAddParam);
