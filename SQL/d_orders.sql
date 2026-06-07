@@ -1390,7 +1390,7 @@ create or replace view v_or_std_items as (
 */
 
 
-create or replace view v_or_std_items as
+create or replace view v_or_std_items as --!!!
   select
   --вью для справочника стандартныых изделий
     i.*,
@@ -1403,7 +1403,7 @@ create or replace view v_or_std_items as
     f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
     prc.priceraw,
-    prc.priceraw / 1.22 as priceraw_wo_nds,
+    round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
     case 
         when nvl(i.price, 0) = 0 then null 
         else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / nvl(i.price, 0) * 100, 2) 
@@ -1415,7 +1415,7 @@ create or replace view v_or_std_items as
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
     case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2,
-    i0.labor_intensity + i2.labor_intensity as labor_intensity,
+    i0.labor_intensity + i2.labor_intensity as labor_intensity_total,
     i0.labor_cost + i2.labor_cost as labor_cost,
     case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / nvl(i.price, 0) * 100, 2) end as labor_percent
   from
@@ -2595,8 +2595,10 @@ group by id_zakaz
 --таблицы трудоемкости по стандартным изделиям и заказам
 
 alter table or_std_labor_intensity add i16 number;
+alter table or_std_labor_intensity add dt_changed date; --!!!  
 create table or_std_labor_intensity (
   id number(11),                   --айди, оно же изделия
+  dt_changed date,                 --дфтф изменения записи
   id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
   i0 number,                       --трудоемкость суммарная
   i1 number,                       --трудоемкости по участкам ( 1 = прочие)
@@ -2619,9 +2621,36 @@ create table or_std_labor_intensity (
   constraint fk_or_std_labor_intensity_id foreign key (id) references or_std_items(id) on delete cascade
 );  
 
-insert into or_std_labor_intensity (id, id_area, i0) select i.id, 0, i.labor_intensity from or_std_items i;
-insert into or_std_labor_intensity (id, id_area) select i.id, 2 from or_std_items i;
-  
+create or replace trigger trg_or_std_labor_int_bu_r --!!!
+  before update on or_std_labor_intensity
+  for each row
+--фиксируем обновление трудоемкости по данному стандартному изделиию
+begin
+  if (   nvl(:new.i0, 0) <> nvl(:old.i0, 0)
+      or nvl(:new.i1, 0) <> nvl(:old.i1, 0)
+      or nvl(:new.i2, 0) <> nvl(:old.i2, 0)
+      or nvl(:new.i3, 0) <> nvl(:old.i3, 0)
+      or nvl(:new.i4, 0) <> nvl(:old.i4, 0)
+      or nvl(:new.i5, 0) <> nvl(:old.i5, 0)
+      or nvl(:new.i6, 0) <> nvl(:old.i6, 0)
+      or nvl(:new.i7, 0) <> nvl(:old.i7, 0)
+      or nvl(:new.i8, 0) <> nvl(:old.i8, 0)
+      or nvl(:new.i9, 0) <> nvl(:old.i9, 0)
+      or nvl(:new.i10, 0) <> nvl(:old.i10, 0)
+      or nvl(:new.i11, 0) <> nvl(:old.i11, 0)
+      or nvl(:new.i12, 0) <> nvl(:old.i12, 0)
+      or nvl(:new.i13, 0) <> nvl(:old.i13, 0)
+      or nvl(:new.i14, 0) <> nvl(:old.i14, 0)
+      or nvl(:new.i15, 0) <> nvl(:old.i15, 0)
+      or nvl(:new.i16, 0) <> nvl(:old.i16, 0)
+     )
+  then
+    :new.dt_changed := sysdate;
+  end if;
+end;
+/  
+
+
 create table or_labor_intensity (
   id number(11),
   id_area number,
@@ -2645,31 +2674,83 @@ create table or_labor_intensity (
   constraint fk_or_labor_intensity_id foreign key (id) references order_items(id) on delete cascade
 );  
 
-alter table or_std_labor_intensity_cost add p16 number;  
+alter table or_std_labor_intensity_cost add p16 number;
+alter table or_std_labor_intensity_cost add dt_changed1 date; --!!!
+alter table or_std_labor_intensity_cost add dt_changed2 date;
+alter table or_std_labor_intensity_cost add dt_changed3 date;
+alter table or_std_labor_intensity_cost add dt_changed4 date;
+alter table or_std_labor_intensity_cost add dt_changed5 date;
+alter table or_std_labor_intensity_cost add dt_changed6 date;
+alter table or_std_labor_intensity_cost add dt_changed7 date;
+alter table or_std_labor_intensity_cost add dt_changed8 date;
+alter table or_std_labor_intensity_cost add dt_changed9 date;
+alter table or_std_labor_intensity_cost add dt_changed10 date;
+alter table or_std_labor_intensity_cost add dt_changed11 date;
+alter table or_std_labor_intensity_cost add dt_changed12 date;
+alter table or_std_labor_intensity_cost add dt_changed13 date;
+alter table or_std_labor_intensity_cost add dt_changed14 date;
+alter table or_std_labor_intensity_cost add dt_changed15 date;
+alter table or_std_labor_intensity_cost add dt_changed16 date;  
 create table or_std_labor_intensity_cost (
-  id_area number,                  --айди произволдственной площадки  (0-ПЩ, 2-Лок)
-  p1 number,                       --стоимость минуты по операции
-  p2 number,                       
-  p3 number,
-  p4 number,
-  p5 number,
-  p6 number,
-  p7 number,
-  p8 number,
-  p9 number,
-  p10 number,
-  p11 number,
-  p12 number,
-  p13 number,
-  p14 number,
-  p15 number,
-  p16 number,
+  id_area      number,      -- айди производственной площадки (0-ПЩ, 2-Лок)
+  p1           number,      -- стоимость минуты по операции
+  p2           number,
+  p3           number,
+  p4           number,
+  p5           number,
+  p6           number,
+  p7           number,
+  p8           number,
+  p9           number,
+  p10          number,
+  p11          number,
+  p12          number,
+  p13          number,
+  p14          number,
+  p15          number,
+  p16          number,
+  dt_changed1  date,        -- дата последнего изменения
+  dt_changed2  date,        
+  dt_changed3  date,        
+  dt_changed4  date,        
+  dt_changed5  date,        
+  dt_changed6  date,        
+  dt_changed7  date,        
+  dt_changed8  date,        
+  dt_changed9  date,        
+  dt_changed10 date,        
+  dt_changed11 date,        
+  dt_changed12 date,        
+  dt_changed13 date,        
+  dt_changed14 date,        
+  dt_changed15 date,        
+  dt_changed16 date,        
   constraint pk_or_std_labor_intensity_cost primary key (id_area)
 );
 
-insert into or_std_labor_intensity_cost (id_area) values (0);
-insert into or_std_labor_intensity_cost (id_area) values (2);
 
+create or replace trigger trg_or_std_labor_int_cost_bu_r --!!!
+  before update on or_std_labor_intensity_cost
+  for each row
+begin
+  if nvl(:new.p1, 0) <> nvl(:old.p1, 0) then :new.dt_changed1 := sysdate; end if;
+  if nvl(:new.p2, 0) <> nvl(:old.p2, 0) then :new.dt_changed2 := sysdate; end if;
+  if nvl(:new.p3, 0) <> nvl(:old.p3, 0) then :new.dt_changed3 := sysdate; end if;
+  if nvl(:new.p4, 0) <> nvl(:old.p4, 0) then :new.dt_changed4 := sysdate; end if;
+  if nvl(:new.p5, 0) <> nvl(:old.p5, 0) then :new.dt_changed5 := sysdate; end if;
+  if nvl(:new.p6, 0) <> nvl(:old.p6, 0) then :new.dt_changed6 := sysdate; end if;
+  if nvl(:new.p7, 0) <> nvl(:old.p7, 0) then :new.dt_changed7 := sysdate; end if;
+  if nvl(:new.p8, 0) <> nvl(:old.p8, 0) then :new.dt_changed8 := sysdate; end if;
+  if nvl(:new.p9, 0) <> nvl(:old.p9, 0) then :new.dt_changed9 := sysdate; end if;
+  if nvl(:new.p10, 0) <> nvl(:old.p10, 0) then :new.dt_changed10 := sysdate; end if;
+  if nvl(:new.p11, 0) <> nvl(:old.p11, 0) then :new.dt_changed11 := sysdate; end if;
+  if nvl(:new.p12, 0) <> nvl(:old.p12, 0) then :new.dt_changed12 := sysdate; end if;
+  if nvl(:new.p13, 0) <> nvl(:old.p13, 0) then :new.dt_changed13 := sysdate; end if;
+  if nvl(:new.p14, 0) <> nvl(:old.p14, 0) then :new.dt_changed14 := sysdate; end if;
+  if nvl(:new.p15, 0) <> nvl(:old.p15, 0) then :new.dt_changed15 := sysdate; end if;
+  if nvl(:new.p16, 0) <> nvl(:old.p16, 0) then :new.dt_changed16 := sysdate; end if;
+end;
+/
 
 create or replace view v_or_std_labor_intensity as
 select
@@ -2716,122 +2797,12 @@ where
   c.id_area = i.id_area
 ;    
 
---------------------------------------------------------------------------------
--- финансовый отчет по запущенным за прошлый день заказам
---------------------------------------------------------------------------------
 
-create or replace view v_orders_fin_monitoring as
-select
---финансовый отчет по запущенным за вчерашний день заказам
---вызывается отдельно для производства и продажи t.order_type
---сгруппирован по изделиям и продажной цене (идет накопительно по изделиям, но при разной цене выделяются строки)
---все цены без ндс  
-  t.order_type,  -- -1 П, 0 - О
-  t.ornums,
-  t.customer,
-  t.fullname,
-  t.qnt,
-  t.price,
-  t.price_std,   --цена в справочнике
-  case when t.price_std > t.price then t.price - t.price_std else null end as price_diff,  --разница между продажной и справочной
-  round(t.price * t.qnt, 2) as summ,
-  t.sum0,
-  t.labor_intensity_0,
-  t.labor_cost_0,
-  t.labor_intensity_2,
-  t.labor_cost_2,
-  t.sum0 + t.labor_cost_0 + labor_cost_2 as prime_cost,
-  case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as sum0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as labor_cost_0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as labor_cost_2_percent,
-  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
-from (  
-select
-  decode(oi.id_organization, -1, -1, 0) as order_type,
-  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
-  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
-  si.fullname,
-  --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
-  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
-  sum(oi.qnt) as qnt,
-  round(oi.cost_wo_nds / oi.qnt, 0) as price,
-  sum(round(oi.sum0 / 1.22, 0)) as sum0,
-  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
-  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
-  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
-  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
-from
-  v_order_items oi,
-  v_or_std_items si
-where
-  oi.id_std_item = si.id
-  and qnt <> 0
-  --and oi.id_organization <> -1  --!!
-  and oi.dt_beg = trunc(sysdate) - 1
-group by
-  si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
-order by
-  si.fullname
-) t    
-;
 
-drop materialized view vm_orders_fin_monitoring;
-create materialized view vm_orders_fin_monitoring as
-select
---финансовый отчет по запущенным за вчерашний день заказам
---вызывается отдельно для производства и продажи t.order_type
---сгруппирован по изделиям и продажной цене (идет накопительно по изделиям, но при разной цене выделяются строки)
---все цены без ндс  
-  t.order_type,  -- -1 П, 0 - О
-  t.ornums,
-  t.customer,
-  t.fullname,
-  t.qnt,
-  t.price,
-  t.price_std,   --цена в справочнике
-  case when t.price_std > t.price then t.price - t.price_std else null end as price_diff,  --разница между продажной и справочной
-  round(t.price * t.qnt, 2) as summ,
-  t.sum0,
-  t.labor_intensity_0,
-  t.labor_cost_0,
-  t.labor_intensity_2,
-  t.labor_cost_2,
-  t.sum0 + t.labor_cost_0 + labor_cost_2 as prime_cost,
-  case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as sum0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as labor_cost_0_percent,
-  case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as labor_cost_2_percent,
-  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
-from (  
-select
-  decode(oi.id_organization, -1, -1, 0) as order_type,
-  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
-  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
-  si.fullname,
-  --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
-  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
-  sum(oi.qnt) as qnt,
-  round(oi.cost_wo_nds / oi.qnt, 0) as price,
-  sum(round(oi.sum0 / 1.22, 0)) as sum0,
-  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
-  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
-  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
-  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
-from
-  v_order_items oi,
-  v_or_std_items si
-where
-  oi.id_std_item = si.id
-  and qnt <> 0
-  --and oi.id_organization <> -1  --!!
-  and oi.dt_end is null or dt_end = trunc(sysdate) - 7
-group by
-  si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
-order by
-  si.fullname
-) t    
-;      
-      
-exec dbms_mview.refresh('vm_orders_fin_monitoring', 'c');  
+
+
+
+
 
 
 
@@ -3173,6 +3144,9 @@ group by
 order by 
   or_format_name, or_format_estimate_name, name
 ;
+
+
+--проверить нестандартные изделия!!!!
 
 
 

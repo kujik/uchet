@@ -183,26 +183,34 @@ select * from v_ref_nomencl;
 --таблица сметы на позицию заказа или стандартное изделие
 --на данную позицию может быть только одна запись в этой таблице
 --alter table estimates add constraint fk_estimates_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade;
---alter table estimates add isempty number(1) default 0;
-alter table estimates add id_buffer number(11) unique;
+--alter table estimates add dt_changed date;
+--alter table estimates add dt_create date;
+--alter table estimates add dt_changed_depend date;
 create table estimates(
   id number(11),
   id_std_item number(11) unique,              --айди стандартного изделия
   id_order_item number(11) unique,            --айди позиции в заказе (оба поля одновременно не могут быть заданы!)
   id_buffer number(11) unique,                 
   dt date,                                    --дата создания сметы
+  dt_create date,                             --дата создания, со временем, фиксируется триггером   
+  dt_changed date,                            --дата изменения (вставка/удалени позиций, изменение наименования или количества), со временем, фиксируется триггером
+  dt_changed_depend date,                     --дата изменения смет, от которой зависит эта
   isempty number(1) default 0,                --признак того, что смета является пустой 
   constraint pk_estimates primary key (id),
   constraint fk_estimates_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
   constraint fk_estimates_order_item foreign key (id_order_item) references order_items(id) on delete cascade
 );  
 
+
+select i.* from estimate_items i, estimates e where e.id = i.id_estimate and e.id_std_item is not null;
+
 create sequence sq_estimates start with 100 nocache;
 
 create or replace trigger trg_estimates_bi_r before insert on estimates for each row
 begin
   if nvl(:new.id, 0) > -1 then 
-    select sq_estimates.nextval into :new.id from dual;
+    :new.id := sq_estimates.nextval;
+    :new.dt_create := nvl(:new.dt_create, sysdate);
   end if;
 end;
 /
@@ -212,6 +220,7 @@ end;
 --alter table estimate_items drop column id_name_resale_std;
 --alter table estimate_items add contract number(1) default 0;
 --alter table estimate_items add  constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id);
+--alter table estimate_items add id_dependent_estimate number(11);
 create table estimate_items(
   id number(11),
   id_estimate number(11),                      --родительская смета
@@ -222,10 +231,11 @@ create table estimate_items(
   id_comment number(11),                       --комментарий из сметы
   contract number(1) default 0,                --подрядный полуфабрикат
   qnt1 number(15,5),                           --количество на одно изделие, по учету
-  qnt number(15,5),                            --количество на все изделия, по учету 
+  qnt number(15,5),                            --количество на все изделия, по учету, только для заказов 
   qnt1_itm number(15,5),                       --количество на одно изделие, по итм
-  qnt_itm number(15,5),                        --количество на все изделия, по итм 
-  qnt_itm_last number(15,5) default null,      --последнее переданное в итм количество по данной позиции 
+  qnt_itm number(15,5),                        --количество на все изделия, по итм, только для заказов 
+  qnt_itm_last number(15,5) default null,      --последнее переданное в итм количество по данной позиции, только для заказов
+  id_dependent_estimate number(11),            --ссылка на другую смету, которая использует данную позицию как вложенное изделие (заполняется автоматически) 
   deleted number(1) default 0,                 --признак, что данная позиция удалена (=1)
   constraint pk_estimate_items primary key (id),
   constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id),
@@ -252,7 +262,86 @@ begin
   select sq_estimate_items.nextval into :new.id from dual;
 end;
 /
+
+drop trigger trg_estimate_items_aiud_r;
+create or replace trigger trg_estimate_items_aiud_r
+  after insert or update or delete on estimate_items
+  for each row
+--фиксируем дату обновления сметы при добавлении или удалении
+--строк либо при изменении наименования или количества на единицу для 
+declare
+  v_id_estimate estimates.id%type;
+begin
+  if inserting or deleting then
+    v_id_estimate := nvl(:new.id_estimate, :old.id_estimate);
+  else
+    v_id_estimate := :new.id_estimate;
+  end if;
+  if inserting or deleting then
+    update estimates
+      set dt_changed = sysdate
+      where id = v_id_estimate;
+  elsif updating then
+    if (nvl(:old.qnt1, 0) <> nvl(:new.qnt1, 0)) or
+       (nvl(:old.id_name, -1) <> nvl(:new.id_name, -1)) then
+      update estimates
+        set dt_changed = sysdate
+        where id = v_id_estimate;
+    end if;
+  end if;
+end;
+/
+
+create or replace trigger trg_estimate_items_dep_id
+  before insert or update of id_name on estimate_items
+  for each row
+--проставим айди сметы, если сметная позиция ей является
+begin
+  if inserting or updating then
+    :new.id_dependent_estimate := f_get_dependent_estimate(:new.id_name, :new.id_estimate);
+  end if;
+end;
+/
+
  
+--!!!вызывает ошибки при удалении в ора11хе!!!
+drop trigger trg_estimate_items_master;
+create or replace trigger trg_estimate_items_master
+  for insert or update or delete on estimate_items
+  compound trigger
+
+  -- коллекция для хранения уникальных id_estimate
+  type t_id_arr is table of estimates.id%type index by pls_integer;
+  v_ids t_id_arr;
+
+  -- секция для каждой строки: запоминаем id родителя
+  before each row is
+    v_id estimates.id%type;
+  begin
+    -- определяем id_estimate из новой или старой записи
+    if inserting or updating then
+      v_id := :new.id_estimate;
+    else
+      v_id := :old.id_estimate;
+    end if;
+
+    if v_id is not null then
+      v_ids(v_id) := v_id; -- уникальные ключи в ассоциативном массиве
+    end if;
+  end before each row;
+
+  -- секция после выполнения всей операции
+  after statement is
+  begin
+    -- один раз обновляем все уникальные сметы
+    forall i in indices of v_ids
+      update estimates
+        set dt_changed = sysdate
+        where id = v_ids(i);
+  end after statement;
+
+end;
+/
 
 create or replace procedure P_CopyEstimateToUserTemp(
   AIdUser in number,
@@ -266,11 +355,11 @@ begin
   delete from estimates where id = -AIdUser;
   insert into estimates (id) values (-AIdUser);
   if AIdStdItem is not null then
-    insert into estimate_items (id_estimate, id_group, id_name, id_unit, qnt1, id_comment)
-      select -AIdUser, id_group, id_name, id_unit, qnt1, id_comment from v_estimate where id_std_item = AIdStdItem;
+    insert into estimate_items (id_estimate, id_group, id_name, id_unit, qnt1, id_comment, id_dependent_estimate)
+      select -AIdUser, id_group, id_name, id_unit, qnt1, id_comment, id_dependent_estimate from v_estimate where id_std_item = AIdStdItem;
   elsif AIdOrItem is not null then  
-    insert into estimate_items (id_estimate, id_group, id_name, id_unit, qnt1, id_comment)
-      select -AIdUser, id_group, id_name, id_unit, qnt1, id_comment from v_estimate where id_order_item = AIdOrItem;
+    insert into estimate_items (id_estimate, id_group, id_name, id_unit, qnt1, id_comment, id_dependent_estimate)
+      select -AIdUser, id_group, id_name, id_unit, qnt1, id_comment, id_dependent_estimate from v_estimate where id_order_item = AIdOrItem;
   end if;
 end; 
 / 
@@ -431,7 +520,7 @@ end;
 / 
 
 
-create or replace procedure P_CopyEstimate (
+create or replace procedure P_CopyEstimate ( 
 --копируем смету на стандартное изделие в записи для заказа
   IdEstimate in number,       --запись в estimates должна быть создана
   IdStdEstimate in number,    --айди стандартной, из которой копируем
@@ -440,7 +529,7 @@ create or replace procedure P_CopyEstimate (
 is
   cursor c1 is
     select
-      id_group, id_name, id_unit, id_comment, qnt1, qnt1_itm        
+      id_group, id_name, id_unit, id_comment, qnt1, qnt1_itm, id_dependent_estimate      
     from estimate_items 
     where id_estimate = IdStdEstimate; 
   IdGroup number;
@@ -453,12 +542,13 @@ is
   QntAll number;
   QntAll_Itm number;
   IdItem number;
+  QidDep number;
   st varchar2(400);
 begin
   update estimate_items set deleted = 1 where id_estimate = IdEstimate;
   open c1;
   loop
-    fetch c1 into IdGroup, IdName, IdUnit, IdComment, PQnt1, PQnt1_Itm;
+    fetch c1 into IdGroup, IdName, IdUnit, IdComment, PQnt1, PQnt1_Itm, QidDep;
     exit when c1%notfound;
     begin
       select id into IdItem from estimate_items 
@@ -477,7 +567,7 @@ begin
       QntAll_Itm := Ceil(PQnt1_Itm * OrQnt * 1000) / 1000; 
     end if;
     update estimate_items 
-      set id_group = IdGroup, id_unit = IdUnit, id_comment = IdComment, qnt1 = PQnt1, qnt = QntAll, qnt1_itm = PQnt1_Itm, qnt_itm = QntAll_ITM, deleted = 0
+      set id_group = IdGroup, id_unit = IdUnit, id_comment = IdComment, qnt1 = PQnt1, qnt = QntAll, qnt1_itm = PQnt1_Itm, qnt_itm = QntAll_ITM, id_dependent_estimate = QidDep, deleted = 0
       where id = IdItem;
   end loop;
   close c1;
@@ -1072,9 +1162,118 @@ where
   and ei.id_estimate = e.id
   and b.id = ei.id_name
   and ((b.name = i.name) or (b.name = i.fullname)) 
-;      
+;
 
-m
+
+
+
+
+-- ======================================================================
+-- функция, возвращающая id сметы для записи estimate_items
+-- ======================================================================
+create or replace function f_get_dependent_estimate(
+  p_id_name in bcad_nomencl.id%type,
+  p_id_estimate in estimates.id%type
+) return number is
+  v_result number;
+  v_name bcad_nomencl.name%type;
+begin
+  --получаем наименование номенклатуры
+  select b.name
+    into v_name
+    from bcad_nomencl b
+    where b.id = p_id_name;
+
+  --ищем стандартное изделие по совпадению имени со сметной позицией
+  --имя проверяем в том числе и в нестандартных изделиях
+  --совпадение отслеживаем как с префиксом так и без префикса изделия
+  begin
+    select i2.id
+      into v_result
+      from
+        or_std_items i2,
+        or_format_estimates fi2
+      where
+        i2.id_or_format_estimates = fi2.id (+)
+        and (
+          (case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = v_name
+          or i2.name = v_name
+        )
+        and rownum = 1;
+  exception
+    when no_data_found then
+      v_result := null;
+  end;
+
+  -- если нашли стандартное изделие, ищем смету, которая его использует
+  if v_result is not null then
+    begin
+      select e.id
+        into v_result
+        from estimates e
+        where
+          e.id_std_item = v_result
+          and e.id <> p_id_estimate
+          and rownum = 1;
+    exception
+      when no_data_found then
+        v_result := null;
+    end;
+  end if;
+
+  return v_result;
+end f_get_dependent_estimate;
+/
+
+
+--==============================================================================
+--заполним данные для сметных позиций, являющихся сметами
+--------------------------------------------------------------------------------
+--таблицы для логирования (выполните один раз)
+create table temp_upd_est (
+  id number,               -- идентификатор обработанной записи estimate_items
+  dt date,                 -- дата/время обработки
+  processed_by varchar2(30) default user
+);
+
+delete from temp_upd_est;
+
+--блок обработки
+--при 700000 записей порядка 2ч работы на 11хе
+declare
+  v_cnt number := 0;
+begin
+  for rec in (select id, id_name, id_estimate 
+                from estimate_items 
+                where id_dependent_estimate is null 
+                  --and id > 610000
+                order by id desc)   -- начинаем с больших id
+  loop
+    -- обновление текущей записи
+    update estimate_items
+      set id_dependent_estimate = f_get_dependent_estimate(rec.id_name, rec.id_estimate)
+      where id = rec.id;
+    
+    
+    v_cnt := v_cnt + 1;
+    
+    -- каждые 1000 записей фиксируем изменения и выводим сообщение
+    if mod(v_cnt, 1000) = 0 then
+      commit;
+      -- логирование обработанного id (вставляем в таблицу лога)
+      insert into temp_upd_est (id, dt) values (rec.id, sysdate);
+      dbms_output.put_line('обработано и зафиксировано: ' || v_cnt);
+    end if;
+  end loop;
+  
+  -- финальный коммит для оставшихся записей
+  commit;
+  dbms_output.put_line('всего обновлено: ' || v_cnt);
+end;
+/
+
+ 
+
 
 
 
