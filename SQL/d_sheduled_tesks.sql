@@ -72,12 +72,11 @@ select log_date, run_duration, status, additional_info from dba_scheduler_job_ru
 
 create or replace procedure p_update_estimate_depends as
 begin
-  call(p_update_estimate_items_ref);
-  call(p_update_dependent_estimate);
-  call(p_update_estimates_depend_dt);
+  p_update_estimate_items_ref;
+  p_update_dependent_estimate;
+  p_update_estimates_depend_dt;
 end;
 /
-
 
 
 
