@@ -1,16 +1,28 @@
 inherited FrmExportToXlsx: TFrmExportToXlsx
   Caption = ''
+  ExplicitWidth = 808
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
+      ExplicitWidth = 782
       inherited pnlGrid1: TPanel
+        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
+          ExplicitWidth = 770
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
+              Width = 762
+              Height = 337
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
+            end
+            inherited pnlStatusBar: TPanel
+              Top = 338
+              Width = 762
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -28,13 +40,19 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
         end
       end
       inherited pnlFrg2: TPanel
+        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
+          ExplicitWidth = 780
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
+              Width = 772
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
               end
+            end
+            inherited pnlStatusBar: TPanel
+              Width = 772
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -54,15 +72,14 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
         end
       end
     end
-    inherited pnlFrmBtns: TPanel
-      ExplicitTop = 476
-      ExplicitWidth = 786
-      inherited pnlFrmBtnsContainer: TPanel
-        ExplicitWidth = 784
-        inherited pnlFrmBtnsChb: TPanel
-          ExplicitLeft = 457
-        end
-      end
+  end
+  inherited pnlStatusBar: TPanel
+    inherited lblStatusBarR: TLabel
+      Left = 723
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

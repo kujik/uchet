@@ -10,7 +10,8 @@ begin
   dbms_scheduler.create_job (
     job_name        => 'update_estimates_depend_job',
     job_type        => 'plsql_block',
-    job_action      => 'begin p_update_estimates_depend_dt; end;',
+    --job_action      => 'begin p_update_estimates_depend_dt; end;',
+    job_action      => 'begin p_update_estimate_depends; end;',
     --start_date      => trunc(systimestamp) + 1/24,  -- первый запуск
     repeat_interval => 'freq=minutely; interval=5',
     enabled         => true,
@@ -69,7 +70,13 @@ select log_date, run_duration, status, additional_info from dba_scheduler_job_ru
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'VM_OR_STD_ITEMS_JOB' order by log_date desc;
 
 
-
+create or replace procedure p_update_estimate_depends as
+begin
+  call(p_update_estimate_items_ref);
+  call(p_update_dependent_estimate);
+  call(p_update_estimates_depend_dt);
+end;
+/
 
 
 

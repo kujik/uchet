@@ -783,6 +783,10 @@ begin
   else if F = myfrm_Dlg_MainSettings then begin
     TFrmADedtMainSettings.Show(AOwner, F, MyFormOptions, fEdit, null, null);
   end
+  else if F = myfrm_Dlg_OrdersFinReport then begin
+    Orders.OrdersFinReport;
+  end
+
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
 end;

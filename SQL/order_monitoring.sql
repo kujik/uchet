@@ -18,6 +18,7 @@ select
   t.price,
   t.price_std,   --цена в справочнике
   case when t.price_std > t.price then t.price - t.price_std else null end as price_diff,  --разница между продажной и справочной
+  t.priceraw_wo_nds,
   round(t.price * t.qnt, 2) as summ,
   t.sum0,
   t.labor_intensity_0,
@@ -40,6 +41,7 @@ select
   max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
   sum(oi.qnt) as qnt,
   round(oi.cost_wo_nds / oi.qnt, 0) as price,
+  max(si.priceraw_wo_nds) as priceraw_wo_nds,
   sum(round(oi.sum0 / 1.22, 0)) as sum0,
   sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
   sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
@@ -60,6 +62,66 @@ order by
 ) t    
 ;
 
+create or replace view v_orders_fin_monitoring_all as 
+select
+--финансовый отчет по всем незакрытымзаказм
+--вызывается отдельно для производства и продажи t.order_type
+--сгруппирован по изделиям и продажной цене (идет накопительно по изделиям, но при разной цене выделяются строки)
+--все цены без ндс  
+  t.order_type,  -- -1 П, 0 - О
+  t.dt_beg,
+  t.ornums,
+  t.customer,
+  t.fullname,
+  t.qnt,
+  t.price,
+  t.price_std,   --цена в справочнике
+  case when t.price_std > t.price then t.price - t.price_std else null end as price_diff,  --разница между продажной и справочной
+  t.priceraw_wo_nds,
+  round(t.price * t.qnt, 2) as summ,
+  t.sum0,
+  t.labor_intensity_0,
+  t.labor_cost_0,
+  t.labor_intensity_2,
+  t.labor_cost_2,
+  t.sum0 + t.labor_cost_0 + labor_cost_2 as prime_cost,
+  case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as sum0_percent,
+  case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as labor_cost_0_percent,
+  case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as labor_cost_2_percent,
+  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
+from (  
+select
+  decode(oi.id_organization, -1, -1, 0) as order_type,
+  max(dt_beg) as dt_beg,
+  listagg(oi.ornum, ', ') within group (order by oi.ornum) as ornums,
+  listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
+  si.fullname,
+  --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
+  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
+  sum(oi.qnt) as qnt,
+  round(oi.cost_wo_nds / oi.qnt, 0) as price,
+  max(si.priceraw_wo_nds) as priceraw_wo_nds,
+  sum(round(oi.sum0 / 1.22, 0)) as sum0,
+  sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
+  sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
+  sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
+  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
+from
+  v_order_items oi,
+  v_or_std_items si
+where
+  oi.id_std_item = si.id
+  and qnt <> 0
+  and oi.dt_end is null
+group by
+  si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
+order by
+  si.fullname
+) t    
+;
+
+
+select * from v_orders_fin_monitoring where fullname ='ЛЕНМ.П_Органайзер для кофе модуля';
 
 --create or replace view v_orders_fin_monitoring as 
 select
@@ -75,16 +137,19 @@ select
   t.qnt as "Количество",
   t.price as "Цена продажи",
   t.price_std as "Цена по справочнику",   --цена в справочнике
-  case when t.price_std > t.price then t.price - t.price_std else null end as "Занижение цены",  
+  case when t.price_std > t.price then t.price - t.price_std else null end as "Занижение цены",
   round(t.price * t.qnt, 2) as "Сумма продажи",
-  t.sum0 as "Себестоимость по смете",
+  t.priceraw_wo_nds as "Себестоимость по смете, цена",
+  t.sum0 as "Себестоимость по смете, сумма",
   case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as "Себестоимость по смете, %",
   t.labor_cost_0 as "Трудозатраты по ПЩ",
   case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as "Трудозатрты ПЩ, %",
   t.labor_cost_2 as "Трудозатраты по ЛОК",
   case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as "Трудозатраты по ЛОК, %",
   t.sum0 + t.labor_cost_0 + labor_cost_2 as "Затраты всего, сумма",
-  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as "Затраты всего, %"
+  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as "Затраты всего, %",
+  t.sum0_min,
+  t.sum0_max
 from (  
 select
   decode(oi.id_organization, -1, -1, 0) as order_type,
@@ -95,8 +160,11 @@ select
   --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
   max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
   sum(oi.qnt) as qnt,
+  max(si.priceraw_wo_nds) as priceraw_wo_nds,
   round(oi.cost_wo_nds / oi.qnt, 0) as price,
   sum(round(oi.sum0 / 1.22, 0)) as sum0,
+  max(round(oi.sum0 / 1.22, 0)) as sum0_max,
+  min(round(oi.sum0 / 1.22, 0)) as sum0_min,
   sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
   sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
   sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
@@ -108,8 +176,10 @@ where
   oi.id_std_item = si.id
   and qnt <> 0
 --  and oi.id_organization <> -1  --!!
-  and oi.id_organization = -1  --!!
+--  and oi.id_organization = -1  --!!
   and oi.dt_end is null
+  and si.fullname ='ЛЕНМ.П_Органайзер для кофе модуля'
+  --and oi.dt_beg >= trunc(sysdate) - 7 
 group by
   si.fullname, round(oi.cost_wo_nds / oi.qnt, 0), decode(oi.id_organization, -1, -1, 0)  
 order by
@@ -117,7 +187,7 @@ order by
 ) t    
 ;
 
-
+select ornum, qnt, sum0 from v_order_items where dt_end is null and fullitemname = 'ЛЕНМ.П_Органайзер для кофе модуля';
 
 --------------------------------------------------------------------------------
 --материализованное представление финансового отчета по заказам

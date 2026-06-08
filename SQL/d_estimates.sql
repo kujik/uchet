@@ -266,7 +266,8 @@ end;
 
 drop trigger trg_estimate_items_aiud_r;
 create or replace trigger trg_estimate_items_aiud_r
-  after insert or update or delete on estimate_items
+--  after insert or update or delete on estimate_items
+  after insert or update on estimate_items
   for each row
 --фиксируем дату обновления сметы при добавлении или удалении
 --строк либо при изменении наименования или количества на единицу для 
@@ -1206,6 +1207,7 @@ where
  e.id_dependent_estimate is not null
  and ed.id = e.id_dependent_estimate 
  and ed.id_std_item = i.id
+ ;
  and e.name <> i.fullname;
  
  and e.id_dependent_estimate = (select f_get_dependent_estimate(2760, 96074) from dual); 

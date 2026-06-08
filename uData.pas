@@ -1060,6 +1060,7 @@ const
   myfrm_Dlg_DeleteOutdatedOrders='Dlg_DeleteOutdatedOrders';
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
   myfrm_Dlg_MainSettings='Dlg_MainSettings';
+  myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
 
 const
   DefHorizMargin = 5;
@@ -1744,9 +1745,10 @@ const
   rOr_D_Order_EnteringAccount='6-151';
   rOr_Rep_Purchase_Prices='6-152';
   rOr_R_StdItems_Set_Prices='6-153';
+  rOr_Rep_OrdersFin='6-154';
 
   const
-  URights : array [0..270] of array [0..3] of string = (
+  URights : array [0..271] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -2013,6 +2015,7 @@ const
     (rOr_Rep_Orders_Overdue_Kns_Thn,'Модуль "Заказы"','Отчеты','Выполнение сроков конструкторами/технологами'),
     (rOr_Rep_Orders_Audit,'Модуль "Заказы"','Отчеты','Журнал операций по заказам'),
     (rOr_Rep_Purchase_Prices,'Модуль "Заказы"','Отчеты','Отчет по закупочным ценам'),
+    (rOr_Rep_OrdersFin,'Модуль "Заказы"','Отчеты','Отчет по запущенным заказам (финансовый, выгрузка)'),
     (rOr_Other_Order_FindEstimate,'Модуль "Заказы"','Сервис: Поиск сметы по сметной позиции', 'Доступ'),
     (rOr_Other_ItmInfo,'Модуль "Заказы"','Сервис: Информация по ИТМ', 'Доступ'),
     (rOr_Other_ItmExtNomencl,'Модуль "Заказы"','Сервис: Расширенный справочник номенклатуры ИТМ', 'Доступ'),

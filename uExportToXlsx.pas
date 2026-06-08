@@ -8,6 +8,10 @@
 
 форматирование данных осуществл€етс€ передеачей массива параметров по правилам FrGBGridEh
 
+если переданное им€ файла содержит путь, то сразу происходит выгрузка в него, в
+противном случае файл сохран€етс€ в папку "ћои документы"
+и после этого автоматически открываетс€.
+
 }
 
 
@@ -42,6 +46,9 @@ function ExportToXlsx(const AFileName: string; const AData: TNamedArr; const AFi
 
 implementation
 
+uses
+  uSys;
+
 {$R *.dfm}
 
 function ExportToXlsx(const AFileName: string; const AData: TNamedArr; const AFields: TVarDynArray2; ATopString: string = ''; const ABottomString: string = ''; AExportFormats: Boolean = False; ACellFormatter: TXlsxCellFormatter = nil): Boolean;
@@ -65,7 +72,7 @@ begin
     Frg1.SetInitData(AData);
     Frg1.Prepare;
     Frg1.RefreshGrid;
-    Gh.ExportGridToXlsxNew(Frg1.DBGridEh1, AFileName, False, ATopString, ABottomString, AExportFormats, True);
+    Gh.ExportGridToXlsxNew(Frg1.DBGridEh1, S.IIfStr(Pos('\', AFileName) = 0,  Sys.GetMyDocumentsPath + '\') + AFileName, S.IIf(Pos('\', AFileName) > 0, False, True), ATopString, ABottomString, AExportFormats, True);
   except
     Result := False;
   end;

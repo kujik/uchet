@@ -100,6 +100,7 @@ type
     function SetLaborIntensity(AOwner: TComponent; AId: Variant;  AAreaId: Integer;  AIsStdItem: Boolean): Boolean;
     function SetLaborCost(AOwner: TComponent; AAreaId: Integer): Boolean;
     function EraseOutdatedOrders(AOwner: TComponent): Boolean;
+    procedure OrdersFinReport;
 end;
 
 var
@@ -143,9 +144,8 @@ implementation
 
 uses
   uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
-  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo, uWaitForm
-//  Xml.XMLDoc, Xml.XMLIntf
-//  OmniXML, OmniXMLUtils
+  LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo, uWaitForm,
+  uServerTasks, uFrmChooseDialog
   ;
 
 constructor TOrders.Create;
@@ -3103,6 +3103,25 @@ begin
     ['directories', dirs]
   ]);
   Result := True;
+end;
+
+procedure TOrders.OrdersFinReport;
+var
+  RepType: Integer;
+begin
+  RepType := FrmChooseDialog.ShowDialog(
+    'Отчет по заказам',
+    'Отчет по финансовым показателям запущенных заказов. Выберите тип отчета, после чего он будет выгружен в файл Excel.'#13#10'Это займет несколько минут.',
+    ['Отчет по производственным заказам за вчерашний день',
+    'Отчет по производственным заказам в работе',
+    'Отчет по отгрузочным заказам за вчерашний день',
+    'Отчет по отгрузочным заказам в работе'
+    ],
+    [['Выберите вариант для выгрузки данных в файл Excel.']]);
+  if RepType = -1 then
+    Exit;
+  ShowWaitForm('Производится создание отчета...');
+  TasksS.ReportForYesterdayOrders(RepType + 1, False);
 end;
 
 

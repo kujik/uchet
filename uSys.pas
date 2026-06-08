@@ -45,6 +45,8 @@ type TSysHelper = record
   function GetEnvVar(const VarName: string): string;
   //получить путь к финдовому временному каталогу
   function GetWinTemp: string;
+  //получить путь к папке ћои документы
+  function GetMyDocumentsPath: string;
   //выполнить файл (открыть стандартной программой)
   //получить им€ временного файла в каталоге Temp виндовс
   //им€ всегда будет разным, типа 'c:\temp\tmp74D0.tmp'.
@@ -260,6 +262,12 @@ function TSysHelper.GetWinTemp: string;
 //получить путь к финдовому временному каталогу
 begin
   Result:=GetEnvironmentVariable('temp');
+end;
+
+function TSysHelper.GetMyDocumentsPath: string;
+//получить путь к папке ћои документы
+begin
+  Result := TPath.GetDocumentsPath;
 end;
 
 function TSysHelper.GetWinTempFileName: string;
