@@ -1285,9 +1285,11 @@ create or replace view v_or_std_items as
     fi.type,
     fi.name as or_format_estimate_name,  
     orf.name as or_format_name,
+    round(i.price / 1.22, 2) as price_wo_nds,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
     f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
+    case when e.has_influencing = 0 then null when e.dt_influencing_ready is null then date '2000-01-01' else e.dt_influencing_ready end as dt_influencing, 
     prc.priceraw,
     round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
     case 
@@ -1314,29 +1316,92 @@ create or replace view v_or_std_items as
     join (select id, f_get_stditem_raw_price(id) as priceraw from or_std_items) prc on prc.id = i.id
   ;
     
-    
+
+drop procedure P_SetStdItemPrice;     
 create or replace procedure P_SetStdItemPrice(
 --установка цены всего издели€ и перепродажи дл€ него (включаема€) в позиции справочника стандартных изделий
   IdStdItem number,  --айди стандартного издели€                      
   PriceNew number,   --нова€ цена (или обща€ издели€, или перепродажи в нем)                  
-  PriceType number   --1, если это цена издели€, иначе цена перепродажи
+  WoNds number
 ) is 
   Idformat number;
   PriceOld number(11,2);
   PricePpOld number(11,2);
+  v_type number(1);  --0 - производственный, 1 - отгрузочный, 2 - п/ф
+  v_pricenew number;
 begin
-  --получим данные по этому изделию
-  select id_or_format_estimates, nvl(price,0), nvl(price_pp,0) into IdFormat, PriceOld, PricePpOld from or_std_items where id = IdStdItem;
+  select 
+    ii.type, d_or_format_estimates, nvl(price,0) into v_type, IdFormat, PriceOld 
+    from or_std_items i, or_format_estimates f 
+    where id = IdStdItem and i.id_or_format_estimates = f.id;
     --это не д/к
-    if PriceType = 1 then 
-      --если устанавливаем цену издели€, то попутно скорректируем цену перепродажи в нем, чтобы была не более цены издели€
-      update or_std_items set price = PriceNew, price_pp = least(PriceNew, PricePpOld) where id = IdStdItem;
-    else
-      --если передали цену перепродажи, то установим ее не более чем цена издели€
-      update or_std_items set price_pp = least(PriceNew, PriceOld) where id = IdStdItem;
+    v_pricenew := PriceNew;
+    if WoNds = 1 then 
+      v_pricenew := Round(v_pricenew * 1.22, 2); 
     end if; 
+   update or_std_items set price = v_pricenew where id = IdStdItem;
+    if v_type = 1 then
+      update order_items set price = v_pricenew where id_order < 0 and id_organization = -1 and id_std_item = IdStdItem;
+    else
+      update order_items set price = Round(v_pricenew / 1.22, 2) where id_order < 0 and id_organization <> -1 and id_std_item = IdStdItem;
+    end if;
 end;  
 /  
+
+create or replace procedure p_set_std_item_price(
+--установим цену стандартного издели€ (с ндс),
+--обновим цены в шаблонах папортов
+  p_id_std_item in number,  -- айлди издели€
+  p_price_new   in number,  -- цена
+  p_wo_nds      in number   -- 1 если цена передена без ндс
+) is
+  v_type        number(1);  -- 0 Ц производственный, 1 Ц отгрузочный, 2 Ц п/ф
+  v_id_format   number;
+  v_price_old   number(11,2);
+  v_price_new   number;
+begin
+  -- получение типа издели€ и старой цены (соединение через старый синтаксис Oracle)
+  select
+    f.type,
+    i.id_or_format_estimates,
+    nvl(i.price, 0)
+  into
+    v_type,
+    v_id_format,
+    v_price_old
+  from
+    or_std_items i,
+    or_format_estimates f
+  where
+    i.id = p_id_std_item
+    and i.id_or_format_estimates = f.id;
+  -- пересчЄт цены с учЄтом флага "без Ќƒ—" - итогова€ будет с ндс
+  v_price_new := p_price_new;
+  if p_wo_nds = 1 then
+    v_price_new := round(v_price_new * 1.22, 2);
+  end if;
+  -- обновление цены в справочнике стандартных изделий
+  update or_std_items
+    set price = v_price_new
+    where id = p_id_std_item;
+ -- обновление цены в позици€х заказов (order_items)
+  if v_type = 1 then
+    --дл€ отгрузочных заказов цена с Ќƒ—
+    update order_items oi
+       set oi.price = v_price_new
+     where oi.id_std_item = p_id_std_item
+       and oi.id_order < 0
+       and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization <> -1);  
+  else
+    --дл€ производственных заказов цена без Ќƒ—
+    update order_items oi
+       set oi.price = round(v_price_new / 1.22, 2)
+     where oi.id_std_item = p_id_std_item
+       and oi.id_order < 0
+       and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization = -1);  
+  end if; 
+end;
+/
 
 --update or_std_items set price_pp = 0 where id_or_format_estimates > 1;
 

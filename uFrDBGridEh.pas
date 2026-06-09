@@ -2823,15 +2823,15 @@ begin
   Result := A.InArray(LId, FEditData.IdsChanged);
 end;
 
-procedure TFrDBGridEh.SetValue(FieldName: string; NewValue: Variant; Post: Boolean = true);
+procedure TFrDBGridEh.SetValue(FieldName: string; NewValue: Variant; Post: Boolean = True);
 //установить значение поля в текущей записи
 begin
   if FieldName = '' then
     FieldName := GetCurrField;
-  MemTableEh1.Edit; //!!!
+  MemTableEh1.Edit;
   MemTableEh1.FieldByName(FieldName).Value := NewValue;
   if Post then
-    Mth.PostAndEdit(MemTableEh1); //!!!07-06-25
+    Mth.PostAndEdit(MemTableEh1);
 end;
 
 procedure TFrDBGridEh.SetValue(FieldName: string; Pos: Integer; Filtered: Boolean; NewValue: Variant);

@@ -1,56 +1,52 @@
 inherited FrmBasicGrid2: TFrmBasicGrid2
   Caption = 'FrmBasicGrid2'
-  ClientHeight = 537
-  ClientWidth = 800
-  ExplicitWidth = 816
-  ExplicitHeight = 576
+  ClientHeight = 536
+  ClientWidth = 796
+  ExplicitWidth = 812
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 800
-    Height = 521
+    Width = 796
+    Height = 520
     ExplicitWidth = 800
     ExplicitHeight = 521
     inherited pnlFrmClient: TPanel
-      Width = 790
-      Height = 472
-      ExplicitWidth = 790
-      ExplicitHeight = 472
+      Width = 786
+      Height = 471
+      ExplicitWidth = 786
+      ExplicitHeight = 471
       object pnlTop: TPanel
         Left = 0
         Top = 0
-        Width = 790
+        Width = 786
         Height = 9
         Align = alTop
         Caption = 'pnlTop'
         TabOrder = 0
-        ExplicitWidth = 786
       end
       object pnlBottom: TPanel
         Left = 0
-        Top = 426
-        Width = 790
+        Top = 425
+        Width = 786
         Height = 5
         Align = alBottom
         Caption = 'pnlBottom'
         TabOrder = 1
-        ExplicitTop = 425
-        ExplicitWidth = 786
       end
       object pnlLeft: TPanel
         Left = 0
         Top = 9
         Width = 5
-        Height = 417
+        Height = 416
         Align = alLeft
         Caption = 'pnlLeft'
         TabOrder = 2
-        ExplicitHeight = 416
       end
       object pnlGrid1: TPanel
         Left = 5
         Top = 9
-        Width = 780
-        Height = 417
+        Width = 776
+        Height = 416
         Align = alClient
         Caption = 'pnlGrid1'
         TabOrder = 3
@@ -63,17 +59,17 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
         inline Frg1: TFrDBGridEh
           Left = 1
           Top = 1
-          Width = 778
-          Height = 415
+          Width = 774
+          Height = 414
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 778
-          ExplicitHeight = 415
+          ExplicitWidth = 774
+          ExplicitHeight = 414
           inherited pnlGrid: TPanel
-            Width = 768
-            Height = 361
+            Width = 764
+            Height = 360
             ExplicitWidth = 764
             ExplicitHeight = 360
             inherited DbGridEh1: TDBGridEh
@@ -113,20 +109,20 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
             end
           end
           inherited pnlLeft: TPanel
-            Height = 361
+            Height = 360
             ExplicitHeight = 360
           end
           inherited pnlTop: TPanel
-            Width = 778
+            Width = 774
             ExplicitWidth = 774
           end
           inherited pnlContainer: TPanel
-            Width = 778
+            Width = 774
             ExplicitWidth = 774
           end
           inherited pnlBottom: TPanel
-            Top = 415
-            Width = 778
+            Top = 414
+            Width = 774
             ExplicitTop = 414
             ExplicitWidth = 774
           end
@@ -146,8 +142,8 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
       end
       object pnlFrg2: TPanel
         Left = 0
-        Top = 431
-        Width = 790
+        Top = 430
+        Width = 786
         Height = 41
         Align = alBottom
         Caption = 'pnlFrg2'
@@ -155,17 +151,17 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
         inline Frg2: TFrDBGridEh
           Left = 1
           Top = 1
-          Width = 788
+          Width = 784
           Height = 39
           Align = alClient
           TabOrder = 0
           ExplicitLeft = 1
           ExplicitTop = 1
-          ExplicitWidth = 788
+          ExplicitWidth = 784
           ExplicitHeight = 39
           inherited pnlGrid: TPanel
             Top = 34
-            Width = 778
+            Width = 774
             Height = 5
             ExplicitTop = 34
             ExplicitWidth = 774
@@ -213,19 +209,19 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
           end
           inherited pnlTop: TPanel
             Top = 29
-            Width = 788
+            Width = 784
             ExplicitTop = 29
             ExplicitWidth = 784
           end
           inherited pnlContainer: TPanel
-            Width = 788
+            Width = 784
             Height = 29
             ExplicitWidth = 784
             ExplicitHeight = 29
           end
           inherited pnlBottom: TPanel
             Top = 39
-            Width = 788
+            Width = 784
             ExplicitTop = 39
             ExplicitWidth = 784
           end
@@ -246,55 +242,53 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
         end
       end
       object pnlRight: TPanel
-        Left = 785
+        Left = 781
         Top = 9
         Width = 5
-        Height = 417
+        Height = 416
         Align = alRight
         Caption = 'pnlLeft'
         TabOrder = 5
-        ExplicitLeft = 781
-        ExplicitHeight = 416
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 477
-      Width = 790
-      ExplicitTop = 477
-      ExplicitWidth = 790
+      Top = 476
+      Width = 786
+      ExplicitTop = 476
+      ExplicitWidth = 786
       inherited bvlFrmBtnsTl: TBevel
-        Width = 788
+        Width = 784
         ExplicitWidth = 506
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 788
+        Width = 784
         ExplicitWidth = 506
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 788
-        ExplicitWidth = 788
+        Width = 784
+        ExplicitWidth = 784
         inherited pnlFrmBtnsMain: TPanel
-          Left = 689
+          Left = 685
           ExplicitLeft = 685
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 461
-          ExplicitLeft = 461
+          Left = 457
+          ExplicitLeft = 457
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 590
+          Left = 586
           ExplicitLeft = 586
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 321
+          Width = 317
           ExplicitWidth = 317
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 521
-    Width = 800
+    Top = 520
+    Width = 796
     ExplicitTop = 520
     ExplicitWidth = 796
     inherited lblStatusBarR: TLabel

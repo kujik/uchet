@@ -195,12 +195,15 @@ create table estimates(
   dt_create date,                             --дата создания, со временем, фиксируется триггером   
   dt_changed date,                            --дата изменения (вставка/удалени позиций, изменение наименования или количества), со временем, фиксируется триггером
   dt_changed_depend date,                     --дата изменения смет, от которой зависит эта
+  has_influencing number(1) default 0,        --смета имеет влияющие на нее сметы
+  dt_influencing_ready date,                  --дата, когда все влияющие подгружены, иначе нулл
   isempty number(1) default 0,                --признак того, что смета является пустой 
   constraint pk_estimates primary key (id),
   constraint fk_estimates_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
   constraint fk_estimates_order_item foreign key (id_order_item) references order_items(id) on delete cascade
 );  
 
+create index idx_estimate_items_parent on estimate_items(id_estimate, id_dependent_estimate);
 
 select i.* from estimate_items i, estimates e where e.id = i.id_estimate and e.id_std_item is not null;
 
@@ -265,7 +268,7 @@ end;
 /
 
 drop trigger trg_estimate_items_aiud_r;
-create or replace trigger trg_estimate_items_aiud_r
+/*create or replace trigger trg_estimate_items_aiud_r
 --  after insert or update or delete on estimate_items
   after insert or update on estimate_items
   for each row
@@ -289,6 +292,41 @@ begin
       update estimates
         set dt_changed = sysdate
         where id = v_id_estimate;
+    end if;
+  end if;
+end;
+/
+*/
+
+create or replace trigger trg_estimate_items_aiud_r
+--фиксируем дату обновления сметы при добавлении или удалении
+--строк либо при изменении наименования или количества на единицу для 
+  after insert or update or delete on estimate_items
+  for each row
+declare
+  v_id_estimate estimates.id%type;
+  e_mutation exception;
+  pragma exception_init(e_mutation, -4091);
+begin
+  if inserting or deleting then
+    v_id_estimate := nvl(:new.id_estimate, :old.id_estimate);
+  else
+    v_id_estimate := :new.id_estimate;
+  end if;
+  if inserting or deleting then
+    begin
+      update estimates set dt_changed = sysdate where id = v_id_estimate;
+    exception
+      when e_mutation then null; -- подавляем только мутацию
+    end;
+  elsif updating then
+    if (nvl(:old.qnt1, 0) <> nvl(:new.qnt1, 0)) or
+       (nvl(:old.id_name, -1) <> nvl(:new.id_name, -1)) then
+      begin
+        update estimates set dt_changed = sysdate where id = v_id_estimate;
+      exception
+        when e_mutation then null;
+      end;
     end if;
   end if;
 end;
@@ -807,8 +845,11 @@ select
   fe.prefix,
   e.id_order_item,
   e.id_std_item,
+  e.has_influencing,
+  e.dt_influencing_ready,
   prc.price,
   ei.qnt1_itm * nvl(prc.price, 0) as sum1,
+  case when has_influencing = 0 then null when dt_influencing_ready is null then date '2000-01-01' else dt_influencing_ready end as dt_influencing,  
   2 as cidsemiproduct,
   103 as cidkrep,
   104 as cidproduct,
@@ -1032,60 +1073,6 @@ where
 ;
 
 --------------------------------------------------------------------------------
-create or replace procedure p_update_estimates_depend_dt is
--- процедура обновления поля dt_changed_depend в таблице estimates
--- находит все сметы, которые зависят от изменённых смет (через цепочку стандартных изделий)
--- и проставляет им текущую дату в dt_changed_depend
--- запускается по расписанию (раз в 5 мин)
-  v_last_run date;
-  v_now      date := sysdate;
-  v_root_id  estimates.id%type;
-  cursor c_changed is
-    select id from estimates where dt_changed > v_last_run;
-  cursor c_deps(p_child_id number) is
-    select distinct connect_by_root child_id as root_id
-    from (
-      select ei.id_estimate as parent_id, ei.id_dependent_estimate as child_id
-      from estimate_items ei
-      where ei.id_dependent_estimate is not null
-    )
-    start with child_id = p_child_id
-    connect by nocycle prior parent_id = child_id;
-begin
-  -- получить время последнего запуска (как выше)
-  begin
-    select last_run_at into v_last_run
-      from scheduler_sync_control
-      where job_name = 'p_update_estimates_depend_dt';
-  exception
-    when no_data_found then
-      insert into scheduler_sync_control (job_name, last_run_at)
-        values ('p_update_estimates_depend_dt', date '1900-01-01');
-      commit;
-      v_last_run := date '1900-01-01';
-  end;
-
-  for ch in c_changed loop
-    for dep in c_deps(ch.id) loop
-      update estimates
-        set dt_changed_depend = v_now
-        where id = dep.root_id
-          and (dt_changed_depend is null or dt_changed_depend < v_now);
-    end loop;
-  end loop;
-
-  update scheduler_sync_control
-    set last_run_at = v_now
-    where job_name = 'p_update_estimates_depend_dt';
-
-  commit;
-
-exception
-  when others then
-    rollback;
-    raise;
-end p_update_estimates_depend_dt;
-/
 
 -- ======================================================================
 -- функция, возвращающая id сметы для записи estimate_items
@@ -1231,7 +1218,6 @@ begin
   update estimate_items
   set id_or_std_item = null,
       or_std_item_cnt = 0;
-
   -- Обновление строк, для которых есть совпадения
   merge into estimate_items ei
   using (
@@ -1278,48 +1264,12 @@ end;
 exec p_update_estimate_items_ref; 
 
 
---------------------------------------------------------------------------------
---обновляем поле, содержащее айди сметы, зависящей от данной позиции
---работает быстро
-create or replace procedure p_update_dependent_estimate as
-begin
-  -- сбрасываем старые значения
-  update estimate_items set id_dependent_estimate = null;
-
-  -- для каждой позиции, которая является стандартным изделием,
-  -- находим смету (id_estimate), в которой это изделие используется как комплектующее
-  merge into estimate_items ei
-  using (
-    select
-      ei.id as item_id,
-      max(ei2.id_estimate) as dep_est_id
-    from estimate_items ei
-    join estimate_items ei2 on ei2.id_or_std_item = ei.id_or_std_item
-    where ei.id_or_std_item is not null
-      and ei2.id_estimate != ei.id_estimate   -- не та же самая смета
-    group by ei.id
-  ) src
-  on (ei.id = src.item_id)
-  when matched then
-    update set ei.id_dependent_estimate = src.dep_est_id;
-
-  commit;
-end;
-/
-
-exec p_update_dependent_estimate;
-
-
---update estimates set dt_changed_depend = null;;
-
-
 exec p_update_estimates_depend_dt;
 
 --------------------------------------------------------------------------------
 --обновляет рекурсивно дату изменения влияющей сметы для всех смет, если она 
 --стала больше текущей.
 --влияет создание, изменение, илли иззменение влияющей сметы для той, от кторой завист эта
-
 create or replace procedure p_update_estimates_depend_dt as
   v_updated number;
 begin
@@ -1363,9 +1313,90 @@ end;
 /
 
 
+--изменяем информацию по влияющим сметам для данной - есть ли такие, и если есть проставим текущую дату, пори условии что все они существуют
+--Сметы, которые стали загружены (loaded=1) и у которых ранее была дата null или 2026-01-01, получат текущую дату.
+--Сметы, которые уже имели реальную дату (не 2026-01-01 и не null), сохранят её.
+--Сметы с loaded=0 сбрасывают дату в null.
+create or replace procedure p_upd_estimates_infl_batch is
+  v_now date := sysdate;
+  v_updated number;
+  c_default_date constant date := date '2026-01-01';
+begin
+  delete from tmp_estimate_loaded;
 
-    
+  insert into tmp_estimate_loaded (id, loaded)
+  select e.id,
+         case when (e.id_std_item is not null and nvl(s.wo_estimate, 0) = 1)
+               or not exists (
+                    select 1
+                      from estimate_items ei
+                      where ei.id_estimate = e.id
+                        and ei.id_or_std_item is not null
+                        and exists (select 1 from estimates e2 where e2.id_std_item = ei.id_or_std_item)
+                 )
+              then 1 else 0 end
+    from estimates e
+    left join or_std_items s on s.id = e.id_std_item;
 
+  for i in 1..100 loop
+    v_updated := 0;
+    update tmp_estimate_loaded t
+       set t.loaded = 1
+     where t.loaded = 0
+       and not exists (
+         select 1
+           from estimate_items ei
+           where ei.id_estimate = t.id
+             and ei.id_or_std_item is not null
+             and exists (select 1 from estimates e2 where e2.id_std_item = ei.id_or_std_item)
+             and not exists (
+               select 1 from tmp_estimate_loaded ch
+                where ch.id = (select e3.id from estimates e3 where e3.id_std_item = ei.id_or_std_item and rownum=1)
+                  and ch.loaded = 1
+             )
+       );
+    v_updated := sql%rowcount;
+    exit when v_updated = 0;
+  end loop;
 
+  merge into estimates e
+  using (
+    select t.id,
+           case when exists (
+                select 1 from estimate_items ei
+                where ei.id_estimate = t.id
+                  and ei.id_or_std_item is not null
+                  and exists (select 1 from estimates e2 where e2.id_std_item = ei.id_or_std_item)
+                ) then 1 else 0 end as has_inf,
+           t.loaded
+      from tmp_estimate_loaded t
+  ) src
+  on (e.id = src.id)
+  when matched then
+    update set
+      e.has_influencing = src.has_inf,
+      e.dt_influencing_ready = case 
+                                 when src.loaded = 1 and src.has_inf = 1 and (e.dt_influencing_ready is null or e.dt_influencing_ready = c_default_date)
+                                   then v_now
+                                 when src.loaded = 0 then null
+                                 else e.dt_influencing_ready
+                               end;
+  commit;
+end;
+/
 
+--------------------------------------------------------------------------------
+--Рекурсивная функция проверки загруженности сметы
+drop table tmp_estimate_loaded;
+create global temporary table tmp_estimate_loaded (
+  id number(11),
+  loaded number(1),
+  dt date,
+  primary key (id)
+) on commit delete rows;
 
+create global temporary table tmp_estimate_loaded (
+  id  number(11) primary key,
+  calc_date date
+) on commit delete rows;
+;

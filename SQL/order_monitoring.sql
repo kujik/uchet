@@ -120,6 +120,7 @@ order by
 ) t    
 ;
 
+select * from v_orders_fin_monitoring_all;
 
 select * from v_orders_fin_monitoring where fullname ='ЛЕНМ.П_Органайзер для кофе модуля';
 

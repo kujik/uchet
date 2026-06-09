@@ -72,11 +72,15 @@ select log_date, run_duration, status, additional_info from dba_scheduler_job_ru
 
 create or replace procedure p_update_estimate_depends as
 begin
+  --обновим ссылки на стандартные изделия
   p_update_estimate_items_ref;
-  p_update_dependent_estimate;
+  --обновим в смета дату изменения влияющих смет 
   p_update_estimates_depend_dt;
+  --обновим признаки готовности все влияющих смет для данной 
+  p_upd_estimates_infl_batch;
 end;
 /
+
 
 
 

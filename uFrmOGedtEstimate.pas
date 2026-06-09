@@ -29,6 +29,7 @@ type
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
+    procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure btnClick(Sender: TObject); override;
     procedure VerifyRow(Row: Integer);
     procedure VerifyBeforeSave; override;
@@ -99,6 +100,7 @@ begin
 
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
+    ['id_estimate$i','_ide','40'],
     ['id_or_std_item$i','_id_or_std_item','40'],
     ['id_dependent_estimate$i','_id_estimate','40'],
     ['is_std_item$i','Изд.','40','pic'],
@@ -206,6 +208,7 @@ begin
     LoadItemFromDB(Frg1.RecNo - 1);
   end
   else if TCellButtonEh(Sender).Hint = 'Выбрать изделие' then begin
+    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit, Fr.GetValue('id_or_std_item'), 1);Exit;
     Wh.ExecReference(myfrm_R_OrderStdItems_SEL, Self, [myfoDialog, myfoModal], null);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
@@ -285,6 +288,14 @@ var
   Tag: Integer;
 begin
   Tag := TControl(Self).Tag;
+end;
+
+procedure TFrmOGedtEstimate.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  //if Fr.CurrField = 'is_std_item' then
+//    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable], fEdit, Fr.GetValue('id_or_std_item'), 1)
+  //else
+  //  inherited;
 end;
 
 procedure TFrmOGedtEstimate.VerifyRow(Row: Integer);

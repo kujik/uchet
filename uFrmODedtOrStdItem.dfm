@@ -8,8 +8,8 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
   inherited pnlFrmMain: TPanel
     Width = 837
     Height = 332
-    ExplicitWidth = 833
-    ExplicitHeight = 331
+    ExplicitWidth = 837
+    ExplicitHeight = 332
     inherited pnlFrmClient: TPanel
       Width = 827
       Height = 283
@@ -20,9 +20,9 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Top = 101
         Width = 104
         Height = 21
-        ControlLabel.Width = 26
+        ControlLabel.Width = 67
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1062#1077#1085#1072
+        ControlLabel.Caption = #1062#1077#1085#1072' ('#1089' '#1053#1044#1057')'
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         currency = True
@@ -33,24 +33,6 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         TabOrder = 0
         Visible = True
       end
-      object nedt_Price_PP: TDBNumberEditEh
-        Left = 282
-        Top = 101
-        Width = 104
-        Height = 21
-        ControlLabel.Width = 70
-        ControlLabel.Height = 13
-        ControlLabel.Caption = #1055#1077#1088#1077#1087#1088#1086#1076#1072#1078#1072
-        ControlLabel.Visible = True
-        ControlLabelLocation.Position = lpLeftCenterEh
-        currency = True
-        DynProps = <>
-        EditButton.Visible = True
-        EditButtons = <>
-        MaxValue = 999999999.000000000000000000
-        TabOrder = 1
-        Visible = True
-      end
       object chb_by_sgp: TDBCheckBoxEh
         Left = 86
         Top = 128
@@ -58,7 +40,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Height = 17
         Caption = #1059#1095#1077#1090' '#1087#1086' '#1057#1043#1055
         DynProps = <>
-        TabOrder = 2
+        TabOrder = 1
       end
       object chb_R0: TDBCheckBoxEh
         Left = 85
@@ -67,7 +49,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Height = 17
         Caption = #1041#1077#1079' '#1084#1072#1088#1096#1088#1091#1090#1072
         DynProps = <>
-        TabOrder = 3
+        TabOrder = 2
       end
       object chb_Wo_Estimate: TDBCheckBoxEh
         Left = 194
@@ -76,7 +58,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Height = 17
         Caption = #1041#1077#1079' '#1089#1084#1077#1090#1099
         DynProps = <>
-        TabOrder = 4
+        TabOrder = 3
       end
       object edt_name: TDBEditEh
         Left = 82
@@ -91,7 +73,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         DynProps = <>
         EditButtons = <>
         MaxLength = 400
-        TabOrder = 5
+        TabOrder = 4
         Text = 'edt_name'
         Visible = True
       end

@@ -23,7 +23,6 @@ type
     chb_R0: TDBCheckBoxEh;
     chb_Wo_Estimate: TDBCheckBoxEh;
     nedt_Price: TDBNumberEditEh;
-    nedt_Price_PP: TDBNumberEditEh;
     chb_by_sgp: TDBCheckBoxEh;
   private
     FRcount: Integer;
@@ -105,7 +104,7 @@ begin
   end;
   if (Mode = fEdit) and not User.Role(rOr_R_StdItems_Set_Prices) then begin
     nedt_Price.ReadOnly := True;
-    nedt_Price_PP.ReadOnly := True;
+    //nedt_Price_PP.ReadOnly := True;
   end;
   SetRoute;
 end;
@@ -132,7 +131,7 @@ begin
     if (Copy(Components[i].Name, 1, 6) = 'chb_r') then
       Cth.SetErrorMarker(TDBCheckBoxEh(Components[i]), TDBCheckBoxEh(Components[i]).Enabled and (j = 0));
   //цена перепродажи не должна быть больше общей цены
-  Cth.SetErrorMarker(nedt_Price_PP, (nedt_Price_PP.Value > nedt_Price.Value) or (nedt_Price_PP.Value = null));
+//  Cth.SetErrorMarker(nedt_Price_PP, (nedt_Price_PP.Value > nedt_Price.Value) or (nedt_Price_PP.Value = null));
 end;
 
 function TFrmODedtOrStdItem.Save: Boolean;

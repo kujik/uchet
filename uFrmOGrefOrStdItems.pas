@@ -61,8 +61,9 @@ begin
     ['id_or_format_estimates','_id_format_est',''],
     ['wo_estimate','_wo_estimate',''],
     ['name','Наименование','500;h'],
-    ['price$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+    ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+    ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+//    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
     ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
     ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
     ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices), 't=1'],
@@ -70,6 +71,7 @@ begin
     ['route2','Производственный маршрут','120'],
     ['qnt_panels_w_drill','Сверловка, панелей','80'],
     ['dt_estimate','Смета','75'],
+    ['dt_influencing','Влияющие сметы','85', 'pic=01.01.2000;:6;0;7:+'],
     ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
     ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
     ['labor_cost_0','!Стоимость','75'],
@@ -254,10 +256,14 @@ begin
     //сохраним контролдьную цену
     Q.QExecSql('update or_std_items set price_check = :p$f where id = :id$i', [Value, Fr.Id])
   else
-    //запишем цену (поля 'price', 'price_pp')
-    Q.QCallStoredProc('p_SetStdItemPrice', 'IdStdItem$i;PriceNew$f;PriceType$i',
-      [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 1, 2])]
+    //запишем цену (поля 'price')
+    Q.QCallStoredProc('p_set_std_item_price', 'p_id_std_item$i;p_price_new$f;p_wo_nds$i',
+      [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 0, 1])]
     );
+  if FieldName = 'price' then
+    Fr.SetValue('price_wo_nds', RoundTo(Fr.GetValueF('price') / 1.22, -2))
+  else
+    Fr.SetValue('price', RoundTo(Fr.GetValueF('price_wo_nds') * 1.22, -2))
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -274,6 +280,9 @@ begin
       then Params.Background := clmyPink  //красный - не подгружена сметы
       else if (Fr.GetValueI('wo_estimate') = 1)
         then Params.Background := clmyYelow;  //желтый - смета пустая (не нужна)
+  if (FieldName = 'dt_influencing') then
+    if Fr.GetValueS('dt_influencing') ='01.01.2000' then
+      Params.Text := '';
 end;
 
 procedure TFrmOGrefOrStdItems.SetCbEstimate;
