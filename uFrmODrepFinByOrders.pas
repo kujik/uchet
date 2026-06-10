@@ -186,6 +186,9 @@ type
     nedt_5_4: TDBNumberEditEh;
     nedt_5_5: TDBNumberEditEh;
     nedt_5_7: TDBNumberEditEh;
+    nedt_3_IRaw: TDBNumberEditEh;
+    nedt_3_ARaw: TDBNumberEditEh;
+    nedt_3_Raw: TDBNumberEditEh;
     procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
   private
@@ -487,7 +490,7 @@ begin
     //берется дата поступления на сгп по каждому слешу, обсчет идет по заказам частично, по мере изготовления изделий
     //вьюха без параметров, т.к. начальная и конечная дата выборки передаются через контекст сесии
     //получаем сумму изготовленных изделий за период, и сумму за переод же, но только тех, которые изготовлены в срок (ранее плановой даты отгрузки)
-    va1:=Q.QLoad('select sum(sum_i), sum(sum_i_ok), sum(sum_a), sum(sum_a_ok) from v_order_finreport_1', []);
+    va1:=Q.QLoad('select sum(sum_i), sum(sum_i_ok), sum(sum_a), sum(sum_a_ok), sum(sum_i_raw) from v_order_finreport_1', []);
     va2:=Q.QLoad(
       'select round(sum(sum3i)), round(sum(sum3a)), max(prc3i), max(prc3a) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
       [EncodeDate(YearOf(DtB), MonthOf(DtB), 1), EncodeDate(YearOf(DtE), MonthOf(DtE), 1)]
@@ -497,6 +500,8 @@ begin
     nedt_3_I.Value:=va1[0][0];
     nedt_3_IOk.Value:=va1[0][1];
     nedt_3_IPlan.Value:=va2[0][0];
+    nedt_3_IRaw.Value:=va1[0][4];
+    nedt_3_Raw.Value:=va1[0][4];
     if S.NNum(nedt_3_IPlan.Value) <> 0 then nedt_3_IPrc.Value:=RoundTo(nedt_3_I.Value / nedt_3_IPlan.Value * 100, -2);
     if S.NNum(nedt_3_I.Value) <> 0 then nedt_3_IPrcOk.Value:=RoundTo(nedt_3_IOk.Value / nedt_3_I.Value * 100, -2);
     nedt_3_A.Value:=va1[0][2];

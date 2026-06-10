@@ -55,7 +55,7 @@ create table order_plans (
 );  
 
 
-create or replace view v_order_finreport_1 as
+--create or replace view v_order_finreport_1 as
 select
 --список изделий заказов, принятых на сгп за заданный период, 
 --суммы изделий (без д/к), с учетом скидок по заказу, за вычетом ндс,
@@ -65,31 +65,36 @@ select
   i.pos,
   case when nvl(o.cost, 0) = nvl(o.cost_wo_nds, 0) 
     then round(nvl((i.price - i.price_pp)*s.sqnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01),0))
-    else round(nvl((i.price - i.price_pp)*s.sqnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01), 0) / 1.2)
+    else round(nvl((i.price - i.price_pp)*s.sqnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01), 0) / 1.22)
   end as sum_i,
   case when nvl(o.cost, 0) = nvl(o.cost_wo_nds, 0) 
     then round(nvl((i.price - i.price_pp)*s.sqnt1*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01),0))
-    else round(nvl((i.price - i.price_pp)*s.sqnt1*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01), 0) / 1.2)
+    else round(nvl((i.price - i.price_pp)*s.sqnt1*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01), 0) / 1.22)
   end as sum_i_ok,
   case when nvl(o.cost, 0) = nvl(o.cost_wo_nds, 0) 
     then round(nvl((i.price_pp)*s.sqnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01),0))
-    else round(nvl((i.price_pp)*s.sqnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01), 0) / 1.2)
+    else round(nvl((i.price_pp)*s.sqnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01), 0) / 1.22)
   end as sum_a,
   case when nvl(o.cost, 0) = nvl(o.cost_wo_nds, 0) 
     then round(nvl((i.price_pp)*s.sqnt1*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01),0))
-    else round(nvl((i.price_pp)*s.sqnt1*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01), 0) / 1.2)
+    else round(nvl((i.price_pp)*s.sqnt1*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01), 0) / 1.22)
   end as sum_a_ok,
+  --0 as sum_i_raw,
+  round(f_get_order_item_raw_price(i.id) / i.qnt * s.sqnt / 1.22) as sum_i_raw,
+  --round(s.sum_raw / 1.22, 0)  as sum_i_raw,
   i.price, i.price_pp, o.m_i,o.d_i,
   s.sqnt, s.sqnt1, s.sqnt_delayed
 from
-  (select id_order_item, sum(s1.qnt) sqnt, sum(case when o1.dt_otgr > s1.dt then s1.qnt else 0 end) sqnt1, sum(case when o1.dt_otgr > s1.dt then 0 else s1.qnt end) sqnt_delayed 
+  (select id_order_item, sum(s1.qnt) sqnt, sum(case when o1.dt_otgr > s1.dt then s1.qnt else 0 end) sqnt1, sum(case when o1.dt_otgr > s1.dt then 0 else s1.qnt end) sqnt_delayed
     from 
       order_item_stages s1, 
       order_items i1,
       orders o1
     where 
+      i1.qnt <> 0 and
       id_stage = 2 and nvl(i1.sgp, 0) <> 1 and i1.id = s1.id_order_item and o1.id = i1.id_order 
-      and s1.dt >= sys_context('context_uchet22','order_finreport_dtbeg') and s1.dt <= sys_context('context_uchet22','order_finreport_dtend')
+--      and s1.dt >= sys_context('context_uchet22','order_finreport_dtbeg') and s1.dt <= sys_context('context_uchet22','order_finreport_dtend')
+      and s1.dt >= date '2026-06-01' and s1.dt < date '2026-07-01'
     group by id_order_item
   ) s,
   order_items i,
@@ -102,7 +107,9 @@ order by
   sqnt1 desc, ornum, pos   
 ;     
   
-select id, ornum || '_' pos, qnt, qnt_ok from v_order_finreport_1  where (sum_i > sum_i_ok) or (sum_a > sum_a_ok) ;
+select id, ornum || '_' pos, qnt, qnt_ok, sum_i, sum_i_raw from v_order_finreport_1  where (sum_i > sum_i_ok) or (sum_a > sum_a_ok) ;
+select id, ornum || '_' pos, sqnt, sum_i, sum_i_raw from v_order_finreport_1;
+select * from v_order_finreport_1;
 
 
 create or replace view v_order_finreport_inprod as
@@ -121,6 +128,7 @@ select
     else round(nvl((i.price_pp)*s.qnt_inprod*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01), 0) / 1.2)
   end as sum_a,
   i.price, i.price_pp, o.m_i,o.d_i,
+  --f_get_order_item_raw_price(i.id) as sum0,
   s.qnt, s.qnt2, s.qnt_inprod
 from
   v_oritms_pn_in_prod s,

@@ -961,11 +961,12 @@ create or replace view v_estimate as  --!!!
 select
   ei.*,
   bn.name as bname,
-  case
+  bn.name as name,
+/*  case
     when si.name is not null
       then decode(fe.prefix, '', '', fe.prefix || '_') || si.name
     else bn.name
-  end as name,
+  end as name,*/
   bg.name as groupname,
   bu.name as unit,
   bc.name as comm,

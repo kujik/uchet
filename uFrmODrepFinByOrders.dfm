@@ -2,37 +2,38 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
   Caption = 'FrmODrepFinByOrders'
   ClientHeight = 402
   ClientWidth = 1036
-  ExplicitWidth = 1052
-  ExplicitHeight = 441
+  ExplicitWidth = 1048
+  ExplicitHeight = 440
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 1036
     Height = 386
-    ExplicitWidth = 1040
-    ExplicitHeight = 387
+    ExplicitWidth = 1032
+    ExplicitHeight = 385
     inherited pnlFrmClient: TPanel
-      Width = 1030
-      Height = 338
-      ExplicitWidth = 1030
-      ExplicitHeight = 338
+      Width = 1026
+      Height = 337
+      ExplicitWidth = 1022
+      ExplicitHeight = 336
       object pgc_1: TPageControl
         Left = 0
         Top = 25
-        Width = 1030
-        Height = 313
-        ActivePage = ts_5
+        Width = 1026
+        Height = 312
+        ActivePage = ts_3
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 1022
+        ExplicitHeight = 311
         object ts_1: TTabSheet
           Caption = #1055#1088#1086#1076#1072#1078#1072
           object pnl_1_Top: TPanel
             Left = 0
             Top = 0
-            Width = 1030
+            Width = 1018
             Height = 25
             Align = alTop
             TabOrder = 0
-            ExplicitWidth = 1022
           end
           object gb_1_1: TGroupBox
             Left = 3
@@ -623,11 +624,10 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
           object pnl_2_Top: TPanel
             Left = 0
             Top = 0
-            Width = 1030
+            Width = 1018
             Height = 25
             Align = alTop
             TabOrder = 0
-            ExplicitWidth = 1022
           end
           object gb_2_2: TGroupBox
             Left = 518
@@ -1218,11 +1218,10 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
           object pnl1: TPanel
             Left = 0
             Top = 0
-            Width = 1030
+            Width = 1018
             Height = 25
             Align = alTop
             TabOrder = 0
-            ExplicitWidth = 1022
           end
           object gb5: TGroupBox
             Left = 3
@@ -1813,11 +1812,10 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
           object pnl_3_Top: TPanel
             Left = 0
             Top = 0
-            Width = 1030
+            Width = 1018
             Height = 25
             Align = alTop
             TabOrder = 0
-            ExplicitWidth = 1022
           end
           object gb2: TGroupBox
             Left = 3
@@ -1827,13 +1825,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
             Caption = #1048#1079#1076#1077#1083#1080#1103
             TabOrder = 1
             object nedt_3_I: TDBNumberEditEh
-              Left = 114
+              Left = 52
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 77
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1057#1091#1084#1084#1072' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1057#1091#1084#1084#1072#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -1845,13 +1843,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_IOk: TDBNumberEditEh
-              Left = 706
+              Left = 762
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 88
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086' '#1074' '#1089#1088#1086#1082
+              ControlLabel.Width = 53
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086#13#10#1074' '#1089#1088#1086#1082
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -1863,7 +1861,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_IPrc: TDBNumberEditEh
-              Left = 329
+              Left = 470
               Top = 15
               Width = 55
               Height = 21
@@ -1880,13 +1878,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_IPrcOk: TDBNumberEditEh
-              Left = 931
+              Left = 951
               Top = 15
               Width = 55
               Height = 21
-              ControlLabel.Width = 72
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '% '#1086#1090' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = '% '#1086#1090#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = False
@@ -1897,7 +1895,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_IPlan: TDBNumberEditEh
-              Left = 442
+              Left = 567
               Top = 15
               Width = 130
               Height = 21
@@ -1914,22 +1912,40 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
+            object nedt_3_IRaw: TDBNumberEditEh
+              Left = 276
+              Top = 15
+              Width = 130
+              Height = 21
+              ControlLabel.Width = 80
+              ControlLabel.Height = 13
+              ControlLabel.Caption = ' '#1057#1077#1073#1077#1089#1090#1086#1080#1084#1086#1089#1090#1100
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DecimalPlaces = 0
+              DynProps = <>
+              EditButtons = <>
+              ReadOnly = True
+              TabOrder = 5
+              Visible = True
+            end
           end
           object gb3: TGroupBox
-            Left = 3
+            Left = 5
             Top = 87
             Width = 1010
             Height = 50
             Caption = #1044#1086#1087#1086#1083#1085#1080#1090#1077#1083#1100#1085#1072#1103' '#1082#1086#1084#1087#1083#1077#1082#1090#1072#1094#1080#1103
             TabOrder = 2
             object nedt_3_A: TDBNumberEditEh
-              Left = 114
+              Left = 52
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 77
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1057#1091#1084#1084#1072' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1057#1091#1084#1084#1072#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -1941,13 +1957,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_AOk: TDBNumberEditEh
-              Left = 706
+              Left = 762
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 88
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086' '#1074' '#1089#1088#1086#1082
+              ControlLabel.Width = 53
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086#13#10#1074' '#1089#1088#1086#1082
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -1959,7 +1975,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_APrc: TDBNumberEditEh
-              Left = 329
+              Left = 470
               Top = 15
               Width = 55
               Height = 21
@@ -1976,13 +1992,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_APrcOk: TDBNumberEditEh
-              Left = 931
+              Left = 952
               Top = 15
               Width = 55
               Height = 21
-              ControlLabel.Width = 72
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '% '#1086#1090' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = '% '#1086#1090#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = False
@@ -1993,7 +2009,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_APlan: TDBNumberEditEh
-              Left = 442
+              Left = 567
               Top = 15
               Width = 130
               Height = 21
@@ -2010,22 +2026,40 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               TabOrder = 4
               Visible = True
             end
+            object nedt_3_ARaw: TDBNumberEditEh
+              Left = 274
+              Top = 15
+              Width = 130
+              Height = 21
+              ControlLabel.Width = 80
+              ControlLabel.Height = 13
+              ControlLabel.Caption = ' '#1057#1077#1073#1077#1089#1090#1086#1080#1084#1086#1089#1090#1100
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DecimalPlaces = 0
+              DynProps = <>
+              EditButtons = <>
+              ReadOnly = True
+              TabOrder = 5
+              Visible = True
+            end
           end
           object gb4: TGroupBox
-            Left = 3
+            Left = 5
             Top = 143
             Width = 1010
             Height = 50
             Caption = #1042#1089#1077#1075#1086
             TabOrder = 3
             object nedt_3: TDBNumberEditEh
-              Left = 114
+              Left = 52
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 77
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1057#1091#1084#1084#1072' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1057#1091#1084#1084#1072#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -2037,7 +2071,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_Prc: TDBNumberEditEh
-              Left = 329
+              Left = 470
               Top = 15
               Width = 55
               Height = 21
@@ -2054,7 +2088,7 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object nedt_3_Plan: TDBNumberEditEh
-              Left = 442
+              Left = 567
               Top = 15
               Width = 130
               Height = 21
@@ -2072,13 +2106,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = True
             end
             object DBNumberEditEh7: TDBNumberEditEh
-              Left = 706
+              Left = 762
               Top = 15
               Width = 130
               Height = 21
-              ControlLabel.Width = 88
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086' '#1074' '#1089#1088#1086#1082
+              ControlLabel.Width = 53
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1042#1099#1087#1091#1097#1077#1085#1086#13#10#1074' '#1089#1088#1086#1082
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
@@ -2090,13 +2124,13 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               Visible = False
             end
             object DBNumberEditEh9: TDBNumberEditEh
-              Left = 931
+              Left = 952
               Top = 15
               Width = 55
               Height = 21
-              ControlLabel.Width = 72
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '% '#1086#1090' '#1074#1099#1087#1091#1089#1082#1072
+              ControlLabel.Width = 43
+              ControlLabel.Height = 26
+              ControlLabel.Caption = '% '#1086#1090#13#10#1074#1099#1087#1091#1089#1082#1072
               ControlLabel.Visible = True
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = False
@@ -2105,6 +2139,24 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
               ReadOnly = True
               TabOrder = 4
               Visible = False
+            end
+            object nedt_3_Raw: TDBNumberEditEh
+              Left = 274
+              Top = 15
+              Width = 130
+              Height = 21
+              ControlLabel.Width = 80
+              ControlLabel.Height = 13
+              ControlLabel.Caption = ' '#1057#1077#1073#1077#1089#1090#1086#1080#1084#1086#1089#1090#1100
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DecimalPlaces = 0
+              DynProps = <>
+              EditButtons = <>
+              ReadOnly = True
+              TabOrder = 5
+              Visible = True
             end
           end
         end
@@ -2268,45 +2320,47 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
       object Panel2: TPanel
         Left = 0
         Top = 0
-        Width = 1030
+        Width = 1026
         Height = 25
         Align = alTop
         Caption = 'Panel2'
         TabOrder = 1
+        ExplicitWidth = 1022
         object lblCaption: TLabel
           Left = 1
           Top = 1
-          Width = 47
+          Width = 1024
           Height = 13
           Align = alTop
           Caption = 'lblCaption'
+          ExplicitWidth = 47
         end
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 343
-      Width = 1030
-      ExplicitTop = 343
-      ExplicitWidth = 1030
+      Top = 342
+      Width = 1026
+      ExplicitTop = 341
+      ExplicitWidth = 1022
       inherited bvlFrmBtnsTl: TBevel
-        Width = 1032
+        Width = 1024
         ExplicitWidth = 1028
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 1032
+        Width = 1024
         ExplicitWidth = 1028
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 1032
-        ExplicitWidth = 1028
+        Width = 1024
+        ExplicitWidth = 1020
         inherited pnlFrmBtnsMain: TPanel
-          Left = 933
-          ExplicitLeft = 929
+          Left = 925
+          ExplicitLeft = 921
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 686
+          Left = 678
           Width = 18
-          ExplicitLeft = 682
+          ExplicitLeft = 674
           ExplicitWidth = 18
           inherited chbNoclose: TCheckBox
             Left = -105
@@ -2314,9 +2368,9 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
           end
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 704
+          Left = 696
           Width = 229
-          ExplicitLeft = 700
+          ExplicitLeft = 692
           ExplicitWidth = 229
         end
         inherited pnlFrmBtnsL: TPanel
@@ -2357,9 +2411,9 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
         end
         inherited pnlFrmBtnsC: TPanel
           Left = 428
-          Width = 258
+          Width = 250
           ExplicitLeft = 428
-          ExplicitWidth = 254
+          ExplicitWidth = 246
         end
       end
     end
@@ -2367,11 +2421,19 @@ inherited FrmODrepFinByOrders: TFrmODrepFinByOrders
   inherited pnlStatusBar: TPanel
     Top = 386
     Width = 1036
-    ExplicitTop = 387
-    ExplicitWidth = 1040
+    ExplicitTop = 385
+    ExplicitWidth = 1032
     inherited lblStatusBarR: TLabel
-      Left = 971
+      Left = 963
+      Height = 14
       ExplicitLeft = 971
     end
+    inherited lblStatusBarL: TLabel
+      Height = 14
+    end
+  end
+  inherited tmrAfterCreate: TTimer
+    Left = 264
+    Top = 336
   end
 end
