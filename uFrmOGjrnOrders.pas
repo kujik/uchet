@@ -680,20 +680,18 @@ var
   va2: TVarDynArray2;
   i: Integer;
 begin
-  va2:= Q.QLoad('select templatename from v_orders where id <= -1 order by templatename asc', []);
+  va2:= Q.QLoad('select templatename from v_orders where id <= -1 and active = 1 order by templatename asc', []);
   if Length(va2) = 0
     then begin MyInfoMessage('Не найдено ни одного шаблона!'); Exit; end;
   van:=A.VarDynArray2ColToVD1(va2, 0);
-  vaid:=A.VarDynArray2ColToVD1(Q.QLoad('select id from v_orders where id <= -1 order by templatename asc', []), 0);
+  vaid:=A.VarDynArray2ColToVD1(Q.QLoad('select id from v_orders where id <= -1 and active = 1 order by templatename asc', []), 0);
   if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Шаблон заказа', 820, 85, [
 //  if Dlg_BasicInput.ShowDialog(Self, 'Создать заказ из шаблона', 820, 85, fAdd, [
     [cntComboLK, 'Шаблон заказа','1:500:0']
    ],
-   [
-     VarArrayOf(['0', VarArrayOf(van), VarArrayOf(vaid)])
-   ],
+   [VarArrayOf(['0', VarArrayOf(van), VarArrayOf(vaid)])],
    va,
-   [['']],
+   [['Выберите шаблон заказа для создания паспорта.'#13#10'Скрыть неактуальные шаблоны вы можете в справочнике "Шаблоны заказов"']],
    nil
   ) < 0
   then Exit;

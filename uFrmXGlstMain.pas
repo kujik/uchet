@@ -890,14 +890,16 @@ v:=True;
     Frg1.Options := Frg1.Options + [myogGridLabels, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
+      ['area','Площадка','150'],
       ['code','Код','50'],
-      ['departament','Подразделение','200'],
+      ['departament','Подразделение','100'],
       ['employee','Работник','200'],
       ['organization$s','Организация','90'],
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта:13']
+      ['finalized','Закрыта','60','pic=Закрыта:13'],
+      ['sum_total','Итого начислено','90','f=r:']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_calc', 'w_payroll_calc');
     Frg1.Opt.SetButtons(1, [
@@ -1252,11 +1254,13 @@ v:=True;
       ['dt_beg$d','Дата создания','80'],
       ['templatename$s','Шаблон','180'],
       ['format$s','Формат паспорта','130'],
-      ['project$s','Проект','200']
+      ['project$s','Проект','200'],
+      ['active$i','Исполь-'#13#10'зуется','80','chb','e', User.Role(rOr_R_Or_Templates_Ch)]
     ]);
     Frg1.Opt.SetTable('v_orders');
-    Frg1.Opt.SetWhere('where id < 0');
-    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rOr_R_Or_Templates_Ch));
+    Frg1.Opt.SetWhere('where id < 0 and active >= :active$i');
+    Frg1.Opt.SetButtons(1, 'rveacdsp', User.Role(rOr_R_Or_Templates_Ch));
+    Frg1.CreateAddControls('1', cntCheck, 'Только используемые', 'ChbActive', '', 5, yrefC, 150);
   end
   //заказы - справочник причин рекламаций
   else if FormDoc = myfrm_R_ComplaintReasons then begin
@@ -2998,6 +3002,9 @@ begin
     else
       Fr.SetSqlParameters('dt1$d;dt2$d', [IncYear(Date, -10), IncYear(Date, 10)]);
   end
+  else if (FormDoc = myfrm_R_OrderTemplates) then begin
+    Fr.SetSqlParameters('active$i', [Fr.GetControlValue('ChbActive')]);
+  end
   else if FormDoc = myfrm_R_Itm_Schet then
     Fr.SetSqlParameters('id_schet$i', [AddParam])
   else if FormDoc = myfrm_R_Itm_DemandSupplier then
@@ -3203,7 +3210,8 @@ begin
     myfrm_J_InvoiceToSgp,
     myfrm_J_Tasks,
     myfrm_J_SplDealsMonitoring,
-    myfrm_Rep_Orders_Overdue_Kns_Thn
+    myfrm_Rep_Orders_Overdue_Kns_Thn,
+    myfrm_R_OrderTemplates
     ])
   then Fr.RefreshGrid;
   except on E: Exception do Application.ShowException(E);
@@ -3283,6 +3291,9 @@ begin
   else if (FormDoc = myfrm_R_Itm_Nomencl) and (FieldName = 'price_check_upd') then begin
     Q.QExecSQL('update spl_itm_nom_props set price_check_upd = :price_check_upd where id = :id$i', [Value, Fr.ID]);
   end;
+  if (FormDoc = myfrm_R_OrderTemplates) and (FieldName = 'active') then begin
+    Q.QExecSQL('update orders set active = :active$i where id = :id$i', [Value, Fr.ID]);
+  end
 end;
 
 

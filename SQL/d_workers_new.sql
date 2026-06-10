@@ -1278,7 +1278,7 @@ begin
 end;
 
 --вью для журнала зарплатных ведомостей
-create or replace view v_w_payroll_calc as 
+create or replace view v_w_payroll_calc as --!!!
 select
   p.*,
   p.dt as dt1,
@@ -1288,15 +1288,21 @@ select
   d.name as departament,
   o.name as organization,
   d.is_office,
-  d.code
+  d.code,
+  a.shortname || ' - ' || decode(d.is_office, 1, 'офис', 'цех') || '' as area,
+  i.sum_total
 from
   w_payroll_calc p,
+  (select id_payroll_calc, sum(total_pay) as sum_total from w_payroll_calc_item group by id_payroll_calc) i,  
   w_employees e,
   w_departaments d,
+  ref_production_areas a,
   ref_sn_organizations o 
 where
   p.id_departament = d.id
+  and i.id_payroll_calc (+) = p.id
   and p.id_employee = e.id (+)
+  and d.id_prod_area = a.id
   and p.id_organization = o.id (+)
 ;
 
@@ -1582,9 +1588,11 @@ from
   w_departaments d,
   w_employees e,
   ref_sn_organizations o,
-  ref_production_areas a 
+  ref_production_areas a,
+  (select id_payroll_cash, sum(pay_cash) as sum_tootal from w_payroll_cash_item group by id_payroll_cash) i  
 where
   p.id_employee = e.id (+)
+  and i.id_payroll_cash (+) = p.id
   and p.id_departament = d.id
   and p.id_organization = o.id (+)
   and d.id_prod_area = a.id

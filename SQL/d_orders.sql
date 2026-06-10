@@ -331,7 +331,7 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 
-alter table orders add dt_account date;
+alter table orders add  active number(1) default 1;
 alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
 alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
@@ -420,6 +420,8 @@ create table orders (
   --qnt_panels_w_drill number,         -- количество панелей со сверловкой 
   has_prod number(1) default 0,      -- в составе заказа есть производственные материалы
   ids_order_properties varchar2(4000),  --айди свойств заказа через "," 
+  active number(1) default 1,        -- используемтся (применяется только в шаблонах)    
+
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
   constraint fk_orders_manager foreign key (id_manager) references adm_users(id),
@@ -668,6 +670,8 @@ where
 ;
 
 SELECT /*+ PARALLEL(4) */ * FROM v_orders;
+
+--update orders set active = 1 where id < 0;
 
 create or replace view v_orders_list as 
 select

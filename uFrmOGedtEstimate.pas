@@ -271,6 +271,12 @@ begin
     else if Fr.GetValueF('qnt1') > Fr.GetValueF('qnt_on_stock') then
       Params.Background := clYellow;
   end;
+  if (FieldName = 'type_of_item') then begin
+    if (Fr.GetValueS('id_item_estimate') = '') and (A.InArray(Fr.GetValueS('type_of_item'), ['о', 'от'])) then
+      Params.Font.Color := clRed;
+    if (Fr.GetValueS('type_of_item') = 'н') then
+      Params.Background := clRed;
+  end;
   if (FieldName = 'name') then begin
     var st := Fr.GetValueS('name');
     if (Trim(st) <> st) or (Pos('  ', st) > 0) then
