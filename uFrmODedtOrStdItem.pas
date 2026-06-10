@@ -123,6 +123,7 @@ function TFrmODedtOrStdItem.VerifyAdd(Sender: TObject; onInput: Boolean = False)
 var
   i, j: Integer;
 begin
+  Result := False;
   j := 0;
   for i := 0 to ComponentCount - 1 do
     if (Copy(Components[i].Name, 1, 6) = 'chb_r') and (TDBCheckBoxEh(Components[i]).Checked) then

@@ -198,6 +198,8 @@ create table estimates(
   has_influencing number(1) default 0,        --смета имеет влияющие на нее сметы
   dt_influencing_ready date,                  --дата, когда все влияющие подгружены, иначе нулл
   isempty number(1) default 0,                --признак того, что смета является пустой 
+  has_influencing number(1),                  --флаг, что смета имеет влияющие сметы 
+  dt_influencing_ready date,                  --проставляется, когда все влияющие сметы загружены 
   constraint pk_estimates primary key (id),
   constraint fk_estimates_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
   constraint fk_estimates_order_item foreign key (id_order_item) references order_items(id) on delete cascade
@@ -239,7 +241,7 @@ create table estimate_items(
   qnt1_itm number(15,5),                       --количество на одно изделие, по итм
   qnt_itm number(15,5),                        --количество на все изделия, по итм, только для заказов 
   qnt_itm_last number(15,5) default null,      --последнее переданное в итм количество по данной позиции, только для заказов
-  id_dependent_estimate number(11),            --ссылка на другую смету, которая использует данную позицию как вложенное изделие (заполняется автоматически) 
+  --id_dependent_estimate number(11),            --ссылка на другую смету, которая использует данную позицию как вложенное изделие (заполняется автоматически) не используем!!!
   deleted number(1) default 0,                 --признак, что данная позиция удалена (=1)
   constraint pk_estimate_items primary key (id),
   constraint fk_estimate_items_std foreign key (id_or_std_item) references or_std_items(id),
@@ -830,7 +832,132 @@ begin
 end;
 /
 
-create or replace view v_estimate as
+create or replace procedure p_test_estimate_item(
+  p_group_id    in  number,  --айди группы бкад
+  p_name        in  varchar2,--наименование  
+  p_group_std   in  number,  --айди группы стандартных изделий для родительской сметы 
+  p_result      out varchar2,--текст ошибки, первый символ (0 - некритическая, иначе критическая)  
+  p_id_std_item out number,  --айди стандартнорго изделия для данной позиции 
+  p_id_estimate out number   --айди сметы по данной позиции
+) is
+  v_is_prod      number(1);
+  v_is_semi      number(1);
+  v_cnt          number;
+  v_cnt2         number;
+  v_id_format    number;
+  v_id_std       number;
+begin
+  -- инициализация выходных параметров
+  p_result := '';
+  p_id_std_item := null;
+  p_id_estimate := null;
+
+  -- признак "изделие" и "полуфабрикат" по группе
+  select is_production, 0  --is_semiproduct
+    into v_is_prod, v_is_semi
+    from bcad_groups
+   where id = p_group_id;
+
+  -- проверка на изделие (type = 0, id_format <> 0)
+  select count(*), nvl(max(id_format), -1)
+    into v_cnt, v_id_format
+    from v_or_std_items
+   where fullname = p_name
+     and type = 0
+     and id_format <> 0;
+
+  if v_cnt <> 0 and v_is_prod = 0 then
+    p_result := '1-Данная позиция является изделием!';
+    return;
+  end if;
+
+  if v_cnt <> 0 and v_id_format <> p_group_std then
+    p_result := '1-изделие из этой группы недопустимо в этой смете!';
+    return;
+  end if;
+
+  -- проверка на полуфабрикат (type = 2)
+  select count(*), nvl(max(id_format), -1)
+    into v_cnt, v_id_format
+    from v_or_std_items
+   where fullname = p_name
+     and type = 2;
+
+  if v_cnt <> 0 and v_is_semi = 0 then
+    p_result := '1-Данная позиция является полуфабрикатом!';
+    return;
+  end if;
+
+  if v_cnt <> 0 and not (v_id_format = p_group_std or v_id_format = 1) then
+    p_result := '1-полуфабрикат из этой группы недопустим в этой смете!';
+    return;
+  end if;
+
+  -- если группа требует изделие или полуфабрикат, но их нет в справочнике
+  if (v_is_prod = 1 or v_is_semi = 1) and v_cnt = 0 then
+    p_result := '2-эту позицию необходимо внести в справочник стандартных изделий!';
+    return;
+  end if;
+
+  -- для изделия: проверка наличия сметы
+  if v_is_prod = 1 and v_cnt <> 0 then
+    select id into v_id_std
+      from v_or_std_items
+     where fullname = p_name
+       and rownum = 1;
+    p_id_std_item := v_id_std;
+    select count(*) into v_cnt2
+      from estimates
+     where id_std_item = v_id_std;
+    if v_cnt2 = 0 then
+      p_result := '3-К этому изделию должна быть подгружена смета!';
+      return;
+    else
+      -- найдём id_estimate (одну из смет, можно минимальную)
+      select min(id) into p_id_estimate
+        from estimates
+       where id_std_item = v_id_std;
+    end if;
+  end if;
+
+  -- для полуфабриката: аналогично
+  if v_is_semi = 1 and v_cnt <> 0 then
+    select id into v_id_std
+      from v_or_std_items
+     where fullname = p_name
+       and rownum = 1;
+    p_id_std_item := v_id_std;
+    select count(*) into v_cnt2
+      from estimates
+     where id_std_item = v_id_std;
+    if v_cnt2 = 0 then
+      p_result := '3-К этому полуфабрикату должна быть подгружена смета!';
+      return;
+    else
+      select min(id) into p_id_estimate
+        from estimates
+       where id_std_item = v_id_std;
+    end if;
+  end if;
+
+  -- если позиция — материал (не изделие и не полуфабрикат)
+  if v_is_prod = 0 and v_is_semi = 0 then
+    select count(*) into v_cnt2
+      from dv.nomenclatura
+     where name = p_name
+       and id_nomencltype = 0;
+    if v_cnt2 = 0 then
+      p_result := '0-Внимание! Этой позиции еще нет в базе ИТМ!';
+      return;
+    end if;
+  end if;
+
+  -- успех
+  p_result := '';
+end;
+/
+
+create or replace view v_estimate as  --!!!
 select
   ei.*,
   bn.name as bname,
@@ -849,7 +976,7 @@ select
   e.dt_influencing_ready,
   prc.price,
   ei.qnt1_itm * nvl(prc.price, 0) as sum1,
-  case when has_influencing = 0 then null when dt_influencing_ready is null then date '2000-01-01' else dt_influencing_ready end as dt_influencing,  
+  case when has_influencing = 0 then null when dt_influencing_ready is null then date '2000-01-01' else trunc(dt_influencing_ready) end as dt_influencing,  
   2 as cidsemiproduct,
   103 as cidkrep,
   104 as cidproduct,
@@ -886,28 +1013,33 @@ where
   e.name = n.name (+) 
 ;
 
+
 create or replace view v_estimate_for_edit_dlg as --!!!
 select
---вью для редактора сметы
+--вью для диалога редактирования сметы
   e.*,
-  case when e.id_or_std_item is not null then 1 else 0 end as is_std_item,
+  case
+    when e.id_or_std_item is null then null
+    when f.id = 0 then 'Н'
+    when f.type = 0 then 'П'
+    when f.type = 2 then 'ПФ'
+  end as type_of_item,
+  e2.id as id_item_estimate,
   n.artikul,
   s.qnt as qnt_on_stock
 from
-  v_estimate e,
-  dv.nomenclatura n,
-  v_spl_qntonstocks_sum_2 s
-where
-  e.name = n.name (+)
-  and e.name = s.name (+) 
+  v_estimate e
+  left join dv.nomenclatura n on n.name = e.name
+  left join v_spl_qntonstocks_sum_2 s on s.id_nomencl = n.id_nomencl
+  left join or_std_items si on si.id = e.id_or_std_item
+  left join or_format_estimates f on f.id = si.id_or_format_estimates
+  left join (
+    select min(id) as id, id_std_item
+    from v_estimate
+    group by id_std_item
+  ) e2 on e2.id_std_item = si.id
 ;
 
-alter table estimate_items drop column id_name_resale;
-
-
-select * from v_estimate where bname is null;
-select * from v_estimate where id = 115201;
-delete from estimate_items t where t.ID_NAME is null;
 
 create or replace view v_estimate_prices as select
   e.*,

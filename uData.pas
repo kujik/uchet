@@ -829,6 +829,7 @@ const
   myfrm_R_bCAD_Nomencl_SelMaterials='R_bCAD_Nomencl_SelMaterials';
   myfrm_R_OrderStdItems_SelSemiproduct='R_OrderStdItems_SelSemiproduct';
   myfrm_R_OrderStdItems_SelProdStdItem='R_OrderStdItems_SelProdStdItem';
+  myfrm_R_OrderStdItems_SelProdNStdItem='R_OrderStdItems_SelProdNStdItem';
 
   myfrm_R_Workers = 'myfrm_R_Workers';
   myfrm_R_Jobs = 'myfrm_R_Jobs';

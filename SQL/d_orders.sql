@@ -1225,57 +1225,6 @@ end;
 /
 
 
-/*
-create or replace view v_or_std_items as (
-  select
-    i.*,
-    fi.prefix,
-    fi.id_format,
-    fi.type,
-    fi.name as or_format_estimate_name,  
-    orf.name as or_format_name,
-    decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
-    --F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route,
-    F_OrItemRoute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
-    e.dt as dt_estimate,
-    prc.sum as priceraw,
-    prc.sum / 1.22 as priceraw_wo_nds,
---    ,rtrim(
---    (select 
---       regexp_replace(listagg(t.code || ', ') within group (order by t.pos), '([^\,]+)(\,\1)+', '\1' )
---       from ((select i.id_or_std_item, t.code, t.pos from work_cell_types t, or_std_item_route i where t.id = i.id_work_cell_type)) t
---       where id_or_std_item = i.id
---    ), ', ') as route,
-    --процент стоимости материалов
-    case when nvl(i.price, 0) = 0 then null else round(nvl(decode(i.price_check, null, prc.sum / 1.22, i.price_check), 0) / nvl(i.price, 0) * 100, 2) end as material_percent,
-    fi.is_semiproduct,
-    i0.labor_intensity as labor_intensity_0,
-    i0.labor_cost as labor_cost_0,
-    --процент стоимости работы
-    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_0,
-    i2.labor_intensity as labor_intensity_2,
-    i2.labor_cost as labor_cost_2,
-    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2
---    case when nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) = 0 then null else round(i2.labor_cost / nvl(decode(i.price_check, null, prc.sum, i.price_check), 0) * 100, 2) end as labor_percent_2 
-  from
-    or_std_items i,
-    estimates e,
-    or_format_estimates fi,
-    or_formats orf,
-    v_fin_stditem_raw_prices prc,
-    v_or_std_labor_intensity i0,
-    v_or_std_labor_intensity i2
-  where
-   i.id = e.id_std_item (+)
-   and orf.id = fi.id_format 
-   and i.id_or_format_estimates = fi.id
-   and prc.id(+) = i.id
-   and i0.id = i.id and i0.id_area = 0
-   and i2.id = i.id and i2.id_area = 2
-);   
-*/
-
-
 create or replace view v_or_std_items as 
   select
   --вью для справочника стандартныых изделий
