@@ -55,7 +55,7 @@ create table order_plans (
 );  
 
 
---create or replace view v_order_finreport_1 as
+create or replace view v_order_finreport_1 as
 select
 --список изделий заказов, принятых на сгп за заданный период, 
 --суммы изделий (без д/к), с учетом скидок по заказу, за вычетом ндс,
@@ -437,14 +437,12 @@ end f_get_stditem_raw_price;
 /
 
 create or replace function f_get_order_item_raw_price(
+--возвращает стоимость по смете позиции в заказе (на все количество изделий, по количеству в итм
   p_id in number,
   depth in number default 1
 ) return number is
   lsum number := 0;
-  v_child_id number;
-  v_qnt1_itm number;
   v_order_qnt number;
-  v_name varchar2(1000);
   c_max_depth constant number := 10;
 begin
   -- защита от бесконечной рекурсии
@@ -454,98 +452,92 @@ begin
 
   -- получаем количество заказанных изделий
   begin
-    select oi.qnt
-    into v_order_qnt
-    from order_items oi
-    where oi.id = p_id;
+    select oi.qnt into v_order_qnt
+      from order_items oi
+     where oi.id = p_id;
   exception
     when no_data_found then
       return 0;
   end;
 
-  -- если количество равно нулю, сразу выходим
   if v_order_qnt = 0 then
     return 0;
   end if;
 
-  -- получаем данные из сметы: наименование номенклатуры, количество на изделие
-  begin
-    select 
+  -- перебираем все позиции сметы, связанной с данным order_item
+  for rec in (
+    select
       b.name,
       ei.qnt1_itm
-    into 
-      v_name,
-      v_qnt1_itm
-    from 
+    from
       order_items oi,
       estimates e,
       estimate_items ei,
       bcad_nomencl b
-    where 
+    where
       oi.id = p_id
       and e.id_order_item = oi.id
       and ei.id_estimate = e.id
       and b.id = ei.id_name
-      and rownum = 1;
-  exception
-    when no_data_found then
-      return 0;  -- нет сметы – стоимость 0
-  end;
-
-  -- проверяем, не является ли данная номенклатура стандартным изделием (вложенным)
-  begin
-    select i2.id
-    into v_child_id
-    from or_std_items i2, or_format_estimates fi2
-    where i2.id_or_format_estimates = fi2.id (+)
-      and ((case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = v_name
-           or i2.name = v_name)
-      and rownum = 1;
-
-    -- рекурсивный вызов для вложенного изделия (защита от самоцитирования)
-    if v_child_id is not null and v_child_id != p_id then
-      lsum := v_qnt1_itm * v_order_qnt * f_get_stditem_raw_price(v_child_id, depth + 1);
-    else
-      lsum := 0;
-    end if;
-  exception
-    when no_data_found then
-      -- не изделие – берём цену из последнего поступления (stock)
-      declare
-        v_price number;
-        v_qty   number;
-        v_nom_id number;
+  )
+  loop
+    declare
+      v_child_id number;
+      v_std_price number;
+      v_nom_id number;
+      v_price number;
+      v_qty number;
+    begin
+      -- проверяем, не является ли данная номенклатура стандартным изделием (вложенным)
       begin
-        select n.id_nomencl
-        into v_nom_id
-        from dv.nomenclatura n
-        where n.name = v_name
-          and rownum = 1;
-
-        select summa, quantity
-        into v_price, v_qty
-        from (
-          select summa, quantity
-          from dv.stock
-          where doctype = 1
-            and id_nomencl = v_nom_id
-          order by stockdate desc
-        )
-        where rownum = 1;
-
-        lsum := v_qnt1_itm * v_order_qnt * nvl(round(v_price / (case when nvl(v_qty, 1) = 0 then 1 else v_qty end), 2), 0);
+        select i2.id
+          into v_child_id
+          from or_std_items i2, or_format_estimates fi2
+         where i2.id_or_format_estimates = fi2.id (+)
+           and ((case when fi2.id = 0 then '' else fi2.prefix || '_' end) || i2.name = rec.name
+                or i2.name = rec.name)
+           and rownum = 1;
       exception
         when no_data_found then
-          lsum := 0;
+          v_child_id := null;
       end;
-  end;
+
+      if v_child_id is not null then
+        -- рекурсивный вызов для вложенного стандартного изделия
+        v_std_price := f_get_stditem_raw_price(v_child_id, depth + 1);
+        lsum := lsum + v_order_qnt * rec.qnt1_itm * nvl(v_std_price, 0);
+      else
+        -- не изделие – берём цену из последнего поступления (stock)
+        begin
+          select n.id_nomencl into v_nom_id
+            from dv.nomenclatura n
+           where n.name = rec.name
+             and rownum = 1;
+
+          select summa, quantity into v_price, v_qty
+            from (
+              select summa, quantity
+                from dv.stock
+               where doctype = 1
+                 and id_nomencl = v_nom_id
+               order by stockdate desc
+            )
+           where rownum = 1;
+
+          lsum := lsum + v_order_qnt * rec.qnt1_itm * nvl(round(v_price / (case when nvl(v_qty, 1) = 0 then 1 else v_qty end), 2), 0);
+        exception
+          when no_data_found then
+            null; -- если нет поступлений, не добавляем стоимость
+        end;
+      end if;
+    end;
+  end loop;
 
   return round(lsum, 2);
 end f_get_order_item_raw_price;
 /
 
-
-
+oi 528853  si 8911
 
 
 

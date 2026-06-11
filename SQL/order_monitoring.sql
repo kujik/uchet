@@ -2,7 +2,7 @@
 -- финансовый отчет по запущенным за прошлый день заказам
 --------------------------------------------------------------------------------
 
-select * from v_orders_fin_monitoring;
+select * from v_orders_fin_monitoring where order_type = -1 and sum0 <> sum000;
 create or replace view v_orders_fin_monitoring as 
 select
 --финансовый отчет по запущенным за вчерашний день заказам
@@ -21,6 +21,7 @@ select
   t.priceraw_wo_nds,
   round(t.price * t.qnt, 2) as summ,
   t.sum0,
+  t.sum000,
   t.labor_intensity_0,
   t.labor_cost_0,
   t.labor_intensity_2,
@@ -29,7 +30,8 @@ select
   case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end as sum0_percent,
   case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end as labor_cost_0_percent,
   case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end as labor_cost_2_percent,
-  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent
+  case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + labor_cost_2) / (t.price * t.qnt) * 100, 1) end as prime_cost_percent,
+  t.item_wo_estimate
 from (  
 select
   decode(oi.id_organization, -1, -1, 0) as order_type,
@@ -42,11 +44,13 @@ select
   sum(oi.qnt) as qnt,
   round(oi.cost_wo_nds / oi.qnt, 0) as price,
   max(si.priceraw_wo_nds) as priceraw_wo_nds,
-  sum(round(oi.sum0 / 1.22, 0)) as sum0,
+  sum(round(oi.sum0 / 1.22, 0)) as sum000,
+  sum(round(si.priceraw_wo_nds * oi.qnt, 0)) as sum0,
   sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
   sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
   sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
-  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2
+  sum(si.labor_cost_2 * oi.qnt) as labor_cost_2,
+  max(case when nvl(si.dt_influencing, date '1900-01-01') = date '2000-01-01' then '!!!' else ' ' end) as item_wo_estimate
 from
   v_order_items oi,
   v_or_std_items si

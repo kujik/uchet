@@ -177,7 +177,7 @@ begin
   end;
   if (Mode = fEdit) then begin
     //утсановим в шаблонах цену и маршрут изделий, соответствующих данному
-    var FieldsArr: TVarDynArray := ['price', 'price_pp', 'r0'];
+    var FieldsArr: TVarDynArray := ['price$f', 'price_pp$f', 'r0$i'];
     for i := 0 to High(RouteFields) do
       FieldsArr := FieldsArr + ['r' + IntToStr(i + 1)];
     var FiealdsVal: TVarDynArray := [];
