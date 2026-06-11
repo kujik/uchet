@@ -40,7 +40,8 @@ select
   listagg(oi.customer, ', ') within group (order by oi.ornum) as customer,
   si.fullname,
   --цена по справочнику изделий без ндс (она там с ндс для отгрузочных и без - для производственных)
-  max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
+  --max(round(case when oi.id_organization <> -1 then si.price / 1.22 else si.price end)) as price_std,
+  max(si.price / 1.22) as price_std,
   sum(oi.qnt) as qnt,
   round(oi.cost_wo_nds / oi.qnt, 0) as price,
   max(si.priceraw_wo_nds) as priceraw_wo_nds,
@@ -65,6 +66,7 @@ order by
   si.fullname
 ) t    
 ;
+
 
 create or replace view v_orders_fin_monitoring_all as 
 select

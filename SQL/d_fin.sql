@@ -93,8 +93,8 @@ from
     where 
       i1.qnt <> 0 and
       id_stage = 2 and nvl(i1.sgp, 0) <> 1 and i1.id = s1.id_order_item and o1.id = i1.id_order 
---      and s1.dt >= sys_context('context_uchet22','order_finreport_dtbeg') and s1.dt <= sys_context('context_uchet22','order_finreport_dtend')
-      and s1.dt >= date '2026-06-01' and s1.dt < date '2026-07-01'
+      and s1.dt >= sys_context('context_uchet22','order_finreport_dtbeg') and s1.dt <= sys_context('context_uchet22','order_finreport_dtend')
+ --     and s1.dt >= date '2026-06-01' and s1.dt < date '2026-07-01'
     group by id_order_item
   ) s,
   order_items i,
