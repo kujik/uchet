@@ -1276,10 +1276,10 @@ begin
       Exit;
     sh := XlsFile.Workbook.Worksheets[0];
     for i := 2 to 2000 do begin
-      if (sh.Cells[1 - 1, i].Value.AsString = '') and (sh.Cells[2 - 1, i].Value.AsString = '') then
+      if (sh.Cells[1 - 1, i].Value.AsString = '') or (S.ToLower(sh.Cells[1 - 1, i].Value.AsString) = 'итого:') then
         Break;
-      if (sh.Cells[4 - 1, i].Value.AsString = '') then
-        Continue;
+   //   if (sh.Cells[4 - 1, i].Value.AsString = '') then
+   //     Continue;
    {   if (High(ArXls) > 0) and (sh.Cells[2 - 1, i].Value.AsString = ArXls[High(ArXls) - 1][0]) and ((sh.Cells[3 - 1, i].Value.AsString = '') or (ArXls[High(ArXls) - 1][1] = '')) then begin
         if sh.Cells[3 - 1, i].Value.AsString <> '' then
           ArXls[High(ArXls) - 1][1] := sh.Cells[3 - 1, i].Value.AsString;
@@ -1289,7 +1289,8 @@ begin
           ArXls[High(ArXls) - 1][3] := sh.Cells[6- 1, i].Value.AsString;
       end
       else  }
-        ArXls := ArXls + [[sh.Cells[1 - 1, i].Value.AsString, sh.Cells[4 - 1, i].Value.AsString, sh.Cells[11 - 1, i].Value.AsFloat]];
+        //фио, табельный номер, выплата
+        ArXls := ArXls + [[sh.Cells[1 - 1, i].Value.AsString, sh.Cells[3 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsFloat]];
     end;
     sh.Free;
     XlsFile.Free;

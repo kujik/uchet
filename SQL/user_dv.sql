@@ -1,3 +1,10 @@
+--открыть pdb
+ALTER PLUGGABLE DATABASE main OPEN;
+--автозапуск 
+ALTER PLUGGABLE DATABASE main SAVE STATE;
+--переключаемся
+ALTER SESSION SET CONTAINER = main;
+
 --create user DV identified by DV default tablespace users temporary tablespace temp;
 DROP USER DV CASCADE;
 
@@ -40,5 +47,12 @@ ALTER USER DV QUOTA UNLIMITED ON USERS;
 GRANT EXECUTE ON SYS.DBMS_CRYPTO TO DV;
 GRANT EXECUTE ON SYS.DBMS_SESSION TO DV;
 
-CREATE DIRECTORY dump_dir AS 'D:\orracle\dumps';
+CREATE DIRECTORY dump_dir AS '/home/orracle/dumps';
+GRANT READ, WRITE ON DIRECTORY dump_dir TO dv;
 GRANT READ, WRITE ON DIRECTORY dump_dir TO system;
+
+
+-- Даем права на чтение/запись в каталог, откуда будет читаться дамп
+--CREATE DIRECTORY data_pump_dir AS '\home\orracle\data_pump_dir';
+GRANT READ, WRITE ON DIRECTORY data_pump_dir TO dv;
+SELECT directory_path FROM dba_directories WHERE directory_name = 'DATA_PUMP_DIR';

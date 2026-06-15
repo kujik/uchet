@@ -1,21 +1,28 @@
 inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   Caption = 'FrmWGedtPayrollTransfer'
-  ExplicitWidth = 812
-  ExplicitHeight = 575
+  ExplicitWidth = 804
+  ExplicitHeight = 573
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    ExplicitHeight = 519
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 786
+      ExplicitWidth = 778
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 776
+        ExplicitWidth = 768
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
+          ExplicitWidth = 766
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
+              Width = 758
+              Height = 336
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
+            end
+            inherited pnlStatusBar: TPanel
+              Top = 337
+              Width = 758
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -33,15 +40,19 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 786
+        ExplicitWidth = 778
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          ExplicitWidth = 776
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
+              Width = 768
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
               end
+            end
+            inherited pnlStatusBar: TPanel
+              Width = 768
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -64,6 +75,7 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   end
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
+      Left = 719
       Height = 14
     end
     inherited lblStatusBarL: TLabel
