@@ -64,7 +64,7 @@ update adm_error_log set pictc = null;
 /*
 янапюрэ ярюрхярхйс он яуеле
 */
-exec dbms_stats.gather_schema_stats('UCHET22');
+exec dbms_stats.gather_schema_stats('DV');
 
 /*
 оепемйнлохкхпнбюрэ мебюкхдмше назейрш яуелш

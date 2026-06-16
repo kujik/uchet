@@ -929,8 +929,13 @@ with
       i.id,
       f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route_val
     from order_items i
+  ),
+  nomencl_uniq as (
+    select name, min(artikul) as artikul
+    from dv.nomenclatura
+    group by name
   )
-select
+  select
   i.*,
   o.ornum,
   o.id_organization,
@@ -963,7 +968,7 @@ select
   case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
   nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
   cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total,
-  n.artikul as article
+  n2.artikul as article
 from
   order_items i,
   orders o,
@@ -976,8 +981,8 @@ from
   estimates es,
   dv.nomenclatura n,
   niz_agg niz,
-  routes r
-  --dv.nomenclatura n2
+  routes r,
+  nomencl_uniq n2
 where
   i.id_order = o.id
   and ob.ornum (+) = o.or_reference
@@ -990,7 +995,7 @@ where
   and i.id_itm = n.id_nomencl (+)
   and i.id_itm = niz.id_nomizdel_parent_t (+)
   and r.id (+) = i.id
-  --and n2.name (+) = case when ee.id > 0 then ee.prefix || '_' else '' end || s.name
+  and n2.name (+) = s.name
 ;
 
 select ornum, article from v_order_items where article is not null order by dt_beg desc; 
