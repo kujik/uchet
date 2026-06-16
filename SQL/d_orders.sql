@@ -836,7 +836,7 @@ begin
 end;
 /
 
-
+/*
 create or replace view v_order_items as 
 with
 --вью изделии в заказах
@@ -913,8 +913,87 @@ where
   and i.id_itm = niz.id_nomizdel_parent_t (+)
   and r.id (+) = i.id
 ;
+*/
 
+create or replace view v_order_items as
+with
+  -- агрегация по входящим изделиям
+  niz_agg as (
+    select id_nomizdel_parent_t, count(*) as cnt
+    from dv.nomenclatura_in_izdel
+    group by id_nomizdel_parent_t
+  ),
+  -- маршруты для каждого id
+  routes as (
+    select
+      i.id,
+      f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route_val
+    from order_items i
+  )
+select
+  i.*,
+  o.ornum,
+  o.id_organization,
+  o.area,
+  rc.name as customer,
+  o.project,
+  o.or_reference,
+  ob.dt_beg as ref_dt_beg,
+  ob.dt_otgr as ref_dt_otgr,
+  o.ornum || '_' || substr('000000' || i.pos, -3) as slash,
+  o.id_itm as id_order_itm,
+  o.sync_with_itm,
+  o.dt_beg,
+  o.dt_end,
+  o.dt_otgr,
+  o.path,
+  o.in_archive,
+  uk.name as kns,
+  ut.name as thn,
+  s.name as itemname,
+  case when ee.id > 0 then ee.prefix else '' end as prefix,
+  case when ee.id > 0 then ee.prefix || '_' else '' end || s.name as fullitemname,
+  r.route_val as route,
+  r.route_val as route2,
+  es.dt as dt_estimate,
+  f_get_order_item_raw_price(i.id) as sum0,
+  (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
+   round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
+  niz.cnt as has_itm_est,
+  case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
+  nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
+  cast(decode(nvl(i.labor_intensity, -1), -1, null, i.labor_intensity * i.qnt) as number) as labor_intensity_total,
+  n.artikul as article
+from
+  order_items i,
+  orders o,
+  orders ob,
+  ref_customers rc,
+  or_std_items s,
+  or_format_estimates ee,
+  adm_users uk,
+  adm_users ut,
+  estimates es,
+  dv.nomenclatura n,
+  niz_agg niz,
+  routes r
+  --dv.nomenclatura n2
+where
+  i.id_order = o.id
+  and ob.ornum (+) = o.or_reference
+  and rc.id (+) = o.id_customer
+  and i.id_std_item = s.id (+)
+  and s.id_or_format_estimates = ee.id (+)
+  and i.id_kns = uk.id (+)
+  and i.id_thn = ut.id (+)
+  and i.id = es.id_order_item (+)
+  and i.id_itm = n.id_nomencl (+)
+  and i.id_itm = niz.id_nomizdel_parent_t (+)
+  and r.id (+) = i.id
+  --and n2.name (+) = case when ee.id > 0 then ee.prefix || '_' else '' end || s.name
+;
 
+select ornum, article from v_order_items where article is not null order by dt_beg desc; 
 select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY'); 
 
 --update order_items i set qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill) where i.id_order = 10;  

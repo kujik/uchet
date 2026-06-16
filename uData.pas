@@ -1189,6 +1189,7 @@ const
   mbtPremiumForPeriod = 108;
   mbtCommentForWorker =109;
   ghtNightWork = 110;
+  mbtPrintPassport2 = 111;
 
 
 
@@ -1298,12 +1299,13 @@ const
   mybtCustom_RepOrStDItemsErr: TmybtRec = (Bt: mbtCustom_RepOrStDItemsErr; Pict: ''; Caption: 'Найти ошибки'; hint: '');
   mybtCopyEstimate: TmybtRec = (Bt: mbtCopyEstimate; Pict: 'up'; Caption: 'Скопировать смету в буфер'; hint: '');
   mybtPasteEstimate: TmybtRec = (Bt: mbtPasteEstimate; Pict: 'down'; Caption: 'Вставить смету из буфера'; hint: '');
+  mybtPrintPassport2: TmybtRec = (Bt: mbtPrintPassport2; Pict: 'print'; Caption: 'Печать паспорта заказа (с артикулами)'; hint: '');
   mybt1: TmybtRec = (Bt: 1; Pict: ''; Caption: ''; hint: '');
 
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 104] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 105] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1412,6 +1414,7 @@ const
   (Bt: mbtPremiumForPeriod; Pict: ''; Caption:  'Премия за период'; hint: ''),
   (Bt: mbtCommentForWorker; Pict: ''; Caption:  'Комментарий по работнику'; hint: ''),
   (Bt: ghtNightWork; Pict: ''; Caption:  'Ночная смена'; hint: ''),
+  (Bt: mbtPrintPassport2; Pict: 'print'; Caption: 'Печать паспорта заказа (с артикулами)'; hint: ''),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')

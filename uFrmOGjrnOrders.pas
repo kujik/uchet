@@ -63,7 +63,8 @@ uses
   uFrmXDedtGridFilter,
   uFrmBasicInput,
   uFrmODEdtInputOrderAccount,
-  uFrmXDinputPwd
+  uFrmXDinputPwd,
+  uFrmChooseDialog
   ;
 
 
@@ -165,7 +166,7 @@ begin
    [-1005, True, 'Просмотр выбранных по слешам'],
    [],
    [mbtTest, User.IsDeveloper],
-   [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintLabels], [mbtDividorM], [],
+   [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintPassport2], [mbtPrintLabels], [mbtDividorM], [],
    [mbtGridFilter], [], [mbtGridSettings], [], [mbtCtlPanel]
   ]);
   Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
@@ -296,7 +297,11 @@ begin
       else Wh.ExecReference(myfrm_R_AggEstimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], va1);
   end
   else if Tag = mbtPrintPassport then begin
-    PrintReport.pnl_Order(Fr.ID);
+    PrintReport.pnl_Order(0, Fr.ID);
+  end
+  else if Tag = mbtPrintPassport2 then begin
+    //печать ПЗ с артикулами
+    PrintReport.pnl_Order(1, Fr.ID);
   end
   else if (Tag = mbtCustom_OrderFromTemplate) then begin
     //заказ из шаблона

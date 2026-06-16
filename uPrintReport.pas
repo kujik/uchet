@@ -138,7 +138,7 @@ type
     procedure D_Turvl;
     procedure pnl_OrderLabels(Id: Integer; MemTableEh1: TMemTableEh; OrderFields: TVarDynArray);
     procedure D_OrderLabels;
-    procedure pnl_Order(Id: Integer);
+    procedure pnl_Order(Mode: Integer; Id: Integer);
     procedure pnl_PayrollLabels(MemTableEh1:TMemTableEh);
     //печать сметы;  1-смета на стд изделие или позицию заказа; 2 - объединенная смета
     procedure pnl_Estimate(MemTableEh1:TMemTableEh; Mode: Integer);
@@ -393,19 +393,19 @@ st:=MemTableEh1.FieldByName('qnt_p').AsString;
   end;
 end;
 
-procedure TPrintReport.pnl_Order(Id: Integer);
+procedure TPrintReport.pnl_Order(Mode: Integer; Id: Integer);
 //печать паспорта заказа, на основе даннх из БД
 begin
   try
   frxDsB.DataSet:=frxQB;
   frxDsT.DataSet:=frxQT;
-  frxReport1.LoadFromFile(GetReportFileFr3('ПЗ'), True);
+  frxReport1.LoadFromFile(GetReportFileFr3(S.Decode([Mode, 1, 'ПЗ с артикулами', 'ПЗ'])), True);
   frxQB.Sql.Text:=
     'select '+
     'ornum, area_short, typename, or_reference, project, customer, address, customerlegal, customerman, account, organization, customercontact, dt_beg, dt_otgr, dt_montage_beg, managername, comm '+
     'from v_orders where id = :id';
   frxQB.Parameters.ParamByName('id').Value:=Id;
-  frxQT.Sql.Text:='select pos, slash, itemname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, r8, r9, resale, kns, thn, comm, disassembled, control_assembly from v_order_items where id_order = :id_order and qnt > 0 order by pos';
+  frxQT.Sql.Text:='select pos, slash, article, itemname, qnt, std, nstd, sgp, r1, r2, r3, r4, r5, r6, r7, r8, r9, resale, kns, thn, comm, disassembled, control_assembly from v_order_items where id_order = :id_order and qnt > 0 order by pos';
   frxQT.Parameters.ParamByName('id_order').Value:=Id;
   if DesignReport
     then frxReport1.DesignReport
