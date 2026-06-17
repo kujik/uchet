@@ -19,13 +19,16 @@ begin
   );
 end;
 /
-  
+
+--------------------------------------------------------------------------------
+--заполение таблицы финансовых параметров запущенных вчера заказов  
 begin
   dbms_scheduler.drop_job('vm_orders_fin_monitoring_job');
   dbms_scheduler.create_job (
     job_name        => 'vm_orders_fin_monitoring_job',
     job_type        => 'plsql_block',
-    job_action      => 'begin dbms_mview.refresh(''vm_orders_fin_monitoring'', ''c''); end;',
+    --job_action      => 'begin dbms_mview.refresh(''vm_orders_fin_monitoring'', ''c''); end;',
+    job_action      => 'begin p_insert_orders_fin_monitoring; end;',
     --start_date      => trunc(systimestamp) + 5/24 + 18/(24*60),  
     repeat_interval => 'freq=daily; byhour=2; byminute=05; bysecond=0;', 
     enabled         => true,

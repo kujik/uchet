@@ -80,6 +80,7 @@ const
   TASK_MAILING_ATTACH_THN = 5;
   TASK_MAILING_ORDERS_FIN = 6;
   TASK_MAILING_MONITORING_SN = 7;
+  TASK_MAILING_EARLY_COMPLETION_ACTS = 8;
   //пользователь (подпись) для служебных почтовых рассылок
   TASK_DEFAULT_SENDER = 'Учёт';
 

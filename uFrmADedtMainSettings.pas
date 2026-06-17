@@ -33,8 +33,9 @@ type
     nedt_payrolls: TDBNumberEditEh;
     edt_mailing_order_fin: TDBEditEh;
     edt_mailing_sn: TDBEditEh;
+    edt_mailing_early_acts: TDBEditEh;
   private
-    MI1, MI2, MI3, MI4, MI5, MI6, MI7: TMailingInterface;
+    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8: TMailingInterface;
     function Prepare: Boolean; override;
     function LoadComboBoxes: Boolean; override;
     procedure VerifyBeforeSave; override;
@@ -64,6 +65,8 @@ begin
   MI6.Load;
   MI7:=TMailingInterface.Create(Self, edt_mailing_sn, 7, '*', True);
   MI7.Load;
+  MI8:=TMailingInterface.Create(Self, edt_mailing_early_acts, 8, '*', True);
+  MI8.Load;
   Result := True;
 end;
 
@@ -108,6 +111,7 @@ begin
   MI5.Save;
   MI6.Save;
   MI7.Save;
+  MI8.Save;
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
 end;

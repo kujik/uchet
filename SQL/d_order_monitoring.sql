@@ -1,3 +1,399 @@
+/*
+
+финансовый мониторинг заказов.
+
+формируется почтовая рассылка с финансовыми показателями запущенных за вчерашний день заказов.
+первоначально эти данные сохраняются в таблиицу orders_fin_monitoring в 23ч каждого дня
+по заданbю шедулера в бд.
+
+в отчете выводятся изделия запущенных за день заказов, сгруппированные по сумме продажи.
+
+в программе можно посмотреть сохраненные данные (суммы будут такими, какими были за день создания)
+за любой день из сохраненных.
+
+также предусмотрен отчет по изделиям заказов, запущенным ранее, но у которых не было хотя
+бы одной сметы в цепочке, и для которых в данный день появились все сметы.
+
+также предусмотрен отчет по всем изделиям выбранного заказа. 
+
+*/
+
+--------------------------------------------------------------------------------
+-- таблицца с финансовыми данными по заказам
+-- все суммы и цены без ндс
+alter table orders_fin_monitoring add dt date;
+create table orders_fin_monitoring (
+  id number(11),                        --айди
+  dt date,                              --дата внесения записи
+  data_type number,                     --1 - данные по запущенным заказам, 2 - данныые по заказам, по которым появились сметы 
+  dt_beg date,                          --дата внесения записи 
+  order_type    number,                 --тип заказа, -1 П, 0 - О
+  id_order_items varchar2(4000),
+  ornums        varchar2(4000),         --номера заказов для данной строки сгруппированных изделий, через разделитель 
+  customer      varchar2(4000),         --покупатели, через разделитель     
+  fullname      varchar2(1000),         --наименование изделия 
+  qnt           number,                 --суммарное количество изделий с учетом группировки
+  price         number,                 --продажная цена (по ней группировка)
+  price_std     number,                 --продажная цена из справочника стандартных изделий
+  price_diff    number,                 --разница реальной продажной со справочником
+  summ          number,                 --сумма по продаже
+  sum0          number,                 --сумма по закупке (себестоимость), на основании смет по изделиям в заказе
+  priceraw_wo_nds number,               --цена по закупке (сейчас на основании сметы стандартного изделия)
+  labor_intensity_0 number,             --трудоемкость ПЩ, мин (сумма)
+  labor_cost_0     number,              --трудоемкость ПЩ, руб (сумма)
+  labor_intensity_2 number,
+  labor_cost_2     number,
+  prime_cost       number,              --себестоимость (сумма сырья + стоимость работы)
+  sum0_percent     number,              --проценты в продажной сумме
+  labor_cost_0_percent number,
+  labor_cost_2_percent number,
+  prime_cost_percent   number,          --общая доля всех расходов, %
+  item_wo_estimate number,              --признак отсутствия сметы
+  comm varchar2(4000),                  --комментарий (вводится в отчете)
+  attentions varchar2(4000)             --выделение ячеек (вводится в отчете)  
+);
+
+create global temporary table temp_orders_fin_monitoring (
+  order_type     number,
+  dt_beg         date,
+  ornums         varchar2(4000),
+  customer       varchar2(4000),
+  fullname       varchar2(1000),
+  qnt            number,
+  price          number,
+  price_std      number,
+  price_diff     number,
+  priceraw_wo_nds number,
+  summ           number,
+  sum0           number,
+  labor_intensity_0 number,
+  labor_cost_0     number,
+  labor_intensity_2 number,
+  labor_cost_2     number,
+  prime_cost       number,
+  sum0_percent     number,
+  labor_cost_0_percent number,
+  labor_cost_2_percent number,
+  prime_cost_percent   number,
+  item_wo_estimate number,
+  id_order_items   varchar2(4000),
+  data_type        number,
+  dt               date
+) on commit preserve rows;
+
+create sequence sq_orders_fin_monitoring start with 1 nocache;
+
+create or replace trigger trg_orders_fin_monitoring_bi_r
+  before insert on orders_fin_monitoring for each row
+begin
+  :new.id := sq_orders_fin_monitoring.nextval;
+end;
+/
+
+--таблица, содержащая (накапливающая) айди изделий в заказах, по котоорым
+--не загружены все сметы. в день, когда смета загружена, проставляется поле dt 
+--drop  table order_items_wo_estimate;
+create table order_items_wo_estimate (
+  id_order_item number(11) unique,
+  dt date,
+  constraint fk_order_items_wo_estimate foreign key (id_order_item) references order_items(id)
+);  
+
+------------------------------------------------------------------------------------
+-- Процедуры заполениния таблиц финансового мониторинга (работает по расписанию в бд 
+------------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+--вспомогательная процедура вставки агрегированных данных
+create or replace procedure p_insert_fin_monitoring_data(
+  p_dt             in date,
+  p_data_type      in number,
+  p_use_wo_list    in number,
+  p_id_order       in number default null,
+  p_dt_beg_from    in date   default null,
+  p_dt_beg_to      in date   default null,
+  p_filter_dt_end_zero in number default 0
+) is
+  v_dt date := trunc(p_dt);
+  v_target_table varchar2(30);
+  v_where_clause varchar2(4000);
+  v_sql varchar2(4000);
+  v_delete_sql varchar2(4000);
+  v_use_temp boolean := false;
+begin
+  -- определяем режим
+  if (p_id_order is not null) or
+     (p_dt_beg_from is not null) or
+     (p_dt_beg_to is not null) or
+     (p_filter_dt_end_zero = 1) then
+    v_use_temp := true;
+  end if;
+
+  if v_use_temp then
+    v_target_table := 'temp_orders_fin_monitoring';
+    -- удаляем старые записи по dt (data_type не используется)
+    v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt';
+    execute immediate v_delete_sql using v_dt;
+  else
+    v_target_table := 'orders_fin_monitoring';
+    -- удаляем старые записи по dt и data_type
+    v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt and data_type = :dt_type';
+    execute immediate v_delete_sql using v_dt, p_data_type;
+  end if;
+
+  -- формируем условие WHERE
+  if v_use_temp then
+    -- режим фильтрации
+    v_where_clause := '1=1';
+    if p_id_order is not null then
+      v_where_clause := v_where_clause || ' and oi.id_order = :id_order';
+    end if;
+    if p_dt_beg_from is not null then
+      v_where_clause := v_where_clause || ' and oi.dt_beg >= :dt_beg_from';
+    end if;
+    if p_dt_beg_to is not null then
+      v_where_clause := v_where_clause || ' and oi.dt_beg <= :dt_beg_to';
+    end if;
+    if p_filter_dt_end_zero = 1 then
+      v_where_clause := v_where_clause || ' and oi.dt_end is null';
+    end if;
+  else
+    -- стандартный режим
+    if p_use_wo_list = 0 then
+      v_where_clause := 'oi.dt_beg = :dt';
+      --return;
+    else
+      v_where_clause := 'oi.id in (select id_order_item from order_items_wo_estimate where dt is null)';
+    end if;
+  end if;
+
+  -- собираем основной INSERT
+  v_sql := '
+    insert into ' || v_target_table || ' (
+      order_type,
+      dt_beg,
+      ornums,
+      customer,
+      fullname,
+      qnt,
+      price,
+      price_std,
+      price_diff,
+      priceraw_wo_nds,
+      summ,
+      sum0,
+      labor_intensity_0,
+      labor_cost_0,
+      labor_intensity_2,
+      labor_cost_2,
+      prime_cost,
+      sum0_percent,
+      labor_cost_0_percent,
+      labor_cost_2_percent,
+      prime_cost_percent,
+      item_wo_estimate,
+      id_order_items,
+      data_type,
+      dt
+    )
+    select
+      t.order_type,
+      t.dt_beg,
+      t.ornums,
+      t.customer,
+      t.fullname,
+      t.qnt,
+      t.price,
+      t.price_std,
+      case when t.price_std > t.price then t.price - t.price_std else null end,
+      t.priceraw_wo_nds,
+      round(t.price * t.qnt, 2),
+      t.sum0,
+      t.labor_intensity_0,
+      t.labor_cost_0,
+      t.labor_intensity_2,
+      t.labor_cost_2,
+      t.sum0 + t.labor_cost_0 + t.labor_cost_2,
+      case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end,
+      case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end,
+      case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
+      case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
+      t.item_wo_estimate,
+      t.id_order_items_str,
+      :dt_type,
+      :dt
+    from (
+      select
+        decode(oi.id_organization, -1, -1, 0) as order_type,
+        max(oi.dt_beg) as dt_beg,
+        listagg(oi.ornum, '', '') within group (order by oi.ornum) as ornums,
+        listagg(oi.customer, '', '') within group (order by oi.ornum) as customer,
+        si.fullname,
+        max(si.price / 1.22) as price_std,
+        sum(oi.qnt) as qnt,
+        round(oi.cost_wo_nds / oi.qnt, 0) as price,
+        max(si.priceraw_wo_nds) as priceraw_wo_nds,
+        sum(round(oi.sum0 / 1.22, 0)) as sum0,
+        sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
+        sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
+        sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
+        sum(si.labor_cost_2 * oi.qnt) as labor_cost_2,
+        max(case when (nvl(oi.wo_estimate, 0) <> 0) and (nvl(si.dt_influencing, date ''1900-01-01'') = date ''2000-01-01'' or e.id is null) then 1 else 0 end) as item_wo_estimate,
+        listagg(oi.id, '', '') within group (order by oi.id) as id_order_items_str
+      from
+        v_order_items oi,
+        v_or_std_items si,
+        estimates e
+      where
+        oi.id_std_item = si.id
+        and oi.id = e.id_order_item (+)
+        and oi.qnt <> 0
+        and ' || v_where_clause || '
+      group by
+        si.fullname,
+        round(oi.cost_wo_nds / oi.qnt, 0),
+        decode(oi.id_organization, -1, -1, 0)
+    ) t
+  ';
+
+  -- выполнение
+  if v_use_temp then
+    -- в режиме фильтрации передаём параметры
+    if p_id_order is not null then
+      execute immediate v_sql using p_data_type, v_dt, p_id_order, p_dt_beg_from, p_dt_beg_to;
+    elsif p_dt_beg_from is not null and p_dt_beg_to is not null then
+      execute immediate v_sql using p_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
+    end if;
+  else
+    -- стандартный режим
+    execute immediate v_sql using p_data_type, v_dt, v_dt; -- для p_use_wo_list=0 передаём v_dt, иначе не нужно
+  end if;
+end;
+/
+--------------------------------------------------------------------------------
+--процедура обработки одного дня
+create or replace procedure p_order_fin_mon_process_day(p_dt in date) is
+  v_dt date := trunc(p_dt);
+  type t_id_list is table of order_items_wo_estimate.id_order_item%type;
+  v_ids t_id_list;
+begin
+  --data_type = 1 для всех заказов за день
+  p_insert_fin_monitoring_data(v_dt, 1, 0);
+
+  --Найти в order_items_wo_estimate те записи, у которых dt is null (ещё без сметы)
+  --и для которых сейчас смета появилась (item_wo_estimate = 0)
+  select distinct oi.id
+    bulk collect into v_ids
+    from
+      v_order_items oi,
+      v_or_std_items si,
+      estimates e
+    where
+      oi.id_std_item = si.id
+      and oi.id = e.id_order_item (+)
+      and oi.qnt <> 0
+      and oi.id in (select id_order_item from order_items_wo_estimate where dt is null)
+      and not (nvl(oi.wo_estimate, 0) <> 0 and (nvl(si.dt_influencing, date '1900-01-01') = date '2000-01-01' or e.id is null));
+
+  if v_ids.count > 0 then
+    --вставляем data_type = 2 для этих id
+    p_insert_fin_monitoring_data(v_dt, 2, 1);
+
+    --обновляем дату появления сметы для этих позиций
+    for i in 1..v_ids.count loop
+      update order_items_wo_estimate
+         set dt = v_dt
+       where id_order_item = v_ids(i);
+    end loop;
+  end if;
+
+  --Добавляем в order_items_wo_estimate новые позиции,
+  --которые на текущий момент остаются без сметы (item_wo_estimate = 1)
+  --и которых ещё нет в таблице
+  for rec in (
+    select distinct oi.id as id_order_item
+      from v_order_items oi,
+           v_or_std_items si,
+           estimates e
+     where oi.id_std_item = si.id
+       and oi.id = e.id_order_item (+)
+       and oi.dt_beg = v_dt
+       and oi.qnt <> 0
+       and (nvl(oi.wo_estimate, 0) <> 0)
+       and (nvl(si.dt_influencing, date '1900-01-01') = date '2000-01-01' or e.id is null)
+       and not exists (select 1 from order_items_wo_estimate w where w.id_order_item = oi.id)
+  )
+  loop
+    insert into order_items_wo_estimate (id_order_item, dt)
+      values (rec.id_order_item, null);
+  end loop;
+
+  commit;
+end p_order_fin_mon_process_day;
+/
+
+--------------------------------------------------------------------------------
+--процедура заполняет таблицу данными финансового отчета за вчерашний день.
+--если были пропуски в вызовах процедуры, то найдет максимальную дату внесепния 
+--записи и обработает начиная с нее.
+--также добавляются в таблицу order_items_wo_estimate айди заказов, по которым
+--не были загружены все сметы.
+--при появлении сметы в указанной выше таблице устанавливает дату события, и 
+--добавляет записи по этим изделиям в основную таблицу.
+create or replace procedure p_insert_orders_fin_monitoring is
+  v_start_date date;
+  v_end_date   date := trunc(sysdate) - 1; -- вчера
+  v_cur_date   date;
+  v_last_date  date;
+begin
+  -- находим последнюю обработанную дату (data_type = 1)
+  select nvl(max(dt), date '2026-06-01')
+    into v_last_date
+    from orders_fin_monitoring
+   where data_type = 1;
+
+  -- начинаем со следующего дня после последней обработанной даты
+  v_start_date := v_last_date + 1;
+
+  if v_start_date > v_end_date then
+    return; -- нечего обрабатывать
+  end if;
+
+  -- обрабатываем каждый день от start до end
+  v_cur_date := v_start_date;
+  while v_cur_date <= v_end_date loop
+    p_order_fin_mon_process_day(v_cur_date);
+    v_cur_date := v_cur_date + 1;
+  end loop;
+
+  commit;
+exception
+  when others then
+    rollback;
+    raise;
+end p_insert_orders_fin_monitoring;
+/
+
+
+delete from orders_fin_monitoring where trunc(dt) = trunc(sysdate) - 1;
+exec p_insert_orders_fin_monitoring;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 --------------------------------------------------------------------------------
 -- финансовый отчет по запущенным за прошлый день заказам
 --------------------------------------------------------------------------------
@@ -326,28 +722,6 @@ with
 select * from v_stditems_fin_monitoring;
 
 
-create table orders_fin_monitoring_snapshot (
-  snapshot_date date,                    -- дата снимка
-  order_type    number,
-  ornums        varchar2(4000),
-  customer      varchar2(4000),
-  fullname      varchar2(1000),
-  qnt           number,
-  price         number,
-  price_std     number,
-  price_diff    number,
-  summ          number,
-  sum0          number,
-  labor_intensity_0 number,
-  labor_cost_0     number,
-  labor_intensity_2 number,
-  labor_cost_2     number,
-  prime_cost       number,
-  sum0_percent     number,
-  labor_cost_0_percent number,
-  labor_cost_2_percent number,
-  prime_cost_percent   number
-);
 
 
 create or replace procedure p_snapshot_fin_monitoring is

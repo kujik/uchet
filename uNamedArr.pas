@@ -44,6 +44,7 @@ type
     procedure SetValueI(ARowNo: Integer; AColIndex: Integer; const AValue: Variant);
     function GetRow(ARowNo: Integer): TVarDynArray;
     procedure SetRow(ARowNo: Integer; const AValues: TVarDynArray);
+    function GetCol(AFieldName: string): TVarDynArray;
     //информация о структуре
     function Count: Integer;
     function High: Integer;
@@ -473,6 +474,15 @@ begin
   //копируем значения – приведение необходимо
   TVarDynArray(V[ARowNo]) := TVarDynArray(System.Copy(AValues, 0, Length(AValues)));
 end;
+
+function TNamedArr.GetCol(AFieldName: string): TVarDynArray;
+begin
+  Result := [];
+  var ColNo := Col(AFieldName);
+  for var i := 0 to High do
+    Result := Result + [V[i][ColNo]];
+end;
+
 //==============================================================================
 // Информация о структуре
 //==============================================================================

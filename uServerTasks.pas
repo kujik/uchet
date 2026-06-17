@@ -78,6 +78,8 @@ type
     //3'Отчет по отгрузочным заказам за вчерашний день',
     //4'Отчет по отгрузочным заказам в работе'
     procedure ReportForYesterdayOrders(AOrderTypes: Integer; AMailing: Boolean = True);
+    //отчет по созданным в ИТМ АВР, по которым по заказу не было полного поринятия на сгп в Учете
+    procedure ReportForEarlyCompletionActs;
   end;
 
 var
@@ -184,6 +186,7 @@ begin
     ReportForYesterdaySupplyDeals;
     ReportForYesterdayOrders(1);
     ReportForYesterdayOrders(3);
+    ReportForEarlyCompletionActs;
   end;
 end;
 
@@ -634,5 +637,46 @@ begin
   if AMailing then
     Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, [FileToSend], '~');
 end;
+
+procedure TTasksS.ReportForEarlyCompletionActs;
+//отчет по созданным в ИТМ АВР, по которым по заказу не было полного поринятия на сгп в Учете
+var
+  HTML: string;
+  naP, naO: TNamedArr;
+begin
+  Q.QLoad(
+    'select o.ornum , o.customer, o.project, dt_beg, a.actdate '+
+    'from v_orders o, dv.acts a '+
+    'where o.id_itm = a.id_zakaz and o.dt_to_sgp is null and o.id_organization = -1 and a.actdate = :dt$d ' +
+    'order by dt_beg, ornum',
+    [IncDay(Date, -1)],
+    naP
+  );
+  Q.QLoad(
+    'select o.ornum , o.customer, o.project, dt_beg, a.actdate '+
+    'from v_orders o, dv.acts a '+
+    'where o.id_itm = a.id_zakaz and o.dt_to_sgp is null and o.id_organization <> -1 and a.actdate = :dt$d ' +
+    'order by dt_beg, ornum',
+    [IncDay(Date, -1)],
+    naO
+  );
+  if (naP.Count = 0) and (naO.Count = 0) then
+    Exit;
+  HTML := '<b>Вчера были преждевременно созданы АВЗ</b><br>';
+  if naP.Count > 0 then begin
+    HTML := HTML + '<br><b>По производственным заказам:</b><br>';
+    for var i := 0 to naP.High do begin
+      S.ConcatStP(HTML, naP.G(i, 'ornum') + '  ' + DateToStr(naP.G(i, 'dt_beg')) {+ '  ' + DateToStr(naP.G(i, 'actdate'))} + '"   "' + naP.G(i, 'project') + '"', '<br>');
+    end;
+  end;
+  if naO.Count > 0 then begin
+    HTML := HTML + '<br><br><b>По отгрузочным заказам:</b><br>';
+    for var i := 0 to naO.High do begin
+      S.ConcatStP(HTML, naO.G(i, 'ornum') + '  ' + DateToStr(naO.G(i, 'dt_beg')) {+ '  ' + DateToStr(naO.G(i, 'actdate'))} + '   "' + naO.G(i, 'customer') + '"   "' + naO.G(i, 'project') + '"', '<br>');
+    end;
+  end;
+  Tasks.SendMail(TASK_MAILING_EARLY_COMPLETION_ACTS, 'Преждевременно созданы АВР', HTML, [], '~');
+end;
+
 
 end.

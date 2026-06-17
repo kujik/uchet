@@ -1422,7 +1422,7 @@ var
 begin
 //TasksS.ReportForYesterdayOrders(True); Exit;
 //TasksS.ReportForYesterdayOrders(False);Exit;
-TasksS.ReportForHorlySupplyDeals;Exit;
+TasksS.ReportForEarlyCompletionActs;Exit;
 va:=[1,2];
 va.Add(2);
 va.Add(3);

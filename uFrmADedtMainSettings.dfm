@@ -8,12 +8,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
   inherited pnlFrmMain: TPanel
     Width = 946
     Height = 447
-    ExplicitWidth = 1034
+    ExplicitWidth = 942
     ExplicitHeight = 446
     inherited pnlFrmClient: TPanel
       Width = 936
       Height = 398
-      ExplicitWidth = 1024
+      ExplicitWidth = 932
       ExplicitHeight = 397
       object pnlMessage: TPanel
         Left = 0
@@ -23,7 +23,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
         Align = alBottom
         TabOrder = 0
         ExplicitTop = 367
-        ExplicitWidth = 1024
+        ExplicitWidth = 932
         object lbl_Warning: TLabel
           Left = 4
           Top = 9
@@ -49,7 +49,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
         ActivePage = tsMail
         Align = alClient
         TabOrder = 1
-        ExplicitWidth = 1024
+        ExplicitWidth = 932
         ExplicitHeight = 367
         object tsPaths: TTabSheet
           Caption = #1056#1072#1089#1087#1086#1083#1086#1078#1077#1085#1080#1077' '#1076#1072#1085#1085#1099#1093
@@ -150,6 +150,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 0
             Visible = True
+            ExplicitWidth = 918
           end
           object edt_MailingAttachSmeta: TDBEditEh
             Left = 3
@@ -168,6 +169,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 1
             Visible = True
+            ExplicitWidth = 918
           end
           object edt_MailingReportSmeta: TDBEditEh
             Left = 3
@@ -186,6 +188,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 2
             Visible = True
+            ExplicitWidth = 918
           end
           object edt_MailingAttachTHN: TDBEditEh
             Left = 3
@@ -204,6 +207,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 3
             Visible = True
+            ExplicitWidth = 918
           end
           object edt_mailing_order_fin: TDBEditEh
             Left = 3
@@ -222,6 +226,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 4
             Visible = True
+            ExplicitWidth = 918
           end
           object edt_mailing_sn: TDBEditEh
             Left = 3
@@ -239,6 +244,25 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
               end>
             ReadOnly = True
             TabOrder = 5
+            Visible = True
+            ExplicitWidth = 918
+          end
+          object edt_mailing_early_acts: TDBEditEh
+            Left = 3
+            Top = 268
+            Width = 922
+            Height = 21
+            Anchors = [akLeft, akTop, akRight]
+            ControlLabel.Width = 162
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1056#1072#1089#1089#1099#1083#1082#1072' '#1087#1088#1080' '#1080#1079#1084#1077#1085#1077#1085#1080#1080' '#1079#1072#1082#1072#1079#1072
+            ControlLabel.Visible = True
+            DynProps = <>
+            EditButtons = <
+              item
+              end>
+            ReadOnly = True
+            TabOrder = 6
             Visible = True
           end
         end
@@ -356,7 +380,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
       Top = 403
       Width = 936
       ExplicitTop = 402
-      ExplicitWidth = 1024
+      ExplicitWidth = 932
       inherited bvlFrmBtnsTl: TBevel
         Width = 934
         ExplicitWidth = 1026
@@ -367,22 +391,22 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 934
-        ExplicitWidth = 1022
+        ExplicitWidth = 930
         inherited pnlFrmBtnsMain: TPanel
           Left = 835
-          ExplicitLeft = 923
+          ExplicitLeft = 831
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 607
-          ExplicitLeft = 695
+          ExplicitLeft = 603
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 736
-          ExplicitLeft = 824
+          ExplicitLeft = 732
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 467
-          ExplicitWidth = 555
+          ExplicitWidth = 463
         end
       end
     end
@@ -391,11 +415,11 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
     Top = 447
     Width = 946
     ExplicitTop = 446
-    ExplicitWidth = 1034
+    ExplicitWidth = 942
     inherited lblStatusBarR: TLabel
       Left = 873
       Height = 14
-      ExplicitLeft = 965
+      ExplicitLeft = 873
     end
     inherited lblStatusBarL: TLabel
       Height = 14

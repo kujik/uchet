@@ -1,20 +1,14 @@
 inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
   Caption = 'FrmOWSearchInEstimates'
-  ClientHeight = 226
-  ClientWidth = 439
-  ExplicitWidth = 451
-  ExplicitHeight = 264
+  ExplicitWidth = 278
+  ExplicitHeight = 135
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 439
-    Height = 210
     inherited pnlFrmClient: TPanel
-      Width = 429
-      Height = 161
       object edt_name: TDBEditEh
         Left = 4
         Top = 15
-        Width = 417
+        Width = 244
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 333
@@ -46,8 +40,8 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
       object pgcResults: TPageControl
         Left = 4
         Top = 104
-        Width = 417
-        Height = 130
+        Width = 244
+        Height = 1
         ActivePage = tsStdItems
         Anchors = [akLeft, akTop, akRight, akBottom]
         TabOrder = 3
@@ -58,37 +52,37 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
           inline Frg1: TFrDBGridEh
             Left = 0
             Top = 0
-            Width = 409
+            Width = 236
             Height = 102
             Align = alClient
             TabOrder = 0
             ExplicitWidth = 232
-            ExplicitHeight = 103
+            ExplicitHeight = 102
             inherited pnlGrid: TPanel
               Top = 22
-              Width = 399
+              Width = 226
               Height = 80
               ExplicitTop = 22
               ExplicitWidth = 222
-              ExplicitHeight = 81
+              ExplicitHeight = 80
               inherited DbGridEh1: TDBGridEh
-                Width = 397
+                Width = 224
                 Height = 57
                 inherited RowDetailData: TRowDetailPanelControlEh
                   ExplicitLeft = 30
                   ExplicitTop = 35
                   ExplicitWidth = 32
-                  ExplicitHeight = 19
+                  ExplicitHeight = 18
                   inherited PRowDetailPanel: TPanel
-                    Height = 17
-                    ExplicitHeight = 17
+                    Height = 16
+                    ExplicitHeight = 16
                   end
                 end
               end
               inherited pnlStatusBar: TPanel
                 Top = 58
-                Width = 397
-                ExplicitTop = 59
+                Width = 224
+                ExplicitTop = 58
                 ExplicitWidth = 220
                 inherited lblStatusBarL: TLabel
                   Height = 13
@@ -104,24 +98,24 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
               Top = 22
               Height = 80
               ExplicitTop = 22
-              ExplicitHeight = 81
+              ExplicitHeight = 80
             end
             inherited pnlTop: TPanel
               Top = 17
-              Width = 409
+              Width = 236
               ExplicitTop = 17
               ExplicitWidth = 232
             end
             inherited pnlContainer: TPanel
-              Width = 409
+              Width = 236
               Height = 17
               ExplicitWidth = 232
               ExplicitHeight = 17
             end
             inherited pnlBottom: TPanel
               Top = 102
-              Width = 409
-              ExplicitTop = 103
+              Width = 236
+              ExplicitTop = 102
               ExplicitWidth = 232
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
@@ -146,15 +140,15 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
           inline Frg2: TFrDBGridEh
             Left = 0
             Top = 0
-            Width = 409
+            Width = 236
             Height = 102
             Align = alClient
             TabOrder = 0
             ExplicitWidth = 232
-            ExplicitHeight = 103
+            ExplicitHeight = 102
             inherited pnlGrid: TPanel
               Top = 22
-              Width = 399
+              Width = 226
               Height = 80
               ExplicitTop = 22
               ExplicitWidth = 399
@@ -196,19 +190,19 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
             end
             inherited pnlTop: TPanel
               Top = 17
-              Width = 409
+              Width = 236
               ExplicitTop = 17
               ExplicitWidth = 409
             end
             inherited pnlContainer: TPanel
-              Width = 409
+              Width = 236
               Height = 17
               ExplicitWidth = 409
               ExplicitHeight = 17
             end
             inherited pnlBottom: TPanel
               Top = 102
-              Width = 409
+              Width = 236
               ExplicitTop = 102
               ExplicitWidth = 409
             end
@@ -239,28 +233,12 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 166
-      Width = 429
       ExplicitTop = 36
       ExplicitWidth = 252
-      inherited bvlFrmBtnsTl: TBevel
-        Width = 427
-      end
-      inherited bvlFrmBtnsB: TBevel
-        Width = 427
-      end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 427
         ExplicitWidth = 250
-        inherited pnlFrmBtnsMain: TPanel
-          Left = 328
-        end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 100
           ExplicitLeft = -77
-        end
-        inherited pnlFrmBtnsR: TPanel
-          Left = 229
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 21
@@ -270,10 +248,7 @@ inherited FrmOWSearchInEstimates: TFrmOWSearchInEstimates
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 210
-    Width = 439
     inherited lblStatusBarR: TLabel
-      Left = 366
       Height = 14
     end
     inherited lblStatusBarL: TLabel
