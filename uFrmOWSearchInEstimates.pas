@@ -25,6 +25,7 @@ type
     tsOrderItems: TTabSheet;
     Frg1: TFrDBGridEh;
     Frg2: TFrDBGridEh;
+    chbIsStdItem: TCheckBox;
     procedure FormCreate(Sender: TObject);
   private
     function  Prepare: Boolean; override;
@@ -62,7 +63,7 @@ function  TFrmOWSearchInEstimates.Prepare: Boolean;
 begin
   Result := False;
   Mode := fView;
-  Caption := '~ѕоиск сметной позиции';
+  Caption := '~ѕоиск издели€ /сметной позиции';
   FOpt.DlgPanelStyle:= dpsBottomRight;
   Cth.MakePanelsFlat(pnlFrmClient, []);
   FOpt.DlgButtonsR:=[[mbtFind, True, 'Ќайти']];
@@ -101,14 +102,18 @@ begin
   FWHBounds.X:=500;
   //подсказка
   FOpt.InfoArray:=[[
-    'ѕоиск наименовани€ в сметах.'#13#10+
+    'ѕоиск наименовани€ в сметах заказов и стандартных изделий, либо наименовани€ издели€ в справочнике и заказах.'#13#10+
     ''#13#10+
-    '¬ведите наименование, которое вы хотите найти,'#13#10+
-    'и нажмите кнопку "—тарт" дл€ поиска.'#13#10+
+    '¬ведите наименование, которое вы хотите найти.'#13#10+
+    '≈сли вы ищете стандартное издели€, то поставьте соотсвествующую галочку'#13#10+
+    'ѕосле нажмите кнопку "—тарт" дл€ поиска.'#13#10+
     ''#13#10+
-    'ѕоиск будет произведен в сметах стандарнтных изделий, и в сметах по издели€м заказов,'#13#10+
+    'ѕри поиске сметной позиции поиск будет произведен в сметах стандартных изделий, и в сметах по издели€м заказов,'#13#10+
     '(как в сметах стандартных, так и нестандартных изделий)'#13#10+
     'результаты отобразатс€ в соответствующих вкладках.'#13#10+
+    ''#13#10+
+    'ѕри поиске издели€ оно программа будет искать введенную строку среди полных наименований (с префиксом)'#13#10+
+    'изделий в справочнике стандартных изделий и в заказах.'#13#10+
     ''#13#10+
     'ƒл€ поиска позиции в сметх заказов, которые уже закрыты, необходимо поставить соотвествующую галочку'#13#10+
     '(иначе ищет только в незавершенных заказах)'#13#10+
@@ -135,18 +140,35 @@ begin
   if TControl(Sender).Tag = mbtFind then begin
     if edt_name.Text = '' then
       Exit;
-    Wherest:= S.IIf(chbLike.Checked, 'upper(bcadname) like upper(:name)', 'bcadname = :name');
-    Frg1.LoadData(
-      'select id_std_item, id_estimate, formatname, stdname from v_findinestimate_std where ' + wherest + ' order by formatname, stdname',
-      [edt_name.Text]
-    );
-    Frg2.LoadData(
-      'select id_order_item, id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_findinestimate_inorders where ' +
-      Wherest +
-      S.IIf(not chbInclosedOrders.Checked, ' and dt_end is null ', ' ') +
-      ' order by slash, itemname',
-      [edt_name.Text]
-    );
+    if chbIsStdItem.Checked then begin
+      Wherest:= S.IIf(chbLike.Checked, 'upper(fullname) like upper(:name)', 'fullname = :name');
+      Frg1.LoadData(
+        'select id as id_std_item, null as id_estimate, or_format_name || '' ('' || or_format_estimate_name || '')'' as formatname, fullname as stdname from v_or_std_items where ' + wherest + ' order by or_format_name, fullname',
+        [edt_name.Text]
+      );
+      Wherest:= S.IIf(chbLike.Checked, 'upper(itemname) like upper(:name)', 'itemname = :name');
+      Frg2.LoadData(
+        'select id as id_order_item, null as id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_order_items where ' +
+        Wherest +
+        S.IIf(not chbInclosedOrders.Checked, ' and dt_end is null ', ' ') +
+        ' order by slash, itemname',
+        [edt_name.Text]
+      );
+    end
+    else begin
+      Wherest:= S.IIf(chbLike.Checked, 'upper(bcadname) like upper(:name)', 'bcadname = :name');
+      Frg1.LoadData(
+        'select id_std_item, id_estimate, formatname, stdname from v_findinestimate_std where ' + wherest + ' order by formatname, stdname',
+        [edt_name.Text]
+      );
+      Frg2.LoadData(
+        'select id_order_item, id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_findinestimate_inorders where ' +
+        Wherest +
+        S.IIf(not chbInclosedOrders.Checked, ' and dt_end is null ', ' ') +
+        ' order by slash, itemname',
+        [edt_name.Text]
+      );
+    end;
   end;
 end;
 

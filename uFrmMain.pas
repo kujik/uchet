@@ -441,7 +441,7 @@ begin
       Dlg_ModuleSettings.ShowDialog
     else if MenuCaption = 'Отчет по себестоимости заказов' then
       Wh.ExecDialog(myfrm_Dlg_Rep_Order_Primecost2, Self, [], fNone, null, null)
-    else if MenuCaption = 'Поиск сметной позиции' then
+    else if MenuCaption = 'Поиск изделия / сметной позиции' then
       Wh.ExecDialog(myfrm_Dlg_Or_FindNameInEstimates, Self, [], fNone, -1, null)
     else if MenuCaption = 'Информация по ИТМ' then
       Wh.ExecDialog(myfrm_Dlg_Or_ItmInfo, Self, [myfoDialog, myfoOneCopy], fNone, -1, null)
@@ -730,7 +730,7 @@ begin
     ['Потребность по участку "Деминская"', myfrm_R_MinRemainsD, User.Roles([], [rOr_Other_R_MinRemainsI_V, rOr_Other_R_MinRemainsI_Ch1, rOr_Other_R_MinRemainsI_ChAll])],
     ['Номенклатура, выданная сверх смет', myfrm_Rep_ItmNomOverEstimate, User.Roles([], [rOr_Rep_ItmNomOverEstimate])],
     [],
-    ['Поиск сметной позиции', '_', User.Role(rOr_Other_Order_FindEstimate)],
+    ['Поиск изделия / сметной позиции', '_', User.Role(rOr_Other_Order_FindEstimate)],
     ['Загрузка цен по смете', myfrm_Dlg_Rep_EstimatePrices, User.Role(rOr_Rep_EstimatePrices)],
     ['Информация по ИТМ', '_', User.Role(rOr_Other_ItmInfo)],
     ['Журнал действий пользователей ИТМ', myfrm_J_ItmLog, User.Role(rOr_Other_J_ItmLog)],
