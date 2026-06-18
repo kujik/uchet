@@ -17,7 +17,7 @@
 interface
 
 uses
-  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils, System.Generics.Collections;
+  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils, VarUtils, System.Generics.Collections;
 
 type
   TVarDynArray = array of Variant;
@@ -312,6 +312,9 @@ type
     //возвращает из массива результат, соответствующий нулевому значению
     //value, case1, value1, case2, value2, {valueelse}
     function Decode(const AArray: TVarDynArray): Variant;
+    //возвращает значение, следубющее в массиве после первого выполнившегося условия.
+    //если ни одно не выполнилось, возвращает поледний элемент при нечетном количестве, иначе нулл
+    function DecodeBool(const AArray: TVarDynArray): Variant;
     //сравнить две строки без учета регистра
     function CompareStI(const AStr1, AStr2: string): Boolean;
 
@@ -1743,6 +1746,35 @@ begin
   end;
   if i = High(AArray) then
     Result := AArray[i];
+end;
+
+function TMyStringHelper.DecodeBool(const AArray: TVarDynArray): Variant;
+//возвращает значение, следубющее в массиве после первого выполнившегося условия.
+//если ни одно не выполнилось, возвращает поледний элемент при нечетном количестве, иначе нулл
+var
+  i: Integer;
+  Condition: Boolean;
+begin
+  Result := Null;
+  if Length(AArray) = 0 then
+    Exit;
+  i := 0;
+  while i < High(AArray) do begin
+    try
+      Condition := AArray[i];
+    except
+      Condition := False; //если преобразование не удалось, считаем условие ложным
+    end;
+    if Condition then begin
+      Result := AArray[i + 1];
+      Exit;
+    end;
+    Inc(i, 2);
+  end;
+  if i = High(AArray) then
+    Result := AArray[i]
+  else
+    Result := Null;
 end;
 
 function TMyStringHelper.CompareStI(const AStr1, AStr2: string): Boolean;

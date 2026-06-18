@@ -710,6 +710,7 @@ begin
     ['Годовая потребность в материалах', myfrm_Rep_PlannedMaterials, User.Roles([], [rOr_Rep_PlannedMaterials_V, rOr_Rep_PlannedMaterials_Calc])],
     [],
     ['Финансовый отчет по заказам', myfrm_Dlg_Rep_FinByOrders, User.Roles([], [rOr_Rep_Order_Fin1, rOr_Rep_Order_Fin2, rOr_Rep_Order_Fin3, rOr_Rep_Order_Fin4, rOr_Rep_Order_Fin5])],
+    ['Финансовый отчет по изделиям в заказах.', {myfrm_Dlg_OrdersFinReport} myfrm_Rep_OrdersFinMonitoring, User.Roles([], [rOr_Rep_OrdersFin])],
     ['Отчет по себестоимости заказов', '_', User.Roles([], [rOr_Rep_Order_Primecost1])],
     ['Отчет по рекламациям', myfrm_Rep_Order_Complaints, User.Roles([], [rOr_Rep_Order_Complaints])],
     ['Отчет по изделиям в производстве', myfrm_J_OrItemSInProd, User.Role(rOr_Rep_OrItemSInProd)],
@@ -721,7 +722,6 @@ begin
     [],
     ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
     ['Отчет по закупочным ценам.', myfrm_Rep_Purchase_Prices, User.Roles([], [rOr_Rep_Purchase_Prices])],
-    ['Финансовый отчет по запущенным заказам.', myfrm_Dlg_OrdersFinReport, User.Roles([], [rOr_Rep_OrdersFin])],
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

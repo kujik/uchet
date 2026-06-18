@@ -952,7 +952,8 @@ const
   myfrm_Rep_Orders_Audit='Rep_Orders_Audit';
   myfrm_Rep_Purchase_Prices='Rep_Purchase_Prices';
   myfrm_Rep_Turv='Rep_Turv';
-
+  myfrm_Rep_OrdersFinMonitoring='Rep_OrdersFinMonitoring';
+  myfrm_J_Orders_SEL = 'J_Orders_SEL';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';

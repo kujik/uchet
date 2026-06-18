@@ -1016,7 +1016,7 @@ type
     procedure SetStatusBarCaption(Caption: string = ''; AProcessMessages: Boolean = False);
     //получить значение контрола на фрейме по его имени
     //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
-    function  GetControlValue(ControlName: string; NullIfEmpty: Boolean = False): Variant;
+    function GetControlValue(ControlName: string; NullIfEmpty: Boolean = False; SkipMissing: Boolean = False): Variant;
     //установить значение контрола принадлежащего фрейму по переданному имени контрола
     procedure SetControlValue(ControlName: string; Value: Variant);
     //ставка строки в таблицу в текущую позицию
@@ -3768,12 +3768,16 @@ begin
     Application.ProcessMessages;
 end;
 
-function TFrDBGridEh.GetControlValue(ControlName: string; NullIfEmpty: Boolean = False): Variant;
+function TFrDBGridEh.GetControlValue(ControlName: string; NullIfEmpty: Boolean = False; SkipMissing: Boolean = False): Variant;
 //получить значение контрола на фрейме по его имени
 //если установлено NullIfEmpty то вернуть null если значение равно пустое или ''
 begin
-  Result:= Cth.GetControlValue(Self, ControlName);
-  if NullIfEmpty then Result:=S.NullIfEmpty(Result);
+  Result := null;
+  if SkipMissing and (Self.FindComponent(ControlName) = nil) then
+    Exit;
+  Result := Cth.GetControlValue(Self, ControlName);
+  if NullIfEmpty then
+    Result := S.NullIfEmpty(Result);
 end;
 
 procedure TFrDBGridEh.SetControlValue(ControlName: string; Value: Variant);

@@ -1552,7 +1552,7 @@ v:=True;
     Frg1.Opt.SetWhere('where id_group = :id_group$i');
     Frg1.InfoArray:=[['Номенклатура в выбранное группе'#13#10'Номенклатура в дочерних группах сюда не включается!']];
   end
-  else if FormDoc = myfrm_J_Orders_SEL_1 then begin  //!!!
+  else if FormDoc = myfrm_J_Orders_SEL_1 then begin
     Caption:='Выбор заказов';
     Frg1.Options := Frg1.Options + [myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
@@ -1576,6 +1576,33 @@ v:=True;
       'Вы можете просмотреть паспорт заказа, нажав кнопку в колонке номера заказа.'#13#10+
       'Настройте внешний вид таблицы, нажав соответствующую кнопку.'
     ]];
+  end
+  else if FormDoc = myfrm_J_Orders_SEL then begin
+    Caption:='Выбор заказов';
+    if AddParam.AsInteger = 1 then
+      Frg1.Options := Frg1.Options + [myogIndicatorCheckBoxes, myogMultiSelect];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      //['path','_File','40'],
+      ['ornum','№ заказа','120'],
+      ['year','Год','40'],
+      ['dt_beg','Дата оформления','80'],
+      ['dt_end','Дата сдачи','80'],
+      ['customer','Заказчик','180'],
+      ['project','Проект','150']
+      //['id_itm$i','_id_itm','40']
+    ]);
+    Frg1.Opt.SetTable('v_orders');
+    Frg1.Opt.SetWhere('where id > 0');
+    Frg1.Opt.SetButtons(1,[[mbtSelectFromList],[],[mbtGridFilter],[mbtGridSettings]]);
+    Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end']];
+    if AddParam.AsInteger = 1 then
+      Frg1.InfoArray:=[[
+        'Выберите один или несколько заказа.'#13#10+
+        'Отмечайте нужные заказы в левой колонке, дла отметки всех, инверсии или снятия отметки используйте правую кнопку мыши.'#13#10
+      ]]
+    else
+      Frg1.InfoArray:=[['Выберите заказ из списка']];
   end
   else if FormDoc = myfrm_R_StdPspFormats then begin
     Caption:='Стандартные форматы паспортов';
@@ -3574,6 +3601,8 @@ end.
  [заголовок, {имя_контрола}, {sql-правило}, {True/False}], [...]
 ]
 
+ обработка чекбоксов в панеле заголовка:
+ чекбоксы с тегом -2..-10 обработаем как радиобаттоны, а -11..-20 так же, но с возможностью снятия
 
 *)
 

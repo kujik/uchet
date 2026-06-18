@@ -1420,6 +1420,7 @@ var
   i: Integer;
   st: string;
 begin
+Wh.ExecReference(myfrm_Rep_OrdersFinMonitoring, nil, [], null); Exit;
 //TasksS.ReportForYesterdayOrders(True); Exit;
 //TasksS.ReportForYesterdayOrders(False);Exit;
 TasksS.ReportForEarlyCompletionActs;Exit;

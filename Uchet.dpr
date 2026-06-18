@@ -208,7 +208,8 @@ uses
   uExportToXlsx in 'uExportToXlsx.pas' {FrmExportToXlsx},
   uServerTasks in 'uServerTasks.pas',
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
-  uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog};
+  uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
+  uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring};
 
 var
   MT: Integer;

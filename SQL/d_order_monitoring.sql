@@ -25,7 +25,7 @@ alter table orders_fin_monitoring add dt date;
 create table orders_fin_monitoring (
   id number(11),                        --айди
   dt date,                              --дата внесени€ записи
-  data_type number,                     --1 - данные по запущенным заказам, 2 - данныые по заказам, по которым по€вились сметы 
+  data_type number,                     --1 - данные по запущенным заказам, 2 - данныые по заказам, по которым по€вились сметы, 3 - данные по конкретному заказу, 4 - данные по заказам за период 
   dt_beg date,                          --дата внесени€ записи 
   order_type    number,                 --тип заказа, -1 ѕ, 0 - ќ
   id_order_items varchar2(4000),
@@ -53,7 +53,11 @@ create table orders_fin_monitoring (
   attentions varchar2(4000)             --выделение €чеек (вводитс€ в отчете)  
 );
 
+drop table temp_orders_fin_monitoring;
 create global temporary table temp_orders_fin_monitoring (
+  id number,
+  data_type        number,
+  dt               date,
   order_type     number,
   dt_beg         date,
   ornums         varchar2(4000),
@@ -76,9 +80,7 @@ create global temporary table temp_orders_fin_monitoring (
   labor_cost_2_percent number,
   prime_cost_percent   number,
   item_wo_estimate number,
-  id_order_items   varchar2(4000),
-  data_type        number,
-  dt               date
+  id_order_items   varchar2(4000)
 ) on commit preserve rows;
 
 create sequence sq_orders_fin_monitoring start with 1 nocache;
@@ -117,6 +119,7 @@ create or replace procedure p_insert_fin_monitoring_data(
 ) is
   v_dt date := trunc(p_dt);
   v_target_table varchar2(30);
+  v_data_type number;
   v_where_clause varchar2(4000);
   v_sql varchar2(4000);
   v_delete_sql varchar2(4000);
@@ -132,10 +135,16 @@ begin
 
   if v_use_temp then
     v_target_table := 'temp_orders_fin_monitoring';
-    -- удал€ем старые записи по dt (data_type не используетс€)
-    v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt';
-    execute immediate v_delete_sql using v_dt;
+    if p_id_order is not null then
+      v_data_type := 3;
+    else
+      v_data_type := 4;
+    end if;
+    -- удал€ем старые записи по data_type
+    v_delete_sql := 'delete from ' || v_target_table || ' where data_type = :v_data_type';
+    execute immediate v_delete_sql using v_data_type;
   else
+    v_data_type := p_data_type;
     v_target_table := 'orders_fin_monitoring';
     -- удал€ем старые записи по dt и data_type
     v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt and data_type = :dt_type';
@@ -261,13 +270,13 @@ begin
   if v_use_temp then
     -- в режиме фильтрации передаЄм параметры
     if p_id_order is not null then
-      execute immediate v_sql using p_data_type, v_dt, p_id_order, p_dt_beg_from, p_dt_beg_to;
+      execute immediate v_sql using v_data_type, v_dt, p_id_order;
     elsif p_dt_beg_from is not null and p_dt_beg_to is not null then
-      execute immediate v_sql using p_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
+      execute immediate v_sql using v_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
     end if;
   else
     -- стандартный режим
-    execute immediate v_sql using p_data_type, v_dt, v_dt; -- дл€ p_use_wo_list=0 передаЄм v_dt, иначе не нужно
+    execute immediate v_sql using v_data_type, v_dt, v_dt; -- дл€ p_use_wo_list=0 передаЄм v_dt, иначе не нужно
   end if;
 end;
 /
@@ -351,7 +360,7 @@ begin
   select nvl(max(dt), date '2026-06-01')
     into v_last_date
     from orders_fin_monitoring
-   where data_type = 1;
+    where data_type = 1;
 
   -- начинаем со следующего дн€ после последней обработанной даты
   v_start_date := v_last_date + 1;

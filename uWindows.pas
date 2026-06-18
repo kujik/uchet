@@ -141,7 +141,7 @@ uses
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
-  uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation,
+  uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
 
 
   uFrmXGlstMain,
@@ -614,6 +614,7 @@ begin
     myfrm_R_Itm_Units,
     myfrm_R_Itm_Suppliers,
     myfrm_R_Itm_InGroup_Nomencl,
+    myfrm_J_Orders_SEL,
     myfrm_J_Orders_SEL_1,
     myfrm_R_StdPspFormats,
     myfrm_Rep_PlannedMaterials,
@@ -771,6 +772,9 @@ begin
   else if F = myfrm_R_Workers then begin
     TFrmWGjrnEmployees.Show(AOwner, F, MyFormOptions + [myfoSizeable], fView, null, null);
   end
+  else if F = myfrm_Rep_OrdersFinMonitoring then begin
+    TFrmOGrepOrdersFinMonitoring.Show(AOwner, F, MyFormOptions, fView, null, null);
+  end
   else if F = myfrm_Dlg_ExportTurvToXls then begin
     Turv.SaveAllTurvToExportTable;
   end
@@ -786,6 +790,7 @@ begin
   else if F = myfrm_Dlg_OrdersFinReport then begin
     Orders.OrdersFinReport;
   end
+
 
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
