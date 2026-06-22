@@ -161,13 +161,13 @@ begin
   Frg1.Opt.ButtonsNoAutoState := [0];
   Frg1.Opt.SetGridOperations('ud');
   Frg1.Opt.SetButtons(1, [
-    [mbtSettings], [], [mbtCustom_Turv],[mbtCustom_Payroll],
+    [mbtSettings], [], [mbtCustom_Turv], [mbtCustom_Payroll],
     [-cmbDeleteRow, True, 'Удалить строку'],
     [-cmbRecalculate, True, 'Пересчитать все'],
     [-cmbSetEditable, True, 'Разрешить редактирование всех полей'],
     [-mbtExcel, AddParam = null],
-    [],[mbtLock],
-    [],[mbtCtlPanel]
+    [], [mbtLock],
+    [], [mbtCtlPanel]
   ]);
 
   Frg1.CreateAddControls('1', cntLabelClr, GetCaption(True), 'lblDivision', '', 4, yrefT, 800);
@@ -479,6 +479,9 @@ end;
 
 
 procedure TFrmWGedtPayrollCalc.GetDataFromExcel;
+//подгружаем ОРС по работникам из файлов расчета, на Buh2.
+//файл находится автоматически по месяцу и подразделению.
+//если работник в ведомости идет несколькими строками, то орс подгружается к каждой
 var
   i, j, k, emp: Integer;
   va, va1, vadel: TVarDynArray2;
@@ -504,7 +507,7 @@ begin
   st := '';   //строка сообщения
   b := False; //признак изменения таблицы
   b2 := False; //признак наличия незагруженных записей
-  err := 'Файл расчета баллов не найден!';
+  err := 'Файл расчета ОРС не найден!';
   FileName := '';
   repeat
     sl := TStringList.Create;
@@ -512,13 +515,14 @@ begin
     Sys.GetFilesInDirectoryRecursive(Module.GetCfgVar(mycfgWpath_to_payrolls), sl);
     //найдем те, вкоторых есть файл типа "Март 1/Сборка 1.xlsx"
     for i := 0 to sl.Count - 1 do begin
-      if pos(MonthsRu[MonthOf(FPayrollParams.G('dt1'))] + ' ' + S.IIFStr(DayOf(FPayrollParams.G('dt1')) = 1, '1', '2') + '\' + FPayrollParams.G('departament') + '.xlsm', sl[i]) > 0 then
+//      if pos(MonthsRu[MonthOf(FPayrollParams.G('dt1'))] + ' ' + S.IIFStr(DayOf(FPayrollParams.G('dt1')) = 1, '1', '2') + '\' + FPayrollParams.G('departament') + '.xlsm', sl[i]) > 0 then
+      if pos(MonthsRu[MonthOf(FPayrollParams.G('dt1'))] + '\' + FPayrollParams.G('departament') + '.xlsm', sl[i]) > 0 then
         FileName := sl[i];
     end;
     sl.Free;
     if FileName = '' then
       Break;
-    err := 'Файл "' + FileName + '" не является файлом расчета баллов';
+    err := 'Файл "' + FileName + '" не является файлом расчета ОРС';
     if not CreateTXlsMemFileEhFromExists(FileName, True, '$2', XlsFile, st) then
       Exit;
     try
@@ -554,16 +558,21 @@ begin
           inc(j);
         end;
         if st1 = fio then begin
-          e := Round(sh.Cells[cSum - 1, j].Value);
-          if Frg1.GetValue('ext_pay').AsVariant <> e then begin
-            if Frg1.GetValue('ext_pay', i, False).AsVariant <> null then
-              st := st + fio + ': Изменен столбец Баллы с ' + Frg1.GetValue('ext_pay', i, False).AsString + ' на ' + VarToStr(e) + #13#10;
-            Frg1.SetValue('ext_pay', i, False, e);
+          try
+          e := RoundTo(sh.Cells[cSum - 1, j].Value, -2);
+          except
+            st := st + fio + ': В файле расчета ОРС не число!' + #13#10;
+            Continue;
+          end;
+          if Frg1.GetValue('ors', i, False).AsFloat <> e then begin
+            if Frg1.GetValue('ors', i, False).AsString <> '' then
+              st := st + fio + ': Изменен столбец ОРС с ' + Frg1.GetValue('ors', i, False).AsString + ' на ' + VarToStr(e) + #13#10;
+            Frg1.SetValue('ors', i, False, e);
             b := True;
           end;
         end
         else begin
-          st := st + fio + ': Не найден в файле расчета баллов!' + #13#10;
+          st := st + fio + ': Не найден в файле расчета ОРС!' + #13#10;
           b2 := True;
           //!надо ли обнулять баллы?
         end;
@@ -589,7 +598,7 @@ begin
   Frg1.DBGridEh1.SetFocus;
   //выведем сообщение
   if b or b2 then
-    MyInfoMessage('Баллы загружены' + S.IIf(b2, ', однако не все работники найдены!', '.') + #13#10#13#10 + S.IIFStr(not b and not b2, 'Изменений не было.', st));
+    MyInfoMessage('ОРС загружена' + S.IIf(b2, ', однако не все работники найдены!', '.') + #13#10#13#10 + S.IIFStr(not b and not b2, 'Изменений не было.', st));
 end;
 
 
@@ -628,7 +637,7 @@ begin
     Frg1.SetControlValue('lblInfo', '$FF00FFВвод данных.');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtSettings, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Turv, null, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, Integer(FPayrollParams.G('calc_method')) in [cMMotivation]);
+    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtCustom_Payroll, null, True {Integer(FPayrollParams.G('calc_method')) in [cMMotivation]});
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbRecalculate, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbSetEditable, null, True);
@@ -912,7 +921,7 @@ begin
       if MyQuestionMessage('Загрузить данные из ТУРВ?') = mrYes then
         GetDataFromTurv;
     mbtCustom_Payroll:
-      if MyQuestionMessage('Загрузить мотивацию') = mrYes then
+      if MyQuestionMessage('Загрузить ОРС?') = mrYes then
         GetDataFromExcel;
     mbtSettings:
       SetPayrollMethod;
