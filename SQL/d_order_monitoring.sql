@@ -109,7 +109,7 @@ create table order_items_wo_estimate (
 -- ѕроцедуры заполенини€ таблиц финансового мониторинга (работает по расписанию в бд 
 ------------------------------------------------------------------------------------
 
-update orders_fin_monitoring set price_diff = round(price_diff, 2) where price_diff is not null;
+--update orders_fin_monitoring set price_diff = round(price_diff, 2) where price_diff is not null;
 --------------------------------------------------------------------------------
 --вспомогательна€ процедура вставки агрегированных данных
 create or replace procedure p_insert_fin_monitoring_data(

@@ -586,17 +586,22 @@ end;
 procedure TTasksS.ReportForYesterdayOrders(AOrderTypes: Integer; AMailing: Boolean = True);
 //финансовый отчет по производственным или отгрузочным заказам, запущенным за вчерашний день
 //1'Отчет по производственным заказам за вчерашний день',
-//2'Отчет по производственным заказам в работе',
+//2'Отчет по производственным заказам в работе',    //убрал
 //3'Отчет по отгрузочным заказам за вчерашний день',
-//4'Отчет по отгрузочным заказам в работе'
+//4'Отчет по отгрузочным заказам в работе'          //убрал
 var
   na: TNamedArr;
   Fields: TVarDynArray2;
   Tbl: THTMLTable;
   HTML, Title, TopSt, FileToSend: string;
 begin
-  Title := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за вчерашний день.';
-  TopSt := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за ' + DateTimeToStr(IncDay(Date, -1));
+  if AOrderTypes < 5 then begin
+    Title := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за вчерашний день.';
+    TopSt := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за ' + DateTimeToStr(IncDay(Date, -1));
+  end
+  else begin
+//    Title := 'Заказы';
+  end;
   Fields := [
     ['rownum$i', '№', '20'],
     ['item_wo_estimate$s', 'Нет сметы', '60'],
@@ -604,6 +609,7 @@ begin
     ['customer$s', 'Покупатели', '200;h'],
     ['fullname$s', 'Изделие', '500;h'],
     ['qnt$i', 'Количество', '80', 'r'],
+    ['qnt_on_sgp$i', 'Количество на СГП', '80', 'r'],
     ['price_std$i', 'Цена по справочнику без НДС', '80', 'r'],
     ['price$i', 'Цена продажи без НДС', '80', 'r'],
     ['price_diff$i', 'Занижение цены без НДС', '80', 'r'],
@@ -618,8 +624,8 @@ begin
     ['prime_cost$i', 'Затраты всего, сумма', '80', 'f=#:', 's', 'r', 'b'],
     ['prime_cost_percent$i', 'Затраты всего, %', '80', 'r']
   ];
-  Q.QLoad(Q.QGetSql('A', S.IIf(AOrderTypes in [1, 3], 'v_orders_fin_monitoring', 'v_orders_fin_monitoring_all') , Fields.Col(0).Implode(';')) +
-    ' where order_type = :p$i order by prime_cost_percent desc', [S.IIf(AOrderTypes in [3, 4], 0, -1)], na
+  Q.QLoad(Q.QGetSql('A', S.IIf(AOrderTypes in [1, 3], 'orders_fin_monitoring', 'orders_fin_monitoring') , Fields.Col(0).Implode(';')) +
+    ' where data_type = 1 and order_type = :p$i order by prime_cost_percent desc', [S.IIf(AOrderTypes in [3, 4], 0, -1)], na
   );
   if na.Count = 0 then begin
     HTML := 'Вчера ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочных', 'производственных') + ' заказов запущено не было.';
