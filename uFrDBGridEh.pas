@@ -912,6 +912,11 @@ type
     function  GetValueF(FieldName: string; Pos: Integer; Filtered: Boolean = true): Extended; overload;
     function  GetValueS(FieldName: string; Pos: Integer; Filtered: Boolean = true): string; overload;
     function  GetValueD(FieldName: string; Pos: Integer; Filtered: Boolean = true): TDateTime; overload;
+    function  GetRawValue(FieldName: string; Pos: Integer): Variant; overload;
+    function  GetRawValueI(FieldName: string; Pos: Integer): Integer; overload;
+    function  GetRawValueF(FieldName: string; Pos: Integer): Extended; overload;
+    function  GetRawValueS(FieldName: string; Pos: Integer): string; overload;
+    function  GetRawValueD(FieldName: string; Pos: Integer): TDateTime; overload;
     //получить значения всех перечисленных полей; если поля не переданы - получаем все
     function  GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
     function  GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
@@ -925,6 +930,7 @@ type
     procedure SetValue(FieldName: string; NewValue: Variant; Post: Boolean = True); overload;
     //установить значение поля во внутреннем массиве (отфильтрованных или всех зщаписей)
     procedure SetValue(FieldName: string; Pos: Integer; Filtered: Boolean; NewValue: Variant); overload;
+    procedure SetRawValue(FieldName: string; Pos: Integer; NewValue: Variant); overload;
     //получить имя поля переданного столбца в нижнем регистре; если столбец не передан, то возвращается текущее поле
     function  GetColumnFieldName(Column: TObject = nil): string;
     //получить заголовок столбца (из таблицы а не исходных данных)
@@ -2766,6 +2772,7 @@ function TFrDBGridEh.GetValueF(FieldName: string; Pos: Integer; Filtered: Boolea
 begin
   Result := S.NNum(GetValue(FieldName, Pos, Filtered));
 end;
+
 function TFrDBGridEh.GetValueS(FieldName: string; Pos: Integer; Filtered: Boolean = true): string;
 begin
   Result := S.NSt(GetValue(FieldName, Pos, Filtered));
@@ -2774,6 +2781,31 @@ end;
 function TFrDBGridEh.GetValueD(FieldName: string; Pos: Integer; Filtered: Boolean = true): TDateTime;
 begin
   Result := VarToDateTime(GetValue(FieldName, Pos, Filtered));
+end;
+
+function  TFrDBGridEh.GetRawValue(FieldName: string; Pos: Integer): Variant;
+begin
+  Result := MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[S.GetFieldNameOnly(FieldName), dvvValueEh];
+end;
+
+function  TFrDBGridEh.GetRawValueI(FieldName: string; Pos: Integer): Integer;
+begin
+  Result := S.NInt(GetValue(FieldName, Pos, False));
+end;
+
+function  TFrDBGridEh.GetRawValueF(FieldName: string; Pos: Integer): Extended;
+begin
+  Result := S.NNum(GetValue(FieldName, Pos, False));
+end;
+
+function  TFrDBGridEh.GetRawValueS(FieldName: string; Pos: Integer): string;
+begin
+  Result := S.NSt(GetValue(FieldName, Pos, False));
+end;
+
+function  TFrDBGridEh.GetRawValueD(FieldName: string; Pos: Integer): TDateTime;
+begin
+  Result := VarToDateTime(GetValue(FieldName, Pos, False));
 end;
 
 function TFrDBGridEh.GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray;
@@ -2841,6 +2873,12 @@ begin
     then MemTableEh1.RecordsView[Pos].DataValues[FieldName, dvvValueEh] := NewValue
     else MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[FieldName, dvvValueEh] := NewValue;
 end;
+
+procedure TFrDBGridEh.SetRawValue(FieldName: string; Pos: Integer; NewValue: Variant);
+begin
+  MemTableEh1.RecordsView.MemTableData.RecordsList[Pos].DataValues[FieldName, dvvValueEh] := NewValue;
+end;
+
 
 function TFrDBGridEh.GetColumnFieldName(Column: TObject = nil): string;
 //получить имя поля переданного столбца в нижнем регистре; если столбец не передан, то возвращается текущее поле

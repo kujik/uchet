@@ -548,7 +548,7 @@ begin
     exit when c1%notfound;
     update estimate_items set qnt1_itm = null, qnt_itm = null where id = PId;
     if IdNameNew is not null then
-      select max(id) into PId from estimate_items where id_estimate = IdEstimate and id_name = IdNameNew and qnt1 is not null;
+      select max(id) into PId from estimate_items where id_estimate = IdEstimate and id_name = IdNameNew; -- and qnt1 is not null;
       if PId is not null then
         update estimate_items set qnt1_itm = qnt1_itm + PQnt1, qnt_itm = qnt_itm + PQnt where id = PId;
       else
