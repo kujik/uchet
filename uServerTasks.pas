@@ -662,7 +662,7 @@ begin
   );
   if (naP.Count = 0) and (naO.Count = 0) then
     Exit;
-  HTML := '<b>Вчера были преждевременно созданы АВЗ</b><br>';
+  HTML := '<b>Вчера были преждевременно созданы АВР</b><br>';
   if naP.Count > 0 then begin
     HTML := HTML + '<br><b>По производственным заказам:</b><br>';
     for var i := 0 to naP.High do begin

@@ -148,7 +148,7 @@ begin
       );
       Wherest:= S.IIf(chbLike.Checked, 'upper(itemname) like upper(:name)', 'itemname = :name');
       Frg2.LoadData(
-        'select id as id_order_item, null as id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_order_items where ' +
+        'select id as id_order_item, null as id_estimate, slash, itemname, std, nvl2(dt_end, 1, 0) as end from v_order_items where qnt > 0 and id_order > 0 and ' +
         Wherest +
         S.IIf(not chbInclosedOrders.Checked, ' and dt_end is null ', ' ') +
         ' order by slash, itemname',

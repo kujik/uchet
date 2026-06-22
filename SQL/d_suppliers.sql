@@ -2001,7 +2001,7 @@ where
   and s.id_schet = ss.id_sp_schet
   and u.id_unit = n.id_unit
   and s.control_date is not null
-  and s.date_registr >= trunc(sysdate) - 3 and s.date_registr < trunc(sysdate)
+  and s.date_registr >= trunc(sysdate) - 1 and s.date_registr < trunc(sysdate)
 ; 
 
 

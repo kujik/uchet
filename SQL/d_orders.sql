@@ -1331,18 +1331,18 @@ create or replace view v_or_std_items as
     round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
     case 
         when nvl(i.price, 0) = 0 then null 
-        else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / nvl(i.price, 0) * 100, 2) 
+        else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / (nvl(i.price, 0) / 1.22) * 100, 2) 
     end as material_percent,
     fi.is_semiproduct,
     i0.labor_intensity as labor_intensity_0,
     i0.labor_cost as labor_cost_0,
-    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_0,
+    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent_0,
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
-    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / nvl(i.price, 0) * 100, 2) end as labor_percent_2,
+    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent_2,
     i0.labor_intensity + i2.labor_intensity as labor_intensity_total,
     i0.labor_cost + i2.labor_cost as labor_cost,
-    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / nvl(i.price, 0) * 100, 2) end as labor_percent
+    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent
   from
     or_std_items i
     left join estimates e on i.id = e.id_std_item
