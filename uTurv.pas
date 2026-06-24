@@ -3703,14 +3703,16 @@ var
 begin
 
   ShowWaitForm('Подготовка данных ТУРВ для использования в таблицах Excel...');
+
+  {
   LIds := Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   LIds := LIds + Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d', [GetTurvBegDate(Date)]);
-  //LIds := Q.QLoadCol('select id from w_turv_period where dt1 = :dt1$d and id_departament = 5', [GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);  //test
   for i := 0 to High(LIds) do begin
     LTurv.Create(LIds[i], '', 'id_employee');
     LTurv.UpdateExportTable;
     LTurv := Default(TTurvData);
   end;
+  }
 
   LDeps := Q.QLoadCol('select distinct id_departament from w_turv_period where dt1 = :dt1$d or dt1 = :dt2$d', [GetTurvBegDate(Date), GetTurvBegDate(IncDay(GetTurvBegDate(Date), -1))]);
   for i := 0 to High(LDeps) do begin

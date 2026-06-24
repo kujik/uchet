@@ -1223,7 +1223,10 @@ begin
         Id_ITM := FieldsArr[i][cBegValue];
       if (FieldsArr[i][cFieldName] = 'ndsd') then begin
         FieldsArr[i][cNewValue] := 1;
-        if cmb_Organization.ItemIndex > 0 then
+        //дол€ производства нет данных в массиве, в июн€ 26 установим 22% ндс
+        if (cmb_Organization.ItemIndex = 0) then
+          FieldsArr[i][cNewValue] := 1.22
+        else if cmb_Organization.ItemIndex > 0 then
           FieldsArr[i][cNewValue] := S.IIfV(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 1.22, 1);
       end;
     end;
@@ -2176,7 +2179,9 @@ begin
   //посчитаем сумму без ндс, выделать ли ндс смотрим в массиве организаций
   nds := 0;
   //возьмем ндс из массива ораганизаций, при этом данные в массиве сдвинуты вниз, в нем нет первой строки комбобокса ѕроизводство
-  if (cmb_Organization.ItemIndex > 0) and (cmb_Organization.ItemIndex <= High(Organizations) + 1) then
+  if (cmb_Organization.ItemIndex = 0) then
+    nds := 22
+  else if (cmb_Organization.ItemIndex > 0) and (cmb_Organization.ItemIndex <= High(Organizations) + 1) then
     nds := S.IIf(S.NSt(Organizations[cmb_Organization.ItemIndex - 1][3]) <> '', 22, 0);
   nedt_SumWoNds.Value := RoundTo(nedt_Sum.Value / ((nds + 100) / 100), -2);
 {  nedt_AddCompl.Value:=Gh.GetGridColumn(DBGridEh1, 'sum_resale').Footer.SumValue;

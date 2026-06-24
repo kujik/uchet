@@ -1,4 +1,4 @@
-select round(s.elapsed_time / 1000000 / s.executions) as tm, t.* 
+select round(s.elapsed_time / 1000000 / s.executions) as tm, s.executions, t.* 
 from v$active_session_history t, v$sql s, v$session se
 where t.sql_id = s.sql_id and t.session_id = se.sid and se.username = 'DV'
 order by nvl(t.sql_exec_start, date '2000-01-01') desc;

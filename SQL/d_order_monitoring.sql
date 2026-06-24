@@ -54,6 +54,15 @@ create table orders_fin_monitoring (
   attentions varchar2(4000)             --выделение €чеек (вводитс€ в отчете)  
 );
 
+create or replace view v_orders_fin_monitoring as
+select
+  t.*,
+  decode (item_wo_estimate, 0, '', '!!!') as item_wo_estimate_st
+from  
+  orders_fin_monitoring t
+;  
+
+
 --временна€ таблица уровн€ сессии, в нее загружаютс€ данные выборки при просмотре
 --пользователем отчета за произвольный период или по заказу.
 drop table temp_orders_fin_monitoring;
@@ -402,8 +411,7 @@ delete from orders_fin_monitoring where trunc(dt) >= trunc(sysdate) - 4;
 
 exec p_insert_orders_fin_monitoring;
 
-
-
+--select rownum, item_wo_estimate, ornums, customer, fullname, qnt, qnt_on_sgp, price_std, price, price_diff, summ, priceraw_wo_nds, sum0, sum0_percent, labor_cost_0, labor_cost_0_percent, labor_cost_2, labor_cost_2_percent, prime_cost, prime_cost_percent from orders_fin_monitoring where data_type = 1 and order_type = :p$i and dt_beg = trunc(sysdate) - 1 order by prime_cost_percent desc;
 
 
 

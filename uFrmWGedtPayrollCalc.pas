@@ -559,7 +559,7 @@ begin
         end;
         if st1 = fio then begin
           try
-          e := RoundTo(sh.Cells[cSum - 1, j].Value, -2);
+          e := RoundTo(sh.Cells[cSum - 1, j].Value * 100, -2);
           except
             st := st + fio + ': В файле расчета ОРС не число!' + #13#10;
             Continue;

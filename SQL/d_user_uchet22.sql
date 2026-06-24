@@ -59,3 +59,6 @@ GRANT EXECUTE ON SYS.KILL_USER_SESSION TO UCHET22;  --только оракл 11
 --от UCHET22
 CREATE OR REPLACE CONTEXT context_uchet22 USING set_context_value;
 delete from uchet22.adm_user_sessions;
+
+
+CREATE OR REPLACE DIRECTORY data_pump_dir AS 'r:\oracle\dumps';
