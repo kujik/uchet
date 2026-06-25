@@ -1017,6 +1017,12 @@ begin
     end;
   end;
   if OrderSaved then begin        //если удачно
+    //предупреждение об изменении номера заказа
+    if (Mode in [fAdd, fCopy]) and  OrderSaved then begin
+      var OrNumNew: Variant := Q.QLoadValue('select ornum from orders where id = :id$i', [ID]);
+      if edt_OrderNum.Text <> OrNumNew.AsString then
+        MyInfoMessage('Внимание!'#13#10'Номер заказа был изменен с ' + edt_OrderNum.Text + ' на ' + OrNumNew.AsString, 1);
+    end;
     //если нам нельзя менять состав заказа, то сброси массив, содержащий слеши для обновления смет,
     //и никакие сметы по заказу обновлены не будут ни в учете, ни в итм!
     //в ItemsToEstimateChange попадают слеши, по которым были любые изменения!
