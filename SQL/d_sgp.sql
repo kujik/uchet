@@ -797,7 +797,8 @@ where
 
 select '[все]' as name, -1, 0  as srt from dual union all select name, id, 1 as srt from v_sgp_sell_formats order by srt, name;
  select * from v_sgp_items; -- where id = 482;
-select * from sgp_act_in_items where id_std_item = 482;
+ select * from v_sgp_items where id_format_est = 26;-- and 1 = 2;
+select * from sgp_act_in_items; 
 
 select * from v_sgp_move_list where id = 482;
 
@@ -813,6 +814,15 @@ select * from v_sgp_move_list where id = 482;
 Приходд и расход поределяетсЯ движением по таблице приемки/отгрузки СГП именно по этому слешу.
 */
 
+ /*+
+    LEADING(SSI SGP_PARAMS ORDERS ORDER_ITEMS OR_STD_ITEMS ...)
+    USE_HASH(ORDERS ORDER_ITEMS OR_STD_ITEMS)
+    NO_USE_NL(ORDERS ORDER_ITEMS OR_STD_ITEMS)
+    NO_MERGE(V_SGP_SELL_ITEMS)
+    NO_MERGE(V_ORDER_ITEMS_ALL)
+    OPT_PARAM('optimizer_adaptive_plans' 'false')
+    OPT_PARAM('optimizer_adaptive_reporting_only' 'false')
+  */
 
 create or replace view v_sgp2_order_items as
 --вспомогательное представление, информация по изделиию заказа

@@ -1480,6 +1480,10 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+  va2 := Q.QLoad('select id, format_name,slash,name,qnt_psp_sell,qnt_psp_prod,qnt_sgp_registered,qnt_shipped,qnt,qnt_in_prod,qnt_to_shipped,qnt_min,qnt_need,price,summ,priceraw,sumraw from v_sgp_items where id_format_est  = :id_format_est$i', [26]);
+  Exit;
+
+
 var ln := Cth.GetTextWidth('sdfsdfsd', frmmain.Font);
   FrmChooseDialog.ShowDialog('Test', 'отступы между кнопками и по веритикали и по горизонтали для панелей из TSpeedButton', ['выбор 1', 'самый-самый правильный выбора','1','1','1','1','1'], [['ququ']]); exit;
 //FrmExportToXlsx.RunExport;Exit;
