@@ -657,7 +657,7 @@ type
   TModuleRecArr = array of TModuleRec;
 
 const
-  ModuleRecArr: array [0..6] of TModuleRec = (
+  ModuleRecArr: array [0..7] of TModuleRec = (
   (
   FileName: 'Администрирование';
   FileNameEn: 'Admin';
@@ -699,49 +699,59 @@ const
   FileNameEn: 'Orders';
   Caption: 'Заказы';
   SettingsTable: '';
+  ),
+  (
+  FileName: 'Планирование';
+  FileNameEn: 'Planning';
+  Caption: 'Планирование';
+  SettingsTable: '';
   )
   );
 
+  //количество модулей
+  cMainModulesCount = 8;
+
+  //текущий модуль (получим из ключей компиляции)
+  cMainModule =
+    {$IFDEF ADMIN}0
+    {$ELSE} {$IFDEF PC}1
+    {$ELSE} {$IFDEF TURV}2
+    {$ELSE} {$IFDEF PICK}3
+    {$ELSE} {$IFDEF SRV}4
+    {$ELSE} {$IFDEF PROD}5
+    {$ELSE} {$IFDEF OR}6
+    {$ELSE} {$IFDEF PLN}7
+    {$ELSE} -1  //никогда не выполнится из-за проверки в dpr
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
+    {$ENDIF};
 
 const
-//эта конструкция не даст скомпилировать, если не установлен ни один ключ типа модуля, или если установлено несколько
-  _ErrKeysNo = 1;
-  {$IFDEF ADMIN}
-  cMainModule=0;
-  {$ELSE}
-    {$IFDEF PC}
-    cMainModule=1;
-    {$ELSE}
-      {$IFDEF TURV}
-      cMainModule=2;
-      {$ELSE}
-        {$IFDEF PICK}
-        cMainModule=3;
-        {$ELSE}
-          {$IFDEF SRV}
-          cMainModule=4;
-          {$ELSE}
-            {$IFDEF PROD}
-            cMainModule=5;
-            {$ELSE}
-              {$IFDEF OR}
-              cMainModule=6;
-              {$ELSE}
-                _ErrKeysNo = 2;
-              {$ENDIF}
-            {$ENDIF}
-          {$ENDIF}
-        {$ENDIF}
-      {$ENDIF}
-    {$ENDIF}
+  //эта конструкция не даст скомпилировать, если не установлен ни один ключ типа модуля, или если установлено несколько
+  //определяем здесь а не в dpr, так как модуль компилируется раньше
+  //Счётчики для каждого ключа (1 – если определён, иначе 0)
+  cAdmin = {$IFDEF ADMIN}1{$ELSE}0{$ENDIF};
+  cPc    = {$IFDEF PC}1{$ELSE}0{$ENDIF};
+  cTurv  = {$IFDEF TURV}1{$ELSE}0{$ENDIF};
+  cPick  = {$IFDEF PICK}1{$ELSE}0{$ENDIF};
+  cSrv   = {$IFDEF SRV}1{$ELSE}0{$ENDIF};
+  cProd  = {$IFDEF PROD}1{$ELSE}0{$ENDIF};
+  cOr    = {$IFDEF OR}1{$ELSE}0{$ENDIF};
+  cPln   = {$IFDEF PLN}1{$ELSE}0{$ENDIF};
+  //Общее количество определённых ключей
+  cKeyCount = cAdmin + cPc + cTurv + cPick + cSrv + cProd + cOr + cPln;
+  //Проверка: если 0 или > 1 – ошибка компиляции
+  {$IF cKeyCount = 0}
+    {$MESSAGE FATAL 'Ошибка: не определён ни один ключ (ADMIN, PC, TURV, PICK, SRV, PROD, OR, PLN)'}
+  {$ELSEIF cKeyCount > 1}
+    {$MESSAGE FATAL 'Ошибка: определено более одного ключа (допустим только один)'}
   {$ENDIF}
-  {$IFDEF PC}_ErrKeys=1;{$ENDIF}
-  {$IFDEF TURV}_ErrKeys=1;{$ENDIF}
-  {$IFDEF PICK}_ErrKeys=1;{$ENDIF}
-  {$IFDEF SRV}_ErrKeys=1;{$ENDIF}
-  {$IFDEF PROD}_ErrKeys=1;{$ENDIF}
-  {$IFDEF OR}_ErrKeys=1;{$ENDIF}
-  cMainModulesCount = 7;
+
 
 var
   AfterProgramStart: Boolean;
@@ -1752,8 +1762,11 @@ const
   rOr_R_StdItems_Set_Prices='6-153';
   rOr_Rep_OrdersFin='6-154';
 
+  rPln_J_Orders_V = '7-01';
+
+
   const
-  URights : array [0..271] of array [0..3] of string = (
+  URights : array [0..272] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1970,8 +1983,6 @@ const
     (rOr_R_BCad_Units_V,'Модуль "Заказы"','Справочники: Единицы измерения bCAD','Доступ к справочнику'),
     (rOr_R_BCad_Units_Ch,'Модуль "Заказы"','Справочники: Единицы измерения bCAD','Создание, изменение, удаление записей'),
     (rOr_R_BCad_Nomencl_V,'Модуль "Заказы"','Справочники: Сметные позиции','Доступ к справочнику'),
-    //(rOr_R_BCad_Nomencl_Add,'Модуль "Заказы"','Справочники: Сметные позиции','--Добавление записи'),
-    //(rOr_R_BCad_Nomencl_Rename,'Модуль "Заказы"','Справочники: Сметные позиции','--Переименование записи в Учете и ИТМ'),
     (rOr_R_BCad_Replace_V,'Модуль "Заказы"','Справочники: Автозамена номенклатуры','Доступ к справочнику'),
     (rOr_R_BCad_Replace_Ch,'Модуль "Заказы"','Справочники: Автозамена номенклатуры','Создание, изменение, удаление записей'),
     (rOr_R_Spl_Categoryes_V,'Модуль "Заказы"','Справочники: Категории снабжения','Доступ к справочнику'),
@@ -2036,8 +2047,9 @@ const
     (rOr_Other_R_MinRemains_Ch_Suppl,'Модуль "Заказы"','Сервис: Формирование заявок на снабжение', 'Ввод данных поставщика'),
     (rOr_Other_J_ItmLog,'Модуль "Заказы"','Сервис: Журнал действий пользователей ИТМ', 'Доступ к журналу'),
     (rOr_Rep_ItmNomOverEstimate,'Модуль "Заказы"','Сервис: Номенклатура сверх смет', 'Доступ'),
-    (rOr_Rep_EstimatePrices,'Модуль "Заказы"','Сервис: Загрузка цен по смете', 'Доступ')
+    (rOr_Rep_EstimatePrices,'Модуль "Заказы"','Сервис: Загрузка цен по смете', 'Доступ'),
 
+    (rPln_J_Orders_V,'Модуль "Планирование"','Журналы: Заказы','Доступ к журналу, просмотр паспортов')
   );
 
 const

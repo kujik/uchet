@@ -736,6 +736,9 @@ begin
     ['Журнал действий пользователей ИТМ', myfrm_J_ItmLog, User.Role(rOr_Other_J_ItmLog)],
     ['Расширенный справочник номенклатуры ITM', myfrm_R_Or_ItmExtNomencl, User.Role(rOr_Other_ItmExtNomencl)]
     {$ENDIF}
+    {$IFDEF PLN}
+    []
+    {$ENDIF}
     {$IFDEF SRV}
     []
     {$ENDIF}

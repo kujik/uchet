@@ -234,45 +234,32 @@ end;
 {$R Main.RES}
 {$R Uchet.RES}
 
-
-
 begin
-  //посчистаем количество ключей компил€ции, указывающийх тип модул€
-  MNum := 0;
   //иконки в зависимости от модул€ (об€зательно удалить иконку (всю строку <Icon_MainIcon> !) из Uchet.dproj)
   {$IFDEF  ADMIN}
   {$R 'Icons\Uchet_Icon_0.res' 'Icons\Uchet_Icon_0.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  PC}
   {$R 'Icons\Uchet_Icon_1.res' 'Icons\Uchet_Icon_1.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  PICK}
   {$R 'Icons\Uchet_Icon_2.res' 'Icons\Uchet_Icon_2.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  TURV}
   {$R 'Icons\Uchet_Icon_3.res' 'Icons\Uchet_Icon_3.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  SRV}
   {$R 'Icons\Uchet_Icon_4.res' 'Icons\Uchet_Icon_4.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  PROD}
   {$R 'Icons\Uchet_Icon_5.res' 'Icons\Uchet_Icon_5.rc'}
-  inc(MNum);
   {$ENDIF}
   {$IFDEF  OR}
   {$R 'Icons\Uchet_Icon_6.res' 'Icons\Uchet_Icon_6.rc'}
-  inc(MNum);
   {$ENDIF}
-  //если задано 0 или больше одного ключа компил€ции, указывающего тип модул€, то предуплерим и выйдем
-  if MNum <> 1 then begin
-    MessageBox(0, pWideChar('Ќеверные ключи компил€ции!!!'), 'ќшибка', 0);
-    Halt;
-  end;
+  {$IFDEF  PLN}
+  {$R 'Icons\Uchet_Icon_7.res' 'Icons\Uchet_Icon_7.rc'}
+  {$ENDIF}
 
   //получим Mutex дл€ контрол€ повторного запуска приложени€
   {$IFDEF SRV}

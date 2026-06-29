@@ -158,6 +158,7 @@ insert into adm_modules (id, nameen, nameru) values (3, 'Picking', 'Комплектация
 insert into adm_modules (id, nameen, nameru) values (4, 'Server', 'Сервер');
 insert into adm_modules (id, nameen, nameru) values (5, 'Production', 'Производство');
 insert into adm_modules (id, nameen, nameru) values (6, 'Orders', 'Заказы');
+insert into adm_modules (id, nameen, nameru) values (7, 'Planning', 'Планирование');
 insert into adm_modules (id, nameen, nameru) values (0, '', '');
 
 

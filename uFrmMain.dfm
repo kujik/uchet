@@ -2,8 +2,8 @@ object FrmMain: TFrmMain
   Left = 667
   Top = 197
   Caption = 'U'
-  ClientHeight = 588
-  ClientWidth = 964
+  ClientHeight = 587
+  ClientWidth = 960
   Color = clAppWorkSpace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBlack
@@ -3209,7 +3209,7 @@ object FrmMain: TFrmMain
   object lbl_GetTop: TLabel
     Left = 0
     Top = 42
-    Width = 964
+    Width = 960
     Height = 13
     Align = alTop
     Caption = 'lbl_GetTop'
@@ -3218,20 +3218,21 @@ object FrmMain: TFrmMain
   end
   object lbl_GetBottom: TLabel
     Left = 0
-    Top = 556
-    Width = 964
+    Top = 555
+    Width = 960
     Height = 13
     Align = alBottom
     Caption = 'lbl_GetBottom'
     Color = clAppWorkSpace
     ParentColor = False
     Visible = False
+    ExplicitTop = 556
     ExplicitWidth = 74
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 569
-    Width = 964
+    Top = 568
+    Width = 960
     Height = 19
     AutoHint = True
     Panels = <
@@ -3244,13 +3245,11 @@ object FrmMain: TFrmMain
         Alignment = taRightJustify
         Width = 200
       end>
-    ExplicitTop = 568
-    ExplicitWidth = 960
   end
   object TlbMain: TToolBar
     Left = 0
     Top = 0
-    Width = 964
+    Width = 960
     Height = 42
     BorderWidth = 1
     ButtonHeight = 38
@@ -3266,12 +3265,11 @@ object FrmMain: TFrmMain
     TabOrder = 1
     Visible = False
     Wrapable = False
-    ExplicitWidth = 960
   end
   object FormsList: TToolBar
     Left = 0
-    Top = 537
-    Width = 964
+    Top = 536
+    Width = 960
     Height = 19
     Align = alBottom
     ButtonWidth = 70
@@ -3283,8 +3281,6 @@ object FrmMain: TFrmMain
     AllowTextButtons = True
     TabOrder = 2
     Transparent = False
-    ExplicitTop = 536
-    ExplicitWidth = 960
   end
   object MainMenu: TMainMenu
     Left = 808
