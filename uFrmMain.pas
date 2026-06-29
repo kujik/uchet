@@ -737,6 +737,8 @@ begin
     ['Расширенный справочник номенклатуры ITM', myfrm_R_Or_ItmExtNomencl, User.Role(rOr_Other_ItmExtNomencl)]
     {$ENDIF}
     {$IFDEF PLN}
+    ['Справочники'],
+    ['Производственные операции по лакокраске', myfrm_R_PnlOpsPainting, True],
     []
     {$ENDIF}
     {$IFDEF SRV}

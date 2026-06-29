@@ -114,5 +114,31 @@ create table pdo_order_stage_dates_items (
 );  
 
 
+/*
 
-              
+ПРОИЗВОДСТВЕНЫЕ ОПЕРАЦИИ ПО СТАНДАРТНЫМ ИЗДЕЛИЯМ И ИЗДЕЛИЯМ В ЗАКАЗАХ 
+
+*/
+
+-------------------------------------------------------------------------------
+--справочник производственных операций по покраске
+create table pnl_ref_ops_painting (
+  id number(11),
+  name varchar(400),  --полное наименование операции
+  pos number(4),      --позиция, для производственных
+  norm number,        --норма времени на 1 м.кв., мин. 
+  active number(1), 
+  constraint pk_pnl_ref_ops_painting primary key (id)
+);   
+
+create unique index idx_pnl_ref_ops_painting on pnl_ref_ops_painting lower(name);
+  
+create sequence sq_pnl_ref_ops_painting nocache start with 100;
+
+create or replace trigger trg_pnl_ref_ops_painting_bi_r 
+before insert on pnl_ref_ops_painting for each row
+begin
+  :new.id := sq_pnl_ref_ops_painting.nextval;
+  :new.pos := :new.id;
+end;
+/

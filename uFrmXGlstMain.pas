@@ -2407,6 +2407,28 @@ v:=True;
       ''#13#10
     ]];
   end
+
+  else if FormDoc = myfrm_R_PnlOpsPainting then begin
+    Caption:='Производственные операции по лакокраске';
+    Frg1.Options := Frg1.Options - [myogSorting] + [myogGridLabels];
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      //['pos$i','№','40'],
+      ['name$s','Наименование','400'],
+      ['norm$f','Норма, мин.','80'],
+      ['active$i','Исполь-'#13#10'эуется','80','pic']
+    ]);
+    Frg1.Opt.SetWhere('order by pos');
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_PnlOpsPainting;
+    Frg1.Opt.SetTable('pnl_ref_ops_painting');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.InfoArray:=[[Caption + #13#10#13#10 +
+      'Задайте операции, используя диалог ввода.'#13#10+
+      'С помощью кнопок Вверх и Вниз можно изменить порядок операции,'#13#10+
+      'в котором они будут отображаться в списках.'#13#10
+    ]];
+  end
+
   ;
 
   //--------------------------------------------------
@@ -2783,14 +2805,6 @@ begin
     Orders.CrealeEstimateOnPlannesOrders(Fr.GetControlValue('DeBeg'));
     Fr.RefreshGrid;
   end
-  else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_OrderProperties, myfrm_R_WorkCellTypes]) then begin
-    if (Tag = 1001) or (Tag = 1002) then begin
-//      if (FormDoc = myfrm_R_WorkCellTypes) and (Fr.GetValue('posstd') <> null) then
-//        Exit;
-      Q.QCallStoredProc('p_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
-      Fr.RefreshGrid;
-    end;
-  end
   else if (FormDoc = myfrm_J_Devel) and (Tag = 1000) then begin
     Wh.ExecReference(myfrm_J_Devel_Ref, Self, [], 0);
   end
@@ -2798,12 +2812,28 @@ begin
     Wh.ExecReference(myfrm_J_DevelThn_Ref, Self, [], 0);
   end
 
+  //----------------------------------------------------------------------------
+  //планирование
 
   else if (FormDoc = myfrm_J_Turv) and (Tag = 1000) then begin
     //Wh.ExecDialog(myfrm_Dlg_ForemanAllowance, Self, [], fEdit, Fr.ID, null);
     Turv.FinalizeAllTurvForPeriod;
     Fr.RefreshGrid;
   end
+
+  //----------------------------------------------------------------------------
+  //общее
+
+  //перемещение строки вверх/вниз
+  else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_OrderProperties, myfrm_R_WorkCellTypes, myfrm_R_PnlOpsPainting]) then begin
+    if (Tag = 1001) or (Tag = 1002) then begin
+      Q.QCallStoredProc('p_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
+      Fr.RefreshGrid;
+    end;
+  end
+
+
+
   else inherited;
 
 end;

@@ -965,6 +965,8 @@ const
   myfrm_Rep_OrdersFinMonitoring='Rep_OrdersFinMonitoring';
   myfrm_J_Orders_SEL = 'J_Orders_SEL';
 
+  myfrm_R_PnlOpsPainting = 'R_PnlOpsPainting';
+
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
   myfrm_Dlg_RefSuppliers = 'Dlg_R_Suppliers';
@@ -1073,6 +1075,8 @@ const
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
   myfrm_Dlg_MainSettings='Dlg_MainSettings';
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
+
+  myfrm_Dlg_R_PnlOpsPainting = 'Dlg_R_PnlOpsPainting';
 
 const
   DefHorizMargin = 5;

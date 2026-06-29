@@ -650,7 +650,10 @@ begin
     myfrm_J_SplDealsMonitoring,
     myfrm_J_OrdersBySlashes,
     myfrm_Rep_Orders_Overdue_Kns_Thn,
-    myfrm_Rep_Orders_Audit
+    myfrm_Rep_Orders_Audit,
+
+    {планирование}
+    myfrm_R_PnlOpsPainting
     ])
   then begin
     TFrmXGlstMain.Show(AOwner, F, MyFormOptions + [], fNone, 0, AAddParam);
@@ -1103,6 +1106,12 @@ begin
   end
   else if F = myfrm_Dlg_ProdCalculation then begin
     TFrmOWedtProdCalculation.Show(AOwner, F, MyFormOptions + [myfoSizeable, myfoMultiCopy, myfoDialog, myfoEnableMaximize], fMode, AId, AAddParam);
+  end
+
+  else if F = myfrm_Dlg_R_PnlOpsPainting then begin
+    TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'pnl_ref_ops_painting', 'Производственные операции по лакокраске', 700, 100,
+      [['name$s', cntEdit, 'Наименование','1:400::T'], ['norm$f', cntNEdit, 'Норма, мин.', '0.06:600:2:N'], ['active$i', cntCheckX, 'Используется']],
+      [['caption dlgedit dlgactive']]);
   end
 
   else if F = myfrm_Dlg_Test then begin
