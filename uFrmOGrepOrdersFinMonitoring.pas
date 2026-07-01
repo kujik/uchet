@@ -126,6 +126,7 @@ begin
     if Fr = FrgOrdersInPeriod then begin
       if MyQuestionMessage('Получение данных можжет занять длительное время'#13#10'Продолжить?') <> mrYes then
         Exit;
+      ShowWaitForm('Получение данных...');
       dtb := S.IIf(Fr.GetControlValue('dteBeg', True, True) = null, Date, Fr.GetControlValue('dteBeg', True, True));
       dte := S.IIf(Fr.GetControlValue('dteEnd', True, True) = null, dtb, Fr.GetControlValue('dteEnd', True, True));
       Q.QCallStoredProc(
@@ -138,9 +139,9 @@ begin
       Wh.ExecReference(myfrm_J_Orders_SEL, Self, [myfoDialog, myfoModal], 0);
       if Length(Wh.SelectDialogResult) = 0 then
         Exit;
-      ShowWaitForm('Получение данных...');
       if MyQuestionMessage('Получение данных можжет занять длительное время'#13#10'Продолжить?') <> mrYes then
         Exit;
+      ShowWaitForm('Получение данных...');
       Q.QCallStoredProc(
         'p_insert_fin_monitoring_data',
         'p1;p2;p3;p_id_order$i;p_dt_beg_from$d;p_dt_beg_to$d;p_filter_dt_end_zero$i',

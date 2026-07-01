@@ -550,7 +550,10 @@ begin
     if IdNameNew is not null then
       select max(id) into PId from estimate_items where id_estimate = IdEstimate and id_name = IdNameNew; -- and qnt1 is not null;
       if PId is not null then
-        update estimate_items set qnt1_itm = nvl(qnt1_itm, 0) + PQnt1, qnt_itm = nvl(qnt_itm, 0) + PQnt where id = PId;
+--        update estimate_items set qnt1_itm = nvl(qnt1_itm, 0) + PQnt1, qnt_itm = nvl(qnt_itm, 0) + PQnt where id = PId;
+        --в смете уже может быть такая позиция, на которую заменяем, в эьтом случае количества надо сложить
+        --но складываем с первоначальным количеством этой позиции по смеите, так как при сложении с qnt_itm при повторном вызове будет задвоение  
+        update estimate_items set qnt1_itm = nvl(qnt1, 0) + PQnt1, qnt_itm = nvl(qnt, 0) + PQnt where id = PId;  --!!!
       else
         insert into estimate_items (id_estimate, id_name, id_group, id_unit, id_comment, qnt1, qnt, qnt1_itm, qnt_itm)
           values(IdEstimate, IdNameNew, IdGroup, IdUnit, IdComment, null, null, PQnt1, PQnt)

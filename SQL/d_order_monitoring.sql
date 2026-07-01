@@ -55,6 +55,7 @@ create table orders_fin_monitoring (
   attentions varchar2(4000)             --גûהוכוםטו ÿקווך (גגמהטעסÿ ג מעקועו)  
 );
 
+
 create or replace view v_orders_fin_monitoring as
 select
   t.*,
