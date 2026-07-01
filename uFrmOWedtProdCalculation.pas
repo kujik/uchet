@@ -245,7 +245,7 @@ begin
    Fr.SetValue('consumption', Row,False, Fr.GetValueF('length', Row, False) * Fr.GetValueF('width', Row, False) * Fr.GetValueF('waste', Row, False) * Fr.GetValueF('qnt', Row, False));
     Fr.SetValue('sum0', Row, False, Fr.GetValueF('price0', Row, False) * Fr.GetValueF('consumption', Row, False));
     Fr.SetValue('sum', Row, False, Fr.GetValueF('sum0', Row, False) * Fr.GetValueF('markup', Row, False));
-    if Fr.GetValueI('facing_id_banding_type', Row, False) = 0 then
+    if Fr.GetValueI('4', Row, False) = 0 then
       Fr.SetValue('facing_consumption', Row, False, null)
     else if Fr.GetValueI('facing_id_banding_type', Row, False) = 3 then
       Fr.SetValue('facing_consumption', Row, False, Fr.GetValueF('length', Row, False) * Fr.GetValueF('width', Row, False) * Fr.GetValueF('qnt', Row, False) * Fr.GetValueF('facing_waste', Row, False))

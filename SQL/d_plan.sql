@@ -142,3 +142,270 @@ begin
   :new.pos := :new.id;
 end;
 /
+
+-------------------------------------------------------------------------------
+--производственных операций по покраске для стагндартных изделий и изделий в заказе
+
+--родительская таблица
+drop table pnl_ops_painting cascade constraints;
+create table pnl_ops_painting (
+  id number(11) primary key,            --айди
+  id_std_item number(11),               --айди стандартного изделия
+  id_order_item number(11),             --фйди изделия в заказе 
+  dt_data_entered date,                 --дата, когда все данные были введены   
+  dt_changed date,                      --дата изменения
+  is_data_entered number(1) default 0,  --введены ли данные; 0 – не введены, 1 – введены
+  constraint fk_ops_painting_id_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
+  constraint fk_ops_painting_id_order_item foreign key (id_order_item) references order_items(id) on delete cascade
+);
+
+create unique index idx_pnl_ops_painting_id_std_item on pnl_ops_painting (id_std_item);
+create unique index idx_pnl_ops_painting_id_order_item on pnl_ops_painting (id_order_item);
+create unique index idx_pnl_ops_painting_ids_std_order_item on pnl_ops_painting (id_std_item, id_order_item);
+
+
+create sequence sq_pnl_ops_painting nocache start with 1;
+
+create or replace trigger trg_pnl_ops_painting_bi_r 
+before insert on pnl_ops_painting for each row
+begin
+  :new.id := sq_pnl_ops_painting.nextval;
+end;
+/
+
+ 
+--сами операции для данной таблицы (изделия)
+drop table pnl_ops_painting_items cascade constraints;
+create table pnl_ops_painting_items (
+  id number(11) primary key,            --айди
+  id_ops_painting number(11),           --айди в родительской таблице
+  id_ref_ops_painting number(11),       --айди операции в журнале
+  area_per_item number,                 --площадь покраски на одно изделие                           
+  constraint fk_ops_painting_id_ops_painting foreign key (id_ops_painting) references pnl_ops_painting(id) on delete cascade,
+  constraint fk_ops_painting_id_ref_ops_painting foreign key (id_ref_ops_painting) references pnl_ref_ops_painting(id)
+);   
+
+create index idx_pnl_ops_painting_items_id_ops_painting on pnl_ops_painting_items (id_ops_painting);
+  
+create sequence sq_pnl_ops_painting_items nocache start with 1;
+
+create or replace trigger trg_pnl_ops_painting_items_bi_r 
+before insert on pnl_ops_painting_items for each row
+begin
+  :new.id := sq_pnl_ops_painting_items.nextval;
+end;
+/
+
+create or replace view v_pnl_ops_painting_items_dlg as
+select
+--вью для диалога ввода оперций по лакокраске для стандартного изделия изи изделия в заказе
+--выдаем все строки из справочника операций по лакокраске, и данные из таблицы к изделию, если есть
+--если привязано к изделию заказа, то выдадим еще итоговые ввеличины в пересчете на количество изделий
+  p.id_order_item,
+  p.id_std_item,
+  i.id,
+  i.id_ops_painting,
+  i.area_per_item,
+  r.id as id_ref_ops_painting,
+  r.name,
+  r.norm,
+  r.active,
+  r.pos,
+  oi.qnt * i.area_per_item as area_per_all_items
+from
+  pnl_ref_ops_painting r,
+  pnl_ops_painting_items i,
+  pnl_ops_painting p,
+  order_items oi
+where
+  r.id = i.id_ref_ops_painting (+)
+  and i.id_ops_painting = p.id (+)
+  and p.id_order_item = oi.id (+)
+;    
+
+
+-------------------------------------------------------------------------------
+--производственных операций на ЧПУ для стагндартных изделий и изделий в заказе
+
+--родительская таблица
+drop table pnl_ops_cnc cascade constraints;
+create table pnl_ops_cnc (
+  id number(11) primary key,            --айди
+  id_std_item number(11),               --айди стандартного изделия
+  id_order_item number(11),             --фйди изделия в заказе 
+  dt_data_entered date,                 --дата, когда все данные были введены   
+  dt_changed date,                      --дата изменения
+  is_data_entered number(1) default 0,  --введены ли данные; 0 – не введены, 1 – введены
+  constraint fk_ops_cnc_id_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
+  constraint fk_ops_cnc_id_order_item foreign key (id_order_item) references order_items(id) on delete cascade
+);
+
+create unique index idx_pnl_ops_cnc_id_std_item on pnl_ops_cnc (id_std_item);
+create unique index idx_pnl_ops_cnc_id_order_item on pnl_ops_cnc (id_order_item);
+create unique index idx_pnl_ops_cnc_ids_std_order_item on pnl_ops_cnc (id_std_item, id_order_item);
+
+create sequence sq_pnl_ops_cnc nocache start with 1;
+
+create or replace trigger trg_pnl_ops_cnc_bi_r 
+  before insert on pnl_ops_cnc for each row
+begin
+  :new.id := sq_pnl_ops_cnc.nextval;
+end;
+/
+
+ 
+--сами операции для данной таблицы (изделия)
+--мы не можем привязать строку к строке в смете, так как сметы пересоздаются!
+drop table pnl_ops_cnc_items cascade constraints;
+create table pnl_ops_cnc_items (
+  id number(11) primary key,            --айди
+  id_ops_cnc number(11),                --айди операции в журнале
+  id_bcad_nomencl number(11),              --айди наименования материла в смете (не уникальны!)
+  batch_count number,                   --количество закладкок
+  batch_duration number,                --время на одну закладку, мин  
+  constraint fk_ops_cnc_id_ops_cnc foreign key (id_ops_cnc) references pnl_ops_cnc(id) on delete cascade,
+  constraint fk_ops_cnc_id_bcad_nomencl foreign key (id_bcad_nomencl) references bcad_nomencl(id)
+);   
+
+create index idx_pnl_ops_cnc_items_id_ops_cnc on pnl_ops_cnc_items (id_ops_cnc);
+  
+create sequence sq_pnl_ops_cnc_items nocache start with 1;
+
+create or replace trigger trg_pnl_ops_cnc_items_bi_r 
+before insert on pnl_ops_cnc_items for each row
+begin
+  :new.id := sq_pnl_ops_cnc_items.nextval;
+end;
+/
+
+create or replace view v_pnl_ops_cnc_items_dlg as
+select
+--вью для диалога ввода оперций по xge
+  t.id_order_item,
+  t.id_std_item,
+  i.*,
+  bn.name
+from
+  pnl_ops_cnc_items i,
+  pnl_ops_cnc t,
+  bcad_nomencl bn
+where
+  i.id_ops_cnc = t.id
+  and i.id_bcad_nomencl = bn.id
+;    
+
+
+-------------------------------------------------------------------------------
+--производственных операций на Лазера для стагндартных изделий и изделий в заказе
+--структура полностью аналогична таковой для ЧПУ
+
+--родительская таблица
+drop table pnl_ops_laser cascade constraints;
+create table pnl_ops_laser (
+  id number(11) primary key,            --айди
+  id_std_item number(11),               --айди стандартного изделия
+  id_order_item number(11),             --фйди изделия в заказе 
+  dt_data_entered date,                 --дата, когда все данные были введены   
+  dt_changed date,                      --дата изменения
+  is_data_entered number(1) default 0,  --введены ли данные; 0 – не введены, 1 – введены
+  constraint fk_ops_laser_id_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
+  constraint fk_ops_laser_id_order_item foreign key (id_order_item) references order_items(id) on delete cascade
+);
+
+create unique index idx_pnl_ops_laser_id_std_item on pnl_ops_laser (id_std_item);
+create unique index idx_pnl_ops_laser_id_order_item on pnl_ops_laser (id_order_item);
+create unique index idx_pnl_ops_laser_ids_std_order_item on pnl_ops_laser (id_std_item, id_order_item);
+
+create sequence sq_pnl_ops_laser nocache start with 1;
+
+create or replace trigger trg_pnl_ops_laser_bi_r 
+  before insert on pnl_ops_laser for each row
+begin
+  :new.id := sq_pnl_ops_laser.nextval;
+end;
+/
+
+ 
+--сами операции для данной таблицы (изделия)
+--мы не можем привязать строку к строке в смете, так как сметы пересоздаются!
+drop table pnl_ops_laser_items cascade constraints;
+create table pnl_ops_laser_items (
+  id number(11) primary key,            --айди
+  id_ops_laser number(11),                --айди операции в журнале
+  id_bcad_nomencl number(11),              --айди наименования материла в смете (не уникальны!)
+  batch_count number,                   --количество закладкок
+  batch_duration number,                --время на одну закладку, мин  
+  constraint fk_ops_laser_id_ops_laser foreign key (id_ops_laser) references pnl_ops_laser(id) on delete cascade,
+  constraint fk_ops_laser_id_bcad_nomencl foreign key (id_bcad_nomencl) references bcad_nomencl(id)
+);   
+
+create index idx_pnl_ops_laser_items_id_ops_laser on pnl_ops_laser_items (id_ops_laser);
+  
+create sequence sq_pnl_ops_laser_items nocache start with 1;
+
+create or replace trigger trg_pnl_ops_laser_items_bi_r 
+before insert on pnl_ops_laser_items for each row
+begin
+  :new.id := sq_pnl_ops_laser_items.nextval;
+end;
+/
+
+create or replace view v_pnl_ops_laser_items_dlg as
+select
+--вью для диалога ввода оперций по xge
+  t.id_order_item,
+  t.id_std_item,
+  i.*,
+  bn.name
+from
+  pnl_ops_laser_items i,
+  pnl_ops_laser t,
+  bcad_nomencl bn
+where
+  i.id_ops_laser = t.id
+  and i.id_bcad_nomencl = bn.id
+;    
+
+
+-------------------------------------------------------------------------------
+--производственных операций по сверловке для стагндартных изделий и изделий в заказе
+--содержит только основную таблицу. единственный параметр - количество панелей со сверловкой
+
+--основная таблица
+drop table pnl_ops_drilling  cascade constraints;
+create table pnl_ops_drilling (
+  id number(11) primary key,            --айди
+  id_std_item number(11),               --айди стандартного изделия
+  id_order_item number(11),             --фйди изделия в заказе 
+  dt_data_entered date,                 --дата, когда все данные были введены   
+  dt_changed date,                      --дата изменения
+  is_data_entered number(1) default 0,  --введены ли данные; 0 – не введены, 1 – введены
+  qnt_panels_with_drill number,         --количество панелей со сверловкой   
+  constraint fk_ops_drilling_id_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade,
+  constraint fk_ops_drilling_id_order_item foreign key (id_order_item) references order_items(id) on delete cascade
+);
+
+create unique index idx_pnl_ops_drilling_id_std_item on pnl_ops_drilling (id_std_item);
+create unique index idx_pnl_ops_drilling_id_order_item on pnl_ops_drilling (id_order_item);
+create unique index idx_pnl_ops_drilling_ids_std_order_item on pnl_ops_drilling (id_std_item, id_order_item);
+
+create sequence sq_pnl_ops_drilling nocache start with 1;
+
+create or replace trigger trg_pnl_ops_drilling_bi_r 
+  before insert on pnl_ops_drilling for each row
+begin
+  :new.id := sq_pnl_ops_drilling.nextval;
+end;
+/
+
+create or replace view v_pnl_ops_drilling as
+select
+--вью для диалога ввода оперций по сверловке для стандартного изделия изи изделия в заказе
+  t.*,
+  oi.qnt * i.qnt_panels_with_drill as qnt_panels_with_drill_for_all
+from
+  pnl_ref_ops_drilling t,
+  order_items oi
+where
+  t.id_order_item = oi.id (+)
+;    

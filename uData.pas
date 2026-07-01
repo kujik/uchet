@@ -965,7 +965,10 @@ const
   myfrm_Rep_OrdersFinMonitoring='Rep_OrdersFinMonitoring';
   myfrm_J_Orders_SEL = 'J_Orders_SEL';
 
+  {планирование}
   myfrm_R_PnlOpsPainting = 'R_PnlOpsPainting';
+  myfrm_R_Pnl_StdItems = 'R_Pnl_StdItems';
+  myfrm_J_Pnl_Orders = 'J_Pnl_Orders';
 
   //диалоги
   myfrm_Dlg_PickItem = 'Dlg_Pick_Item';
@@ -1077,7 +1080,7 @@ const
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
 
   myfrm_Dlg_R_PnlOpsPainting = 'Dlg_R_PnlOpsPainting';
-
+  myfrm_Dlg_PnlOpsForItem = 'Dlg_PnlOpsForItem';
 const
   DefHorizMargin = 5;
   DefVertMargin = 5;
@@ -1767,10 +1770,14 @@ const
   rOr_Rep_OrdersFin='6-154';
 
   rPln_J_Orders_V = '7-01';
+  rPln_R_PnlOpsPainting_V = '7-02';
+  rPln_R_PnlOpsPainting_Ch = '7-03';
+  rPnl_R_StdItems_V='7-04';
+  rPnl_R_StdItems_Set_Ops='7-05';
 
 
   const
-  URights : array [0..272] of array [0..3] of string = (
+  URights : array [0..276] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -2053,7 +2060,11 @@ const
     (rOr_Rep_ItmNomOverEstimate,'Модуль "Заказы"','Сервис: Номенклатура сверх смет', 'Доступ'),
     (rOr_Rep_EstimatePrices,'Модуль "Заказы"','Сервис: Загрузка цен по смете', 'Доступ'),
 
-    (rPln_J_Orders_V,'Модуль "Планирование"','Журналы: Заказы','Доступ к журналу, просмотр паспортов')
+    (rPln_J_Orders_V,'Модуль "Планирование"','Журналы: Заказы','Доступ к журналу, просмотр паспортов'),
+    (rPln_R_PnlOpsPainting_V,'Модуль "Планирование"','Справочники: Производственные операции по лакокраске','Доступ к справочнику'),
+    (rPln_R_PnlOpsPainting_Ch,'Модуль "Планирование"','Справочники: Производственные операции по лакокраске','Ввод данных'),
+    (rPnl_R_StdItems_V,'Модуль "Планирование"','Справочники: Стандартные изделия','Доступ к справочнику'),
+    (rPnl_R_StdItems_Set_Ops,'Модуль "Планирование"','Справочники: Стандартные изделия','Ввод производственных операций')
   );
 
 const
@@ -2067,6 +2078,8 @@ const
   mycfgWtime_beg_diff_2 = 'time_beg_diff_2';
   mycfgWpath_to_payrolls = 'path_to_payrolls';
 
+  THIS_IS_STD_ITEM = 1;
+  THIS_IS_ORDER_ITEM = 2;
 
 type
 

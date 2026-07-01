@@ -56,70 +56,140 @@ begin
   FrmOGrefOrStdItems := Self;
   Caption:='Справочник стандартных изделий';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
-  Frg1.Opt.SetFields([
-    ['id$i','_id','40'],
-    ['id_or_format_estimates','_id_format_est',''],
-    ['wo_estimate','_wo_estimate',''],
-    ['name','Наименование','500;h'],
-    ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-    ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-//    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-    ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
-    ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
-    ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices), 't=1'],
-    ['material_percent','Стоимость материалов (без НДС), %','75', 't=1'],
-    ['route2','Производственный маршрут','120'],
-    ['qnt_panels_w_drill','Сверловка, панелей','80'],
-    ['dt_estimate','Смета','75'],
-    ['dt_influencing','Влияющие сметы','85', 'pic=01.01.2000;:6;0;7:+'],
-    ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
-    ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
-    ['labor_cost_0','!Стоимость','75'],
-    ['labor_percent_0','!%','65'],
-    ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
-    ['labor_cost_2','!Стоимость','75'],
-    ['labor_percent_2','!%','65'],
-    ['labor_intensity_total','Общая|Трудо-'#13#10'емкость','65'],
-    ['labor_cost','!Стоимость','75'],
-    ['labor_percent','!%','65'],
-    ['by_sgp','Учет по СГП','40','pic']
-  ]);
-  Frg1.Opt.SetTable('v_or_std_items');
-  Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
-  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
-    [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
-    [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
-//    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
-    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
-    [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
-    ,[mbtTest, User.IsDeveloper]
-  ]);
-  Frg1.Opt.SetButtonsIfEmpty([1000]);
-  Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
-  Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
-  Frg1.CreateAddControls('1', cntCheck, 'Скрыть цены по смете', 'ChbHidePrice0', '', -1, yrefC, 140);
-  SetCbEstimate;
-  Frg1.InfoArray:=[
-    [Caption + '.'#13#10+
-    'В верхней части в выпадающем списке выберете формат, для которого вы хотите просмотреть или редактировать стандартные изделия '#13#10+
-    '(ети форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
-    'С помощью кнопок или меню ПКМ откройте диалог для создания, изменения, копирования стандартных изделий,'#13#10+
-    'и вводите их наименования и параметры.'#13#10+
-    'Цены каждого изделия и цену перепродажи в его составе вы может редактировть не открывая диалога, а'#13#10+
-    'непосредственно изменяя значение цены в ячейке таблицы'#13#10+
-    '(цена перепродажи не может быть более цены изделия, а в случае дополнительной комплектации, обе цены равны).'#13#10+
-    'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
-    'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается доля стоимости материалов.'#13#10+
-    '(если не введена, то расчет идет по цене по смете).'#13#10+
-    'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
-    'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10+
-    ''#13#10+
-    'Наименования язделий не могут совпадать с наименованиями дополнительной комплектации, и не могут повторяться внутри одного формата.'#13#10+
-    'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвочнике Стандартные форматы паспортов.'#13#10+
-    'При переименовании изделия, в Учете позиции во всех ранее созданных заказах будут обновлены,'#13#10+
-    'также программа в этом случае пытается переименовать данную номенклатурную позицию и в ИТМ.'#13#10
-    ]
-  ];
+  if FormDoc = myfrm_R_OrderStdItems then begin
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_or_format_estimates','_id_format_est',''],
+      ['wo_estimate','_wo_estimate',''],
+      ['name','Наименование','500;h'],
+      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+  //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
+      ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
+      ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices), 't=1'],
+      ['material_percent','Стоимость материалов (без НДС), %','75', 't=1'],
+      ['route2','Производственный маршрут','120'],
+      ['qnt_panels_w_drill','Сверловка, панелей','80'],
+      ['dt_estimate','Смета','75'],
+      ['dt_influencing','Влияющие сметы','85', 'pic=01.01.2000;:6;0;7:+'],
+      ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
+      ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+      ['labor_cost_0','!Стоимость','75'],
+      ['labor_percent_0','!%','65'],
+      ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+      ['labor_cost_2','!Стоимость','75'],
+      ['labor_percent_2','!%','65'],
+      ['labor_intensity_total','Общая|Трудо-'#13#10'емкость','65'],
+      ['labor_cost','!Стоимость','75'],
+      ['labor_percent','!%','65'],
+      ['by_sgp','Учет по СГП','40','pic']
+    ]);
+    Frg1.Opt.SetTable('v_or_std_items');
+    Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
+      [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
+  //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
+      [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
+      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
+      ,[mbtTest, User.IsDeveloper]
+    ]);
+    Frg1.Opt.SetButtonsIfEmpty([1000]);
+    Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
+    Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
+    Frg1.CreateAddControls('1', cntCheck, 'Скрыть цены по смете', 'ChbHidePrice0', '', -1, yrefC, 140);
+    SetCbEstimate;
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10+
+      'В верхней части в выпадающем списке выберете формат, для которого вы хотите просмотреть или редактировать стандартные изделия '#13#10+
+      '(ети форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
+      'С помощью кнопок или меню ПКМ откройте диалог для создания, изменения, копирования стандартных изделий,'#13#10+
+      'и вводите их наименования и параметры.'#13#10+
+      'Цены каждого изделия и цену перепродажи в его составе вы может редактировть не открывая диалога, а'#13#10+
+      'непосредственно изменяя значение цены в ячейке таблицы'#13#10+
+      '(цена перепродажи не может быть более цены изделия, а в случае дополнительной комплектации, обе цены равны).'#13#10+
+      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
+      'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается доля стоимости материалов.'#13#10+
+      '(если не введена, то расчет идет по цене по смете).'#13#10+
+      'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
+      'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10+
+      ''#13#10+
+      'Наименования язделий не могут совпадать с наименованиями дополнительной комплектации, и не могут повторяться внутри одного формата.'#13#10+
+      'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвочнике Стандартные форматы паспортов.'#13#10+
+      'При переименовании изделия, в Учете позиции во всех ранее созданных заказах будут обновлены,'#13#10+
+      'также программа в этом случае пытается переименовать данную номенклатурную позицию и в ИТМ.'#13#10
+      ]
+    ];
+  end
+  else begin
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['id_or_format_estimates','_id_format_est',''],
+      ['wo_estimate','_wo_estimate',''],
+      ['name','Наименование','500;h'],
+//      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+//      ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+  //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+//      ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
+//      ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
+//      ['price_check$f','Контрольная цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices), 't=1'],
+//      ['material_percent','Стоимость материалов (без НДС), %','75', 't=1'],
+      ['route2','Производственный маршрут','120'],
+      ['qnt_panels_w_drill','Сверловка, панелей','80'],
+      ['dt_estimate','Смета','75'],
+      ['dt_influencing','Влияющие сметы','85', 'pic=01.01.2000;:6;0;7:+'],
+      ['is_xml_loaded','XML','40','pic=0;1;2:6;7;12'],
+      ['null as dt_pnl_ops','Производ-'#13#10'ственные операции','110','bt=Производственные операции'],
+      ['labor_intensity_0','ПЩ|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+      ['labor_cost_0','!Стоимость','75'],
+      ['labor_percent_0','!%','65'],
+      ['labor_intensity_2','ЛОК|Трудо-'#13#10'емкость','65','bt=Трудоемкость'],
+      ['labor_cost_2','!Стоимость','75'],
+      ['labor_percent_2','!%','65'],
+      ['labor_intensity_total','Общая|Трудо-'#13#10'емкость','65'],
+      ['labor_cost','!Стоимость','75'],
+      ['labor_percent','!%','65']
+//      ['by_sgp','Учет по СГП','40','pic']
+    ]);
+    Frg1.Opt.SetTable('v_or_std_items');
+    Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
+    Frg1.Opt.SetButtons(1,[
+      [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[],
+      [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
+      [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
+      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel]
+      ,[mbtTest, User.IsDeveloper]
+    ]);
+    Frg1.Opt.SetButtonsIfEmpty([1000]);
+    Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
+    Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
+    //Frg1.CreateAddControls('1', cntCheck, 'Скрыть цены по смете', 'ChbHidePrice0', '', -1, yrefC, 140);
+    SetCbEstimate;
+    Frg1.InfoArray:=[
+      [Caption + '.'#13#10+
+      'В верхней части в выпадающем списке выберете формат, для которого вы хотите просмотреть или редактировать стандартные изделия '#13#10+
+      '(ети форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
+      'С помощью кнопок или меню ПКМ откройте диалог для создания, изменения, копирования стандартных изделий,'#13#10+
+      'и вводите их наименования и параметры.'#13#10+
+      'Цены каждого изделия и цену перепродажи в его составе вы может редактировть не открывая диалога, а'#13#10+
+      'непосредственно изменяя значение цены в ячейке таблицы'#13#10+
+      '(цена перепродажи не может быть более цены изделия, а в случае дополнительной комплектации, обе цены равны).'#13#10+
+      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
+      'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается доля стоимости материалов.'#13#10+
+      '(если не введена, то расчет идет по цене по смете).'#13#10+
+      'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
+      'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10+
+      ''#13#10+
+      'Наименования язделий не могут совпадать с наименованиями дополнительной комплектации, и не могут повторяться внутри одного формата.'#13#10+
+      'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвочнике Стандартные форматы паспортов.'#13#10+
+      'При переименовании изделия, в Учете позиции во всех ранее созданных заказах будут обновлены,'#13#10+
+      'также программа в этом случае пытается переименовать данную номенклатурную позицию и в ИТМ.'#13#10
+      ]
+    ];
+
+  end;
   Result := inherited;
 end;
 
@@ -226,6 +296,9 @@ begin
   if Fr.CurrField = 'labor_intensity_2' then
    if Orders.SetLaborIntensity(Self, Fr.ID, 2, True) then
      Fr.RefreshRecord;
+  if Fr.CurrField = 'dt_pnl_ops' then begin
+    Wh.ExecDialog(myfrm_Dlg_PnlOpsForItem, Self, [], fEdit, Fr.ID, THIS_IS_STD_ITEM);
+  end;
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
@@ -240,8 +313,10 @@ end;
 procedure TFrmOGrefOrStdItems.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
   Fr.SetSqlParameters('id_or_format_estimates$i', [Cth.GetControlValue(Fr, 'CbEstimate')]);
-  Fr.Opt.SetColFeature('1', 'null', Fr.GetControlValue('ChbHidePrice0') = 1 , False);
-  Fr.Opt.SetColFeature('1', 'i', Fr.GetControlValue('ChbHidePrice0') = 1 , False);
+  if FormDoc = myfrm_R_OrderStdItems then begin
+    Fr.Opt.SetColFeature('1', 'null', Fr.GetControlValue('ChbHidePrice0') = 1, False);
+    Fr.Opt.SetColFeature('1', 'i', Fr.GetControlValue('ChbHidePrice0') = 1, False);
+  end;
 end;
 
 procedure TFrmOGrefOrStdItems.FormDestroy(Sender: TObject);

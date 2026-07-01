@@ -111,8 +111,9 @@ type
     procedure FromJSON(const AJSON: string);
     //методы для совместимости с исходным кодом
     function Col(const AFieldName: string): Integer;
-    function G(ARowNo: Integer; const AFieldName: string): Variant; overload;
     function G(const AFieldName: string): Variant; overload;
+    function G(ARowNo: Integer; const AFieldName: string): Variant; overload;
+    function GN(const AFieldName: string; const ANullIsNoRows: Boolean = True): Variant;
     function GetValueByOtherField(ASearchValue: Variant; const ASearchField, AResultField: string; AValueIfNotFound: Variant): Variant;
     function Find(AValue: Variant; const AFieldName: string): Integer; //первое вхождение
   end;
@@ -1518,6 +1519,15 @@ function TNamedArr.G(const AFieldName: string): Variant;
 //получить значение из первой строки
 begin
   Result := GetValue(0, AFieldName);
+end;
+
+function TNamedArr.GN(const AFieldName: string; const ANullIsNoRows: Boolean = True): Variant;
+//получить значение из первой строки
+begin
+  if (Count = 0) and  ANullIsNoRows then
+    Result := null
+  else
+    Result := GetValue(0, AFieldName);
 end;
 
 function TNamedArr.GetValueByOtherField(ASearchValue: Variant; const ASearchField, AResultField: string; AValueIfNotFound: Variant): Variant;

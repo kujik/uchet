@@ -2421,7 +2421,7 @@ v:=True;
     Frg1.Opt.SetWhere('order by pos');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_PnlOpsPainting;
     Frg1.Opt.SetTable('pnl_ref_ops_painting');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh], [], [mbtEdit, User.Role(rPln_R_PnlOpsPainting_Ch)], [mbtAdd,1],[mbtDelete,1], [], [1001, 1, 'Выше', 'arrow_up'], [1002, 1, 'Ниже', 'arrow_down'], [], [mbtGridSettings]]);
     Frg1.InfoArray:=[[Caption + #13#10#13#10 +
       'Задайте операции, используя диалог ввода.'#13#10+
       'С помощью кнопок Вверх и Вниз можно изменить порядок операции,'#13#10+

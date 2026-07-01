@@ -738,8 +738,12 @@ begin
     {$ENDIF}
     {$IFDEF PLN}
     ['Справочники'],
-    ['Производственные операции по лакокраске', myfrm_R_PnlOpsPainting, True],
-    []
+    ['Производственные операции по лакокраске', myfrm_R_PnlOpsPainting, User.Roles([], [rPln_R_PnlOpsPainting_V, rPln_R_PnlOpsPainting_Ch])],
+    [],
+    ['Стандартные изделия', myfrm_R_Pnl_StdItems, User.Roles([], [rPnl_R_StdItems_V])],
+
+    ['Журналы'],
+    ['Заказы', myfrm_J_Pnl_Orders, User.Roles([], [rPln_J_Orders_V])]
     {$ENDIF}
     {$IFDEF SRV}
     []
@@ -749,6 +753,4 @@ end;
 
 initialization
 end.
-
-
 

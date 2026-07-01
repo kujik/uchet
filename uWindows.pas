@@ -143,6 +143,7 @@ uses
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
 
+  uFrmPWedtPnlOps,
 
   uFrmXGlstMain,
   uFrmBasicInput
@@ -708,17 +709,14 @@ begin
   else if F = myfrm_J_ProdCalculations then begin
     TFrmOGjrnProdCalculations.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
-  else if F = myfrm_R_OrderStdItems then begin
-//    Form := TForm_R_OrStdItems.Create(Application, F, MyFormOptions, fNone, 0, null);
+  else if (F = myfrm_R_OrderStdItems) or (F = myfrm_R_Pnl_StdItems) then begin
     TFrmOGrefOrStdItems.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
-  else if F = myfrm_R_Estimate then begin
+  else if (F = myfrm_R_Estimate) then begin
     TFrmOGlstEstimate.Show(Application, F, MyFormOptions + [myfoMultiCopy], fNone, 0, AAddParam);
-//    Form := TForm_R_Estimate.Create(Application, F, MyFormOptions + [myfoMultiCopy], fNone, 0, AAddParam);
   end
   else if F = myfrm_R_AggEstimate then begin
     TFrmOGlstEstimate.Show(Application, F, MyFormOptions + [myfoMultiCopy], fNone, 0, AAddParam);
-//    Form := TForm_R_Estimate.Create(Application, F, MyFormOptions + [myfoMultiCopy], fNone, 0, AAddParam);
   end
   else if F = myfrm_R_Customers then begin
     //справочник отключен из-за неготовности сложной формы и отсутствия сейчас в нем необходимости
@@ -793,7 +791,6 @@ begin
   else if F = myfrm_Dlg_OrdersFinReport then begin
     Orders.OrdersFinReport;
   end
-
 
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + F + '" в ней не зарегистрирован!');
@@ -1109,10 +1106,16 @@ begin
   end
 
   else if F = myfrm_Dlg_R_PnlOpsPainting then begin
+    //диалог справочника производственных операций по лакокраске
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'pnl_ref_ops_painting', 'Производственные операции по лакокраске', 700, 100,
       [['name$s', cntEdit, 'Наименование','1:400::T'], ['norm$f', cntNEdit, 'Норма, мин.', '0.06:600:2:N'], ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']]);
   end
+  else if F = myfrm_Dlg_PnlOpsForItem then begin
+    //диалог ввода/просмотра производственных операций по смтандартному изделию или изделию заказа
+    TFrmPWedtPnlOps.Show(AOwner, F, MyFormOptions, fEdit, AID, AAddParam);
+  end
+
 
   else if F = myfrm_Dlg_Test then begin
   end

@@ -554,7 +554,8 @@ type
     //Если полей для группировки нет - она не включится
     procedure SetGrouping(AFields: TVarDynArray; AFonts: TFontsArray; AColors: TColorsArray; AActive: Boolean);
     //добавляет запись в массив определений выпадающих списков в столбцах грида
-    procedure SetPick(AFieldName: string; APickList: TVarDynArray; AKeyList: TVarDynArray; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean = True);
+    procedure SetPick(AFieldName: string; APickList: TVarDynArray; AKeyList: TVarDynArray; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean = True); overload;
+    procedure SetPick(AFieldName: string; APickKeyList: TVarDynArray2; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean = True) overload;
     //установка массива имен панелей автосохранения значений контролов
     procedure SetPanelsSaved(APanelsSaved: TVarDynArray);
 
@@ -886,6 +887,8 @@ type
     function  IsNotEmpty: Boolean;
     //получить количество строк таблицы (отфильрованных или нет)
     function  GetCount(Filtered: Boolean = True): Integer;
+    //получить количество неотфильтрованных строк таблицы
+    function GetRawCount: Integer;
     //получить признак первой или последней записи с учетом фильтра
     function  IsFirstRecord: Boolean;
     function  IsLastRecord: Boolean;
@@ -1363,6 +1366,18 @@ begin
   FPickLists[i].AlwaysShowEditButton := AAlwaysShowEditButton;
 end;
 
+procedure TFrDBGridEhOpt.SetPick(AFieldName: string; APickKeyList: TVarDynArray2; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean = True);
+//добавляет запись в массив определений выпадающих списков в столбцах грида
+var
+  KeyList, PickList: TVarDynArray;
+begin
+  PickList := APickKeyList.Col(0);
+  if Length(APickKeyList[0]) = 2 then
+    KeyList := APickKeyList.Col(1)
+  else
+    KeyList := [];
+  SetPick(AFieldName, PickList, KeyList, ALimitTextToListValues, AAlwaysShowEditButton);
+end;
 
 procedure TFrDBGridEhOpt.SetButtonsIfEmpty(AButtonsIfEmpty: TVarDynArray);
 //установка кнопок, которые доступны при пустом гриде. если не вызывалась - там будут кнопки по умолчанию
@@ -2650,21 +2665,28 @@ end;
 function TFrDBGridEh.IsEmpty: Boolean;
 //вернем True, если таблица пуста
 begin
-  Result:= (not MemTableEh1.Active) or (MemTableEh1.RecordCount = 0);
+  Result := (not MemTableEh1.Active) or (MemTableEh1.RecordCount = 0);
 end;
 
 function TFrDBGridEh.IsNotEmpty: Boolean;
 //вернем True, если таблица не пуста
 begin
-  Result:= not IsEmpty;
+  Result := not IsEmpty;
 end;
 
 function TFrDBGridEh.GetCount(Filtered: Boolean = True): Integer;
 //получить количество строк таблицы (отфильрованных или нет)
 begin
-  if Filtered
-    then Result:= MemTableEh1.RecordsView.Count
-    else Result:= MemTableEh1.RecordsView.MemTableData.RecordsList.Count;
+  if Filtered then
+    Result := MemTableEh1.RecordsView.Count
+  else
+    Result := MemTableEh1.RecordsView.MemTableData.RecordsList.Count;
+end;
+
+function TFrDBGridEh.GetRawCount: Integer;
+//получить количество неотфильтрованных строк таблицы
+begin
+  Result := MemTableEh1.RecordsView.MemTableData.RecordsList.Count;
 end;
 
 //получить признак первой или последней записи

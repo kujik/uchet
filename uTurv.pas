@@ -2798,7 +2798,7 @@ begin
   if k <> -1 then
     Result := va2[k][0]          //!!! неверное если нет рабочих дней, напр каникулы НГ!!!
   else
-    Result := micntBadDate;
+    Result :=cBadDate ;
 end;
 
 function TTurv.DeletePayrollCalculations(AId: Variant): Boolean;

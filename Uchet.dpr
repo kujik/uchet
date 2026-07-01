@@ -209,7 +209,8 @@ uses
   uServerTasks in 'uServerTasks.pas',
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
-  uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring};
+  uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
+  uFrmPWedtPnlOps in 'uFrmPWedtPnlOps.pas' {FrmPWedtPnlOps};
 
 var
   MT: Integer;

@@ -39,7 +39,7 @@ type
   TMyStringLocation = (stlLeft, stlRight, stlBoth); //для совместимости
 
 const
-  micntBadDate: Double = 365;  //30.12.1900
+  cBadDate: Double = 365;  //30.12.1900
   RubDividor: ShortString = ' ';
   KopDividor: ShortString = ' . ';
   Kop2Dividor: ShortString = '';
@@ -531,8 +531,10 @@ type
     function AsFloat: Extended;
     //Возвращает Boolean; для Null/Empty возвращает False.
     function AsBoolean: Boolean;
-    //Возвращает дату/время.
+    //Возвращает дату/время. Если null, вернет cBadDate
     function AsDateTime: TDateTime;
+    //Возвращает дату/время (строкове представление)
+    function AsDateTimeStr: string;
     //Возвращает Null, если значение равно 0 (как Extended).
     function NullIf0: Variant;
     //Возвращает Null, если значение Null или пустая строка.
@@ -3568,8 +3570,20 @@ end;
 
 function TVariantHelper.AsDateTime: TDateTime;
 begin
-  Result := Self;
+  if IsNull or IsEmpty then
+    Result := cBadDate
+  else
+    Result := Self;
 end;
+
+function TVariantHelper.AsDateTimeStr: string;
+begin
+  if IsNull or IsEmpty then
+    Result := ''
+  else
+    Result := DateTimeToStr(Self);
+end;
+
 
 function TVariantHelper.NullIf0: Variant;
 begin

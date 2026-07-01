@@ -30,7 +30,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         object edt_name: TDBEditEh
           Left = 81
           Top = 15
-          Width = 1006
+          Width = 998
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           ControlLabel.Width = 73
@@ -43,7 +43,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
           TabOrder = 0
           Text = 'edt_name'
           Visible = True
-          ExplicitWidth = 1002
+          ExplicitWidth = 994
         end
       end
       object pgcMain: TPageControl
@@ -51,7 +51,7 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
         Top = 49
         Width = 1116
         Height = 477
-        ActivePage = tsEconomic
+        ActivePage = ts1
         Align = alClient
         TabOrder = 1
         ExplicitWidth = 1112
@@ -71,8 +71,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             inherited pnlGrid: TPanel
               Width = 1098
               Height = 395
-              ExplicitWidth = 1098
-              ExplicitHeight = 395
+              ExplicitWidth = 1094
+              ExplicitHeight = 394
               inherited DbGridEh1: TDBGridEh
                 Width = 1096
                 Height = 372
@@ -98,8 +98,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
               inherited pnlStatusBar: TPanel
                 Top = 373
                 Width = 1096
-                ExplicitTop = 373
-                ExplicitWidth = 1096
+                ExplicitTop = 372
+                ExplicitWidth = 1092
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -112,21 +112,21 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             end
             inherited pnlLeft: TPanel
               Height = 395
-              ExplicitHeight = 395
+              ExplicitHeight = 394
             end
             inherited pnlTop: TPanel
               Width = 1108
-              ExplicitWidth = 1108
+              ExplicitWidth = 1104
             end
             inherited pnlContainer: TPanel
               Width = 1108
-              ExplicitWidth = 1108
+              ExplicitWidth = 1104
             end
             inherited pnlBottom: TPanel
               Top = 449
               Width = 1108
-              ExplicitTop = 449
-              ExplicitWidth = 1108
+              ExplicitTop = 448
+              ExplicitWidth = 1104
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -423,8 +423,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             inherited pnlGrid: TPanel
               Width = 1098
               Height = 395
-              ExplicitWidth = 1094
-              ExplicitHeight = 394
+              ExplicitWidth = 1098
+              ExplicitHeight = 395
               inherited DbGridEh1: TDBGridEh
                 Width = 1096
                 Height = 372
@@ -450,8 +450,8 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
               inherited pnlStatusBar: TPanel
                 Top = 373
                 Width = 1096
-                ExplicitTop = 372
-                ExplicitWidth = 1092
+                ExplicitTop = 373
+                ExplicitWidth = 1096
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -464,21 +464,21 @@ inherited FrmOWedtProdCalculation: TFrmOWedtProdCalculation
             end
             inherited pnlLeft: TPanel
               Height = 395
-              ExplicitHeight = 394
+              ExplicitHeight = 395
             end
             inherited pnlTop: TPanel
               Width = 1108
-              ExplicitWidth = 1104
+              ExplicitWidth = 1108
             end
             inherited pnlContainer: TPanel
               Width = 1108
-              ExplicitWidth = 1104
+              ExplicitWidth = 1108
             end
             inherited pnlBottom: TPanel
               Top = 449
               Width = 1108
-              ExplicitTop = 448
-              ExplicitWidth = 1104
+              ExplicitTop = 449
+              ExplicitWidth = 1108
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {

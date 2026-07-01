@@ -3,6 +3,7 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
   ClientWidth = 792
   OnDestroy = FormDestroy
   ExplicitWidth = 804
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 792
@@ -34,7 +35,7 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
             inherited pnlStatusBar: TPanel
               Top = 338
               Width = 758
-              ExplicitWidth = 758
+              ExplicitWidth = 754
             end
           end
           inherited pnlTop: TPanel
