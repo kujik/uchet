@@ -9,11 +9,13 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
   inherited pnlFrmMain: TPanel
     Width = 810
     Height = 407
-    ExplicitWidth = 262
-    ExplicitHeight = 80
+    ExplicitWidth = 810
+    ExplicitHeight = 407
     inherited pnlFrmClient: TPanel
       Width = 800
       Height = 358
+      ExplicitWidth = 796
+      ExplicitHeight = 357
       object pgcMain: TPageControl
         Left = 0
         Top = 0
@@ -22,6 +24,8 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
         ActivePage = tsSelectedOrder
         Align = alClient
         TabOrder = 0
+        ExplicitWidth = 796
+        ExplicitHeight = 357
         object tsStartedOrders: TTabSheet
           Caption = #1047#1072#1087#1091#1097#1077#1085#1085#1099#1077' '#1079#1072#1082#1072#1079#1099
           inline FrgStartedOrders: TFrDBGridEh
@@ -31,10 +35,8 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
             Height = 330
             Align = alClient
             TabOrder = 0
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 770
-            ExplicitHeight = 413
+            ExplicitWidth = 788
+            ExplicitHeight = 329
             inherited pnlGrid: TPanel
               Width = 782
               Height = 276
@@ -101,7 +103,7 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331362027255B446F
                 63756D656E745C66315C6C616E6731303333205D205C66305C6C616E67313034
                 3920255B546F6461795D20255B557365724E616D655D5C66315C6C616E673130
@@ -119,10 +121,8 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
             Height = 330
             Align = alClient
             TabOrder = 0
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 770
-            ExplicitHeight = 413
+            ExplicitWidth = 788
+            ExplicitHeight = 329
             inherited pnlGrid: TPanel
               Width = 782
               Height = 276
@@ -189,7 +189,7 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331362027255B446F
                 63756D656E745C66315C6C616E6731303333205D205C66305C6C616E67313034
                 3920255B546F6461795D20255B557365724E616D655D5C66315C6C616E673130
@@ -207,10 +207,8 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
             Height = 330
             Align = alClient
             TabOrder = 0
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 770
-            ExplicitHeight = 413
+            ExplicitWidth = 788
+            ExplicitHeight = 329
             inherited pnlGrid: TPanel
               Width = 782
               Height = 276
@@ -277,7 +275,7 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331362027255B446F
                 63756D656E745C66315C6C616E6731303333205D205C66305C6C616E67313034
                 3920255B546F6461795D20255B557365724E616D655D5C66315C6C616E673130
@@ -295,15 +293,13 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
             Height = 330
             Align = alClient
             TabOrder = 0
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 770
-            ExplicitHeight = 413
+            ExplicitWidth = 788
+            ExplicitHeight = 329
             inherited pnlGrid: TPanel
               Width = 782
               Height = 276
-              ExplicitWidth = 760
-              ExplicitHeight = 359
+              ExplicitWidth = 778
+              ExplicitHeight = 275
               inherited DbGridEh1: TDBGridEh
                 Width = 780
                 Height = 253
@@ -329,8 +325,8 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
               inherited pnlStatusBar: TPanel
                 Top = 254
                 Width = 780
-                ExplicitTop = 337
-                ExplicitWidth = 758
+                ExplicitTop = 253
+                ExplicitWidth = 776
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -343,21 +339,21 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
             end
             inherited pnlLeft: TPanel
               Height = 276
-              ExplicitHeight = 359
+              ExplicitHeight = 275
             end
             inherited pnlTop: TPanel
               Width = 792
-              ExplicitWidth = 770
+              ExplicitWidth = 788
             end
             inherited pnlContainer: TPanel
               Width = 792
-              ExplicitWidth = 770
+              ExplicitWidth = 788
             end
             inherited pnlBottom: TPanel
               Top = 330
               Width = 792
-              ExplicitTop = 413
-              ExplicitWidth = 770
+              ExplicitTop = 329
+              ExplicitWidth = 788
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -365,7 +361,7 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
                 7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
                 305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
                 666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
-                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                6E657261746F722052696368656432302031302E302E31393034317D5C766965
                 776B696E64345C756331200D0A5C706172645C66305C667331362027255B446F
                 63756D656E745C66315C6C616E6731303333205D205C66305C6C616E67313034
                 3920255B546F6461795D20255B557365724E616D655D5C66315C6C616E673130
@@ -378,29 +374,34 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
     inherited pnlFrmBtns: TPanel
       Top = 363
       Width = 800
-      ExplicitTop = 36
-      ExplicitWidth = 252
+      ExplicitTop = 362
+      ExplicitWidth = 796
       inherited bvlFrmBtnsTl: TBevel
         Width = 798
+        ExplicitWidth = 798
       end
       inherited bvlFrmBtnsB: TBevel
         Width = 798
+        ExplicitWidth = 798
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 798
-        ExplicitWidth = 250
+        ExplicitWidth = 794
         inherited pnlFrmBtnsMain: TPanel
           Left = 699
+          ExplicitLeft = 695
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 471
-          ExplicitLeft = -77
+          ExplicitLeft = 467
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 600
+          ExplicitLeft = 596
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 331
+          ExplicitWidth = 327
         end
       end
     end
@@ -408,9 +409,12 @@ inherited FrmOGrepOrdersFinMonitoring: TFrmOGrepOrdersFinMonitoring
   inherited pnlStatusBar: TPanel
     Top = 407
     Width = 810
+    ExplicitTop = 406
+    ExplicitWidth = 806
     inherited lblStatusBarR: TLabel
       Left = 737
       Height = 14
+      ExplicitLeft = 737
     end
     inherited lblStatusBarL: TLabel
       Height = 14

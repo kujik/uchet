@@ -21,7 +21,7 @@
 --------------------------------------------------------------------------------
 -- таблицца с финансовыми данными по заказам
 -- все суммы и цены без ндс
-alter table orders_fin_monitoring add qnt_on_sgp number;
+alter table orders_fin_monitoring add priceraw_wo_nds_std number;
 create table orders_fin_monitoring (
   id number(11),                        --айди
   dt date,                              --дата внесения записи
@@ -38,7 +38,8 @@ create table orders_fin_monitoring (
   price_diff    number,                 --разница реальной продажной со справочником
   summ          number,                 --сумма по продаже
   sum0          number,                 --сумма по закупке (себестоимость), на основании смет по изделиям в заказе
-  priceraw_wo_nds number,               --цена по закупке (сейчас на основании сметы стандартного изделия)
+  priceraw_wo_nds_std number,           --цена по закупке материалов на основании сметы стандартного изделия 
+  priceraw_wo_nds number,               --цена по закупке материалов, средняя для сгруппированных изделий
   labor_intensity_0 number,             --трудоемкость ПЩ, мин (сумма)
   labor_cost_0     number,              --трудоемкость ПЩ, руб (сумма)
   labor_intensity_2 number,
@@ -79,6 +80,7 @@ create global temporary table temp_orders_fin_monitoring (
   price          number,
   price_std      number,
   price_diff     number,
+  priceraw_wo_nds_std number,
   priceraw_wo_nds number,
   summ           number,
   sum0           number,
@@ -202,6 +204,7 @@ begin
       price,
       price_std,
       price_diff,
+      priceraw_wo_nds_std,
       priceraw_wo_nds,
       summ,
       sum0,
@@ -230,6 +233,7 @@ begin
       t.price,
       t.price_std,
       case when t.price_std > t.price then t.price - t.price_std else null end,
+      t.priceraw_wo_nds_std,
       t.priceraw_wo_nds,
       round(t.price * t.qnt, 2),
       t.sum0,
@@ -254,10 +258,11 @@ begin
         listagg(oi.ornum, '', '') within group (order by oi.ornum) as ornums,
         listagg(oi.customer, '', '') within group (order by oi.ornum) as customer,
         si.fullname,
-        max(round(si.price / 1.22, 2)) as price_std,
+        max(round(si.price / 1.22, 0)) as price_std,
         sum(oi.qnt) as qnt,
         round(oi.cost_wo_nds / oi.qnt, 0) as price,
-        max(si.priceraw_wo_nds) as priceraw_wo_nds,
+        round(max(si.priceraw_wo_nds)) as priceraw_wo_nds_std,
+        round(sum(oi.sum0 / 1.22) / sum(oi.qnt)) as priceraw_wo_nds,
         sum(round(oi.sum0 / 1.22, 0)) as sum0,
         sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
         sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,

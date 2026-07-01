@@ -37,7 +37,7 @@ var
 implementation
 
 uses
-  uDBOra, uWindows;
+  uDBOra, uWindows, uWaitForm;
 
 {$R *.dfm}
 
@@ -69,6 +69,7 @@ begin
     ['price$i', 'Цена продажи без НДС', '80', 'r'],
     ['price_diff$i', 'Занижение цены без НДС', '80', 'r'],
     ['summ$i', 'Сумма продажи без НДС', '80', 'f=#:', 's', 'r'],
+    ['priceraw_wo_nds_std$i', 'Себестоимость по смете стд. изд., без НДС', '80', 's', 'r'],
     ['priceraw_wo_nds$i', 'Себестоимость по смете, за шт., без НДС', '80', 's', 'r'],
     ['sum0$i', 'Себестоимость по смете, сумма без НДС', '80', 'f=#:', 's', 'r'],
     ['sum0_percent$i', '%', '80', 'r'],
@@ -137,6 +138,7 @@ begin
       Wh.ExecReference(myfrm_J_Orders_SEL, Self, [myfoDialog, myfoModal], 0);
       if Length(Wh.SelectDialogResult) = 0 then
         Exit;
+      ShowWaitForm('Получение данных...');
       if MyQuestionMessage('Получение данных можжет занять длительное время'#13#10'Продолжить?') <> mrYes then
         Exit;
       Q.QCallStoredProc(
