@@ -69,7 +69,105 @@ select to_char(id) as id, format_name, slash, name, qnt_psp_sell, qnt_psp_prod, 
 SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL, NULL, 'ALLSTATS LAST +OUTLINE'));
 
 
+--------------------------------------------------------------------------------
 
+-- ============================================================================
+-- Create a manual SQL Profile for SQL_ID_2
+-- using the execution plan hints from SQL_ID_1 / PLAN_HASH_VALUE_1
+--
+-- Requirements:
+--   - Diagnostic + Tuning Pack licensed
+--   - EXECUTE on DBMS_SQLTUNE
+--   - Access to GV$/V$SQL_PLAN
+--
+-- Replace:
+--   &&SOURCE_SQL_ID
+--   &&SOURCE_PHV
+--   &&TARGET_SQL_ID
+--   &&PROFILE_NAME
+--
+-- Notes:
+--   - The target SQL text must exist in cursor cache.
+--   - This extracts OUTLINE hints from the good plan and applies them
+--     as a SQL Profile to another SQL_ID.
+-- ============================================================================
+
+set serveroutput on size unlimited
+set long 1000000
+set pagesize 0
+set linesize 300
+set verify off
+
+define SOURCE_SQL_ID = '&&1'
+define SOURCE_PHV    = '&&2'
+define TARGET_SQL_ID = '&&3'
+define PROFILE_NAME  = '&&4'
+
+DECLARE
+    l_sql_text   CLOB;
+    l_profile    SYS.SQLPROF_ATTR;
+    l_hints      CLOB;
+BEGIN
+
+    ----------------------------------------------------------------------------
+    -- Get target SQL text
+    ----------------------------------------------------------------------------
+    SELECT sql_fulltext
+    INTO   l_sql_text
+    FROM   v$sql
+    WHERE  sql_id = '&&TARGET_SQL_ID'
+    AND    rownum = 1;
+
+    ----------------------------------------------------------------------------
+    -- Collect outline hints from good plan
+    ----------------------------------------------------------------------------
+    SELECT
+        XMLCAST(
+            XMLAGG(
+                XMLELEMENT(e, q'[']' || hint || q'[' ,]')
+                ORDER BY hint
+            ) AS CLOB
+        )
+    INTO l_hints
+    FROM (
+        SELECT DISTINCT
+               extractvalue(value(d), '/hint') AS hint
+        FROM xmltable(
+            '/other_xml/outline_data/hint'
+            PASSING (
+                SELECT XMLTYPE(other_xml)
+                FROM   v$sql_plan
+                WHERE  sql_id = '&&SOURCE_SQL_ID'
+                AND    plan_hash_value = &&SOURCE_PHV
+                AND    other_xml IS NOT NULL
+                AND    rownum = 1
+            )
+        ) d
+    );
+
+    ----------------------------------------------------------------------------
+    -- Convert hint list to SQLPROF_ATTR
+    ----------------------------------------------------------------------------
+    EXECUTE IMMEDIATE
+        'BEGIN :x := SYS.SQLPROF_ATTR(' || l_hints || '); END;'
+    USING OUT l_profile;
+
+    ----------------------------------------------------------------------------
+    -- Create SQL Profile
+    ----------------------------------------------------------------------------
+    DBMS_SQLTUNE.IMPORT_SQL_PROFILE(
+        sql_text    => l_sql_text,
+        profile     => l_profile,
+        name        => '&&PROFILE_NAME',
+        force_match => TRUE,
+        replace     => TRUE,
+        category    => 'DEFAULT'
+    );
+
+    DBMS_OUTPUT.PUT_LINE('SQL Profile created: &&PROFILE_NAME');
+
+END;
+/
 
 
 

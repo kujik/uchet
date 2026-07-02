@@ -143,7 +143,7 @@ uses
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
 
-  uFrmPWedtPnlOps,
+  uFrmPWedtPlnOps,
 
   uFrmXGlstMain,
   uFrmBasicInput
@@ -1113,7 +1113,7 @@ begin
   end
   else if F = myfrm_Dlg_PnlOpsForItem then begin
     //диалог ввода/просмотра производственных операций по смтандартному изделию или изделию заказа
-    TFrmPWedtPnlOps.Show(AOwner, F, MyFormOptions, fEdit, AID, AAddParam);
+    TFrmPWedtPlnOps.Show(AOwner, F, MyFormOptions, fEdit, AID, AAddParam);
   end
 
 

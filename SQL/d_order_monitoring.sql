@@ -21,7 +21,7 @@
 --------------------------------------------------------------------------------
 -- таблицца с финансовыми данными по заказам
 -- все суммы и цены без ндс
-alter table orders_fin_monitoring add priceraw_wo_nds_std number;
+alter table orders_fin_monitoring add qnt_need_on_sgp number;
 create table orders_fin_monitoring (
   id number(11),                        --айди
   dt date,                              --дата внесения записи
@@ -51,6 +51,7 @@ create table orders_fin_monitoring (
   prime_cost_percent   number,          --общая доля всех расходов, %
   item_wo_estimate number,              --признак отсутствия сметы
   qnt_on_sgp number,                    --количество изделий (стандартных) на СГП на вечер дня  
+  qnt_need_on_sgp number,               --избыток/потребностьт на СГП на вечер дня  
   comm varchar2(4000),                  --комментарий (вводится в отчете)
   attentions varchar2(4000)             --выделение ячеек (вводится в отчете)  
 );
@@ -96,6 +97,7 @@ create global temporary table temp_orders_fin_monitoring (
   prime_cost_percent   number,
   item_wo_estimate number,
   qnt_on_sgp number,
+  qnt_need_on_sgp number,                 
   id_order_items   varchar2(4000)
 ) on commit preserve rows;
 
@@ -220,6 +222,7 @@ begin
       prime_cost_percent,
       item_wo_estimate,
       qnt_on_sgp,
+      qnt_need_on_sgp,
       id_order_items,
       data_type,
       dt
@@ -243,12 +246,14 @@ begin
       t.labor_intensity_2,
       t.labor_cost_2,
       t.sum0 + t.labor_cost_0 + t.labor_cost_2,
-      case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end,
+--      case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end,  --sum0_percent
+      case when t.price = 0 then null when nvl(t.priceraw_wo_nds_std, 0) = 0 then round(t.sum0 / (t.price * t.qnt) * 100, 1) else round(t.priceraw_wo_nds_std / t.price * 100, 1) end,  --sum0_percent
       case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end,
       case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
       case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
       t.item_wo_estimate,
       t.qnt_on_sgp,
+      t.qnt_need_on_sgp,
       t.id_order_items_str,
       :dt_type,
       :dt
@@ -270,12 +275,13 @@ begin
         sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
         sum(si.labor_cost_2 * oi.qnt) as labor_cost_2,
         max(sgp.qnt) as qnt_on_sgp,
+        max(sgp.qnt_need) as qnt_need_on_sgp,
         max(case when (nvl(oi.wo_estimate, 0) <> 0) and (nvl(si.dt_influencing, date ''1900-01-01'') = date ''2000-01-01'' or e.id is null) then 1 else 0 end) as item_wo_estimate,
         listagg(oi.id, '', '') within group (order by oi.id) as id_order_items_str
       from
         v_order_items oi,
         v_or_std_items si,
-        ' || case when not v_use_temp then 'v_sgp_items sgp,' else '(select null as id, null as qnt from dual) sgp,' end || '
+        ' || case when not v_use_temp then 'v_sgp_items sgp,' else '(select null as id, null as qnt, null as qnt_need from dual) sgp,' end || '
         --v_sgp_items sgp,
         estimates e
       where

@@ -1,5 +1,5 @@
-inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
-  Caption = 'FrmPWedtPnlOps'
+inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
+  Caption = 'FrmPWedtPlnOps'
   ClientHeight = 544
   ClientWidth = 846
   ExplicitWidth = 858
@@ -55,7 +55,7 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
         Top = 41
         Width = 836
         Height = 397
-        ActivePage = tsCnc
+        ActivePage = tsDrilling
         Align = alClient
         TabOrder = 2
         object tsPainting: TTabSheet
@@ -67,7 +67,7 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
             Height = 18
             Align = alTop
             TabOrder = 0
-            ExplicitWidth = 824
+            ExplicitWidth = 828
             inherited bvl1: TBevel
               Width = 828
               ExplicitWidth = 707
@@ -81,8 +81,6 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
             Align = alBottom
             Caption = 'pnlPaintingBottom'
             TabOrder = 1
-            ExplicitTop = 333
-            ExplicitWidth = 824
             object lblPainting: TLabel
               Left = 137
               Top = 6
@@ -113,8 +111,8 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
             inherited pnlGrid: TPanel
               Width = 818
               Height = 262
-              ExplicitWidth = 814
-              ExplicitHeight = 261
+              ExplicitWidth = 818
+              ExplicitHeight = 262
               inherited DbGridEh1: TDBGridEh
                 Width = 816
                 Height = 239
@@ -140,8 +138,8 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
               inherited pnlStatusBar: TPanel
                 Top = 240
                 Width = 816
-                ExplicitTop = 239
-                ExplicitWidth = 812
+                ExplicitTop = 240
+                ExplicitWidth = 816
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -154,21 +152,21 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
             end
             inherited pnlLeft: TPanel
               Height = 262
-              ExplicitHeight = 261
+              ExplicitHeight = 262
             end
             inherited pnlTop: TPanel
               Width = 828
-              ExplicitWidth = 824
+              ExplicitWidth = 828
             end
             inherited pnlContainer: TPanel
               Width = 828
-              ExplicitWidth = 824
+              ExplicitWidth = 828
             end
             inherited pnlBottom: TPanel
               Top = 316
               Width = 828
-              ExplicitTop = 315
-              ExplicitWidth = 824
+              ExplicitTop = 316
+              ExplicitWidth = 828
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -312,6 +310,197 @@ inherited FrmPWedtPnlOps: TFrmPWedtPnlOps
             inherited bvl1: TBevel
               Width = 828
               ExplicitWidth = 707
+            end
+          end
+        end
+        object tsLaser: TTabSheet
+          Caption = #1051#1072#1079#1077#1088
+          ImageIndex = 2
+          inline frmpcLaser: TFrMyPanelCaption
+            Left = 0
+            Top = 0
+            Width = 828
+            Height = 18
+            Align = alTop
+            TabOrder = 0
+            ExplicitTop = 8
+            ExplicitWidth = 828
+            inherited bvl1: TBevel
+              Width = 828
+              ExplicitWidth = 707
+            end
+          end
+          object pnlLaserBottom: TPanel
+            Left = 0
+            Top = 334
+            Width = 828
+            Height = 35
+            Align = alBottom
+            Caption = 'pnlPaintingBottom'
+            TabOrder = 1
+            ExplicitTop = 333
+            ExplicitWidth = 824
+            object lblLaser: TLabel
+              Left = 137
+              Top = 6
+              Width = 48
+              Height = 13
+              Caption = 'lblPainting'
+            end
+            object chbLaserDataEntered: TDBCheckBoxEh
+              Left = 12
+              Top = 6
+              Width = 114
+              Height = 17
+              Caption = #1044#1072#1085#1085#1099#1077' '#1074#1074#1077#1076#1077#1085#1099
+              DynProps = <>
+              TabOrder = 0
+            end
+          end
+          inline FrgLaser: TFrDBGridEh
+            Left = 0
+            Top = 18
+            Width = 828
+            Height = 316
+            Align = alClient
+            TabOrder = 2
+            ExplicitTop = 26
+            ExplicitWidth = 828
+            ExplicitHeight = 316
+            inherited pnlGrid: TPanel
+              Width = 818
+              Height = 262
+              ExplicitWidth = 814
+              ExplicitHeight = 261
+              inherited DbGridEh1: TDBGridEh
+                Width = 816
+                Height = 239
+                Columns = <
+                  item
+                    CellButtons = <>
+                    DynProps = <>
+                    EditButtons = <>
+                    FieldName = 'iii'
+                    Footers = <>
+                  end>
+                inherited RowDetailData: TRowDetailPanelControlEh
+                  ExplicitLeft = 30
+                  ExplicitTop = 35
+                  ExplicitWidth = 46
+                  ExplicitHeight = 120
+                  inherited PRowDetailPanel: TPanel
+                    Width = 44
+                    ExplicitWidth = 44
+                  end
+                end
+              end
+              inherited pnlStatusBar: TPanel
+                Top = 240
+                Width = 816
+                ExplicitTop = 239
+                ExplicitWidth = 812
+                inherited lblStatusBarL: TLabel
+                  Height = 13
+                  ExplicitHeight = 13
+                end
+              end
+              inherited CProp: TDBEditEh
+                Height = 21
+                ExplicitHeight = 21
+              end
+            end
+            inherited pnlLeft: TPanel
+              Height = 262
+              ExplicitHeight = 261
+            end
+            inherited pnlTop: TPanel
+              Width = 828
+              ExplicitWidth = 824
+            end
+            inherited pnlContainer: TPanel
+              Width = 828
+              ExplicitWidth = 824
+            end
+            inherited pnlBottom: TPanel
+              Top = 316
+              Width = 828
+              ExplicitTop = 315
+              ExplicitWidth = 824
+            end
+            inherited PrintDBGridEh1: TPrintDBGridEh
+              BeforeGridText_Data = {
+                7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
+                7569636F6D7061745C6465666C616E67313034397B5C666F6E7474626C7B5C66
+                305C666E696C5C6663686172736574323034205461686F6D613B7D7B5C66315C
+                666E696C5C666368617273657430205461686F6D613B7D7D0D0A7B5C2A5C6765
+                6E657261746F722052696368656432302031302E302E32363130307D5C766965
+                776B696E64345C756331200D0A5C706172645C66305C667331365C2763665C27
+                66305C2765655C2765355C2765615C2766323A20255B50726F656B745D5C7061
+                720D0A5C2763665C2765355C2766305C2765385C2765655C276534205C276631
+                205C66315C6C616E67313033332020255B4474315D205C66305C6C616E673130
+                34395C2765665C2765655C66315C6C616E67313033332020255B4474325D5C66
+                305C6C616E67313034395C7061720D0A5C7061720D0A7D0D0A00}
+            end
+          end
+        end
+        object tsDrilling: TTabSheet
+          Caption = #1057#1074#1077#1088#1083#1086#1074#1082#1072
+          ImageIndex = 3
+          object nedtDrilling: TDBNumberEditEh
+            Left = 12
+            Top = 37
+            Width = 73
+            Height = 21
+            ControlLabel.Width = 181
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1050#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1087#1072#1085#1077#1083#1077#1081' '#1089#1086' '#1089#1074#1077#1088#1083#1086#1074#1082#1086#1081
+            ControlLabel.Visible = True
+            DecimalPlaces = 0
+            DynProps = <>
+            EditButtons = <>
+            MinValue = 9999.000000000000000000
+            TabOrder = 0
+            Visible = True
+          end
+          inline frmpcDrilling: TFrMyPanelCaption
+            Left = 0
+            Top = 0
+            Width = 828
+            Height = 18
+            Align = alTop
+            TabOrder = 1
+            ExplicitTop = 8
+            ExplicitWidth = 828
+            inherited bvl1: TBevel
+              Width = 828
+              ExplicitWidth = 707
+            end
+          end
+          object pnDrillingBottom: TPanel
+            Left = 0
+            Top = 334
+            Width = 828
+            Height = 35
+            Align = alBottom
+            Caption = 'pnlPaintingBottom'
+            TabOrder = 2
+            ExplicitTop = 333
+            ExplicitWidth = 824
+            object lbDrillinglLaser: TLabel
+              Left = 137
+              Top = 6
+              Width = 48
+              Height = 13
+              Caption = 'lblPainting'
+            end
+            object chbDrillingDataEntered: TDBCheckBoxEh
+              Left = 12
+              Top = 6
+              Width = 114
+              Height = 17
+              Caption = #1044#1072#1085#1085#1099#1077' '#1074#1074#1077#1076#1077#1085#1099
+              DynProps = <>
+              TabOrder = 0
             end
           end
         end

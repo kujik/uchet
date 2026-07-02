@@ -1,4 +1,4 @@
-unit uFrmPWedtPnlOps;
+unit uFrmPWedtPlnOps;
 
 interface
 
@@ -11,7 +11,7 @@ uses
   ;
 
 type
-  TFrmPWedtPnlOps = class(TFrmBasicDbDialog)
+  TFrmPWedtPlnOps = class(TFrmBasicDbDialog)
     pnlTop: TPanel;
     pnlBottom: TPanel;
     pgcMain: TPageControl;
@@ -29,6 +29,18 @@ type
     lblCnc: TLabel;
     chbCncDataEntered: TDBCheckBoxEh;
     frmpcCnc: TFrMyPanelCaption;
+    tsLaser: TTabSheet;
+    frmpcLaser: TFrMyPanelCaption;
+    pnlLaserBottom: TPanel;
+    lblLaser: TLabel;
+    chbLaserDataEntered: TDBCheckBoxEh;
+    FrgLaser: TFrDBGridEh;
+    tsDrilling: TTabSheet;
+    nedtDrilling: TDBNumberEditEh;
+    frmpcDrilling: TFrMyPanelCaption;
+    pnDrillingBottom: TPanel;
+    lbDrillinglLaser: TLabel;
+    chbDrillingDataEntered: TDBCheckBoxEh;
   private
     FIdOrItem: Variant;
     FIStdrItem: Variant;
@@ -36,14 +48,19 @@ type
     FPaintingItems: TNamedArr;
     FCncData: TNamedArr;
     FCncItems: TNamedArr;
+    FLaserData: TNamedArr;
+    FLaserItems: TNamedArr;
     //настройки при создании формы
     function  Prepare: Boolean; override;
     procedure PreparePainting;
     procedure PrepareCnc;
+    procedure PrepareLaser;
+    procedure PrepareDrilling;
     function  Save: Boolean; override;
     procedure SaveTable(var ARec: TNamedArr; ATable: string; AChanged: Boolean; ACheckBox: TDBCheckBoxEh);
     procedure SavePainting;
     procedure SaveCnc;
+    procedure SaveLaser;
     procedure SetCaption;
     procedure SetOpsCaption(ARec: TNamedArr; ALabel: TLabel; ACheckBox: TDBCheckBoxEh);
     procedure ControlOnChange(Sender: TObject); override;
@@ -51,13 +68,13 @@ type
   end;
 
 var
-  FrmPWedtPnlOps: TFrmPWedtPnlOps;
+  FrmPWedtPlnOps: TFrmPWedtPlnOps;
 
 implementation
 
 {$R *.dfm}
 
-function TFrmPWedtPnlOps.Prepare: Boolean;
+function TFrmPWedtPlnOps.Prepare: Boolean;
 begin
   Result := False;
   Caption := 'Производственные операции';
@@ -73,11 +90,12 @@ begin
   SetCaption;
   PreparePainting;
   PrepareCnc;
+  PrepareLaser;
   pgcMain.ActivePageIndex := 0;
   Result := True;
 end;
 
-procedure TFrmPWedtPnlOps.PreparePainting;
+procedure TFrmPWedtPlnOps.PreparePainting;
 begin
   frmpcPainting.SetParameters(True, 'Операции по лакокраске',
     [['Проставьте площадь покраски на одно изделие по тем операциям, которые в данном изделии присутствуют. Если операции нет, можно поставить 0 или оставить пустое значение.']],
@@ -121,12 +139,17 @@ begin
   SetOpsCaption(FPaintingData, lblPainting, chbPaintingDataEntered);
 end;
 
-procedure TFrmPWedtPnlOps.PrepareCnc;
+procedure TFrmPWedtPlnOps.PrepareCnc;
 var
   LEstimateNomencl: TVarDynArray2;
 begin
   frmpcCnc.SetParameters(True, 'Операции по ЧПУ',
-    [['Выберите используемые материалы и проставьте для каждого колитчество закладок и время на одну закладку (для всего количества изделий в заказе).']],
+    [['Выберите используемые материалы и проставьте для каждого колитчество закладок и время на одну закладку (для всего количества изделий в заказе).'#13#10+
+    'Номенклатура выбирается из списка, содержащего позиции из сметы в группе "Плитные материалы"'#13#10+
+    'Для добавления строки внизу таблицы нажмите клавишу "Стрелка вниз".'#13#10+
+    'Если ввести 0 в любом столбце или очистить наименование, то при сохранении строка будет удалена.'#13#10+
+    ''#13#10
+    ]],
     False
   );
 
@@ -169,16 +192,17 @@ begin
   SetOpsCaption(FCncData, lblCnc, chbCncDataEntered);
 end;
 
-function TFrmPWedtPnlOps.Save: Boolean;
+function TFrmPWedtPlnOps.Save: Boolean;
 begin
   Result := False;
   Q.QBeginTrans(True);
   SavePainting;
   SaveCnc;
+  SaveLaser;
   Result := Q.QCommitTrans;
 end;
 
-procedure TFrmPWedtPnlOps.SaveTable(var ARec: TNamedArr; ATable: string; AChanged: Boolean; ACheckBox: TDBCheckBoxEh);
+procedure TFrmPWedtPlnOps.SaveTable(var ARec: TNamedArr; ATable: string; AChanged: Boolean; ACheckBox: TDBCheckBoxEh);
 //устанавливаем поля в любой родительской таблице по операции в зависимости от фактов изменения данных
 //записываем в бд поля, являющиеся общими для данных таблиц
 begin
@@ -218,7 +242,7 @@ begin
   end;
 end;
 
-procedure TFrmPWedtPnlOps.SavePainting;
+procedure TFrmPWedtPlnOps.SavePainting;
 //сохраним данные по покраске
 var
   i, j: Integer;
@@ -244,7 +268,7 @@ begin
       end;
 end;
 
-procedure TFrmPWedtPnlOps.SaveCnc;
+procedure TFrmPWedtPlnOps.SaveCnc;
 //сохраним данные по ЧПУ
 var
   i, j: Integer;
@@ -289,7 +313,7 @@ begin
     end;
 end;
 
-procedure TFrmPWedtPnlOps.SetCaption;
+procedure TFrmPWedtPlnOps.SetCaption;
 //информация по объекту, для которого задаем операции, в верхней панели
 begin
   Cth.AlignControls(pnlTop, [], False);
@@ -297,7 +321,7 @@ begin
   lblCaption2.SetCaption2('$FF0000' + F.GetProp('parent_name') + '$000000  -  $FF0000' + F.GetProp('name'));
 end;
 
-procedure TFrmPWedtPnlOps.SetOpsCaption(ARec: TNamedArr; ALabel: TLabel; ACheckBox: TDBCheckBoxEh);
+procedure TFrmPWedtPlnOps.SetOpsCaption(ARec: TNamedArr; ALabel: TLabel; ACheckBox: TDBCheckBoxEh);
 begin
   ALabel.SetCaptionAr2([
     S.IIf(ACheckBox.Checked, '$FF00FFДанные введены' +
@@ -308,12 +332,122 @@ begin
   ]);
 end;
 
-procedure TFrmPWedtPnlOps.ControlOnChange(Sender: TObject);
+procedure TFrmPWedtPlnOps.ControlOnChange(Sender: TObject);
 begin
   if Sender = chbPaintingDataEntered then
     SetOpsCaption(FPaintingData, lblPainting, chbPaintingDataEntered)
   else if Sender = chbCncDataEntered then
     SetOpsCaption(FCncData, lblCnc, chbCncDataEntered);
 end;
+
+procedure TFrmPWedtPlnOps.PrepareDrilling;
+begin
+  frmpcDrilling.SetParameters(True, 'Операции по свеловке',
+    [['Введите количество панелей, для которых есть сверловка.'#13#10+
+    'Если таковых нет, поставьте ноль.'#13#10+
+    'Можно загрузить данные по сверловке из XML-файла, для этого нажмите кнопку в поле ввода.'#13#10
+    ]],
+    False
+  );
+end;
+
+procedure TFrmPWedtPlnOps.PrepareLaser;
+var
+  LEstimateNomencl: TVarDynArray2;
+begin
+  frmpcLaser.SetParameters(True, 'Операции по лазеру',
+    [['Выберите используемые материалы и проставьте для каждого колитчество закладок и время на одну закладку (для всего количества изделий в заказе).'#13#10+
+    'Номенклатура выбирается из списка, содержащего позиции из сметы в группе "Плитные материалы"'#13#10+
+    'Для добавления строки внизу таблицы нажмите клавишу "Стрелка вниз".'#13#10+
+    'Если ввести 0 в любом столбце или очистить наименование, то при сохранении строка будет удалена.'#13#10+
+    ''#13#10
+    ]],
+    False
+  );
+
+  Cth.AlignControls(pnlLaserBottom, [], True);
+
+  Q.QLoad('select * from pnl_ops_laser where ' +  S.IIf(AddParam = THIS_IS_STD_ITEM, 'id_std_item', 'id_order_item') + ' = :id$i',
+    [ID], FLaserData
+  );
+
+  Cth.SetControlValue(chbLaserDataEntered, FLaserData.GN('is_data_entered').AsInteger);
+
+  LEstimateNomencl := Q.QLoad('select name, id_name from v_estimate where id_std_item = :id$i', [ID]);
+
+  FrgLaser.Options := [myogColoredTitle, myogIndicatorColumn, myogHiglightEditableColumns, myogHiglightEditableCells, myogHasStatusBar];
+  FrgLaser.Opt.SetFields([
+    ['id$i', '_id', '40'],
+    ['id_ops_laser$i', '_id_ops', '40'],
+//    ['id_bcad_nomencl$i', '_id_ref', '40'],
+//    ['name$s', 'Материал', '300;w'],
+    ['id_bcad_nomencl$i', 'Материал', '300;w;L', 'e'],
+    ['batch_count$i', 'Количество закладок', '90', 'e=0:1000'],
+    ['batch_duration$f', 'Время на однцу закладку, мин.', '90', 'e=0:1000:2']
+  ]);
+  FrgLaser.Opt.SetGridOperations('uad');
+  FrgLaser.SetInitData([]);
+  FrgLaser.Opt.SetPick('id_bcad_nomencl', LEstimateNomencl, True, True);
+  FrgLaser.Prepare;
+  FrgLaser.RefreshGrid;
+  Q.QLoad('select ' + FrgLaser.GetFieldNames.Implode(', ') +
+    ' from v_pnl_ops_laser_items_dlg where ' +
+    S.IIf(AddParam = THIS_IS_STD_ITEM, 'id_std_item', 'id_order_item') + ' = :id$i order by name, batch_count desc, batch_duration desc',
+    [ID], FLaserItems
+  );
+  FrgLaser.SetInitData(FLaserItems);
+  FrgLaser.Opt.Caption := '';
+  FrgLaser.RefreshGrid;
+  FrgLaser.AddRow;
+  FrgLaser.SetState(False, False, null);
+
+  SetOpsCaption(FLaserData, lblLaser, chbLaserDataEntered);
+end;
+
+procedure TFrmPWedtPlnOps.SaveLaser;
+//сохраним данные по Лазеру
+var
+  i, j: Integer;
+begin
+  var LItemsChanged := False;
+  if FrgLaser.GetRawCount <> FLaserItems.Count then
+    LItemsChanged := True
+  else
+    for i := 0 to Min(FrgLaser.GetCount(False), FLaserItems.Count) - 1 do
+      if (FrgLaser.GetRawValue('id_bcad_nomencl', i) <> FLaserItems.G(i, 'id_bcad_nomencl')) or
+         (FrgLaser.GetRawValue('batch_count', i) <> FLaserItems.G(i, 'batch_count')) or
+         (FrgLaser.GetRawValue('batch_duration', i) <> FLaserItems.G(i, 'batch_duration')) or
+         (FrgLaser.GetRawValue('id', i) >= MY_IDS_INSERTED_MIN)
+      then begin
+        LItemsChanged := True;
+        Break;
+      end;
+  SaveTable(FLaserData, 'pnl_ops_laser', LItemsChanged, chbLaserDataEntered);
+  if LItemsChanged then
+    for i := 0 to FrgLaser.GetCount(False) - 1 do begin
+      var LDbOp := '';
+      if (FrgLaser.GetRawValueI('id_bcad_nomencl', i) = 0) or (FrgLaser.GetRawValueI('batch_count', i) = 0) or (FrgLaser.GetRawValueF('batch_duration', i) = 0) then begin
+        if FrgLaser.GetRawValueI('id', i) < MY_IDS_INSERTED_MIN then
+          LDbOp := 'd';
+      end
+      else if FrgLaser.GetRawValueI('id', i) >= MY_IDS_INSERTED_MIN then begin
+        LDbOp := 'i';
+      end
+      else if
+        (FrgLaser.GetRawValue('id_bcad_nomencl', i) <> FLaserItems.G(i, 'id_bcad_nomencl')) or
+        (FrgLaser.GetRawValue('batch_count', i) <> FLaserItems.G(i, 'batch_count')) or
+        (FrgLaser.GetRawValue('batch_duration', i) <> FLaserItems.G(i, 'batch_duration'))
+      then begin
+        LDbOp := 'u';
+      end;
+      if LDbOp <> '' then
+        Q.QSave(LDbOp,
+          'pnl_ops_laser_items', '',
+          'id$i;id_ops_laser$i;id_bcad_nomencl$i;batch_count$i;batch_duration$f',
+          [FrgLaser.GetRawValueI('id', i), FLaserData.G('id'), FrgLaser.GetRawValueI('id_bcad_nomencl', i), FrgLaser.GetRawValueI('batch_count', i), FrgLaser.GetRawValueF('batch_duration', i)]
+        );
+    end;
+end;
+
 
 end.
