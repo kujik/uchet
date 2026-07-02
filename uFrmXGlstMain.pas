@@ -934,7 +934,7 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_w_payroll_transfer', 'w_payroll_transfer');
     Frg1.Opt.SetButtons(1, [
-      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'], //[mbtDelete, 1],
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];
@@ -958,11 +958,11 @@ v:=True;
       ['personnel_number$s','Табельный номер','90'],
       ['dt1','Нач. дата','75'],
       ['dt2','Кон. дата','75'],
-      ['finalized','Закрыта','60','pic=Закрыта:13', 'i']
+      ['finalized','Закрыта','60','pic=Закрыта:13']
     ]);
     Frg1.Opt.SetTable('v_w_payroll_cash', 'w_payroll_cash');
     Frg1.Opt.SetButtons(1, [
-      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rW_J_Payroll_Ch)],[mbtAdd, 1],[],[mbtLock, User.Role(rW_J_Payroll_Ch), 'Закрыть выбранные'],
       [-1001, User.Role(rW_J_Payroll_Ch), 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
     ]);
     Frg1.Opt.FilterRules := [[], ['dt1']];

@@ -90,7 +90,7 @@ begin
 
   if FormDbLock = fNone then Exit;
 
-  Q.QLoad('select id, id_employee, id_departament, dt, dt1, dt2, employee, departament from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
+  Q.QLoad('select id, id_employee, id_departament, dt, dt1, dt2, employee, departament, is_finalized from v_w_payroll_cash where id = :id$i', [ID], FPayrollParams);
   if FPayrollParams.Count = 0 then begin
     MsgRecordIsDeleted;
     Exit;
@@ -115,7 +115,9 @@ begin
   ]);
   Frg1.Opt.SetGridOperations('u');
   Frg1.Opt.SetButtons(1, [
-    [mbtRefresh, Mode = fEdit, 'Обновить данные'], [], [mbtPrintGrid],
+    [mbtRefresh, Mode = fEdit, 'Обновить данные'],
+    [],[mbtPrintGrid],
+    [],[mbtLock],
     [],[mbtCtlPanel]
   ]);
   Frg1.Opt.ButtonsNoAutoState := [0];
@@ -173,6 +175,7 @@ var
 begin
   Result := False;
   Q.QBeginTrans(True);
+  Q.QExecSql('update w_payroll_cash set is_finalized = :p3$i where id = :id$i', [FPayrollParams.G('is_finalized'), ID]);
   if Length(FDeletedWorkers) > 0 then
     Q.QExecSql('delete from w_payroll_cash_item where id in (' + A.Implode(FDeletedWorkers, ',') + ')', []);
   for i := 0 to Frg1.GetCount(False) - 1 do begin
@@ -198,13 +201,9 @@ var
   i: Integer;
   NoNorms: Boolean;
 begin
-{
+
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtRefresh, null, False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtCard, null, False);
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbt1C, null, False);
-  Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtEditAll, null, False);
   Frg1.DbGridEh1.ReadOnly := True;
   if Mode = fView then begin
     Frg1.SetControlValue('lblInfo', '$000000Только просмотр.');
@@ -216,16 +215,12 @@ begin
   else begin
     Frg1.SetControlValue('lblInfo', '$FF00FFВвод данных.');
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtRefresh, null, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtDeduction, null, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtCard, null, True);
     Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, null, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbt1C, null, True);
-    Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, cmbtEditAll, null, True);
     Frg1.DbGridEh1.ReadOnly := False;
   end;
   Cth.SetButtonsAndPopupMenuCaptionEnabled(Frg1, mbtLock, S.IIf(FPayrollParams.G('is_finalized') = 1, 'Отменить закрытие ведомости', 'Закрыть ведомость'), null);
   SetColumns;
-  Frg1.DbGridEh1.Invalidate;    }
+  Frg1.DbGridEh1.Invalidate;
 end;
 
 
@@ -240,11 +235,11 @@ end;
 
 procedure TFrmWGedtPayrollCash.CommitPayroll;
 begin
-{  if MyQuestionMessage(S.IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
+  if MyQuestionMessage(S.IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 'Снять статус "Закрыта" для ведомости?', 'Поставить статус "Закрыта" для ведомости?')) <> mrYes then
     Exit;
   FPayrollParams.SetValue(0, 'is_finalized', IIf(S.NInt(FPayrollParams.G('is_finalized')) = 1, 0, 1));
-  FIsChanged := True;
-  SetButtons;}
+  Frg1.SetState(True, null, null);
+  SetButtons;
 end;
 
 

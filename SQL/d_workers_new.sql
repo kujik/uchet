@@ -1540,9 +1540,6 @@ where
 
 
 --------------------------------------------------------------------------------
---drop t able w_payroll_cash cascade constraints;
---drop ta le w_payroll_cash_item cascade constraints;
-
 
 create table w_payroll_cash ( 
   id number(11),
@@ -1569,7 +1566,7 @@ begin
   select nvl(:new.id, sq_w_payroll_cash.nextval) into :new.id from dual;
 end;
 
---вью для журнала зарплатных ведомостей
+--вью для журнала ведомостей к выдаче
 create or replace view v_w_payroll_cash as 
 select
   p.*,
