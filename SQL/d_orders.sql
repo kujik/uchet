@@ -1313,7 +1313,7 @@ end;
 /
 
 
-create or replace view v_or_std_items as 
+create or replace view v_or_std_items as --!!!
   select
   --вью для справочника стандартныых изделий
     i.*,
@@ -1342,7 +1342,13 @@ create or replace view v_or_std_items as
     case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent_2,
     i0.labor_intensity + i2.labor_intensity as labor_intensity_total,
     i0.labor_cost + i2.labor_cost as labor_cost,
-    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent
+    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent,
+    case 
+      when not ((type = 0) or (type = 2)) then null
+      when pp.is_data_entered + pc.is_data_entered + pl.is_data_entered + pd.is_data_entered = 4
+        then trunc(greatest(pp.dt_data_entered, pc.dt_data_entered, pl.dt_data_entered, pd.dt_data_entered))
+        else date '2000-01-01'
+    end as dt_pln_ops 
   from
     or_std_items i
     left join estimates e on i.id = e.id_std_item
@@ -1351,6 +1357,10 @@ create or replace view v_or_std_items as
     join v_or_std_labor_intensity i0 on i.id = i0.id and i0.id_area = 0
     join v_or_std_labor_intensity i2 on i.id = i2.id and i2.id_area = 2
     join (select id, f_get_stditem_raw_price(id) as priceraw from or_std_items) prc on prc.id = i.id
+    left outer join pnl_ops_painting pp on i.id = pp.id_std_item
+    left outer join pnl_ops_cnc pc on i.id = pc.id_std_item
+    left outer join pnl_ops_laser pl on i.id = pl.id_std_item
+    left outer join pnl_ops_drilling pd on i.id = pd.id_std_item
   ;
     
 

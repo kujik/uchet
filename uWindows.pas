@@ -1113,7 +1113,7 @@ begin
   end
   else if F = myfrm_Dlg_PnlOpsForItem then begin
     //диалог ввода/просмотра производственных операций по смтандартному изделию или изделию заказа
-    TFrmPWedtPlnOps.Show(AOwner, F, MyFormOptions, fEdit, AID, AAddParam);
+    TFrmPWedtPlnOps.Show(AOwner, F, MyFormOptions + [myfoSizeable], fMode, AID, AAddParam);
   end
 
 

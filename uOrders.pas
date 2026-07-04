@@ -113,8 +113,8 @@ const
   Group_NomToDel_Name: ansistring = 'На удаление';
   Group_NomToDel_Id = 2671;
   Group_Production_Id = 3;
-
   Group_Semiproducts_Id = 2;
+  cBcadGroupPlit =  3;  //сметная группа "Панели: Материалы основы"
 
   myOrFinalizePay = 0;
   myOrFinalizeFromSgp = 2;

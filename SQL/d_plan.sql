@@ -372,7 +372,7 @@ where
 --содержит только основную таблицу. единственный параметр - количество панелей со сверловкой
 
 --основная таблица
-drop table pnl_ops_drilling  cascade constraints;
+--drop table pnl_ops_drilling  cascade constraints;
 create table pnl_ops_drilling (
   id number(11) primary key,            --айди
   id_std_item number(11),               --айди стандартного изделия
@@ -404,7 +404,7 @@ select
   t.*,
   oi.qnt * i.qnt_panels_with_drill as qnt_panels_with_drill_for_all
 from
-  pnl_ref_ops_drilling t,
+  pnl_ops_drilling t,
   order_items oi
 where
   t.id_order_item = oi.id (+)
