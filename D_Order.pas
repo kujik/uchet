@@ -183,6 +183,7 @@ type
     ID_Itm: Variant;               //id заказа в программе ИТМ
     OrSyncWithITM: Boolean;       //если False, то не синхронизируем заказ с ИТМ (даже если у еного есть id_itm и он есть в бд итм), и ограничиваем некоторые други функции
     ItemsToEstimateChange: TVarDynArray;  //айди записей в заказе, для которых после сохранения заказа надо изменить/перезагрузить смету. пападают все добавленнные или измененныые в любых полях записи
+    ItemsToPlnOpsSync: TVarDynArray;
     NoChangeItems: Boolean;       //если установлено, то нельзя менять наименования изделий и количества, добавлять строки. устанавливается сейчас, если статус в ИТМ >= Выполнен
     FOrderChanges, FOrderItemChanges: TVarDynArray2;
     FOrderTypes: TVarDynArray2;
@@ -1032,7 +1033,11 @@ begin
 //          Q.QBeginTrans(True);
         SetOrderSaveStatusText('Обновление смет для изделий');
         Orders.RefreshEstimatesToOrder(ID, ItemsToEstimateChange, False);
-//         Q.QCommitOrRollback;
+
+        SetOrderSaveStatusText('Обновление производственных операций для изделий');
+        Q.QBeginTrans(True);
+        Orders.RefreshPlnOpsForOrder(ItemsToPlnOpsSync);
+        Q.QCommitTrans;
       end;
       Q.QBeginTrans(True);
       SetOrderSaveStatusText('Отправка заказа в ИТМ');
@@ -2576,6 +2581,7 @@ begin
   RecNo := MemTableEh1.RecNo;
   //сюда будут складиваться айди, для которых после записи меняем смету
   ItemsToEstimateChange := [];
+  ItemsToPlnOpsSync := [];
   repeat
     if not VerifyTable then
       Break;
@@ -2680,6 +2686,8 @@ begin
       //добавим в массив айди этой позиции в списке изделий заказа,
       //для вызова после сохранения заказа процедуру коррекции смет, по данным позициям
         ItemsToEstimateChange := ItemsToEstimateChange + [S.IIfV(va[0] = null, Res, va[0])];
+        if (va[0] = null) or S.InCommaStr('name', MemTableEh1.FieldByName('chg').AsString) or S.InCommaStr('qnt', MemTableEh1.FieldByName('chg').AsString) or S.InCommaStr('std', MemTableEh1.FieldByName('chg').AsString) then
+          ItemsToPlnOpsSync := ItemsToPlnOpsSync + [S.IIfV(va[0] = null, Res, va[0])];
       //CreateEstimateToItem(i, S.IIfV(va[0] = null, Res, MemTableEh1.FieldByName('id').Value), va[2], va[3]);
       end
       else if (Mode = fEdit) and (va[0] <> null) and not chgr and (Length(DeletedItems) > 0) then begin

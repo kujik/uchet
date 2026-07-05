@@ -141,6 +141,7 @@ begin
     ['comm$s','Дополнение','200']
 //    ['','',''],
   ]);
+
   Frg1.Opt.SetTable('v_orders_list');
   Frg1.Opt.SetWhere('where id > 0');
 //Frg1.SetInitData([]);
@@ -176,7 +177,7 @@ begin
   Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr;dt_end'], ['Показать себестоимость', 'Sum0', User.Role(rOr_J_Orders_PrimeCost)]];
 
   Frg2.Options := Frg2.Options + [myogIndicatorCheckBoxes, myogMultiSelect];// - [myogIndicatorcolumn, myogIndicatorCheckBoxes, myogSaveOptions];
-  Frg2.Opt.SetFields([
+  var Fields2: TVarDynArray2 := [
     ['id$i','_id','40'],
     ['id_std_item$i','_id_std_item','40'],
     ['id_itm$i','_id_itm','40'],
@@ -212,7 +213,11 @@ begin
     ['cost_wo_nds$f','Сумма','80','f=r:','t=1'],
     ['sum0$f','Себестоимость (с НДС)','80','f=r:','t=2','null'],
     ['comm$s','Дополнение','200']
-  ]);
+  ];
+  if FormDoc = myfrm_J_Pnl_Orders then
+    Fields2 := Fields2 +
+      [['dt_pln_ops','Производ-'#13#10'ственные операции','110', 'pic=01.01.2000;:6;0;7:+', 'bt=Производственные операции']];
+  Frg2.Opt.SetFields(Fields2);
   Frg2.Opt.SetTable('v_order_items');
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
@@ -582,7 +587,10 @@ begin
       end;
     1001:
       begin
-        TFrmOGrefOrStdItems.GoToItem(Fr.GetValue('id_std_item'));
+        if FormDoc = myfrm_J_Pnl_Orders then
+          TFrmOGrefOrStdItems.GoToItem(Fr.GetValue('id_std_item'), myfrm_R_Pnl_StdItems)
+        else
+          TFrmOGrefOrStdItems.GoToItem(Fr.GetValue('id_std_item'));
       end;
     1003:
       begin
@@ -608,6 +616,11 @@ begin
     Q.QExecSql('update order_items set dt_doc = :dt$d where dt_doc is null and id = :id$i', [Date, Fr.ID]);
     Fr.RefreshRecord;
   end;
+  //просмотр или редактирование производственных операций
+  //если есть права, и это производственное изделий ели полуфабрикат
+  if (Fr.CurrField = 'dt_pln_ops') and User.Roles([], [rPln_R_PnlOpsPainting_V, rPln_R_PnlOpsPainting_Ch]) and (Fr.GetValueI('id_thn') <> -100) then begin
+    Wh.ExecDialog(myfrm_Dlg_PnlOpsForItem, Self, [], S.IIf(User.Role(rPln_R_PnlOpsPainting_Ch), fEdit, fView), Fr.ID, THIS_IS_ORDER_ITEM);
+  end;
 end;
 
 procedure TFrmOGjrnOrders.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
@@ -632,6 +645,9 @@ begin
     if (Fr.GetValue('dt_kns') <> null) and (Fr.GetValue('wo_kns') = 1) then
       Params.Text := 'нет';
   end;
+  if A.InArray(FieldName, ['dt_pln_ops']) then
+    if Fr.GetValueS(FieldName) ='01.01.2000' then
+      Params.Text := '';
 end;
 
 procedure TFrmOGjrnOrders.Frg2ColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);

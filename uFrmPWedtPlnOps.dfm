@@ -506,6 +506,23 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
               TabOrder = 0
             end
           end
+          object nedtDrillingForAll: TDBNumberEditEh
+            Left = 12
+            Top = 101
+            Width = 73
+            Height = 21
+            ControlLabel.Width = 181
+            ControlLabel.Height = 26
+            ControlLabel.Caption = #1050#1086#1083#1080#1095#1077#1089#1090#1074#1086' '#1087#1072#1085#1077#1083#1077#1081' '#1089#1086' '#1089#1074#1077#1088#1083#1086#1074#1082#1086#1081#13#10'('#1085#1072' '#1074#1089#1077' '#1080#1079#1076#1077#1083#1080#1103')'
+            ControlLabel.Visible = True
+            DecimalPlaces = 0
+            DynProps = <>
+            EditButtons = <>
+            MaxValue = 9999.000000000000000000
+            ReadOnly = True
+            TabOrder = 3
+            Visible = True
+          end
         end
       end
     end

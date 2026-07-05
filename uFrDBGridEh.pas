@@ -782,6 +782,8 @@ type
     FOnCellValueSave: TFrDBGridEhCellValueSaveEvent;
     FOnRowOperation: TFrDBGridEhRowOperationEvent;
     FOnRowDetailPanelShow: TFrDBGridEhRowDetailPanelShowEvent;
+    function GetGridReadOnly: Boolean;
+    procedure SetGridReadOnly(const Value: Boolean);
 
   protected
     {функции и процедуры для получения и установки свойств поля которых определеня в разделе Private}
@@ -869,6 +871,9 @@ type
     property InLoadData: Boolean read FInLoadData write FInLoadData;
     //в обработчике события изменения доп. контрола
     property InAddControlChange: Boolean read FInAddControlChange write FInAddControlChange;
+    //получить / задать свойство ридонли для грида
+    property GridReadOnly: Boolean read GetGridReadOnly write SetGridReadOnly;
+
 
     {конструктор и деструктор}
 
@@ -2049,9 +2054,23 @@ begin
   ChangeSelectedData;
 end;
 
+{
+МЕТОДЫ УСТАНОВКИ/ПОЛУЧЕНИЯ СВОЙСТВА
+}
+
+function TFrDBGridEh.GetGridReadOnly: Boolean;
+begin
+  Result := DbGridEh1.ReadOnly;
+end;
+
+procedure TFrDBGridEh.SetGridReadOnly(const Value: Boolean);
+begin
+  DbGridEh1.ReadOnly := Value;
+end;
+
 
 {
-ФУНКЦИИ И ПРОЦЕДУРЫ ДЛЯ ПОЛУЧЕНИЯ И УСТАНОВКИ СВОЙСТВ ПОЛЯ КОТОРЫХ ОПРЕДЕЛЕНЯ В РАЗДЕЛЕ pRIVATE
+ФУНКЦИИ И ПРОЦЕДУРЫ ДЛЯ ПОЛУЧЕНИЯ И УСТАНОВКИ СВОЙСТВ ПОЛЯ КОТОРЫХ ОПРЕДЕЛЕНЯ В РАЗДЕЛЕ Private
 }
 
 function TFrDBGridEh.GetID: Variant;

@@ -29,7 +29,7 @@ uses
   //הכÿ דנטהמג םא באחו פנוילא
   Windows, Messages, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, StdCtrls, ComCtrls, Buttons, Menus, //basic
   DBGridEh,  //ehlib
-  uData, uString, uFrDBGridEh,  //my
+  uData, uString, uFrDBGridEh,   //my
 
 
 implementation

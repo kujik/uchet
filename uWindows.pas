@@ -703,7 +703,7 @@ begin
   else if F = myfrm_Adm_DeleteOnServer then begin
 //    Form := TForm_Adm_DeleteOnServer.Create(Application, F, MyFormOptions, fNone, 0, null);
   end
-  else if F = myfrm_J_Orders then begin
+  else if (F = myfrm_J_Orders) or (F = myfrm_J_Pnl_Orders) then begin
     TFrmOGjrnOrders.Show(Application, F, MyFormOptions, fNone, 0, null);
   end
   else if F = myfrm_J_ProdCalculations then begin

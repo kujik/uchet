@@ -124,7 +124,7 @@ inherited Dlg_Order: TDlg_Order
     object edt_id_reglament: TDBEditEh
       Left = 572
       Top = 11
-      Width = 13
+      Width = 9
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       ControlLabel.Width = 55
@@ -137,12 +137,12 @@ inherited Dlg_Order: TDlg_Order
       MaxLength = 400
       TabOrder = 5
       Visible = True
-      ExplicitWidth = 9
+      ExplicitWidth = 5
     end
     object edt_ids_order_properties: TDBEditEh
       Left = 607
       Top = 11
-      Width = 13
+      Width = 9
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       ControlLabel.Width = 80
@@ -155,7 +155,7 @@ inherited Dlg_Order: TDlg_Order
       MaxLength = 400
       TabOrder = 6
       Visible = True
-      ExplicitWidth = 9
+      ExplicitWidth = 5
     end
   end
   object pnl_Bottom: TPanel [2]

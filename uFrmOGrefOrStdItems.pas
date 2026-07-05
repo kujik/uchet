@@ -34,7 +34,7 @@ type
     procedure CopyAllItems;
   public
     //открытие справочника, если он не открыт, на странице для нужного изделия и переход к его строке
-    class procedure GoToItem(AId: integer);
+    class procedure GoToItem(AId: integer; AFormDoc: string = myfrm_R_OrderStdItems);
   end;
 
 var
@@ -379,7 +379,7 @@ begin
   FrmOGrefOrStdItems.Frg1.MemTableEh1.Locate('id', FItemId, []);
 end;
 
-class procedure TFrmOGrefOrStdItems.GoToItem(AId: integer);
+class procedure TFrmOGrefOrStdItems.GoToItem(AId: integer; AFormDoc: string = myfrm_R_OrderStdItems);
 //открытие справочника, если он не открыт, на странице для нужного изделия и переход к его строке
 var
   va: TVarDynArray;
@@ -391,7 +391,7 @@ begin
   if S.NNum(va[0]) = 0 then
     Exit;
   if FrmOGrefOrStdItems = nil then
-    Wh.ExecReference(myfrm_R_OrderStdItems);
+    Wh.ExecReference(AFormDoc);
   FrmOGrefOrStdItems.Frg1.SetControlValue('CbEstimate', va[0]);
   FrmOGrefOrStdItems.FItemId := AId;
   FrmOGrefOrStdItems.Frg1.DbGridEh1.SetFocus;

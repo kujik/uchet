@@ -65,6 +65,7 @@ type
     //состав заказа всегда подгоняется под эти критерии в полном составе, независмо от LoadOrderAllItems, последее влияет только собственно
     //на загшрузку смет в итм, загружэаются или все, иле переденные в OrderItems только
     function SyncOrderWithITM(IdOrder: Integer; OrderItems: TVarDynArray; LoadOrderAllItems: Boolean = True): Boolean;
+    function RefreshPlnOpsForOrder(OrderItems: TVarDynArray): Boolean;
     function RefreshEstimatesToOrder(IdOrder: Integer; OrderItems: TVarDynArray; LoadOrderAllItems: Boolean = True): Boolean;
     function CreateAggregateEstimate(IdOrder: Integer; Mode: Integer): Boolean;
     procedure TaskForSendEstimate(IdOrder, IdOrItem: Variant; FileName: string; AddFiles: TStringDynArray; MailTo: Boolean = True; TextToSend: string = '');
@@ -379,6 +380,19 @@ begin
   if Length(Q.QCallStoredProc('p_SyncOrderWithITM', 'AIdOrder$i;AOrItems$s', [IdOrder, st])) = 0 then Exit;
 //  end;
   Result:= True;
+end;
+
+function TOrders.RefreshPlnOpsForOrder(OrderItems: TVarDynArray): Boolean;
+//обновление производственных операций для заказа на основе стандартных изделий
+//будут перезагружены все операции для переданных изделий заказа
+//(а передаются сюда айди, по котором изменялось само изделие (наименование) или количество)
+//полное пересоздание допустимо, так как раскладка по чпу и лазеру как минимум зависит от количества,
+//а по сверловке и лакокраске формируется исключительно на основании изделия
+begin
+  Result := True;
+  if Length(OrderItems) = 0 then
+    Exit;
+  Result := Length(Q.QCallStoredProc('p_pnl_update_ops_for_order', 'p_order_items_str$s', [OrderItems.Implode(',')])) > 0;
 end;
 
 function TOrders.RefreshEstimatesToOrder(IdOrder: Integer; OrderItems: TVarDynArray; LoadOrderAllItems: Boolean = True): Boolean;
