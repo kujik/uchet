@@ -21,7 +21,8 @@ begin
     job_name        => 'orders_fin_monitoring_job',
     job_type        => 'plsql_block',
     job_action      => 'begin p_run_insert_orders_fin_monitoring; end;',
-    repeat_interval => 'freq=daily; byhour=10; byminute=37; bysecond=0;',
+    start_date      => trunc(systimestamp) + interval '3' minute,
+    repeat_interval => 'freq=daily; byhour=18; byminute=07; bysecond=0;',
     enabled         => true,
     comments        => 'заполнение финансовых параметров запущенных вчера заказов'
   );
@@ -48,7 +49,7 @@ begin
     job_type        => 'plsql_block',
     job_action      => 'begin p_run_purge_scheduler_log; end;',
     start_date      => trunc(systimestamp) + interval '3' hour,
-    repeat_interval => 'freq=daily; byhour=10; byminute=41; bysecond=0;',
+    repeat_interval => 'freq=daily; byhour=3; byminute=0; bysecond=0;',
     enabled         => true,
     comments        => 'очистка лога заданий шедулера старше 7 дней'
   );
