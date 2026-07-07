@@ -1627,7 +1627,10 @@ select
 --  k.full_name as supplierinfo,
   k.name_org as supplierinfo,
   --количество "в пути" (считается разница между между количеством в счете и приходных накладных, только по счетам по которым не статус 3-Получен товар
-  round(niv.qnt, 0) as qnt_onway,
+  round(niv.qnt, 0) as qnt_onway,  --!!!округление!!!
+  --в пути без резерва
+  nullif(greatest(nvl(niv.qnt, 0) - nvl(-rz.rezerv, 0), 0), 0) as  qnt_onway_surplus,
+  case when nvl(niv.qnt, 0) > nvl(-rz.rezerv, 0) then 1 else 0 end as is_onway_surplus,
   --флаг, что есть зависшие старые записи в пути
   niv.flag as onway_old,  
   --количество "в обработке" 
@@ -2347,6 +2350,93 @@ where
   and ss.fact_quantity > 0          
   and ss.ibprice is not null    
 group by ss.id_nomencl;
+
+
+create or replace view v_spl_raw_materials_on_sgp as
+select 
+--вью выводит список номенклатуры на складах сгп,
+--являющейся материалалом, а не изделием
+  id_nomencl,
+  name,
+  s.skladname as stockname,
+  qnt as qnt
+from 
+  (select
+    s.id_nomencl, 
+    id_sklad,
+    sum(quantity) as qnt,
+    max(n.name) as name
+  from 
+    dv.stock s,
+    dv.nomenclatura n 
+  where 
+    s.doctype <> 27
+    and (id_sklad in (422, 862)) --сгп пщ, сгп лок
+    and n.id_nomencl = s.id_nomencl
+    and n.id_nomencltype = 0
+  group by 
+    s.id_nomencl, s.id_sklad
+  ) t,
+  dv.sklad s
+where
+  t.id_sklad = s.id_sklad  
+  --and t.qnt > 0 
+;
+
+
+create or replace view v_acts_writeoff_receipt as
+select 
+--информация по актам списания и оприходования
+  'акт списания' as doctype,
+  n.id_nomencl,
+  n.name,
+  om.offminusnum as docnum,
+  om.offminusdate as dt,
+  om.comments,
+  om.id_inventory,
+  case when om.id_inventory is null then null else 'инвентаризация' end as is_inventory, 
+  s.skladname as stockname,
+  -oms.omquantity as qnt,
+  u.name_unit
+from
+  dv.off_minus om,
+  dv.off_minus_spec oms,
+  dv.nomenclatura n,
+  dv.unit u,
+  dv.sklad s
+where
+  om.id_offminus = oms.id_offminus
+  and oms.id_nomencl = n.id_nomencl
+  and n.id_unit = u.id_unit
+  and om.id_sklad = s.id_sklad
+union all
+select 
+  'акт оприходования' as doctype,
+  n.id_nomencl,
+  n.name,
+  om.postplusnum as docnum,
+  om.postplusdate as dt,
+  om.comments,
+  om.id_inventory,
+  case when om.id_inventory is null then null else 'инвентаризация' end as is_inventory, 
+  s.skladname as stockname,
+  oms.ppquantity as qnt,
+  u.name_unit
+from
+  dv.post_pluses om,
+  dv.post_plus_spec oms,
+  dv.nomenclatura n,
+  dv.unit u,
+  dv.sklad s
+where
+  om.id_postplus = oms.id_postplus
+  and oms.id_nomencl = n.id_nomencl
+  and n.id_unit = u.id_unit
+  and om.id_sklad = s.id_sklad
+;     
+
+
+
 
 
 

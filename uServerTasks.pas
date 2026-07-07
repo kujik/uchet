@@ -77,9 +77,17 @@ type
     //2'Отчет по производственным заказам в работе',
     //3'Отчет по отгрузочным заказам за вчерашний день',
     //4'Отчет по отгрузочным заказам в работе'
+    //5'Отчет по производственным заказам за прошедшую неделю'
+    //6'Отчет по производственным заказам за прошешеший месяц'
     procedure ReportForYesterdayOrders(AOrderTypes: Integer; AMailing: Boolean = True);
     //отчет по созданным в ИТМ АВР, по которым по заказу не было полного поринятия на сгп в Учете
     procedure ReportForEarlyCompletionActs;
+    //отчет по сырью, находящемуся в пути при отсуствии резерва на него
+    procedure ReportForSupplyisOnwaySurplus;
+    //отчет по материалам на   складах готовой продукции, являющихся сырьем а не изделиями
+    procedure ReportForRawMaterialsOnSgp;
+    //информация по актам списания и оприходования за вчерашний день
+    procedure ReportForActsWriteoffReceipt;
   end;
 
 var
@@ -187,6 +195,19 @@ begin
     ReportForYesterdayOrders(1);
     ReportForYesterdayOrders(3);
     ReportForEarlyCompletionActs;
+    ReportForSupplyisOnwaySurplus;
+    ReportForRawMaterialsOnSgp;
+    ReportForActsWriteoffReceipt;
+    //задачи по понедельникам
+    if DayOfWeek(Date) = 1 then begin
+      ReportForYesterdayOrders(5);
+      ReportForYesterdayOrders(7);
+    end;
+    //задачи первого числа месяца
+    if DayOf(Date) = 1 then begin
+      ReportForYesterdayOrders(6);
+      ReportForYesterdayOrders(8);
+    end;
   end;
 end;
 
@@ -486,38 +507,38 @@ begin
   ];
   //получим список номенкклатуры из еще не обработанных этим скриптом счетов, по которой есть превышение закупочной цены над кеонтрольной
   try
-  Q.QBeginTrans(True);
-  IdSch := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', []), 36327);
-  Q.QLoad(Q.QGetSql('A', 'v_prices_from_sp_schet', Fields.Col(0).Implode(';')) + ' where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
-  IdSchN := Q.QLoadValue('select max(id_schet) from dv.sp_schet', []);
-  //сохраним айди обработанного счета
-  Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
-  if na.Count > 0 then begin
-    Tbl.InitDefaults;
-    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
-    HTML := '<b>По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
-    Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [], '~');
-  end;
-  //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
-  IdIb := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', []), 113205);
-  Q.QExecSql(
-    'insert into spl_deals_monitoring '+
-      '(dt, id_nomencl, id_inbill, price_check) '+
-      '(select trunc(sysdate), id_nomencl, id_inbill, price_check '+
-        'from v_spl_deals_monitoring_get '+
-        'where id_inbill > :id$i'+
-      ')',
-    [IdIb]
-  );
-  //обновим контрольную цену, если найдена в накладных, старше айди из properties, цена меньше контрольной
-  Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
-  //получим и сохраним айди последней накладной
-  IdIbN := Q.QLoadValue('select max(id_inbill) from dv.in_bill', []);
-  Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
+    Q.QBeginTrans(True);
+    IdSch := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_monitoring_prices'' and subprop = ''id_schet_mon''', []), 36327);
+    Q.QLoad(Q.QGetSql('A', 'v_prices_from_sp_schet', Fields.Col(0).Implode(';')) + ' where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
+    IdSchN := Q.QLoadValue('select max(id_schet) from dv.sp_schet', []);
+    //сохраним айди обработанного счета
+    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
+    if na.Count > 0 then begin
+      Tbl.InitDefaults;
+      Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+      HTML := '<b>По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+      Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [], '~');
+    end;
+    //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
+    IdIb := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', []), 113205);
+    Q.QExecSql(
+      'insert into spl_deals_monitoring '+
+        '(dt, id_nomencl, id_inbill, price_check) '+
+        '(select trunc(sysdate), id_nomencl, id_inbill, price_check '+
+          'from v_spl_deals_monitoring_get '+
+          'where id_inbill > :id$i'+
+        ')',
+      [IdIb]
+    );
+    //обновим контрольную цену, если найдена в накладных, старше айди из properties, цена меньше контрольной
+    Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
+    //получим и сохраним айди последней накладной
+    IdIbN := Q.QLoadValue('select max(id_inbill) from dv.in_bill', []);
+    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdSchN, null]);
   except
-  Q.QRollbackTrans;
+    Q.QRollbackTrans;
   end;
-  Q.QCommitTrans;
+    Q.QCommitTrans;
 end;
 
 procedure ReportForYesterdaySupplyDealsXlsxFormatter(var Fr: TFrDBGridEh; FieldName: string; Params: TColCellParamsEh);
@@ -562,7 +583,7 @@ begin
     ['sum_diff$f', 'Разница с контрольной','80', 'f=#:', 's', 'r'],
     ['num_w_dt$s', 'Счет', '150;h']
   ];
-  Q.QLoad(Q.QGetSql('A', 'v_prices_from_sp_schet_day', Fields.Col(0).Implode(';') + ' /*where monitor_price = 1*/ order by name asc'), [], na);
+  Q.QLoad(Q.QGetSql('A', 'v_prices_from_sp_schet_day', Fields.Col(0).Implode(';')) + ' /*where monitor_price = 1*/ order by name asc', [], na);
   va := Q.QLoadCol('select to_char(inbillnum) from dv.in_bill where docstr is null and inbilldate >= trunc(sysdate) - 1 and inbilldate < trunc(sysdate)', []);
   HTML := '';
   if na.Count > 0 then begin
@@ -589,19 +610,72 @@ procedure TTasksS.ReportForYesterdayOrders(AOrderTypes: Integer; AMailing: Boole
 //2'Отчет по производственным заказам в работе',    //убрал
 //3'Отчет по отгрузочным заказам за вчерашний день',
 //4'Отчет по отгрузочным заказам в работе'          //убрал
+//5'Отчет по производственным заказам за прошедшую неделю'
+//6'Отчет по производственным заказам за прошешеший месяц'
+//7'Отчет по отгрузочным заказам за прошедшую неделю'
+//8'Отчет по отгрузочным заказам за прошешеший месяц'
 var
   na: TNamedArr;
   Fields: TVarDynArray2;
   Tbl: THTMLTable;
-  HTML, Title, TopSt, FileToSend: string;
+  HTML, Title, TopSt, FileToSend, st1, st2, st3: string;
+  DtBeg: TDateTime;
+  DataType: Integer;
 begin
-  if AOrderTypes < 5 then begin
-    Title := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за вчерашний день.';
-    TopSt := 'Отчет по ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочным', 'производственным') + ' заказам за ' + DateTimeToStr(IncDay(Date, -1));
-  end
-  else begin
-//    Title := 'Заказы';
+  case AOrderTypes of
+    1:
+      begin
+        st1 := 'производственным';
+        st2 := 'вчерашний день';
+        st3 := DateTimeToStr(IncDay(Date, -1));
+        DtBeg := IncDay(Date, -1);
+        DataType := 1;
+      end;
+    3:
+      begin
+        st1 := 'отгрузочным';
+        st2 := 'вчерашний день';
+        st3 := DateTimeToStr(IncDay(Date, -1));
+        DtBeg := IncDay(Date, -1);
+        DataType := 1;
+      end;
+    5:
+      begin
+        st1 := 'производственным';
+        st2 := 'прошлую неделю';
+        st3 := 'прошлую неделю';
+        DtBeg := Date - DayOfTheWeek(Date);
+        DataType := 5;
+      end;
+    6:
+      begin
+        st1 := 'производственным';
+        st2 := 'прошлый месяц';
+        st3 := 'прошлый месяц';
+        DtBeg := DateOf(EndOfTheMonth(IncMonth(Date, -1)));
+        DataType := 6;
+      end;
+    7:
+      begin
+        st1 := 'отгрузочным';
+        st2 := 'прошлую неделю';
+        st3 := 'прошлую неделю';
+        //дата окончания периода!
+        DtBeg := Date - DayOfTheWeek(Date);
+        DataType := 5;
+      end;
+    8:
+      begin
+        st1 := 'отгрузочным';
+        st2 := 'прошлый месяц';
+        st3 := 'прошлый месяц';
+        //дата окончания периода!
+        DtBeg := DateOf(EndOfTheMonth(IncMonth(Date, -1)));
+        DataType := 6;
+      end;
   end;
+  Title := 'Отчет по ' + st1 + ' заказам за ' + st2 + '.';
+  TopSt := 'Отчет по ' + st1 + ' заказам за ' + st3 + '.';
   Fields := [
     ['rownum$i', '№', '20'],
     ['item_wo_estimate_st$s', 'Нет сметы', '60'],
@@ -627,15 +701,19 @@ begin
     ['prime_cost_percent$i', 'Затраты всего, %', '80', 'r']
   ];
   Q.QLoad(Q.QGetSql('A', S.IIf(AOrderTypes in [1, 3], 'v_orders_fin_monitoring', 'v_orders_fin_monitoring') , Fields.Col(0).Implode(';')) +
-    ' where data_type = 1 and order_type = :p$i and dt_beg = trunc(sysdate) - 1 order by prime_cost_percent desc', [
-    S.IIf(AOrderTypes in [3, 4], 0, -1)], na
+    ' where data_type = :data_type$i and order_type = :order_type$i and dt = trunc(:dt$d) order by prime_cost_percent desc',
+    [DataType, S.IIf(st1 = 'отгрузочным', 0, -1), DtBeg], na
   );
+  HTML := '';
   if na.Count = 0 then begin
-    HTML := 'Вчера ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочных', 'производственных') + ' заказов запущено не было.';
+    if AOrderTypes < 5 then
+      HTML := 'Вчера ' + S.IIf(AOrderTypes in [3, 4], 'отгрузочных', 'производственных') + ' заказов запущено не было.'
+    else
+      HTML := 'За этот период не было запущено ни одного заказа.';
     FileToSend := '';
   end
   else begin
-    if AMailing then begin
+    if AMailing and (AOrderTypes < 5) then begin
       Tbl.InitDefaults;
       Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
       HTML := TopSt + '<br>' + Tbl.GenerateEmail(na, Fields);
@@ -685,6 +763,109 @@ begin
     end;
   end;
   Tasks.SendMail(TASK_MAILING_EARLY_COMPLETION_ACTS, 'Преждевременно созданы АВР', HTML, [], '~');
+end;
+
+procedure TTasksS.ReportForSupplyisOnwaySurplus;
+//отчет по сырью, находящемуся в пути при отсуствии резерва на него
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Номенклатура в пути без резерва за вчерашний день';
+  TopSt := 'Номенклатура в пути без резерва за ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['name_unit$s', 'Ед. изм.', '80'],
+    ['price_main$f', 'Цена', '80', 'r'],
+    ['price_check$f', 'Контрольная цена', '80', 'r'],
+    ['qnt$f', 'Кол-во на складах', '80', 'r'],
+    ['need$f', 'Потребность','80', 'f=#:', 'r'],
+    ['rezerv$f', 'Резерв','80', 'f=#:', 'r'],
+    ['qnt_onway$f', 'В пути', '80', 'f=#:', 'r'],
+    ['qnt_onway_surplus$s', 'Превышение', '80', 'f=#:', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_spl_minremains', Fields.Col(0).Implode(';'))+ ' where /*monitor_price = 1 and*/ qnt_onway_surplus is not null order by qnt_onway_surplus desc', [], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>Номенклатура в пути без резерва:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  end
+  else
+    HTML := 'Номенклатура в пути без резерва отсуствует.<br>';
+  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+end;
+
+procedure TTasksS.ReportForRawMaterialsOnSgp;
+//отчет по материалам на складах готовой продукции, являющихся сырьем а не изделиями
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Номенклатура на СГП, не являющаяся готовой продукцией';
+  TopSt := Title;
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['stockname$s', 'Склад', '160'],
+    ['qnt$f', 'Кол-во', '80', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_spl_raw_materials_on_sgp', Fields.Col(0).Implode(';'))+ ' order by stockname, name', [], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + Title + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  end
+  else
+    HTML := '';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+end;
+
+procedure TTasksS.ReportForActsWriteoffReceipt;
+//информация по актам списания и оприходования за вчерашний день
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Акты списания и оприходования за вчерашний день';
+  TopSt := 'Акты списания и оприходования за ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['doctype$s', 'Вид документа', '120'],
+    ['docnum$s', '№', '80'],
+    ['stockname$s', 'Склад', '150'],
+    ['comments$s', 'Примечание', '400;h'],
+    ['is_inventory$s', 'Инвентаризация', '120'],
+    ['name$s', 'Наименование', '500;h'],
+    ['name_unit$s', 'Ед. изм.', '80'],
+    ['qnt$f', 'Кол-во', '80', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_acts_writeoff_receipt', Fields.Col(0).Implode(';')) + ' where dt = :dt$d order by doctype, name', [IncDay(Date, -1)], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  end
+  else
+    HTML := '';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
 end;
 
 

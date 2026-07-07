@@ -619,7 +619,7 @@ begin
   //просмотр или редактирование производственных операций
   //если есть права, и это производственное изделий ели полуфабрикат
   if (Fr.CurrField = 'dt_pln_ops') and User.Roles([], [rPln_R_PnlOpsPainting_V, rPln_R_PnlOpsPainting_Ch]) and (Fr.GetValueI('id_thn') <> -100) then begin
-    Wh.ExecDialog(myfrm_Dlg_PnlOpsForItem, Self, [], S.IIf(User.Role(rPln_R_PnlOpsPainting_Ch), fEdit, fView), Fr.ID, THIS_IS_ORDER_ITEM);
+    Wh.ExecDialog(myfrm_Dlg_PnlOpsForItem, Fr, [], S.IIf(User.Role(rPln_R_PnlOpsPainting_Ch), fEdit, fView), Fr.ID, THIS_IS_ORDER_ITEM);
   end;
 end;
 

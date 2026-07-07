@@ -728,6 +728,8 @@ type
     FLastRecNo: Integer;
 
     {внутренние переменные}
+    //сохраненна€ дл€ последующего восстановлени€ позици€ в гриде
+    FSavedRecNo: Integer;
     //временный столбец дл€ присвоени€ свойств и событий столбца грида, заданных в дизайнтайме, всем созданным динамически столбцам
     ColumnTemp: TColumnEh;
     //признак, что было установлено FIsDataChanged в гриде детальной панели
@@ -790,6 +792,7 @@ type
 
     function  GetID: Variant;
     function  GetRecNo: Integer;
+    procedure SetRecNo(Value: Integer);
     function  GetRecordCount: Integer;
     function  GetCurrField: string;
     function  GetCurrValue: Variant;
@@ -858,7 +861,7 @@ type
     //значение текущего пол€ датасета (если датасет пуст то Unassigned)
     property CurrValue: Variant read GetCurrValue;
     //текущй номер строки мемтейбла
-    property RecNo: Integer read GetRecNo;
+    property RecNo: Integer read GetRecNo write SetRecNo;
     //номер строки мемтейбла, возвращенный событием AfterScroll (он бывает нужен; не вызываетс€ например при прогрутке грида из-за присмени€ фильтра на изменение текущего столбца)
     property LastRecNo: Integer read FLastRecNo;
     //количество записей в датасете
@@ -904,10 +907,14 @@ type
     procedure Last;
     //установка фокуса грида на переданную строку, с нул€
     procedure SetRow(ARow: Integer);
+    //запомнить позицию в гриде
+    procedure SaveRecNo;
+    //¬осстановить позицию в гриде
+    procedure RestoreRecNo;
     //проверить, есть ли столбец с таким наименованием
     function  IsFieldExists(FieldName: string): Boolean;
     //установка фокуса грида на переданную строку, с единицы
-    procedure SetRecNo(ARecNo: Integer);
+    //procedure SetRecNo(ARecNo: Integer);
     //получить значение пол€ в текущей строке грида
     function  GetValue(FieldName: string = ''): Variant; overload;
     function  GetValueI(FieldName: string = ''): Integer; overload;
@@ -2087,11 +2094,15 @@ begin
   Result := MemTableEh1.RecNo;
 end;
 
+procedure TFrDBGridEh.SetRecNo(Value: Integer);
+begin
+  MemTableEh1.RecNo := Value;
+end;
+
 function TFrDBGridEh.GetRecordCount: Integer;
 begin
   Result := MemTableEh1.RecordCount;
 end;
-
 
 function TFrDBGridEh.GetCurrField: string;
 //получим наименование текущего пол€ (поле данных текущего столбца) в нижнем регистре
@@ -2746,10 +2757,16 @@ begin
   MemTableEh1.RecNo := ARow + 1;
 end;
 
-procedure TFrDBGridEh.SetRecNo(ARecNo: Integer);
-//установка фокуса грида на переданную строку, с единицы
+procedure TFrDBGridEh.SaveRecNo;
+//запомнить позицию в гриде
 begin
-  MemTableEh1.RecNo := ARecNo;
+  FSavedRecNo := MemTableEh1.RecNo;
+end;
+
+procedure TFrDBGridEh.RestoreRecNo;
+//¬осстановить позицию в гриде
+begin
+  MemTableEh1.RecNo := FSavedRecNo;
 end;
 
 function TFrDBGridEh.IsFieldExists(FieldName: string): Boolean;

@@ -1000,13 +1000,13 @@ begin
     EOrs := Frg1.GetValueF('ors', Row, False);
     EOrs := S.IIf(EOrs = 0, 100, EOrs);
     if M = cMWorkshop then begin
-      if (EOrs < 95) then
+      if (EOrs <= 95) then
         EOrs := EOrs
-      else if (EOrs >= 95) and (EOrs <= 100) then
+      else if (EOrs > 95) and (EOrs <= 100) then
         EOrs := 100
-      else if (EOrs >= 100) and (EOrs <= 105) then
+      else if (EOrs > 100) and (EOrs <= 105) then
         EOrs := 105
-      else if (EOrs >= 105) and (EOrs <= 110) then
+      else if (EOrs > 105) and (EOrs <= 110) then
         EOrs := 110
       else if (EOrs > 110) then
         EOrs := 120;

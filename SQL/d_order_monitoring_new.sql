@@ -24,7 +24,7 @@
 alter table orders_fin_monitoring add qnt_need_on_sgp number;
 create table orders_fin_monitoring (
   id number(11),                        --айди
-  dt date,                              --дата внесения записи
+  dt date,                              --контрольная дата  /для 1 = dt_beg, для 5 и 6 здесь дата окончания периода/
   data_type number,                     --1 - данные по запущенным вчера заказам, 2 - данныые по заказам, по которым вчера появились сметы, 
                                         --3 - данные по конкретному заказу, 4 - данные по заказам за период
                                         --5 - данные по заказам, запущенным за прошедшую неделю, 6 - данные по заказам, запущенным за прошедший месяц  
@@ -125,16 +125,20 @@ create table order_items_wo_estimate (
 -- Процедуры заполениния таблиц финансового мониторинга (работает по расписанию в бд 
 ------------------------------------------------------------------------------------
 
---update orders_fin_monitoring set price_diff = round(price_diff, 2) where price_diff is not null;
---------------------------------------------------------------------------------
---вспомогательная процедура вставки агрегированных данных
+-- =============================================================================
+-- процедура: p_insert_fin_monitoring_data
+-- назначение: вспомогательная процедура вставки агрегированных данных
+--             в основную таблицу orders_fin_monitoring или временную.
+--             Поддерживает режимы: день (data_type 1,2), период (data_type 5,6),
+--             конкретный заказ (data_type 3).
+-- =============================================================================
 create or replace procedure p_insert_fin_monitoring_data(
-  p_dt             in date,
-  p_data_type      in number,
-  p_use_wo_list    in number,
-  p_id_order       in number default null,
-  p_dt_beg_from    in date   default null,
-  p_dt_beg_to      in date   default null,
+  p_dt                in date,
+  p_data_type         in number,
+  p_use_wo_list       in number,
+  p_id_order          in number default null,
+  p_dt_beg_from       in date   default null,
+  p_dt_beg_to         in date   default null,
   p_filter_dt_end_zero in number default 0
 ) is
   v_dt date := trunc(p_dt);
@@ -145,54 +149,45 @@ create or replace procedure p_insert_fin_monitoring_data(
   v_delete_sql varchar2(4000);
   v_use_temp boolean := false;
 begin
-  -- определяем режим
-  if (p_id_order is not null) or
-     (p_dt_beg_from is not null) or
-     (p_dt_beg_to is not null) or
-     (p_filter_dt_end_zero = 1) then
+  -- определяем режим: временная таблица только для конкретного заказа
+  if p_id_order is not null then
     v_use_temp := true;
   end if;
 
   if v_use_temp then
+    -- временная таблица (data_type 3)
     v_target_table := 'temp_orders_fin_monitoring';
-    if p_id_order is not null then
-      v_data_type := 3;
-    else
-      v_data_type := 4;
-    end if;
+    v_data_type := 3;
     -- удаляем старые записи по data_type
     v_delete_sql := 'delete from ' || v_target_table || ' where data_type = :v_data_type';
     execute immediate v_delete_sql using v_data_type;
   else
+    -- основная таблица
     v_data_type := p_data_type;
     v_target_table := 'orders_fin_monitoring';
     -- удаляем старые записи по dt и data_type
     v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt and data_type = :dt_type';
-    execute immediate v_delete_sql using v_dt, p_data_type;
+    execute immediate v_delete_sql using v_dt, v_data_type;
   end if;
 
   -- формируем условие WHERE
   if v_use_temp then
-    -- режим фильтрации
+    -- режим фильтрации по конкретному заказу
     v_where_clause := '1=1';
     if p_id_order is not null then
       v_where_clause := v_where_clause || ' and oi.id_order = :id_order';
     end if;
-    if p_dt_beg_from is not null then
-      v_where_clause := v_where_clause || ' and oi.dt_beg >= :dt_beg_from';
-    end if;
-    if p_dt_beg_to is not null then
-      v_where_clause := v_where_clause || ' and oi.dt_beg <= :dt_beg_to';
-    end if;
-    if p_filter_dt_end_zero = 1 then
-      v_where_clause := v_where_clause || ' and oi.dt_end is null';
-    end if;
+    -- для временной таблицы дополнительные фильтры не используются
   else
-    -- стандартный режим
-    if p_use_wo_list = 0 then
+    -- основная таблица
+    if p_dt_beg_from is not null and p_dt_beg_to is not null then
+      -- период (data_type 5,6)
+      v_where_clause := 'oi.dt_beg between :dt_from and :dt_to';
+    elsif p_use_wo_list = 0 then
+      -- один день (data_type 1,2)
       v_where_clause := 'oi.dt_beg = :dt';
-      --return;
     else
+      -- список order_items без сметы (data_type 2)
       v_where_clause := 'oi.id in (select id_order_item from order_items_wo_estimate where dt is null)';
     end if;
   end if;
@@ -248,8 +243,10 @@ begin
       t.labor_intensity_2,
       t.labor_cost_2,
       t.sum0 + t.labor_cost_0 + t.labor_cost_2,
---      case when t.price = 0 then null else round((t.sum0) / (t.price * t.qnt) * 100, 1) end,  --sum0_percent
-      case when t.price = 0 then null when nvl(t.priceraw_wo_nds_std, 0) = 0 then round(t.sum0 / (t.price * t.qnt) * 100, 1) else round(t.priceraw_wo_nds_std / t.price * 100, 1) end,  --sum0_percent
+      case when t.price = 0 then null 
+           when nvl(t.priceraw_wo_nds_std, 0) = 0 then round(t.sum0 / (t.price * t.qnt) * 100, 1) 
+           else round(t.priceraw_wo_nds_std / t.price * 100, 1) 
+      end,
       case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end,
       case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
       case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
@@ -283,8 +280,7 @@ begin
       from
         v_order_items oi,
         v_or_std_items si,
-        ' || case when not v_use_temp then 'v_sgp_items sgp,' else '(select null as id, null as qnt, null as qnt_need from dual) sgp,' end || '
-        --v_sgp_items sgp,
+        ' || case when v_use_temp then '(select null as id, null as qnt, null as qnt_need from dual) sgp' else 'v_sgp_items sgp' end || ',
         estimates e
       where
         oi.id_std_item = si.id
@@ -299,25 +295,28 @@ begin
     ) t
   ';
 
-  -- выполнение
+  -- выполнение с правильным набором bind-переменных
   if v_use_temp then
-    -- в режиме фильтрации передаём параметры
-    if p_id_order is not null then
-      execute immediate v_sql using v_data_type, v_dt, p_id_order;
-    elsif p_dt_beg_from is not null and p_dt_beg_to is not null then
-      execute immediate v_sql using v_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
-    end if;
+    -- временная таблица: всегда есть p_id_order
+    execute immediate v_sql using v_data_type, v_dt, p_id_order;
   else
-    -- стандартный режим
-    execute immediate v_sql using v_data_type, v_dt, v_dt; -- для p_use_wo_list=0 передаём v_dt, иначе не нужно
+    if p_dt_beg_from is not null and p_dt_beg_to is not null then
+      -- период
+      execute immediate v_sql using v_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
+    elsif p_use_wo_list = 0 then
+      -- один день
+      execute immediate v_sql using v_data_type, v_dt, v_dt;
+    else
+      -- список wo
+      execute immediate v_sql using v_data_type, v_dt;
+    end if;
   end if;
+
 end;
 /
 
---        ' || case when v_use_temp and false then 'v_sgp_items sgp,' else '(select null as id, null as qnt from dual) sgp,' end || '
-
 --------------------------------------------------------------------------------
---процедура обработки одного дня
+--процедура обработки одного дня (без изменений)
 create or replace procedure p_order_fin_mon_process_day(p_dt in date) is
   v_dt date := trunc(p_dt);
   type t_id_list is table of order_items_wo_estimate.id_order_item%type;
@@ -380,17 +379,25 @@ end p_order_fin_mon_process_day;
 
 --------------------------------------------------------------------------------
 --процедура заполняет таблицу данными финансового отчета за вчерашний день.
---если были пропуски в вызовах процедуры, то найдет максимальную дату внесепния 
+--если были пропуски в вызовах процедуры, то найдет максимальную дату внесения 
 --записи и обработает начиная с нее.
 --также добавляются в таблицу order_items_wo_estimate айди заказов, по которым
 --не были загружены все сметы.
 --при появлении сметы в указанной выше таблице устанавливает дату события, и 
 --добавляет записи по этим изделиям в основную таблицу.
+--дополнительно: вставляет агрегированные данные за прошедшую неделю (data_type=5)
+--и за прошедший месяц (data_type=6) при отсутствии записей за соответствующий период.
 create or replace procedure p_insert_orders_fin_monitoring is
   v_start_date date;
   v_end_date   date := trunc(sysdate) - 1; -- вчера
   v_cur_date   date;
   v_last_date  date;
+  v_cnt        number;
+  -- для периода
+  v_end_week   date;
+  v_start_week date;
+  v_end_month  date;
+  v_start_month date;
 begin
   -- находим последнюю обработанную дату (data_type = 1)
   select nvl(max(dt), date '2026-06-01')
@@ -401,16 +408,67 @@ begin
   -- начинаем со следующего дня после последней обработанной даты
   v_start_date := v_last_date + 1;
 
-  if v_start_date > v_end_date then
-    return; -- нечего обрабатывать
+  if v_start_date <= v_end_date then
+    -- обрабатываем каждый день от start до end
+    v_cur_date := v_start_date;
+    while v_cur_date <= v_end_date loop
+      p_order_fin_mon_process_day(v_cur_date);
+      v_cur_date := v_cur_date + 1;
+    end loop;
   end if;
 
-  -- обрабатываем каждый день от start до end
-  v_cur_date := v_start_date;
-  while v_cur_date <= v_end_date loop
-    p_order_fin_mon_process_day(v_cur_date);
-    v_cur_date := v_cur_date + 1;
-  end loop;
+  -- ---------------------------------------------------------------------------
+  -- 2. обработка прошедшей недели (data_type = 5)
+  -- ---------------------------------------------------------------------------
+  -- вычисляем дату окончания недели (последнее прошедшее воскресенье)
+  -- если сегодня воскресенье, то это воскресенье предыдущей недели
+  v_end_week := trunc(sysdate, 'IW') - 1;
+  v_start_week := v_end_week - 6;
+--v_end_week:=  v_start_week;
+
+  -- проверяем наличие записей за эту неделю
+  select count(*) into v_cnt
+    from orders_fin_monitoring
+   where data_type = 5
+     and dt = v_end_week;
+
+  if v_cnt = 0 then
+    -- вставляем данные за неделю
+    p_insert_fin_monitoring_data(
+      p_dt             => v_end_week,
+      p_data_type      => 5,
+      p_use_wo_list    => 0,
+      p_id_order       => null,
+      p_dt_beg_from    => v_start_week,
+      p_dt_beg_to      => v_end_week,
+      p_filter_dt_end_zero => 0
+    );
+  end if;
+
+  -- ---------------------------------------------------------------------------
+  -- 3. обработка прошедшего месяца (data_type = 6)
+  -- ---------------------------------------------------------------------------
+  v_end_month   := trunc(sysdate, 'MM') - 1;  -- последний день предыдущего месяца
+  v_start_month := trunc(sysdate, 'MM') - interval '1' month; -- первый день предыдущего месяца
+--v_end_month:=v_start_month;  
+
+  select count(*) into v_cnt
+    from orders_fin_monitoring
+   where data_type = 6
+     and dt = v_end_month;
+
+  if v_cnt = 0 then
+    -- вставляем данные за месяц
+    p_insert_fin_monitoring_data(
+      p_dt             => v_end_month,
+      p_data_type      => 6,
+      p_use_wo_list    => 0,
+      p_id_order       => null,
+      p_dt_beg_from    => v_start_month,
+      p_dt_beg_to      => v_end_month,
+      p_filter_dt_end_zero => 0
+    );
+  end if;
 
   commit;
 exception
@@ -420,8 +478,9 @@ exception
 end p_insert_orders_fin_monitoring;
 /
 
+--delete from orders_fin_monitoring where trunc(dt) >= trunc(sysdate) - 4;
 
-delete from orders_fin_monitoring where trunc(dt) >= trunc(sysdate) - 4;
+delete from orders_fin_monitoring where data_type >= 5;
 
 exec p_insert_orders_fin_monitoring;
 

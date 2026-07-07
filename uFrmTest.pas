@@ -1420,7 +1420,13 @@ var
   i: Integer;
   st: string;
 begin
-TasksS.ReportForYesterdayOrders(3); Exit;
+TasksS.ReportForActsWriteoffReceipt; exit;
+TasksS.ReportForSupplyisOnwaySurplus; exit;
+TasksS.ReportForYesterdayOrders(5);
+TasksS.ReportForYesterdayOrders(6);
+TasksS.ReportForYesterdayOrders(7);
+TasksS.ReportForYesterdayOrders(8);
+Exit;
 //TasksS.ReportForYesterdayOrders(False);Exit;
 TasksS.ReportForEarlyCompletionActs;Exit;
 va:=[1,2];
