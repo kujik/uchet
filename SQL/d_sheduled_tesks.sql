@@ -22,7 +22,7 @@ begin
     job_type        => 'plsql_block',
     job_action      => 'begin p_run_insert_orders_fin_monitoring; end;',
     start_date      => trunc(systimestamp) + interval '3' minute,
-    repeat_interval => 'freq=daily; byhour=18; byminute=07; bysecond=0;',
+    repeat_interval => 'freq=daily; byhour=2; byminute=0; bysecond=0;',
     enabled         => true,
     comments        => 'заполнение финансовых параметров запущенных вчера заказов'
   );

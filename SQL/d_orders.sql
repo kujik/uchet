@@ -579,6 +579,7 @@ select
       else ''
     end
   end as typename,
+  orr.name as reglament,
   case when (o.id_type = 2) or (ot.name like 'Рекламация%') then 1 else 0 end as is_complaint,
   pa.shortname as area_short,
   decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
@@ -648,7 +649,8 @@ from
   dv.zakaz z,
   dv.status_zakaza sz,
   (select id_doc, max(log_date) as dt_reserve from dv.stock where agentcode = 'ZAKAZ' and doctype = 27 group by id_doc) rsv,
-  order_types ot
+  order_types ot,
+  order_reglaments orr
 where
   ob.ornum (+) = o.or_reference
   and ro.id (+) = o.id_organization
@@ -667,6 +669,7 @@ where
   and sz.id_status (+) = z.id_status
   and rsv.id_doc (+) = o.id_itm
   and ot.id (+) = o.id_type2
+  and orr.id (+) = o.id_reglament
 ;
 
 SELECT /*+ PARALLEL(4) */ * FROM v_orders;

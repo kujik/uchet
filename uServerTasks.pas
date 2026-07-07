@@ -189,6 +189,9 @@ begin
   Turv.LoadDataFromParsec;
   Turv.SaveAllTurvToExportTable;
   Turv.ExtendPersBonuses;
+  if HourOf(Now) = 4 then begin
+    Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []);
+  end;
   //задачи, выполняющиеся в начале рабочего дня
   if HourOf(Now) = 8 then begin
     ReportForYesterdaySupplyDeals;
