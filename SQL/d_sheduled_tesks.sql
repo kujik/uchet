@@ -16,12 +16,12 @@ end;
 /
 
 begin
-  dbms_scheduler.drop_job('vm_orders_fin_monitoring_job');
+  dbms_scheduler.drop_job('orders_fin_monitoring_job');
   dbms_scheduler.create_job (
-    job_name        => 'vm_orders_fin_monitoring_job',
+    job_name        => 'orders_fin_monitoring_job',
     job_type        => 'plsql_block',
     job_action      => 'begin p_run_insert_orders_fin_monitoring; end;',
-    repeat_interval => 'freq=daily; byhour=2; byminute=05; bysecond=0;',
+    repeat_interval => 'freq=daily; byhour=10; byminute=37; bysecond=0;',
     enabled         => true,
     comments        => 'заполнение финансовых параметров запущенных вчера заказов'
   );
@@ -48,7 +48,7 @@ begin
     job_type        => 'plsql_block',
     job_action      => 'begin p_run_purge_scheduler_log; end;',
     start_date      => trunc(systimestamp) + interval '3' hour,
-    repeat_interval => 'freq=daily; byhour=3; byminute=0; bysecond=0;',
+    repeat_interval => 'freq=daily; byhour=10; byminute=41; bysecond=0;',
     enabled         => true,
     comments        => 'очистка лога заданий шедулера старше 7 дней'
   );
@@ -56,12 +56,12 @@ end;
 /
 
 --прервать задание
-exec dbms_scheduler.stop_job('vm_orders_fin_monitoring_job');
+exec dbms_scheduler.stop_job('orders_fin_monitoring_job');
 --Включить/выключить: 
 exec dbms_scheduler.enable('update_estimates_depend_job'); 
 exec dbms_scheduler.disable('update_estimates_depend_job');
 --апустить вручную: 
-exec dbms_scheduler.run_job('vm_or_std_items_job', false);
+exec dbms_scheduler.run_job('orders_fin_monitoring_job', false);
 --Удалить задание: 
 exec dbms_scheduler.drop_job('update_estimates_depend_job');
 
@@ -70,8 +70,9 @@ exec dbms_scheduler.drop_job('update_estimates_depend_job');
 --во время выполнения задания информация в логе еще не появится!
 select sysdate from dual;
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'UPDATE_ESTIMATES_DEPEND_JOB' order by log_date desc;
-select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'VM_ORDERS_FIN_MONITORING_JOB' order by log_date desc;
+select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'ORDERS_FIN_MONITORING_JOB' order by log_date desc;
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'VM_OR_STD_ITEMS_JOB' order by log_date desc;
+select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'PURGE_SCHEDULER_LOG_JOB' order by log_date desc;
 
 
 --------------------------------------------------------------------------------
@@ -80,7 +81,7 @@ select log_date, run_duration, status, additional_info from dba_scheduler_job_ru
 create or replace procedure p_run_insert_orders_fin_monitoring is
   v_log_id number;
 begin
-  p_log_job_start('vm_orders_fin_monitoring_job', v_log_id);
+  p_log_job_start('orders_fin_monitoring_job', v_log_id);
   p_insert_orders_fin_monitoring;
   p_log_job_end(v_log_id, 'SUCCESS');
 exception

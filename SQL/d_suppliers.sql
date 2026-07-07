@@ -1444,6 +1444,7 @@ select * from v_spl_need_curr;
 --таблица истории изменений параметров номенклатуры, используемых при формировании заявок на снабжение
 --сохраняются остатки на складе и по площадкам, резерв, количество в обработке и в пути, плановый резерв,
 --потребности, а также количество к заказу и состояние галки "к заказу"
+alter table spl_history add rezerv_order_nums varchar2(4000);
 create table spl_history (
   dt date,
   state varchar2(30),              --комментарий (тут или пусто, или "Заказ")
@@ -1468,6 +1469,7 @@ create table spl_history (
   to_order number(1),
   need number,
   need_p number,
+  rezerv_order_nums varchar2(4000),
   constraint pk_spl_history primary key (id, dt)
 );  
 
@@ -1495,9 +1497,9 @@ create or replace procedure P_Spl_Create_History(
   cursor c1 is
     select 
       v.id, v.supplierinfo, v.qnt, v.qnta0, v.qnta1, v.qnta2, v.qnt_in_processing, v.qnt_pl, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, 
-      v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p 
+      v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p, v.rezerv_order_nums 
     from 
-      v_spl_minremains v,
+      v_spl_minremains_ex v,
       (select id, dt, row_number() over (partition by id order by dt desc) as rn from spl_history) l,
       spl_history h
     where
@@ -1511,16 +1513,17 @@ create or replace procedure P_Spl_Create_History(
       nvl(v.qnt_pl1,0) <> nvl(h.qnt_pl1,0) or nvl(v.qnt_pl2,0) <> nvl(h.qnt_pl2,0) or nvl(v.qnt_pl3,0) <> nvl(h.qnt_pl3,0) or 
       nvl(v.rezerv,0) <> nvl(h.rezerv,0) or nvl(v.rezerva0,0) <> nvl(h.rezerva0,0) or nvl(v.rezerva1,0) <> nvl(h.rezerva1,0) or nvl(v.rezerva2,0) <> nvl(h.rezerva2,0) or
       nvl(v.qnt_onway,0) <> nvl(h.qnt_onway,0) or nvl(v.planned_need_days,0) <> nvl(h.planned_need_days,0) or nvl(v.price_main,0) <> nvl(h.price_main,0) or
-      nvl(v.price_check,0) <> nvl(h.price_check,0) or nvl(v.qnt_order,0) <> nvl(h.qnt_order,0) or nvl(v.to_order,0) <> nvl(h.to_order,0) or nvl(v.need,0) <> nvl(h.need,0) or nvl(v.need_p,0) <> nvl(h.need_p,0)
+      nvl(v.price_check,0) <> nvl(h.price_check,0) or nvl(v.qnt_order,0) <> nvl(h.qnt_order,0) or nvl(v.to_order,0) <> nvl(h.to_order,0) or nvl(v.need,0) <> nvl(h.need,0) or nvl(v.need_p,0) <> nvl(h.need_p,0) or
+      nvl(v.rezerv_order_nums,'0') <> nvl(h.rezerv_order_nums,'0')
       )   
     ; 
 begin
   select sysdate into FDate from dual;
   for v in c1 loop
     insert into spl_history
-      (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order, need, need_p)
+      (id, dt, state, supplierinfo, qnt, qnt_pl1, qnt_pl2, qnt_pl3, rezerv, rezerva0, rezerva1, rezerva2, qnt_onway, planned_need_days, price_main, price_check, qnt_order, to_order, need, need_p, rezerv_order_nums)
       values
-      (v.id, FDate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p)
+      (v.id, FDate, AState, v.supplierinfo, v.qnt, v.qnt_pl1, v.qnt_pl2, v.qnt_pl3, v.rezerv, v.rezerva0, v.rezerva1, v.rezerva2, v.qnt_onway, v.planned_need_days, v.price_main, v.price_check, v.qnt_order, v.to_order, v.need, v.need_p, v.rezerv_order_nums)
       ;   
   end loop;
 end;
@@ -1627,7 +1630,7 @@ select
 --  k.full_name as supplierinfo,
   k.name_org as supplierinfo,
   --количество "в пути" (считается разница между между количеством в счете и приходных накладных, только по счетам по которым не статус 3-Получен товар
-  round(niv.qnt, 0) as qnt_onway,  --!!!округление!!!
+  round(niv.qnt, 3) as qnt_onway,  --!!!округление!!!
   --в пути без резерва
   nullif(greatest(nvl(niv.qnt, 0) - nvl(-rz.rezerv, 0), 0), 0) as  qnt_onway_surplus,
   case when nvl(niv.qnt, 0) > nvl(-rz.rezerv, 0) then 1 else 0 end as is_onway_surplus,
@@ -1867,10 +1870,30 @@ where
 
 select price_main , price_last from v_spl_minremains;
 
-
-
---select p.price_last from dv.nomenclatura n, v_spl_nom_lastibprice p where n.id_nomencl = p.id_nomencl (+) and n.name = :name$s and p.rn = 1;
-
+create or replace view v_spl_minremains_ex as
+select
+--данные для снабжения, расширенная версия
+  t.*,
+  v.*
+from   
+    (select
+      --информация по номерам заказов, по котором зарезервирована данная номенклатура (строкой)
+      mn.id_nomencl,
+      listagg(mn.numdoc, ', ') within group (order by mn.numdoc) as rezerv_order_nums
+    from
+      v_spl_minremains v,
+      dv.v_movenomencl mn
+    where
+      mn.doctype = 27
+      and v.id = mn.id_nomencl
+    group by
+      mn.id_nomencl
+    ) t,
+    v_spl_minremains v
+where
+  v.id = t.id_nomencl(+)      
+;       
+    
 
 
 --------------------------------------------------------------------------------
@@ -2380,7 +2403,7 @@ from
   dv.sklad s
 where
   t.id_sklad = s.id_sklad  
-  --and t.qnt > 0 
+  and t.qnt > 0 
 ;
 
 
