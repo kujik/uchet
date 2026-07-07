@@ -72,6 +72,7 @@ type
     procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
+    procedure Frg2OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
   public
   end;
 
@@ -225,6 +226,7 @@ begin
 
   Frg2.Opt.SetFields([
     ['id$i','_id','40'],
+    ['rezerv_order_nums$i','_rezerv_order_nums','40'],
     ['dt$d','Дата','120'],
     ['state$s','Статус','120'],
     ['supplierinfo$s','Основной поставщик','150'],
@@ -1483,6 +1485,13 @@ begin
   Q.QCallStoredProc('p_Itm_DelRezervForCompleted', '', []);
   Q.QCommitOrRollback(True);
   Frg1.RefreshGrid;
+end;
+
+procedure TFrmOGedtSnMain.Frg2OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if Fr.CurrField = 'rezerv' then begin
+     MyInfoMessage(Fr.GetValueS('rezerv_order_nums'), 1);
+  end;
 end;
 
 procedure TFrmOGedtSnMain.SendMail;

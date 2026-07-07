@@ -1630,7 +1630,9 @@ select
 --  k.full_name as supplierinfo,
   k.name_org as supplierinfo,
   --количество "в пути" (считается разница между между количеством в счете и приходных накладных, только по счетам по которым не статус 3-Получен товар
-  round(niv.qnt, 3) as qnt_onway,  --!!!округление!!!
+  round(niv.qnt, 3) as qnt_onway, 
+  --сумма в пути
+  round(niv.qnt * case when prc.price_main is null then np.price_check else prc.price_main end) as qnt_onway_sum, 
   --в пути без резерва
   nullif(greatest(nvl(niv.qnt, 0) - nvl(-rz.rezerv, 0), 0), 0) as  qnt_onway_surplus,
   case when nvl(niv.qnt, 0) > nvl(-rz.rezerv, 0) then 1 else 0 end as is_onway_surplus,
