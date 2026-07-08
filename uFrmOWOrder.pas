@@ -33,12 +33,12 @@ type
     dedt_dt_montage_end: TDBDateTimeEditEh;
     dedt_dt_beg: TDBDateTimeEditEh;
     PHCustomer: TPanel;
-    DBComboBoxEh1: TDBComboBoxEh;
-    DBComboBoxEh2: TDBComboBoxEh;
-    DBEditEh2: TDBEditEh;
-    cmb_legalname: TDBComboBoxEh;
-    DBEditEh4: TDBEditEh;
-    cmb_CashType: TDBComboBoxEh;
+    cmb_customer: TDBComboBoxEh;
+    cmb_customerman: TDBComboBoxEh;
+    edt_customercontact: TDBEditEh;
+    cmb_customerlegal: TDBComboBoxEh;
+    edt_customerinn: TDBEditEh;
+    cmb_cashtype: TDBComboBoxEh;
     edt_address: TDBEditEh;
     PHOrder: TPanel;
     cmb_id_organization: TDBComboBoxEh;
@@ -46,7 +46,7 @@ type
     cmb_id_or_format_estimates: TDBComboBoxEh;
     cmb_project: TDBComboBoxEh;
     edt_managername: TDBEditEh;
-    cmb_main: TDBComboBoxEh;
+    cmb_or_reference: TDBComboBoxEh;
     cmb_Area: TDBComboBoxEh;
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
@@ -78,8 +78,8 @@ type
     lbl1: TLabel;
     FrgSemiproducts: TFrDBGridEh;
     PHCommentsLeft: TPanel;
-    DBEditEh1: TDBEditEh;
-    DBMemoEh1: TDBMemoEh;
+    edt_complaints: TDBEditEh;
+    m_comm: TDBMemoEh;
     frmpcItems: TFrMyPanelCaption;
     edt_reglament: TDBEditEh;
     frmpcOrder: TFrMyPanelCaption;
@@ -254,25 +254,47 @@ procedure TFrmOWOrder.DefineFields;
 begin
   F.DefineFields := [
     ['id$i'],
+    ['id_itm;0'],
+    ['sync_with_itm$i'],
+    ['year;0'],
+    ['num;0'],
+    ['path;0'],
+    ['in_archive;0'],
+    ['ch$s'],
+    ['dt_end;0'],
+    ['dt_to_sgp;0'],
+    ['dt_from_sgp;0'],
+    ['ndsd$f', 'ndsd$f'],
+    ['id_status_itm;0'],
+    ['status_itm'],
+
     ['ornum$i;0'],
+    ['or_reference$s'],
     ['id_type2$i;0', 'V=1:400'],
     ['id_reglament$i'],
     ['reglament$s;0', 'V=1:400'],
     ['id_organization$s;id_organization$i', 'V=1:400'],
     ['area$i', 'V=1:100'], ['project$s', 'V=1:500::T'],
     ['id_or_format_estimates$i', 'V=1:400'],
-    ['address$s', 'V=0:400'],
-    ['account$s', 'V=0:400'],
     ['managername$s'],
+    ['complaints$s'],
+
+    ['customer$s', 'V=0:400'],
+    ['customerman$s', 'V=0:400'],
+    ['customercontact$s', 'V=0:400'],
+    ['customerlegal$s', 'V=0:400'],
+    ['customerinn$s', 'V=0:400'],
+    ['address$s', 'V=1:400'],
+    ['cashtype_add;cashtype$i','V=1:400'],
+    ['account$s', 'V=0:400'],
+
     ['dt_beg$d'],
     ['dt_end$d'],
     ['dt_otgr$d'],
     ['dt_montage_beg$d'],
     ['dt_montage_end$d'],
-    ['dt_change$d'],
-    ['cashtype$i', 'V=', #0]
+    ['dt_change$d']
     {['','V=',#0],
-    ['','V=',#0],
     ['','V=',#0],
     ['','V=',#0],
     ['','V=',#0],
@@ -280,6 +302,72 @@ begin
     ['','V=',#0],}
       ];
   F.PrepareDefineFieldsAdd;
+  (*
+    ['', null, 'id', '', -1, null, -1],
+    ['', null, 'id_itm', '', -1, null, -1],
+    ['', null, 'sync_with_itm', 'sync_with_itm$i', -1, null, -1],
+    ['', null, 'year', '', -1, null, -1],
+    ['', null, 'num', '', -1, null, -1],
+    ['', null, 'ornum', '', -1, null, -1],
+    ['', null, 'path', '', -1, null, -1],
+    ['', null, 'in_archive', '', -1, null, -1],
+    ['', null, 'ch', 'ch$s', -1, null, -1],
+    ['', null, 'dt_end', '', -1, null, -1],
+    ['', null, 'dt_to_sgp', '', -1, null, -1],
+    ['', null, 'dt_from_sgp', '', -1, null, -1],
+    ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
+    ['', null, 'id_status_itm', '', -1, null, -1],
+    ['', null, 'status_itm', '', -1, null, -1],
+    ['edt_ids_order_properties', null, 'ids_order_properties', 'ids_order_properties$s', 0, null, -1],
+    ['edt_id_reglament', null, 'id_reglament', 'id_reglament$i', 0, null, -1],
+    ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
+    ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
+    ['edt_OrderNum', null, 'ornum', '', 1, null, 0],
+    ['cmb_OrderReference', null, 'or_reference', 'or_reference$s', 0, null, 0],
+    ['edt_Complaints', null, 'complaints', '', 1, null, 1],
+    ['cmb_Format', null, 'id_format', 'id_format$i', 1, null, 0],
+    ['cmb_EstimatePath', null, 'id_or_format_estimates', 'id_or_format_estimates$i', 1, null, 0],
+    ['cmb_CustomerName', null, 'customer', '', 2, null, 1],
+    ['cmb_CustomerMan', null, 'customerman', '', 2, null, 1],
+    ['edt_CustomerContacts',  null, 'customercontact', '', 2, null, 1],
+    ['cmb_CustomerLegalName', null, 'customerlegal', '', 0, null, 1],
+    ['edt_CustomerINN', null, 'customerinn', '', 0, null, 1],
+    ['edt_Account', null, 'account', 'account$s', 2, null, 1],
+    ['cmb_OrderType', null, 'id_type', 'id_type$i', 1, null, 0],
+    ['edt_Address', null, 'address', 'address$s', 2, null, 1],
+    ['dedt_Beg', Date, 'dt_beg', 'dt_beg$d', 1, null, -1],
+    ['dedt_Otgr', null, 'dt_otgr', 'dt_otgr$d', S.IIf(User.Role(rOr_D_Order_EditDtOtgr) or (FNewOrderType = 0), 1, -1), null, 0],
+    ['dedt_MontageBeg', null, 'dt_montage_beg', 'dt_montage_beg$d', 2, null, 1],
+    ['dedt_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],
+    ['dedt_Change', null, 'dt_change', 'dt_change$d', 0, null, -1],
+    ['cmb_Project', null, 'project', 'project$s', 1, null, 0],
+    ['nedt_Items_0', null, 'cost_i_0', 'cost_i_0$f', 0, null, -1],
+    ['nedt_Items_M', null, 'm_i', 'm_i$f', 0, null, 1],
+    ['nedt_Items_D', null, 'd_i', 'd_i$f', 0, null, 1],
+    ['nedt_Items', null, 'cost_i', 'cost_i$f', 0, null, -1],
+    ['nedt_Items_NoSgp', null, 'cost_i_nosgp', 'cost_i_nosgp$f', 0, null, -1],
+    ['nedt_AC_0', null, 'cost_a_0', 'cost_a_0$f', 0, null, -1],
+    ['nedt_AC_M', null, 'm_a', 'm_a$f', 0, null, 1],
+    ['nedt_AC_D', null, 'd_a', 'd_a$f', 0, null, 1],
+    ['nedt_AC', null, 'cost_a', 'cost_a$f', 0, null, -1],
+    ['nedt_Montage_0', null, 'cost_m_0', 'cost_m_0$f', 0, null, 1],
+    ['nedt_Montage_M', null, 'm_m', 'm_m$f', 0, null, 1],
+    ['nedt_Montage_D', null, 'd_m', 'd_m$f', 0, null, 1],
+    ['nedt_Montage', null, 'cost_m', 'cost_m$f', 0, null, -1],
+    ['nedt_Trans_0', null, 'cost_d_0', 'cost_d_0$f', 0, null, 1],
+    ['nedt_Trans_M', null, 'm_d', 'm_d$f', 0, null, 1],
+    ['nedt_Trans_D', null, 'd_d', 'd_d$f', 0, null, 1],
+    ['nedt_Trans', null, 'cost_d', 'cost_d$f', 0, null, -1],
+    ['nedt_Sum', null, 'cost', 'cost$f', 0, null, -1],
+    ['nedt_SumWoNds', null, 'cost_wo_nds', 'cost_wo_nds$f', 0, null, -1],
+    ['nedt_Sum_Av', null, 'cost_av', 'cost_av$f', 0, null, 1],
+    ['cmb_CashType', null, 'cashtype_add', 'cashtype$i', 2, null, 1],
+    ['edt_Manager', User.GetName, 'managername', '', 0, null, -1],
+    ['mem_Comment', null, 'comm', 'comm$s', 0, null, 0],
+    ['nedt_Attention', 0, 'attention', 'attention$i', 0, null, -1],
+    ['', User.GetID, 'id_manager', 'id_manager$i', 0, null, -1]
+
+  *)
 end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
@@ -458,7 +546,7 @@ end;
 
 procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
 var
-  SenderName: string;
+  SenderName, SenderNameL: string;
   SenderValue : Variant;
 begin
   SenderName := TControl(Sender).Name;
@@ -565,14 +653,14 @@ end;
 procedure TFrmOWOrder.SetVisCheckboxes;
 //установим отметку чекбоксов видимости панелей по их состоянию visible
 begin
-{  chbAddInfo.Checked := PHeader2.Visible;
+  chbVisAddInfo.Checked := PHeader2.Visible;
   chbVisCustomer.Checked := PHCustomer.Visible;
   chbVisDates.Checked := PHDates.Visible;
-  chbVisFinance.Checked := PHFin.Visible;}
-  chbVisAddInfo.Checked := PHeader2.Width > 0;
+  chbVisFinance.Checked := PHFin.Visible;
+{  chbVisAddInfo.Checked := PHeader2.Width > 0;
   chbVisCustomer.Checked := PHCustomer.Width > 0;
   chbVisDates.Checked := PHDates.Width > 0;
-  chbVisFinance.Checked := PHFin.Width > 0;
+  chbVisFinance.Checked := PHFin.Width > 0;}
 end;
 
 procedure TFrmOWOrder.SetVisPanels(Sender: TObject = nil);
@@ -598,7 +686,8 @@ begin
     //посчитаем минимально необходимую ширину
     w := 0;
     for j := 0 to High(LPanels) do
-      w := w + S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+//      w := w + S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+      w := w + S.IIf(LPanels[j].Visible, LWMin[j], 0);
     //если панели с учетом видимости и минимальных размеров не умещаются на форме
     if Self.ClientWidth - cIndent < w then
       //пройдем по чекбоксам видимости справа налево
@@ -612,25 +701,28 @@ begin
     //установим видимость панелей
     for j := 1 to High(LPanels) do begin
       LPanels[j].Enabled := LCheckBoxes[j - 1].Checked;
-      if not LCheckBoxes[j - 1].Checked then
+      LPanels[j].Visible := LCheckBoxes[j - 1].Checked;
+{      if not LCheckBoxes[j - 1].Checked then
         LPanels[j].Width := 0
       else
-        LPanels[j].Width := LWMin[j];
+        LPanels[j].Width := LWMin[j];}
     end;
     //установим ширину в массиве по минимуму и посчитаем общую ширину
     w := 0;
     for j := 0 to High(LPanels) do begin
-      LWCurr[j] := S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+//      LWCurr[j] := S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+      LWCurr[j] := S.IIf(LPanels[j].Visible, LWMin[j], 0);
       w := w + LWCurr[j];
     end;
     //количество видимых панелей с изменяемой шириной
     var LCntSizeable := 0;
     for j := 0 to High(LPanelsSizeable) do
-      if (LPanelsSizeable[j]) and (LPanels[j].Width > 0) then
+//      if (LPanelsSizeable[j]) and (LPanels[j].Width > 0) then
+      if (LPanelsSizeable[j]) and (LPanels[j].Visible) then
         Inc(LCntSizeable);
     //расширим пропорционально все видимые растягиваемые панели, если ширина формы больше минимально необходимой для видимых
     for j := 0 to High(LPanels) do
-      if (LPanels[j].Width > 0) and (Self.ClientWidth - cIndent > w) then
+      if (LPanels[j].Visible) and (Self.ClientWidth - cIndent > w) then
         if LPanelsSizeable[j] then
           LPanels[j].Width := LWCurr[j] + (Self.ClientWidth - cIndent - w) div LCntSizeable
         else

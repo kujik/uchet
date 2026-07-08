@@ -1,25 +1,25 @@
 inherited FrmOWOrder: TFrmOWOrder
   Caption = 'FrmOWOrder'
   ClientHeight = 705
-  ClientWidth = 1432
+  ClientWidth = 1287
   OnResize = FormResize
-  ExplicitWidth = 1444
+  ExplicitWidth = 1299
   ExplicitHeight = 743
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 1432
+    Width = 1287
     Height = 689
     ExplicitWidth = 1287
     ExplicitHeight = 689
     inherited pnlFrmClient: TPanel
-      Width = 1422
+      Width = 1277
       Height = 640
       ExplicitWidth = 1273
       ExplicitHeight = 639
       object PDividor1: TPanel
         Left = 0
         Top = 324
-        Width = 1422
+        Width = 1277
         Height = 20
         Align = alTop
         Caption = 'PDividor1'
@@ -35,14 +35,14 @@ inherited FrmOWOrder: TFrmOWOrder
       object PHeader2: TPanel
         Left = 0
         Top = 344
-        Width = 1422
+        Width = 1277
         Height = 120
         Align = alTop
         Caption = 'PHeader2'
         TabOrder = 1
         ExplicitWidth = 1273
         object PHAddDocs: TPanel
-          Left = 1121
+          Left = 976
           Top = 1
           Width = 300
           Height = 118
@@ -179,7 +179,7 @@ inherited FrmOWOrder: TFrmOWOrder
           end
         end
         object PHRelatedDocs: TPanel
-          Left = 720
+          Left = 575
           Top = 1
           Width = 401
           Height = 118
@@ -419,19 +419,19 @@ inherited FrmOWOrder: TFrmOWOrder
         object PHCommentsLeft: TPanel
           Left = 1
           Top = 1
-          Width = 719
+          Width = 574
           Height = 118
           Align = alClient
           Caption = 'pnl1'
           TabOrder = 2
           ExplicitWidth = 570
           DesignSize = (
-            719
+            574
             118)
-          object DBEditEh1: TDBEditEh
+          object edt_complaints: TDBEditEh
             Left = 66
             Top = 28
-            Width = 1178
+            Width = 1033
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 60
@@ -449,10 +449,10 @@ inherited FrmOWOrder: TFrmOWOrder
             Visible = True
             ExplicitWidth = 1029
           end
-          object DBMemoEh1: TDBMemoEh
+          object m_comm: TDBMemoEh
             Left = 66
             Top = 53
-            Width = 1179
+            Width = 1034
             Height = 60
             ControlLabel.Width = 62
             ControlLabel.Height = 13
@@ -472,7 +472,7 @@ inherited FrmOWOrder: TFrmOWOrder
           inline frmpcComments: TFrMyPanelCaption
             Left = 1
             Top = 1
-            Width = 717
+            Width = 572
             Height = 18
             Align = alTop
             TabOrder = 2
@@ -480,7 +480,7 @@ inherited FrmOWOrder: TFrmOWOrder
             ExplicitTop = 1
             ExplicitWidth = 568
             inherited bvl1: TBevel
-              Width = 717
+              Width = 572
               ExplicitWidth = 707
             end
           end
@@ -489,7 +489,7 @@ inherited FrmOWOrder: TFrmOWOrder
       object pnlBottom: TPanel
         Left = 0
         Top = 610
-        Width = 1422
+        Width = 1277
         Height = 30
         Align = alBottom
         Caption = 'pnl1'
@@ -500,7 +500,7 @@ inherited FrmOWOrder: TFrmOWOrder
       object pnlTop: TPanel
         Left = 0
         Top = 0
-        Width = 1422
+        Width = 1277
         Height = 88
         Align = alTop
         Caption = 'pnlTop'
@@ -509,7 +509,7 @@ inherited FrmOWOrder: TFrmOWOrder
         object pnlSelectAreas: TPanel
           Left = 1
           Top = 40
-          Width = 1420
+          Width = 1275
           Height = 47
           Align = alBottom
           Caption = 'pnlSelectAreas'
@@ -556,7 +556,7 @@ inherited FrmOWOrder: TFrmOWOrder
       object PHeaderTop: TPanel
         Left = 0
         Top = 88
-        Width = 1422
+        Width = 1277
         Height = 236
         Align = alTop
         TabOrder = 4
@@ -692,7 +692,7 @@ inherited FrmOWOrder: TFrmOWOrder
           DesignSize = (
             356
             234)
-          object DBComboBoxEh1: TDBComboBoxEh
+          object cmb_customer: TDBComboBoxEh
             Left = 78
             Top = 27
             Width = 262
@@ -709,7 +709,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 0
             Visible = True
           end
-          object DBComboBoxEh2: TDBComboBoxEh
+          object cmb_customerman: TDBComboBoxEh
             Left = 78
             Top = 54
             Width = 262
@@ -726,7 +726,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 1
             Visible = True
           end
-          object DBEditEh2: TDBEditEh
+          object edt_customercontact: TDBEditEh
             Left = 78
             Top = 81
             Width = 262
@@ -743,7 +743,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 2
             Visible = True
           end
-          object cmb_legalname: TDBComboBoxEh
+          object cmb_customerlegal: TDBComboBoxEh
             Left = 78
             Top = 108
             Width = 264
@@ -760,7 +760,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 3
             Visible = True
           end
-          object DBEditEh4: TDBEditEh
+          object edt_customerinn: TDBEditEh
             Left = 224
             Top = 134
             Width = 116
@@ -777,7 +777,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 5
             Visible = True
           end
-          object cmb_CashType: TDBComboBoxEh
+          object cmb_cashtype: TDBComboBoxEh
             Left = 80
             Top = 135
             Width = 105
@@ -905,7 +905,7 @@ inherited FrmOWOrder: TFrmOWOrder
           object edt_managername: TDBEditEh
             Left = 66
             Top = 161
-            Width = 88
+            Width = 144
             Height = 21
             ControlLabel.Width = 53
             ControlLabel.Height = 13
@@ -918,7 +918,7 @@ inherited FrmOWOrder: TFrmOWOrder
             Text = #1055#1088#1086#1082#1086#1087#1077#1085#1082#1086' '#1057'.'#1042'.'
             Visible = True
           end
-          object cmb_main: TDBComboBoxEh
+          object cmb_or_reference: TDBComboBoxEh
             Left = 142
             Top = 53
             Width = 85
@@ -1439,22 +1439,21 @@ inherited FrmOWOrder: TFrmOWOrder
           end
         end
         object pnlInvisible: TPanel
-          Left = 1236
+          Left = 1177
           Top = 1
-          Width = 185
+          Width = 99
           Height = 234
           Align = alRight
           Caption = 'pnlInvisible'
           TabOrder = 4
-          ExplicitLeft = 1360
-          ExplicitTop = 120
-          ExplicitHeight = 41
+          Visible = False
+          ExplicitLeft = 1173
         end
       end
       object pnlGrid: TPanel
         Left = 0
         Top = 464
-        Width = 1422
+        Width = 1277
         Height = 146
         Align = alClient
         Caption = 'pnlGrid'
@@ -1464,7 +1463,7 @@ inherited FrmOWOrder: TFrmOWOrder
         inline FrgItems: TFrDBGridEh
           Left = 1
           Top = 19
-          Width = 1420
+          Width = 1275
           Height = 126
           Align = alClient
           TabOrder = 0
@@ -1473,12 +1472,12 @@ inherited FrmOWOrder: TFrmOWOrder
           ExplicitWidth = 1271
           ExplicitHeight = 125
           inherited pnlGrid: TPanel
-            Width = 1410
+            Width = 1265
             Height = 72
             ExplicitWidth = 1261
             ExplicitHeight = 71
             inherited DbGridEh1: TDBGridEh
-              Width = 1408
+              Width = 1263
               Height = 49
               Columns = <
                 item
@@ -1503,7 +1502,7 @@ inherited FrmOWOrder: TFrmOWOrder
             end
             inherited pnlStatusBar: TPanel
               Top = 50
-              Width = 1408
+              Width = 1263
               ExplicitTop = 49
               ExplicitWidth = 1259
               inherited lblStatusBarL: TLabel
@@ -1521,16 +1520,16 @@ inherited FrmOWOrder: TFrmOWOrder
             ExplicitHeight = 71
           end
           inherited pnlTop: TPanel
-            Width = 1420
+            Width = 1275
             ExplicitWidth = 1271
           end
           inherited pnlContainer: TPanel
-            Width = 1420
+            Width = 1275
             ExplicitWidth = 1271
           end
           inherited pnlBottom: TPanel
             Top = 126
-            Width = 1420
+            Width = 1275
             ExplicitTop = 125
             ExplicitWidth = 1271
           end
@@ -1552,7 +1551,7 @@ inherited FrmOWOrder: TFrmOWOrder
         inline frmpcItems: TFrMyPanelCaption
           Left = 1
           Top = 1
-          Width = 1420
+          Width = 1275
           Height = 18
           Align = alTop
           TabOrder = 1
@@ -1560,7 +1559,7 @@ inherited FrmOWOrder: TFrmOWOrder
           ExplicitTop = 1
           ExplicitWidth = 1271
           inherited bvl1: TBevel
-            Width = 1420
+            Width = 1275
             ExplicitWidth = 707
           end
         end
@@ -1568,34 +1567,34 @@ inherited FrmOWOrder: TFrmOWOrder
     end
     inherited pnlFrmBtns: TPanel
       Top = 645
-      Width = 1422
+      Width = 1277
       ExplicitTop = 644
       ExplicitWidth = 1273
       inherited bvlFrmBtnsTl: TBevel
-        Width = 1420
+        Width = 1275
         ExplicitWidth = 1812
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 1420
+        Width = 1275
         ExplicitWidth = 1812
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 1420
+        Width = 1275
         ExplicitWidth = 1271
         inherited pnlFrmBtnsMain: TPanel
-          Left = 1321
+          Left = 1176
           ExplicitLeft = 1172
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 1093
+          Left = 948
           ExplicitLeft = 944
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 1222
+          Left = 1077
           ExplicitLeft = 1073
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 953
+          Width = 808
           ExplicitWidth = 804
         end
       end
@@ -1603,11 +1602,11 @@ inherited FrmOWOrder: TFrmOWOrder
   end
   inherited pnlStatusBar: TPanel
     Top = 689
-    Width = 1432
+    Width = 1287
     ExplicitTop = 688
     ExplicitWidth = 1283
     inherited lblStatusBarR: TLabel
-      Left = 1359
+      Left = 1214
       Height = 14
       ExplicitLeft = 1214
     end
