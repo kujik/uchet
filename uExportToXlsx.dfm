@@ -4,13 +4,9 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
   ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitHeight = 520
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 782
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 770
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               Width = 762
@@ -40,7 +36,6 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
           ExplicitWidth = 780
           inherited pnlGrid: TPanel
@@ -76,10 +71,7 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
       Left = 723
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
+      ExplicitLeft = 723
     end
   end
 end

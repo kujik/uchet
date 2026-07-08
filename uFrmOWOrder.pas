@@ -71,29 +71,46 @@ type
     DBNumberEditEh42: TDBNumberEditEh;
     DBNumberEditEh43: TDBNumberEditEh;
     DBNumberEditEh44: TDBNumberEditEh;
-    PHFinCaptions: TPanel;
-    lbl10: TLabel;
-    lbl11: TLabel;
-    lbl12: TLabel;
-    lbl13: TLabel;
     pnlGrid: TPanel;
     FrgItems: TFrDBGridEh;
     PHRelatedDocs: TPanel;
     PHRelatedDocsCaption: TPanel;
     lbl1: TLabel;
-    FrgReclamations: TFrDBGridEh;
     FrgSemiproducts: TFrDBGridEh;
     PHCommentsLeft: TPanel;
     DBEditEh1: TDBEditEh;
     DBMemoEh1: TDBMemoEh;
-    frmpcDrilling: TFrMyPanelCaption;
+    frmpcItems: TFrMyPanelCaption;
     edt_reglament: TDBEditEh;
+    frmpcOrder: TFrMyPanelCaption;
+    frmpcCustomer: TFrMyPanelCaption;
+    frmpcDates: TFrMyPanelCaption;
+    PHFinCaptions: TPanel;
+    lbl10: TLabel;
+    lbl11: TLabel;
+    lbl12: TLabel;
+    lbl13: TLabel;
+    frmpcFinance: TFrMyPanelCaption;
+    pnlSelectAreas: TPanel;
+    chbVisCustomer: TDBCheckBoxEh;
+    chbVisDates: TDBCheckBoxEh;
+    chbVisFinance: TDBCheckBoxEh;
+    chbVisAddInfo: TDBCheckBoxEh;
+    frmpcComments: TFrMyPanelCaption;
+    frmpcAddDocs: TFrMyPanelCaption;
+    frmpcRelatedDocs: TFrMyPanelCaption;
+    FrgReclamations: TFrDBGridEh;
+    pnlInvisible: TPanel;
     procedure FormResize(Sender: TObject);
   private
     WorkCellTypes: TNamedArr;
     WorkCellAreas: TVarDynArray2;
+    FPDatesWidth, FPFinWidth: Integer;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
+    procedure SetAreasCaptions;
+    procedure SetVisCheckboxes;
+    procedure SetVisPanels(Sender: TObject = nil);
     function  PrepareFrgItems: Boolean;
     function  PrepareFrgReclamations: Boolean;
     function  PrepareFrgSemiproducts: Boolean;
@@ -139,17 +156,19 @@ implementation
 
 {$R *.dfm}
 
+const
+  WMIN_ORDERS = 425;
+  WMIN_CUSTOMER = 250;
+
 procedure TFrmOWOrder.FormResize(Sender: TObject);
 var
   i: integer;
 begin
   inherited;
-  var LPHOrderWidth := Max((PHOrder.Width + PHCustomer.Width) div 2, 425);
-  PHOrder.Width := LPHOrderWidth;
-//  PHOrder.Width := (PHOrder.Width + PHCustomer.Width) div 2;
+  SetVisPanels;
+  PHFinCaptions.Height := 26;
+  PHSum.Top := PHFinCaptions.Bottom;
   edt_managername.Width := (PHOrder.Width div 2 - edt_managername.Left);
-//  edt_planningname.Width := edt_managername.Width;
-//  edt_planningname.Left := cmb_project.Left + cmb_project.Width - edt_planningname.Width;
 end;
 
 function TFrmOWOrder.Prepare: Boolean;
@@ -162,7 +181,8 @@ var
   st, st2: string;
   i: Integer;
 begin
-  pnlTop.Hide;
+// pnlTop.Hide;
+  pnlBottom.Hide;
   Caption := 'Заказ';
   Mode := fEdit;
   FOpt.DlgPanelStyle := dpsTopLeft;
@@ -180,7 +200,11 @@ begin
   if not LoadOrderComboBoxes then
     Exit;
   F.SetPropsControls;
+  SetAreasCaptions;
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);
+
+  //буферизация, иначе тормозит ресайз, тк много контролов меняют размер
+  Self.DoubleBuffered := True;
 
   FWHBounds.X := 1000;
   FWHBounds.Y := 700;
@@ -190,22 +214,28 @@ end;
 
 function TFrmOWOrder.SetControlsLayout: Boolean;
 begin
+  SetVisCheckboxes;
   Cth.MakePanelsFlat(pnlFrmClient, [], True);
+  Cth.AlignControls(pnlSelectAreas, [], True);
+  pnlTop.Height := pnlSelectAreas.Height;
   Cth.AlignControls(PHOrder, [], True);
   Cth.AlignControls(PHCustomer, [], True);
   Cth.AlignControls(PHDates, [], True);
   Cth.AlignControls(PHSum, [], True);
   Cth.AlignControls(PHTotalSum, [], True);
+  FPDatesWidth := PHDates.Width;
+  FPFinWidth := PHFin.Width;
   PHFinCaptions.Height := dedt_dt.Top + dedt_dt.Height;
   PHFin.Height := PHSum.Height + PHTotalSum.Height;
   PHeaderTop.Height := S.MaxOf([PHOrder.Height, PHCustomer.Height, PHDates.Height, PHFin.Height]);
-  PHFin.Align := alRight;
-  PHDates.Align := alRight;
-  PHOrder.Align := alLeft;
-  PHCustomer.Align := alClient;
+{  PHFin.Align := alNone;
+  PHDates.Align := alNone;
+  PHOrder.Align := alNone;
+  PHCustomer.Align := alNone;}
   Cth.AlignControls(PDividor1, [], True);
   bvl1.Left := 0;
   bvl1.Width := 4000;
+  PDividor1.Visible := False;
 //  Cth.AlignControls(PHCommentsLeft, [], True);
 //  Cth.AlignControls(PHAddDocs, [], True);
   PHeader2.Height := PHCommentsLeft.Height;
@@ -216,6 +246,7 @@ begin
 //PHCommentsLeft.Align := alclient;
   Width := Width - 1;
   FormResize(Self);
+  SetVisCheckboxes;
 //  cmb_project.ControlLabel.Left := 5;
 end;
 
@@ -332,7 +363,10 @@ begin
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'chb'],
     ['control_assembly$i', 'Контр сборка', '40', 'chb'],
     ['decode(nstd, 1, '' '') as nstd$s', 'Н/стд', '30', 'chbt', 'e']
-    ] + va2 + [
+  ];
+  LFields := LFields + va2;
+  LFields := LFields +
+  [
     ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb'],
     ['id_kns$i', 'Конструктор', '100;L'],
     ['id_thn$i', 'Технолог', '100;L'],
@@ -422,16 +456,19 @@ begin
   end;
 end;
 
-
-
-
 procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
 var
   SenderName: string;
   SenderValue : Variant;
 begin
   SenderName := TControl(Sender).Name;
+  SenderNameL := S.ToLower(TControl(Sender).Name);
   SenderValue := Cth.GetControlValue(Sender);
+
+  //чекбоксы видимости панелей
+  if A.InArray(SenderNameL, ['chbvisaddinfo', 'chbviscustomer', 'chbvisdates', 'chbvisfinance']) then
+    SetVisPanels(Sender);
+
   if Sender = cmb_id_type2 then begin
     if (S.NNum(SenderValue) = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
       F.SetProp('id_organization', -1);
@@ -440,11 +477,11 @@ begin
   end;
   if Sender = cmb_id_organization then begin
   end;
-  if F.GetProp('_id_ordertype') = null then
+  if F.GetProp('id_type2') = null then
     F.SetProp('id_organization', null)
-  else if (F.GetProp('_id_ordertype') = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
+  else if (F.GetProp('id_type2') = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
     F.SetProp('id_organization', -1)
-  else if (F.GetProp('_id_ordertype') <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
+  else if (F.GetProp('id_type2') <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
     F.SetProp('id_organization', null);
   inherited;
 end;
@@ -477,6 +514,132 @@ begin
       FrgItems.AddRow;
     mbtDelete:
       FrgItems.DeleteRow;
+  end;
+end;
+
+procedure TFrmOWOrder.SetAreasCaptions;
+begin
+  frmpcOrder.SetParameters(True, 'Основное', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcCustomer.SetParameters(True, 'Покупатель', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcDates.SetParameters(True, 'Даты', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcFinance.SetParameters(True, 'Финансы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcComments.SetParameters(True, 'Дополнение', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcRelatedDocs.SetParameters(True, 'Связанные заказы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcAddDocs.SetParameters(True, 'Внешние документы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcItems.SetParameters(True, 'Состав заказа', [[
+    ''#13#10
+    ]],
+    False
+  );
+
+end;
+
+procedure TFrmOWOrder.SetVisCheckboxes;
+//установим отметку чекбоксов видимости панелей по их состоянию visible
+begin
+{  chbAddInfo.Checked := PHeader2.Visible;
+  chbVisCustomer.Checked := PHCustomer.Visible;
+  chbVisDates.Checked := PHDates.Visible;
+  chbVisFinance.Checked := PHFin.Visible;}
+  chbVisAddInfo.Checked := PHeader2.Width > 0;
+  chbVisCustomer.Checked := PHCustomer.Width > 0;
+  chbVisDates.Checked := PHDates.Width > 0;
+  chbVisFinance.Checked := PHFin.Width > 0;
+end;
+
+procedure TFrmOWOrder.SetVisPanels(Sender: TObject = nil);
+//установим видимость панелей
+var
+  i, j, w: Integer;
+const
+  cIndent = 10;
+begin
+  if Sender = chbVisAddInfo then begin
+    PHeader2.Visible := chbVisAddInfo.Checked;
+    SetVisCheckboxes;
+    Exit;
+  end;
+  //параметры
+  var LCheckBoxes := [chbVisCustomer, chbVisDates, chbVisFinance];
+  var LPanels := [PHOrder, PHCustomer, PHDates, PHFin];
+  var LPanelsSizeable := [True, True, False, False];
+  var LWMin := [WMIN_ORDERS, WMIN_CUSTOMER, FPDatesWidth, FPFinWidth];
+  var LWCurr := [0, 0, 0, 0];
+  //делаем количество итераций подгонки по количеству чекбоксов управления видимостью
+  for i := 0 to High(LCheckBoxes) do begin
+    //посчитаем минимально необходимую ширину
+    w := 0;
+    for j := 0 to High(LPanels) do
+      w := w + S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+    //если панели с учетом видимости и минимальных размеров не умещаются на форме
+    if Self.ClientWidth - cIndent < w then
+      //пройдем по чекбоксам видимости справа налево
+      for j := High(LCheckBoxes) downto 0 do
+        //и снимем видимость крайнего правого (но не того по которому кликнули)
+        if LCheckBoxes[j] <> Sender then
+          if LCheckBoxes[j].Checked then begin
+            LCheckBoxes[j].Checked := False;
+            Break;
+          end;
+    //установим видимость панелей
+    for j := 1 to High(LPanels) do begin
+      LPanels[j].Enabled := LCheckBoxes[j - 1].Checked;
+      if not LCheckBoxes[j - 1].Checked then
+        LPanels[j].Width := 0
+      else
+        LPanels[j].Width := LWMin[j];
+    end;
+    //установим ширину в массиве по минимуму и посчитаем общую ширину
+    w := 0;
+    for j := 0 to High(LPanels) do begin
+      LWCurr[j] := S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+      w := w + LWCurr[j];
+    end;
+    //количество видимых панелей с изменяемой шириной
+    var LCntSizeable := 0;
+    for j := 0 to High(LPanelsSizeable) do
+      if (LPanelsSizeable[j]) and (LPanels[j].Width > 0) then
+        Inc(LCntSizeable);
+    //расширим пропорционально все видимые растягиваемые панели, если ширина формы больше минимально необходимой для видимых
+    for j := 0 to High(LPanels) do
+      if (LPanels[j].Width > 0) and (Self.ClientWidth - cIndent > w) then
+        if LPanelsSizeable[j] then
+          LPanels[j].Width := LWCurr[j] + (Self.ClientWidth - cIndent - w) div LCntSizeable
+        else
+          LPanels[j].Width := LWCurr[j];
+    //расставим в нужном порядке, так как он при скрытии может сбиваться
+    for j := 1 to High(LPanels) do
+      LPanels[j].Left := LPanels[j - 1].Right + 1;
+    //обновим состояние чекбоксов
+    SetVisCheckboxes;
   end;
 end;
 
