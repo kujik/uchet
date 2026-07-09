@@ -2107,6 +2107,7 @@ type
     Il_All16: TImageList;
     IlAll24: TImageList;
     SaveDialog1: TSaveDialog;
+    Il_VertLines: TImageList;
   private
     { Private declarations }
   public

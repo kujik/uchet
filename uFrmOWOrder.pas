@@ -47,23 +47,6 @@ type
     cmb_Area: TDBComboBoxEh;
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
-    PHSum: TPanel;
-    nedt_cost_d_0: TDBNumberEditEh;
-    nedt_cost_m_0: TDBNumberEditEh;
-    nedt_cost_a_0: TDBNumberEditEh;
-    nedt_cost_i_0: TDBNumberEditEh;
-    nedt_m_i: TDBNumberEditEh;
-    nedt_d_i: TDBNumberEditEh;
-    nedt_cost_i: TDBNumberEditEh;
-    nedt_m_a: TDBNumberEditEh;
-    nedt_d_a: TDBNumberEditEh;
-    nedt_cost_a: TDBNumberEditEh;
-    nedt_m_m: TDBNumberEditEh;
-    nedt_d_m: TDBNumberEditEh;
-    nedt_cost_m: TDBNumberEditEh;
-    nedt_m_d: TDBNumberEditEh;
-    nedt_d_d: TDBNumberEditEh;
-    nedt_cost_d: TDBNumberEditEh;
     PHTotalSum: TPanel;
     DBNumberEditEh42: TDBNumberEditEh;
     DBNumberEditEh43: TDBNumberEditEh;
@@ -78,11 +61,6 @@ type
     frmpcOrder: TFrMyPanelCaption;
     frmpcCustomer: TFrMyPanelCaption;
     frmpcDates: TFrMyPanelCaption;
-    PHFinCaptions: TPanel;
-    lbl10: TLabel;
-    lbl11: TLabel;
-    lbl12: TLabel;
-    lbl13: TLabel;
     frmpcFinance: TFrMyPanelCaption;
     pnlSelectAreas: TPanel;
     frmpcComments: TFrMyPanelCaption;
@@ -104,11 +82,32 @@ type
     FrgBasis: TFrDBGridEh;
     frmpcBasis: TFrMyPanelCaption;
     pnlFilesButtons: TPanel;
+    PHSum: TPanel;
+    nedt_cost_d_0: TDBNumberEditEh;
+    nedt_cost_m_0: TDBNumberEditEh;
+    nedt_cost_i_0: TDBNumberEditEh;
+    nedt_m_i: TDBNumberEditEh;
+    nedt_d_i: TDBNumberEditEh;
+    nedt_cost_i: TDBNumberEditEh;
+    nedt_m_m: TDBNumberEditEh;
+    nedt_d_m: TDBNumberEditEh;
+    nedt_cost_m: TDBNumberEditEh;
+    nedt_m_d: TDBNumberEditEh;
+    nedt_d_d: TDBNumberEditEh;
+    nedt_cost_d: TDBNumberEditEh;
+    PHFinCaptions: TPanel;
+    lbl10: TLabel;
+    lbl11: TLabel;
+    lbl12: TLabel;
+    lbl13: TLabel;
     procedure FormResize(Sender: TObject);
   private
     FOrderTypes: TNamedArr;
     FOrganizations: TNamedArr;
     FEstimateFormats: TNamedArr;
+    FCustomers: TVarDynArray2;
+    FCustomerContacts: TVarDynArray2;
+    FCustomerLegal: TVarDynArray2;
     FPDatesWidth, FPFinWidth: Integer;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
@@ -123,7 +122,9 @@ type
     procedure DefineFields;
     function  LoadOrderComboBoxes: Boolean;
     function  LoadOrder: Boolean;
-    procedure SetOrderType;
+    procedure SetOrderTypeOrOrganization;
+    procedure SetCustomer(ALoadFirst: Boolean);
+    procedure OnCustomerControlsChange(Sender: TObject);
 
 //    procedure VerifyBeforeSave; virtual;
 //    function  Save: Boolean; virtual;
@@ -300,6 +301,7 @@ begin
     ['id_or_format_estimates$i', 'V=1:400'],
     ['managername$s'],
     ['complaints$s'],
+    ['comm$s'],
 
     ['customer$s', 'V=0:400', 't=c'],
     ['customerman$s', 'V=0:400', 't=c'],
@@ -416,17 +418,16 @@ begin
 end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
+//загрузим влияющие данные, которые потребуются для оформления заказа, и установим их в комболбоксы и поля класса
 begin
+  //типы паспортов
   Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], FOrderTypes);
   Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('name'), FOrderTypes.GetCol('id'));
 
-//  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], cmb_id_type2, cntComboLK);
-//  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], cmb_id_type2, cntComboLK, 1);
+  //вид оплаты
   Cth.AddToComboBoxEh(cmb_cashtype, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
 
-
-  //  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], cmb_Format, cntComboLK);
-  //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
+  //организации
   Q.QLoad(
     'select name, id, prefix from ref_sn_organizations where id = -1 ' +
     'union all ' +
@@ -437,13 +438,13 @@ begin
     FOrganizations
   );
 
-
-
-//  Q.QLoadToDBComboBoxEh('select name, id, prefix from ref_sn_organizations where id = -1', [], cmb_id_organization, cntComboLK);
-//  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_id_organization, cntComboLK, 1);
-  //Organizations := Q.QLoad('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
+  //производственные площадки
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], cmb_Area, cntComboLK);
+
+  //проекты
   Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], cmb_Project, cntComboE);
+
+  //форматы стандартных изделий
   Q.QLoad(
     'select f.name || '' ['' || e.name || '']'' as name, e.id as id, e.id_format, e.type ' +
     'from or_formats f, or_format_estimates e ' +
@@ -453,24 +454,22 @@ begin
     [F.GetPropB('id_or_format_estimates')],
     FEstimateFormats
   );
-//  Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('cmb_id_or_format_estimates'), FOrderTypes.GetCol('id'));
-  //Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], cmb_id_or_format_estimates, cntComboLK);
 
-
-{  Customers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
-  cmb_CustomerName.Images := Il_Columns;
-  cmb_CustomerMan.Images := Il_Columns;
-  cmb_CustomerLegalName.Images := Il_Columns;
-  for i := 0 to High(Customers) do
-    cmb_CustomerName.Items.Add(Customers[i][0]);
-  CustomerContacts := Q.QLoad('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customerman'), cBegValue]]);
-  CustomerLegal := Q.QLoad('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [FieldsArr[GetFieldsArrPos('customerlegal'), cBegValue]]);
+  //данные покупателей
+  FCustomers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [F.GetPropB('customer')]);
+  Cth.AddToComboBoxEh(cmb_customer, FCustomers.Col(0), []);
+  FCustomerContacts := Q.QLoad('select name, contact, id_customer, id from ref_customer_contact where active = 1 or name = :name$s order by name', [F.GetPropB('customerman')]);
+  FCustomerLegal := Q.QLoad('select legalname, inn, id_customer, id from ref_customer_legal where active = 1 or legalname = :name$s order by legalname', [F.GetPropB('customerlegal')]);
+  cmb_customer.Images := MyData.Il_VertLines;
+  cmb_customerman.Images := MyData.Il_VertLines;
+  cmb_customerlegal.Images := MyData.Il_VertLines;
 
   //if not(Mode in [fDelete, fView]) then
-  GetEstimateList;
-  LoadComplaints;}
+//  GetEstimateList;
+//  LoadComplaints;}
 
-  SetOrderType;
+  SetOrderTypeOrOrganization;
+  SetCustomer(True);
 
   Result := True;
 end;
@@ -638,8 +637,9 @@ begin
     SetVisPanels(Sender);
 
   if (Sender = cmb_id_type2) or (Sender = cmb_id_organization) then begin
-    SetOrderType;
+    SetOrderTypeOrOrganization;
   end;
+  OnCustomerControlsChange(Sender);
   Verify(nil);
 end;
 
@@ -724,7 +724,7 @@ begin
 
 end;
 
-procedure TFrmOWOrder.SetOrderType;
+procedure TFrmOWOrder.SetOrderTypeOrOrganization;
 //установим поля, зависящие от типа заказа и от организации
 var
   i, ot, org, est: Integer;
@@ -820,6 +820,79 @@ begin
     F.SetProps('c', True, fvtDsbl);
   end;
 end;
+
+
+procedure TFrmOWOrder.OnCustomerControlsChange(Sender: TObject);
+//обработка изменений контролов, связанных с покупателем
+var
+  st: string;
+  Canvas: TControlCanvas;
+  i, j: Integer;
+  b: Boolean;
+begin
+  if Sender = cmb_customer then
+    SetCustomer(False)
+  else if Sender = cmb_customerman then begin
+    edt_customercontact.Text := '';
+    if cmb_customerman.ItemIndex >= 0 then
+      edt_customercontact.Text := cmb_customerman.DynProps[IntToStr(cmb_customerman.ItemIndex)].Value;
+  end
+  else if Sender = cmb_customerlegal then begin
+    edt_CustomerInn.Text := '';
+    if cmb_customerlegal.ItemIndex >= 0 then
+      edt_customerinn.Text := cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.ItemIndex)].Value;
+  end;
+end;
+
+procedure TFrmOWOrder.SetCustomer(ALoadFirst: Boolean);
+//установим поля, связанные с покупателем
+//вызывает события изменения рекурсивно
+var
+  IdCustomer, i, j: Integer;
+begin
+  IdCustomer := A.PosInArray(cmb_customer.Text, FCustomers, 0, False);
+  IdCustomer := FCustomers[IdCustomer][1];
+  cmb_customerman.Items.Clear;
+  cmb_customerman.DynProps.Clear;
+  cmb_customerlegal.Items.Clear;
+  cmb_customerlegal.DynProps.Clear;
+  if not ALoadFirst then begin
+    cmb_customerman.Text := '';
+    edt_customercontact.Text := '';
+    cmb_customerlegal.Text := '';
+    edt_customerinn.Text := '';
+  end;
+  if IdCustomer = -1 then
+    Exit;
+  j := -1;
+  //добавим в динпропс значения контактных данных, соответствующие данному человеку
+  for i := 0 to High(FCustomerContacts) do begin
+    if FCustomerContacts[i][2] = IdCustomer then begin
+      cmb_customerman.Items.Add(FCustomerContacts[i][0]);
+      cmb_customerman.DynProps[IntToStr(cmb_customerman.Items.Count - 1)].Value := FCustomerContacts[i][1].AsString;
+      j := i;
+    end;
+  end;
+  if not ALoadFirst then begin
+    if (cmb_customerman.Items.Count = 1) then
+      cmb_customerman.ItemIndex := 0;
+    ControlOnChange(cmb_customerman);
+  end;
+  j := -1;
+  for i := 0 to High(FCustomerLegal) do begin
+    if FCustomerLegal[i][2] = IdCustomer then begin
+      cmb_customerlegal.Items.Add(FCustomerLegal[i][0]);
+      cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.Items.Count - 1)].Value := FCustomerLegal[i][1].AsString;
+      j := i;
+    end;
+  end;
+  if not ALoadFirst then begin
+    if (cmb_customerlegal.Items.Count = 1) then
+      cmb_customerlegal.ItemIndex := 0;
+    ControlOnChange(cmb_customerlegal);
+  end;
+end;
+
 
 
 procedure TFrmOWOrder.SetVisCheckboxes;

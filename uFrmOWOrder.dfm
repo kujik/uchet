@@ -995,16 +995,97 @@ inherited FrmOWOrder: TFrmOWOrder
           Align = alLeft
           Caption = 'PHFin'
           TabOrder = 3
+          object PHTotalSum: TPanel
+            Left = 1
+            Top = 157
+            Width = 389
+            Height = 36
+            Align = alTop
+            Caption = 'PHTotalSum'
+            TabOrder = 0
+            object DBNumberEditEh42: TDBNumberEditEh
+              Left = 64
+              Top = 6
+              Width = 89
+              Height = 21
+              ControlLabel.Width = 30
+              ControlLabel.Height = 13
+              ControlLabel.Caption = #1048#1090#1086#1075#1086
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DynProps = <>
+              Enabled = False
+              EditButton.DefaultAction = True
+              EditButtons = <>
+              TabOrder = 0
+              Value = 12235123.050000000000000000
+              Visible = True
+            end
+            object DBNumberEditEh43: TDBNumberEditEh
+              Left = 185
+              Top = 6
+              Width = 80
+              Height = 21
+              ControlLabel.Width = 22
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1041#1077#1079#13#10#1053#1044#1057
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DynProps = <>
+              Enabled = False
+              EditButton.DefaultAction = True
+              EditButtons = <>
+              TabOrder = 1
+              Value = 12235123.050000000000000000
+              Visible = True
+            end
+            object DBNumberEditEh44: TDBNumberEditEh
+              Left = 300
+              Top = 6
+              Width = 77
+              Height = 21
+              ControlLabel.Width = 30
+              ControlLabel.Height = 13
+              ControlLabel.Caption = #1040#1074#1072#1085#1089
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              currency = True
+              DynProps = <>
+              Enabled = False
+              EditButton.DefaultAction = True
+              EditButtons = <>
+              TabOrder = 2
+              Value = 12235123.050000000000000000
+              Visible = True
+            end
+          end
+          inline frmpcFinance: TFrMyPanelCaption
+            Left = 1
+            Top = 1
+            Width = 389
+            Height = 18
+            Align = alTop
+            TabOrder = 1
+            ExplicitLeft = 1
+            ExplicitTop = 1
+            ExplicitWidth = 389
+            inherited bvl1: TBevel
+              Width = 389
+              ExplicitWidth = 707
+            end
+          end
           object PHSum: TPanel
             Left = 1
             Top = 19
             Width = 389
             Height = 138
             Align = alTop
-            TabOrder = 0
+            TabOrder = 2
             object nedt_cost_d_0: TDBNumberEditEh
               Left = 64
-              Top = 117
+              Top = 90
               Width = 95
               Height = 21
               ControlLabel.Width = 54
@@ -1015,15 +1096,14 @@ inherited FrmOWOrder: TFrmOWOrder
               currency = True
               DynProps = <>
               EditButton.DefaultAction = True
-              EditButton.Visible = True
               EditButtons = <>
-              TabOrder = 12
+              TabOrder = 8
               Value = 12235123.050000000000000000
               Visible = True
             end
             object nedt_cost_m_0: TDBNumberEditEh
               Left = 64
-              Top = 90
+              Top = 63
               Width = 95
               Height = 21
               ControlLabel.Width = 54
@@ -1033,26 +1113,6 @@ inherited FrmOWOrder: TFrmOWOrder
               ControlLabelLocation.Position = lpLeftCenterEh
               currency = True
               DynProps = <>
-              EditButton.DefaultAction = True
-              EditButton.Visible = True
-              EditButtons = <>
-              TabOrder = 8
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-            object nedt_cost_a_0: TDBNumberEditEh
-              Left = 63
-              Top = 63
-              Width = 95
-              Height = 21
-              ControlLabel.Width = 55
-              ControlLabel.Height = 26
-              ControlLabel.Caption = #1044#1086#1087'.'#13#10#1082#1086#1084#1087#1083'.       '
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = True
-              DynProps = <>
-              Enabled = False
               EditButton.DefaultAction = True
               EditButtons = <>
               TabOrder = 4
@@ -1135,8 +1195,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_a: TDBNumberEditEh
-              Left = 172
+            object nedt_m_m: TDBNumberEditEh
+              Left = 181
               Top = 63
               Width = 41
               Height = 21
@@ -1154,8 +1214,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_d_a: TDBNumberEditEh
-              Left = 229
+            object nedt_d_m: TDBNumberEditEh
+              Left = 228
               Top = 63
               Width = 41
               Height = 21
@@ -1173,7 +1233,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_a: TDBNumberEditEh
+            object nedt_cost_m: TDBNumberEditEh
               Left = 284
               Top = 63
               Width = 95
@@ -1192,8 +1252,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_m: TDBNumberEditEh
-              Left = 172
+            object nedt_m_d: TDBNumberEditEh
+              Left = 181
               Top = 90
               Width = 41
               Height = 21
@@ -1211,7 +1271,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_d_m: TDBNumberEditEh
+            object nedt_d_d: TDBNumberEditEh
               Left = 228
               Top = 90
               Width = 41
@@ -1230,7 +1290,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_m: TDBNumberEditEh
+            object nedt_cost_d: TDBNumberEditEh
               Left = 284
               Top = 90
               Width = 95
@@ -1249,70 +1309,13 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_d: TDBNumberEditEh
-              Left = 172
-              Top = 117
-              Width = 41
-              Height = 21
-              ControlLabel.Width = 8
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '+'
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = False
-              DynProps = <>
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              MaxValue = 500.000000000000000000
-              TabOrder = 13
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-            object nedt_d_d: TDBNumberEditEh
-              Left = 228
-              Top = 117
-              Width = 41
-              Height = 21
-              ControlLabel.Width = 4
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '-'
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = False
-              DynProps = <>
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              MaxValue = 100.000000000000000000
-              TabOrder = 14
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-            object nedt_cost_d: TDBNumberEditEh
-              Left = 284
-              Top = 117
-              Width = 95
-              Height = 21
-              ControlLabel.Width = 8
-              ControlLabel.Height = 13
-              ControlLabel.Caption = '='
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = True
-              DynProps = <>
-              Enabled = False
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              TabOrder = 15
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
             object PHFinCaptions: TPanel
               Left = 1
               Top = 1
               Width = 387
               Height = 26
               Align = alTop
-              TabOrder = 16
+              TabOrder = 12
               object lbl10: TLabel
                 Left = 64
                 Top = 4
@@ -1341,87 +1344,6 @@ inherited FrmOWOrder: TFrmOWOrder
                 Height = 13
                 Caption = #1048#1090#1086#1075#1086
               end
-            end
-          end
-          object PHTotalSum: TPanel
-            Left = 1
-            Top = 157
-            Width = 389
-            Height = 36
-            Align = alTop
-            Caption = 'PHTotalSum'
-            TabOrder = 1
-            object DBNumberEditEh42: TDBNumberEditEh
-              Left = 64
-              Top = 6
-              Width = 89
-              Height = 21
-              ControlLabel.Width = 30
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1048#1090#1086#1075#1086
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = True
-              DynProps = <>
-              Enabled = False
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              TabOrder = 0
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-            object DBNumberEditEh43: TDBNumberEditEh
-              Left = 185
-              Top = 6
-              Width = 80
-              Height = 21
-              ControlLabel.Width = 22
-              ControlLabel.Height = 26
-              ControlLabel.Caption = #1041#1077#1079#13#10#1053#1044#1057
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = True
-              DynProps = <>
-              Enabled = False
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              TabOrder = 1
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-            object DBNumberEditEh44: TDBNumberEditEh
-              Left = 300
-              Top = 6
-              Width = 77
-              Height = 21
-              ControlLabel.Width = 30
-              ControlLabel.Height = 13
-              ControlLabel.Caption = #1040#1074#1072#1085#1089
-              ControlLabel.Visible = True
-              ControlLabelLocation.Position = lpLeftCenterEh
-              currency = True
-              DynProps = <>
-              Enabled = False
-              EditButton.DefaultAction = True
-              EditButtons = <>
-              TabOrder = 2
-              Value = 12235123.050000000000000000
-              Visible = True
-            end
-          end
-          inline frmpcFinance: TFrMyPanelCaption
-            Left = 1
-            Top = 1
-            Width = 389
-            Height = 18
-            Align = alTop
-            TabOrder = 2
-            ExplicitLeft = 1
-            ExplicitTop = 1
-            ExplicitWidth = 389
-            inherited bvl1: TBevel
-              Width = 389
-              ExplicitWidth = 707
             end
           end
         end

@@ -192,8 +192,6 @@ inherited Dlg_Order: TDlg_Order
     Height = 317
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 1260
-    ExplicitHeight = 316
     object DBGridEh1: TDBGridEh
       Left = 1
       Top = 1
@@ -694,9 +692,9 @@ inherited Dlg_Order: TDlg_Order
         Top = 119
         Width = 269
         Height = 21
-        ControlLabel.Width = 34
-        ControlLabel.Height = 13
-        ControlLabel.Caption = #1057#1084#1077#1090#1099
+        ControlLabel.Width = 42
+        ControlLabel.Height = 26
+        ControlLabel.Caption = #1060#1086#1088#1084#1072#1090#13#10#1080#1079#1076#1077#1083#1080#1103
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         Anchors = [akLeft, akTop, akRight]
