@@ -1082,7 +1082,16 @@ begin
   end
   else if F = myfrm_Dlg_R_OrderTypes then begin
     TFrmBasicInput.ShowDialogDB(AOwner, F, DefBasicInputOpts, fMode, AId, 'order_types', 'Типы заказов', 400, 100,
-      [['name$s', cntEdit, 'Наименование','1:100'], ['need_ref$i', cntCheck, 'Сcылка'#13#10'на заказ'], ['active$i', cntCheckX, 'Используется']],
+      [['name$s', cntEdit, 'Наименование','1:100'],
+      ['is_production_order$i', cntCheck, 'Прозводственный'],
+      ['is_semiproduct_order$i', cntCheck, 'Полуфабрикат'],
+      ['is_shipment_order$i', cntCheck, 'Отгрузочный'],
+      ['is_complaint$i', cntCheck, 'Рекламация'],
+      ['is_additional_order$i', cntCheck, 'Дозаказ'],
+      ['need_ref$i', cntCheck, 'Сcылка'#13#10'на заказ'],
+      ['is_nonstandard$i', cntCheck, 'Нестандарт'],
+      ['is_cash_payment$i', cntCheck, 'Наличные'],
+      ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']]);
   end
   else if F = myfrm_Dlg_R_WorkCellTypes then begin

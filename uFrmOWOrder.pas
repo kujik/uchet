@@ -17,10 +17,7 @@ type
     PDividor1: TPanel;
     PHeader2: TPanel;
     PHAddDocs: TPanel;
-    PHAddDocsCaption: TPanel;
-    lbl5: TLabel;
     pnlBottom: TPanel;
-    PHFilesButtons: TPanel;
     FrgFiles: TFrDBGridEh;
     pnlTop: TPanel;
     bvl1: TBevel;
@@ -51,22 +48,22 @@ type
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
     PHSum: TPanel;
-    DBNumberEditEh26: TDBNumberEditEh;
-    DBNumberEditEh27: TDBNumberEditEh;
-    DBNumberEditEh28: TDBNumberEditEh;
-    nedt_sum_i: TDBNumberEditEh;
-    DBNumberEditEh30: TDBNumberEditEh;
-    DBNumberEditEh31: TDBNumberEditEh;
-    DBNumberEditEh32: TDBNumberEditEh;
-    DBNumberEditEh33: TDBNumberEditEh;
-    DBNumberEditEh34: TDBNumberEditEh;
-    DBNumberEditEh35: TDBNumberEditEh;
-    DBNumberEditEh36: TDBNumberEditEh;
-    DBNumberEditEh37: TDBNumberEditEh;
-    DBNumberEditEh38: TDBNumberEditEh;
-    DBNumberEditEh39: TDBNumberEditEh;
-    DBNumberEditEh40: TDBNumberEditEh;
-    DBNumberEditEh41: TDBNumberEditEh;
+    nedt_cost_d_0: TDBNumberEditEh;
+    nedt_cost_m_0: TDBNumberEditEh;
+    nedt_cost_a_0: TDBNumberEditEh;
+    nedt_cost_i_0: TDBNumberEditEh;
+    nedt_m_i: TDBNumberEditEh;
+    nedt_d_i: TDBNumberEditEh;
+    nedt_cost_i: TDBNumberEditEh;
+    nedt_m_a: TDBNumberEditEh;
+    nedt_d_a: TDBNumberEditEh;
+    nedt_cost_a: TDBNumberEditEh;
+    nedt_m_m: TDBNumberEditEh;
+    nedt_d_m: TDBNumberEditEh;
+    nedt_cost_m: TDBNumberEditEh;
+    nedt_m_d: TDBNumberEditEh;
+    nedt_d_d: TDBNumberEditEh;
+    nedt_cost_d: TDBNumberEditEh;
     PHTotalSum: TPanel;
     DBNumberEditEh42: TDBNumberEditEh;
     DBNumberEditEh43: TDBNumberEditEh;
@@ -74,11 +71,7 @@ type
     pnlGrid: TPanel;
     FrgItems: TFrDBGridEh;
     PHRelatedDocs: TPanel;
-    PHRelatedDocsCaption: TPanel;
-    lbl1: TLabel;
-    FrgSemiproducts: TFrDBGridEh;
     PHCommentsLeft: TPanel;
-    edt_complaints: TDBEditEh;
     m_comm: TDBMemoEh;
     frmpcItems: TFrMyPanelCaption;
     edt_reglament: TDBEditEh;
@@ -92,19 +85,30 @@ type
     lbl13: TLabel;
     frmpcFinance: TFrMyPanelCaption;
     pnlSelectAreas: TPanel;
+    frmpcComments: TFrMyPanelCaption;
+    frmpcAddDocs: TFrMyPanelCaption;
+    frmpcRelatedDocs: TFrMyPanelCaption;
+    FrgRelatedOrders: TFrDBGridEh;
+    pnlInvisible: TPanel;
     chbVisCustomer: TDBCheckBoxEh;
     chbVisDates: TDBCheckBoxEh;
     chbVisFinance: TDBCheckBoxEh;
     chbVisAddInfo: TDBCheckBoxEh;
-    frmpcComments: TFrMyPanelCaption;
-    frmpcAddDocs: TFrMyPanelCaption;
-    frmpcRelatedDocs: TFrMyPanelCaption;
-    FrgReclamations: TFrDBGridEh;
-    pnlInvisible: TPanel;
+    pnlOrderInfo: TPanel;
+    lbl_ITM: TLabel;
+    lbl_status_itm: TLabel;
+    PHlBasis: TPanel;
+    pnlBasisButtons: TPanel;
+    pnlBasisComm: TPanel;
+    m_basis: TDBMemoEh;
+    FrgBasis: TFrDBGridEh;
+    frmpcBasis: TFrMyPanelCaption;
+    pnlFilesButtons: TPanel;
     procedure FormResize(Sender: TObject);
   private
-    WorkCellTypes: TNamedArr;
-    WorkCellAreas: TVarDynArray2;
+    FOrderTypes: TNamedArr;
+    FOrganizations: TNamedArr;
+    FEstimateFormats: TNamedArr;
     FPDatesWidth, FPFinWidth: Integer;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
@@ -112,13 +116,14 @@ type
     procedure SetVisCheckboxes;
     procedure SetVisPanels(Sender: TObject = nil);
     function  PrepareFrgItems: Boolean;
-    function  PrepareFrgReclamations: Boolean;
-    function  PrepareFrgSemiproducts: Boolean;
+    function  PrepareFrgRelatedOrders: Boolean;
+    function  PrepareFrgBasis: Boolean;
     function  PrepareFrgFiles: Boolean;
     function  PrepareWorkCells: Boolean;
     procedure DefineFields;
     function  LoadOrderComboBoxes: Boolean;
     function  LoadOrder: Boolean;
+    procedure SetOrderType;
 
 //    procedure VerifyBeforeSave; virtual;
 //    function  Save: Boolean; virtual;
@@ -154,6 +159,10 @@ var
 
 implementation
 
+uses
+  uOrders
+  ;
+
 {$R *.dfm}
 
 const
@@ -168,7 +177,18 @@ begin
   SetVisPanels;
   PHFinCaptions.Height := 26;
   PHSum.Top := PHFinCaptions.Bottom;
-  edt_managername.Width := (PHOrder.Width div 2 - edt_managername.Left);
+  PHRelatedDocs.Width := 140;
+  var w := (ClientWidth - PHRelatedDocs.Width) div 3;
+  PHCommentsLeft.Width := w;
+  PHlBasis.Width := w -6;
+  PHlBasis.Left := PHCommentsLeft.Right + 1;
+  pnlBasisButtons.Width := 24;
+  PHAddDocs.Width := w;
+  PHAddDocs.Left := PHlBasis.Right + 1 +6;
+  pnlFilesButtons.Width := 24;
+  PHRelatedDocs.Left := PHAddDocs.Right + 1;
+  //edt_managername.Width := (PHOrder.Width div 2 - edt_managername.Left);
+
 end;
 
 function TFrmOWOrder.Prepare: Boolean;
@@ -186,11 +206,12 @@ begin
   Caption := 'Заказ';
   Mode := fEdit;
   FOpt.DlgPanelStyle := dpsTopLeft;
+  FOpt.StatusBarMode := stbmDialog;
 
   PrepareWorkCells;
   PrepareFrgItems;
-  PrepareFrgReclamations;
-  PrepareFrgSemiproducts;
+  PrepareFrgRelatedOrders;
+  PrepareFrgBasis;
   PrepareFrgFiles;
 
   SetControlsLayout;
@@ -239,7 +260,7 @@ begin
 //  Cth.AlignControls(PHCommentsLeft, [], True);
 //  Cth.AlignControls(PHAddDocs, [], True);
   PHeader2.Height := PHCommentsLeft.Height;
-  PHRelatedDocs.Width := PHRelatedDocsCaption.Width + FrgReclamations.Width + FrgSemiproducts.Width;
+//  PHRelatedDocs.Width := PHRelatedDocsCaption.Width + FrgReclamations.Width + FrgSemiproducts.Width;
 //  PHAddDocs.Width := Max(PHDates.Width + PHFin.Width, 250);
   PHAddDocs.Width := PHRelatedDocs.Width;
 //  PHCommentsLeft.Width := ClientWidth - PHRelatedDocs.Width - PHAddDocs.Width;
@@ -268,32 +289,55 @@ begin
     ['id_status_itm;0'],
     ['status_itm'],
 
+    ['id_type2$i;0', 'V=1:400'],
     ['ornum$i;0'],
     ['or_reference$s'],
-    ['id_type2$i;0', 'V=1:400'],
     ['id_reglament$i'],
-    ['reglament$s;0', 'V=1:400'],
-    ['id_organization$s;id_organization$i', 'V=1:400'],
-    ['area$i', 'V=1:100'], ['project$s', 'V=1:500::T'],
+    ['id_reglament$i', 'V=1:400'],
+    ['id_organization$i', 'V=1:400'],
+    ['area$i', 'V=1:100'],
+    ['project$s', 'V=1:500::T'],
     ['id_or_format_estimates$i', 'V=1:400'],
     ['managername$s'],
     ['complaints$s'],
 
-    ['customer$s', 'V=0:400'],
-    ['customerman$s', 'V=0:400'],
-    ['customercontact$s', 'V=0:400'],
-    ['customerlegal$s', 'V=0:400'],
-    ['customerinn$s', 'V=0:400'],
-    ['address$s', 'V=1:400'],
-    ['cashtype_add;cashtype$i','V=1:400'],
-    ['account$s', 'V=0:400'],
+    ['customer$s', 'V=0:400', 't=c'],
+    ['customerman$s', 'V=0:400', 't=c'],
+    ['customercontact$s', 'V=0:400', 't=c'],
+    ['customerlegal$s', 'V=0:400', 't=c'],
+    ['customerinn$s', 'V=0:400', 't=c'],
+    ['address$s', 'V=1:400', 't=c'],
+    ['cashtypeex$s;cashtype$i','V=1:400', 't=c'],
+    ['account$s', 'V=0:400', 't=c'],
 
     ['dt_beg$d'],
     ['dt_end$d'],
     ['dt_otgr$d'],
     ['dt_montage_beg$d'],
     ['dt_montage_end$d'],
-    ['dt_change$d']
+    ['dt_change$d'],
+
+    ['cost_i$f','V=',#0],
+    ['cost_i_0$f','V=',#0],
+    ['m_i$f','V=',#0],
+    ['d_i$f','V=',#0],
+    ['cost_a$f','V=',#0],
+    ['cost_a_0$f','V=',#0],
+    ['m_a$f','V=',#0],
+    ['d_a$f','V=',#0],
+    ['cost_m$f','V=',#0],
+    ['cost_m_0$f','V=',#0],
+    ['m_m$f','V=',#0],
+    ['d_m$f','V=',#0],
+    ['cost_d$f','V=',#0],
+    ['cost_d_0$f','V=',#0],
+    ['m_d$f','V=',#0],
+    ['d_d$f','V=',#0],
+    ['cost$f','V=',#0],
+    ['cost_wo_nds$f','V=',#0],
+    ['cost_av$f','V=0:9999999:2',#0]
+
+
     {['','V=',#0],
     ['','V=',#0],
     ['','V=',#0],
@@ -368,24 +412,49 @@ begin
     ['', User.GetID, 'id_manager', 'id_manager$i', 0, null, -1]
 
   *)
+  var va := F.GetPropValues('c',fvtCtrl);
 end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
 begin
-  //Cth.AddToComboBoxEh(cmb_OrderType, [['новый', '1'], ['рекламация', '2'], ['эксперимент', '3']]);
-  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], cmb_id_type2, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], cmb_id_type2, cntComboLK, 1);
-  Cth.AddToComboBoxEh(cmb_CashType, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
+  Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], FOrderTypes);
+  Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('name'), FOrderTypes.GetCol('id'));
+
+//  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is not null order by posstd', [], cmb_id_type2, cntComboLK);
+//  Q.QLoadToDBComboBoxEh('select name, id from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], cmb_id_type2, cntComboLK, 1);
+  Cth.AddToComboBoxEh(cmb_cashtype, [['наличные', '2'], ['безнал (нет счета)', '0'], ['безнал', '1']]);
 
 
   //  Q.QLoadToDBComboBoxEh('select name, id from or_formats where id = 0', [], cmb_Format, cntComboLK);
   //Q.QLoadToDBComboBoxEh('select name, id from or_formats where id > 1 and (active = 1 or id = :id$i) order by name', [FieldsArr[GetFieldsArrPos('id_format'), cBegValue]], cmb_Format, cntComboLK, 1);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id = -1', [], cmb_id_organization, cntComboLK);
-  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_id_organization, cntComboLK, 1);
+  Q.QLoad(
+    'select name, id, prefix from ref_sn_organizations where id = -1 ' +
+    'union all ' +
+    'select name, id, prefix from ' +
+    '(select * from ref_sn_organizations ' +
+    'where id > 0 and prefix is not null and (active = 1 or id = :id$i) order by name)',
+    [F.GetPropB('id_organization')],
+    FOrganizations
+  );
+
+
+
+//  Q.QLoadToDBComboBoxEh('select name, id, prefix from ref_sn_organizations where id = -1', [], cmb_id_organization, cntComboLK);
+//  Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [0{//!!!}], cmb_id_organization, cntComboLK, 1);
   //Organizations := Q.QLoad('select id, prefix, or_cashless, nds from ref_sn_organizations where id >= 0 and prefix is not null and (active = 1 or id = :id$i) order by name', [Id_Org_Old]);
   Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], cmb_Area, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], cmb_Project, cntComboE);
-  Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], cmb_id_or_format_estimates, cntComboLK);
+  Q.QLoad(
+    'select f.name || '' ['' || e.name || '']'' as name, e.id as id, e.id_format, e.type ' +
+    'from or_formats f, or_format_estimates e ' +
+    'where e.id_format = f.id and ((e.active = 1 and f.active = 1) or e.id = :id$i) and ' +
+    '((e.id_format > 1) or (e.id_format = 0)) ' +
+    'order by 1 asc',
+    [F.GetPropB('id_or_format_estimates')],
+    FEstimateFormats
+  );
+//  Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('cmb_id_or_format_estimates'), FOrderTypes.GetCol('id'));
+  //Q.QLoadToDBComboBoxEh('select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.active = 1 and f.active = 1 and ((e.id_format > 1)or(e.id_format = 0))' + 'order by 1 asc', [], cmb_id_or_format_estimates, cntComboLK);
 
 
 {  Customers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [FieldsArr[GetFieldsArrPos('customer'), cBegValue]]);
@@ -400,6 +469,9 @@ begin
   //if not(Mode in [fDelete, fView]) then
   GetEstimateList;
   LoadComplaints;}
+
+  SetOrderType;
+
   Result := True;
 end;
 
@@ -463,12 +535,19 @@ begin
   ];
   FrgItems.Opt.Caption := 'Состав заказа';
   FrgItems.Opt.SetFields(LFields);
-  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1], [], [mbtCtlPanel]]);
-  FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 250);
+  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1], [], [mbtCtlPanel], [], [mbtCtlPanel ,4000], []]);
+  FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
   FrgItems.Opt.SetGridOperations('uaid');
   FrgItems.Opt.SetTable('v_order_items');
   FrgItems.SetInitData([]);
-  FrgItems.Prepare;
+  FrgItems. Prepare;
+  pnlOrderInfo.Parent := TWinControl(FrgItems.FindComponent('pnlTopBtnsCtl2'));
+  pnlOrderInfo.Color := RGB(255, 255, 220);
+  pnlOrderInfo.BevelOuter := bvRaised;
+  pnlOrderInfo.BorderWidth := 2;
+  pnlOrderInfo.BorderStyle:=bsSingle;
+  pnlOrderInfo.Align:=alClient;
+
 //  FrgItems.Opt.SetPick('id_bcad_nomencl', FEstimateBoardsNomencl, True, True);
   var LFieldsSt := '';
   for i:= 0 to High(LFields) do
@@ -493,25 +572,26 @@ begin
   Result := True;
 end;
 
-function TFrmOWOrder.PrepareFrgReclamations: Boolean;
+function TFrmOWOrder.PrepareFrgRelatedOrders: Boolean;
 begin
-  FrgReclamations.Width := 130;
-  FrgReclamations.Options := [];
-  FrgReclamations.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Рекламации', '30;w', 'bt=показать паспорт']]);
-  FrgReclamations.SetInitData('select ornum from orders where rownum <= 1', []);
-  FrgReclamations.Prepare;
-  //FrgReclamations.DbGridEh1.Options := FrgReclamations.DbGridEh1.Options - [dgTitles];
-  FrgReclamations.RefreshGrid;
+  FrgRelatedOrders.Width := 130;
+  FrgRelatedOrders.Options := [];
+  FrgRelatedOrders.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Рекламации', '30;w', 'bt=показать паспорт']]);
+  FrgRelatedOrders.SetInitData('select ornum from orders where rownum <= 1', []);
+  FrgRelatedOrders.Prepare;
+  //FrgRelatedOrders.DbGridEh1.Options := FrgRelatedOrders.DbGridEh1.Options - [dgTitles];
+  FrgRelatedOrders.RefreshGrid;
 end;
 
-function TFrmOWOrder.PrepareFrgSemiproducts: Boolean;
+function TFrmOWOrder.PrepareFrgBasis: Boolean;
 begin
-  FrgSemiproducts.Width := 130;
-  FrgSemiproducts.Options := [];
-  FrgSemiproducts.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Полуфабрикаты', '30;w', 'bt=показать паспорт']]);
-  FrgSemiproducts.SetInitData('select ornum from orders where rownum <= 5', []);
-  FrgSemiproducts.Prepare;
-  FrgSemiproducts.RefreshGrid;
+  FrgBasis.Width := 130;
+  FrgBasis.Options := [];
+  FrgBasis.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
+  FrgBasis.Opt.SetTable('bcad_groups');
+  FrgBasis.Opt.SetButtons(1, [[1001, True, 'Добавить', 'add'], [1002, True, 'Удалить', 'delete'], [1003, True, 'Переключить вид', 'view']], 2, pnlBasisButtons, 0, True);
+  FrgBasis.Prepare;
+  FrgBasis.RefreshGrid;
 end;
 
 function TFrmOWOrder.PrepareFrgFiles: Boolean;
@@ -521,7 +601,7 @@ begin
   FrgFiles.Opt.SetGridOperations('uaid');
   FrgFiles.Opt.SetTable('bcad_groups');
   FrgFiles.SetInitData('*', []);
-  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, PHFilesButtons, 0, True);
+  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, pnlFilesButtons, 0, True);
   FrgFiles.Prepare;
   FrgFiles.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
   FrgFiles.RefreshGrid;
@@ -531,7 +611,7 @@ function TFrmOWOrder.PrepareWorkCells: Boolean;
 var
   i: Integer;
 begin
-  Result := False;
+{  Result := False;
   Result := True;
   WorkCellAreas := [];
   Q.QLoad('select id, code, posstd, refers_to_prod_area from v_work_cell_types order by posall asc', [], WorkCellTypes);
@@ -541,7 +621,7 @@ begin
     else
       WorkCellAreas := WorkCellAreas + [['ПЩ', 'И', 'ДМ']];
 //      FrgItems.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(WorkCellAreas, 0), A.VarDynArray2RowToVD1(WorkCellAreas, i), True);
-  end;
+  end;}
 end;
 
 procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
@@ -557,21 +637,10 @@ begin
   if A.InArray(SenderNameL, ['chbvisaddinfo', 'chbviscustomer', 'chbvisdates', 'chbvisfinance']) then
     SetVisPanels(Sender);
 
-  if Sender = cmb_id_type2 then begin
-    if (S.NNum(SenderValue) = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
-      F.SetProp('id_organization', -1);
-    if (S.NNum(SenderValue) <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
-      F.SetProp('id_organization', null);
+  if (Sender = cmb_id_type2) or (Sender = cmb_id_organization) then begin
+    SetOrderType;
   end;
-  if Sender = cmb_id_organization then begin
-  end;
-  if F.GetProp('id_type2') = null then
-    F.SetProp('id_organization', null)
-  else if (F.GetProp('id_type2') = 1) and (S.NNum(F.GetProp('id_organization')) <> -1) then
-    F.SetProp('id_organization', -1)
-  else if (F.GetProp('id_type2') <> 1) and (S.NNum(F.GetProp('id_organization')) = -1) then
-    F.SetProp('id_organization', null);
-  inherited;
+  Verify(nil);
 end;
 
 
@@ -632,12 +701,17 @@ begin
     ]],
     False
   );
-  frmpcRelatedDocs.SetParameters(True, 'Связанные заказы', [[
+  frmpcBasis.SetParameters(True, 'Основание заказа', [[
     ''#13#10
     ]],
     False
   );
   frmpcAddDocs.SetParameters(True, 'Внешние документы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcRelatedDocs.SetParameters(True, 'Связанные заказы', [[
     ''#13#10
     ]],
     False
@@ -649,6 +723,104 @@ begin
   );
 
 end;
+
+procedure TFrmOWOrder.SetOrderType;
+//установим поля, зависящие от типа заказа и от организации
+var
+  i, ot, org, est: Integer;
+  va2: TVarDynArray2;
+begin
+  var LOrderType := F.GetProp('id_type2').AsInteger;
+  var LOrganization := F.GetProp('id_organization').AsInteger;
+  var LEstimate := F.GetProp('id_or_format_estimates').AsInteger;
+  ot := FOrderTypes.FindFirst('id', F.GetProp('id_type2'));
+  va2 := [];
+  if LOrderType = 0 then begin
+    //при пустом значении очистим поля
+    F.SetProp('id_organization', null);
+    F.SetProp('id_reglament', null);
+  end
+  else begin
+    //создадим список организации, которые доступны для данного типа заказа
+    for i := 0 to FOrganizations.High do begin
+      if
+        //допустимо Прозводство (есть прозводственные или пф)
+        ((FOrganizations.G(i, 'id') = -1) and ((FOrderTypes.G(ot, 'is_production_order') = 1) or FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
+         or
+        //допустима Ника (есть оплата нал. и отгрузочные)
+        ((FOrganizations.G(i, 'prefix') = 'Н') and ((FOrderTypes.G(ot, 'is_cash_payment') = 1) and FOrderTypes.G(ot, 'is_shipment_order') = 1))
+        or
+        //допустиммы остальные (есть отгруузочные)
+        ((FOrganizations.G(i, 'prefix') <> 'Н') and (FOrganizations.G(i, 'id') <> -1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1))
+      then
+        va2 := va2 + [[FOrganizations.G(i, 'name'), FOrganizations.G(i, 'id')]];
+    end;
+    //установим параметры для ссылки на другой заказ
+    if (FOrderTypes.G(ot, 'need_ref') = 1) then begin
+      //ссылка обязательна
+      F.SetProps('or_reference', '1:400:T', fvtVer);
+      F.SetProps('or_reference', True, fvtDsbl);
+    end
+    else begin
+      //ссылка недоступна
+      F.SetProps('or_reference', '0:400:T', fvtVer);
+      F.SetProps('or_reference', False, fvtDsbl);
+      F.SetProp('or_reference', null)
+    end;
+  end;
+  //загрузим список
+  Cth.AddToComboBoxEh(cmb_id_organization, va2);
+  //восстановим старое значение, если найдено
+  org := A.PosInArray(LOrganization, va2, 1);
+  if org = - 1 then
+    F.SetProp('id_organization', null)
+  else
+    F.SetProp('id_organization', LOrganization);
+  LOrganization := F.GetProp('id_organization').AsInteger;
+
+  //установим список доступных форматов стандартных изделий (они же форматы смет)
+  va2 := [];
+  if (LOrderType = 0) or (LOrganization = 0) then begin
+
+  end;
+  for i := 0 to FEstimateFormats.High do
+    if
+      (LOrganization <> 0)
+      and
+      (
+      //отгрузочные
+      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT))
+      or
+      //нестандарт
+      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1))
+      or
+      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_PRODUCTION) and (FOrderTypes.G(ot, 'is_production_order') = 1))
+      or
+      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SEMIPRODUCT) and (FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
+      )
+    then
+      va2 := va2 + [[FEstimateFormats.G(i, 'name'), FEstimateFormats.G(i, 'id')]];
+  //загрузим список
+  Cth.AddToComboBoxEh(cmb_id_or_format_estimates, va2);
+  //восстановим старое значение, если найдено
+  est := A.PosInArray(LEstimate, va2, 1);
+  if est = - 1 then begin
+    F.SetProp('id_or_format_estimates', null);
+  end
+  else
+    F.SetProp('id_or_format_estimates', LEstimate);
+
+  //установми проверку и доступность полей ввода клиента в зависимости от организации
+  if F.GetProp('id_organization').AsInteger = -1 then begin
+    F.SetProps('c', '', fvtVer);
+    F.SetProps('c', False, fvtDsbl);
+  end
+  else begin
+    F.SetProps('c', '1:400:T', fvtVer);
+    F.SetProps('c', True, fvtDsbl);
+  end;
+end;
+
 
 procedure TFrmOWOrder.SetVisCheckboxes;
 //установим отметку чекбоксов видимости панелей по их состоянию visible

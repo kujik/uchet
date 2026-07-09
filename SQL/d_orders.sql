@@ -331,9 +331,14 @@ from
 --------------------------------------------------------------------------------
 --alter table orders drop column attention;
 
-alter table orders add  active number(1) default 1;
-alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
-alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
+--alter table orders add id_or_reference number(11);
+--alter table orders add id_or_reference number(11);
+
+update orders set id_type2 = 117 where id_type = 1 and id_type2 is null;
+update orders set id_type2 = 106 where id_type = 2 and id_type2 is null;
+
+--alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
+--alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
 create table orders (
   id number(11),
@@ -586,6 +591,7 @@ select
   f.name as format,
   ob.dt_beg as ref_dt_beg,
   ob.dt_otgr as ref_dt_otgr,
+  case when o.cashtype = 1 and o.account is null then 0 else o.cashtype end as cashtypeex,
   case
     when o.cashtype = 2 then 'наличные'
     when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
@@ -2751,13 +2757,25 @@ where
 
 
 --------------------------------------------------------------------------------
---таблица по типам заказов (рекламация, дозаказ...)
-alter table order_types add is_complaint number(1);
+--таблица по типам заказов (рекламация, дозаказ...)   --!!!
+alter table order_types add is_production_order number(1);
+alter table order_types add is_semiproduct_order number(1);
+alter table order_types add is_shipment_order number(1);
+alter table order_types add is_additional_order number(1);
+alter table order_types add is_nonstandard number(1);
+alter table order_types add is_cash_payment number(1);
+
 create table order_types (
   id number(11),
   name varchar(100),
   need_ref number(1),
-  is_complaint number(1),
+  is_production_order number(1),              --может быть производственным заказом
+  is_semiproduct_order number(1),             --может быть заказом на полуфабрикаты    
+  is_shipment_order number(1),                --может быть отгрузочным заказом
+  is_complaint number(1),                     --может быть рекламацией
+  is_additional_order number(1),              --может быть дозаказом
+  is_nonstandard number(1),                   --может включать нестандартные изделия
+  is_cash_payment number(1),                  --допустима оплата за наличные (Ника)
   active number(1), 
   pos number(3),
   posstd number(4),

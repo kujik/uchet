@@ -138,7 +138,12 @@ const
   ORDER_AUDIT_KNS_DOC = 3;
   ORDER_AUDIT_THN_DOC = 4;
 
+  //пароль дл€ отображени€ архивных заказов по Ќ, вводитс€ в журнале заказов по нажатии Ctrl-Alt-W
   PW_ODERS_VIEW_ALL = 'bn-78-nm-90';
+
+  STDITEM_TYPE_PRODUCTION = 0;
+  STDITEM_TYPE_SHIPMENT = 1;
+  STDITEM_TYPE_SEMIPRODUCT= 2;
 
 
 implementation

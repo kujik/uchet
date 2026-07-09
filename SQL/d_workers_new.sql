@@ -1469,7 +1469,7 @@ where
   and p.id_organization = o.id (+)
 ;
 
-alter table w_payroll_transfer_item add pay_adv3 number; 
+alter table w_payroll_transfer_item add pay_adv5 number; 
 create table w_payroll_transfer_item(
   id number(11),
   id_payroll_transfer number(11),     --айди зарплатной ведомости, в которую входит эта строка
@@ -1487,6 +1487,8 @@ create table w_payroll_transfer_item(
   pay_adv number,         -- промежуточная (авансовая) выплата
   pay_adv2 number,         -- промежуточная выплата
   pay_adv3 number,         -- промежуточная выплата
+  pay_adv4 number,         -- промежуточная выплата
+  pay_adv5 number,         -- промежуточная выплата
   pay_card number,        -- перечислено на карту
   advance number,         --сумма аванса по неофициальщиикам
   advance_official number,         --сумма аванса официальная

@@ -34,6 +34,7 @@ type
     function  GetDataFromDb: Integer;
     function  GetDataFromTurv: Integer;
     procedure LoadPrevCalcMethods;
+    procedure RemoveTerminatedFromPayroll(var APayroll: TNamedArr);
     procedure SetPayrollMethod;
     procedure GetDataFromExcel;
     function  GetCaption(Colored: Boolean = False): string;
@@ -221,6 +222,7 @@ begin
   Q.QLoad(Q.QGetSql('a', 'v_w_payroll_calc_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_calc = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by job, employee, schedulecode, organization, personnel_number',
     [ID], na
   );
+  RemoveTerminatedFromPayroll(na);
   Frg1.LoadData(na);
 end;
 
@@ -292,7 +294,6 @@ begin
   else begin
     WhereSt := 'and id_employee = ' + FPayrollParams.G('id_employee').AsString + ' and nvl(id_organization, -100) = nvl(''' + FPayrollParams.G('id_organization').AsString + ''', -100) ' +
     'and nvl(personnel_number, -100) = nvl(''' + FPayrollParams.G('personnel_number').AsString + ''', -100)';
-//    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 0);               //по всем, я не только уволенным
     FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 0);
   end;
   //получим данные по плановой зарплате и фиксированной части из прошлой ведомости
@@ -444,6 +445,7 @@ begin
 
 
   //загрузим данные в грид
+  RemoveTerminatedFromPayroll(na);
   Frg1.LoadData(na);
   CalculateAll;
 
@@ -1066,6 +1068,22 @@ begin
        Fr.SetValue(FieldName, i, False, Fr.GetValue(FieldName));
        CalculateRow(i);
      end;
+end;
+
+procedure TFrmWGedtPayrollCalc.RemoveTerminatedFromPayroll(var APayroll: TNamedArr);
+var
+  na: TNamedArr;
+begin
+  if FPayrollParams.G('id_employee') <> null then
+    Exit;
+  Q.QLoad('select id_employee, id_organization, personnel_number from v_w_payroll_calc_item where id_target_employee is not null and dt1 = :dt$d', [FPayrollParams.G('dt')], na);
+  for var i := APayroll.High downto 0 do
+    for var j := 0 to na.High do
+      if (APayroll.G(i, 'id_employee').AsInteger = na.G(j, 'id_employee').AsInteger) and (APayroll.G(i, 'id_organization').AsInteger = na.G(j, 'id_organization').AsInteger) and (APayroll.G(i, 'personnel_number').AsString = na.G(j, 'personnel_number').AsString) then begin
+         APayroll.DeleteRow(i);
+         Frg1.SetState(True, null, null);
+         Break;
+      end;
 end;
 
 

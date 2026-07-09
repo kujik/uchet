@@ -1156,6 +1156,7 @@ begin
   Cth.SetControlsVerification(Self, FControlVerifycations);
   //назаначим события всем дб-контролам формы, если они не были назначены явно в дизайнере формы или в Prepare
   Cth.SetControlsEhEvents(pnlFrmClient, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState, EditButtonsClick);
+  Cth.SetControlsEhEvents(pnlFrmBtnsC, False, True, nil, ControlOnExit, ControlOnChangeEvent, ControlCheckDrawRequiredState, EditButtonsClick);
   //назаначим событие онклик кнопкам в клиентской области (не в строке кнопок), если для них оно не задано в дизайнтайм или в prepare
   Cth.SetButtonsOnClick(pnlFrmClient, btnClientClick);
 end;
@@ -1252,11 +1253,11 @@ begin
   if not FInControlOnChaange then begin
     FInControlOnChaange := True;
     ControlOnChange(Sender);
+    FInControlOnChaange := False;
   end;
   //проверим, признак что в этом событии проверка
   Serialize;
   Verify(Sender, True);
-  FInControlOnChaange := False;
 end;
 
 procedure TFrmBasicMdi.ControlOnChange(Sender: TObject);

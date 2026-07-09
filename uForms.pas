@@ -333,7 +333,8 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     function GetFindControlText(Form: TForm; Name: string): Variant;
     //добавляет значения в комбобокс из массива [[value1,key1,condition1],[value2,...
     //где в массивах обязателен только нулевой элемент
-    procedure AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; v: TVarDynArray2; Append: Boolean = False);
+    procedure AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; v: TVarDynArray2; Append: Boolean = False); overload;
+    procedure AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; Items, KeyItems: TVarDynArray; Append: Boolean = False); overload;
     //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh
     function DteValueIsDate(DBDateTimeEditEh1: TComponent): Boolean;
     //отрисовать красную линию подчеркивания в указанном контроле для индикации ошибки
@@ -3311,6 +3312,22 @@ begin
         DBComboboxEh.KeyItems.Add(VarToStr(v[i][1]));
     end;
 end;
+
+procedure TControlsHelper.AddToComboBoxEh(DBComboboxEh: TDBComboboxEh; Items, KeyItems: TVarDynArray; Append: Boolean = False);
+//добавляет значения в комбобокс из массивов значений и ключей
+var
+  res, i, j: Integer;
+begin
+  if not Append then begin
+    DBComboboxEh.Items.Clear;
+    DBComboboxEh.KeyItems.Clear;
+  end;
+  for i := 0 to High(Items) do
+    DBComboboxEh.Items.Add(Items[i]);
+  for i := 0 to High(KeyItems) do
+    DBComboboxEh.KeyItems.Add(KeyItems[i].AsString);
+end;
+
 
 function TControlsHelper.DteValueIsDate(DBDateTimeEditEh1: TComponent): Boolean;
 //проверяет, является ли датой текущее значение контрола типа DBDateTimeEditEh

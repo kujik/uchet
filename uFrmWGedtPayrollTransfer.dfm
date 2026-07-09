@@ -1,25 +1,27 @@
 inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   Caption = 'FrmWGedtPayrollTransfer'
-  ExplicitWidth = 804
-  ExplicitHeight = 573
+  ExplicitWidth = 808
+  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitHeight = 519
     inherited pnlFrmClient: TPanel
+      ExplicitWidth = 782
       inherited pnlGrid1: TPanel
+        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
+          ExplicitWidth = 770
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 758
-              Height = 336
+              Width = 762
+              Height = 337
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 337
-              Width = 758
+              Top = 338
+              Width = 762
               ExplicitTop = 337
               ExplicitWidth = 758
             end
@@ -39,18 +41,19 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
         end
       end
       inherited pnlFrg2: TPanel
+        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 776
+          ExplicitWidth = 780
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 768
+              Width = 772
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
               end
             end
             inherited pnlStatusBar: TPanel
-              Width = 768
+              Width = 772
               ExplicitWidth = 768
             end
           end
@@ -74,8 +77,12 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   end
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
-      Left = 719
-      ExplicitLeft = 719
+      Left = 723
+      Height = 14
+      ExplicitLeft = 723
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end
