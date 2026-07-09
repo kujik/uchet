@@ -76,12 +76,10 @@ type
     lbl_ITM: TLabel;
     lbl_status_itm: TLabel;
     PHlBasis: TPanel;
-    pnlBasisButtons: TPanel;
     pnlBasisComm: TPanel;
     m_basis: TDBMemoEh;
     FrgBasis: TFrDBGridEh;
     frmpcBasis: TFrMyPanelCaption;
-    pnlFilesButtons: TPanel;
     PHSum: TPanel;
     nedt_cost_d_0: TDBNumberEditEh;
     nedt_cost_m_0: TDBNumberEditEh;
@@ -100,7 +98,13 @@ type
     lbl11: TLabel;
     lbl12: TLabel;
     lbl13: TLabel;
+    pnlReclamation: TPanel;
+    ed_reclamation_caption: TDBEditEh;
+    edt_Complaints: TDBEditEh;
+    pnlBasisInfo: TPanel;
+    lblBasisInfo: TLabel;
     procedure FormResize(Sender: TObject);
+    procedure lblBasisInfoClick(Sender: TObject);
   private
     FOrderTypes: TNamedArr;
     FOrganizations: TNamedArr;
@@ -125,6 +129,7 @@ type
     procedure SetOrderTypeOrOrganization;
     procedure SetCustomer(ALoadFirst: Boolean);
     procedure OnCustomerControlsChange(Sender: TObject);
+    procedure SwitchBasisPanel(ALoadFirst: Boolean);
 
 //    procedure VerifyBeforeSave; virtual;
 //    function  Save: Boolean; virtual;
@@ -179,14 +184,14 @@ begin
   PHFinCaptions.Height := 26;
   PHSum.Top := PHFinCaptions.Bottom;
   PHRelatedDocs.Width := 140;
-  var w := (ClientWidth - PHRelatedDocs.Width) div 3;
+  var w := (ClientWidth - PHRelatedDocs.Width) div 3 - 6;
   PHCommentsLeft.Width := w;
-  PHlBasis.Width := w -6;
-  PHlBasis.Left := PHCommentsLeft.Right + 1;
-  pnlBasisButtons.Width := 24;
+  PHlBasis.Align := alNone;
+  PHlBasis.Width := w;
+  PHlBasis.Left := PHCommentsLeft.Right + 1 + 6;
+  PHAddDocs.Align := alNone;
   PHAddDocs.Width := w;
-  PHAddDocs.Left := PHlBasis.Right + 1 +6;
-  pnlFilesButtons.Width := 24;
+  PHAddDocs.Left := PHlBasis.Right + 1 + 6;
   PHRelatedDocs.Left := PHAddDocs.Right + 1;
   //edt_managername.Width := (PHOrder.Width div 2 - edt_managername.Left);
 
@@ -227,6 +232,8 @@ begin
 
   //буферизация, иначе тормозит ресайз, тк много контролов меняют размер
   Self.DoubleBuffered := True;
+
+  SwitchBasisPanel(True);
 
   FWHBounds.X := 1000;
   FWHBounds.Y := 700;
@@ -270,6 +277,272 @@ begin
   FormResize(Self);
   SetVisCheckboxes;
 //  cmb_project.ControlLabel.Left := 5;
+end;
+
+procedure TFrmOWOrder.SetAreasCaptions;
+begin
+  frmpcOrder.SetParameters(True, 'Основное', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcCustomer.SetParameters(True, 'Покупатель', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcDates.SetParameters(True, 'Даты', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcFinance.SetParameters(True, 'Финансы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcComments.SetParameters(True, 'Дополнение', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcBasis.SetParameters(True, 'Основание заказа', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcAddDocs.SetParameters(True, 'Внешние документы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcRelatedDocs.SetParameters(True, 'Связанные заказы', [[
+    ''#13#10
+    ]],
+    False
+  );
+  frmpcItems.SetParameters(True, 'Состав заказа', [[
+    ''#13#10
+    ]],
+    False
+  );
+
+end;
+
+procedure TFrmOWOrder.SetVisCheckboxes;
+//установим отметку чекбоксов видимости панелей по их состоянию visible
+begin
+  chbVisAddInfo.Checked := PHeader2.Visible;
+  chbVisCustomer.Checked := PHCustomer.Visible;
+  chbVisDates.Checked := PHDates.Visible;
+  chbVisFinance.Checked := PHFin.Visible;
+{  chbVisAddInfo.Checked := PHeader2.Width > 0;
+  chbVisCustomer.Checked := PHCustomer.Width > 0;
+  chbVisDates.Checked := PHDates.Width > 0;
+  chbVisFinance.Checked := PHFin.Width > 0;}
+end;
+
+procedure TFrmOWOrder.SetVisPanels(Sender: TObject = nil);
+//установим видимость панелей
+var
+  i, j, w: Integer;
+const
+  cIndent = 10;
+begin
+  if Sender = chbVisAddInfo then begin
+    PHeader2.Visible := chbVisAddInfo.Checked;
+    SetVisCheckboxes;
+    Exit;
+  end;
+  //параметры
+  var LCheckBoxes := [chbVisCustomer, chbVisDates, chbVisFinance];
+  var LPanels := [PHOrder, PHCustomer, PHDates, PHFin];
+  var LPanelsSizeable := [True, True, False, False];
+  var LWMin := [WMIN_ORDERS, WMIN_CUSTOMER, FPDatesWidth, FPFinWidth];
+  var LWCurr := [0, 0, 0, 0];
+  //делаем количество итераций подгонки по количеству чекбоксов управления видимостью
+  for i := 0 to High(LCheckBoxes) do begin
+    //посчитаем минимально необходимую ширину
+    w := 0;
+    for j := 0 to High(LPanels) do
+//      w := w + S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+      w := w + S.IIf(LPanels[j].Visible, LWMin[j], 0);
+    //если панели с учетом видимости и минимальных размеров не умещаются на форме
+    if Self.ClientWidth - cIndent < w then
+      //пройдем по чекбоксам видимости справа налево
+      for j := High(LCheckBoxes) downto 0 do
+        //и снимем видимость крайнего правого (но не того по которому кликнули)
+        if LCheckBoxes[j] <> Sender then
+          if LCheckBoxes[j].Checked then begin
+            LCheckBoxes[j].Checked := False;
+            Break;
+          end;
+    //установим видимость панелей
+    for j := 1 to High(LPanels) do begin
+      LPanels[j].Enabled := LCheckBoxes[j - 1].Checked;
+      LPanels[j].Visible := LCheckBoxes[j - 1].Checked;
+{      if not LCheckBoxes[j - 1].Checked then
+        LPanels[j].Width := 0
+      else
+        LPanels[j].Width := LWMin[j];}
+    end;
+    //установим ширину в массиве по минимуму и посчитаем общую ширину
+    w := 0;
+    for j := 0 to High(LPanels) do begin
+//      LWCurr[j] := S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
+      LWCurr[j] := S.IIf(LPanels[j].Visible, LWMin[j], 0);
+      w := w + LWCurr[j];
+    end;
+    //количество видимых панелей с изменяемой шириной
+    var LCntSizeable := 0;
+    for j := 0 to High(LPanelsSizeable) do
+//      if (LPanelsSizeable[j]) and (LPanels[j].Width > 0) then
+      if (LPanelsSizeable[j]) and (LPanels[j].Visible) then
+        Inc(LCntSizeable);
+    //расширим пропорционально все видимые растягиваемые панели, если ширина формы больше минимально необходимой для видимых
+    for j := 0 to High(LPanels) do
+      if (LPanels[j].Visible) and (Self.ClientWidth - cIndent > w) then
+        if LPanelsSizeable[j] then
+          LPanels[j].Width := LWCurr[j] + (Self.ClientWidth - cIndent - w) div LCntSizeable
+        else
+          LPanels[j].Width := LWCurr[j];
+    //расставим в нужном порядке, так как он при скрытии может сбиваться
+    for j := 1 to High(LPanels) do
+      LPanels[j].Left := LPanels[j - 1].Right + 1;
+    //обновим состояние чекбоксов
+    SetVisCheckboxes;
+  end;
+end;
+
+function TFrmOWOrder.PrepareFrgItems: Boolean;
+var
+  i, j: integer;
+  va2: TVarDynArray2;
+  na: TNamedArr;
+begin
+  Result := False;
+  FrgItems.Options := FrDBGridOptionDef + [myogPanelFind, myogMultiSelect, myogIndicatorCheckBoxes, myogHasStatusBar];
+  va2 := [];
+  for i := 0 to High(RouteFields) do begin
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '30', 'chb', 'e']]
+  end;
+  var LFields: TVarDynArray2 := [
+    ['id$i', '_id', '40'],
+    ['id_std_item$i', '_id_std', '40'],
+    ['id_itm$i', '_id_itm', '40'],
+    ['ch$s', '_ch', '40'],
+    ['attention$i', '_attention', '40'],
+    ['0 as status$s', '*', '20'],
+    ['slash$s', 'Паспорт', '90'],
+    ['prefix$s', 'Префикс', '60;h'],
+    ['itemname$s', 'Изделие', '400;L;w;h', 'e=1:400::T'],
+    ['price$f', 'Цена', '50', 'f=0.00', 'e=0:999999:2:N'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N'],
+    ['0 as qnt_sgp$f', 'Кол-во с СГП', '40', 'e=0:999999:0:N'],
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'chb'],
+    ['control_assembly$i', 'Контр сборка', '40', 'chb'],
+    ['decode(nstd, 1, '' '') as nstd$s', 'Н/стд', '30', 'chbt', 'e']
+  ];
+  LFields := LFields + va2;
+  LFields := LFields +
+  [
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb'],
+    ['id_kns$i', 'Конструктор', '100;L'],
+    ['id_thn$i', 'Технолог', '100;L'],
+    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::T'],
+    ['0 as sum$f', 'Сумма', '50', 'f=0.00:']
+  ];
+  FrgItems.Opt.Caption := 'Состав заказа';
+  FrgItems.Opt.SetFields(LFields);
+  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1], [], [mbtCtlPanel], [], [mbtCtlPanel ,4000], []]);
+  FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
+  FrgItems.Opt.SetGridOperations('uaid');
+  FrgItems.Opt.SetTable('v_order_items');
+  FrgItems.SetInitData([]);
+  FrgItems. Prepare;
+  pnlOrderInfo.Parent := TWinControl(FrgItems.FindComponent('pnlTopBtnsCtl2'));
+  pnlOrderInfo.Color := RGB(255, 255, 220);
+  pnlOrderInfo.BevelOuter := bvRaised;
+  pnlOrderInfo.BorderWidth := 2;
+  pnlOrderInfo.BorderStyle:=bsSingle;
+  pnlOrderInfo.Align:=alClient;
+
+//  FrgItems.Opt.SetPick('id_bcad_nomencl', FEstimateBoardsNomencl, True, True);
+  var LFieldsSt := '';
+  for i:= 0 to High(LFields) do
+    S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
+  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [ID], na);
+  FrgItems.SetInitData(na);
+  //установим события грида
+  FrgItems.OnButtonClick := FrgItemsButtonClick;
+  FrgItems.OnCellButtonClick := FrgItemsCellButtonClick;
+  FrgItems.OnGetCellReadOnly := FrgItemsGetCellReadOnly;
+{    FrgItems.OnSelectedDataChange := FrgItemsSelectedDataChange;
+    FrgItems.OnSetSqlParams := FrgItemsOnSetSqlParams;
+    FrgItems.OnColumnsUpdateData := FrgItemsColumnsUpdateData;
+    FrgItems.OnAddControlChange := FrgItemsAddControlChange;
+    FrgItems.OnColumnsGetCellParams := FrgItemsColumnsGetCellParams;
+    FrgItems.OnDbClick := FrgItemsOnDbClick;
+    FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
+    FrgItems.OnCellValueSave := FrgItemsCellValueSave;}
+  FrgItems.RefreshGrid;
+//  FrgItems.MemTableEh1.Active := true;
+  FrgItems.IsTableCorrect;
+  Result := True;
+end;
+
+function TFrmOWOrder.PrepareFrgRelatedOrders: Boolean;
+begin
+  FrgRelatedOrders.Width := 130;
+  FrgRelatedOrders.Options := [];
+  FrgRelatedOrders.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Рекламации', '30;w', 'bt=показать паспорт']]);
+  FrgRelatedOrders.SetInitData('select ornum from orders where rownum <= 1', []);
+  FrgRelatedOrders.Prepare;
+  //FrgRelatedOrders.DbGridEh1.Options := FrgRelatedOrders.DbGridEh1.Options - [dgTitles];
+  FrgRelatedOrders.RefreshGrid;
+end;
+
+function TFrmOWOrder.PrepareFrgBasis: Boolean;
+begin
+  FrgBasis.Width := 130;
+  FrgBasis.Options := [];
+  FrgBasis.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
+  FrgBasis.Opt.SetTable('bcad_groups');
+//  FrgBasis.Opt.SetButtons(1, [[1001, True, 'Добавить', 'add'], [1002, True, 'Удалить', 'delete'], [1003, True, 'Переключить вид', 'view']], 2, pnlBasisButtons, 0, True);
+  FrgBasis.Opt.SetButtons(-3, [[mbtAdd, True], [mbtDelete, True]], 2, nil, 0, True);
+  FrgBasis.Prepare;
+  FrgBasis.RefreshGrid;
+end;
+
+function TFrmOWOrder.PrepareFrgFiles: Boolean;
+begin
+  FrgFiles.Options := [];
+  FrgFiles.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
+  FrgFiles.Opt.SetGridOperations('uaid');
+  FrgFiles.Opt.SetTable('bcad_groups');
+  FrgFiles.SetInitData('*', []);
+//  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, pnlFilesButtons, 0, True);
+  FrgFiles.Opt.SetButtons(-3, [[mbtAdd, True], [mbtDelete, True]], 2, nil, 0, True);
+  FrgFiles.Prepare;
+  FrgFiles.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
+  FrgFiles.RefreshGrid;
+end;
+
+function TFrmOWOrder.PrepareWorkCells: Boolean;
+var
+  i: Integer;
+begin
+{  Result := False;
+  Result := True;
+  WorkCellAreas := [];
+  Q.QLoad('select id, code, posstd, refers_to_prod_area from v_work_cell_types order by posall asc', [], WorkCellTypes);
+  for i := 0 to WorkCellTypes.Count - 1 do begin
+    if WorkCellTypes.G(i, 'refers_to_prod_area') = 1 then
+      WorkCellAreas := WorkCellAreas + [[]]
+    else
+      WorkCellAreas := WorkCellAreas + [['ПЩ', 'И', 'ДМ']];
+//      FrgItems.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(WorkCellAreas, 0), A.VarDynArray2RowToVD1(WorkCellAreas, i), True);
+  end;}
 end;
 
 procedure TFrmOWOrder.DefineFields;
@@ -494,236 +767,6 @@ begin
   Result := True;
 end;
 
-function TFrmOWOrder.PrepareFrgItems: Boolean;
-var
-  i, j: integer;
-  va2: TVarDynArray2;
-  na: TNamedArr;
-begin
-  Result := False;
-  FrgItems.Options := FrDBGridOptionDef + [myogPanelFind, myogMultiSelect, myogIndicatorCheckBoxes, myogHasStatusBar];
-  va2 := [];
-  for i := 0 to High(RouteFields) do begin
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '30', 'chb', 'e']]
-  end;
-  var LFields: TVarDynArray2 := [
-    ['id$i', '_id', '40'],
-    ['id_std_item$i', '_id_std', '40'],
-    ['id_itm$i', '_id_itm', '40'],
-    ['ch$s', '_ch', '40'],
-    ['attention$i', '_attention', '40'],
-    ['0 as status$s', '*', '20'],
-    ['slash$s', 'Паспорт', '90'],
-    ['prefix$s', 'Префикс', '60;h'],
-    ['itemname$s', 'Изделие', '400;L;w;h', 'e=1:400::T'],
-    ['price$f', 'Цена', '50', 'f=0.00', 'e=0:999999:2:N'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N'],
-    ['0 as qnt_sgp$f', 'Кол-во с СГП', '40', 'e=0:999999:0:N'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'chb'],
-    ['control_assembly$i', 'Контр сборка', '40', 'chb'],
-    ['decode(nstd, 1, '' '') as nstd$s', 'Н/стд', '30', 'chbt', 'e']
-  ];
-  LFields := LFields + va2;
-  LFields := LFields +
-  [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb'],
-    ['id_kns$i', 'Конструктор', '100;L'],
-    ['id_thn$i', 'Технолог', '100;L'],
-    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::T'],
-    ['0 as sum$f', 'Сумма', '50', 'f=0.00:']
-  ];
-  FrgItems.Opt.Caption := 'Состав заказа';
-  FrgItems.Opt.SetFields(LFields);
-  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1], [], [mbtCtlPanel], [], [mbtCtlPanel ,4000], []]);
-  FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
-  FrgItems.Opt.SetGridOperations('uaid');
-  FrgItems.Opt.SetTable('v_order_items');
-  FrgItems.SetInitData([]);
-  FrgItems. Prepare;
-  pnlOrderInfo.Parent := TWinControl(FrgItems.FindComponent('pnlTopBtnsCtl2'));
-  pnlOrderInfo.Color := RGB(255, 255, 220);
-  pnlOrderInfo.BevelOuter := bvRaised;
-  pnlOrderInfo.BorderWidth := 2;
-  pnlOrderInfo.BorderStyle:=bsSingle;
-  pnlOrderInfo.Align:=alClient;
-
-//  FrgItems.Opt.SetPick('id_bcad_nomencl', FEstimateBoardsNomencl, True, True);
-  var LFieldsSt := '';
-  for i:= 0 to High(LFields) do
-    S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
-  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [ID], na);
-  FrgItems.SetInitData(na);
-  //установим события грида
-  FrgItems.OnButtonClick := FrgItemsButtonClick;
-  FrgItems.OnCellButtonClick := FrgItemsCellButtonClick;
-  FrgItems.OnGetCellReadOnly := FrgItemsGetCellReadOnly;
-{    FrgItems.OnSelectedDataChange := FrgItemsSelectedDataChange;
-    FrgItems.OnSetSqlParams := FrgItemsOnSetSqlParams;
-    FrgItems.OnColumnsUpdateData := FrgItemsColumnsUpdateData;
-    FrgItems.OnAddControlChange := FrgItemsAddControlChange;
-    FrgItems.OnColumnsGetCellParams := FrgItemsColumnsGetCellParams;
-    FrgItems.OnDbClick := FrgItemsOnDbClick;
-    FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
-    FrgItems.OnCellValueSave := FrgItemsCellValueSave;}
-  FrgItems.RefreshGrid;
-//  FrgItems.MemTableEh1.Active := true;
-  FrgItems.IsTableCorrect;
-  Result := True;
-end;
-
-function TFrmOWOrder.PrepareFrgRelatedOrders: Boolean;
-begin
-  FrgRelatedOrders.Width := 130;
-  FrgRelatedOrders.Options := [];
-  FrgRelatedOrders.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Рекламации', '30;w', 'bt=показать паспорт']]);
-  FrgRelatedOrders.SetInitData('select ornum from orders where rownum <= 1', []);
-  FrgRelatedOrders.Prepare;
-  //FrgRelatedOrders.DbGridEh1.Options := FrgRelatedOrders.DbGridEh1.Options - [dgTitles];
-  FrgRelatedOrders.RefreshGrid;
-end;
-
-function TFrmOWOrder.PrepareFrgBasis: Boolean;
-begin
-  FrgBasis.Width := 130;
-  FrgBasis.Options := [];
-  FrgBasis.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
-  FrgBasis.Opt.SetTable('bcad_groups');
-  FrgBasis.Opt.SetButtons(1, [[1001, True, 'Добавить', 'add'], [1002, True, 'Удалить', 'delete'], [1003, True, 'Переключить вид', 'view']], 2, pnlBasisButtons, 0, True);
-  FrgBasis.Prepare;
-  FrgBasis.RefreshGrid;
-end;
-
-function TFrmOWOrder.PrepareFrgFiles: Boolean;
-begin
-  FrgFiles.Options := [];
-  FrgFiles.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
-  FrgFiles.Opt.SetGridOperations('uaid');
-  FrgFiles.Opt.SetTable('bcad_groups');
-  FrgFiles.SetInitData('*', []);
-  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, pnlFilesButtons, 0, True);
-  FrgFiles.Prepare;
-  FrgFiles.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
-  FrgFiles.RefreshGrid;
-end;
-
-function TFrmOWOrder.PrepareWorkCells: Boolean;
-var
-  i: Integer;
-begin
-{  Result := False;
-  Result := True;
-  WorkCellAreas := [];
-  Q.QLoad('select id, code, posstd, refers_to_prod_area from v_work_cell_types order by posall asc', [], WorkCellTypes);
-  for i := 0 to WorkCellTypes.Count - 1 do begin
-    if WorkCellTypes.G(i, 'refers_to_prod_area') = 1 then
-      WorkCellAreas := WorkCellAreas + [[]]
-    else
-      WorkCellAreas := WorkCellAreas + [['ПЩ', 'И', 'ДМ']];
-//      FrgItems.Opt.SetPick('id_category', A.VarDynArray2ColToVD1(WorkCellAreas, 0), A.VarDynArray2RowToVD1(WorkCellAreas, i), True);
-  end;}
-end;
-
-procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
-var
-  SenderName, SenderNameL: string;
-  SenderValue : Variant;
-begin
-  SenderName := TControl(Sender).Name;
-  SenderNameL := S.ToLower(TControl(Sender).Name);
-  SenderValue := Cth.GetControlValue(Sender);
-
-  //чекбоксы видимости панелей
-  if A.InArray(SenderNameL, ['chbvisaddinfo', 'chbviscustomer', 'chbvisdates', 'chbvisfinance']) then
-    SetVisPanels(Sender);
-
-  if (Sender = cmb_id_type2) or (Sender = cmb_id_organization) then begin
-    SetOrderTypeOrOrganization;
-  end;
-  OnCustomerControlsChange(Sender);
-  Verify(nil);
-end;
-
-
-procedure TFrmOWOrder.FrgItemsCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
-begin
-  if Fr.GetValue = null then begin
-    if Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList.Count = 0 then
-      Fr.SetValue(Fr.CurrField, ' ')
-    else
-      Fr.SetValue(Fr.CurrField, Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList[0]);
-  end
-  else
-    Fr.SetValue(Fr.CurrField, null);
-end;
-
-procedure TFrmOWOrder.FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
-begin
-  if TColumnEh(Sender).KeyList.Count > 0 then
-    ReadOnly := False;
-end;
-
-procedure TFrmOWOrder.FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
-begin
-  case Tag of
-    mbtInsert:
-      FrgItems.InsertRow;
-    mbtAdd:
-      FrgItems.AddRow;
-    mbtDelete:
-      FrgItems.DeleteRow;
-  end;
-end;
-
-procedure TFrmOWOrder.SetAreasCaptions;
-begin
-  frmpcOrder.SetParameters(True, 'Основное', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcCustomer.SetParameters(True, 'Покупатель', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcDates.SetParameters(True, 'Даты', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcFinance.SetParameters(True, 'Финансы', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcComments.SetParameters(True, 'Дополнение', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcBasis.SetParameters(True, 'Основание заказа', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcAddDocs.SetParameters(True, 'Внешние документы', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcRelatedDocs.SetParameters(True, 'Связанные заказы', [[
-    ''#13#10
-    ]],
-    False
-  );
-  frmpcItems.SetParameters(True, 'Состав заказа', [[
-    ''#13#10
-    ]],
-    False
-  );
-
-end;
-
 procedure TFrmOWOrder.SetOrderTypeOrOrganization;
 //установим поля, зависящие от типа заказа и от организации
 var
@@ -821,29 +864,6 @@ begin
   end;
 end;
 
-
-procedure TFrmOWOrder.OnCustomerControlsChange(Sender: TObject);
-//обработка изменений контролов, связанных с покупателем
-var
-  st: string;
-  Canvas: TControlCanvas;
-  i, j: Integer;
-  b: Boolean;
-begin
-  if Sender = cmb_customer then
-    SetCustomer(False)
-  else if Sender = cmb_customerman then begin
-    edt_customercontact.Text := '';
-    if cmb_customerman.ItemIndex >= 0 then
-      edt_customercontact.Text := cmb_customerman.DynProps[IntToStr(cmb_customerman.ItemIndex)].Value;
-  end
-  else if Sender = cmb_customerlegal then begin
-    edt_CustomerInn.Text := '';
-    if cmb_customerlegal.ItemIndex >= 0 then
-      edt_customerinn.Text := cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.ItemIndex)].Value;
-  end;
-end;
-
 procedure TFrmOWOrder.SetCustomer(ALoadFirst: Boolean);
 //установим поля, связанные с покупателем
 //вызывает события изменения рекурсивно
@@ -893,91 +913,117 @@ begin
   end;
 end;
 
-
-
-procedure TFrmOWOrder.SetVisCheckboxes;
-//установим отметку чекбоксов видимости панелей по их состоянию visible
-begin
-  chbVisAddInfo.Checked := PHeader2.Visible;
-  chbVisCustomer.Checked := PHCustomer.Visible;
-  chbVisDates.Checked := PHDates.Visible;
-  chbVisFinance.Checked := PHFin.Visible;
-{  chbVisAddInfo.Checked := PHeader2.Width > 0;
-  chbVisCustomer.Checked := PHCustomer.Width > 0;
-  chbVisDates.Checked := PHDates.Width > 0;
-  chbVisFinance.Checked := PHFin.Width > 0;}
-end;
-
-procedure TFrmOWOrder.SetVisPanels(Sender: TObject = nil);
-//установим видимость панелей
+procedure TFrmOWOrder.OnCustomerControlsChange(Sender: TObject);
+//обработка изменений контролов, связанных с покупателем
 var
-  i, j, w: Integer;
-const
-  cIndent = 10;
+  st: string;
+  Canvas: TControlCanvas;
+  i, j: Integer;
+  b: Boolean;
 begin
-  if Sender = chbVisAddInfo then begin
-    PHeader2.Visible := chbVisAddInfo.Checked;
-    SetVisCheckboxes;
-    Exit;
-  end;
-  //параметры
-  var LCheckBoxes := [chbVisCustomer, chbVisDates, chbVisFinance];
-  var LPanels := [PHOrder, PHCustomer, PHDates, PHFin];
-  var LPanelsSizeable := [True, True, False, False];
-  var LWMin := [WMIN_ORDERS, WMIN_CUSTOMER, FPDatesWidth, FPFinWidth];
-  var LWCurr := [0, 0, 0, 0];
-  //делаем количество итераций подгонки по количеству чекбоксов управления видимостью
-  for i := 0 to High(LCheckBoxes) do begin
-    //посчитаем минимально необходимую ширину
-    w := 0;
-    for j := 0 to High(LPanels) do
-//      w := w + S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
-      w := w + S.IIf(LPanels[j].Visible, LWMin[j], 0);
-    //если панели с учетом видимости и минимальных размеров не умещаются на форме
-    if Self.ClientWidth - cIndent < w then
-      //пройдем по чекбоксам видимости справа налево
-      for j := High(LCheckBoxes) downto 0 do
-        //и снимем видимость крайнего правого (но не того по которому кликнули)
-        if LCheckBoxes[j] <> Sender then
-          if LCheckBoxes[j].Checked then begin
-            LCheckBoxes[j].Checked := False;
-            Break;
-          end;
-    //установим видимость панелей
-    for j := 1 to High(LPanels) do begin
-      LPanels[j].Enabled := LCheckBoxes[j - 1].Checked;
-      LPanels[j].Visible := LCheckBoxes[j - 1].Checked;
-{      if not LCheckBoxes[j - 1].Checked then
-        LPanels[j].Width := 0
-      else
-        LPanels[j].Width := LWMin[j];}
-    end;
-    //установим ширину в массиве по минимуму и посчитаем общую ширину
-    w := 0;
-    for j := 0 to High(LPanels) do begin
-//      LWCurr[j] := S.IIf(LPanels[j].Width > 0, LWMin[j], 0);
-      LWCurr[j] := S.IIf(LPanels[j].Visible, LWMin[j], 0);
-      w := w + LWCurr[j];
-    end;
-    //количество видимых панелей с изменяемой шириной
-    var LCntSizeable := 0;
-    for j := 0 to High(LPanelsSizeable) do
-//      if (LPanelsSizeable[j]) and (LPanels[j].Width > 0) then
-      if (LPanelsSizeable[j]) and (LPanels[j].Visible) then
-        Inc(LCntSizeable);
-    //расширим пропорционально все видимые растягиваемые панели, если ширина формы больше минимально необходимой для видимых
-    for j := 0 to High(LPanels) do
-      if (LPanels[j].Visible) and (Self.ClientWidth - cIndent > w) then
-        if LPanelsSizeable[j] then
-          LPanels[j].Width := LWCurr[j] + (Self.ClientWidth - cIndent - w) div LCntSizeable
-        else
-          LPanels[j].Width := LWCurr[j];
-    //расставим в нужном порядке, так как он при скрытии может сбиваться
-    for j := 1 to High(LPanels) do
-      LPanels[j].Left := LPanels[j - 1].Right + 1;
-    //обновим состояние чекбоксов
-    SetVisCheckboxes;
+  if Sender = cmb_customer then
+    SetCustomer(False)
+  else if Sender = cmb_customerman then begin
+    edt_customercontact.Text := '';
+    if cmb_customerman.ItemIndex >= 0 then
+      edt_customercontact.Text := cmb_customerman.DynProps[IntToStr(cmb_customerman.ItemIndex)].Value;
+  end
+  else if Sender = cmb_customerlegal then begin
+    edt_CustomerInn.Text := '';
+    if cmb_customerlegal.ItemIndex >= 0 then
+      edt_customerinn.Text := cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.ItemIndex)].Value;
   end;
 end;
+
+procedure TFrmOWOrder.SwitchBasisPanel(ALoadFirst: Boolean);
+var
+  LVisFiles: Boolean;
+begin
+  LVisFiles := FrgBasis.Visible;
+  if ALoadFirst then begin
+    LVisFiles := False;
+  end
+  else begin
+    LVisFiles := not LVisFiles;
+  end;
+  if LVisFiles then begin
+    pnlBasisComm.Visible := False;
+    pnlBasisComm.Align := alNone;
+    FrgBasis.Align := alClient;
+    FrgBasis.Visible := True;
+    if StringReplace(Trim(m_basis.Text) , #13#10, '', [rfReplaceAll]) = '' then
+      lblBasisInfo.Caption := '   Основание не задано.'
+    else
+      lblBasisInfo.Caption := '   ' + StringReplace(Trim(m_basis.Text) , #13#10, ' ', [rfReplaceAll]);
+  end
+  else begin
+    FrgBasis.Visible := False;
+    FrgBasis.Align := alNone;
+    pnlBasisComm.Align := alClient;
+    pnlBasisComm.Visible := True;
+    if FrgBasis.GetCount = 0 then
+      lblBasisInfo.Caption := '   Файлы не загружены.'
+    else
+      lblBasisInfo.Caption := '   Загружено ' + S.GetEndingFull(FrgBasis.GetCount, 'файл', '', 'а', 'ов') + '.';
+  end;
+end;
+
+procedure TFrmOWOrder.ControlOnChange(Sender: TObject);
+var
+  SenderName, SenderNameL: string;
+  SenderValue : Variant;
+begin
+  SenderName := TControl(Sender).Name;
+  SenderNameL := S.ToLower(TControl(Sender).Name);
+  SenderValue := Cth.GetControlValue(Sender);
+
+  //чекбоксы видимости панелей
+  if A.InArray(SenderNameL, ['chbvisaddinfo', 'chbviscustomer', 'chbvisdates', 'chbvisfinance']) then
+    SetVisPanels(Sender);
+
+  if (Sender = cmb_id_type2) or (Sender = cmb_id_organization) then begin
+    SetOrderTypeOrOrganization;
+  end;
+  OnCustomerControlsChange(Sender);
+  Verify(nil);
+end;
+
+procedure TFrmOWOrder.FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  case Tag of
+    mbtInsert:
+      FrgItems.InsertRow;
+    mbtAdd:
+      FrgItems.AddRow;
+    mbtDelete:
+      FrgItems.DeleteRow;
+  end;
+end;
+
+procedure TFrmOWOrder.FrgItemsCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if Fr.GetValue = null then begin
+    if Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList.Count = 0 then
+      Fr.SetValue(Fr.CurrField, ' ')
+    else
+      Fr.SetValue(Fr.CurrField, Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList[0]);
+  end
+  else
+    Fr.SetValue(Fr.CurrField, null);
+end;
+
+procedure TFrmOWOrder.FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
+begin
+  if TColumnEh(Sender).KeyList.Count > 0 then
+    ReadOnly := False;
+end;
+
+procedure TFrmOWOrder.lblBasisInfoClick(Sender: TObject);
+begin
+  SwitchBasisPanel(False);
+end;
+
+
+
 
 end.

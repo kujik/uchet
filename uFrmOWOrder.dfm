@@ -50,25 +50,25 @@ inherited FrmOWOrder: TFrmOWOrder
           TabOrder = 0
           ExplicitLeft = 659
           inline FrgFiles: TFrDBGridEh
-            Left = 33
+            Left = 1
             Top = 19
-            Width = 266
+            Width = 298
             Height = 98
             Margins.Top = 6
             Margins.Bottom = 6
             Align = alClient
             TabOrder = 0
-            ExplicitLeft = 30
+            ExplicitLeft = 1
             ExplicitTop = 19
             ExplicitWidth = 298
             ExplicitHeight = 98
             inherited pnlGrid: TPanel
-              Width = 256
+              Width = 288
               Height = 44
               ExplicitWidth = 288
               ExplicitHeight = 44
               inherited DbGridEh1: TDBGridEh
-                Width = 254
+                Width = 286
                 Height = 21
                 Columns = <
                   item
@@ -92,7 +92,7 @@ inherited FrmOWOrder: TFrmOWOrder
               end
               inherited pnlStatusBar: TPanel
                 Top = 22
-                Width = 254
+                Width = 286
                 ExplicitTop = 22
                 ExplicitWidth = 286
                 inherited lblStatusBarL: TLabel
@@ -110,16 +110,16 @@ inherited FrmOWOrder: TFrmOWOrder
               ExplicitHeight = 44
             end
             inherited pnlTop: TPanel
-              Width = 266
+              Width = 298
               ExplicitWidth = 298
             end
             inherited pnlContainer: TPanel
-              Width = 266
+              Width = 298
               ExplicitWidth = 298
             end
             inherited pnlBottom: TPanel
               Top = 98
-              Width = 266
+              Width = 298
               ExplicitTop = 98
               ExplicitWidth = 298
             end
@@ -152,17 +152,6 @@ inherited FrmOWOrder: TFrmOWOrder
               Width = 298
               ExplicitWidth = 707
             end
-          end
-          object pnlFilesButtons: TPanel
-            Left = 1
-            Top = 19
-            Width = 32
-            Height = 98
-            Align = alLeft
-            Caption = 'PHlBasis'
-            TabOrder = 2
-            ExplicitLeft = 9
-            ExplicitTop = 20
           end
         end
         object PHRelatedDocs: TPanel
@@ -297,11 +286,12 @@ inherited FrmOWOrder: TFrmOWOrder
           TabOrder = 2
           object m_comm: TDBMemoEh
             Left = 1
-            Top = 19
+            Top = 41
             Width = 342
-            Height = 98
+            Height = 76
             ControlLabel.Caption = #1044#1086#1087#1086#1083#1085#1077#1085#1080#1077
             ControlLabelLocation.Position = lpLeftCenterEh
+            ScrollBars = ssVertical
             Align = alClient
             AutoSize = False
             DynProps = <>
@@ -326,6 +316,50 @@ inherited FrmOWOrder: TFrmOWOrder
               ExplicitWidth = 707
             end
           end
+          object pnlReclamation: TPanel
+            Left = 1
+            Top = 19
+            Width = 342
+            Height = 22
+            Align = alTop
+            Caption = 'pnlReclamation'
+            TabOrder = 2
+            object ed_reclamation_caption: TDBEditEh
+              Left = 1
+              Top = 1
+              Width = 70
+              Height = 20
+              Align = alLeft
+              DynProps = <>
+              EditButtons = <>
+              ReadOnly = True
+              TabOrder = 0
+              Text = #1056#1077#1082#1083#1072#1084#1072#1094#1080#1103':'
+              Visible = True
+              ExplicitHeight = 21
+            end
+            object edt_Complaints: TDBEditEh
+              Left = 71
+              Top = 1
+              Width = 270
+              Height = 20
+              Align = alClient
+              ControlLabel.Width = 60
+              ControlLabel.Height = 26
+              ControlLabel.Caption = #1055#1088#1080#1095#1080#1085#1099#13#10#1088#1077#1082#1083#1072#1084#1072#1094#1080#1080
+              ControlLabel.Visible = True
+              ControlLabelLocation.Position = lpLeftCenterEh
+              DynProps = <>
+              EditButtons = <
+                item
+                  DropDownFormParams.Align = daRight
+                end>
+              MaxLength = 400
+              TabOrder = 1
+              Visible = True
+              ExplicitHeight = 21
+            end
+          end
         end
         object PHlBasis: TPanel
           Left = 345
@@ -335,31 +369,23 @@ inherited FrmOWOrder: TFrmOWOrder
           Align = alLeft
           Caption = 'PHlBasis'
           TabOrder = 3
-          object pnlBasisButtons: TPanel
+          object pnlBasisComm: TPanel
             Left = 1
             Top = 19
-            Width = 32
-            Height = 98
+            Width = 72
+            Height = 81
             Align = alLeft
             Caption = 'PHlBasis'
             TabOrder = 0
-          end
-          object pnlBasisComm: TPanel
-            Left = 33
-            Top = 19
-            Width = 72
-            Height = 98
-            Align = alLeft
-            Caption = 'PHlBasis'
-            TabOrder = 1
             object m_basis: TDBMemoEh
               Left = 1
               Top = 1
               Width = 70
-              Height = 96
+              Height = 79
               ControlLabel.Caption = #1044#1086#1087#1086#1083#1085#1077#1085#1080#1077
               ControlLabelLocation.Position = lpLeftCenterEh
-              Align = alLeft
+              ScrollBars = ssVertical
+              Align = alClient
               AutoSize = False
               DynProps = <>
               EditButtons = <>
@@ -370,26 +396,26 @@ inherited FrmOWOrder: TFrmOWOrder
             end
           end
           inline FrgBasis: TFrDBGridEh
-            Left = 105
+            Left = 73
             Top = 19
-            Width = 182
-            Height = 98
+            Width = 214
+            Height = 81
             Margins.Top = 6
             Margins.Bottom = 6
             Align = alClient
-            TabOrder = 2
-            ExplicitLeft = 105
+            TabOrder = 1
+            ExplicitLeft = 73
             ExplicitTop = 19
-            ExplicitWidth = 182
-            ExplicitHeight = 98
+            ExplicitWidth = 214
+            ExplicitHeight = 81
             inherited pnlGrid: TPanel
-              Width = 172
-              Height = 44
-              ExplicitWidth = 172
-              ExplicitHeight = 44
+              Width = 204
+              Height = 27
+              ExplicitWidth = 204
+              ExplicitHeight = 27
               inherited DbGridEh1: TDBGridEh
-                Width = 170
-                Height = 21
+                Width = 202
+                Height = 4
                 Columns = <
                   item
                     CellButtons = <>
@@ -411,10 +437,10 @@ inherited FrmOWOrder: TFrmOWOrder
                 end
               end
               inherited pnlStatusBar: TPanel
-                Top = 22
-                Width = 170
-                ExplicitTop = 22
-                ExplicitWidth = 170
+                Top = 5
+                Width = 202
+                ExplicitTop = 5
+                ExplicitWidth = 202
                 inherited lblStatusBarL: TLabel
                   Height = 13
                   ExplicitHeight = 13
@@ -426,22 +452,22 @@ inherited FrmOWOrder: TFrmOWOrder
               end
             end
             inherited pnlLeft: TPanel
-              Height = 44
-              ExplicitHeight = 44
+              Height = 27
+              ExplicitHeight = 27
             end
             inherited pnlTop: TPanel
-              Width = 182
-              ExplicitWidth = 182
+              Width = 214
+              ExplicitWidth = 214
             end
             inherited pnlContainer: TPanel
-              Width = 182
-              ExplicitWidth = 182
+              Width = 214
+              ExplicitWidth = 214
             end
             inherited pnlBottom: TPanel
-              Top = 98
-              Width = 182
-              ExplicitTop = 98
-              ExplicitWidth = 182
+              Top = 81
+              Width = 214
+              ExplicitTop = 81
+              ExplicitWidth = 214
             end
             inherited PrintDBGridEh1: TPrintDBGridEh
               BeforeGridText_Data = {
@@ -464,13 +490,41 @@ inherited FrmOWOrder: TFrmOWOrder
             Width = 286
             Height = 18
             Align = alTop
-            TabOrder = 3
+            TabOrder = 2
             ExplicitLeft = 1
             ExplicitTop = 1
             ExplicitWidth = 286
             inherited bvl1: TBevel
               Width = 286
               ExplicitWidth = 707
+            end
+          end
+          object pnlBasisInfo: TPanel
+            Left = 1
+            Top = 100
+            Width = 286
+            Height = 17
+            Align = alBottom
+            Caption = 'pnlBasisInfo'
+            Color = clWhite
+            ParentBackground = False
+            TabOrder = 3
+            object lblBasisInfo: TLabel
+              Left = 1
+              Top = 1
+              Width = 284
+              Height = 15
+              Align = alClient
+              Caption = '3 '#1087#1088#1080#1082#1088#1077#1087#1083#1077#1085#1085#1099#1093' '#1092#1072#1081#1083#1072
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = [fsUnderline]
+              ParentFont = False
+              OnClick = lblBasisInfoClick
+              ExplicitWidth = 124
+              ExplicitHeight = 13
             end
           end
         end
