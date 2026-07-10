@@ -90,6 +90,10 @@ type
     procedure SetPropP(PropPos: Integer; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
     //массовые операции
     procedure SetProps(PropNames: string; ValuesAndTypes: TVarDynArray2); overload;
+    //установка свойств полей из пользовательских значений (индексы 0,1,... после #0) или из начального значения (fvtVBeg)
+    procedure SetPropsFromCustom(PropNames: string; SourceType: TDefFiledcValueType; TargetType: TDefFiledcValueType; const CustomIndex: Integer = 0; const IgnoreMissing: Boolean = True); overload;
+    //перегрузка с неявным SourceType = fvtCustom
+    procedure SetPropsFromCustom(PropNames: string; CustomIndex: Integer; TargetType: TDefFiledcValueType; const IgnoreMissing: Boolean = True); overload;
     //установка одного значения для нескольких свойств
     procedure SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
     function  SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;
@@ -587,6 +591,45 @@ begin
   indices := CollectIndices(PropNames);
   for i := 0 to High(indices) do
     SetProp(Integer(indices[i]), Value, PropValueType);
+end;
+
+procedure TFields.SetPropsFromCustom(PropNames: string; SourceType: TDefFiledcValueType;
+  TargetType: TDefFiledcValueType; const CustomIndex: Integer = 0;
+  const IgnoreMissing: Boolean = True);
+//установка свойств из пользовательских индексов или начального значения
+var
+  indices: TVarDynArray;
+  i: Integer;
+  idx: Integer;
+  val: Variant;
+begin
+  indices := CollectIndices(PropNames);
+  for i := 0 to High(indices) do
+  begin
+    idx := Integer(indices[i]);
+    if SourceType = fvtCustom then
+      val := GetFieldValue(idx, Integer(fvtCustom) + CustomIndex)
+    else
+      val := GetFieldValue(idx, Integer(SourceType));
+
+    //если значение не определено (Null) и игнорирование разрешено - пропускаем
+    if VarIsNull(val) then
+    begin
+      if IgnoreMissing then
+        Continue
+      else
+        Errors.RaiseErr('SetPropsFromCustom: поле "' + GetName(idx) + '" не имеет значения источника (индекс ' + IntToStr(CustomIndex) +')');
+    end;
+
+    SetProp(idx, val, TargetType);
+  end;
+end;
+
+procedure TFields.SetPropsFromCustom(PropNames: string; CustomIndex: Integer;
+  TargetType: TDefFiledcValueType; const IgnoreMissing: Boolean = True);
+//перегрузка: устанавливаем из пользовательского индекса
+begin
+  SetPropsFromCustom(PropNames, fvtCustom, TargetType, CustomIndex, IgnoreMissing);
 end;
 
 function TFields.SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;

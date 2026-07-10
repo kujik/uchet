@@ -353,6 +353,16 @@ type
     //выбирает минимальное значение из вариантного массива
     function MinOf(const AValues: array of Variant): Variant;
 
+    //-------------------- перекодирование текста ----------------------------------
+
+    // Проверка возможности перекодировки в Windows-1252
+    function CanConvertToANSI(const AStr: string): Boolean;
+    // Преобразование в Windows-1252 с заменой/удалением невозможных символов
+    function ConvertToANSI(const AStr: string): string;
+    // Нормализация текста (удаление переносов, лишних пробелов)
+    function NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True): string;
+    // Коррекция имени файла/пути (улучшенная)
+    function CorrectFileNameEx(const AStr: string): string;
     //-------------------------- служебные -----------------------------------------
 
     //возвращает дату, которую условились считать признаком неверной даты/времени
@@ -1987,6 +1997,234 @@ begin
     Delete(Result, Length(Result), 1);
 end;
 
+//==============================================================================
+// Проверка и конвертация UTF-8 в Windows-1252 (ANSI)
+//==============================================================================
+
+function TMyStringHelper.CanConvertToANSI(const AStr: string): Boolean;
+var
+  Enc1252: TEncoding;
+  AnsiBytes: TBytes;
+  Converted: string;
+begin
+  Enc1252 := TEncoding.GetEncoding(1252);
+  try
+    AnsiBytes := Enc1252.GetBytes(AStr);
+    Converted := Enc1252.GetString(AnsiBytes);
+    Result := Converted = AStr;
+  finally
+    Enc1252.Free;
+  end;
+end;
+
+function TMyStringHelper.ConvertToANSI(const AStr: string): string;
+
+  // Локальная таблица замены (Unicode → ANSI-символ)
+  function ReplaceChar(ch: Char): Char;
+  const
+    ReplaceMap: array[0..73] of record
+      U: Char;
+      A: Char;
+    end = (
+      // Типографские кавычки и тире
+      (U: #$2018; A: #39), // ‘ → '
+      (U: #$2019; A: #39), // ’ → '
+      (U: #$201C; A: #34), // “ → "
+      (U: #$201D; A: #34), // ” → "
+      (U: #$201E; A: #34), // „ → "
+      (U: #$2013; A: #45), // – → -
+      (U: #$2014; A: #45), // — → -
+      (U: #$2026; A: #46), // … → .
+      (U: #$00AB; A: #34), // « → "
+      (U: #$00BB; A: #34), // » → "
+      (U: #$2039; A: #39), // ‹ → '
+      (U: #$203A; A: #39), // › → '
+      // Заглавные латиницы с диакритикой
+      (U: #$00C0; A: 'A'), // À → A
+      (U: #$00C1; A: 'A'), // Á → A
+      (U: #$00C2; A: 'A'), // Â → A
+      (U: #$00C3; A: 'A'), // Ã → A
+      (U: #$00C4; A: 'A'), // Ä → A
+      (U: #$00C5; A: 'A'), // Å → A
+      (U: #$00C6; A: 'A'), // Æ → A
+      (U: #$00C7; A: 'C'), // Ç → C
+      (U: #$00C8; A: 'E'), // È → E
+      (U: #$00C9; A: 'E'), // É → E
+      (U: #$00CA; A: 'E'), // Ê → E
+      (U: #$00CB; A: 'E'), // Ë → E
+      (U: #$00CC; A: 'I'), // Ì → I
+      (U: #$00CD; A: 'I'), // Í → I
+      (U: #$00CE; A: 'I'), // Î → I
+      (U: #$00CF; A: 'I'), // Ï → I
+      (U: #$00D0; A: 'D'), // Ð → D
+      (U: #$00D1; A: 'N'), // Ñ → N
+      (U: #$00D2; A: 'O'), // Ò → O
+      (U: #$00D3; A: 'O'), // Ó → O
+      (U: #$00D4; A: 'O'), // Ô → O
+      (U: #$00D5; A: 'O'), // Õ → O
+      (U: #$00D6; A: 'O'), // Ö → O
+      (U: #$00D8; A: 'O'), // Ø → O
+      (U: #$00D9; A: 'U'), // Ù → U
+      (U: #$00DA; A: 'U'), // Ú → U
+      (U: #$00DB; A: 'U'), // Û → U
+      (U: #$00DC; A: 'U'), // Ü → U
+      (U: #$00DD; A: 'Y'), // Ý → Y
+      (U: #$00DE; A: 'T'), // Þ → T
+      (U: #$00DF; A: 's'), // ß → s
+      // Строчные латиницы с диакритикой
+      (U: #$00E0; A: 'a'), // à → a
+      (U: #$00E1; A: 'a'), // á → a
+      (U: #$00E2; A: 'a'), // â → a
+      (U: #$00E3; A: 'a'), // ã → a
+      (U: #$00E4; A: 'a'), // ä → a
+      (U: #$00E5; A: 'a'), // å → a
+      (U: #$00E6; A: 'a'), // æ → a
+      (U: #$00E7; A: 'c'), // ç → c
+      (U: #$00E8; A: 'e'), // è → e
+      (U: #$00E9; A: 'e'), // é → e
+      (U: #$00EA; A: 'e'), // ê → e
+      (U: #$00EB; A: 'e'), // ë → e
+      (U: #$00EC; A: 'i'), // ì → i
+      (U: #$00ED; A: 'i'), // í → i
+      (U: #$00EE; A: 'i'), // î → i
+      (U: #$00EF; A: 'i'), // ï → i
+      (U: #$00F0; A: 'd'), // ð → d
+      (U: #$00F1; A: 'n'), // ñ → n
+      (U: #$00F2; A: 'o'), // ò → o
+      (U: #$00F3; A: 'o'), // ó → o
+      (U: #$00F4; A: 'o'), // ô → o
+      (U: #$00F5; A: 'o'), // õ → o
+      (U: #$00F6; A: 'o'), // ö → o
+      (U: #$00F8; A: 'o'), // ø → o
+      (U: #$00F9; A: 'u'), // ù → u
+      (U: #$00FA; A: 'u'), // ú → u
+      (U: #$00FB; A: 'u'), // û → u
+      (U: #$00FC; A: 'u'), // ü → u
+      (U: #$00FD; A: 'y'), // ý → y
+      (U: #$00FE; A: 't'), // þ → t
+      (U: #$00FF; A: 'y')  // ÿ → y
+    );
+  var
+    i: Integer;
+  begin
+    Result := ch;
+    for i := 0 to High(ReplaceMap) do
+      if ReplaceMap[i].U = ch then
+      begin
+        Result := ReplaceMap[i].A;
+        Exit;
+      end;
+  end;
+
+var
+  ch: Char;
+  sb: TStringBuilder;
+  Enc1252: TEncoding;
+begin
+  // 1. Сначала заменяем известные Unicode-символы на близкие ASCII
+  sb := TStringBuilder.Create;
+  try
+    for ch in AStr do
+      sb.Append(ReplaceChar(ch));
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+
+  // 2. Удаляем символы, не представимые в Windows-1252
+  Enc1252 := TEncoding.GetEncoding(1252);
+  try
+    sb := TStringBuilder.Create;
+    try
+      for ch in Result do
+      begin
+        try
+          Enc1252.GetBytes(ch); // пробуем закодировать
+          sb.Append(ch);
+        except
+          // Символ недопустим – пропускаем
+        end;
+      end;
+      Result := sb.ToString;
+    finally
+      sb.Free;
+    end;
+  finally
+    Enc1252.Free;
+  end;
+end;
+
+function TMyStringHelper.NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True): string;
+begin
+  Result := ConvertToANSI(AStr);
+  // Замена всех видов переносов строк на пробел
+  if ARemoveCrLf then begin
+    Result := StringReplace(Result, #13#10, ' ', [rfReplaceAll]); // CRLF
+    Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);    // CR
+    Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);    // LF
+    Result := StringReplace(Result, #9, ' ', [rfReplaceAll]);     // табуляция
+  end;
+  Result := Trim(Result);
+  Result := DeleteRepSpaces(Result, ' ');
+end;
+
+function TMyStringHelper.CorrectFileNameEx(const AStr: string): string;
+var
+  Drive, Dir, Name, Ext: string;
+begin
+  Drive := ExtractFileDrive(AStr);
+  Dir := ExtractFilePath(AStr);
+  if Drive <> '' then
+    Dir := Copy(Dir, Length(Drive) + 1);
+
+  Name := ExtractFileName(AStr);
+  if Name = '' then
+    Exit(AStr);
+
+  Ext := ExtractFileExt(Name);
+  Name := ChangeFileExt(Name, '');
+
+  // Замена запрещённых символов
+  Name := StringReplace(Name, '\', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '/', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, ':', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '*', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '?', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '"', '''', [rfReplaceAll]);
+  Name := StringReplace(Name, '<', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '>', '-', [rfReplaceAll]);
+  Name := StringReplace(Name, '|', '-', [rfReplaceAll]);
+
+  Name := ConvertToANSI(Name);
+  Name := Trim(Name);
+  while (Name <> '') and (Name[Length(Name)] = '.') do
+    Delete(Name, Length(Name), 1);
+  if Name = '' then
+    Name := 'unnamed';
+
+  if Ext <> '' then
+  begin
+    Ext := ConvertToANSI(Ext);
+    Ext := StringReplace(Ext, '\', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '/', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, ':', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '*', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '?', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '"', '''', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '<', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '>', '-', [rfReplaceAll]);
+    Ext := StringReplace(Ext, '|', '-', [rfReplaceAll]);
+    Ext := Trim(Ext);
+    while (Ext <> '') and (Ext[Length(Ext)] = '.') do
+      Delete(Ext, Length(Ext), 1);
+    if Ext <> '' then
+      Name := Name + '.' + Ext;
+  end;
+
+  Result := Drive + Dir + Name;
+end;
+
+
 function TMyStringHelper.ValidateInn(const AInn: Variant): string;
 //проверка ИНН
 var
@@ -2024,6 +2262,7 @@ begin
       Result := 'Неправильное контрольное число';
   end;
 end;
+
 
 function TMyStringHelper.StringToPAnsiChar(const AString: string): PAnsiChar;
 //конвертация типа string в PAnsiChar c проверкой (при ошибке исключение)
