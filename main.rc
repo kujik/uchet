@@ -147,4 +147,11 @@ test32 BITMAP "R:\Buttons\NEW\test_32.bmp"
 1c32 BITMAP "R:\Buttons\NEW\1c_32.bmp"
 r_minus BITMAP "R:\Buttons\NEW\r_minus_20.bmp" 
 r_minus32 BITMAP "R:\Buttons\NEW\r_minus_32.bmp" 
+approved RCDATA "R:\Buttons\NEW\approved_20.png" 
+approved2 RCDATA "R:\Buttons\NEW\approved_32.png"
+unapproved RCDATA "R:\Buttons\NEW\unapproved_20.png" 
+unapproved2 RCDATA "R:\Buttons\NEW\unapproved_32.png"
+save RCDATA "R:\Buttons\NEW\save_20.png" 
+save32 RCDATA "R:\Buttons\NEW\save_32.png"
+
 

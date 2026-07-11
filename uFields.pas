@@ -94,6 +94,10 @@ type
     procedure SetPropsFromCustom(PropNames: string; SourceType: TDefFiledcValueType; TargetType: TDefFiledcValueType; const CustomIndex: Integer = 0; const IgnoreMissing: Boolean = True); overload;
     //перегрузка с неявным SourceType = fvtCustom
     procedure SetPropsFromCustom(PropNames: string; CustomIndex: Integer; TargetType: TDefFiledcValueType; const IgnoreMissing: Boolean = True); overload;
+    //копирование значения из предопределённого или пользовательского свойства в пользовательское свойство с индексом CustomIndex
+    procedure CopyPropToCustom(PropNames: string; SourceType: TDefFiledcValueType; CustomIndex: Integer; const SourceCustomIndex: Integer = 0; const IgnoreMissing: Boolean = True); overload;
+    //перегрузка с неявным SourceType = fvtCustom
+    procedure CopyPropToCustom(PropNames: string; SourceCustomIndex, CustomIndex: Integer; const IgnoreMissing: Boolean = True); overload;
     //установка одного значения для нескольких свойств
     procedure SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
     function  SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;
@@ -109,14 +113,6 @@ implementation
 uses
   uErrors;
 
-{ TFields }
-
-constructor TFields.Create(ASelf: TForm);
-//создание экземпляра, сохранение ссылки на форму
-begin
-  inherited Create;
-  FSelf := ASelf;
-end;
 
 procedure TFields.SetFieldValue(AIndex, ACol: Integer; const AValue: Variant);
 //установка значения в расширенном массиве по индексу строки и колонки
@@ -405,6 +401,15 @@ begin
   end;
 end;
 
+{ TFields }
+
+constructor TFields.Create(ASelf: TForm);
+//создание экземпляра, сохранение ссылки на форму
+begin
+  inherited Create;
+  FSelf := ASelf;
+end;
+
 procedure TFields.PrepareDefineFieldsAdd;
 //подготовка расширенного массива на основе DefineFields
 var
@@ -582,17 +587,6 @@ begin
       SetProp(Integer(indices[i]), ValuesAndTypes[k][0], TDefFiledcValueType(ValuesAndTypes[k][1]));
 end;
 
-procedure TFields.SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
-//установка одного значения для всех свойств, соответствующих именам/тегам
-var
-  indices: TVarDynArray;
-  i: Integer;
-begin
-  indices := CollectIndices(PropNames);
-  for i := 0 to High(indices) do
-    SetProp(Integer(indices[i]), Value, PropValueType);
-end;
-
 procedure TFields.SetPropsFromCustom(PropNames: string; SourceType: TDefFiledcValueType;
   TargetType: TDefFiledcValueType; const CustomIndex: Integer = 0;
   const IgnoreMissing: Boolean = True);
@@ -630,6 +624,60 @@ procedure TFields.SetPropsFromCustom(PropNames: string; CustomIndex: Integer;
 //перегрузка: устанавливаем из пользовательского индекса
 begin
   SetPropsFromCustom(PropNames, fvtCustom, TargetType, CustomIndex, IgnoreMissing);
+end;
+
+// Новые методы:
+
+procedure TFields.CopyPropToCustom(PropNames: string; SourceType: TDefFiledcValueType;
+  CustomIndex: Integer; const SourceCustomIndex: Integer = 0;
+  const IgnoreMissing: Boolean = True);
+//копирование значения из источника (предопределённое или пользовательское) в пользовательское свойство с индексом CustomIndex
+var
+  indices: TVarDynArray;
+  i: Integer;
+  idx: Integer;
+  val: Variant;
+begin
+  indices := CollectIndices(PropNames);
+  for i := 0 to High(indices) do
+  begin
+    idx := Integer(indices[i]);
+    // Получаем значение источника
+    if SourceType = fvtCustom then
+      val := GetFieldValue(idx, Integer(fvtCustom) + SourceCustomIndex)
+    else
+      val := GetFieldValue(idx, Integer(SourceType));
+
+    if VarIsNull(val) then
+    begin
+      if IgnoreMissing then
+        Continue
+      else
+        Errors.RaiseErr('CopyPropToCustom: поле "' + GetName(idx) + '" не имеет значения источника (индекс ' +
+          S.IIfStr(SourceType = fvtCustom, 'custom ' + IntToStr(SourceCustomIndex), 'предопределённый ' + IntToStr(Integer(SourceType))) + ')');
+    end;
+
+    // Устанавливаем в целевое пользовательское свойство
+    SetFieldValue(idx, Integer(fvtCustom) + CustomIndex, val);
+  end;
+end;
+
+procedure TFields.CopyPropToCustom(PropNames: string; SourceCustomIndex, CustomIndex: Integer;
+  const IgnoreMissing: Boolean = True);
+//перегрузка: копирование из пользовательского индекса SourceCustomIndex в пользовательский индекс CustomIndex
+begin
+  CopyPropToCustom(PropNames, fvtCustom, CustomIndex, SourceCustomIndex, IgnoreMissing);
+end;
+
+procedure TFields.SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
+//установка одного значения для всех свойств, соответствующих именам/тегам
+var
+  indices: TVarDynArray;
+  i: Integer;
+begin
+  indices := CollectIndices(PropNames);
+  for i := 0 to High(indices) do
+    SetProp(Integer(indices[i]), Value, PropValueType);
 end;
 
 function TFields.SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;

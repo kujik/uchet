@@ -1,29 +1,28 @@
 inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
   Caption = 'FrmPWedtPlnOps'
-  ClientHeight = 544
-  ClientWidth = 846
+  ClientHeight = 543
+  ClientWidth = 842
   ExplicitWidth = 858
   ExplicitHeight = 582
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 846
-    Height = 528
+    Width = 842
+    Height = 527
     ExplicitWidth = 846
     ExplicitHeight = 528
     inherited pnlFrmClient: TPanel
-      Width = 836
-      Height = 479
+      Width = 832
+      Height = 478
       ExplicitWidth = 832
       ExplicitHeight = 478
       object pnlTop: TPanel
         Left = 0
         Top = 0
-        Width = 836
+        Width = 832
         Height = 41
         Align = alTop
         Caption = 'pnlTop'
         TabOrder = 0
-        ExplicitWidth = 832
         object lblCaption1: TLabel
           Left = 9
           Top = 0
@@ -41,14 +40,12 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
       end
       object pnlBottom: TPanel
         Left = 0
-        Top = 438
-        Width = 836
+        Top = 437
+        Width = 832
         Height = 41
         Align = alBottom
         Caption = 'pnlBottom'
         TabOrder = 1
-        ExplicitTop = 437
-        ExplicitWidth = 832
         object lblAllDataEntered: TLabel
           Left = 14
           Top = 6
@@ -60,19 +57,17 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
       object pgcMain: TPageControl
         Left = 0
         Top = 41
-        Width = 836
-        Height = 397
+        Width = 832
+        Height = 396
         ActivePage = tsDrilling
         Align = alClient
         TabOrder = 2
-        ExplicitWidth = 832
-        ExplicitHeight = 396
         object tsPainting: TTabSheet
           Caption = #1051#1072#1082#1086#1082#1088#1072#1089#1082#1072
           inline frmpcPainting: TFrMyPanelCaption
             Left = 0
             Top = 0
-            Width = 828
+            Width = 824
             Height = 18
             Align = alTop
             TabOrder = 0
@@ -84,12 +79,14 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           end
           object pnlPaintingBottom: TPanel
             Left = 0
-            Top = 334
-            Width = 828
+            Top = 333
+            Width = 824
             Height = 35
             Align = alBottom
             Caption = 'pnlPaintingBottom'
             TabOrder = 1
+            ExplicitTop = 334
+            ExplicitWidth = 828
             object lblPainting: TLabel
               Left = 137
               Top = 6
@@ -110,16 +107,16 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           inline FrgPainting: TFrDBGridEh
             Left = 0
             Top = 18
-            Width = 828
-            Height = 316
+            Width = 824
+            Height = 315
             Align = alClient
             TabOrder = 2
             ExplicitTop = 18
             ExplicitWidth = 824
             ExplicitHeight = 315
             inherited pnlGrid: TPanel
-              Width = 818
-              Height = 262
+              Width = 814
+              Height = 261
               ExplicitWidth = 818
               ExplicitHeight = 262
               inherited DbGridEh1: TDBGridEh
@@ -160,20 +157,20 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
               end
             end
             inherited pnlLeft: TPanel
-              Height = 262
+              Height = 261
               ExplicitHeight = 262
             end
             inherited pnlTop: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlContainer: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlBottom: TPanel
-              Top = 316
-              Width = 828
+              Top = 315
+              Width = 824
               ExplicitTop = 316
               ExplicitWidth = 828
             end
@@ -199,16 +196,16 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           inline FrgCnc: TFrDBGridEh
             Left = 0
             Top = 18
-            Width = 828
-            Height = 316
+            Width = 824
+            Height = 315
             Align = alClient
             TabOrder = 0
             ExplicitTop = 18
             ExplicitWidth = 824
             ExplicitHeight = 315
             inherited pnlGrid: TPanel
-              Width = 818
-              Height = 262
+              Width = 814
+              Height = 261
               ExplicitWidth = 818
               ExplicitHeight = 262
               inherited DbGridEh1: TDBGridEh
@@ -249,20 +246,20 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
               end
             end
             inherited pnlLeft: TPanel
-              Height = 262
+              Height = 261
               ExplicitHeight = 262
             end
             inherited pnlTop: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlContainer: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlBottom: TPanel
-              Top = 316
-              Width = 828
+              Top = 315
+              Width = 824
               ExplicitTop = 316
               ExplicitWidth = 828
             end
@@ -283,12 +280,14 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           end
           object pnlCncBottom: TPanel
             Left = 0
-            Top = 334
-            Width = 828
+            Top = 333
+            Width = 824
             Height = 35
             Align = alBottom
             Caption = 'pnlPaintingBottom'
             TabOrder = 1
+            ExplicitTop = 334
+            ExplicitWidth = 828
             object lblCnc: TLabel
               Left = 137
               Top = 6
@@ -309,7 +308,7 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           inline frmpcCnc: TFrMyPanelCaption
             Left = 0
             Top = 0
-            Width = 828
+            Width = 824
             Height = 18
             Align = alTop
             TabOrder = 2
@@ -326,7 +325,7 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           inline frmpcLaser: TFrMyPanelCaption
             Left = 0
             Top = 0
-            Width = 828
+            Width = 824
             Height = 18
             Align = alTop
             TabOrder = 0
@@ -338,12 +337,14 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           end
           object pnlLaserBottom: TPanel
             Left = 0
-            Top = 334
-            Width = 828
+            Top = 333
+            Width = 824
             Height = 35
             Align = alBottom
             Caption = 'pnlPaintingBottom'
             TabOrder = 1
+            ExplicitTop = 334
+            ExplicitWidth = 828
             object lblLaser: TLabel
               Left = 137
               Top = 6
@@ -364,16 +365,16 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
           inline FrgLaser: TFrDBGridEh
             Left = 0
             Top = 18
-            Width = 828
-            Height = 316
+            Width = 824
+            Height = 315
             Align = alClient
             TabOrder = 2
             ExplicitTop = 18
             ExplicitWidth = 824
             ExplicitHeight = 315
             inherited pnlGrid: TPanel
-              Width = 818
-              Height = 262
+              Width = 814
+              Height = 261
               ExplicitWidth = 818
               ExplicitHeight = 262
               inherited DbGridEh1: TDBGridEh
@@ -414,20 +415,20 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
               end
             end
             inherited pnlLeft: TPanel
-              Height = 262
+              Height = 261
               ExplicitHeight = 262
             end
             inherited pnlTop: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlContainer: TPanel
-              Width = 828
+              Width = 824
               ExplicitWidth = 828
             end
             inherited pnlBottom: TPanel
-              Top = 316
-              Width = 828
+              Top = 315
+              Width = 824
               ExplicitTop = 316
               ExplicitWidth = 828
             end
@@ -527,8 +528,8 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 484
-      Width = 836
+      Top = 483
+      Width = 832
       ExplicitTop = 483
       ExplicitWidth = 832
       inherited bvlFrmBtnsTl: TBevel
@@ -562,17 +563,13 @@ inherited FrmPWedtPlnOps: TFrmPWedtPlnOps
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 528
-    Width = 846
+    Top = 527
+    Width = 842
     ExplicitTop = 527
     ExplicitWidth = 842
     inherited lblStatusBarR: TLabel
       Left = 773
-      Height = 14
       ExplicitLeft = 773
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

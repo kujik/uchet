@@ -37,7 +37,7 @@ const
   //типы кнопок
   cbttSBig = 1;        //TSpeedButton MY_FORMPRM_SPEEDBTN_DEF_H - большой квадратный
   cbttSSmall = 2;      //TSpeedButton MY_FORMPRM_BTN_DEF_H - малый квадратный
-  cbttBNormal = 3;        //TBiеBtn высотой MY_FORMPRM_CONTROL_H длиной MY_FORMPRM_BTN_DEF_W - обычный диный
+  cbttBNormal = 3;     //TBiеBtn высотой MY_FORMPRM_CONTROL_H длиной MY_FORMPRM_BTN_DEF_W - обычный диный
   cbttBSmall = 4;      //TBiеBtn MY_FORMPRM_BTN_DEF_H - обычный квадратный
   cbttBCtl = 5;        //TBiеBtn MY_FORMPRM_CONTROL_H - обычный квадратный по размеру контрола типа TEdit
                        //при другом чиле TBiеBtn высотой MY_FORMPRM_CONTROL_H длиной равной числу
@@ -259,8 +259,10 @@ procedure SetControlVerification(Control: TControl; Verify: string);
     //установить вссем дбэх контролам формы событития OnCheckDrawRequiredState
     procedure SetControlsOnCheckDrawRequired(ASelf: TForm; c: TOnCheckDrawRequiredStateEventEh);
     //проверить все дбэх контролы на форме
-    procedure VerifyAllDbEhControls(ASelf: TForm);
-    //установить вссем кнопкам событие OnClick (если оно еще не установлено)
+    function VerifyAllDbEhControls(ASelf: TForm): Boolean;
+    //проверка всех DbEh-контролов в указанной панели (включая вложенные)
+    //возвращает True, если ошибок нет
+    function VerifyAllDbEhControlsForPanel(AParent: TWinControl): Boolean;    //установить вссем кнопкам событие OnClick (если оно еще не установлено)
     procedure SetButtonsOnClick(ASelf: TWinControl; c: TNotifyEvent);
     //найти родительскую форму для контрола
     function GetParentForm(C: TControl): TForm;
@@ -1762,6 +1764,612 @@ begin
 end;
 
 function TControlsHelper.VerifyControl(C: TControl; OnInput: Boolean = True): Boolean;
+// проверка значения контрола по маске в DynProps (dpVerify).
+// формат маски: min:max:digits:flags:invalid:valid
+//
+// для чисел (TDBNumberEditEh):
+//   min, max, digits (кол-во знаков после запятой)
+//   flags: 'N' - допускается пустое значение (иначе обязательно)
+//   min и max могут быть:
+//     - числовым значением
+//     - ссылкой на другой контрол: =ИмяКонтрола[+N] (число берётся из указанного контрола, можно добавить N)
+//     - несколько ссылок через ';' (для min берётся минимальное, для max - максимальное)
+//
+// для дат (TDBDateTimeEditEh):
+//   min, max (целые числа - дни или '*' - любая дата)
+//   flags: '-' - допускается пустое значение
+//   min и max могут быть:
+//     - числом (дни от текущей даты: -N или +N)
+//     - ссылкой на другой контрол: =ИмяКонтрола[+N] (дата из указанного контрола с добавлением дней)
+//     - несколько ссылок через ';' (для min берётся минимальная дата, для max - максимальная)
+//
+// для строк (TDBEditEh, TDBComboboxEh, TDBMemoEh):
+//   min, max - длина строки
+//   flags:
+//     'N' - выполнить нормализацию текста (конвертация ANSI, удаление лишних пробелов, управляющих символов)
+//           для TDBMemoEh переносы строк сохраняются (приводятся к CRLF), для остальных удаляются
+//     'T' - обрезать пробелы (только не в OnInput)
+//     'U' - перевести в верхний регистр
+//     'L' - перевести в нижний регистр
+//     'I' - для комбобокса: значение должно быть в списке
+//   invalid (ver[5]) - символы, которые надо удалить
+//   valid (ver[6]) - разрешённые символы (если заданы, остальные удаляются)
+//
+// возвращает True, если значение корректно
+var
+  MaskParts: TStringDynArray;
+  CtrlText, ProcessedText: string;
+  j: Integer;
+  NumValue: Extended;
+  IsValid: Boolean;
+  SelStart, SelLength: Integer;
+
+  // вспомогательные функции для разбора ссылок
+  function ParseReference(const AValue: string; out RefCtrlName: string; out Offset: Extended): Boolean;
+  var
+    p: Integer;
+    s: string;
+  begin
+    Result := False;
+    RefCtrlName := '';
+    Offset := 0;
+    if Length(AValue) = 0 then Exit;
+    if AValue[1] <> '=' then Exit;
+    s := Copy(AValue, 2);
+    p := Pos('+', s);
+    if p = 0 then p := Pos('-', s);
+    if p > 0 then begin
+      RefCtrlName := Copy(s, 1, p-1);
+      Offset := StrToFloatDef(Copy(s, p), 0);
+    end else begin
+      RefCtrlName := s;
+      Offset := 0;
+    end;
+    Result := True;
+  end;
+
+  function GetNumericValueFromRef(const ARef: string): Extended;
+  var
+    RefCtrlName: string;
+    Offset: Extended;
+    RefControl: TControl;
+  begin
+    Result := MaxExtended;
+    if ParseReference(ARef, RefCtrlName, Offset) then begin
+      RefControl := TControl(C.Owner.FindComponent(RefCtrlName));
+      if RefControl is TDBNumberEditEh then
+        Result := TDBNumberEditEh(RefControl).Value + Offset
+      else if RefControl is TDBEditEh then
+        Result := StrToFloatDef(TDBEditEh(RefControl).Text, MaxExtended) + Offset;
+    end else if ARef <> '' then
+      Result := StrToFloatDef(ARef, MaxExtended);
+  end;
+
+  function GetDateValueFromRef(const ARef: string): TDateTime;
+  var
+    RefCtrlName: string;
+    Offset: Extended;
+    RefControl: TControl;
+    dt: TDateTime;
+  begin
+    Result := 0;
+    if ARef = '' then Exit;
+    if ARef[1] = '=' then begin
+      if ParseReference(ARef, RefCtrlName, Offset) then begin
+        RefControl := TControl(C.Owner.FindComponent(RefCtrlName));
+        if RefControl is TDBDateTimeEditEh then
+          dt := TDBDateTimeEditEh(RefControl).Value
+        else if RefControl is TDBEditEh then
+          dt := StrToDateTimeDef(TDBEditEh(RefControl).Text, 0);
+        if dt <> 0 then
+          Result := dt + Offset;
+      end;
+    end else begin
+      if (ARef[1] = '+') or (ARef[1] = '-') then
+        Result := Date + StrToIntDef(ARef, 0)
+      else
+        Result := StrToIntDef(ARef, 0);
+    end;
+  end;
+
+  function GetMinDate(const AList: string): TDateTime;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    dt: TDateTime;
+  begin
+    Result := 0;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      dt := GetDateValueFromRef(Items[i]);
+      if dt <> 0 then
+        if (Result = 0) or (dt < Result) then
+          Result := dt;
+    end;
+  end;
+
+  function GetMaxDate(const AList: string): TDateTime;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    dt: TDateTime;
+  begin
+    Result := 0;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      dt := GetDateValueFromRef(Items[i]);
+      if dt <> 0 then
+        if (Result = 0) or (dt > Result) then
+          Result := dt;
+    end;
+  end;
+
+  function GetMinNumber(const AList: string): Extended;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    v: Extended;
+  begin
+    Result := MaxExtended;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      v := GetNumericValueFromRef(Items[i]);
+      if v <> MaxExtended then
+        if (Result = MaxExtended) or (v < Result) then
+          Result := v;
+    end;
+  end;
+
+  function GetMaxNumber(const AList: string): Extended;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    v: Extended;
+  begin
+    Result := -MaxExtended;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      v := GetNumericValueFromRef(Items[i]);
+      if v <> MaxExtended then
+        if (Result = -MaxExtended) or (v > Result) then
+          Result := v;
+    end;
+  end;
+
+begin
+  Result := True;
+  if not (C is TCustomDBEditEh) then Exit;
+
+  CtrlText := GetDynProp(C, dpVerify);
+  if CtrlText = '' then begin
+    SetErrorMarker(C, False);
+    Exit;
+  end;
+
+  MaskParts := A.ExplodeS(CtrlText, ':');
+  if Length(MaskParts) < 2 then begin
+    SetErrorMarker(C, False);
+    Exit;
+  end;
+
+  // обработка в зависимости от типа контрола
+  if C is TDBNumberEditEh then begin
+    ProcessedText := TDBNumberEditEh(C).Text;
+    if ProcessedText = '' then
+      IsValid := (Pos('N', UpperCase(MaskParts[3])) = 0)
+    else begin
+      NumValue := TDBNumberEditEh(C).Value;
+      var MinVal := GetMinNumber(MaskParts[0]);
+      var MaxVal := GetMaxNumber(MaskParts[1]);
+      IsValid := True;
+      if MinVal <> MaxExtended then
+        IsValid := NumValue >= MinVal;
+      if IsValid and (MaxVal <> -MaxExtended) then
+        IsValid := NumValue <= MaxVal;
+    end;
+  end
+  else if C is TDBDateTimeEditEh then begin
+    if (Length(MaskParts) >= 3) and (MaskParts[2] = '-') and (TDBDateTimeEditEh(C).Value = Null) then
+      IsValid := True
+    else begin
+      IsValid := DteValueIsDate(TDBDateTimeEditEh(C));
+      if IsValid then begin
+        var MinDate := GetMinDate(MaskParts[0]);
+        var MaxDate := GetMaxDate(MaskParts[1]);
+        if MinDate <> 0 then
+          IsValid := TDBDateTimeEditEh(C).Value >= MinDate;
+        if IsValid and (MaxDate <> 0) then
+          IsValid := TDBDateTimeEditEh(C).Value <= MaxDate;
+      end;
+    end;
+  end
+  else if (C is TDBEditEh) or (C is TDBComboboxEh) or (C is TDBMemoEh) then begin
+    // строки
+    if C is TDBMemoEh then begin
+      ProcessedText := TDBMemoEh(C).Lines.Text;
+      SelStart := TDBMemoEh(C).SelStart;
+      SelLength := TDBMemoEh(C).SelLength;
+    end
+    else begin
+      ProcessedText := TDBEditEh(C).Text;
+      SelStart := TDBEditEh(C).SelStart;
+      SelLength := TDBEditEh(C).SelLength;
+    end;
+
+    // нормализация текста (флаг N) - только если не OnInput
+    if (not OnInput) and (Pos('N', UpperCase(MaskParts[3])) > 0) then
+      ProcessedText := S.NormalizeText(ProcessedText, not (C is TDBMemoEh), OnInput);
+
+    // регистр
+    if Pos('U', UpperCase(MaskParts[3])) > 0 then
+      ProcessedText := UpperCase(ProcessedText);
+    if Pos('L', UpperCase(MaskParts[3])) > 0 then
+      ProcessedText := LowerCase(ProcessedText);
+
+    // трим (только если не OnInput)
+    if (not OnInput) and (Pos('T', UpperCase(MaskParts[3])) > 0) then
+      ProcessedText := Trim(ProcessedText);
+
+    // удаление невалидных символов (только если не OnInput)
+    if (not OnInput) and (Length(MaskParts) >= 6) then begin
+      for j := 1 to Length(MaskParts[5]) do
+        ProcessedText := StringReplace(ProcessedText, MaskParts[5][j], '', [rfReplaceAll, rfIgnoreCase]);
+    end;
+
+    // оставление только валидных символов (только если не OnInput)
+    if (not OnInput) and (Length(MaskParts) >= 7) and (MaskParts[6] <> '') then begin
+      var Temp := '';
+      for j := 1 to Length(ProcessedText) do
+        if Pos(ProcessedText[j], MaskParts[6]) > 0 then
+          Temp := Temp + ProcessedText[j];
+      ProcessedText := Temp;
+    end;
+
+    // обновление контрола (только если не OnInput)
+    if not OnInput then begin
+      if C is TDBMemoEh then begin
+        if TDBMemoEh(C).Lines.Text <> ProcessedText then begin
+          TDBMemoEh(C).Lines.Text := ProcessedText;
+          TDBMemoEh(C).SelStart := SelStart;
+          TDBMemoEh(C).SelLength := SelLength;
+        end;
+      end
+      else begin
+        if TDBEditEh(C).Text <> ProcessedText then begin
+          TDBEditEh(C).Text := ProcessedText;
+          TDBEditEh(C).SelStart := SelStart;
+          TDBEditEh(C).SelLength := SelLength;
+        end;
+      end;
+    end;
+
+    // проверка длины
+    var MinLen := StrToIntDef(MaskParts[0], -1);
+    var MaxLen := StrToIntDef(MaskParts[1], -1);
+    if (MinLen >= 0) and (MaxLen >= 0) then
+      IsValid := (Length(ProcessedText) >= MinLen) and (Length(ProcessedText) <= MaxLen)
+    else
+      IsValid := True;
+
+    // для комбобокса: проверка наличия в списке
+    if IsValid and (C is TDBComboboxEh) and (Pos('I', UpperCase(MaskParts[3])) > 0) then
+      IsValid := TDBComboboxEh(C).ItemIndex >= 0;
+  end
+  else
+    IsValid := True;
+
+  Result := IsValid;
+  SetErrorMarker(C, not Result);
+end;
+
+(*
+function TControlsHelper.VerifyControl(C: TControl; OnInput: Boolean = True): Boolean;
+// проверка значения контрола по маске в DynProps (dpVerify).
+// формат маски: min:max:digits:flags:invalid:valid
+//
+// для чисел (TDBNumberEditEh):
+//   min, max, digits (кол-во знаков после запятой)
+//   flags: 'N' - допускается пустое значение (иначе обязательно)
+//   min и max могут быть:
+//     - числовым значением
+//     - ссылкой на другой контрол: =ИмяКонтрола[+N] (число берётся из указанного контрола, можно добавить N)
+//     - несколько ссылок через ';' (для min берётся минимальное, для max - максимальное)
+//
+// для дат (TDBDateTimeEditEh):
+//   min, max (целые числа - дни или '*' - любая дата)
+//   flags: '-' - допускается пустое значение
+//   min и max могут быть:
+//     - числом (дни от текущей даты: -N или +N)
+//     - ссылкой на другой контрол: =ИмяКонтрола[+N] (дата из указанного контрола с добавлением дней)
+//     - несколько ссылок через ';' (для min берётся минимальная дата, для max - максимальная)
+//
+// для строк (TDBEditEh, TDBComboboxEh, TDBMemoEh):
+//   min, max - длина строки
+//   flags:
+//     'N' - выполнить нормализацию текста (конвертация ANSI, удаление лишних пробелов, управляющих символов)
+//           для TDBMemoEh переносы строк сохраняются (приводятся к CRLF), для остальных удаляются
+//     'T' - обрезать пробелы (только не в OnInput)
+//     'U' - перевести в верхний регистр
+//     'L' - перевести в нижний регистр
+//     'I' - для комбобокса: значение должно быть в списке
+//   invalid (ver[5]) - символы, которые надо удалить
+//   valid (ver[6]) - разрешённые символы (если заданы, остальные удаляются)
+//
+// возвращает True, если значение корректно
+var
+  MaskParts: TStringDynArray;
+  CtrlText, ProcessedText: string;
+  j: Integer;
+  NumValue: Extended;
+  IsValid: Boolean;
+
+  // вспомогательная функция для разбора ссылок на другие контролы (для чисел и дат)
+  function ParseReference(const AValue: string; out RefCtrlName: string; out Offset: Extended): Boolean;
+  var
+    p: Integer;
+    s: string;
+  begin
+    Result := False;
+    RefCtrlName := '';
+    Offset := 0;
+    if Length(AValue) = 0 then Exit;
+    if AValue[1] <> '=' then Exit;
+    s := Copy(AValue, 2);
+    p := Pos('+', s);
+    if p = 0 then p := Pos('-', s);
+    if p > 0 then begin
+      RefCtrlName := Copy(s, 1, p-1);
+      Offset := StrToFloatDef(Copy(s, p), 0);
+    end else begin
+      RefCtrlName := s;
+      Offset := 0;
+    end;
+    Result := True;
+  end;
+
+  function GetNumericValueFromRef(const ARef: string): Extended;
+  var
+    RefCtrlName: string;
+    Offset: Extended;
+    RefControl: TControl;
+  begin
+    Result := MaxExtended; // специальное значение "не определено"
+    if ParseReference(ARef, RefCtrlName, Offset) then begin
+      RefControl := TControl(C.Owner.FindComponent(RefCtrlName));
+      if RefControl is TDBNumberEditEh then
+        Result := TDBNumberEditEh(RefControl).Value + Offset
+      else if RefControl is TDBEditEh then
+        Result := StrToFloatDef(TDBEditEh(RefControl).Text, MaxExtended) + Offset;
+    end else if ARef <> '' then
+      Result := StrToFloatDef(ARef, MaxExtended);
+  end;
+
+  function GetDateValueFromRef(const ARef: string): TDateTime;
+  var
+    RefCtrlName: string;
+    Offset: Extended;
+    RefControl: TControl;
+    dt: TDateTime;
+  begin
+    Result := 0; // 0 означает "не определено"
+    if ARef = '' then Exit;
+    if ARef[1] = '=' then begin
+      if ParseReference(ARef, RefCtrlName, Offset) then begin
+        RefControl := TControl(C.Owner.FindComponent(RefCtrlName));
+        if RefControl is TDBDateTimeEditEh then
+          dt := TDBDateTimeEditEh(RefControl).Value
+        else if RefControl is TDBEditEh then
+          dt := StrToDateTimeDef(TDBEditEh(RefControl).Text, 0);
+        if dt <> 0 then
+          Result := dt + Offset;
+      end;
+    end else begin
+      // если строка начинается с + или - - это смещение от текущей даты
+      if (ARef[1] = '+') or (ARef[1] = '-') then
+        Result := Date + StrToIntDef(ARef, 0)
+      else
+        Result := StrToIntDef(ARef, 0);
+    end;
+  end;
+
+  function GetMinDate(const AList: string): TDateTime;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    dt: TDateTime;
+  begin
+    Result := 0;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      dt := GetDateValueFromRef(Items[i]);
+      if dt <> 0 then
+        if (Result = 0) or (dt < Result) then
+          Result := dt;
+    end;
+  end;
+
+  function GetMaxDate(const AList: string): TDateTime;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    dt: TDateTime;
+  begin
+    Result := 0;
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      dt := GetDateValueFromRef(Items[i]);
+      if dt <> 0 then
+        if (Result = 0) or (dt > Result) then
+          Result := dt;
+    end;
+  end;
+
+  function GetMinNumber(const AList: string): Extended;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    v: Extended;
+  begin
+    Result := MaxExtended; // специальное значение "не определено"
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      v := GetNumericValueFromRef(Items[i]);
+      if v <> MaxExtended then
+        if (Result = MaxExtended) or (v < Result) then
+          Result := v;
+    end;
+  end;
+
+  function GetMaxNumber(const AList: string): Extended;
+  var
+    Items: TStringDynArray;
+    i: Integer;
+    v: Extended;
+  begin
+    Result := -MaxExtended; // специальное значение "не определено"
+    Items := A.ExplodeS(AList, ';');
+    for i := 0 to High(Items) do begin
+      v := GetNumericValueFromRef(Items[i]);
+      if v <> MaxExtended then
+        if (Result = -MaxExtended) or (v > Result) then
+          Result := v;
+    end;
+  end;
+
+begin
+  Result := True;
+  if not (C is TCustomDBEditEh) then
+    Exit;
+
+  CtrlText := GetDynProp(C, dpVerify);
+  if CtrlText = '' then begin
+    SetErrorMarker(C, False);
+    Exit;
+  end;
+
+  MaskParts := A.ExplodeS(CtrlText, ':');
+  if Length(MaskParts) < 2 then begin
+    SetErrorMarker(C, False);
+    Exit;
+  end;
+
+  //обработка в зависимости от типа контрола
+  if C is TDBNumberEditEh then begin
+    ProcessedText := TDBNumberEditEh(C).Text;
+    if ProcessedText = '' then
+      IsValid := (Pos('N', UpperCase(MaskParts[3])) = 0)
+    else begin
+      NumValue := TDBNumberEditEh(C).Value;
+      var MinVal := GetMinNumber(MaskParts[0]);
+      var MaxVal := GetMaxNumber(MaskParts[1]);
+      IsValid := True;
+      if MinVal <> MaxExtended then
+        IsValid := NumValue >= MinVal;
+      if IsValid and (MaxVal <> -MaxExtended) then
+        IsValid := NumValue <= MaxVal;
+    end;
+  end
+  else if C is TDBDateTimeEditEh then begin
+    if (Length(MaskParts) >= 3) and (MaskParts[2] = '-') and (TDBDateTimeEditEh(C).Value = Null) then
+      IsValid := True
+    else begin
+      IsValid := DteValueIsDate(TDBDateTimeEditEh(C));
+      if IsValid then begin
+        var MinDate := GetMinDate(MaskParts[0]);
+        var MaxDate := GetMaxDate(MaskParts[1]);
+        if MinDate <> 0 then
+          IsValid := TDBDateTimeEditEh(C).Value >= MinDate;
+        if IsValid and (MaxDate <> 0) then
+          IsValid := TDBDateTimeEditEh(C).Value <= MaxDate;
+      end;
+    end;
+  end
+  else if (C is TDBEditEh) or (C is TDBComboboxEh) or (C is TDBMemoEh) then
+  begin
+    var Name := C.Name;
+    var SelStart, SelLength: Integer;
+    // строки
+    if C is TDBMemoEh then begin
+      ProcessedText := TDBMemoEh(C).Lines.Text;
+      SelStart := TDBMemoEh(C).SelStart;
+      SelLength := TDBMemoEh(C).SelLength;
+    end
+    else begin
+      ProcessedText := TDBEditEh(C).Text;
+      SelStart := TDBEditEh(C).SelStart;
+      SelLength := TDBEditEh(C).SelLength;
+    end;
+
+    // нормализация текста (флаг N)
+    if Pos('N', UpperCase(MaskParts[3])) > 0 then
+      ProcessedText := S.NormalizeText(ProcessedText, not (C is TDBMemoEh));
+
+    // регистр
+    if Pos('U', UpperCase(MaskParts[3])) > 0 then
+      ProcessedText := UpperCase(ProcessedText);
+    if Pos('L', UpperCase(MaskParts[3])) > 0 then
+      ProcessedText := LowerCase(ProcessedText);
+
+    // трим (только если не OnInput и явно указан флаг T)
+    if (not OnInput) and (Pos('T', UpperCase(MaskParts[3])) > 0) then
+      ProcessedText := Trim(ProcessedText);
+
+    // удаление невалидных символов (только если не OnInput)
+    if (not OnInput) and (Length(MaskParts) >= 6) then begin
+      for j := 1 to Length(MaskParts[5]) do
+        ProcessedText := StringReplace(ProcessedText, MaskParts[5][j], '', [rfReplaceAll, rfIgnoreCase]);
+    end;
+
+    // оставление только валидных символов (только если не OnInput)
+    if (not OnInput) and (Length(MaskParts) >= 7) and (MaskParts[6] <> '') then
+    begin
+      var Temp := '';
+      for j := 1 to Length(ProcessedText) do
+        if Pos(ProcessedText[j], MaskParts[6]) > 0 then
+          Temp := Temp + ProcessedText[j];
+      ProcessedText := Temp;
+    end;
+
+    // обновление контрола, только если текст изменился
+    if C is TDBMemoEh then begin
+      if TDBMemoEh(C).Lines.Text <> ProcessedText then begin
+        TDBMemoEh(C).Lines.Text := ProcessedText;
+        // восстанавливаем позицию курсора
+        TDBMemoEh(C).SelStart := SelStart;
+        TDBMemoEh(C).SelLength := SelLength;
+      end;
+    end
+    else begin
+      if TDBEditEh(C).Text <> ProcessedText then begin
+        TDBEditEh(C).Text := ProcessedText;
+        // восстанавливаем позицию курсора
+        TDBEditEh(C).SelStart := SelStart;
+        TDBEditEh(C).SelLength := SelLength;
+      end;
+    end;
+
+    // проверка длины
+    var MinLen := StrToIntDef(MaskParts[0], -1);
+    var MaxLen := StrToIntDef(MaskParts[1], -1);
+    if (MinLen >= 0) and (MaxLen >= 0) then
+      IsValid := (Length(ProcessedText) >= MinLen) and (Length(ProcessedText) <= MaxLen)
+    else
+      IsValid := True; // ограничений нет
+
+    // для комбобокса: проверка наличия в списке
+    if IsValid and (C is TDBComboboxEh) and (Pos('I', UpperCase(MaskParts[3])) > 0) then
+      IsValid := TDBComboboxEh(C).ItemIndex >= 0;
+  end
+  else
+    IsValid := True;
+
+  Result := IsValid;
+  SetErrorMarker(C, not Result);
+end;
+*)
+
+(*
+function TControlsHelper.VerifyControl(C: TControl; OnInput: Boolean = True): Boolean;
 //проверка значения, для проверкки используется маска в динварс
 //CVerify - min:max:digits:inult:validchars:invalidcars
 //1,2,3 минимальное значение и максимальное и количество дробных знаков для чисел
@@ -1855,6 +2463,8 @@ begin
     end;
   SetErrorMarker(C, not Result);
 end;
+
+*)
 
 procedure TControlsHelper.SetErrorMarker(c: TControl; HasError: Boolean);
 //устанавливает или снимает в зависимости от HasError динамическую переменную 'error'
@@ -2220,17 +2830,37 @@ begin
     end;
 end;
 
-procedure TControlsHelper.VerifyAllDbEhControls(ASelf: TForm);
-//проверить все дбэх контролы на форме
+function TControlsHelper.VerifyAllDbEhControls(ASelf: TForm): Boolean;
+//проверить все всех контролы на форме
+//вернем True, если ошибок нет
 var
-  i, j: Integer;
-  st: string;
+  i: Integer;
 begin
+  Result := True;
   for i := 0 to ASelf.ComponentCount - 1 do
-    if ASelf.Components[i] is TCustomDBEditEh then begin
-      st := TCustomDBEditEh(ASelf.Components[i]).Name;
-      VerifyControl(TDBEditEh(ASelf.Components[i]), False);
+    if (ASelf.Components[i] is TCustomDBEditEh) or (ASelf.Components[i] is TDBMemoEh) then
+      Result := VerifyControl(TControl(ASelf.Components[i]), False) and Result;
+end;
+
+function TControlsHelper.VerifyAllDbEhControlsForPanel(AParent: TWinControl): Boolean;
+//проверить все DbEh-контролы в указанной панели (включая вложенные)
+//возвращает True, если ошибок нет
+var
+  i: Integer;
+  c: TComponent;
+begin
+  Result := True;
+  if AParent = nil then Exit;
+  for i := 0 to AParent.ComponentCount - 1 do begin
+    c := AParent.Components[i];
+    if c is TControl then begin
+      // проверяем, является ли контрол потомком AParent (рекурсивно)
+      if IsChildControl(AParent, TControl(c), True) then begin
+        if (c is TCustomDBEditEh) or (c is TDBMemoEh) then
+          Result := VerifyControl(TDBEditEh(c), False) and Result;
+      end;
     end;
+  end;
 end;
 
 procedure TControlsHelper.SetButtonsOnClick(ASelf: TWinControl; c: TNotifyEvent);
@@ -4365,12 +4995,24 @@ begin
 end;
 
 procedure TControlsHelper.SetDynProps(Control: TObject; DynProps: TVarDynArray2);
-//установим (создадим или ззаменим) DynProps для DbEh контролов, данные возьмем из массива
-//[[PropName {,Value}], [PropName2 {,Value2}]..
+// установить (создать или заменить) DynProps для DbEh-контролов, данные из массива
+// формат: [[PropName {,Value}], [PropName2 {,Value2}]...]
 var
   i: Integer;
 begin
   for i := 0 to High(DynProps) do begin
+    // обработка TDBMemoEh
+    if Control is TDBMemoEh then begin
+      if (High(DynProps[i]) > 1) and (DynProps[i][2] = False) then
+        TDBMemoEh(Control).DynProps.DeleteDynVar(DynProps[i][0])
+      else begin
+        if not TDBMemoEh(Control).DynProps.VarExists(DynProps[i][0]) then
+          TDBMemoEh(Control).DynProps.CreateDynVar(DynProps[i][0], '');
+        if High(DynProps[i]) > 0 then
+          TDBMemoEh(Control).DynProps.FindDynVar(DynProps[i][0]).Value := VarToStr(DynProps[i][1]);
+      end;
+    end;
+    // обработка TDBCheckBoxEh
     if Control is TDBCheckBoxEh then begin
       if (High(DynProps[i]) > 1) and (DynProps[i][2] = False) then
         TDBCheckBoxEh(Control).DynProps.DeleteDynVar(DynProps[i][0])
@@ -4381,6 +5023,7 @@ begin
           TDBCheckBoxEh(Control).DynProps.FindDynVar(DynProps[i][0]).Value := VarToStr(DynProps[i][1]);
       end;
     end;
+    // обработка TColumnEh
     if Control is TColumnEh then begin
       if (High(DynProps[i]) > 1) and (DynProps[i][2] = False) then
         TColumnEh(Control).DynProps.DeleteDynVar(DynProps[i][0])
@@ -4391,6 +5034,7 @@ begin
           TColumnEh(Control).DynProps.FindDynVar(DynProps[i][0]).Value := VarToStr(DynProps[i][1]);
       end;
     end;
+    // обработка TCustomDBEditEh (включает TDBEditEh, TDBNumberEditEh и др.)
     if Control is TCustomDBEditEh then begin
       if (High(DynProps[i]) > 1) and (DynProps[i][2] = False) then
         TCustomDBEditEh(Control).DynProps.DeleteDynVar(DynProps[i][0])
@@ -4401,6 +5045,7 @@ begin
           TCustomDBEditEh(Control).DynProps.FindDynVar(DynProps[i][0]).Value := VarToStr(DynProps[i][1]);
       end;
     end;
+    // обработка TFrDBGridEh
     if Control is TFrDBGridEh then begin
       if (High(DynProps[i]) > 1) and (DynProps[i][2] = False) then
         TFrDBGridEh(Control).DynProps.DeleteDynVar(DynProps[i][0])
@@ -4415,22 +5060,31 @@ begin
 end;
 
 function TControlsHelper.GetDynProp(Control: TObject; DynProp: string): Variant;
-//возвращает значение свойства с именем DynProp для DbEh контролов
-//если свойство не найдено, возвращает пустую строку
+// возвращает значение свойства с именем DynProp для DbEh-контролов
+// если свойство не найдено, возвращает пустую строку
 begin
   Result := '';
+  // TDBMemoEh
+  if Control is TDBMemoEh then begin
+    if TDBMemoEh(Control).DynProps.VarExists(DynProp) then
+      Result := TDBMemoEh(Control).DynProps.FindDynVar(DynProp).Value;
+  end;
+  // TColumnEh
   if Control is TColumnEh then begin
     if TColumnEh(Control).DynProps.VarExists(DynProp) then
       Result := TColumnEh(Control).DynProps.FindDynVar(DynProp).Value;
   end;
+  // TDBCheckBoxEh
   if Control is TDBCheckBoxEh then begin
     if TDBCheckBoxEh(Control).DynProps.VarExists(DynProp) then
       Result := TDBCheckBoxEh(Control).DynProps.FindDynVar(DynProp).Value;
   end;
+  // TCustomDBEditEh (включает TDBEditEh, TDBNumberEditEh, TDBMemoEh уже обработан)
   if Control is TCustomDBEditEh then begin
     if TCustomDBEditEh(Control).DynProps.VarExists(DynProp) then
       Result := TCustomDBEditEh(Control).DynProps.FindDynVar(DynProp).Value;
   end;
+  // TFrDBGridEh
   if Control is TFrDBGridEh then begin
     if TFrDBGridEh(Control).DynProps.VarExists(DynProp) then
       Result := TFrDBGridEh(Control).DynProps.FindDynVar(DynProp).Value;
@@ -4475,7 +5129,18 @@ begin
     if not (ParentIsForm or IsChildControl(AParent, TControl(c), True)) then
       Continue;
     st := TControl(c).Name;
-    if c is TCustomDBEditEh then begin
+    // Обработка TDBMemoEh
+    if c is TDBMemoEh then begin
+      if Assigned(AOnChange) and not AIfEmptyEvent or not Assigned(TDBMemoEh(c).OnChange) then
+        TDBMemoEh(c).OnChange := AOnChange;
+      if Assigned(AOnEnter) and not AIfEmptyEvent or not Assigned(TDBMemoEh(c).OnEnter) then
+        TDBMemoEh(c).OnEnter := AOnEnter;
+      if Assigned(AOnExit) and not AIfEmptyEvent or not Assigned(TDBMemoEh(c).OnExit) then
+        TDBMemoEh(c).OnExit := AOnExit;
+      if Assigned(AOnCheckDrawRS) and not AIfEmptyEvent or not Assigned(TDBMemoEh(c).OnCheckDrawRequiredState) then
+        TDBMemoEh(c).OnCheckDrawRequiredState := AOnCheckDrawRS;
+    end
+    else if c is TCustomDBEditEh then begin
       if Assigned(AOnChange) and not AIfEmptyEvent or not Assigned(TDBEditEh(c).OnChange) then
         TDBEditEh(c).OnChange := AOnChange;
       if Assigned(AOnEnter) and not AIfEmptyEvent or not Assigned(TDBEditEh(c).OnEnter) then
@@ -4498,7 +5163,6 @@ begin
     end;
   end;
 end;
-
 procedure TControlsHelper.LoadBitmap(ImageList: TImageList; Number: Integer; Bitmap: TBitmap);
 var
   ActiveBitmap: TBitmap;

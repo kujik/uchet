@@ -537,7 +537,7 @@ begin
     Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
     //получим и сохраним айди последней накладной
     IdIbN := Q.QLoadValue('select max(id_inbill) from dv.in_bill', []);
-    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdSchN, null]);
+    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
   except
     Q.QRollbackTrans;
   end;

@@ -1208,6 +1208,9 @@ const
   mbtCommentForWorker =109;
   ghtNightWork = 110;
   mbtPrintPassport2 = 111;
+  mbtApprove = 112;
+  mbtUnApprove = 113;
+  mbtSave = 114;
 
 
 
@@ -1323,7 +1326,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 105] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 108] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1433,6 +1436,9 @@ const
   (Bt: mbtCommentForWorker; Pict: ''; Caption:  'Комментарий по работнику'; hint: ''),
   (Bt: ghtNightWork; Pict: ''; Caption:  'Ночная смена'; hint: ''),
   (Bt: mbtPrintPassport2; Pict: 'print'; Caption: 'Печать паспорта заказа (с артикулами)'; hint: ''),
+  (Bt: mbtApprove; Pict: 'approved'; Caption:  'Провести'; hint: ''),
+  (Bt: mbtUnApprove; Pict: 'unapproved'; Caption:  'Отменить проведение'; hint: ''),
+  (Bt: mbtSave; Pict: 'save'; Caption:  'Сохранить'; hint: ''),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')

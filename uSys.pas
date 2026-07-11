@@ -9,11 +9,9 @@ uses
   PngImage, uString, IniFiles, DBCtrlsEh, ShellApi, IOUtils, Types,
   frxClass, frxDesgn, Vcl.Styles,
   IdHTTP, Xml.xmldom,
-
   IdIOHandler, IdIOHandlerStack, IdSSL, IdSSLOpenSSL,
   Data.DBXOracle, Menus, System.TypInfo,
-  ShlObj, ClipBrd
-  ;
+  ShlObj, ClipBrd;
 
 type
   NTSTATUS = LongInt;
@@ -40,228 +38,92 @@ function NtQueryInformationThread(
   ReturnLength: PULONG
 ): NTSTATUS; stdcall; external 'ntdll.dll';
 
-type TSysHelper = record
-  //возвращает значение переменной окружения
-  function GetEnvVar(const VarName: string): string;
-  //получить путь к финдовому временному каталогу
-  function GetWinTemp: string;
-  //получить путь к папке Мои документы
-  function GetMyDocumentsPath: string;
-  //выполнить файл (открыть стандартной программой)
-  //получить имя временного файла в каталоге Temp виндовс
-  //имя всегда будет разным, типа 'c:\temp\tmp74D0.tmp'.
-  function GetWinTempFileName: string;
-  procedure ExecFile(FileName: string);
-  //выполнить файл (открыть стандартной программой), если файла нет то, в случае если задано сообщение об ошибке то вывести его
-  procedure ExecFileIfExists(FileName: string; ErrorMessage: string = '');
-  //получаем признак наличия файла "dev" в каталоге программы (указывает на отладочный режим выполнения)
-  //здесь - так как нужна проверка до создания объекта TModule
-  function GetDevFile: Boolean;
-  //получения списка файлов (не директорий) в каталоге рекурсивно, старыми средствами
-  procedure GetFilesInDirectoryRecursive(Dir: string; Strings: TStrings); //ListFilesInDirectory
-  //получить список файлов (не каталогов) в каталоге, без рекурсии, вернет массив полных путей
-  function GetFileInDirectoryOnly(DirName: string): TStringDynArray;  //GetFileListInDirectory
-  //если в папке один файл, то открыть файл в дефолной программе, если несколько файлов то открыть папку в проводнике, если файлов нет выдать сообщение
-  function OpenFileOrDirectory(DirName: Variant; ErrorMessage: string = ''; Mask: string = ''): Boolean;
-  //получить размер файла
-  function GetFileSize(const aFilename: string): Int64;
-  //запись строки в лог по имени модуля, кроме строки пишется всегда время записи
-  //получаем дату \модификации файла в формате TDateTime; Если не смогла открыть файл, то вернет BadDate;
-  function GetFileAge(FileName: string): TDateTime;
-  //скачать файл из интернета
-  function LoadFileFromWWW(Link, FileName: string): Boolean;
-  //запись строки в текстовый файл
-  function SaveTextToFile(FileName, Text: string; AppendFile: Boolean = False): Boolean;
-  //сохранить VarDynArray2 в файл, для отладки
-  procedure SaveArray2ToFile(var va2: TVarDynArray2; FName: string; IDEonly: Boolean = True); //Array2ToFile
-  //копирование файла в буфер обмена (потом можно вставить в проводнике
-  //можно передать сразу несколько файлов в одной строке, через разделитель #0
-  procedure CopyFilesToClipboard(FileList: string);
-  //получаем имя исполняемого файла по хендлу (дочернего) окна
-  function GetModuleFileByHandle(Handle: HWND): string;
-  //получаем заголовок окна по его хендлу
-  function GetWindowHeader(Handle: HWND): string;
-  function HasProp(comp: TComponent; const prop: string): Boolean;
-  //устанавливает значение свойства с данным именем (prop) на объекте (comp)
-  //Стоит отметить, что свойство ожидается быть типа строка.
-  procedure SetCompPropString(comp: TComponent; const prop, s: string);
-  procedure SetCompPropObj(comp: TComponent; PropName: string; Prop: TObject);
-
-  //!!!НЕ проверял
-  function GetComponentPropNo(AComponent: TComponent; APropName: string; var PropList: PPropList): Integer;
-  procedure SetComponentProp(AComponent: TComponent; APropName: string; APropValue: TObject); overload;
-  procedure SetComponentProp(AComponent: TComponent; APropName: string; APropValue: string); overload;
-  procedure SetComponentProp(AComponent: TComponent; APropName: string; APropValue: Integer); overload;
-//устанавливает значение свойства с данным именем (prop) на объекте (comp)
-  procedure SetComponentProp(AComponent: TComponent; APropName: string; APropValue: Variant); overload;
-
-  function GetThreadStackInfo(hThread: THandle): string;
-end;
+type
+  TSysHelper = record
+    //возвращает значение переменной окружения
+    function GetEnvVar(const AVarName: string): string;
+    //получить путь к временному каталогу Windows
+    function GetWinTemp: string;
+    //получить путь к папке Мои документы
+    function GetMyDocumentsPath: string;
+    //выполнить файл (открыть стандартной программой)
+    procedure ExecFile(const AFileName: string);
+    //получить имя временного файла в каталоге Temp Windows
+    function GetWinTempFileName: string;
+    //выполнить файл, если он существует, иначе вывести сообщение об ошибке
+    procedure ExecFileIfExists(const AFileName, AErrorMessage: string);
+    //получаем признак наличия файла "dev" в каталоге программы
+    function GetDevFile: Boolean;
+    //получение списка файлов в каталоге рекурсивно (старыми средствами)
+    procedure GetFilesInDirectoryRecursive(const ADir: string; AStrings: TStrings);
+    //получить список файлов (не каталогов) в каталоге без рекурсии
+    function GetFileInDirectoryOnly(const ADirName: string): TStringDynArray;
+    //если в папке один файл, открыть файл, если несколько – открыть папку в проводнике, если нет – выдать сообщение
+    function OpenFileOrDirectory(const ADirName: Variant; const AErrorMessage: string = ''; const AMask: string = ''): Boolean;
+    //получить размер файла
+    function GetFileSize(const AFilename: string): Int64;
+    //запись строки в лог-файл по имени модуля (с временем записи)
+    procedure LogToFile(const AModuleName, AText: string);
+    //получить дату модификации файла, если не удалось – вернуть BadDate
+    function GetFileAge(const AFileName: string): TDateTime;
+    //скачать файл из интернета по ссылке
+    function LoadFileFromWWW(const ALink, AFileName: string): Boolean;
+    //запись строки в текстовый файл (дозапись или перезапись)
+    function SaveTextToFile(const AFileName, AText: string; const AAppendFile: Boolean = False): Boolean;
+    //сохранить TVarDynArray2 в файл для отладки
+    procedure SaveArray2ToFile(const AArray: TVarDynArray2; const AFileName: string; const AIDEOnly: Boolean = True);
+    //копирование файлов в буфер обмена (можно передать несколько через #0)
+    procedure CopyFilesToClipboard(const AFileList: string);
+    //получить имя исполняемого файла по хендлу окна
+    function GetModuleFileByHandle(const AHandle: HWND): string;
+    //получить заголовок окна по его хендлу
+    function GetWindowHeader(const AHandle: HWND): string;
+    //проверить наличие свойства у компонента
+    function HasProp(const AComponent: TComponent; const APropName: string): Boolean;
+    //установить строковое свойство компонента
+    procedure SetCompPropString(const AComponent: TComponent; const APropName, AValue: string);
+    //установить объектное свойство компонента
+    procedure SetCompPropObj(const AComponent: TComponent; const APropName: string; const APropValue: TObject);
+    //вспомогательная функция для получения индекса свойства (не рекомендуется к использованию)
+    function GetComponentPropNo(const AComponent: TComponent; const APropName: string; var APropList: PPropList): Integer;
+    //установить свойство компонента (объект)
+    procedure SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: TObject); overload;
+    //установить свойство компонента (строка)
+    procedure SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: string); overload;
+    //установить свойство компонента (целое)
+    procedure SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: Integer); overload;
+    //установить свойство компонента (Variant)
+    procedure SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: Variant); overload;
+    //получить информацию о стеке потока (для отладки)
+    function GetThreadStackInfo(const AThreadHandle: THandle): string;
+  end;
 
 var
   Sys: TSysHelper;
 
-
-
 implementation
 
 uses
-
+  psapi,
   uMessages,
   uForms,
-
-
-
   uModule,
-  uData
-  ;
+  uData;
 
-procedure TSysHelper.ExecFile(FileName: string);
-begin
-  ShellExecute(Application.Handle, nil, pWideChar(FileName), nil, nil, SW_SHOWNORMAL);
-end;
+//==============================================================================
+// TSysHelper
+//==============================================================================
 
-function TSysHelper.GetDevFile: Boolean;
-//получаем признак наличия файла "dev" в каталоге программы (указывает на отладочный режим выполнения)
-//здесь - так как нужна проверка до создания объекта TModule
-begin
-  Result:= FileExists(ExtractFilePath(ParamStr(0)) + '\dev');
-end;
-
-function TSysHelper.GetModuleFileByHandle(Handle: HWND): string;
-//получаем имя исполняемого файла по хендлу (дочернего) окна
-var
-  h: dword;
-  buf: array[0..255] of char;
-begin
-  GetWindowThreadProcessId(Handle, h);
-  GetModuleFileName(windows.OpenProcess(0, False, h), @buf[0], 255);
-  Result:= buf;
-end;
-
-function TSysHelper.GetWindowHeader(Handle: HWND): string;
-//получаем заголовок окна по его хендлу
-var
-  buf: array[0..254] of char;
-begin
-  GetWindowText(Handle, buf, Length(buf));
-  Result:=buf;
-end;
-
-
-procedure TSysHelper.ExecFileIfExists(FileName: string; ErrorMessage: string = '');
-begin
-  if FileExists(FileName)
-    then Sys.ExecFile(FileName)
-    else if ErrorMessage<>'' then myMessageDlg(ErrorMessage, mtWarning, [mbOk])
-end;
-
-function TSysHelper.GetEnvVar(const VarName: string): string;
+function TSysHelper.GetEnvVar(const AVarName: string): string;
 //возвращает значение переменной окружения
 begin
-  Result := GetEnvironmentVariable(VarName);
-end;
-
-procedure TSysHelper.GetFilesInDirectoryRecursive(Dir: string; Strings: TStrings);
-//получения списка файлов в каталоге рекурсивно, старыми средствами
-var
-  rSearchRec: TSearchRec;
-begin
-  if ((Dir = '') or (not Assigned(Strings))) then
-    Exit;
-  Dir := IncludeTrailingPathDelimiter(Dir);
-  if FindFirst(Dir + '*.*', faAnyFile, rSearchRec) = 0 then
-    try
-      repeat
-        if ((rSearchRec.Name <> '.') and (rSearchRec.Name <> '..')) then
-          if (rSearchRec.Attr and faDirectory) <> 0 then
-            GetFilesInDirectoryRecursive(Dir + rSearchRec.Name, Strings)
-          else
-            Strings.Add(Dir + rSearchRec.Name);
-      until FindNext(rSearchRec) <> 0;
-    finally
-      FindClose(rSearchRec);
-    end;
-end;
-
-function TSysHelper.OpenFileOrDirectory(DirName: Variant; ErrorMessage: string = ''; Mask: string = ''): Boolean;
-//передаютя - один или массив путей к файлам (именно каталог, без заключающего \), сообщение если не найден,  маска файла
-//если в папке один файл (или один подпадающий под маску), то открыть файл в дефолной программе,
-//если несколько файлов то открыть папку в проводнике, если файлов нет выдать сообщение
-//system, ioutils, types
-//если передан массив путей то пытается открыть файл с начала массива, если успешно то открывает, если ни один не найден то выдает сообщение об ошибке
-var
-  s: string;
-  a: TStringDynArray;
-  i,j: Integer;
-  DirNames, Masks: TVarDynArray;
-  b: Boolean;
-begin
-  b:=False;
-    if VarIsArray(DirName)
-      then DirNames:=DirName
-      else DirNames:=VarArrayOf([DirName]);
-    for j:=0 to High(DirNames) do begin
-      try
-        //getfiles вызывает исключение, если путь не найден, иначе выдает массив подпадающий под маску файлов
-        if Mask = ''
-          then a:=TDirectory.GetFiles(DirNames[j])
-          else a:=TDirectory.GetFiles(DirNames[j], Mask);
-        i:=Length(a);
-        if i>0 then begin
-          //файлы найдены
-          b:= True;
-          if i = 1
-            //если один элемент в массиве, откроем файл, иначе папку откроем папку
-            then Sys.ExecFile(a[0])
-            else Sys.ExecFile(DirNames[j]);
-          Break;
-        end;
-      except
-      end;
-    end;
-    if not b
-      then begin
-        if ErrorMessage<>'' then myMessageDlg(ErrorMessage, mtWarning, [mbOk]);
-      end;
-    Result:=b;
-{  except
-    if ErrorMessage<>'' then myMessageDlg(ErrorMessage, mtWarning, [mbOk])
-  end;}
-end;
-
-//получить список файлов (не каталогов) в каталоге, без рекурсии, вернет массив полных путей
-function TSysHelper.GetFileInDirectoryOnly(DirName: string): TStringDynArray;
-//получить список файлов (не каталогов) в каталоге, без рекурсии, вернет массив полных путей
-begin
-  try
-    Result:=[];
-    if DirectoryExists(DirName) then Result:=TDirectory.GetFiles(DirName);
-  finally
-  end;
-end;
-
-function TSysHelper.LoadFileFromWWW(Link, FileName: string): Boolean;
-//скачать файл из интернета
-var
-  MS:TMemoryStream;
-begin
-  Result:=False;
-  MS :=TMemoryStream.Create;
-  try
-    MyData.IdHTTP1.Get(Link, MS);
-    MS.SaveToFile(FileName);
-    Result:=True;
-    MS.Free;
-  except
-    MS.Free;
-  end;
+  Result := GetEnvironmentVariable(AVarName);
 end;
 
 function TSysHelper.GetWinTemp: string;
-//получить путь к финдовому временному каталогу
+//получить путь к временному каталогу Windows
 begin
-  Result:=GetEnvironmentVariable('temp');
+  Result := GetEnvironmentVariable('temp');
 end;
 
 function TSysHelper.GetMyDocumentsPath: string;
@@ -271,306 +133,407 @@ begin
 end;
 
 function TSysHelper.GetWinTempFileName: string;
-//получить имя временного файла в каталоге Temp виндовс
-//имя всегда будет разным, типа 'c:\temp\tmp74D0.tmp'.
+//получить имя временного файла в каталоге Temp Windows
 begin
-  Result:=TPath.GetTempFileName;
+  Result := TPath.GetTempFileName;
 end;
 
-function TSysHelper.GetFileSize(const aFilename: string): Int64;
-var
-  info: TWin32FileAttributeData;
+procedure TSysHelper.ExecFile(const AFileName: string);
+//выполнить файл (открыть стандартной программой)
 begin
-  result := -1;
-  if not GetFileAttributesEx(PChar(aFilename), GetFileExInfoStandard, @info) then
-    EXIT;
-  result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32);
+  ShellExecute(Application.Handle, nil, PChar(AFileName), nil, nil, SW_SHOWNORMAL);
 end;
 
-function TSysHelper.GetFileAge(FileName: string): TDateTime;
-//получаем дату \модификации файла в формате TDateTime; Если не смогла открыть файл, то вернет BadDate;
-var
-  FileDate   : Integer;
+procedure TSysHelper.ExecFileIfExists(const AFileName, AErrorMessage: string);
+//выполнить файл, если он существует, иначе вывести сообщение об ошибке
 begin
-  Result:=S.BadDate;
-  FileDate := FileAge(FileName);
-  // Мы получали возраста файла?
-  if fileDate > -1 then
-  Result := FileDateToDateTime(fileDate);
+  if FileExists(AFileName) then
+    Sys.ExecFile(AFileName)
+  else if AErrorMessage <> '' then
+    MyMessageDlg(AErrorMessage, mtWarning, [mbOk]);
 end;
 
-function TSysHelper.SaveTextToFile(FileName, Text: string; AppendFile: Boolean = False): Boolean;
-var
-  f : TextFile;
+function TSysHelper.GetDevFile: Boolean;
+//получаем признак наличия файла "dev" в каталоге программы (отладочный режим)
 begin
+  Result := FileExists(ExtractFilePath(ParamStr(0)) + '\dev');
+end;
+
+procedure TSysHelper.GetFilesInDirectoryRecursive(const ADir: string; AStrings: TStrings);
+//получение списка файлов в каталоге рекурсивно (старыми средствами)
+var
+  SearchRec: TSearchRec;
+  DirPath: string;
+begin
+  if (ADir = '') or not Assigned(AStrings) then
+    Exit;
+  DirPath := IncludeTrailingPathDelimiter(ADir);
+  if FindFirst(DirPath + '*.*', faAnyFile, SearchRec) = 0 then
   try
-    assign(f, FileName);
-    if (not FileExists(FileName)) or not AppendFile
-      then Rewrite(f)
-      else Append(f);
-    write(f, Text);
-    Close(f);
-    Result:=True;
-  except
-    Close(f);
-    Result:=False;
+    repeat
+      if (SearchRec.Name <> '.') and (SearchRec.Name <> '..') then
+        if (SearchRec.Attr and faDirectory) <> 0 then
+          GetFilesInDirectoryRecursive(DirPath + SearchRec.Name, AStrings)
+        else
+          AStrings.Add(DirPath + SearchRec.Name);
+    until FindNext(SearchRec) <> 0;
+  finally
+    FindClose(SearchRec);
   end;
 end;
 
-procedure TSysHelper.SaveArray2ToFile(var va2: TVarDynArray2; FName: string; IDEonly: Boolean = True);
+function TSysHelper.GetFileInDirectoryOnly(const ADirName: string): TStringDynArray;
+//получить список файлов (не каталогов) в каталоге без рекурсии
+begin
+  Result := [];
+  if DirectoryExists(ADirName) then
+    Result := TDirectory.GetFiles(ADirName);
+end;
+
+function TSysHelper.OpenFileOrDirectory(const ADirName: Variant; const AErrorMessage: string = ''; const AMask: string = ''): Boolean;
+//если в папке один файл (или один под маску), открыть файл, если несколько – открыть папку, если нет – выдать сообщение
+var
+  DirList, MaskList: TVarDynArray;
+  i, j: Integer;
+  FileArray: TStringDynArray;
+  Found: Boolean;
+begin
+  Found := False;
+  if VarIsArray(ADirName) then
+    DirList := ADirName
+  else
+    DirList := VarArrayOf([ADirName]);
+  for i := 0 to High(DirList) do
+  begin
+    try
+      if AMask = '' then
+        FileArray := TDirectory.GetFiles(VarToStr(DirList[i]))
+      else
+        FileArray := TDirectory.GetFiles(VarToStr(DirList[i]), AMask);
+      if Length(FileArray) > 0 then
+      begin
+        Found := True;
+        if Length(FileArray) = 1 then
+          Sys.ExecFile(FileArray[0])
+        else
+          Sys.ExecFile(VarToStr(DirList[i]));
+        Break;
+      end;
+    except
+      // игнорируем ошибки доступа к каталогу
+    end;
+  end;
+  if not Found and (AErrorMessage <> '') then
+    MyMessageDlg(AErrorMessage, mtWarning, [mbOk]);
+  Result := Found;
+end;
+
+function TSysHelper.GetFileSize(const AFilename: string): Int64;
+//получить размер файла
+var
+  FileData: TWin32FileAttributeData;
+begin
+  Result := -1;
+  if not GetFileAttributesEx(PChar(AFilename), GetFileExInfoStandard, @FileData) then
+    Exit;
+  Result := Int64(FileData.nFileSizeLow) or Int64(FileData.nFileSizeHigh shl 32);
+end;
+
+procedure TSysHelper.LogToFile(const AModuleName, AText: string);
+//запись строки в лог-файл по имени модуля (с временем записи)
+var
+  FileName: string;
+begin
+  FileName := Module.ExePath + '\Log\' + AModuleName + '.txt';
+  ForceDirectories(ExtractFilePath(FileName));
+  SaveTextToFile(FileName, DateTimeToStr(Now) + ' - ' + AText + #13#10, True);
+end;
+
+function TSysHelper.GetFileAge(const AFileName: string): TDateTime;
+//получить дату модификации файла; если не удалось – вернуть BadDate
+var
+  FileDate: Integer;
+begin
+  Result := S.BadDate;
+  FileDate := FileAge(AFileName);
+  if FileDate > -1 then
+    Result := FileDateToDateTime(FileDate);
+end;
+
+function TSysHelper.LoadFileFromWWW(const ALink, AFileName: string): Boolean;
+//скачать файл из интернета по ссылке
+var
+  MemoryStream: TMemoryStream;
+begin
+  Result := False;
+  MemoryStream := TMemoryStream.Create;
+  try
+    MyData.IdHTTP1.Get(ALink, MemoryStream);
+    MemoryStream.SaveToFile(AFileName);
+    Result := True;
+  finally
+    MemoryStream.Free;
+  end;
+end;
+
+function TSysHelper.SaveTextToFile(const AFileName, AText: string; const AAppendFile: Boolean = False): Boolean;
+//запись строки в текстовый файл (дозапись или перезапись)
+var
+  LTextFile: TextFile;
+begin
+  try
+    AssignFile(LTextFile, AFileName);
+    if (not FileExists(AFileName)) or not AAppendFile then
+      Rewrite(LTextFile)
+    else
+      Append(LTextFile);
+    Write(LTextFile, AText);
+    CloseFile(LTextFile);
+    Result := True;
+  except
+    CloseFile(LTextFile);
+    Result := False;
+  end;
+end;
+
+procedure TSysHelper.SaveArray2ToFile(const AArray: TVarDynArray2; const AFileName: string; const AIDEOnly: Boolean = True);
+//сохранить TVarDynArray2 в файл для отладки (если AIDEOnly=True, то только при запуске из IDE)
 var
   i, j: Integer;
-  fs: TFileStream;
-  fw: TWriter;
-  st: string;
+  FileStream: TFileStream;
+  Writer: TWriter;
+  Line: string;
 begin
-  if IdeOnly then
-    if not Module.RunFromIDE
-      then Exit;
-  fs := nil;
-  fw := nil;
+  if AIDEOnly and not Module.RunFromIDE then
+    Exit;
+  FileStream := nil;
+  Writer := nil;
   try
-    fs := TFileStream.Create(fname, fmCreate or fmShareDenyWrite);
-    fw := TWriter.Create(fs, 1024);
-    for i := 0 to High(va2) do begin
-      st:='';
-      for j := 0 to High(va2[i]) do
-        S.ConcatStP(st, VarToStr(va2[i][j]), '||');
-      fw.WriteString(st+#13#10);
+    FileStream := TFileStream.Create(AFileName, fmCreate or fmShareDenyWrite);
+    Writer := TWriter.Create(FileStream, 1024);
+    for i := 0 to High(AArray) do
+    begin
+      Line := '';
+      for j := 0 to High(AArray[i]) do
+        S.ConcatStP(Line, VarToStr(AArray[i][j]), '||');
+      Writer.WriteString(Line + #13#10);
     end;
   finally
-    fw.Free;
-    fs.Free;
+    Writer.Free;
+    FileStream.Free;
   end;
 end;
 
-procedure TSysHelper.CopyFilesToClipboard(FileList: string);
-//копирование файла в буфер обмена (потом можно вставить в проводнике
-//можно передать сразу несколько файлов в одной строке, через разделитель #0
-//uses ShlObj, ClipBrd
-//CopyFilesToClipboard('C:\Bootlog.Txt'#0'C:\AutoExec.Bat');
+procedure TSysHelper.CopyFilesToClipboard(const AFileList: string);
+//копирование файлов в буфер обмена (можно передать несколько через #0)
 var
   DropFiles: PDropFiles;
-  hGlobal: THandle;
-  iLen: Integer;
+  GlobalHandle: THandle;
+  DataLen: Integer;
 begin
-  iLen := Length(FileList) + 2;
-  FileList := FileList + #0#0;
-{  hGlobal := GlobalAlloc(GMEM_SHARE or GMEM_MOVEABLE or GMEM_ZEROINIT,  SizeOf(TDropFiles) + iLen);    //в В7           }
-  hGlobal := GlobalAlloc(GMEM_SHARE or GMEM_MOVEABLE or GMEM_ZEROINIT, SizeOf(TDropFiles) + iLen * SizeOf(Char));
-  if (hGlobal = 0) then raise Exception.Create('Could not allocate memory.');
-  begin
-    DropFiles := GlobalLock(hGlobal);
-    DropFiles^.fWide := True; //не надо в В7
+  DataLen := Length(AFileList) + 2;
+  GlobalHandle := GlobalAlloc(GMEM_SHARE or GMEM_MOVEABLE or GMEM_ZEROINIT,
+    SizeOf(TDropFiles) + DataLen * SizeOf(Char));
+  if GlobalHandle = 0 then
+    raise Exception.Create('Не удалось выделить память для буфера обмена.');
+  DropFiles := GlobalLock(GlobalHandle);
+  try
+    DropFiles^.fWide := True;
     DropFiles^.pFiles := SizeOf(TDropFiles);
-{    Move(FileList[1], (PChar(DropFiles) + SizeOf(TDropFiles))^, iLen); //в В7 }
-    Move(FileList[1], (PByte(DropFiles) + SizeOf(TDropFiles))^, iLen * SizeOf(Char));
-    GlobalUnlock(hGlobal);
-    Clipboard.SetAsHandle(CF_HDROP, hGlobal);
+    Move(PChar(AFileList)^, (PByte(DropFiles) + SizeOf(TDropFiles))^, DataLen * SizeOf(Char));
+  finally
+    GlobalUnlock(GlobalHandle);
   end;
+  Clipboard.SetAsHandle(CF_HDROP, GlobalHandle);
 end;
 
-
-{
-function TSysHelper.GetTypeName(V: string;
+function TSysHelper.GetModuleFileByHandle(const AHandle: HWND): string;
+//получить имя исполняемого файла по хендлу окна
 var
-  v: TTest;
-  i: Integer;
+  ProcessId: DWORD;
+  ProcessHandle: THandle;
+  Buffer: array[0..MAX_PATH - 1] of Char;
 begin
-result:=GetEnumName(TypeInfo(TTest), ord(bb));
+  GetWindowThreadProcessId(AHandle, ProcessId);
+  ProcessHandle := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, ProcessId);
+  if ProcessHandle <> 0 then
+  begin
+    SetLength(Result, MAX_PATH);
+    if GetModuleFileNameEx(ProcessHandle, 0, PChar(Result), MAX_PATH) > 0 then
+      Result := PChar(Result)
+    else
+      Result := '';
+    CloseHandle(ProcessHandle);
+  end
+  else
+    Result := '';
+end;
 
-  case v of
-    bb: Exit;
-  end;
-end;}
-
-function TSysHelper.HasProp(comp: TComponent; const prop: string): Boolean;
+function TSysHelper.GetWindowHeader(const AHandle: HWND): string;
+//получить заголовок окна по его хендлу
 var
-  proplist: PPropList;
-  numprops, i: Integer;
+  Len: Integer;
 begin
-  result := False;
-  getmem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
+  SetLength(Result, 256);
+  Len := GetWindowText(AHandle, PChar(Result), Length(Result));
+  SetLength(Result, Len);
+end;
+
+function TSysHelper.HasProp(const AComponent: TComponent; const APropName: string): Boolean;
+//проверить наличие свойства у компонента
+var
+  PropList: PPropList;
+  PropCount, i: Integer;
+begin
+  Result := False;
+  GetMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   try
-    NumProps := getproplist(comp.classInfo, tkProperties, proplist);
-    for i := 0 to pred(NumProps) do
-    begin
-      if comparetext(proplist[i]^.Name, prop) = 0 then
+    PropCount := GetPropList(AComponent.ClassInfo, tkProperties, PropList);
+    for i := 0 to PropCount - 1 do
+      if SameText(PropList[i]^.Name, APropName) then
       begin
-        result := True;
-        break;
-      end;
-    end;
-  finally
-    freemem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
-  end;
-end;
-
-{
-function HasProperty(obj: TObject; propertyName: string): Boolean;
-var
-  Props: TRttiContext;
-begin
-  Props := TRttiContext.Create;
-  try
-    for var Prop in Props.GetType(obj.ClassInfo).GetProperties do
-      if Prop.Name = propertyName then
         Result := True;
+        Break;
+      end;
   finally
-    Props.Free;
-  end;
-end;}
-
-procedure TSysHelper.SetCompPropString(comp: TComponent; const prop, s: string);
-//устанавливает значение свойства с данным именем (prop) на объекте (comp)
-//!!!пока устанавливает свойство типа строка, надо передавать явно название типа и устанавливать свойство
-var
-  proplist: PPropList;
-  numprops, i: Integer;
-  st: string;
-begin
-  getmem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
-  try
-    NumProps := getproplist(comp.classInfo, tkProperties, proplist);
-    for i := 0 to pred(NumProps) do
-    begin
-      if (comparetext(proplist[i]^.Name, prop) = 0)
-        //and (comparetext(proplist[i]^.proptype^.name, 'string') = 0)  //здесь будет имя типа свойства
-        then  begin
-          setStrProp(comp, proplist[i], s);
-          st:=proplist[i]^.proptype^.name;
-          break;
-        end;
-    end;
-  finally
-    freemem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   end;
 end;
 
-procedure TSysHelper.SetCompPropObj(comp: TComponent; PropName: string; Prop: TObject);
-//устанавливает значение свойства с данным именем (prop) на объекте (comp)
-var
-  proplist: PPropList;
-  numprops, i: Integer;
-  st: string;
-begin
-  getmem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
-  try
-    NumProps := getproplist(comp.classInfo, tkProperties, proplist);
-    for i := 0 to pred(NumProps) do
-    begin
-      if (comparetext(proplist[i]^.Name, propname) = 0)
-//        and (comparetext(proplist[i]^.proptype^.name, 'string') = 0)  //здесь будет имя типа свойства
-        then  begin
-          System.TypInfo.SetObjectProp(comp, proplist[i], Prop);
-          break;
-        end;
-    end;
-  finally
-    freemem(proplist, getTypeData(comp.classinfo)^.propcount * Sizeof(Pointer));
-  end;
-end;
-
-function TSysHelper.GetComponentPropNo(AComponent: TComponent; APropName: string; var PropList: PPropList): Integer;
-var
-  numprops, i: Integer;
-  st: string;
-  PropvaList: PPropList;
-begin
-  getmem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
-  Result:= -1;
-  try
-    NumProps := getproplist(AComponent.classInfo, tkProperties, proplist);
-    for i := 0 to pred(NumProps) do begin
-      if (comparetext(proplist[i]^.Name, APropName) = 0)
-//        and (comparetext(proplist[i]^.proptype^.name, 'string') = 0)  //здесь будет имя типа свойства
-        then begin
-          Result:= i;
-          break;
-        end;
-    end;
-  finally
- //   freemem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
-  end;
-end;
-
-
-procedure TSysHelper.SetComponentProp(AComponent: TComponent; APropName: string; APropValue: TObject);
+procedure TSysHelper.SetCompPropString(const AComponent: TComponent; const APropName, AValue: string);
+//установить строковое свойство компонента
 var
   PropList: PPropList;
-  NumProp: Integer;
+  PropCount, i: Integer;
 begin
+  GetMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   try
-    NumProp:= GetComponentPropNo(AComponent, APropName, PropList);
-    if NumProp >= 0
-      then System.TypInfo.SetObjectProp(AComponent, PropList[NumProp], APropValue);
+    PropCount := GetPropList(AComponent.ClassInfo, tkProperties, PropList);
+    for i := 0 to PropCount - 1 do
+      if SameText(PropList[i]^.Name, APropName) then
+      begin
+        SetStrProp(AComponent, PropList[i], AValue);
+        Break;
+      end;
   finally
-    freemem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   end;
 end;
 
-procedure TSysHelper.SetComponentProp(AComponent: TComponent; APropName: string; APropValue: string);
+procedure TSysHelper.SetCompPropObj(const AComponent: TComponent; const APropName: string; const APropValue: TObject);
+//установить объектное свойство компонента
 var
   PropList: PPropList;
-  NumProp: Integer;
+  PropCount, i: Integer;
 begin
+  GetMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   try
-    NumProp:= GetComponentPropNo(AComponent, APropName, PropList);
-    if NumProp >= 0
-      then System.TypInfo.SetStrProp(AComponent, PropList[NumProp], APropValue);
+    PropCount := GetPropList(AComponent.ClassInfo, tkProperties, PropList);
+    for i := 0 to PropCount - 1 do
+      if SameText(PropList[i]^.Name, APropName) then
+      begin
+        SetObjectProp(AComponent, PropList[i], APropValue);
+        Break;
+      end;
   finally
-    freemem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   end;
 end;
 
-procedure TSysHelper.SetComponentProp(AComponent: TComponent; APropName: string; APropValue: Integer);
+function TSysHelper.GetComponentPropNo(const AComponent: TComponent; const APropName: string; var APropList: PPropList): Integer;
+//вспомогательная функция для получения индекса свойства
+var
+  PropCount, i: Integer;
+begin
+  Result := -1;
+  GetMem(APropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
+  try
+    PropCount := GetPropList(AComponent.ClassInfo, tkProperties, APropList);
+    for i := 0 to PropCount - 1 do
+      if SameText(APropList[i]^.Name, APropName) then
+      begin
+        Result := i;
+        Break;
+      end;
+  finally
+    // память освобождается вызывающей стороной
+  end;
+end;
+
+procedure TSysHelper.SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: TObject);
+//установить свойство компонента (объект)
 var
   PropList: PPropList;
-  NumProp: Integer;
+  PropIndex: Integer;
 begin
-  try
-    NumProp:= GetComponentPropNo(AComponent, APropName, PropList);
-    if NumProp >= 0
-      then System.TypInfo.SetInt64Prop(AComponent, PropList[NumProp], APropValue);
-  finally
-    freemem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
+  PropIndex := GetComponentPropNo(AComponent, APropName, PropList);
+  if PropIndex >= 0 then
+  begin
+    SetObjectProp(AComponent, PropList[PropIndex], APropValue);
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   end;
 end;
 
-procedure TSysHelper.SetComponentProp(AComponent: TComponent; APropName: string; APropValue: Variant);
+procedure TSysHelper.SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: string);
+//установить свойство компонента (строка)
 var
   PropList: PPropList;
-  NumProp: Integer;
+  PropIndex: Integer;
 begin
-  try
-    NumProp:= GetComponentPropNo(AComponent, APropName, PropList);
-    if NumProp >= 0
-      then System.TypInfo.SetPropValue(AComponent, PropList[NumProp], APropValue);
-  finally
-    freemem(proplist, getTypeData(AComponent.classinfo)^.propcount * Sizeof(Pointer));
+  PropIndex := GetComponentPropNo(AComponent, APropName, PropList);
+  if PropIndex >= 0 then
+  begin
+    SetStrProp(AComponent, PropList[PropIndex], APropValue);
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
   end;
 end;
 
-function TSysHelper.GetThreadStackInfo(hThread: THandle): string;
+procedure TSysHelper.SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: Integer);
+//установить свойство компонента (целое)
+var
+  PropList: PPropList;
+  PropIndex: Integer;
+begin
+  PropIndex := GetComponentPropNo(AComponent, APropName, PropList);
+  if PropIndex >= 0 then
+  begin
+    SetInt64Prop(AComponent, PropList[PropIndex], APropValue);
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
+  end;
+end;
+
+procedure TSysHelper.SetComponentProp(const AComponent: TComponent; const APropName: string; const APropValue: Variant);
+//установить свойство компонента (Variant)
+var
+  PropList: PPropList;
+  PropIndex: Integer;
+begin
+  PropIndex := GetComponentPropNo(AComponent, APropName, PropList);
+  if PropIndex >= 0 then
+  begin
+    SetPropValue(AComponent, PropList[PropIndex], APropValue);
+    FreeMem(PropList, GetTypeData(AComponent.ClassInfo)^.PropCount * SizeOf(Pointer));
+  end;
+end;
+
+function TSysHelper.GetThreadStackInfo(const AThreadHandle: THandle): string;
+//получить информацию о стеке потока (для отладки)
 var
   ThreadInfo: THREAD_BASIC_INFORMATION;
   Status: NTSTATUS;
   StackBase, StackLimit: Pointer;
 begin
   Status := NtQueryInformationThread(
-    hThread,
+    AThreadHandle,
     ThreadBasicInformation,
     @ThreadInfo,
     SizeOf(ThreadInfo),
     nil
   );
-
   if Status = 0 then
   begin
-    // Получаем StackBase и StackLimit из TEB (Thread Environment Block)
-    StackBase := PPointer(PByte(ThreadInfo.TebBaseAddress) + $8)^;  // TIB.StackBase
-    StackLimit := PPointer(PByte(ThreadInfo.TebBaseAddress) + $10)^; // TIB.StackLimit
-
+    StackBase := PPointer(PByte(ThreadInfo.TebBaseAddress) + $8)^;
+    StackLimit := PPointer(PByte(ThreadInfo.TebBaseAddress) + $10)^;
     Result := Format(
       'Стек потока: База = %p, Лимит = %p, Размер = %d байт',
       [StackBase, StackLimit, NativeUInt(StackBase) - NativeUInt(StackLimit)]
@@ -580,10 +543,4 @@ begin
     Result := 'Ошибка: Не удалось получить информацию о стеке потока';
 end;
 
-
-
-
-
-
-begin
 end.

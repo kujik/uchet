@@ -202,7 +202,7 @@ begin
   Cth.MakePanelsFlat(pnlFrmClient, []);
 
   Info := [['Основная информация по счету.']];
-  frmpcGeneral.SetParameters(True, 'Основное', Info, False);
+  frmpcGeneral.SetParameters(True, 'Основное', Info, '');
   Cth.AlignControls(pnlGeneralM, FOpt.ControlsWoAligment, True);
   pnlGeneral.Height := frmpcGeneral.Height + pnlGeneralM.Height;
 
@@ -213,7 +213,7 @@ begin
     '(пункт назначения можно выбирать из выпадающего списка или вводить вручную; пункт отправки будет проставлен автоматически, кроме самой первой ячейки).'#13#10+
     'Если в таблице будут незаполненные ячейки, сохранить счет будет невозможно!'#13#10
   ]];
-  frmpcRoute.SetParameters(True, 'Транспорт', Info, False);
+  frmpcRoute.SetParameters(True, 'Транспорт', Info, '');
   Cth.AlignControls(pnlRouteM, FOpt.ControlsWoAligment, True);
 
   Info := [[
@@ -225,7 +225,7 @@ begin
     'Основание можно удалить из таблицы, нажав соответствующую кнопку.'#10#13+
     '(это также необходимо сделать в том случае, если вы ввели неверный процент, по-другому его изменить нельзя).'#10#13
   ]];
-  frmpcBasis.SetParameters(True, 'Основание', Info, False);
+  frmpcBasis.SetParameters(True, 'Основание', Info, '');
 
   Info := [[
     'Распределите платежи по счету.'#10#13+
@@ -234,7 +234,7 @@ begin
     //'Нажмите "=" в поле даты, чтобы посмотреть запланированные платежи.'#10#13+
     'Для удаления платежа сотрите дату и сумму.'
   ]];
-  frmpcPayments.SetParameters(True, 'Платежи', Info, False);
+  frmpcPayments.SetParameters(True, 'Платежи', Info, '');
   CreatePaymentsEdts;
 
   Info := [[
@@ -244,7 +244,7 @@ begin
     'Те пользователи, у которых есть соответствующие права, могут согласовать счет от имени руководителя или директора.'#13#10+
     'Также для счета можно ввести примечание.'
   ]];
-  frmpcAdd.SetParameters(True, 'Дополнительно', Info, False);
+  frmpcAdd.SetParameters(True, 'Дополнительно', Info, '');
   Cth.AlignControls(pnlAddM, FOpt.ControlsWoAligment, False);
   pnlAddM.Height := btnFileOpen.Top + btnFileOpen.Height + 4;
   pnlAdd.Height :=  frmpcAdd.Height + pnlAddM.Height;

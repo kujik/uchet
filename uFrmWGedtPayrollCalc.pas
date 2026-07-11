@@ -570,6 +570,7 @@ begin
             if Frg1.GetValue('ors', i, False).AsString <> '' then
               st := st + fio + ': Изменен столбец ОРС с ' + Frg1.GetValue('ors', i, False).AsString + ' на ' + VarToStr(e) + #13#10;
             Frg1.SetValue('ors', i, False, e);
+            Frg1.SetState(True, null, null);
             b := True;
           end;
         end

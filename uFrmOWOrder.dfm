@@ -801,15 +801,15 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 3
             Visible = True
           end
-          object edt_customerinn: TDBEditEh
-            Left = 224
+          object edt_order_number_custome: TDBEditEh
+            Left = 256
             Top = 134
-            Width = 116
+            Width = 84
             Height = 21
             Anchors = [akLeft, akTop, akRight]
-            ControlLabel.Width = 31
+            ControlLabel.Width = 45
             ControlLabel.Height = 26
-            ControlLabel.Caption = #1053#1086#1084#1077#1088#13#10#1089#1095#1077#1090#1072
+            ControlLabel.Caption = #1047#1072#1082#1072#1079#13#10' '#1082#1083#1080#1077#1085#1090#1072
             ControlLabel.Visible = True
             ControlLabelLocation.Position = lpLeftCenterEh
             DynProps = <>
@@ -818,21 +818,22 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 5
             Visible = True
           end
-          object cmb_cashtype: TDBComboBoxEh
+          object cmb_cashtype_account: TDBComboBoxEh
             Left = 80
             Top = 135
-            Width = 105
+            Width = 121
             Height = 21
-            ControlLabel.Width = 60
+            ControlLabel.Width = 65
             ControlLabel.Height = 13
-            ControlLabel.Caption = #1042#1080#1076' '#1086#1087#1083#1072#1090#1099
+            ControlLabel.Caption = #1054#1087#1083#1072#1090#1072'/'#1089#1095#1077#1090
             ControlLabel.Visible = True
             ControlLabelLocation.Position = lpLeftCenterEh
             DynProps = <>
             EditButtons = <>
             TabOrder = 4
-            Text = #1073'/'#1085' ('#1085#1077#1090' '#1089#1095#1077#1090#1072')'
+            Text = #1073#1077#1079#1085#1072#1083' ('#1085#1077#1090' '#1089#1095#1077#1090#1072')'
             Visible = True
+            OnKeyPress = cmb_cashtype_accountKeyPress
           end
           object edt_address: TDBEditEh
             Left = 80
@@ -946,11 +947,11 @@ inherited FrmOWOrder: TFrmOWOrder
           object edt_managername: TDBEditEh
             Left = 66
             Top = 161
-            Width = 144
+            Width = 119
             Height = 21
-            ControlLabel.Width = 53
+            ControlLabel.Width = 46
             ControlLabel.Height = 13
-            ControlLabel.Caption = #1052#1077#1085#1077#1076#1078#1077#1088
+            ControlLabel.Caption = #1054#1092#1086#1088#1084#1080#1083
             ControlLabel.Visible = True
             ControlLabelLocation.Position = lpLeftCenterEh
             DynProps = <>
@@ -1039,6 +1040,23 @@ inherited FrmOWOrder: TFrmOWOrder
               Width = 342
               ExplicitWidth = 707
             end
+          end
+          object edt_launched_by_name: TDBEditEh
+            Left = 219
+            Top = 161
+            Width = 119
+            Height = 21
+            Anchors = [akTop, akRight]
+            ControlLabel.Width = 47
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1047#1072#1087#1091#1089#1090#1080#1083
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 10
+            Text = #1055#1088#1086#1082#1086#1087#1077#1085#1082#1086' '#1057'.'#1042'.'
+            Visible = True
           end
         end
         object PHFin: TPanel
@@ -1606,11 +1624,7 @@ inherited FrmOWOrder: TFrmOWOrder
     ExplicitWidth = 1283
     inherited lblStatusBarR: TLabel
       Left = 1214
-      Height = 14
       ExplicitLeft = 1214
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

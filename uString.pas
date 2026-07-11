@@ -360,7 +360,7 @@ type
     // Преобразование в Windows-1252 с заменой/удалением невозможных символов
     function ConvertToANSI(const AStr: string): string;
     // Нормализация текста (удаление переносов, лишних пробелов)
-    function NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True): string;
+    function NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True; const KeepTrailingWhitespace: Boolean = False): string;
     // Коррекция имени файла/пути (улучшенная)
     function CorrectFileNameEx(const AStr: string): string;
     //-------------------------- служебные -----------------------------------------
@@ -2018,91 +2018,54 @@ begin
 end;
 
 function TMyStringHelper.ConvertToANSI(const AStr: string): string;
+// преобразует строку в Windows-1251 с заменой похожих символов и удалением невозможных.
+var
+  Enc1251: TEncoding;
+  sb: TStringBuilder;
+  ch: Char;
+  SrcBytes, DstBytes: TBytes;
+  DstStr: string;
 
-  // Локальная таблица замены (Unicode → ANSI-символ)
   function ReplaceChar(ch: Char): Char;
   const
     ReplaceMap: array[0..73] of record
       U: Char;
       A: Char;
     end = (
-      // Типографские кавычки и тире
-      (U: #$2018; A: #39), // ‘ → '
-      (U: #$2019; A: #39), // ’ → '
-      (U: #$201C; A: #34), // “ → "
-      (U: #$201D; A: #34), // ” → "
-      (U: #$201E; A: #34), // „ → "
-      (U: #$2013; A: #45), // – → -
-      (U: #$2014; A: #45), // — → -
-      (U: #$2026; A: #46), // … → .
-      (U: #$00AB; A: #34), // « → "
-      (U: #$00BB; A: #34), // » → "
-      (U: #$2039; A: #39), // ‹ → '
-      (U: #$203A; A: #39), // › → '
-      // Заглавные латиницы с диакритикой
-      (U: #$00C0; A: 'A'), // À → A
-      (U: #$00C1; A: 'A'), // Á → A
-      (U: #$00C2; A: 'A'), // Â → A
-      (U: #$00C3; A: 'A'), // Ã → A
-      (U: #$00C4; A: 'A'), // Ä → A
-      (U: #$00C5; A: 'A'), // Å → A
-      (U: #$00C6; A: 'A'), // Æ → A
-      (U: #$00C7; A: 'C'), // Ç → C
-      (U: #$00C8; A: 'E'), // È → E
-      (U: #$00C9; A: 'E'), // É → E
-      (U: #$00CA; A: 'E'), // Ê → E
-      (U: #$00CB; A: 'E'), // Ë → E
-      (U: #$00CC; A: 'I'), // Ì → I
-      (U: #$00CD; A: 'I'), // Í → I
-      (U: #$00CE; A: 'I'), // Î → I
-      (U: #$00CF; A: 'I'), // Ï → I
-      (U: #$00D0; A: 'D'), // Ð → D
-      (U: #$00D1; A: 'N'), // Ñ → N
-      (U: #$00D2; A: 'O'), // Ò → O
-      (U: #$00D3; A: 'O'), // Ó → O
-      (U: #$00D4; A: 'O'), // Ô → O
-      (U: #$00D5; A: 'O'), // Õ → O
-      (U: #$00D6; A: 'O'), // Ö → O
-      (U: #$00D8; A: 'O'), // Ø → O
-      (U: #$00D9; A: 'U'), // Ù → U
-      (U: #$00DA; A: 'U'), // Ú → U
-      (U: #$00DB; A: 'U'), // Û → U
-      (U: #$00DC; A: 'U'), // Ü → U
-      (U: #$00DD; A: 'Y'), // Ý → Y
-      (U: #$00DE; A: 'T'), // Þ → T
-      (U: #$00DF; A: 's'), // ß → s
-      // Строчные латиницы с диакритикой
-      (U: #$00E0; A: 'a'), // à → a
-      (U: #$00E1; A: 'a'), // á → a
-      (U: #$00E2; A: 'a'), // â → a
-      (U: #$00E3; A: 'a'), // ã → a
-      (U: #$00E4; A: 'a'), // ä → a
-      (U: #$00E5; A: 'a'), // å → a
-      (U: #$00E6; A: 'a'), // æ → a
-      (U: #$00E7; A: 'c'), // ç → c
-      (U: #$00E8; A: 'e'), // è → e
-      (U: #$00E9; A: 'e'), // é → e
-      (U: #$00EA; A: 'e'), // ê → e
-      (U: #$00EB; A: 'e'), // ë → e
-      (U: #$00EC; A: 'i'), // ì → i
-      (U: #$00ED; A: 'i'), // í → i
-      (U: #$00EE; A: 'i'), // î → i
-      (U: #$00EF; A: 'i'), // ï → i
-      (U: #$00F0; A: 'd'), // ð → d
-      (U: #$00F1; A: 'n'), // ñ → n
-      (U: #$00F2; A: 'o'), // ò → o
-      (U: #$00F3; A: 'o'), // ó → o
-      (U: #$00F4; A: 'o'), // ô → o
-      (U: #$00F5; A: 'o'), // õ → o
-      (U: #$00F6; A: 'o'), // ö → o
-      (U: #$00F8; A: 'o'), // ø → o
-      (U: #$00F9; A: 'u'), // ù → u
-      (U: #$00FA; A: 'u'), // ú → u
-      (U: #$00FB; A: 'u'), // û → u
-      (U: #$00FC; A: 'u'), // ü → u
-      (U: #$00FD; A: 'y'), // ý → y
-      (U: #$00FE; A: 't'), // þ → t
-      (U: #$00FF; A: 'y')  // ÿ → y
+      (U: #$2018; A: #39), (U: #$2019; A: #39),
+      (U: #$201C; A: #34), (U: #$201D; A: #34), (U: #$201E; A: #34),
+      (U: #$2013; A: #45), (U: #$2014; A: #45),
+      (U: #$2026; A: #46),
+      (U: #$00AB; A: #34), (U: #$00BB; A: #34),
+      (U: #$2039; A: #39), (U: #$203A; A: #39),
+      (U: #$00C0; A: 'A'), (U: #$00C1; A: 'A'), (U: #$00C2; A: 'A'),
+      (U: #$00C3; A: 'A'), (U: #$00C4; A: 'A'), (U: #$00C5; A: 'A'),
+      (U: #$00C6; A: 'A'), (U: #$00C7; A: 'C'),
+      (U: #$00C8; A: 'E'), (U: #$00C9; A: 'E'), (U: #$00CA; A: 'E'),
+      (U: #$00CB; A: 'E'),
+      (U: #$00CC; A: 'I'), (U: #$00CD; A: 'I'), (U: #$00CE; A: 'I'),
+      (U: #$00CF; A: 'I'),
+      (U: #$00D0; A: 'D'), (U: #$00D1; A: 'N'),
+      (U: #$00D2; A: 'O'), (U: #$00D3; A: 'O'), (U: #$00D4; A: 'O'),
+      (U: #$00D5; A: 'O'), (U: #$00D6; A: 'O'),
+      (U: #$00D8; A: 'O'),
+      (U: #$00D9; A: 'U'), (U: #$00DA; A: 'U'), (U: #$00DB; A: 'U'),
+      (U: #$00DC; A: 'U'),
+      (U: #$00DD; A: 'Y'), (U: #$00DE; A: 'T'), (U: #$00DF; A: 's'),
+      (U: #$00E0; A: 'a'), (U: #$00E1; A: 'a'), (U: #$00E2; A: 'a'),
+      (U: #$00E3; A: 'a'), (U: #$00E4; A: 'a'), (U: #$00E5; A: 'a'),
+      (U: #$00E6; A: 'a'), (U: #$00E7; A: 'c'),
+      (U: #$00E8; A: 'e'), (U: #$00E9; A: 'e'), (U: #$00EA; A: 'e'),
+      (U: #$00EB; A: 'e'),
+      (U: #$00EC; A: 'i'), (U: #$00ED; A: 'i'), (U: #$00EE; A: 'i'),
+      (U: #$00EF; A: 'i'),
+      (U: #$00F0; A: 'd'), (U: #$00F1; A: 'n'),
+      (U: #$00F2; A: 'o'), (U: #$00F3; A: 'o'), (U: #$00F4; A: 'o'),
+      (U: #$00F5; A: 'o'), (U: #$00F6; A: 'o'),
+      (U: #$00F8; A: 'o'),
+      (U: #$00F9; A: 'u'), (U: #$00FA; A: 'u'), (U: #$00FB; A: 'u'),
+      (U: #$00FC; A: 'u'),
+      (U: #$00FD; A: 'y'), (U: #$00FE; A: 't'), (U: #$00FF; A: 'y')
     );
   var
     i: Integer;
@@ -2116,12 +2079,9 @@ function TMyStringHelper.ConvertToANSI(const AStr: string): string;
       end;
   end;
 
-var
-  ch: Char;
-  sb: TStringBuilder;
-  Enc1252: TEncoding;
 begin
-  // 1. Сначала заменяем известные Unicode-символы на близкие ASCII
+  // 1. Заменяем известные Unicode-символы на близкие ASCII (таблица ReplaceChar)
+  // (локальная функция ReplaceChar уже определена)
   sb := TStringBuilder.Create;
   try
     for ch in AStr do
@@ -2131,18 +2091,25 @@ begin
     sb.Free;
   end;
 
-  // 2. Удаляем символы, не представимые в Windows-1252
-  Enc1252 := TEncoding.GetEncoding(1252);
+  // 2. Удаляем символы, не представимые в Windows-1251
+  Enc1251 := TEncoding.GetEncoding(1251);
   try
     sb := TStringBuilder.Create;
     try
       for ch in Result do
       begin
+        // Проверяем, можно ли закодировать символ в 1251.
+        // Если при кодировании и декодировании символ меняется (становится '?' или другим),
+        // значит он не поддерживается, и мы его пропускаем.
         try
-          Enc1252.GetBytes(ch); // пробуем закодировать
-          sb.Append(ch);
+          DstBytes := Enc1251.GetBytes(ch);
+          DstStr := Enc1251.GetString(DstBytes);
+          if DstStr = ch then
+            sb.Append(ch)
+          else
+            ; // пропускаем неподдерживаемый символ
         except
-          // Символ недопустим – пропускаем
+          // при ошибке тоже пропускаем
         end;
       end;
       Result := sb.ToString;
@@ -2150,21 +2117,137 @@ begin
       sb.Free;
     end;
   finally
-    Enc1252.Free;
+    Enc1251.Free;
   end;
 end;
+(*
+function TMyStringHelper.ConvertToANSI(const AStr: string): string;
+// преобразует строку в Windows-1251 с заменой похожих символов и удалением невозможных.
+// Используется таблица замены для часто встречающихся символов.
+var
+  Enc1251: TEncoding;
+  sb: TStringBuilder;
+  ch: Char;
+  ByteCount: Integer;
 
-function TMyStringHelper.NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True): string;
+  function ReplaceChar(ch: Char): Char;
+  const
+    ReplaceMap: array[0..73] of record
+      U: Char;
+      A: Char;
+    end = (
+      (U: #$2018; A: #39), (U: #$2019; A: #39),
+      (U: #$201C; A: #34), (U: #$201D; A: #34), (U: #$201E; A: #34),
+      (U: #$2013; A: #45), (U: #$2014; A: #45),
+      (U: #$2026; A: #46),
+      (U: #$00AB; A: #34), (U: #$00BB; A: #34),
+      (U: #$2039; A: #39), (U: #$203A; A: #39),
+      (U: #$00C0; A: 'A'), (U: #$00C1; A: 'A'), (U: #$00C2; A: 'A'),
+      (U: #$00C3; A: 'A'), (U: #$00C4; A: 'A'), (U: #$00C5; A: 'A'),
+      (U: #$00C6; A: 'A'), (U: #$00C7; A: 'C'),
+      (U: #$00C8; A: 'E'), (U: #$00C9; A: 'E'), (U: #$00CA; A: 'E'),
+      (U: #$00CB; A: 'E'),
+      (U: #$00CC; A: 'I'), (U: #$00CD; A: 'I'), (U: #$00CE; A: 'I'),
+      (U: #$00CF; A: 'I'),
+      (U: #$00D0; A: 'D'), (U: #$00D1; A: 'N'),
+      (U: #$00D2; A: 'O'), (U: #$00D3; A: 'O'), (U: #$00D4; A: 'O'),
+      (U: #$00D5; A: 'O'), (U: #$00D6; A: 'O'),
+      (U: #$00D8; A: 'O'),
+      (U: #$00D9; A: 'U'), (U: #$00DA; A: 'U'), (U: #$00DB; A: 'U'),
+      (U: #$00DC; A: 'U'),
+      (U: #$00DD; A: 'Y'), (U: #$00DE; A: 'T'), (U: #$00DF; A: 's'),
+      (U: #$00E0; A: 'a'), (U: #$00E1; A: 'a'), (U: #$00E2; A: 'a'),
+      (U: #$00E3; A: 'a'), (U: #$00E4; A: 'a'), (U: #$00E5; A: 'a'),
+      (U: #$00E6; A: 'a'), (U: #$00E7; A: 'c'),
+      (U: #$00E8; A: 'e'), (U: #$00E9; A: 'e'), (U: #$00EA; A: 'e'),
+      (U: #$00EB; A: 'e'),
+      (U: #$00EC; A: 'i'), (U: #$00ED; A: 'i'), (U: #$00EE; A: 'i'),
+      (U: #$00EF; A: 'i'),
+      (U: #$00F0; A: 'd'), (U: #$00F1; A: 'n'),
+      (U: #$00F2; A: 'o'), (U: #$00F3; A: 'o'), (U: #$00F4; A: 'o'),
+      (U: #$00F5; A: 'o'), (U: #$00F6; A: 'o'),
+      (U: #$00F8; A: 'o'),
+      (U: #$00F9; A: 'u'), (U: #$00FA; A: 'u'), (U: #$00FB; A: 'u'),
+      (U: #$00FC; A: 'u'),
+      (U: #$00FD; A: 'y'), (U: #$00FE; A: 't'), (U: #$00FF; A: 'y')
+    );
+  var
+    i: Integer;
+  begin
+    Result := ch;
+    for i := 0 to High(ReplaceMap) do
+      if ReplaceMap[i].U = ch then
+      begin
+        Result := ReplaceMap[i].A;
+        Exit;
+      end;
+  end;
+
+begin
+  // 1. Заменяем известные Unicode-символы на близкие ASCII
+  sb := TStringBuilder.Create;
+  try
+    for ch in AStr do
+      sb.Append(ReplaceChar(ch));
+    Result := sb.ToString;
+  finally
+    sb.Free;
+  end;
+
+  // 2. Удаляем символы, не представимые в Windows-1251
+  Enc1251 := TEncoding.GetEncoding(1251);
+  try
+    sb := TStringBuilder.Create;
+    try
+      for ch in Result do
+      begin
+        // Проверяем, можно ли закодировать символ в 1251
+        // Если GetByteCount возвращает 0 или выбрасывает исключение, символ пропускаем
+        try
+          ByteCount := Enc1251.GetByteCount(ch);
+          if ByteCount > 0 then
+            sb.Append(ch);
+        except
+          // если возникла ошибка, символ пропускаем
+        end;
+      end;
+      Result := sb.ToString;
+    finally
+      sb.Free;
+    end;
+  finally
+    Enc1251.Free;
+  end;
+end;
+*)
+
+function TMyStringHelper.NormalizeText(const AStr: string; const ARemoveCrLf: Boolean = True; const KeepTrailingWhitespace: Boolean = False): string;
+// нормализация текста: конвертация в ANSI, опциональное удаление переносов и табуляции,
+// удаление начальных пробелов, опциональное удаление конечных пробелов и переносов,
+// схлопывание множественных пробелов.
+// если KeepTrailingWhitespace = True, то конечные пробелы и переносы сохраняются (один экземпляр)
 begin
   Result := ConvertToANSI(AStr);
-  // Замена всех видов переносов строк на пробел
   if ARemoveCrLf then begin
-    Result := StringReplace(Result, #13#10, ' ', [rfReplaceAll]); // CRLF
-    Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);    // CR
-    Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);    // LF
-    Result := StringReplace(Result, #9, ' ', [rfReplaceAll]);     // табуляция
+    // удаляем все виды переносов и табуляцию, заменяем на пробел
+    Result := StringReplace(Result, #13#10, ' ', [rfReplaceAll]);
+    Result := StringReplace(Result, #13, ' ', [rfReplaceAll]);
+    Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
+    Result := StringReplace(Result, #9, ' ', [rfReplaceAll]);
+  end
+  else begin
+    // приводим все переносы к CRLF (#13#10)
+    Result := StringReplace(Result, #13#10, #10, [rfReplaceAll]);
+    Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
+    Result := StringReplace(Result, #10, #13#10, [rfReplaceAll]);
+    // табуляцию не трогаем
   end;
-  Result := Trim(Result);
+
+  if KeepTrailingWhitespace then
+    Result := TrimLeft(Result) // удаляем пробелы в начале, но сохраняем в конце
+  else
+    Result := Trim(Result);    // удаляем и в начале, и в конце
+
   Result := DeleteRepSpaces(Result, ' ');
 end;
 

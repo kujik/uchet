@@ -144,8 +144,7 @@ type
     procedure cmb_OrderReferenceEnter(Sender: TObject);
     procedure mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure cmb_OrderTypeEditButtons0Click(Sender: TObject;
-      var Handled: Boolean);
+    procedure cmb_OrderTypeEditButtons0Click(Sender: TObject; var Handled: Boolean);
   private
     { Private declarations }
     IDOld: Variant;

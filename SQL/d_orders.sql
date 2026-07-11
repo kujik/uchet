@@ -337,6 +337,13 @@ from
 update orders set id_type2 = 117 where id_type = 1 and id_type2 is null;
 update orders set id_type2 = 106 where id_type = 2 and id_type2 is null;
 
+alter table orders add id_launched_by number(11);
+alter table orders add constraint fk_id_launched_by foreign key (id_launched_by) references adm_users(id);
+
+alter table orders add order_number_custome varchar2(400);
+
+
+
 --alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
 --alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
 --alter table orders drop column id_complaint_reasons cascade constraints;
@@ -358,6 +365,7 @@ create table orders (
   project varchar2(400),             -- название проекта
   address varchar2(400),             -- адрес отгруузки 
   account varchar2(400),             -- счет
+  order_number_custome varchar2(400),-- номер заказа клиента 
   id_format number(11),              -- айди формата паспорта (0 - общий, ’ -  Ѕ ...)
   id_target number(11),
   target varchar2(40),               -- подпапка в стандартных проектах итм (ѕ - производство, остальные берутс€ из справочника стандартных форматов) 
@@ -366,6 +374,7 @@ create table orders (
   id_reglament number(11), 
   or_reference varchar(16),          -- номер заказа, по которому рекламаци€, в виде текста 
   id_manager number(11),             -- айди человека, оформившего заказ
+  id_launched_by number(11),         -- айди человека, запустившего заказ в работу
   dt_beg date,                       -- дата создани€ паспорта
   dt_otgr date,                      -- планируема€ дата отгрузки
   dt_montage_beg date,               -- планова€ дата начала монтажа
@@ -430,6 +439,7 @@ create table orders (
   constraint pk_orders primary key (id),
   constraint fk_orders_format foreign key (id_format) references or_formats(id),
   constraint fk_orders_manager foreign key (id_manager) references adm_users(id),
+  constraint fk_id_launched_by foreign key (id_launched_by) references adm_users(id),
   constraint fk_orders_organization foreign key (id_organization) references ref_sn_organizations(id),
   constraint fk_orders_customer foreign key (id_customer) references ref_customers(id),
   constraint fk_orders_customer_contact foreign key (id_customer_contact) references ref_customer_contact(id),
@@ -575,6 +585,7 @@ select
   rcl.legalname as customerlegal,
   rcl.inn as customerinn,
   au.name as managername,
+  au2.name as launched_by_name,
   case
     when o.id_type2 is not null then ot.name
     else case
@@ -598,6 +609,12 @@ select
     when o.cashtype = 1 and o.account is not null then 'безнал'
     else ''
   end as cashtypename,
+  case
+    when o.cashtype = 2 then 'наличные'
+    when o.cashtype = 1 and o.account is null then 'безнал (нет счета)'
+    when o.cashtype = 1 and o.account is not null then o.account
+    else ''
+  end as cashtype_account,
   case when o.cashtype = 1 and o.account is null then 0 else o.cashtype end as cashtype_add,
   round(nvl(o.cost_i, 0) / o.ndsd, 2) as cost_i_wo_nds,
   round(nvl(o.cost_i_nosgp, 0) / o.ndsd, 2) as cost_i_nosgp_wo_nds,
@@ -647,6 +664,7 @@ from
   or_formats f,
   ref_production_areas pa,
   adm_users au,
+  adm_users au2,
   v_order_hasestimate he,
   order_items_agg agg,
   --thn_list tl,
@@ -665,6 +683,7 @@ where
   and rcl.id (+) = o.id_customer_org
   and f.id (+) = o.id_format
   and au.id (+) = o.id_manager
+  and au2.id (+) = o.id_launched_by
   and pa.id (+) = o.area
   and he.id_order (+) = o.id
   and agg.id_order (+) = o.id
