@@ -17,7 +17,7 @@
 interface
 
 uses
-  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils, VarUtils, System.Generics.Collections;
+  Graphics, Classes, DateUtils, Variants, Types, SysUtils, Math, StrUtils, VarUtils, Vcl.Controls, System.Generics.Collections;
 
 type
   TVarDynArray = array of Variant;
@@ -453,6 +453,8 @@ type
     function PosInArray(const AValue: Variant; const AArray: array of Variant; const AIgnoreCase: Boolean = False): Integer; overload; //+++
     function PosInArray(const AValue: string; const AArray: TStringDynArray; const AIgnoreCase: Boolean = False): Integer; overload; //+++
     function PosInArray(const AValue: Variant; const AArray: TVarDynArray; const AIgnoreCase: Boolean = False): Integer; overload; //+++
+    function PosInArray(const AControl: TControl; const AControlArray: array of TControl): Integer; overload;
+    function PosInArray(const AComponent: TComponent; const AComponentArray: array of TComponent): Integer; overload;
     //находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V
     function PosInArray(const AValue: Variant; const AArray: TVarDynArray2; const AColumn: Integer = 0; const AIgnoreCase: Boolean = False): Integer; overload; //+++
     //найдет позицию в массиве, для которой совпадаю все переданные значения в переданных столбцах
@@ -3120,6 +3122,30 @@ begin
       Exit(i);
   end;
 end;
+
+function TMyArrayHelper.PosInArray(const AControl: TControl; const AControlArray: array of TControl): Integer;
+//находит позицию V в одномерном массиве контролов
+begin
+  for var i := 0 to High(AControlArray) do
+    if AControl = AControlArray[i] then begin
+      Result := i;
+      Exit;
+    end;
+  Result := -1;
+end;
+
+function TMyArrayHelper.PosInArray(const AComponent: TComponent; const AComponentArray: array of TComponent): Integer;
+//находит позицию V в одномерном массиве компонентов
+begin
+  for var i := 0 to High(AComponentArray) do
+    if AComponent = AComponentArray[i] then begin
+      Result := i;
+      Exit;
+    end;
+  Result := -1;
+end;
+
+
 
 function TMyArrayHelper.PosInArray(const AValue: Variant; const AArray: TVarDynArray2; const AColumn: Integer; const AIgnoreCase: Boolean): Integer;
 //находит позицию первого уровня для двумерного массива, в которой в поле FNo находится значение V

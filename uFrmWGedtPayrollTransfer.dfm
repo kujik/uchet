@@ -1,27 +1,26 @@
 inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
   Caption = 'FrmWGedtPayrollTransfer'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
+  ClientWidth = 796
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    Width = 796
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 782
+      Width = 786
+      ExplicitWidth = 786
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 772
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 770
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 762
-              Height = 337
+              Width = 758
+              Height = 336
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitHeight = 120
               end
             end
             inherited pnlStatusBar: TPanel
-              Top = 338
-              Width = 762
+              Top = 337
+              Width = 758
               ExplicitTop = 337
               ExplicitWidth = 758
             end
@@ -41,19 +40,17 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 782
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 772
+              Width = 768
               inherited RowDetailData: TRowDetailPanelControlEh
                 ExplicitLeft = 30
                 ExplicitWidth = 32
               end
             end
             inherited pnlStatusBar: TPanel
-              Width = 772
+              Width = 768
               ExplicitWidth = 768
             end
           end
@@ -74,8 +71,12 @@ inherited FrmWGedtPayrollTransfer: TFrmWGedtPayrollTransfer
         end
       end
     end
+    inherited pnlFrmBtns: TPanel
+      Width = 786
+    end
   end
   inherited pnlStatusBar: TPanel
+    Width = 796
     inherited lblStatusBarR: TLabel
       Left = 723
       Height = 14

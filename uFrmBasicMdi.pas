@@ -12,7 +12,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, DBGridEhToolCtrls, DBCtrlsEh, TypInfo,
   MemTableDataEh, Db, ADODB, DataDriverEh, GridsEh, DBAxisGridsEh, DBGridEh,
-  Math, Vcl.StdCtrls, Buttons, uLabelColors, uData, uString, uFields;
+  Math, Vcl.StdCtrls, Buttons, uLabelColors, uData, uString, uFields,
+  Generics.Collections; // <-- добавлено для TDictionary
 
 {$R *.dfm}
 
@@ -60,6 +61,7 @@ type
   TMDIOpt = record
     DlgPanelStyle: TMDIDlgPanelStyle;        // стиль панели кнопок
     StatusBarMode: TMDIStatusMode;           // режим статусбара
+    DlgButtonsM: TVarDynArray2;              // кастомное задание кнопок на основной панели. автоматические в зависимости от режива в этом случае не создаются
     DlgButtonsL: TVarDynArray2;              // кастомные кнопки слева
     DlgButtonsR: TVarDynArray2;              // кастомные кнопки справа
     UseChbNoClose: Boolean;                  // показывать чекбокс "Не закрывать" (для fAdd/fCopy)
@@ -121,6 +123,21 @@ type
     FCtrlBegValuesStr, FCtrlCurrValuesStr: string; // сериализованные значения контролов
     FTab0Control: TWinControl;      // контрол, получающий фокус при Tab
     FHasError: Boolean;             // наличие ошибки в данных
+    FPanelOrderCache: TDictionary<TPanel, TControlArray>; // кеш порядка контролов для панелей
+
+    procedure BuildPanelOrder(APanel: TPanel);
+    function GetPanelOrder(APanel: TPanel): TControlArray;
+    function ArrayContainsId(const AArray: TVarDynArray; AId: Integer): Boolean;
+    function ArrayContainsName(const AArray: TVarDynArray; const AName: string): Boolean;
+    procedure SetPanelControlsVisibility(APanel: TPanel; const ShowIDs, HideIDs: TVarDynArray);
+    procedure ArrangeAllPanels;
+
+    procedure HandleCheckBoxRadioGroup(Sender: TObject);
+    procedure ClearCheckBoxGroup(GroupStartTag, GroupEndTag: Integer); overload;
+    procedure ClearCheckBoxGroup; overload;
+    procedure DisableCheckBoxGroup(GroupStartTag, GroupEndTag: Integer; Disabled: Boolean); overload;
+    procedure DisableCheckBoxGroup(Disabled: Boolean); overload;
+
     procedure SetError(Value: Boolean);
     procedure WMSysCommand(var Msg: TWMSysCommand); message WM_SYSCOMMAND;
   protected
@@ -249,6 +266,8 @@ type
     // инициализация новой формы (переопределение)
     procedure InitializeNewForm; override;
 
+    // деструктор формы
+    destructor Destroy;
     // показать форму в зависимости от опций
     class procedure ShowForm(AForm: TForm);
     // показать как MDI-дочернюю
@@ -277,6 +296,11 @@ type
     procedure Verify(Sender: TObject; onInput: Boolean = False); virtual;
     // глобальное событие (для расширения)
     procedure GlobalEvent(AEvent: Integer); virtual;
+
+    // методы управления видимостью кнопок и пересчёта положения панелей
+    procedure ArrangeControlsOnPanel(APanel: TPanel);                                  // расстановка контролов на панели с центрированием
+    procedure SetButtonsVisibilityAndArrange(const ShowIDs, HideIDs: TVarDynArray); overload;   // для всех панелей (Main, L, R, C)
+    procedure SetButtonsVisibilityAndArrange(APanelName: string; const ShowIDs, HideIDs: TVarDynArray); overload; // для конкретной панели по имени
 
     // статические методы для создания и отображения формы
     class function Show(AOwner: TComponent; ADoc: string;
@@ -379,9 +403,271 @@ begin
     AParent.Controls[i].Top := (AParent.Height - AParent.Controls[i].Height) div 2;
 end;
 
+procedure SortControlsByLeft(var AControls: TControlArray);
+var
+  i, j: Integer;
+  Temp: TControl;
+begin
+  for i := Low(AControls) to High(AControls) - 1 do
+    for j := i + 1 to High(AControls) do
+      if AControls[i].Left > AControls[j].Left then
+      begin
+        Temp := AControls[i];
+        AControls[i] := AControls[j];
+        AControls[j] := Temp;
+      end;
+end;
+
 //-----------------------------------------------------------------------------
 // Методы TFrmBasicMdi
 //-----------------------------------------------------------------------------
+
+procedure TFrmBasicMdi.BuildPanelOrder(APanel: TPanel);
+var
+  i: Integer;
+  Arr: TControlArray;
+begin
+  SetLength(Arr, APanel.ControlCount);
+  for i := 0 to APanel.ControlCount - 1 do
+    Arr[i] := APanel.Controls[i];
+  SortControlsByLeft(Arr);
+  FPanelOrderCache.AddOrSetValue(APanel, Arr);
+end;
+
+function TFrmBasicMdi.GetPanelOrder(APanel: TPanel): TControlArray;
+begin
+  if not FPanelOrderCache.TryGetValue(APanel, Result) then
+  begin
+    BuildPanelOrder(APanel);
+    FPanelOrderCache.TryGetValue(APanel, Result);
+  end;
+end;
+
+function TFrmBasicMdi.ArrayContainsId(const AArray: TVarDynArray; AId: Integer): Boolean;
+// проверяет, содержится ли число AId в массиве вариантов
+var
+  V: Variant;
+begin
+  Result := False;
+  for V in AArray do
+    if (S.VarType(V) = varInteger) and (Integer(V) = AId) then
+      Exit(True);
+end;
+
+function TFrmBasicMdi.ArrayContainsName(const AArray: TVarDynArray; const AName: string): Boolean;
+// проверяет, содержится ли строка AName в массиве вариантов
+var
+  V: Variant;
+begin
+  Result := False;
+  for V in AArray do
+    if (S.VarType(V) = varString) and (string(V) = AName) then
+      Exit(True);
+end;
+
+procedure TFrmBasicMdi.SetPanelControlsVisibility(APanel: TPanel; const ShowIDs, HideIDs: TVarDynArray);
+// устанавливает видимость контролов на панели в соответствии с массивами ShowIDs и HideIDs,
+// обрабатывает разделители (оставляет только первый из подряд идущих), затем пересчитывает расположение.
+var
+  Order: TControlArray;
+  Ctrl: TControl;
+  LastWasBevel: Boolean;
+begin
+  if APanel = nil then Exit;
+  Order := GetPanelOrder(APanel);
+
+  // 1. установка видимости по переданным массивам
+  for Ctrl in Order do
+  begin
+    if Ctrl is TBitBtn then
+    begin
+      if ArrayContainsId(ShowIDs, Ctrl.Tag) then
+        Ctrl.Visible := True
+      else if ArrayContainsId(HideIDs, Ctrl.Tag) then
+        Ctrl.Visible := False;
+      // иначе оставляем как есть
+    end
+    else if Ctrl is TBevel then
+    begin
+      // разделители пока не трогаем
+    end
+    else
+    begin
+      // другие контролы (чекбоксы, панели и т.д.) – управляем по имени
+      if ArrayContainsName(ShowIDs, Ctrl.Name) then
+        Ctrl.Visible := True
+      else if ArrayContainsName(HideIDs, Ctrl.Name) then
+        Ctrl.Visible := False;
+    end;
+  end;
+
+  // 2. обработка разделителей: если подряд идут несколько Bevel, оставляем только первый
+  LastWasBevel := False;
+  for Ctrl in Order do
+  begin
+    if Ctrl is TBevel then
+    begin
+      if LastWasBevel then
+        Ctrl.Visible := False
+      else
+        LastWasBevel := True;
+    end
+    else
+    begin
+      // если есть видимый не-Bevel контрол, сбрасываем флаг для последующих разделителей
+      if Ctrl.Visible then
+        LastWasBevel := False;
+    end;
+  end;
+
+  // 3. расстановка и центрирование
+  ArrangeControlsOnPanel(APanel);
+end;
+
+procedure TFrmBasicMdi.ArrangeControlsOnPanel(APanel: TPanel);
+// расставляет видимые контролы на панели по горизонтали с отступом MY_FORMPRM_BTN_H_MARGIN
+// и центрирует их по вертикали внутри панели, кроме разделителей bvlV*
+var
+  Order: TControlArray;
+  Ctrl: TControl;
+  X, Y: Integer;
+  BevelHeight: Integer;
+begin
+  if APanel = nil then
+    Exit;
+  Order := GetPanelOrder(APanel);
+  X := MY_FORMPRM_BTN_H_MARGIN;
+  for Ctrl in Order do
+    if Ctrl.Visible then begin
+      // специальная обработка вертикальных разделителей bvlV*
+      if (Ctrl is TBevel) and (Pos('bvlV', Ctrl.Name) = 1) then begin
+        Ctrl.Width := 2;
+        BevelHeight := APanel.Height - 8; // отступы 4 сверху и 4 снизу
+        if BevelHeight < 2 then
+          BevelHeight := 2;
+        Ctrl.Height := BevelHeight;
+        Ctrl.Top := 4;
+      end
+      else begin
+        // вертикальное центрирование для остальных контролов
+        Y := (APanel.Height - Ctrl.Height) div 2;
+        if Y < 0 then
+          Y := 0;
+        Ctrl.Top := Y;
+      end;
+      Ctrl.Left := X;
+      X := X + Ctrl.Width + MY_FORMPRM_BTN_H_MARGIN;
+    end;
+  // устанавливаем ширину панели
+  if X > MY_FORMPRM_BTN_H_MARGIN then
+    APanel.Width := X
+  else
+    APanel.Width := 0;
+end;
+procedure TFrmBasicMdi.ArrangeAllPanels;
+// пересчёт расположения контролов на всех основных панелях
+begin
+  ArrangeControlsOnPanel(pnlFrmBtnsMain);
+  ArrangeControlsOnPanel(pnlFrmBtnsL);
+  ArrangeControlsOnPanel(pnlFrmBtnsR);
+  ArrangeControlsOnPanel(pnlFrmBtnsC);
+end;
+
+procedure TFrmBasicMdi.SetButtonsVisibilityAndArrange(const ShowIDs, HideIDs: TVarDynArray);
+// публичный метод для всех панелей (Main, L, R, C)
+var
+  Panels: array[0..3] of TPanel;
+  P: TPanel;
+begin
+  Panels[0] := pnlFrmBtnsMain;
+  Panels[1] := pnlFrmBtnsL;
+  Panels[2] := pnlFrmBtnsR;
+  Panels[3] := pnlFrmBtnsC;
+  for P in Panels do
+    if Assigned(P) then
+      SetPanelControlsVisibility(P, ShowIDs, HideIDs);
+end;
+
+procedure TFrmBasicMdi.SetButtonsVisibilityAndArrange(APanelName: string; const ShowIDs, HideIDs: TVarDynArray);
+// публичный метод для конкретной панели по имени
+var
+  P: TPanel;
+begin
+  P := FindComponent(APanelName) as TPanel;
+  if Assigned(P) then
+    SetPanelControlsVisibility(P, ShowIDs, HideIDs)
+  else
+    raise Exception.CreateFmt('Панель "%s" не найдена', [APanelName]);
+end;
+
+{
+обработка чекбоксов
+}
+
+
+procedure TFrmBasicMdi.HandleCheckBoxRadioGroup(Sender: TObject);
+// обработка чекбоксов, работающих как радиокнопки, с возможностью снятия всех
+// теги от CHECKBOX_GROUP_START_TAG до CHECKBOX_GROUP_END_TAG (-20..-1)
+// поддиапазон CHECKBOX_RADIO_GROUP_START_TAG..CHECKBOX_GROUP_END_TAG (-10..-1) - радио (нельзя снять все)
+// поддиапазон CHECKBOX_GROUP_START_TAG..CHECKBOX_RADIO_GROUP_START_TAG-1 (-20..-11) - можно снять все
+var
+  i: Integer;
+begin
+  if not (Sender is TDBCheckBoxEh) then Exit;
+  if (TControl(Sender).Tag < CHECKBOX_GROUP_START_TAG) or (TControl(Sender).Tag > CHECKBOX_GROUP_END_TAG) then Exit;
+  // сначала снимаем все чекбоксы в группе
+  for i := 0 to ComponentCount - 1 do
+    if (Components[i] is TDBCheckBoxEh) and (Sender <> Components[i]) and
+       (TControl(Components[i]).Tag >= CHECKBOX_GROUP_START_TAG) and
+       (TControl(Components[i]).Tag <= CHECKBOX_GROUP_END_TAG) then
+      TDBCheckBoxEh(Components[i]).Checked := False;
+  // если тег в диапазоне радио (нельзя снять все), то если после снятия чекбокс не выбран,
+  // восстанавливаем его в True и выходим
+  if (TControl(Sender).Tag >= CHECKBOX_RADIO_GROUP_START_TAG) and
+     (TControl(Sender).Tag <= CHECKBOX_GROUP_END_TAG) and
+     (not TDBCheckBoxEh(Sender).Checked) then
+  begin
+    TDBCheckBoxEh(Sender).Checked := True;
+    FInControlOnChaange := False; // предотвращаем повторный вход
+    Exit;
+  end;
+end;
+
+procedure TFrmBasicMdi.ClearCheckBoxGroup(GroupStartTag, GroupEndTag: Integer);
+// снять все чекбоксы в указанном диапазоне тегов
+var
+  i: Integer;
+begin
+  for i := 0 to ComponentCount - 1 do
+    if (Components[i] is TDBCheckBoxEh) and
+       (TControl(Components[i]).Tag >= GroupStartTag) and
+       (TControl(Components[i]).Tag <= GroupEndTag) then
+      TDBCheckBoxEh(Components[i]).Checked := False;
+end;
+
+procedure TFrmBasicMdi.ClearCheckBoxGroup;
+begin
+  ClearCheckBoxGroup(CHECKBOX_GROUP_START_TAG, CHECKBOX_GROUP_END_TAG);
+end;
+
+procedure TFrmBasicMdi.DisableCheckBoxGroup(GroupStartTag, GroupEndTag: Integer; Disabled: Boolean);
+// отключить/включить чекбоксы в указанном диапазоне тегов
+var
+  i: Integer;
+begin
+  for i := 0 to ComponentCount - 1 do
+    if (Components[i] is TDBCheckBoxEh) and
+       (TControl(Components[i]).Tag >= GroupStartTag) and
+       (TControl(Components[i]).Tag <= GroupEndTag) then
+      TDBCheckBoxEh(Components[i]).Enabled := not Disabled;
+end;
+
+procedure TFrmBasicMdi.DisableCheckBoxGroup(Disabled: Boolean);
+begin
+  DisableCheckBoxGroup(CHECKBOX_GROUP_START_TAG, CHECKBOX_GROUP_END_TAG, Disabled);
+end;
+
+// ----- остальные методы -----
 
 procedure TFrmBasicMdi.RefreshStatusBar(TextLeft, TextRight: Variant; AVisible: Boolean);
 // обновление статусбара: установка текста (левый/правый) и видимости.
@@ -522,35 +808,47 @@ begin
   SetPanelsAlign(pnlFrmBtnsContainer);
 
   // создание основных кнопок Ок / Отмена
-  Cth.CreateButtons(pnlFrmBtnsMain,
-    [
-      [mbtOk, Mode in [fEdit, fAdd, fCopy, fDelete], S.Decode([Mode, fDelete, 'Удалить', 'Ок']), S.Decode([Mode, fDelete, 'delete', 'ok'])],
-      [mbtCancel, True, S.Decode([Mode, fView, 'Закрыть', fNone, 'Закрыть', 'Отмена']), S.Decode([Mode, fView, 'viewclose', fNone, 'cancel', 'cancel'])]
-    ],
-    btnCancelClick, cbttBNormal, '', 0, 0, False);
-
-  // временно увеличиваем ширину панели, чтобы избежать сдвигов
-  pnlFrmBtnsMain.AutoSize := False;
-  pnlFrmBtnsMain.Width := 1024 * 10;
-
-  // назначение обработчиков для кнопок
-  if Mode in [fView, fNone] then
-    btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[0])
+  btnOk :=  nil;
+  btnCancel := nil;
+  if Length(FOpt.DlgButtonsM) > 0 then begin
+     if Length(FOpt.DlgButtonsM[0]) > 0 then
+       Cth.CreateButtons(pnlFrmBtnsMain, FOpt.DlgButtonsM, btnClick, cbttBNormal, '', 0, 0, False)
+     else
+       pnlFrmBtnsMain.Width := 0;
+  end
   else begin
-    btnOk := TBitBtn(pnlFrmBtnsMain.Controls[0]);
-    btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[1]);
+    Cth.CreateButtons(pnlFrmBtnsMain,
+      [
+        [mbtOk, Mode in [fEdit, fAdd, fCopy, fDelete], S.Decode([Mode, fDelete, 'Удалить', 'Ок']), S.Decode([Mode, fDelete, 'delete', 'ok'])],
+        [mbtCancel, True, S.Decode([Mode, fView, 'Закрыть', fNone, 'Закрыть', 'Отмена']), S.Decode([Mode, fView, 'viewclose', fNone, 'cancel', 'cancel'])]
+      ],
+      btnCancelClick, cbttBNormal, '', 0, 0, False
+    );
+
+    // временно увеличиваем ширину панели, чтобы избежать сдвигов
+    pnlFrmBtnsMain.AutoSize := False;
+    pnlFrmBtnsMain.Width := 1024 * 10;
+
+    // назначение обработчиков для кнопок
+    if Mode in [fView, fNone] then
+      btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[0])
+    else begin
+      btnOk := TBitBtn(pnlFrmBtnsMain.Controls[0]);
+      btnCancel := TBitBtn(pnlFrmBtnsMain.Controls[1]);
+    end;
+
+    if btnOk <> nil then begin
+      TButton(btnOk).OnClick := btnOkClick;
+      TButton(btnOk).Cancel := False;
+      TButton(btnOk).ModalResult := mrNone;
+    end;
+    if btnCancel <> nil then begin
+      TButton(btnCancel).OnClick := btnCancelClick;
+      TButton(btnCancel).Cancel := FMode in [fView, fDelete];
+      TButton(btnCancel).ModalResult := mrCancel;
+    end;
   end;
 
-  if btnOk <> nil then begin
-    TButton(btnOk).OnClick := btnOkClick;
-    TButton(btnOk).Cancel := False;
-    TButton(btnOk).ModalResult := mrNone;
-  end;
-  if btnCancel <> nil then begin
-    TButton(btnCancel).OnClick := btnCancelClick;
-    TButton(btnCancel).Cancel := FMode in [fView, fDelete];
-    TButton(btnCancel).ModalResult := mrCancel;
-  end;
   Self.ModalResult := mrNone;
 
   // левая панель
@@ -590,6 +888,9 @@ begin
     TWinControl(pnlFrmBtnsContainer.Controls[i]).Height := pnlFrmBtnsContainer.ClientHeight;
     VertAlignCtrls(TWinControl(pnlFrmBtnsContainer.Controls[i]));
   end;
+
+  // дополнительная расстановка с учётом кеша (для единообразия с публичными методами)
+  ArrangeAllPanels;
 
   pnlFrmBtnsMain.AutoSize := True;
   FDlgPanelMinWidth := Self.Width - pnlFrmBtnsC.Width;
@@ -653,6 +954,8 @@ begin
     FStatusBarHeight := -1;
     Exit;
   end;
+  // инициализация кеша порядка контролов
+  FPanelOrderCache := TDictionary<TPanel, TControlArray>.Create;
   if not (myfoModal in MyFormOptions) then begin
     FS := @FormStyle;
     FS^ := fsMDIChild;
@@ -660,6 +963,12 @@ begin
     FS := @FormStyle;
     FS^ := fsNormal;
   end;
+end;
+
+destructor TFrmBasicMdi.Destroy;
+begin
+  FPanelOrderCache.Free;
+  inherited;
 end;
 
 class procedure TFrmBasicMdi.ShowForm(AForm: TForm);
@@ -1425,49 +1734,6 @@ begin
 
   RefreshStatusBar('*', '*', True);
 end;
-
-
-
-
-
-
-(*
-procedure TFrmBasicMdi.Verify(Sender: TObject; onInput: Boolean = False);
-// основная проверка данных: контролы, гриды, дополнительная проверка
-var
-  GridsErr: Boolean;
-  GridsErrSt: string;
-  GridsCh: Boolean;
-  b: Boolean;
-begin
-  if FInPrepare and (Sender <> nil) then Exit;
-  FErrorMessage := '';
-
-  if (Mode = fView) or (Mode = fDelete) then begin
-    HasError := False;
-    FIsDataChanged := False;
-    if btnOk <> nil then
-      btnOk.Enabled := not HasError;
-    Exit;
-  end;
-
-  if Sender = nil then begin
-    Cth.VerifyAllDbEhControls(Self);
-    VerirfyGrids(nil, GridsErr, GridsErrSt, GridsCh);
-  end else begin
-    Cth.VerifyControl(TControl(Sender), onInput);
-    VerirfyGrids(nil, GridsErr, GridsErrSt, GridsCh);
-  end;
-
-  b := VerifyAdd(Sender, onInput);
-  HasError := not Cth.VerifyVisualise(Self) or b or GridsErr;
-
-  if not FInPrepare then
-    FIsDataChanged := (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or GridsCh;
-
-  RefreshStatusBar('*', '*', True);
-end;
-*)
 
 procedure TFrmBasicMdi.SetError(Value: Boolean);
 // установка статуса ошибки (блокирует кнопку Ок)

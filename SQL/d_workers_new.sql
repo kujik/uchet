@@ -1514,33 +1514,36 @@ end;
 --delete from w_payroll_transfer;
    
 
---вью для элемента (записи по работнику в данном подразделении) зарплатных ведомостей
 create or replace view v_w_payroll_transfer_item as 
+--вью для записей по работнику в ведомостях к перечислению
+--подраздение выдается на момент конечно даты ведомости,
+--соответственно для уволенных неправильно
 select
   i.*,
   p.dt,
---  p.dt2,
   p.id_employee as id_target_employee,
   e.name as employee,
-  --e.is_concurrent,
   o.name as organization,
-  --d.name as departament,
+  ep.departament,
   0 as changed,
   null as temp
 from
   w_payroll_transfer_item i,
   w_payroll_transfer p,
   v_w_employees e,
+  v_w_employee_properties ep,
   ref_sn_organizations o
-  --w_departaments d
 where
   i.id_payroll_transfer = p.id and
   i.id_employee (+) = e.id and 
   i.id_organization = o.id (+) 
-  --and p.id_departament (+) = d.id 
+  and ep.id_employee = i.id_employee  
+  and  ep.is_terminated <> 1
+  and ep.dt_beg <= last_day(p.dt)
+  and nvl(ep.dt_end, sysdate) >= nvl(last_day(p.dt),sysdate) 
 ;     
 
-
+  
 --------------------------------------------------------------------------------
 
 create table w_payroll_cash ( 

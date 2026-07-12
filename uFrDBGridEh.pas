@@ -2431,11 +2431,11 @@ begin
     Exit;
   FInAddControlChange := True;
   //чекбоксы с тегом -2..-10 обработаем как радиобаттоны, а -11..-20 так же, но с возможностью снятия
-  if (Sender is TDBCheckBoxEh) and (TControl(Sender).Tag >= -20) and (TControl(Sender).Tag <= -1) and IsPrepared then begin
+  if (Sender is TDBCheckBoxEh) and (TControl(Sender).Tag >= CHECKBOX_GROUP_START_TAG) and (TControl(Sender).Tag <= CHECKBOX_GROUP_END_TAG) and IsPrepared then begin
     for i := 0 to ComponentCount - 1 do
-      if (Components[i] is TDBCheckBoxEh) and (Sender <> Components[i]) and (TControl(Components[i]).Tag >= -20) and (TControl(Components[i]).Tag <= -1) then
+      if (Components[i] is TDBCheckBoxEh) and (Sender <> Components[i]) and (TControl(Components[i]).Tag >= CHECKBOX_GROUP_START_TAG) and (TControl(Components[i]).Tag <= CHECKBOX_GROUP_END_TAG) then
         TDBCheckBoxEh(Components[i]).Checked := False;
-    if (TControl(Sender).Tag >= -10) and (TControl(Sender).Tag <= -1) and (not TDBCheckBoxEh(Sender).Checked) then begin
+    if (TControl(Sender).Tag >= CHECKBOX_RADIO_GROUP_START_TAG) and (TControl(Sender).Tag <= CHECKBOX_GROUP_END_TAG) and (not TDBCheckBoxEh(Sender).Checked) then begin
       TDBCheckBoxEh(Sender).Checked := True;
       FInAddControlChange := False;
       Exit;

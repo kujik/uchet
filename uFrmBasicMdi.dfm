@@ -2,8 +2,8 @@ object FrmBasicMdi: TFrmBasicMdi
   Left = 0
   Top = 0
   Caption = 'FrmBasicMdi'
-  ClientHeight = 97
-  ClientWidth = 266
+  ClientHeight = 96
+  ClientWidth = 262
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,31 +20,31 @@ object FrmBasicMdi: TFrmBasicMdi
   object pnlFrmMain: TPanel
     Left = 0
     Top = 0
-    Width = 266
-    Height = 81
+    Width = 262
+    Height = 80
     Align = alClient
     AutoSize = True
     Padding.Left = 4
     Padding.Top = 4
     Padding.Right = 4
     TabOrder = 0
-    ExplicitWidth = 262
-    ExplicitHeight = 80
+    ExplicitWidth = 258
+    ExplicitHeight = 79
     object pnlFrmClient: TPanel
       Left = 5
       Top = 5
-      Width = 256
-      Height = 32
+      Width = 252
+      Height = 31
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitWidth = 252
-      ExplicitHeight = 31
+      ExplicitWidth = 248
+      ExplicitHeight = 30
     end
     object pnlFrmBtns: TPanel
       Left = 5
-      Top = 37
-      Width = 256
+      Top = 36
+      Width = 252
       Height = 43
       Margins.Left = 0
       Margins.Top = 0
@@ -57,12 +57,12 @@ object FrmBasicMdi: TFrmBasicMdi
       Ctl3D = True
       ParentCtl3D = False
       TabOrder = 1
-      ExplicitTop = 36
-      ExplicitWidth = 252
+      ExplicitTop = 35
+      ExplicitWidth = 248
       object bvlFrmBtnsTl: TBevel
         Left = 1
         Top = 1
-        Width = 254
+        Width = 250
         Height = 3
         Align = alTop
         ExplicitWidth = 782
@@ -70,7 +70,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object bvlFrmBtnsB: TBevel
         Left = 1
         Top = 39
-        Width = 254
+        Width = 250
         Height = 3
         Align = alBottom
         ExplicitLeft = 7
@@ -80,7 +80,7 @@ object FrmBasicMdi: TFrmBasicMdi
       object pnlFrmBtnsContainer: TPanel
         Left = 1
         Top = 4
-        Width = 254
+        Width = 250
         Height = 35
         Margins.Left = 0
         Margins.Top = 0
@@ -94,28 +94,28 @@ object FrmBasicMdi: TFrmBasicMdi
         Padding.Bottom = 4
         ParentCtl3D = False
         TabOrder = 0
-        ExplicitWidth = 250
+        ExplicitWidth = 246
         object pnlFrmBtnsMain: TPanel
           Tag = -1
-          Left = 155
+          Left = 151
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'pnlFrmBtnsMain'
           TabOrder = 0
-          ExplicitLeft = 151
+          ExplicitLeft = 147
         end
         object pnlFrmBtnsChb: TPanel
           Tag = -2
-          Left = -73
+          Left = -77
           Top = 4
           Width = 129
           Height = 27
           Align = alRight
           Caption = 'pnlFrmBtnsChb'
           TabOrder = 1
-          ExplicitLeft = -77
+          ExplicitLeft = -81
           DesignSize = (
             129
             27)
@@ -131,14 +131,14 @@ object FrmBasicMdi: TFrmBasicMdi
         end
         object pnlFrmBtnsR: TPanel
           Tag = -3
-          Left = 56
+          Left = 52
           Top = 4
           Width = 99
           Height = 27
           Align = alRight
           Caption = 'pnlFrmBtnsR'
           TabOrder = 2
-          ExplicitLeft = 52
+          ExplicitLeft = 48
         end
         object pnlFrmBtnsInfo: TPanel
           Tag = 1
@@ -180,8 +180,8 @@ object FrmBasicMdi: TFrmBasicMdi
   end
   object pnlStatusBar: TPanel
     Left = 0
-    Top = 81
-    Width = 266
+    Top = 80
+    Width = 262
     Height = 16
     Align = alBottom
     Color = cl3DLight
@@ -189,10 +189,10 @@ object FrmBasicMdi: TFrmBasicMdi
     Padding.Right = 8
     ParentBackground = False
     TabOrder = 1
-    ExplicitTop = 80
-    ExplicitWidth = 262
+    ExplicitTop = 79
+    ExplicitWidth = 258
     object lblStatusBarR: TLabel
-      Left = 193
+      Left = 189
       Top = 1
       Width = 64
       Height = 14

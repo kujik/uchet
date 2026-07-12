@@ -73,7 +73,7 @@ const
     'id$i;id_employee$i;id_organization$i;personnel_number$s;' +
     'total_pay$f;ors_pay$f;is_concurrent$f;deduct_enf$f;deduct_ndfl$f;pay_fss$f;pay_adv$f;pay_adv2$f;pay_adv3$f;pay_adv4$f;pay_adv5$f;pay_card$f;correction$f;advance$f;advance_official$f;pay_cash$f';
   cFieldsL =
-    'employee$s;organization$s;changed$i;temp$i';
+    'employee$s;organization$s;changed$i;departament$s;temp$i';
 
   cmbtDeduction = 1001;
   cmbtCard = 1002;
@@ -126,13 +126,14 @@ begin
 
     ['employee$s', 'Работник|ФИО', '200;h'],
     ['organization$s', '!Организация', '100'],
+    ['departament$s', '!Подразделение', '200'],
     ['personnel_number$s', '!Табельный номер', '60'],
     ['is_concurrent$i', '!Совмес-'#13#10'титель', '60', 'pic' ,'i'],
 
     ['total_pay$f', '~Итого' + sLineBreak + ' начислено', wcol, fcol],
     ['ors_pay$f', '~ОРС '#13#10'сумма', wcol, fcol, 'i', (Mode <> fEdit) or True],
     ['deduct_enf$f', '~Удержано/ '#13#10'Исп. лист', wcol, fcol, 't=1'],
-    ['deduct_ndfl$f', '~НДФЛ', wcol, fcol, 't=1'],
+    ['deduct_ndfl$f', '~НДФЛ', wcol, fcol, 't=1', 'i'],
     ['pay_fss$f', '~Выплачено'#13#10' ФСС', wcol, fcol, 't=1'],
     ['pay_adv$f', '~Промежуточная'#13#10' выплата', wcol, fcol, 't=1'],
     ['pay_adv2$f', '~Промежуточная'#13#10' выплата 2', wcol, fcol, 't=1'],
@@ -320,7 +321,7 @@ end;
 
 procedure TFrmWGedtPayrollTransfer.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
-  if A.InArray(FieldName, ['employee', 'organization', 'personnel_number', 'is_concurrent']) then
+  if A.InArray(FieldName, ['employee', 'organization', 'personnel_number', 'is_concurrent', 'departament']) then
       Params.Background := clmyGray;
   if A.InArray(FieldName, ['total_pay', 'pay_cash']) then
       Params.Background := RGB(220, 255, 190);
@@ -564,7 +565,7 @@ begin
   if Row = -1 then
     Row := Frg1.MemTableEh1.RecNo - 1;
   Frg1.SetValue('pay_cash', Row, False, RoundTo(
-    Frg1.GetValueF('total_pay', Row, False) - Frg1.GetValueF('deduct_enf', Row, False) - Frg1.GetValueF('deduct_ndfl', Row, False) - Frg1.GetValueF('pay_fss', Row, False) -
+    Frg1.GetValueF('total_pay', Row, False) - Frg1.GetValueF('deduct_enf', Row, False){ - Frg1.GetValueF('deduct_ndfl', Row, False)} - Frg1.GetValueF('pay_fss', Row, False) -
     Frg1.GetValueF('advance', Row, False) - Frg1.GetValueF('advance_official', Row, False) -
     Frg1.GetValueF('pay_adv', Row, False) - Frg1.GetValueF('pay_adv2', Row, False) - Frg1.GetValueF('pay_adv3', Row, False) - Frg1.GetValueF('pay_adv4', Row, False) - Frg1.GetValueF('pay_adv5', Row, False) -
     Frg1.GetValueF('pay_card', Row, False) + Frg1.GetValueF('correction', Row, False), 2
@@ -701,7 +702,7 @@ begin
     if (sh.Cells[2 - 1, i].Value.AsString = '') then
       Continue;
     //фио, таб.номер, ндфл, карта, организация(из заголовка)
-    ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, org]];
+    ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, 0 {sh.Cells[8 - 1, i].Value.AsFloat}, sh.Cells[6 - 1, i].Value.AsFloat, org]];
   end;
   sh.Free;
   XlsFile.Free;
@@ -728,13 +729,13 @@ begin
               e2 := e2 + ArXls[k][3].AsFloat;
             end;
         //проверим что полученные данные численно отличаются от того что уже в ведомости
-        if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
+  {      if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
           //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
           st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец НДФЛ с ' + Frg1.GetValueS('deduct_ndfl', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e1))) + #13#10;
           Frg1.SetValue('deduct_ndfl', i, False, S.NullIf0(e1));
           Frg1.SetState(True, null, null);
           b1 := True;
-        end;
+        end;       }
         if Frg1.GetValueF('pay_card', i, False) <> Round(e2) then begin
           //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
           st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец Карта с ' + Frg1.GetValueS('pay_card', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e2))) + #13#10;
@@ -1058,7 +1059,7 @@ begin
         Break;
       //фио, таб.номер, ндфл, карта, удержания, организация(из заголовка)
       //!!удержаний пока нет!
-      ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, 0, org]];
+      ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, 0 {sh.Cells[5 - 1, i].Value.AsString}, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, 0, org]];
     end;
     sh.Free;
     XlsFile.Free;
@@ -1089,13 +1090,13 @@ begin
             end;
         e1 := Round(e1); e2 := Round(e2); e3 := Round(e3);
         //проверим что полученные данные численно отличаются от того что уже в ведомости
-        if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
+{        if Frg1.GetValueF('deduct_ndfl', i, False) <> Round(e1) then begin
           //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
           st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец НДФЛ с ' + Frg1.GetValueS('deduct_ndfl', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e1))) + #13#10;
           Frg1.SetValue('deduct_ndfl', i, False, S.NullIf0(e1));
           Frg1.SetState(True, null, null);
           b1 := True;
-        end;
+        end;}
         if Frg1.GetValueF('pay_card', i, False) <> Round(e2) then begin
           //если отличаются - заполним ведомсть, статус из менения, и выдадим сообщение
           st := st + Frg1.GetValueS('employee', i, False) + ': Изменен столбец Карта с ' + Frg1.GetValueS('pay_card', i, False) + ' на ' + VarToStr(S.NullIf0(Round(e2))) + #13#10;

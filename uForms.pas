@@ -34,6 +34,11 @@ const
   MY_FORMPRM_LABEL_H = 13;
   MY_FORMPRM_CONTROL_H = 21;
 
+  // диапазоны тегов для групповой работы чекбоксов
+  CHECKBOX_GROUP_START_TAG = -20;
+  CHECKBOX_GROUP_END_TAG   = -1;
+  CHECKBOX_RADIO_GROUP_START_TAG = -10; // теги от -10 до -1 - обычное радио (нельзя снять все)
+
   //типы кнопок
   cbttSBig = 1;        //TSpeedButton MY_FORMPRM_SPEEDBTN_DEF_H - большой квадратный
   cbttSSmall = 2;      //TSpeedButton MY_FORMPRM_BTN_DEF_H - малый квадратный
@@ -380,6 +385,9 @@ function  EnumComponents(AParent: TComponent; AControlName: string; ASuffix: Int
     function GetTextWidth(const AText: string; const AFont: TFont): Integer;
     //рассчитать высоту текста с переносом
     function GetWordWrapHeight(const AText: string; const AFont: TFont; const AWidth: Integer): Integer;
+    //автоматическая подгонка ширины для всех TCheckBox и TDBCheckBoxEh в AParent (рекурсивно)
+    procedure AutoSizeCheckBoxes(AParent: TWinControl; const AIncludeControls: TControlArray = []; const AExcludeControls: TControlArray = []; const AIncludeNames: TVarDynArray = []; const AExcludeNames: TVarDynArray = []); overload;
+    procedure AutoSizeCheckBoxes(AParent: TWinControl; const AIncludeNames, AExcludeNames: TVarDynArray); overload;
 end;
 
 var
@@ -4447,6 +4455,74 @@ begin
     bmp.Free;
   end;
 end;
+
+
+procedure TControlsHelper.AutoSizeCheckBoxes(AParent: TWinControl; const AIncludeControls: TControlArray = []; const AExcludeControls: TControlArray = []; const AIncludeNames: TVarDynArray = []; const AExcludeNames: TVarDynArray = []);
+// автоматическая подгонка ширины для всех TCheckBox и TDBCheckBoxEh в AParent (рекурсивно)
+// AIncludeControls – список контролов, которые надо обработать (если не пуст, только они)
+// AExcludeControls – список контролов, которые не надо обрабатывать
+// AIncludeNames – список имён контролов, которые надо обработать
+// AExcludeNames – список имён контролов, которые не надо обрабатывать
+var
+  i: Integer;
+  c: TControl;
+  CheckBox: TCustomCheckBox;
+  ExtraWidth: Integer;
+  Canvas: TControlCanvas;
+  bmp: TBitmap;
+  IsIncluded, IsExcluded: Boolean;
+begin
+  if AParent = nil then
+    Exit;
+  bmp := TBitmap.Create;
+  try
+    for i := 0 to AParent.ControlCount - 1 do begin
+      c := AParent.Controls[i];
+      // рекурсивный обход для дочерних контейнеров
+      if c is TWinControl then
+        AutoSizeCheckBoxes(TWinControl(c), AIncludeControls, AExcludeControls, AIncludeNames, AExcludeNames);
+      // проверяем, что это чекбокс
+      if not (c is TCustomCheckBox) then
+        Continue;
+      CheckBox := TCustomCheckBox(c);
+      // фильтры включения
+      IsIncluded := True;
+      if Length(AIncludeControls) > 0 then
+        IsIncluded := A.PosInArray(c, AIncludeControls) > 0;
+      if IsIncluded and (Length(AIncludeNames) > 0) then
+        IsIncluded := A.PosInArray(c.Name, AIncludeNames) > 0;
+      // фильтры исключения
+      IsExcluded := False;
+      if Length(AExcludeControls) > 0 then
+        IsExcluded := A.PosInArray(c, AExcludeControls) > 0;
+      if not IsExcluded and (Length(AExcludeNames) > 0) then
+        IsExcluded := A.PosInArray(c.Name, AExcludeNames) > 0;
+
+      if not IsIncluded or IsExcluded then
+        Continue;
+      // вычисляем ширину
+      if CheckBox is TDBCheckBoxEh then
+        bmp.Canvas.Font := TDBCheckBoxEh(CheckBox).Font
+      else
+        bmp.Canvas.Font := TCheckBox(CheckBox).Font;
+      // отступ: сам чекбокс (~13-16) + промежуток до текста (~4-6) + отступы
+      ExtraWidth := 20 + CheckBox.Margins.Left + CheckBox.Margins.Right + CheckBox.Padding.Left + CheckBox.Padding.Right;
+      if CheckBox is TDBCheckBoxEh then
+        CheckBox.Width := bmp.Canvas.TextWidth(TDBCheckBoxEh(CheckBox).Caption) + ExtraWidth
+      else
+        CheckBox.Width := bmp.Canvas.TextWidth(TCheckBox(CheckBox).Caption) + ExtraWidth;
+    end;
+  finally
+    bmp.Free;
+  end;
+end;
+
+procedure TControlsHelper.AutoSizeCheckBoxes(AParent: TWinControl; const AIncludeNames, AExcludeNames: TVarDynArray);
+// перегрузка с массивами имён
+begin
+  AutoSizeCheckBoxes(AParent, [], [], AIncludeNames, AExcludeNames);
+end;
+
 
 //==============================================================================
 //  TTableHelper

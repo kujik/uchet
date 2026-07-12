@@ -104,6 +104,9 @@ type
     pnlBasisInfo: TPanel;
     lblBasisInfo: TLabel;
     edt_launched_by_name: TDBEditEh;
+    bvlVt1: TBevel;
+    chbIsVerifyed: TDBCheckBoxEh;
+    bvlVt2: TBevel;
     procedure cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
     procedure FormResize(Sender: TObject);
     procedure AfterFormActivate; override;
@@ -184,7 +187,9 @@ const
 procedure TFrmOWOrder.AfterFormActivate;
 begin
   inherited;
-  pnlFrmBtnsMain.Hide;
+  //pnlFrmBtnsMain.Hide;
+  Cth.AutoSizeCheckBoxes(Self);
+  SetButtonsVisibilityAndArrange([], [mbtUnApprove, 'chbVisAddInfo']);
 end;
 
 procedure TFrmOWOrder.cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
@@ -1089,7 +1094,7 @@ end;
 procedure TFrmOWOrder.CreateButtons;
 begin
 //function TControlsHelper.CreateButtons(APanel: TPanel; AButtons: TVaRDynArray2; AOnClick: TNotifyEvent; AButtonType: Integer = 1 ; ASuffix: string = ''; APanMargins: Integer = 0; AHeight: Integer = 0; AVertical: Boolean = False): Integer;
-  Cth.CreateButtons(
+{  Cth.CreateButtons(
     pnlFrmBtnsL,
     [
     [mbtSave],
@@ -1100,7 +1105,18 @@ begin
     ],
     nil,
     cbttBNormal
-  );
+  );}
+
+   FOpt.DlgButtonsM :=
+    [
+    [mbtSave],
+    [mbtApprove],
+    [mbtUnApprove, True, 150],
+    [mbtGo],
+    [mbtDelete],
+    [mbtClose, True, 'Закрыть', 'cancel']
+    ];
+
 end;
 
 
