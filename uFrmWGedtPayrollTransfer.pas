@@ -1286,7 +1286,7 @@ begin
     if not CreateTXlsMemFileEhFromExists(MyData.FileOpenDialog1.Files[fn], True, '$2', XlsFile, st) then
       Exit;
     sh := XlsFile.Workbook.Worksheets[0];
-    for i := 2 to 2000 do begin
+    for i := 1 to 2000 do begin
       if (sh.Cells[1 - 1, i].Value.AsString = '') or (S.ToLower(sh.Cells[1 - 1, i].Value.AsString) = 'итого:') then
         Break;
    //   if (sh.Cells[4 - 1, i].Value.AsString = '') then

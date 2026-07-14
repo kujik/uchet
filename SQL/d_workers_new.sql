@@ -1511,14 +1511,11 @@ begin
   select nvl(:new.id, sq_w_payroll_transfer_item.nextval) into :new.id from dual;
 end;
 
---delete from w_payroll_transfer;
-   
-
-create or replace view v_w_payroll_transfer_item as 
+create or replace view v_w_payroll_transfer_item as
+select
 --вью для записей по работнику в ведомостях к перечислению
 --подраздение выдается на момент конечно даты ведомости,
 --соответственно для уволенных неправильно
-select
   i.*,
   p.dt,
   p.id_employee as id_target_employee,
@@ -1528,20 +1525,15 @@ select
   0 as changed,
   null as temp
 from
-  w_payroll_transfer_item i,
-  w_payroll_transfer p,
-  v_w_employees e,
-  v_w_employee_properties ep,
-  ref_sn_organizations o
-where
-  i.id_payroll_transfer = p.id and
-  i.id_employee (+) = e.id and 
-  i.id_organization = o.id (+) 
-  and ep.id_employee = i.id_employee  
-  and  ep.is_terminated <> 1
-  and ep.dt_beg <= last_day(p.dt)
-  and nvl(ep.dt_end, sysdate) >= nvl(last_day(p.dt),sysdate) 
-;     
+  w_payroll_transfer_item i
+  join w_payroll_transfer p on i.id_payroll_transfer = p.id
+  left join v_w_employees e on i.id_employee = e.id
+  left join ref_sn_organizations o on i.id_organization = o.id
+  left join v_w_employee_properties ep on ep.id_employee = i.id_employee
+    and nvl(ep.is_terminated, 0) <> 1
+    and nvl(ep.dt_beg, last_day(p.dt)) <= last_day(p.dt)
+    and nvl(ep.dt_end, last_day(p.dt)) >= nvl(last_day(p.dt), sysdate)
+;
 
   
 --------------------------------------------------------------------------------
