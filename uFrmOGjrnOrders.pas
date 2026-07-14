@@ -64,7 +64,8 @@ uses
   uFrmBasicInput,
   uFrmODEdtInputOrderAccount,
   uFrmXDinputPwd,
-  uFrmChooseDialog
+  uFrmChooseDialog,
+  D_Order
   ;
 
 
@@ -261,7 +262,8 @@ var
   i, j: Integer;
 begin
   if Tag = mbtTest then begin
-TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fEdit, Fr.ID, null);
+    TDlg_Order.ShowDialog(Self, 'od11111', fEdit, Fr.ID, [myfoSizeable, myfoDialog, myfoEnableMaximize], null);
+//TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fEdit, Fr.ID, null);
 //    Orders.EraseOutdatedOrders(Self);
 //    TFrmOWOrder.Show( Self, '_order', [myfodialog, myfoSizeable, myfoEnableMaximize], fEdit, Fr.ID, null);
 {    Fr.setstate(null, True, 'wqdwqsdfwefsdfsdfgsdgsdfgdfsgdfsgsdfgdfgdfgfd');exit;

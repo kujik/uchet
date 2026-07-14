@@ -19,7 +19,7 @@ type
     function  Save: Boolean; override;
     //события грида
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
-    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     //методы класса
     function  GetDataFromDb: Integer;
@@ -152,7 +152,7 @@ begin
     [mbtRefresh, True, 'Обновить данные из расчетных ведомостей'],[],
     [mbtDividorM],
     [cmbt1C, True, True, 'Загрузка данных из 1С', '1c'],
-    [cmbtCard, True, True, 'Загрузить НДФЛ и карты', ''],
+    [cmbtCard, True, True, 'Загрузить карты', ''],
     [cmbtAdvance, True, True, 'Загрузить аванс', ''],
     [cmbtAdvaPay1, True, True, 'Загрузить промежуточные выплаты 1', ''],
     [cmbtAdvaPay2, True, True, 'Загрузить промежуточные выплаты 2', ''],
@@ -337,7 +337,7 @@ begin
       if MyQuestionMessage('Загрузить данные из расчетных ведомостей?') = mrYes then
         GetDataFromCalc;
     cmbtCard:
-      if MyQuestionMessage('Загрузить НДФЛ и карты?') = mrYes then
+      if MyQuestionMessage('Загрузить карты?') = mrYes then
         GetNdflFromExcelZup;
     cmbtAdvance:
       if MyQuestionMessage('Загрузить авансовые выплаты?') = mrYes then
@@ -1059,7 +1059,7 @@ begin
         Break;
       //фио, таб.номер, ндфл, карта, удержания, организация(из заголовка)
       //!!удержаний пока нет!
-      ArXls := ArXls + [[sh.Cells[7 - 1, i].Value.AsString, 0 {sh.Cells[5 - 1, i].Value.AsString}, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, 0, org]];
+      ArXls := ArXls + [[sh.Cells[4 - 1, i].Value.AsString, sh.Cells[5 - 1, i].Value.AsString, sh.Cells[8 - 1, i].Value.AsFloat, sh.Cells[6 - 1, i].Value.AsFloat, 0, org]];
     end;
     sh.Free;
     XlsFile.Free;
@@ -1196,12 +1196,12 @@ begin
       Exit;
     sh := XlsFile.Workbook.Worksheets[0];
     org := sh.Cells[4 - 1, 1].Value.AsString;
-    for i := 9 to 2000 do begin
-      if (sh.Cells[1 - 1, i].Value.AsString = '') then
+    for i := 4 to 2000 do begin
+      if (sh.Cells[4 - 1, i].Value.AsString = '') then
         Break;
       //фио, таб.номер, ндфл, карта, удержания, организация(из заголовка)
       //!!удержаний пока нет!
-      ArXls := ArXls + [[sh.Cells[1 - 1, i].Value.AsString, sh.Cells[7 - 1, i].Value.AsString, 0, org]];
+      ArXls := ArXls + [[sh.Cells[4 - 1, i].Value.AsString, sh.Cells[6 - 1, i].Value.AsString, 0, org]];
     end;
     sh.Free;
     XlsFile.Free;

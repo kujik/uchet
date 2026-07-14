@@ -357,6 +357,8 @@ inherited FrmOWOrder: TFrmOWOrder
               MaxLength = 400
               TabOrder = 1
               Visible = True
+              OnCloseDropDownForm = edt_ComplaintsCloseDropDownForm
+              OnOpenDropDownForm = edt_ComplaintsOpenDropDownForm
               ExplicitHeight = 21
             end
           end
@@ -377,12 +379,12 @@ inherited FrmOWOrder: TFrmOWOrder
             Align = alLeft
             Caption = 'PHlBasis'
             TabOrder = 0
-            object m_basis: TDBMemoEh
+            object m_basis_text: TDBMemoEh
               Left = 1
               Top = 1
               Width = 70
               Height = 79
-              ControlLabel.Caption = #1044#1086#1087#1086#1083#1085#1077#1085#1080#1077
+              ControlLabel.Caption = #1054#1089#1085#1086#1074#1072#1085#1080#1077
               ControlLabelLocation.Position = lpLeftCenterEh
               ScrollBars = ssVertical
               Align = alClient
@@ -609,9 +611,9 @@ inherited FrmOWOrder: TFrmOWOrder
           Height = 234
           Align = alLeft
           TabOrder = 0
-          object dedt_dt: TDBDateTimeEditEh
-            Left = 72
-            Top = 25
+          object dedt_dt_beg: TDBDateTimeEditEh
+            Left = 74
+            Top = 22
             Width = 115
             Height = 21
             ControlLabel.Width = 62
@@ -691,7 +693,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 4
             Visible = True
           end
-          object dedt_dt_beg: TDBDateTimeEditEh
+          object dedt_dt_start: TDBDateTimeEditEh
             Left = 72
             Top = 79
             Width = 115
@@ -801,7 +803,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 3
             Visible = True
           end
-          object edt_order_number_custome: TDBEditEh
+          object edt_order_number_customer: TDBEditEh
             Left = 256
             Top = 134
             Width = 84
@@ -971,10 +973,7 @@ inherited FrmOWOrder: TFrmOWOrder
             ControlLabel.Visible = True
             ControlLabelLocation.Position = lpLeftCenterEh
             DynProps = <>
-            EditButtons = <
-              item
-                Style = ebsEllipsisEh
-              end>
+            EditButtons = <>
             MaxLength = 400
             TabOrder = 3
             Visible = True
@@ -1590,7 +1589,7 @@ inherited FrmOWOrder: TFrmOWOrder
             Height = 50
           end
           object chbVisCustomer: TDBCheckBoxEh
-            Left = 238
+            Left = 129
             Top = 8
             Width = 81
             Height = 17
@@ -1599,7 +1598,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 0
           end
           object chbVisDates: TDBCheckBoxEh
-            Left = 326
+            Left = 226
             Top = 8
             Width = 50
             Height = 17
@@ -1608,7 +1607,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 1
           end
           object chbVisFinance: TDBCheckBoxEh
-            Left = 382
+            Left = 282
             Top = 8
             Width = 110
             Height = 17
@@ -1617,7 +1616,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 2
           end
           object chbVisAddInfo: TDBCheckBoxEh
-            Left = 518
+            Left = 369
             Top = 8
             Width = 85
             Height = 17
@@ -1633,6 +1632,22 @@ inherited FrmOWOrder: TFrmOWOrder
             Caption = #1055#1088#1086#1074#1077#1088#1077#1085#1086
             DynProps = <>
             TabOrder = 4
+          end
+          object edt_templatename: TDBEditEh
+            Left = 551
+            Top = 2
+            Width = 116
+            Height = 19
+            ControlLabel.Width = 73
+            ControlLabel.Height = 26
+            ControlLabel.Caption = #1053#1072#1080#1084#1077#1085#1086#1074#1072#1085#1080#1077#13#10#1096#1072#1073#1083#1086#1085#1072
+            ControlLabel.Visible = True
+            ControlLabelLocation.Position = lpLeftCenterEh
+            DynProps = <>
+            EditButtons = <>
+            MaxLength = 400
+            TabOrder = 5
+            Visible = True
           end
         end
       end

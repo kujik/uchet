@@ -329,7 +329,7 @@ from
 
 
 --------------------------------------------------------------------------------
---alter table orders drop column attention;
+alter table orders drop column status;
 
 --alter table orders add id_or_reference number(11);
 --alter table orders add id_or_reference number(11);
@@ -339,8 +339,12 @@ update orders set id_type2 = 106 where id_type = 2 and id_type2 is null;
 
 alter table orders add id_launched_by number(11);
 alter table orders add constraint fk_id_launched_by foreign key (id_launched_by) references adm_users(id);
-
-alter table orders add order_number_custome varchar2(400);
+alter table orders add id_or_reference number(11);
+alter table orders add constraint fk_id_or_reference foreign key (id_or_reference) references orders(id);
+alter table orders add id_status number(2) default 1;
+--update orders set id_status = 3;
+alter table orders add order_number_customer varchar2(400);
+alter table orders add basis_text varchar2(4000);
 
 
 
@@ -358,6 +362,8 @@ create table orders (
   num number(4),                     -- номер заказа 
   ornum varchar(16) unique,          -- полный номер заказа СГ230013 
   templatename varchar2(400),        -- название шаблона, только для шаблонов
+  id_status number(2) default 1,     -- стутус заказа (1 - на оформлении, 2 - проведен, 3 - запущен в работу)
+  basis_text varchar2(4000),         -- основание (текстовое мемо-0поле) 
   area number(1) default 0,          -- производственная площадка (0 - ПЩ, 1 - Инженерный)
   estimatepath varchar2(400),        -- путь к сметам для стандартных шаблонов 
   cashtype number(1),                -- 2 - наличные, 1 - безнал
@@ -365,7 +371,7 @@ create table orders (
   project varchar2(400),             -- название проекта
   address varchar2(400),             -- адрес отгруузки 
   account varchar2(400),             -- счет
-  order_number_custome varchar2(400),-- номер заказа клиента 
+  order_number_customer varchar2(400),-- номер заказа клиента 
   id_format number(11),              -- айди формата паспорта (0 - общий, Х - КБ ...)
   id_target number(11),
   target varchar2(40),               -- подпапка в стандартных проектах итм (П - производство, остальные берутся из справочника стандартных форматов) 
@@ -579,6 +585,7 @@ with
 select
   o.*,
   ro.name as organization,
+  decode(o.id_status, 1, 'на оформлениии', 2, 'проведен', 3, 'запущен в работу', '') as status,
   rc.name as customer,
   rcc.name as customerman,
   rcc.contact as customercontact,

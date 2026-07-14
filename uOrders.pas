@@ -138,6 +138,14 @@ const
   ORDER_AUDIT_KNS_DOC = 3;
   ORDER_AUDIT_THN_DOC = 4;
 
+  ORDER_ID_STATUS_DRAFT = 1;
+  ORDER_ID_STATUS_APPROVED = 2;
+  ORDER_ID_STATUS_STARTED = 3;
+
+  cOrdersOrderStatusNames: array [1..3] of string =
+    ('на оформлении', 'проведен', 'запущен в работу');
+
+
   //пароль дл€ отображени€ архивных заказов по Ќ, вводитс€ в журнале заказов по нажатии Ctrl-Alt-W
   PW_ODERS_VIEW_ALL = 'bn-78-nm-90';
 

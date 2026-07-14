@@ -1,4 +1,12 @@
-﻿unit uFields;
+﻿{
+поля для чтения и записи в бд принимаются без изменения, с модификаторами и в том числе могут быть выражениями
+если начинается с _ или равно 0, то оно очищается
+
+теги могут быть множественные, задаются через запятую, регистр не учитывается.
+вся обработка может быть вперемешку по полям и по тегам, также возможно обработка всех полей кроме исключаемых
+
+}
+unit uFields;
 
 interface
 
@@ -163,17 +171,18 @@ begin
     var fullName := VarToStr(parts[0]);
     var saveName := VarToStr(parts[1]);
     var loadName := VarToStr(parts[2]);
-
     var cleanName := S.GetDBFieldNameFromSt(fullName);
+
+  {        SetF(fvtVName, S.GetDBFieldNameFromSt(va[0]));
+        SetF(fvtFName, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0], True)));
+        SetF(fvtFNameL, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0])));
+        SetF(fvtFNameS, S.IIFStr((Pos('_', va[1]) <> 1)and(Pos('0', va[1]) <> 1), S.IIFStr(va[1] = '', va[0], va[1])));
+        SetF(fvtFNameL, S.IIFStr((Pos('_', va[2]) <> 1)and(Pos('0', va[2]) <> 1), S.IIFStr(va[2] = '', va[0], va[2])));}
     SetFieldValue(ARowIndex, Integer(fvtVName), cleanName);
     SetFieldValue(ARowIndex, Integer(fvtFName), S.IIfStr(Pos('_', fullName) <> 1, S.GetDBFieldNameFromSt(fullName, True)));
     SetFieldValue(ARowIndex, Integer(fvtFNameL), S.IIfStr(Pos('_', fullName) <> 1, S.GetDBFieldNameFromSt(fullName)));
-    if (saveName = '') or (Pos('_', saveName) = 1) or (Pos('0', saveName) = 1) then
-      saveName := cleanName;
-    SetFieldValue(ARowIndex, Integer(fvtFNameS), saveName);
-    if (loadName = '') or (Pos('_', loadName) = 1) or (Pos('0', loadName) = 1) then
-      loadName := cleanName;
-    SetFieldValue(ARowIndex, Integer(fvtFNameL), loadName);
+    SetFieldValue(ARowIndex, Integer(fvtFNameS), S.IIfStr((Pos('_', saveName) <> 1) and (Pos('0', saveName) <> 1), S.IIFStr(saveName = '', fullName, saveName)));
+    SetFieldValue(ARowIndex, Integer(fvtFNameL), S.IIfStr((Pos('_', loadName) <> 1) and (Pos('0', loadName) <> 1), S.IIFStr(loadName = '', fullName, loadName)));
 
     ctrlName := cleanName;
     c := Cth.FindControlByFieldName(FSelf, ctrlName);

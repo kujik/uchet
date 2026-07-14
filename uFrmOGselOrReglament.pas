@@ -1,21 +1,4 @@
 {
-
-uses
-  Windows, Messages, Variants, Types, RegularExpressions, Math, DateUtils, IOUtils, Clipbrd,   //basic
-  Db, ADODB, //db
-  Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, StdCtrls, Buttons, Menus, //vcl basic
-  DBGridEhGrouping, ToolCtrlsEh, DBGridEhToolCtrls, PrnDbgEh, DBCtrlsEh, DynVarsEh, MemTableDataEh, DataDriverEh, ADODataDriverEh, MemTableEh, DBAxisGridsEh, DBGridEh, GridsEh, //ehlib
-  uData, uSettings, uSys, uForms, uDBOra, uString, uMessages, uWindows, uPrintReport, uLabelColors, uFrmBasicInput, uFrDBGridEh, uFrMyPanelCaption, uFrmBasicMdi, //my
-  uFrmBasicEditabelGrid //parentform
-  ;
-
-
-}
-
-
-
-
-{
 јвтоматический выбора регламента зазака дл€ данного типа заказа.
 ¬ гриде отображаютс€ свойства, доступные дл€ данного типа, они выбираютс€ отметкой чекбоксами,
 на основании выбранных свойств подбираетс€ регламент с наибольшим сроком выполнени€.
@@ -72,7 +55,6 @@ begin
   ]);
   Frg1.Opt.SetGridOperations('u');
   Frg1.SetInitData('select id, pos, name, 0 as used from v_order_properties_for_type where id_type = :id$i and used = 1 order by pos', [ID]);
-//  Frg1.EditOptions.;
   Result := inherited;
   for var i: Integer := 0 to Frg1.GetCount(False) - 1 do
     if S.InCommaStr(Frg1.GetValueS('id', i, False), AddParam.AsString) then
@@ -83,7 +65,7 @@ end;
 
 procedure TFrmOGselOrReglament.VerifyBeforeSave;
 begin
-  FFormResult.DataA := [[FReglaments[FReglament][0], FProperties, FReglaments[FReglament][3]]];
+  FFormResult.DataA := [[FReglaments[FReglament][0], FProperties, FReglaments[FReglament][3],FReglaments[FReglament][1]]];
 end;
 
 procedure TFrmOGselOrReglament.FindReglament;

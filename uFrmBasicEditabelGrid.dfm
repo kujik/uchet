@@ -1,10 +1,10 @@
 inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
   Caption = 'FrmBasicEditabelGrid'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
+  ExplicitWidth = 804
+  ExplicitHeight = 573
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    ExplicitHeight = 520
+    ExplicitHeight = 519
     inherited pnlFrmClient: TPanel
       inherited pnlGrid1: TPanel
         inherited Frg1: TFrDBGridEh
@@ -36,7 +36,7 @@ inherited FrmBasicEditabelGrid: TFrmBasicEditabelGrid
       end
       inherited pnlFrg2: TPanel
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          ExplicitWidth = 776
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
               Width = 772

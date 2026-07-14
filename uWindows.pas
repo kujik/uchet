@@ -105,6 +105,8 @@ uses
   D_Spl_InfoGrid,
   F_Adm_Installer,
   uFrmXGsrvSqlMonitor,
+
+  uFrmOWOrder,
   uFrmOWInvoiceToSgp, uFrmDlgEditNomenclatura, uFrmOGjrnOrders, uFrmOGjrnSemiproducts,
   uFrmCGrepPaymentsByMonth, uFrmCWCash, uFrmAWOracleSessions, uFrmCDedtCashRevision,
   uFrmAWUsersAndRoles, uFrmWGjrnParsec, uFrmOGjrnUchetLog, uFrmOGrefOrStdItems,
@@ -115,6 +117,7 @@ uses
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
+
   uFrmPWedtPlnOps,
   uFrmXGlstMain,
   uFrmBasicInput;
@@ -792,7 +795,8 @@ begin
   else if AFormType = myfrm_Dlg_Vacancy then
     // Form := ...
   else if AFormType = myfrm_Dlg_Order then
-    Form := TDlg_Order.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
+//    Form := TDlg_Order.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
+    TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Candidates_Ad then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_candidates_ad;;sq_ref_suppliers', 'Источники информации о вакансии', 400, 100,
       [['name$s', cntEdit, 'Наименование','1:100']],

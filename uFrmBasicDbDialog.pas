@@ -54,6 +54,7 @@ var
   i, j: Integer;
 begin
   Result := False;
+  FieldsSt := '';
   for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameL) <> '' then begin
       S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
