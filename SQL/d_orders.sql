@@ -346,6 +346,12 @@ alter table orders add id_status number(2) default 1;
 alter table orders add order_number_customer varchar2(400);
 alter table orders add basis_text varchar2(4000);
 
+alter table orders add dt_start date;
+update orders set dt_start = dt_beg;
+--alter table orders add is_wholesale number(1) default 0;
+alter table orders add nds_rate number default 0;
+update orders set nds_rate = ndsd;
+
 
 
 --alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
@@ -769,8 +775,16 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
---alter table order_items add dt_create date; 
-
+alter table order_items add price_wo_nds number;  --!!! 
+alter table order_items add nds_rate number;
+alter table order_items add price_wo_nds_with_margin number;
+alter table order_items add price_tmp number;
+update order_items set nds_rate = 22;
+update order_items set price_tmp = price;
+update order_items set price_pp = 0;
+update order_items set price_wo_nds = round(price_tmp / 1.22 , 2)where id_order >= 16743;
+update order_items set price_wo_nds_with_margin = round(price_tmp / 1.22 , 2) where id_order >= 16743;
+ 
 create table order_items (
   id number(11),
   id_order number(11),               --айди заказа
@@ -786,8 +800,11 @@ create table order_items (
   comm varchar2(400),                --комментарий
   wo_estimate number(1) default 0,   --изделие не требует смету  
   id_kns number(11),                 --айди конструктора, или -100 = нет, или -101 = [конструктор] (любой)
-  id_thn number(11),                 --технолог 
-  price number(12,2),                --цена позиции общая без учета скидок 
+  id_thn number(11),                 --технолог
+  nds_rate number,                   --ставка ндс  
+  price_wo_nds number,               --базовая цена без ндс и скидок
+  price_wo_nds_with_margin number,   --цена без ндс, но с учетом скидки и наценки
+  price number(12,2),                --цена позиции общая с учетом ндс, наченки и скидки 
   price_pp number(12,2),             --цена перепродажи, входит в общую цену позиции, не больше ее (всегда равна в случае д/к)
   r0 number(1) default 0,            --не задается производственный маршрут
   r1 number(1),                      --производственный участок №1 (КС)
@@ -2789,6 +2806,7 @@ alter table order_types add is_semiproduct_order number(1);
 alter table order_types add is_shipment_order number(1);
 alter table order_types add is_additional_order number(1);
 alter table order_types add is_nonstandard number(1);
+alter table order_types add is_nonstandard_only number(1);
 alter table order_types add is_cash_payment number(1);
 
 create table order_types (
@@ -2801,6 +2819,7 @@ create table order_types (
   is_complaint number(1),                     --может быть рекламацией
   is_additional_order number(1),              --может быть дозаказом
   is_nonstandard number(1),                   --может включать нестандартные изделия
+  is_nonstandard_only number(1),              --допустимы только нестандартные изделия
   is_cash_payment number(1),                  --допустима оплата за наличные (Ника)
   active number(1), 
   pos number(3),

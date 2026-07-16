@@ -1074,7 +1074,7 @@ inherited FrmOWOrder: TFrmOWOrder
             Align = alTop
             Caption = 'PHTotalSum'
             TabOrder = 0
-            object DBNumberEditEh42: TDBNumberEditEh
+            object nedt_cost: TDBNumberEditEh
               Left = 64
               Top = 6
               Width = 89
@@ -1093,7 +1093,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object DBNumberEditEh43: TDBNumberEditEh
+            object nedt_cost_wo_nds: TDBNumberEditEh
               Left = 185
               Top = 6
               Width = 80
@@ -1459,6 +1459,8 @@ inherited FrmOWOrder: TFrmOWOrder
             inherited DbGridEh1: TDBGridEh
               Width = 1259
               Height = 48
+              OnApplyFilter = FrgItemsDbGridEh1ApplyFilter
+              OnEnter = FrgItemsDbGridEh1Enter
               Columns = <
                 item
                   CellButtons = <>
@@ -1660,7 +1662,11 @@ inherited FrmOWOrder: TFrmOWOrder
     ExplicitWidth = 1279
     inherited lblStatusBarR: TLabel
       Left = 1210
-      ExplicitLeft = 1214
+      Height = 14
+      ExplicitLeft = 1210
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

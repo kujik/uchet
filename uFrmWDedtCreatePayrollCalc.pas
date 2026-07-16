@@ -114,7 +114,8 @@ begin
       'select id_departament, id_employee, id_organization, personnel_number from v_w_employee_properties ' +
       'where employee_st = :employee_st$s and dt_beg >= :dt1$d and dt_beg <= :dt2$d ' +
       'group by id_departament, id_employee, id_organization, personnel_number' ,
-      [cmbWorker.Text, dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], va1
+//      [cmbWorker.Text, dt1, Turv.GetTurvEndDate(IncDay(dt2, 1))], va1
+      [cmbWorker.Text, dt1, IncDay(IncMonth(dt1, 2), -1)], va1
     );
     //получим список всех ведомостей по зп, по уволенным за этот период
     va2 := Q.QLoad('select id_departament, id_employee, id_organization, personnel_number from v_w_payroll_calc where dt1 = :dt1$d and id_employee is not null', [dt1]);

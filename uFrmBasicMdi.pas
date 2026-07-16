@@ -890,7 +890,7 @@ begin
   end;
 
   // дополнительная расстановка с учётом кеша (для единообразия с публичными методами)
-  ArrangeAllPanels;
+  //ArrangeAllPanels;
 
   pnlFrmBtnsMain.AutoSize := True;
   FDlgPanelMinWidth := Self.Width - pnlFrmBtnsC.Width;

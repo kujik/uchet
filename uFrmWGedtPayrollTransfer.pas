@@ -203,7 +203,9 @@ function TFrmWGedtPayrollTransfer.GetDataFromDb: Integer;
 var
   na : TNamedArr;
 begin
-  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) + ' where id_payroll_transfer = :id$i' + S.IIFStr(AddParam <> null, ' and id_employee = ' + AddParam.AsString) + ' order by employee, organization, personnel_number',
+  Q.QLoad(Q.QGetSql('a', 'v_w_payroll_transfer_item', cFieldsS + ';' + cFieldsL) +
+    ' where id_payroll_transfer = :id$i' + S.IIFStr(AddParam <> null,
+    ' and id_employee = ' + AddParam.AsString) + ' order by employee, organization, personnel_number',
     [ID], na
   );
   Frg1.LoadData(na);

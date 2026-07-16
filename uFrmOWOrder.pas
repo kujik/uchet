@@ -48,8 +48,8 @@ type
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
     PHTotalSum: TPanel;
-    DBNumberEditEh42: TDBNumberEditEh;
-    DBNumberEditEh43: TDBNumberEditEh;
+    nedt_cost: TDBNumberEditEh;
+    nedt_cost_wo_nds: TDBNumberEditEh;
     DBNumberEditEh44: TDBNumberEditEh;
     pnlGrid: TPanel;
     FrgItems: TFrDBGridEh;
@@ -113,6 +113,8 @@ type
     procedure edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
     procedure FormResize(Sender: TObject);
     procedure AfterFormActivate; override;
+    procedure FrgItemsDbGridEh1ApplyFilter(Sender: TObject);
+    procedure FrgItemsDbGridEh1Enter(Sender: TObject);
     procedure lblBasisInfoClick(Sender: TObject);
   private
     //заказ является шаблоном
@@ -138,6 +140,8 @@ type
     FPDatesWidth, FPFinWidth: Integer;
     //используемый в заказе формат изделий (фиксируется при начале заполнения таблицы)
     FUsedEstimateFormat: Integer;
+    FOrganizationIndex: Integer;
+    FOrderTypeIndes: Integer;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -168,6 +172,10 @@ type
     procedure SetButtons;
     procedure SetEditButtons;
     procedure AfterLoadData;
+    procedure AfterLoadTables;
+    procedure RecalculateItemsPrices;
+    procedure RecalculateSum;
+    procedure CalculateFrgItemsRow(const AFieldName: string = '');
 
 //    procedure VerifyBeforeSave; virtual;
 //    function  Save: Boolean; virtual;
@@ -185,17 +193,17 @@ type
     //события грида изделий
     procedure FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
     procedure FrgItemsCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
-//    procedure FrgItemsSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); virtual;
-//    procedure FrgItemsOnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); virtual;
-//    procedure FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); virtual;
-//    procedure FrgItemsAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
+    procedure FrgItemsSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); virtual;
+    procedure FrgItemsOnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); virtual;
+    procedure FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); virtual;
+    procedure FrgItemsAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
     //здесь мождем устанавливать параметры ячейки (номер картинки, readonly) в зависимости от данных в текущей записи
-//    procedure FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); virtual;
+    procedure FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); virtual;
     //двойной клик в таблице
     //по умолчанию вызывает редактирование или просмотр записи
 //    procedure FrgItemsOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
     procedure FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
-//    procedure FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
+    procedure FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
   public
   end;
 
@@ -297,14 +305,19 @@ begin
   LoadOrder;
   if not LoadOrderComboBoxes then
     Exit;
+
   F.SetPropsControls;
+
+  AfterLoadData;
+
   PrepareWorkCells;
   PrepareFrgItems;
   PrepareFrgRelatedOrders;
   PrepareFrgBasis;
   PrepareFrgFiles;
 
-  AfterLoadData;
+  AfterLoadTables;
+
 
   FWHBounds.X := 1000;
   FWHBounds.Y := 700;
@@ -510,39 +523,52 @@ begin
     ['0 as status$s', '*', '20'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
-    ['itemname$s', 'Изделие', '400;L;w;h', 'e=1:400::T'],
-    ['price$f', 'Цена без НДС', '50', 'f=0.00', 'e=0:999999:2:N'],
+    ['itemname$s', 'Изделие', '400;w;h', 'e=1:400::T'],
+    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2'],
+    ['price_wo_nds$f', 'Цена без НДС', '80', 'f=0.00', 'e=0:999999:2:N'],
+    ['0 as price_with_nds$f', 'Цена с НДС', '80', 'f=0.00', 'e=0:999999:2:N'],
+    ['price_wo_nds_with_margin$f', 'Цена без НДС и скидками', '80', 'f=0.00' ],
+    ['price$f', 'Цена с НДС и скидками', '80', 'f=0.00' ],
+    ['nds_rate$f', 'Ставка НДС', '80', 'f=0'],
     ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N'],
-    ['0 as qnt_sgp$f', 'Кол-во с СГП', '40', 'e=0:999999:0:N'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'chb'],
-    ['control_assembly$i', 'Контр сборка', '40', 'chb'],
-    ['decode(nstd, 1, '' '') as nstd$s', 'Н/стд', '30', 'chb', 'e']
+    ['sgp$f', 'С СГП', '40', 'e', 'chb'],
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb'],
+    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb']
   ];
+
   LFields := LFields + va2;
   LFields := LFields +
   [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb'],
-    ['id_kns$i', 'Конструктор', '100;L'],
-    ['id_thn$i', 'Технолог', '100;L'],
-    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::T'],
-    ['0 as sum$f', 'Сумма', '50', 'f=0.00:']
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e'],
+    ['id_thn$i', 'Технолог', '100;L', 'e'],
+    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N'],
+    ['0 as sum$f', 'Сумма', '90', 'f=0.00:']
   ];
-  FrgItems.Opt.Caption := 'Состав заказа';
+  FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
   FrgItems.Opt.SetFields(LFields);
-  FrgItems.Opt.SetButtons(1, [[mbtInsert, True, 1], [mbtAdd, True, 1], [mbtDelete, True, 1], [], [mbtCtlPanel], [], [mbtCtlPanel ,4000], []]);
+  FrgItems.Opt.SetButtons(1, [
+    [mbtRefresh, True, 1, 'Обновить данные из справочника изделий'],
+    [mbtInsert, True, 1],
+    [mbtAdd, True, 1],
+    [mbtDelete, True, 1],
+    [],
+    [mbtCtlPanel],
+    [],
+    [mbtCtlPanel ,4000],
+    []
+  ]);
   FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
   FrgItems.Opt.SetGridOperations('uaid');
   FrgItems.Opt.SetTable('v_order_items');
   FrgItems.SetInitData([]);
-  FrgItems. Prepare;
+  FrgItems.Prepare;
   pnlOrderInfo.Parent := TWinControl(FrgItems.FindComponent('pnlTopBtnsCtl2'));
   pnlOrderInfo.Color := RGB(255, 255, 220);
   pnlOrderInfo.BevelOuter := bvRaised;
   pnlOrderInfo.BorderWidth := 2;
   pnlOrderInfo.BorderStyle:=bsSingle;
   pnlOrderInfo.Align:=alClient;
-
-//  FrgItems.Opt.SetPick('id_bcad_nomencl', FEstimateBoardsNomencl, True, True);
   var LFieldsSt := '';
   for i:= 0 to High(LFields) do
     S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
@@ -552,17 +578,17 @@ begin
   FrgItems.OnButtonClick := FrgItemsButtonClick;
   FrgItems.OnCellButtonClick := FrgItemsCellButtonClick;
   FrgItems.OnGetCellReadOnly := FrgItemsGetCellReadOnly;
-{    FrgItems.OnSelectedDataChange := FrgItemsSelectedDataChange;
-    FrgItems.OnSetSqlParams := FrgItemsOnSetSqlParams;
-    FrgItems.OnColumnsUpdateData := FrgItemsColumnsUpdateData;
-    FrgItems.OnAddControlChange := FrgItemsAddControlChange;
-    FrgItems.OnColumnsGetCellParams := FrgItemsColumnsGetCellParams;
-    FrgItems.OnDbClick := FrgItemsOnDbClick;
-    FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
-    FrgItems.OnCellValueSave := FrgItemsCellValueSave;}
+  FrgItems.OnSelectedDataChange := FrgItemsSelectedDataChange;
+  FrgItems.OnSetSqlParams := FrgItemsOnSetSqlParams;
+  FrgItems.OnColumnsUpdateData := FrgItemsColumnsUpdateData;
+  FrgItems.OnAddControlChange := FrgItemsAddControlChange;
+  FrgItems.OnColumnsGetCellParams := FrgItemsColumnsGetCellParams;
+//  FrgItems.OnDbClick := FrgItemsOnDbClick;
+  FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
+//  FrgItems.OnCellValueSave := FrgItemsCellValueSave;
   FrgItems.RefreshGrid;
-//  FrgItems.MemTableEh1.Active := true;
   FrgItems.IsTableCorrect;
+  RecalculateItemsPrices;
   Result := True;
 end;
 
@@ -647,6 +673,9 @@ begin
     ['ids_order_properties$s'],
     ['id_status$i'],
     ['status;0'],
+    ['nds_rate$f'],
+    ['wholesale$i'],
+
 
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
@@ -670,7 +699,6 @@ begin
     ['customercontact$s', 'V=0:400', 't=c'],
     ['customerlegal$s', 'V=0:400', 't=c'],
     ['customerinn$s', 'V=0:400::N', 't=c'],
-    ['address$s', 'V=1:400', 't=c'],
     ['cashtype_account$s;0','V=1:400::N', 't=c'],
     ['address$s', 'V=1:400', 't=c'],
     ['order_number_customer$s', 'V=1:400::N', 't=c'],
@@ -678,25 +706,29 @@ begin
     ['dt_end$d;0', 't=t'],
     ['dt_beg$d', 't=d,t'],
     ['dt_change$d', 't=d,t'],
-    ['dt_otgr$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t'],
+    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t'],
+    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t'],
     ['dt_montage_beg$d', 'v==dt_otgr:=dt_otgr+1000000', 't=p,t'],
     ['dt_montage_end$d', 'v==dt_montage_beg:=dt_montage_beg+1000000', 't=p,t'],
 
     ['cost_i$f','V=', 't=d,td',#0],
     ['cost_i_0$f','V=', 't=d,td',#0],
-    ['m_i$f','V=', 't=p,td',#0],
-    ['d_i$f','V=', 't=p,td',#0],
+    ['cost_i_wo_nds$f;0;0'],
+    ['m_i$f','V=0:100:2', 't=p,td',#0],
+    ['d_i$f','V=0:100:2', 't=p,td',#0],
     ['cost_m$f','V=', 't=p,td', 't=d',#0],
-    ['cost_m_0$f', 't=p,td','V=',#0],
-    ['m_m$f','V=', 't=p,td',#0],
-    ['d_m$f','V=', 't=p,td',#0],
-    ['cost_d$f','V=', 't=td',#0],
-    ['cost_d_0$f','V=', 't=d,td' ,#0],
-    ['m_d$f','V=', 't=p,td',#0],
-    ['d_d$f','V=', 't=p,td',#0],
+    ['cost_m_0$f', 't=p,td','V=0:9999999:2', #0],
+    ['m_m$f','V=0:100:2', 't=p,td',#0],
+    ['d_m$f','V=0:100:2', 't=p,td',#0],
+    ['cost_d$f','V=', 't=d,td',#0],
+    ['cost_d_0$f','V=0:9999999:2', 't=td' ,#0],
+    ['m_d$f', 'V=0:100:2', 't=p,td',#0],
+    ['d_d$f',' V=0:100:2','t=p,td',#0],
     ['cost$f','V=', 't=d,td', #0],
     ['cost_wo_nds$f','V=', 't=d,td' ,#0],
     ['cost_av$f','V=0:9999999:2', 't=td' ,#0]
+
+
 
 
     {['','V=',#0],
@@ -793,13 +825,13 @@ begin
   //вид оплаты
   Cth.AddToComboBoxEh(cmb_cashtype_account, ['наличные', 'безнал (нет счета)', 'безнал'], []);
 
-  //организации
+  //организации (производство и активные, являющиесы продавцами)
   Q.QLoad(
-    'select name, id, prefix from ref_sn_organizations where id = -1 ' +
+    'select name, id, prefix, is_wholesaler, nds_rate, or_cashless, or_cash from ref_sn_organizations where id = -1 ' +
     'union all ' +
-    'select name, id, prefix from ' +
+    'select name, id, prefix, is_wholesaler, nds_rate, or_cashless, or_cash from ' +
     '(select * from ref_sn_organizations ' +
-    'where id > 0 and prefix is not null and (active = 1 or id = :id$i) order by name)',
+    'where id > 0 and prefix is not null and is_seller = 1 and (active = 1 or id = :id$i) order by name)',
     [F.GetPropB('id_organization')],
     FOrganizations
   );
@@ -833,9 +865,6 @@ begin
   LoadComplaints;
 
   LoadKnsThn;
-
-  if not (Mode in [fAdd, fDelete, fView]) then
-    LoadStdItems;
 
   Result := True;
 end;
@@ -955,6 +984,8 @@ var
   i, ot, org, est: Integer;
   va2: TVarDynArray2;
 begin
+  if cmb_id_type2.Text = '' then
+    cmb_id_type2.ItemIndex := 0;
   var LOrderType := F.GetProp('id_type2').AsInteger;
   var LOrganization := F.GetProp('id_organization').AsInteger;
   var LEstimate := F.GetProp('id_or_format_estimates').AsInteger;
@@ -975,10 +1006,10 @@ begin
         ((FOrganizations.G(i, 'id') = -1) and ((FOrderTypes.G(ot, 'is_production_order') = 1) or FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
          or
         //допустима Ника (есть оплата нал. и отгрузочные)
-        ((FOrganizations.G(i, 'prefix') = 'Н') and ((FOrderTypes.G(ot, 'is_cash_payment') = 1) and FOrderTypes.G(ot, 'is_shipment_order') = 1))
+        ((FOrganizations.G(i, 'or_cash').AsInteger = 1) and ((FOrderTypes.G(ot, 'is_cash_payment') = 1) and FOrderTypes.G(ot, 'is_shipment_order') = 1))
         or
         //допустиммы остальные (есть отгруузочные)
-        ((FOrganizations.G(i, 'prefix') <> 'Н') and (FOrganizations.G(i, 'id') <> -1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1))
+        ((FOrganizations.G(i, 'or_cash').AsInteger <> 1) and (FOrganizations.G(i, 'id') <> -1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1))
       then
         va2 := va2 + [[FOrganizations.G(i, 'name'), FOrganizations.G(i, 'id')]];
     end;
@@ -1003,56 +1034,134 @@ begin
     F.SetProp('id_organization', null)
   else
     F.SetProp('id_organization', LOrganization);
-  LOrganization := F.GetProp('id_organization').AsInteger;
 
+  LOrganization := F.GetProp('id_organization').AsInteger;
+  org := FOrganizations.FindFirst('id', LOrganization);
   //установим список доступных форматов стандартных изделий (они же форматы смет)
   va2 := [];
   if (LOrderType = 0) or (LOrganization = 0) then begin
 
   end;
-  for i := 0 to FEstimateFormats.High do
+  var LUsedEstimateFormatFound := False;
+  for i := 0 to FEstimateFormats.High do begin
     if
       (LOrganization <> 0)
       and
-      (
+      ((
       //отгрузочные
       ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT))
       or
       //нестандарт
       ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1))
       or
+      //производственные
       ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_PRODUCTION) and (FOrderTypes.G(ot, 'is_production_order') = 1))
       or
+      //отгрузочные
       ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SEMIPRODUCT) and (FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
       )
-    then
+      //только нестандартные изделия
+      and
+      (
+      (FOrderTypes.G(ot, 'is_nonstandard_only') <> 1) or (FEstimateFormats.G(i, 'id') = 0)
+      )
+      )
+    then begin
       va2 := va2 + [[FEstimateFormats.G(i, 'name'), FEstimateFormats.G(i, 'id')]];
-  //загрузим список
-  Cth.AddToComboBoxEh(cmb_id_or_format_estimates, va2);
-  //восстановим старое значение, если найдено
-  est := A.PosInArray(LEstimate, va2, 1);
-  if est = - 1 then begin
-    F.SetProp('id_or_format_estimates', null);
+      if FUsedEstimateFormat = FEstimateFormats.G(i, 'id').AsInteger then
+        LUsedEstimateFormatFound := True;
+    end;
+  end;
+  if (not LUsedEstimateFormatFound) and (FrgItems.GetRawCount > 0) then begin
+    //если формат, по кторому заполнена таблица, не найден в списке доступныых, то добавим его последней позицией, и сделаем ошибочным
+    va2 := va2 + [[FEstimateFormats.G(FEstimateFormats.FindFirst('id', LUsedEstimateFormatFound), 'name'), FUsedEstimateFormat]];
+    F.SetProp('id_or_format_estimates', '1000:1001', fvtVer);
   end
   else
+    F.SetProp('id_or_format_estimates', '1:400', fvtVer);
+  //загрузим список
+  Cth.AddToComboBoxEh(cmb_id_or_format_estimates, va2);
+  //если таблица заполнена, то установим формат равным формату в талице и заблокируем поле выбора формата сметы
+  if FrgItems.GetRawCount > 0 then begin
+    //F.SetProp('id_or_format_estimates', False, fvtDsbl);
+    LEstimate := FUsedEstimateFormat;
+  end;
+  //позиция в массиве форматов смет
+  est := A.PosInArray(LEstimate, va2, 1);
+  //восстановим старое значение, если найдено
+  if est = - 1 then begin
+    F.SetProp('id_or_format_estimates', null);
+    FStdItems.Clear;
+  end
+  else begin
     F.SetProp('id_or_format_estimates', LEstimate);
-
+  end;
+  var LNdsRate := F.GetProp('nds_rate').Asfloat;
+  var LMargin := F.GetProp('m_i').Asfloat;
+  var LDiscount := F.GetProp('d_i').Asfloat;
   //установми проверку и доступность полей ввода клиента в зависимости от организации
-  if F.GetProp('id_organization').AsInteger = -1 then begin
+  if (LOrganization = -1) or (org = -1) then begin
     F.SetProps('c', '', fvtVer);
     F.SetProps('c', False, fvtDsbl);
     F.SetProps('p', null, fvtVCurr);
     F.SetProps('p', False, fvtDsbl);
+    F.SetProps('dt_start', True, fvtDsbl);
+    F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer);
+    F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
+    F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
   end
   else begin
-    F.SetProps('c', '1:400:T', fvtVer);
+    F.SetProps('c', '1:400::N', fvtVer);
     F.SetProps('c', True, fvtDsbl);
     F.SetPropsFromCustom('p', PROP_NUM_VER_BEG, fvtVer);
-    F.SetProps('p', True, fvtDsbl);
+    F.SetProps('p', True, fvtDsbl);    F.SetProps('p', True, fvtDsbl);
+    F.SetProps('dt_start', False, fvtDsbl);   //!!!
+    F.SetProps('dt_start', F.GetProp('dt_beg'), fvtVCurr);
+    F.SetProps('dt_montage_beg', '=dt_otgr:=dt_otgr+1000000', fvtVer);
+    F.SetProps('dt_montage_end', '=dt_montage_beg:=dt_montage_beg+1000000', fvtVer);
+    F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0', True, fvtDsbl);
+    //все скидки/наценки допускаем только для розничных продавцов
+    if FOrganizations.G(org, 'is_wholesaler') = 1 then begin
+      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
+      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
+    end
+    else begin
+      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', True, fvtDsbl);
+    end;
+    //возможные варианты оплаты в зависимости от организаций
+    var LPaymentType: TvarDynArray := [];
+    if FOrganizations.G(org, 'or_cash') = 1 then
+      LPaymentType := LPaymentType + ['наличные'];
+    if FOrganizations.G(org, 'or_cashless') = 1 then
+      LPaymentType := LPaymentType + ['безнал (нет счета)', 'безнал'];
+    //установим список вариантов
+    Cth.AddToComboBoxEh(cmb_cashtype_account, LPaymentType, []);
+    //очистим, если старый вариант не подходит
+    if (cmb_cashtype_account.Text = 'наличные') and not A.InArray(cmb_cashtype_account.Text, LPaymentType) then
+      cmb_cashtype_account.Text := '';
+    if (cmb_cashtype_account.Text <> 'наличные') and not A.InArray('безнал', LPaymentType) then
+      cmb_cashtype_account.Text := '';
+  end;
+  //установим из организации ставку НДС и признак оптовой продажи
+  if org >= 0 then begin
+    F.SetProps('wholesale', FOrganizations.G(org, 'is_wholesaler'));
+    F.SetProps('nds_rate', FOrganizations.G(org, 'nds_rate'));
+  end
+  else begin
+    F.SetProps('wholesale', 0);
+    F.SetProps('nds_rate', 0);
   end;
 
   SetPermanetFieldProps;
 
+  //сохраним в свойтвах позиции в массивах организации и типа заказа
+  FOrderTypeIndes := ot;
+  FOrganizationIndex := org;
+
+  if (LNdsRate <> F.GetProp('nds_rate').Asfloat) or (LMargin <> F.GetProp('m_i').Asfloat) or (LDiscount <> F.GetProp('d_i').Asfloat) then
+    RecalculateItemsPrices;
+
+  Verify(nil);
 end;
 
 procedure TFrmOWOrder.SetCustomer(ALoadFirst: Boolean);
@@ -1185,6 +1294,12 @@ begin
   end;
   if Sender = cmb_cashtype_account then
     OnCashTypeAccountChange;
+
+  if TControl(Sender).Parent = PHSum then begin
+    RecalculateItemsPrices;
+    RecalculateSum;
+  end;
+
   OnCustomerControlsChange(Sender);
 end;
 
@@ -1219,20 +1334,30 @@ end;
 
 procedure TFrmOWOrder.FrgItemsCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 begin
-  if Fr.GetValue = null then begin
+{  if Fr.GetValue = null then begin
     if Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList.Count = 0 then
       Fr.SetValue(Fr.CurrField, ' ')
     else
       Fr.SetValue(Fr.CurrField, Fr.DbGridEh1.FindFieldColumn(Fr.CurrField).KeyList[0]);
   end
   else
-    Fr.SetValue(Fr.CurrField, null);
+    Fr.SetValue(Fr.CurrField, null);}
 end;
 
 procedure TFrmOWOrder.FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
-  if TColumnEh(Sender).KeyList.Count > 0 then
-    ReadOnly := False;
+  var LFieldName := Fr.GetFieldNameForSender(Sender);
+  var LIsStdItem := FrgItems.GetValue('nstd').AsInteger <> 1;
+  var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
+  var LWoEstimate := FrgItems.GetValue('wo_estimate').AsInteger = 1;
+  if LFieldName = 'wo_estimate' then
+    ReadOnly := LIsStdItem;
+  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) then
+    ReadOnly := LIsStdItem or LFromSgp or LWoEstimate;
+  if A.InArray(LFieldName, ['id_kns', 'id_thn']) then
+    ReadOnly := LFromSgp or LWoEstimate;
+  if A.InArray(LFieldName, ['price_wo_nds', 'price_with_nds']) then
+    ReadOnly := LIsStdItem;
 end;
 
 procedure TFrmOWOrder.lblBasisInfoClick(Sender: TObject);
@@ -1303,11 +1428,10 @@ begin
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);
   SetOrderTypeOrOrganization;
   SetCustomer(True);
+  //if not (Mode in [fAdd, fDelete, fView]) then
+  //  LoadStdItems;
 
   if FIsTemplate then begin
-    {chbVisDates.Checked := False;
-    chbVisFinance.Checked := False;
-    chbVisAddInfo.Checked := False;}
     chbVisDates.Enabled := False;
     chbVisFinance.Enabled := False;
     chbVisAddInfo.Enabled := False;
@@ -1318,6 +1442,13 @@ begin
   SwitchBasisPanel(True);
   Verify(nil);
   SetPermanetFieldProps;
+end;
+
+procedure TFrmOWOrder.AfterLoadTables;
+//вызывается при инициализации после загрузки данных в таблицы
+begin
+  SetOrderTypeOrOrganization;
+  RecalculateSum;
 end;
 
 procedure TFrmOWOrder.SetPermanetFieldProps;
@@ -1335,9 +1466,9 @@ end;
 
 procedure TFrmOWOrder.SetEditButtons;
 begin
-//  Cth.SetEditButtons(cmb_or_reference, [[37, 'Обновить'], [39, 'Выбрать из справочника']]);
-  Cth.SetEditButtons(cmb_or_reference, [[0, 'Выбрать из списка']]);
-  Cth.SetEditButtons(edt_reglament, [[0, 'Задать регламент']]);
+  Cth.SetEditButtons(cmb_or_reference, [[-Integer(myebsEllipsisEh), 'Выбрать из списка']]);
+  Cth.SetEditButtons(edt_reglament, [[-Integer(myebsEllipsisEh), 'Задать регламент']]);
+  Cth.SetEditButtons(edt_order_number_customer, [[-Integer(myebsEllipsisEh), 'Параметры заказа клиента']]);
 end;
 
 procedure TFrmOWOrder.ChooseReglamernt;
@@ -1347,7 +1478,7 @@ begin
   if FNewOrderType <> 1 then
     Exit;
   ReglamentData := TFrmOGselOrReglament.Show(
-    Self, '', MyFormOptions + [myfoDialog, myfoSizeable, myfoModal], S.IIf(not (Mode in [fView, fDelete]), fEdit, fView), F.GetProp('cmb_type2'), F.GetProp('ids_order_properties')
+    Self, '', MyFormOptions + [myfoDialog, myfoSizeable, myfoModal], S.IIf(not (Mode in [fView, fDelete]), fEdit, fView), F.GetProp('id_type2'), F.GetProp('ids_order_properties')
   );
   if ReglamentData.ModalResult <> mrOk then
     Exit;
@@ -1365,6 +1496,66 @@ begin
   end;
 end;
 
+procedure TFrmOWOrder.FrgItemsAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
+begin
+  if TControl(Sender).Name = 'ChbView0' then begin
+    FrgItemsDbGridEh1ApplyFilter(Fr.DbGridEh1);
+  end;
+end;
+
+procedure TFrmOWOrder.FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
+begin
+{  if FieldName = 'price' then
+    Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
+  if FieldName = 'sum' then
+    Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100)  * (1 + F.GetProp('m_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100);}
+end;
+
+procedure TFrmOWOrder.FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+begin
+  var LFieldName := Fr.GetFieldNameForSender(Sender);
+  var LOldValue: Variant := Fr.GetValue(LFieldName);
+  if LOldValue = Value then
+    Exit;
+  Fr.SetValue(LFieldName, Value);
+  if (LFieldName = 'itemname') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
+    CalculateFrgItemsRow(LFieldName);
+  end;
+  Fr.IsRowCorrect;
+end;
+
+procedure TFrmOWOrder.FrgItemsDbGridEh1ApplyFilter(Sender: TObject);
+//фильтрация грида
+var
+  st: string;
+begin
+  if FrgItems.GetControlValue('ChbView0') = 0 then
+    st := '>0'
+  else
+    st := '';
+  Gh.GetGridColumn(FrgItems.DBGridEh1, 'qnt').STFilter.ExpressionStr := st;
+  FrgItems.DBGridEh1.DefaultApplyFilter;
+//  inherited;
+//  FrgItems.DbGridEh1ApplyFilter(Sender);
+end;
+
+procedure TFrmOWOrder.FrgItemsDbGridEh1Enter(Sender: TObject);
+begin
+  inherited;
+  if Mode in [fAdd, fCopy, fEdit] then
+    if FStdItems.Count = 0 then
+      LoadStdItems;
+end;
+
+procedure TFrmOWOrder.FrgItemsOnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
+begin
+
+end;
+
+procedure TFrmOWOrder.FrgItemsSelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+end;
+
 procedure TFrmOWOrder.LoadStdItems;
 //загрузим стандартнуую номенклатуру в свойство и в список грида
 var
@@ -1376,25 +1567,28 @@ begin
   FStdItems.Clear;
   if Mode in [fDelete, fView] then
     Exit;
-  var LFormat := F.GetProp('id_or_format_estimates').AsInteger;
+  var LFormat := F.GetProp('id_or_format_estimates').AsIntegerM;
   //если нестандарт, то не нужно устанавливать список
-  if LFormat = 0 then
+  if LFormat <= 0 then begin
+    FrgItems.UpdatePickKeyList('itemname', [], [], False, False);
     Exit;
+  end;
   st := '';
   //поля маршщрутов
   for i := 0 to High(RouteFields) do
     S.ConcatStP(st, 'r' + IntToStr(i), ', ');
   //стандартные изделия по данному типу сметы
   Q.QLoad(
-    'select id, name, price, wo_estimate, ' + st + ' ' +
-    'from or_std_items ' +
+    'select id, name, price_wo_nds, wo_estimate, ' + st + ' ' +
+    'from v_or_std_items ' +
     'where ' + '(id_or_format_estimates = :id$i) and (id_or_format_estimates <> 0) ' +
     'order by name asc',
     [LFormat],
     FStdItems
   );
   //установим список в гриде
-  FrgItems.Opt.SetPick('name', FStdItems.GetCol('name'), FStdItems.GetCol('id'), False, True);
+//  FrgItems.Opt.SetPick('itemname', FStdItems.GetCol('name'), FStdItems.GetCol('id'), False, True);
+  FrgItems.UpdatePickKeyList('itemname', FStdItems.GetCol('name'), [], False, True);
 end;
 
 procedure TFrmOWOrder.LoadKnsThn;
@@ -1419,7 +1613,215 @@ begin
   FrgItems.Opt.SetPick('id_thn', ['[нет]', '[технолог]'] + Thn.GetCol('name'), ['-100', '-102'] + Thn.GetCol('id'), False, True);
 end;
 
+procedure TFrmOWOrder.RecalculateItemsPrices;
+//пересчитаем цены в табличной части и обновим суммы
+begin
+  var LTableChanged := False;
+  var SumWithNdsWoMarginsOld := F.GetProp('cost_i_0').Asfloat;
+  var SumWithNdsWithMarginsOld := F.GetProp('cost_i').Asfloat;
+  var SumWoNdsWithMarginsOld := F.GetProp('cost_i_wo_nds').Asfloat;
+  var SumWithNdsWoMargins := 0.0;
+  var SumWithNdsWithMargins := 0.0;
+  var SumWoNdsWithMargins := 0.0;
+  for var i := 0 to FrgItems.GetRawCount - 1 do begin
+    var LPriceWithNds := FrgItems.GetRawValue('price_wo_nds', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
+    var LPriceWoNdsWithMargins := FrgItems.GetRawValue('price_wo_nds', i).AsFloat  * (1 + F.GetProp('m_i').AsFloat / 100) * (1 - F.GetProp('d_i').AsFloat / 100);
+    var LPriceWithNdsWithMargins := LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100);
+    var Sum := LPriceWithNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
+    SumWithNdsWithMargins := SumWithNdsWithMargins + Sum;
+    SumWithNdsWoMargins := SumWithNdsWoMargins + LPriceWithNds * FrgItems.GetRawValue('qnt', i).AsFloat;
+    SumWithNdsWoMargins := SumWoNdsWithMargins + LPriceWoNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
+    if (FrgItems.GetRawValue('nds_rate', i) <> F.GetProp('nds_rate').AsFloat) or (FrgItems.GetRawValue('price_with_nds', i) <> LPriceWithNds) or
+       (FrgItems.GetRawValue('price', i) <> LPriceWithNdsWithMargins) or (FrgItems.GetRawValue('sum', i) <> Sum) then
+    begin
+      LTableChanged := True;
+      FrgItems.SetRawValue('nds_rate', i, F.GetProp('nds_rate').AsFloat);
+      FrgItems.SetRawValue('price_with_nds', i, LPriceWithNds);
+      FrgItems.SetRawValue('price', i, LPriceWithNdsWithMargins);
+      FrgItems.SetRawValue('price_wo_nds_with_margin', i, LPriceWoNdsWithMargins);
+      FrgItems.SetRawValue('sum', i, Sum);
+    end;
+  end;
+  if (SumWithNdsWoMarginsOld <> SumWithNdsWoMargins) or (SumWithNdsWithMarginsOld <> SumWithNdsWithMargins) then begin
+    F.SetProp('cost_i_0', SumWithNdsWoMargins);
+    F.SetProp('cost_i', SumWithNdsWithMargins);
+    F.SetProp('cost_i_wo_nds', SumWoNdsWithMargins);
+    RecalculateSum;
+  end;
+  if LTableChanged then
+    FrgItems.InvalidateGrid;
+end;
+
+procedure TFrmOWOrder.RecalculateSum;
+begin
+  F.SetProp('cost_m', F.GetProp('cost_m_0').AsFloat * (1 + F.GetProp('m_m').AsFloat/ 100) * (1 - F.GetProp('d_m').AsFloat / 100));
+  F.SetProp('cost_d', F.GetProp('cost_d_0').AsFloat * (1 + F.GetProp('m_d').AsFloat/ 100) * (1 - F.GetProp('d_d').AsFloat / 100));
+  var LSumTotal := F.GetProp('cost_i_wo_nds').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  F.SetProp('cost_wo_nds', LSumTotal);
+  F.SetProp('cost_d', F.GetProp('cost_d').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100));
+  F.SetProp('cost_m', F.GetProp('cost_m').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100));
+  LSumTotal := F.GetProp('cost_i').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  F.SetProp('cost', LSumTotal);
+end;
+
+procedure TFrmOWOrder.CalculateFrgItemsRow(const AFieldName: string = '');
+var
+  i: Integer;
+begin
+  var LItemNamePos :=  -1;
+  LItemNamePos := FStdItems.FindFirst('name', FrgItems.GetValue(AFieldName));
+  var LIsStdItem := LItemNamePos >= 0;
+  var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
+  var LWoEstimate:= FrgItems.GetValue('wo_estimate').AsInteger = 1;
+
+  FrgItems.SetValue('nstd', S.IIf(LIsStdItem, 0, 1));
+  if LIsStdItem then begin
+    FrgItems.SetValue('id_std_item', FStdItems.G(LItemNamePos, 'id'));
+    FrgItems.SetValue('wo_estimate', FStdItems.G(LItemNamePos, 'wo_estimate'));
+    FrgItems.SetValue('price_wo_nds', FStdItems.G(LItemNamePos, 'price_wo_nds'));
+    for i := 1 to  High(RouteFields) + 1 do begin
+      FrgItems.SetValue('r' + IntToStr(i), FStdItems.G(LItemNamePos, 'r' + IntToStr(i)));
+    end;
+  end;
+  if LFromSgp or LWoEstimate then begin
+    FrgItems.SetValue('id_kns', -100);
+    FrgItems.SetValue('id_thn', -100);
+    for i := 1 to  High(RouteFields) + 1 do  begin
+      FrgItems.SetValue('r' + IntToStr(i), 0);
+    end;
+  end
+  else if LIsStdItem then begin
+    if FrgItems.GetValue('id_thn').AsInteger <= 0 then
+      FrgItems.SetValue('id_thn', -102);
+  end
+  else begin
+    if FrgItems.GetValue('id_kns').AsInteger <= 0 then
+      FrgItems.SetValue('id_kns', -101);
+    if FrgItems.GetValue('id_thn').AsInteger <= 0 then
+      FrgItems.SetValue('id_thn', -102);
+  end;
+
+end;
+
+procedure TFrmOWOrder.FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+begin
+  var LFieldName := FieldName;
+  var LIsStdItem := FrgItems.GetValue('nstd').AsInteger <> 1;
+  var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
+  var LWoEstimate := FrgItems.GetValue('wo_estimate').AsInteger = 1;
+  var LRouteDefined := False;
+  for var i := 1 to  High(RouteFields) + 1 do
+    if FrgItems.GetValue('r' + IntToStr(i)) = 1 then begin
+      LRouteDefined := True;
+      Break;
+    end;
+  Msg :=  '';
+  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
+    Msg := S.IIFStr(not LRouteDefined, 'Не задан маршрут');
+  end
+  else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
+    Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
+  end;
+ {
+  var LWoEstimate := FrgItems.GetValue('wo_estimate').AsInteger = 1;
+  if LFieldName = 'wo_estimate' then
+    ReadOnly := LIsStdItem;
+  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) then
+    ReadOnly := LIsStdItem or LFromSgp or LWoEstimate;
+  if A.InArray(LFieldName, ['kns', 'thn']) then
+    ReadOnly := LFromSgp or LWoEstimate;
+  if A.InArray(LFieldName, ['price_wo_nds', 'price_with_nds']) then
+    ReadOnly := LIsStdItem;
+}
+end;
 
 end.
 
+procedure TDlg_Order.CorrectRowIfNameChanged(DisableOnly: Boolean = False);
+//проверяем, является ли изделие в поле наименование стандартным - есть ли в списке, и также дествия зависят от галки СГП
+//в зависимости от этого или только блокирем изменение зависимых ячеек (это при переходе по записям в мемтейбл),
+//либо корректируем еще и их значения (при вызове при изменении значения вручную, и при загрузке таблицы в режиме копирования заказа)
+var
+  NoErr: Boolean;
+  val: Variant;
+  fn: string;
+  dt1: TDateTime;
+  st, fst: string;
+  rn: Integer;
+  i, j: Integer;
+  b, IsStd, FromSgp, WoEstimate: Boolean;
+  RecNo: Integer;
+begin
+  //для названия, проверим есть ли в списке стандартных
+  for i := 0 to High(StdItems) do
+    if MemTableEh1.FieldByName('name').AsString = StdItems[i][1] then
+      Break;
+  IsStd := i <= High(StdItems);
+  FromSgp := MemTableEh1.FieldByName('sgp').Value = 1;
+  WoEstimate := MemTableEh1.FieldByName('wo_estimate').Value = 1;
+  //IsStd and (StdItems[i][2] = 1);
+{  if IsStd then begin
+    LockStdFormat;
+  end;}
+  //заблокирем изменение зависимых
+//  Gh.GetGridColumn(DBGridEh1, 'kns').ReadOnly := IsStd;
+//ch 2024-08-26 - конструктор допустим для стандартных изделий, но по-прежнему недопустим при получении с сгп
+  Gh.GetGridColumn(DBGridEh1, 'kns').ReadOnly := FromSgp or WoEstimate;
+  Gh.GetGridColumn(DBGridEh1, 'thn').ReadOnly := FromSgp or WoEstimate;
+  Gh.GetGridColumn(DBGridEh1, 'resale').ReadOnly := True; //IsStd;
+  Gh.GetGridColumn(DBGridEh1, 'price_pp').ReadOnly := MemTableEh1.FieldByName('resale').Value = 1;
+  Gh.GetGridColumn(DBGridEh1, 'wo_estimate').ReadOnly := IsStd or NoChangeItems;
+  for j := 1 to High(RouteFields) + 1 do begin
+    Gh.GetGridColumn(DBGridEh1, 'r' + IntToStr(j)).ReadOnly := IsStd or FromSgp or WoEstimate;
+  end;
+  //выход, если не надо менть значения
+  if DisableOnly then Exit;
+  //коррекция зависимых значений
+  //StdItems  адйи, имя, null, 9 участков производства, доп.компл, цена, цена перепродажи
+  if not IsStd then MemTableEh1.FieldByName('id_std').Value := null;
+  MemTableEh1.FieldByName('std').Value := S.IIf(IsStd, 1, 0);
+  MemTableEh1.FieldByName('nstd').Value := S.IIf(IsStd, 0, 1);
+  //MemTableEh1.FieldByName('sgp').Value:= S.IIf(FromSgp, 1, 0);
+  if IsStd then begin
+    MemTableEh1.FieldByName('id_std').Value := StdItems[i][0];
+    for j := 1 to  High(RouteFields) + 1 do begin
+      MemTableEh1.FieldByName('r' + IntToStr(j)).Value := S.IIf(StdItems[i][2 + j] = 1, 1, 0);
+    end;
+    MemTableEh1.FieldByName('resale').Value := S.IIf(StdItems[i][2 + 9 + 1] = 1, 1, 0);
+    MemTableEh1.FieldByName('price').Value := StdItems[i][2 + 9 + 1 + 1];
+    MemTableEh1.FieldByName('price_pp').Value := StdItems[i][2 + 9 + 1 + 2];
+    MemTableEh1.FieldByName('wo_estimate').Value := StdItems[i][2 + 9 + 1 + 2 + 1];
+  end;
+  //дублируем здесь зависимости от галки Без сметы
+  WoEstimate := MemTableEh1.FieldByName('wo_estimate').Value = 1;
+  Gh.GetGridColumn(DBGridEh1, 'kns').ReadOnly := FromSgp or WoEstimate;
+  Gh.GetGridColumn(DBGridEh1, 'thn').ReadOnly := FromSgp or WoEstimate;
+  if (FromSgp) or WoEstimate or (MemTableEh1.FieldByName('resale').Value = 1) then begin
+    MemTableEh1.FieldByName('kns').Value := -100;
+    MemTableEh1.FieldByName('thn').Value := -100;
+    for j := 1 to  High(RouteFields) + 1 do begin
+      MemTableEh1.FieldByName('r' + IntToStr(j)).Value := 0;
+    end;
+  end
+  else if IsStd then begin
+    //MemTableEh1.FieldByName('kns').Value := -100;   //2024-08-26 убираем проверку - для стандартного изделия может быть выбран конструктор
+    if S.NNum(MemTableEh1.FieldByName('thn').AsVariant) <= 0 then
+      MemTableEh1.FieldByName('thn').Value := -102;
+  end
+  else begin
+    if S.NNum(MemTableEh1.FieldByName('kns').AsVariant) <= 0 then
+      MemTableEh1.FieldByName('kns').Value := -101;
+    if S.NNum(MemTableEh1.FieldByName('thn').AsVariant) <= 0 then
+      MemTableEh1.FieldByName('thn').Value := -102;
+  end;
+  if MemTableEh1.FieldByName('resale').Value = 1 then begin
+    MemTableEh1.FieldByName('price_pp').Value := MemTableEh1.FieldByName('price').Value;
+  end;
 
+end;
+
+
+
+проверку дат, не рабюооает автомат
+ндс при наличке?
+какие суммы нужны в шапки, без скидок они без ндс?

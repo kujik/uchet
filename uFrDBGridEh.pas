@@ -935,6 +935,8 @@ type
     //получить значени€ всех перечисленных полей; если пол€ не переданы - получаем все
     function  GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
     function  GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
+    //получить им€ пол€ дл€ столбца (в нижнем регистре)
+    function  GetFieldNameForSender(Sender: TObject): string;
     //получить значение €чейки футера дл€ пол€ (если там автосумма, то при AsText = False получит именно значение а не форматированный текст)
     function  GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
     //сохраним айди измененной строки в массиве EditData.IdsChanged
@@ -1056,9 +1058,11 @@ type
     function IsTableCorrect: Boolean;
     //получить размеры грида
     procedure GetGridDimensions(var AWidth, AHeight: Integer);
+    //пересоздадим выпадающий список в столбце
+    procedure UpdatePickKeyList(const AFieldName: string; APickList, AKeyList: TVarDynArray; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean);
     //тестова€ процедура
     procedure Test;
-    function  TestCompareFC: Boolean;
+    function TestCompareFC: Boolean;
 
 
     {функции, вызываемые событи€ми во врем€ работы или настройки фрейма}
@@ -1383,12 +1387,16 @@ procedure TFrDBGridEhOpt.SetPick(AFieldName: string; APickKeyList: TVarDynArray2
 var
   KeyList, PickList: TVarDynArray;
 begin
-  PickList := APickKeyList.Col(0);
-  if Length(APickKeyList[0]) = 2 then
-    KeyList := APickKeyList.Col(1)
+  if Length(APickKeyList) > 0 then begin
+    PickList := APickKeyList.Col(0);
+    if Length(APickKeyList[0]) = 2 then
+      KeyList := APickKeyList.Col(1)
+    else
+      KeyList := [];
+    SetPick(AFieldName, PickList, KeyList, ALimitTextToListValues, AAlwaysShowEditButton);
+  end
   else
-    KeyList := [];
-  SetPick(AFieldName, PickList, KeyList, ALimitTextToListValues, AAlwaysShowEditButton);
+    SetPick(AFieldName, [], [], ALimitTextToListValues, AAlwaysShowEditButton);
 end;
 
 procedure TFrDBGridEhOpt.SetButtonsIfEmpty(AButtonsIfEmpty: TVarDynArray);
@@ -2880,6 +2888,12 @@ function TFrDBGridEh.GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Bo
 //получить значени€ всех перечисленных полей
 begin
   Result := GetValuesArr(A.Explode(FieldNames, ';', True), Pos, Filtered);
+end;
+
+function TFrDBGridEh.GetFieldNameForSender(Sender: TObject): string;
+//получить им€ пол€ дл€ столбца (в нижнем регистре)
+begin
+  Result := S.ToLower(TColumnEh(Sender).FieldName);
 end;
 
 function TFrDBGridEh.GetFuterValue(FieldName: string; AsText: Boolean = True): Variant;
@@ -4566,6 +4580,24 @@ begin
     end;
   end;
 end;
+
+procedure TFrDBGridEh.UpdatePickKeyList(const AFieldName: string; APickList, AKeyList: TVarDynArray; ALimitTextToListValues: Boolean; AAlwaysShowEditButton: Boolean);
+//пересоздадим выпадающий список в столбце
+var
+  col: TColumnEh;
+  k: Integer;
+begin
+  col := DBGridEh1.FindFieldColumn(AFieldName);
+  col.LimitTextToListValues := ALimitTextToListValues;
+  col.AlwaysShowEditButton := AAlwaysShowEditButton;
+  col.PickList.Clear;
+  col.KeyList.Clear;
+  for k := 0 to High(AKeyList) do
+    col.KeyList.Add(S.NSt(AKeyList[k]));
+  for k := 0 to High(APickList) do
+    col.PickList.Add(S.NSt(APickList[k]));
+end;
+
 
 
 end.

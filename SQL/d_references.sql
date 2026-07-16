@@ -2,7 +2,9 @@
 
 --свои организации дл€ использовани€ в и таблицах снабжени€
 --alter table ref_sn_organizations drop column is_customer;
-alter table ref_sn_organizations add is_employer number(1) default 0;
+alter table ref_sn_organizations add is_wholesaler number(1) default 0;  --!!!
+alter table ref_sn_organizations add nds_rate number default 0;  --!!!
+alter table ref_sn_organizations add or_cash number default 0;  --!!!
 create table ref_sn_organizations (
   id number(12),
   name varchar(30),        --наименование
@@ -11,9 +13,12 @@ create table ref_sn_organizations (
   is_buyer number(1),   --€вл€етс€ покупателем (1) 
   is_seller number(1),   --€вл€етс€ продавцом (1)
   prefix varchar(10),      --префикс дл€ заказов
-  or_cashless number(1),   --в заказах допускаетс€ только безналичный расчет (1)
+  or_cashless number(1),   --в заказах допускаетс€ безналичный расчет
+  or_cash number(1),   --в заказах допускаетс€ наличный расчет
+  is_wholesaler number(1) default 0,  --€вл€етс€ оптовым продавцом
   nds number(1),           --в заказах, выделать Ќƒ—
   is_employer number(1) default 0,   --€вл€етс€ работодателем (к ней могут прикрепл€тьс€ работники)
+  nds_rate  number default 0,      --ставка ндс
   constraint pk_ref_sn_organizations primary key (id)
 );  
 
