@@ -1,4 +1,4 @@
-unit uFrmMain;
+﻿unit uFrmMain;
 
 {$I EhLib.Inc}
 
@@ -8,11 +8,10 @@ uses
 Windows, SysUtils, Classes, Graphics, Forms, Controls, Menus,
 {$IFDEF EH_LIB_7} {$ENDIF}
 StdCtrls, Dialogs, Buttons, Messages, ExtCtrls, ComCtrls, StdActns, ActnList,
-DB, ADODB{, EhLibMTE}, DataDriverEh, DBGridEh, PrnDbgeh,
-PropFilerEh, PropStorageEh, {EhLibADO, }AppEvnts, uUtils,
-psAPI, uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants,
-Vcl.Imaging.pngimage, System.Actions,
-Vcl.ActnMan, uString, Vcl.DBActns, Vcl.ToolWin;
+DB, ADODB, DataDriverEh, DBGridEh, PrnDbgeh, PropFilerEh, PropStorageEh, Vcl.DBActns,
+System.Actions, Vcl.AppEvnts, Vcl.ToolWin, Vcl.Imaging.pngimage, uUtils, psAPI,
+uForms, uMessages, uFrmXDsrvAuth, uSettings, Variants, Vcl.ActnMan, uString
+;
 
 type
   TFrmMain = class(TForm)
@@ -448,7 +447,7 @@ begin
     else if MenuCaption = 'Общая смета по выбранным заказам' then
       Dlg_Rep_Smeta.ShowModal
     else if MenuCaption = 'О программе' then
-      FrmXWAbout.ShowModal
+      FrmXWAbout.ShowAbout
     else if MenuCaption = '' then;
   end;
 end;

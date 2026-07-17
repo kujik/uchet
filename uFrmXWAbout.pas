@@ -9,12 +9,11 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, DBCtrlsEh, uData, uForms, uString, uMessages,
-  Vcl.Imaging.pngimage, Vcl.ExtCtrls, V_Normal;
+  Vcl.Imaging.pngimage, Vcl.ExtCtrls, uFrmBasicMdi;
 
   type
-  TFrmXWAbout = class(TForm_Normal)
+  TFrmXWAbout = class(TFrmBasicMdi)
     pnlMain: TPanel;
-    btnOk: TButton;
     imgMain: TImage;
     lblUchet: TLabel;
     lblAuthor: TLabel;
@@ -29,7 +28,6 @@ uses
     procedure lblAuthorDblClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure imgMainClick(Sender: TObject);
     procedure lblSqlClick(Sender: TObject);
     procedure lblErrorsClick(Sender: TObject);
@@ -37,13 +35,9 @@ uses
     { Private declarations }
     RndVal: Integer;
     Pwd: string;
-    IsMdiChild: Boolean;
   public
     { Public declarations }
-    DoYourCheckForMDI: Boolean;
-    constructor Create(AOwner: TComponent; AIsMdiChild: Boolean = False); reintroduce;
-  protected
-    procedure InitializeNewForm; override;
+    procedure ShowAbout;
   end;
 
 var
@@ -51,42 +45,23 @@ var
 
 implementation
 
-// Тестовый комментарий: проверка кодировки после перекодировки файла в UTF-8
-
 uses
   uWindows;
 {$R *.dfm}
 
-constructor TFrmXWAbout.Create(AOwner: TComponent; AIsMdiChild: Boolean = False);
+procedure TFrmXWAbout.ShowAbout;
+var
+  SavedCaption: string;
 begin
-  IsMdiChild:=AIsMdiChild;
-  inherited Create(AOwner);
+  SavedCaption := Self.Caption;
+  PrepareCreatedForm(Application, Self.Name, SavedCaption, fView, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB], False);
+  ShowModal;
 end;
-
 
 procedure TFrmXWAbout.imgMainClick(Sender: TObject);
 begin
   inherited;
   pnlLinks.Visible:=True;
-end;
-
-procedure TFrmXWAbout.InitializeNewForm;
-var
-  FS: ^TFormStyle;
-begin
-  inherited;
-  if IsMdiChild then
-    begin
-      FS := @FormStyle;
-      FS^ := fsMDIChild;
-    end;
-end;
-
-procedure TFrmXWAbout.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-  inherited;
-  if FormStyle = fsMDIChild
-    then Action := caFree;
 end;
 
 procedure TFrmXWAbout.FormKeyPress(Sender: TObject; var Key: Char);

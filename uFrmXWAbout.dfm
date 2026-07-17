@@ -1,7 +1,4 @@
-object FrmXWAbout: TFrmXWAbout
-  Left = 445
-  Top = 127
-  ActiveControl = btnOk
+inherited FrmXWAbout: TFrmXWAbout
   BorderStyle = bsDialog
   Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
   ClientHeight = 374
@@ -14,21 +11,26 @@ object FrmXWAbout: TFrmXWAbout
   Font.Style = []
   KeyPreview = True
   Position = poMainFormCenter
-  OnClose = FormClose
   OnKeyPress = FormKeyPress
   OnShow = FormShow
   DesignSize = (
     211
     374)
   TextHeight = 13
-  object pnlMain: TPanel
-    Left = 8
-    Top = 8
-    Width = 201
-    Height = 320
-    BevelOuter = bvNone
-    TabOrder = 0
-    object imgMain: TImage
+  inherited pnlFrmMain: TPanel
+    Width = 211
+    Height = 374
+    inherited pnlFrmClient: TPanel
+      Width = 203
+      Height = 331
+      object pnlMain: TPanel
+        Left = 8
+        Top = 8
+        Width = 201
+        Height = 320
+        BevelOuter = bvNone
+        TabOrder = 0
+        object imgMain: TImage
       Left = -2
       Top = 3
       Width = 200
@@ -2236,17 +2238,6 @@ object FrmXWAbout: TFrmXWAbout
       ParentFont = False
     end
   end
-  object btnOk: TButton
-    Left = 142
-    Top = 334
-    Width = 65
-    Height = 33
-    Caption = 'OK'
-    Default = True
-    ModalResult = 1
-    TabOrder = 1
-    IsControl = True
-  end
   object pnlLinks: TPanel
     Left = 0
     Top = 324
@@ -2284,6 +2275,8 @@ object FrmXWAbout: TFrmXWAbout
       Font.Style = [fsUnderline]
       ParentFont = False
       OnClick = lblErrorsClick
+    end
+  end
     end
   end
 end
