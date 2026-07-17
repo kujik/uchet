@@ -1,4 +1,4 @@
-unit uFrmADedtMainSettings;
+п»їunit uFrmADedtMainSettings;
 
 interface
 
@@ -73,7 +73,7 @@ end;
 function TFrmADedtMainSettings.Prepare: Boolean;
 begin
   Result := False;
-  Caption := '~Основные настройки программы';
+  Caption := '~РћСЃРЅРѕРІРЅС‹Рµ РЅР°СЃС‚СЂРѕР№РєРё РїСЂРѕРіСЂР°РјРјС‹';
   ID := 1;
   F.DefineFields:=[
     ['id$i'],
@@ -119,9 +119,9 @@ end;
 procedure TFrmADedtMainSettings.VerifyBeforeSave;
 begin
   if FIsDataChanged then
-    FErrorMessage := '?Данные были изменены!'#13#10'Сохранить?'
+    FErrorMessage := '?Р”Р°РЅРЅС‹Рµ Р±С‹Р»Рё РёР·РјРµРЅРµРЅС‹!'#13#10'РЎРѕС…СЂР°РЅРёС‚СЊ?'
   else
-    FErrorMessage := 'Изменений не было.';
+    FErrorMessage := 'РР·РјРµРЅРµРЅРёР№ РЅРµ Р±С‹Р»Рѕ.';
 end;
 
 end.

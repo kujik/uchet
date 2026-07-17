@@ -1,4 +1,4 @@
-unit uMailingInterface;
+п»їunit uMailingInterface;
 
 interface
 
@@ -73,10 +73,10 @@ begin
   v := Q.QLoadRow('select id, userids, customemail, comm from adm_mailing where id = :id$i', [FMailingNum]);
   if v[0] = null then begin
     FMailingNum := 0;
-    MyWarningMessage('Неверно задан код рассылки!');
+    MyWarningMessage('РќРµРІРµСЂРЅРѕ Р·Р°РґР°РЅ РєРѕРґ СЂР°СЃСЃС‹Р»РєРё!');
     FUserIDs := '';
     FAddresses := '';
-    FComm := 'Такой рассылки нет!';
+    FComm := 'РўР°РєРѕР№ СЂР°СЃСЃС‹Р»РєРё РЅРµС‚!';
   end
   else begin
     FUserIDs := S.NSt(v[1]);

@@ -1,4 +1,4 @@
-unit uFrmADedtItmCopyRigths;
+п»їunit uFrmADedtItmCopyRigths;
 
 interface
 
@@ -30,7 +30,7 @@ function TFrmADedtItmCopyRigths.Save: Boolean;
 begin
   if (cmbSrc.Text = '') or (cmbDst.Text = '') or (cmbSrc.Text = cmbDst.Text) then
     Exit;
-  if MyQuestionMessage('Установить права доступа пользователя'#13#10 + cmbDst.Text + #13#10'такими же, как у'#13#10 + cmbSrc.Text + #13#10'?') <> mrYes then
+  if MyQuestionMessage('РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РїСЂР°РІР° РґРѕСЃС‚СѓРїР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ'#13#10 + cmbDst.Text + #13#10'С‚Р°РєРёРјРё Р¶Рµ, РєР°Рє Сѓ'#13#10 + cmbSrc.Text + #13#10'?') <> mrYes then
     Exit;
   Result := True;
   exit;
@@ -47,7 +47,7 @@ begin
   );
   Q.QCommitOrRollback;
   if not Q.CommitSuccess then begin
-    MyWarningMessage('Ошибка! Изменения не внесены!');
+    MyWarningMessage('РћС€РёР±РєР°! РР·РјРµРЅРµРЅРёСЏ РЅРµ РІРЅРµСЃРµРЅС‹!');
     Result := False;
     Exit;
   end;
@@ -55,7 +55,7 @@ end;
 
 procedure TFrmADedtItmCopyRigths.ShowDialog;
 begin
-  PrepareCreatedForm(Application, '', '~Права пользователя ИТМ', fEdit, null, [], [{myfoModal, }myfoDialog, myfoDialogButtonsB]);
+  PrepareCreatedForm(Application, '', '~РџСЂР°РІР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РРўРњ', fEdit, null, [], [{myfoModal, }myfoDialog, myfoDialogButtonsB]);
   F.DefineFields:=[['cmbSrc','V=1:255'], ['cmbDst','V=1:255']];
   Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], cmbSrc, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from dv.au_user where id not in (-1, 904) order by name', [], cmbDst, cntComboLK);

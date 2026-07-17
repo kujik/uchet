@@ -1,4 +1,4 @@
-unit F_TestTree;
+п»їunit F_TestTree;
 
 interface
 
@@ -55,7 +55,7 @@ uses
 
 
 {--------------------------------------------------------------------}
-{ Сохранение открытых веток и текущей ветки дерева                   }
+{ РЎРѕС…СЂР°РЅРµРЅРёРµ РѕС‚РєСЂС‹С‚С‹С… РІРµС‚РѕРє Рё С‚РµРєСѓС‰РµР№ РІРµС‚РєРё РґРµСЂРµРІР°                   }
 {--------------------------------------------------------------------}
 function SavePositionTreeStr(oMemTableEh :TMemTableEh) :string;
 var
@@ -153,8 +153,8 @@ end;
 procedure TForm_TestTree.FormShow(Sender: TObject);
 begin
   inherited;
-  //фокус на грид
-  //если этого не сделать, не видим подсветки значения, найденного перед открытием методом Memtable.TreeList.Locate
+  //С„РѕРєСѓСЃ РЅР° РіСЂРёРґ
+  //РµСЃР»Рё СЌС‚РѕРіРѕ РЅРµ СЃРґРµР»Р°С‚СЊ, РЅРµ РІРёРґРёРј РїРѕРґСЃРІРµС‚РєРё Р·РЅР°С‡РµРЅРёСЏ, РЅР°Р№РґРµРЅРЅРѕРіРѕ РїРµСЂРµРґ РѕС‚РєСЂС‹С‚РёРµРј РјРµС‚РѕРґРѕРј Memtable.TreeList.Locate
   DBGridEh1.SetFocus;
 end;
 
@@ -176,7 +176,7 @@ var
   i: Integer;
 begin
   FormDoc:='Dlg_TestTree';
-  Caption:='Выбор группы';
+  Caption:='Р’С‹Р±РѕСЂ РіСЂСѓРїРїС‹';
   MinWidth:=370;
   MinHeight:=400;
   if DBGridEh1.Columns.Count = 1 then begin
@@ -185,7 +185,7 @@ begin
     MemTableEh1.close;
     Mth.AddTableColumn(DBGridEh1, 'id_group', ftInteger, 0, 'id_group', 100, False);
     Mth.AddTableColumn(DBGridEh1, 'id_parentgroup', ftInteger, 0, 'id_parentgroup', 100, False);
-    Mth.AddTableColumn(DBGridEh1, 'groupname', ftString, 400, 'Наименование', 300, True);
+    Mth.AddTableColumn(DBGridEh1, 'groupname', ftString, 400, 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ', 300, True);
     MemTableEh1.CreateDataSet;
     MemTableEh1.TreeList.Active := True;
     MemTableEh1.TreeList.KeyFieldName := 'id_group';
@@ -194,12 +194,12 @@ begin
 //    DBGridEh1.Columns[1].AlwaysShowEditButton:=True;
     DBGridEh1.OptionsEh:=DBGridEh1.OptionsEh-[dghColumnResize, dghColumnMove] + [dghEnterAsTab] + [dghAutoFitRowHeight];
     DBGridEh1.AutoFitColWidths:=True;
-    //скроем айди
+    //СЃРєСЂРѕРµРј Р°Р№РґРё
 //    DBGridEh1.Columns[0].Visible:=False;
-    //обработчики ввода данных в гриде
+    //РѕР±СЂР°Р±РѕС‚С‡РёРєРё РІРІРѕРґР° РґР°РЅРЅС‹С… РІ РіСЂРёРґРµ
 //    DBGridEh1.Columns[1].onUpdateData:=DBGridEh1ColumnsUpdateData;
 //    DBGridEh1.Columns[2].onUpdateData:=DBGridEh1ColumnsUpdateData;
-    //операции будем выполнять по кнопкам (добавление строки - нажатие +), здеь отключим чтобы не выполнялись автоматом напр при скроллинге стрелками
+    //РѕРїРµСЂР°С†РёРё Р±СѓРґРµРј РІС‹РїРѕР»РЅСЏС‚СЊ РїРѕ РєРЅРѕРїРєР°Рј (РґРѕР±Р°РІР»РµРЅРёРµ СЃС‚СЂРѕРєРё - РЅР°Р¶Р°С‚РёРµ +), Р·РґРµСЊ РѕС‚РєР»СЋС‡РёРј С‡С‚РѕР±С‹ РЅРµ РІС‹РїРѕР»РЅСЏР»РёСЃСЊ Р°РІС‚РѕРјР°С‚РѕРј РЅР°РїСЂ РїСЂРё СЃРєСЂРѕР»Р»РёРЅРіРµ СЃС‚СЂРµР»РєР°РјРё
     DBGridEh1.AllowedOperations:=[alopUpdateEh];
 //    Gh._SetDBGridEhSumFooter(DBGridEh1, 'qnt', '0');
     DBGridEh1.IndicatorOptions := [gioShowRowIndicatorEh];
@@ -238,11 +238,11 @@ begin
   AutoSaveWindowPos:= True;
 
   if (S.VarIsClear(IdGroup)) or (S.NNum(IdGroup) = -1) then begin
-    //если передено пустое значение, сохраним раскрытые ранее ноды грида
+    //РµСЃР»Рё РїРµСЂРµРґРµРЅРѕ РїСѓСЃС‚РѕРµ Р·РЅР°С‡РµРЅРёРµ, СЃРѕС…СЂР°РЅРёРј СЂР°СЃРєСЂС‹С‚С‹Рµ СЂР°РЅРµРµ РЅРѕРґС‹ РіСЂРёРґР°
     RestorePositionTree(MemTableEh1, st);
   end
   else begin
-    //если передано айди группы, найдем его и откроем этот узел (Locate откроет)
+    //РµСЃР»Рё РїРµСЂРµРґР°РЅРѕ Р°Р№РґРё РіСЂСѓРїРїС‹, РЅР°Р№РґРµРј РµРіРѕ Рё РѕС‚РєСЂРѕРµРј СЌС‚РѕС‚ СѓР·РµР» (Locate РѕС‚РєСЂРѕРµС‚)
 //    MemTableEh1.TreeList.FullCollapse;
     RestorePositionTree(MemTableEh1, st);
     MemTableEh1.TreeList.Locate('id_group', IdGroup, []);

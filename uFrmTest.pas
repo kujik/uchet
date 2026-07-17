@@ -1,4 +1,4 @@
-unit uFrmTest;
+п»їunit uFrmTest;
 
 interface
 
@@ -226,7 +226,7 @@ begin
   exit;
 
 {
-  //через FireDAC
+  //С‡РµСЂРµР· FireDAC
 //  FDConnection1.ConnectionString:=ConnectionString;
   FDConnection1.Connected:=True;
   FDQuery1.SQL.text:='insert into test1 (id) values (10000) returning id into :id';
@@ -237,7 +237,7 @@ begin
   v2:=FDQuery1.RowsAffected;
 //  exit;
 }
-  //так не работает, возвращает исходное значение параметра
+  //С‚Р°Рє РЅРµ СЂР°Р±РѕС‚Р°РµС‚, РІРѕР·РІСЂР°С‰Р°РµС‚ РёСЃС…РѕРґРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїР°СЂР°РјРµС‚СЂР°
 {  MyData.QOra.SQL.Text:='insert into test1 (id) values (10000) returning id into :id';
   MyData.QOra.Parameters.ParamByName('id').value:=1;
   MyData.QOra.Parameters.ParamByName('id').DataType:=ftInteger;
@@ -249,9 +249,9 @@ begin
   v1:=MyData.QOra.RowsAffected;}
   exit;
 
-  //так описано получение результата вставки ключевым словом returning
-//для другого типа соединения нежели использую я
-//проверить не удалось, при выполнении execsql ора-03106
+  //С‚Р°Рє РѕРїРёСЃР°РЅРѕ РїРѕР»СѓС‡РµРЅРёРµ СЂРµР·СѓР»СЊС‚Р°С‚Р° РІСЃС‚Р°РІРєРё РєР»СЋС‡РµРІС‹Рј СЃР»РѕРІРѕРј returning
+//РґР»СЏ РґСЂСѓРіРѕРіРѕ С‚РёРїР° СЃРѕРµРґРёРЅРµРЅРёСЏ РЅРµР¶РµР»Рё РёСЃРїРѕР»СЊР·СѓСЋ СЏ
+//РїСЂРѕРІРµСЂРёС‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ, РїСЂРё РІС‹РїРѕР»РЅРµРЅРёРё execsql РѕСЂР°-03106
 {  Query := TSQLQuery.Create( nil);
   Query.SQLConnection := mydata.SQLConnection1;
 //  mydata.CnOra.Connected:=False;
@@ -275,7 +275,7 @@ var
   va: TVarDynArray;
 begin
   try
-  if MyQuestionMessage('Заполнить таблицу этапов заказа?') <> mrYes Then Exit;
+  if MyQuestionMessage('Р—Р°РїРѕР»РЅРёС‚СЊ С‚Р°Р±Р»РёС†Сѓ СЌС‚Р°РїРѕРІ Р·Р°РєР°Р·Р°?') <> mrYes Then Exit;
 {  QBeginTrans;
   Randomize;
   ar2:=QLoad('select id, qnt, dt_beg from v_order_items where qnt > 0 and dt_end is null', null);
@@ -312,7 +312,7 @@ var
   res: Integer;
 begin
 {  try
-  if MyQuestionMessage('Заполнить таблицу платежей по заказам?') <> mrYes Then Exit;
+  if MyQuestionMessage('Р—Р°РїРѕР»РЅРёС‚СЊ С‚Р°Р±Р»РёС†Сѓ РїР»Р°С‚РµР¶РµР№ РїРѕ Р·Р°РєР°Р·Р°Рј?') <> mrYes Then Exit;
   QBeginTrans;
   ar2:=QLoad('select id_order, dt, sum(sum) from sn_order_payments where dt < :dt$d group by id_order, dt', EncodeDate(2024,05,19));
   QExecSql('delete from or_payments', null);
@@ -345,7 +345,7 @@ var
   va, va2, va3: TVarDynArray;
 begin
 {  try
-  if MyQuestionMessage('Заполнить таблицу приемки/отгрузки по СГП?') <> mrYes Then Exit;
+  if MyQuestionMessage('Р—Р°РїРѕР»РЅРёС‚СЊ С‚Р°Р±Р»РёС†Сѓ РїСЂРёРµРјРєРё/РѕС‚РіСЂСѓР·РєРё РїРѕ РЎР“Рџ?') <> mrYes Then Exit;
   QBeginTrans;
   Randomize;
   ar2:=QLoad('select id, qnt, dt_end, sgp, id_order, id_organization from v_order_items where id_order > 0 and qnt > 0 and dt_end is not null', null);
@@ -353,7 +353,7 @@ begin
   va2:=[]; va3:=[];
   for i:=0 to High(ar2) do begin
     if ar2[i][3] <> 1 then begin
-      //для всех позиций всех заказов кроме позиций с сгп добавим запаись на дату окончания  = шаг 2
+      //РґР»СЏ РІСЃРµС… РїРѕР·РёС†РёР№ РІСЃРµС… Р·Р°РєР°Р·РѕРІ РєСЂРѕРјРµ РїРѕР·РёС†РёР№ СЃ СЃРіРї РґРѕР±Р°РІРёРј Р·Р°РїР°РёСЃСЊ РЅР° РґР°С‚Сѓ РѕРєРѕРЅС‡Р°РЅРёСЏ  = С€Р°Рі 2
       QExecSql('insert into order_item_stages (id_stage, id_order_item, qnt, dt) values (:id_stage$i, :id_order_item$i, :qnt$f, :dt$d)',
         VarArrayOf([2, ar2[i][0], ar2[i][1], ar2[i][2]])
       );
@@ -361,7 +361,7 @@ begin
       va2:=va2 + [ar2[i][4]];
     end;
     if ar2[i][5] <> -1 then begin
-      //для всех заказов кроме производственных добавим запись на дату окончания = шаг 3
+      //РґР»СЏ РІСЃРµС… Р·Р°РєР°Р·РѕРІ РєСЂРѕРјРµ РїСЂРѕРёР·РІРѕРґСЃС‚РІРµРЅРЅС‹С… РґРѕР±Р°РІРёРј Р·Р°РїРёСЃСЊ РЅР° РґР°С‚Сѓ РѕРєРѕРЅС‡Р°РЅРёСЏ = С€Р°Рі 3
       QExecSql('insert into order_item_stages (id_stage, id_order_item, qnt, dt) values (:id_stage$i, :id_order_item$i, :qnt$f, :dt$d)',
         VarArrayOf([3, ar2[i][0], ar2[i][1], ar2[i][2]])
       );
@@ -388,11 +388,11 @@ begin
 end;
 
 procedure Test_DelResaleStd;
-//убрать стандартные Д/К
-//меняем им группу в стд изделиях на нестандартные,
-//создаем для них в бкад_номенкл записи
-//изделия в ордер_итемся меняем на нестандартные и не д/к
-//меняем в сметах сслылку на д/к на ссылку на бкад_ном и группу на_удаление
+//СѓР±СЂР°С‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ Р”/Рљ
+//РјРµРЅСЏРµРј РёРј РіСЂСѓРїРїСѓ РІ СЃС‚Рґ РёР·РґРµР»РёСЏС… РЅР° РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ,
+//СЃРѕР·РґР°РµРј РґР»СЏ РЅРёС… РІ Р±РєР°Рґ_РЅРѕРјРµРЅРєР» Р·Р°РїРёСЃРё
+//РёР·РґРµР»РёСЏ РІ РѕСЂРґРµСЂ_РёС‚РµРјСЃСЏ РјРµРЅСЏРµРј РЅР° РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ Рё РЅРµ Рґ/Рє
+//РјРµРЅСЏРµРј РІ СЃРјРµС‚Р°С… СЃСЃР»С‹Р»РєСѓ РЅР° Рґ/Рє РЅР° СЃСЃС‹Р»РєСѓ РЅР° Р±РєР°Рґ_РЅРѕРј Рё РіСЂСѓРїРїСѓ РЅР°_СѓРґР°Р»РµРЅРёРµ
 var
   i,j,k:Integer;
   v:Variant;
@@ -400,12 +400,12 @@ var
   va, va2, va3: TVarDynArray;
   Res:Integer;
 begin
-  if MyQuestionMessage('Преобразовать Д/К (стд)?') <> mrYes Then Exit;
+  if MyQuestionMessage('РџСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ Р”/Рљ (СЃС‚Рґ)?') <> mrYes Then Exit;
   ar2:=Q.QLoad('select id, name, null from or_std_items where id_or_format_estimates = 1', []);
   Q.QBeginTrans;
   Res:=-1;
   repeat
-  if Q.QExecSql('update or_std_items set id_or_format_estimates = 0, resale = 0, price = null, price_pp = null, name =''ДК_'' || name where id_or_format_estimates = 1', [] ) < 0
+  if Q.QExecSql('update or_std_items set id_or_format_estimates = 0, resale = 0, price = null, price_pp = null, name =''Р”Рљ_'' || name where id_or_format_estimates = 1', [] ) < 0
     then Break;
   for i:=0 to High(ar2) do begin
     ar2[i][2]:=Q.QSave('i','bcad_nomencl','','id$i;name$s', [-1, ar2[i][1]]);
@@ -428,11 +428,11 @@ begin
 end;
 
 procedure Test_DelResaleNStd;
-//убрать нестандартные Д/К
-//получис список нестандартных д.к изделий из ордер_итемс
-//создаем для них в бкад_номенкл в группе На удаление записи, рапвные назв изделия + "_"
-//в ордер_итемс снимеаем флаг д/к
-//меняем в сметах сслылку на д/к на ссылку на бкад_ном и группу на_удаление
+//СѓР±СЂР°С‚СЊ РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ Р”/Рљ
+//РїРѕР»СѓС‡РёСЃ СЃРїРёСЃРѕРє РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹С… Рґ.Рє РёР·РґРµР»РёР№ РёР· РѕСЂРґРµСЂ_РёС‚РµРјСЃ
+//СЃРѕР·РґР°РµРј РґР»СЏ РЅРёС… РІ Р±РєР°Рґ_РЅРѕРјРµРЅРєР» РІ РіСЂСѓРїРїРµ РќР° СѓРґР°Р»РµРЅРёРµ Р·Р°РїРёСЃРё, СЂР°РїРІРЅС‹Рµ РЅР°Р·РІ РёР·РґРµР»РёСЏ + "_"
+//РІ РѕСЂРґРµСЂ_РёС‚РµРјСЃ СЃРЅРёРјРµР°РµРј С„Р»Р°Рі Рґ/Рє
+//РјРµРЅСЏРµРј РІ СЃРјРµС‚Р°С… СЃСЃР»С‹Р»РєСѓ РЅР° Рґ/Рє РЅР° СЃСЃС‹Р»РєСѓ РЅР° Р±РєР°Рґ_РЅРѕРј Рё РіСЂСѓРїРїСѓ РЅР°_СѓРґР°Р»РµРЅРёРµ
 var
   i,j,k:Integer;
   v:Variant;
@@ -440,7 +440,7 @@ var
   va, va2, va3: TVarDynArray;
   Res:Integer;
 begin
-  if MyQuestionMessage('Преобразовать Д/К (НЕ стд)?') <> mrYes Then Exit;
+  if MyQuestionMessage('РџСЂРµРѕР±СЂР°Р·РѕРІР°С‚СЊ Р”/Рљ (РќР• СЃС‚Рґ)?') <> mrYes Then Exit;
   ar2:=Q.QLoad('select id_std_item, max(itemname), null from v_order_items where nstd = 1 and resale = 1 group by id_std_item', []);
   Q.QBeginTrans;
   Res:=-1;
@@ -462,11 +462,11 @@ begin
 end;
 
 procedure Test_SetMinPart;
-//убрать нестандартные Д/К
-//получис список нестандартных д.к изделий из ордер_итемс
-//создаем для них в бкад_номенкл в группе На удаление записи, рапвные назв изделия + "_"
-//в ордер_итемс снимеаем флаг д/к
-//меняем в сметах сслылку на д/к на ссылку на бкад_ном и группу на_удаление
+//СѓР±СЂР°С‚СЊ РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ Р”/Рљ
+//РїРѕР»СѓС‡РёСЃ СЃРїРёСЃРѕРє РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹С… Рґ.Рє РёР·РґРµР»РёР№ РёР· РѕСЂРґРµСЂ_РёС‚РµРјСЃ
+//СЃРѕР·РґР°РµРј РґР»СЏ РЅРёС… РІ Р±РєР°Рґ_РЅРѕРјРµРЅРєР» РІ РіСЂСѓРїРїРµ РќР° СѓРґР°Р»РµРЅРёРµ Р·Р°РїРёСЃРё, СЂР°РїРІРЅС‹Рµ РЅР°Р·РІ РёР·РґРµР»РёСЏ + "_"
+//РІ РѕСЂРґРµСЂ_РёС‚РµРјСЃ СЃРЅРёРјРµР°РµРј С„Р»Р°Рі Рґ/Рє
+//РјРµРЅСЏРµРј РІ СЃРјРµС‚Р°С… СЃСЃР»С‹Р»РєСѓ РЅР° Рґ/Рє РЅР° СЃСЃС‹Р»РєСѓ РЅР° Р±РєР°Рґ_РЅРѕРј Рё РіСЂСѓРїРїСѓ РЅР°_СѓРґР°Р»РµРЅРёРµ
 var
   i,j,k:Integer;
   v:Variant;
@@ -474,7 +474,7 @@ var
   va, va2, va3: TVarDynArray;
   Res:Integer;
 begin
-  if MyQuestionMessage('Задать мин партии?') <> mrYes Then Exit;
+  if MyQuestionMessage('Р—Р°РґР°С‚СЊ РјРёРЅ РїР°СЂС‚РёРё?') <> mrYes Then Exit;
   ar2:=Q.QLoad('select id_nomencl, max(minpart) minpart_max from dv.namenom_supplier ns group by id_nomencl', []);
   for i:=0 to High(ar2) do begin
     if ar2[i][0] = null then Continue;
@@ -507,8 +507,8 @@ begin
   va:=Q.DBLock(False,'ordercreate','-1','');
   Exit;
 
-  MyQuestionMessage('Паспорта по следующим заказам не могут быть сформированы!'#13#10 +  ',123421342342134 ' + #13#10'Сформировать по остальным заказам?');
-  MyQuestionMessage('Паспорта по следующим заказам не могут быть сформированы!'#13#10 +  ',123421342342134 ' + #13#10'Сформировать по остальным заказам?', 1); exit;
+  MyQuestionMessage('РџР°СЃРїРѕСЂС‚Р° РїРѕ СЃР»РµРґСѓСЋС‰РёРј Р·Р°РєР°Р·Р°Рј РЅРµ РјРѕРіСѓС‚ Р±С‹С‚СЊ СЃС„РѕСЂРјРёСЂРѕРІР°РЅС‹!'#13#10 +  ',123421342342134 ' + #13#10'РЎС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РїРѕ РѕСЃС‚Р°Р»СЊРЅС‹Рј Р·Р°РєР°Р·Р°Рј?');
+  MyQuestionMessage('РџР°СЃРїРѕСЂС‚Р° РїРѕ СЃР»РµРґСѓСЋС‰РёРј Р·Р°РєР°Р·Р°Рј РЅРµ РјРѕРіСѓС‚ Р±С‹С‚СЊ СЃС„РѕСЂРјРёСЂРѕРІР°РЅС‹!'#13#10 +  ',123421342342134 ' + #13#10'РЎС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РїРѕ РѕСЃС‚Р°Р»СЊРЅС‹Рј Р·Р°РєР°Р·Р°Рј?', 1); exit;
   for i := 0 to 100 do
     S.ConcatStP(v, inttostr(i), #13#10);
    myMessageDlg(
@@ -524,7 +524,7 @@ begin
 '  Date2 := EncodeDate(2023, 1, 3) + EncodeTime(12, 0, 0, 0); // 03.01.2023 12:00'+
 '  Date2 := EncodeDate(2023, 1, 3) + EncodeTime(12, 0, 0, 0); // 03.01.2023 12:00'+
 ''+
-'  DaysDiff := Trunc(Date2) - Trunc(Date1); // = 2 дня'+#13#10+
+'  DaysDiff := Trunc(Date2) - Trunc(Date1); // = 2 РґРЅСЏ'+#13#10+
 'end;' + v
 , mtInformation, [mbYes], '', 1);exit;
 
@@ -592,7 +592,7 @@ Exit;
 
   //try
  // ar2[1000][100]:=0;
-  //ar2:=QLoad('select id_group from dv.groups where groupname = ''Номенклатура из CAD''', null);
+  //ar2:=QLoad('select id_group from dv.groups where groupname = ''РќРѕРјРµРЅРєР»Р°С‚СѓСЂР° РёР· CAD''', null);
 //  ar2:=QLoad('select id_group from dv.groups where groupname = :groupname$i', 'dddd');
   //ar2[1000][100]:=0;
   //finally
@@ -624,18 +624,18 @@ Exit;
   exit;
 
 
-  st1:='ф?ываasdf';
+  st1:='С„?С‹РІР°asdf';
   ch:=st1[2];
   MyInfoMessage(st1[2]);;
   //Dlg_Memo.ShowDialog('','qqq','sss',st1);
-//myxlsLoadSheetToArray('r:\smeta-max.xls', 'Смета печать', 0,0,0,0,10000, 30, ar2);
+//myxlsLoadSheetToArray('r:\smeta-max.xls', 'РЎРјРµС‚Р° РїРµС‡Р°С‚СЊ', 0,0,0,0,10000, 30, ar2);
   Exit;
 
 //  Orders.LoadEstimate(null,85,null);
 //  Orders.LoadEstimate(0,0,1);
   exit;
 
-  tasks.createtaskroot(mytskopmail, [['to', 'sprokopenko@fr-mix.ru'], ['subject', 'Тестовое письмо'], ['body', 'Тело письма'], ['user-name', 'Учёт']]);
+  tasks.createtaskroot(mytskopmail, [['to', 'sprokopenko@fr-mix.ru'], ['subject', 'РўРµСЃС‚РѕРІРѕРµ РїРёСЃСЊРјРѕ'], ['body', 'РўРµР»Рѕ РїРёСЃСЊРјР°'], ['user-name', 'РЈС‡С‘С‚']]);
   exit;
 
   exit;
@@ -643,12 +643,12 @@ Exit;
 declare
   IdZakaz number;
 begin
-  select dv.SyncOrder(1, 1, 'test1', '01.12.2023', '10.12.2023', 'Билайн', 'ООО "Омега"') into idzakaz from dual;
+  select dv.SyncOrder(1, 1, 'test1', '01.12.2023', '10.12.2023', 'Р‘РёР»Р°Р№РЅ', 'РћРћРћ "РћРјРµРіР°"') into idzakaz from dual;
   dbms_output.put_line(idzakaz);
 end;
 }
 //  myinfomessage(vartostr(
-//  QSelectOneRow('select dv.SyncOrder(1, 1, ''test1'', ''01.12.2023'', ''10.12.2023'', ''Билайн'', ''ООО "Омега"'') from dual', null)
+//  QSelectOneRow('select dv.SyncOrder(1, 1, ''test1'', ''01.12.2023'', ''10.12.2023'', ''Р‘РёР»Р°Р№РЅ'', ''РћРћРћ "РћРјРµРіР°"'') from dual', null)
 //  [0]
 //  ))
 //  ;
@@ -683,28 +683,28 @@ end;
 //  turv.Convert20230806;exit;
 
 
-//  Thunderbird('sprokopenko@fr-mix.ru', '+test', 'учет'#13#10'assafsadfsd', ''); exit;
+//  Thunderbird('sprokopenko@fr-mix.ru', '+test', 'СѓС‡РµС‚'#13#10'assafsadfsd', ''); exit;
 //  testsql1;  exit;
 
 //  TasksS.TestTurvDifferences;
 //  Tasks.TestTurvComplete;
   exit;
 
-  tasks.createtaskroot(mytskopmail, [['to', 'sprokopenko@fr-mix.ru'], ['subject', 'Тестовое письмо'], ['body', 'Тело письма'], ['user-name', 'Учёт']]);
+  tasks.createtaskroot(mytskopmail, [['to', 'sprokopenko@fr-mix.ru'], ['subject', 'РўРµСЃС‚РѕРІРѕРµ РїРёСЃСЊРјРѕ'], ['body', 'РўРµР»Рѕ РїРёСЃСЊРјР°'], ['user-name', 'РЈС‡С‘С‚']]);
   exit;
 
-  Module.MailSendToUsers('mail test Учет', 'Test'#13#10'Учёт', '33,2');// VarArrayOf([33]));
+  Module.MailSendToUsers('mail test РЈС‡РµС‚', 'Test'#13#10'РЈС‡С‘С‚', '33,2');// VarArrayOf([33]));
   exit;
 
-  //UpdateIcons('R:\Uchet\Сервер.exe', 'R:\Uchet\Uchet_Icon.ico');
+  //UpdateIcons('R:\Uchet\РЎРµСЂРІРµСЂ.exe', 'R:\Uchet\Uchet_Icon.ico');
   exit;
 
   Module.CloseAppTimer(1);
-  MyInfoMessage('завершение через 10сек');
+  MyInfoMessage('Р·Р°РІРµСЂС€РµРЅРёРµ С‡РµСЂРµР· 10СЃРµРє');
   Module.CloseAppTimer(0);
   exit;
 //aFieldName: string; aFieldType:TFieldType; aFieldSize: Integer; aCaption: string; aWidth: Integer; aVisible: Boolean)
-  //Dlg_Grid1.ShowDialog('Соискатели', 400, 200, [['job', ftString, 400, 'Должность', 150, True], ['job1', ftString, 400, 'Должность 222', 250, True]], [['aaaaaaaa','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww213423345345345'], ['sdffsdfsdfsd', '3']]);
+  //Dlg_Grid1.ShowDialog('РЎРѕРёСЃРєР°С‚РµР»Рё', 400, 200, [['job', ftString, 400, 'Р”РѕР»Р¶РЅРѕСЃС‚СЊ', 150, True], ['job1', ftString, 400, 'Р”РѕР»Р¶РЅРѕСЃС‚СЊ 222', 250, True]], [['aaaaaaaa','wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww213423345345345'], ['sdffsdfsdfsd', '3']]);
   exit;
 
 //QSave('u', 'payroll', 'sq_payroll', 'id;id_method$i', [1, null]);
@@ -812,43 +812,43 @@ var
   i, j, r, c:Integer;
 
 begin
-  //создаем объект Excel
+  //СЃРѕР·РґР°РµРј РѕР±СЉРµРєС‚ Excel
   ExlApp := CreateOleObject('Excel.Application');
 
-  //делаем окно Excel невидимым
+  //РґРµР»Р°РµРј РѕРєРЅРѕ Excel РЅРµРІРёРґРёРјС‹Рј
   ExlApp.Visible := False;
 
-  //открываем файл XLSFile
+  //РѕС‚РєСЂС‹РІР°РµРј С„Р°Р№Р» XLSFile
   ExlApp.Workbooks.Open(XLSFile);
 
-  //создаем объект Sheet(страница) и указываем номер листа (1)
-  //в книге, с которого будем осуществлять чтение
-  Sheet := ExlApp.Workbooks[ExtractFileName(XLSFile)].WorkSheets['Отчет панели'];
+  //СЃРѕР·РґР°РµРј РѕР±СЉРµРєС‚ Sheet(СЃС‚СЂР°РЅРёС†Р°) Рё СѓРєР°Р·С‹РІР°РµРј РЅРѕРјРµСЂ Р»РёСЃС‚Р° (1)
+  //РІ РєРЅРёРіРµ, СЃ РєРѕС‚РѕСЂРѕРіРѕ Р±СѓРґРµРј РѕСЃСѓС‰РµСЃС‚РІР»СЏС‚СЊ С‡С‚РµРЅРёРµ
+  Sheet := ExlApp.Workbooks[ExtractFileName(XLSFile)].WorkSheets['РћС‚С‡РµС‚ РїР°РЅРµР»Рё'];
 
-  //активируем последнюю ячейку на листе
+  //Р°РєС‚РёРІРёСЂСѓРµРј РїРѕСЃР»РµРґРЅСЋСЋ СЏС‡РµР№РєСѓ РЅР° Р»РёСЃС‚Рµ
 //  Sheet.Cells.SpecialCells(xlCellTypeLastCell, EmptyParam).Activate;
 
-    // Возвращает номер последней строки
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅРѕРјРµСЂ РїРѕСЃР»РµРґРЅРµР№ СЃС‚СЂРѕРєРё
     r := 26;//ExlApp.ActiveCell.Row;
 
-    // Возвращает номер последнего столбца
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅРѕРјРµСЂ РїРѕСЃР»РµРґРЅРµРіРѕ СЃС‚РѕР»Р±С†Р°
     c := 5;//ExlApp.ActiveCell.Column;
 
-    //устанавливаем кол-во столбцов и строк в StringGrid
+    //СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РєРѕР»-РІРѕ СЃС‚РѕР»Р±С†РѕРІ Рё СЃС‚СЂРѕРє РІ StringGrid
     Grid.RowCount:=r;
     Grid.ColCount:=c;
 
-    //считываем значение из каждой ячейки и копируем в нашу таблицу
+    //СЃС‡РёС‚С‹РІР°РµРј Р·РЅР°С‡РµРЅРёРµ РёР· РєР°Р¶РґРѕР№ СЏС‡РµР№РєРё Рё РєРѕРїРёСЂСѓРµРј РІ РЅР°С€Сѓ С‚Р°Р±Р»РёС†Сѓ
      for j:= 1 to r do
        for i:= 1 to c do
          Grid.Cells[i-1,j-1]:= sheet.cells[j,i];
-        //если необходимо прочитать формулы то
+        //РµСЃР»Рё РЅРµРѕР±С…РѕРґРёРјРѕ РїСЂРѕС‡РёС‚Р°С‚СЊ С„РѕСЂРјСѓР»С‹ С‚Рѕ
        //Grid.Cells[i-1,j-1]:= sheet.cells[j,i].formula;
 
- //закрываем приложение Excel
+ //Р·Р°РєСЂС‹РІР°РµРј РїСЂРёР»РѕР¶РµРЅРёРµ Excel
  ExlApp.Quit;
 
- //очищаем выделенную память
+ //РѕС‡РёС‰Р°РµРј РІС‹РґРµР»РµРЅРЅСѓСЋ РїР°РјСЏС‚СЊ
  ExlApp := Unassigned;
  Sheet := Unassigned;
 
@@ -910,10 +910,10 @@ var
 UnPro : HWND;
 PassText: HWND;
 OKbutton: HWND;
-// CallBack-функция,используемая функцией EnumChildWindows
+// CallBack-С„СѓРЅРєС†РёСЏ,РёСЃРїРѕР»СЊР·СѓРµРјР°СЏ С„СѓРЅРєС†РёРµР№ EnumChildWindows
 function ChildWndProc(h : HWND) : BOOL; stdcall;
 begin
- //SendMessage(h, WM_SETTEXT, 0, lParam(LPCTSTR('Текст,который надо поместить')));
+ //SendMessage(h, WM_SETTEXT, 0, lParam(LPCTSTR('РўРµРєСЃС‚,РєРѕС‚РѕСЂС‹Р№ РЅР°РґРѕ РїРѕРјРµСЃС‚РёС‚СЊ')));
  Result := True;
 end;
 
@@ -921,12 +921,12 @@ var
  SearchedWnd : HWND;
 
 begin
-UnPro:= FindWindow(nil, 'Добавление'); //Где меню с вводом пароля
+UnPro:= FindWindow(nil, 'Р”РѕР±Р°РІР»РµРЅРёРµ'); //Р“РґРµ РјРµРЅСЋ СЃ РІРІРѕРґРѕРј РїР°СЂРѕР»СЏ
 if UnPro<> 0 then begin
-  PassText := FindWindowEx(UnPro, 0, 'Edit', nil); // Где само поле на этом меню
+  PassText := FindWindowEx(UnPro, 0, 'Edit', nil); // Р“РґРµ СЃР°РјРѕ РїРѕР»Рµ РЅР° СЌС‚РѕРј РјРµРЅСЋ
 end;
 
- SearchedWnd := FindWindow(nil, 'Добавление');
+ SearchedWnd := FindWindow(nil, 'Р”РѕР±Р°РІР»РµРЅРёРµ');
  EnumChildWindows(SearchedWnd, @ChildWndProc, 0);
 
  PassText := FindWindowEx(UnPro, 0, 'Edit', nil);
@@ -966,14 +966,14 @@ procedure TFrmTest.lbl1Click(Sender: TObject);
 begin
   inherited;
     with lbl1  do begin
-    SetCaption('Каждый'+'$0000FFохотник'+'$FF0000желает'+'знать');
-{    ColorsPos('Каждый', 255000000);
-    ColorsPos('охотник', 42495);
-    ColorsPos('желает', 65535);
-    ColorsPos('знать', 32768);
-    ColorsPos('где', 16760576);
-    ColorsPos('сидит', 16711680);
-    ColorsPos('фазан', 13828244);}
+    SetCaption('РљР°Р¶РґС‹Р№'+'$0000FFРѕС…РѕС‚РЅРёРє'+'$FF0000Р¶РµР»Р°РµС‚'+'Р·РЅР°С‚СЊ');
+{    ColorsPos('РљР°Р¶РґС‹Р№', 255000000);
+    ColorsPos('РѕС…РѕС‚РЅРёРє', 42495);
+    ColorsPos('Р¶РµР»Р°РµС‚', 65535);
+    ColorsPos('Р·РЅР°С‚СЊ', 32768);
+    ColorsPos('РіРґРµ', 16760576);
+    ColorsPos('СЃРёРґРёС‚', 16711680);
+    ColorsPos('С„Р°Р·Р°РЅ', 13828244);}
   end;
 end;
 
@@ -1011,7 +1011,7 @@ end;
 
 
 procedure TFrmTest.Bt_LoadXLSMClick(Sender: TObject);
-//тест загрузки данных из хлсх-файла без его открытия в экселе
+//С‚РµСЃС‚ Р·Р°РіСЂСѓР·РєРё РґР°РЅРЅС‹С… РёР· С…Р»СЃС…-С„Р°Р№Р»Р° Р±РµР· РµРіРѕ РѕС‚РєСЂС‹С‚РёСЏ РІ СЌРєСЃРµР»Рµ
 var
   xlsFile: TXlsMemFileEh;
   st, st1, st2, st3, st4: string;
@@ -1078,53 +1078,53 @@ exit;
 //  xlsFile := TXlsMemFileEh.Create;
 //  xlsFile := ttt;
   ttt(xlsFile);
-  //файл не откроется, если он открыт в экселе
+  //С„Р°Р№Р» РЅРµ РѕС‚РєСЂРѕРµС‚СЃСЏ, РµСЃР»Рё РѕРЅ РѕС‚РєСЂС‹С‚ РІ СЌРєСЃРµР»Рµ
 //  XlsFile.LoadFromFile('r:\TestLoad.xlsm');
-  //можно выкрутьться так (копируем во временный, с флагом перезаписи)
+  //РјРѕР¶РЅРѕ РІС‹РєСЂСѓС‚СЊС‚СЊСЃСЏ С‚Р°Рє (РєРѕРїРёСЂСѓРµРј РІРѕ РІСЂРµРјРµРЅРЅС‹Р№, СЃ С„Р»Р°РіРѕРј РїРµСЂРµР·Р°РїРёСЃРё)
  // CopyFile('r:\TestLoad.xlsm', 'r:\temp.xlsx', False);
  // XlsFile.LoadFromFile('r:\temp.xlsx');
 
   //CreateTXlsMemFileEhFromExists
 
-  sh:=xlsFile.Workbook.Worksheets['Лист2']; //регистр имеет значение!
+  sh:=xlsFile.Workbook.Worksheets['Р›РёСЃС‚2']; //СЂРµРіРёСЃС‚СЂ РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёРµ!
   st1:=sh.name;
-  //читает значение, втч результат формулы
-  //col, row с нуля
+  //С‡РёС‚Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ, РІС‚С‡ СЂРµР·СѓР»СЊС‚Р°С‚ С„РѕСЂРјСѓР»С‹
+  //col, row СЃ РЅСѓР»СЏ
   v:=sh.cells[2, 0].Value;
   MyInfoMessage(vartostr(v));
   xlsfile.free;
   *)
   {
  id number(11),
-  id_vacancy number(11),       --айди вакансии, на которую оформлен соискатель
-  id_job number(11),           --айди вакантной должности, если нет вакансии
-  id_division number(11),      --айди подразделения, если нет вакансии
-  id_head number(11),          --айди руководителя (в таблице работников), если нет вакансии
-  f varchar2(25),              --фамилия
-  i varchar2(25),              --имя
-  o varchar2(25),              --отчество
-  dt_birth date,               --дата рождения
-  dt date,                     --дата собеседования
-  dt1 date,                    --дата приема
-  dt2 date,                    --дата увольнения
-  id_status number(1),         --статус (резерв, откал ОК...)
-  ad varchar(200),             --как нашел данную вакансию, строка
-  comm varchar(4000),          --комментарий
+  id_vacancy number(11),       --Р°Р№РґРё РІР°РєР°РЅСЃРёРё, РЅР° РєРѕС‚РѕСЂСѓСЋ РѕС„РѕСЂРјР»РµРЅ СЃРѕРёСЃРєР°С‚РµР»СЊ
+  id_job number(11),           --Р°Р№РґРё РІР°РєР°РЅС‚РЅРѕР№ РґРѕР»Р¶РЅРѕСЃС‚Рё, РµСЃР»Рё РЅРµС‚ РІР°РєР°РЅСЃРёРё
+  id_division number(11),      --Р°Р№РґРё РїРѕРґСЂР°Р·РґРµР»РµРЅРёСЏ, РµСЃР»Рё РЅРµС‚ РІР°РєР°РЅСЃРёРё
+  id_head number(11),          --Р°Р№РґРё СЂСѓРєРѕРІРѕРґРёС‚РµР»СЏ (РІ С‚Р°Р±Р»РёС†Рµ СЂР°Р±РѕС‚РЅРёРєРѕРІ), РµСЃР»Рё РЅРµС‚ РІР°РєР°РЅСЃРёРё
+  f varchar2(25),              --С„Р°РјРёР»РёСЏ
+  i varchar2(25),              --РёРјСЏ
+  o varchar2(25),              --РѕС‚С‡РµСЃС‚РІРѕ
+  dt_birth date,               --РґР°С‚Р° СЂРѕР¶РґРµРЅРёСЏ
+  dt date,                     --РґР°С‚Р° СЃРѕР±РµСЃРµРґРѕРІР°РЅРёСЏ
+  dt1 date,                    --РґР°С‚Р° РїСЂРёРµРјР°
+  dt2 date,                    --РґР°С‚Р° СѓРІРѕР»СЊРЅРµРЅРёСЏ
+  id_status number(1),         --СЃС‚Р°С‚СѓСЃ (СЂРµР·РµСЂРІ, РѕС‚РєР°Р» РћРљ...)
+  ad varchar(200),             --РєР°Рє РЅР°С€РµР» РґР°РЅРЅСѓСЋ РІР°РєР°РЅСЃРёСЋ, СЃС‚СЂРѕРєР°
+  comm varchar(4000),          --РєРѕРјРјРµРЅС‚Р°СЂРёР№
   }
 
 (*
-  //загрузка соискателей
+  //Р·Р°РіСЂСѓР·РєР° СЃРѕРёСЃРєР°С‚РµР»РµР№
   EXIT;
-  if myquestionmessage('Загрузить соискателей?') <> mrYes then Exit;
+  if myquestionmessage('Р—Р°РіСЂСѓР·РёС‚СЊ СЃРѕРёСЃРєР°С‚РµР»РµР№?') <> mrYes then Exit;
 
   sl:=tstringlist.Create;
 
   xlsFile := TXlsMemFileEh.Create;
-  CopyFile('r:\соискатели.xlsm', 'r:\соискатели1.xlsm', False);
-  XlsFile.LoadFromFile('r:\соискатели1.xlsm');
-  sh:=xlsFile.Workbook.Worksheets['Соискатели']; //регистр имеет значение!
-  //читает значение, втч результат формулы
-  //col, row с нуля
+  CopyFile('r:\СЃРѕРёСЃРєР°С‚РµР»Рё.xlsm', 'r:\СЃРѕРёСЃРєР°С‚РµР»Рё1.xlsm', False);
+  XlsFile.LoadFromFile('r:\СЃРѕРёСЃРєР°С‚РµР»Рё1.xlsm');
+  sh:=xlsFile.Workbook.Worksheets['РЎРѕРёСЃРєР°С‚РµР»Рё']; //СЂРµРіРёСЃС‚СЂ РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёРµ!
+  //С‡РёС‚Р°РµС‚ Р·РЅР°С‡РµРЅРёРµ, РІС‚С‡ СЂРµР·СѓР»СЊС‚Р°С‚ С„РѕСЂРјСѓР»С‹
+  //col, row СЃ РЅСѓР»СЏ
   for i:=2 to 5310 do begin
     v:=sh.cells[0, i].Value;
     A.ExplodeP(trim(vartostr(sh.cells[0, i].Value)), ' ', ast);
@@ -1165,11 +1165,11 @@ exit;
     st:=vartostr(sh.cells[7, i].Value);
     stid:=null;
     if (uv = False) and (dt1 = S.BadDate) then begin
-      if st = 'резерв' then stid:=10;
-      if st = 'отказ рук-ля' then stid:=11;
-      if st = 'отказ мед.' then stid:=12;
-      if st = 'отказ СБ' then stid:=13;
-      if st = 'отказ ОК' then stid:=13;
+      if st = 'СЂРµР·РµСЂРІ' then stid:=10;
+      if st = 'РѕС‚РєР°Р· СЂСѓРє-Р»СЏ' then stid:=11;
+      if st = 'РѕС‚РєР°Р· РјРµРґ.' then stid:=12;
+      if st = 'РѕС‚РєР°Р· РЎР‘' then stid:=13;
+      if st = 'РѕС‚РєР°Р· РћРљ' then stid:=13;
 //      if st = '' then stid:=;
     end;
     phone:=trim(vartostr(sh.cells[2, i].Value));
@@ -1210,7 +1210,7 @@ end;
 //  MyInfoMessage(vartostr(v));
   xlsfile.free;
 
-  sl.SaveToFile('r:\соискатели.txt');
+  sl.SaveToFile('r:\СЃРѕРёСЃРєР°С‚РµР»Рё.txt');
 
 exit;
 
@@ -1230,7 +1230,7 @@ var
   Rep: TA7Rep;
   FileName:string;
 begin
-//  FileName:='Зарплатная ведомость';
+//  FileName:='Р—Р°СЂРїР»Р°С‚РЅР°СЏ РІРµРґРѕРјРѕСЃС‚СЊ';
 //  FileName:=Module.GetReportFileXlsx(FileName);
   FileName:='r:\temp1.xls';
   if FileName = '' then Exit;
@@ -1294,11 +1294,11 @@ var
 begin
   xlsFile:= TXlsMemFileEh.Create;
   XlsFile.LoadFromFile('r:\test1.xlsx');
-  xlsFile.Workbook.Worksheets[0].Cells[1,1].Value:='Заголовок паспорта';
+  xlsFile.Workbook.Worksheets[0].Cells[1,1].Value:='Р—Р°РіРѕР»РѕРІРѕРє РїР°СЃРїРѕСЂС‚Р°';
   for i:=0 to 20 do begin
     if xlsFile.Workbook.Worksheets[0].Cells[0,i].Value='TABLE' then begin
       if i<10
-        then xlsFile.Workbook.Worksheets[0].Cells[1,i].Value:='TABLE Заголовок паспорта Наименование изделия ' + IntToStr(i)
+        then xlsFile.Workbook.Worksheets[0].Cells[1,i].Value:='TABLE Р—Р°РіРѕР»РѕРІРѕРє РїР°СЃРїРѕСЂС‚Р° РќР°РёРјРµРЅРѕРІР°РЅРёРµ РёР·РґРµР»РёСЏ ' + IntToStr(i)
         else xlsFile.Workbook.Worksheets[0].Rows[i].Visible:=False;
 //xlsFile.Workbook.Worksheets[0].Rows[i].
     end;
@@ -1324,7 +1324,7 @@ end;
 
 
 procedure LoadPersonnelNumber;
-//загрузка из файла табельных номеров работника
+//Р·Р°РіСЂСѓР·РєР° РёР· С„Р°Р№Р»Р° С‚Р°Р±РµР»СЊРЅС‹С… РЅРѕРјРµСЂРѕРІ СЂР°Р±РѕС‚РЅРёРєР°
 var
   i, j, k, emp: Integer;
   st, st1, st2, w, FileName, err, err2, fio: string;
@@ -1356,7 +1356,7 @@ begin
     sh.Free;
     XlsFile.Free;
   end;
-  orgn := ['ООО "МЕРКУРИЙ"','ООО "ОМЕГА"','ООО "Промсервис"'];
+  orgn := ['РћРћРћ "РњР•Р РљРЈР РР™"','РћРћРћ "РћРњР•Р“Рђ"','РћРћРћ "РџСЂРѕРјСЃРµСЂРІРёСЃ"'];
   orgid := [1,3,6];
   ar2 := Q.QLoad('select id, workername from v_ref_workers', []);
   for i := 0 to High(ar) do begin
@@ -1371,19 +1371,19 @@ begin
     if j > High(ar2) then
       S.ConcatStP(err, ar[i][0], #13#10);
   end;
-  MyInfoMessage('Не удалось загрузить:'#13#10#13#10 + err + #13#10'----------'#13#10 + err2, 1);
+  MyInfoMessage('РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ:'#13#10#13#10 + err + #13#10'----------'#13#10 + err2, 1);
 end;
 
 
 procedure ConvertNewOrStdItemRoutes;
-//маршруты для стандартных изделий в новом формате (в таблицу)
+//РјР°СЂС€СЂСѓС‚С‹ РґР»СЏ СЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РёР·РґРµР»РёР№ РІ РЅРѕРІРѕРј С„РѕСЂРјР°С‚Рµ (РІ С‚Р°Р±Р»РёС†Сѓ)
 var
   i, j, k: integer;
   va, RouteFields: TVarDynArray;
   va1, va2: TVarDynArray2;
   st: string;
 begin
-  RouteFields := ['КС','МТ','СТ','РК','ПГ','ЛК','КМ'];
+  RouteFields := ['РљРЎ','РњРў','РЎРў','Р Рљ','РџР“','Р›Рљ','РљРњ'];
 
   va1 := Q.QLoad('select id, code from work_cell_types', []);
   for i := 0 to High(RouteFields) do
@@ -1492,7 +1492,7 @@ begin
 
 
 var ln := Cth.GetTextWidth('sdfsdfsd', frmmain.Font);
-  FrmChooseDialog.ShowDialog('Test', 'отступы между кнопками и по веритикали и по горизонтали для панелей из TSpeedButton', ['выбор 1', 'самый-самый правильный выбора','1','1','1','1','1'], [['ququ']]); exit;
+  FrmChooseDialog.ShowDialog('Test', 'РѕС‚СЃС‚СѓРїС‹ РјРµР¶РґСѓ РєРЅРѕРїРєР°РјРё Рё РїРѕ РІРµСЂРёС‚РёРєР°Р»Рё Рё РїРѕ РіРѕСЂРёР·РѕРЅС‚Р°Р»Рё РґР»СЏ РїР°РЅРµР»РµР№ РёР· TSpeedButton', ['РІС‹Р±РѕСЂ 1', 'СЃР°РјС‹Р№-СЃР°РјС‹Р№ РїСЂР°РІРёР»СЊРЅС‹Р№ РІС‹Р±РѕСЂР°','1','1','1','1','1'], [['ququ']]); exit;
 //FrmExportToXlsx.RunExport;Exit;
   Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
 
@@ -1507,7 +1507,7 @@ Turv.SaveAllTurvToExportTable; Exit;
   Sleep(3000);
   //i:=i div i;
   //FrmCWAcoountBasis.ShowDialog(nil, 0, fAdd, 0);
-  ShowWaitForm('Привет!'#13#10'Производится очень долгая операция!');
+  ShowWaitForm('РџСЂРёРІРµС‚!'#13#10'РџСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РѕС‡РµРЅСЊ РґРѕР»РіР°СЏ РѕРїРµСЂР°С†РёСЏ!');
   Sleep(3000);
 
 
@@ -1543,7 +1543,7 @@ Turv.SaveAllTurvToExportTable; Exit;
   
   TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
 
-  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
+  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'РљРѕРјРјРµРЅС‚Р°СЂРёР№ Рє РѕР±С‰РµР№ СЃРјРµС‚Рµ', 'wqewqe', st);exit;
 
 
   Wh.ExecReference(myfrm_Rep_Salary);exit; //myfrm_J_Parsec
@@ -1569,8 +1569,8 @@ TFrmBasicInput._TestFunctionDB;
 exit;
 
 //  TFrmDlgRItmSupplier.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fAdd, null, null); exit;
-//myfoMultiCopyWoID - не реализовано нигде
-//myfoMultiCopy - запускает несколько копий всегда в режимах fNone, fAdd, fCopy, иначе только если нет формы с таким ID
+//myfoMultiCopyWoID - РЅРµ СЂРµР°Р»РёР·РѕРІР°РЅРѕ РЅРёРіРґРµ
+//myfoMultiCopy - Р·Р°РїСѓСЃРєР°РµС‚ РЅРµСЃРєРѕР»СЊРєРѕ РєРѕРїРёР№ РІСЃРµРіРґР° РІ СЂРµР¶РёРјР°С… fNone, fAdd, fCopy, РёРЅР°С‡Рµ С‚РѕР»СЊРєРѕ РµСЃР»Рё РЅРµС‚ С„РѕСЂРјС‹ СЃ С‚Р°РєРёРј ID
   TFrmTestMdi1.Show(FrmMain, 'dddddddd', [myfoMultiCopy, myfoSizeable], fAdd, 1, null);
 //  TFrmTestMdi1.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fNone, 2, null);
 //  TFrmTestMdi1.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fEdit, 1, null);

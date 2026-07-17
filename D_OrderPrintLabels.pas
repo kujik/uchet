@@ -1,4 +1,4 @@
-unit D_OrderPrintLabels;
+п»їunit D_OrderPrintLabels;
 
 interface
 
@@ -70,10 +70,10 @@ begin
     MemTableEh1.DataDriver:=nil;
     MemTableEh1.FieldDefs.Clear;
     MemTableEh1.Close;
-    Mth.AddTableColumn(DBGridEh1, 'slash', ftString, 100, '№', 100, True);
-    Mth.AddTableColumn(DBGridEh1, 'itemname', ftString, 400, 'Изделие', 200, True);
-    Mth.AddTableColumn(DBGridEh1, 'qnt', ftFloat, 0, 'Кол-во', 50, True);
-    Mth.AddTableColumn(DBGridEh1, 'qnt_p', ftFloat, 0, 'На печать', 50, True);         //!!!поправить Integer
+    Mth.AddTableColumn(DBGridEh1, 'slash', ftString, 100, 'в„–', 100, True);
+    Mth.AddTableColumn(DBGridEh1, 'itemname', ftString, 400, 'РР·РґРµР»РёРµ', 200, True);
+    Mth.AddTableColumn(DBGridEh1, 'qnt', ftFloat, 0, 'РљРѕР»-РІРѕ', 50, True);
+    Mth.AddTableColumn(DBGridEh1, 'qnt_p', ftFloat, 0, 'РќР° РїРµС‡Р°С‚СЊ', 50, True);         //!!!РїРѕРїСЂР°РІРёС‚СЊ Integer
     MemTableEh1.CreateDataSet;
   //  DbGridEh1.optionseh:=DbGridEh1.optionseh - [dghClearSelection];
   //  DbGridEh1.options:=DbGridEh1.options + [dgRowSelect];
@@ -92,7 +92,7 @@ begin
     width:=600;
     height:=400;
     DBGridEh1.OptimizeAllColsWidth(-1, 2);
-    Caption:='Печать этикеток';
+    Caption:='РџРµС‡Р°С‚СЊ СЌС‚РёРєРµС‚РѕРє';
     Cth.SetBtn(Bt_Print, mybtPrint, False);
   end;
   Resize;

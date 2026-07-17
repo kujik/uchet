@@ -1,4 +1,4 @@
-unit uFrmODEdtInputOrderAccount;
+п»їunit uFrmODEdtInputOrderAccount;
 
 interface
 
@@ -49,18 +49,18 @@ var
 begin
   Result := False;
   Q.QLoad('select id, dt_account_reg, dt_account, account, prefix, dt_end, dt_beg, id_type, cashtype from orders where id = :id$i', [AIdOrder], na);
-  //выходим без диалога для заказов не того префикса, если заказ не найден, если рекламация
+  //РІС‹С…РѕРґРёРј Р±РµР· РґРёР°Р»РѕРіР° РґР»СЏ Р·Р°РєР°Р·РѕРІ РЅРµ С‚РѕРіРѕ РїСЂРµС„РёРєСЃР°, РµСЃР»Рё Р·Р°РєР°Р· РЅРµ РЅР°Р№РґРµРЅ, РµСЃР»Рё СЂРµРєР»Р°РјР°С†РёСЏ
   if (na.Count = 0) or(na.G('cashtype') <> 1) then Exit;
-  //если заказ закрыт или нет прав - откроем на просмотр
+  //РµСЃР»Рё Р·Р°РєР°Р· Р·Р°РєСЂС‹С‚ РёР»Рё РЅРµС‚ РїСЂР°РІ - РѕС‚РєСЂРѕРµРј РЅР° РїСЂРѕСЃРјРѕС‚СЂ
   Mode:=S.IIf((na.G('dt_end') = null)and(User.Role(rOr_D_Order_EnteringAccount)), fEdit, fView);
   LInfo := [
-   ['Введите данные счета.'#13#10+
-    'Дата документа и его номер обязательны. Дата регистрации ставится автоматически.'#13#10 ,
+   ['Р’РІРµРґРёС‚Рµ РґР°РЅРЅС‹Рµ СЃС‡РµС‚Р°.'#13#10+
+    'Р”Р°С‚Р° РґРѕРєСѓРјРµРЅС‚Р° Рё РµРіРѕ РЅРѕРјРµСЂ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹. Р”Р°С‚Р° СЂРµРіРёСЃС‚СЂР°С†РёРё СЃС‚Р°РІРёС‚СЃСЏ Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё.'#13#10 ,
     Mode <> fView],
-   ['Для удаления записи очистите поля "Дата счета" и "№ счета"' ,
+   ['Р”Р»СЏ СѓРґР°Р»РµРЅРёСЏ Р·Р°РїРёСЃРё РѕС‡РёСЃС‚РёС‚Рµ РїРѕР»СЏ "Р”Р°С‚Р° СЃС‡РµС‚Р°" Рё "в„– СЃС‡РµС‚Р°"' ,
    Mode <> fView
   ]];
-  PrepareCreatedForm(AOwner, Self.Name, '~Данные счета', Mode, AIdOrder, LInfo, [myfoModal, myfoDialog, myfoDialogButtonsB]);
+  PrepareCreatedForm(AOwner, Self.Name, '~Р”Р°РЅРЅС‹Рµ СЃС‡РµС‚Р°', Mode, AIdOrder, LInfo, [myfoModal, myfoDialog, myfoDialogButtonsB]);
   Cth.SetControlValue(dedt_Upd_Reg, S.IIf(na.G('dt_account_reg') = null, Date, na.G('dt_account_reg')));
   Cth.SetControlValue(dedt_Upd, na.G('dt_account'));
   Cth.SetControlValue(edt_Upd, na.G('account'));
@@ -77,9 +77,9 @@ end;
 procedure TFrmODEdtInputOrderAccount.VerifyBeforeSave;
 begin
   if (dedt_Upd.Value = null) and (Trim(edt_Upd.Text) = '') and not FIsNewAccount then
-    FErrorMessage := '?Удалить данные счета?'
+    FErrorMessage := '?РЈРґР°Р»РёС‚СЊ РґР°РЅРЅС‹Рµ СЃС‡РµС‚Р°?'
   else if (dedt_Upd.Value = null) or (Trim(edt_Upd.Text) = '') then
-    FErrorMessage := 'Данные некорректны!';
+    FErrorMessage := 'Р”Р°РЅРЅС‹Рµ РЅРµРєРѕСЂСЂРµРєС‚РЅС‹!';
 end;
 
 end.

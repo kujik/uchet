@@ -1,4 +1,4 @@
-unit uFrmXWNoConnectionAfterStart;
+п»їunit uFrmXWNoConnectionAfterStart;
 
 interface
 
@@ -38,8 +38,8 @@ begin
   FrmXWNoConnectionAfterStart:=TFrmXWNoConnectionAfterStart.Create(nil);
   FrmXWNoConnectionAfterStart.Caption:=ModuleRecArr[cMainModule].Caption;
   FrmXWNoConnectionAfterStart.lblMessage.Caption:=S.IIFStr(Q.ConnectionFileFull = '',
-    'В каталоге программы не найден файл настроек соединения "connect.udl"',
-    'Запустите файл "connect.udl" в каталоге программы, настройте и проверьте подключение.'
+    'Р’ РєР°С‚Р°Р»РѕРіРµ РїСЂРѕРіСЂР°РјРјС‹ РЅРµ РЅР°Р№РґРµРЅ С„Р°Р№Р» РЅР°СЃС‚СЂРѕРµРє СЃРѕРµРґРёРЅРµРЅРёСЏ "connect.udl"',
+    'Р—Р°РїСѓСЃС‚РёС‚Рµ С„Р°Р№Р» "connect.udl" РІ РєР°С‚Р°Р»РѕРіРµ РїСЂРѕРіСЂР°РјРјС‹, РЅР°СЃС‚СЂРѕР№С‚Рµ Рё РїСЂРѕРІРµСЂСЊС‚Рµ РїРѕРґРєР»СЋС‡РµРЅРёРµ.'
   );
   FrmXWNoConnectionAfterStart.ShowModal;
 end;

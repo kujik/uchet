@@ -1,4 +1,4 @@
-unit D_ModuleSettings;
+п»їunit D_ModuleSettings;
 
 interface
 
@@ -73,7 +73,7 @@ begin
    (nedt_W_Time_Dinner_2.value = null) or
    (dedt_W_Time_Beg_2.value = null) or
    (nedt_W_Time_Beg_Diff_2.value = null)
-  then begin MyInfoMessage('Введены некорректные данные!'); Exit; end;
+  then begin MyInfoMessage('Р’РІРµРґРµРЅС‹ РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ!'); Exit; end;
   b1 :=
     (va[0][0]<>nedt_sum_autoagreed.value)or
     (va[0][1]<>nedt_sum_need_req.value)or
@@ -87,8 +87,8 @@ begin
    ;
   b := b1 or b2;
   if not b
-    then begin MyInfoMessage('Данные не были изменены!'); Exit; end;
-  if (MyQuestionMessage('Данные были изменены. Сохранить?') <> mrYes) then Exit;
+    then begin MyInfoMessage('Р”Р°РЅРЅС‹Рµ РЅРµ Р±С‹Р»Рё РёР·РјРµРЅРµРЅС‹!'); Exit; end;
+  if (MyQuestionMessage('Р”Р°РЅРЅС‹Рµ Р±С‹Р»Рё РёР·РјРµРЅРµРЅС‹. РЎРѕС…СЂР°РЅРёС‚СЊ?') <> mrYes) then Exit;
   if b1 then begin
     Q.QExecSql('update sn_calendar_cfg set sum_autoagreed = :sum_autoagreed, sum_need_req = :sum_need_req, transport_maxidle = :transport_maxidle',
       [nedt_sum_autoagreed.value, nedt_sum_need_req.value, nedt_transport_maxidle.value]);

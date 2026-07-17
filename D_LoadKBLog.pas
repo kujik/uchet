@@ -1,4 +1,4 @@
-unit D_LoadKBLog;
+п»їunit D_LoadKBLog;
 
 interface
 
@@ -51,11 +51,11 @@ var
   i, j: Integer;
 begin
   if Length(va) = 0 then begin
-    MyInfoMessage('Паспорт КБ еще не импортировался!.');
+    MyInfoMessage('РџР°СЃРїРѕСЂС‚ РљР‘ РµС‰Рµ РЅРµ РёРјРїРѕСЂС‚РёСЂРѕРІР°Р»СЃСЏ!.');
     Exit;
   end
   else if (Length(va) = 1)and(va[0][0] = #1) then begin
-    MyInfoMessage('Импорт паспорта КБ завершнен без ошибок.');
+    MyInfoMessage('РРјРїРѕСЂС‚ РїР°СЃРїРѕСЂС‚Р° РљР‘ Р·Р°РІРµСЂС€РЅРµРЅ Р±РµР· РѕС€РёР±РѕРє.');
     Exit;
   end;
   if DbGridEh1.Columns.Count = 1 then begin
@@ -63,10 +63,10 @@ begin
     MemTableEh1.DataDriver:=nil;
     MemTableEh1.FieldDefs.Clear;
     MemTableEh1.Close;
-    Mth.AddTableColumn(DBGridEh1, 'name', ftString, 400, 'Наименование', 300, True);
-    Mth.AddTableColumn(DBGridEh1, 'dim', ftString, 400, 'Ед.', 45, True);
-    Mth.AddTableColumn(DBGridEh1, 'qnt', ftString, 400, 'Кол-во', 300, True);
-    Mth.AddTableColumn(DBGridEh1, 'status', ftString, 400, 'Статус', 300, True);
+    Mth.AddTableColumn(DBGridEh1, 'name', ftString, 400, 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ', 300, True);
+    Mth.AddTableColumn(DBGridEh1, 'dim', ftString, 400, 'Р•Рґ.', 45, True);
+    Mth.AddTableColumn(DBGridEh1, 'qnt', ftString, 400, 'РљРѕР»-РІРѕ', 300, True);
+    Mth.AddTableColumn(DBGridEh1, 'status', ftString, 400, 'РЎС‚Р°С‚СѓСЃ', 300, True);
     MemTableEh1.CreateDataSet;
     DBGridEh1.IndicatorOptions:=DBGridEh1.IndicatorOptions - [gioShowRowSelCheckBoxesEh] + [gioShowRecNoEh];
   //  DbGridEh1.optionseh:=DbGridEh1.optionseh - [dghClearSelection];
@@ -75,7 +75,7 @@ begin
     DBGridEh1.OptionsEh:=DBGridEh1.OptionsEh-[dghColumnResize, dghColumnMove] - [dghEnterAsTab] + [dghAutoFitRowHeight];
     DBGridEh1.AutoFitColWidths:=True;
     for i:=0 to DBGridEh1.Columns.Count - 1 do begin
-      DBGridEh1.Columns[i].AutoFitColWidth:=DBGridEh1.Columns[i].FieldName <> '' ;//= 'NAME';     //использовать этот столбец для подгонки
+      DBGridEh1.Columns[i].AutoFitColWidth:=DBGridEh1.Columns[i].FieldName <> '' ;//= 'NAME';     //РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ СЌС‚РѕС‚ СЃС‚РѕР»Р±РµС† РґР»СЏ РїРѕРґРіРѕРЅРєРё
     end;
     width:=800;
     height:=500;

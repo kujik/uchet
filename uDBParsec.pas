@@ -1,4 +1,4 @@
-unit uDBParsec;
+п»їunit uDBParsec;
 
 interface
 
@@ -14,8 +14,8 @@ type
     { Private declarations }
   public
     { Public declarations }
-    //создаем объект базы данных
-    //передается файл настроек соединения (только имя файла, без расширения), если AConnectAfterCreate то тут же пытаемся подключиться
+    //СЃРѕР·РґР°РµРј РѕР±СЉРµРєС‚ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
+    //РїРµСЂРµРґР°РµС‚СЃСЏ С„Р°Р№Р» РЅР°СЃС‚СЂРѕРµРє СЃРѕРµРґРёРЅРµРЅРёСЏ (С‚РѕР»СЊРєРѕ РёРјСЏ С„Р°Р№Р»Р°, Р±РµР· СЂР°СЃС€РёСЂРµРЅРёСЏ), РµСЃР»Рё AConnectAfterCreate С‚Рѕ С‚СѓС‚ Р¶Рµ РїС‹С‚Р°РµРјСЃСЏ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ
     constructor CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = True); reintroduce;
   end;
 
@@ -29,8 +29,8 @@ implementation
 {$R *.dfm}
 
 constructor TmyDBParsec.CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = True);
-//создаем объект базы данных
-//передается файл настроек соединения (только имя файла, без расширения), если AConnectAfterCreate то тут же пытаемся подключиться
+//СЃРѕР·РґР°РµРј РѕР±СЉРµРєС‚ Р±Р°Р·С‹ РґР°РЅРЅС‹С…
+//РїРµСЂРµРґР°РµС‚СЃСЏ С„Р°Р№Р» РЅР°СЃС‚СЂРѕРµРє СЃРѕРµРґРёРЅРµРЅРёСЏ (С‚РѕР»СЊРєРѕ РёРјСЏ С„Р°Р№Р»Р°, Р±РµР· СЂР°СЃС€РёСЂРµРЅРёСЏ), РµСЃР»Рё AConnectAfterCreate С‚Рѕ С‚СѓС‚ Р¶Рµ РїС‹С‚Р°РµРјСЃСЏ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ
 var
   va: TVarDynArray;
 begin

@@ -1,4 +1,4 @@
-unit uFrmODedtSplCategoryes;
+п»їunit uFrmODedtSplCategoryes;
 
 interface
 
@@ -35,7 +35,7 @@ uses
 
 function TFrmODedtSplCategoryes.Prepare: Boolean;
 begin
-  Caption:='Категории заявок на снабжение';
+  Caption:='РљР°С‚РµРіРѕСЂРёРё Р·Р°СЏРІРѕРє РЅР° СЃРЅР°Р±Р¶РµРЅРёРµ';
   F.DefineFields:=[
     ['id$i'],
     ['name$s','V=1:50'],
@@ -45,9 +45,9 @@ begin
   View:='v_spl_categoryes';
   Table:='spl_categoryes';
   FOpt.InfoArray := [[
-  'Реадктирование категории заявок на снабжение.'#13#10+
-  'Введите наименование категории и выберите пользователей,'#13#10+
-  'которые могут формировать по ним заявки.'#13#10
+  'Р РµР°РґРєС‚РёСЂРѕРІР°РЅРёРµ РєР°С‚РµРіРѕСЂРёРё Р·Р°СЏРІРѕРє РЅР° СЃРЅР°Р±Р¶РµРЅРёРµ.'#13#10+
+  'Р’РІРµРґРёС‚Рµ РЅР°РёРјРµРЅРѕРІР°РЅРёРµ РєР°С‚РµРіРѕСЂРёРё Рё РІС‹Р±РµСЂРёС‚Рµ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№,'#13#10+
+  'РєРѕС‚РѕСЂС‹Рµ РјРѕРіСѓС‚ С„РѕСЂРјРёСЂРѕРІР°С‚СЊ РїРѕ РЅРёРј Р·Р°СЏРІРєРё.'#13#10
   ]];
 {  MinWidth:=400;
   MinHeight:=148;
@@ -56,7 +56,7 @@ begin
   Result:=inherited;
   FNewIds := S.NSt(F.GetPropB('useravail'));
   edt_UserNames.ReadOnly := True;
-  //не удаляем категорию с айди = 1
+  //РЅРµ СѓРґР°Р»СЏРµРј РєР°С‚РµРіРѕСЂРёСЋ СЃ Р°Р№РґРё = 1
   if (Mode = fDelete)and(F.GetPropB('id') = 1)
     then btnOk.Enabled:=False;
 end;

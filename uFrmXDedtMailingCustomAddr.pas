@@ -1,4 +1,4 @@
-unit uFrmXDedtMailingCustomAddr;
+п»їunit uFrmXDedtMailingCustomAddr;
 
 interface
 
@@ -51,14 +51,14 @@ begin
   end;
   edtAddr.Text := st;
   if not (b) and (st <> '') then
-    FErrorMessage := 'Строка содержит недопустимые адреса электронной почты!';
+    FErrorMessage := 'РЎС‚СЂРѕРєР° СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјС‹Рµ Р°РґСЂРµСЃР° СЌР»РµРєС‚СЂРѕРЅРЅРѕР№ РїРѕС‡С‚С‹!';
 end;
 
 function TFrmXDedtMailingCustomAddr.ShowDialog(var MailAddr: string): Boolean;
 begin
-  PrepareCreatedForm(Application, '', '~Дополнительные адреса электронной почты', fEdit, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
+  PrepareCreatedForm(Application, '', '~Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р°РґСЂРµСЃР° СЌР»РµРєС‚СЂРѕРЅРЅРѕР№ РїРѕС‡С‚С‹', fEdit, null, [], [myfoModal, myfoDialog, myfoDialogButtonsB, myfoSizeable]);
   edtAddr.Text := MailAddr;
-  FOpt.InfoArray :=[['Введитете через запятую произвольные адреса почты, которые также будут использоваться для рассылки, дополнительно к адресам выбранных пользователей.']];
+  FOpt.InfoArray :=[['Р’РІРµРґРёС‚РµС‚Рµ С‡РµСЂРµР· Р·Р°РїСЏС‚СѓСЋ РїСЂРѕРёР·РІРѕР»СЊРЅС‹Рµ Р°РґСЂРµСЃР° РїРѕС‡С‚С‹, РєРѕС‚РѕСЂС‹Рµ С‚Р°РєР¶Рµ Р±СѓРґСѓС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РґР»СЏ СЂР°СЃСЃС‹Р»РєРё, РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕ Рє Р°РґСЂРµСЃР°Рј РІС‹Р±СЂР°РЅРЅС‹С… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№.']];
   Result := ShowModal = mrOk;
   if not Result then
     Exit;

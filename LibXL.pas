@@ -1,6 +1,6 @@
-{
-изменно GlavMonstr
-добавлен метод TSheet.readCell
+п»ї{
+РёР·РјРµРЅРЅРѕ GlavMonstr
+РґРѕР±Р°РІР»РµРЅ РјРµС‚РѕРґ TSheet.readCell
 }
 
 unit LibXL;

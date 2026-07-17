@@ -1,6 +1,6 @@
-//****************************************************************//
+п»ї//****************************************************************//
 //****** Author - Kucher Alexander <a7exander@gmail.com> *********//
-//************************* (С) 2017 *****************************//
+//************************* (РЎ) 2017 *****************************//
 //****************************************************************//
 unit uExcel;
 
@@ -171,7 +171,7 @@ begin
 end;
 
 procedure TA7Rep.OpenTemplate(FileName: string);
-begin // По умолчанию не показываем Excel
+begin // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РЅРµ РїРѕРєР°Р·С‹РІР°РµРј Excel
   OpenTemplate(FileName, False);
 end;
 
@@ -193,7 +193,7 @@ begin
   CurrentLine := 1;
   MaxBandColumns := TemplateSheet.UsedRange.Columns.Count;
 
-  if Assigned(Progress) then Progress.L3.Caption := 'Лист: 1';
+  if Assigned(Progress) then Progress.L3.Caption := 'Р›РёСЃС‚: 1';
 end;
 
 procedure TA7Rep.PasteBand(BandName: string);
@@ -345,7 +345,7 @@ begin
   L1.Width := 100;
   L1.Alignment := taCenter;
   L1.Top := 20;
-  L1.Caption := 'Построение отчета.';
+  L1.Caption := 'РџРѕСЃС‚СЂРѕРµРЅРёРµ РѕС‚С‡РµС‚Р°.';
 
   // Line
   L2 := TLabel.Create(F);
@@ -375,7 +375,7 @@ end;
 
 procedure TA7Progress.Line(p: Integer);
 begin
-  L2.Caption := 'Строка: ' + IntToStr(p);
+  L2.Caption := 'РЎС‚СЂРѕРєР°: ' + IntToStr(p);
   Application.ProcessMessages;
 end;
 
@@ -396,7 +396,7 @@ begin
   CurrentLine := 1;
   MaxBandColumns := TemplateSheet.UsedRange.Columns.Count;
 
-  if Assigned(Progress) then Progress.L3.Caption := 'Лист: '+Name;
+  if Assigned(Progress) then Progress.L3.Caption := 'Р›РёСЃС‚: '+Name;
 end;
 
 procedure TA7Rep.SetSumFormula(VarName: string; FirstLine, LastLine: Integer);
@@ -486,7 +486,7 @@ end;
 
 
 
-//прочие функции для работы вне класса и без оле
+//РїСЂРѕС‡РёРµ С„СѓРЅРєС†РёРё РґР»СЏ СЂР°Р±РѕС‚С‹ РІРЅРµ РєР»Р°СЃСЃР° Рё Р±РµР· РѕР»Рµ
 
 
 function CreateTXlsMemFileEhFromExists(FileName: string; CreateIfOpened:Boolean; ErrorMessage: string; var XlsFile:TXlsMemFileEh; var CopyFileName: string): Boolean;
@@ -518,22 +518,22 @@ begin
   if res = -1 then begin
       XlsFile:= nil;
       if ErrorMessage = ''
-        then st:='Файл не найден!'
+        then st:='Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ!'
         else if ErrorMessage = '$2'
-          then st:='Файл "$F" не найден!'
+          then st:='Р¤Р°Р№Р» "$F" РЅРµ РЅР°Р№РґРµРЅ!'
           else if ErrorMessage = '$3'
-            then st:='Файл "$f" не найден!'
+            then st:='Р¤Р°Р№Р» "$f" РЅРµ РЅР°Р№РґРµРЅ!'
             else if ErrorMessage = '$0'
               then st:=''
               else st:=ErrorMessage;
   end
   else begin
       if ErrorMessage = ''
-        then st:='Ошибка загрузки файла!'
+        then st:='РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»Р°!'
         else if ErrorMessage = '$2'
-          then st:='Ошибка загрузки файла "$F"!'
+          then st:='РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»Р° "$F"!'
           else if ErrorMessage = '$3'
-            then st:='Ошибка загрузки файла "$F"!'
+            then st:='РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»Р° "$F"!'
             else if ErrorMessage = '$0'
               then st:=''
               else st:=ErrorMessage;

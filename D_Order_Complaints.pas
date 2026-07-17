@@ -1,4 +1,4 @@
-unit D_Order_Complaints;
+ï»¿unit D_Order_Complaints;
 
 interface
 
@@ -69,7 +69,7 @@ begin
   MemTableEh1.FieldDefs.Clear;
   MemTableEh1.Close;
   Mth.AddTableColumn(DBGridEh1, 'id', ftInteger, 0, 'ID', 20, False);
-  Mth.AddTableColumn(DBGridEh1, 'name', ftString, 400, 'Ïðè÷èíà', 300, True);
+  Mth.AddTableColumn(DBGridEh1, 'name', ftString, 400, 'ÐŸÑ€Ð¸Ñ‡Ð¸Ð½Ð°', 300, True);
   MemTableEh1.CreateDataSet;
   DBGridEh1.IndicatorOptions:=DBGridEh1.IndicatorOptions + [gioShowRowSelCheckBoxesEh];
   DbGridEh1.optionseh:=DbGridEh1.optionseh - [dghClearSelection];

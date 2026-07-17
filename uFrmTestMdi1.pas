@@ -1,4 +1,4 @@
-unit uFrmTestMdi1;
+п»їunit uFrmTestMdi1;
 
 interface
 
@@ -44,14 +44,14 @@ result := True;
   //Mode:= fEdit;
   FOpt.DlgPanelStyle:= dpsBottomRight;
   FOpt.UseChbNoClose:=True;
-  //Opt.DlgButtonsR:= [[mbtApply, True, 'Сохранить'],[mbtCopy],[mbtEdit],[mbtView]];
+  //Opt.DlgButtonsR:= [[mbtApply, True, 'РЎРѕС…СЂР°РЅРёС‚СЊ'],[mbtCopy],[mbtEdit],[mbtView]];
   FOpt.StatusBarMode:= stbmNone;
-  FOpt.InfoArray:=[['Тестовая форма', True]];
+  FOpt.InfoArray:=[['РўРµСЃС‚РѕРІР°СЏ С„РѕСЂРјР°', True]];
   //WHCorrected:=Cth.AlignControls(pnlFrmClient, [], True);
   FOpt.AutoAlignControls:= True;
   //FWHBounds.Y:=Height;
   //FWHBounds.Y2:=-1;
-  Caption:= 'Тестовая форма'; //~
+  Caption:= 'РўРµСЃС‚РѕРІР°СЏ С„РѕСЂРјР°'; //~
 //chbNoclose.Visible:=False;
   Result:= True;
 end;

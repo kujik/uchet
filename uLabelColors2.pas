@@ -1,4 +1,4 @@
-unit uLabelColors2;
+п»їunit uLabelColors2;
 
 interface
 uses  SysUtils, StrUtils, StdCtrls, Classes, Variants, uString;
@@ -9,7 +9,7 @@ type
       clr: array of array of Integer;
       b: Boolean;
     public
-      //методы с суффиксом 2 уже делают ResetColors перед вызовом отрисовки
+      //РјРµС‚РѕРґС‹ СЃ СЃСѓС„С„РёРєСЃРѕРј 2 СѓР¶Рµ РґРµР»Р°СЋС‚ ResetColors РїРµСЂРµРґ РІС‹Р·РѕРІРѕРј РѕС‚СЂРёСЃРѕРІРєРё
       procedure SetCaption(ACaption:string);
       procedure SetCaption2(ACaption:string);
       procedure SetCaptionAr(ACaption:TVarDynArray);

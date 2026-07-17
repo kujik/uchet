@@ -1,4 +1,4 @@
-unit D_Rep_Smeta;
+п»їunit D_Rep_Smeta;
 
 interface
 
@@ -63,8 +63,8 @@ var
 const
   MaxCnt = 10000;
 begin
-//  vv:=VarArrayOf(['%', OrIds, 'dt_pnr', 'Дата распила']);
-  vv:=VarArrayOf(['%', OrIds, 'dt_beg', 'Дата распила']);
+//  vv:=VarArrayOf(['%', OrIds, 'dt_pnr', 'Р”Р°С‚Р° СЂР°СЃРїРёР»Р°']);
+  vv:=VarArrayOf(['%', OrIds, 'dt_beg', 'Р”Р°С‚Р° СЂР°СЃРїРёР»Р°']);
 //  Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal], vv);
     Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal, myfoSizeable], VarArrayOf(['%', '',{FOrIds,} '', '']));
 (*    Wh.SelectDialogResult := [-100];
@@ -76,10 +76,10 @@ begin
   Wh.ExecAdd(myfrm_J_Orders_SEL_1, Self, fNone, 0, [], vv, True);
 *)
 {
-//!!! не работет вывод диалогового сообщения после ExecDlgFormAdd (ShowMessage не отображается, сворачивает программу, MyWarningMessage блокирет программу без отображения)!!!
+//!!! РЅРµ СЂР°Р±РѕС‚РµС‚ РІС‹РІРѕРґ РґРёР°Р»РѕРіРѕРІРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ РїРѕСЃР»Рµ ExecDlgFormAdd (ShowMessage РЅРµ РѕС‚РѕР±СЂР°Р¶Р°РµС‚СЃСЏ, СЃРІРѕСЂР°С‡РёРІР°РµС‚ РїСЂРѕРіСЂР°РјРјСѓ, MyWarningMessage Р±Р»РѕРєРёСЂРµС‚ РїСЂРѕРіСЂР°РјРјСѓ Р±РµР· РѕС‚РѕР±СЂР°Р¶РµРЅРёСЏ)!!!
 ShowMessage('!!!+++'); exit;
 self.Visible:=False;
-MyWarningMessage('Выбрано слишшком много заказов!'#13#10'Будут добавлены только 300 первых заказов.');
+MyWarningMessage('Р’С‹Р±СЂР°РЅРѕ СЃР»РёС€С€РєРѕРј РјРЅРѕРіРѕ Р·Р°РєР°Р·РѕРІ!'#13#10'Р‘СѓРґСѓС‚ РґРѕР±Р°РІР»РµРЅС‹ С‚РѕР»СЊРєРѕ 300 РїРµСЂРІС‹С… Р·Р°РєР°Р·РѕРІ.');
 self.Visible:=True;
 exit;
 }
@@ -87,7 +87,7 @@ exit;
   OrIds:='';
   OrNum:='';
   if Length(Wh.SelectDialogResult2) > MaxCnt
-    then MyWarningMessage('Выбрано слишшком много заказов!'#13#10'Будут добавлены только 300 первых заказов.');
+    then MyWarningMessage('Р’С‹Р±СЂР°РЅРѕ СЃР»РёС€С€РєРѕРј РјРЅРѕРіРѕ Р·Р°РєР°Р·РѕРІ!'#13#10'Р‘СѓРґСѓС‚ РґРѕР±Р°РІР»РµРЅС‹ С‚РѕР»СЊРєРѕ 300 РїРµСЂРІС‹С… Р·Р°РєР°Р·РѕРІ.');
 
   OrCnt:=Min(Length(Wh.SelectDialogResult2), MaxCnt);
   for i:=0 to Min(High(Wh.SelectDialogResult2), MaxCnt-1) do begin
@@ -101,10 +101,10 @@ end;
 procedure TDlg_Rep_Smeta.SetLb_AddOrders;
 begin
   lbl_AddOrders.Caption:=S.IIFStr(OrCnt = 0,
-    'Заказы не выбраны!',
+    'Р—Р°РєР°Р·С‹ РЅРµ РІС‹Р±СЂР°РЅС‹!',
     IntToStr(OrCnt) +
-//    ' дополнительн' + S.GetEnding(OrCnt,'ый','ых','ых') +
-    ' заказ' + S.GetEnding(OrCnt,'','а','ов'));
+//    ' РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅ' + S.GetEnding(OrCnt,'С‹Р№','С‹С…','С‹С…') +
+    ' Р·Р°РєР°Р·' + S.GetEnding(OrCnt,'','Р°','РѕРІ'));
 end;
 
 procedure TDlg_Rep_Smeta.Bt_GoClick(Sender: TObject);
@@ -128,7 +128,7 @@ var
   SnFiles: TStringDynArray;
   b: Boolean;
 const
-  smtypes: array of string = ['формат не распознан!','смета старого образца','смета нового образца','заявка СН','заявка СН общая'];
+  smtypes: array of string = ['С„РѕСЂРјР°С‚ РЅРµ СЂР°СЃРїРѕР·РЅР°РЅ!','СЃРјРµС‚Р° СЃС‚Р°СЂРѕРіРѕ РѕР±СЂР°Р·С†Р°','СЃРјРµС‚Р° РЅРѕРІРѕРіРѕ РѕР±СЂР°Р·С†Р°','Р·Р°СЏРІРєР° РЎРќ','Р·Р°СЏРІРєР° РЎРќ РѕР±С‰Р°СЏ'];
 begin
   Stop:=False;
   Memo1.Lines.Clear;
@@ -144,35 +144,35 @@ begin
     if not DirectoryExists(st) then begin
       st:=Module.GetPath_OrderArchive(Orders[i,3]) + '\' + Orders[i,1];
       if not DirectoryExists(st) then
-        begin Err:='Не найден каталог заказа!'; Break; end;
+        begin Err:='РќРµ РЅР°Р№РґРµРЅ РєР°С‚Р°Р»РѕРі Р·Р°РєР°Р·Р°!'; Break; end;
     end;
-    if not DirectoryExists(st + '\СН') then
-      begin Err:='Не найден каталог СН!'; Break; end;
+    if not DirectoryExists(st + '\РЎРќ') then
+      begin Err:='РќРµ РЅР°Р№РґРµРЅ РєР°С‚Р°Р»РѕРі РЎРќ!'; Break; end;
     SnFiles:=[];
     try
-      SnFiles:=TDirectory.GetFiles(st + '\СН', '*xls');
+      SnFiles:=TDirectory.GetFiles(st + '\РЎРќ', '*xls');
     finally
     end;
     if Length(SnFiles) = 0 then
-      begin Err:='Нет ни одной сметы!'; Break; end;
+      begin Err:='РќРµС‚ РЅРё РѕРґРЅРѕР№ СЃРјРµС‚С‹!'; Break; end;
     b:=True;
     for j:=0 to High(SnFiles) do begin
       sm:=LoadSmeta(SnFiles[j]);
       b:=(sm > 0) and b;
     end;
     if not(b)
-      then begin Err:='Файлы в СН не являются файлами сметы!'; Break; end
+      then begin Err:='Р¤Р°Р№Р»С‹ РІ РЎРќ РЅРµ СЏРІР»СЏСЋС‚СЃСЏ С„Р°Р№Р»Р°РјРё СЃРјРµС‚С‹!'; Break; end
       else begin Err:=smtypes[sm]; end;
     until True;
     if Err<>'' then begin
       Memo1.Lines.Add(Orders[i, 2] + ':  ' + Err);
     end;
     Application.ProcessMessages;
-    lbl_Progress.Caption:='обработано:  ' + IntToStr(i+1) + ' из ' + IntToStr(Length(Orders));
+    lbl_Progress.Caption:='РѕР±СЂР°Р±РѕС‚Р°РЅРѕ:  ' + IntToStr(i+1) + ' РёР· ' + IntToStr(Length(Orders));
   end;
-  lbl_Progress.Caption:='Подготовка отчета';
+  lbl_Progress.Caption:='РџРѕРґРіРѕС‚РѕРІРєР° РѕС‚С‡РµС‚Р°';
   ExportToXlsxA7;
-  lbl_Progress.Caption:='Завершено';
+  lbl_Progress.Caption:='Р—Р°РІРµСЂС€РµРЅРѕ';
 end;
 
 procedure TDlg_Rep_Smeta.ExportToXlsxA7;
@@ -193,7 +193,7 @@ begin
     changed := False;
     for k := 0 to High(a1) - 1 do
       if a1[k][0] > a1[k + 1][0] then
-      begin // обменяем k-й и k+1-й элементы
+      begin // РѕР±РјРµРЅСЏРµРј k-Р№ Рё k+1-Р№ СЌР»РµРјРµРЅС‚С‹
         for j:=0 to High(a1[k]) do begin
           buf := a1[k][j];
           a1[k][j] := a1[k + 1][j];
@@ -202,7 +202,7 @@ begin
         changed := True;
       end;
   until not changed;}
-  FileName:='Заявка СН общая';
+  FileName:='Р—Р°СЏРІРєР° РЎРќ РѕР±С‰Р°СЏ';
   FileName:=Module.GetReportFileXls(FileName);
   if FileName = '' then Exit;
   Rep:= TA7Rep.Create;
@@ -212,7 +212,7 @@ begin
     Rep.Free;
     Exit;
   end;
-  Rep.OpenWorkSheet('СН');
+  Rep.OpenWorkSheet('РЎРќ');
   Rep.PasteBand('HEADER');
   gr:='';
   j:=0;
@@ -284,48 +284,48 @@ begin
   Excel.Visible := False;
   dtype:=0;
   for i:=1 to Excel.Workbooks[1].WorkSheets.Count do begin
-    if Excel.Workbooks[1].WorkSheets[i].Name = 'СН'
+    if Excel.Workbooks[1].WorkSheets[i].Name = 'РЎРќ'
       then begin dtype:=1; Break; end
-      else if Excel.Workbooks[1].WorkSheets[i].Name = 'Смета печать'
+      else if Excel.Workbooks[1].WorkSheets[i].Name = 'РЎРјРµС‚Р° РїРµС‡Р°С‚СЊ'
         then begin dtype:=2; Break; end;
   end;
 //MyInfoMessage(inttostr(dtype));
   doctype:=0;
   if dtype > 0 then begin
     sh:=Excel.Workbooks[1].WorkSheets[i];
-    if S.NSt(sh.Cells[3,1].Value) = 'Заказчик' then begin
-      //смета старого образца
-      if (S.NSt(sh.Cells[4,1].Value) = 'Наименование изделия')and
-        (S.NSt(sh.Cells[5,1].Value) = '№ паспорта заказа СГ')and
-        (S.NSt(sh.Cells[16,1].Value) = 'Смета на материалы')and
-        (S.NSt(sh.Cells[17,1].Value) = '№')
+    if S.NSt(sh.Cells[3,1].Value) = 'Р—Р°РєР°Р·С‡РёРє' then begin
+      //СЃРјРµС‚Р° СЃС‚Р°СЂРѕРіРѕ РѕР±СЂР°Р·С†Р°
+      if (S.NSt(sh.Cells[4,1].Value) = 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ РёР·РґРµР»РёСЏ')and
+        (S.NSt(sh.Cells[5,1].Value) = 'в„– РїР°СЃРїРѕСЂС‚Р° Р·Р°РєР°Р·Р° РЎР“')and
+        (S.NSt(sh.Cells[16,1].Value) = 'РЎРјРµС‚Р° РЅР° РјР°С‚РµСЂРёР°Р»С‹')and
+        (S.NSt(sh.Cells[17,1].Value) = 'в„–')
         then begin
           DocType:=1; sti:=18;
         end;
     end
-    else if S.NSt(sh.Cells[13,1].Value) = 'Заказчик:' then begin
-      //смета нового образца
-      if (S.NSt(sh.Cells[14,1].Value) = 'Наименование изделия:')and
-        (S.NSt(sh.Cells[19,1].Value) = 'Смета на материалы')and
-        (S.NSt(sh.Cells[20,1].Value) = '№')
+    else if S.NSt(sh.Cells[13,1].Value) = 'Р—Р°РєР°Р·С‡РёРє:' then begin
+      //СЃРјРµС‚Р° РЅРѕРІРѕРіРѕ РѕР±СЂР°Р·С†Р°
+      if (S.NSt(sh.Cells[14,1].Value) = 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ РёР·РґРµР»РёСЏ:')and
+        (S.NSt(sh.Cells[19,1].Value) = 'РЎРјРµС‚Р° РЅР° РјР°С‚РµСЂРёР°Р»С‹')and
+        (S.NSt(sh.Cells[20,1].Value) = 'в„–')
         then begin
           DocType:=2; sti:=21;
         end;
     end
-    else if Trim(S.NSt(sh.Cells[1,1].Value)) = 'Бланк заявки на снабжение' then begin
-      //заявка СН
-      if (Trim(S.NSt(sh.Cells[2,1].Value)) = 'Номер заказа:')and
-        (Trim(S.NSt(sh.Cells[3,1].Value)) = 'Заказчик:')and
-        (Trim(S.NSt(sh.Cells[4,1].Value)) = 'Изделие')
+    else if Trim(S.NSt(sh.Cells[1,1].Value)) = 'Р‘Р»Р°РЅРє Р·Р°СЏРІРєРё РЅР° СЃРЅР°Р±Р¶РµРЅРёРµ' then begin
+      //Р·Р°СЏРІРєР° РЎРќ
+      if (Trim(S.NSt(sh.Cells[2,1].Value)) = 'РќРѕРјРµСЂ Р·Р°РєР°Р·Р°:')and
+        (Trim(S.NSt(sh.Cells[3,1].Value)) = 'Р—Р°РєР°Р·С‡РёРє:')and
+        (Trim(S.NSt(sh.Cells[4,1].Value)) = 'РР·РґРµР»РёРµ')
         then begin
           DocType:=3; sti:=7;
         end;
     end
-    else if Trim(S.NSt(sh.Cells[2,2].Value)) = 'Заказчик' then begin
-      //объединенная заявка СН
-      if (Trim(S.NSt(sh.Cells[6,6].Value)) = 'Итого:')and
-        (Trim(S.NSt(sh.Cells[6,7].Value)) = 'Примечание')and
-        (Trim(S.NSt(sh.Cells[9,2].Value)) = 'Наименование')
+    else if Trim(S.NSt(sh.Cells[2,2].Value)) = 'Р—Р°РєР°Р·С‡РёРє' then begin
+      //РѕР±СЉРµРґРёРЅРµРЅРЅР°СЏ Р·Р°СЏРІРєР° РЎРќ
+      if (Trim(S.NSt(sh.Cells[6,6].Value)) = 'РС‚РѕРіРѕ:')and
+        (Trim(S.NSt(sh.Cells[6,7].Value)) = 'РџСЂРёРјРµС‡Р°РЅРёРµ')and
+        (Trim(S.NSt(sh.Cells[9,2].Value)) = 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ')
         then begin
           DocType:=4; sti:=10;
         end;
@@ -338,14 +338,14 @@ begin
   end;
 
   irow:=sh.UsedRange.Row + sh.UsedRange.Rows.Count + 3; //!
-  gr:='Материалы без групп';
+  gr:='РњР°С‚РµСЂРёР°Р»С‹ Р±РµР· РіСЂСѓРїРї';
   for i:=sti to sti + 10000 do begin
     Application.ProcessMessages;
     try
     if (doctype in [1, 3]) then begin
-      //старая смета и заявка СН новая
-      //'заполняем построчно, маркер мателриалла (не группа) - число в первом столбце
-      //количество правильно брать из столбца Загрузка в итм (там итоговое на все заказы), а не расчетное
+      //СЃС‚Р°СЂР°СЏ СЃРјРµС‚Р° Рё Р·Р°СЏРІРєР° РЎРќ РЅРѕРІР°СЏ
+      //'Р·Р°РїРѕР»РЅСЏРµРј РїРѕСЃС‚СЂРѕС‡РЅРѕ, РјР°СЂРєРµСЂ РјР°С‚РµР»СЂРёР°Р»Р»Р° (РЅРµ РіСЂСѓРїРїР°) - С‡РёСЃР»Рѕ РІ РїРµСЂРІРѕРј СЃС‚РѕР»Р±С†Рµ
+      //РєРѕР»РёС‡РµСЃС‚РІРѕ РїСЂР°РІРёР»СЊРЅРѕ Р±СЂР°С‚СЊ РёР· СЃС‚РѕР»Р±С†Р° Р—Р°РіСЂСѓР·РєР° РІ РёС‚Рј (С‚Р°Рј РёС‚РѕРіРѕРІРѕРµ РЅР° РІСЃРµ Р·Р°РєР°Р·С‹), Р° РЅРµ СЂР°СЃС‡РµС‚РЅРѕРµ
       If Not (((S.NSt(Sh.Cells[i, 1].Value) = '') And (S.NSt(Sh.Cells[i, 2].Value) = '')) Or ((S.NSt(Sh.Cells[i, 1].Value) = '0') And (S.NSt(Sh.Cells[i, 2].Value) = '0'))) Then begin
         If (S.NSt(Sh.Cells[i, 2].Value) <> '') And (S.NSt(Sh.Cells[i, 2].Value) <> '0') Then begin
           nm:=sh.cells[i,2].Value;
@@ -367,26 +367,26 @@ begin
       else if i > irow then Break;
 {          k = k + 1
           sh.Cells(j, 1) = k 'no
-          sh.Cells(j, 2) = arr(i, 2) 'наименование
-          sh.Cells(j, 3) = arr(i, 3) 'код
+          sh.Cells(j, 2) = arr(i, 2) 'РЅР°РёРјРµРЅРѕРІР°РЅРёРµ
+          sh.Cells(j, 3) = arr(i, 3) 'РєРѕРґ
           If sh.Cells(j, 3) = "0" Then sh.Cells(j, 3) = ""
-          sh.Cells(j, 4) = arr(i, 4) 'ед изм
-          sh.Cells(j, 5) = arr(i, 5) 'расч колво
-          sh.Cells(j, 9) = arr(i, 9) 'загрузка в итм
-          If doctype = 1 Then sh.Cells(j, 10) = arr(i, 16) Else sh.Cells(j, 10) = arr(i, 11) 'примечание
+          sh.Cells(j, 4) = arr(i, 4) 'РµРґ РёР·Рј
+          sh.Cells(j, 5) = arr(i, 5) 'СЂР°СЃС‡ РєРѕР»РІРѕ
+          sh.Cells(j, 9) = arr(i, 9) 'Р·Р°РіСЂСѓР·РєР° РІ РёС‚Рј
+          If doctype = 1 Then sh.Cells(j, 10) = arr(i, 16) Else sh.Cells(j, 10) = arr(i, 11) 'РїСЂРёРјРµС‡Р°РЅРёРµ
           If sh.Cells(j, 10) = "0" Then sh.Cells(j, 10) = ""
           If sh.Cells(j, 10) = "0" Then sh.Cells(j, 10) = ""
           j = j + 1
         Else
           sh.Cells(j, 1) = ""
-          sh.Cells(j, 2) = arr(i, 1) 'группа
+          sh.Cells(j, 2) = arr(i, 1) 'РіСЂСѓРїРїР°
           j = j + 1
         End If
       End If}
     end;
     if (doctype in [2]) then begin
-      //новая смета
-      //маркер материала - пустой первый столбец, группа как и материал в четвертом
+      //РЅРѕРІР°СЏ СЃРјРµС‚Р°
+      //РјР°СЂРєРµСЂ РјР°С‚РµСЂРёР°Р»Р° - РїСѓСЃС‚РѕР№ РїРµСЂРІС‹Р№ СЃС‚РѕР»Р±РµС†, РіСЂСѓРїРїР° РєР°Рє Рё РјР°С‚РµСЂРёР°Р» РІ С‡РµС‚РІРµСЂС‚РѕРј
       If Not (((S.NSt(Sh.Cells[i, 1].Value) = '') And (S.NSt(Sh.Cells[i, 4].Value) = '')) Or ((S.NSt(Sh.Cells[i, 1].Value) = '0') And (S.NSt(Sh.Cells[i, 4].Value) = '0'))) Then begin
         If (S.NSt(Sh.Cells[i, 1].Value) <> '') And (S.NSt(Sh.Cells[i, 1].Value) <> '0') Then begin
           nm:=sh.cells[i,4].Value;
@@ -412,18 +412,18 @@ S.NNum(Sh.Cells[i, 11].Value);
           k = k + 1
           sh.Cells(j, 1) = k 'no
           sh.Cells(j, 1) = arr(i, 1) 'no
-          sh.Cells(j, 2) = arr(i, 4) 'наименование
-          sh.Cells(j, 3) = arr(i, 6) 'код
+          sh.Cells(j, 2) = arr(i, 4) 'РЅР°РёРјРµРЅРѕРІР°РЅРёРµ
+          sh.Cells(j, 3) = arr(i, 6) 'РєРѕРґ
           If sh.Cells(j, 3) = "0" Then sh.Cells(j, 3) = ""
-          sh.Cells(j, 4) = arr(i, 8) 'ед изм
-          sh.Cells(j, 5) = arr(i, 9) 'расч колво
-          sh.Cells(j, 9) = arr(i, 11) 'загрузка в итм
+          sh.Cells(j, 4) = arr(i, 8) 'РµРґ РёР·Рј
+          sh.Cells(j, 5) = arr(i, 9) 'СЂР°СЃС‡ РєРѕР»РІРѕ
+          sh.Cells(j, 9) = arr(i, 11) 'Р·Р°РіСЂСѓР·РєР° РІ РёС‚Рј
           sh.Cells(j, 10) = arr(i, 12)
           If sh.Cells(j, 10) = "0" Then sh.Cells(j, 10) = ""
           j = j + 1
         Else
           sh.Cells(j, 1) = ""
-          sh.Cells(j, 2) = arr(i, 4) 'группа
+          sh.Cells(j, 2) = arr(i, 4) 'РіСЂСѓРїРїР°
           j = j + 1
         End If
       end;}
@@ -431,15 +431,15 @@ S.NNum(Sh.Cells[i, 11].Value);
       else if i > irow then Break;
     end;
     if (doctype in [4]) then begin
-      //заявка СН общая
-      //маркер материала - первый столбец является числом, а второй не пустой, группа в первом столбце
+      //Р·Р°СЏРІРєР° РЎРќ РѕР±С‰Р°СЏ
+      //РјР°СЂРєРµСЂ РјР°С‚РµСЂРёР°Р»Р° - РїРµСЂРІС‹Р№ СЃС‚РѕР»Р±РµС† СЏРІР»СЏРµС‚СЃСЏ С‡РёСЃР»РѕРј, Р° РІС‚РѕСЂРѕР№ РЅРµ РїСѓСЃС‚РѕР№, РіСЂСѓРїРїР° РІ РїРµСЂРІРѕРј СЃС‚РѕР»Р±С†Рµ
       if (S.NSt(Sh.Cells[i, 1].Value) <> '') or (S.NSt(Sh.Cells[i, 2].Value) <> '') then begin
         if S.IsNumber(S.NSt(Sh.Cells[i, 1].Value), 1 , 10000) and (S.NSt(Sh.Cells[i, 1].Value) <> '') then begin
           nm:=sh.cells[i,2].Value;
           for j:=0 to High(a1) - 1 do
             if (High(a1[j]) = -1) or (S.NSt(a1[j, 1]) = nm)
               then Break;
-if nm = 'Крепление/Фланец/D25 низкий' then begin
+if nm = 'РљСЂРµРїР»РµРЅРёРµ/Р¤Р»Р°РЅРµС†/D25 РЅРёР·РєРёР№' then begin
 
 end;
           //st:=S.IIFStr(doctype = 1, Sh.Cells[i, 16].Value, Sh.Cells[i, 10].Value);
@@ -466,9 +466,9 @@ end;
 procedure TDlg_Rep_Smeta.FormActivate(Sender: TObject);
 begin
   inherited;
-  Cth.SetBtn(Bt_AddOrders, mybtAdd, False, 'Добавить заказы');
-  Cth.SetBtn(Bt_Go, mybtGo, False, 'Старт');
-  Cth.SetBtn(Bt_Stop, mybtCancel, False, 'Стоп');
+  Cth.SetBtn(Bt_AddOrders, mybtAdd, False, 'Р”РѕР±Р°РІРёС‚СЊ Р·Р°РєР°Р·С‹');
+  Cth.SetBtn(Bt_Go, mybtGo, False, 'РЎС‚Р°СЂС‚');
+  Cth.SetBtn(Bt_Stop, mybtCancel, False, 'РЎС‚РѕРї');
   SetLb_AddOrders;
   lbl_Progress.Caption:='';
   Excel:=null;

@@ -2250,11 +2250,13 @@ object FrmXWAbout: TFrmXWAbout
   object pnlLinks: TPanel
     Left = 0
     Top = 324
-    Width = 128
+    Width = 124
     Height = 50
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 120
+    ExplicitHeight = 49
     object lblSql: TLabel
       Left = 8
       Top = 10

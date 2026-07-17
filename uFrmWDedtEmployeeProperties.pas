@@ -1,9 +1,9 @@
-{
-проверка что были изменения при добавлении статуса по сравнению с прошлым статусом
-диапозон дат начала статуса
-блокировки, уведомления - пока только блокировка на редактирование любого турв с текущим и ппрошлым подразделением!
-режим редактирования для разработчика
-нужно обеспечить блокировку оденовременного открытия окна статуса!
+п»ї{
+РїСЂРѕРІРµСЂРєР° С‡С‚Рѕ Р±С‹Р»Рё РёР·РјРµРЅРµРЅРёСЏ РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё СЃС‚Р°С‚СѓСЃР° РїРѕ СЃСЂР°РІРЅРµРЅРёСЋ СЃ РїСЂРѕС€Р»С‹Рј СЃС‚Р°С‚СѓСЃРѕРј
+РґРёР°РїРѕР·РѕРЅ РґР°С‚ РЅР°С‡Р°Р»Р° СЃС‚Р°С‚СѓСЃР°
+Р±Р»РѕРєРёСЂРѕРІРєРё, СѓРІРµРґРѕРјР»РµРЅРёСЏ - РїРѕРєР° С‚РѕР»СЊРєРѕ Р±Р»РѕРєРёСЂРѕРІРєР° РЅР° СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ Р»СЋР±РѕРіРѕ С‚СѓСЂРІ СЃ С‚РµРєСѓС‰РёРј Рё РїРїСЂРѕС€Р»С‹Рј РїРѕРґСЂР°Р·РґРµР»РµРЅРёРµРј!
+СЂРµР¶РёРј СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ РґР»СЏ СЂР°Р·СЂР°Р±РѕС‚С‡РёРєР°
+РЅСѓР¶РЅРѕ РѕР±РµСЃРїРµС‡РёС‚СЊ Р±Р»РѕРєРёСЂРѕРІРєСѓ РѕРґРµРЅРѕРІСЂРµРјРµРЅРЅРѕРіРѕ РѕС‚РєСЂС‹С‚РёСЏ РѕРєРЅР° СЃС‚Р°С‚СѓСЃР°!
 
 }
 
@@ -66,26 +66,26 @@ begin
   Result := False;
   FIdEmp := AddParam;
   if Mode <> fView then begin
-    //получим айди последней по работнику записи
+    //РїРѕР»СѓС‡РёРј Р°Р№РґРё РїРѕСЃР»РµРґРЅРµР№ РїРѕ СЂР°Р±РѕС‚РЅРёРєСѓ Р·Р°РїРёСЃРё
     FIdLast := Q.QLoadValue('select id from w_employee_properties where id_employee = :id_e$i order by id desc', [FIdEmp]);
     if (Mode = fDelete) then begin
-      //в случае удаления статуса - выйдем если нет записей, иначе возьмем айди последней
+      //РІ СЃР»СѓС‡Р°Рµ СѓРґР°Р»РµРЅРёСЏ СЃС‚Р°С‚СѓСЃР° - РІС‹Р№РґРµРј РµСЃР»Рё РЅРµС‚ Р·Р°РїРёСЃРµР№, РёРЅР°С‡Рµ РІРѕР·СЊРјРµРј Р°Р№РґРё РїРѕСЃР»РµРґРЅРµР№
       if FIdLast = null then
         Exit;
       ID := FIdLast;
-      //и найдем запись, предшествующую последней
+      //Рё РЅР°Р№РґРµРј Р·Р°РїРёСЃСЊ, РїСЂРµРґС€РµСЃС‚РІСѓСЋС‰СѓСЋ РїРѕСЃР»РµРґРЅРµР№
       FIdLast := Q.QLoadValue('select id from w_employee_properties where id_employee = :id_e$i and id <> :id$i order by id desc', [FIdEmp, ID]);
     end;
-    //получим все поля этой записи
+    //РїРѕР»СѓС‡РёРј РІСЃРµ РїРѕР»СЏ СЌС‚РѕР№ Р·Р°РїРёСЃРё
     if FIdLast <> null then
       Q.QLoad('select * from w_employee_properties where id = :id$i', [FIdLast], FLastRec);
   end;
   if (Mode = fAdd) and (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
-    //в режиме создания нового статуса, если он не первый для работника и последний не есть увольнение, поставим режим копирования и айди послдедней записи
+    //РІ СЂРµР¶РёРјРµ СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ СЃС‚Р°С‚СѓСЃР°, РµСЃР»Рё РѕРЅ РЅРµ РїРµСЂРІС‹Р№ РґР»СЏ СЂР°Р±РѕС‚РЅРёРєР° Рё РїРѕСЃР»РµРґРЅРёР№ РЅРµ РµСЃС‚СЊ СѓРІРѕР»СЊРЅРµРЅРёРµ, РїРѕСЃС‚Р°РІРёРј СЂРµР¶РёРј РєРѕРїРёСЂРѕРІР°РЅРёСЏ Рё Р°Р№РґРё РїРѕСЃР»РґРµРґРЅРµР№ Р·Р°РїРёСЃРё
     ID := FIdLast;
     Mode := fCopy;
   end;
-  //первоначальнай режим прием/перевод/увольнение (только прием при первом или после увольения, какой есть для просмотра или удаления, в противном случае не выбран)
+  //РїРµСЂРІРѕРЅР°С‡Р°Р»СЊРЅР°Р№ СЂРµР¶РёРј РїСЂРёРµРј/РїРµСЂРµРІРѕРґ/СѓРІРѕР»СЊРЅРµРЅРёРµ (С‚РѕР»СЊРєРѕ РїСЂРёРµРј РїСЂРё РїРµСЂРІРѕРј РёР»Рё РїРѕСЃР»Рµ СѓРІРѕР»СЊРµРЅРёСЏ, РєР°РєРѕР№ РµСЃС‚СЊ РґР»СЏ РїСЂРѕСЃРјРѕС‚СЂР° РёР»Рё СѓРґР°Р»РµРЅРёСЏ, РІ РїСЂРѕС‚РёРІРЅРѕРј СЃР»СѓС‡Р°Рµ РЅРµ РІС‹Р±СЂР°РЅ)
   FIdMode := null;
   if Mode in [fView, fDelete] then begin
     va := Q.QLoadRow('select is_terminated, is_hired from w_employee_properties where id = :id$i', [ID]);
@@ -93,8 +93,8 @@ begin
   end
   else if (Mode = fAdd) and ((FIdLast = null) or (FLastRec.G('is_terminated') = 1)) then
     FIdMode := 1;
-  //проверка начальной даты
-  //при добавлении статуса, дата позднее начальной даты прошлого статуса, если это ббыли прием или увольнение, или дата его начала, если это перевод (перевод можно перекрыть)
+  //РїСЂРѕРІРµСЂРєР° РЅР°С‡Р°Р»СЊРЅРѕР№ РґР°С‚С‹
+  //РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё СЃС‚Р°С‚СѓСЃР°, РґР°С‚Р° РїРѕР·РґРЅРµРµ РЅР°С‡Р°Р»СЊРЅРѕР№ РґР°С‚С‹ РїСЂРѕС€Р»РѕРіРѕ СЃС‚Р°С‚СѓСЃР°, РµСЃР»Рё СЌС‚Рѕ Р±Р±С‹Р»Рё РїСЂРёРµРј РёР»Рё СѓРІРѕР»СЊРЅРµРЅРёРµ, РёР»Рё РґР°С‚Р° РµРіРѕ РЅР°С‡Р°Р»Р°, РµСЃР»Рё СЌС‚Рѕ РїРµСЂРµРІРѕРґ (РїРµСЂРµРІРѕРґ РјРѕР¶РЅРѕ РїРµСЂРµРєСЂС‹С‚СЊ)
   DtVer := '*:*';
   if (Mode in [fAdd, fCopy]) then begin
     DtVer := DateToStr(IncDay(Date, -62));
@@ -105,7 +105,7 @@ begin
         DtVer := S.DateTimeToIntStr(IncDay(FLastRec.G('dt_beg'), 0));
     DtVer := 'V=' + DtVer + ':' + S.DateTimeToIntStr(IncDay(Date, +16));
   end;
-  Caption := '~' + S.Decode([Mode, fCopy, 'Статус работника - Добавить', fAdd, 'Статус работника - Добавить', fDelete, 'Статус работника - Удалить', fEdit, 'Статус работника - Изменить', 'Статус работника - Просмотреть']);
+  Caption := '~' + S.Decode([Mode, fCopy, 'РЎС‚Р°С‚СѓСЃ СЂР°Р±РѕС‚РЅРёРєР° - Р”РѕР±Р°РІРёС‚СЊ', fAdd, 'РЎС‚Р°С‚СѓСЃ СЂР°Р±РѕС‚РЅРёРєР° - Р”РѕР±Р°РІРёС‚СЊ', fDelete, 'РЎС‚Р°С‚СѓСЃ СЂР°Р±РѕС‚РЅРёРєР° - РЈРґР°Р»РёС‚СЊ', fEdit, 'РЎС‚Р°С‚СѓСЃ СЂР°Р±РѕС‚РЅРёРєР° - РР·РјРµРЅРёС‚СЊ', 'РЎС‚Р°С‚СѓСЃ СЂР°Р±РѕС‚РЅРёРєР° - РџСЂРѕСЃРјРѕС‚СЂРµС‚СЊ']);
   F.DefineFields := [
     ['id$i'],
     ['dt$d', #0, Date],
@@ -131,18 +131,18 @@ begin
   View := 'w_employee_properties';
   Table := 'w_employee_properties';
   FOpt.InfoArray := [[
-    'Введите данные для добавляемого статуса работника.'#13#10 +
-    'Все поля обязательны для ввода.'#13#10 +
-    'Недопустимые данные будут подчеркнуты красным.'#13#10 +
-    'При приеме работника без табельного номера (который надо будет обязательно задать позднее),'#13#10+
-    'поствьте в этом поле "-".'#13#10+
-    'Также, если Вы ошибетесь или пока неизвестны'#13#10 +
-    'подразделение, должность или график, Вы сможете их отредактировать впоследствии.'#13#10
+    'Р’РІРµРґРёС‚Рµ РґР°РЅРЅС‹Рµ РґР»СЏ РґРѕР±Р°РІР»СЏРµРјРѕРіРѕ СЃС‚Р°С‚СѓСЃР° СЂР°Р±РѕС‚РЅРёРєР°.'#13#10 +
+    'Р’СЃРµ РїРѕР»СЏ РѕР±СЏР·Р°С‚РµР»СЊРЅС‹ РґР»СЏ РІРІРѕРґР°.'#13#10 +
+    'РќРµРґРѕРїСѓСЃС‚РёРјС‹Рµ РґР°РЅРЅС‹Рµ Р±СѓРґСѓС‚ РїРѕРґС‡РµСЂРєРЅСѓС‚С‹ РєСЂР°СЃРЅС‹Рј.'#13#10 +
+    'РџСЂРё РїСЂРёРµРјРµ СЂР°Р±РѕС‚РЅРёРєР° Р±РµР· С‚Р°Р±РµР»СЊРЅРѕРіРѕ РЅРѕРјРµСЂР° (РєРѕС‚РѕСЂС‹Р№ РЅР°РґРѕ Р±СѓРґРµС‚ РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ Р·Р°РґР°С‚СЊ РїРѕР·РґРЅРµРµ),'#13#10+
+    'РїРѕСЃС‚РІСЊС‚Рµ РІ СЌС‚РѕРј РїРѕР»Рµ "-".'#13#10+
+    'РўР°РєР¶Рµ, РµСЃР»Рё Р’С‹ РѕС€РёР±РµС‚РµСЃСЊ РёР»Рё РїРѕРєР° РЅРµРёР·РІРµСЃС‚РЅС‹'#13#10 +
+    'РїРѕРґСЂР°Р·РґРµР»РµРЅРёРµ, РґРѕР»Р¶РЅРѕСЃС‚СЊ РёР»Рё РіСЂР°С„РёРє, Р’С‹ СЃРјРѕР¶РµС‚Рµ РёС… РѕС‚СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ РІРїРѕСЃР»РµРґСЃС‚РІРёРё.'#13#10
     , not A.InArray(Mode, [fView, fDelete])] ,
     [''#13#10, not A.InArray(Mode, [fView, fDelete])], ['', A.InArray(Mode, [fView, fDelete])]
   ];
   FWHBounds.Y2 := -1;
-  //выполним метод родителя
+  //РІС‹РїРѕР»РЅРёРј РјРµС‚РѕРґ СЂРѕРґРёС‚РµР»СЏ
   Result := inherited;
   if not Result then
     Exit;
@@ -156,19 +156,19 @@ function TFrmWDedtEmployeeProperties.LoadComboBoxes: Boolean;
 var
   va2: TVarDynArray2;
 begin
-  //загружаем комбобоксы
-  Cth.AddToComboBoxEh(cmb_id_organization, [['нет', '-1000']]);
+  //Р·Р°РіСЂСѓР¶Р°РµРј РєРѕРјР±РѕР±РѕРєСЃС‹
+  Cth.AddToComboBoxEh(cmb_id_organization, [['РЅРµС‚', '-1000']]);
   Q.QLoadToDBComboBoxEh('select name, id from ref_sn_organizations where active = 1 and id > 0 or id = :id_old$i order by name asc', [F.GetPropB('id_organization')], cmb_id_organization, cntComboLK, 1);
   Q.QLoadToDBComboBoxEh('select name, id from w_jobs where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_job')], cmb_id_job, cntComboLK);
   Q.QLoadToDBComboBoxEh('select name, id from w_departaments where active = 1 or id = :id_old$i order by name asc', [F.GetPropB('id_departament')], cmb_id_departament, cntComboLK);
   Q.QLoadToDBComboBoxEh('select code, id from w_schedules where active = 1 or id = :id_old$i order by code asc', [F.GetPropB('id_schedule')], cmb_id_schedule, cntComboLK);
   Q.QLoadToDBComboBoxEh('select grade, grade as key from w_grades where active = 1 or grade = :grade_old$i order by grade asc', [F.GetPropB('grade')], cmb_grade, cntComboLK);
   if Mode in [fView, fDelete] then
-    va2 := [['принят', '1'], ['переведен', '2'], ['уволен', '3']]
+    va2 := [['РїСЂРёРЅСЏС‚', '1'], ['РїРµСЂРµРІРµРґРµРЅ', '2'], ['СѓРІРѕР»РµРЅ', '3']]
   else if (FIdLast = null) or (FLastRec.G('is_terminated') = 1) then
-    va2 := [['принять', '1']]
+    va2 := [['РїСЂРёРЅСЏС‚СЊ', '1']]
   else
-    va2 := [['перевести', '2'], ['уволить', '3']];
+    va2 := [['РїРµСЂРµРІРµСЃС‚Рё', '2'], ['СѓРІРѕР»РёС‚СЊ', '3']];
   Cth.AddToComboBoxEh(cmb_id_mode, va2);
   Result := True;
 end;
@@ -181,7 +181,7 @@ var
 begin
   FErrorMessage := '';
   if (Mode = fAdd) and (edt_personnel_number.Text = '-') and (GetcontrolValue(cmb_id_mode).AsString = '2')  then begin
-    FErrorMessage := 'При приеме работника не был задан табельный номер. Задайте его для статуса приема, и после этого добавьте статус перевода.';
+    FErrorMessage := 'РџСЂРё РїСЂРёРµРјРµ СЂР°Р±РѕС‚РЅРёРєР° РЅРµ Р±С‹Р» Р·Р°РґР°РЅ С‚Р°Р±РµР»СЊРЅС‹Р№ РЅРѕРјРµСЂ. Р—Р°РґР°Р№С‚Рµ РµРіРѕ РґР»СЏ СЃС‚Р°С‚СѓСЃР° РїСЂРёРµРјР°, Рё РїРѕСЃР»Рµ СЌС‚РѕРіРѕ РґРѕР±Р°РІСЊС‚Рµ СЃС‚Р°С‚СѓСЃ РїРµСЂРµРІРѕРґР°.';
     Exit;
   end;
   FDep := [GetcontrolValue('cmb_id_departament'), GetcontrolValue('cmb_id_departament')];
@@ -196,12 +196,12 @@ begin
   end;
 {    if lock[0] <> null then begin
       v1 := Q.QSelectOneRow('select name from ref_divisions where id = :id$i', [FDep[i][0]]);
-      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v1[0]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' заблокирован ' + VarToStr(v[1]) + '.';
+      Result := Result + #13#10 + 'РўРЈР Р’ РїРѕ РѕС‚РґРµР»Сѓ ' + VarToStr(v1[0]) + ' Р·Р° РїРµСЂРёРѕРґ СЃ ' + DateToStr(TDateTime(FDep[i][1])) + ' РїРѕ ' + DateToStr(TDateTime(FDep[i][2])) + ' Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ ' + VarToStr(v[1]) + '.';
     end;}
   if Length(users) = 0 then
     Exit;
   users := A.RemoveDuplicates(users);
-  FErrorMessage := 'ТУРВ открыты у следующих пользователей:'#13#10 + A.Implode(users, #13#10) + #13#10 + 'Их необходимо закрыть, чтобы продолжить!';
+  FErrorMessage := 'РўРЈР Р’ РѕС‚РєСЂС‹С‚С‹ Сѓ СЃР»РµРґСѓСЋС‰РёС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№:'#13#10 + A.Implode(users, #13#10) + #13#10 + 'РС… РЅРµРѕР±С…РѕРґРёРјРѕ Р·Р°РєСЂС‹С‚СЊ, С‡С‚РѕР±С‹ РїСЂРѕРґРѕР»Р¶РёС‚СЊ!';
 end;
 
 function TFrmWDedtEmployeeProperties.Save: Boolean;
@@ -222,46 +222,46 @@ begin
   Q.QBeginTrans(True);
   if Mode = fEdit then
     Result := inherited
-  //проставим дату окончания прошлого статуса, поправим айди статусов в таблице дней турв, при увольнении дни после него удалим
+  //РїСЂРѕСЃС‚Р°РІРёРј РґР°С‚Сѓ РѕРєРѕРЅС‡Р°РЅРёСЏ РїСЂРѕС€Р»РѕРіРѕ СЃС‚Р°С‚СѓСЃР°, РїРѕРїСЂР°РІРёРј Р°Р№РґРё СЃС‚Р°С‚СѓСЃРѕРІ РІ С‚Р°Р±Р»РёС†Рµ РґРЅРµР№ С‚СѓСЂРІ, РїСЂРё СѓРІРѕР»СЊРЅРµРЅРёРё РґРЅРё РїРѕСЃР»Рµ РЅРµРіРѕ СѓРґР°Р»РёРј
   else if (FIdLast <> null) and (FLastRec.G('is_terminated') <> 1) then begin
-    //есть предыдущий статус и это не увольнение
-    //(у увольнения нет конечноq даты, и нет дней, которым назначен этот статус)
+    //РµСЃС‚СЊ РїСЂРµРґС‹РґСѓС‰РёР№ СЃС‚Р°С‚СѓСЃ Рё СЌС‚Рѕ РЅРµ СѓРІРѕР»СЊРЅРµРЅРёРµ
+    //(Сѓ СѓРІРѕР»СЊРЅРµРЅРёСЏ РЅРµС‚ РєРѕРЅРµС‡РЅРѕq РґР°С‚С‹, Рё РЅРµС‚ РґРЅРµР№, РєРѕС‚РѕСЂС‹Рј РЅР°Р·РЅР°С‡РµРЅ СЌС‚РѕС‚ СЃС‚Р°С‚СѓСЃ)
     if Mode = fDelete then begin
-      //при удалении статуса сбросим конечную дату прошлого статуса
+      //РїСЂРё СѓРґР°Р»РµРЅРёРё СЃС‚Р°С‚СѓСЃР° СЃР±СЂРѕСЃРёРј РєРѕРЅРµС‡РЅСѓСЋ РґР°С‚Сѓ РїСЂРѕС€Р»РѕРіРѕ СЃС‚Р°С‚СѓСЃР°
       Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [null, FIdLast]);
-      //и присвоим всем дням с удаленным id_employee_properties айди того, к которому откатились
+      //Рё РїСЂРёСЃРІРѕРёРј РІСЃРµРј РґРЅСЏРј СЃ СѓРґР°Р»РµРЅРЅС‹Рј id_employee_properties Р°Р№РґРё С‚РѕРіРѕ, Рє РєРѕС‚РѕСЂРѕРјСѓ РѕС‚РєР°С‚РёР»РёСЃСЊ
       Q.QExecSql('update w_turv_day set id_employee_properties = :id_last$i where id_employee_properties = :id$i', [FIdLast, ID]);
-      //вызовем родительскую процедуру (поле FID будет обновлено)
+      //РІС‹Р·РѕРІРµРј СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ (РїРѕР»Рµ FID Р±СѓРґРµС‚ РѕР±РЅРѕРІР»РµРЅРѕ)
       Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
-      //!!! ЕСЛИ ДЕЛАТЬ ТАК - СТРАННАЯ ОШИБКА ПРИ УДАЛЕНИИ, НАДО РАЗБИРАТЬСЯ - В ЛОГАХ ДРУГОЙ АЙДИ!!!
+      //!!! Р•РЎР›Р Р”Р•Р›РђРўР¬ РўРђРљ - РЎРўР РђРќРќРђРЇ РћРЁРР‘РљРђ РџР Р РЈР”РђР›Р•РќРР, РќРђР”Рћ Р РђР—Р‘РР РђРўР¬РЎРЇ - Р’ Р›РћР“РђРҐ Р”Р РЈР“РћР™ РђР™Р”Р!!!
  //     Result := inherited;
     end
     else begin
-      //вызовем родительскую процедуру (поле FID будет обновлено)
+      //РІС‹Р·РѕРІРµРј СЂРѕРґРёС‚РµР»СЊСЃРєСѓСЋ РїСЂРѕС†РµРґСѓСЂСѓ (РїРѕР»Рµ FID Р±СѓРґРµС‚ РѕР±РЅРѕРІР»РµРЅРѕ)
       Result := inherited;
-      //при добавлении конечную дату прошлого поставим на день раньше начала созданного статуса,
-      //но если увольнение - поставим днем начала (днем увольнения, так по тк)
+      //РїСЂРё РґРѕР±Р°РІР»РµРЅРёРё РєРѕРЅРµС‡РЅСѓСЋ РґР°С‚Сѓ РїСЂРѕС€Р»РѕРіРѕ РїРѕСЃС‚Р°РІРёРј РЅР° РґРµРЅСЊ СЂР°РЅСЊС€Рµ РЅР°С‡Р°Р»Р° СЃРѕР·РґР°РЅРЅРѕРіРѕ СЃС‚Р°С‚СѓСЃР°,
+      //РЅРѕ РµСЃР»Рё СѓРІРѕР»СЊРЅРµРЅРёРµ - РїРѕСЃС‚Р°РІРёРј РґРЅРµРј РЅР°С‡Р°Р»Р° (РґРЅРµРј СѓРІРѕР»СЊРЅРµРЅРёСЏ, С‚Р°Рє РїРѕ С‚Рє)
       Q.QExecSql('update w_employee_properties set dt_end = :dt$d where id = :id$i', [IncDay(GetcontrolValue('dedt_dt_beg'), S.IIf(GetcontrolValue('cmb_id_mode').AsInteger = 3, 0, -1)), FIdLast]);
       if GetcontrolValue('cmb_id_mode').AsInteger = 3 then
-        //если увольнение, то удалим безвозвратно данные по дням для этого работника после даты увольнения
+        //РµСЃР»Рё СѓРІРѕР»СЊРЅРµРЅРёРµ, С‚Рѕ СѓРґР°Р»РёРј Р±РµР·РІРѕР·РІСЂР°С‚РЅРѕ РґР°РЅРЅС‹Рµ РїРѕ РґРЅСЏРј РґР»СЏ СЌС‚РѕРіРѕ СЂР°Р±РѕС‚РЅРёРєР° РїРѕСЃР»Рµ РґР°С‚С‹ СѓРІРѕР»СЊРЅРµРЅРёСЏ
         Q.QExecSql('delete from w_turv_day where id_employee = :id_e$i and dt > :dt_beg$d', [FIdEmp, GetcontrolValue('dedt_dt_beg')])
       else
-        //при переводе поправим в данных по дням айди статуса для работника после начала действия созданного статуса на его айди
+        //РїСЂРё РїРµСЂРµРІРѕРґРµ РїРѕРїСЂР°РІРёРј РІ РґР°РЅРЅС‹С… РїРѕ РґРЅСЏРј Р°Р№РґРё СЃС‚Р°С‚СѓСЃР° РґР»СЏ СЂР°Р±РѕС‚РЅРёРєР° РїРѕСЃР»Рµ РЅР°С‡Р°Р»Р° РґРµР№СЃС‚РІРёСЏ СЃРѕР·РґР°РЅРЅРѕРіРѕ СЃС‚Р°С‚СѓСЃР° РЅР° РµРіРѕ Р°Р№РґРё
         Q.QExecSql('update w_turv_day set id_employee_properties = :id$i where id_employee = :id_e$i and dt >= :dt_beg$d', [ID, FIdEmp, GetcontrolValue('dedt_dt_beg')]);
-      //если дата окончания прошлого периода оказалась меньше даты его начала, то удалим его
+      //РµСЃР»Рё РґР°С‚Р° РѕРєРѕРЅС‡Р°РЅРёСЏ РїСЂРѕС€Р»РѕРіРѕ РїРµСЂРёРѕРґР° РѕРєР°Р·Р°Р»Р°СЃСЊ РјРµРЅСЊС€Рµ РґР°С‚С‹ РµРіРѕ РЅР°С‡Р°Р»Р°, С‚Рѕ СѓРґР°Р»РёРј РµРіРѕ
       Q.QExecSql('delete from w_employee_properties where dt_end < dt_beg and id = :id$i', [FIdLast]);
     end;
   end
   else if (FIdLast <> null) and (FLastRec.G('is_terminated') = 1) and (Mode = fDelete) then begin
-    //при удалени статуса, если предыдущий является увольнением
-    //удалим данные турв по удаляемому статусу и удалим сам статус
+    //РїСЂРё СѓРґР°Р»РµРЅРё СЃС‚Р°С‚СѓСЃР°, РµСЃР»Рё РїСЂРµРґС‹РґСѓС‰РёР№ СЏРІР»СЏРµС‚СЃСЏ СѓРІРѕР»СЊРЅРµРЅРёРµРј
+    //СѓРґР°Р»РёРј РґР°РЅРЅС‹Рµ С‚СѓСЂРІ РїРѕ СѓРґР°Р»СЏРµРјРѕРјСѓ СЃС‚Р°С‚СѓСЃСѓ Рё СѓРґР°Р»РёРј СЃР°Рј СЃС‚Р°С‚СѓСЃ
     Q.QExecSql('delete from w_turv_day where id_employee_properties = :id$i', [ID]);
     Q.QExecSql('delete from w_employee_properties where id = :id$i', [ID]);
   end
   else
-    //если нет предыдущего статуса, или же предыдущий есть увольнение - просто обработаем текущую строку
-    //(это либо удаление последнего статуса, либо приём на работу)
-    //для увольнения не нужно корректировать дату и править таблицу дней
+    //РµСЃР»Рё РЅРµС‚ РїСЂРµРґС‹РґСѓС‰РµРіРѕ СЃС‚Р°С‚СѓСЃР°, РёР»Рё Р¶Рµ РїСЂРµРґС‹РґСѓС‰РёР№ РµСЃС‚СЊ СѓРІРѕР»СЊРЅРµРЅРёРµ - РїСЂРѕСЃС‚Рѕ РѕР±СЂР°Р±РѕС‚Р°РµРј С‚РµРєСѓС‰СѓСЋ СЃС‚СЂРѕРєСѓ
+    //(СЌС‚Рѕ Р»РёР±Рѕ СѓРґР°Р»РµРЅРёРµ РїРѕСЃР»РµРґРЅРµРіРѕ СЃС‚Р°С‚СѓСЃР°, Р»РёР±Рѕ РїСЂРёС‘Рј РЅР° СЂР°Р±РѕС‚Сѓ)
+    //РґР»СЏ СѓРІРѕР»СЊРЅРµРЅРёСЏ РЅРµ РЅСѓР¶РЅРѕ РєРѕСЂСЂРµРєС‚РёСЂРѕРІР°С‚СЊ РґР°С‚Сѓ Рё РїСЂР°РІРёС‚СЊ С‚Р°Р±Р»РёС†Сѓ РґРЅРµР№
     Result := inherited;
   //Q.QRollbackTrans;
   Q.QCommitOrRollback(Result);
@@ -276,14 +276,14 @@ begin
   if Sender = cmb_id_organization then begin
     if cmb_id_organization.Value = '-1000' then begin
       if F.GetPropB('personnel_number') = null then
-        edt_personnel_number.Text := 'Временный'
+        edt_personnel_number.Text := 'Р’СЂРµРјРµРЅРЅС‹Р№'
       else
         edt_personnel_number.Text := F.GetPropB('personnel_number');
       SetControlsEditable([edt_personnel_number], False);
   //    edt_personnel_number.ReadOnly := True;
     end
     else begin
-      if edt_personnel_number.Text = 'Временный' then
+      if edt_personnel_number.Text = 'Р’СЂРµРјРµРЅРЅС‹Р№' then
         edt_personnel_number.Text := '';
     //  edt_personnel_number.ReadOnly := False;
       SetControlsEditable([edt_personnel_number], True);
@@ -298,13 +298,13 @@ begin
     Exit
   else if Mode = fEdit then
     SetControlsEditable([cmb_id_mode, dedt_dt_beg], False);
-  //заблокируем все если выбрали режим Увольнение
+  //Р·Р°Р±Р»РѕРєРёСЂСѓРµРј РІСЃРµ РµСЃР»Рё РІС‹Р±СЂР°Р»Рё СЂРµР¶РёРј РЈРІРѕР»СЊРЅРµРЅРёРµ
   SetControlsEditable([cmb_id_job, cmb_grade, cmb_id_schedule, cmb_id_departament, cmb_id_organization, edt_personnel_number], (GetControlValue('cmb_id_mode').AsString <> '3') and not ((Mode = fEdit) and (F.GetPropB('is_terminated') = 1)));
   if Mode = fEdit then
     Exit;
-  //заблокирем изменение организации и табельного номера
-  //изменение допустимо при приеме, и при переводе, если ранее не была привязана организация
-  //(для возмождности переводить неофициальщиков в официалку без увольнения)
+  //Р·Р°Р±Р»РѕРєРёСЂРµРј РёР·РјРµРЅРµРЅРёРµ РѕСЂРіР°РЅРёР·Р°С†РёРё Рё С‚Р°Р±РµР»СЊРЅРѕРіРѕ РЅРѕРјРµСЂР°
+  //РёР·РјРµРЅРµРЅРёРµ РґРѕРїСѓСЃС‚РёРјРѕ РїСЂРё РїСЂРёРµРјРµ, Рё РїСЂРё РїРµСЂРµРІРѕРґРµ, РµСЃР»Рё СЂР°РЅРµРµ РЅРµ Р±С‹Р»Р° РїСЂРёРІСЏР·Р°РЅР° РѕСЂРіР°РЅРёР·Р°С†РёСЏ
+  //(РґР»СЏ РІРѕР·РјРѕР¶РґРЅРѕСЃС‚Рё РїРµСЂРµРІРѕРґРёС‚СЊ РЅРµРѕС„РёС†РёР°Р»СЊС‰РёРєРѕРІ РІ РѕС„РёС†РёР°Р»РєСѓ Р±РµР· СѓРІРѕР»СЊРЅРµРЅРёСЏ)
   if (GetControlValue('cmb_id_mode').AsInteger <> 1) and not ((GetControlValue('cmb_id_mode').AsInteger = 2) and (F.GetPropB('id_organization') = null)) then
     SetControlsEditable([cmb_id_organization, edt_personnel_number], False);
     if cmb_id_organization.Value = '-1000' then
@@ -316,12 +316,12 @@ begin
   if GetControlValue('cmb_id_mode').AsString <> '3' then
     Exit;
   Exit;
-  F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);  //!!! работает неправильно, сбрасывается комбобокс выбора режима!!!
+  F.SetPropsControls('id_job;grade;id_schedule;id_departament;id_organization;is_trainee;is_foreman;is_concurrent;personnel_number', [fvtVBeg]);  //!!! СЂР°Р±РѕС‚Р°РµС‚ РЅРµРїСЂР°РІРёР»СЊРЅРѕ, СЃР±СЂР°СЃС‹РІР°РµС‚СЃСЏ РєРѕРјР±РѕР±РѕРєСЃ РІС‹Р±РѕСЂР° СЂРµР¶РёРјР°!!!
 end;
 
 (*
-//вернет сообщение, на какие из затрагиваемых периодов установлена блокировка, и какие закрыты
-//если сообщение не пустое, то продолжать действие нельзя
+//РІРµСЂРЅРµС‚ СЃРѕРѕР±С‰РµРЅРёРµ, РЅР° РєР°РєРёРµ РёР· Р·Р°С‚СЂР°РіРёРІР°РµРјС‹С… РїРµСЂРёРѕРґРѕРІ СѓСЃС‚Р°РЅРѕРІР»РµРЅР° Р±Р»РѕРєРёСЂРѕРІРєР°, Рё РєР°РєРёРµ Р·Р°РєСЂС‹С‚С‹
+//РµСЃР»Рё СЃРѕРѕР±С‰РµРЅРёРµ РЅРµ РїСѓСЃС‚РѕРµ, С‚Рѕ РїСЂРѕРґРѕР»Р¶Р°С‚СЊ РґРµР№СЃС‚РІРёРµ РЅРµР»СЊР·СЏ
 function TFrmWDedtWorkerStatus.VerifyTurvPeriods: string;
 var
   i, j: Integer;
@@ -336,11 +336,11 @@ begin
     v := Q.QSelectOneRow('select login, username from adm_locks where lock_docum = :docum$s and lock_docum_add = :documadd$s', [myfrm_Dlg_Turv, id]);
     if v[0] <> null then begin
       v1 := Q.QSelectOneRow('select name from ref_divisions where id = :id$i', [FDep[i][0]]);
-      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v1[0]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' заблокирован ' + VarToStr(v[1]) + '.';
+      Result := Result + #13#10 + 'РўРЈР Р’ РїРѕ РѕС‚РґРµР»Сѓ ' + VarToStr(v1[0]) + ' Р·Р° РїРµСЂРёРѕРґ СЃ ' + DateToStr(TDateTime(FDep[i][1])) + ' РїРѕ ' + DateToStr(TDateTime(FDep[i][2])) + ' Р·Р°Р±Р»РѕРєРёСЂРѕРІР°РЅ ' + VarToStr(v[1]) + '.';
     end;
     v := Q.QSelectOneRow('select id_division, name from v_turv_period where id = :id$s and commit = :commit$i', [id, 1]);
     if v[0] <> null then
-      Result := Result + #13#10 + 'ТУРВ по отделу ' + VarToStr(v[1]) + ' за период с ' + DateToStr(TDateTime(FDep[i][1])) + ' по ' + DateToStr(TDateTime(FDep[i][2])) + ' завершен и не может быть изменен!'
+      Result := Result + #13#10 + 'РўРЈР Р’ РїРѕ РѕС‚РґРµР»Сѓ ' + VarToStr(v[1]) + ' Р·Р° РїРµСЂРёРѕРґ СЃ ' + DateToStr(TDateTime(FDep[i][1])) + ' РїРѕ ' + DateToStr(TDateTime(FDep[i][2])) + ' Р·Р°РІРµСЂС€РµРЅ Рё РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РёР·РјРµРЅРµРЅ!'
   end;
 end;
 *)
@@ -348,4 +348,4 @@ end;
 end.
 
 
-!!!увольнение нужно допускать и первым днем прошлого статуса, а не следующим!!!
+!!!СѓРІРѕР»СЊРЅРµРЅРёРµ РЅСѓР¶РЅРѕ РґРѕРїСѓСЃРєР°С‚СЊ Рё РїРµСЂРІС‹Рј РґРЅРµРј РїСЂРѕС€Р»РѕРіРѕ СЃС‚Р°С‚СѓСЃР°, Р° РЅРµ СЃР»РµРґСѓСЋС‰РёРј!!!

@@ -1,4 +1,4 @@
-unit D_DelayedInProd;
+п»їunit D_DelayedInProd;
 
 interface
 
@@ -68,10 +68,10 @@ begin
   if Mode <> fView then Mode:=fEdit;
   ModalResult:=mrnone;
   ID_Order:= aID_Order;
-  Cth.SetDialogForm(Self, Mode, 'Причина задержки');
+  Cth.SetDialogForm(Self, Mode, 'РџСЂРёС‡РёРЅР° Р·Р°РґРµСЂР¶РєРё');
   Cth.SetInfoIcon(Img_Info,Cth.SetInfoIconText(Self, [
-   ['Выберите причину задержки заказа из списка.'#13#10+
-    'Также вы можете ввести произвольный комментарий.'
+   ['Р’С‹Р±РµСЂРёС‚Рµ РїСЂРёС‡РёРЅСѓ Р·Р°РґРµСЂР¶РєРё Р·Р°РєР°Р·Р° РёР· СЃРїРёСЃРєР°.'#13#10+
+    'РўР°РєР¶Рµ РІС‹ РјРѕР¶РµС‚Рµ РІРІРµСЃС‚Рё РїСЂРѕРёР·РІРѕР»СЊРЅС‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№.'
    ]
   ]), 20);
  { Img_Info.Visible:=True;

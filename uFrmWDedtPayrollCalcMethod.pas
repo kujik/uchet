@@ -1,4 +1,4 @@
-unit uFrmWDedtPayrollCalcMethod;
+п»їunit uFrmWDedtPayrollCalcMethod;
 
 interface
 
@@ -47,17 +47,17 @@ end;
 
 function TFrmWDedtPayrollCalcMethod.ShowDialog(var Params: TNamedArr): Boolean;
 begin
-  PrepareCreatedForm(Application, '', '~Метод расчета', fEdit, null, [['Выберите метод расчета заработной платы'#13#10'(выбранный метод сохранится и будет использоваться и в будущих ведомостях)']], [myfoDialog, myfoDialogButtonsB]);
+  PrepareCreatedForm(Application, '', '~РњРµС‚РѕРґ СЂР°СЃС‡РµС‚Р°', fEdit, null, [['Р’С‹Р±РµСЂРёС‚Рµ РјРµС‚РѕРґ СЂР°СЃС‡РµС‚Р° Р·Р°СЂР°Р±РѕС‚РЅРѕР№ РїР»Р°С‚С‹'#13#10'(РІС‹Р±СЂР°РЅРЅС‹Р№ РјРµС‚РѕРґ СЃРѕС…СЂР°РЅРёС‚СЃСЏ Рё Р±СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ Рё РІ Р±СѓРґСѓС‰РёС… РІРµРґРѕРјРѕСЃС‚СЏС…)']], [myfoDialog, myfoDialogButtonsB]);
 
   rgMethod.Items.Clear;
-  rgMethod.Items.Add('Офис');
-  rgMethod.Items.Add('Цех');
-  rgMethod.Items.Add('Загрузка мотивации');
+  rgMethod.Items.Add('РћС„РёСЃ');
+  rgMethod.Items.Add('Р¦РµС…');
+  rgMethod.Items.Add('Р—Р°РіСЂСѓР·РєР° РјРѕС‚РёРІР°С†РёРё');
   rgMethod.ItemIndex := -1;
   rgOvertime.Items.Clear;
-  rgOvertime.Items.Add('Не учитываются');
-  rgOvertime.Items.Add('Рассчитываются с коэффициентом 1');
-  rgOvertime.Items.Add('Рассчитываются с коэффициентом 1.5');
+  rgOvertime.Items.Add('РќРµ СѓС‡РёС‚С‹РІР°СЋС‚СЃСЏ');
+  rgOvertime.Items.Add('Р Р°СЃСЃС‡РёС‚С‹РІР°СЋС‚СЃСЏ СЃ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРј 1');
+  rgOvertime.Items.Add('Р Р°СЃСЃС‡РёС‚С‹РІР°СЋС‚СЃСЏ СЃ РєРѕСЌС„С„РёС†РёРµРЅС‚РѕРј 1.5');
   rgOvertime.ItemIndex := -1;
 
   if Params.G('calc_method') <> null then

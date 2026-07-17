@@ -1,4 +1,4 @@
-unit uFrmODrepFinByOrders;
+п»їunit uFrmODrepFinByOrders;
 
 interface
 
@@ -220,9 +220,9 @@ uses
   ;
 
 function TFrmODrepFinByOrders.GetDateFromComboBox(st: string; LastDay: Boolean = False): TDateTime;
-//получим дату из по текстовой строке типа 2024, март
-//если LastDay то последним числом месяца, иначе первым числом
-//если старше текущей даты, то вернем текущую дату
+//РїРѕР»СѓС‡РёРј РґР°С‚Сѓ РёР· РїРѕ С‚РµРєСЃС‚РѕРІРѕР№ СЃС‚СЂРѕРєРµ С‚РёРїР° 2024, РјР°СЂС‚
+//РµСЃР»Рё LastDay С‚Рѕ РїРѕСЃР»РµРґРЅРёРј С‡РёСЃР»РѕРј РјРµСЃСЏС†Р°, РёРЅР°С‡Рµ РїРµСЂРІС‹Рј С‡РёСЃР»РѕРј
+//РµСЃР»Рё СЃС‚Р°СЂС€Рµ С‚РµРєСѓС‰РµР№ РґР°С‚С‹, С‚Рѕ РІРµСЂРЅРµРј С‚РµРєСѓС‰СѓСЋ РґР°С‚Сѓ
 var
   i:Integer;
 begin
@@ -252,7 +252,7 @@ begin
 end;
 
 procedure TFrmODrepFinByOrders.FormActivate(Sender: TObject);
-//порядок вкладок не совпадает с номерами в их названиях, в именах контролов цира совпадает с цифрой в имени вкладки
+//РїРѕСЂСЏРґРѕРє РІРєР»Р°РґРѕРє РЅРµ СЃРѕРІРїР°РґР°РµС‚ СЃ РЅРѕРјРµСЂР°РјРё РІ РёС… РЅР°Р·РІР°РЅРёСЏС…, РІ РёРјРµРЅР°С… РєРѕРЅС‚СЂРѕР»РѕРІ С†РёСЂР° СЃРѕРІРїР°РґР°РµС‚ СЃ С†РёС„СЂРѕР№ РІ РёРјРµРЅРё РІРєР»Р°РґРєРё
 var
   i,j :Integer;
   st: string;
@@ -270,11 +270,11 @@ begin
     cmb_DtB.ItemIndex := 0;
   if cmb_DtE.ItemIndex = -1 then
     cmb_DtE.ItemIndex := 0;
-  ts_1.TabVisible := User.Role(rOr_Rep_Order_Fin1);         //продажа
-  ts_2.TabVisible := User.Role(rOr_Rep_Order_Fin5);         //отгрузка
-  ts_3.TabVisible := User.Role(rOr_Rep_Order_Fin3);         //производство
-  ts_4.TabVisible := User.Role(rOr_Rep_Order_Fin2);         //реализация
-  ts_5.TabVisible := User.Role(rOr_Rep_Order_Fin3);         //производство
+  ts_1.TabVisible := User.Role(rOr_Rep_Order_Fin1);         //РїСЂРѕРґР°Р¶Р°
+  ts_2.TabVisible := User.Role(rOr_Rep_Order_Fin5);         //РѕС‚РіСЂСѓР·РєР°
+  ts_3.TabVisible := User.Role(rOr_Rep_Order_Fin3);         //РїСЂРѕРёР·РІРѕРґСЃС‚РІРѕ
+  ts_4.TabVisible := User.Role(rOr_Rep_Order_Fin2);         //СЂРµР°Р»РёР·Р°С†РёСЏ
+  ts_5.TabVisible := User.Role(rOr_Rep_Order_Fin3);         //РїСЂРѕРёР·РІРѕРґСЃС‚РІРѕ
 end;
 
 procedure TFrmODrepFinByOrders.FormCreate(Sender: TObject);
@@ -289,8 +289,8 @@ var
   i:Integer;
 begin
   if YearOf(DtB) = 2000
-    then lblCaption.SetCaptionAr2(['$0000FF', 'Отчет не сформирован!'])
-    else lblCaption.SetCaptionAr2(['$000000', 'Отчет за период с ', '$FF0000', DateToStr(DtB) , '$000000' , ' по ', '$FF0000', DateToStr(DtE)]);
+    then lblCaption.SetCaptionAr2(['$0000FF', 'РћС‚С‡РµС‚ РЅРµ СЃС„РѕСЂРјРёСЂРѕРІР°РЅ!'])
+    else lblCaption.SetCaptionAr2(['$000000', 'РћС‚С‡РµС‚ Р·Р° РїРµСЂРёРѕРґ СЃ ', '$FF0000', DateToStr(DtB) , '$000000' , ' РїРѕ ', '$FF0000', DateToStr(DtE)]);
 end;
 
 procedure TFrmODrepFinByOrders.CalculateReport;
@@ -319,11 +319,11 @@ begin
   //QSetContextValue('order_finreport_dtbeg', IncDay(Date, -1));
   //QSetContextValue('order_finreport_dtend', IncDay(Date, -1));
   if ts_1.TabVisible then begin
-    //продажа, выборка по начальной дате
-    //розница, по префиксам О и Н
+    //РїСЂРѕРґР°Р¶Р°, РІС‹Р±РѕСЂРєР° РїРѕ РЅР°С‡Р°Р»СЊРЅРѕР№ РґР°С‚Рµ
+    //СЂРѕР·РЅРёС†Р°, РїРѕ РїСЂРµС„РёРєСЃР°Рј Рћ Рё Рќ
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''О'', ''Н'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
+      'where id > 0 and prefix in (''Рћ'', ''Рќ'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -344,10 +344,10 @@ begin
     nedt_1_RM2.Value:=RoundTo(nedt_1_RM.Value / nedt_1_RM3.Value * 100, -2);
     nedt_1_R2.Value:=RoundTo(nedt_1_R.Value / nedt_1_R3.Value * 100, -2);
 
-    //опт, по префиксам М и Ф
+    //РѕРїС‚, РїРѕ РїСЂРµС„РёРєСЃР°Рј Рњ Рё Р¤
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''М'', ''Ф'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
+      'where id > 0 and prefix in (''Рњ'', ''Р¤'') and dt_beg >= :dtb$d and dt_beg <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -368,18 +368,18 @@ begin
     nedt_1_OM2.Value:=RoundTo(nedt_1_OM.Value / nedt_1_OM3.Value * 100, -2);
     nedt_1_O2.Value:=RoundTo(nedt_1_O.Value / nedt_1_O3.Value * 100, -2);
 
-    //итого
+    //РёС‚РѕРіРѕ
     nedt_1_I.Value:= nedt_1_R.Value + nedt_1_O.Value;
     nedt_1_I3.Value:= nedt_1_R3.Value + nedt_1_O3.Value;
     nedt_1_I2.Value:=RoundTo(nedt_1_I.Value / nedt_1_I3.Value * 100, -2);
   end;
 
   if ts_2.TabVisible then begin
-    //отгрузка, выборка по дате отгрузки с СГП
-    //розница, по префиксам О и Н
+    //РѕС‚РіСЂСѓР·РєР°, РІС‹Р±РѕСЂРєР° РїРѕ РґР°С‚Рµ РѕС‚РіСЂСѓР·РєРё СЃ РЎР“Рџ
+    //СЂРѕР·РЅРёС†Р°, РїРѕ РїСЂРµС„РёРєСЃР°Рј Рћ Рё Рќ
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''О'', ''Н'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
+      'where id > 0 and prefix in (''Рћ'', ''Рќ'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -400,10 +400,10 @@ begin
     nedt_2_RM2.Value:=RoundTo(nedt_2_RM.Value / nedt_2_RM3.Value * 100, -2);
     nedt_2_R2.Value:=RoundTo(nedt_2_R.Value / nedt_2_R3.Value * 100, -2);
 
-    //опт, по префиксам М и Ф
+    //РѕРїС‚, РїРѕ РїСЂРµС„РёРєСЃР°Рј Рњ Рё Р¤
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''М'', ''Ф'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
+      'where id > 0 and prefix in (''Рњ'', ''Р¤'') and dt_from_sgp >= :dtb$d and dt_from_sgp <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -424,17 +424,17 @@ begin
     nedt_2_OM2.Value:=RoundTo(nedt_2_OM.Value / nedt_2_OM3.Value * 100, -2);
     nedt_2_O2.Value:=RoundTo(nedt_2_O.Value / nedt_2_O3.Value * 100, -2);
 
-    //итого
+    //РёС‚РѕРіРѕ
     nedt_2_I.Value:= nedt_2_R.Value + nedt_2_O.Value;
     nedt_2_I3.Value:= nedt_2_R3.Value + nedt_2_O3.Value;
     nedt_2_I2.Value:=RoundTo(nedt_2_I.Value / nedt_2_I3.Value * 100, -2);
   end;
 
   if ts_4.TabVisible then begin
-    //реализация, выборка по дате завершения заказа, планы такие же как по отгрузке
+    //СЂРµР°Р»РёР·Р°С†РёСЏ, РІС‹Р±РѕСЂРєР° РїРѕ РґР°С‚Рµ Р·Р°РІРµСЂС€РµРЅРёСЏ Р·Р°РєР°Р·Р°, РїР»Р°РЅС‹ С‚Р°РєРёРµ Р¶Рµ РєР°Рє РїРѕ РѕС‚РіСЂСѓР·РєРµ
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''О'', ''Н'') and dt_end >= :dtb$d and dt_end <= :dte$d',
+      'where id > 0 and prefix in (''Рћ'', ''Рќ'') and dt_end >= :dtb$d and dt_end <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -454,10 +454,10 @@ begin
     nedt_4_RM2.Value:=RoundTo(nedt_4_RM.Value / nedt_4_RM3.Value * 100, -2);
     nedt_4_R2.Value:=RoundTo(nedt_4_R.Value / nedt_4_R3.Value * 100, -2);
 
-    //опт, по префиксам М и Ф
+    //РѕРїС‚, РїРѕ РїСЂРµС„РёРєСЃР°Рј Рњ Рё Р¤
     va1:=Q.QLoad(
       'select round(sum(cost_i_wo_nds)), round(sum(cost_a_wo_nds)), round(sum(cost_d_wo_nds)), round(sum(cost_m_wo_nds)) from v_orders '+
-      'where id > 0 and prefix in (''М'', ''Ф'') and dt_end >= :dtb$d and dt_end <= :dte$d',
+      'where id > 0 and prefix in (''Рњ'', ''Р¤'') and dt_end >= :dtb$d and dt_end <= :dte$d',
       [DtB, DtE]
     );
     va2:=Q.QLoad(
@@ -478,7 +478,7 @@ begin
     nedt_4_OM2.Value:=RoundTo(nedt_4_OM.Value / nedt_4_OM3.Value * 100, -2);
     nedt_4_O2.Value:=RoundTo(nedt_4_O.Value / nedt_4_O3.Value * 100, -2);
 
-    //итого
+    //РёС‚РѕРіРѕ
     nedt_4_I.Value:= nedt_4_R.Value + nedt_4_O.Value;
     nedt_4_I3.Value:= nedt_4_R3.Value + nedt_4_O3.Value;
     nedt_4_I2.Value:=RoundTo(nedt_4_I.Value / nedt_4_I3.Value * 100, -2);
@@ -486,10 +486,10 @@ begin
 
 
   if ts_3.TabVisible then begin
-    //отчет по производству
-    //берется дата поступления на сгп по каждому слешу, обсчет идет по заказам частично, по мере изготовления изделий
-    //вьюха без параметров, т.к. начальная и конечная дата выборки передаются через контекст сесии
-    //получаем сумму изготовленных изделий за период, и сумму за переод же, но только тех, которые изготовлены в срок (ранее плановой даты отгрузки)
+    //РѕС‚С‡РµС‚ РїРѕ РїСЂРѕРёР·РІРѕРґСЃС‚РІСѓ
+    //Р±РµСЂРµС‚СЃСЏ РґР°С‚Р° РїРѕСЃС‚СѓРїР»РµРЅРёСЏ РЅР° СЃРіРї РїРѕ РєР°Р¶РґРѕРјСѓ СЃР»РµС€Сѓ, РѕР±СЃС‡РµС‚ РёРґРµС‚ РїРѕ Р·Р°РєР°Р·Р°Рј С‡Р°СЃС‚РёС‡РЅРѕ, РїРѕ РјРµСЂРµ РёР·РіРѕС‚РѕРІР»РµРЅРёСЏ РёР·РґРµР»РёР№
+    //РІСЊСЋС…Р° Р±РµР· РїР°СЂР°РјРµС‚СЂРѕРІ, С‚.Рє. РЅР°С‡Р°Р»СЊРЅР°СЏ Рё РєРѕРЅРµС‡РЅР°СЏ РґР°С‚Р° РІС‹Р±РѕСЂРєРё РїРµСЂРµРґР°СЋС‚СЃСЏ С‡РµСЂРµР· РєРѕРЅС‚РµРєСЃС‚ СЃРµСЃРёРё
+    //РїРѕР»СѓС‡Р°РµРј СЃСѓРјРјСѓ РёР·РіРѕС‚РѕРІР»РµРЅРЅС‹С… РёР·РґРµР»РёР№ Р·Р° РїРµСЂРёРѕРґ, Рё СЃСѓРјРјСѓ Р·Р° РїРµСЂРµРѕРґ Р¶Рµ, РЅРѕ С‚РѕР»СЊРєРѕ С‚РµС…, РєРѕС‚РѕСЂС‹Рµ РёР·РіРѕС‚РѕРІР»РµРЅС‹ РІ СЃСЂРѕРє (СЂР°РЅРµРµ РїР»Р°РЅРѕРІРѕР№ РґР°С‚С‹ РѕС‚РіСЂСѓР·РєРё)
     va1:=Q.QLoad('select sum(sum_i), sum(sum_i_ok), sum(sum_a), sum(sum_a_ok), sum(sum_i_raw) from v_order_finreport_1', []);
     va2:=Q.QLoad(
       'select round(sum(sum3i)), round(sum(sum3a)), max(prc3i), max(prc3a) from order_plans where dt >= :dtb$d and  dt <= :dte$d',
@@ -514,9 +514,9 @@ begin
     if S.NNum(nedt_3_Plan.Value) <> 0 then nedt_3_Prc.Value:=RoundTo(nedt_3.Value / nedt_3_Plan.Value * 100, -2);
   end;
   if ts_5.TabVisible then begin
-    //отчет по изделиям в производстве
-    //сумма изделии и дк без ндс с учетом скидок по производстенным паспортам, и нестандартных изделий по всем остальным,
-    //только по незавершенным паспортам, по непринятому на сгп остатку
+    //РѕС‚С‡РµС‚ РїРѕ РёР·РґРµР»РёСЏРј РІ РїСЂРѕРёР·РІРѕРґСЃС‚РІРµ
+    //СЃСѓРјРјР° РёР·РґРµР»РёРё Рё РґРє Р±РµР· РЅРґСЃ СЃ СѓС‡РµС‚РѕРј СЃРєРёРґРѕРє РїРѕ РїСЂРѕРёР·РІРѕРґСЃС‚РµРЅРЅС‹Рј РїР°СЃРїРѕСЂС‚Р°Рј, Рё РЅРµСЃС‚Р°РЅРґР°СЂС‚РЅС‹С… РёР·РґРµР»РёР№ РїРѕ РІСЃРµРј РѕСЃС‚Р°Р»СЊРЅС‹Рј,
+    //С‚РѕР»СЊРєРѕ РїРѕ РЅРµР·Р°РІРµСЂС€РµРЅРЅС‹Рј РїР°СЃРїРѕСЂС‚Р°Рј, РїРѕ РЅРµРїСЂРёРЅСЏС‚РѕРјСѓ РЅР° СЃРіРї РѕСЃС‚Р°С‚РєСѓ
     Cth.SetControlValue(Ne5Selling, Q.QLoadValue('select sum(sum_i) + sum(sum_a) from v_order_finreport_inprod',[]));
     va2:=Q.QLoad('select sum_in_prod, sum_in_stock, sum_rezerv, sum_onway, sum_need, sum_need_p, sum_needcurr from v_nom_for_orders_in_prod_fin', []);
     for i:=0 to High(va2[0]) do
@@ -525,7 +525,7 @@ begin
   SetReportCaption;
 end;
 
-//ошибки деления на ноль если нет данных!!!
+//РѕС€РёР±РєРё РґРµР»РµРЅРёСЏ РЅР° РЅРѕР»СЊ РµСЃР»Рё РЅРµС‚ РґР°РЅРЅС‹С…!!!
 
 
 
@@ -542,7 +542,7 @@ begin
   end
   else begin
     if (cmb_DtB.ItemIndex = -1) or (cmb_DtE.ItemIndex = -1) or (cmb_DtE.ItemIndex > cmb_DtB.ItemIndex) then begin
-      MyWarningMessage('Неверно задан период!');
+      MyWarningMessage('РќРµРІРµСЂРЅРѕ Р·Р°РґР°РЅ РїРµСЂРёРѕРґ!');
       Exit;
     end;
     DtB := GetDateFromComboBox(cmb_DtB.Value);
@@ -554,11 +554,11 @@ end;
 
 function TFrmODrepFinByOrders.Prepare: Boolean;
 begin
-  Caption := 'Финансовый отчет по заказам';
+  Caption := 'Р¤РёРЅР°РЅСЃРѕРІС‹Р№ РѕС‚С‡РµС‚ РїРѕ Р·Р°РєР°Р·Р°Рј';
   Mode := fNone;
   FOpt.DlgPanelStyle:= dpsBottomRight;
   Cth.MakePanelsFlat(pnlFrmClient, []);
-  FOpt.DlgButtonsR:=[[1000, User.Role(rOr_R_Plans), 'Планы'], [], [mbtGo, True, True, 180, 'Сформировать отчет', '', 150]];
+  FOpt.DlgButtonsR:=[[1000, User.Role(rOr_R_Plans), 'РџР»Р°РЅС‹'], [], [mbtGo, True, True, 180, 'РЎС„РѕСЂРјРёСЂРѕРІР°С‚СЊ РѕС‚С‡РµС‚', '', 150]];
   FOpt.StatusBarMode:=stbmNone;
   Cth.AlignControls(pnlFrmBtnsL, [], True, 2);
   Result := True;

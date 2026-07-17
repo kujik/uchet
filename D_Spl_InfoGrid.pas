@@ -1,4 +1,4 @@
-unit D_Spl_InfoGrid;
+п»їunit D_Spl_InfoGrid;
 
 interface
 
@@ -24,8 +24,8 @@ type
   private
     { Private declarations }
     function Prepare: Boolean; override;
-    function InitGrid: Boolean; override;            //создаем грид и мемтейбл (поля, настройки...). вызывается в Prepare, обязательно перекрывается.
-    function InitAdd: Boolean; override;             //Дополнительные действия потомка, которые вызывается в Prepare.
+    function InitGrid: Boolean; override;            //СЃРѕР·РґР°РµРј РіСЂРёРґ Рё РјРµРјС‚РµР№Р±Р» (РїРѕР»СЏ, РЅР°СЃС‚СЂРѕР№РєРё...). РІС‹Р·С‹РІР°РµС‚СЃСЏ РІ Prepare, РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ РїРµСЂРµРєСЂС‹РІР°РµС‚СЃСЏ.
+    function InitAdd: Boolean; override;             //Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РїРѕС‚РѕРјРєР°, РєРѕС‚РѕСЂС‹Рµ РІС‹Р·С‹РІР°РµС‚СЃСЏ РІ Prepare.
     procedure ViewEstimate;
   public
     { Public declarations }
@@ -52,23 +52,23 @@ var
   IdOrder: Variant;
 begin
   if MemTableEh1.RecordCount = 0 then Exit;
-  //получим айди заказа в учете
+  //РїРѕР»СѓС‡РёРј Р°Р№РґРё Р·Р°РєР°Р·Р° РІ СѓС‡РµС‚Рµ
   IdOrder:=null;
   if DBGridEh1.FindFieldColumn('ornum') <> nil
     then IdOrder:=Q.QLoadValue('select id from v_orders where ornum = :ornum$s', [MemTableEh1.FieldByName('ornum').Value]);
-  //откроем паспотр заказа или смету
+  //РѕС‚РєСЂРѕРµРј РїР°СЃРїРѕС‚СЂ Р·Р°РєР°Р·Р° РёР»Рё СЃРјРµС‚Сѓ
   if IdOrder <> null
-    then if TCellButtonEh(Sender).Hint = 'Паспорт'
+    then if TCellButtonEh(Sender).Hint = 'РџР°СЃРїРѕСЂС‚'
       then Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fView, IdOrder, null)
-      else if TCellButtonEh(Sender).Hint = 'Смета'
+      else if TCellButtonEh(Sender).Hint = 'РЎРјРµС‚Р°'
        then Wh.ExecReference(myfrm_R_AggEstimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([IdOrder]));
-  //откроем счет из ИТМ
-  if TCellButtonEh(Sender).Hint = 'Открыть счет'
+  //РѕС‚РєСЂРѕРµРј СЃС‡РµС‚ РёР· РРўРњ
+  if TCellButtonEh(Sender).Hint = 'РћС‚РєСЂС‹С‚СЊ СЃС‡РµС‚'
     then Wh.ExecReference(myfrm_R_Itm_Schet, Self, [myfoDialog, myfoSizeable, myfoEnableMaximize], MemTableEh1.FieldByName('id_schet').Value);
-  //откроем ПН из ИТМ
-  if TCellButtonEh(Sender).Hint = 'Открыть приходную накладную'
+  //РѕС‚РєСЂРѕРµРј РџРќ РёР· РРўРњ
+  if TCellButtonEh(Sender).Hint = 'РћС‚РєСЂС‹С‚СЊ РїСЂРёС…РѕРґРЅСѓСЋ РЅР°РєР»Р°РґРЅСѓСЋ'
     then Wh.ExecReference(myfrm_R_Itm_InBill, Self, [myfoDialog, myfoSizeable, myfoEnableMaximize], MemTableEh1.FieldByName('id_inbill').Value);
-  if TCellButtonEh(Sender).Hint = 'Открыть плановый заказ'
+  if TCellButtonEh(Sender).Hint = 'РћС‚РєСЂС‹С‚СЊ РїР»Р°РЅРѕРІС‹Р№ Р·Р°РєР°Р·'
     then TFrmOWPlannedOrder.Show(Self, myfrm_Dlg_PlannedOrder, [myfoSizeable, myfoMultiCopy], fView, MemTableEh1.FieldByName('id').Value, null);
 
 end;
@@ -78,8 +78,8 @@ var
   IdOrder: Variant;
 begin
   if MemTableEh1.RecordCount = 0 then Exit;
-  //откроем ПН из ИТМ
-  if TCellButtonEh(Sender).Hint = 'Открыть приходную накладную'
+  //РѕС‚РєСЂРѕРµРј РџРќ РёР· РРўРњ
+  if TCellButtonEh(Sender).Hint = 'РћС‚РєСЂС‹С‚СЊ РїСЂРёС…РѕРґРЅСѓСЋ РЅР°РєР»Р°РґРЅСѓСЋ'
     then Wh.ExecReference(myfrm_R_Itm_InBill, Self, [myfoDialog, myfoSizeable, myfoEnableMaximize], MemTableEh2.FieldByName('id_inbill').Value);
 end;
 
@@ -102,11 +102,11 @@ begin
   Mth.CreateTableGrid(
     DBGridEh1, True, False, False, False,[
     ['id', ftInteger, 0, 'id', 20, False, False, False],
-    ['supplier', ftString, 1000, 'Поставщик', 400, True, True, True],
-    ['name', ftString, 1000, 'Наименование', 400, True, True, True],
-    ['unit', ftString, 50, 'Ед.изм.', 100, True, False, False],
-    ['base_unit_k', ftFloat, 0, 'Коэфф.', 80, True, False, False],
-    ['minpart', ftFloat, 0, 'Мин. партия', 80, True, False, False]
+    ['supplier', ftString, 1000, 'РџРѕСЃС‚Р°РІС‰РёРє', 400, True, True, True],
+    ['name', ftString, 1000, 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ', 400, True, True, True],
+    ['unit', ftString, 50, 'Р•Рґ.РёР·Рј.', 100, True, False, False],
+    ['base_unit_k', ftFloat, 0, 'РљРѕСЌС„С„.', 80, True, False, False],
+    ['minpart', ftFloat, 0, 'РњРёРЅ. РїР°СЂС‚РёСЏ', 80, True, False, False]
     ],
     va2, '', ''
   );
@@ -121,13 +121,13 @@ begin
     );
   Mth.CreateTableGrid(
     DBGridEh1, True, False, False, False,[
-    //['stockdate', ftDateTime, 0, 'Дата', 80, True, True, False],
-    ['ornum', ftString, 15, '№ заказа', 80, True, True, False],
-    ['area_short', ftString, 15, 'Площадка', 80, True, True, False],
-    ['project', ftString, 500, 'Проект', 200, True, True, False],
-    ['dt_beg', ftDateTime, 0, 'Дата оформления', 80, True, True, False], //control_date
-    ['dt_otgr', ftDateTime, 0, 'Дата отгрузки', 80, True, True, False],
-    ['rashod', ftFloat, 0, 'Кол-во', 80, True, True, False]
+    //['stockdate', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False],
+    ['ornum', ftString, 15, 'в„– Р·Р°РєР°Р·Р°', 80, True, True, False],
+    ['area_short', ftString, 15, 'РџР»РѕС‰Р°РґРєР°', 80, True, True, False],
+    ['project', ftString, 500, 'РџСЂРѕРµРєС‚', 200, True, True, False],
+    ['dt_beg', ftDateTime, 0, 'Р”Р°С‚Р° РѕС„РѕСЂРјР»РµРЅРёСЏ', 80, True, True, False], //control_date
+    ['dt_otgr', ftDateTime, 0, 'Р”Р°С‚Р° РѕС‚РіСЂСѓР·РєРё', 80, True, True, False],
+    ['rashod', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
     ],
     va2, '', ''
   );
@@ -145,14 +145,14 @@ begin
   Mth.CreateTableGrid(
     DBGridEh1, True, False, False, False,[
     ['id_schet', ftInteger, 0, '_id', 80, False, True, False],
-    ['date_registr', ftDateTime, 0, 'Дата', 80, True, True, False], //control_date
-    ['num', ftString, 50, '№ счета', 100, True, True, False],
-    ['name_org', ftString, 255, 'Поставщик', 250, True, True, False],
-    ['quantity_suppl', ftFloat, 0, 'Кол. поставщика', 80, True, True, False],
-    ['unit_suppl', ftString, 50, 'Ед. поставщика', 80, True, True, False],
-    ['quantity_main', ftFloat, 0, 'По счету', 80, True, True, False],
-    ['fact_quantity', ftFloat, 0, 'По накладным', 80, True, True, False],
-    ['rest', ftFloat, 0, 'Остаток', 80, True, True, False]
+    ['date_registr', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False], //control_date
+    ['num', ftString, 50, 'в„– СЃС‡РµС‚Р°', 100, True, True, False],
+    ['name_org', ftString, 255, 'РџРѕСЃС‚Р°РІС‰РёРє', 250, True, True, False],
+    ['quantity_suppl', ftFloat, 0, 'РљРѕР». РїРѕСЃС‚Р°РІС‰РёРєР°', 80, True, True, False],
+    ['unit_suppl', ftString, 50, 'Р•Рґ. РїРѕСЃС‚Р°РІС‰РёРєР°', 80, True, True, False],
+    ['quantity_main', ftFloat, 0, 'РџРѕ СЃС‡РµС‚Сѓ', 80, True, True, False],
+    ['fact_quantity', ftFloat, 0, 'РџРѕ РЅР°РєР»Р°РґРЅС‹Рј', 80, True, True, False],
+    ['rest', ftFloat, 0, 'РћСЃС‚Р°С‚РѕРє', 80, True, True, False]
     ],
     va2, '', ''
   );
@@ -160,25 +160,25 @@ begin
   Gh.SetGridOptionsMain(DBGridEh1, True, True, True);
   Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, 'quantity_suppl;quantity_main;fact_quantity;rest', '#.#');
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'quantity_suppl;quantity_main;fact_quantity;rest', '#.#');
-  Gh.SetGridInCellButtons(DBGridEh1, 'num', 'Открыть счет', CellButtonClick);
+  Gh.SetGridInCellButtons(DBGridEh1, 'num', 'РћС‚РєСЂС‹С‚СЊ СЃС‡РµС‚', CellButtonClick);
   DBGridEh1.RowDetailPanel.Active:=True;
   Mth.CreateTableGrid(
     DBGridEh2,True, True, True, True,[
     ['id_inbill', ftInteger, 0, '_id', 80, False, True, False],
-    ['dt', ftDateTime, 0, 'Дата', 150, True, True, False],
-    ['num', ftString, 50, '№ накладной', 150, True, True, False],
-    ['qnt', ftFloat, 0, 'Кол-во', 80, True, True, False]
+    ['dt', ftDateTime, 0, 'Р”Р°С‚Р°', 150, True, True, False],
+    ['num', ftString, 50, 'в„– РЅР°РєР»Р°РґРЅРѕР№', 150, True, True, False],
+    ['qnt', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
     ],
     [], '', ''
   );
-  Gh.SetGridInCellButtons(DBGridEh2, 'num', 'Открыть приходную накладную', CellButtonClick2);
+  Gh.SetGridInCellButtons(DBGridEh2, 'num', 'РћС‚РєСЂС‹С‚СЊ РїСЂРёС…РѕРґРЅСѓСЋ РЅР°РєР»Р°РґРЅСѓСЋ', CellButtonClick2);
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Consumption then begin
-  //документы по расходу за выбранный период
+  //РґРѕРєСѓРјРµРЅС‚С‹ РїРѕ СЂР°СЃС…РѕРґСѓ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ
     va2:=Q.QLoad(
       'select id, id_doc, doctypename, docnum, dt, scladname, comm, qnt '+
       'from v_spl_consumption '+
-      'where id_nomencl = :id$i and dt >= trunc(sysdate) - :d$i + 1 and doctype <> 2 /*05-09-24 убираем акты списания*/'+
+      'where id_nomencl = :id$i and dt >= trunc(sysdate) - :d$i + 1 and doctype <> 2 /*05-09-24 СѓР±РёСЂР°РµРј Р°РєС‚С‹ СЃРїРёСЃР°РЅРёСЏ*/'+
       'order by dt',
       [id, AddParam[2]]
     );
@@ -186,14 +186,14 @@ begin
     DBGridEh1, True, True, True, True,[
     ['id', ftInteger, 0, '_id', 80, False, True, False],
     ['id_doc', ftInteger, 0, '_id_doc', 80, False, True, False],
-    ['doctypename', ftString, 50, 'Тип документа', 100, True, True, False],
-    ['docnum', ftString, 50, '№ документа', 100, True, True, False],
-    ['dt', ftDateTime, 0, 'Дата', 80, True, True, False], //control_date
-    ['scladname', ftString, 255, 'Со склада', 100, True, True, False],
-//    ['basedoc', ftString, 0, 'Основание', 150, True, True, True],
-    ['ornum', ftString, 500, 'Основание', 150, True, True, True],
-    ['qnt', ftFloat, 0, 'Кол-во', 80, True, True, False]
-//    ['comm', ftString, 1000, 'Комментарий', 150, True, True, True]
+    ['doctypename', ftString, 50, 'РўРёРї РґРѕРєСѓРјРµРЅС‚Р°', 100, True, True, False],
+    ['docnum', ftString, 50, 'в„– РґРѕРєСѓРјРµРЅС‚Р°', 100, True, True, False],
+    ['dt', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False], //control_date
+    ['scladname', ftString, 255, 'РЎРѕ СЃРєР»Р°РґР°', 100, True, True, False],
+//    ['basedoc', ftString, 0, 'РћСЃРЅРѕРІР°РЅРёРµ', 150, True, True, True],
+    ['ornum', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 150, True, True, True],
+    ['qnt', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
+//    ['comm', ftString, 1000, 'РљРѕРјРјРµРЅС‚Р°СЂРёР№', 150, True, True, True]
     ],
     va2, '', ''
   );
@@ -202,7 +202,7 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'qnt', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_QntOnStore then begin
-  //количество на складах
+  //РєРѕР»РёС‡РµСЃС‚РІРѕ РЅР° СЃРєР»Р°РґР°С…
   va2:=Q.QLoad(
       'select skladname, qnt from v_itm_qntonstore '+
       'where id_nomencl = :id$i and id_sklad is not null and (not id_sklad in (842, 922)) '+
@@ -211,8 +211,8 @@ begin
     );
   Mth.CreateTableGrid(
     DBGridEh1, True, True, True, False,[
-    ['skladname', ftString, 200, 'Склад', 200, True, True, False],
-    ['qnt', ftFloat, 0, 'Кол-во', 80, True, True, False]
+    ['skladname', ftString, 200, 'РЎРєР»Р°Рґ', 200, True, True, False],
+    ['qnt', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
     ],
     va2, '', ''
   );
@@ -220,7 +220,7 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'qnt', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Incoming then begin
-  //документы по приходу за выбранный период (по приходным накладным)
+  //РґРѕРєСѓРјРµРЅС‚С‹ РїРѕ РїСЂРёС…РѕРґСѓ Р·Р° РІС‹Р±СЂР°РЅРЅС‹Р№ РїРµСЂРёРѕРґ (РїРѕ РїСЂРёС…РѕРґРЅС‹Рј РЅР°РєР»Р°РґРЅС‹Рј)
   va2:=Q.QLoad(
       'select td, numdoc, stockdate, basis, prihod from v_itm_movenomencl '+
       'where id_nomencl = :id$i and doctype in (1/*, 5*/) and stockdate >= trunc(sysdate) - :d$i + 1 '+
@@ -229,11 +229,11 @@ begin
     );
   Mth.CreateTableGrid(
     DBGridEh1, True, False, False, False,[
-    ['td', ftString, 50, 'Тип документа', 120, True, True, False],
-    ['numdoc', ftString, 50, '№ документа', 80, True, True, False],
-    ['stockdate', ftDateTime, 0, 'Дата', 80, True, True, False],
-    ['basis', ftString, 500, 'Основание', 250, True, True, True],
-    ['prihod', ftFloat, 0, 'Кол-во', 80, True, True, False]
+    ['td', ftString, 50, 'РўРёРї РґРѕРєСѓРјРµРЅС‚Р°', 120, True, True, False],
+    ['numdoc', ftString, 50, 'в„– РґРѕРєСѓРјРµРЅС‚Р°', 80, True, True, False],
+    ['stockdate', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False],
+    ['basis', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 250, True, True, True],
+    ['prihod', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
     ],
     va2, '', ''
   );
@@ -242,10 +242,10 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'prihod', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_MoveNomencl then begin
-  //документы по движению по номенклатуре за весь период, все документы движдения (приходны, расходные, авр, акты списания, постановка в резерв)
+  //РґРѕРєСѓРјРµРЅС‚С‹ РїРѕ РґРІРёР¶РµРЅРёСЋ РїРѕ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ Р·Р° РІРµСЃСЊ РїРµСЂРёРѕРґ, РІСЃРµ РґРѕРєСѓРјРµРЅС‚С‹ РґРІРёР¶РґРµРЅРёСЏ (РїСЂРёС…РѕРґРЅС‹, СЂР°СЃС…РѕРґРЅС‹Рµ, Р°РІСЂ, Р°РєС‚С‹ СЃРїРёСЃР°РЅРёСЏ, РїРѕСЃС‚Р°РЅРѕРІРєР° РІ СЂРµР·РµСЂРІ)
   {
-   При фильтре по конкретному складу в столбце "Со склада" будут корректно отображены документы РАСХОДА с данного склада, приход будет неверный,
-   и наоборот будет верный приход при фильтре "На склад"
+   РџСЂРё С„РёР»СЊС‚СЂРµ РїРѕ РєРѕРЅРєСЂРµС‚РЅРѕРјСѓ СЃРєР»Р°РґСѓ РІ СЃС‚РѕР»Р±С†Рµ "РЎРѕ СЃРєР»Р°РґР°" Р±СѓРґСѓС‚ РєРѕСЂСЂРµРєС‚РЅРѕ РѕС‚РѕР±СЂР°Р¶РµРЅС‹ РґРѕРєСѓРјРµРЅС‚С‹ Р РђРЎРҐРћР”Рђ СЃ РґР°РЅРЅРѕРіРѕ СЃРєР»Р°РґР°, РїСЂРёС…РѕРґ Р±СѓРґРµС‚ РЅРµРІРµСЂРЅС‹Р№,
+   Рё РЅР°РѕР±РѕСЂРѕС‚ Р±СѓРґРµС‚ РІРµСЂРЅС‹Р№ РїСЂРёС…РѕРґ РїСЂРё С„РёР»СЊС‚СЂРµ "РќР° СЃРєР»Р°Рґ"
   }
 
     va2:=Q.QLoad(
@@ -258,19 +258,19 @@ begin
     ['id_stock', ftInteger, 0, '_id', 80, False, True, False],
     ['id_doc', ftInteger, 0, '_id_doc', 80, False, True, False],
     ['doctype', ftInteger, 0, '_id_doc', 80, False, True, False],
-    ['td', ftString, 50, 'Тип документа', 120, True, True, False],
-    ['numdoc', ftString, 50, '№ документа', 80, True, True, False],
-    ['stochdate', ftDateTime, 0, 'Дата документа', 80, True, True, False],
-    ['skladsrc', ftString, 255, 'Со склада', 150, True, True, False],
-    ['skladdest', ftString, 255, 'На склад', 150, True, True, False],
-//    ['basis', ftString, 500, 'Основание', 500, True, True, True],
-    ['ornum', ftString, 500, 'Основание', 500, True, True, True],
-    ['dt_beg', ftDateTime, 0, 'Дата оформления', 80, True, True, False],
-    ['dt_otgr', ftDateTime, 0, 'Дата отгрузки', 80, True, True, False],
-    ['project', ftString, 500, 'Проект', 200, True, True, False],
-    ['prihod', ftFloat, 0, 'Приход', 80, True, True, False],
-    ['rashod', ftFloat, 0, 'Расход', 80, True, True, False],
-    ['comments', ftString, 1000, 'Комментарий', 400, True, True, True]
+    ['td', ftString, 50, 'РўРёРї РґРѕРєСѓРјРµРЅС‚Р°', 120, True, True, False],
+    ['numdoc', ftString, 50, 'в„– РґРѕРєСѓРјРµРЅС‚Р°', 80, True, True, False],
+    ['stochdate', ftDateTime, 0, 'Р”Р°С‚Р° РґРѕРєСѓРјРµРЅС‚Р°', 80, True, True, False],
+    ['skladsrc', ftString, 255, 'РЎРѕ СЃРєР»Р°РґР°', 150, True, True, False],
+    ['skladdest', ftString, 255, 'РќР° СЃРєР»Р°Рґ', 150, True, True, False],
+//    ['basis', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 500, True, True, True],
+    ['ornum', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 500, True, True, True],
+    ['dt_beg', ftDateTime, 0, 'Р”Р°С‚Р° РѕС„РѕСЂРјР»РµРЅРёСЏ', 80, True, True, False],
+    ['dt_otgr', ftDateTime, 0, 'Р”Р°С‚Р° РѕС‚РіСЂСѓР·РєРё', 80, True, True, False],
+    ['project', ftString, 500, 'РџСЂРѕРµРєС‚', 200, True, True, False],
+    ['prihod', ftFloat, 0, 'РџСЂРёС…РѕРґ', 80, True, True, False],
+    ['rashod', ftFloat, 0, 'Р Р°СЃС…РѕРґ', 80, True, True, False],
+    ['comments', ftString, 1000, 'РљРѕРјРјРµРЅС‚Р°СЂРёР№', 400, True, True, True]
     ],
     va2, '', ''
   );
@@ -279,8 +279,8 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'prihod;rashod', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_DiffInOrder then begin
-  //НЕ РАБОТАЕТ!!!
-  //документы по движению по номенклатуре за весь период, все документы движдения (приходны, расходные, авр, акты списания, постановка в резерв)
+  //РќР• Р РђР‘РћРўРђР•Рў!!!
+  //РґРѕРєСѓРјРµРЅС‚С‹ РїРѕ РґРІРёР¶РµРЅРёСЋ РїРѕ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ Р·Р° РІРµСЃСЊ РїРµСЂРёРѕРґ, РІСЃРµ РґРѕРєСѓРјРµРЅС‚С‹ РґРІРёР¶РґРµРЅРёСЏ (РїСЂРёС…РѕРґРЅС‹, СЂР°СЃС…РѕРґРЅС‹Рµ, Р°РІСЂ, Р°РєС‚С‹ СЃРїРёСЃР°РЅРёСЏ, РїРѕСЃС‚Р°РЅРѕРІРєР° РІ СЂРµР·РµСЂРІ)
     va:=Q.QLoadCol(
       'select basis from ( '+
       'select sum(prihod + (case when doctype = 3 then 0 else rashod end)) as moves, basis from v_itm_movenomencl ' +
@@ -303,19 +303,19 @@ begin
     ['id_stock', ftInteger, 0, '_id', 80, False, True, False],
     ['id_doc', ftInteger, 0, '_id_doc', 80, False, True, False],
     ['doctype', ftInteger, 0, '_id_doc', 80, False, True, False],
-    ['td', ftString, 50, 'Тип документа', 120, True, True, False],
-    ['numdoc', ftString, 50, '№ документа', 80, True, True, False],
-    ['stochdate', ftDateTime, 0, 'Дата документа', 80, True, True, False],
-    ['skladsrc', ftString, 255, 'Со склада', 150, True, True, False],
-    ['skladdest', ftString, 255, 'На склад', 150, True, True, False],
-//    ['basis', ftString, 500, 'Основание', 500, True, True, True],
-    ['ornum', ftString, 500, 'Основание', 500, True, True, True],
-    ['dt_beg', ftDateTime, 0, 'Дата оформления', 80, True, True, False],
-    ['dt_otgr', ftDateTime, 0, 'Дата отгрузки', 80, True, True, False],
-    ['project', ftString, 500, 'Проект', 200, True, True, False],
-    ['prihod', ftFloat, 0, 'Приход', 80, True, True, False],
-    ['rashod', ftFloat, 0, 'Расход', 80, True, True, False],
-    ['comments', ftString, 1000, 'Комментарий', 400, True, True, True]
+    ['td', ftString, 50, 'РўРёРї РґРѕРєСѓРјРµРЅС‚Р°', 120, True, True, False],
+    ['numdoc', ftString, 50, 'в„– РґРѕРєСѓРјРµРЅС‚Р°', 80, True, True, False],
+    ['stochdate', ftDateTime, 0, 'Р”Р°С‚Р° РґРѕРєСѓРјРµРЅС‚Р°', 80, True, True, False],
+    ['skladsrc', ftString, 255, 'РЎРѕ СЃРєР»Р°РґР°', 150, True, True, False],
+    ['skladdest', ftString, 255, 'РќР° СЃРєР»Р°Рґ', 150, True, True, False],
+//    ['basis', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 500, True, True, True],
+    ['ornum', ftString, 500, 'РћСЃРЅРѕРІР°РЅРёРµ', 500, True, True, True],
+    ['dt_beg', ftDateTime, 0, 'Р”Р°С‚Р° РѕС„РѕСЂРјР»РµРЅРёСЏ', 80, True, True, False],
+    ['dt_otgr', ftDateTime, 0, 'Р”Р°С‚Р° РѕС‚РіСЂСѓР·РєРё', 80, True, True, False],
+    ['project', ftString, 500, 'РџСЂРѕРµРєС‚', 200, True, True, False],
+    ['prihod', ftFloat, 0, 'РџСЂРёС…РѕРґ', 80, True, True, False],
+    ['rashod', ftFloat, 0, 'Р Р°СЃС…РѕРґ', 80, True, True, False],
+    ['comments', ftString, 1000, 'РљРѕРјРјРµРЅС‚Р°СЂРёР№', 400, True, True, True]
     ],
     va2, '', ''
   );
@@ -324,7 +324,7 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'prihod;rashod', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_SpSchetList then begin
-  //список счетов по данной номенклатуре
+  //СЃРїРёСЃРѕРє СЃС‡РµС‚РѕРІ РїРѕ РґР°РЅРЅРѕР№ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ
     va2:=Q.QLoad(
       'select id_schet, date_registr, num, name_org, name, quantity, unit, price '+
       'from v_spl_schetbynomencl where id_nomencl = :id$i order by date_registr',
@@ -333,32 +333,32 @@ begin
   Mth.CreateTableGrid(
     DBGridEh1, True, True, True, False,[
     ['id_schet', ftInteger, 0, '_id', 80, False, True, False],
-    ['date_registr', ftDateTime, 0, 'Дата', 80, True, True, False], //control_date
-    ['num', ftString, 50, '№ счета', 100, True, True, False],
-    ['name_org', ftString, 255, 'Поставщик', 250, True, True, False],
-    ['name', ftString, 255, 'Наименование у поставщика', 250, True, True, False],
-    ['quantity', ftFloat, 0, 'Кол. поставщика', 80, True, True, False],
-    ['unit', ftString, 50, 'Ед. поставщика', 80, True, True, False],
-    ['price', ftFloat, 0, 'Цена', 80, True, True, False]
+    ['date_registr', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False], //control_date
+    ['num', ftString, 50, 'в„– СЃС‡РµС‚Р°', 100, True, True, False],
+    ['name_org', ftString, 255, 'РџРѕСЃС‚Р°РІС‰РёРє', 250, True, True, False],
+    ['name', ftString, 255, 'РќР°РёРјРµРЅРѕРІР°РЅРёРµ Сѓ РїРѕСЃС‚Р°РІС‰РёРєР°', 250, True, True, False],
+    ['quantity', ftFloat, 0, 'РљРѕР». РїРѕСЃС‚Р°РІС‰РёРєР°', 80, True, True, False],
+    ['unit', ftString, 50, 'Р•Рґ. РїРѕСЃС‚Р°РІС‰РёРєР°', 80, True, True, False],
+    ['price', ftFloat, 0, 'Р¦РµРЅР°', 80, True, True, False]
     ],
     va2, '', ''
   );
   Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, 'quantity', '0.#');
   Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, 'price', '0.00');
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'quantity', '0.#');
-  Gh.SetGridInCellButtons(DBGridEh1, 'num', 'Открыть счет', CellButtonClick);
+  Gh.SetGridInCellButtons(DBGridEh1, 'num', 'РћС‚РєСЂС‹С‚СЊ СЃС‡РµС‚', CellButtonClick);
 {  DBGridEh1.RowDetailPanel.Active:=True;
   Mth.CreateTableGrid(
     DBGridEh2,True, True, True, True,[
-    ['dt', ftDateTime, 0, 'Дата', 150, True, True, False],
-    ['num', ftString, 50, '№ накладной', 150, True, True, False],
-    ['qnt', ftFloat, 0, 'Кол-во', 80, True, True, False]
+    ['dt', ftDateTime, 0, 'Р”Р°С‚Р°', 150, True, True, False],
+    ['num', ftString, 50, 'в„– РЅР°РєР»Р°РґРЅРѕР№', 150, True, True, False],
+    ['qnt', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False]
     ],
     [], '', ''
   );}
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_InBillList then begin
-  //список приходных накладных по данной номенклатуре
+  //СЃРїРёСЃРѕРє РїСЂРёС…РѕРґРЅС‹С… РЅР°РєР»Р°РґРЅС‹С… РїРѕ РґР°РЅРЅРѕР№ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ
     va2:=Q.QLoad(
       'select id_inbill, inbilldate, inbillnum, name_org, ibquantity, fact_quantity, name_unit, price, price_itogo '+
       'from v_spl_nom_inbills where id_nomencl = :id$i order by inbilldate',
@@ -366,22 +366,22 @@ begin
     );
   Mth.CreateTableGrid(
     DBGridEh1, True, True, True, False,[
-    ['id_inbill', ftInteger, 0, '_id', 80, False, True, False],          //дата и номер наши, а не исходного документа!
-    ['inbilldate', ftDateTime, 0, 'Дата', 80, True, True, False],
-    ['inbillnum', ftString, 50, '№ ПН', 100, True, True, False],
-    ['name_org', ftString, 255, 'Поставщик', 250, True, True, False],
-    ['ibquantity', ftFloat, 0, 'Кол-во', 80, True, True, False],
-    ['fact_quantity', ftFloat, 0, 'Кол-во по док.', 80, True, True, False],
-    ['unit', ftString, 50, 'Ед. изм', 80, True, True, False],
-    ['price', ftFloat, 0, 'Цена', 80, True, True, False],
-    ['price_itogo', ftFloat, 0, 'Цена с НДС', 80, True, True, False]
+    ['id_inbill', ftInteger, 0, '_id', 80, False, True, False],          //РґР°С‚Р° Рё РЅРѕРјРµСЂ РЅР°С€Рё, Р° РЅРµ РёСЃС…РѕРґРЅРѕРіРѕ РґРѕРєСѓРјРµРЅС‚Р°!
+    ['inbilldate', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False],
+    ['inbillnum', ftString, 50, 'в„– РџРќ', 100, True, True, False],
+    ['name_org', ftString, 255, 'РџРѕСЃС‚Р°РІС‰РёРє', 250, True, True, False],
+    ['ibquantity', ftFloat, 0, 'РљРѕР»-РІРѕ', 80, True, True, False],
+    ['fact_quantity', ftFloat, 0, 'РљРѕР»-РІРѕ РїРѕ РґРѕРє.', 80, True, True, False],
+    ['unit', ftString, 50, 'Р•Рґ. РёР·Рј', 80, True, True, False],
+    ['price', ftFloat, 0, 'Р¦РµРЅР°', 80, True, True, False],
+    ['price_itogo', ftFloat, 0, 'Р¦РµРЅР° СЃ РќР”РЎ', 80, True, True, False]
     ],
     va2, '', ''
   );
   Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, 'ibquantity;fact_quantity', '0.#');
   Gh.SetGridColumnsProperty(DBGridEh1, cptDisplayFormat, 'price;price_itogo', '0.00');
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'ibquantity;fact_quantity', '0.#');
-  Gh.SetGridInCellButtons(DBGridEh1, 'inbillnum', 'Открыть приходную накладную', CellButtonClick);
+  Gh.SetGridInCellButtons(DBGridEh1, 'inbillnum', 'РћС‚РєСЂС‹С‚СЊ РїСЂРёС…РѕРґРЅСѓСЋ РЅР°РєР»Р°РґРЅСѓСЋ', CellButtonClick);
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_OnDemand then begin
     va2:=Q.QLoad(
@@ -394,9 +394,9 @@ begin
   Mth.CreateTableGrid(
     DBGridEh1, True, False, False, False,[
     ['id_demand', ftInteger, 0, '_id', 80, False, True, False],
-    ['demand_date', ftDateTime, 0, 'Дата', 80, True, True, False], //control_date
-    ['docstate', ftString, 20, 'Статус', 80, True, True, False],    //4-рассчитана, 3-На обработке, 1-В ожидании, 2-?
-    ['quantity', ftFloat, 0, 'Кол.', 80, True, True, False]
+    ['demand_date', ftDateTime, 0, 'Р”Р°С‚Р°', 80, True, True, False], //control_date
+    ['docstate', ftString, 20, 'РЎС‚Р°С‚СѓСЃ', 80, True, True, False],    //4-СЂР°СЃСЃС‡РёС‚Р°РЅР°, 3-РќР° РѕР±СЂР°Р±РѕС‚РєРµ, 1-Р’ РѕР¶РёРґР°РЅРёРё, 2-?
+    ['quantity', ftFloat, 0, 'РљРѕР».', 80, True, True, False]
     ],
     va2, '', ''
   );
@@ -405,9 +405,9 @@ begin
   Gh.SetGridColumnsProperty(DBGridEh1, cptSumFooter, 'quantity', '0.#');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_PlannedOrders then begin
-    //покажем спитсок плановых заказов по данной номенклатуре за данный менсяц
-    //номенклатура передеается в AddParam[0], месяц в AddParam[1]
-    //если месяц отрицательный, то берем из таблицы для СН, иначе из общей на 12 месяцев
+    //РїРѕРєР°Р¶РµРј СЃРїРёС‚СЃРѕРє РїР»Р°РЅРѕРІС‹С… Р·Р°РєР°Р·РѕРІ РїРѕ РґР°РЅРЅРѕР№ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ Р·Р° РґР°РЅРЅС‹Р№ РјРµРЅСЃСЏС†
+    //РЅРѕРјРµРЅРєР»Р°С‚СѓСЂР° РїРµСЂРµРґРµР°РµС‚СЃСЏ РІ AddParam[0], РјРµСЃСЏС† РІ AddParam[1]
+    //РµСЃР»Рё РјРµСЃСЏС† РѕС‚СЂРёС†Р°С‚РµР»СЊРЅС‹Р№, С‚Рѕ Р±РµСЂРµРј РёР· С‚Р°Р±Р»РёС†С‹ РґР»СЏ РЎРќ, РёРЅР°С‡Рµ РёР· РѕР±С‰РµР№ РЅР° 12 РјРµСЃСЏС†РµРІ
     if AddParam[1] > 0
       then st := S.NSt(Q.QLoadValue('select or' + VarToStr(AddParam[1]) + ' from planned_order_estimate12 where name = :name$s', [AddParam[0]]))
       else if AddParam[1] < 0
@@ -423,18 +423,18 @@ begin
     Mth.CreateTableGrid(
       DBGridEh1, True, False, False, False,[
       ['id', ftInteger, 0, '_id', 80, False, True, False],
-      ['num', ftString, 40, '№', 80, True, True, False],
-      ['project', ftString, 400, 'Проект', 250, True, True, True],
-      ['dt_staкt', ftDateTime, 0, 'Начало', 80, True, True, False],
-      ['dt_end', ftDateTime, 0, 'Окончание', 80, True, True, False]
+      ['num', ftString, 40, 'в„–', 80, True, True, False],
+      ['project', ftString, 400, 'РџСЂРѕРµРєС‚', 250, True, True, True],
+      ['dt_staРєt', ftDateTime, 0, 'РќР°С‡Р°Р»Рѕ', 80, True, True, False],
+      ['dt_end', ftDateTime, 0, 'РћРєРѕРЅС‡Р°РЅРёРµ', 80, True, True, False]
       ],
       va2, '', ''
     );
     Gh.SetGridOptionsMain(DBGridEh1, True, True, True);
-    Gh.SetGridInCellButtons(DBGridEh1, 'num', 'Открыть плановый заказ', CellButtonClick);
+    Gh.SetGridInCellButtons(DBGridEh1, 'num', 'РћС‚РєСЂС‹С‚СЊ РїР»Р°РЅРѕРІС‹Р№ Р·Р°РєР°Р·', CellButtonClick);
   end;
-  //добавляет кнопки в ячейки грида
-  Gh.SetGridInCellButtons(DBGridEh1, 'ornum;ornum', 'Паспорт;Смета', CellButtonClick);
+  //РґРѕР±Р°РІР»СЏРµС‚ РєРЅРѕРїРєРё РІ СЏС‡РµР№РєРё РіСЂРёРґР°
+  Gh.SetGridInCellButtons(DBGridEh1, 'ornum;ornum', 'РџР°СЃРїРѕСЂС‚;РЎРјРµС‚Р°', CellButtonClick);
   Result := True;
 end;
 
@@ -449,7 +449,7 @@ begin
       [MemTableEh1.FieldByName('num').Value, MemTableEh1.FieldByName('date_registr').Value]
     );
     if (Length(va) > 0)and(va[0] <> null)
-      then Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(VarToStr(va[0])), 'Файл счета не найден!');
+      then Sys.OpenFileOrDirectory(Module.GetPath_Accounts_A(VarToStr(va[0])), 'Р¤Р°Р№Р» СЃС‡РµС‚Р° РЅРµ РЅР°Р№РґРµРЅ!');
   end;
   if FormDoc = myfrm_Dlg_Spl_InfoGrid_Rezerv then begin
     va:=Q.QLoadRow0(
@@ -457,12 +457,12 @@ begin
       [MemTableEh1.FieldByName('ornum').Value]
     );
     if FieldNameCurr = 'ornum' then begin
-      //покажем паспорт заказа
+      //РїРѕРєР°Р¶РµРј РїР°СЃРїРѕСЂС‚ Р·Р°РєР°Р·Р°
       if (Length(va) > 0)and(va[0] <> null)
         then Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fView, va[0], null);
     end;
     if FieldNameCurr = 'rashod' then begin
-      //покажем паспорт заказа
+      //РїРѕРєР°Р¶РµРј РїР°СЃРїРѕСЂС‚ Р·Р°РєР°Р·Р°
       if (Length(va) > 0)and(va[0] <> null)
         then Wh.ExecReference(myfrm_R_AggEstimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([va[0]]));
     end;
@@ -477,7 +477,7 @@ begin
     DBGridEh1.RowDetailPanel.Width:=DBGridEh1.Width-50;
     Q.QLoadToMemTableEh(
     'select '#13#10+
-    'i.id_inbill as id_inbill, i.inbilldate as dt, i.inbillnum as num, ii.fact_quantity as qnt '#13#10+   // fact_quantity или ibquantity!!!
+    'i.id_inbill as id_inbill, i.inbilldate as dt, i.inbillnum as num, ii.fact_quantity as qnt '#13#10+   // fact_quantity РёР»Рё ibquantity!!!
     '  from dv.in_bill i, dv.in_bill_spec ii '#13#10+
     '  where '#13#10+
     '    i.id_docstate = 3 and ii.id_inbill = i.id_inbill and ii.id_nomencl = :idn2$i and i.docid = :idd2$i '#13#10+
@@ -492,22 +492,22 @@ function TDlg_Spl_InfoGrid.InitAdd: Boolean;
 begin
   Caption := S.Decode([
      FormDoc,
-     myfrm_Dlg_Spl_InfoGrid_MinPart, 'Минимальная партия',
-     myfrm_Dlg_Spl_InfoGrid_Rezerv, 'Резерв',
-     myfrm_Dlg_Spl_InfoGrid_OnWay, 'В пути',
-     myfrm_Dlg_Spl_InfoGrid_Consumption, 'Расход',
-     myfrm_Dlg_Spl_InfoGrid_MoveNomencl, 'Движение товара',
-     myfrm_Dlg_Spl_InfoGrid_QntOnStore, 'Остатки на складах',
-     myfrm_Dlg_Spl_InfoGrid_SpSchetList, 'Счета по номенклатуре',
-     myfrm_Dlg_Spl_InfoGrid_InBillList, 'Приходные накладные',
-     myfrm_Dlg_Spl_InfoGrid_PlanneDOrders, 'Плановые заказы',
-     'Информация'
+     myfrm_Dlg_Spl_InfoGrid_MinPart, 'РњРёРЅРёРјР°Р»СЊРЅР°СЏ РїР°СЂС‚РёСЏ',
+     myfrm_Dlg_Spl_InfoGrid_Rezerv, 'Р РµР·РµСЂРІ',
+     myfrm_Dlg_Spl_InfoGrid_OnWay, 'Р’ РїСѓС‚Рё',
+     myfrm_Dlg_Spl_InfoGrid_Consumption, 'Р Р°СЃС…РѕРґ',
+     myfrm_Dlg_Spl_InfoGrid_MoveNomencl, 'Р”РІРёР¶РµРЅРёРµ С‚РѕРІР°СЂР°',
+     myfrm_Dlg_Spl_InfoGrid_QntOnStore, 'РћСЃС‚Р°С‚РєРё РЅР° СЃРєР»Р°РґР°С…',
+     myfrm_Dlg_Spl_InfoGrid_SpSchetList, 'РЎС‡РµС‚Р° РїРѕ РЅРѕРјРµРЅРєР»Р°С‚СѓСЂРµ',
+     myfrm_Dlg_Spl_InfoGrid_InBillList, 'РџСЂРёС…РѕРґРЅС‹Рµ РЅР°РєР»Р°РґРЅС‹Рµ',
+     myfrm_Dlg_Spl_InfoGrid_PlanneDOrders, 'РџР»Р°РЅРѕРІС‹Рµ Р·Р°РєР°Р·С‹',
+     'РРЅС„РѕСЂРјР°С†РёСЏ'
   ]);
   InfoArr := [];
   pnl_Top.Visible := True;
   pnl_Bottom.Visible := False;
   lbl_Caption.Caption := AddParam[0].AsString;
-  //lbl_Caption.SetCaption2('Смета к стандартному изделию: ''$FF0000  КП.П_Стока кассовая 100х600');
+  //lbl_Caption.SetCaption2('РЎРјРµС‚Р° Рє СЃС‚Р°РЅРґР°СЂС‚РЅРѕРјСѓ РёР·РґРµР»РёСЋ: ''$FF0000  РљРџ.Рџ_РЎС‚РѕРєР° РєР°СЃСЃРѕРІР°СЏ 100С…600');
   Result := True;
 end;
 

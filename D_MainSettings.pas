@@ -1,4 +1,4 @@
-unit D_MainSettings;
+п»їunit D_MainSettings;
 
 interface
 
@@ -88,16 +88,16 @@ begin
     (Length(edt_PathToFiles.text)<3) or
     (Length(edt_ZCurrent.text)<3) or
     (Length(edt_ZArchive.text)<3)
-  then begin MyInfoMessage('Введены некорректные данные на вкладке "Расположение данных"!'); Exit; end;
+  then begin MyInfoMessage('Р’РІРµРґРµРЅС‹ РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ РЅР° РІРєР»Р°РґРєРµ "Р Р°СЃРїРѕР»РѕР¶РµРЅРёРµ РґР°РЅРЅС‹С…"!'); Exit; end;
   if
     (Length(edt_EMailDomain.text)<5) or
     (Length(edt_EMailUser.text)<1) or
     (Length(edt_EMailServer.text)<5) or
     (Length(edt_EMailLogin.text)<1)
-  then begin MyInfoMessage('Введены некорректные данные на вкладке "Настройки почты"!'); Exit; end;
+  then begin MyInfoMessage('Р’РІРµРґРµРЅС‹ РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РґР°РЅРЅС‹Рµ РЅР° РІРєР»Р°РґРєРµ "РќР°СЃС‚СЂРѕР№РєРё РїРѕС‡С‚С‹"!'); Exit; end;
   if
     (edt_EMailPassword.text <> edt_EMailPassword2.text)
-  then begin MyInfoMessage('Пароли для почтового сервера не совпадают!'); Exit; end;
+  then begin MyInfoMessage('РџР°СЂРѕР»Рё РґР»СЏ РїРѕС‡С‚РѕРІРѕРіРѕ СЃРµСЂРІРµСЂР° РЅРµ СЃРѕРІРїР°РґР°СЋС‚!'); Exit; end;
   b1 :=
     (va[0][0]<>edt_PathToFiles.text)or
     (va[0][1]<>edt_ZCurrent.text)or
@@ -118,8 +118,8 @@ begin
     (nedt_DeletePayrolls.Value<>va[2][4]);
   b := b1 or b2 or b3;
   if not b
-    then begin MyInfoMessage('Данные не были изменены!'); Exit; end;
-  if (MyQuestionMessage('Данные были изменены. Сохранить?') <> mrYes) then Exit;
+    then begin MyInfoMessage('Р”Р°РЅРЅС‹Рµ РЅРµ Р±С‹Р»Рё РёР·РјРµРЅРµРЅС‹!'); Exit; end;
+  if (MyQuestionMessage('Р”Р°РЅРЅС‹Рµ Р±С‹Р»Рё РёР·РјРµРЅРµРЅС‹. РЎРѕС…СЂР°РЅРёС‚СЊ?') <> mrYes) then Exit;
   if b1 then begin
     Q.QExecSql('update adm_main_settings set filespath = :fp, ordercurrentpath = :ocp, orderarchivepath = :oap', [edt_PathToFiles.text, edt_ZCurrent.text, edt_ZArchive.text]);
   end;
