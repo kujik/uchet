@@ -84,7 +84,7 @@ type
     procedure ReportForEarlyCompletionActs;
     //отчет по сырью, находящемуся в пути при отсуствии резерва на него
     procedure ReportForSupplyisOnwaySurplus;
-    //отчет по материалам на   складах готовой продукции, являющихся сырьем а не изделиями
+    //отчет по материалам на складах готовой продукции, являющихся сырьем а не изделиями
     procedure ReportForRawMaterialsOnSgp;
     //информация по актам списания и оприходования за вчерашний день
     procedure ReportForActsWriteoffReceipt;
@@ -833,7 +833,7 @@ begin
   else
     HTML := '';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForActsWriteoffReceipt;
@@ -869,7 +869,7 @@ begin
   else
     HTML := '';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, [FileToSend], '~');
 end;
 
 

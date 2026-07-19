@@ -673,6 +673,7 @@ insert into adm_mailing(id, comm) values (5, 'Рассылка при прикреплении документ
 insert into adm_mailing(id, comm) values (6, 'Рассылка по заказам финансовая');
 insert into adm_mailing(id, comm) values (7, 'Мониторинг сделок снабжения');
 insert into adm_mailing(id, comm) values (8, 'Мониторинг преждевременно созданных АВР');
+insert into adm_mailing(id, comm) values (9, 'Мониторинг складского хозяйства');
 
 
 create or replace trigger trg_adm_mailing_bu

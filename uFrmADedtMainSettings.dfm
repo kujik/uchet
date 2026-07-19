@@ -79,7 +79,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
           object edt_filespath: TDBEditEh
             Left = 3
             Top = 15
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 668
@@ -97,7 +97,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
           object edt_ordercurrentpath: TDBEditEh
             Left = 3
             Top = 93
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 317
@@ -113,7 +113,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
           object edt_orderarchivepath: TDBEditEh
             Left = 3
             Top = 135
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 315
@@ -136,7 +136,7 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
           object edt_MailingOrdersCh: TDBEditEh
             Left = 3
             Top = 19
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -150,12 +150,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 0
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_MailingAttachSmeta: TDBEditEh
             Left = 3
             Top = 60
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -169,12 +169,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 1
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_MailingReportSmeta: TDBEditEh
             Left = 3
             Top = 100
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -188,12 +188,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 2
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_MailingAttachTHN: TDBEditEh
             Left = 3
             Top = 140
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -207,12 +207,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 3
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_mailing_order_fin: TDBEditEh
             Left = 3
             Top = 185
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -226,12 +226,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 4
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_mailing_sn: TDBEditEh
             Left = 3
             Top = 228
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -245,12 +245,12 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
             ReadOnly = True
             TabOrder = 5
             Visible = True
-            ExplicitWidth = 918
+            ExplicitWidth = 914
           end
           object edt_mailing_early_acts: TDBEditEh
             Left = 3
             Top = 268
-            Width = 922
+            Width = 918
             Height = 21
             Anchors = [akLeft, akTop, akRight]
             ControlLabel.Width = 162
@@ -263,6 +263,25 @@ inherited FrmADedtMainSettings: TFrmADedtMainSettings
               end>
             ReadOnly = True
             TabOrder = 6
+            Visible = True
+            ExplicitWidth = 914
+          end
+          object edt_mailing_for_stocks: TDBEditEh
+            Left = 3
+            Top = 308
+            Width = 918
+            Height = 21
+            Anchors = [akLeft, akTop, akRight]
+            ControlLabel.Width = 162
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1056#1072#1089#1089#1099#1083#1082#1072' '#1087#1088#1080' '#1080#1079#1084#1077#1085#1077#1085#1080#1080' '#1079#1072#1082#1072#1079#1072
+            ControlLabel.Visible = True
+            DynProps = <>
+            EditButtons = <
+              item
+              end>
+            ReadOnly = True
+            TabOrder = 7
             Visible = True
           end
         end

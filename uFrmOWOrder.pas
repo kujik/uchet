@@ -512,7 +512,7 @@ begin
   FrgItems.Options := FrDBGridOptionDef + [myogPanelFind, myogMultiSelect, myogIndicatorCheckBoxes, myogHasStatusBar];
   va2 := [];
   for i := 0 to High(RouteFields) do begin
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '30', 'chb', 'e']]
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e']]
   end;
   var LFields: TVarDynArray2 := [
     ['id$i', '_id', '40'],
@@ -525,11 +525,11 @@ begin
     ['prefix$s', 'Префикс', '60;h'],
     ['itemname$s', 'Изделие', '400;w;h', 'e=1:400::T'],
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2'],
-    ['price_wo_nds$f', 'Цена без НДС', '80', 'f=0.00', 'e=0:999999:2:N'],
-    ['0 as price_with_nds$f', 'Цена с НДС', '80', 'f=0.00', 'e=0:999999:2:N'],
-    ['price_wo_nds_with_margin$f', 'Цена без НДС и скидками', '80', 'f=0.00' ],
-    ['price$f', 'Цена с НДС и скидками', '80', 'f=0.00' ],
-    ['nds_rate$f', 'Ставка НДС', '80', 'f=0'],
+    ['price_wo_nds$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
+    ['0 as price_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
+    ['price_wo_nds_with_margin$f', 'Цена без НДС и скидками', '70', 'f=0.00' ],
+    ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00' ],
+    ['nds_rate$f', 'Ставка НДС', '70', 'f=0'],
     ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb'],
@@ -1448,6 +1448,7 @@ procedure TFrmOWOrder.AfterLoadTables;
 //вызывается при инициализации после загрузки данных в таблицы
 begin
   SetOrderTypeOrOrganization;
+  RecalculateItemsPrices;
   RecalculateSum;
 end;
 
@@ -1520,6 +1521,10 @@ begin
   Fr.SetValue(LFieldName, Value);
   if (LFieldName = 'itemname') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
     CalculateFrgItemsRow(LFieldName);
+    RecalculateItemsPrices;
+  end;
+  if (LFieldName = 'price_wo_nds') or (LFieldName = 'price_with_nds') or (LFieldName = 'qnt') then begin
+    RecalculateItemsPrices;
   end;
   Fr.IsRowCorrect;
 end;
@@ -1615,6 +1620,7 @@ end;
 
 procedure TFrmOWOrder.RecalculateItemsPrices;
 //пересчитаем цены в табличной части и обновим суммы
+//сначала применяем к цене без ндс скидку, потом наценку, потом ндс.
 begin
   var LTableChanged := False;
   var SumWithNdsWoMarginsOld := F.GetProp('cost_i_0').Asfloat;
@@ -1623,14 +1629,16 @@ begin
   var SumWithNdsWoMargins := 0.0;
   var SumWithNdsWithMargins := 0.0;
   var SumWoNdsWithMargins := 0.0;
+  var SumWoNdsWoMargins := 0.0;
   for var i := 0 to FrgItems.GetRawCount - 1 do begin
-    var LPriceWithNds := FrgItems.GetRawValue('price_wo_nds', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
-    var LPriceWoNdsWithMargins := FrgItems.GetRawValue('price_wo_nds', i).AsFloat  * (1 + F.GetProp('m_i').AsFloat / 100) * (1 - F.GetProp('d_i').AsFloat / 100);
-    var LPriceWithNdsWithMargins := LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100);
+    var LPriceWithNds := RoundTo(FrgItems.GetRawValue('price_wo_nds', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
+    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_wo_nds', i).AsFloat  * (1 + F.GetProp('d_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100), -2);
+    var LPriceWithNdsWithMargins := RoundTo(LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
     var Sum := LPriceWithNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
+    SumWoNdsWoMargins := SumWoNdsWoMargins + FrgItems.GetRawValue('price_wo_nds', i).AsFloat * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWithNdsWithMargins := SumWithNdsWithMargins + Sum;
     SumWithNdsWoMargins := SumWithNdsWoMargins + LPriceWithNds * FrgItems.GetRawValue('qnt', i).AsFloat;
-    SumWithNdsWoMargins := SumWoNdsWithMargins + LPriceWoNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
+    SumWoNdsWithMargins := SumWoNdsWithMargins + LPriceWoNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
     if (FrgItems.GetRawValue('nds_rate', i) <> F.GetProp('nds_rate').AsFloat) or (FrgItems.GetRawValue('price_with_nds', i) <> LPriceWithNds) or
        (FrgItems.GetRawValue('price', i) <> LPriceWithNdsWithMargins) or (FrgItems.GetRawValue('sum', i) <> Sum) then
     begin
@@ -1643,24 +1651,30 @@ begin
     end;
   end;
   if (SumWithNdsWoMarginsOld <> SumWithNdsWoMargins) or (SumWithNdsWithMarginsOld <> SumWithNdsWithMargins) then begin
-    F.SetProp('cost_i_0', SumWithNdsWoMargins);
+    F.SetProp('cost_i_0', SumWoNdsWoMargins);
     F.SetProp('cost_i', SumWithNdsWithMargins);
     F.SetProp('cost_i_wo_nds', SumWoNdsWithMargins);
     RecalculateSum;
   end;
-  if LTableChanged then
+  if LTableChanged then begin
     FrgItems.InvalidateGrid;
+  end;
 end;
 
 procedure TFrmOWOrder.RecalculateSum;
+//итоговые суммы в шапке
 begin
-  F.SetProp('cost_m', F.GetProp('cost_m_0').AsFloat * (1 + F.GetProp('m_m').AsFloat/ 100) * (1 - F.GetProp('d_m').AsFloat / 100));
-  F.SetProp('cost_d', F.GetProp('cost_d_0').AsFloat * (1 + F.GetProp('m_d').AsFloat/ 100) * (1 - F.GetProp('d_d').AsFloat / 100));
+  //в левой колонке без ндс и без учета наценок/скидок
+  //в правой с ндс и наценками/скидками
+  F.SetProp('cost_m', RoundTo(F.GetProp('cost_m_0').AsFloat * (1 + F.GetProp('d_m').AsFloat/ 100) * (1 - F.GetProp('m_m').AsFloat / 100), -2));
+  F.SetProp('cost_d', RoundTo(F.GetProp('cost_d_0').AsFloat * (1 + F.GetProp('d_d').AsFloat/ 100) * (1 - F.GetProp('m_d').AsFloat / 100), -2));
   var LSumTotal := F.GetProp('cost_i_wo_nds').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  //итоговая без ндс но со скидками
   F.SetProp('cost_wo_nds', LSumTotal);
-  F.SetProp('cost_d', F.GetProp('cost_d').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100));
-  F.SetProp('cost_m', F.GetProp('cost_m').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100));
+  F.SetProp('cost_d', RoundTo(F.GetProp('cost_d').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
+  F.SetProp('cost_m', RoundTo(F.GetProp('cost_m').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
   LSumTotal := F.GetProp('cost_i').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  //итоговая с ндс и учетом всех скидок
   F.SetProp('cost', LSumTotal);
 end;
 
@@ -1682,6 +1696,11 @@ begin
     for i := 1 to  High(RouteFields) + 1 do begin
       FrgItems.SetValue('r' + IntToStr(i), FStdItems.G(LItemNamePos, 'r' + IntToStr(i)));
     end;
+  end
+  else begin
+    FrgItems.SetValue('id_std_item', null);
+    FrgItems.SetValue('wo_estimate', null);
+    FrgItems.SetValue('price_wo_nds', null);
   end;
   if LFromSgp or LWoEstimate then begin
     FrgItems.SetValue('id_kns', -100);
@@ -1700,6 +1719,7 @@ begin
     if FrgItems.GetValue('id_thn').AsInteger <= 0 then
       FrgItems.SetValue('id_thn', -102);
   end;
+  FrgItems.InvalidateGrid;
 
 end;
 
@@ -1722,17 +1742,26 @@ begin
   else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
     Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
   end;
- {
-  var LWoEstimate := FrgItems.GetValue('wo_estimate').AsInteger = 1;
-  if LFieldName = 'wo_estimate' then
-    ReadOnly := LIsStdItem;
-  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) then
-    ReadOnly := LIsStdItem or LFromSgp or LWoEstimate;
-  if A.InArray(LFieldName, ['kns', 'thn']) then
-    ReadOnly := LFromSgp or LWoEstimate;
-  if A.InArray(LFieldName, ['price_wo_nds', 'price_with_nds']) then
-    ReadOnly := LIsStdItem;
-}
+  if (LFieldName = 'id_thn') and LIsStdItem then begin
+    if FrgItems.GetValue('id_thn').AsInteger <> - 102 then
+      Msg := 'Технолдог для стандартного изделия не может быть задан';
+  end;
+  if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
+    if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
+      Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
+  end;
+  if (LFieldName = 'id_thn') and (LFromSgp or LWoEstimate) then begin
+    if FrgItems.GetValue('id_kns').AsInteger <> - 100 then
+      Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
+  end;
+  if (LFieldName = 'должен') and  not LIsStdItem then begin
+    if (FrgItems.GetValue('id_kns').AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns').AsIntegerM = -100) then
+      Msg := 'Конструктор должен быть задан для нестандартного изделия';
+  end;
+  if (LFieldName = 'id_thn') and not LIsStdItem then begin
+    if (FrgItems.GetValue('id_thn').AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn').AsIntegerM = -100) then
+      Msg := 'Технолог должен быть задан для нестандартного изделия';
+  end;
 end;
 
 end.

@@ -34,8 +34,9 @@ type
     edt_mailing_order_fin: TDBEditEh;
     edt_mailing_sn: TDBEditEh;
     edt_mailing_early_acts: TDBEditEh;
+    edt_mailing_for_stocks: TDBEditEh;
   private
-    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8: TMailingInterface;
+    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8, MI9: TMailingInterface;
     function Prepare: Boolean; override;
     function LoadComboBoxes: Boolean; override;
     procedure VerifyBeforeSave; override;
@@ -53,20 +54,22 @@ implementation
 
 function TFrmADedtMainSettings.LoadComboBoxes: Boolean;
 begin
-  MI1:=TMailingInterface.Create(Self, edt_MailingOrdersCh, 1, '*', True);
+  MI1 := TMailingInterface.Create(Self, edt_MailingOrdersCh, 1, '*', True);
   MI1.Load;
-  MI3:=TMailingInterface.Create(Self, edt_MailingAttachSmeta, 3, '*', True);
+  MI3 := TMailingInterface.Create(Self, edt_MailingAttachSmeta, 3, '*', True);
   MI3.Load;
-  MI4:=TMailingInterface.Create(Self, edt_MailingReportSmeta, 4, '*', True);
+  MI4 := TMailingInterface.Create(Self, edt_MailingReportSmeta, 4, '*', True);
   MI4.Load;
-  MI5:=TMailingInterface.Create(Self, edt_MailingAttachTHN, 5, '*', True);
+  MI5 := TMailingInterface.Create(Self, edt_MailingAttachTHN, 5, '*', True);
   MI5.Load;
-  MI6:=TMailingInterface.Create(Self, edt_mailing_order_fin, 6, '*', True);
+  MI6 := TMailingInterface.Create(Self, edt_mailing_order_fin, 6, '*', True);
   MI6.Load;
-  MI7:=TMailingInterface.Create(Self, edt_mailing_sn, 7, '*', True);
+  MI7 := TMailingInterface.Create(Self, edt_mailing_sn, 7, '*', True);
   MI7.Load;
-  MI8:=TMailingInterface.Create(Self, edt_mailing_early_acts, 8, '*', True);
+  MI8 := TMailingInterface.Create(Self, edt_mailing_early_acts, 8, '*', True);
   MI8.Load;
+  MI9 := TMailingInterface.Create(Self, edt_mailing_for_stocks, 9, '*', True);
+  MI9.Load;
   Result := True;
 end;
 
@@ -112,6 +115,7 @@ begin
   MI6.Save;
   MI7.Save;
   MI8.Save;
+  MI9.Save;
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
 end;

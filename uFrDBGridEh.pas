@@ -3072,6 +3072,7 @@ end;
 procedure TFrDBGridEh.InvalidateGrid;
 begin
   DbGridEh1.Invalidate;
+  DbGridEh1.InvalidateFooter;
 end;
 
 
