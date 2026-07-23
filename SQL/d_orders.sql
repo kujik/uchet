@@ -783,7 +783,9 @@ update order_items set nds_rate = 22;
 update order_items set price_tmp = price;
 update order_items set price_pp = 0;
 update order_items set price_wo_nds = round(price_tmp / 1.22 , 2)where id_order >= 16743;
+update order_items set price_wo_nds = round(price_tmp / 1.22 , 2)where id_order < 0;
 update order_items set price_wo_nds_with_margin = round(price_tmp / 1.22 , 2) where id_order >= 16743;
+update order_items set price_wo_nds_with_margin = round(price_tmp / 1.22 , 2) where id_order < 0;
  
 create table order_items (
   id number(11),
@@ -2808,11 +2810,14 @@ alter table order_types add is_additional_order number(1);
 alter table order_types add is_nonstandard number(1);
 alter table order_types add is_nonstandard_only number(1);
 alter table order_types add is_cash_payment number(1);
+alter table order_types add is_reference_allowed number(1);
+alter table order_types add is_reference_required  number(1);
+alter table order_types add need_ref  number(1);
+alter table order_types drop column need_ref;
 
 create table order_types (
   id number(11),
   name varchar(100),
-  need_ref number(1),
   is_production_order number(1),              --может быть производственным заказом
   is_semiproduct_order number(1),             --может быть заказом на полуфабрикаты    
   is_shipment_order number(1),                --может быть отгрузочным заказом
@@ -2821,6 +2826,8 @@ create table order_types (
   is_nonstandard number(1),                   --может включать нестандартные изделия
   is_nonstandard_only number(1),              --допустимы только нестандартные изделия
   is_cash_payment number(1),                  --допустима оплата за наличные (Ника)
+  is_reference_allowed number(1),             --допустима ссылка на другой заказ 
+  is_reference_required  number(1),           --обязательна ссылка на другой заказ
   active number(1), 
   pos number(3),
   posstd number(4),

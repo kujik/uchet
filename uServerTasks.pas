@@ -88,6 +88,10 @@ type
     procedure ReportForRawMaterialsOnSgp;
     //информация по актам списания и оприходования за вчерашний день
     procedure ReportForActsWriteoffReceipt;
+    //отчет по номенклатурым позициям (материалы) с отрицательным оличеством на складах
+    procedure ReportForNegativeQuantityOnStocks;
+    //отчет по позициям на СГП (стандартные изделия) с отрицательным текущим количеством
+    procedure ReportForNegativeQuantityOnSgp;
   end;
 
 var
@@ -201,6 +205,8 @@ begin
     ReportForSupplyisOnwaySurplus;
     ReportForRawMaterialsOnSgp;
     ReportForActsWriteoffReceipt;
+    ReportForNegativeQuantityOnStocks;
+    ReportForNegativeQuantityOnSgp;
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
       ReportForYesterdayOrders(5);
@@ -701,7 +707,9 @@ begin
     ['labor_cost_2$i', 'Трудозатраты по ЛОК', '80', 'f=#:', 's', 'r'],
     ['labor_cost_2_percent$i', '%', '80', 'f=#:', 'r'],
     ['prime_cost$i', 'Затраты всего, сумма', '80', 'f=#:', 's', 'r', 'b'],
-    ['prime_cost_percent$i', 'Затраты всего, %', '80', 'r']
+    ['prime_cost_percent$i', 'Затраты всего, %', '80', 'r'],
+    ['kns$s', 'Конструктора', '200;h'],
+    ['thn$s', 'Технологи', '200;h']
   ];
   Q.QLoad(Q.QGetSql('A', S.IIf(AOrderTypes in [1, 3], 'v_orders_fin_monitoring', 'v_orders_fin_monitoring') , Fields.Col(0).Implode(';')) +
     ' where data_type = :data_type$i and order_type = :order_type$i and dt = trunc(:dt$d) order by prime_cost_percent desc',
@@ -870,6 +878,74 @@ begin
     HTML := '';
   if HTML <> '' then
     Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, [FileToSend], '~');
+end;
+
+procedure TTasksS.ReportForNegativeQuantityOnSgp;
+//отчет по позициям на СГП (стандартные изделия) с отрицательным текущим количеством
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Изделия с отрицательным остатком на СГП';
+  TopSt := 'Изделия с отрицательным остатком на СГП на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['format_name$s', 'Формат', '150'],
+    ['slash$s', 'Слеш', '00'],
+    ['name$s', 'Наименование', '500;h'],
+    ['qnt$f', 'Кол-во', '80', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_sgp_items', Fields.Col(0).Implode(';')) + ' where qnt < 0 order by format_name, name', [IncDay(Date, -1)], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := 'На СГП нет позиций с отрицательными остатками.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
+end;
+
+procedure TTasksS.ReportForNegativeQuantityOnStocks;
+//отчет по номенклатурым позициям (материалы) с отрицательным оличеством на складах
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Материалы с отрицательным остатком на складах';
+  TopSt := 'Материалы с отрицательным остатком на складах на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['artikul$s', 'Артикул', '150'],
+    ['name_unit$s', 'Ед. изм.', '00'],
+    ['qnt$f', 'Текущий остаток', '100', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_spl_minremains', Fields.Col(0).Implode(';')) + ' where qnt < 0 order by name', [IncDay(Date, -1)], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := 'На складах нет материалов с отрицательными остатками.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
 end;
 
 

@@ -22,6 +22,8 @@
 -- таблицца с финансовыми данными по заказам
 -- все суммы и цены без ндс
 alter table orders_fin_monitoring add qnt_need_on_sgp number;
+alter table orders_fin_monitoring add (kns varchar2(4000), thn varchar2(4000));
+alter table temp_orders_fin_monitoring add (kns varchar2(4000), thn varchar2(4000));
 create table orders_fin_monitoring (
   id number(11),                        --айди
   dt date,                              --контрольная дата  /для 1 = dt_beg, для 5 и 6 здесь дата окончания периода/
@@ -54,6 +56,8 @@ create table orders_fin_monitoring (
   item_wo_estimate number,              --признак отсутствия сметы
   qnt_on_sgp number,                    --количество изделий (стандартных) на СГП на вечер дня  
   qnt_need_on_sgp number,               --избыток/потребностьт на СГП на вечер дня  
+  kns varchar2(4000),
+  thn varchar2(4000),  
   comm varchar2(4000),                  --комментарий (вводится в отчете)
   attentions varchar2(4000)             --выделение ячеек (вводится в отчете)  
 );
@@ -66,6 +70,10 @@ select
 from  
   orders_fin_monitoring t
 ;  
+
+delete from orders_fin_monitoring where data_type in (1) and dt_beg = date '2026-07-22';
+exec p_insert_orders_fin_monitoring;
+
 
 
 --временная таблица уровня сессии, в нее загружаются данные выборки при просмотре
@@ -100,6 +108,8 @@ create global temporary table temp_orders_fin_monitoring (
   item_wo_estimate number,
   qnt_on_sgp number,
   qnt_need_on_sgp number,                 
+  kns varchar2(4000),
+  thn varchar2(4000),  
   id_order_items   varchar2(4000)
 ) on commit preserve rows;
 
@@ -158,41 +168,33 @@ begin
     -- временная таблица (data_type 3)
     v_target_table := 'temp_orders_fin_monitoring';
     v_data_type := 3;
-    -- удаляем старые записи по data_type
     v_delete_sql := 'delete from ' || v_target_table || ' where data_type = :v_data_type';
     execute immediate v_delete_sql using v_data_type;
   else
     -- основная таблица
     v_data_type := p_data_type;
     v_target_table := 'orders_fin_monitoring';
-    -- удаляем старые записи по dt и data_type
     v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt and data_type = :dt_type';
     execute immediate v_delete_sql using v_dt, v_data_type;
   end if;
 
   -- формируем условие WHERE
   if v_use_temp then
-    -- режим фильтрации по конкретному заказу
     v_where_clause := '1=1';
     if p_id_order is not null then
       v_where_clause := v_where_clause || ' and oi.id_order = :id_order';
     end if;
-    -- для временной таблицы дополнительные фильтры не используются
   else
-    -- основная таблица
     if p_dt_beg_from is not null and p_dt_beg_to is not null then
-      -- период (data_type 5,6)
       v_where_clause := 'oi.dt_beg between :dt_from and :dt_to';
     elsif p_use_wo_list = 0 then
-      -- один день (data_type 1,2)
       v_where_clause := 'oi.dt_beg = :dt';
     else
-      -- список order_items без сметы (data_type 2)
       v_where_clause := 'oi.id in (select id_order_item from order_items_wo_estimate where dt is null)';
     end if;
   end if;
 
-  -- собираем основной INSERT
+  -- собираем основной INSERT с добавленными полями kns, thn
   v_sql := '
     insert into ' || v_target_table || ' (
       order_type,
@@ -221,6 +223,8 @@ begin
       qnt_on_sgp,
       qnt_need_on_sgp,
       id_order_items,
+      kns,
+      thn,
       data_type,
       dt
     )
@@ -254,6 +258,8 @@ begin
       t.qnt_on_sgp,
       t.qnt_need_on_sgp,
       t.id_order_items_str,
+      t.kns,
+      t.thn,
       :dt_type,
       :dt
     from (
@@ -276,7 +282,10 @@ begin
         max(sgp.qnt) as qnt_on_sgp,
         max(sgp.qnt_need) as qnt_need_on_sgp,
         max(case when (nvl(oi.wo_estimate, 0) <> 0) and (nvl(si.dt_influencing, date ''1900-01-01'') = date ''2000-01-01'' or e.id is null) then 1 else 0 end) as item_wo_estimate,
-        listagg(oi.id, '', '') within group (order by oi.id) as id_order_items_str
+        listagg(oi.id, '', '') within group (order by oi.id) as id_order_items_str,
+        -- добавленные поля: списки уникальных конструкторов и технологов
+        listagg(distinct oi.kns, '', '') within group (order by oi.kns) as kns,
+        listagg(distinct oi.thn, '', '') within group (order by oi.thn) as thn
       from
         v_order_items oi,
         v_or_std_items si,
@@ -297,23 +306,20 @@ begin
 
   -- выполнение с правильным набором bind-переменных
   if v_use_temp then
-    -- временная таблица: всегда есть p_id_order
     execute immediate v_sql using v_data_type, v_dt, p_id_order;
   else
     if p_dt_beg_from is not null and p_dt_beg_to is not null then
-      -- период
       execute immediate v_sql using v_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
     elsif p_use_wo_list = 0 then
-      -- один день
       execute immediate v_sql using v_data_type, v_dt, v_dt;
     else
-      -- список wo
       execute immediate v_sql using v_data_type, v_dt;
     end if;
   end if;
 
 end;
 /
+
 
 --------------------------------------------------------------------------------
 --процедура обработки одного дня (без изменений)
@@ -1008,5 +1014,202 @@ from
     where e.dt_changed > trunc(sysdate) - 1;
 
 select * from m
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+create or replace procedure p_insert_fin_monitoring_data(
+  p_dt                in date,
+  p_data_type         in number,
+  p_use_wo_list       in number,
+  p_id_order          in number default null,
+  p_dt_beg_from       in date   default null,
+  p_dt_beg_to         in date   default null,
+  p_filter_dt_end_zero in number default 0
+) is
+  v_dt date := trunc(p_dt);
+  v_target_table varchar2(30);
+  v_data_type number;
+  v_where_clause varchar2(4000);
+  v_sql varchar2(4000);
+  v_delete_sql varchar2(4000);
+  v_use_temp boolean := false;
+begin
+  -- определяем режим: временная таблица только для конкретного заказа
+  if p_id_order is not null then
+    v_use_temp := true;
+  end if;
+
+  if v_use_temp then
+    -- временная таблица (data_type 3)
+    v_target_table := 'temp_orders_fin_monitoring';
+    v_data_type := 3;
+    -- удаляем старые записи по data_type
+    v_delete_sql := 'delete from ' || v_target_table || ' where data_type = :v_data_type';
+    execute immediate v_delete_sql using v_data_type;
+  else
+    -- основная таблица
+    v_data_type := p_data_type;
+    v_target_table := 'orders_fin_monitoring';
+    -- удаляем старые записи по dt и data_type
+    v_delete_sql := 'delete from ' || v_target_table || ' where dt = :dt and data_type = :dt_type';
+    execute immediate v_delete_sql using v_dt, v_data_type;
+  end if;
+
+  -- формируем условие WHERE
+  if v_use_temp then
+    -- режим фильтрации по конкретному заказу
+    v_where_clause := '1=1';
+    if p_id_order is not null then
+      v_where_clause := v_where_clause || ' and oi.id_order = :id_order';
+    end if;
+    -- для временной таблицы дополнительные фильтры не используются
+  else
+    -- основная таблица
+    if p_dt_beg_from is not null and p_dt_beg_to is not null then
+      -- период (data_type 5,6)
+      v_where_clause := 'oi.dt_beg between :dt_from and :dt_to';
+    elsif p_use_wo_list = 0 then
+      -- один день (data_type 1,2)
+      v_where_clause := 'oi.dt_beg = :dt';
+    else
+      -- список order_items без сметы (data_type 2)
+      v_where_clause := 'oi.id in (select id_order_item from order_items_wo_estimate where dt is null)';
+    end if;
+  end if;
+
+  -- собираем основной INSERT
+  v_sql := '
+    insert into ' || v_target_table || ' (
+      order_type,
+      dt_beg,
+      ornums,
+      customer,
+      fullname,
+      qnt,
+      price,
+      price_std,
+      price_diff,
+      priceraw_wo_nds_std,
+      priceraw_wo_nds,
+      summ,
+      sum0,
+      labor_intensity_0,
+      labor_cost_0,
+      labor_intensity_2,
+      labor_cost_2,
+      prime_cost,
+      sum0_percent,
+      labor_cost_0_percent,
+      labor_cost_2_percent,
+      prime_cost_percent,
+      item_wo_estimate,
+      qnt_on_sgp,
+      qnt_need_on_sgp,
+      id_order_items,
+      data_type,
+      dt
+    )
+    select
+      t.order_type,
+      t.dt_beg,
+      t.ornums,
+      t.customer,
+      t.fullname,
+      t.qnt,
+      t.price,
+      t.price_std,
+      case when t.price_std > t.price then t.price - t.price_std else null end,
+      t.priceraw_wo_nds_std,
+      t.priceraw_wo_nds,
+      round(t.price * t.qnt, 2),
+      t.sum0,
+      t.labor_intensity_0,
+      t.labor_cost_0,
+      t.labor_intensity_2,
+      t.labor_cost_2,
+      t.sum0 + t.labor_cost_0 + t.labor_cost_2,
+      case when t.price = 0 then null 
+           when nvl(t.priceraw_wo_nds_std, 0) = 0 then round(t.sum0 / (t.price * t.qnt) * 100, 1) 
+           else round(t.priceraw_wo_nds_std / t.price * 100, 1) 
+      end,
+      case when t.price = 0 then null else round((t.labor_cost_0) / (t.price * t.qnt) * 100, 1) end,
+      case when t.price = 0 then null else round((t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
+      case when t.price = 0 then null else round((t.sum0 + t.labor_cost_0 + t.labor_cost_2) / (t.price * t.qnt) * 100, 1) end,
+      t.item_wo_estimate,
+      t.qnt_on_sgp,
+      t.qnt_need_on_sgp,
+      t.id_order_items_str,
+      :dt_type,
+      :dt
+    from (
+      select
+        decode(oi.id_organization, -1, -1, 0) as order_type,
+        max(oi.dt_beg) as dt_beg,
+        listagg(oi.ornum, '', '') within group (order by oi.ornum) as ornums,
+        listagg(oi.customer, '', '') within group (order by oi.ornum) as customer,
+        si.fullname,
+        max(round(si.price / 1.22, 0)) as price_std,
+        sum(oi.qnt) as qnt,
+        round(oi.cost_wo_nds / oi.qnt, 0) as price,
+        round(max(si.priceraw_wo_nds)) as priceraw_wo_nds_std,
+        round(sum(oi.sum0 / 1.22) / sum(oi.qnt)) as priceraw_wo_nds,
+        sum(round(oi.sum0 / 1.22, 0)) as sum0,
+        sum(si.labor_intensity_0 * oi.qnt) as labor_intensity_0,
+        sum(si.labor_cost_0 * oi.qnt) as labor_cost_0,
+        sum(si.labor_intensity_2 * oi.qnt) as labor_intensity_2,
+        sum(si.labor_cost_2 * oi.qnt) as labor_cost_2,
+        max(sgp.qnt) as qnt_on_sgp,
+        max(sgp.qnt_need) as qnt_need_on_sgp,
+        max(case when (nvl(oi.wo_estimate, 0) <> 0) and (nvl(si.dt_influencing, date ''1900-01-01'') = date ''2000-01-01'' or e.id is null) then 1 else 0 end) as item_wo_estimate,
+        listagg(oi.id, '', '') within group (order by oi.id) as id_order_items_str
+      from
+        v_order_items oi,
+        v_or_std_items si,
+        ' || case when v_use_temp then '(select null as id, null as qnt, null as qnt_need from dual) sgp' else 'v_sgp_items sgp' end || ',
+        estimates e
+      where
+        oi.id_std_item = si.id
+        and oi.id = e.id_order_item (+)
+        and oi.qnt <> 0
+        and si.id = sgp.id (+)
+        and ' || v_where_clause || '
+      group by
+        si.fullname,
+        round(oi.cost_wo_nds / oi.qnt, 0),
+        decode(oi.id_organization, -1, -1, 0)
+    ) t
+  ';
+
+  -- выполнение с правильным набором bind-переменных
+  if v_use_temp then
+    -- временная таблица: всегда есть p_id_order
+    execute immediate v_sql using v_data_type, v_dt, p_id_order;
+  else
+    if p_dt_beg_from is not null and p_dt_beg_to is not null then
+      -- период
+      execute immediate v_sql using v_data_type, v_dt, p_dt_beg_from, p_dt_beg_to;
+    elsif p_use_wo_list = 0 then
+      -- один день
+      execute immediate v_sql using v_data_type, v_dt, v_dt;
+    else
+      -- список wo
+      execute immediate v_sql using v_data_type, v_dt;
+    end if;
+  end if;
+
+end;
+/
+*/
 
 

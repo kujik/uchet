@@ -108,6 +108,7 @@ type
     chbIsVerifyed: TDBCheckBoxEh;
     bvlVt2: TBevel;
     edt_templatename: TDBEditEh;
+    edt_customerinn: TDBEditEh;
     procedure cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
     procedure edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
     procedure edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
@@ -176,11 +177,16 @@ type
     procedure RecalculateItemsPrices;
     procedure RecalculateSum;
     procedure CalculateFrgItemsRow(const AFieldName: string = '');
+    function  Save: Boolean; override;
+    procedure SaveCustomer;
+    procedure Verify(Sender: TObject; onInput: Boolean = False); override;
+
 
 //    procedure VerifyBeforeSave; virtual;
 //    function  Save: Boolean; virtual;
     procedure ControlOnChange(Sender: TObject); override;
     procedure EditButtonsClick(Sender: TObject; var Handled: Boolean); override;
+    procedure btnClick(Sender: TObject); override;
 //    procedure ControlOnEnter(Sender: TObject); virtual;
 //    procedure ControlOnExit(Sender: TObject); virtual;
 //    procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
@@ -294,6 +300,7 @@ begin
 
   FOpt.DlgPanelStyle := dpsTopLeft;
   FOpt.StatusBarMode := stbmDialog;
+  FOpt.RefreshParent := True;
 
   SetControlsLayout;
   DefineFields;
@@ -679,11 +686,11 @@ begin
 
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
-    ['id_type2$i;0', 'V=1:400'],
+    ['id_type2$i', 'V=1:400'],
     ['ornum$i;0'],
     ['or_reference$s','t=td'],
     ['id_reglament$i'],
-    ['reglament$s', 'V=1:400', 't=t'],
+    ['reglament$s;0', 'V=1:400', 't=t'],
     ['id_organization$i', 'V=1:400'],
     ['area$i', 'V=1:100', 't=t'],
     ['project$s', 'V=1:500::td', 't=t'],
@@ -694,22 +701,27 @@ begin
     ['comm$s', 'v=0:4000::N', 't=t'],
     ['basis_text$s', 'v=0:4000::N', 't=t'],
 
-    ['customer$s', 'V=0:400', 't=c'],
-    ['customerman$s', 'V=0:400', 't=c'],
-    ['customercontact$s', 'V=0:400', 't=c'],
-    ['customerlegal$s', 'V=0:400', 't=c'],
-    ['customerinn$s', 'V=0:400::N', 't=c'],
-    ['cashtype_account$s;0','V=1:400::N', 't=c'],
-    ['address$s', 'V=1:400', 't=c'],
-    ['order_number_customer$s', 'V=1:400::N', 't=c'],
+    ['id_customer$i'],
+    ['id_customer_contact$i'],
+    ['id_customer_org$i'],
+    ['customer$s;0', 'V=0:400', 't=c,t'],
+    ['customerman$s;0', 'V=0:400', 't=c,t'],
+    ['customercontact$s;0', 'V=0:400', 't=c,t'],
+    ['customerlegal$s;0', 'V=0:400', 't=c,t'],
+    ['customerinn$s;0', 'V=0:400::N', 't=c,t'],
+    ['cashtype_account$s;0','V=1:400::N', 't=c,t'],
+    ['address$s', 'V=1:400', 't=c,t'],
+    ['order_number_customer$s', 'V=1:400::N', 't=c,t'],
 
     ['dt_end$d;0', 't=t'],
     ['dt_beg$d', 't=d,t'],
     ['dt_change$d', 't=d,t'],
     ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t'],
     ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t'],
-    ['dt_montage_beg$d', 'v==dt_otgr:=dt_otgr+1000000', 't=p,t'],
-    ['dt_montage_end$d', 'v==dt_montage_beg:=dt_montage_beg+1000000', 't=p,t'],
+    ['dt_montage_beg$d', 't=p,t'],
+    ['dt_montage_end$d', 't=p,t'],
+//    ['dt_montage_beg$d', 'v==dt_otgr:=dt_otgr+1000000', 't=p,t'],
+//    ['dt_montage_end$d', 'v==dt_montage_beg:=dt_montage_beg+1000000', 't=p,t'],
 
     ['cost_i$f','V=', 't=d,td',#0],
     ['cost_i_0$f','V=', 't=d,td',#0],
@@ -819,7 +831,7 @@ begin
   end;
 
   //типы паспортов
-  Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [F.GetPropB('id_type2')], FOrderTypes);
+  Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [cmb_id_type2.Value], FOrderTypes);
   Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('name'), FOrderTypes.GetCol('id'));
 
   //вид оплаты
@@ -875,17 +887,20 @@ var
   CtrlValues: TVarDynArray;
   i, j: Integer;
 begin
-  for i := 0 to F.Count - 1 do
-    if F.GetProp(i, fvtFNameL) <> '' then begin
-      S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
-    end;
-  CtrlValues := Q.QLoadRow0(Q.QGetSql('s', 'v_orders', FieldsSt), [id]);
-  j := 0;
-  for i := 0 to F.Count - 1 do
-    if F.GetProp(i, fvtFNameL) <> '' then begin
-      F.SetPropP(i, CtrlValues[j], fvtVBeg);
-      inc(j);
-    end;
+  Result := False;
+  if Mode <> fAdd then begin
+    for i := 0 to F.Count - 1 do
+      if F.GetProp(i, fvtFNameL) <> '' then begin
+        S.ConcatStP(FieldsSt, F.GetProp(i, fvtFNameL), ';');
+      end;
+    CtrlValues := Q.QLoadRow0(Q.QGetSql('s', 'v_orders', FieldsSt), [id]);
+    j := 0;
+    for i := 0 to F.Count - 1 do
+      if F.GetProp(i, fvtFNameL) <> '' then begin
+        F.SetPropP(i, CtrlValues[j], fvtVBeg);
+        inc(j);
+      end;
+  end;
   Result := True;
 end;
 
@@ -989,6 +1004,7 @@ begin
   var LOrderType := F.GetProp('id_type2').AsInteger;
   var LOrganization := F.GetProp('id_organization').AsInteger;
   var LEstimate := F.GetProp('id_or_format_estimates').AsInteger;
+ot:=F.GetProp('id_type2');
   ot := FOrderTypes.FindFirst('id', F.GetProp('id_type2'));
   va2 := [];
   //покажем/скроем информацию по рекламачии
@@ -1003,10 +1019,10 @@ begin
     for i := 0 to FOrganizations.High do begin
       if
         //допустимо Прозводство (есть прозводственные или пф)
-        ((FOrganizations.G(i, 'id') = -1) and ((FOrderTypes.G(ot, 'is_production_order') = 1) or FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
-         or
+        ((FOrganizations.G(i, 'id') = -1) and ((FOrderTypes.G(ot, 'is_production_order') = 1) or (FOrderTypes.G(ot, 'is_semiproduct_order') = 1)))
+        or
         //допустима Ника (есть оплата нал. и отгрузочные)
-        ((FOrganizations.G(i, 'or_cash').AsInteger = 1) and ((FOrderTypes.G(ot, 'is_cash_payment') = 1) and FOrderTypes.G(ot, 'is_shipment_order') = 1))
+        ((FOrganizations.G(i, 'or_cash').AsInteger = 1) and ((FOrderTypes.G(ot, 'is_cash_payment') = 1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1)))
         or
         //допустиммы остальные (есть отгруузочные)
         ((FOrganizations.G(i, 'or_cash').AsInteger <> 1) and (FOrganizations.G(i, 'id') <> -1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1))
@@ -1014,9 +1030,14 @@ begin
         va2 := va2 + [[FOrganizations.G(i, 'name'), FOrganizations.G(i, 'id')]];
     end;
     //установим параметры для ссылки на другой заказ
-    if (FOrderTypes.G(ot, 'need_ref') = 1) then begin
+    if (FOrderTypes.G(ot, 'is_reference_required') = 1) then begin
       //ссылка обязательна
       F.SetProps('or_reference', '1:400:T', fvtVer);
+      F.SetProps('or_reference', True, fvtDsbl);
+    end
+    else if (FOrderTypes.G(ot, 'is_reference_allowed') = 1) then begin
+      //ссылка обязательна
+      F.SetProps('or_reference', '0:400:T', fvtVer);
       F.SetProps('or_reference', True, fvtDsbl);
     end
     else begin
@@ -1112,6 +1133,7 @@ begin
   end
   else begin
     F.SetProps('c', '1:400::N', fvtVer);
+    F.SetProps('customerlegal;customerinn', '0:400::N', fvtVer);
     F.SetProps('c', True, fvtDsbl);
     F.SetPropsFromCustom('p', PROP_NUM_VER_BEG, fvtVer);
     F.SetProps('p', True, fvtDsbl);    F.SetProps('p', True, fvtDsbl);
@@ -1236,10 +1258,9 @@ begin
       edt_customercontact.Text := cmb_customerman.DynProps[IntToStr(cmb_customerman.ItemIndex)].Value;
   end
   else if Sender = cmb_customerlegal then begin
-    cmb_cashtype_account.Text := '';
+    edt_customerinn.Text := '';
     if cmb_customerlegal.ItemIndex >= 0 then
-      cmb_cashtype_account.Text := cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.ItemIndex)].Value;
-    OnCashTypeAccountChange;
+      edt_customerinn.Text := cmb_customerlegal.DynProps[IntToStr(cmb_customerlegal.ItemIndex)].Value;
   end;
 end;
 
@@ -1452,6 +1473,16 @@ begin
   RecalculateSum;
 end;
 
+procedure TFrmOWOrder.btnClick(Sender: TObject);
+begin
+  if TControl(Sender).Tag = mbtSave then begin
+    btnOkClick(Sender);
+  end
+  else if TControl(Sender).Tag = mbtClose then begin
+    btnCancelClick(Sender);
+  end;
+end;
+
 procedure TFrmOWOrder.SetPermanetFieldProps;
 //установить доступность/значения контролов глобально
 begin
@@ -1527,6 +1558,7 @@ begin
     RecalculateItemsPrices;
   end;
   Fr.IsRowCorrect;
+  Fr.IsTableCorrect;
 end;
 
 procedure TFrmOWOrder.FrgItemsDbGridEh1ApplyFilter(Sender: TObject);
@@ -1743,7 +1775,7 @@ begin
     Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
   end;
   if (LFieldName = 'id_thn') and LIsStdItem then begin
-    if FrgItems.GetValue('id_thn').AsInteger <> - 102 then
+    if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
       Msg := 'Технолдог для стандартного изделия не может быть задан';
   end;
   if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
@@ -1764,7 +1796,71 @@ begin
   end;
 end;
 
+function TFrmOWOrder.Save: Boolean;
+//сохранение данных
+var
+  ChildHandled: Boolean;
+  i, res: Integer;
+  CtrlValues2: TVarDynArray;
+  FieldsSave2: string;
+  UseTransaction: Boolean;
+begin
+  Result := False;
+  FieldsSave2 := '';
+  CtrlValues2 := [];
+  //получим поля и их значения, по тем для которых указано сохранение
+  for i := 0 to F.Count - 1 do
+    if F.GetProp(i, fvtFNameS) <> '' then begin
+      S.ConcatStP(FieldsSave2, F.GetProp(i, fvtFNameS), ';');
+      CtrlValues2 := CtrlValues2 + [S.NullIfEmpty(F.GetProp(i, fvtVCurr))];
+    end;
+  //сохраняем заголовочную часть
+  UseTransaction := not Q.AdoConnection.InTransaction;
+  if UseTransaction then
+    Q.QBeginTrans(True);
+  SaveCustomer;
+  res := Q.QSave(Q.QFModeToIUD(Mode), 'orders', '', FieldsSave2, CtrlValues2);
+//  IdAfterInsert:= res;
+  if not (Mode in [fEdit, fDelete]) then
+    ID := res;
+  Result := res <> - 1;
+  if UseTransaction then
+    Result := Q.QCommitOrRollback;
+end;
+
+procedure TFrmOWOrder.SaveCustomer;
+//сохраним данные покупателя
+//установим поля для сохранения в основной таблице из результатов хранимой процедуры
+var
+  LCustomer: TVarDynArray;
+begin
+  if Mode = fDelete then
+    Exit;
+  if Trim(cmb_customer.Text)  = '' then begin
+    LCustomer := [null, null, null, null, null, null, null, null];
+    F.SetProps('id_customer;id_customer_contact;id_customer_org', null, fvtVCurr);
+  end
+  else begin
+    LCustomer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_customer.Text, cmb_customerman.Text, edt_customercontact.Text, cmb_customerlegal.Text, edt_customerinn.Text, -1, -1, -1]);
+    if Length(LCustomer) = 0 then
+      Exit;
+    F.SetProp('id_customer', LCustomer[5], fvtVCurr);
+    F.SetProp('id_customer_contact', LCustomer[6], fvtVCurr);
+    F.SetProp('id_customer_org', LCustomer[7], fvtVCurr);
+  end;
+end;
+
+procedure TFrmOWOrder.Verify(Sender: TObject; onInput: Boolean = False);
+begin
+  inherited;
+//  Cth.SetButtonsAndPopupMenuCaptionEnabled(FPanelsBtn, mbtOk, AName, not HasError, '');
+  Cth.SetButtonState(Self, mbtSave, null, not HasError, True);
+end;
+
 end.
+
+
+
 
 procedure TDlg_Order.CorrectRowIfNameChanged(DisableOnly: Boolean = False);
 //проверяем, является ли изделие в поле наименование стандартным - есть ли в списке, и также дествия зависят от галки СГП
@@ -1849,6 +1945,19 @@ begin
 
 end;
 
+    if Mode <> fDelete then
+      if Trim(cmb_CustomerName.Text) = '' then begin
+        Customer := [null, null, null, null, null, null, null, null];
+      end
+      else begin
+        Customer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_CustomerName.Text, cmb_CustomerMan.Text, edt_CustomerContacts.Text, cmb_CustomerLegalName.Text, edt_CustomerINN.Text, -1, -1, -1]);
+        if Length(Customer) = 0 then
+          Break;
+        Fields := Fields + ';id_customer$i;id_customer_contact$i;id_customer_org$i';
+        Values := Values + [Customer[5], Customer[6], Customer[7]];
+      //получим признак Оптовый покупатель
+        IsCustomerWholesale := Q.QLoadValue('select wholesale from ref_customers where id = :id$i', [Customer[5]]) = 1;
+      end;
 
 
 проверку дат, не рабюооает автомат

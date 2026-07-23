@@ -860,16 +860,17 @@ begin
   else if AFormType = myfrm_Dlg_J_Tasks then
     TFrmODedtTasks.Show(AOwner, AFormType, Opt + [myfoMultiCopy, myfoDialog], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_OrderTypes then
-    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'order_types', 'Типы заказов', 400, 100,
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'order_types', 'Типы заказов', 430, 90,
       [['name$s', cntEdit, 'Наименование','1:100'],
        ['is_production_order$i', cntCheck, 'Прозводственный'],
        ['is_semiproduct_order$i', cntCheck, 'Полуфабрикат'],
        ['is_shipment_order$i', cntCheck, 'Отгрузочный'],
        ['is_complaint$i', cntCheck, 'Рекламация'],
        ['is_additional_order$i', cntCheck, 'Дозаказ'],
-       ['need_ref$i', cntCheck, 'Сcылка'#13#10'на заказ'],
+       ['is_reference_allowed$i', cntCheck, 'Допустима сcылка на заказ'],
+       ['is_reference_required$i', cntCheck, 'Обязательна сcылка на заказ'],
        ['is_nonstandard$i', cntCheck, 'Нестандарт'],
-       ['is_nonstandard_only$i', cntCheck, 'Только'#13#10'нестандарт'],
+       ['is_nonstandard_only$i', cntCheck, 'Только нестандарт'],
        ['is_cash_payment$i', cntCheck, 'Наличные'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])

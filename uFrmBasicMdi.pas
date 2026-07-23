@@ -222,7 +222,8 @@ type
     procedure ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean); virtual;
     procedure ControlClick(Sender: TObject); virtual;
     procedure ControlDblClick(Sender: TObject); virtual;
-    procedure ControlKeyPress(Sender: TObject; var Key: Char); virtual;    procedure btnOkClick(Sender: TObject); virtual;
+    procedure ControlKeyPress(Sender: TObject; var Key: Char); virtual;
+    procedure btnOkClick(Sender: TObject); virtual;
     procedure btnCancelClick(Sender: TObject); virtual;
     // обработчик клика по кнопкам в панели кнопок
     procedure btnClick(Sender: TObject); virtual;
@@ -1790,14 +1791,19 @@ begin
       Break;
     end;
 
-    if not Save then Break;
+    if not Save then
+      Break;
     RefreshParentForm;
-    if FOpt.DefFocusedControl <> nil then
-      FOpt.DefFocusedControl.SetFocus;
+    if (FOpt.DefFocusedControl <> nil) and chbNoclose.Visible and chbNoclose.Checked and FOpt.DefFocusedControl.Parent.Visible then
+      try
+        FOpt.DefFocusedControl.SetFocus;
+      except
+      end;
 
     if (not chbNoclose.Visible) or (not chbNoclose.Checked) then begin
       Self.ModalResult := mrOk;
-      if FormStyle <> fsNormal then Close;
+      if FormStyle <> fsNormal then
+        Close;
       Break;
     end;
     Break;

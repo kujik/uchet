@@ -943,7 +943,11 @@ where
   and s.id_nomencl = n.id_nomencl and s.rn = 1
 group by 
   ssi.id  
-;  
+;
+
+
+--отрицательные очстатки
+  select * from v_sgp_items where qnt < 0;  
 
   
   
