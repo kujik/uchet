@@ -525,7 +525,7 @@ begin
     va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e']]
   end;
   var LFields: TVarDynArray2 := [
-    ['id$i', '_id', '40'],
+    ['id$i', '_id', '40', 't=s'],
     ['id_std_item$i', '_id_std', '40', 't=s'],
     ['id_itm$i', '_id_itm', '40', 't=s'],
     ['ch$s', '_ch', '40', 't=s'],
@@ -535,7 +535,7 @@ begin
     ['0 as status$s', '*', '20'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
-    ['itemname$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=s'],
+    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T'],
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s'],
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
@@ -1566,7 +1566,7 @@ begin
   if LOldValue = Value then
     Exit;
   Fr.SetValue(LFieldName, Value);
-  if (LFieldName = 'itemname') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
+  if (LFieldName = 'name') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
     CalculateFrgItemsRow(LFieldName);
     RecalculateItemsPrices;
   end;
@@ -1623,7 +1623,7 @@ begin
   var LFormat := F.GetProp('id_or_format_estimates').AsIntegerM;
   //если нестандарт, то не нужно устанавливать список
   if LFormat <= 0 then begin
-    FrgItems.UpdatePickKeyList('itemname', [], [], False, False);
+    FrgItems.UpdatePickKeyList('name', [], [], False, False);
     Exit;
   end;
   st := '';
@@ -1641,7 +1641,7 @@ begin
   );
   //установим список в гриде
 //  FrgItems.Opt.SetPick('itemname', FStdItems.GetCol('name'), FStdItems.GetCol('id'), False, True);
-  FrgItems.UpdatePickKeyList('itemname', FStdItems.GetCol('name'), [], False, True);
+  FrgItems.UpdatePickKeyList('name', FStdItems.GetCol('name'), [], False, True);
 end;
 
 procedure TFrmOWOrder.LoadKnsThn;
@@ -1731,7 +1731,7 @@ var
   i: Integer;
 begin
   var LItemNamePos :=  -1;
-  LItemNamePos := FStdItems.FindFirst('name', FrgItems.GetValue('itemname'));
+  LItemNamePos := FStdItems.FindFirst('name', FrgItems.GetValue('name'));
   var LIsStdItem := LItemNamePos >= 0;
   var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
   var LWoEstimate:= FrgItems.GetValue('wo_estimate').AsInteger = 1;
@@ -1870,6 +1870,7 @@ begin
 end;
 
 function TFrmOWOrder.SaveOrderItems: Boolean;
+//сохранение в бд табличной части заказа
 var
   Frg: TFrDBGridEh;
   i, j: Integer;
@@ -1879,22 +1880,34 @@ var
   Fields, FieldNames, NewValues: TVarDynArray;
   OrderItems: TNamedArr;
   PosOld: Integer;
+  IsNameChanged: Boolean;
 begin
   if Mode in [fView, fDelete] then
     Exit;
+  //удалим строки, которые были удалены из таблицы с помощью пользовательского интерфейса
   if Length(FrgItems.EditData.IdsDeleted) > 0 then
     Q.QExecSql('delete from order_items where id in (' + A.Implode(FrgItems.EditData.IdsDeleted, ',') + ')', []);
+  //посля для сохранения (с иден тификатором типа), они же используются для проверки изменений (только наименование проверяется дополнительно, сюдла не входит)
   Fields := FrgItems.GetFieldNamesEx('s', True);
+  //поля доля сохранения, только наименования
   FieldNames := FrgItems.GetFieldNamesEx('s', False);
+  //получим во временную структуру данные из таблицы (не отфильтрованные)
   OrderItems := FrgItems.ExportToNa('', False);
+  //прохорд по данным
   for i := 0 to OrderItems.High do begin
     LId := OrderItems.G(i, 'id');
+    //установим позицию (при отображении она показывается динамически)
     OrderItems.SetValue(i, 'pos', i + 1);
+    //установим приззнак стандарта
     OrderItems.SetValue(i, 'std', S.IIf(FrgItems.GetRawValueI('nstd', i) = 1, 0, 1));
     NewValues := [];
+    //признак изменения строки (если добавлена - автоматом ставим как измененную)
     IsRowChanged := LId >= MY_IDS_INSERTED_MIN;
+    //признак изменения наименования в этой строке (важно для нестандартных)
+    IsNameChanged := False;
     if not IsRowChanged then begin
       PosOld := FOrderItemsOld.FindFirst('id', LId);
+      //пройдем по всем поолям, сравним нцужные
       for j := 0 to OrderItems.FieldsCount - 1 do begin
         var FieldName := OrderItems.F[j];
         if not A.InArray(FieldName, FieldNames) then
@@ -1902,18 +1915,26 @@ begin
         if OrderItems.GetValueI(i, j) <> FOrderItemsOld.GetValueI(PosOld, j) then begin
           IsRowChanged := True;
         end;
+        //значения для смохранения
         NewValues := NewValues + [OrderItems.GetValueI(i, j)];
       end;
     end;
-    if not IsRowChanged then
+    //признак, что надо создавать запись для нестандартного изделия (или получать айди если такое ужен существует)
+    IsNameChanged := (OrderItems.GetValue(i, 'name') <> FOrderItemsOld.GetValue(PosOld, 'name')) and (OrderItems.GetValue(i, 'nstd') = 1);
+    if not (IsRowChanged or IsNameChanged) then
       Continue;
+    if IsNameChanged then begin
+      //сорздадим (или получим существующую) запись для нестандратного изделия в or_std_items
+      var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);
+      OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
+    end;
+    //сохраним строку в бд
     Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);
   end;
 end;
 
 
 end.
-
 
 
 

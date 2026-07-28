@@ -928,6 +928,7 @@ with
   o.in_archive,
   uk.name as kns,
   ut.name as thn,
+  s.name as name,
   s.name as itemname,
   case when ee.id > 0 then ee.prefix else '' end as prefix,
   case when ee.id > 0 then ee.prefix || '_' else '' end || s.name as fullitemname,
@@ -936,10 +937,8 @@ with
   es.dt as dt_estimate,
   f_get_order_item_raw_price(i.id) as sum0,
   (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
-   round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
-   
+  round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
   round(i.price * i.qnt, 2) as sum,  
-   
   niz.cnt as has_itm_est,
   case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
   nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,
