@@ -625,7 +625,7 @@ begin
     ['Авансовые ведомости к перечислению', myfrm_J_AdvanceTransfer,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Авансовые ведомости к выдаче', myfrm_J_AdvanceCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     [],
-    ['Расчетные ведомости', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
+    ['Расчетные ведомости', myfrm_J_PayrollCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch, rW_J_Payroll_V_Ceh])],
     ['Ведомости к перечислению', myfrm_J_PayrollTransfer,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Ведомости к выдаче', myfrm_J_PayrollCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     [],

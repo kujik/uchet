@@ -1487,6 +1487,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 ExplicitHeight = 8
@@ -1678,11 +1679,7 @@ inherited FrmOWOrder: TFrmOWOrder
     ExplicitWidth = 1279
     inherited lblStatusBarR: TLabel
       Left = 1210
-      Height = 14
       ExplicitLeft = 1210
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

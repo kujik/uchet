@@ -775,17 +775,15 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
-alter table order_items add price_wo_nds number;  --!!! 
+alter table order_items add price_base  number;  --!!! 
 alter table order_items add nds_rate number;
-alter table order_items add price_wo_nds_with_margin number;
+alter table order_items add price_adjusted  number;
 alter table order_items add price_tmp number;
 update order_items set nds_rate = 22;
 update order_items set price_tmp = price;
 update order_items set price_pp = 0;
-update order_items set price_wo_nds = round(price_tmp / 1.22 , 2)where id_order >= 16743;
-update order_items set price_wo_nds = round(price_tmp / 1.22 , 2)where id_order < 0;
-update order_items set price_wo_nds_with_margin = round(price_tmp / 1.22 , 2) where id_order >= 16743;
-update order_items set price_wo_nds_with_margin = round(price_tmp / 1.22 , 2) where id_order < 0;
+update order_items set price_base  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
+update order_items set price_adjusted  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
  
 create table order_items (
   id number(11),
@@ -804,8 +802,8 @@ create table order_items (
   id_kns number(11),                 --айди конструктора, или -100 = нет, или -101 = [конструктор] (любой)
   id_thn number(11),                 --технолог
   nds_rate number,                   --ставка ндс  
-  price_wo_nds number,               --базовая цена без ндс и скидок
-  price_wo_nds_with_margin number,   --цена без ндс, но с учетом скидки и наценки
+  price_base number,               --базовая цена без ндс и скидок
+  price_adjusted  number,   --цена без ндс, но с учетом скидки и наценки
   price number(12,2),                --цена позиции общая с учетом ндс, наченки и скидки 
   price_pp number(12,2),             --цена перепродажи, входит в общую цену позиции, не больше ее (всегда равна в случае д/к)
   r0 number(1) default 0,            --не задается производственный маршрут
@@ -939,6 +937,9 @@ with
   f_get_order_item_raw_price(i.id) as sum0,
   (round(nvl((i.price - i.price_pp)*i.qnt*(1 + nvl(o.m_i,0) * 0.01 - nvl(o.d_i,0) * 0.01) / o.ndsd, 0)) +
    round(nvl((i.price_pp)*i.qnt*(1 + nvl(o.m_a,0) * 0.01 - nvl(o.d_a,0) * 0.01) / o.ndsd, 0))) as cost_wo_nds,
+   
+  round(i.price * i.qnt, 2) as sum,  
+   
   niz.cnt as has_itm_est,
   case when nvl(i.sgp, 0) = 1 then 0 else i.qnt - i.qnt_to_sgp end as qnt_in_prod,
   nvl(i.qnt_panels_w_drill, 0) * i.qnt as qnt_panels_w_drill_all,

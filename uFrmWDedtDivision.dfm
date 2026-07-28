@@ -1,13 +1,13 @@
 inherited FrmWDedtDivision: TFrmWDedtDivision
   Caption = 'FrmWDedtDivision'
-  ClientHeight = 295
-  ClientWidth = 664
+  ClientHeight = 294
+  ClientWidth = 660
   ExplicitWidth = 676
   ExplicitHeight = 333
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 664
-    Height = 279
+    Width = 660
+    Height = 278
     ExplicitWidth = 660
     ExplicitHeight = 278
     inherited pnlFrmClient: TPanel
@@ -475,17 +475,13 @@ inherited FrmWDedtDivision: TFrmWDedtDivision
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 279
-    Width = 664
+    Top = 278
+    Width = 660
     ExplicitTop = 278
     ExplicitWidth = 660
     inherited lblStatusBarR: TLabel
       Left = 591
-      Height = 14
       ExplicitLeft = 591
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

@@ -3001,7 +3001,9 @@ begin
       S.IfNotEmptyStr(A.ImplodeNotEmpty([
         S.IIfStr(Fr.GetControlValue('ChbCurrent') = 1, 'dt = ''' + S.SQLdate(EncodeDate(YearOf(Date), MonthOf(Date), 1)) + ''''),
         S.IIfStr(Fr.GetControlValue('ChbPrevious') = 1, 'dt = ''' + S.SQLdate(EncodeDate(YearOf(IncMonth(Date, -1)), MonthOf(IncMonth(Date, -1)), 1)) + '''')],
-        ' or '), '('#0')')], ' and '
+        ' or '), '('#0')'),
+        S.IIFStr(User.Role(rW_J_Payroll_V_Ceh), 'is_office <> 1')
+        ], ' and '
     );
   end
 {  else if (FormDoc = myfrm_J_PayrollTransfer) or (FormDoc = myfrm_J_PayrollCash) then begin

@@ -1745,7 +1745,7 @@ where
   and s.id_offminus(+) = m.id_offminus 
   and s.id_nomencl = n.id_nomencl(+)
   and n.id_nomencltype = 0
-  and 1 = 0          --2024-09-05  - расход по актам списания убираем
+  and 1 = 1          --2026-07-23  - доюавил расход по актам списания 
 group by
   n.id_nomencl
 )  

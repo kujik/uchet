@@ -1977,10 +1977,15 @@ begin
   SetControlEvents;
   Cth.FixTabOrder(Self);
 
-  if FOpt.DefFocusedControl = nil then
-    FOpt.DefFocusedControl := Cth.GetFirstTabControl(Self);
-  if FOpt.DefFocusedControl <> nil then
-    FOpt.DefFocusedControl.SetFocus;
+  //!!! уберем, кк сделано до рфакторинга
+//  if FOpt.DefFocusedControl = nil then
+//    FOpt.DefFocusedControl := Cth.GetFirstTabControl(Self);
+  //здесь возхможна ошибка, так как контрол здесь может быть невиден или заблокирован
+  try
+    if FOpt.DefFocusedControl <> nil then
+      FOpt.DefFocusedControl.SetFocus;
+  except
+  end;
 
   Cth.SetDialogCaption(Self, Mode, Self.Caption);
   SetMainInfoIcon;

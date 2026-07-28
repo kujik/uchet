@@ -143,6 +143,8 @@ type
     FUsedEstimateFormat: Integer;
     FOrganizationIndex: Integer;
     FOrderTypeIndes: Integer;
+    //список изделий в заказе на момент его загрузки
+    FOrderItemsOld: TNamedArr;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -178,6 +180,7 @@ type
     procedure RecalculateSum;
     procedure CalculateFrgItemsRow(const AFieldName: string = '');
     function  Save: Boolean; override;
+    function  SaveOrderItems: Boolean;
     procedure SaveCustomer;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
 
@@ -523,24 +526,26 @@ begin
   end;
   var LFields: TVarDynArray2 := [
     ['id$i', '_id', '40'],
-    ['id_std_item$i', '_id_std', '40'],
-    ['id_itm$i', '_id_itm', '40'],
-    ['ch$s', '_ch', '40'],
-    ['attention$i', '_attention', '40'],
+    ['id_std_item$i', '_id_std', '40', 't=s'],
+    ['id_itm$i', '_id_itm', '40', 't=s'],
+    ['ch$s', '_ch', '40', 't=s'],
+    ['pos$i', '_pos', '20', 't=s'],
+    ['std$i', '_std', '20', 't=s'],
+    ['attention$i', '_attention', '40', 't=s'],
     ['0 as status$s', '*', '20'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
-    ['itemname$s', 'Изделие', '400;w;h', 'e=1:400::T'],
-    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2'],
-    ['price_wo_nds$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
-    ['0 as price_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
-    ['price_wo_nds_with_margin$f', 'Цена без НДС и скидками', '70', 'f=0.00' ],
-    ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00' ],
-    ['nds_rate$f', 'Ставка НДС', '70', 'f=0'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N'],
-    ['sgp$f', 'С СГП', '40', 'e', 'chb'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb'],
-    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb']
+    ['itemname$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=s'],
+    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s'],
+    ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s'],
+    ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
+    ['price_adjusted$f', 'Цена без НДС и скидками', '70', 'f=0.00' , 't=s'],
+    ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
+    ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N', 't=s'],
+    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s'],
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s'],
+    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s']
   ];
 
   LFields := LFields + va2;
@@ -579,8 +584,8 @@ begin
   var LFieldsSt := '';
   for i:= 0 to High(LFields) do
     S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
-  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [ID], na);
-  FrgItems.SetInitData(na);
+  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [ID], FOrderItemsOld);
+  FrgItems.SetInitData(FOrderItemsOld);
   //установим события грида
   FrgItems.OnButtonClick := FrgItemsButtonClick;
   FrgItems.OnCellButtonClick := FrgItemsCellButtonClick;
@@ -595,7 +600,9 @@ begin
 //  FrgItems.OnCellValueSave := FrgItemsCellValueSave;
   FrgItems.RefreshGrid;
   FrgItems.IsTableCorrect;
+  FrgItems.SetControlValue('ChbView0', S.IIf(Mode in [fView, fDelete], 0, 1));
   RecalculateItemsPrices;
+  FrgItems.DbGridEh1.DefaultApplyFilter;
   Result := True;
 end;
 
@@ -864,6 +871,10 @@ begin
     [F.GetPropB('id_or_format_estimates')],
     FEstimateFormats
   );
+  var i := FEstimateFormats.FindFirst('id', 0);
+  FEstimateFormats.SetValue(i, 'name', '[Нестандартные изделия]');
+  FEstimateFormats.Sort('name');
+
 
   //данные покупателей
   FCustomers := Q.QLoad('select name, id from ref_customers where active = 1 or name = :name$s order by name', [F.GetPropB('customer')]);
@@ -1196,7 +1207,6 @@ begin
   if F.GetProp('id_organization').AsInteger <= 0 then
     Exit;
   IdCustomer := A.PosInArray(cmb_customer.Text, FCustomers, 0, False);
-  IdCustomer := FCustomers[IdCustomer][1];
   cmb_customerman.Items.Clear;
   cmb_customerman.DynProps.Clear;
   cmb_customerlegal.Items.Clear;
@@ -1210,6 +1220,7 @@ begin
   OnCashTypeAccountChange;
   if IdCustomer = -1 then
     Exit;
+  IdCustomer := FCustomers[IdCustomer][1];
   j := -1;
   //добавим в динпропс значения контактных данных, соответствующие данному человеку
   for i := 0 to High(FCustomerContacts) do begin
@@ -1537,6 +1548,11 @@ end;
 
 procedure TFrmOWOrder.FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 begin
+  if FieldName = 'slash' then
+    Params.Text := edt_ornum.Text + '_' + S.Right('000' + IntToStr(Fr.GetRawRowCurrent + 1), 3);
+  if Fr.GetValueF('qnt') > 0 then
+    Params.Background := RGB(220, 255, 220);
+
 {  if FieldName = 'price' then
     Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
   if FieldName = 'sum' then
@@ -1663,22 +1679,22 @@ begin
   var SumWoNdsWithMargins := 0.0;
   var SumWoNdsWoMargins := 0.0;
   for var i := 0 to FrgItems.GetRawCount - 1 do begin
-    var LPriceWithNds := RoundTo(FrgItems.GetRawValue('price_wo_nds', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
-    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_wo_nds', i).AsFloat  * (1 + F.GetProp('d_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100), -2);
+    var LPriceWithNds := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
+    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat  * (1 + F.GetProp('d_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100), -2);
     var LPriceWithNdsWithMargins := RoundTo(LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
     var Sum := LPriceWithNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
-    SumWoNdsWoMargins := SumWoNdsWoMargins + FrgItems.GetRawValue('price_wo_nds', i).AsFloat * FrgItems.GetRawValue('qnt', i).AsFloat;
+    SumWoNdsWoMargins := SumWoNdsWoMargins + FrgItems.GetRawValue('price_base', i).AsFloat * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWithNdsWithMargins := SumWithNdsWithMargins + Sum;
     SumWithNdsWoMargins := SumWithNdsWoMargins + LPriceWithNds * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWoNdsWithMargins := SumWoNdsWithMargins + LPriceWoNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
-    if (FrgItems.GetRawValue('nds_rate', i) <> F.GetProp('nds_rate').AsFloat) or (FrgItems.GetRawValue('price_with_nds', i) <> LPriceWithNds) or
+    if (FrgItems.GetRawValue('nds_rate', i) <> F.GetProp('nds_rate').AsFloat) or (FrgItems.GetRawValue('price_base_with_nds', i) <> LPriceWithNds) or
        (FrgItems.GetRawValue('price', i) <> LPriceWithNdsWithMargins) or (FrgItems.GetRawValue('sum', i) <> Sum) then
     begin
       LTableChanged := True;
       FrgItems.SetRawValue('nds_rate', i, F.GetProp('nds_rate').AsFloat);
-      FrgItems.SetRawValue('price_with_nds', i, LPriceWithNds);
+      FrgItems.SetRawValue('price_base_with_nds', i, LPriceWithNds);
       FrgItems.SetRawValue('price', i, LPriceWithNdsWithMargins);
-      FrgItems.SetRawValue('price_wo_nds_with_margin', i, LPriceWoNdsWithMargins);
+      FrgItems.SetRawValue('price_adjusted', i, LPriceWoNdsWithMargins);
       FrgItems.SetRawValue('sum', i, Sum);
     end;
   end;
@@ -1774,10 +1790,10 @@ begin
   else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
     Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
   end;
-  if (LFieldName = 'id_thn') and LIsStdItem then begin
+  {if (LFieldName = 'id_thn') and LIsStdItem then begin
     if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
       Msg := 'Технолдог для стандартного изделия не может быть задан';
-  end;
+  end;}
   if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
     if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
       Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
@@ -1815,17 +1831,13 @@ begin
       CtrlValues2 := CtrlValues2 + [S.NullIfEmpty(F.GetProp(i, fvtVCurr))];
     end;
   //сохраняем заголовочную часть
-  UseTransaction := not Q.AdoConnection.InTransaction;
-  if UseTransaction then
-    Q.QBeginTrans(True);
+  Q.QBeginTrans(True);
   SaveCustomer;
   res := Q.QSave(Q.QFModeToIUD(Mode), 'orders', '', FieldsSave2, CtrlValues2);
-//  IdAfterInsert:= res;
   if not (Mode in [fEdit, fDelete]) then
     ID := res;
-  Result := res <> - 1;
-  if UseTransaction then
-    Result := Q.QCommitOrRollback;
+  SaveOrderItems;
+  Result := Q.QCommitTrans;
 end;
 
 procedure TFrmOWOrder.SaveCustomer;
@@ -1856,6 +1868,49 @@ begin
 //  Cth.SetButtonsAndPopupMenuCaptionEnabled(FPanelsBtn, mbtOk, AName, not HasError, '');
   Cth.SetButtonState(Self, mbtSave, null, not HasError, True);
 end;
+
+function TFrmOWOrder.SaveOrderItems: Boolean;
+var
+  Frg: TFrDBGridEh;
+  i, j: Integer;
+  LId: Variant;
+  IsRowChanged: Boolean;
+  ExcludedFields: TVarDynArray;
+  Fields, FieldNames, NewValues: TVarDynArray;
+  OrderItems: TNamedArr;
+  PosOld: Integer;
+begin
+  if Mode in [fView, fDelete] then
+    Exit;
+  if Length(FrgItems.EditData.IdsDeleted) > 0 then
+    Q.QExecSql('delete from order_items where id in (' + A.Implode(FrgItems.EditData.IdsDeleted, ',') + ')', []);
+  Fields := FrgItems.GetFieldNamesEx('s', True);
+  FieldNames := FrgItems.GetFieldNamesEx('s', False);
+  OrderItems := FrgItems.ExportToNa('', False);
+  for i := 0 to OrderItems.High do begin
+    LId := OrderItems.G(i, 'id');
+    OrderItems.SetValue(i, 'pos', i + 1);
+    OrderItems.SetValue(i, 'std', S.IIf(FrgItems.GetRawValueI('nstd', i) = 1, 0, 1));
+    NewValues := [];
+    IsRowChanged := LId >= MY_IDS_INSERTED_MIN;
+    if not IsRowChanged then begin
+      PosOld := FOrderItemsOld.FindFirst('id', LId);
+      for j := 0 to OrderItems.FieldsCount - 1 do begin
+        var FieldName := OrderItems.F[j];
+        if not A.InArray(FieldName, FieldNames) then
+          Continue;
+        if OrderItems.GetValueI(i, j) <> FOrderItemsOld.GetValueI(PosOld, j) then begin
+          IsRowChanged := True;
+        end;
+        NewValues := NewValues + [OrderItems.GetValueI(i, j)];
+      end;
+    end;
+    if not IsRowChanged then
+      Continue;
+    Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);
+  end;
+end;
+
 
 end.
 

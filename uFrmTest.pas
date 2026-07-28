@@ -1420,13 +1420,14 @@ var
   i: Integer;
   st: string;
 begin
+exit;
 //TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
-TasksS.ReportForActsWriteoffReceipt; exit;
-TasksS.ReportForSupplyisOnwaySurplus; exit;
-TasksS.ReportForYesterdayOrders(5);
-TasksS.ReportForYesterdayOrders(6);
-TasksS.ReportForYesterdayOrders(7);
-TasksS.ReportForYesterdayOrders(8);
+//TasksS.ReportForActsWriteoffReceipt; exit;
+//TasksS.ReportForSupplyisOnwaySurplus; exit;
+//TasksS.ReportForYesterdayOrders(5);
+//TasksS.ReportForYesterdayOrders(6);
+TasksS.ReportForYesterdayOrders(1);
+TasksS.ReportForYesterdayOrders(3);
 Exit;
 //TasksS.ReportForYesterdayOrders(False);Exit;
 TasksS.ReportForEarlyCompletionActs;Exit;

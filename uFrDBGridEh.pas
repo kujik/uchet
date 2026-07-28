@@ -583,7 +583,7 @@ type
     FieldsParams: TVarDynArray2;
     FieldsErrors: TVarDynArray2;
     IdsChanged: TVarDynArray;
-    IdsDeleted: TVarDynArray;
+    IdsDeleted: TVarDynArray;         //айди удаленных строк (вставленные при редактировании и удаленные сюда не попадают!)
     CellsWithErrors: TVarDynArray;
     IdAdded: Integer;
   end;
@@ -935,6 +935,10 @@ type
     //получить значения всех перечисленных полей; если поля не переданы - получаем все
     function  GetValuesArr(FieldNames: TVarDynArray; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
     function  GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Boolean = true): TVarDynArray; overload;
+    //получить строку в массиве данных (отфильтрованном или нет) по айди. нумерация с нуля.
+    function  GetRowById(AId: Variant): Integer;
+    function  GetRawRowById(AId: Variant): Integer;
+    function  GetRawRowCurrent: Integer;
     //получить имя поля для столбца (в нижнем регистре)
     function  GetFieldNameForSender(Sender: TObject): string;
     //получить значение ячейки футера для поля (если там автосумма, то при AsText = False получит именно значение а не форматированный текст)
@@ -2888,6 +2892,29 @@ function TFrDBGridEh.GetValuesArr(FieldNames: string; Pos: Integer; Filtered: Bo
 //получить значения всех перечисленных полей
 begin
   Result := GetValuesArr(A.Explode(FieldNames, ';', True), Pos, Filtered);
+end;
+
+function TFrDBGridEh.GetRowById(AId: Variant): Integer;
+//получить строку в массиве данных (отфильтрованном) по айди. нумерация с нуля.
+begin
+  Result := MemTableEh1.FindRec(FOpt.Sql.IdField, AID, []);
+end;
+
+function TFrDBGridEh.GetRawRowById(AId: Variant): Integer;
+//получить строку в массиве данных (неотфильтрованном) по айди. нумерация с нуля.
+begin
+  Result := -1;
+  for var i := 0 to MemTableEh1.RecordsView.MemTableData.RecordsList.Count - 1 do
+    if MemTableEh1.RecordsView.MemTableData.RecordsList[i].DataValues[S.GetFieldNameOnly(FOpt.Sql.IdField), dvvValueEh] = AId then begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+function TFrDBGridEh.GetRawRowCurrent: Integer;
+//получить строку в массиве данных (неотфильтрованном), соотвеьтствующую текущей строке. нумерация с нуля.
+begin
+  Result := GetRawRowById(GetValue(FOpt.Sql.IdField));
 end;
 
 function TFrDBGridEh.GetFieldNameForSender(Sender: TObject): string;

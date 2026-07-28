@@ -47,11 +47,11 @@ begin
     ['is_office$i','v=1:400'],
     ['name$s','v=1:400:0:T'],
     ['id_head$i','v=1:40000'],
-    ['ids_editusers$s',''],
+    ['ids_editusers$s'],
     ['editusernames$s;0','v=1:4000:0', True],
     ['code$s','v=0:5:0::T'],
-    ['has_foreman$i',''],
-    ['active$i','']
+    ['has_foreman$i'],
+    ['active$i']
   ];
   View := 'v_w_departaments';
   Table := 'w_departaments';
