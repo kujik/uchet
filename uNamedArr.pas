@@ -600,7 +600,7 @@ begin
   if Length(AValues) <> FieldsCount then
     raise ENamedArrError.CreateFmt('TNamedArr: количество значений (%d) не совпадает с числом полей (%d)', [Length(AValues), FieldsCount]);
   System.SetLength(V, Count + 1);
-  for i := Count - 1 downto AIndex do
+  for i := Count - 2 downto AIndex do  //!!! -2 было -1
     V[i + 1] := V[i];
   System.SetLength(V[AIndex], FieldsCount);
   TVarDynArray(V[AIndex]) := TVarDynArray(System.Copy(AValues, 0, Length(AValues)));

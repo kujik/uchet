@@ -1876,7 +1876,7 @@ begin
     GetFormLTWH;
 end;
 
-procedure TFrmBasicMdi.FormClose(Sender: TObject; var Action: TCloseAction);
+(*procedure TFrmBasicMdi.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Cth.SetWaitCursor(False);
   try
@@ -1892,7 +1892,51 @@ begin
     Wh.ChildFormDestroy(Sender);
   except
   end;
+end;*)
+
+procedure TFrmBasicMdi.FormClose(Sender: TObject; var Action: TCloseAction);
+//!в случае диалогового окна сюда попадает два раза почему-то, сначала
+//с fsnormal потом с fsMDIChild
+var
+  i: Integer;
+  pr: Boolean;
+{procedure TCustomFormMy.VisibleChanging;
+begin
+  if (FormStyle = fsMDIChild) and Visible and (Parent = nil) then
+    raise EInvalidOperation.Create(SMDIChildNotVisible);
+end;}
+begin
+  //сбросим курсор выполения операции
+  if (not FFormNotCreatedByApplication) and (FormStyle = fsNormal) then begin
+    Settings.SaveWindowPos(Self, FormDoc);
+    if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
+      if not FOpt.NoDbLock then
+        Q.DBLock(False, FormDoc, VarToStr(id));
+    Wh.ChildFormDestroy(Sender);
+    Exit;
+  end;
+  Cth.SetWaitCursor(False);
+  try
+    // всегда разрушаем форму
+    Action := caFree;
+    //если задан идентификатор документа
+    if FormDoc <> '' then begin
+      if (Self.Left > mycHiddenFormLeft) then begin
+        //сохраним размеры и позицию окна
+        Settings.SaveWindowPos(Self, FormDoc);
+      end;
+      if (not FPreventShow) then begin
+        //отменим блокировку в БД по документу
+        if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
+          Q.DBLock(False, FormDoc, VarToStr(id));
+      end;
+    end;
+    FPreventShow:=True;
+    Wh.ChildFormDestroy(Sender);
+  except
+  end;
 end;
+
 
 procedure TFrmBasicMdi.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 var

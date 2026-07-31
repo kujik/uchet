@@ -178,7 +178,8 @@ uses
   //uFrmWGEdtTurv,
   uFrmOGedtEstimate,
   uFrmCDedtAccount,
-  uFrmWWedtWorkSchedule
+  uFrmWWedtWorkSchedule,
+  uFrmXDinputPwd
   ;
 
 
@@ -1420,6 +1421,8 @@ var
   i: Integer;
   st: string;
 begin
+FrmXDinputPwd.ShowDialogP(APPlication);
+
 exit;
 //TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
 //TasksS.ReportForActsWriteoffReceipt; exit;

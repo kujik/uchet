@@ -6,7 +6,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, StdCtrls,
   DBGridEhToolCtrls, MemTableDataEh, Db, ADODB, DataDriverEh,
-  Clipbrd, GridsEh, DBAxisGridsEh,
+  Clipbrd, GridsEh, DBAxisGridsEh, IOUtils,
   DBGridEh, Menus, Math, Buttons, PrnDbgEh, DBCtrlsEh, Types, DynVarsEh,
   uString, uData, uMessages, uForms, System.DateUtils,
   uDBOra, uFrmBasicMdi, uFrDBGridEh, uLabelColors, ufields, Vcl.Mask, uNamedArr,
@@ -176,6 +176,11 @@ type
     procedure SetEditButtons;
     procedure AfterLoadData;
     procedure AfterLoadTables;
+    procedure CheckDates;
+    function GetAddFiles(AMode: Integer): TNamedArr;
+    procedure ViewAddFile(AFrg: TFrDBGridEh);
+    procedure AddAddFile(AFrg: TFrDBGridEh; ATag: Integer);
+    function  GetPathToOrders: string;
     procedure RecalculateItemsPrices;
     procedure RecalculateSum;
     procedure CalculateFrgItemsRow(const AFieldName: string = '');
@@ -213,6 +218,9 @@ type
 //    procedure FrgItemsOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
     procedure FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
     procedure FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
+    //события грида внешних документов и грида файлов основания заказа
+    procedure FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
+    procedure FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
   public
   end;
 
@@ -224,6 +232,7 @@ implementation
 uses
   uOrders,
   uWindows,
+  uSys,
   D_Order_Complaints,
   uExcel2,
   uFrmOGselOrReglament
@@ -309,7 +318,7 @@ begin
   DefineFields;
   CreateButtons;
 
-  if not inherited then
+  if not inherited Prepare then
     Exit;
 
   LoadOrder;
@@ -327,6 +336,9 @@ begin
   PrepareFrgFiles;
 
   AfterLoadTables;
+
+  if Mode in [fView, fDelete] then
+    edt_templatename.Enabled := False;
 
 
   FWHBounds.X := 1000;
@@ -391,7 +403,7 @@ begin
     ''#13#10
     ]],
     '',
-    True
+    False //!
   );
   frmpcFinance.SetParameters(True, 'Финансы', [[
     ''#13#10
@@ -612,6 +624,7 @@ begin
   FrgRelatedOrders.Options := [];
   FrgRelatedOrders.Opt.SetFields([['id$i', '_id', '100'], ['ornum$s', 'Рекламации', '30;w', 'bt=показать паспорт']]);
   FrgRelatedOrders.SetInitData('select ornum from orders where rownum <= 1', []);
+  FrgRelatedOrders.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
   FrgRelatedOrders.Prepare;
   //FrgRelatedOrders.DbGridEh1.Options := FrgRelatedOrders.DbGridEh1.Options - [dgTitles];
   FrgRelatedOrders.RefreshGrid;
@@ -621,25 +634,44 @@ function TFrmOWOrder.PrepareFrgBasis: Boolean;
 begin
   FrgBasis.Width := 130;
   FrgBasis.Options := [];
-  FrgBasis.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
-  FrgBasis.Opt.SetTable('bcad_groups');
-//  FrgBasis.Opt.SetButtons(1, [[1001, True, 'Добавить', 'add'], [1002, True, 'Удалить', 'delete'], [1003, True, 'Переключить вид', 'view']], 2, pnlBasisButtons, 0, True);
+  FrgBasis.Opt.SetFields([
+    ['id$i', '_id', '100'],
+    ['mode$i', '*', '20', 'pic=1;3;2:1;6;7'],  //изменен - 1, добавлен - 2, удален - 3
+    ['name$s', 'Файл', '300;w', 'bt=Просмотреть'],
+    ['namenew$s', '_namenew', '100'],
+    ['onserver$i', '_onserver', '20']
+  ]);
+  FrgBasis.DbGridEh1.ReadOnly := True;
+  FrgBasis.DbGridEh1.Options := FrgBasis.DbGridEh1.Options - [dgTitles];
+  FrgBasis.OnButtonClick := FrgFilesButtonClick;
+  FrgBasis.OnCellButtonClick := FrgFilesCellButtonClick;
+  FrgBasis.Opt.SetGridOperations('uad');
   FrgBasis.Opt.SetButtons(-3, [[mbtAdd, True], [mbtDelete, True]], 2, nil, 0, True);
+  FrgBasis.SetInitData([]);
   FrgBasis.Prepare;
+  FrgBasis.SetInitData(GetAddFiles(2));
   FrgBasis.RefreshGrid;
 end;
 
 function TFrmOWOrder.PrepareFrgFiles: Boolean;
 begin
   FrgFiles.Options := [];
-  FrgFiles.Opt.SetFields([['id$i', '_id', '100'], ['name$s', 'Файл', '300;w', 'bt']]);
-  FrgFiles.Opt.SetGridOperations('uaid');
-  FrgFiles.Opt.SetTable('bcad_groups');
-  FrgFiles.SetInitData('*', []);
-//  FrgFiles.Opt.SetButtons(1, [[mbtAdd, True], [mbtDelete, True]], 2, pnlFilesButtons, 0, True);
-  FrgFiles.Opt.SetButtons(-3, [[mbtAdd, True], [mbtDelete, True]], 2, nil, 0, True);
-  FrgFiles.Prepare;
+  FrgFiles.Opt.SetFields([
+    ['id$i', '_id', '100'],
+    ['mode$i', '*', '20', 'pic=1;3;2:1;6;7'],  //изменен - 1, добавлен - 2, удален - 3
+    ['name$s', 'Файл', '300;w', 'bt=Просмотреть'],
+    ['namenew$s', '_namenew', '100'],
+    ['onserver$i', '_onserver', '20']
+  ]);
+  FrgFiles.DbGridEh1.ReadOnly := True;
   FrgFiles.DbGridEh1.Options := FrgFiles.DbGridEh1.Options - [dgTitles];
+  FrgFiles.OnButtonClick := FrgFilesButtonClick;
+  FrgFiles.OnCellButtonClick := FrgFilesCellButtonClick;
+  FrgFiles.Opt.SetGridOperations('uad');
+  FrgFiles.Opt.SetButtons(-3, [[mbtAdd, True], [mbtDelete, True]], 2, nil, 0, True);
+  FrgFiles.SetInitData([]);
+  FrgFiles.Prepare;
+  FrgFiles.SetInitData(GetAddFiles(1));
   FrgFiles.RefreshGrid;
 end;
 
@@ -1047,7 +1079,7 @@ ot:=F.GetProp('id_type2');
       F.SetProps('or_reference', True, fvtDsbl);
     end
     else if (FOrderTypes.G(ot, 'is_reference_allowed') = 1) then begin
-      //ссылка обязательна
+      //ссылка допустима
       F.SetProps('or_reference', '0:400:T', fvtVer);
       F.SetProps('or_reference', True, fvtDsbl);
     end
@@ -1137,10 +1169,12 @@ ot:=F.GetProp('id_type2');
     F.SetProps('c', False, fvtDsbl);
     F.SetProps('p', null, fvtVCurr);
     F.SetProps('p', False, fvtDsbl);
-    F.SetProps('dt_start', True, fvtDsbl);
+    F.SetProps('cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
+    F.SetProps('cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
+{    F.SetProps('dt_start', True, fvtDsbl);
     F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer);
     F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
-    F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
+    F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);}
   end
   else begin
     F.SetProps('c', '1:400::N', fvtVer);
@@ -1148,11 +1182,13 @@ ot:=F.GetProp('id_type2');
     F.SetProps('c', True, fvtDsbl);
     F.SetPropsFromCustom('p', PROP_NUM_VER_BEG, fvtVer);
     F.SetProps('p', True, fvtDsbl);    F.SetProps('p', True, fvtDsbl);
-    F.SetProps('dt_start', False, fvtDsbl);   //!!!
+    F.SetProps('cost_m_0;cost_d_0', True, fvtDsbl);
+{    F.SetProps('dt_start', False, fvtDsbl);   //!!!
     F.SetProps('dt_start', F.GetProp('dt_beg'), fvtVCurr);
     F.SetProps('dt_montage_beg', '=dt_otgr:=dt_otgr+1000000', fvtVer);
     F.SetProps('dt_montage_end', '=dt_montage_beg:=dt_montage_beg+1000000', fvtVer);
     F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0', True, fvtDsbl);
+    F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer); //!!!}
     //все скидки/наценки допускаем только для розничных продавцов
     if FOrganizations.G(org, 'is_wholesaler') = 1 then begin
       F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
@@ -1333,6 +1369,8 @@ begin
   end;
 
   OnCustomerControlsChange(Sender);
+
+  CheckDates;
 end;
 
 procedure TFrmOWOrder.EditButtonsClick(Sender: TObject; var Handled: Boolean);
@@ -1430,7 +1468,7 @@ end;
 procedure TFrmOWOrder.SetButtons;
 begin
   if (Mode = fView) and (not FIsTemplate) then
-    SetButtonsVisibilityAndArrange([], ['edt_templatename', 'chbIsVerifyed', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo])
+    SetButtonsVisibilityAndArrange([], ['edt_templatename1', 'chbIsVerifyed', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo])
   else if (Mode = fView) and (FIsTemplate) then
     SetButtonsVisibilityAndArrange([], ['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo])
   else if (Mode = fDelete) and (not FIsTemplate) then
@@ -1768,7 +1806,69 @@ begin
       FrgItems.SetValue('id_thn', -102);
   end;
   FrgItems.InvalidateGrid;
+end;
 
+procedure TFrmOWOrder.CheckDates;
+//проверка и установка доступности контролорв в блоке дат заказа
+//не получается автоматически управлять ошибкой полей, статусы сбрасываются,
+//поэтому вручную устанавливаем если нужно статус ошибки для блока!
+begin
+  //сбросим флаги ошибок
+  Cth.SetErrorMarker(dedt_dt_start, False);
+  Cth.SetErrorMarker(dedt_dt_otgr, False);
+  Cth.SetErrorMarker(dedt_dt_montage_beg, False);
+  Cth.SetErrorMarker(dedt_dt_montage_end, False);
+  var LOrganization := F.GetProp('id_organization').AsInteger;
+  //для шаблона или пустой организации выходим без проверки
+  if LOrganization = 0 then
+    Exit;
+  if FIsTemplate then
+    Exit;
+  if LOrganization = -1 then begin
+    //для производства монтаж недоступен (сбросим значения и зблокируем)
+    F.SetProps('dt_start', True, fvtDsbl);
+    F.SetProps('dt_montage_beg;dt_montage_end', False, fvtDsbl);
+    F.SetProps('dt_montage_beg;dt_montage_end', null, fvtVCurr);
+  end
+  else begin
+    F.SetProps('dt_start', True, fvtDsbl);   //!!!
+    F.SetProps('dt_start', F.GetProp('dt_beg'), fvtVCurr);
+    F.SetProps('dt_montage_beg;dt_montage_end', True, fvtDsbl);
+  end;
+  F.SetProps('dt_start;dt_montage_beg;dt_montage_end', '', fvtVer);
+  frmpcDates.SetError(False);
+  //каждая дата ниже в блоке должна быть не ранее той что идет выше.
+  //при этом даты монтажа могту быть не введены обе, а если введены то подчиняются общему правилук
+  if (not Cth.DteValueIsDate(dedt_dt_start)) or (dedt_dt_start.Value < dedt_dt_beg.Value) then begin
+    Cth.SetErrorMarker(dedt_dt_start, True);
+    frmpcDates.SetError(True);
+  end
+  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or (dedt_dt_otgr.Value < dedt_dt_start.Value) then begin
+    Cth.SetErrorMarker(dedt_dt_otgr, True);
+    frmpcDates.SetError(True);
+  end
+  else if Cth.DteValueIsDate(dedt_dt_montage_beg) and (dedt_dt_montage_beg.Value < dedt_dt_otgr.Value) then begin
+    Cth.SetErrorMarker(dedt_dt_montage_beg, True);
+    frmpcDates.SetError(True);
+  end
+  else if Cth.DteValueIsDate(dedt_dt_montage_beg) and (not Cth.DteValueIsDate(dedt_dt_montage_end) or (dedt_dt_montage_end.Value < dedt_dt_montage_beg.Value)) then begin
+    Cth.SetErrorMarker(dedt_dt_montage_end, True);
+    frmpcDates.SetError(True);
+  end
+  else if not Cth.DteValueIsDate(dedt_dt_montage_beg) and Cth.DteValueIsDate(dedt_dt_montage_end) then begin
+    Cth.SetErrorMarker(dedt_dt_montage_end, True);
+    frmpcDates.SetError(True);
+  end;
+end;
+
+procedure TFrmOWOrder.FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+begin
+  AddAddFile(Fr, Tag);
+end;
+
+procedure TFrmOWOrder.FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  ViewAddFile(Fr);
 end;
 
 procedure TFrmOWOrder.FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
@@ -1812,6 +1912,30 @@ begin
   end;
 end;
 
+function TFrmOWOrder.GetAddFiles(AMode: Integer): TNamedArr;
+//получим список файлов - внешних документов, уже загруженныых в папку заказа
+var
+  PathTofioles: string;
+  sa: TStringDynArray;
+begin
+  Result.Create(['id', 'name', 'mode', 'namenew', 'onserver']);
+  if FIsTemplate or not (Mode in [fEdit, fDelete, fView]) then
+    Exit;
+  PathTofioles := GetPathToOrders + '\' + F.GetProp('path') + '\' + S.IIf(AMode = 1, 'Внешние документы', 'Основание');
+  if not DirectoryExists(PathTofioles) then
+    Exit;
+  sa := TDirectory.GetFiles(PathTofioles, '*.*', TSearchOption.soTopDirectoryOnly);
+  for var FileName in sa do begin
+    Result.AddRow([1, ExtractFileName(FileName), 0, '', 1]);
+  end;
+end;
+
+function TFrmOWOrder.GetPathToOrders: string;
+//получим путь к файлам заказа на диске
+begin
+  Result := Module.GetPath_Order(IntToStr(YearOf(F.GetProp('dt_beg'))), F.GetProp('in_archive'));
+end;
+
 function TFrmOWOrder.Save: Boolean;
 //сохранение данных
 var
@@ -1821,6 +1945,7 @@ var
   FieldsSave2: string;
   UseTransaction: Boolean;
 begin
+  Result := true;Exit;//!!!
   Result := False;
   FieldsSave2 := '';
   CtrlValues2 := [];
@@ -1867,6 +1992,7 @@ begin
   inherited;
 //  Cth.SetButtonsAndPopupMenuCaptionEnabled(FPanelsBtn, mbtOk, AName, not HasError, '');
   Cth.SetButtonState(Self, mbtSave, null, not HasError, True);
+  Cth.SetButtonState(Self, mbtApprove, null, not HasError, True);
 end;
 
 function TFrmOWOrder.SaveOrderItems: Boolean;
@@ -1933,8 +2059,153 @@ begin
   end;
 end;
 
+procedure TFrmOWOrder.ViewAddFile(AFrg: TFrDBGridEh);
+//просмотр файла из внешних документов
+begin
+  //просмотр
+  if AFrg.GetRawCount = 0 then
+    Exit;
+  //ищем по новому пути файла (он будет задан если файл был добавлен в этот раз), если он пут то ищем в папке заказа
+  var st := AFrg.GetValueS('namenew');
+  if st = '' then
+    st := GetPathToOrders + '\' + F.GetProp('path') + S.IIf(AFrg = Frgfiles, '\Внешние документы\', 'Основание\') + AFrg.GetValueS('name');
+  Sys.OpenFileOrDirectory(ExtractFilePath(st), 'Файл не найден!', ExtractFileName(st));
+end;
+
+procedure TFrmOWOrder.AddAddFile(AFrg: TFrDBGridEh; ATag: Integer);
+//добавить/обновить/удалить файл из внешних документов
+begin
+  if Tag = mbtView then begin
+    ViewAddFile(AFrg);
+  end
+  else if ATag = mbtDelete then begin
+    //удаление
+    if AFrg.GetCount = 0 then
+      Exit;
+    //если файл уже на сервере, то спросим, и пометим как удаленный
+    if AFrg.GetValueI('onserver') = 1 then begin
+      if MyQuestionMessage('Удалить этот файл?') <> mrYes then
+        Exit;
+      AFrg.SetValue('mode', 3);
+    end
+    //если файл еще не на сервере, то просто удалим строку
+    else
+      AFrg.DeleteRow;
+  end
+  else if ATag = mbtAdd then begin
+    //добавление файла
+    //диалог выбора, можно несколько
+    MyData.OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
+    MyData.OpenDialog1.Filter := '';
+    //вышли по отмене в диалге
+    if not MyData.OpenDialog1.Execute then
+      Exit;
+    //пройдем по выбранным файлам
+    for var FileName in MyData.OpenDialog1.Files do begin
+      var FileNamefound := False;
+      //пройдем по строкам грида
+      for var i := 0 to AFrg.GetRawCount - 1 do begin
+        if AFrg.GetRawValueS('name', i) = ExtractFileName(FileName) then begin
+          //если найден в гриде по имени только файла
+          AFrg.SetRawValue('namenew', i, FileName);
+          //если был на сервере то проставим что обновлен
+          //а если не был и был добавлен ранее, то останется Добавлен, но будет заменен полный путь
+          if AFrg.GetRawValueI('onserver', i) = 1 then
+            AFrg.SetRawValue('mode', i, 1);
+          FileNamefound := True;
+          Break;
+        end;
+      end;
+      if not FileNamefound then begin
+        //не найден по короткому имени файла в гриде - добавим
+        AFrg.AddRow(True);
+        AFrg.SetRawValue('name', AFrg.GetCount -1, ExtractFileName(FileName));
+        AFrg.SetRawValue('namenew', AFrg.GetCount -1, FileName);
+        AFrg.SetRawValue('mode', AFrg.GetCount -1, 2);
+      end;
+    end;
+  end;
+end;
+
 
 end.
+
+
+
+
+procedure TDlg_Order.Pm_FilesClick(Sender: TObject);
+//обработка кликов контекстного меню грида внешних документов
+//просмотреть - добавить - удалить файл
+var
+  tag: Integer;
+  st: string;
+  i, j, RecNo: Integer;
+begin
+  tag := TMenuItem(Sender).tag;
+  if Tag = mbtView then begin
+    ViewAddFile;
+  end
+  else if Tag = mbtDelete then begin
+    //удаление
+    if MemTableEh2.RecordCount = 0 then
+      Exit;
+    //если файл уже на сервере, то спросим, и пометим как удаленный
+    if MemTableEh2.FieldByName('onserver').AsInteger = 1 then begin
+      if MyQuestionMessage('Удалить этот файл?') <> mrYes then
+        Exit;
+      MemTableEh2.Edit;
+      MemTableEh2.FieldByName('mode').Value := 'Удален';
+      MemTableEh2.Post;
+    end    //если файл еще не на сервере, то просто удалим строку
+    else begin
+      MemTableEh2.Edit;
+      MemTableEh2.Delete;
+      Mth.Post(MemTableEh2);
+    end;
+  end
+  else if Tag = mbtAdd then begin
+    //добавление файла
+    //диалог выбора, можно несколько
+    OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
+    OpenDialog1.Filter := '';
+    //вышли по отмене в диалге
+    if not OpenDialog1.Execute then
+      Exit;
+    RecNo := MemTableEh2.RecNo;
+    //пройдем по выбранным файлам
+    for i := 0 to OpenDialog1.Files.Count - 1 do begin
+      //пройдем по строкам грида
+      j := 1;  //если MemTableEh2.RecordCount=0 то не будет инициирющего присваивания в цикле j:= 1 !!!
+      for j := 1 to MemTableEh2.RecordCount do begin
+        MemTableEh2.RecNo := j;
+        if MemTableEh2.FieldByName('name').AsString = ExtractFileName(OpenDialog1.Files[i]) then begin
+          //если найден в гриде по имени только файла
+          MemTableEh2.Edit;
+          MemTableEh2.FieldByName('namenew').AsString := OpenDialog1.Files[i];
+          //если был на сервере то проставим что обновлен
+          //а если не был и был добавлен ранее, то останется Добавлен, но будет заменен полный путь
+          if MemTableEh2.FieldByName('onserver').AsInteger = 1 then
+            MemTableEh2.FieldByName('mode').AsString := 'Обновлен';
+          MemTableEh2.Post;
+          Break;
+        end;
+      end;
+      if j > MemTableEh2.RecordCount then begin
+        //не найден по короткому имени файла в гриде - добавим
+        MemTableEh2.Append;
+        MemTableEh2.FieldByName('name').AsString := ExtractFileName(OpenDialog1.Files[i]);
+        MemTableEh2.FieldByName('namenew').AsString := OpenDialog1.Files[i];
+        MemTableEh2.FieldByName('mode').AsString := 'Добавлен';
+        MemTableEh2.Post;
+      end;
+    end;
+    MemTableEh2.RecNo := RecNo;
+  end;
+end;
+
+
+
+
 
 
 
