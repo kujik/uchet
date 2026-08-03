@@ -995,7 +995,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 3
             Visible = True
           end
-          object cmb_Area: TDBComboBoxEh
+          object cmb_area: TDBComboBoxEh
             Left = 284
             Top = 80
             Width = 54
@@ -1679,7 +1679,11 @@ inherited FrmOWOrder: TFrmOWOrder
     ExplicitWidth = 1279
     inherited lblStatusBarR: TLabel
       Left = 1210
+      Height = 14
       ExplicitLeft = 1210
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

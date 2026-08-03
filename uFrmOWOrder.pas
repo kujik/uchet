@@ -1,4 +1,5 @@
-﻿unit uFrmOWOrder;
+﻿
+unit uFrmOWOrder;
 
 interface
 
@@ -44,7 +45,7 @@ type
     cmb_project: TDBComboBoxEh;
     edt_managername: TDBEditEh;
     cmb_or_reference: TDBComboBoxEh;
-    cmb_Area: TDBComboBoxEh;
+    cmb_area: TDBComboBoxEh;
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
     PHTotalSum: TPanel;
@@ -130,6 +131,8 @@ type
     FOrganizations: TNamedArr;
     //форматы стандартных изделий (смет)
     FEstimateFormats: TNamedArr;
+    //производственные площадки
+    FProdAreas: TNamedArr;
     //данные по стандартным изделиям для выбранного формата
     FStdItems: TNamedArr;
     //данные по покупателям
@@ -161,10 +164,11 @@ type
     procedure LoadComplaints;
     procedure LoadStdItems;
     procedure LoadKnsThn;
+    procedure AfterLoadOrder;
     procedure GetComplaintsString;
     procedure ChooseReglamernt;
-    procedure ChooseREference;
-    procedure SetOrderTypeOrOrganization;
+    procedure ChooseReference;
+    procedure SetOrderTypeOrOrganization(Sender: TObject);
     procedure SetCustomer(ALoadFirst: Boolean);
     procedure OnCustomerControlsChange(Sender: TObject);
     procedure OnCashTypeAccountChange;
@@ -177,10 +181,12 @@ type
     procedure AfterLoadData;
     procedure AfterLoadTables;
     procedure CheckDates;
-    function GetAddFiles(AMode: Integer): TNamedArr;
+    function  GetAddFiles(AMode: Integer): TNamedArr;
     procedure ViewAddFile(AFrg: TFrDBGridEh);
     procedure AddAddFile(AFrg: TFrDBGridEh; ATag: Integer);
     function  GetPathToOrders: string;
+    procedure GetOrderNumber;
+    procedure GetOrderPath;
     procedure RecalculateItemsPrices;
     procedure RecalculateSum;
     procedure CalculateFrgItemsRow(const AFieldName: string = '');
@@ -188,6 +194,7 @@ type
     function  SaveOrderItems: Boolean;
     procedure SaveCustomer;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
+    function  SetTaskForServer: Boolean;
 
 
 //    procedure VerifyBeforeSave; virtual;
@@ -233,6 +240,7 @@ uses
   uOrders,
   uWindows,
   uSys,
+  uTasks,
   D_Order_Complaints,
   uExcel2,
   uFrmOGselOrReglament
@@ -322,6 +330,7 @@ begin
     Exit;
 
   LoadOrder;
+  AfterLoadOrder;
   if not LoadOrderComboBoxes then
     Exit;
 
@@ -705,9 +714,10 @@ begin
     ['id$i'],
     ['id_itm;0'],
     ['sync_with_itm$i'],
-    ['year;0'],
-    ['num;0'],
-    ['path;0'],
+    ['year$i'],
+    ['prefix$s'],
+    ['num$i'],
+    ['path$s'],
     ['in_archive;0'],
     ['ch$s'],
     ['dt_end;0'],
@@ -726,16 +736,19 @@ begin
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
     ['id_type2$i', 'V=1:400'],
-    ['ornum$i;0'],
+    ['ornum$s', 't=d'],
     ['or_reference$s','t=td'],
     ['id_reglament$i'],
     ['reglament$s;0', 'V=1:400', 't=t'],
-    ['id_organization$i', 'V=1:400'],
+    ['id_organization$i', 'V=1:400', 't=t'],
     ['area$i', 'V=1:100', 't=t'],
     ['project$s', 'V=1:500::td', 't=t'],
+    ['id_format$i'],
     ['id_or_format_estimates$i', 'V=1:400'],
-    ['managername$s;0', 't=d'],
+    ['managername$s;0', 't=d', #0, User.GetName],
     ['launched_by_name$s;0', 't=d', #0, User.GetName],
+    ['id_manager$i', #0, User.GetId],
+    ['id_launched_by$i', #0, User.GetId],
     ['complaints$s;0', 't=td'],
     ['comm$s', 'v=0:4000::N', 't=t'],
     ['basis_text$s', 'v=0:4000::N', 't=t'],
@@ -791,70 +804,10 @@ begin
       ];
   F.PrepareDefineFieldsAdd;
   (*
-    ['', null, 'id', '', -1, null, -1],
-    ['', null, 'id_itm', '', -1, null, -1],
-    ['', null, 'sync_with_itm', 'sync_with_itm$i', -1, null, -1],
-    ['', null, 'year', '', -1, null, -1],
-    ['', null, 'num', '', -1, null, -1],
-    ['', null, 'ornum', '', -1, null, -1],
-    ['', null, 'path', '', -1, null, -1],
-    ['', null, 'in_archive', '', -1, null, -1],
-    ['', null, 'ch', 'ch$s', -1, null, -1],
-    ['', null, 'dt_end', '', -1, null, -1],
-    ['', null, 'dt_to_sgp', '', -1, null, -1],
-    ['', null, 'dt_from_sgp', '', -1, null, -1],
-    ['', null, 'ndsd', 'ndsd$f', -1, null, -1],
-    ['', null, 'id_status_itm', '', -1, null, -1],
-    ['', null, 'status_itm', '', -1, null, -1],
-    ['edt_ids_order_properties', null, 'ids_order_properties', 'ids_order_properties$s', 0, null, -1],
-    ['edt_id_reglament', null, 'id_reglament', 'id_reglament$i', 0, null, -1],
-    ['cmb_Organization', null, 'id_organization', 'id_organization$i', 1, null, 0],
-    ['cmb_Area', null, 'area', 'area$i', 1, null, 0],
-    ['edt_OrderNum', null, 'ornum', '', 1, null, 0],
-    ['cmb_OrderReference', null, 'or_reference', 'or_reference$s', 0, null, 0],
-    ['edt_Complaints', null, 'complaints', '', 1, null, 1],
-    ['cmb_Format', null, 'id_format', 'id_format$i', 1, null, 0],
-    ['cmb_EstimatePath', null, 'id_or_format_estimates', 'id_or_format_estimates$i', 1, null, 0],
-    ['cmb_CustomerName', null, 'customer', '', 2, null, 1],
-    ['cmb_CustomerMan', null, 'customerman', '', 2, null, 1],
-    ['edt_CustomerContacts',  null, 'customercontact', '', 2, null, 1],
-    ['cmb_CustomerLegalName', null, 'customerlegal', '', 0, null, 1],
-    ['edt_CustomerINN', null, 'customerinn', '', 0, null, 1],
-    ['edt_Account', null, 'account', 'account$s', 2, null, 1],
-    ['cmb_OrderType', null, 'id_type', 'id_type$i', 1, null, 0],
-    ['edt_Address', null, 'address', 'address$s', 2, null, 1],
-    ['dedt_Beg', Date, 'dt_beg', 'dt_beg$d', 1, null, -1],
-    ['dedt_Otgr', null, 'dt_otgr', 'dt_otgr$d', S.IIf(User.Role(rOr_D_Order_EditDtOtgr) or (FNewOrderType = 0), 1, -1), null, 0],
-    ['dedt_MontageBeg', null, 'dt_montage_beg', 'dt_montage_beg$d', 2, null, 1],
-    ['dedt_MontageEnd', null, 'dt_montage_end', 'dt_montage_end$d', 2, null, 1],
-    ['dedt_Change', null, 'dt_change', 'dt_change$d', 0, null, -1],
-    ['cmb_Project', null, 'project', 'project$s', 1, null, 0],
-    ['nedt_Items_0', null, 'cost_i_0', 'cost_i_0$f', 0, null, -1],
-    ['nedt_Items_M', null, 'm_i', 'm_i$f', 0, null, 1],
-    ['nedt_Items_D', null, 'd_i', 'd_i$f', 0, null, 1],
-    ['nedt_Items', null, 'cost_i', 'cost_i$f', 0, null, -1],
-    ['nedt_Items_NoSgp', null, 'cost_i_nosgp', 'cost_i_nosgp$f', 0, null, -1],
-    ['nedt_AC_0', null, 'cost_a_0', 'cost_a_0$f', 0, null, -1],
-    ['nedt_AC_M', null, 'm_a', 'm_a$f', 0, null, 1],
-    ['nedt_AC_D', null, 'd_a', 'd_a$f', 0, null, 1],
-    ['nedt_AC', null, 'cost_a', 'cost_a$f', 0, null, -1],
-    ['nedt_Montage_0', null, 'cost_m_0', 'cost_m_0$f', 0, null, 1],
-    ['nedt_Montage_M', null, 'm_m', 'm_m$f', 0, null, 1],
-    ['nedt_Montage_D', null, 'd_m', 'd_m$f', 0, null, 1],
-    ['nedt_Montage', null, 'cost_m', 'cost_m$f', 0, null, -1],
-    ['nedt_Trans_0', null, 'cost_d_0', 'cost_d_0$f', 0, null, 1],
-    ['nedt_Trans_M', null, 'm_d', 'm_d$f', 0, null, 1],
-    ['nedt_Trans_D', null, 'd_d', 'd_d$f', 0, null, 1],
-    ['nedt_Trans', null, 'cost_d', 'cost_d$f', 0, null, -1],
-    ['nedt_Sum', null, 'cost', 'cost$f', 0, null, -1],
-    ['nedt_SumWoNds', null, 'cost_wo_nds', 'cost_wo_nds$f', 0, null, -1],
-    ['nedt_Sum_Av', null, 'cost_av', 'cost_av$f', 0, null, 1],
-    ['cmb_CashType', null, 'cashtype_add', 'cashtype$i', 2, null, 1],
     ['edt_Manager', User.GetName, 'managername', '', 0, null, -1],
     ['mem_Comment', null, 'comm', 'comm$s', 0, null, 0],
     ['nedt_Attention', 0, 'attention', 'attention$i', 0, null, -1],
     ['', User.GetID, 'id_manager', 'id_manager$i', 0, null, -1]
-
   *)
   var va := F.GetPropValues('c',fvtCtrl);
 end;
@@ -888,7 +841,8 @@ begin
   );
 
   //производственные площадки
-  Q.QLoadToDBComboBoxEh('select shortname, id from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], cmb_Area, cntComboLK);
+  Q.QLoad('select shortname, id, order_prefix from ref_production_areas where active = 1 or id = :id$i order by id', [F.GetPropB('area')], FProdAreas);
+  Cth.AddToComboBoxEh(cmb_area, FProdAreas.GetCol('shortname'), FProdAreas.GetCol('id'));
 
   //проекты
   Q.QLoadToDBComboBoxEh('select name from or_projects where (active = 1 or name = :name$s) order by name', [F.GetPropB('project')], cmb_Project, cntComboE);
@@ -1036,7 +990,7 @@ begin
   DynParams['readonly'].AsString := S.IIfV(Mode in [fDelete, fView], '1', '0');
 end;
 
-procedure TFrmOWOrder.SetOrderTypeOrOrganization;
+procedure TFrmOWOrder.SetOrderTypeOrOrganization(Sender: TObject);
 //установим поля, зависящие от типа заказа и от организации
 var
   i, ot, org, est: Integer;
@@ -1047,7 +1001,6 @@ begin
   var LOrderType := F.GetProp('id_type2').AsInteger;
   var LOrganization := F.GetProp('id_organization').AsInteger;
   var LEstimate := F.GetProp('id_or_format_estimates').AsInteger;
-ot:=F.GetProp('id_type2');
   ot := FOrderTypes.FindFirst('id', F.GetProp('id_type2'));
   va2 := [];
   //покажем/скроем информацию по рекламачии
@@ -1098,12 +1051,14 @@ ot:=F.GetProp('id_type2');
     F.SetProp('id_organization', null)
   else
     F.SetProp('id_organization', LOrganization);
-
+  if (Sender = cmb_id_organization) or (LOrganization <> F.GetProp('id_organization').AsInteger) then begin
+    GetOrderNumber;
+  end;
   LOrganization := F.GetProp('id_organization').AsInteger;
   org := FOrganizations.FindFirst('id', LOrganization);
   //установим список доступных форматов стандартных изделий (они же форматы смет)
   va2 := [];
-  if (LOrderType = 0) or (LOrganization = 0) then begin
+  if (LOrderType = 0) or ((LOrganization = 0) and not FIsTemplate) then begin
 
   end;
   var LUsedEstimateFormatFound := False;
@@ -1136,9 +1091,9 @@ ot:=F.GetProp('id_type2');
         LUsedEstimateFormatFound := True;
     end;
   end;
-  if (not LUsedEstimateFormatFound) and (FrgItems.GetRawCount > 0) then begin
+  if (not LUsedEstimateFormatFound) and (FrgItems.GetRawCount > 0) and (FUsedEstimateFormat > -1) then begin
     //если формат, по кторому заполнена таблица, не найден в списке доступныых, то добавим его последней позицией, и сделаем ошибочным
-    va2 := va2 + [[FEstimateFormats.G(FEstimateFormats.FindFirst('id', LUsedEstimateFormatFound), 'name'), FUsedEstimateFormat]];
+    va2 := va2 + [[FEstimateFormats.G(FEstimateFormats.FindFirst('id', FUsedEstimateFormat), 'name'), FUsedEstimateFormat]];
     F.SetProp('id_or_format_estimates', '1000:1001', fvtVer);
   end
   else
@@ -1146,7 +1101,7 @@ ot:=F.GetProp('id_type2');
   //загрузим список
   Cth.AddToComboBoxEh(cmb_id_or_format_estimates, va2);
   //если таблица заполнена, то установим формат равным формату в талице и заблокируем поле выбора формата сметы
-  if FrgItems.GetRawCount > 0 then begin
+  if (FrgItems.GetRawCount > 0) and (FUsedEstimateFormat > -1) then begin
     //F.SetProp('id_or_format_estimates', False, fvtDsbl);
     LEstimate := FUsedEstimateFormat;
   end;
@@ -1358,7 +1313,7 @@ begin
     SetVisPanels(Sender);
 
   if (Sender = cmb_id_type2) or (Sender = cmb_id_organization) then begin
-    SetOrderTypeOrOrganization;
+    SetOrderTypeOrOrganization(Sender);
   end;
   if Sender = cmb_cashtype_account then
     OnCashTypeAccountChange;
@@ -1377,16 +1332,17 @@ procedure TFrmOWOrder.EditButtonsClick(Sender: TObject; var Handled: Boolean);
 begin
 //  if (TEditButtonControlEh(Sender).Owner = edt_reglament) then //and (TEditButtonControlEh(Sender).ButtonImages.NormalIndex = 39) then
   if (TEditButtonControlEh(Sender).Owner = cmb_or_reference) then
-    ChooseREference;
+    ChooseReference;
   if (TEditButtonControlEh(Sender).Owner = edt_reglament) then
     ChooseReglamernt;
 end;
 
-procedure TFrmOWOrder.ChooseREference;
+procedure TFrmOWOrder.ChooseReference;
+//выбор заказа, к которому привязан этот заказ, в диалоге
 begin
-    Wh.ExecReference(myfrm_J_Orders_SEL_1, Self, [myfoDialog, myfoModal], VarArrayOf([]));
-    if Length(Wh.SelectDialogResult) > 0 then
-      cmb_or_reference.Text := Wh.SelectDialogResult2[0][2];
+  Wh.ExecReference(myfrm_J_Orders_SEL, Self, [myfoDialog, myfoModal], 0);
+  if Length(Wh.SelectDialogResult) > 0 then
+    cmb_or_reference.Text := Wh.SelectDialogResult[1];
 end;
 
 
@@ -1489,15 +1445,20 @@ end;
 
 
 procedure TFrmOWOrder.AfterLoadData;
-//вызывается в препаре после загрузки данных и родительского метожда
+//вызывается в препаре после загрузки данных и родительского метода
 begin
   FUsedEstimateFormat := F.GetPropB('id_or_format_estimates').AsIntegerM;
   SetAreasCaptions;
   SetEditButtons;
   F.CopyPropToCustom('', fvtVer, PROP_NUM_VER_BEG);
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);
-  SetOrderTypeOrOrganization;
+  SetOrderTypeOrOrganization(nil);
   SetCustomer(True);
+
+  //сгенерируем номер заказа, если это не редактирование (просмотр и удаление отсеиваются в методе)
+  if Mode <> fEdit then
+    GetOrderNumber;
+
   //if not (Mode in [fAdd, fDelete, fView]) then
   //  LoadStdItems;
 
@@ -1517,7 +1478,7 @@ end;
 procedure TFrmOWOrder.AfterLoadTables;
 //вызывается при инициализации после загрузки данных в таблицы
 begin
-  SetOrderTypeOrOrganization;
+  SetOrderTypeOrOrganization(nil);
   RecalculateItemsPrices;
   RecalculateSum;
 end;
@@ -1945,8 +1906,18 @@ var
   FieldsSave2: string;
   UseTransaction: Boolean;
 begin
-  Result := true;Exit;//!!!
+  if MyQuestionMessage('Сохранить заказ?') <> mrYes then begin
+    Result := true;
+    Exit;//!!!
+  end;
   Result := False;
+  //сгенерируем номер заказа
+  var LOrNum := F.GetProp('ornum').AsString;
+  GetOrderNumber;
+  //получим наименование папки заказа
+  GetOrderPath;
+  //прочие поля
+  F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
   FieldsSave2 := '';
   CtrlValues2 := [];
   //получим поля и их значения, по тем для которых указано сохранение
@@ -1959,10 +1930,16 @@ begin
   Q.QBeginTrans(True);
   SaveCustomer;
   res := Q.QSave(Q.QFModeToIUD(Mode), 'orders', '', FieldsSave2, CtrlValues2);
+  //получим айди заказа в случае его создания
   if not (Mode in [fEdit, fDelete]) then
     ID := res;
+  //сохраним табличную часть
   SaveOrderItems;
+  //фиксиоруем транзакцию
   Result := Q.QCommitTrans;
+  //предупреждение об изменении номера заказа
+  if Result and not FIsTemplate and (Mode in [fAdd, fCopy]) and (LOrNum <> F.GetProp('ornum')) then
+    MyInfoMessage('Внимание!'#13#10'Номер заказа был изменен с ' + LOrNum + ' на ' + F.GetProp('ornum'), 1);
 end;
 
 procedure TFrmOWOrder.SaveCustomer;
@@ -1985,6 +1962,25 @@ begin
     F.SetProp('id_customer_contact', LCustomer[6], fvtVCurr);
     F.SetProp('id_customer_org', LCustomer[7], fvtVCurr);
   end;
+end;
+
+procedure TFrmOWOrder.GetOrderNumber;
+//получим номер для создаваемого заказа, исходя из выбранной организации и текущей даты
+begin
+  if FIsTemplate or (Mode in [fView, fDelete]) then
+    Exit;
+  if F.GetProp('id_organization').AsInteger = 0 then begin
+    F.SetProp('ornum', '');
+    Exit;
+  end;
+  var LOrNum := F.GetPropB('ornum').AsString;
+  //получим следующий доступный для заказа по этой организации номер, если только это не редактирование и организация не изменилась
+  if not ((Mode = fEdit) and (F.GetProp('id_organization').AsInteger = F.GetPropB('id_organization').AsInteger)) then
+    LOrNum := Q.QLoadValue('select f_order_getnewnum(:dt$d, :id_org$i) from dual', [Date, Cth.GetControlValue(cmb_id_organization)]).AsString;
+  F.SetProp('ornum', LOrNum);
+  F.SetProp('year', YearOf(Date));
+  F.SetProp('prefix', Copy(LOrNum, 1, Length(LOrNum) - 6));
+  F.SetProp('num', Copy(LOrNum, Length(LOrNum) - 3, 4));
 end;
 
 procedure TFrmOWOrder.Verify(Sender: TObject; onInput: Boolean = False);
@@ -2127,81 +2123,134 @@ begin
   end;
 end;
 
-
-end.
-
-
-
-
-procedure TDlg_Order.Pm_FilesClick(Sender: TObject);
-//обработка кликов контекстного меню грида внешних документов
-//просмотреть - добавить - удалить файл
-var
-  tag: Integer;
-  st: string;
-  i, j, RecNo: Integer;
+procedure TFrmOWOrder.AfterLoadOrder;
 begin
-  tag := TMenuItem(Sender).tag;
-  if Tag = mbtView then begin
-    ViewAddFile;
-  end
-  else if Tag = mbtDelete then begin
-    //удаление
-    if MemTableEh2.RecordCount = 0 then
-      Exit;
-    //если файл уже на сервере, то спросим, и пометим как удаленный
-    if MemTableEh2.FieldByName('onserver').AsInteger = 1 then begin
-      if MyQuestionMessage('Удалить этот файл?') <> mrYes then
-        Exit;
-      MemTableEh2.Edit;
-      MemTableEh2.FieldByName('mode').Value := 'Удален';
-      MemTableEh2.Post;
-    end    //если файл еще не на сервере, то просто удалим строку
-    else begin
-      MemTableEh2.Edit;
-      MemTableEh2.Delete;
-      Mth.Post(MemTableEh2);
-    end;
-  end
-  else if Tag = mbtAdd then begin
-    //добавление файла
-    //диалог выбора, можно несколько
-    OpenDialog1.Options := [ofAllowMultiSelect, ofFileMustExist];
-    OpenDialog1.Filter := '';
-    //вышли по отмене в диалге
-    if not OpenDialog1.Execute then
-      Exit;
-    RecNo := MemTableEh2.RecNo;
-    //пройдем по выбранным файлам
-    for i := 0 to OpenDialog1.Files.Count - 1 do begin
-      //пройдем по строкам грида
-      j := 1;  //если MemTableEh2.RecordCount=0 то не будет инициирющего присваивания в цикле j:= 1 !!!
-      for j := 1 to MemTableEh2.RecordCount do begin
-        MemTableEh2.RecNo := j;
-        if MemTableEh2.FieldByName('name').AsString = ExtractFileName(OpenDialog1.Files[i]) then begin
-          //если найден в гриде по имени только файла
-          MemTableEh2.Edit;
-          MemTableEh2.FieldByName('namenew').AsString := OpenDialog1.Files[i];
-          //если был на сервере то проставим что обновлен
-          //а если не был и был добавлен ранее, то останется Добавлен, но будет заменен полный путь
-          if MemTableEh2.FieldByName('onserver').AsInteger = 1 then
-            MemTableEh2.FieldByName('mode').AsString := 'Обновлен';
-          MemTableEh2.Post;
-          Break;
-        end;
-      end;
-      if j > MemTableEh2.RecordCount then begin
-        //не найден по короткому имени файла в гриде - добавим
-        MemTableEh2.Append;
-        MemTableEh2.FieldByName('name').AsString := ExtractFileName(OpenDialog1.Files[i]);
-        MemTableEh2.FieldByName('namenew').AsString := OpenDialog1.Files[i];
-        MemTableEh2.FieldByName('mode').AsString := 'Добавлен';
-        MemTableEh2.Post;
-      end;
-    end;
-    MemTableEh2.RecNo := RecNo;
+  if Mode in [fCopy, fAdd] then begin
+    F.SetProp('id_maanager', User.GetId, fvtVBeg);
+    F.SetProp('id_maanager', User.GetId);
+    F.SetProp('maanagername', User.GetName, fvtVBeg);
+    F.SetProp('maanagername', User.GetName);
+    F.SetProp('id_launched_by', User.GetId, fvtVBeg);
+    F.SetProp('id_launched_by', User.GetId);
+    F.SetProp('launched_by', User.GetName, fvtVBeg);
+    F.SetProp('launched_by', User.GetName);
   end;
 end;
+
+procedure TFrmOWOrder.GetOrderPath;
+//получим наименование каталога заказа
+begin
+  var LArea := FProdAreas.FindFirst('id', F.GetProp('area'));
+  F.SetProp('path',
+    FProdAreas.G(LArea, 'order_prefix') +
+    F.GetProp('ornum') + ' ' +
+    S.CorrectFileName(Trim(S.IIfV(cmb_customer.Text = '', 'Производство', cmb_customer.Text)) + ' ' + Trim(cmb_project.Text))
+  );
+end;
+
+function TFrmOWOrder.SetTaskForServer: Boolean;
+//создадим задачу для серверного процесса
+var
+  st, FilesToCopy, FilesToDelete, BasisToCopy, BasisToDelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld: string;
+  i: Integer;
+begin
+  //SetOrderSaveStatusText('Передача данных на сервер');
+  Result := True;
+  if FIsTemplate then
+    Exit;
+  Result := False;
+  try
+    Slashes := '';
+    FilesToCopy := '';
+    FilesToDelete := '';
+    if Mode <> fDelete then begin
+      //список слешей для создания каталогов, в формате 001, 005...
+      //создаем только если колво не 0 и не с СГП,
+      for i := 0 to FrgItems.GetRawCount - 1 do
+        if (FrgItems.GetRawValueF('qnt', i) <> 0) and (FrgItems.GetRawValueI('sgp', i) <> 1) then
+          S.ConcatStP(Slashes, S.Right('0000' + IntToStr(i + 1), 3) + ' ' + S.CorrectFileName(S.IIFStr(FrgItems.GetRawValueS('prefix', i) <> '', FrgItems.GetRawValueS('prefix', i) + '_', '') + Trim(FrgItems.GetRawValueS('name', i))), #13#10);
+      //получим поля файлов внешних документов для копипрования на сервер
+      for i := 0 to FrgFiles.GetRawCount - 1 do begin
+        if FrgItems.GetRawValueI('mode', i) = 3 then
+          S.ConcatStP(FilesToDelete, FrgItems.GetRawValueS('name', i), #13#10)
+        else if FrgItems.GetRawValueI('mode', i) <> 0 then
+          S.ConcatStP(FilesToCopy, FrgItems.GetRawValueS('name', i), #13#10);
+      end;
+      //получим поля файлов основания для копипрования на сервер
+      for i := 0 to FrgBasis.GetRawCount - 1 do begin
+        if FrgBasis.GetRawValueI('mode', i) = 3 then
+          S.ConcatStP(BasisToDelete, FrgBasis.GetRawValueS('name', i), #13#10)
+        else if FrgBasis.GetRawValueI('mode', i) <> 0 then
+          S.ConcatStP(BasisToCopy, FrgBasis.GetRawValueS('name', i), #13#10);
+      end;
+    end;
+    Addr := Tasks.GetMailingAddr(TASK_MAILING_ORDERS);
+    var LOrderPath := F.GetProp('poath').AsString;
+    if Mode = fDelete then begin
+      Subj := 'Удален заказ ' + LOrderPath;
+      if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
+        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', LOrderPath], ['in_archive', F.GetProp('in_archive')], ['year', F.GetProp('year')], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
+      else
+        TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
+    end
+    else begin
+      if Mode = fEdit then
+        Subj := 'Изменен заказ'
+      else
+        Subj := 'Создан заказ';
+      Subj := Orders.GetSubject(Subj, '', ID, null);
+      if Mode = fEdit then begin
+        st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetPropB('area')]));
+        PspNameOld := F.GetPropB('path') + '.xlsx';
+        Delete(PspNameOld, 1, length(st));
+      end
+      else
+        PspNameOld := '';
+      st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetProp('area')]));
+      PspName := LOrderPath + '.xlsx';
+      Delete(PspName, 1, length(st));
+      //создадим таскдир
+      TaskDir := Tasks.CreateTaskRoot(mytskopToPassportChange, [
+        ['directory', LOrderPath],
+        ['old-directory', F.GetPropB('path').AsString],
+        ['in_archive', F.GetPropB('in_archive').AsString],
+        ['year', YearOf(dedt_dt_beg.Value)],
+        ['passport', PspName],
+        ['old-passport', PspNameOld],
+        ['subject', Subj],
+        ['to', Addr],
+        ['body', ''],//DifferencesText],
+        ['files-to-send', PspName],
+        ['files-to-copy', FilesToCopy],
+        ['files-to-delete', FilesToDelete],
+        ['slashes', Slashes]
+        ],
+        False, False
+      );
+      //скопируем паспорт заказа из временного файла в каталог задачи
+      CopyFile(pWideChar(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
+      //удалим временный файл паспорта
+      DeleteFile(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx');
+      //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
+      for i := 0 to FrgFiles.GetRawCount - 1 do begin
+        if FrgItems.GetRawValueI('mode',i) in [1, 2] then
+          if FileExists(FrgItems.GetRawValueS('namenew', i)) then
+            CopyFile(pWideChar(FrgItems.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgItems.GetRawValueS('name',i)), True);
+      end;
+      for i := 0 to FrgFiles.GetRawCount - 1 do begin
+        if FrgItems.GetRawValueI('mode',i) in [1, 2] then
+          if FileExists(FrgItems.GetRawValueS('namenew', i)) then
+            CopyFile(pWideChar(FrgItems.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgItems.GetRawValueS('name',i)), True);
+      end;
+    end;
+    //отправим задачу на выполнение
+    Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
+    Result := True;
+  except
+  end;
+end;
+
+end.
 
 
 
@@ -2292,21 +2341,111 @@ begin
 
 end;
 
-    if Mode <> fDelete then
-      if Trim(cmb_CustomerName.Text) = '' then begin
-        Customer := [null, null, null, null, null, null, null, null];
-      end
-      else begin
-        Customer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_CustomerName.Text, cmb_CustomerMan.Text, edt_CustomerContacts.Text, cmb_CustomerLegalName.Text, edt_CustomerINN.Text, -1, -1, -1]);
-        if Length(Customer) = 0 then
-          Break;
-        Fields := Fields + ';id_customer$i;id_customer_contact$i;id_customer_org$i';
-        Values := Values + [Customer[5], Customer[6], Customer[7]];
-      //получим признак Оптовый покупатель
-        IsCustomerWholesale := Q.QLoadValue('select wholesale from ref_customers where id = :id$i', [Customer[5]]) = 1;
+function TDlg_Order.SetTask: Boolean;
+//создадим задачу для серверного процесса
+//в случае удаления делаем сейчас просто рассылку, не затрагивая диск Z
+var
+  st, st1, filesadd, filesdelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld: string;
+  i, j, RecNo: Integer;
+begin
+  SetOrderSaveStatusText('Передача данных на сервер');
+  if IsTemplate then begin
+    Result := True;
+    Exit;
+  end;
+  Result := False;
+  try
+    Slashes := '';
+    filesadd := '';
+    filesdelete := '';
+    if Mode <> fDelete then begin
+    //список слешей для создания каталогов, в формате 001, 005...
+    //создаем только если колво не 0, не с СГП, и не д/к
+      RecNo := MemTableEh1.RecNo;
+      for i := 1 to MemTableEh1.RecordCount do begin
+        MemTableEh1.RecNo := i;
+        if (S.NNum(MemTableEh1.FieldByName('qnt').Value) <> 0) and (S.NNum(MemTableEh1.FieldByName('sgp').Value) <> 1) and (S.NNum(MemTableEh1.FieldByName('resale').Value) <> 1) then
+          S.ConcatStP(Slashes, RightStr('0000' + IntToStr(i), 3) + ' ' + S.CorrectFileName(S.IIFStr(MemTableEh1.FieldByName('prefix').AsString <> '', MemTableEh1.FieldByName('prefix').AsString + '_', '') + Trim(MemTableEh1.FieldByName('name').AsString)), #13#10);
       end;
+      MemTableEh1.RecNo := RecNo;
+    //получим поля файлов для удаления и копирования на сервер
+      RecNo := MemTableEh2.RecNo;
+      for i := 1 to MemTableEh2.RecordCount do begin
+        MemTableEh2.RecNo := i;
+        if MemTableEh2.FieldByName('mode').AsString = 'Удален' then
+          S.ConcatStP(filesdelete, MemTableEh2.FieldByName('name').AsString, #13#10)
+        else if MemTableEh2.FieldByName('mode').AsString <> '' then
+          S.ConcatStP(filesadd, MemTableEh2.FieldByName('name').AsString, #13#10);
+      end;
+      MemTableEh2.RecNo := RecNo;
+    end;
+    Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [1]));
+    if Mode = fDelete then begin
+      Subj := 'Удален заказ ' + OrderPath;
+      if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
+        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', OrderPath], ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])], ['year', YearOf(dedt_Beg.Value)], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
+      else
+        TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
+    end
+    else begin
+      if Mode = fEdit then
+        Subj := 'Изменен заказ'
+      else
+        Subj := 'Создан заказ';
+      Subj := Orders.GetSubject(Subj, '', ID, null);
+      if Mode = fEdit then begin
+        st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cBegValue]]));
+        PspNameOld:= FieldsArr[GetFieldsArrPos('path'), cBegValue] + '.xlsx';
+        Delete(PspNameOld, 1, length(st));
+      end
+      else PspNameOld:= '';
+      st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]]));
+      PspName:= OrderPath + '.xlsx';
+      Delete(PspName, 1, length(st));
+//exit;
+    //создадим таскдир
+      TaskDir := Tasks.CreateTaskRoot(mytskopToPassportChange, [
+        ['directory', OrderPath],
+        ['old-directory', S.NSt(FieldsArr[GetFieldsArrPos('path')][cBegValue])],
+        ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])],
+        ['year', YearOf(dedt_Beg.Value)],
+        ['passport', PspName],
+        ['old-passport', PspNameOld],
+        ['subject', Subj],
+        ['to', Addr],
+        ['body', DifferencesText],
+        ['files-to-send', PspName],
+        ['files-to-copy', filesadd],
+        ['files-to-delete', filesdelete],
+        ['slashes', Slashes]  //    ['', ],
+        ],
+        False, False
+      );
+    //скопируем паспорт заказа из временного файла в каталог задачи
+      CopyFile(pWideChar(Sys.GetWinTemp + '\' + OrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
+    //удалим временный файл паспорта
+      DeleteFile(Sys.GetWinTemp + '\' + OrderPath + '.xlsx');
+    //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
+      for i := 1 to MemTableEh2.RecordCount do begin
+        MemTableEh2.RecNo := i;
+        if (MemTableEh2.FieldByName('mode').AsString = 'Добавлен') or (MemTableEh2.FieldByName('mode').AsString = 'Обновлен') then
+          if FileExists(MemTableEh2.FieldByName('namenew').AsString) then
+            CopyFile(pWideChar(MemTableEh2.FieldByName('namenew').AsString), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + MemTableEh2.FieldByName('name').AsString), True);
+      end;
+    end;
+  //отправим задачу на выполнение
+    Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
+    Result := True;
+  except
+  end;
+end;
 
 
-проверку дат, не рабюооает автомат
+
+
+
++++проверку дат, не рабюооает автомат
 ндс при наличке?
-какие суммы нужны в шапки, без скидок они без ндс?
+++какие суммы нужны в шапки, без скидок они без ндс?
+сейчас в шаблоне нужно выбирать организацию обязательно, иначе не будет списка форамтов. может выдвать весь список форматов в шаблоне?
+  также в старых шаблонах мог быть не выбран тип заказа, сейчас здесь в результате встанет плановый заказ.

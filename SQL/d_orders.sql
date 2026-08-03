@@ -613,6 +613,7 @@ select
   pa.shortname as area_short,
   decode(o.wholesale, 1, 'опт', 2, 'розница', '') as wholesalename,
   f.name as format,
+  f.name || ' [' || e.name || ']' as format_fullname,
   ob.dt_beg as ref_dt_beg,
   ob.dt_otgr as ref_dt_otgr,
   case when o.cashtype = 1 and o.account is null then 0 else o.cashtype end as cashtypeex,
@@ -675,6 +676,7 @@ from
   ref_customer_contact rcc,
   ref_customer_legal rcl,
   or_formats f,
+  or_format_estimates e,
   ref_production_areas pa,
   adm_users au,
   adm_users au2,
@@ -695,6 +697,7 @@ where
   and rcc.id (+) = o.id_customer_contact
   and rcl.id (+) = o.id_customer_org
   and f.id (+) = o.id_format
+  and e.id_format (+) = f.id
   and au.id (+) = o.id_manager
   and au2.id (+) = o.id_launched_by
   and pa.id (+) = o.area

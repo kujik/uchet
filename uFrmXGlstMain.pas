@@ -1253,7 +1253,8 @@ v:=True;
       ['id$i','_id','40'],
       ['dt_beg$d','Дата создания','80'],
       ['templatename$s','Шаблон','180'],
-      ['format$s','Формат паспорта','130'],
+      ['typename$s','Тип заказа','280'],
+      ['format_fullname$s','Формат паспорта','200'],
       ['project$s','Проект','200'],
       ['active$i','Исполь-'#13#10'зуется','80','chb','e', User.Role(rOr_R_Or_Templates_Ch)]
     ]);
@@ -2627,6 +2628,8 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Bcad_Units, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Nomencl then
       Wh.ExecDialog(myfrm_Dlg_EditNomenclatura, Self, [], fMode, Fr.ID, null);
+ if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fView) then
+    TDlg_Order.ShowDialog(Self, 'od11111', fEdit, Fr.ID, [myfoSizeable, myfoDialog, myfoEnableMaximize], 1);  //!!!
     if FormDoc = myfrm_R_OrderTemplates then
       Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fMode, Fr.ID, 1);
     if FormDoc = myfrm_R_ComplaintReasons then

@@ -92,6 +92,9 @@ type
     procedure ReportForNegativeQuantityOnStocks;
     //отчет по позициям на СГП (стандартные изделия) с отрицательным текущим количеством
     procedure ReportForNegativeQuantityOnSgp;
+    //отчет по просроченным заказам
+    //(которые не готовы после наступления плановой даты отгрузки)
+    procedure ReportForOverdueOrders(AForProductionOrders: Boolean);
   end;
 
 var
@@ -207,6 +210,8 @@ begin
     ReportForActsWriteoffReceipt;
     ReportForNegativeQuantityOnStocks;
     ReportForNegativeQuantityOnSgp;
+    ReportForOverdueOrders(True);
+    ReportForOverdueOrders(False);
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
       ReportForYesterdayOrders(5);
@@ -947,6 +952,50 @@ begin
   if HTML <> '' then
     Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
 end;
+
+
+procedure TTasksS.ReportForOverdueOrders(AForProductionOrders: Boolean);
+//отчет по просроченным заказам
+//(которые не готовы после наступления плановой даты отгрузки)
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Просроченные ' + S.IIf(AForProductionOrders, 'производственные', 'отгрузочные') + ' заказы';
+  TopSt := Title + ' на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['ornum$s', 'Заказ', '90'],
+    ['dt_beg$d', 'Дата создания', '100'],
+    ['customer$s', 'Покупатель', '300;h'],
+    ['project$s', 'Проект', '300;h'],
+    ['dt_otgr$d', 'Плановая дата отгрузки', ''],
+    ['dt_to_prod$d', 'Запущен в производство', '100'],
+    ['dt_to_sgp$d', 'Принят на СГП', '100'],
+    ['dt_from_sgp$d', 'Отгружен с СГП', '100']
+  ];
+  Q.QLoad(Q.QGetSql('A',
+    S.IIf(AForProductionOrders, 'v_rep_overdue_production_orders', 'v_rep_overdue_shipment_orders'),
+    Fields.Col(0).Implode(';')) + ' where dt_control is null order by dt_beg, ornum', [], na
+  );
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := TopSt + ' отсутствуют.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');         //!!!по какой рассылке сделать
+end;
+
 
 
 end.

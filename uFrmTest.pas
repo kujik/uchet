@@ -1421,6 +1421,7 @@ var
   i: Integer;
   st: string;
 begin
+TasksS.ReportForOverdueOrders(False);Exit;
 FrmXDinputPwd.ShowDialogP(APPlication);
 
 exit;
