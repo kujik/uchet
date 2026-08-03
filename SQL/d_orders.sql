@@ -840,6 +840,7 @@ create table order_items (
   dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_doc date,                         --дата выдачи бумажных документов по заказу технологами
+  ch varchar2(4000),                   --имена полей чере запятую, которые были изменены при редактироывание
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
   constraint fk_order_items_kns foreign key (id_kns) references adm_users(id),

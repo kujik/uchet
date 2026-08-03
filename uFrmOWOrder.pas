@@ -195,6 +195,7 @@ type
     procedure SaveCustomer;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     function  SetTaskForServer: Boolean;
+    procedure GetFrgItemsRowChanges;
 
 
 //    procedure VerifyBeforeSave; virtual;
@@ -346,8 +347,11 @@ begin
 
   AfterLoadTables;
 
-  if Mode in [fView, fDelete] then
+  edt_templatename.Visible := FIsTemplate;
+  if Mode in [fView, fDelete] then begin
     edt_templatename.Enabled := False;
+    SetControlsEditable([], False);
+  end;
 
 
   FWHBounds.X := 1000;
@@ -534,6 +538,7 @@ begin
 end;
 
 function TFrmOWOrder.PrepareFrgItems: Boolean;
+//параметры грида изделдий заказа
 var
   i, j: integer;
   va2: TVarDynArray2;
@@ -541,10 +546,12 @@ var
 begin
   Result := False;
   FrgItems.Options := FrDBGridOptionDef + [myogPanelFind, myogMultiSelect, myogIndicatorCheckBoxes, myogHasStatusBar];
+  //переменная часть, производственные участки
   va2 := [];
   for i := 0 to High(RouteFields) do begin
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e']]
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,ch']]
   end;
+  //теги: s - сохранение в бд, ch - отслеживание изменений поля
   var LFields: TVarDynArray2 := [
     ['id$i', '_id', '40', 't=s'],
     ['id_std_item$i', '_id_std', '40', 't=s'],
@@ -556,26 +563,26 @@ begin
     ['0 as status$s', '*', '20'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
-    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T'],
-    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s'],
-    ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s'],
+    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't-ch'],
+    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,ch'],
+    ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N'],
-    ['price_adjusted$f', 'Цена без НДС и скидками', '70', 'f=0.00' , 't=s'],
+    ['price_adjusted$f', 'Цена без НДС? со скидками', '70', 'f=0.00' , 't=s'],
     ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N', 't=s'],
-    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s'],
-    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s']
+    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N', 't=s,ch'],
+    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch'],
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch'],
+    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch']
   ];
 
   LFields := LFields + va2;
   LFields := LFields +
   [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e'],
-    ['id_kns$i', 'Конструктор', '100;L', 'e'],
-    ['id_thn$i', 'Технолог', '100;L', 'e'],
-    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N'],
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,ch'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e', 't=s,ch'],
+    ['id_thn$i', 'Технолог', '100;L', 'e', 't=s,ch'],
+    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,ch'],
     ['0 as sum$f', 'Сумма', '90', 'f=0.00:']
   ];
   FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
@@ -709,6 +716,7 @@ begin
   //p - свойства, нужные только для отгрузочных заказов
   //t - не обязательны в шаблонах
   //td - в шаблонах недоступны и очищены
+  //ch - отслеживаются изменения
 
   F.DefineFields := [
     ['id$i'],
@@ -735,62 +743,60 @@ begin
 
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
-    ['id_type2$i', 'V=1:400'],
-    ['ornum$s', 't=d'],
-    ['or_reference$s','t=td'],
+    ['id_type2$i', 'V=1:400', 't=ch'],
+    ['ornum$s', 't=d,ch'],
+    ['or_reference$s','t=td,ch'],
     ['id_reglament$i'],
-    ['reglament$s;0', 'V=1:400', 't=t'],
-    ['id_organization$i', 'V=1:400', 't=t'],
-    ['area$i', 'V=1:100', 't=t'],
-    ['project$s', 'V=1:500::td', 't=t'],
+    ['reglament$s;0', 'V=1:400', 't=t,ch'],
+    ['id_organization$i', 'V=1:400', 't=t,ch'],
+    ['area$i', 'V=1:100', 't=t,ch'],
+    ['project$s', 'V=1:500::td', 't=t,ch'],
     ['id_format$i'],
-    ['id_or_format_estimates$i', 'V=1:400'],
+    ['id_or_format_estimates$i', 'V=1:400', 't=ch'],
     ['managername$s;0', 't=d', #0, User.GetName],
     ['launched_by_name$s;0', 't=d', #0, User.GetName],
     ['id_manager$i', #0, User.GetId],
     ['id_launched_by$i', #0, User.GetId],
-    ['complaints$s;0', 't=td'],
-    ['comm$s', 'v=0:4000::N', 't=t'],
-    ['basis_text$s', 'v=0:4000::N', 't=t'],
+    ['complaints$s;0', 't=td,ch'],
+    ['comm$s', 'v=0:4000::N', 't=t,ch'],
+    ['basis_text$s', 'v=0:4000::N', 't=t,ch'],
 
     ['id_customer$i'],
     ['id_customer_contact$i'],
     ['id_customer_org$i'],
-    ['customer$s;0', 'V=0:400', 't=c,t'],
-    ['customerman$s;0', 'V=0:400', 't=c,t'],
-    ['customercontact$s;0', 'V=0:400', 't=c,t'],
-    ['customerlegal$s;0', 'V=0:400', 't=c,t'],
-    ['customerinn$s;0', 'V=0:400::N', 't=c,t'],
-    ['cashtype_account$s;0','V=1:400::N', 't=c,t'],
-    ['address$s', 'V=1:400', 't=c,t'],
-    ['order_number_customer$s', 'V=1:400::N', 't=c,t'],
+    ['customer$s;0', 'V=0:400', 't=c,t,ch'],
+    ['customerman$s;0', 'V=0:400', 't=c,t,ch'],
+    ['customercontact$s;0', 'V=0:400', 't=c,t,ch'],
+    ['customerlegal$s;0', 'V=0:400', 't=c,t,ch'],
+    ['customerinn$s;0', 'V=0:400::N', 't=c,t,ch'],
+    ['cashtype_account$s;0','V=1:400::N', 't=c,t,ch'],
+    ['address$s', 'V=1:400', 't=c,t,ch'],
+    ['order_number_customer$s', 'V=1:400::N', 't=c,t,ch'],
 
     ['dt_end$d;0', 't=t'],
     ['dt_beg$d', 't=d,t'],
     ['dt_change$d', 't=d,t'],
-    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t'],
-    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t'],
-    ['dt_montage_beg$d', 't=p,t'],
-    ['dt_montage_end$d', 't=p,t'],
-//    ['dt_montage_beg$d', 'v==dt_otgr:=dt_otgr+1000000', 't=p,t'],
-//    ['dt_montage_end$d', 'v==dt_montage_beg:=dt_montage_beg+1000000', 't=p,t'],
+    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t,ch'],
+    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t,ch'],
+    ['dt_montage_beg$d', 't=p,t,ch'],
+    ['dt_montage_end$d', 't=p,t,ch'],
 
     ['cost_i$f','V=', 't=d,td',#0],
     ['cost_i_0$f','V=', 't=d,td',#0],
     ['cost_i_wo_nds$f;0;0'],
-    ['m_i$f','V=0:100:2', 't=p,td',#0],
-    ['d_i$f','V=0:100:2', 't=p,td',#0],
-    ['cost_m$f','V=', 't=p,td', 't=d',#0],
-    ['cost_m_0$f', 't=p,td','V=0:9999999:2', #0],
-    ['m_m$f','V=0:100:2', 't=p,td',#0],
-    ['d_m$f','V=0:100:2', 't=p,td',#0],
+    ['m_i$f','V=0:100:2', 't=p,td,ch',#0],
+    ['d_i$f','V=0:100:2', 't=p,td,ch',#0],
+    ['cost_m$f','V=', 't=p,td,d',#0],
+    ['cost_m_0$f', 't=p,td,ch','V=0:9999999:2', #0],
+    ['m_m$f','V=0:100:2', 't=p,td,ch',#0],
+    ['d_m$f','V=0:100:2', 't=p,td,ch',#0],
     ['cost_d$f','V=', 't=d,td',#0],
-    ['cost_d_0$f','V=0:9999999:2', 't=td' ,#0],
-    ['m_d$f', 'V=0:100:2', 't=p,td',#0],
-    ['d_d$f',' V=0:100:2','t=p,td',#0],
+    ['cost_d_0$f','V=0:9999999:2', 't=td,ch' ,#0],
+    ['m_d$f', 'V=0:100:2', 't=p,td,ch',#0],
+    ['d_d$f',' V=0:100:2','t=p,td,ch',#0],
     ['cost$f','V=', 't=d,td', #0],
     ['cost_wo_nds$f','V=', 't=d,td' ,#0],
-    ['cost_av$f','V=0:9999999:2', 't=td' ,#0]
+    ['cost_av$f','V=0:9999999:2', 't=td,ch' ,#0]
 
 
 
@@ -1382,7 +1388,7 @@ begin
     ReadOnly := LIsStdItem or LFromSgp or LWoEstimate;
   if A.InArray(LFieldName, ['id_kns', 'id_thn']) then
     ReadOnly := LFromSgp or LWoEstimate;
-  if A.InArray(LFieldName, ['price_wo_nds', 'price_with_nds']) then
+  if A.InArray(LFieldName, ['price_base', 'price_base_with_nds']) then
     ReadOnly := LIsStdItem;
 end;
 
@@ -1551,6 +1557,9 @@ begin
     Params.Text := edt_ornum.Text + '_' + S.Right('000' + IntToStr(Fr.GetRawRowCurrent + 1), 3);
   if Fr.GetValueF('qnt') > 0 then
     Params.Background := RGB(220, 255, 220);
+  if S.InCommaStr(FieldName, Fr.GetValue('ch').AsString) then
+    Params.Background := RGB(255, 255, 100);
+
 
 {  if FieldName = 'price' then
     Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
@@ -1565,13 +1574,17 @@ begin
   if LOldValue = Value then
     Exit;
   Fr.SetValue(LFieldName, Value);
+  if (LFieldName = 'price_base_with_nds') then begin
+    Fr.SetValue('price_base', RoundTo(FrgItems.GetValue('price_base_with_nds').AsFloat / (1 + FrgItems.GetValue('nds_rate').AsFloat / 100), -2));
+  end;
   if (LFieldName = 'name') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
     CalculateFrgItemsRow(LFieldName);
     RecalculateItemsPrices;
   end;
-  if (LFieldName = 'price_wo_nds') or (LFieldName = 'price_with_nds') or (LFieldName = 'qnt') then begin
+  if (LFieldName = 'price_base') or (LFieldName = 'price_base_with_nds') or (LFieldName = 'qnt') then begin
     RecalculateItemsPrices;
   end;
+  GetFrgItemsRowChanges;
   Fr.IsRowCorrect;
   Fr.IsTableCorrect;
 end;
@@ -1679,7 +1692,7 @@ begin
   var SumWoNdsWoMargins := 0.0;
   for var i := 0 to FrgItems.GetRawCount - 1 do begin
     var LPriceWithNds := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
-    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat  * (1 + F.GetProp('d_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100), -2);
+    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat  * (1 - F.GetProp('d_i').AsFloat / 100) * (1 + F.GetProp('m_i').AsFloat / 100), -2);
     var LPriceWithNdsWithMargins := RoundTo(LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
     var Sum := LPriceWithNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWoNdsWoMargins := SumWoNdsWoMargins + FrgItems.GetRawValue('price_base', i).AsFloat * FrgItems.GetRawValue('qnt', i).AsFloat;
@@ -1736,18 +1749,16 @@ begin
   var LWoEstimate:= FrgItems.GetValue('wo_estimate').AsInteger = 1;
 
   FrgItems.SetValue('nstd', S.IIf(LIsStdItem, 0, 1));
+  if AFieldName = 'name' then
   if LIsStdItem then begin
     FrgItems.SetValue('id_std_item', FStdItems.G(LItemNamePos, 'id'));
     FrgItems.SetValue('wo_estimate', FStdItems.G(LItemNamePos, 'wo_estimate'));
-    FrgItems.SetValue('price_wo_nds', FStdItems.G(LItemNamePos, 'price_wo_nds'));
-    for i := 1 to  High(RouteFields) + 1 do begin
-      FrgItems.SetValue('r' + IntToStr(i), FStdItems.G(LItemNamePos, 'r' + IntToStr(i)));
-    end;
+    FrgItems.SetValue('price_base', FStdItems.G(LItemNamePos, 'price_wo_nds'));
   end
   else begin
     FrgItems.SetValue('id_std_item', null);
     FrgItems.SetValue('wo_estimate', null);
-    FrgItems.SetValue('price_wo_nds', null);
+    FrgItems.SetValue('price_base', null);
   end;
   if LFromSgp or LWoEstimate then begin
     FrgItems.SetValue('id_kns', -100);
@@ -1757,6 +1768,9 @@ begin
     end;
   end
   else if LIsStdItem then begin
+    for i := 1 to  High(RouteFields) + 1 do begin
+      FrgItems.SetValue('r' + IntToStr(i), FStdItems.G(LItemNamePos, 'r' + IntToStr(i)));
+    end;
     if FrgItems.GetValue('id_thn').AsInteger <= 0 then
       FrgItems.SetValue('id_thn', -102);
   end
@@ -1882,7 +1896,7 @@ begin
   Result.Create(['id', 'name', 'mode', 'namenew', 'onserver']);
   if FIsTemplate or not (Mode in [fEdit, fDelete, fView]) then
     Exit;
-  PathTofioles := GetPathToOrders + '\' + F.GetProp('path') + '\' + S.IIf(AMode = 1, 'Внешние документы', 'Основание');
+  PathTofioles := GetPathToOrders + '\' + F.GetProp('path').AsString + '\' + S.IIf(AMode = 1, 'Внешние документы', 'Основание');
   if not DirectoryExists(PathTofioles) then
     Exit;
   sa := TDirectory.GetFiles(PathTofioles, '*.*', TSearchOption.soTopDirectoryOnly);
@@ -2124,16 +2138,22 @@ begin
 end;
 
 procedure TFrmOWOrder.AfterLoadOrder;
+//вызывается после загрузки полей из основной таблицы, но перед загрузкой комбобоксов и родительским prepare
 begin
+  //при копировании установим поля в начальное значение, так как они были загружены из исходдного паспорта
+  //достаточно установить fvtVBeg
   if Mode in [fCopy, fAdd] then begin
-    F.SetProp('id_maanager', User.GetId, fvtVBeg);
-    F.SetProp('id_maanager', User.GetId);
-    F.SetProp('maanagername', User.GetName, fvtVBeg);
-    F.SetProp('maanagername', User.GetName);
+    F.SetProp('id_manager', User.GetId, fvtVBeg);
+    //F.SetProp('id_manager', User.GetId);
+    F.SetProp('managername', User.GetName, fvtVBeg);
+    //F.SetProp('managername', User.GetName);
     F.SetProp('id_launched_by', User.GetId, fvtVBeg);
-    F.SetProp('id_launched_by', User.GetId);
-    F.SetProp('launched_by', User.GetName, fvtVBeg);
-    F.SetProp('launched_by', User.GetName);
+    //F.SetProp('id_launched_by', User.GetId);
+    F.SetProp('launched_by_name', User.GetName, fvtVBeg);
+    //F.SetProp('launched_by', User.GetName);
+    F.SetProp('launched_by_name', User.GetName, fvtVBeg);
+    F.SetProps('dt_end;dt_otgr;dt_montage_beg;dt_montage_end;dt_start;dt_change', null, fvtVBeg);
+    F.SetProp('dt_beg', Date, fvtVBeg);
   end;
 end;
 
@@ -2249,6 +2269,30 @@ begin
   except
   end;
 end;
+
+procedure TFrmOWOrder.GetFrgItemsRowChanges;
+//получим список измененных полей (только те что были загружены, а не расчетных), и сохраним его в поле 'chg' через запятую
+//вызывается при изменении значения вручную, потому только при ручном редактировании таблице, притом если было изменение значения
+begin
+  //проставлять изменения нам нужно только в режиме редактирования
+  var LRecNo := FrgItems.RecNo;
+  var LChgSt := '';
+  if not (Mode in [fEdit]) then
+    Exit;
+  if FrgItems.GetValue('id') >= MY_IDS_INSERTED_MIN then begin
+    //для добавленных строк будет поле Slash признаком добавления
+    LChgSt := 'slash';
+  end
+  else begin
+    var LFields: TVarDynArray := FrgItems.GetFieldNamesEx('ch', False);
+    var r := FOrderItemsOld.FindFirst('id', FrgItems.GetValue('id'));
+    for var i := 0 to High(LFields) do
+      if FOrderItemsOld.G(r, LFields[i]).AsString <> FrgItems.GetValueS(LFields[i]) then
+        S.ConcatStP(LChgSt, LFields[i], ',');
+  end;
+  FrgItems.SetValue('ch', LChgSt);
+end;
+
 
 end.
 
@@ -2449,3 +2493,7 @@ end;
 ++какие суммы нужны в шапки, без скидок они без ндс?
 сейчас в шаблоне нужно выбирать организацию обязательно, иначе не будет списка форамтов. может выдвать весь список форматов в шаблоне?
   также в старых шаблонах мог быть не выбран тип заказа, сейчас здесь в результате встанет плановый заказ.
+
+блокировка действий в гридах в зависимости от статуса и при просмотре/удалении
+
+FrgItemsButtonClick - ненльзя удалять.вставлять строки в пределах того что уже было при редактироывании???
