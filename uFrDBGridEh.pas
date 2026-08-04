@@ -1452,7 +1452,7 @@ begin
   if Pos('=', AValue) = k + 1 then
     Inc(k);
   st1 := Copy(AValue, k + 1);
-  fr.FVerify := '';
+//!!! fr.FVerify := '';
   if (st = 'D') then
     if ASet
       then fr.DefOptions := st1
@@ -1491,14 +1491,17 @@ begin
     if ASet then begin
       fr.Editable := True;
       if st1 <> '' then
-        fr.FVerify := st1;
+        fr.FVerify := st1
+      else
+        fr.FVerify := '';
     end
     else
       fr.Editable := False;
   if (st = 'V') then
-    if ASet
-      then fr.FVerify := st1
-      else fr.FVerify := '';
+    if ASet then
+      fr.FVerify := st1
+    else
+      fr.FVerify := '';
   if (st = 'F') then
     if ASet
       then fr.FFormat := uString.S.IIf(st1 = '', 'r', st1)
@@ -2498,7 +2501,8 @@ var
 begin
   if Assigned(FOnColumnsUpdateData)
     then FOnColumnsUpdateData(Self, No, Sender, Text, Value, UseText, Handled);
-  if Handled then Exit;
+  if Handled then
+    Exit;
   FRec := Opt.GetFieldRec(TColumnEh(Sender).FieldName);
   ReadOnly := False;
   Msg := '';
@@ -4497,9 +4501,10 @@ begin
       FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RowNum + 1, MemTableEh1.Fields[i].FieldName, Value, Msg);
     st := IntToStr(RowNum + 1) + '-' + IntToStr(DbGridEh1.FindFieldColumn(MemTableEh1.Fields[i].FieldName).Index + 1);
     j := A.PosInArray(st, FEditData.CellsWithErrors);
-    if IsValueCorrect and (i = 2)
-      then b := True
-      else b := False;
+if (MemTableEh1.Fields[i].FieldName = 'qnt') and (RowNum = 0) then begin
+  b:=True;
+  Msg := '';
+end;
     if not IsValueCorrect or (Msg <> '') then
       Result := False;
     if (not IsValueCorrect or (Msg <> '')) and (j = -1) then begin

@@ -153,7 +153,7 @@ type
     procedure SetAreasCaptions;
     procedure SetVisCheckboxes;
     procedure SetVisPanels(Sender: TObject = nil);
-    function  PrepareFrgItems: Boolean;
+    function PrepareFrgItems: Boolean;
     function  PrepareFrgRelatedOrders: Boolean;
     function  PrepareFrgBasis: Boolean;
     function  PrepareFrgFiles: Boolean;
@@ -219,8 +219,8 @@ type
     procedure FrgItemsOnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); virtual;
     procedure FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean); virtual;
     procedure FrgItemsAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
-    //здесь мождем устанавливать параметры ячейки (номер картинки, readonly) в зависимости от данных в текущей записи
     procedure FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); virtual;
+    procedure FrgItemsCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
     //двойной клик в таблице
     //по умолчанию вызывает редактирование или просмотр записи
 //    procedure FrgItemsOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
@@ -552,6 +552,7 @@ begin
   va2 := [];
   for i := 0 to High(RouteFields) do begin
     va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,ch']]
+//    va2 := va2 + [['nvl(r' + IntToStr(i + 1) + ',0) as ' + 'r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e=0:1:0', 't=s,ch']]
   end;
   //теги: s - сохранение в бд, ch - отслеживание изменений поля
   var LFields: TVarDynArray2 := [
@@ -572,7 +573,7 @@ begin
     ['price_adjusted$f', 'Цена без НДС? со скидками', '70', 'f=0.00' , 't=s'],
     ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:999999:0:N', 't=s,ch'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:5:0:N', 't=s,ch'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch'],
     ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch']
@@ -582,8 +583,8 @@ begin
   LFields := LFields +
   [
     ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,ch'],
-    ['id_kns$i', 'Конструктор', '100;L', 'e', 't=s,ch'],
-    ['id_thn$i', 'Технолог', '100;L', 'e', 't=s,ch'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,ch'],
+    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,ch'],
     ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,ch'],
     ['0 as sum$f', 'Сумма', '90', 'f=0.00:']
   ];
@@ -630,7 +631,7 @@ begin
   FrgItems.OnColumnsGetCellParams := FrgItemsColumnsGetCellParams;
 //  FrgItems.OnDbClick := FrgItemsOnDbClick;
   FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
-//  FrgItems.OnCellValueSave := FrgItemsCellValueSave;
+  FrgItems.OnCellValueSave := FrgItemsCellValueSave;
   FrgItems.RefreshGrid;
   FrgItems.IsTableCorrect;
   FrgItems.SetControlValue('ChbView0', S.IIf(Mode in [fView, fDelete], 0, 1));
@@ -1575,6 +1576,8 @@ end;
 procedure TFrmOWOrder.FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 //вызывается при ручном вводе данных в грид
 begin
+  Handled := False;
+Exit;
   var LFieldName := Fr.GetFieldNameForSender(Sender);
   var LOldValue: Variant := Fr.GetValue(LFieldName);
   if LOldValue = Value then
@@ -1643,7 +1646,7 @@ begin
   st := '';
   //поля маршщрутов
   for i := 1 to High(RouteFields) + 1 do
-    S.ConcatStP(st, 'r' + IntToStr(i), ', ');
+    S.ConcatStP(st, 'nvl(r' + IntToStr(i) + ', 0) as r' + IntToStr(i), ', ');
   //стандартные изделия по данному типу сметы
   Q.QLoad(
     'select id, name, price_wo_nds, wo_estimate, ' + st + ' ' +
@@ -1855,8 +1858,9 @@ begin
   Msg := '';
   //не корректируеми ввод! если это вызов при вводе данных для возможной коррекции - выходим.
   //иначе некорректно будут выдаваться сообщения, так как мы проверяем не обязательно текущую ячейку!
-  if Mode = dbgvBefore then
+  if Mode = dbgvBefore then begin
     Exit;
+  end;
   Row := Row - 1;
   var LFieldName := FieldName;
   var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
@@ -1864,8 +1868,8 @@ begin
   var LWoEstimate := FrgItems.GetValue('wo_estimate', Row).AsInteger = 1;
   var LRouteDefined := False;
   Msg := '';
- for var i := 1 to  High(RouteFields) + 1 do
-    if FrgItems.GetValue('r' + IntToStr(i), Row) = 1 then begin
+  for var i := 1 to  High(RouteFields) + 1 do
+    if FrgItems.GetValueI('r' + IntToStr(i), Row) = 1 then begin
       LRouteDefined := True;
       Break;
     end;
@@ -1879,15 +1883,15 @@ begin
     if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
       Msg := 'Технолдог для стандартного изделия не может быть задан';
   end;}
+  if (LFieldName = 'id_kns') and (LFromSgp or LWoEstimate) then begin
+    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
+      Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
+  end;
   if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
     if FrgItems.GetValue('id_thn', Row).AsInteger <> - 100 then
       Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
-  if (LFieldName = 'id_thn') and (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
-      Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
-  end;
-  if (LFieldName = 'должен') and  not LIsStdItem then begin
+  if (LFieldName = 'id_kns') and  not LIsStdItem then begin
     if (FrgItems.GetValue('id_kns', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
       Msg := 'Конструктор должен быть задан для нестандартного изделия';
   end;
@@ -2217,6 +2221,25 @@ begin
     F.SetProps('dt_end;dt_otgr;dt_montage_beg;dt_montage_end;dt_start;dt_change', null, fvtVBeg);
     F.SetProp('dt_beg', Date, fvtVBeg);
   end;
+end;
+
+procedure TFrmOWOrder.FrgItemsCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+begin
+  var LFieldName := FieldName;
+  var LOldValue: Variant := Fr.GetValue(LFieldName);
+  Fr.SetValue(LFieldName, Value);
+  if (LFieldName = 'price_base_with_nds') then begin
+    Fr.SetValue('price_base', RoundTo(FrgItems.GetValue('price_base_with_nds').AsFloat / (1 + FrgItems.GetValue('nds_rate').AsFloat / 100), -2));
+  end;
+  if (LFieldName = 'name') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
+    CalculateFrgItemsRow(LFieldName);
+    RecalculateItemsPrices;
+  end;
+  if (LFieldName = 'price_base') or (LFieldName = 'price_base_with_nds') or (LFieldName = 'qnt') then begin
+    RecalculateItemsPrices;
+  end;
+  GetFrgItemsRowChanges;
+  Fr.IsTableCorrect;
 end;
 
 procedure TFrmOWOrder.GetOrderPath;

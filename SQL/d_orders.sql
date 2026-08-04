@@ -818,7 +818,7 @@ create table order_items (
   r6 number(1),
   r7 number(1),
   r8 number(1),
-  r9 Number(1),
+  r9 number(1),
   ch varchar(4000),                  -- изменени€, сделанные к данному слешу, имена полей memtable через зап€тую
   attention number(3) default 0,     -- признак внимани€ к €чеке строки (выделена цветом в паспорте)
   dt_sn date,                        -- отметка по слешу, что заказ обработан снабжением   
