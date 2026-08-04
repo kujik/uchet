@@ -691,29 +691,29 @@ from
   order_types ot,
   order_reglaments orr
 where
-  ob.ornum (+) = o.or_reference
-  and ro.id (+) = o.id_organization
-  and rc.id (+) = o.id_customer
+  ob.ornum (+) = o.or_reference 
+  and ro.id (+) = o.id_organization 
+  and rc.id (+) = o.id_customer 
   and rcc.id (+) = o.id_customer_contact
-  and rcl.id (+) = o.id_customer_org
+  and rcl.id (+) = o.id_customer_org 
   and f.id (+) = o.id_format
-  and e.id_format (+) = f.id
-  and au.id (+) = o.id_manager
-  and au2.id (+) = o.id_launched_by
-  and pa.id (+) = o.area
-  and he.id_order (+) = o.id
-  and agg.id_order (+) = o.id
+  and e.id (+) = o.id_or_format_estimates
+  and au.id (+) = o.id_manager 
+  and au2.id (+) = o.id_launched_by 
+  and pa.id (+) = o.area 
+  and he.id_order (+) = o.id 
+  and agg.id_order (+) = o.id 
   --and tl.id_order (+) = o.id
   --and kl.id_order (+) = o.id
-  and cl.id_order (+) = o.id
-  and z.id_zakaz (+) = o.id_itm
-  and sz.id_status (+) = z.id_status
-  and rsv.id_doc (+) = o.id_itm
-  and ot.id (+) = o.id_type2
+  and cl.id_order (+) = o.id 
+  and z.id_zakaz (+) = o.id_itm 
+  and sz.id_status (+) = z.id_status 
+  and rsv.id_doc (+) = o.id_itm 
+  and ot.id (+) = o.id_type2 
   and orr.id (+) = o.id_reglament
 ;
 
-SELECT /*+ PARALLEL(4) */ * FROM v_orders;
+SELECT /*+ PARALLEL(4) */ * FROM v_orders order by dt_beg desc;
 
 --update orders set active = 1 where id < 0;
 

@@ -632,7 +632,8 @@ type
   TGetFrDBGridEhCellReadOnlyEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean) of object;
   //вызывается при изменении данных в таблице с разными Mode в зависимости от типа вызова
   //dbgvBefore - когда значение введено но еще не записано в таблицу, можно изменить значение или задать сообщение об ошибке
-  //dbgvCell - когда значение в ячейке было изменено вручную
+  //dbgvCell - когда значение в ячейке было изменено вручную, а также при проверке строки/всей таблицы.
+  //Row начинается с елдиницы
   TFrDBGridEhVeryfyAndCorrectValuesEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string) of object;
   //вызывается после ручного ввода данных в ячейку таблицы, после установки значения в мемтейбл
   //здесь можно сохранить значение ячейки если не надо перекрывать TFrDBGridEhColumnsUpdateDataEvent
@@ -1055,7 +1056,7 @@ type
     //проверка, что все поля строки пустые (кроме невидимых, точнее с заголовками с _)
     function IsRowNotEmpty(RowNum: Integer = -1): Boolean;
     //проверка корректности строки
-    function IsRowCorrect(RowNum: Integer = -1): Boolean;
+    function TestRowCorrect(RowNum: Integer = -1): Boolean;
     //проверка того, что вся таблица пуста (за исключение сервисных полей)
     function IsTableEmpty: Boolean;
     //проверка корректности всей таблицы
@@ -1631,7 +1632,7 @@ begin
   if InLoadData then
     Exit;
 //  Mth.PostAndEdit(MemTableEh1);
-//  IsRowCorrect;
+//  TestRowCorrect;
 //  IsTableCorrect;
 end;
 
@@ -2538,7 +2539,7 @@ begin
   if EditOptions.AlwaysVerifyAllTable then
     IsTableCorrect
   else
-    IsRowCorrect;
+    TestRowCorrect;
   EvSaveHandled := False;
   if Assigned(FOnCellValueSave) then
     FOnCellValueSave(Self, No, S.ToLower(TColumnEh(Sender).FieldName), S.IIf(Text = '', null, Value), EvSaveHandled);
@@ -4393,7 +4394,7 @@ begin
   //добавим только если текущая строка заполнена хотя бы частично (при AddIfNotempty)
   //и текущая строка корректна (данная процедура перекрывается и по умолчанию возвращает true:
   //при этом нужно еще блокировать перемещение из неверной строки, иначе блокирока по ней теряет смысл)
-//  if not ((not AIfNotempty or IsRowNotEmpty) and IsRowCorrect) then Exit;
+//  if not ((not AIfNotempty or IsRowNotEmpty) and TestRowCorrect) then Exit;
   DBGridEh1.AllowedOperations := [alopInsertEh, alopUpdateEh, alopDeleteEh, alopAppendEh];
   DbGridEh1.ReadOnly := False;
   MemTableEh1.ReadOnly := False;
@@ -4469,7 +4470,7 @@ begin
   Result := False;
 end;
 
-function TFrDBGridEh.IsRowCorrect(RowNum: Integer = -1): Boolean;
+function TFrDBGridEh.TestRowCorrect(RowNum: Integer = -1): Boolean;
 //Вернет труе, если строка заполнена корректно
 //по умолчанию проверяет в соотвествии с ColumnsVerify (если последний не задан то вернет True)
 //пустые строки игнорирует
@@ -4491,14 +4492,12 @@ begin
   for i := 0 to MemTableEh1.Fields.Count - 1 do begin
     FRec := Opt.GetFieldRec(MemTableEh1.Fields[i].FieldName);
     Value := VaRToStr(GetValue(MemTableEh1.Fields[i].FieldName, RowNum, False));
-    if Value = 'ПФ' then
-      b := True;
     IsValueCorrect := (FRec.FVerify = '') or S.VeryfyValue(q.QGetDataTypeAsChar(MemTableEh1.Fields[i].DataType), FRec.FVerify, Value, CorrectValue);
     if IsValueCorrect and Assigned(FOnVeryfyAndCorrectValues) then
-      FOnVeryfyAndCorrectValues(Self, No, dbgvBefore, RecNo, MemTableEh1.Fields[i].FieldName, Value, Msg);
+      FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RowNum + 1, MemTableEh1.Fields[i].FieldName, Value, Msg);
     st := IntToStr(RowNum + 1) + '-' + IntToStr(DbGridEh1.FindFieldColumn(MemTableEh1.Fields[i].FieldName).Index + 1);
     j := A.PosInArray(st, FEditData.CellsWithErrors);
-    if IsValueCorrect and (i=2)
+    if IsValueCorrect and (i = 2)
       then b := True
       else b := False;
     if not IsValueCorrect or (Msg <> '') then
@@ -4542,7 +4541,7 @@ begin
   for i := 0 to GetCount(False) - 1 do begin
     if not IsRowNotEmpty(i) then
       Continue;
-    if not IsRowCorrect(i) then begin
+    if not TestRowCorrect(i) then begin
       Result := False;
       S.ConcatStP(ERows, IntToStr(i + 1), ', ');
     end;

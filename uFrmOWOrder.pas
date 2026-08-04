@@ -226,6 +226,7 @@ type
 //    procedure FrgItemsOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
     procedure FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
     procedure FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
+    procedure FrgItemsRowVerify(Row: Integer);
     //события грида внешних документов и грида файлов основания заказа
     procedure FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
     procedure FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
@@ -543,6 +544,7 @@ var
   i, j: integer;
   va2: TVarDynArray2;
   na: TNamedArr;
+  o: TFrDBGridEditOptions;
 begin
   Result := False;
   FrgItems.Options := FrDBGridOptionDef + [myogPanelFind, myogMultiSelect, myogIndicatorCheckBoxes, myogHasStatusBar];
@@ -560,7 +562,7 @@ begin
     ['pos$i', '_pos', '20', 't=s'],
     ['std$i', '_std', '20', 't=s'],
     ['attention$i', '_attention', '40', 't=s'],
-    ['0 as status$s', '*', '20'],
+    ['null as status$s', '*', '20', 'pic=e;0:16;12'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
     ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't-ch'],
@@ -601,6 +603,9 @@ begin
   FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
   FrgItems.Opt.SetGridOperations('uaid');
   FrgItems.Opt.SetTable('v_order_items');
+  o.AlwaysVerifyAllTable:= True;
+  O.FieldsNoRepaeted:=['name'];
+  FrgItems.EditOptions := o;
   FrgItems.SetInitData([]);
   FrgItems.Prepare;
   pnlOrderInfo.Parent := TWinControl(FrgItems.FindComponent('pnlTopBtnsCtl2'));
@@ -1568,6 +1573,7 @@ begin
 end;
 
 procedure TFrmOWOrder.FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+//вызывается при ручном вводе данных в грид
 begin
   var LFieldName := Fr.GetFieldNameForSender(Sender);
   var LOldValue: Variant := Fr.GetValue(LFieldName);
@@ -1585,8 +1591,6 @@ begin
     RecalculateItemsPrices;
   end;
   GetFrgItemsRowChanges;
-  Fr.IsRowCorrect;
-  Fr.IsTableCorrect;
 end;
 
 procedure TFrmOWOrder.FrgItemsDbGridEh1ApplyFilter(Sender: TObject);
@@ -1600,8 +1604,6 @@ begin
     st := '';
   Gh.GetGridColumn(FrgItems.DBGridEh1, 'qnt').STFilter.ExpressionStr := st;
   FrgItems.DBGridEh1.DefaultApplyFilter;
-//  inherited;
-//  FrgItems.DbGridEh1ApplyFilter(Sender);
 end;
 
 procedure TFrmOWOrder.FrgItemsDbGridEh1Enter(Sender: TObject);
@@ -1847,18 +1849,26 @@ begin
 end;
 
 procedure TFrmOWOrder.FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+//проверка ячеек таблицы
+//по настрокам - проверяем при каждом вводе всмю таблицу
 begin
+  Msg := '';
+  //не корректируеми ввод! если это вызов при вводе данных для возможной коррекции - выходим.
+  //иначе некорректно будут выдаваться сообщения, так как мы проверяем не обязательно текущую ячейку!
+  if Mode = dbgvBefore then
+    Exit;
+  Row := Row - 1;
   var LFieldName := FieldName;
-  var LIsStdItem := FrgItems.GetValue('nstd').AsInteger <> 1;
-  var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
-  var LWoEstimate := FrgItems.GetValue('wo_estimate').AsInteger = 1;
+  var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
+  var LFromSgp := FrgItems.GetValue('sgp', Row).AsInteger = 1;
+  var LWoEstimate := FrgItems.GetValue('wo_estimate', Row).AsInteger = 1;
   var LRouteDefined := False;
-  for var i := 1 to  High(RouteFields) + 1 do
-    if FrgItems.GetValue('r' + IntToStr(i)) = 1 then begin
+  Msg := '';
+ for var i := 1 to  High(RouteFields) + 1 do
+    if FrgItems.GetValue('r' + IntToStr(i), Row) = 1 then begin
       LRouteDefined := True;
       Break;
     end;
-  Msg :=  '';
   if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
     Msg := S.IIFStr(not LRouteDefined, 'Не задан маршрут');
   end
@@ -1870,21 +1880,73 @@ begin
       Msg := 'Технолдог для стандартного изделия не может быть задан';
   end;}
   if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
+    if FrgItems.GetValue('id_thn', Row).AsInteger <> - 100 then
       Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
   if (LFieldName = 'id_thn') and (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_kns').AsInteger <> - 100 then
+    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
       Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
   if (LFieldName = 'должен') and  not LIsStdItem then begin
-    if (FrgItems.GetValue('id_kns').AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns').AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_kns', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
       Msg := 'Конструктор должен быть задан для нестандартного изделия';
   end;
   if (LFieldName = 'id_thn') and not LIsStdItem then begin
-    if (FrgItems.GetValue('id_thn').AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn').AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_thn', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
       Msg := 'Технолог должен быть задан для нестандартного изделия';
   end;
+//  FrgItems.SetValue('status', Row, True, S.IIf(Msg <> '', 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));
+end;
+
+
+procedure TFrmOWOrder.FrgItemsRowVerify(Row: Integer);
+begin
+  var LErrMsgs: TVarDynArray := [];
+  for var LFld := 0 to FrgItems.MemTableEh1.FieldCount - 1 do begin
+  var LFieldName := FrgItems.MemTableEh1.Fields[LFld].FieldName;
+  //Row := Row - 1;
+  //if Row = -1 then
+  //  Row := FrgItems.GetRawRowById() - 1;
+  var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
+  var LFromSgp := FrgItems.GetValue('sgp', Row).AsInteger = 1;
+  var LWoEstimate := FrgItems.GetValue('wo_estimate', Row).AsInteger = 1;
+  var LRouteDefined := False;
+  for var i := 1 to  High(RouteFields) + 1 do
+    if FrgItems.GetValue('r' + IntToStr(i), Row) = 1 then begin
+      LRouteDefined := True;
+      Break;
+    end;
+  var Msg :=  '';
+  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
+    Msg := S.IIFStr(not LRouteDefined, 'Не задан маршрут');
+  end
+  else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
+    Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
+  end;
+  {if (LFieldName = 'id_thn') and LIsStdItem then begin
+    if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
+      Msg := 'Технолдог для стандартного изделия не может быть задан';
+  end;}
+  if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
+    if FrgItems.GetValue('id_thn', Row).AsInteger <> - 100 then
+      Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
+  end;
+  if (LFieldName = 'id_thn') and (LFromSgp or LWoEstimate) then begin
+    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
+      Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
+  end;
+  if (LFieldName = 'должен') and  not LIsStdItem then begin
+    if (FrgItems.GetValue('id_kns', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
+      Msg := 'Конструктор должен быть задан для нестандартного изделия';
+  end;
+  if (LFieldName = 'id_thn') and not LIsStdItem then begin
+    if (FrgItems.GetValue('id_thn', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
+      Msg := 'Технолог должен быть задан для нестандартного изделия';
+  end;
+    if not A.InArray(Msg, LErrMsgs) then
+      LErrMsgs := LErrMsgs + [Msg];
+  end;
+  FrgItems.SetValue('status', Row, True, S.IIf(LErrMsgs.Count <> 0, 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));
 end;
 
 function TFrmOWOrder.GetAddFiles(AMode: Integer): TNamedArr;
