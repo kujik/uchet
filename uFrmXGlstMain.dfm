@@ -189,11 +189,7 @@ inherited FrmXGlstMain: TFrmXGlstMain
     ExplicitWidth = 573
     inherited lblStatusBarR: TLabel
       Left = 504
-      Height = 14
       ExplicitLeft = 504
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

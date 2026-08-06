@@ -2251,6 +2251,7 @@ v:=True;
       ['is_nonstandard$i','Нестан-'#13#10'дарт','80','pic'],
       ['is_nonstandard_only$i','Только нестан-'#13#10'дарт','80','pic'],
       ['is_cash_payment$i','Налич-'#13#10'ные','80','pic'],
+      ['is_launch_by_manager$i', 'Запускает '#13#10'менеджер','80','pic'],
       ['active$i','Используется','80','pic']
     ]);
     Frg1.Opt.SetWhere('where id >= 100 order by pos');

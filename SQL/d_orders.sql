@@ -1004,9 +1004,13 @@ where
 ;
 
 select ornum, article from v_order_items where article is not null order by dt_beg desc; 
-select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY'); 
+select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY');
 
---update order_items i set qnt_panels_w_drill = nvl((select qnt_panels_w_drill from or_std_items s where i.id_std_item = s.id and nvl(i.std, 0) = 1), i.qnt_panels_w_drill) where i.id_order = 10;  
+
+create table order_changes (
+  id number(11),
+  dt date 
+
 
 create or replace function F_TestOrderEstimatesInItm(
 --вернем количество изделий в заказе в »“ћ, к которым нет смет
@@ -2861,6 +2865,7 @@ alter table order_types add is_nonstandard_only number(1);
 alter table order_types add is_cash_payment number(1);
 alter table order_types add is_reference_allowed number(1);
 alter table order_types add is_reference_required  number(1);
+alter table order_types add is_launch_by_manager number(1);
 alter table order_types add need_ref  number(1);
 alter table order_types drop column need_ref;
 
@@ -2877,6 +2882,7 @@ create table order_types (
   is_cash_payment number(1),                  --допустима оплата за наличные (Ќика)
   is_reference_allowed number(1),             --допустима ссылка на другой заказ 
   is_reference_required  number(1),           --об€зательна ссылка на другой заказ
+  is_launch_by_manager number(1),             --заказ может быть запущен менеджером
   active number(1), 
   pos number(3),
   posstd number(4),
