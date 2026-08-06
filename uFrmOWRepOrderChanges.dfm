@@ -51,12 +51,13 @@
           Caption = 'lblOperation'
         end
       end
-      object FrgTitle: TFrDBGridEh
+      object mmoTitle: TDBMemoEh
         Left = 0
         Top = 89
         Width = 690
         Height = 200
         Align = alTop
+        ScrollBars = ssVertical
         TabOrder = 1
       end
       object Splitter1: TSplitter
@@ -69,12 +70,13 @@
         ExplicitTop = 288
         ExplicitWidth = 700
       end
-      object FrgItems: TFrDBGridEh
+      object mmoItems: TDBMemoEh
         Left = 0
         Top = 294
         Width = 690
         Height = 201
         Align = alClient
+        ScrollBars = ssVertical
         TabOrder = 2
       end
     end

@@ -1,7 +1,7 @@
 ﻿{
 история изменений заказа (по переданному в ExecDialog id заказа)
 вверху - инфа по текущему шагу истории (номер заказа+проект, дата/время события, пользователь, операция)
-внизу - два грида (изменения шапки заказа / изменения позиций заказа), с перетаскиваемой границей между ними
+внизу - два поля TDBMemoEh (изменения шапки заказа / изменения позиций заказа), с перетаскиваемой границей между ними
 навигация по истории - кнопки "Назад"/"Вперед" на стандартной панели кнопок (DlgButtonsR)
 
 загрузка данных (LoadOrderGeneralChanges/LoadOrderTitleChanges/LoadOrderItemsChanges) - реализуется отдельно
@@ -14,7 +14,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls,
-  uFrDBGridEh, uData;
+  DBCtrlsEh, uData;
 
 type
   TFrmOWRepOrderChanges = class(TFrmBasicMdi)
@@ -23,9 +23,9 @@ type
     lblDateTime: TLabel;
     lblUser: TLabel;
     lblOperation: TLabel;
-    FrgTitle: TFrDBGridEh;
+    mmoTitle: TDBMemoEh;
     Splitter1: TSplitter;
-    FrgItems: TFrDBGridEh;
+    mmoItems: TDBMemoEh;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
@@ -35,11 +35,11 @@ type
     //загрузка общей инфы о шаге истории (номер заказа+проект, дата/время, пользователь, операция) в лейблы верхней панели
     //реализация - отдельно
     procedure LoadOrderGeneralChanges(AStep: Integer);
-    //загрузка изменений шапки заказа для грида FrgTitle
-    //реализация - отдельно (Opt.SetFields/SetInitData/Prepare/RefreshGrid)
+    //загрузка изменений шапки заказа в поле mmoTitle
+    //реализация - отдельно (mmoTitle.Lines/mmoTitle.Text)
     procedure LoadOrderTitleChanges(AStep: Integer);
-    //загрузка изменений позиций заказа для грида FrgItems
-    //реализация - отдельно (Opt.SetFields/SetInitData/Prepare/RefreshGrid)
+    //загрузка изменений позиций заказа в поле mmoItems
+    //реализация - отдельно (mmoItems.Lines/mmoItems.Text)
     procedure LoadOrderItemsChanges(AStep: Integer);
   public
     { Public declarations }
@@ -69,15 +69,15 @@ begin
 end;
 
 procedure TFrmOWRepOrderChanges.LoadOrderTitleChanges(AStep: Integer);
-//загрузка изменений шапки заказа для грида FrgTitle
+//загрузка изменений шапки заказа в поле mmoTitle
 begin
-  //реализация - отдельно (Opt.SetFields/SetInitData/Prepare/RefreshGrid)
+  //реализация - отдельно (mmoTitle.Lines/mmoTitle.Text)
 end;
 
 procedure TFrmOWRepOrderChanges.LoadOrderItemsChanges(AStep: Integer);
-//загрузка изменений позиций заказа для грида FrgItems
+//загрузка изменений позиций заказа в поле mmoItems
 begin
-  //реализация - отдельно (Opt.SetFields/SetInitData/Prepare/RefreshGrid)
+  //реализация - отдельно (mmoItems.Lines/mmoItems.Text)
 end;
 
 procedure TFrmOWRepOrderChanges.btnClick(Sender: TObject);
@@ -105,7 +105,7 @@ end;
 
 
 function TFrmOWRepOrderChanges.Prepare: Boolean;
-//начальная подготовка формы - панель кнопок Назад/Вперед, минимальная настройка гридов, первая загрузка данных (FStep = 0)
+//начальная подготовка формы - панель кнопок Назад/Вперед, минимальная настройка полей mmoTitle/mmoItems, первая загрузка данных (FStep = 0)
 begin
   Result := False;
   Caption := '~История заказа';
@@ -119,11 +119,10 @@ begin
     [mbtNext, True, True, 120, 'Вперед']
   ];
 
-  FrgTitle.Options := [myogIndicatorColumn, myogHasStatusBar];
-  FrgTitle.Opt.Caption := 'Изменения шапки заказа';
-
-  FrgItems.Options := [myogIndicatorColumn, myogHasStatusBar];
-  FrgItems.Opt.Caption := 'Изменения позиций заказа';
+  mmoTitle.ReadOnly := True;
+  mmoTitle.ScrollBars := ssVertical;
+  mmoItems.ReadOnly := True;
+  mmoItems.ScrollBars := ssVertical;
 
   FStep := 0;
   LoadOrderGeneralChanges(FStep);
