@@ -1798,6 +1798,39 @@ select dt_beg, dt_end, dt_beg + Round(((dt_end - dt_beg) / 2), 0) from v_orders 
 
 
 
+--create or replace view v_get_empty_orders as
+select
+  o.id, o.ornum, o.dt_beg
+from
+  orders o,
+  (select id_order, sum(qnt) as qnt from order_items group by id_order) i
+where
+  o.id > 0 and i.id_order = o.id and i.qnt = 0
+;
+
+-- Анонимный PL/SQL блок для удаления пустых заказов
+-- Удаление выполняется сначала из таблицы dv.zakaz (зависимая), затем из orders
+-- Данные для удаления берутся из представления v_get_empty_orders
+declare
+  cursor c_empty_orders is
+    select id
+    from v_get_empty_orders;
+begin
+  for rec in c_empty_orders loop
+    -- удаляем записи из зависимой таблицы dv.zakaz (если есть)
+    --delete from dv.zakaz where id_order_dv = rec.id;
+    -- удаляем заказ из основной таблицы orders
+    --delete from orders where id = rec.id;
+  end loop;
+  -- фиксируем изменения
+  --rollback;
+  commit;
+exception
+  when others then
+    rollback;
+    raise;
+end;
+/
 
 
 

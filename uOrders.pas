@@ -102,6 +102,7 @@ type
     function SetLaborCost(AOwner: TComponent; AAreaId: Integer): Boolean;
     function EraseOutdatedOrders(AOwner: TComponent): Boolean;
     procedure OrdersFinReport;
+    procedure DeleteEmptyOrders;
 end;
 
 var
@@ -3005,6 +3006,11 @@ begin
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['FIGBOARDS']) +
     ParseBoardType(XMLDoc.DocumentElement.ChildNodes['BOARDROOTNODE'].ChildNodes['BENTBOARDS'])
   ;
+end;
+
+procedure TOrders.DeleteEmptyOrders;
+//удалить заказы, в которых изделия только с нулевым количеством
+begin
 end;
 
 procedure TOrders.SetViewAllOrders(AMode: Boolean);

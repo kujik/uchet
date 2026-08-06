@@ -174,8 +174,8 @@ begin
     [-mbtDivisionScedule, FInEditMode, True],
     [-mbtWorkerScedule, FInEditMode, True],}
     [],
-    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1), True],
-    [-mbtFine, FInEditMode and (FRgsEdit2), True, 'Депремирование за день'],
+    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1 or FRgsEdit2), True],
+    [-mbtFine, FInEditMode and (FRgsEdit1 or FRgsEdit2), True, 'Депремирование за день'],
     [-mbtComment, FInEditMode, True],
     [],
     //[mbtSendEMail, FRgsEdit2 and FInEditMode],
@@ -211,8 +211,8 @@ begin
     [mbtCtlPanel, True, 500],
     [],}
     [mbtCtlPanel],
-    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1), True, 'Преимия за день'],
-    [-mbtFine, FInEditMode and (FRgsEdit2), True, 'Депремирование за день'],
+    [-mbtPremiumForDay, FInEditMode and (FRgsEdit1 or FRgsEdit2), True, 'Преимия за день'],
+    [-mbtFine, FInEditMode and (FRgsEdit1 or FRgsEdit2), True, 'Депремирование за день'],
     //[-ghtNightWork, FInEditMode, True, 'Ночная смена'],
     [-mbtComment, FInEditMode, True, 'Комментарий'],
     []

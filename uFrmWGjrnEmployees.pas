@@ -82,6 +82,7 @@ begin
     ['departament$s','!Подразделение','240;h'],
     ['job$s','!Должность','240;h'],
     ['schedulecode$s','!График','70'],
+    ['phones$s','Телефон','80;h'],
     ['comm$s','Комментарий','200;h']
   ]);
   Frg1.Opt.SetTable('v_w_employees');

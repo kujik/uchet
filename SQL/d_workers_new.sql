@@ -67,7 +67,7 @@ end;
 --------------------------------------------------------------------------------
 --сотрудники
 --alter table w_employees drop column i;
-alter table w_employees add is_concurrent number(1) default 0; 
+alter table w_employees add phones varchar2(400); 
 create table w_employees(
   id number(11),
   f varchar2(25) not null,
@@ -76,6 +76,7 @@ create table w_employees(
   birthday date,
   is_concurrent number(1) default 0,        --совместитель (занимает несколько должностей в разных организациях)
   comm varchar2(400),
+  phones varchar2(400),                     --телефоны работника, строкой
   active number(1),
   constraint pk_w_employees primary key (id)
 );
@@ -480,6 +481,7 @@ select
   e.name as employee,
   e.personnel_number,
   e.birthday,
+  e.phones,
   e.id as id_employee
 from  
   w_pers_bonus t,
@@ -674,6 +676,7 @@ select
   o.name as organization,
   s.code as schedulecode,
   e.is_concurrent,
+  e.phones,
   e.comm
 from w_employees e
 left join last_hired h on e.id = h.id_employee and h.rn = 1
@@ -2312,6 +2315,11 @@ ORDER BY personnel_number;
       
       
       select id_employee, null as id_organization, personnel_number, pay_cash from v_w_advance_transfer_item where id_employee = 10015;
+      
+      
+      
+  
+        
       
 
 

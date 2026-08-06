@@ -91,6 +91,11 @@ type
     function  GetPropB(PropName: string): Variant;
     //получение значений свойства для нескольких полей (поддерживаются теги – возвращает все совпадения)
     function  GetPropValues(PropNames: string; PropValueType: TDefFiledcValueType = fvtVCurr): TVarDynArray;
+    //алиас GetPropValues (то же самое, отдельное имя для симметрии с SetProps)
+    function  GetProps(PropNames: string; PropValueType: TDefFiledcValueType = fvtVCurr): TVarDynArray;
+    //получение заголовков контролов для нескольких полей (fvtCtrlCaption);
+    //если не задан явно, а контрол найден - берется TDBEditEh.ControlLabel.Caption либо TDbCheckboxEh.Caption
+    function  GetPropCaptions(PropNames: string = ''): TVarDynArray;
     //установка значения свойства
     procedure SetProp(PropName: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
     procedure SetProp(AIndex: Integer; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
@@ -110,6 +115,10 @@ type
     procedure SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr); overload;
     function  SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;
     function  SetPropsControls(PropNames: string = ''; PropValueTypes: TDefFiledcValueTypeSet = [fvtVBeg, fvtDsbl, fvtVer]): Integer;
+    //установка заголовков контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption
+    procedure SetPropsCaptions(PropNames: string = '');
+    //список полей через ; (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
+    function  GetChangedProps(PropNames: string = ''): string;
     //служебные методы
     function  PropNameFromControl(C: TObject): string;
     function  Count: Integer;
@@ -519,6 +528,39 @@ begin
     Result[i] := GetProp(Integer(indices[i]), PropValueType);
 end;
 
+function TFields.GetProps(PropNames: string; PropValueType: TDefFiledcValueType = fvtVCurr): TVarDynArray;
+//алиас GetPropValues (то же самое, отдельное имя для симметрии с SetProps)
+begin
+  Result := GetPropValues(PropNames, PropValueType);
+end;
+
+function TFields.GetPropCaptions(PropNames: string = ''): TVarDynArray;
+//получение заголовков контролов для нескольких полей (fvtCtrlCaption);
+//если не задан явно, а контрол найден - берется TDBEditEh.ControlLabel.Caption либо TDbCheckboxEh.Caption
+var
+  indices: TVarDynArray;
+  i, idx: Integer;
+  v: Variant;
+  c: TComponent;
+begin
+  indices := CollectIndices(PropNames);
+  SetLength(Result, Length(indices));
+  for i := 0 to High(indices) do
+  begin
+    idx := Integer(indices[i]);
+    v := GetProp(idx, fvtCtrlCaption);
+    if S.NSt(v) = '' then
+    begin
+      c := FSelf.FindComponent(GetFieldValue(idx, Integer(fvtCtrl)));
+      if c is TDBEditEh then
+        v := TDBEditEh(c).ControlLabel.Caption
+      else if c is TDbCheckboxEh then
+        v := TDbCheckboxEh(c).Caption;
+    end;
+    Result[i] := v;
+  end;
+end;
+
 procedure TFields.SetProp(PropName: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
 //установка значения свойства по имени (с обновлением контрола)
 var
@@ -745,6 +787,55 @@ begin
         SetProp(i, FDefineFieldsAdd[i][Integer(PropValueType)], PropValueType);
     end;
     Inc(Result);
+  end;
+end;
+
+procedure TFields.SetPropsCaptions(PropNames: string = '');
+//устанавливает заголовки контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption
+var
+  indices: TVarDynArray;
+  i, idx: Integer;
+  v: Variant;
+  c: TComponent;
+begin
+  indices := CollectIndices(PropNames);
+  for i := 0 to High(indices) do
+  begin
+    idx := Integer(indices[i]);
+    v := GetProp(idx, fvtCtrlCaption);
+    if S.NSt(v) = '' then
+      Continue;
+    c := FSelf.FindComponent(GetFieldValue(idx, Integer(fvtCtrl)));
+    if c is TDBEditEh then
+      TDBEditEh(c).ControlLabel.Caption := S.NSt(v)
+    else if c is TDbCheckboxEh then
+      TDbCheckboxEh(c).Caption := S.NSt(v);
+  end;
+end;
+
+function TFields.GetChangedProps(PropNames: string = ''): string;
+//возвращает через ; имена полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
+var
+  indices: TVarDynArray;
+  i, idx: Integer;
+  vBeg, vCurr: Variant;
+  isChanged: Boolean;
+begin
+  Result := '';
+  indices := CollectIndices(PropNames);
+  for i := 0 to High(indices) do
+  begin
+    idx := Integer(indices[i]);
+    vBeg := GetProp(idx, fvtVBeg);
+    vCurr := GetProp(idx, fvtVCurr);
+    if VarIsNull(vBeg) and VarIsNull(vCurr) then
+      isChanged := False
+    else if VarIsNull(vBeg) or VarIsNull(vCurr) then
+      isChanged := True
+    else
+      isChanged := (vBeg <> vCurr);
+    if isChanged then
+      Result := Result + S.IIfStr(Result <> '', ';') + GetName(idx);
   end;
 end;
 

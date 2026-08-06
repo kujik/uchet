@@ -124,11 +124,11 @@ end;
 
 --таблица, содержащая (накапливающая) айди изделий в заказах, по котоорым
 --не загружены все сметы. в день, когда смета загружена, проставляется поле dt 
---drop  table order_items_wo_estimate;
+--alter table order_items_wo_estimate add constraint fk_order_items_wo_estimate foreign key (id_order_item) references order_items(id) on delete cascade; 
 create table order_items_wo_estimate (
   id_order_item number(11) unique,
   dt date,
-  constraint fk_order_items_wo_estimate foreign key (id_order_item) references order_items(id)
+  constraint fk_order_items_wo_estimate foreign key (id_order_item) references order_items(id) on delete cascade
 );  
 
 ------------------------------------------------------------------------------------
@@ -1212,4 +1212,38 @@ end;
 /
 */
 
+;
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--отчет по заказм, просроченным по плановой  дате отгрузки
+
+create or replace view v_rep_overdue_production_orders as
+select
+--отчет по заказм, просроченным по плановой  дате отгрузки
+--по производственным, контролируем дату поступления на сгп
+  ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp,
+  dt_to_sgp as dt_control,
+  nvl(dt_to_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
+from 
+  v_orders 
+where 
+  id > 0 and
+  id_organization = -1 and dt_otgr < nvl(dt_to_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' order by dt_beg
+;
+
+create or replace view v_rep_overdue_shipment_orders as
+select
+--отчет по заказм, просроченным по плановой  дате отгрузки
+--по отгрузочныым, контролируем дату отгрузки с сгп
+  ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, 
+  dt_from_sgp as dt_control, 
+  nvl(dt_from_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
+from 
+  v_orders 
+where 
+  id > 0 and
+  id_organization <> -1 and dt_otgr < nvl(dt_from_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' /*and dt_from_sgp is null */ order by dt_beg
+;
 

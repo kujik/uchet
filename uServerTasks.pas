@@ -975,7 +975,8 @@ begin
     ['dt_otgr$d', 'Плановая дата отгрузки', ''],
     ['dt_to_prod$d', 'Запущен в производство', '100'],
     ['dt_to_sgp$d', 'Принят на СГП', '100'],
-    ['dt_from_sgp$d', 'Отгружен с СГП', '100']
+    ['dt_from_sgp$d', 'Отгружен с СГП', '100'],
+    ['overdue_days$i', 'Просрочка', '100']
   ];
   Q.QLoad(Q.QGetSql('A',
     S.IIf(AForProductionOrders, 'v_rep_overdue_production_orders', 'v_rep_overdue_shipment_orders'),

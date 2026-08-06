@@ -963,10 +963,12 @@ select
 --отчет по заказм, просроченным по плановой  дате отгрузки
 --по производственным, контролируем дату поступления на сгп
   ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp,
-  dt_to_sgp as dt_control 
+  dt_to_sgp as dt_control,
+  nvl(dt_to_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
 from 
   v_orders 
 where 
+  id > 0 and
   id_organization = -1 and dt_otgr < nvl(dt_to_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' order by dt_beg
 ;
 
@@ -975,10 +977,12 @@ select
 --отчет по заказм, просроченным по плановой  дате отгрузки
 --по отгрузочныым, контролируем дату отгрузки с сгп
   ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, 
-  dt_from_sgp as dt_control 
+  dt_from_sgp as dt_control, 
+  nvl(dt_to_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
 from 
   v_orders 
 where 
+  id > 0 and
   id_organization <> -1 and dt_otgr < nvl(dt_from_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' /*and dt_from_sgp is null */ order by dt_beg
 ;
 

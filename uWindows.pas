@@ -35,10 +35,12 @@ type
   private
     FWindows: TWindowsArray;
     FUseWindowsBar: Boolean;
-    // Обработка событий изменения состояния форм
+    //обновление тулбара окон
     procedure WindowsBarChange(AForm: TForm; AHandle: HWND; AMode: TmyWindowsStateChangeMode);
     // Вспомогательные методы для получения параметров формы
+    //возвращает FormDoc для разных типов форм
     function GetFormDoc(AForm: TForm): string;
+    //возвращает Id для разных типов форм
     function GetFormId(AForm: TForm): Variant;
   public
     // ModalResult, возвращённый формой при показе в модальном режиме
@@ -52,31 +54,38 @@ type
     // Коллекция окон
     property Windows: TWindowsArray read FWindows;
 
+    //инициализация
     constructor Create();
     // События изменения состояния форм
+    //обработчик создания (не используется)
     procedure ChildFormCreate(Sender: TObject);
+    //обработчик активации
     procedure ChildFormActivate(Sender: TObject);
+    //обработчик разрушения
     procedure ChildFormDestroy(Sender: TObject);
+    //обработчик смены активной формы (для диалогов)
     procedure ActiveFormChange(Sender: TObject);
-    // Вызывается при нажатии кнопки в тулбаре
+    //переключение на окно по клику на кнопке
     procedure BringToFrontMDIForm(Sender: TObject);
-    // Для диалогов: проверить наличие окна, при наличии активировать и вернуть False
+    //активировать существующее окно
     function BringToFrontIfExists(const AFormDoc: string; const AId: Variant): Boolean;
-    // Получить количество окон с таким же FormDoc (и Id, если задан)
+    //подсчёт окон с таким же FormDoc и Id
     function GetWindowsCount(var AForm: TForm; const AFormDoc: string; const AId: Variant; var AMaxNum: Integer): Integer; overload;
+    //перегрузка без формы
     function GetWindowsCount(const AFormDoc: string; const AId: Variant; var AMaxNum: Integer): Integer; overload;
-    // Подсветить кнопку активной формы (не используется)
+    //(не используется)
     procedure HiglightActiveForm(AForm: TForm);
-    // Вернуть объект формы из коллекции, иначе nil
+    //поиск формы в коллекции
     function GetFormFromWindows(AForm: TForm): TForm;
-    // Проверить, открыта ли модальная форма
+    //проверка, открыта ли модальная форма
     function IsModalFormOpen: Boolean;
-    // Открыть справочную форму
+    //открытие справочной формы с параметрами по умолчанию
     procedure ExecReference(const AFormType: string); overload;
+    //открытие справочной формы с указанными опциями
     procedure ExecReference(const AFormType: string; AOwner: TComponent; const AMyFormOptions: TMyFormOptions; const AAddParam: Variant); overload;
-    // Открыть диалоговую форму
+    //открытие диалоговой формы
     procedure ExecDialog(const AFormType: string; AOwner: TComponent; const AMyFormOptions: TMyFormOptions; const AMode: TDialogType; const AId: Variant; const AAddParam: Variant);
-    // Универсальный метод (в текущей реализации пуст)
+    //универсальный метод (не используется)
     procedure ExecAdd(const AFormType: string; AOwner: TComponent; const AMode: TDialogType; const AId: Variant; const AMyFormOptions: TMyFormOptions; const AAddParam: Variant; const AShowModal: Boolean = False; const ADlgFunction: TDlgFunction = nil);
   end;
 
@@ -207,14 +216,12 @@ begin
   // добавление новой кнопки, если окно не в списке
   b := True;
   for i := 0 to FrmMain.FormsList.ComponentCount - 1 do
-    if (FrmMain.FormsList.Buttons[i].Tag = AHandle) and FrmMain.FormsList.Buttons[i].Visible then
-    begin
+    if (FrmMain.FormsList.Buttons[i].Tag = AHandle) and FrmMain.FormsList.Buttons[i].Visible then begin
       b := False;
       Break;
     end;
 
-  if b and (AHandle <> FrmMain.Handle) then
-  begin
+  if b and (AHandle <> FrmMain.Handle) then begin
     if (AForm is TForm_MDI) or (AForm is TForm_Normal) or (AForm is TFrmBasicMdi) then
       GetWindowsCount(AForm, '', Null, MaxNum)
     else
@@ -245,8 +252,7 @@ begin
 
   // удаление помеченных кнопок
   for i := FrmMain.FormsList.ComponentCount - 1 downto 0 do
-    if FrmMain.FormsList.Buttons[i].Caption = '----' then
-    begin
+    if FrmMain.FormsList.Buttons[i].Caption = '----' then begin
       FrmMain.FormsList.Buttons[i].OnClick := nil;
       try
         Delete(FWindows, i, 1);
@@ -259,8 +265,7 @@ begin
   for i := FrmMain.FormsList.ComponentCount - 1 downto 0 do
   begin
     Tbt := FrmMain.FormsList.Buttons[i];
-    if Trim(Tbt.Caption) = '' then
-    begin
+    if Trim(Tbt.Caption) = '' then begin
       try
         Tbt.Destroy;
         Delete(FWindows, i, 1);
@@ -272,8 +277,7 @@ begin
 
     if IsModalFormOpen or
        ((AForm is TForm_MDI) and (AForm.FormStyle = fsNormal)) or
-       ((AForm is TFrmBasicMdi) and (AForm.FormStyle = fsNormal)) then
-    begin
+       ((AForm is TFrmBasicMdi) and (AForm.FormStyle = fsNormal)) then begin
       if Tbt.ImageIndex = cGreenGalka then
         Tbt.ImageIndex := cGreenDot
       else if Tbt.ImageIndex = cRedGalka then
@@ -281,10 +285,8 @@ begin
       if b then
         Tbt.ImageIndex := cRedGalka;
     end
-    else
-    begin
-      if AMode = mywscmActivate then
-      begin
+    else begin
+      if AMode = mywscmActivate then begin
         if b then
           Tbt.ImageIndex := cGreenGalka
         else
@@ -299,12 +301,10 @@ begin
   for i := FrmMain.FormsList.ComponentCount - 1 downto 0 do
   begin
     Tbt := FrmMain.FormsList.Buttons[i];
-    if (Tbt.Tag > 0) and (Tbt.Tag = AHandle) and (AMode = mywscmDestroy) then
-    begin
+    if (Tbt.Tag > 0) and (Tbt.Tag = AHandle) and (AMode = mywscmDestroy) then begin
       Tbt.Caption := '--' + Tbt.Caption;
       Tbt.Visible := False;
-      if i < Length(FWindows) then
-      begin
+      if i < Length(FWindows) then begin
         FWindows[i].Form := nil;
         FWindows[i].FormDoc := '';
       end;
@@ -321,8 +321,7 @@ begin
   try
     Tbt := TToolButton(Sender);
     for i := 0 to High(FWindows) do
-      if FWindows[i].Handle = Tbt.Tag then
-      begin
+      if FWindows[i].Handle = Tbt.Tag then begin
         if IsWindowVisible(Tbt.Tag) and (FWindows[i].Form <> nil) and
            (FWindows[i].Form.WindowState = wsMinimized) then
           FWindows[i].Form.WindowState := wsNormal;
@@ -343,8 +342,7 @@ begin
   for i := 0 to High(FWindows) do
   begin
     id1 := GetFormId(FWindows[i].Form);
-    if (AFormDoc = FWindows[i].FormDoc) and ((AId = Null) or (AId = id1)) then
-    begin
+    if (AFormDoc = FWindows[i].FormDoc) and ((AId = Null) or (AId = id1)) then begin
       FWindows[i].Form.BringToFront;
       Result := False;
       Exit;
@@ -366,8 +364,7 @@ begin
   for i := 0 to High(FWindows) do
   begin
     if (FWindows[i].Form <> nil) and (st1 = FWindows[i].FormDoc) and
-       ((AId = Null) or (AId = id1)) then
-    begin
+       ((AId = Null) or (AId = id1)) then begin
       Inc(Result);
       if FWindows[i].Number > AMaxNum then
         AMaxNum := FWindows[i].Number;
@@ -383,8 +380,7 @@ begin
   Result := 0;
   AMaxNum := 0;
   for i := 0 to High(FWindows) do
-    if (AFormDoc = FWindows[i].FormDoc) and ((AId = Null) or (AId = GetFormId(FWindows[i].Form))) then
-    begin
+    if (AFormDoc = FWindows[i].FormDoc) and ((AId = Null) or (AId = GetFormId(FWindows[i].Form))) then begin
       Inc(Result);
       if FWindows[i].Number > AMaxNum then
         AMaxNum := FWindows[i].Number;
@@ -399,8 +395,7 @@ var
 begin
   for i := 0 to High(FWindows) do
     with FrmMain.FormsList do
-      if AForm <> nil then
-      begin
+      if AForm <> nil then begin
         b := (AForm.Handle = Buttons[i].Tag);
         Buttons[i].Down := b;
         Buttons[i].ImageIndex := IfThen(b, 0, -1);
@@ -414,8 +409,7 @@ var
 begin
   Result := nil;
   for i := 0 to High(FWindows) do
-    if FWindows[i].Form = AForm then
-    begin
+    if FWindows[i].Form = AForm then begin
       Result := AForm;
       Exit;
     end;
@@ -690,6 +684,7 @@ begin
        ['o$s', cntEdit, 'Отчество','0:25::T'],
        ['birthday$d', cntDEdit, 'Дата'#13#10'рождение',''],
        ['is_concurrent$i', cntCheck, 'Совместитель',''],
+       ['phones$s', cntEdit, 'Телефон','0:400::T'],
        ['comm$s', cntEdit, 'Комментарий','0:400::T']],
       [['caption dlgedit']])
   else if AFormType = myfrm_Dlg_ForemanAllowance then
@@ -860,17 +855,16 @@ begin
   else if AFormType = myfrm_Dlg_J_Tasks then
     TFrmODedtTasks.Show(AOwner, AFormType, Opt + [myfoMultiCopy, myfoDialog], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_OrderTypes then
-    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'order_types', 'Типы заказов', 430, 90,
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'order_types', 'Типы заказов', 400, 100,
       [['name$s', cntEdit, 'Наименование','1:100'],
        ['is_production_order$i', cntCheck, 'Прозводственный'],
        ['is_semiproduct_order$i', cntCheck, 'Полуфабрикат'],
        ['is_shipment_order$i', cntCheck, 'Отгрузочный'],
        ['is_complaint$i', cntCheck, 'Рекламация'],
        ['is_additional_order$i', cntCheck, 'Дозаказ'],
-       ['is_reference_allowed$i', cntCheck, 'Допустима сcылка на заказ'],
-       ['is_reference_required$i', cntCheck, 'Обязательна сcылка на заказ'],
+       ['need_ref$i', cntCheck, 'Сcылка'#13#10'на заказ'],
        ['is_nonstandard$i', cntCheck, 'Нестандарт'],
-       ['is_nonstandard_only$i', cntCheck, 'Только нестандарт'],
+       ['is_nonstandard_only$i', cntCheck, 'Только'#13#10'нестандарт'],
        ['is_cash_payment$i', cntCheck, 'Наличные'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])

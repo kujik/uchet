@@ -78,6 +78,9 @@ type
     function Avg(const AFieldName: string): Double;
     function Min(const AFieldName: string): Variant;
     function Max(const AFieldName: string): Variant;
+    //группирует строки по значению поля AGroupField, суммируя указанные числовые поля ASumFields;
+    //для остальных полей берется значение из первой строки группы
+    function GroupSum(const AGroupField: string; const ASumFields: array of string): TNamedArr;
     //ортировка по нескольким полям с индивидуальными направлениями
     procedure Sort(const AFieldNames: TVarDynArray; const AAscending: array of Boolean); overload;
     //ортировка по нескольким полям с общим направлениями
@@ -814,6 +817,28 @@ begin
     if not VarIsNull(LVal) then
       if VarIsNull(Result) or (LVal > Result) then
         Result := LVal;
+  end;
+end;
+
+function TNamedArr.GroupSum(const AGroupField: string; const ASumFields: array of string): TNamedArr;
+//группирует по AGroupField, суммируя ASumFields; для прочих полей берет значение первой строки группы
+var
+  i, j, LGroupIdx: Integer;
+  LKey: Variant;
+  LSumCols: TArray<Integer>;
+begin
+  Result.Create(GetRawFieldNames);
+  System.SetLength(LSumCols, System.Length(ASumFields));
+  for j := 0 to System.High(ASumFields) do
+    LSumCols[j] := Col(ASumFields[j]);
+  for i := 0 to Count - 1 do begin
+    LKey := GetValue(i, AGroupField);
+    LGroupIdx := Result.FindFirst(AGroupField, LKey);
+    if LGroupIdx = -1 then
+      Result.AddRow(GetRow(i))
+    else
+      for j := 0 to System.High(LSumCols) do
+        Result.SetValueI(LGroupIdx, LSumCols[j], Result.GetValueI(LGroupIdx, LSumCols[j]) + GetValueI(i, LSumCols[j]));
   end;
 end;
 //==============================================================================

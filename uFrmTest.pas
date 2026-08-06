@@ -140,6 +140,7 @@ uses
   uExportToXlsx,
   uServerTasks,
   uFrmChooseDialog,
+  uFrmOWItmInfo,
 
 
   F_TestTree,
@@ -1421,7 +1422,10 @@ var
   i: Integer;
   st: string;
 begin
-TasksS.ReportForOverdueOrders(False);Exit;
+//    TFrmOWItmInfo.Show(Application, 'asdfghj', [myfoSizeable], FEdit, null, null); Exit;
+
+
+TasksS.ReportForOverdueOrders(False);TasksS.ReportForOverdueOrders(True);Exit;
 FrmXDinputPwd.ShowDialogP(APPlication);
 
 exit;

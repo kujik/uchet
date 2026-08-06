@@ -574,6 +574,15 @@ type
     function Count: Integer;
     function Row(ARow: Integer): TVarDynArray;
     function Col(ACol: Integer): TVarDynArray;
+    //находит позицию строки, в которой в столбце ACol значение равно AValue;
+    //в отличие от Col(ACol).Pos(AValue) не выделяет промежуточный массив
+    function PosInCol(const ACol: Integer; const AValue: Variant; const AIgnoreCase: Boolean = False): Integer;
+    //возвращает индексы строк текущего массива, для которых нет полного совпадения строки в AOther;
+    //типичный случай - синхронизация двух наборов данных (вставить недостающее)
+    function RowsNotIn(const AOther: TVarDynArray2): TArray<Integer>;
+    //возвращает индексы начала каждой группы одинаковых значений столбца ACol;
+    //массив должен быть предварительно отсортирован по этому столбцу
+    function GroupBoundaries(const ACol: Integer): TArray<Integer>;
   end;
 
 //------------------------------------------------------------------------------
@@ -4010,6 +4019,55 @@ end;
 function TVarDynArray2Helper.Col(ACol: Integer): TVarDynArray;
 begin
   Result := A.VarDynArray2ColToVD1(Self, ACol);
+end;
+
+function TVarDynArray2Helper.PosInCol(const ACol: Integer; const AValue: Variant; const AIgnoreCase: Boolean = False): Integer;
+//находит позицию строки, в которой в столбце ACol значение равно AValue
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to High(Self) do
+    if ((AIgnoreCase) and (SameText(VarToStr(Self[i][ACol]), VarToStr(AValue)))) or
+       ((not AIgnoreCase) and (Self[i][ACol] = AValue)) then
+      Exit(i);
+end;
+
+function TVarDynArray2Helper.RowsNotIn(const AOther: TVarDynArray2): TArray<Integer>;
+//возвращает индексы строк, для которых не нашлось полного совпадения в AOther
+var
+  i, lCnt: Integer;
+begin
+  System.SetLength(Result, System.Length(Self));
+  lCnt := 0;
+  for i := 0 to High(Self) do
+    if A.PosRowInArray(Self, AOther, i) = -1 then begin
+      Result[lCnt] := i;
+      Inc(lCnt);
+    end;
+  System.SetLength(Result, lCnt);
+end;
+
+function TVarDynArray2Helper.GroupBoundaries(const ACol: Integer): TArray<Integer>;
+//индексы начала каждой группы одинаковых значений столбца ACol (массив должен быть отсортирован)
+var
+  i, lCnt: Integer;
+  lLastValue: Variant;
+begin
+  System.SetLength(Result, System.Length(Self));
+  if System.Length(Self) = 0 then
+    Exit;
+  lCnt := 0;
+  Result[0] := 0;
+  Inc(lCnt);
+  lLastValue := Self[0][ACol];
+  for i := 1 to High(Self) do
+    if Self[i][ACol] <> lLastValue then begin
+      Result[lCnt] := i;
+      Inc(lCnt);
+      lLastValue := Self[i][ACol];
+    end;
+  System.SetLength(Result, lCnt);
 end;
 
 

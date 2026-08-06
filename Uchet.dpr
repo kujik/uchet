@@ -210,7 +210,8 @@ uses
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
   uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
-  uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps};
+  uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
+  uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo};
 
 var
   MT: Integer;
