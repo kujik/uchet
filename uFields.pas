@@ -37,7 +37,8 @@ type
     fvtCtrlSizes = 17,  //размеры/положение
     fvtFlags = 18,      //флаги
     fvtTags = 19,       //теги (через запятую)
-    fvtCustom = 20      //начало пользовательских индексов
+    fvtCheck = 20,      //поле участвует в проверке формы (Verify) и в отслеживании изменений (тег CH=1)
+    fvtCustom = 21      //начало пользовательских индексов
   );
 
   TDefFiledcValueTypeSet = set of TDefFiledcValueType;
@@ -49,6 +50,7 @@ const
   fvpFlags = 'F=';      //флаги
   fvpSizes = 'S=';      //размеры
   fvpTags = 'T=';       //теги
+  fvpCheck = 'CH=';     //включение поля в проверку формы (Verify) и отслеживание изменений
 
 type
   TDefFiledcValue = (
@@ -73,6 +75,8 @@ type
     function  FindAllProps(const APropName: string): TVarDynArray;
     function  GetAllPropIndices: TVarDynArray;
     function  CollectIndices(const PropNames: string): TVarDynArray;
+    //буква типа значения для S.VeryfyValue, взятая из fvtFName (символ после '$', по умолчанию 's')
+    function  GetVerifyTypeLetter(AIndex: Integer): string;
   protected
   public
     property DefineFields: TVarDynArray2 read FDefineFields write FDefineFields;
@@ -119,6 +123,10 @@ type
     procedure SetPropsCaptions(PropNames: string = '');
     //список полей через ; (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
     function  GetChangedProps(PropNames: string = ''): string;
+    //проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
+    //а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
+    //(тип значения берётся из буквы после '$' в fvtFName, по умолчанию 's')
+    procedure VerifyChecked(var AHasError: Boolean; var AErrorSt: string; var AIsChanged: Boolean);
     //служебные методы
     function  PropNameFromControl(C: TObject): string;
     function  Count: Integer;
@@ -240,6 +248,8 @@ begin
         SetFieldValue(ARowIndex, Integer(fvtCtrlSizes), Copy(tagStr, 3))
       else if Pos(fvpTags, tagStr) = 1 then
         SetFieldValue(ARowIndex, Integer(fvtTags), Copy(tagStr, 3))
+      else if Pos(fvpCheck, tagStr) = 1 then
+        SetFieldValue(ARowIndex, Integer(fvtCheck), Copy(tagStr, Length(fvpCheck) + 1))
       else
       begin
         SetFieldValue(ARowIndex, Integer(fvtVBeg), v);
@@ -419,6 +429,20 @@ begin
   end;
 end;
 
+function TFields.GetVerifyTypeLetter(AIndex: Integer): string;
+//буква типа значения для S.VeryfyValue, взятая из fvtFName (символ после '$', по умолчанию 's')
+var
+  fn: string;
+  p: Integer;
+begin
+  fn := VarToStr(GetFieldValue(AIndex, Integer(fvtFName)));
+  p := Pos('$', fn);
+  if (p > 0) and (p < Length(fn)) then
+    Result := fn[p + 1]
+  else
+    Result := 's';
+end;
+
 { TFields }
 
 constructor TFields.Create(ASelf: TForm);
@@ -536,6 +560,8 @@ end;
 
 function TFields.GetPropCaptions(PropNames: string = ''): TVarDynArray;
 //получение заголовков контролов для нескольких полей (fvtCtrlCaption);
+//если явно указанный заголовок начинается с '-', возвращается без минуса
+//(минус используется только в SetPropsCaptions, чтобы не устанавливать заголовок на контрол);
 //если не задан явно, а контрол найден - берется TDBEditEh.ControlLabel.Caption либо TDbCheckboxEh.Caption
 var
   indices: TVarDynArray;
@@ -556,7 +582,9 @@ begin
         v := TDBEditEh(c).ControlLabel.Caption
       else if c is TDbCheckboxEh then
         v := TDbCheckboxEh(c).Caption;
-    end;
+    end
+    else if Pos('-', S.NSt(v)) = 1 then
+      v := Copy(S.NSt(v), 2);
     Result[i] := v;
   end;
 end;
@@ -791,7 +819,8 @@ begin
 end;
 
 procedure TFields.SetPropsCaptions(PropNames: string = '');
-//устанавливает заголовки контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption
+//устанавливает заголовки контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption;
+//если заголовок начинается с '-', то для этого поля заголовок на контрол не устанавливается
 var
   indices: TVarDynArray;
   i, idx: Integer;
@@ -804,6 +833,8 @@ begin
     idx := Integer(indices[i]);
     v := GetProp(idx, fvtCtrlCaption);
     if S.NSt(v) = '' then
+      Continue;
+    if Pos('-', S.NSt(v)) = 1 then
       Continue;
     c := FSelf.FindComponent(GetFieldValue(idx, Integer(fvtCtrl)));
     if c is TDBEditEh then
@@ -836,6 +867,58 @@ begin
       isChanged := (vBeg <> vCurr);
     if isChanged then
       Result := Result + S.IIfStr(Result <> '', ';') + GetName(idx);
+  end;
+end;
+
+procedure TFields.VerifyChecked(var AHasError: Boolean; var AErrorSt: string; var AIsChanged: Boolean);
+//проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
+//а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
+//(тип значения берётся из буквы после '$' в fvtFName, по умолчанию 's');
+//если fvtVer не задано - только контроль изменения, без контроля корректности
+var
+  i: Integer;
+  vBeg, vCurr, CorrectValue: Variant;
+  isChanged: Boolean;
+  verRule: string;
+  caps: TVarDynArray;
+  caption: string;
+begin
+  AHasError := False;
+  AErrorSt := '';
+  AIsChanged := False;
+
+  for i := 0 to High(FDefineFieldsAdd) do
+  begin
+    if VarToStr(GetFieldValue(i, Integer(fvtCheck))) = '' then
+      Continue;
+
+    vBeg := GetProp(i, fvtVBeg);
+    vCurr := GetProp(i, fvtVCurr);
+    if VarIsNull(vBeg) and VarIsNull(vCurr) then
+      isChanged := False
+    else if VarIsNull(vBeg) or VarIsNull(vCurr) then
+      isChanged := True
+    else
+      isChanged := (vBeg <> vCurr);
+    if isChanged then
+      AIsChanged := True;
+
+    verRule := VarToStr(GetProp(i, fvtVer));
+    if verRule = '' then
+      Continue;
+
+    if not S.VeryfyValue(GetVerifyTypeLetter(i), verRule, VarToStr(vCurr), CorrectValue) then
+    begin
+      AHasError := True;
+      caps := GetPropCaptions(GetName(i));
+      if Length(caps) > 0 then
+        caption := VarToStr(caps[0])
+      else
+        caption := '';
+      if caption = '' then
+        caption := GetName(i);
+      S.ConcatStP(AErrorSt, 'Поле "' + caption + '": некорректное значение', #13#10);
+    end;
   end;
 end;
 

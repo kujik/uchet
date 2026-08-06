@@ -1672,11 +1672,11 @@ begin
 end;
 
 procedure TFrmBasicMdi.Verify(Sender: TObject; onInput: Boolean = False);
-// основная проверка данных: контролы, гриды, панели, дополнительная проверка
+// основная проверка данных: контролы, гриды, панели, поля (fvtCheck), дополнительная проверка
 var
-  GridsErr, PanelsErr: Boolean;
-  GridsErrSt, PanelsErrSt: string;
-  GridsCh, PanelsCh: Boolean;
+  GridsErr, PanelsErr, FieldsErr: Boolean;
+  GridsErrSt, PanelsErrSt, FieldsErrSt: string;
+  GridsCh, PanelsCh, FieldsCh: Boolean;
   b: Boolean;
   i: Integer;
 begin
@@ -1694,6 +1694,13 @@ begin
 
   // проверка гридов
   VerirfyGrids(nil, GridsErr, GridsErrSt, GridsCh);
+
+  // проверка полей с тегом fvtCheck (CH=1): контроль изменения значения, а если задано fvtVer - также корректности (S.VeryfyValue)
+  FieldsErr := False;
+  FieldsErrSt := '';
+  FieldsCh := False;
+  if F <> nil then
+    F.VerifyChecked(FieldsErr, FieldsErrSt, FieldsCh);
 
   // проверка конкретного контрола (если передан)
   if Sender <> nil then
@@ -1720,7 +1727,7 @@ begin
       end;
 
   // общий статус ошибки
-  HasError := not Cth.VerifyVisualise(Self) or b or GridsErr or PanelsErr;
+  HasError := not Cth.VerifyVisualise(Self) or b or GridsErr or PanelsErr or FieldsErr;
 
   // сбор сообщений об ошибках
   FErrorMessage := '';
@@ -1728,10 +1735,12 @@ begin
     S.ConcatStP(FErrorMessage, GridsErrSt, #13#10);
   if PanelsErrSt <> '' then
     S.ConcatStP(FErrorMessage, PanelsErrSt, #13#10);
+  if FieldsErrSt <> '' then
+    S.ConcatStP(FErrorMessage, FieldsErrSt, #13#10);
 
-  // признак изменения данных (только для контролов и гридов, панели не вносят изменений)
+  // признак изменения данных (только для контролов, гридов и полей fvtCheck, панели не вносят изменений)
   if not FInPrepare then
-    FIsDataChanged := (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or GridsCh;
+    FIsDataChanged := (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or GridsCh or FieldsCh;
 
   RefreshStatusBar('*', '*', True);
 end;

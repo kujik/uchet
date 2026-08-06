@@ -35,6 +35,7 @@ __recovery
 !*.inc
 !*.dll
 !*.xlsx
+!*.ps1
 !.gitignore
 
 

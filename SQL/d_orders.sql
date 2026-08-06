@@ -591,7 +591,18 @@ with
 select
   o.*,
   ro.name as organization,
-  decode(o.id_status, 1, 'на оформлениии', 2, 'проведен', 3, 'запущен в работу', '') as status,
+  case 
+    when o.id_status = -1 then 'остановлен'
+    when o.id_status = -2 then 'удален'
+    when o.id_status =  1 then 'на оформлении'
+    when o.id_status =  2 then 'проведен'
+    when o.id_status =  3 and nvl(z.id_status, 0) < 28 then 'запущен в работу'
+    when o.id_status =  3 and nvl(z.id_status, 0) = 28 then 'на выполнении'
+    when o.id_status =  3 and nvl(z.id_status, 0) = 30 then 'выполнен'
+    when o.id_status =  3 and o.dt_to_sgp is not null then 'на сгп'
+    when o.id_status =  3 and o.dt_from_sgp is not null then 'отгружен'
+    when o.id_status =  3 and o.dt_end is not null then 'закрыт'
+  end as status,  
   rc.name as customer,
   rcc.name as customerman,
   rcc.contact as customercontact,
@@ -653,7 +664,7 @@ select
   --F_GetCostOrderItemsFromItm(o.id, null) as sum0,
   0 as sum0,
   sz.id_status as id_status_itm,
-  sz.statusname as status_itm,
+  nvl(sz.statusname, 'нет в итм') as status_itm,
   trunc(rsv.dt_reserve) as dt_reserve,
   agg.qnt_slashes,
   agg.qnt_items,

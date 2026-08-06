@@ -1230,7 +1230,7 @@ from
   v_orders 
 where 
   id > 0 and
-  id_organization = -1 and dt_otgr < nvl(dt_to_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' order by dt_beg
+  id_organization = -1 and dt_otgr < nvl(dt_to_sgp, trunc(sysdate)) and dt_beg >= date '2023-06-01' order by dt_beg
 ;
 
 create or replace view v_rep_overdue_shipment_orders as
@@ -1244,6 +1244,10 @@ from
   v_orders 
 where 
   id > 0 and
-  id_organization <> -1 and dt_otgr < nvl(dt_from_sgp, trunc(sysdate)) and dt_beg >= date '2026-06-01' /*and dt_from_sgp is null */ order by dt_beg
+  id_organization <> -1 and dt_otgr < nvl(dt_from_sgp, trunc(sysdate)) and dt_beg >= date '2023-06-01' /*and dt_from_sgp is null */ order by dt_beg
 ;
+
+
+
+
 
