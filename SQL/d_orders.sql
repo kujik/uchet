@@ -330,6 +330,7 @@ from
 
 --------------------------------------------------------------------------------
 alter table orders drop column status;
+alter table orders drop column ch_comm;
 
 --alter table orders add id_or_reference number(11);
 --alter table orders add id_or_reference number(11);
@@ -341,7 +342,7 @@ alter table orders add id_launched_by number(11);
 alter table orders add constraint fk_id_launched_by foreign key (id_launched_by) references adm_users(id);
 alter table orders add id_or_reference number(11);
 alter table orders add constraint fk_id_or_reference foreign key (id_or_reference) references orders(id);
-alter table orders add id_status number(2) default 1;
+alter table orders add id_status number(2) default 0;
 --update orders set id_status = 3;
 alter table orders add order_number_customer varchar2(400);
 alter table orders add basis_text varchar2(4000);
@@ -368,7 +369,7 @@ create table orders (
   num number(4),                     -- номер заказа 
   ornum varchar(16) unique,          -- полный номер заказа —√230013 
   templatename varchar2(400),        -- название шаблона, только дл€ шаблонов
-  id_status number(2) default 1,     -- стутус заказа (1 - на оформлении, 2 - проведен, 3 - запущен в работу)
+  id_status number(2) default 0,     -- стутус заказа (0 - на оформлении, 1 - проведен, 2 - запущен в работу)
   basis_text varchar2(4000),         -- основание (текстовое мемо-0поле) 
   area number(1) default 0,          -- производственна€ площадка (0 - ѕў, 1 - »нженерный)
   estimatepath varchar2(400),        -- путь к сметам дл€ стандартных шаблонов 
@@ -421,7 +422,7 @@ create table orders (
   discount number(12,2),             -- сумма скидки Ќ≈ используем
   comm varchar(4000),                -- произвольный комментарий к заказу                           
   ch varchar(4000),                  -- изменени€, сделанные в заголовке заказа, имена контролов через зап€тую   
-  ch_comm varchar(4000),             -- изменени€, сделанные в заказе, в текстовом виде   
+  --ch_comm varchar(4000),             -- изменени€, сделанные в заказе, в текстовом виде   
   path varchar2(400),                -- наименование каталога заказа на Z
   in_archive number(1),              -- 1 - заказа перемещен в архив 
   dt_end date,                       -- дата закрыти€ заказа
@@ -594,9 +595,9 @@ select
   case 
     when o.id_status = -1 then 'остановлен'
     when o.id_status = -2 then 'удален'
-    when o.id_status =  1 then 'на оформлении'
-    when o.id_status =  2 then 'проведен'
-    when o.id_status =  3 and nvl(z.id_status, 0) < 28 then 'запущен в работу'
+    when o.id_status =  0 then 'на оформлении'
+    when o.id_status =  1 then 'проведен'
+    when o.id_status =  2 and nvl(z.id_status, 0) < 28 then 'запущен в работу'
     when o.id_status =  3 and nvl(z.id_status, 0) = 28 then 'на выполнении'
     when o.id_status =  3 and nvl(z.id_status, 0) = 30 then 'выполнен'
     when o.id_status =  3 and o.dt_to_sgp is not null then 'на сгп'

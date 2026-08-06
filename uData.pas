@@ -964,6 +964,7 @@ const
   myfrm_Rep_Turv='Rep_Turv';
   myfrm_Rep_OrdersFinMonitoring='Rep_OrdersFinMonitoring';
   myfrm_J_Orders_SEL = 'J_Orders_SEL';
+  myfrm_Rep_OrderChanges='Rep_OrderChange';
 
   {планирование}
   myfrm_R_PnlOpsPainting = 'R_PnlOpsPainting';

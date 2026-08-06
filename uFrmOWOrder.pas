@@ -74,8 +74,7 @@ type
     chbVisFinance: TDBCheckBoxEh;
     chbVisAddInfo: TDBCheckBoxEh;
     pnlOrderInfo: TPanel;
-    lbl_ITM: TLabel;
-    lbl_status_itm: TLabel;
+    lbl_status: TLabel;
     PHlBasis: TPanel;
     pnlBasisComm: TPanel;
     m_basis_text: TDBMemoEh;
@@ -148,6 +147,7 @@ type
     FOrderTypeIndes: Integer;
     //список изделий в заказе на момент его загрузки
     FOrderItemsOld: TNamedArr;
+    FOrderTitleChangedFields, FOrderTitleChangedFieldNames: string;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -175,6 +175,7 @@ type
     procedure SwitchBasisPanel(ALoadFirst: Boolean);
     procedure SetControlEnabledState;
     procedure SetPermanetFieldProps;
+    procedure SetOrderStatusLabels;
     procedure CreateButtons;
     procedure SetButtons;
     procedure SetEditButtons;
@@ -196,6 +197,10 @@ type
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     function  SetTaskForServer: Boolean;
     procedure GetFrgItemsRowChanges;
+    function  GetOrderChangedfieldNames: string;
+    procedure HighlihtPreviousChangedControls;
+    procedure HighlihtCurrentChangedControls;
+
 
 
 //    procedure VerifyBeforeSave; virtual;
@@ -230,6 +235,8 @@ type
     //события грида внешних документов и грида файлов основания заказа
     procedure FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
     procedure FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
+    //процедура разработчика для отладочных действий
+    procedure Test;
   public
   end;
 
@@ -255,6 +262,14 @@ const
   WMIN_CUSTOMER = 250;
   PROP_NUM_VER_BEG = 2;
 
+  mbtOrderViewHistory = 1001;
+  mbtOrderReloadPrices = 1002;
+  mbtOrderReloadRoutes = 1003;
+  mbtOrderStop = 1004;
+
+const
+  clMyChangesColor = $A0FFFF; // RGB(255, 255, 100)
+  clMyNot0Color = $AAFFAA;    //RGB(220, 255, 220);
 
 procedure TFrmOWOrder.AfterFormActivate;
 //вызывается непосредственно перед показов формы, когда все данные уже загружены и поля формы установлены
@@ -265,7 +280,6 @@ begin
   //установим видимость кнопок
   SetButtons;
 end;
-
 
 procedure TFrmOWOrder.cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
 //обработка нажатия клавиши в поле ввода формы оплаты/счета
@@ -298,6 +312,9 @@ begin
   edt_launched_by_name.Width := edt_managername.Width;
   edt_launched_by_name.Right := cmb_project.Right;
   edt_templatename.SetRightKeepLeft(pnlFrmBtnsC.Parent.Right - 4);
+  //растягиваем панель отображения статуса заказа в заголовке грида изделия
+  if FrgItems.FindComponent('Bt_1000') <> nil then
+    TPanel(FrgItems.FindComponent('pnlTopBtnsCtl2')).SetRightKeepLeft(TButton(FrgItems.FindComponent('Bt_1000')).Left - 10);
 end;
 
 function TFrmOWOrder.Prepare: Boolean;
@@ -590,15 +607,35 @@ begin
   ];
   FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
   FrgItems.Opt.SetFields(LFields);
+  //верхняя панель (кнопки и панели контролов)
   FrgItems.Opt.SetButtons(1, [
     [mbtRefresh, True, 1, 'Обновить данные из справочника изделий'],
-    [mbtInsert, True, 1],
-    [mbtAdd, True, 1],
-    [mbtDelete, True, 1],
+    [mbtInsert, Mode in [fAdd, fEdit, fCopy], 1],
+    [mbtAdd, 1, 1],
+    [mbtDelete, 1, 1],
     [],
     [mbtCtlPanel],
     [],
-    [mbtCtlPanel ,4000],
+    [mbtCtlPanel ,400],
+    [mbtToAlRight],
+    [],
+    //кнопка дополнительныых действий по заказу
+      [mbtDividorM],
+      [1000, True, 106, 'Действия', 'ok'],
+      [mbtOrderViewHistory,
+      not (FIsTemplate and (Mode in [fEdit, fView])) {and A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])}, //!!!
+      'Просмотреть историю изменений', ''],
+      [],
+      [mbtOrderReloadPrices, Mode in [fEdit, fAdd, fCopy], 'Загрузить цены из справочника'],
+      [],
+      [mbtOrderReloadRoutes, Mode in [fEdit, fAdd, fCopy], 'Загрузить маршрут из справочника'],
+      [],
+      [mbtOrderStop,
+      not FIsTemplate and (Mode in [fEdit]) and (F.GetProp('id_status').AsInteger =  ORDER_ID_STATUS_STARTED),
+      User.Role(rOr_D_Order_Stop), 'Остановить заказ', ''],
+      [],
+      [mbtTest, User.IsDeveloper],
+      [mbtDividorM],
     []
   ]);
   FrgItems.CreateAddControls('1', cntCheck, 'Показать с нулевым количеством', 'ChbView0', '', 4, yrefC, 190);
@@ -633,6 +670,7 @@ begin
   FrgItems.OnVeryfyAndCorrectValues := FrgItemsVeryfyAndCorrect;
   FrgItems.OnCellValueSave := FrgItemsCellValueSave;
   FrgItems.RefreshGrid;
+  //FrgItems.SetBtnNameEnabled(1000, null, F.GetProp('id_state').AsInteger < 2);
   FrgItems.IsTableCorrect;
   FrgItems.SetControlValue('ChbView0', S.IIf(Mode in [fView, fDelete], 0, 1));
   RecalculateItemsPrices;
@@ -1359,14 +1397,34 @@ end;
 
 
 procedure TFrmOWOrder.FrgItemsButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+//обработка нажатия кнопок фрейма грида изделий заказа
 begin
   case Tag of
+    mbtTest:
+      Test;
     mbtInsert:
-      FrgItems.InsertRow;
+      //вставляем в любую позицию строку в шаблоне, при создании или копировании, и при редактировании в непроведенном заказе
+      if (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') > 0) then
+        if FIsTemplate or (Mode in [fAdd, fCopy]) or (Fr.GetRawRowCurrent > FOrderItemsOld.High) then
+           Fr.InsertRow;
     mbtAdd:
-      FrgItems.AddRow;
+      //добавляем строку в конец таблицы
+      if (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') > 0) then
+        if FIsTemplate or (Mode in [fAdd, fCopy]) then
+          Fr.AddRow;
     mbtDelete:
-      FrgItems.DeleteRow;
+      //удаляем строку, правила те же что при вставке
+      if (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') > 0) then
+        if FIsTemplate or (Mode in [fAdd, fCopy]) or (Fr.GetRawRowCurrent > FOrderItemsOld.High) then
+          if MyQuestionMessage('Удалить запись?') = mrYes then
+            Fr.DeleteRow;
+    mbtOrderViewHistory:
+      Wh.ExecDialog(myfrm_Rep_OrderChanges, Self, [], fView, ID, null);
+{
+    mbtOrderStop:
+    mbtOrderReloadPrices:
+    mbtReloadRoutes:
+    }
   end;
 end;
 
@@ -1457,7 +1515,7 @@ end;
 
 
 procedure TFrmOWOrder.AfterLoadData;
-//вызывается в препаре после загрузки данных и родительского метода
+//вызывается в препаре после загрузки данных и родительского метода, но до инициализации и загрузки табюлиц
 begin
   FUsedEstimateFormat := F.GetPropB('id_or_format_estimates').AsIntegerM;
   SetAreasCaptions;
@@ -1481,10 +1539,13 @@ begin
   end;
 
   //буферизация, иначе тормозит ресайз, тк много контролов меняют размер
+  Self.DoubleBuffered := True;
 
   SwitchBasisPanel(True);
+  SetOrderStatusLabels;
   Verify(nil);
   SetPermanetFieldProps;
+  HighlihtPreviousChangedControls;
 end;
 
 procedure TFrmOWOrder.AfterLoadTables;
@@ -1562,9 +1623,9 @@ begin
   if FieldName = 'slash' then
     Params.Text := edt_ornum.Text + '_' + S.Right('000' + IntToStr(Fr.GetRawRowCurrent + 1), 3);
   if Fr.GetValueF('qnt') > 0 then
-    Params.Background := RGB(220, 255, 220);
+    Params.Background := clMyNot0Color;
   if S.InCommaStr(FieldName, Fr.GetValue('ch').AsString) then
-    Params.Background := RGB(255, 255, 100);
+    Params.Background := clMyChangesColor
 
 
 {  if FieldName = 'price' then
@@ -1998,6 +2059,7 @@ begin
   GetOrderPath;
   //прочие поля
   F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
+  F.SetProp('ch', GetOrderChangedfieldNames);
   FieldsSave2 := '';
   CtrlValues2 := [];
   //получим поля и их значения, по тем для которых указано сохранение
@@ -2069,6 +2131,7 @@ begin
 //  Cth.SetButtonsAndPopupMenuCaptionEnabled(FPanelsBtn, mbtOk, AName, not HasError, '');
   Cth.SetButtonState(Self, mbtSave, null, not HasError, True);
   Cth.SetButtonState(Self, mbtApprove, null, not HasError, True);
+  HighlihtCurrentChangedControls;
 end;
 
 function TFrmOWOrder.SaveOrderItems: Boolean;
@@ -2210,15 +2273,12 @@ begin
   //достаточно установить fvtVBeg
   if Mode in [fCopy, fAdd] then begin
     F.SetProp('id_manager', User.GetId, fvtVBeg);
-    //F.SetProp('id_manager', User.GetId);
     F.SetProp('managername', User.GetName, fvtVBeg);
-    //F.SetProp('managername', User.GetName);
     F.SetProp('id_launched_by', User.GetId, fvtVBeg);
-    //F.SetProp('id_launched_by', User.GetId);
-    F.SetProp('launched_by_name', User.GetName, fvtVBeg);
-    //F.SetProp('launched_by', User.GetName);
-    F.SetProp('launched_by_name', User.GetName, fvtVBeg);
-    F.SetProps('dt_end;dt_otgr;dt_montage_beg;dt_montage_end;dt_start;dt_change', null, fvtVBeg);
+    F.SetProp('launched_by_name', null, fvtVBeg);
+    F.SetProp('launched_by_name', null, fvtVBeg);
+    F.SetProp('id_status', 0, fvtVBeg);
+    F.SetProps('dt_end;dt_otgr;dt_montage_beg;dt_montage_end;dt_start;dt_change;id_status_itm;status_itm;status', null, fvtVBeg);
     F.SetProp('dt_beg', Date, fvtVBeg);
   end;
 end;
@@ -2355,6 +2415,24 @@ begin
   end;
 end;
 
+procedure TFrmOWOrder.SetOrderStatusLabels;
+//сообщение о статусе заказа
+begin
+  if FIsTemplate then
+    lbl_status.SetCaption('$FF0000Шаблон заказа')
+  else
+    lbl_status.SetCaption(
+      '$FF0000Статус заказа: ' +
+      S.Decode([F.GetProp('id_status').AsInteger, 0, '$00FFFF', 1, '$FF00FF', 2, '$00FF00']) +
+      S.IfEmptyStr(F.GetProp('status').AsString, 'на выполнении') +
+      S.IIfStr(not (Mode in [fAdd, fCopy]),
+      '$FF0000   ИТМ: ' +
+      S.DecodeBool([F.GetProp('id_status_itm').AsInteger = 0, '$0000FF', F.GetProp('id_status_itm').AsInteger < 28, '$000000', F.GetProp('id_status_itm').AsInteger = 28, '$FF00FF', F.GetProp('id_status_itm').AsInteger >= 28, '$00FF00']) +
+      S.IfEmptyStr(F.GetProp('status_itm').AsString, 'нет в итм')
+      )
+    );
+end;
+
 procedure TFrmOWOrder.GetFrgItemsRowChanges;
 //получим список измененных полей (только те что были загружены, а не расчетных), и сохраним его в поле 'chg' через запятую
 //вызывается при изменении значения вручную, потому только при ручном редактировании таблице, притом если было изменение значения
@@ -2376,6 +2454,55 @@ begin
         S.ConcatStP(LChgSt, LFields[i], ',');
   end;
   FrgItems.SetValue('ch', LChgSt);
+end;
+
+function TFrmOWOrder.GetOrderChangedfieldNames: string;
+begin
+  Result := F.GetProps('ch', fvtVName).Implode(',');
+end;
+
+procedure TFrmOWOrder.HighlihtCurrentChangedControls;
+//подсветим все контролы, значения которых в строковом виде сейчас не равны первоначальным
+begin
+  if (Mode in [fView, fDelete, fAdd, fCopy]) then
+    Exit;
+  var LPropNames: TVarDynArray := F.GetProps(F.GetProps('ch', fvtVName).Implode(';'), fvtVName);
+  for var LPropName: string in LPropNames do begin
+    var LControlName := F.GetProp(LPropName, fvtCtrl).AsString;
+    if LControlName = '' then
+      Continue;
+    var c: TComponent := Self.FindComponent(LControlName);
+    if c = nil then
+      Continue;
+    if Cth.GetControlValue(c).AsString <> F.GetPropB(LPropName).AsString then
+      TEdit(c).Color := clMyChangesColor
+    else if TDBEditEh(c).ReadOnly then
+      TEdit(c).Color := clmyDisabled
+    else
+      TEdit(c).Color := clWhite;
+  end;
+end;
+
+procedure TFrmOWOrder.HighlihtPreviousChangedControls;
+//подсветим в режиме просмотра заказа контпролы, значения которых были изменены при последнем редактировании
+begin
+  //if FIsTemplate or (Mode <> fView) then
+    //Exit;
+  var LPropNames: TVarDynArray := A.Explode(F.GetProp('ch', fvtVName), ',');
+  for var LPropName: string in LPropNames do begin
+    var LControlName := F.GetProp(LPropName, fvtCtrl).AsString;
+    if LControlName = '' then
+      Continue;
+    var c: TComponent := Self.FindComponent(LControlName);
+      if c = nil then
+      Continue;
+    TEdit(c).Color := clMyChangesColor;
+  end;
+end;
+
+procedure TFrmOWOrder.Test;
+begin
+  HighlihtPreviousChangedControls;
 end;
 
 
@@ -2582,3 +2709,7 @@ end;
 блокировка действий в гридах в зависимости от статуса и при просмотре/удалении
 
 FrgItemsButtonClick - ненльзя удалять.вставлять строки в пределах того что уже было при редактироывании???
+
+нужно ли оббновление цен из справочника при редактировании? как это логгировать?
+
+строки нельзя вставлять/удалять при редактировании проведенного заказа?

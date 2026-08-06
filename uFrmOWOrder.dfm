@@ -1,5 +1,5 @@
 inherited FrmOWOrder: TFrmOWOrder
-  Caption = 'FrmOWOrder'
+  Caption = '\'
   ClientHeight = 704
   ClientWidth = 1283
   OnResize = FormResize
@@ -82,6 +82,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -213,6 +214,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -430,6 +432,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -574,25 +577,18 @@ inherited FrmOWOrder: TFrmOWOrder
           ParentBackground = False
           TabOrder = 1
           ExplicitWidth = 1267
-          object lbl_ITM: TLabel
-            Left = 9
-            Top = 2
-            Width = 54
-            Height = 29
-            Caption = #1048#1058#1052
+          object lbl_status: TLabel
+            Left = 6
+            Top = 12
+            Width = 51
+            Height = 14
+            Caption = 'lbl_status'
             Font.Charset = DEFAULT_CHARSET
-            Font.Color = clHotLight
-            Font.Height = -24
-            Font.Name = 'MS Sans Serif'
+            Font.Color = clWindowText
+            Font.Height = -12
+            Font.Name = 'Tahoma'
             Font.Style = []
             ParentFont = False
-          end
-          object lbl_status_itm: TLabel
-            Left = 81
-            Top = 12
-            Width = 66
-            Height = 13
-            Caption = 'lbl_status_itm'
           end
         end
       end
@@ -1487,7 +1483,6 @@ inherited FrmOWOrder: TFrmOWOrder
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 ExplicitHeight = 8
@@ -1679,11 +1674,7 @@ inherited FrmOWOrder: TFrmOWOrder
     ExplicitWidth = 1279
     inherited lblStatusBarR: TLabel
       Left = 1210
-      Height = 14
       ExplicitLeft = 1210
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

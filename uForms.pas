@@ -442,6 +442,7 @@ function clmyYelow: Cardinal;
 function clmyGreen: Cardinal;
 function clmyGray: Cardinal;
 function clmyBlue: Cardinal;
+function clmyDisabled: Cardinal;
 
 
 var
@@ -472,6 +473,10 @@ end;
 function clmyBlue: Cardinal;
 begin
   Result := RGB(180, 180, 255);  //голубой
+end;
+function clmyDisabled: Cardinal;
+begin
+  Result := RGB(230, 230, 230);  //для заблокированных контролов -  серый
 end;
 
 
@@ -2670,7 +2675,7 @@ begin
       end;
     end;
     if Greyed and (AControl is TCustomDBEditEh) then begin
-      SetEhControlColor(AControl, RGB(230, 230, 230));
+      SetEhControlColor(AControl, clmyDisabled);
     end;
   end;
 end;

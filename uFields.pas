@@ -121,8 +121,8 @@ type
     function  SetPropsControls(PropNames: string = ''; PropValueTypes: TDefFiledcValueTypeSet = [fvtVBeg, fvtDsbl, fvtVer]): Integer;
     //установка заголовков контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption
     procedure SetPropsCaptions(PropNames: string = '');
-    //список полей через ; (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
-    function  GetChangedProps(PropNames: string = ''): string;
+    //возвращает массив имен полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
+    function  GetChangedProps(PropNames: string = ''): TVarDynArray;
     //проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
     //а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
     //(тип значения берётся из буквы после '$' в fvtFName, по умолчанию 's')
@@ -844,29 +844,30 @@ begin
   end;
 end;
 
-function TFields.GetChangedProps(PropNames: string = ''): string;
-//возвращает через ; имена полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
+function TFields.GetChangedProps(PropNames: string = ''): TVarDynArray;
+//возвращает массив имен полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
 var
   indices: TVarDynArray;
   i, idx: Integer;
   vBeg, vCurr: Variant;
   isChanged: Boolean;
 begin
-  Result := '';
+  Result := [];
   indices := CollectIndices(PropNames);
   for i := 0 to High(indices) do
   begin
     idx := Integer(indices[i]);
     vBeg := GetProp(idx, fvtVBeg);
     vCurr := GetProp(idx, fvtVCurr);
-    if VarIsNull(vBeg) and VarIsNull(vCurr) then
+{    if VarIsNull(vBeg) and VarIsNull(vCurr) then
       isChanged := False
     else if VarIsNull(vBeg) or VarIsNull(vCurr) then
       isChanged := True
     else
-      isChanged := (vBeg <> vCurr);
+      isChanged := (vBeg <> vCurr);              }
+    isChanged := (vBeg.AsString <> vCurr.AsString);
     if isChanged then
-      Result := Result + S.IIfStr(Result <> '', ';') + GetName(idx);
+      Result := Result + [GetName(idx)];
   end;
 end;
 
@@ -894,12 +895,7 @@ begin
 
     vBeg := GetProp(i, fvtVBeg);
     vCurr := GetProp(i, fvtVCurr);
-    if VarIsNull(vBeg) and VarIsNull(vCurr) then
-      isChanged := False
-    else if VarIsNull(vBeg) or VarIsNull(vCurr) then
-      isChanged := True
-    else
-      isChanged := (vBeg <> vCurr);
+    isChanged := (vBeg.AsString <> vCurr.AsString);
     if isChanged then
       AIsChanged := True;
 

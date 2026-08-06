@@ -126,6 +126,7 @@ uses
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
+  uFrmOWRepOrderChanges,
 
   uFrmPWedtPlnOps,
   uFrmXGlstMain,
@@ -792,6 +793,8 @@ begin
   else if AFormType = myfrm_Dlg_Order then
 //    Form := TDlg_Order.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
     TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
+  else if AFormType = myfrm_Rep_OrderChanges then
+    TFrmOWRepOrderChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Candidates_Ad then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_candidates_ad;;sq_ref_suppliers', 'Источники информации о вакансии', 400, 100,
       [['name$s', cntEdit, 'Наименование','1:100']],

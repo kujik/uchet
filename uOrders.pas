@@ -139,9 +139,11 @@ const
   ORDER_AUDIT_KNS_DOC = 3;
   ORDER_AUDIT_THN_DOC = 4;
 
-  ORDER_ID_STATUS_DRAFT = 1;
-  ORDER_ID_STATUS_APPROVED = 2;
-  ORDER_ID_STATUS_STARTED = 3;
+  ORDER_ID_STATUS_DRAFT = 0;
+  ORDER_ID_STATUS_APPROVED = 1;
+  ORDER_ID_STATUS_STARTED = 2;
+  ORDER_ID_STATUS_STOPPED = -1;
+  ORDER_ID_STATUS_DELETED = -2;
 
   cOrdersOrderStatusNames: array [1..3] of string =
     ('на оформлении', 'проведен', 'запущен в работу');

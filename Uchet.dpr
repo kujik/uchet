@@ -211,7 +211,8 @@ uses
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
   uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
   uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
-  uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo};
+  uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo},
+  uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges};
 
 var
   MT: Integer;
