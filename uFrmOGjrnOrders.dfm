@@ -118,11 +118,7 @@ inherited FrmOGjrnOrders: TFrmOGjrnOrders
     ExplicitTop = 521
     inherited lblStatusBarR: TLabel
       Left = 719
-      Height = 14
       ExplicitLeft = 719
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

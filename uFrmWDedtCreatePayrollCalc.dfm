@@ -141,11 +141,7 @@ inherited FrmWDedtCreatePayrollCalc: TFrmWDedtCreatePayrollCalc
     ExplicitWidth = 495
     inherited lblStatusBarR: TLabel
       Left = 426
-      Height = 14
       ExplicitLeft = 426
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
     end
   end
 end

@@ -3264,7 +3264,6 @@ var
   BtnType: Integer;
   IsDiv: Integer;
   PCtlN: Integer;
-
 begin
   try
   if AComponent is TPopupMenu then begin

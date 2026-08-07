@@ -354,6 +354,11 @@ alter table orders add nds_rate number default 0;
 update orders set nds_rate = ndsd;
 
 
+alter table orders add attention_fields varchar2(1000);
+update orders set attention_fields = 'comm' where attention <> 0;
+--alter table orders drop column attention; 
+
+
 
 --alter table orders add constraint fk_orders_id_type2 foreign key (id_type2) references order_types(id);
 --alter table orders add constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id);
@@ -799,6 +804,8 @@ update order_items set price_tmp = price;
 update order_items set price_pp = 0;
 update order_items set price_base  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
 update order_items set price_adjusted  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
+alter table order_items add attention_fields varchar2(400);
+--alter table order_items drop column attention;
  
 create table order_items (
   id number(11),
@@ -832,7 +839,6 @@ create table order_items (
   r8 number(1),
   r9 number(1),
   ch varchar(4000),                  -- изменения, сделанные к данному слешу, имена полей memtable через запятую
-  attention number(3) default 0,     -- признак внимания к ячеке строки (выделена цветом в паспорте)
   dt_sn date,                        -- отметка по слешу, что заказ обработан снабжением   
   dt_thn date,                       -- дата, когда по слэшу загружены документы технологов (при перезагрузке остается старая)
   dt_thn_last date,
@@ -852,6 +858,7 @@ create table order_items (
   dt_last date,                        --дата первой подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_est_last date,                    --дата последней подгрузки/обновления по одному слешу сметы в ручном режиме
   dt_doc date,                         --дата выдачи бумажных документов по заказу технологами
+  attention_fields varchar2(400),      --признак внимания к ячеке строки (выделена цветом в паспорте); хранится имя поля
   ch varchar2(4000),                   --имена полей чере запятую, которые были изменены при редактироывание
   constraint pk_order_items primary key (id),
   constraint fk_order_items_id_order foreign key (id_order) references orders(id) on delete cascade,
@@ -1848,6 +1855,30 @@ exception
 end;
 /
 
+declare
+  cursor c_empty_orders is
+    select id
+    from v_rep_overdue_shipment_orders    
+    --from v_rep_overdue_production_orders
+    where dt_control is null and dt_beg < date '2026-01-01';
+begin
+  for rec in c_empty_orders loop
+    -- удаляем записи из зависимой таблицы dv.zakaz (если есть)
+    delete from dv.zakaz where id_order_dv = rec.id;
+    -- удаляем заказ из основной таблицы orders
+    delete from orders where id = rec.id;
+  end loop;
+  -- фиксируем изменения
+  --rollback;
+  --commit;
+exception
+  when others then
+    rollback;
+    raise;
+end;
+/
+
+select count(*) from orders;
 
 
 

@@ -67,7 +67,7 @@ const
   cFieldsS =
     'id$i;id_employee$i;id_job$i;pay_cash$f;banknotes$s';
   cFieldsL =
-    'employee$s;job$s;changed$i;temp$i';
+    'blank_no$i;employee$s;job$s;changed$i;temp$i';
 
   cmbtDeduction = 1001;
   cmbtCard = 1002;
@@ -97,7 +97,7 @@ begin
   end;
 
   FDeletedWorkers := [];
-  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind, myogHasStatusBar] - [myogColumnFilter];
+  Frg1.Options := FrDBGridOptionDef + [myogPanelFind, myogColumnResize, myogPanelfind, myogHasStatusBar] + [myogColumnFilter];
 
   //определим поля
   wcol := IntToStr(cColWidth) + ';r';
@@ -107,6 +107,7 @@ begin
     ['id_job$i', '_id_job', wcol],
     ['changed$i', '_changed', wcol],
     ['temp$i', '_temp', wcol],
+    ['blank_no$i', 'Бланк','60','e'],
     ['employee$s', 'ФИО', '200;h'],
     ['job$s', 'Должность', '200;h'],
     ['pay_cash$f', 'Итого к'#13#10' получению', 70, 'f=###,###,###:'],
@@ -435,7 +436,7 @@ begin
       na.SetNull(na.High);
       //установим поля и итоговые данные из турв
       for k := 0 to High(na.F) do
-        if not A.InArray(na.F[k],  ['id', 'changed', 'temp', 'banknotes', 'sign']) then
+        if not A.InArray(na.F[k],  ['id', 'changed', 'temp', 'banknotes', 'sign', 'blank_no']) then
           na.SetValue(na.High, na.F[k], na1.G(i, na.F[k]));
     end;
   end;

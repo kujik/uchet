@@ -86,7 +86,7 @@ begin
       Exit;
     //получим список созданных турв за период
     //активны ли подразделения здесь не проверяем, по неактивным не должны были быть созданы табели
-    va1 := Q.QLoad('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d', [dt1]);
+    va1 := Q.QLoad('select id_departament, departament, is_finalized from v_w_turv_period where dt1 = :dt1$d or dt1 = :dt2$d', [dt1, EncodeDate(YearOf(dt1), MonthOf(dt1), 16)]);
     //получим список ведомостей по зп, по полным подразделениям за этот период
     va2 := Q.QLoad('select id_departament from v_w_payroll_calc where dt1 = :dt1$d and id_employee is null', [dt1]);
     for i := 0 to High(va1) do begin

@@ -1,7 +1,5 @@
 inherited FrmWGedtPayrollCash: TFrmWGedtPayrollCash
   Caption = 'FrmWGedtPayrollCash'
-  ExplicitWidth = 808
-  ExplicitHeight = 574
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     inherited pnlFrmClient: TPanel
@@ -22,6 +20,8 @@ inherited FrmWGedtPayrollCash: TFrmWGedtPayrollCash
             inherited pnlStatusBar: TPanel
               Top = 338
               Width = 762
+              ExplicitTop = 337
+              ExplicitWidth = 758
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -52,6 +52,7 @@ inherited FrmWGedtPayrollCash: TFrmWGedtPayrollCash
             end
             inherited pnlStatusBar: TPanel
               Width = 772
+              ExplicitWidth = 768
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -76,6 +77,7 @@ inherited FrmWGedtPayrollCash: TFrmWGedtPayrollCash
     inherited lblStatusBarR: TLabel
       Left = 723
       Height = 14
+      ExplicitLeft = 723
     end
     inherited lblStatusBarL: TLabel
       Height = 14

@@ -1212,7 +1212,7 @@ const
   mbtApprove = 112;
   mbtUnApprove = 113;
   mbtSave = 114;
-
+  mbtStopOrder = 115;
 
 
 
@@ -1327,7 +1327,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 109] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 110] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1441,6 +1441,7 @@ const
   (Bt: mbtUnApprove; Pict: 'unapproved'; Caption:  'Отменить проведение'; hint: ''),
   (Bt: mbtSave; Pict: 'save'; Caption:  'Сохранить'; hint: ''),
   (Bt: mbtCustom_PriceCheck; Pict: ''; Caption:  'Контрольная цена'; hint: ''),
+  (Bt: mbtStopOrder; Pict: ''; Caption:  'Остановить заказ'; hint: ''),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')

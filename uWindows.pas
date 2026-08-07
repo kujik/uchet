@@ -869,6 +869,7 @@ begin
        ['is_nonstandard$i', cntCheck, 'Нестандарт'],
        ['is_nonstandard_only$i', cntCheck, 'Только'#13#10'нестандарт'],
        ['is_cash_payment$i', cntCheck, 'Наличные'],
+       ['is_launch_by_manager$i', cntCheck, 'Запускает'#13#10'менеджер'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])
   else if AFormType = myfrm_Dlg_R_WorkCellTypes then

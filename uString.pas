@@ -321,6 +321,8 @@ type
     procedure ConcatStrP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: string; const APart: string; const ADelimiter: string = ','; const AIgnoreEmpty: Boolean = False); overload;
     procedure ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean = False); overload;
+    procedure ConcatStP(var AMain: string; const APart, ADelimiter: string; const AIgnoreEmpty: Boolean; const ASkipIfExists: Boolean); overload;
+    procedure ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean; const ASkipIfExists: Boolean); overload;
     //Функция возвращает строку, обрамлённую левой и правой частями.
     function  WrapStr(const AString, ALeft, ARight: string; AIgnoreEmpty: Boolean = False): string;
     procedure WrapStrP(const AString, ALeft, ARight: string; var ResultStr: string; AIgnoreEmpty: Boolean = False);
@@ -1838,6 +1840,35 @@ begin
     sMain := sMain + sDelim;
   sMain := sMain + sPart;
   AMain := sMain;
+end;
+
+procedure TMyStringHelper.ConcatStP(var AMain: Variant; const APart, ADelimiter: Variant; const AIgnoreEmpty: Boolean; const ASkipIfExists: Boolean);
+var
+  sMain, sPart, sDelim: string;
+begin
+  sMain := VarToStr(AMain);
+  sPart := VarToStr(APart);
+  sDelim := VarToStr(ADelimiter);
+  if AIgnoreEmpty and (sPart = '') then
+    Exit;
+  if ASkipIfExists then begin
+    if Pos(APart, sDelim + sMain + sDelim) = 0 then begin
+      if sMain <> '' then
+        sMain := sMain + sDelim;
+      sMain := sMain + sPart;
+    end;
+  end
+  else begin
+    if sMain <> '' then
+      sMain := sMain + sDelim;
+    sMain := sMain + sPart;
+  end;
+  AMain := sMain;
+end;
+
+procedure TMyStringHelper.ConcatStP(var AMain: string; const APart, ADelimiter: string; const AIgnoreEmpty: Boolean; const ASkipIfExists: Boolean);
+begin
+  ConcatStP(AMain, APart, ADelimiter, AIgnoreEmpty, ASkipIfExists);
 end;
 
 function TMyStringHelper.ConcatSt(const AMain, APart, ADelimiter: string; const AIgnoreEmpty: Boolean): string;

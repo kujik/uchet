@@ -353,7 +353,7 @@ begin
     if Orders.FinalizeOrdersM(Fr.GetSetlectedIds) then
       Fr.RefreshGrid;
   end
-  else if Fmode <> fNone then begin
+  else if fMode <> fNone then begin
     //диалог ввода заказа
     Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fMode, Fr.ID, null);
   end

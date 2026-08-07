@@ -34,6 +34,7 @@ DefMessages: TVarDynArray - задается в виде:
 
 //вывод сообщения с одной кнопкой Ок (использует стандартный)
 procedure MyInfoMessage(const Msg: string; Memo: Integer = 0); overload;
+procedure MyInfoMessage(const Msg: Variant; Memo: Integer = 0); overload;
 procedure MyInfoMessage(Msg: string; DefMessages: TVarDynArray; Memo: Integer = 0); overload;
 //сообщение - воопрос
 function  MyQuestionMessage(const Msg: string; Memo: Integer = 0): Integer;
@@ -71,6 +72,11 @@ mtCustom	A message box containing no bitmap. The caption of the message box is t
 }
 
 //просто сообщение с кнопкой Ок
+procedure MyInfoMessage(const Msg: Variant; Memo: Integer = 0);
+begin
+  myMessageDlg(Msg.AsString, mtInformation, [mbYes], '', Memo);
+end;
+
 procedure MyInfoMessage(const Msg: string; Memo: Integer = 0);
 begin
   myMessageDlg(Msg, mtInformation, [mbYes], '', Memo);

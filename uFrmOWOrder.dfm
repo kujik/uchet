@@ -82,7 +82,6 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
-                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -214,7 +213,6 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
-                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -302,6 +300,7 @@ inherited FrmOWOrder: TFrmOWOrder
             TabOrder = 0
             Visible = True
             WantReturns = True
+            OnKeyPress = m_commKeyPress
           end
           inline frmpcComments: TFrMyPanelCaption
             Left = 1
@@ -432,7 +431,6 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
-                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0

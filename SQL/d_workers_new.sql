@@ -1633,7 +1633,8 @@ select
   j.name as job,
   o.name as organization,
   0 as changed,
-  null as temp
+  null as temp,
+  null as blank_no
 from
   w_payroll_cash_item i,
   w_payroll_cash p,

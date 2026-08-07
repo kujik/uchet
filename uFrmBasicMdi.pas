@@ -1964,13 +1964,13 @@ begin
     if FQueryCloseMessage <> '' then
       QueryMsg := FQueryCloseMessage
     else
-      QueryMsg := 'Данные были изменены?'#13#10'Все равно закрыть диалог?';
+      QueryMsg := 'Данные были изменены!'#13#10'Все равно закрыть диалог?';
     CanClose := MyQuestionMessage(QueryMsg) = mrYes;
   end else if (EscPressed or (FOpt.RequestWhereClose = cqYNC)) and FIsDataChanged then begin
     if FQueryCloseMessage <> '' then
       QueryMsg := FQueryCloseMessage
     else
-      QueryMsg := 'Данные были изменены?'#13#10'Сохранить?';
+      QueryMsg := 'Данные были изменены!'#13#10'Сохранить?';
     mr := MyMessageDlg(QueryMsg, mtConfirmation, [mbYes, mbNo, mbCancel]);
     CanClose := mr = mrNo;
     if mr = mrYes then
