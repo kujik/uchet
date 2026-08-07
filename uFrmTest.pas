@@ -1496,6 +1496,8 @@ var
   v: TVarDynArray;
   na: TNamedArr;
 begin
+  MyInfoMessage('!!!');Exit;
+
   va2 := Q.QLoad('select id, format_name,slash,name,qnt_psp_sell,qnt_psp_prod,qnt_sgp_registered,qnt_shipped,qnt,qnt_in_prod,qnt_to_shipped,qnt_min,qnt_need,price,summ,priceraw,sumraw from v_sgp_items where id_format_est  = :id_format_est$i', [26]);
   Exit;
 
