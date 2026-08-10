@@ -1551,7 +1551,9 @@ begin
   Result := -10;
   var LStatus := F.GetProp('id_status').AsInteger;
   var LOnVerification := False;
-  if Tag = 0 then
+  if Tag = 0 then begin
+    Exit;
+  end
   else if (Tag = mbtSave) and (FIsTemplate) then begin
     if Q.QLoadValue('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(edt_TemplateName.Text)]) > 0
       then
@@ -1598,6 +1600,10 @@ begin
       F.SetProp('id_status', ORDER_ID_STATUS_DRAFT);
   end
   else if (Tag = mbtGo) and (not FOnVerification) then begin
+    if not User.Role(rOr_D_Order_Start) then begin
+      MyInfoMessage('Вы не можете запустить в работу этот заказ!');
+      Exit;
+    end;
     chbIsVerifyed.Checked := False;
     MyInfoMessage('Проверьте заказ перед запуском в работу!'#13#10'После этого поставьте галочку "Проверено" и нажмите кнопку "Запустить" повторно.');
     LOnVerification := True;
