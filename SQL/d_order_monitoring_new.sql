@@ -1223,7 +1223,7 @@ create or replace view v_rep_overdue_production_orders as
 select
 --отчет по заказм, просроченным по плановой  дате отгрузки
 --по производственным, контролируем дату поступления на сгп
-  id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp,
+  id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference,
   dt_to_sgp as dt_control,
   nvl(dt_to_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
 from 
@@ -1237,7 +1237,7 @@ create or replace view v_rep_overdue_shipment_orders as
 select
 --отчет по заказм, просроченным по плановой  дате отгрузки
 --по отгрузочныым, контролируем дату отгрузки с сгп
-  id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, 
+  id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference,
   dt_from_sgp as dt_control, 
   nvl(dt_from_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
 from 

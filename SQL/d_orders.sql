@@ -351,12 +351,71 @@ alter table orders add dt_start date;
 update orders set dt_start = dt_beg;
 --alter table orders add is_wholesale number(1) default 0;
 alter table orders add nds_rate number default 0;
-update orders set nds_rate = ndsd;
+update orders set nds_rate = (ndsd - 1) * 100;
+--select distinct nds_rate from orders; 
+alter table orders add margins_tmp varchar2(4000);
+
 
 
 alter table orders add attention_fields varchar2(1000);
 update orders set attention_fields = 'comm' where attention <> 0;
 --alter table orders drop column attention; 
+
+
+alter table orders add sum_items_base number;
+alter table orders add sum_items_adjusted number;
+alter table orders add sum_items_final number;
+alter table orders add markup_items_percent number;
+alter table orders add discount_items_percent number;
+
+alter table orders add sum_montage_base number;
+alter table orders add sum_montage_adjusted number;
+alter table orders add sum_montage_final number;
+alter table orders add markup_montage_percent number;
+alter table orders add discount_montage_percent number;
+
+alter table orders add sum_delivery_base number;
+alter table orders add sum_delivery_adjusted number;
+alter table orders add sum_delivery_final number;
+alter table orders add markup_delivery_percent number;
+alter table orders add discount_delivery_percent number;
+
+alter table orders add sum_advance number;
+
+alter table orders add sum_final number;
+alter table orders add sum_final_wo_nds number;
+alter table orders add sum_items_final_wo_nds number;
+
+update orders set sum_advance = cost_av;
+
+
+
+
+sum_items_base number,
+sum_items_adjusted number,
+sum_items_final number,
+markup_items_percent number,
+discount_items_percent number,
+
+sum_montage_base number,
+sum_montage_adjusted number,
+sum_montage_final number,
+markup_montage_percent number,
+discount_montage_percent number,
+
+sum_delivery_base number,
+sum_delivery_adjusted number,
+sum_delivery_final number,
+markup_delivery_percent number,
+discount_delivery_percent number,
+
+sum_advance number,
+
+sum_final number,
+sum_final_wo_nds number,
+
+
+
 
 
 
@@ -402,7 +461,8 @@ create table orders (
   id_customer number(11),            -- айди покупателя
   id_customer_contact number(11),    -- айди контактного лица покупателя
   id_customer_org number(11),        -- айди юридического лица покупателя
-  ndsd number(5,3),                  -- ндс для вычета (если ндс 20% то будет здесь 1.2) 
+  ndsd number(5,3),                  -- ндс для вычета (если ндс 20% то будет здесь 1.2)  --!!!old
+  nds_rate number,                   -- ставка ндс, в процентах 
   cost number(12,2),                 -- сумма заказа
   cost_nds number(12,2),             -- сумма ндс в заказе НЕ ИСПОЛЬЗУЕМ
   cost_wo_nds number(12,2),          -- сумма заказа без ндс
@@ -411,8 +471,8 @@ create table orders (
   cost_d_0 number(12,2),               -- стоимость доставки
   cost_m_0 number(12,2),               -- стоимость монтажа
   cost_a_0 number(12,2),               -- стоимость покупных изделий
-  cost_i number(12,2),               -- стоимость изделий (с учетом скидки и наценки)
-  cost_i_nosgp number(12,2),         -- стоимость изделий не с сгп (кроме д/к, с учетом скидки/наценки)
+  cost_i number(12,2),               -- стоимость изделий (с учетом скидки и наценки)   --!
+  cost_i_nosgp number(12,2),         -- стоимость изделий не с сгп (кроме д/к, с учетом скидки/наценки)  --!
   cost_d number(12,2),               -- стоимость доставки
   cost_m number(12,2),               -- стоимость монтажа
   cost_a number(12,2),               -- стоимость покупных изделий
@@ -425,6 +485,27 @@ create table orders (
   d_m number(12,2),               -- скидка для монтажа
   d_a number(12,2),               -- скидка для покупных изделий
   discount number(12,2),             -- сумма скидки НЕ используем
+  
+sum_items_base number,               --стоимость изделдий в заказе, по базовой цене (без скидок, наценок и ндс)
+sum_items_adjusted number,           --стоимость изделдий в заказе, с учетом скидок и наценок, но без ндс
+sum_items_final number,              --стоимость изделий итоговая, со скидками, наценками и ндс  
+markup_items_percent number,         --процент наценки на изделия
+discount_items_percent number,       --процент скидки на изделия  
+sum_montage_base number,
+sum_montage_adjusted number,
+sum_montage_final number,
+markup_montage_percent number,
+discount_montage_percent number,
+sum_delivery_base number,
+sum_delivery_adjusted number,
+sum_delivery_final number,
+markup_delivery_percent number,
+discount_delivery_percent number,
+sum_advance number,
+sum_final number,
+sum_final_wo_nds number,
+
+  
   comm varchar(4000),                -- произвольный комментарий к заказу                           
   ch varchar(4000),                  -- изменения, сделанные в заголовке заказа, имена контролов через запятую   
   --ch_comm varchar(4000),             -- изменения, сделанные в заказе, в текстовом виде   
@@ -799,12 +880,15 @@ alter table order_items add price_base  number;  --!!!
 alter table order_items add nds_rate number;
 alter table order_items add price_adjusted  number;
 alter table order_items add price_tmp number;
+alter table order_items add price_final number;
 update order_items set nds_rate = 22;
 update order_items set price_tmp = price;
+update order_items set price = price_tmp;
 update order_items set price_pp = 0;
 update order_items set price_base  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
 update order_items set price_adjusted  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
 alter table order_items add attention_fields varchar2(400);
+
 --alter table order_items drop column attention;
  
 create table order_items (
@@ -1013,11 +1097,11 @@ where
 select ornum, article from v_order_items where article is not null order by dt_beg desc; 
 select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY');
 
-
+/*
 create table order_changes (
   id number(11),
   dt date 
-
+*/
 
 create or replace function F_TestOrderEstimatesInItm(
 --вернем количество изделий в заказе в ИТМ, к которым нет смет

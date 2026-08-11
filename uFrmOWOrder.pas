@@ -49,9 +49,9 @@ type
     cmb_id_type2: TDBComboBoxEh;
     PHFin: TPanel;
     PHTotalSum: TPanel;
-    nedt_cost: TDBNumberEditEh;
-    nedt_cost_wo_nds: TDBNumberEditEh;
-    DBNumberEditEh44: TDBNumberEditEh;
+    nedt_sum_final: TDBNumberEditEh;
+    nedt_sum_final_wo_nds: TDBNumberEditEh;
+    nedt_sum_advance: TDBNumberEditEh;
     pnlGrid: TPanel;
     FrgItems: TFrDBGridEh;
     PHRelatedDocs: TPanel;
@@ -81,18 +81,18 @@ type
     FrgBasis: TFrDBGridEh;
     frmpcBasis: TFrMyPanelCaption;
     PHSum: TPanel;
-    nedt_cost_d_0: TDBNumberEditEh;
-    nedt_cost_m_0: TDBNumberEditEh;
-    nedt_cost_i_0: TDBNumberEditEh;
-    nedt_m_i: TDBNumberEditEh;
-    nedt_d_i: TDBNumberEditEh;
-    nedt_cost_i: TDBNumberEditEh;
-    nedt_m_m: TDBNumberEditEh;
-    nedt_d_m: TDBNumberEditEh;
-    nedt_cost_m: TDBNumberEditEh;
-    nedt_m_d: TDBNumberEditEh;
-    nedt_d_d: TDBNumberEditEh;
-    nedt_cost_d: TDBNumberEditEh;
+    nedt_sum_delivery_base: TDBNumberEditEh;
+    nedt_sum_montage_base: TDBNumberEditEh;
+    nedt_sum_items_base: TDBNumberEditEh;
+    nedt_markup_items_percent: TDBNumberEditEh;
+    nedt_discount_items_percent: TDBNumberEditEh;
+    nedt_sum_items_final: TDBNumberEditEh;
+    nedt_markup_montage_percent: TDBNumberEditEh;
+    nedt_discount_montage_percent: TDBNumberEditEh;
+    nedt_sum_montage_final: TDBNumberEditEh;
+    nedt_markup_delivery_percent: TDBNumberEditEh;
+    nedt_discount_delivery_percent: TDBNumberEditEh;
+    nedt_sum_delivery_final: TDBNumberEditEh;
     PHFinCaptions: TPanel;
     lbl10: TLabel;
     lbl11: TLabel;
@@ -109,6 +109,7 @@ type
     bvlVt2: TBevel;
     edt_templatename: TDBEditEh;
     edt_customerinn: TDBEditEh;
+    lbl_status_2: TLabel;
     procedure cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
     procedure edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
     procedure edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
@@ -598,9 +599,9 @@ begin
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch,e'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e'],
     ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s'],
-    ['price$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
+    ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:5:0:N', 't=s,ch,e'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch,e'],
     ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch,e']
@@ -837,23 +838,22 @@ begin
     ['dt_montage_beg$d', 't=p,t,ch,ea'],
     ['dt_montage_end$d', 't=p,t,ch,ea'],
 
-    ['cost_i$f','V=', 't=d,td',#0],
-    ['cost_i_0$f','V=', 't=d,td',#0],
-    ['cost_i_wo_nds$f;0;0'],
-    ['m_i$f','V=0:100:2', 't=p,td,ch',#0],
-    ['d_i$f','V=0:100:2', 't=p,td,ch',#0],
-    ['cost_m$f','V=', 't=p,td,d',#0],
-    ['cost_m_0$f', 't=p,td,ch','V=0:9999999:2', #0],
-    ['m_m$f','V=0:100:2', 't=p,td,ch',#0],
-    ['d_m$f','V=0:100:2', 't=p,td,ch',#0],
-    ['cost_d$f','V=', 't=d,td',#0],
-    ['cost_d_0$f','V=0:9999999:2', 't=td,ch' ,#0],
-    ['m_d$f', 'V=0:100:2', 't=p,td,ch',#0],
-    ['d_d$f',' V=0:100:2','t=p,td,ch',#0],
-    ['cost$f','V=', 't=d,td', #0],
-    ['cost_wo_nds$f','V=', 't=d,td' ,#0],
-    ['cost_av$f','V=0:9999999:2', 't=td,ch' ,#0]
-
+    ['sum_items_final$f','V=', 't=d,td',#0],
+    ['sum_items_base$f','V=', 't=d,td',#0],
+    ['sum_items_final_wo_nds$f;0;0'],
+    ['markup_items_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['discount_items_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['sum_montage_final$f','V=', 't=p,td,d',#0],
+    ['sum_montage_base$f', 't=p,td,ch','V=0:9999999:2', #0],
+    ['markup_montage_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['discount_montage_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['sum_delivery_final$f','V=', 't=d,td',#0],
+    ['sum_delivery_base$f','V=0:9999999:2', 't=td,ch' ,#0],
+    ['markup_delivery_percent$f', 'V=0:100:2', 't=p,td,ch',#0],
+    ['discount_delivery_percent$f',' V=0:100:2','t=p,td,ch',#0],
+    ['sum_final$f','V=', 't=d,td', #0],
+    ['sum_final_wo_nds$f','V=', 't=d,td' ,#0],
+    ['sum_advance$f','V=0:9999999:2', 't=td,ch' ,#0]
 
 
 
@@ -1181,16 +1181,16 @@ begin
     F.SetProp('id_or_format_estimates', LEstimate);
   end;
   var LNdsRate := F.GetProp('nds_rate').Asfloat;
-  var LMargin := F.GetProp('m_i').Asfloat;
-  var LDiscount := F.GetProp('d_i').Asfloat;
+  var LMargin := F.GetProp('markup_items_percent').Asfloat;
+  var LDiscount := F.GetProp('discount_items_percent').Asfloat;
   //установми проверку и доступность полей ввода клиента в зависимости от организации
   if (LOrganization = -1) or (org = -1) then begin
     F.SetProps('c', '', fvtVer);
     F.SetProps('c', False, fvtDsbl);
     F.SetProps('p', null, fvtVCurr);
     F.SetProps('p', False, fvtDsbl);
-    F.SetProps('cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
-    F.SetProps('cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
+    F.SetProps('sum_montage_base;sum_delivery_base;markup_items_percent;discount_items_percent;markup_montage_percen;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', null, fvtVCurr);
+    F.SetProps('sum_montage_base;sum_delivery_base;markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', False, fvtDsbl);
 {    F.SetProps('dt_start', True, fvtDsbl);
     F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer);
     F.SetProps('dt_montage_beg;dt_montage_end;cost_m_0;cost_d_0;m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
@@ -1202,7 +1202,7 @@ begin
     F.SetProps('c', True, fvtDsbl);
     F.SetPropsFromCustom('p', PROP_NUM_VER_BEG, fvtVer);
     F.SetProps('p', True, fvtDsbl);    F.SetProps('p', True, fvtDsbl);
-    F.SetProps('cost_m_0;cost_d_0', True, fvtDsbl);
+    F.SetProps('sum_montage_base;sum_delivery_base', True, fvtDsbl);
 {    F.SetProps('dt_start', False, fvtDsbl);   //!!!
     F.SetProps('dt_start', F.GetProp('dt_beg'), fvtVCurr);
     F.SetProps('dt_montage_beg', '=dt_otgr:=dt_otgr+1000000', fvtVer);
@@ -1211,11 +1211,11 @@ begin
     F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer); //!!!}
     //все скидки/наценки допускаем только для розничных продавцов
     if FOrganizations.G(org, 'is_wholesaler') = 1 then begin
-      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', null, fvtVCurr);
-      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', False, fvtDsbl);
+      F.SetProps('markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', null, fvtVCurr);
+      F.SetProps('markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', False, fvtDsbl);
     end
     else begin
-      F.SetProps('m_i;d_i;m_m;d_m;m_d;d_d', True, fvtDsbl);
+      F.SetProps('markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', True, fvtDsbl);
     end;
     //возможные варианты оплаты в зависимости от организаций
     var LPaymentType: TvarDynArray := [];
@@ -1247,7 +1247,7 @@ begin
   FOrderTypeIndes := ot;
   FOrganizationIndex := org;
 
-  if (LNdsRate <> F.GetProp('nds_rate').Asfloat) or (LMargin <> F.GetProp('m_i').Asfloat) or (LDiscount <> F.GetProp('d_i').Asfloat) then
+  if (LNdsRate <> F.GetProp('nds_rate').Asfloat) or (LMargin <> F.GetProp('markup_items_percent').Asfloat) or (LDiscount <> F.GetProp('discount_items_percent').Asfloat) then
     RecalculateItemsPrices;
 
   Verify(nil);
@@ -1817,10 +1817,6 @@ begin
     Params.Background := clMyNot0Color;
   if S.InCommaStr(FieldName, Fr.GetValue('ch').AsString) and (FHighlihtCurrentChangedControls = 1) then
     Params.Background := clMyChangesColor;
-{  if FieldName = 'price' then
-    Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100);
-  if FieldName = 'sum' then
-    Params.Text := Fr.GetValue('price_wo_nds').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100)  * (1 + F.GetProp('m_i').AsFloat / 100) * (1 - F.GetProp('m_i').AsFloat / 100);}
 end;
 
 procedure TFrmOWOrder.FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
@@ -1938,16 +1934,16 @@ procedure TFrmOWOrder.RecalculateItemsPrices;
 //сначала применяем к цене без ндс скидку, потом наценку, потом ндс.
 begin
   var LTableChanged := False;
-  var SumWithNdsWoMarginsOld := F.GetProp('cost_i_0').Asfloat;
-  var SumWithNdsWithMarginsOld := F.GetProp('cost_i').Asfloat;
-  var SumWoNdsWithMarginsOld := F.GetProp('cost_i_wo_nds').Asfloat;
+  var SumWithNdsWoMarginsOld := F.GetProp('sum_items_base').Asfloat;
+  var SumWithNdsWithMarginsOld := F.GetProp('sum_items_final').Asfloat;
+  var SumWoNdsWithMarginsOld := F.GetProp('sum_items_final_wo_nds').Asfloat;
   var SumWithNdsWoMargins := 0.0;
   var SumWithNdsWithMargins := 0.0;
   var SumWoNdsWithMargins := 0.0;
   var SumWoNdsWoMargins := 0.0;
   for var i := 0 to FrgItems.GetRawCount - 1 do begin
     var LPriceWithNds := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
-    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat  * (1 - F.GetProp('d_i').AsFloat / 100) * (1 + F.GetProp('m_i').AsFloat / 100), -2);
+    var LPriceWoNdsWithMargins := RoundTo(FrgItems.GetRawValue('price_base', i).AsFloat  * (1 - F.GetProp('discount_items_percent').AsFloat / 100) * (1 + F.GetProp('markup_items_percent').AsFloat / 100), -2);
     var LPriceWithNdsWithMargins := RoundTo(LPriceWoNdsWithMargins * (1 + F.GetProp('nds_rate').AsFloat / 100), -2);
     var Sum := LPriceWithNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWoNdsWoMargins := SumWoNdsWoMargins + FrgItems.GetRawValue('price_base', i).AsFloat * FrgItems.GetRawValue('qnt', i).AsFloat;
@@ -1955,20 +1951,20 @@ begin
     SumWithNdsWoMargins := SumWithNdsWoMargins + LPriceWithNds * FrgItems.GetRawValue('qnt', i).AsFloat;
     SumWoNdsWithMargins := SumWoNdsWithMargins + LPriceWoNdsWithMargins * FrgItems.GetRawValue('qnt', i).AsFloat;
     if (FrgItems.GetRawValue('nds_rate', i) <> F.GetProp('nds_rate').AsFloat) or (FrgItems.GetRawValue('price_base_with_nds', i) <> LPriceWithNds) or
-       (FrgItems.GetRawValue('price', i) <> LPriceWithNdsWithMargins) or (FrgItems.GetRawValue('sum', i) <> Sum) then
+       (FrgItems.GetRawValue('price_final', i) <> LPriceWithNdsWithMargins) or (FrgItems.GetRawValue('sum', i) <> Sum) then
     begin
       LTableChanged := True;
       FrgItems.SetRawValue('nds_rate', i, F.GetProp('nds_rate').AsFloat);
       FrgItems.SetRawValue('price_base_with_nds', i, LPriceWithNds);
-      FrgItems.SetRawValue('price', i, LPriceWithNdsWithMargins);
+      FrgItems.SetRawValue('price_final', i, LPriceWithNdsWithMargins);
       FrgItems.SetRawValue('price_adjusted', i, LPriceWoNdsWithMargins);
       FrgItems.SetRawValue('sum', i, Sum);
     end;
   end;
   if (SumWithNdsWoMarginsOld <> SumWithNdsWoMargins) or (SumWithNdsWithMarginsOld <> SumWithNdsWithMargins) then begin
-    F.SetProp('cost_i_0', SumWoNdsWoMargins);
-    F.SetProp('cost_i', SumWithNdsWithMargins);
-    F.SetProp('cost_i_wo_nds', SumWoNdsWithMargins);
+    F.SetProp('sum_items_base', SumWoNdsWoMargins);
+    F.SetProp('sum_items_final', SumWithNdsWithMargins);
+    F.SetProp('sum_items_final_wo_nds', SumWoNdsWithMargins);
     RecalculateSum;
   end;
   if LTableChanged then begin
@@ -1981,16 +1977,24 @@ procedure TFrmOWOrder.RecalculateSum;
 begin
   //в левой колонке без ндс и без учета наценок/скидок
   //в правой с ндс и наценками/скидками
-  F.SetProp('cost_m', RoundTo(F.GetProp('cost_m_0').AsFloat * (1 + F.GetProp('d_m').AsFloat/ 100) * (1 - F.GetProp('m_m').AsFloat / 100), -2));
-  F.SetProp('cost_d', RoundTo(F.GetProp('cost_d_0').AsFloat * (1 + F.GetProp('d_d').AsFloat/ 100) * (1 - F.GetProp('m_d').AsFloat / 100), -2));
-  var LSumTotal := F.GetProp('cost_i_wo_nds').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  F.SetProp('sum_montage_final', RoundTo(F.GetProp('sum_montage_base').AsFloat * (1 + F.GetProp('discount_montage_percent').AsFloat/ 100) * (1 - F.GetProp('markup_montage_percent').AsFloat / 100), -2));
+  F.SetProp('sum_delivery_final', RoundTo(F.GetProp('sum_delivery_base').AsFloat * (1 + F.GetProp('discount_delivery_percent').AsFloat/ 100) * (1 - F.GetProp('markup_delivery_percent').AsFloat / 100), -2));
+  var LSumTotal := F.GetProp('sum_items_final_wo_nds').AsFloat + F.GetProp('sum_montage_final').AsFloat + F.GetProp('sum_delivery_final').AsFloat;
   //итоговая без ндс но со скидками
-  F.SetProp('cost_wo_nds', LSumTotal);
-  F.SetProp('cost_d', RoundTo(F.GetProp('cost_d').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
-  F.SetProp('cost_m', RoundTo(F.GetProp('cost_m').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
-  LSumTotal := F.GetProp('cost_i').AsFloat + F.GetProp('cost_m').AsFloat + F.GetProp('cost_d').AsFloat;
+  F.SetProp('sum_final_wo_nds', LSumTotal);
+  F.SetProp('sum_delivery_final', RoundTo(F.GetProp('sum_delivery_final').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
+  F.SetProp('sum_montage_final', RoundTo(F.GetProp('sum_montage_final').AsFloat * (1 + F.GetProp('nds_rate').AsFloat / 100), -2));
+  LSumTotal := F.GetProp('sum_items_final').AsFloat + F.GetProp('sum_montage_final').AsFloat + F.GetProp('sum_delivery_final').AsFloat;
   //итоговая с ндс и учетом всех скидок
-  F.SetProp('cost', LSumTotal);
+  F.SetProp('sum_final', LSumTotal);
+  //дополнительная информация по заказу //! где разместиьть блок?
+  lbl_status_2.SetCaption2(
+    '$FF0000' +
+    S.IIf(F.GetProp('wholesale').AsInteger = 1, 'Опт', 'Розница') +
+    '$000000   Ставка НДС: ' + '$FF0000' + F.GetProp('nds_rate').AsString + '%'
+  );
+//  nedt_Items_NoSgp.Value := RoundTo(S.NNum(sum_items_nosgp) + S.NNum(sum_items_nosgp) / 100 * S.NNum(nedt_Items_M.Value) - S.NNum(sum_items_nosgp) / 100 * S.NNum(nedt_Items_D.Value), -2);
+
 end;
 
 procedure TFrmOWOrder.CalculateFrgItemsRow(const AFieldName: string = '');

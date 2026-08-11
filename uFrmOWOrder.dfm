@@ -576,8 +576,8 @@ inherited FrmOWOrder: TFrmOWOrder
           TabOrder = 1
           ExplicitWidth = 1267
           object lbl_status: TLabel
-            Left = 6
-            Top = 12
+            Left = 4
+            Top = 3
             Width = 51
             Height = 14
             Caption = 'lbl_status'
@@ -587,6 +587,13 @@ inherited FrmOWOrder: TFrmOWOrder
             Font.Name = 'Tahoma'
             Font.Style = []
             ParentFont = False
+          end
+          object lbl_status_2: TLabel
+            Left = 4
+            Top = 20
+            Width = 58
+            Height = 13
+            Caption = 'lbl_status_2'
           end
         end
       end
@@ -1085,7 +1092,7 @@ inherited FrmOWOrder: TFrmOWOrder
             Align = alTop
             Caption = 'PHTotalSum'
             TabOrder = 0
-            object nedt_cost: TDBNumberEditEh
+            object nedt_sum_final: TDBNumberEditEh
               Left = 64
               Top = 6
               Width = 89
@@ -1104,7 +1111,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_wo_nds: TDBNumberEditEh
+            object nedt_sum_final_wo_nds: TDBNumberEditEh
               Left = 185
               Top = 6
               Width = 80
@@ -1123,7 +1130,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object DBNumberEditEh44: TDBNumberEditEh
+            object nedt_sum_advance: TDBNumberEditEh
               Left = 300
               Top = 6
               Width = 77
@@ -1165,7 +1172,7 @@ inherited FrmOWOrder: TFrmOWOrder
             Height = 138
             Align = alTop
             TabOrder = 2
-            object nedt_cost_d_0: TDBNumberEditEh
+            object nedt_sum_delivery_base: TDBNumberEditEh
               Left = 64
               Top = 90
               Width = 95
@@ -1183,7 +1190,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_m_0: TDBNumberEditEh
+            object nedt_sum_montage_base: TDBNumberEditEh
               Left = 64
               Top = 63
               Width = 95
@@ -1201,7 +1208,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_i_0: TDBNumberEditEh
+            object nedt_sum_items_base: TDBNumberEditEh
               Left = 64
               Top = 36
               Width = 95
@@ -1220,8 +1227,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_i: TDBNumberEditEh
-              Left = 172
+            object nedt_markup_items_percent: TDBNumberEditEh
+              Left = 228
               Top = 36
               Width = 41
               Height = 21
@@ -1239,8 +1246,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_d_i: TDBNumberEditEh
-              Left = 228
+            object nedt_discount_items_percent: TDBNumberEditEh
+              Left = 181
               Top = 36
               Width = 41
               Height = 21
@@ -1258,7 +1265,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_i: TDBNumberEditEh
+            object nedt_sum_items_final: TDBNumberEditEh
               Left = 284
               Top = 36
               Width = 95
@@ -1277,8 +1284,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_m: TDBNumberEditEh
-              Left = 181
+            object nedt_markup_montage_percent: TDBNumberEditEh
+              Left = 228
               Top = 63
               Width = 41
               Height = 21
@@ -1296,8 +1303,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_d_m: TDBNumberEditEh
-              Left = 228
+            object nedt_discount_montage_percent: TDBNumberEditEh
+              Left = 181
               Top = 63
               Width = 41
               Height = 21
@@ -1315,7 +1322,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_m: TDBNumberEditEh
+            object nedt_sum_montage_final: TDBNumberEditEh
               Left = 284
               Top = 63
               Width = 95
@@ -1334,8 +1341,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_m_d: TDBNumberEditEh
-              Left = 181
+            object nedt_markup_delivery_percent: TDBNumberEditEh
+              Left = 228
               Top = 90
               Width = 41
               Height = 21
@@ -1353,8 +1360,8 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_d_d: TDBNumberEditEh
-              Left = 228
+            object nedt_discount_delivery_percent: TDBNumberEditEh
+              Left = 181
               Top = 90
               Width = 41
               Height = 21
@@ -1372,7 +1379,7 @@ inherited FrmOWOrder: TFrmOWOrder
               Value = 12235123.050000000000000000
               Visible = True
             end
-            object nedt_cost_d: TDBNumberEditEh
+            object nedt_sum_delivery_final: TDBNumberEditEh
               Left = 284
               Top = 90
               Width = 95
@@ -1406,15 +1413,15 @@ inherited FrmOWOrder: TFrmOWOrder
                 Caption = #1057#1091#1084#1084#1072' '#1073#1077#1079' '#1089#1082#1080#1076#1082#1080
               end
               object lbl11: TLabel
-                Left = 172
-                Top = 4
+                Left = 228
+                Top = 5
                 Width = 43
                 Height = 13
                 Caption = #1053#1072#1094#1077#1085#1082#1072
               end
               object lbl12: TLabel
-                Left = 229
-                Top = 4
+                Left = 173
+                Top = 5
                 Width = 38
                 Height = 13
                 Caption = #1057#1082#1080#1076#1082#1072

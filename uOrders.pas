@@ -103,6 +103,7 @@ type
     function EraseOutdatedOrders(AOwner: TComponent): Boolean;
     procedure OrdersFinReport;
     procedure DeleteEmptyOrders;
+    procedure ConvertOrders2026;
 end;
 
 var
@@ -3158,6 +3159,44 @@ begin
   ShowWaitForm('Производится создание отчета...');
   TasksS.ReportForYesterdayOrders(RepType + 1, False);
 end;
+
+
+procedure TOrders.ConvertOrders2026;
+var
+  Orders: TNamedArr;
+begin
+  if MyQuestionMessage('Рассчитать цены по заказам?') <> mrYes then
+    Exit;
+  Q.QLoad('select * from orders where dt_beg >= :dt$d', [EncodeDate(2026, 05, 01)], Orders);
+  for var i:= 0 to Orders.High do begin
+    var OrId := Orders.G(i, 'id');
+    var Items := Q.QLoad('select id, price, qnt from order_items where id_order = :id$i', [OrId]);
+    //ндс было Меркурий и Фреш-К = 1.22, с 6го производство 1.22
+    //пересчет цен с 1-06 цена / 1.22
+    //ранее П=цена, остальное на /1.22
+    var Prices: TVarDynArray2 := [0, 0, 0];
+    var NdsRate := 0;
+    if Orders.G(i, 'dt_beg') >= EncodeDate(2026, 06, 01) then
+      NdsRate := 22
+    else if (Orders.G(i, 'dt_beg') >= EncodeDate(2026, 01, 01)) and (Orders.G(i, 'id_organization') <> -1) then
+      NdsRate := 22
+    else if (Orders.G(i, 'id_organization') <> -1) then
+      NdsRate := 20;
+    if Orders.G(i, 'id_organization') = -1 then begin
+      var Sum: Extended := 0;
+      for var j := 0 to High(Items) do begin
+        var Price := RoundTo(Items[j][1] / 1.22, -2);
+        Sum:= Sum + Price * Items[j][2];
+        Q.QSave('u', 'order_items', '', 'id$i;nds_rate;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 0, Price, Price, Price]);
+      end;
+      Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 0, Sum, Sum, Sum]);
+    end;
+
+  end;
+
+
+end;
+
 
 
 
