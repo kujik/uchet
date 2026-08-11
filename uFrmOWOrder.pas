@@ -152,6 +152,8 @@ type
     FOrderTitleChangedFields, FOrderTitleChangedFieldNames: string;
     //подсвечивать текущие изменения в шапке (-1: скрыть подсветку (перерисовать фон), 0 - не подсвечивать, 1 - подсвечивать)
     FHighlihtCurrentChangedControls: Integer;
+    //разрешает редакьтирование заказа в статусах Проведен или Запущен
+    FEditAll: Boolean;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -178,7 +180,7 @@ type
     procedure OnCashTypeAccountChange;
     procedure SwitchBasisPanel(ALoadFirst: Boolean);
     procedure SetControlEnabledState;
-    procedure SetPermanetFieldProps;
+    procedure SetPermanentFieldProps;
     procedure SetOrderStatusLabels;
     procedure CreateButtons;
     procedure SetButtons;
@@ -276,6 +278,7 @@ const
   mbtOrderReloadPrices = 1002;
   mbtOrderReloadRoutes = 1003;
   mbtOrderDelete = 1004;
+  mbtOrderEditAll = 1005;
 
 const
   clMyChangesColor = $A0FFFF; // RGB(255, 255, 100)
@@ -641,6 +644,7 @@ begin
       [],
       [mbtOrderReloadRoutes, Mode in [fEdit, fAdd, fCopy], 'Загрузить маршрут из справочника'],
       [],
+      [mbtOrderEditAll, not FIsTemplate and (Mode in [fEdit]) and User.Role(rOr_D_Order_EditAll), 'Редактировать заказ', ''],
       [mbtStopOrder, not FIsTemplate and (Mode in [fEdit]) and (F.GetProp('id_status').AsInteger =  ORDER_ID_STATUS_STARTED), 'Остановить заказ', ''],
       [mbtOrderDelete, not FIsTemplate and (Mode in [fEdit]) and User.Role(rOr_D_Order_Del), 'Удалить заказ', ''],
       [],
@@ -1241,7 +1245,7 @@ begin
     F.SetProps('nds_rate', 0);
   end;
 
-  SetPermanetFieldProps;
+  SetPermanentFieldProps;
 
   //сохраним в свойтвах позиции в массивах организации и типа заказа
   FOrderTypeIndes := ot;
@@ -1438,6 +1442,8 @@ begin
             Fr.DeleteRow;
     mbtOrderViewHistory:
       Wh.ExecDialog(myfrm_Rep_OrderChanges, Self, [], fView, ID, null);
+    mbtOrderEditAll:
+      TitleButtonClick(mbtOrderEditAll);
     mbtStopOrder:
       TitleButtonClick(mbtStopOrder);
     mbtOrderDelete:
@@ -1523,6 +1529,9 @@ begin
   //скроем чекбокс, если не в статусе проверки
   if not FOnVerification then
     SetButtonsVisibilityAndArrange([], ['chbIsVerifyed']);
+  //если заказ изначально не был в статусе На оформлении, то уберем кнопку Отменить проведение, если у пользователя нет права его отменять
+  if not ((F.GetPropB('id_status').AsInteger = ORDER_ID_STATUS_DRAFT) or User.Role(rOr_D_Order_UnApprove)) then
+    SetButtonsVisibilityAndArrange([], [mbtUnApprove]);
   //для удаленных и остановленных заказов уберем все кнопки кроме закрытия
   if A.InArray(LStatus, [ORDER_ID_STATUS_DELETED, ORDER_ID_STATUS_STOPPED]) then
     SetButtonsVisibilityAndArrange([], ['chbIsVerifyed', mbtSave, mbtApprove, mbtUnApprove, mbtGo]);
@@ -1543,10 +1552,14 @@ begin
     SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtSave])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_STARTED then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtUnApprove, mbtGo])
-//    chbVisDates,    chbVisCustomer,chbVisFinance chbVisAddInfo
 end;
 
 function TFrmOWOrder.ChangeOrderStatus(Tag: Integer): Integer;
+//изменение статуса заказа
+//фактически - действия по нажатию кнопки в заголовке либо из меню Действия
+//переключает статус заказа, выполняет связанные с этим действия
+//возвращает новый статус заказа, в этом случае заказ записывается (поле вызова данногшо метода) и диалог закрывается
+//если запись не нужна, возвращает -10
 begin
   Result := -10;
   var LStatus := F.GetProp('id_status').AsInteger;
@@ -1567,9 +1580,7 @@ begin
   end
   else if (Tag = mbtSave) and (F.GetProp('id_status') >=  ORDER_ID_STATUS_STARTED) and (not FOnVerification) then begin
     chbIsVerifyed.Checked := False;
-    if MyQuestionMessage('Внимание: Вы изменили заказ, уже запущенный в работу!'#13#10'Проверьте заказ перед сохранением!'#13#10'После этого поставьте галочку "Проверено" и нажмите кнопку "Сохранить" повторно.')
-    = mrYes then
-      Result := F.GetProp('id_status');
+    MyInfoMessage('Внимание: Вы изменили заказ, уже запущенный в работу!'#13#10'Проверьте заказ перед сохранением!'#13#10'После этого поставьте галочку "Проверено" и нажмите кнопку "Сохранить" повторно.');
     LOnVerification := True;
   end
   else if (Tag = mbtSave) and (F.GetProp('id_status') >=  ORDER_ID_STATUS_STARTED) then begin
@@ -1638,7 +1649,32 @@ begin
         'Все резервы по нему вернутся на склад.'#13#10'Продолжить?'
     ) = mrYes then
       Result := ORDER_ID_STATUS_STOPPED;
+  end
+  else if (Tag = mbtOrderEditAll) then begin
+    if not A.InArray(LStatus, [ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_STARTED]) then begin
+      MyInfoMessage('Действие недопустимо для этого заказа!');
+      Exit;
+    end
+    else if LStatus = ORDER_ID_STATUS_APPROVED then begin
+      if MyQuestionMessage(
+          'Вы хотате редактировать все данные заказа в статусе "' +  F.GetProp('status').AsString + '".'#13#10'После внесения изменений они будут сразу применены.'#13#10+
+          'Это повлияет на обработку данного заказа как в Учете так и в ИТМ'#13#10+
+          'Продолжить?'#13#10
+      ) <> mrYes then
+        Exit;
+      FEditAll := True;
+    end
+    else if LStatus = ORDER_ID_STATUS_STARTED then begin
+      if MyQuestionMessage(
+          'Вы хотате редактировать все данные заказа в статусе "' +  F.GetProp('status').AsString + '".'#13#10'После внесения изменений они будут сразу применены.'#13#10+
+          'Это повлияет на обработку данного заказа как в Учете так и в ИТМ'#13#10+
+          'Продолжить?'#13#10
+      ) <> mrYes then
+        Exit;
+      FEditAll := True;
+    end;
   end;
+
   if Result >= 0 then F.SetProp('id_status', Result);  //!отладка
   //сбросим признак На проверке, если не был явно установлен по условиям
   FOnVerification := LOnVerification;
@@ -1651,7 +1687,10 @@ begin
   SetFrgItemsFieldsEditabled;
   SetButtons;
   SetOrderStatusLabels;
-  SetPermanetFieldProps;
+  SetPermanentFieldProps;
+  SetOrderTypeOrOrganization(nil);
+  SetCustomer(True);
+  HighlihtPreviousChangedControls;
   Verify(nil);
 end;
 
@@ -1685,7 +1724,7 @@ begin
   SwitchBasisPanel(True);
   SetOrderStatusLabels;
   Verify(nil);
-  SetPermanetFieldProps;
+  SetPermanentFieldProps;
   HighlihtPreviousChangedControls;
 end;
 
@@ -1703,39 +1742,61 @@ begin
 end;
 
 procedure TFrmOWOrder.TitleButtonClick(Tag: Integer);
+//обраболтка кнопок в заголовке окна
 begin
+  //специально обработаем кнопку Закрыть
   if Tag = mbtClose then begin
     btnCancelClick(nil);
   end
+  //остальные кнопки
   else begin
+    //сохраним поле статуса, так как следующая процедура может его изменить, на случай восстановления при ошибке записи
+    var LOrderStatusOld := F.GetProp('id_status');
+    //обработает нажатие кнопки, вернем новый статус заказа, или -10 если запись после нажатия не нужна
     var Result := ChangeOrderStatus(Tag);
-    MyInfoMessage(Result); Exit;
-
-
+    //MyInfoMessage(Result);  //!отладка
+    if Result = -10 then
+      Exit;
+    //на всякий случай продублировал здесь блок проверки, по идее он не нужен!
     Verify(nil);
     if Mode <> fDelete then begin
-      if HasError then Exit;
-    VerifyBeforeSave;
-    if FErrorMessage <> '' then
-      if FErrorMessage <> '' then begin
-        if Pos('?', FErrorMessage) = 1 then begin
-          if MyQuestionMessage(Copy(FErrorMessage, 2)) <> mrYes then
+      if HasError then
+        Exit;
+      VerifyBeforeSave;
+      if FErrorMessage <> '' then
+        if FErrorMessage <> '' then begin
+          if Pos('?', FErrorMessage) = 1 then begin
+            if MyQuestionMessage(Copy(FErrorMessage, 2)) <> mrYes then
+              Exit;
+          end
+          else begin
+            MyWarningMessage(FErrorMessage, ['-', '*Данные не корректны!']);
             Exit;
-        end else begin
-          MyWarningMessage(FErrorMessage, ['-', '*Данные не корректны!']);
-          Exit;
+          end;
         end;
-      end;
     end;
-    if Save then
+    //пытаемся сохранить заказ
+    if Save then begin
+      //удачно
+      Self.ModalResult := mrOk;
+      FOpt.RequestWhereClose := cqNone;
+      //RefreshParentForm;  //!отладка
+      //закроем форму
       Close;
-    //btnOkClick(Sender);
+    end
+    else begin
+      //неудачно
+      //продолжим редактирование
+      F.SetProp('id_status', LOrderStatusOld);
+    end;
   end;
 end;
 
-procedure TFrmOWOrder.SetPermanetFieldProps;
+procedure TFrmOWOrder.SetPermanentFieldProps;
 //установить доступность/значения контролов глобально
 begin
+  //сначала разблокируем все поля
+  F.SetProps('', True, fvtDsbl);
   //всегда нередактируемые поля
   F.SetProps('d', False, fvtDsbl);
   //для шаблонов: t необязательные, td недоступные
@@ -1748,7 +1809,9 @@ begin
   end
   //если статус Проведен и более, то редактируем только выборочно поля
   else if F.GetProp('id_status').AsInteger > ORDER_ID_STATUS_DRAFT then begin
-    F.SetProps('-ea', False, fvtDsbl);
+    //если не установлен флаг Редактировать все, запретим изменения полей кроме выбранных по тегу
+    if not FEditAll then
+      F.SetProps('-ea', False, fvtDsbl);
   end
   //для всех остальных статусов блокирем все
   else if F.GetProp('id_status').AsInteger <> ORDER_ID_STATUS_DRAFT then begin
@@ -2240,19 +2303,22 @@ var
   FieldsSave2: string;
   UseTransaction: Boolean;
 begin
-  if MyQuestionMessage('Сохранить заказ?') <> mrYes then begin
-    Result := true;
-    Exit;//!!!
-  end;
+  if False then  //!отладка
+    if MyQuestionMessage('Сохранить заказ?') <> mrYes then begin
+      Result := True;
+      Exit;
+    end;
   Result := False;
   //сгенерируем номер заказа
   var LOrNum := F.GetProp('ornum').AsString;
   GetOrderNumber;
   //получим наименование папки заказа
   GetOrderPath;
+var st := F.GetProp('path');
+
   //прочие поля
   F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
-  F.SetProp('ch', GetOrderChangedfieldNames);
+  F.SetProp('ch', GetOrderChangedFieldNames);
   FieldsSave2 := '';
   CtrlValues2 := [];
   //получим поля и их значения, по тем для которых указано сохранение
@@ -2272,9 +2338,15 @@ begin
   SaveOrderItems;
   //фиксиоруем транзакцию
   Result := Q.QCommitTrans;
+  //выйдем если не удалось зафиксировать транзакцию
+  if not Result then
+    Exit;
   //предупреждение об изменении номера заказа
   if Result and not FIsTemplate and (Mode in [fAdd, fCopy]) and (LOrNum <> F.GetProp('ornum')) then
     MyInfoMessage('Внимание!'#13#10'Номер заказа был изменен с ' + LOrNum + ' на ' + F.GetProp('ornum'), 1);
+  //создадим задачу для серверного процесса
+  if not FIsTemplate and (not Q.TestDB or (MyQuestionMessage('Выгрузить данные на диск?') = mrYes)) then
+    SetTaskForServer;
 end;
 
 procedure TFrmOWOrder.SaveCustomer;
@@ -2521,9 +2593,10 @@ procedure TFrmOWOrder.GetOrderPath;
 begin
   var LArea := FProdAreas.FindFirst('id', F.GetProp('area'));
   F.SetProp('path',
-    FProdAreas.G(LArea, 'order_prefix') +
-    F.GetProp('ornum') + ' ' +
-    S.CorrectFileName(Trim(S.IIfV(cmb_customer.Text = '', 'Производство', cmb_customer.Text)) + ' ' + Trim(cmb_project.Text))
+    S.IIfStr(Q.TestDB, '__') +                           //в тестовой базе добавим подчеркивание в имя каталога
+    FProdAreas.G(LArea, 'order_prefix').AsString +
+    F.GetProp('ornum').AsString + ' ' +
+    S.CorrectFileName(Trim(S.IIfV(F.GetProp('customer').AsString = '', 'Производство', F.GetProp('customer').AsString)) + ' ' + Trim(F.GetProp('project').AsString))
   );
 end;
 
@@ -2538,7 +2611,7 @@ begin
   if FIsTemplate then
     Exit;
   Result := False;
-  try
+  //try
     Slashes := '';
     FilesToCopy := '';
     FilesToDelete := '';
@@ -2550,10 +2623,10 @@ begin
           S.ConcatStP(Slashes, S.Right('0000' + IntToStr(i + 1), 3) + ' ' + S.CorrectFileName(S.IIFStr(FrgItems.GetRawValueS('prefix', i) <> '', FrgItems.GetRawValueS('prefix', i) + '_', '') + Trim(FrgItems.GetRawValueS('name', i))), #13#10);
       //получим поля файлов внешних документов для копипрования на сервер
       for i := 0 to FrgFiles.GetRawCount - 1 do begin
-        if FrgItems.GetRawValueI('mode', i) = 3 then
-          S.ConcatStP(FilesToDelete, FrgItems.GetRawValueS('name', i), #13#10)
-        else if FrgItems.GetRawValueI('mode', i) <> 0 then
-          S.ConcatStP(FilesToCopy, FrgItems.GetRawValueS('name', i), #13#10);
+        if FrgFiles.GetRawValueI('mode', i) = 3 then
+          S.ConcatStP(FilesToDelete, FrgFiles.GetRawValueS('name', i), #13#10)
+        else if FrgFiles.GetRawValueI('mode', i) <> 0 then
+          S.ConcatStP(FilesToCopy, FrgFiles.GetRawValueS('name', i), #13#10);
       end;
       //получим поля файлов основания для копипрования на сервер
       for i := 0 to FrgBasis.GetRawCount - 1 do begin
@@ -2564,7 +2637,7 @@ begin
       end;
     end;
     Addr := Tasks.GetMailingAddr(TASK_MAILING_ORDERS);
-    var LOrderPath := F.GetProp('poath').AsString;
+    var LOrderPath := F.GetProp('path').AsString;
     if Mode = fDelete then begin
       Subj := 'Удален заказ ' + LOrderPath;
       if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
@@ -2579,8 +2652,8 @@ begin
         Subj := 'Создан заказ';
       Subj := Orders.GetSubject(Subj, '', ID, null);
       if Mode = fEdit then begin
-        st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetPropB('area')]));
-        PspNameOld := F.GetPropB('path') + '.xlsx';
+        st := Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetPropB('area')]).AsString;
+        PspNameOld := F.GetPropB('path').AsString + '.xlsx';
         Delete(PspNameOld, 1, length(st));
       end
       else
@@ -2602,6 +2675,8 @@ begin
         ['files-to-send', PspName],
         ['files-to-copy', FilesToCopy],
         ['files-to-delete', FilesToDelete],
+        ['basis_files-to-copy', BasisToCopy],
+        ['basis_files-to-delete', BasisToDelete],
         ['slashes', Slashes]
         ],
         False, False
@@ -2612,21 +2687,21 @@ begin
       DeleteFile(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx');
       //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
       for i := 0 to FrgFiles.GetRawCount - 1 do begin
-        if FrgItems.GetRawValueI('mode',i) in [1, 2] then
-          if FileExists(FrgItems.GetRawValueS('namenew', i)) then
-            CopyFile(pWideChar(FrgItems.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgItems.GetRawValueS('name',i)), True);
+        if FrgFiles.GetRawValueI('mode',i) in [1, 2] then
+          if FileExists(FrgFiles.GetRawValueS('namenew', i)) then
+            CopyFile(pWideChar(FrgFiles.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgFiles.GetRawValueS('name',i)), True);
       end;
-      for i := 0 to FrgFiles.GetRawCount - 1 do begin
-        if FrgItems.GetRawValueI('mode',i) in [1, 2] then
-          if FileExists(FrgItems.GetRawValueS('namenew', i)) then
-            CopyFile(pWideChar(FrgItems.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgItems.GetRawValueS('name',i)), True);
+      for i := 0 to FrgBasis.GetRawCount - 1 do begin
+        if FrgBasis.GetRawValueI('mode',i) in [1, 2] then
+          if FileExists(FrgBasis.GetRawValueS('namenew', i)) then
+            CopyFile(pWideChar(FrgBasis.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgBasis.GetRawValueS('name',i)), True);
       end;
     end;
     //отправим задачу на выполнение
     Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
     Result := True;
-  except
-  end;
+  //except
+  //end;
 end;
 
 procedure TFrmOWOrder.SetOrderStatusLabels;
@@ -2637,7 +2712,7 @@ begin
   else
     lbl_status.SetCaption2(
       '$FF0000Статус заказа: ' +
-      S.Decode([F.GetProp('id_status').AsInteger, 0, '$00FFFF', 1, '$FF00FF', 2, '$00FF00']) +
+      S.Decode([F.GetProp('id_status').AsInteger, 0, '$00AAFF', 1, '$FF00FF', 2, '$00AA00']) +
       S.IfEmptyStr(F.GetProp('status').AsString, 'на оформлении') +
       S.IIfStr(FOnVerification, '$0000FF (ПРОВЕРКА)') +
       S.IIfStr(not (Mode in [fAdd, fCopy]),

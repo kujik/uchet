@@ -576,7 +576,7 @@ inherited FrmOWOrder: TFrmOWOrder
           TabOrder = 1
           ExplicitWidth = 1267
           object lbl_status: TLabel
-            Left = 4
+            Left = 10
             Top = 3
             Width = 51
             Height = 14
@@ -589,7 +589,7 @@ inherited FrmOWOrder: TFrmOWOrder
             ParentFont = False
           end
           object lbl_status_2: TLabel
-            Left = 4
+            Left = 10
             Top = 20
             Width = 58
             Height = 13
