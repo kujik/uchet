@@ -31,7 +31,6 @@ type
     //основная функция формы
     function  Prepare: Boolean; override;
     function  PrepareForm: Boolean; virtual;
-
     //события первого (основного) фрейма грида
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;

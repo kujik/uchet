@@ -149,17 +149,19 @@ type
     FOrderTypeIndes: Integer;
     //список изделий в заказе на момент его загрузки
     FOrderItemsOld: TNamedArr;
-    FOrderTitleChangedFields, FOrderTitleChangedFieldNames: string;
+//    FOrderTitleChangedFields, FOrderTitleChangedFieldNames: string;  //! не использую
     //подсвечивать текущие изменения в шапке (-1: скрыть подсветку (перерисовать фон), 0 - не подсвечивать, 1 - подсвечивать)
     FHighlihtCurrentChangedControls: Integer;
     //разрешает редакьтирование заказа в статусах Проведен или Запущен
     FEditAll: Boolean;
+    //текстовое описание изменений в шапке заказа - толь перечисление изменений, без указания начальных и конечных значений
+    FTitleChangesShortText: string;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
     procedure SetVisCheckboxes;
     procedure SetVisPanels(Sender: TObject = nil);
-    function PrepareFrgItems: Boolean;
+    function  PrepareFrgItems: Boolean;
     function  PrepareFrgRelatedOrders: Boolean;
     function  PrepareFrgBasis: Boolean;
     function  PrepareFrgFiles: Boolean;
@@ -188,6 +190,7 @@ type
     procedure AfterLoadData;
     procedure AfterLoadTables;
     procedure CheckDates;
+    procedure CheckBasis;
     function  GetAddFiles(AMode: Integer): TNamedArr;
     procedure ViewAddFile(AFrg: TFrDBGridEh);
     procedure AddAddFile(AFrg: TFrDBGridEh; ATag: Integer);
@@ -201,6 +204,7 @@ type
     function  SaveOrderItems: Boolean;
     procedure SaveCustomer;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
+    function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
     function  SetTaskForServer: Boolean;
     procedure GetFrgItemsRowChanges;
     function  GetOrderChangedfieldNames: string;
@@ -210,6 +214,8 @@ type
     procedure ReloadRoutesForOrderItems;
     procedure ReloadPricesForOrderItems;
     procedure SetFrgItemsFieldsEditabled;
+    function GetTitleChangesShortText: string;
+
 
 
 
@@ -238,12 +244,9 @@ type
     procedure FrgItemsAddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); virtual;
     procedure FrgItemsColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); virtual;
     procedure FrgItemsCellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
-    //двойной клик в таблице
-    //по умолчанию вызывает редактирование или просмотр записи
 //    procedure FrgItemsOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
     procedure FrgItemsGetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
     procedure FrgItemsVeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
-    procedure FrgItemsRowVerify(Row: Integer);
     //события грида внешних документов и грида файлов основания заказа
     procedure FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); virtual;
     procedure FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
@@ -447,17 +450,27 @@ begin
   frmpcDates.SetParameters(True, 'Даты', [[
     ''#13#10
     ]],
-    '',
+    'Все даты в этом блоке должны идти в порядке возрастания!',
     False //!
   );
   frmpcFinance.SetParameters(True, 'Финансы', [[
+    'Здесь отображается (и вводится) финансовая информация по заказу.'#13#10+
+    'Все суммы в левой колонки рассчитаны по базовым ценам, и не включают скидку, наценку и НДС.'#13#10+
+    'В правой колонке, напротив, суммы включают и наценку/скидку и НДС.'#13#10+
+    'Суммы доставки и монтажа вводятся вручную и доступны только для отгрузочных заказов.'#13#10+
+    'Наценка и скидка доступны только для розничных заказов (что определяется выбранной организацией).'#13#10+
+    'Ставка НДС для расчета также привязана к организации.'#13#10+
+    'Дополнительно есть возможность ввода авансового платежа по заказу.'#13#10+
     ''#13#10
     ]],
     '',
     True
   );
   frmpcComments.SetParameters(True, 'Дополнение', [[
-    ''#13#10
+    'Необязательная уточняющая информация (комментарий) к заказу.'#13#10+
+    'Вы можете выделить (подсветить крансным) текст, нажав Ctrl-Z, чтобы привлечь к ней внимание.'#13#10+
+    'Также в этом блоке отображается информация по рекламации, если заказа ей является.'#13#10+
+    'В этом случае нажмите кнопку в правой части строки "Причины ррекламации" для их редактирования.'#13#10
     ]],
     '',
     True
@@ -466,7 +479,7 @@ begin
     ''#13#10
     ]],
     '',
-    True
+    False
   );
   frmpcAddDocs.SetParameters(True, 'Внешние документы', [[
     ''#13#10
@@ -597,7 +610,7 @@ begin
     ['null as status$s', '*', '20', 'pic=e;0:16;12'],
     ['slash$s', 'Паспорт', '90'],
     ['prefix$s', 'Префикс', '60;h'],
-    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't-ch,e'],
+    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=ch,e'],
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,ch'],
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch,e'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e'],
@@ -727,6 +740,8 @@ begin
   FrgBasis.Prepare;
   FrgBasis.SetInitData(GetAddFiles(2));
   FrgBasis.RefreshGrid;
+  SwitchBasisPanel(True);
+  CheckBasis;
 end;
 
 function TFrmOWOrder.PrepareFrgFiles: Boolean;
@@ -837,45 +852,39 @@ begin
     ['dt_end$d;0', 't=t'],
     ['dt_beg$d', 't=d,t'],
     ['dt_change$d', 't=d,t'],
-    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t,ch'],
-    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t,ch,ea'],
+    ['dt_start$d', 't=t,ch'],
+    ['dt_otgr$d', 't=t,ch,ea'],
+//    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t,ch'],
+//    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t,ch,ea'],
     ['dt_montage_beg$d', 't=p,t,ch,ea'],
     ['dt_montage_end$d', 't=p,t,ch,ea'],
 
     ['sum_items_final$f','V=', 't=d,td',#0],
     ['sum_items_base$f','V=', 't=d,td',#0],
     ['sum_items_final_wo_nds$f;0;0'],
-    ['markup_items_percent$f','V=0:100:2', 't=p,td,ch',#0],
-    ['discount_items_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['markup_items_percent$f', 'N=Наценка для изделий', 'V=0:100:2', 't=p,td,ch',#0],
+    ['discount_items_percent$f', 'N=Скидка для изделий','V=0:100:2', 't=p,td,ch',#0],
     ['sum_montage_final$f','V=', 't=p,td,d',#0],
     ['sum_montage_base$f', 't=p,td,ch','V=0:9999999:2', #0],
-    ['markup_montage_percent$f','V=0:100:2', 't=p,td,ch',#0],
-    ['discount_montage_percent$f','V=0:100:2', 't=p,td,ch',#0],
+    ['markup_montage_percent$f', 'N=Наценка для монтажа','V=0:100:2', 't=p,td,ch',#0],
+    ['discount_montage_percent$f', 'N=Скидка для монтажа','V=0:100:2', 't=p,td,ch',#0],
     ['sum_delivery_final$f','V=', 't=d,td',#0],
     ['sum_delivery_base$f','V=0:9999999:2', 't=td,ch' ,#0],
-    ['markup_delivery_percent$f', 'V=0:100:2', 't=p,td,ch',#0],
-    ['discount_delivery_percent$f',' V=0:100:2','t=p,td,ch',#0],
+    ['markup_delivery_percent$f', 'N=Наценка для доставки', 'V=0:100:2', 't=p,td,ch',#0],
+    ['discount_delivery_percent$f', 'N=Скидка для доставки',' V=0:100:2','t=p,td,ch',#0],
     ['sum_final$f','V=', 't=d,td', #0],
     ['sum_final_wo_nds$f','V=', 't=d,td' ,#0],
-    ['sum_advance$f','V=0:9999999:2', 't=td,ch' ,#0]
+    ['sum_advance$f','V=0:9999999:2', 't=td,ch' ,#0],
 
+    ['chg_basis$i;0;0','N=Основание (файлы)','CH=1','t=td,ch'],
+    ['chg_files$i;0;0','N=Внешние документы','CH=1','t=td,ch']
 
 
     {['','V=',#0],
     ['','V=',#0],
-    ['','V=',#0],
-    ['','V=',#0],
-    ['','V=',#0],
     ['','V=',#0],}
-      ];
+    ];
   F.PrepareDefineFieldsAdd;
-  (*
-    ['edt_Manager', User.GetName, 'managername', '', 0, null, -1],
-    ['mem_Comment', null, 'comm', 'comm$s', 0, null, 0],
-    ['nedt_Attention', 0, 'attention', 'attention$i', 0, null, -1],
-    ['', User.GetID, 'id_manager', 'id_manager$i', 0, null, -1]
-  *)
-  var va := F.GetPropValues('c',fvtCtrl);
 end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
@@ -1193,7 +1202,7 @@ begin
     F.SetProps('c', False, fvtDsbl);
     F.SetProps('p', null, fvtVCurr);
     F.SetProps('p', False, fvtDsbl);
-    F.SetProps('sum_montage_base;sum_delivery_base;markup_items_percent;discount_items_percent;markup_montage_percen;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', null, fvtVCurr);
+    F.SetProps('sum_montage_base;sum_delivery_base;markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', null, fvtVCurr);
     F.SetProps('sum_montage_base;sum_delivery_base;markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', False, fvtDsbl);
 {    F.SetProps('dt_start', True, fvtDsbl);
     F.SetProps('dt_montage_beg;dt_montage_end', '', fvtVer);
@@ -1336,14 +1345,18 @@ begin
 end;
 
 procedure TFrmOWOrder.SwitchBasisPanel(ALoadFirst: Boolean);
+//переключения вида панели основания (файлы/текст)
+//флаг ALoadFirst обозначат первый проказ после открытия диалога заказа
 var
   LVisFiles: Boolean;
 begin
   LVisFiles := FrgBasis.Visible;
   if ALoadFirst then begin
-    LVisFiles := False;
+    //при первом показе отобразим тектовое поле, но если нет текта а есть прикрепленный файлы - то грид файлов
+    LVisFiles := (m_basis_text.Text = '') and (FrgBasis.GetCount > 0);
   end
   else begin
+    //инфертируем вид
     LVisFiles := not LVisFiles;
   end;
   if LVisFiles then begin
@@ -1395,9 +1408,11 @@ begin
     RecalculateSum;
   end;
 
+  //if (Sender = m_basis_text) then
+  //  CheckBasis;
+
   OnCustomerControlsChange(Sender);
 
-  CheckDates;
 end;
 
 procedure TFrmOWOrder.EditButtonsClick(Sender: TObject; var Handled: Boolean);
@@ -1432,7 +1447,7 @@ begin
     mbtAdd:
       //добавляем строку в конец таблицы
       if (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') >= 0) then
-        if FIsTemplate or (Mode in [fAdd, fCopy]) then
+        if FIsTemplate or (Mode in [fAdd, fCopy, fEdit]) then
           Fr.AddRow;
     mbtDelete:
       //удаляем строку, правила те же что при вставке
@@ -1721,7 +1736,6 @@ begin
   //буферизация, иначе тормозит ресайз, тк много контролов меняют размер
   Self.DoubleBuffered := True;
 
-  SwitchBasisPanel(True);
   SetOrderStatusLabels;
   Verify(nil);
   SetPermanentFieldProps;
@@ -1809,9 +1823,20 @@ begin
   end
   //если статус Проведен и более, то редактируем только выборочно поля
   else if F.GetProp('id_status').AsInteger > ORDER_ID_STATUS_DRAFT then begin
-    //если не установлен флаг Редактировать все, запретим изменения полей кроме выбранных по тегу
+    //если флаг установлен, редактируем все
     if not FEditAll then
-      F.SetProps('-ea', False, fvtDsbl);
+      if User.Role(rOr_D_Order_Ch)
+        //если права на редактирования заказа, то редактируем только доступные всегда
+        then F.SetProps('-ea', False, fvtDsbl)
+        //а если прав нет, но право на запуск в работу, то редактируем только дату отгрузки в случае производственного заказа
+        else if User.Role(rOr_D_Order_Start) then begin
+          if F.GetProp('id_organization').AsInteger = -1
+            then F.SetProps('-dt_otgr', False, fvtDsbl)
+            else F.SetProps('', False, fvtDsbl);
+        end;
+    //если не установлен флаг Редактировать все, запретим изменения полей кроме выбранных по тегу
+//    if not FEditAll then
+//      F.SetProps('-ea', False, fvtDsbl);
   end
   //для всех остальных статусов блокирем все
   else if F.GetProp('id_status').AsInteger <> ORDER_ID_STATUS_DRAFT then begin
@@ -1886,23 +1911,6 @@ procedure TFrmOWOrder.FrgItemsColumnsUpdateData(var Fr: TFrDBGridEh; const No: I
 //вызывается при ручном вводе данных в грид
 begin
   Handled := False;
-Exit;
-  var LFieldName := Fr.GetFieldNameForSender(Sender);
-  var LOldValue: Variant := Fr.GetValue(LFieldName);
-  if LOldValue = Value then
-    Exit;
-  Fr.SetValue(LFieldName, Value);
-  if (LFieldName = 'price_base_with_nds') then begin
-    Fr.SetValue('price_base', RoundTo(FrgItems.GetValue('price_base_with_nds').AsFloat / (1 + FrgItems.GetValue('nds_rate').AsFloat / 100), -2));
-  end;
-  if (LFieldName = 'name') or (LFieldName = 'sgp') or (LFieldName = 'wo_estimate') then begin
-    CalculateFrgItemsRow(LFieldName);
-    RecalculateItemsPrices;
-  end;
-  if (LFieldName = 'price_base') or (LFieldName = 'price_base_with_nds') or (LFieldName = 'qnt') then begin
-    RecalculateItemsPrices;
-  end;
-  GetFrgItemsRowChanges;
 end;
 
 procedure TFrmOWOrder.FrgItemsDbGridEh1ApplyFilter(Sender: TObject);
@@ -2040,8 +2048,8 @@ procedure TFrmOWOrder.RecalculateSum;
 begin
   //в левой колонке без ндс и без учета наценок/скидок
   //в правой с ндс и наценками/скидками
-  F.SetProp('sum_montage_final', RoundTo(F.GetProp('sum_montage_base').AsFloat * (1 + F.GetProp('discount_montage_percent').AsFloat/ 100) * (1 - F.GetProp('markup_montage_percent').AsFloat / 100), -2));
-  F.SetProp('sum_delivery_final', RoundTo(F.GetProp('sum_delivery_base').AsFloat * (1 + F.GetProp('discount_delivery_percent').AsFloat/ 100) * (1 - F.GetProp('markup_delivery_percent').AsFloat / 100), -2));
+  F.SetProp('sum_montage_final', RoundTo(F.GetProp('sum_montage_base').AsFloat * (1 - F.GetProp('discount_montage_percent').AsFloat/ 100) * (1 + F.GetProp('markup_montage_percent').AsFloat / 100), -2));
+  F.SetProp('sum_delivery_final', RoundTo(F.GetProp('sum_delivery_base').AsFloat * (1 - F.GetProp('discount_delivery_percent').AsFloat/ 100) * (1 + F.GetProp('markup_delivery_percent').AsFloat / 100), -2));
   var LSumTotal := F.GetProp('sum_items_final_wo_nds').AsFloat + F.GetProp('sum_montage_final').AsFloat + F.GetProp('sum_delivery_final').AsFloat;
   //итоговая без ндс но со скидками
   F.SetProp('sum_final_wo_nds', LSumTotal);
@@ -2105,6 +2113,13 @@ begin
   FrgItems.InvalidateGrid;
 end;
 
+procedure TFrmOWOrder.CheckBasis;
+begin
+  frmpcBasis.SetError(not(
+    (FrgBasis.GetRawCount > 0) or (F.GetProp('basis_text').AsString <> '')
+  ));
+end;
+
 procedure TFrmOWOrder.CheckDates;
 //проверка и установка доступности контролорв в блоке дат заказа
 //не получается автоматически управлять ошибкой полей, статусы сбрасываются,
@@ -2161,6 +2176,8 @@ end;
 procedure TFrmOWOrder.FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
   AddAddFile(Fr, Tag);
+  if Fr = FrgBasis then
+    CheckBasis;
 end;
 
 procedure TFrmOWOrder.FrgFilesCellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
@@ -2219,56 +2236,6 @@ begin
 //  FrgItems.SetValue('status', Row, True, S.IIf(Msg <> '', 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));
 end;
 
-
-procedure TFrmOWOrder.FrgItemsRowVerify(Row: Integer);
-begin
-  var LErrMsgs: TVarDynArray := [];
-  for var LFld := 0 to FrgItems.MemTableEh1.FieldCount - 1 do begin
-  var LFieldName := FrgItems.MemTableEh1.Fields[LFld].FieldName;
-  //Row := Row - 1;
-  //if Row = -1 then
-  //  Row := FrgItems.GetRawRowById() - 1;
-  var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
-  var LFromSgp := FrgItems.GetValue('sgp', Row).AsInteger = 1;
-  var LWoEstimate := FrgItems.GetValue('wo_estimate', Row).AsInteger = 1;
-  var LRouteDefined := False;
-  for var i := 1 to  High(RouteFields) + 1 do
-    if FrgItems.GetValue('r' + IntToStr(i), Row) = 1 then begin
-      LRouteDefined := True;
-      Break;
-    end;
-  var Msg :=  '';
-  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
-    Msg := S.IIFStr(not LRouteDefined, 'Не задан маршрут');
-  end
-  else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
-    Msg := S.IIFStr(LRouteDefined, 'Маршрут недопустим при пометке "С СГП" или "Без сметы"');
-  end;
-  {if (LFieldName = 'id_thn') and LIsStdItem then begin
-    if FrgItems.GetValue('id_thn').AsInteger <> - 100 then
-      Msg := 'Технолдог для стандартного изделия не может быть задан';
-  end;}
-  if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_thn', Row).AsInteger <> - 100 then
-      Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
-  end;
-  if (LFieldName = 'id_thn') and (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
-      Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
-  end;
-  if (LFieldName = 'должен') and  not LIsStdItem then begin
-    if (FrgItems.GetValue('id_kns', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
-      Msg := 'Конструктор должен быть задан для нестандартного изделия';
-  end;
-  if (LFieldName = 'id_thn') and not LIsStdItem then begin
-    if (FrgItems.GetValue('id_thn', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
-      Msg := 'Технолог должен быть задан для нестандартного изделия';
-  end;
-    if not A.InArray(Msg, LErrMsgs) then
-      LErrMsgs := LErrMsgs + [Msg];
-  end;
-  FrgItems.SetValue('status', Row, True, S.IIf(LErrMsgs.Count <> 0, 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));
-end;
 
 function TFrmOWOrder.GetAddFiles(AMode: Integer): TNamedArr;
 //получим список файлов - внешних документов, уже загруженныых в папку заказа
@@ -2391,12 +2358,24 @@ begin
 end;
 
 procedure TFrmOWOrder.Verify(Sender: TObject; onInput: Boolean = False);
+//проверка. вызываем родительский метод, здесь устанавливаем доступность кнопок
 begin
   inherited;
 //  Cth.SetButtonsAndPopupMenuCaptionEnabled(FPanelsBtn, mbtOk, AName, not HasError, '');
-  Cth.SetButtonState(Self, mbtSave, null, not HasError, True);
+  //кнопка Сохранить доступна, если нет ошибок и были изменения в данных
+  Cth.SetButtonState(Self, mbtSave, null, not HasError and  IsDataChanged, True);
   Cth.SetButtonState(Self, mbtApprove, null, not HasError, True);
+  //подсветим измененные поля
   HighlihtCurrentChangedControls;
+end;
+
+function TFrmOWOrder.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
+//дополнительная проверка
+begin
+  Result := False;
+  //заполнено ли основание
+  CheckDates;
+  CheckBasis;
 end;
 
 function TFrmOWOrder.SaveOrderItems: Boolean;
@@ -2478,6 +2457,14 @@ end;
 
 procedure TFrmOWOrder.AddAddFile(AFrg: TFrDBGridEh; ATag: Integer);
 //добавить/обновить/удалить файл из внешних документов
+  procedure SetChanges;
+  begin
+    if AFrg = FrgBasis then
+      F.SetProp('chg_basis', 1)
+    else
+      F.SetProp('chg_files', 1);
+    Verify(nil);
+  end;
 begin
   if Tag = mbtView then begin
     ViewAddFile(AFrg);
@@ -2491,6 +2478,7 @@ begin
       if MyQuestionMessage('Удалить этот файл?') <> mrYes then
         Exit;
       AFrg.SetValue('mode', 3);
+      SetChanges;
     end
     //если файл еще не на сервере, то просто удалим строку
     else
@@ -2516,11 +2504,11 @@ begin
           //а если не был и был добавлен ранее, то останется Добавлен, но будет заменен полный путь
           if AFrg.GetRawValueI('onserver', i) = 1 then
             AFrg.SetRawValue('mode', i, 1);
-          FileNamefound := True;
+          FileNameFound := True;
           Break;
         end;
       end;
-      if not FileNamefound then begin
+      if not FileNameFound then begin
         //не найден по короткому имени файла в гриде - добавим
         AFrg.AddRow(True);
         AFrg.SetRawValue('name', AFrg.GetCount -1, ExtractFileName(FileName));
@@ -2528,6 +2516,7 @@ begin
         AFrg.SetRawValue('mode', AFrg.GetCount -1, 2);
       end;
     end;
+    SetChanges;
   end;
 end;
 
@@ -2603,7 +2592,7 @@ end;
 function TFrmOWOrder.SetTaskForServer: Boolean;
 //создадим задачу для серверного процесса
 var
-  st, FilesToCopy, FilesToDelete, BasisToCopy, BasisToDelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld: string;
+  st, FilesToCopy, FilesToDelete, BasisToCopy, BasisToDelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld, DifferenceText: string;
   i: Integer;
 begin
   //SetOrderSaveStatusText('Передача данных на сервер');
@@ -2615,6 +2604,7 @@ begin
     Slashes := '';
     FilesToCopy := '';
     FilesToDelete := '';
+    DifferenceText := '';
     if Mode <> fDelete then begin
       //список слешей для создания каталогов, в формате 001, 005...
       //создаем только если колво не 0 и не с СГП,
@@ -2658,6 +2648,7 @@ begin
       end
       else
         PspNameOld := '';
+//GetOrderChangedFieldCaptions
       st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetProp('area')]));
       PspName := LOrderPath + '.xlsx';
       Delete(PspName, 1, length(st));
@@ -2820,38 +2811,123 @@ begin
 end;
 
 procedure TFrmOWOrder.ReloadPricesForOrderItems;
+//обновим цену в строках табличной части заказа из уже загруженного справочника стандартных изделий (FStdItems);
+//только для строк со стандартными изделиями (nstd <> 1) - у нестандартных нет соответствия в справочнике
+var
+  i, LStdItemPos: Integer;
 begin
-
+  if not ((Mode in [fView, fDelete]) and ((F.GetProp('id_status').AsInteger =  ORDER_ID_STATUS_STARTED) or ((F.GetProp('id_status').AsInteger > ORDER_ID_STATUS_STARTED) and FEditAll))) then begin
+    MyInfoMessage('Эта функция недоступна для данного заказа!');
+    Exit;
+  end;
+  if MyQuestionMessage('Обновить цены из справочника стандартных изделий?') <> mrYes then
+    Exit;
+  for i := 0 to FrgItems.GetRawCount - 1 do begin
+    if FrgItems.GetRawValueI('nstd', i) = 1 then
+      Continue;
+    LStdItemPos := FStdItems.FindFirst('id', FrgItems.GetRawValue('id_std_item', i));
+    if LStdItemPos < 0 then
+      Continue;
+    FrgItems.SetRawValue('price_base', i, FStdItems.G(LStdItemPos, 'price_wo_nds'));
+  end;
+  RecalculateItemsPrices;
+  FrgItems.InvalidateGrid;
+  Verify(nil);
 end;
 
 procedure TFrmOWOrder.ReloadRoutesForOrderItems;
+//обновим маршрут (поля r1..rN) в строках табличной части заказа из уже загруженного справочника
+//стандартных изделий (FStdItems); только для строк со стандартными изделиями (nstd <> 1) -
+//у нестандартных нет соответствия в справочнике
+var
+  i, j, LStdItemPos: Integer;
 begin
-
+  if not ((Mode in [fView, fDelete]) and ((F.GetProp('id_status').AsInteger =  ORDER_ID_STATUS_STARTED) or ((F.GetProp('id_status').AsInteger > ORDER_ID_STATUS_STARTED) and FEditAll))) then begin
+    MyInfoMessage('Эта функция недоступна для данного заказа!');
+    Exit;
+  end;
+  if MyQuestionMessage('Обновить маршруты из справочника стандартных изделий?') <> mrYes then
+    Exit;
+  for i := 0 to FrgItems.GetRawCount - 1 do begin
+    if FrgItems.GetRawValueI('nstd', i) = 1 then
+      Continue;
+    LStdItemPos := FStdItems.FindFirst('id', FrgItems.GetRawValue('id_std_item', i));
+    if LStdItemPos < 0 then
+      Continue;
+    for j := 1 to High(RouteFields) + 1 do
+      FrgItems.SetRawValue('r' + IntToStr(j), i, FStdItems.G(LStdItemPos, 'r' + IntToStr(j)));
+  end;
+  FrgItems.InvalidateGrid;
+  FrgItems.IsTableCorrect;
+  Verify(nil);
 end;
 
 procedure TFrmOWOrder.SetFrgItemsFieldsEditabled;
+//установим редактируемый поля в гриде изделий
 begin
+  //запретим все редактирование
   FrgItems.Opt.SetColFeature('*', 'e', False, False);
-  if F.GetProp('id_status').AsInteger = ORDER_ID_STATUS_DRAFT then
-    FrgItems.Opt.SetColFeature('e', 'e', True, False)
-  else
+  FrgItems.Opt.SetGridOperations('');
+  //если не режимы редактирования, а также для удаленных/остановленных заказов - нельзя ничего
+  if not (Mode in [fAdd, fCopy, fEdit]) or (F.GetProp('id_status').AsInteger < 0) then
+    Exit;
+  //можно все в режиме оформления или в режиме полного редактирования
+  if (F.GetProp('id_status').AsInteger = ORDER_ID_STATUS_DRAFT) or FEditAll then begin
+    FrgItems.Opt.SetColFeature('e', 'e', True, False);
+    FrgItems.Opt.SetGridOperations('uaid');
+  end
+  //можно только заданные поля, и нельзя добавлять/удалять для проведенный и запущенных
+  else begin
     FrgItems.Opt.SetColFeature('ea', 'e', True, False);
+    FrgItems.Opt.SetGridOperations('u');
+  end;
 end;
+
+function TFrmOWOrder.GetTitleChangesShortText: string;
+//ввернем в кратком виде текст изменений, сделанных в паспорте
+//(только имена изменных полей в шапке, и дистинкт имена изменныых полей в теле папорта)
+//порядок полей пока получается случайный!
+begin
+  //заголовки контролов (или свойств), помеченных тегом 'ch', значения которых изменились с момента открытия формы;
+  //в том порядке, в котором соответствующие поля объявлены в DefineFields
+  Result := F.GetChangedPropCaptions('ch').Implode(#1);
+  Result := StringReplace(Result, #13#10, ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, #1, '  #13#10', [rfReplaceAll]);
+  if Result <> '' then
+    Result := 'Шапка паспорта:'#13#10'  ' + Result;
+  var LChangesText := '';
+  for var i := 0 to FrgItems.GetRawCount - 1 do begin
+    S.ConcatStP(LChangesText, FrgItems.GetRawValueS('ch', i), ',');
+  end;
+  var LChanges: TVarDynArray := A.RemoveDuplicates(A.Explode(LChangesText, ',', True));
+  for var i := 0 to High(LChanges) do begin
+    if (VarToStr(LChanges[i])[1] = 'r') and (VarToStr(LChanges[i])[2] >= '0') and (VarToStr(LChanges[i])[2] <= '9') then
+      LChanges[i] := 'Производственный маршрут'
+    else if LChanges[i] = 'slash' then
+      LChanges[i] := 'Добавлено изделие'
+    else if LChanges[i] = 'nstd' then
+      LChanges[i] := 'Нестандарт'
+    else begin
+      if FrgItems.IsFieldExists(LChanges[i]) then
+        LChanges[i] := FrgItems.GetColumnCaption(LChanges[i]);
+    end;
+  end;
+  if Length(FrgItems.EditData.IdsDeleted) > 0 then
+    LChanges := LChanges + ['Удалено изделие'];
+  LChanges := A.RemoveDuplicates(LChanges);
+  if Length(LChanges) > 0 then
+    Result := Result + #13#10#10#10'Тело паспорта:'#13#10'' + LChanges.Implode('  '#13#10);
+end;
+
 
 
 
 
 procedure TFrmOWOrder.Test;
 begin
-  //HighlihtPreviousChangedControls;
-  var i := F.GetProp('id_status').AsInteger;
-  Inc(i);
-  if i = 3 then i := 0;
-  F.SetProp('id_status2', i);
-  SetButtons;
-  SetOrderStatusLabels;
-  Verify(nil);
+  MyInfoMessage(GetTitleChangesShortText, 1);
 end;
+
 
 
 end.
@@ -2945,112 +3021,9 @@ begin
 
 end;
 
-function TDlg_Order.SetTask: Boolean;
-//создадим задачу для серверного процесса
-//в случае удаления делаем сейчас просто рассылку, не затрагивая диск Z
-var
-  st, st1, filesadd, filesdelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld: string;
-  i, j, RecNo: Integer;
-begin
-  SetOrderSaveStatusText('Передача данных на сервер');
-  if IsTemplate then begin
-    Result := True;
-    Exit;
-  end;
-  Result := False;
-  try
-    Slashes := '';
-    filesadd := '';
-    filesdelete := '';
-    if Mode <> fDelete then begin
-    //список слешей для создания каталогов, в формате 001, 005...
-    //создаем только если колво не 0, не с СГП, и не д/к
-      RecNo := MemTableEh1.RecNo;
-      for i := 1 to MemTableEh1.RecordCount do begin
-        MemTableEh1.RecNo := i;
-        if (S.NNum(MemTableEh1.FieldByName('qnt').Value) <> 0) and (S.NNum(MemTableEh1.FieldByName('sgp').Value) <> 1) and (S.NNum(MemTableEh1.FieldByName('resale').Value) <> 1) then
-          S.ConcatStP(Slashes, RightStr('0000' + IntToStr(i), 3) + ' ' + S.CorrectFileName(S.IIFStr(MemTableEh1.FieldByName('prefix').AsString <> '', MemTableEh1.FieldByName('prefix').AsString + '_', '') + Trim(MemTableEh1.FieldByName('name').AsString)), #13#10);
-      end;
-      MemTableEh1.RecNo := RecNo;
-    //получим поля файлов для удаления и копирования на сервер
-      RecNo := MemTableEh2.RecNo;
-      for i := 1 to MemTableEh2.RecordCount do begin
-        MemTableEh2.RecNo := i;
-        if MemTableEh2.FieldByName('mode').AsString = 'Удален' then
-          S.ConcatStP(filesdelete, MemTableEh2.FieldByName('name').AsString, #13#10)
-        else if MemTableEh2.FieldByName('mode').AsString <> '' then
-          S.ConcatStP(filesadd, MemTableEh2.FieldByName('name').AsString, #13#10);
-      end;
-      MemTableEh2.RecNo := RecNo;
-    end;
-    Addr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [1]));
-    if Mode = fDelete then begin
-      Subj := 'Удален заказ ' + OrderPath;
-      if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
-        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', OrderPath], ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])], ['year', YearOf(dedt_Beg.Value)], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
-      else
-        TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
-    end
-    else begin
-      if Mode = fEdit then
-        Subj := 'Изменен заказ'
-      else
-        Subj := 'Создан заказ';
-      Subj := Orders.GetSubject(Subj, '', ID, null);
-      if Mode = fEdit then begin
-        st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cBegValue]]));
-        PspNameOld:= FieldsArr[GetFieldsArrPos('path'), cBegValue] + '.xlsx';
-        Delete(PspNameOld, 1, length(st));
-      end
-      else PspNameOld:= '';
-      st:= S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [FieldsArr[GetFieldsArrPos('area'), cNewValue]]));
-      PspName:= OrderPath + '.xlsx';
-      Delete(PspName, 1, length(st));
-//exit;
-    //создадим таскдир
-      TaskDir := Tasks.CreateTaskRoot(mytskopToPassportChange, [
-        ['directory', OrderPath],
-        ['old-directory', S.NSt(FieldsArr[GetFieldsArrPos('path')][cBegValue])],
-        ['in_archive', S.NSt(FieldsArr[GetFieldsArrPos('in_archive'), cBegValue])],
-        ['year', YearOf(dedt_Beg.Value)],
-        ['passport', PspName],
-        ['old-passport', PspNameOld],
-        ['subject', Subj],
-        ['to', Addr],
-        ['body', DifferencesText],
-        ['files-to-send', PspName],
-        ['files-to-copy', filesadd],
-        ['files-to-delete', filesdelete],
-        ['slashes', Slashes]  //    ['', ],
-        ],
-        False, False
-      );
-    //скопируем паспорт заказа из временного файла в каталог задачи
-      CopyFile(pWideChar(Sys.GetWinTemp + '\' + OrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
-    //удалим временный файл паспорта
-      DeleteFile(Sys.GetWinTemp + '\' + OrderPath + '.xlsx');
-    //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
-      for i := 1 to MemTableEh2.RecordCount do begin
-        MemTableEh2.RecNo := i;
-        if (MemTableEh2.FieldByName('mode').AsString = 'Добавлен') or (MemTableEh2.FieldByName('mode').AsString = 'Обновлен') then
-          if FileExists(MemTableEh2.FieldByName('namenew').AsString) then
-            CopyFile(pWideChar(MemTableEh2.FieldByName('namenew').AsString), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + MemTableEh2.FieldByName('name').AsString), True);
-      end;
-    end;
-  //отправим задачу на выполнение
-    Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
-    Result := True;
-  except
-  end;
-end;
 
 
 
-
-
-+++проверку дат, не рабюооает автомат
-ндс при наличке?
-++какие суммы нужны в шапки, без скидок они без ндс?
 сейчас в шаблоне нужно выбирать организацию обязательно, иначе не будет списка форамтов. может выдвать весь список форматов в шаблоне?
   также в старых шаблонах мог быть не выбран тип заказа, сейчас здесь в результате встанет плановый заказ.
 
@@ -3061,3 +3034,20 @@ FrgItemsButtonClick - ненльзя удалять.вставлять стро�
 нужно ли оббновление цен из справочника при редактировании? как это логгировать?
 
 строки нельзя вставлять/удалять при редактировании проведенного заказа?
+
++++заблокирова добавление строки в изделия когда нельзя редактировать ничего или можно только дополнение
++++в журнале заказов по-видимому не вызыввает родителькая процедура обработки кнопок или хоткеев
+
+когда можно менять дату отгрузки вручную? только ли больше регламентной или вообще нельзя?
+   плановикам для производственных можно?
+
+устанавливать пользователя, который запустил заказ
+утсанавливать файтическую дату запуска заказа
+
+рассылка по проведению/отмене проведения заказа отдельно
+
+основная рассылка по запуску заказа и изменениям в статусе Запущен, а также при остановке
+
+экспорт ПЗ в хлс
+
+разрешение пустых полей для основания/регламента/заказа клиента для старых заказов

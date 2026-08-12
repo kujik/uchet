@@ -23,6 +23,9 @@ type
   private
     //айди изделия, к которому будет автоматический переход
     FItemId: Integer;
+    //допустимые ставки НДС (из справоника организаций, по продавцам)
+    FNdsRates: TVarDynArray;
+    function  Prepare: Boolean; override;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
@@ -32,6 +35,9 @@ type
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure SetCbEstimate;
     procedure CopyAllItems;
+    procedure GetNdsRates;
+    procedure SetNdsRateValue;
+    procedure RememberNdsRateValue;
   public
     //открытие справочника, если он не открыт, на странице для нужного изделия и переход к его строке
     class procedure GoToItem(AId: integer; AFormDoc: string = myfrm_R_OrderStdItems);
@@ -51,6 +57,16 @@ uses
 
 {$R *.dfm}
 
+function  TFrmOGrefOrStdItems.Prepare: Boolean;
+begin
+  F.DefineFields := [['nds_rates$s', 'SV=1']];
+  F.PrepareDefineFieldsAdd;
+  F.LoadConfigValues(FormDoc);
+  var st := F.GetProp('nds_rates').AsString;
+  Result := inherited;
+end;
+
+
 function TFrmOGrefOrStdItems.PrepareForm: Boolean;
 begin
   FrmOGrefOrStdItems := Self;
@@ -62,9 +78,11 @@ begin
       ['id_or_format_estimates','_id_format_est',''],
       ['type$i','_type','40'],
       ['wo_estimate','_wo_estimate',''],
+      ['active','Исполь-'#13#10'зуется','50', 'chb', 'e', User.Role(rOr_R_StdItems_Set_Active)],
       ['name','Наименование','500;h'],
-      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
       ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price_with_nds$f','Цена +++ c НДС','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
   //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
       ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
       ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
@@ -97,9 +115,11 @@ begin
       ,[mbtTest, User.IsDeveloper]
     ]);
     Frg1.Opt.SetButtonsIfEmpty([1000]);
-    Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 80, yrefC, 400);
+    Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbEstimate', '', 50, yrefC, 400);
+    Frg1.CreateAddControls('1', cntComboLK, 'НДС:', 'CbNdsRate', '', 485, yrefC, 40);
     Frg1.CreateAddControls('1', cntCheck, 'Показать архивные', 'chbAll', '', -1, yrefC, 125);
     Frg1.CreateAddControls('1', cntCheck, 'Скрыть цены по смете', 'ChbHidePrice0', '', -1, yrefC, 140);
+    GetNdsRates;
     SetCbEstimate;
     Frg1.InfoArray:=[
       [Caption + '.'#13#10+
@@ -129,9 +149,10 @@ begin
       ['id_or_format_estimates','_id_format_est',''],
       ['type$i','_type','40'],
       ['wo_estimate','_wo_estimate',''],
+      ['active','Исполь-'#13#10'зуется','50', 'chb', 'e', User.Role(rOr_R_StdItems_Set_Active)],
       ['name','Наименование','500;h'],
-//      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-//      ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price_wo_nds$f','Цена без НДС','70','f=r'{,'e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)}],
+      ['price$f','Цена c НДС','70','f=r'{,'e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)}],
   //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
 //      ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
 //      ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
@@ -172,8 +193,8 @@ begin
     Frg1.InfoArray:=[
       [Caption + '.'#13#10+
       'В верхней части в выпадающем списке выберете формат, для которого вы хотите просмотреть или редактировать стандартные изделия '#13#10+
-      '(ети форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
-      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
+      '(эти форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
+      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они разворачиваются).'#13#10+
       'Для просмотра (либо ввода) производственных операций по изделию нажмите кнопку в соответствующем столбце.'#13#10+
       'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
       'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10
@@ -296,6 +317,17 @@ end;
 
 procedure TFrmOGrefOrStdItems.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
 begin
+  if TControl(Sender).Name = 'CbNdsRate' then begin
+    Q.QSetContextValue('v_or_std_items_nds_rate', Fr.GetControlValue('CbNdsRate').AsInteger);
+    if (Frg1.GetControlValue('CbNdsRate').AsString <> '') and (Frg1.GetControlValue('CbEstimate').AsString <> '') then
+      F.SetProp('nds_rates', S.SetStrParam(F.GetProp('nds_rates').AsString, Frg1.GetControlValue('CbEstimate').AsString, Frg1.GetControlValue('CbNdsRate').AsString));
+  end
+  else if TControl(Sender).Name = 'CbEstimate' then begin
+    if (Frg1.GetControlValue('CbEstimate').AsString <> '') then begin
+      Frg1.SetControlValue('CbNdsRate',S.GetStrParam(F.GetProp('nds_rates').AsString, Frg1.GetControlValue('CbEstimate').AsString).AsString);
+      Q.QSetContextValue('v_or_std_items_nds_rate', Frg1.GetControlValue('CbNdsRate').AsInteger);
+    end;
+  end;
   if not Fr.IsPrepared then
     Exit;
   if TControl(Sender).Name = 'chbAll' then
@@ -433,6 +465,33 @@ begin
       Frg1.RefreshGrid;
     end;
   end;
+end;
+
+procedure TFrmOGrefOrStdItems.GetNdsRates;
+//получим список ставой ндс (из таблицы организаций, для продавцов)
+//загрузим в комбобокс
+begin
+  FNdsRates := Q.QLoadCol('select nds_rate from ref_sn_organizations where is_seller = 1', []) + [0];
+  FNdsRates := A.RemoveDuplicates(FNdsRates);
+  FNdsRates.SortP(True);
+  Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbNdsRate')), FNdsRates, []);
+  TDBComboBoxEh(Frg1.FindComponent('CbNdsRate')).LimitTextToListValues := True;
+  SetNdsRateValue;
+  Q.QSetContextValue('v_or_std_items_nds_rate', Frg1.GetControlValue('CbNdsRate').AsInteger);
+end;
+
+procedure TFrmOGrefOrStdItems.SetNdsRateValue;
+begin
+//  Frg1.SetControlValue('CbNdsRate',S.GetStrParam(F.GetProp('nds_rates').AsString, Frg1.GetControlValue('CbEstimate').AsString));
+//  Q.QSetContextValue('v_or_std_items_nds_rate', Frg1.GetControlValue('CbNdsRate').AsInteger);
+end;
+
+procedure TFrmOGrefOrStdItems.RememberNdsRateValue;
+begin
+//  var st := F.GetProp('nds_rates').AsString;
+//  var st3 := S.SetStrParam(F.GetProp('nds_rates').AsString, Frg1.GetControlValue('CbEstimate').AsString, Frg1.GetControlValue('CbNdsRate').AsString);
+//  F.SetProp('nds_rates', st3);
+//  var st2 := F.GetProp('nds_rates').AsString;
 end;
 
 

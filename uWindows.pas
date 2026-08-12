@@ -142,7 +142,7 @@ uses
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
-  uFrmOWOrder, uFrmOWRepOrderChanges,
+  uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWedtSetOrderRoute,
 
   uFrmPWedtPlnOps,
 
@@ -902,6 +902,8 @@ begin
     TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Rep_OrderChanges then
     TFrmOWRepOrderChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
+  else if AFormType = myfrm_Dlg_SetOrderRoute then
+    TFrmOWedtSetOrderRoute.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Candidates_Ad then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_candidates_ad;;sq_ref_suppliers', 'Источники информации о вакансии', 400, 100,
       [['name$s', cntEdit, 'Наименование','1:100']],

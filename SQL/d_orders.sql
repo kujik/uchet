@@ -1346,11 +1346,20 @@ end;
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
 --alter table or_std_items add dt_changed_price date;
+--!!!
+alter table or_std_items add price_base number;
+update or_std_items set price_base = round(price / 1.22, 2);
+
+alter table or_std_items add active number(1) default 1;
+
 create table or_std_items (
   id number(11),
   id_or_format_estimates number(11),   --айди типа сметы (КБ/Производство)
   name varchar2(400),                  --наименование изделия
   price number(12,2),                  --цена
+  
+  price_base number,                   --прождажная цена изделий без учета ндс
+  
   price_pp number(12,2),               --цена перепродажи, входит в итоговую цену, не больше ее (всегда равна в случае д/к)
   price_check number(12,2),            --контрольная цена (имеется ввиду себестоимость) 
   wo_estimate number(1) default 0,     --если 1, то смета не требуется (по факту требуется запись в estimates с полем isempty = 1)
@@ -1372,6 +1381,8 @@ create table or_std_items (
   r7 number(1),
   r8 number(1),
   r9 number(1),
+  
+  active number(1) default 1,         --признак использования, только эьти позиции вывалятся в новом заказе
   
   constraint pk_or_std_items primary key (id), 
   constraint fk_or_std_items_est foreign key (id_or_format_estimates) references or_format_estimates(id),
@@ -1406,7 +1417,7 @@ create or replace trigger trg_or_std_items_bu_price_r
 --триггер для обновления даты при изменении price
 begin
   --обновляем поле только если значение price действительно изменилось
-  if nvl(:new.price, 0) <> nvl(:old.price, 0) then
+  if nvl(:new.price_base, 0) <> nvl(:old.price_base, 0) then
     :new.dt_changed_price := sysdate;
   end if;
 end;
@@ -1429,6 +1440,7 @@ create or replace view v_or_std_items as --!!!
     case when e.has_influencing = 0 then null when e.dt_influencing_ready is null then date '2000-01-01' else e.dt_influencing_ready end as dt_influencing, 
     prc.priceraw,
     round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
+    round(i.price_base * (1 + nvl(get_context('v_or_std_items_nds_rate'), 0) /100), 2) as price_with_nds,
     case 
         when nvl(i.price, 0) = 0 then null 
         else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / (nvl(i.price, 0) / 1.22) * 100, 2) 
@@ -2497,7 +2509,7 @@ where
   and n.id_group in ( 
     select id_group
     from dv.groups
-    start with id_group in (/*14*/ 2284 /*массив щит*/, 2276 /*мдф*/, 18 /*лдсп*/, 2288 /* Пластик HPL*/, 2287 /*Пластик рекламный*/, 2275 /*ХДФ\ДВП*/, 2295 /*Фанера*/, 2283 /*Шпон*/) --плитные 
+    start with id_group in (/*14*/ 2284 /*массив щит*/, 2276 /*мдф*/, 18 /*лдсп*/, 2288 /* Пластик HPL*/, 2287 /*Пластик рекламный*/, 2275 /*ХДФ\ДВП*/, 2295 /*Фанера*/, 2283 /*Шпон*/, 2296 /*Столешницы*/) --плитные 
     connect by prior id_group = id_parentgroup   
   )
   group by oi.id
@@ -3279,9 +3291,6 @@ group by
 order by 
   or_format_name, or_format_estimate_name, name
 ;
-
-
-
 
 
 

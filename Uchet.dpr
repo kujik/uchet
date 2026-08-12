@@ -212,7 +212,8 @@ uses
   uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
   uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
   uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo},
-  uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges};
+  uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges},
+  uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute};
 
 var
   MT: Integer;

@@ -1044,6 +1044,9 @@ begin
     Exit;
   end;
   FInPrepare := False;
+  //восстановим значения полей с тегом fvtSaveVal (SV=1) из индивидуального конфига пользователя
+//!!!  if FormDoc <> '' then
+    //F.LoadConfigValues(FormDoc);
   Cth.SetWaitCursor;
   AfterPrepare;
   Cth.SetWaitCursor(False);
@@ -1674,9 +1677,9 @@ end;
 procedure TFrmBasicMdi.Verify(Sender: TObject; onInput: Boolean = False);
 // основная проверка данных: контролы, гриды, панели, дополнительная проверка
 var
-  GridsErr, PanelsErr: Boolean;
-  GridsErrSt, PanelsErrSt: string;
-  GridsCh, PanelsCh: Boolean;
+  GridsErr, PanelsErr, FieldsErr: Boolean;
+  GridsErrSt, PanelsErrSt, FieldsErrSt: string;
+  GridsCh, PanelsCh, FieldsCh: Boolean;
   b: Boolean;
   i: Integer;
 begin
@@ -1719,8 +1722,12 @@ begin
           S.ConcatStP(PanelsErrSt, TFrMyPanelCaption(Components[i]).pnlError.Hint, #13#10);
       end;
 
+  // проверка полей с тегом fvtCheck (CH=1): контроль изменения значения,
+  // а если для поля задано fvtVer - также контроль его корректности
+  F.VerifyChecked(FieldsErr, FieldsErrSt, FieldsCh);
+
   // общий статус ошибки
-  HasError := not Cth.VerifyVisualise(Self) or b or GridsErr or PanelsErr;
+  HasError := not Cth.VerifyVisualise(Self) or b or GridsErr or PanelsErr or FieldsErr;
 
   // сбор сообщений об ошибках
   FErrorMessage := '';
@@ -1728,10 +1735,12 @@ begin
     S.ConcatStP(FErrorMessage, GridsErrSt, #13#10);
   if PanelsErrSt <> '' then
     S.ConcatStP(FErrorMessage, PanelsErrSt, #13#10);
+  if FieldsErrSt <> '' then
+    S.ConcatStP(FErrorMessage, FieldsErrSt, #13#10);
 
-  // признак изменения данных (только для контролов и гридов, панели не вносят изменений)
+  // признак изменения данных (для контролов, гридов и полей с тегом fvtCheck; панели не вносят изменений)
   if not FInPrepare then
-    FIsDataChanged := (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or GridsCh;
+    FIsDataChanged := (FCtrlCurrValuesStr <> FCtrlBegValuesStr) or GridsCh or FieldsCh;
 
   RefreshStatusBar('*', '*', True);
 end;
@@ -1909,6 +1918,8 @@ begin
   //сбросим курсор выполения операции
   if (not FFormNotCreatedByApplication) and (FormStyle = fsNormal) then begin
     Settings.SaveWindowPos(Self, FormDoc);
+    //сохраним значения полей с тегом fvtSaveVal (SV=1) в индивидуальном конфиге пользователя
+    F.SaveConfigValues(FormDoc);
     if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
       if not FOpt.NoDbLock then
         Q.DBLock(False, FormDoc, VarToStr(id));
@@ -1925,6 +1936,8 @@ begin
         //сохраним размеры и позицию окна
         Settings.SaveWindowPos(Self, FormDoc);
       end;
+      //сохраним значения полей с тегом fvtSaveVal (SV=1) в индивидуальном конфиге пользователя
+      F.SaveConfigValues(FormDoc);
       if (not FPreventShow) then begin
         //отменим блокировку в БД по документу
         if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
@@ -1980,6 +1993,8 @@ begin
   // для форм, созданных не через Application (скрываем вместо закрытия)
   if (not FFormNotCreatedByApplication) and (FormStyle <> fsNormal) then begin
     Settings.SaveWindowPos(Self, FormDoc);
+    //сохраним значения полей с тегом fvtSaveVal (SV=1) в индивидуальном конфиге пользователя
+    F.SaveConfigValues(FormDoc);
     if (FLockInDB = fEdit) or (FLockInDB = fDelete) then
       Q.DBLock(False, FormDoc, VarToStr(ID));
     ShowWindow(Handle, SW_HIDE);

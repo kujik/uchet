@@ -665,15 +665,19 @@ create table adm_mailing (
   constraint pk_adm_mailing primary key (id)
 );
 
-insert into adm_mailing (id, comm) values (1, 'Рассылка при создании и изменении паспорта, для Учета-excel'); 
+insert into adm_mailing (id, comm) values (1, 'Рассылка при запуске и изменении уже запущенного заказа'); 
 insert into adm_mailing (id, comm, userids) values (2, 'Рассылка при создании и изменении паспорта, для ИТМ', '33'); 
 insert into adm_mailing(id, comm) values (3, 'Рассылка при прикреплении сметы и документов для снабжения, для Учета-excel');
 insert into adm_mailing(id, comm) values (4, 'Рассылка по заказам, для которых не созданы сметы');
 insert into adm_mailing(id, comm) values (5, 'Рассылка при прикреплении документов технологов');
-insert into adm_mailing(id, comm) values (6, 'Рассылка по заказам финансовая');
+insert into adm_mailing(id, comm) values (6, 'Рассылка по заказам (финансовая, просроченные...)');
 insert into adm_mailing(id, comm) values (7, 'Мониторинг сделок снабжения');
 insert into adm_mailing(id, comm) values (8, 'Мониторинг преждевременно созданных АВР');
 insert into adm_mailing(id, comm) values (9, 'Мониторинг складского хозяйства');
+insert into adm_mailing(id, comm) values (10, 'Рассылка при проведении и отмене проведения заказа');  --!!!
+
+update adm_mailing set comm = 'Рассылка при запуске и изменении уже запущенного заказа' where id = 1; --!!!
+update adm_mailing set comm = 'Рассылка по заказам (финансовая, просроченные...)' where id = 6;
 
 
 create or replace trigger trg_adm_mailing_bu

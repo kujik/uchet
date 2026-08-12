@@ -38,7 +38,8 @@ type
     fvtFlags = 18,      //флаги
     fvtTags = 19,       //теги (через запятую)
     fvtCheck = 20,      //поле участвует в проверке формы (Verify) и в отслеживании изменений (тег CH=1)
-    fvtCustom = 21      //начало пользовательских индексов
+    fvtSaveVal = 21,    //значение поля сохраняется/восстанавливается в индивидуальном конфиге пользователя (тег SV=1)
+    fvtCustom = 22      //начало пользовательских индексов
   );
 
   TDefFiledcValueTypeSet = set of TDefFiledcValueType;
@@ -51,6 +52,7 @@ const
   fvpSizes = 'S=';      //размеры
   fvpTags = 'T=';       //теги
   fvpCheck = 'CH=';     //включение поля в проверку формы (Verify) и отслеживание изменений
+  fvpSaveVal = 'SV=';   //сохранение/восстановление значения поля в индивидуальном конфиге пользователя (Settings)
 
 type
   TDefFiledcValue = (
@@ -123,10 +125,19 @@ type
     procedure SetPropsCaptions(PropNames: string = '');
     //возвращает массив имен полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
     function  GetChangedProps(PropNames: string = ''): TVarDynArray;
+    //то же самое (по PropNames/тегам, например по тегу 'ch'), но возвращает заголовки контролов (см. GetPropCaptions)
+    //вместо внутренних имён; заголовки идут в том порядке, в котором соответствующие поля объявлены в DefineFields
+    function  GetChangedPropCaptions(PropNames: string = ''): TVarDynArray;
     //проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
     //а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
     //(тип значения берётся из буквы после '$' в fvtFName, по умолчанию 's')
     procedure VerifyChecked(var AHasError: Boolean; var AErrorSt: string; var AIsChanged: Boolean);
+    //сохраняет текущее значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) в индивидуальном
+    //конфиге пользователя (Settings.WriteProperty), в качестве имени свойства используется внутреннее имя поля
+    procedure SaveConfigValues(const AFormDoc: string);
+    //восстанавливает значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) из индивидуального
+    //конфига пользователя (Settings.ReadProperty); если сохранённое значение отсутствует (пустая строка) - не трогает поле
+    procedure LoadConfigValues(const AFormDoc: string);
     //служебные методы
     function  PropNameFromControl(C: TObject): string;
     function  Count: Integer;
@@ -136,7 +147,7 @@ type
 implementation
 
 uses
-  uErrors;
+  uErrors, uSettings;
 
 
 procedure TFields.SetFieldValue(AIndex, ACol: Integer; const AValue: Variant);
@@ -250,6 +261,8 @@ begin
         SetFieldValue(ARowIndex, Integer(fvtTags), Copy(tagStr, 3))
       else if Pos(fvpCheck, tagStr) = 1 then
         SetFieldValue(ARowIndex, Integer(fvtCheck), Copy(tagStr, Length(fvpCheck) + 1))
+      else if Pos(fvpSaveVal, tagStr) = 1 then
+        SetFieldValue(ARowIndex, Integer(fvtSaveVal), Copy(tagStr, Length(fvpSaveVal) + 1))
       else
       begin
         SetFieldValue(ARowIndex, Integer(fvtVBeg), v);
@@ -797,6 +810,11 @@ begin
     if (Length(PropNames) > 0) and not A.InArray(FDefineFieldsAdd[i][Integer(fvtVName)], names) then
       Continue;
 
+    //поля с тегом SV=1 (fvtSaveVal) хранят текущее значение через LoadConfigValues/SaveConfigValues
+    //и не имеют осмысленного начального значения (fvtVBeg) - не сбрасываем их здесь
+    if VarToStr(FDefineFieldsAdd[i][Integer(fvtSaveVal)]) = '1' then
+      Continue;
+
     if fvtVBeg in PropValueTypes then
       SetProp(i, FDefineFieldsAdd[i][Integer(fvtVBeg)], fvtVCurr);
 
@@ -871,6 +889,20 @@ begin
   end;
 end;
 
+function TFields.GetChangedPropCaptions(PropNames: string = ''): TVarDynArray;
+//то же самое, что и GetChangedProps (по PropNames/тегам, например по тегу 'ch'), но возвращает заголовки
+//контролов (см. GetPropCaptions) вместо внутренних имён; заголовки идут в том порядке, в котором
+//соответствующие поля объявлены в DefineFields
+var
+  changedNames: TVarDynArray;
+begin
+  changedNames := GetChangedProps(PropNames);
+  if Length(changedNames) = 0 then
+    Result := []
+  else
+    Result := GetPropCaptions(changedNames.Implode(';'));
+end;
+
 procedure TFields.VerifyChecked(var AHasError: Boolean; var AErrorSt: string; var AIsChanged: Boolean);
 //проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
 //а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
@@ -916,6 +948,37 @@ begin
       S.ConcatStP(AErrorSt, 'Поле "' + caption + '": некорректное значение', #13#10);
     end;
   end;
+end;
+
+procedure TFields.SaveConfigValues(const AFormDoc: string);
+//сохраняет текущее значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) в индивидуальном
+//конфиге пользователя (Settings.WriteProperty), в качестве имени свойства используется внутреннее имя поля
+var
+  i: Integer;
+begin
+  if AFormDoc = '' then
+    Exit;
+  for i := 0 to High(FDefineFieldsAdd) do
+    if VarToStr(GetFieldValue(i, Integer(fvtSaveVal))) = '1' then
+      Settings.WriteProperty(AFormDoc, GetName(i), VarToStr(GetProp(i, fvtVCurr)));
+end;
+
+procedure TFields.LoadConfigValues(const AFormDoc: string);
+//восстанавливает значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) из индивидуального
+//конфига пользователя (Settings.ReadProperty); если сохранённое значение отсутствует (пустая строка) - не трогает поле
+var
+  i: Integer;
+  val: string;
+begin
+  if AFormDoc = '' then
+    Exit;
+  for i := 0 to High(FDefineFieldsAdd) do
+    if VarToStr(GetFieldValue(i, Integer(fvtSaveVal))) = '1' then
+    begin
+      val := Settings.ReadProperty(AFormDoc, GetName(i));
+      if val <> '' then
+        SetProp(i, val, fvtVCurr);
+    end;
 end;
 
 function TFields.PropNameFromControl(C: TObject): string;

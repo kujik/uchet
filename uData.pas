@@ -1082,6 +1082,7 @@ const
 
   myfrm_Dlg_R_PnlOpsPainting = 'Dlg_R_PnlOpsPainting';
   myfrm_Dlg_PnlOpsForItem = 'Dlg_PnlOpsForItem';
+  myfrm_Dlg_SetOrderRoute = 'Dlg_SetOrderRoute';
 const
   DefHorizMargin = 5;
   DefVertMargin = 5;
@@ -1782,6 +1783,7 @@ const
   rOr_D_Order_Stop='6-156';
   rOr_D_Order_EditAll='6-157';
   rOr_D_Order_UnApprove='6-158';
+  rOr_R_StdItems_Set_Active='6-159';
 
   rPln_J_Orders_V = '7-01';
   rPln_R_PnlOpsPainting_V = '7-02';
@@ -1791,7 +1793,7 @@ const
 
 
   const
-  URights : array [0..281] of array [0..3] of string = (
+  URights : array [0..282] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -2006,6 +2008,7 @@ const
     (rOr_R_StdItems_Estimate,'Модуль "Заказы"','Справочники: Стандартные изделия','Подгрузка смет и отчетов'),
     (rOr_R_StdItems_Set_Prices,'Модуль "Заказы"','Справочники: Стандартные изделия','Ввод цен'),
     (rOr_R_StdItems_Set_Labor,'Модуль "Заказы"','Справочники: Стандартные изделия','Ввод трудоемкости'),
+    (rOr_R_StdItems_Set_Active,'Модуль "Заказы"','Справочники: Стандартные изделия','Простановка признака "Используется"'),
     (rOr_R_StdProjects_V,'Модуль "Заказы"','Справочники: Типовые проекты','Доступ к справочнику'),
     (rOr_R_StdProjects_Ch,'Модуль "Заказы"','Справочники: Типовые проекты','Создание, изменение, удаление записей'),
     (rOr_R_BCad_Groups_V,'Модуль "Заказы"','Справочники: Группы bCAD','Доступ к справочнику'),

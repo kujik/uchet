@@ -156,7 +156,9 @@ begin
 
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
-   [mbtView], [mbtEdit, User.Role(rOr_D_Order_Ch)], [mbtAdd, 1], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, User.Role(rOr_D_Order_Del)], [],
+   [mbtView],
+   [mbtEdit, User.Roles([], [rOr_D_Order_Ch, rOr_D_Order_Start])], [mbtAdd, User.Role(rOr_D_Order_Ch)], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, False and User.Role(rOr_D_Order_Del)],
+   [],
    [-1006, User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]), 'Поставить отметку завершения менеджером'], [],
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate_All), 'Обновить все сметы по заказу'],
    [-mbtCustom_CreateAggregateEstimate, 1],
@@ -189,7 +191,7 @@ begin
     ['qnt','Количество','80'],
     ['qnt_in_prod$f', 'Кол-во изделий в производстве', '80','f=:'],
     ['qnt_to_sgp$f', 'Кол-во изделий, принятых на СГП', '80','f=:'],
-    ['route2','Маршрут','120'],
+    ['route2','Маршрут','120','bt=Маршрут'],
     //['kns','Конструктор','120'],
     ['id_kns','Конструктор','120;L','e',(User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper],
     //['thn','Технолог','120'],
@@ -517,7 +519,7 @@ begin
       Frg1.RefreshGrid;
     end;
   end;
-  inherited;
+  Frg1.DbGridEh1KeyDown(Sender, Key, Shift);
 end;
 
 procedure TFrmOGjrnOrders.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
@@ -618,6 +620,11 @@ begin
   if (Fr.CurrField = 'dt_doc') and (Fr.GetValueI('id_thn') <> -100) and (Frg1.GetValue('dt_end') = null) then begin
     Q.QExecSql('update order_items set dt_doc = :dt$d where dt_doc is null and id = :id$i', [Date, Fr.ID]);
     Fr.RefreshRecord;
+  end
+  else if (Fr.CurrField = 'route2') then begin
+    Wh.ExecDialog(myfrm_Dlg_SetOrderRoute, Fr, [myfoDialog, myfoModal],
+      S.IIf(((User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper) and (Fr.GetValueI('nstd') = 1), fEdit, fView), Fr.ID, null
+    );
   end;
   //просмотр или редактирование производственных операций
   //если есть права, и это производственное изделий ели полуфабрикат

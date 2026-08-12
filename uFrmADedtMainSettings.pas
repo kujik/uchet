@@ -35,8 +35,9 @@ type
     edt_mailing_sn: TDBEditEh;
     edt_mailing_early_acts: TDBEditEh;
     edt_mailing_for_stocks: TDBEditEh;
+    edt_mailing_for_orders_approve: TDBEditEh;
   private
-    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8, MI9: TMailingInterface;
+    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8, MI9, MI10: TMailingInterface;
     function Prepare: Boolean; override;
     function LoadComboBoxes: Boolean; override;
     procedure VerifyBeforeSave; override;
@@ -70,6 +71,8 @@ begin
   MI8.Load;
   MI9 := TMailingInterface.Create(Self, edt_mailing_for_stocks, 9, '*', True);
   MI9.Load;
+  MI10 := TMailingInterface.Create(Self, edt_mailing_for_orders_approve, 10, '*', True);
+  MI10.Load;
   Result := True;
 end;
 
@@ -91,8 +94,11 @@ begin
  ];
   View := 'v_adm_all_settings';
   FOpt.InfoArray:= [];
+  //! дельфи портит размер формы при F9
+  Height := 600;
   FWHBounds.Y2:= -1;
   Result := inherited;
+  //Cth.AlignControls(tsMail, [], False);
   pgcMain.TabIndex := 0;
   if not Result then
     Exit;
@@ -116,6 +122,7 @@ begin
   MI7.Save;
   MI8.Save;
   MI9.Save;
+  MI10.Save;
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
 end;

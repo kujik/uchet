@@ -399,6 +399,12 @@ type
 //    procedure GetDatePeriod(const APeriod: Variant; const AStartDate: TDateTime; out ADateFrom, ADateTo: TDateTime);
     procedure GetDatePeriod(Period: Variant; dt0: TDateTime; var dt1: TDateTime; var dt2: TDateTime);
     procedure GetDatesFromPeriodString(const AStr: string; out ADateFrom, ADateTo: TDateTime);
+    //возвращает значение параметра с именем AParamName из строки AValue, сериализованной A.ImplodeParams
+    //(см. A.GetArrParam/A.ExplodeParams); если параметр не найден - Null
+    function GetStrParam(const AValue: string; const AParamName: Variant; const ADelimiter: string = #1; const ADelimiter2: string = #2): Variant;
+    //устанавливает значение параметра с именем AParamName в строке AValue, сериализованной A.ImplodeParams
+    //(см. A.SetArrParam/A.ExplodeParams/A.ImplodeParams), и возвращает новую сериализованную строку
+    function SetStrParam(const AValue: string; const AParamName: Variant; const AParamValue: Variant; const ADelimiter: string = #1; const ADelimiter2: string = #2): string;
   end;
 
 
@@ -497,6 +503,17 @@ type
     //удаляем дублирующиеся знаения из массива
     function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
     procedure RemoveDuplicatesInPlace(var AValues: TVarDynArray);
+    //массив вида [имя1, значение1, имя2, значение2, ...] (четные позиции - имена параметров, нечетные - их значения);
+    //возвращает значение параметра с именем AParamName (без учета регистра); если параметр не найден - Null
+    function GetArrParam(const AArray: TVarDynArray; const AParamName: Variant): Variant;
+    //устанавливает значение параметра с именем AParamName в массиве вида [имя1, значение1, имя2, значение2, ...];
+    //если параметр с таким именем уже есть - заменяет его значение, иначе добавляет новую пару имя/значение в конец массива
+    procedure SetArrParam(var AArray: TVarDynArray; const AParamName: Variant; const AValue: Variant);
+    //сериализация массива параметров вида [имя1, значение1, имя2, значение2, ...] в строку;
+    //ADelimiter - разделитель между парами имя/значение (по умолчанию #1), ADelimiter2 - разделитель между именем и значением (по умолчанию #2)
+    function ImplodeParams(const AArray: TVarDynArray; const ADelimiter: string = #1; const ADelimiter2: string = #2): string;
+    //десериализация строки, полученной ImplodeParams, обратно в массив вида [имя1, значение1, имя2, значение2, ...]
+    function ExplodeParams(const AValue: string; const ADelimiter: string = #1; const ADelimiter2: string = #2): TVarDynArray;
     //сравнение двух двумерных массивов (или одной их строки)
     //будут одинаковы, если совпадают размерности массивов и все их значения
     function IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer = -1): Boolean; //+++
@@ -2807,6 +2824,24 @@ begin
   ADateFrom := StrToDateDef(va[0], BadDate);
   ADateTo := StrToDateDef(va[1], BadDate);
 end;
+
+function TMyStringHelper.GetStrParam(const AValue: string; const AParamName: Variant; const ADelimiter: string = #1; const ADelimiter2: string = #2): Variant;
+//возвращает значение параметра с именем AParamName из строки AValue, сериализованной A.ImplodeParams
+//(см. A.GetArrParam/A.ExplodeParams); если параметр не найден - Null
+begin
+  Result := A.GetArrParam(A.ExplodeParams(AValue, ADelimiter, ADelimiter2), AParamName);
+end;
+
+function TMyStringHelper.SetStrParam(const AValue: string; const AParamName: Variant; const AParamValue: Variant; const ADelimiter: string = #1; const ADelimiter2: string = #2): string;
+//устанавливает значение параметра с именем AParamName в строке AValue, сериализованной A.ImplodeParams
+//(см. A.SetArrParam/A.ExplodeParams/A.ImplodeParams), и возвращает новую сериализованную строку
+var
+  arr: TVarDynArray;
+begin
+  arr := A.ExplodeParams(AValue, ADelimiter, ADelimiter2);
+  A.SetArrParam(arr, AParamName, AParamValue);
+  Result := A.ImplodeParams(arr, ADelimiter, ADelimiter2);
+end;
 //==============================================================================
 //Методы записи A (массивы)
 //==============================================================================
@@ -3752,6 +3787,84 @@ begin
       Temp := Temp + [AValues[i]];
   end;
   AValues := Temp;
+end;
+
+function TMyArrayHelper.GetArrParam(const AArray: TVarDynArray; const AParamName: Variant): Variant;
+//массив вида [имя1, значение1, имя2, значение2, ...] (четные позиции - имена параметров, нечетные - их значения);
+//возвращает значение параметра с именем AParamName (без учета регистра); если параметр не найден - Null
+var
+  i: Integer;
+begin
+  Result := Null;
+  i := 0;
+  while i + 1 <= High(AArray) do begin
+    if SameText(VarToStr(AArray[i]), VarToStr(AParamName)) then begin
+      Result := AArray[i + 1];
+      Exit;
+    end;
+    Inc(i, 2);
+  end;
+end;
+
+procedure TMyArrayHelper.SetArrParam(var AArray: TVarDynArray; const AParamName: Variant; const AValue: Variant);
+//устанавливает значение параметра с именем AParamName в массиве вида [имя1, значение1, имя2, значение2, ...];
+//если параметр с таким именем уже есть - заменяет его значение, иначе добавляет новую пару имя/значение в конец массива
+var
+  i: Integer;
+  found: Boolean;
+begin
+  found := False;
+  i := 0;
+  while i + 1 <= High(AArray) do begin
+    if SameText(VarToStr(AArray[i]), VarToStr(AParamName)) then begin
+      AArray[i + 1] := AValue;
+      found := True;
+      Break;
+    end;
+    Inc(i, 2);
+  end;
+  if not found then begin
+    SetLength(AArray, Length(AArray) + 2);
+    AArray[High(AArray) - 1] := AParamName;
+    AArray[High(AArray)] := AValue;
+  end;
+end;
+
+function TMyArrayHelper.ImplodeParams(const AArray: TVarDynArray; const ADelimiter: string = #1; const ADelimiter2: string = #2): string;
+//сериализация массива параметров вида [имя1, значение1, имя2, значение2, ...] в строку;
+//ADelimiter - разделитель между парами имя/значение, ADelimiter2 - разделитель между именем и значением
+var
+  i: Integer;
+begin
+  Result := '';
+  i := 0;
+  while i + 1 <= High(AArray) do begin
+    if Result <> '' then
+      Result := Result + ADelimiter;
+    Result := Result + VarToStr(AArray[i]) + ADelimiter2 + VarToStr(AArray[i + 1]);
+    Inc(i, 2);
+  end;
+end;
+
+function TMyArrayHelper.ExplodeParams(const AValue: string; const ADelimiter: string = #1; const ADelimiter2: string = #2): TVarDynArray;
+//десериализация строки, полученной ImplodeParams, обратно в массив вида [имя1, значение1, имя2, значение2, ...]
+var
+  groups: TVarDynArray;
+  i, p: Integer;
+  groupSt: string;
+begin
+  Result := [];
+  if AValue = '' then
+    Exit;
+  groups := Explode(AValue, ADelimiter);
+  for i := 0 to High(groups) do begin
+    groupSt := VarToStr(groups[i]);
+    p := Pos(ADelimiter2, groupSt);
+    if p > 0 then
+      Result := Result + [Copy(groupSt, 1, p - 1), Copy(groupSt, p + Length(ADelimiter2), MaxInt)]
+    else
+      Result := Result + [groupSt, ''];
+  end;
 end;
 
 function TMyArrayHelper.IsArraysEqual(const A, B: TVarDynArray2; const ARow: Integer): Boolean;

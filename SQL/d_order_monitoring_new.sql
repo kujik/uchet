@@ -1248,6 +1248,29 @@ where
 ;
 
 
+create or replace view v_rep_overdue_start_production_orders as
+select
+--отчет по заказм, просроченным по дате запуска в производство относительно регламентной
+--по производственным заказам.
+--регламентная дата определяется следующим днем после окончанимя участка Планирование
+  o.id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference,
+  o.dt_to_prod as dt_control, 
+  o.dt_beg + ri.day_end - 0 as dt_by_reglament,
+  (nvl(o.dt_to_prod, trunc(sysdate)) - (o.dt_beg + ri.day_end - 0)) as overdue_days 
+from
+  v_orders o,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  o.id > 0 and o.dt_beg > date '2023-03-01' and id_organization = -1 
+  and o.id_reglament is not null 
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 7 --планирование
+  and o.dt_to_prod is null
+  and o.dt_end is null
+order by dt_beg  
+;
+
 
 
 
