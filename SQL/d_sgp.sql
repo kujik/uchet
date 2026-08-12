@@ -248,6 +248,7 @@ where
 
 select * from v_sgp_sell_formats;
 
+--!!!?
 create or replace view v_sgp_sell_items as
 --список изделий по паспорту отгрузки по данному формату, для по которому формируем состояние СГП
 select

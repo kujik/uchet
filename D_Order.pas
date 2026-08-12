@@ -1752,7 +1752,7 @@ begin
 //  StdItems := Q.QLoad('select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp ' + 'from or_std_items where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' + 'order by name asc', [Cth.GetControlValue(cmb_EstimatePath)]);
   StdItems := Q.QLoad(
     'select id, name, null, r1, r2, r3, r4, r5, r6, r7, r8, r9, null, /*resale,*/ price, price_pp, wo_estimate ' +
-    'from or_std_items '+
+    'from v_or_std_items '+           //!!!вью
     'where ' + '(id_or_format_estimates = :id$i or id_or_format_estimates = 1) and (id_or_format_estimates <> 0) ' +
     'order by name asc',
     [Cth.GetControlValue(cmb_EstimatePath)]

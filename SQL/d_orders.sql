@@ -1428,12 +1428,14 @@ create or replace view v_or_std_items as --!!!
   select
   --вью дл€ справочника стандартныых изделий
     i.*,
+    --!!! временное поле вместо удалЄнного or_std_items.price - убрать после переноса потребителей на price_base/price_with_nds
+    round(i.price_base * 1.22, 2) as price,
     fi.prefix,
     fi.id_format,
     fi.type,
     fi.name as or_format_estimate_name,  
     orf.name as or_format_name,
-    round(i.price / 1.22, 2) as price_wo_nds,
+    round(round(i.price_base * 1.22, 2) / 1.22, 2) as price_wo_nds,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
     f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
@@ -1442,19 +1444,19 @@ create or replace view v_or_std_items as --!!!
     round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
     round(i.price_base * (1 + nvl(get_context('v_or_std_items_nds_rate'), 0) /100), 2) as price_with_nds,
     case 
-        when nvl(i.price, 0) = 0 then null 
-        else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / (nvl(i.price, 0) / 1.22) * 100, 2) 
+        when nvl(round(i.price_base * 1.22, 2), 0) = 0 then null 
+        else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / (nvl(round(i.price_base * 1.22, 2), 0) / 1.22) * 100, 2) 
     end as material_percent,
     fi.is_semiproduct,
     i0.labor_intensity as labor_intensity_0,
     i0.labor_cost as labor_cost_0,
-    case when nvl(i.price, 0) = 0 then null else round(i0.labor_cost / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent_0,
+    case when nvl(round(i.price_base * 1.22, 2), 0) = 0 then null else round(i0.labor_cost / (nvl(round(i.price_base * 1.22, 2), 0) / 1.22) * 100, 2) end as labor_percent_0,
     i2.labor_intensity as labor_intensity_2,
     i2.labor_cost as labor_cost_2,
-    case when nvl(i.price, 0) = 0 then null else round(i2.labor_cost / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent_2,
+    case when nvl(round(i.price_base * 1.22, 2), 0) = 0 then null else round(i2.labor_cost / (nvl(round(i.price_base * 1.22, 2), 0) / 1.22) * 100, 2) end as labor_percent_2,
     i0.labor_intensity + i2.labor_intensity as labor_intensity_total,
     i0.labor_cost + i2.labor_cost as labor_cost,
-    case when nvl(i.price, 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / (nvl(i.price, 0) / 1.22) * 100, 2) end as labor_percent,
+    case when nvl(round(i.price_base * 1.22, 2), 0) = 0 then null else round((i0.labor_cost + i2.labor_cost) / (nvl(round(i.price_base * 1.22, 2), 0) / 1.22) * 100, 2) end as labor_percent,
     case 
       when not ((type = 0) or (type = 2)) then null
       when pp.is_data_entered + pc.is_data_entered + pl.is_data_entered + pd.is_data_entered = 4
@@ -1476,54 +1478,25 @@ create or replace view v_or_std_items as --!!!
   ;
     
 
-drop procedure P_SetStdItemPrice;     
-create or replace procedure P_SetStdItemPrice(
---установка цены всего издели€ и перепродажи дл€ него (включаема€) в позиции справочника стандартных изделий
-  IdStdItem number,  --айди стандартного издели€                      
-  PriceNew number,   --нова€ цена (или обща€ издели€, или перепродажи в нем)                  
-  WoNds number
-) is 
-  Idformat number;
-  PriceOld number(11,2);
-  PricePpOld number(11,2);
-  v_type number(1);  --0 - производственный, 1 - отгрузочный, 2 - п/ф
-  v_pricenew number;
-begin
-  select 
-    ii.type, d_or_format_estimates, nvl(price,0) into v_type, IdFormat, PriceOld 
-    from or_std_items i, or_format_estimates f 
-    where id = IdStdItem and i.id_or_format_estimates = f.id;
-    --это не д/к
-    v_pricenew := PriceNew;
-    if WoNds = 1 then 
-      v_pricenew := Round(v_pricenew * 1.22, 2); 
-    end if; 
-   update or_std_items set price = v_pricenew where id = IdStdItem;
-    if v_type = 1 then
-      update order_items set price = v_pricenew where id_order < 0 and id_organization = -1 and id_std_item = IdStdItem;
-    else
-      update order_items set price = Round(v_pricenew / 1.22, 2) where id_order < 0 and id_organization <> -1 and id_std_item = IdStdItem;
-    end if;
-end;  
-/  
-
 create or replace procedure p_set_std_item_price(
---установим цену стандартного издели€ (с ндс),
---обновим цены в шаблонах папортов
-  p_id_std_item in number,  -- айлди издели€
+--установим цену стандартного издели€ (без ндс, в price_base),
+--обновим цены в шаблонах заказов
+  p_id_std_item in number,  -- айди издели€
   p_price_new   in number,  -- цена
-  p_wo_nds      in number   -- 1 если цена передена без ндс
+  p_wo_nds      in number   -- 1 если цена передана без ндс
 ) is
-  v_type        number(1);  -- 0 Ц производственный, 1 Ц отгрузочный, 2 Ц п/ф
-  v_id_format   number;
-  v_price_old   number(11,2);
-  v_price_new   number;
+  v_type            number(1);  -- 0 Ц производственный, 1 Ц отгрузочный, 2 Ц п/ф
+  v_id_format       number;
+  v_price_old       number(11,2);
+  v_nds_rate        number;      -- ставка ндс (%), берЄтс€ из контекста (устанавливаетс€ формой)
+  v_price_wo_nds    number;      -- нова€ цена без ндс (пишетс€ в price_base)
+  v_price_with_nds  number;      -- нова€ цена с ндс (пишетс€ в order_items.price дл€ отгрузочных)
 begin
   -- получение типа издели€ и старой цены (соединение через старый синтаксис Oracle)
   select
     f.type,
     i.id_or_format_estimates,
-    nvl(i.price, 0)
+    nvl(i.price_base, 0)
   into
     v_type,
     v_id_format,
@@ -1534,27 +1507,32 @@ begin
   where
     i.id = p_id_std_item
     and i.id_or_format_estimates = f.id;
-  -- пересчЄт цены с учЄтом флага "без Ќƒ—" - итогова€ будет с ндс
-  v_price_new := p_price_new;
+  -- ставка ндс берЄтс€ из контекста (устанавливаетс€ формой при выборе формата/ставки ндс)
+  v_nds_rate := nvl(get_context('v_or_std_items_nds_rate'), 0);
+  -- пересчЄт цены с учЄтом флага "без Ќƒ—" - считаем и цену без ндс, и цену с ндс
   if p_wo_nds = 1 then
-    v_price_new := round(v_price_new * 1.22, 2);
+    v_price_wo_nds := p_price_new;
+    v_price_with_nds := round(p_price_new * (1 + v_nds_rate / 100), 2);
+  else
+    v_price_with_nds := p_price_new;
+    v_price_wo_nds := round(p_price_new / (1 + v_nds_rate / 100), 2);
   end if;
-  -- обновление цены в справочнике стандартных изделий
+  -- обновление цены в справочнике стандартных изделий (без ндс)
   update or_std_items
-    set price = v_price_new
+    set price_base = v_price_wo_nds
     where id = p_id_std_item;
  -- обновление цены в позици€х заказов (order_items)
   if v_type = 1 then
     --дл€ отгрузочных заказов цена с Ќƒ—
     update order_items oi
-       set oi.price = v_price_new
+       set oi.price = v_price_with_nds
      where oi.id_std_item = p_id_std_item
        and oi.id_order < 0
        and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization <> -1);  
   else
     --дл€ производственных заказов цена без Ќƒ—
     update order_items oi
-       set oi.price = round(v_price_new / 1.22, 2)
+       set oi.price_base = v_price_wo_nds
      where oi.id_std_item = p_id_std_item
        and oi.id_order < 0
        and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization = -1);  

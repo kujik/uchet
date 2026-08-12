@@ -53,3 +53,5 @@ end;
 select sys_context('context_uchet22','qqq') from dual;
 
 select get_context_value('qqq') from dual;
+
+ 

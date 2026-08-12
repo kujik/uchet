@@ -74,6 +74,7 @@ where
   and po.id_user = u.id
 ;
 
+--!!!?
 create or replace view v_planned_orders_w_sum as
 select
 --вью журнала плановых заказов с выводом суммы заказа
@@ -170,6 +171,7 @@ begin
 end;
 /
 
+--!!!?
 create or replace view v_planned_order_items as
 select
 --вью спецификации планового заказа
