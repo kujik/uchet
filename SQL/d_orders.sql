@@ -1349,6 +1349,10 @@ end;
 --!!!
 alter table or_std_items add price_base number;
 update or_std_items set price_base = round(price / 1.22, 2);
+alter table or_std_items add price_tmp number;
+update or_std_items set price_tmp = price;
+alter table or_std_items drop column price;
+
 
 alter table or_std_items add active number(1) default 1;
 
@@ -1428,14 +1432,11 @@ create or replace view v_or_std_items as --!!!
   select
   --вью для справочника стандартныых изделий
     i.*,
-    --!!! временное поле вместо удалённого or_std_items.price - убрать после переноса потребителей на price_base/price_with_nds
-    round(i.price_base * 1.22, 2) as price,
     fi.prefix,
     fi.id_format,
     fi.type,
     fi.name as or_format_estimate_name,  
     orf.name as or_format_name,
-    round(round(i.price_base * 1.22, 2) / 1.22, 2) as price_wo_nds,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
     f_oritemroute(i.r1,i.r2,i.r3,i.r4,i.r5,i.r6,i.r7,i.r8,i.r9) as route2,
     e.dt as dt_estimate,
@@ -1443,6 +1444,9 @@ create or replace view v_or_std_items as --!!!
     prc.priceraw,
     round(prc.priceraw / 1.22, 2) as priceraw_wo_nds,
     round(i.price_base * (1 + nvl(get_context('v_or_std_items_nds_rate'), 0) /100), 2) as price_with_nds,
+    --!!! временное поле вместо удалённого or_std_items.price - убрать после переноса потребителей на price_base/price_with_nds
+    round(i.price_base * 1.22, 2) as price,
+    round(round(i.price_base * 1.22, 2) / 1.22, 2) as price_wo_nds,
     case 
         when nvl(round(i.price_base * 1.22, 2), 0) = 0 then null 
         else round(nvl(decode(i.price_check, null, prc.priceraw / 1.22, i.price_check), 0) / (nvl(round(i.price_base * 1.22, 2), 0) / 1.22) * 100, 2) 
@@ -1507,9 +1511,9 @@ begin
   where
     i.id = p_id_std_item
     and i.id_or_format_estimates = f.id;
-  -- ставка ндс берётся из контекста (устанавливается формой при выборе формата/ставки ндс)
+  --ставка ндс берётся из контекста (устанавливается формой при выборе формата/ставки ндс)
   v_nds_rate := nvl(get_context('v_or_std_items_nds_rate'), 0);
-  -- пересчёт цены с учётом флага "без НДС" - считаем и цену без ндс, и цену с ндс
+  --пересчёт цены с учётом флага "без НДС" - считаем и цену без ндс, и цену с ндс
   if p_wo_nds = 1 then
     v_price_wo_nds := p_price_new;
     v_price_with_nds := round(p_price_new * (1 + v_nds_rate / 100), 2);
@@ -1517,31 +1521,24 @@ begin
     v_price_with_nds := p_price_new;
     v_price_wo_nds := round(p_price_new / (1 + v_nds_rate / 100), 2);
   end if;
-  -- обновление цены в справочнике стандартных изделий (без ндс)
+  --обновление цены в справочнике стандартных изделий (без ндс)
   update or_std_items
     set price_base = v_price_wo_nds
     where id = p_id_std_item;
- -- обновление цены в позициях заказов (order_items)
-  if v_type = 1 then
-    --для отгрузочных заказов цена с НДС
-    update order_items oi
-       set oi.price = v_price_with_nds
-     where oi.id_std_item = p_id_std_item
-       and oi.id_order < 0
-       and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization <> -1);  
-  else
-    --для производственных заказов цена без НДС
-    update order_items oi
-       set oi.price_base = v_price_wo_nds
-     where oi.id_std_item = p_id_std_item
-       and oi.id_order < 0
-       and exists (select 1 from orders o where o.id = oi.id_order and o.id_organization = -1);  
-  end if; 
+ --обновление цены в шаблонах заказов
+  update order_items oi
+    set oi.price_base = v_price_with_nds
+  where 
+    oi.id_std_item = p_id_std_item
+    and oi.id_order < 0 and oi.id_order > -100000;
 end;
 /
 
---update or_std_items set price_pp = 0 where id_or_format_estimates > 1;
-
+begin
+--7401 | 24901 | 1
+  p_set_std_item_price(7401, 24901, 1);
+end;
+/
 
 
 create or replace function F_OrItemRoute

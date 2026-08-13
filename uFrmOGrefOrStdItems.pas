@@ -78,11 +78,11 @@ begin
       ['id_or_format_estimates','_id_format_est',''],
       ['type$i','_type','40'],
       ['wo_estimate','_wo_estimate',''],
-      ['active','Исполь-'#13#10'зуется','50', 'chb', 'e', User.Role(rOr_R_StdItems_Set_Active)],
+      ['active','Исполь-'#13#10'зуется','70', 'chb', 'e', User.Role(rOr_R_StdItems_Set_Active)],
       ['name','Наименование','500;h'],
-      ['price_wo_nds$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-      ['price$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
-      ['price_with_nds$f','Цена +++ c НДС','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price_base$f','Цена (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+      ['price_with_nds$f','Цена (c НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
+  //   ['price_tmp$f','Цена старая c НДС','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
   //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
       ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
       ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
@@ -124,20 +124,23 @@ begin
     Frg1.InfoArray:=[
       [Caption + '.'#13#10+
       'В верхней части в выпадающем списке выберете формат, для которого вы хотите просмотреть или редактировать стандартные изделия '#13#10+
-      '(ети форматы должны быть предварительно настроены в справочнике Стандартные форматы паспортов).'#13#10+
+      '(эти форматы должны быть предварительно настроены в справочнике "Стандартные форматы паспортов").'#13#10+
       'С помощью кнопок или меню ПКМ откройте диалог для создания, изменения, копирования стандартных изделий,'#13#10+
       'и вводите их наименования и параметры.'#13#10+
-      'Цены каждого изделия и цену перепродажи в его составе вы может редактировть не открывая диалога, а'#13#10+
-      'непосредственно изменяя значение цены в ячейке таблицы'#13#10+
-      '(цена перепродажи не может быть более цены изделия, а в случае дополнительной комплектации, обе цены равны).'#13#10+
-      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они не разворачиваются).'#13#10+
-      'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается доля стоимости материалов.'#13#10+
-      '(если не введена, то расчет идет по цене по смете).'#13#10+
+      'Цену каждого изделия вы можете редактировать не открывая диалога, а'#13#10+
+      'непосредственно изменяя значение цены в ячейке таблицы (Цена с НДС, Цена без НДС)'#13#10+
+      'Ставка НДС выбирается вверху таблицы, и служит только для удобства ввода (можно выбрать произвольную).'#13#10+
+      'Цена по смете рассчитывается по данным ИТМ (если в смете есть изделия, они разворачиваются).'#13#10+
+      'Вывод этих цен значительно замедляет открытие таблицы, вы можете отключить его галкой вверху окна.'#13#10+
+      'Также непосредственно в таблице устанавливается признак "Используется".'#13#10+
+      'Изделия, для которых снята эта галка, не будут доступны для выбора при создании заказов.'#13#10+
+//      'Контрольная цена вводится непосредственно в таблице. Если она введена, по ней рассчитывается доля стоимости материалов.'#13#10+
+//      '(если не введена, то расчет идет по цене по смете).'#13#10+
       'Для просмотра (либо ввода) трудоемкости нажмите кнопку в соответствующем столбце.'#13#10+
       'Для просмотра (либо ввода) стоимости работы, щелкните в столбце Стоимость правой кнопкой мыши.'#13#10+
       ''#13#10+
-      'Наименования язделий не могут совпадать с наименованиями дополнительной комплектации, и не могут повторяться внутри одного формата.'#13#10+
-      'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвочнике Стандартные форматы паспортов.'#13#10+
+      'Наименования изделий не могут не могут повторяться внутри одного формата.'#13#10+
+      'В ИТМ изделия используются в качестве позиций заказа, и к ним добавляются префиксы, настроенные ранее в спрвачнике "Стандартные форматы паспортов".'#13#10+
       'При переименовании изделия, в Учете позиции во всех ранее созданных заказах будут обновлены,'#13#10+
       'также программа в этом случае пытается переименовать данную номенклатурную позицию и в ИТМ.'#13#10
       ]
@@ -149,10 +152,10 @@ begin
       ['id_or_format_estimates','_id_format_est',''],
       ['type$i','_type','40'],
       ['wo_estimate','_wo_estimate',''],
-      ['active','Исполь-'#13#10'зуется','50', 'chb', 'e', User.Role(rOr_R_StdItems_Set_Active)],
+      ['active','Исполь-'#13#10'зуется','50', 'pic'],
       ['name','Наименование','500;h'],
-      ['price_wo_nds$f','Цена без НДС','70','f=r'{,'e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)}],
-      ['price$f','Цена c НДС','70','f=r'{,'e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)}],
+      ['price_base$f','Цена (без НДС)','70','f=r'],
+      ['price_with_nds$f','Цена (c НДС)','70','f=r'],
   //    ['price_pp$f','Перепродажа (без НДС)','70','f=r','e=0:999999999:2',User.Role(rOr_R_StdItems_Set_Prices)],
 //      ['priceraw$f','Цена по смете (с НДС)','70','f=r', 't=1'],
 //      ['priceraw_wo_nds$f','Цена по смете (без НДС)','70','f=r', 't=1'],
@@ -266,9 +269,6 @@ begin
     if A.InArray(Fr.CurrField, ['labor_cost_0', 'labor_cost_2']) then
       if Orders.SetLaborCost(Self, S.IIf(Fr.CurrField = 'labor_cost_0', 0, 2).AsInteger) then
         Fr.RefreshGrid;
-
-//    if Orders.InputLaborIntensity(Self, Fr.ID, null) then
-//      Fr.RefreshRecord;
   end
 (*//!!!es else if (Tag = mbtViewEstimate) then begin
     //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
@@ -355,15 +355,20 @@ begin
   if FieldName = 'price_check' then
     //сохраним контролдьную цену
     Q.QExecSql('update or_std_items set price_check = :p$f where id = :id$i', [Value, Fr.Id])
-  else
-    //запишем цену (поля 'price')
+  else if (FieldName = 'price_base') or (FieldName = 'price_with_nds') then begin
+    //запишем цену (поля 'price_base', price_with_nds)
+    //в бд сохраняется только цена без ндс. также функция обновляет цену в шаблонах заказов
     Q.QCallStoredProc('p_set_std_item_price', 'p_id_std_item$i;p_price_new$f;p_wo_nds$i',
-      [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price', 0, 1])]
+      [Fr.ID, S.NNum(Value), S.Decode([FieldName, 'price_base', 1, 0])]
     );
-  if FieldName = 'price' then
-    Fr.SetValue('price_wo_nds', RoundTo(Fr.GetValueF('price') / 1.22, -2))
+  if FieldName = 'price_with_nds' then
+    Fr.SetValue('price_base', RoundTo(Fr.GetValueF('price_with_nds') / (1 + Frg1.GetControlValue('CbNdsRate').AsInteger / 100), -2))
   else
-    Fr.SetValue('price', RoundTo(Fr.GetValueF('price_wo_nds') * 1.22, -2))
+    Fr.SetValue('price_with_nds', RoundTo(Fr.GetValueF('price_base') * (1 + Frg1.GetControlValue('CbNdsRate').AsInteger / 100), -2));
+  end
+  else if FieldName = 'active' then
+    //сохраним признак Используется
+    Q.QExecSql('update or_std_items set active = :p$i where id = :id$i', [Value, Fr.Id]);
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -399,7 +404,8 @@ begin
     [S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0), S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0)],
     TDBComboBoxEh(Frg1.FindComponent('CbEstimate')), cntComboLK
   );
-  TDBComboBoxEh(Frg1.FindComponent('CbEstimate')).ItemIndex:=0;  //нужно в случае первого запуска у пользователя, если значение комбобокса не чиатеся из бд, или он был очищен перед закрытием журнала
+  //нужно в случае первого запуска у пользователя, если значение комбобокса не чиатеся из бд, или он был очищен перед закрытием журнала
+  TDBComboBoxEh(Frg1.FindComponent('CbEstimate')).ItemIndex:=0;
 end;
 
 procedure TFrmOGrefOrStdItems.tmrAfterCreateTimer(Sender: TObject);

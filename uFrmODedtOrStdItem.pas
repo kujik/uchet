@@ -22,7 +22,7 @@ type
     edt_name: TDBEditEh;
     chb_R0: TDBCheckBoxEh;
     chb_Wo_Estimate: TDBCheckBoxEh;
-    nedt_Price: TDBNumberEditEh;
+    nedt_price_base: TDBNumberEditEh;
     chb_by_sgp: TDBCheckBoxEh;
   private
     FRcount: Integer;
@@ -71,8 +71,8 @@ begin
   F.DefineFields:=[
     ['id$i'],
     ['name$s','V=1:400::T'],
-    ['price$f','V=0:9999999:2:n'],
-    ['price_pp$f','V=0:9999999:2:n'],
+    ['price_base$f','V=0:9999999:2:n'],
+    //['price_pp$f','V=0:9999999:2:n'],
     ['wo_estimate$i'],
     ['r0$i'],
     ['by_sgp$i'],
@@ -103,7 +103,7 @@ begin
     FPrefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [FIdOrFormatEstimate]).AsString;
   end;
   if (Mode = fEdit) and not User.Role(rOr_R_StdItems_Set_Prices) then begin
-    nedt_Price.ReadOnly := True;
+    nedt_price_base.ReadOnly := True;
     //nedt_Price_PP.ReadOnly := True;
   end;
   SetRoute;
@@ -177,13 +177,13 @@ begin
   end;
   if (Mode = fEdit) then begin
     //утсановим в шаблонах цену и маршрут изделий, соответствующих данному
-    var FieldsArr: TVarDynArray := ['price$f', 'price_pp$f', 'r0$i'];
+    var FieldsArr: TVarDynArray := ['price_base$f', 'r0$i'];
     for i := 0 to High(RouteFields) do
       FieldsArr := FieldsArr + ['r' + IntToStr(i + 1)];
     var FiealdsVal: TVarDynArray := [];
     for i := 0 to High(FieldsArr) do
       FiealdsVal := FiealdsVal + [F.GetProp(FieldsArr[i].AsString)];
-    Q.QExecSql(Q.QGetSql('Q', 'order_items', FieldsArr.Implode(';')) + ' where id_order < 0 and id_std_item = :id_std_item$i', FiealdsVal + [ID]);
+    Q.QExecSql(Q.QGetSql('Q', 'order_items', FieldsArr.Implode(';')) + ' where id_order < 0 and id_order > -100000 and id_std_item = :id_std_item$i', FiealdsVal + [ID]);
   end;
   Result := Q.QCommitTrans;
 end;

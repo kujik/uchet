@@ -15,14 +15,14 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
       Height = 283
       ExplicitWidth = 823
       ExplicitHeight = 282
-      object nedt_Price: TDBNumberEditEh
+      object nedt_price_base: TDBNumberEditEh
         Left = 85
         Top = 101
         Width = 104
         Height = 21
-        ControlLabel.Width = 67
+        ControlLabel.Width = 79
         ControlLabel.Height = 13
-        ControlLabel.Caption = #1062#1077#1085#1072' ('#1089' '#1053#1044#1057')'
+        ControlLabel.Caption = #1062#1077#1085#1072' ('#1073#1077#1079' '#1053#1044#1057')'
         ControlLabel.Visible = True
         ControlLabelLocation.Position = lpLeftCenterEh
         currency = True
