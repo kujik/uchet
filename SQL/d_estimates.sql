@@ -1004,15 +1004,20 @@ begin
 
   if p_type_of_item = 'О' then
     p_message := 'Данная позиция является отгрузочным изделием и недопустимо в смете!';
-    p_result := 1;
-  elsif p_type_of_item is not null and v_is_prod = 0 then
+    p_result := 1;  --предупреждения, такие позиции встречаются как минимум при подряде
+  elsif nvl(p_type_of_item, '-') in ('П', 'О') and v_is_prod = 0 then
     p_message := 'Данная позиция является изделием, и должна быть в группе "Готовые изделия"!';
-    p_result := 1;
+    p_result := -1;
   elsif p_type_of_item = 'П' and v_id_format <> p_group_std then
     p_message := 'Производственное изделие из этой группы недопустимо в этой смете!';
+    p_result := -1;
+  elsif not nvl(p_type_of_item, '-') in ('П', 'О', 'ПФ', 'Н') and v_is_prod = 1 then
+    p_message := 'Данная позиция не является изделием, однако находится в группе "Готовые изделия"!';
     p_result := 1;
   end if;
-
+/*
+надо лии запрещать не изделия в готовых изделиях
+*/
 end;
 /
 

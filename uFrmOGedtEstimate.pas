@@ -41,11 +41,14 @@ type
     procedure LoadFromDB;
     procedure LoadFromXls;
     procedure LoadFromBuffer;
+    procedure SaveEstimateToBuffer;
     procedure LoadItemFromDB(Row: Integer);
     function  SaveEstimate: Boolean;
   protected
   public
   end;
+
+
 var
   FrmOGedtEstimate: TFrmOGedtEstimate;
   //"боковой канал" для передачи массива-снимка сметы в диалог и получения отредактированного массива обратно,
@@ -55,18 +58,25 @@ var
   EstDlgInputItems: TNamedArr;     //входной массив (текущий состав сметы: name;id_group;id_unit;qnt1;comm)
   EstDlgResultItems: TNamedArr;    //результат редактирования (тот же состав полей), заполняется при успешном сохранении (Res.ModalResult = mrOk)
   EstDlgSourceUsed: Integer;       //источник данных для estimate_change_log.source (см. TOrders.LogEstimateChange)
+
+
 implementation
+
 uses
   uOrders,
   uFrmODedtOrStdItem,
   uWindows
   ;
+
+
 {$R *.dfm}
+
 const
   cIdSemiproduct = 2;
   cIdProduct = 104;
   cIdStuff = 1;
   cIdKrep = 103;
+
 
 function TFrmOGedtEstimate.PrepareForm: Boolean;
 var
@@ -86,7 +96,7 @@ begin
   else begin
     FIdOfStdItem := Q.QLoadValue('select id_std_item from order_items where id = :id$i', [ID]);
     FIdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
-    va := Q.QLoadValue('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID]);
+    va := Q.QLoadRow('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID]);
     FName := va[0];
     FIdOfOrder := va[1];
     FQntOfItem := va[2];
@@ -97,8 +107,6 @@ begin
     Mode := fAdd;
   //получим айди группы (не подгруппыв!) стандартных изделий для данной позиции
   FGroupOfItem := Q.QLoadValue('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]);
-  //получим тип этой позиции - производсственное, отгрузочное, п/ф
-//  FTypeOfItem := Q.QLoadValue('select type_name from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]).AsString;
   //заголовочный лейбл
   FTitleTexts := [S.IIf(AddParam = 1, 'Смета к ' +
     S.Decode([FTypeOfItem, 'О', 'отгрузочному стандартному изделию', 'П', 'производственному стандартному изделию', 'ПФ', 'полуфабрикату', 'стандартному изделию'])  + '  ' +
@@ -113,15 +121,15 @@ begin
     ['id_or_std_item$i','_id_or_std_item','40','t=1,2'],
     ['id_item_estimate$i','_id_item_estimate','40','t=1,2'],
     ['type_of_item$s','Изделие','85', 'bt=Изделие:И:::009;Смета:С:::909', 'pic=;П;ПФ;Н;О:0;7;7;8;9:+','t=1'],
-    ['id_group$i','Группа','250;w;L','e=1:100000::TP','t=1,2'],
+    ['id_group$i','Группа','250;w;L','e=1:100000:0:N','t=1,2'],
     ['name$s','Наименование','400;w;h','e=1:1000',
       'bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 'П', ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 'О', ';Выбрать производственное изделие:И:::009') + ';Выбрать нестандартное изделие:Н:::000','t=1'],
-    ['id_unit$i','Ед.изм.','100;L','e=0:1000000::TP','t=1,2'],
+    ['id_unit$i','Ед.изм.','100;L','e=1:1000000:0:N','t=1,2'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N','t=1,2'], {недопустимо пустое кол-во}
     ['qnt_on_stock$f','На складе','80','t=1'],
     //['null as purchase$i','Покупка','80','chb','e'],
     ['comm$s','Дополнение','300;w;h','e=0:1000::TP','t=1'],
-    ['null as err$i','!','20','v=0:10:0''pic=-1;1;16;17'],
+    ['null as err$i','!','20','v=0:10:0','pic=-1;1:16;17'],
     ['null as newpos$i','_newpos','40'],
     ['null as errinfo$s','_errinfo','40']
   ]);
@@ -155,7 +163,8 @@ begin
   Frg1.Opt.SetButtons(4, [
     [mbtExcel, True, 'Загрузить смету из файла'],
     [mbtLoad, True, 'Загрузить текущую смету из БД'],
-    [mbtPasteEstimate, True, 'Вставить смету из буфера'],
+    [mbtToClipboard, True, 'Скопировать смету в буфер'],
+    [mbtFromClipboard, True, 'Вставить смету из буфера'],
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
@@ -175,8 +184,10 @@ begin
     Frg1.LoadData('*', [FIdEstimate])
   else if Tag = mbtExcel then
     LoadFromXls
-  else if Tag = mbtPasteEstimate then
+  else if Tag = mbtFromClipboard then
     LoadFromBuffer
+  else if Tag = mbtToClipboard then
+    SaveEstimateToBuffer
   else begin
     Handled := False;
     inherited;
@@ -251,16 +262,6 @@ end;
 procedure TFrmOGedtEstimate.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
 //подсветим ошибки и предупреждения
 begin
-{  if Fr.GetValueS('flags') <> '' then begin
-    if Fr.GetValueS('flags')[1] = '0' then
-      Params.Background := clYellow
-    else if Fr.GetValueS('flags')[1] = '1' then
-      Params.Background := clRed
-    else if Fr.GetValueS('flags')[1] = '2' then
-      Params.Background := RGB(255, 0, 255)
-    else if Fr.GetValueS('flags')[1] = '3' then
-      Params.Background := RGB(100, 0, 255);
-  end; }
   if Fr.GetValue('newpos').AsIntegerM = 1 then
     Params.Background := clYellow;
   if (FieldName = 'qnt_on_stock') and (Fr.GetValue('qnt_on_stock') <> null) and (Fr.GetValue('qnt1') <> null) then begin
@@ -352,135 +353,45 @@ end;
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
 //стандартная процедура проверки при нажатии кнопки Ок
 begin
-  //проверим таблицу с выполнением запросов к бд по кажждой строке
-  VerifyTable(True);
-end;
-
-procedure TFrmOGedtEstimate.VerifyTable(AReloadStatus: boolean = False);
-//проверяем таблицу
-//вызываем при каждом изменении данных без запросов к бд в эитой процедуре, и после загрузки и перед записью - с запросами
-//ВАЖНО: Frg1.IsTableCorrect сама по каждой ячейке вызывает OnVeryfyAndCorrectValues (=Frg1VeryfyAndCorrect), который в свою
-//очередь снова вызывает VerifyTable - без защиты FInVerifyTable это уходит в бесконечную рекурсию (переполнение стека)
-var
-  i, j, k, m: Integer;
-  Err: TVarDynArray;
-  Res : TVarDynArray;
-  st: string;
-  b: Boolean;
-begin
   Frg1.SetState(null, False, '');
   var LErrorMessage := '';
-  for i := 0 to Frg1.GetRawCount - 1 do begin
-    VerifyRow(i, False);
-  end;
-  Exit;
-
-  if FInVerifyTable then
-    Exit;
-  FInVerifyTable := True;
-  try
-    Err := [];
-    b := True;
-    //стандартная проврка таблицы фрейма на корректномть - по маскам редактирования и на повторяющиеся значения в таблице
-    Frg1.IsTableCorrect;
-    if Frg1.ErrorMessage <> '' then
-      b := FaLse;
-    //дополнительная проверка по базу данных
-    for i := 0 to Frg1.GetCount(False) - 1 do begin
-      //--проверим правильность и новизну сметной позиции, вернем в строке
-      //--1й символ = 0 если нет такой позция в справочнике номенклатуры бкад
-      //--2й символ = 0 - ошибка для номенклатуры из группы Изделий - нет такого изделия в v_or_std_items
-      //--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе
-      st := Frg1.GetValueS('flags', i, False);
-      if AReloadStatus then begin
-        st := S.NSt(Q.QLoadRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), FGroupOfItem])[0]);
-        Frg1.SetValue('flags', i, False, st);
-      end;
-      if st <> '' then begin
-        if st[1] <> '0' then
-          b := False;  //были ошибки, с которыми сохранять смету нельзя.
-        Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + Copy(Frg1.GetValueS('flags', i, False), 3)];
-      end;
-    end;
-    FErrorMessage := '';
-    if (Frg1.ErrorMessage = '') and (Length(Err) = 0) then begin
-      Frg1.SetState(null, False, '');
-    end
-    else begin
-      FErrorMessage := S.ConcatSt(Frg1.ErrorMessage, A.Implode(Err, #13#10), #13#10);
-      Frg1.SetState(null, not b, FErrorMessage);
-      if b then
-        FErrorMessage := '?' + FErrorMessage + #10#13#10#13 + 'Записать смету?';
-    end;
-  finally
-    FInVerifyTable := False;
-  end;
-end;
-(*
-procedure TFrmOGedtEstimate.VerifyTable(AReloadStatus: boolean = False);
-//проверяем таблицу
-//вызываем при каждом изменении данных без запросов к бд в эитой процедуре, и после загрузки и перед записью - с запросами
-var
-  i, j, k, m: Integer;
-  Err: TVarDynArray;
-  st: string;
-  b: Boolean;
-begin
-  Err := [];
-  b := True;
-  //стандартная проврка таблицы фрейма на корректномть - по маскам редактирования и на повторяющиеся значения в таблице
-  Frg1.IsTableCorrect;
-  if Frg1.ErrorMessage <> '' then
-    b := FaLse;
-  //дополнительная проверка по базу данных
-  for i := 0 to Frg1.GetCount(False) - 1 do begin
-    //--проверим правильность и новизну сметной позиции, вернем в строке
-    //--1й символ = 0 если нет такой позция в справочнике номенклатуры бкад
-    //--2й символ = 0 - ошибка для номенклатуры из группы Изделий - нет такого изделия в v_or_std_items
-    //--3й символ = 0 - ошибка для номенклатуры из группы сметных позиций бкад - номенклатура найдена в списке изделий, при этом являясь материалом согласно группе
-    st := Frg1.GetValueS('flags', i, False);
-    if AReloadStatus then begin
-      st := S.NSt(Q.QLoadRow('select F_TestEstimateItem_New(:g$i, :n$s, :sg$i) from dual', [Frg1.GetValueS('id_group', i, False), Frg1.GetValueS('name', i, False), FGroupOfItem])[0]);
-      Frg1.SetValue('flags', i, False, st);
-    end;
-    if st <> '' then begin
-      if st[1] <> '0' then
-        b := False;  //были ошибки, с которыми сохранять смету нельзя.
-      Err := Err + ['[ ' + Frg1.GetValueS('name', i, False) + ' ] - ' + Copy(Frg1.GetValueS('flags', i, False), 3)];
-    end;
+  var LWarningMessage := '';
+  //еще раз проверим путем обращения к хранимой процедуре
+  VerifyTable;
+  //пройдем по гриду и соберем ошибки и предупреждения
+  for var i := 0 to Frg1.GetRawCount - 1 do begin
+    if Frg1.GetRawValue('err', i) = -1 then
+      S.ConcatStP(LErrorMessage, IntToStr(i + 1) + ' - ' + Frg1.GetRawValueS('errinfo', i), #13#10)
+    else if Frg1.GetRawValue('err', i) = 1 then
+      S.ConcatStP(LWarningMessage, IntToStr(i + 1) + ' - ' + Frg1.GetRawValueS('errinfo', i), #13#10);
   end;
   FErrorMessage := '';
-  if (Frg1.ErrorMessage = '') and (Length(Err) = 0) then begin
-    Frg1.SetState(null, False, '');
+  if LErrorMessage <> '' then begin
+    Frg1.SetState(null, True, LErrorMessage);
+    FErrorMessage := 'В смете есть ошибки:'#13#10#13#10 + LErrorMessage + #13#10#13#10'Сохранить смету невозможно!';
   end
-  else begin
-    FErrorMessage := S.ConcatSt(Frg1.ErrorMessage, A.Implode(Err, #13#10), #13#10);
-    Frg1.SetState(null, not b, FErrorMessage);
-    if b then
-      FErrorMessage := '?' + FErrorMessage + #10#13#10#13 + 'Записать смету?';
+  else if LWarningMessage <> '' then begin
+    FErrorMessage := '?' + 'Есть следующие замечания по смете:'#13#10#13#10 + LWarningMessage + #10#13#10#13'Записать смету?';
   end;
-end;
-*)
-function  TFrmOGedtEstimate.Save: Boolean;
-var
-  i: Integer;
-begin
-  Result := SaveEstimate; Exit;
-  Result := False;
-Exit;
-  Wh.SelectDialogResult2 := [];
-  for i := 0 to Frg1.GetCount - 1 do begin
-    if Frg1.GetValueS('name', i, False) <> '' then
-      Wh.SelectDialogResult2 := Wh.SelectDialogResult2 + [[Frg1.GetValue('name'), Frg1.GetValue('id_group'), Frg1.GetValue('id_unit'), Frg1.GetValue('qnt1'), Frg1.GetValue('comm')]];
-  end;
-  //Result := True;
 end;
 
+procedure TFrmOGedtEstimate.VerifyTable(AReloadStatus: boolean = False);
+//проверяем данные в таблице путем вызова хранимой процедуры для каждой строки
+begin
+  for var i := 0 to Frg1.GetRawCount - 1 do begin
+    VerifyRow(i, False);
+  end;
+end;
+
+function TFrmOGedtEstimate.Save: Boolean;
+begin
+  Result := SaveEstimate;
+end;
 
 procedure TFrmOGedtEstimate.LoadFromDB;
 begin
-  Frg1.SetInitData('*',[]);
-  VerifyBeforeSave;
+  Frg1.SetInitData('*', [ID]);
+  VerifyTable;
 end;
 
 
@@ -527,22 +438,20 @@ begin
   if st <> '' then
     MyInfoMessage(st, 1);
 end;
+
 procedure TFrmOGedtEstimate.LoadFromBuffer;
-//загрузим смету из личного буфера пользователя (заполняется кнопкой "Скопировать смету" в справочнике стандартных изделий,
+//загрузим смету из личного буфера пользователя (заполняется кнопкой "Скопировать смету" в справочнике стандартных изделий,   //!!!
 //см. Orders.CopyEstimateToBuffer; хранится как смета с id_estimate = -id_user)
-var
-  Est: TVarDynArray2;
 begin
   if MyQuestionMessage('Вставить смету из буфера?') <> mrYes then
     Exit;
-  Est := Q.QLoad('select name, id_group, id_unit, qnt1, comm from v_estimate where id_estimate = :id_estimate$i order by id_group', [-User.GetId]);       //!!!!
-  if Length(Est) = 0 then begin
+  if Q.QLoadValue('select count(*) from v_estimate where id_estimate = :id_estimate$i', [-User.GetId]) = 0 then begin
     MyWarningMessage('Буфер обмена смет пуст!');
     Exit;
   end;
   EstDlgSourceUsed := 2;
-  Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');
-  VerifyBeforeSave;
+  Frg1.SetInitData('*', [ID]);
+  VerifyTable;
 end;
 
 procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
@@ -550,9 +459,16 @@ procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
 var
   na: TNamedArr;
 begin
-  Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, False)], na);
+  Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, True)], na);
   if na.Count > 0 then
-    Frg1.LoadRow(na, Row);
+    Frg1.LoadRow(na, Row, True);
+end;
+
+procedure TFrmOGedtEstimate.SaveEstimateToBuffer;
+begin
+  if MyQuestionMessage('В буфер будет скопирована уже сохраненная смета! Изменения, сделанные в этом окне без сохранения сметы, скопированы не будут! Продолжить?') <> mrYes then
+    Exit;
+   Orders.CopyEstimateToBuffer(S.IIf(AddParam = 1, ID, null), S.IIf(AddParam <> 1, ID, null));
 end;
 
 function TFrmOGedtEstimate.SaveEstimate: Boolean;
@@ -566,17 +482,8 @@ begin
     //а только формируем результирующий массив, который обертка заберет из EstDlgResultItems и сохранит сама
     EstDlgResultItems := Frg1.ExportToNa('id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm', False);
     Result := True;
-    Exit;
-
-
-//    EstDlgResultItems.Create([], 'id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm');
-    for i := 0 to Frg1.GetCount(False) - 1 do
-      if Frg1.GetValueS('name', i, False) <> '' then
-        EstDlgResultItems.AddRow([Frg1.GetValue('id_group', i, False), Frg1.GetValue('name', i, False),
-          Frg1.GetValue('id_unit', i, False), Frg1.GetValue('qnt1', i, False), Frg1.GetValue('comm', i, False)]);
-    Result := True;
-    Exit;
   end;
+  Exit;
   Q.QBeginTrans(True);
   Q.QSave(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
    'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
@@ -603,21 +510,7 @@ end;
 end.
 
 
-
-
-end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 что можно выбирать в нестандартном изделии?????
+
+
+везде проверить работу с фильтром!!!
