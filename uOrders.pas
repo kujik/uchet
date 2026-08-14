@@ -54,6 +54,17 @@ type
     function EstimateFromFile(var FileName: string; var Est: TVarDynArray2): Boolean;
     function SetEstimateQnt(IdEstimate: Integer; Qnt: extended): Boolean;
     function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False): Integer;
+    //снимок состава сметы (name;unit;qnt1) для последующего сравнения "было"/"стало" и лога изменений;
+    //пустой TNamedArr, если AIdEstimate = null (сметы еще нет)
+    function LoadEstimateArray(AIdEstimate: Variant): TNamedArr;
+    //полный состав сметы (id_group;name;id_unit;qnt1;comm) для передачи в диалог редактирования сметы
+    //(uFrmOGedtEstimate) в качестве входных данных; пустой TNamedArr, если AIdEstimate = null
+    function LoadEstimateEditArray(AIdEstimate: Variant): TNamedArr;
+    //сравнивает два снимка состава сметы (см. LoadEstimateArray) по наименованию без учета группы,
+    //возвращает текст диффа построчно (добавлено/удалено/было->стало), пустую строку - если различий нет
+    function BuildEstimateDiffText(AOld, ANew: TNamedArr): string;
+    //пишет строку в estimate_change_log, если AChanges не пуст или ASource = 0 (факт первичной загрузки)
+    procedure LogEstimateChange(AIdEstimate: Variant; ASource: Integer; AChanges: string);
     //удаляет смету для переданного стандартного изделия. если не Silent, то перед этим спросит.
     //вернет True, кроме случая ошибки при выполнениии запроса удаления
     function RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;
@@ -163,7 +174,7 @@ implementation
 uses
   uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
   LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo, uWaitForm,
-  uServerTasks, uFrmChooseDialog
+  uServerTasks, uFrmChooseDialog, uFrmBasicMdi, uFrmOGedtEstimate
   ;
 
 constructor TOrders.Create;
@@ -516,6 +527,9 @@ var
   v: Variant;
   vatest: TVarDynArray;
   OpenEditEstimateDialog: Boolean;
+  EstBefore: TNamedArr;
+  MdiRes: TMDIResult;
+  EstLogSource: Integer;
 begin
 {(*}
   InputType:= mrYes;
@@ -628,6 +642,10 @@ begin
     end;
   end;
 
+  //снимок состава сметы "до" - для сравнения и записи в лог изменений
+  EstBefore := LoadEstimateArray(IdEstimate);
+  EstLogSource := S.IIf(IsOrItemStd, 4, 3);
+
   if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged) then begin
     //предварительно загрузим группы и единицы бкад - если грузится одна смета, то перечитываем, иначе читаем только если еще не загружен
     LoadBcadGroups(OneItem);
@@ -639,15 +657,21 @@ begin
     end
     else begin}
     if OpenEditEstimateDialog then begin
-      //диалог-сетка для ввода сметы
-      Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable],
-        fAdd, IdEstimate, VararrayOf([IdEstimate, S.IIf(IdStdItem <> null, 0, 1), OrName, OrItemName, OrFullItemName])
-      );
-      //обязательно! иначе виснем на следующем диалоговом окне!
-      Application.ProcessMessages;
-      if Length(Wh.SelectDialogResult2) = 0 then
+      //диалог-сетка для ввода/редактирования сметы; передаем текущий состав сметы через массив,
+      //получаем обратно отредактированный состав тем же способом (см. uFrmOGedtEstimate.pas)
+      EstDlgHasInput := True;
+      EstDlgInputItems := LoadEstimateEditArray(IdEstimate);
+      EstDlgSourceUsed := 3;
+      MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable], fEdit,
+        S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
+      EstDlgHasInput := False;
+      if MdiRes.ModalResult <> mrOk then
         Exit;
-      Est:=Wh.SelectDialogResult2;
+      EstLogSource := EstDlgSourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
+      SetLength(Est, EstDlgResultItems.Count);
+      for i := 0 to EstDlgResultItems.Count - 1 do
+        Est[i] := [EstDlgResultItems.GetValue(i, 'name'), EstDlgResultItems.GetValue(i, 'id_group'),
+          EstDlgResultItems.GetValue(i, 'id_unit'), EstDlgResultItems.GetValue(i, 'qnt1'), EstDlgResultItems.GetValue(i, 'comm')];
     end;
   end
   else if ((IsEstimateEmpty = 1) and not IsOrItemStd) then begin
@@ -693,8 +717,8 @@ begin
           Res := -1;
       end
       else if IsOrItemStd then begin
-      //копируем из стандартной сметы
-        va1 := Q.QCallStoredProc('p_copyestimate', 'idestimate$i;idstdestimate$i;pqntinor$f', [IdEstimate, ParentIdEstimate, OrQnt]);
+      //копируем из стандартной сметы (p_copyestimate устарела, помечена --!- в d_estimates.sql)
+        va1 := Q.QCallStoredProc('p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f', [IdEstimate, ParentIdEstimate, OrQnt]);
         if Length(va1) = 0 then
           Res := -1;
       end
@@ -746,24 +770,93 @@ begin
     if (IdOrderItem <> null)
       then MyWarningMessage('Смета ' + S.IIfStr(IdOrderItem <> null, 'к изделию "' + OrName + '" ') + 'не загружена!')
   end
-  else if not Silent then begin
-    //Только для подгрузки нестандартной сметы по заказу - сформируем отправку сметы в каталог заказа и по почте
-    if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged or (IdStdItem <> null) or not OneItem) then begin
-      st2 := '';
-      b := False;
-      if Q.QLoadValue('select dt_aggr_estimate from orders where id =:id$i', [OrderIdUchet]) <> null then begin
-        FrmXDedtMemo.ShowDialog(nil, 'AttachEstimate', 'Комментарий к смете', '', st2);
-        b := True;
+  else begin
+    //залогируем изменения состава сметы (пересчет количества по QntChanged - не логируем, см. комментарий к LoadEstimate)
+    if not QntChanged then
+      LogEstimateChange(IdEstimate, S.IIf(EstBefore.Count = 0, 0, EstLogSource),
+        BuildEstimateDiffText(EstBefore, LoadEstimateArray(IdEstimate)));
+    if not Silent then begin
+      //Только для подгрузки нестандартной сметы по заказу - сформируем отправку сметы в каталог заказа и по почте
+      if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged or (IdStdItem <> null) or not OneItem) then begin
+        st2 := '';
+        b := False;
+        if Q.QLoadValue('select dt_aggr_estimate from orders where id =:id$i', [OrderIdUchet]) <> null then begin
+          FrmXDedtMemo.ShowDialog(nil, 'AttachEstimate', 'Комментарий к смете', '', st2);
+          b := True;
+        end;
+        TaskForSendEstimate(OrderIdUchet, IdOrderItem, FileName, [], b, st2);
       end;
-      TaskForSendEstimate(OrderIdUchet, IdOrderItem, FileName, [], b, st2);
+      if Length(Est) > 0 then
+        MyInfoMessage('Смета из ' + IntToStr(Length(Est)) + ' позици' + S.GetEnding(Length(Est), 'и', 'й', 'й') + ' успешно загружена.')
+      else
+        MyInfoMessage('Смета успешно загружена.');
     end;
-    if Length(Est) > 0 then
-      MyInfoMessage('Смета из ' + IntToStr(Length(Est)) + ' позици' + S.GetEnding(Length(Est), 'и', 'й', 'й') + ' успешно загружена.')
-    else
-      MyInfoMessage('Смета успешно загружена.');
   end;
   Result := Res;
 {*)}
+end;
+
+function TOrders.LoadEstimateArray(AIdEstimate: Variant): TNamedArr;
+//снимок состава сметы (name;unit;qnt1) для последующего сравнения "было"/"стало" и лога изменений;
+//пустой TNamedArr, если AIdEstimate = null (сметы еще нет)
+begin
+  if AIdEstimate = null then
+    Result.Create([], 'name;unit;qnt1')
+  else
+    Q.QLoad('select name, unit, qnt1 from v_estimate where id_estimate = :id_estimate$i order by groupname', [AIdEstimate], Result);
+end;
+
+function TOrders.LoadEstimateEditArray(AIdEstimate: Variant): TNamedArr;
+//полный состав сметы для передачи в диалог редактирования сметы (uFrmOGedtEstimate) в качестве входных данных;
+//поля - те же, что диалог грузит напрямую из v_estimate_for_edit_dlg при обычном (не-массивном) открытии,
+//это важно для сохранения подсветки (остаток на складе, тип позиции) и работы кнопок "Смета"/"Изделие" в гриде;
+//пустой TNamedArr, если AIdEstimate = null
+begin
+  if AIdEstimate = null then
+    Result.Create([], 'id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm')
+  else
+    Q.QLoad('select id, id_estimate, id_or_std_item, id_item_estimate, type_of_item, id_group, name, id_unit, qnt1, qnt_on_stock, comm ' +
+      'from v_estimate_for_edit_dlg where id_estimate = :id_estimate$i order by id_group', [AIdEstimate], Result);
+end;
+
+function TOrders.BuildEstimateDiffText(AOld, ANew: TNamedArr): string;
+//сравнивает два снимка состава сметы (см. LoadEstimateArray) по наименованию без учета группы,
+//возвращает текст диффа построчно (добавлено/удалено/было->стало), пустую строку - если различий нет
+var
+  Pairs: TVarDynArray2;
+  i, iNew, iOld: Integer;
+  Lines: TVarDynArray;
+  QOld, QNew: Variant;
+begin
+  Lines := [];
+  Pairs := ANew.CompareWith(AOld, 'name', 'name');
+  for i := 0 to High(Pairs) do begin
+    iNew := Pairs[i][0];
+    iOld := Pairs[i][1];
+    if iNew = -1 then
+      //есть только в старом снимке - позиция удалена
+      Lines := Lines + [S.NSt(AOld.GetValue(iOld, 'name')) + ' ' + S.NSt(AOld.GetValue(iOld, 'unit')) + ' ' + VarToStr(AOld.GetValue(iOld, 'qnt1')) + ' - удалено']
+    else if iOld = -1 then
+      //есть только в новом снимке - позиция добавлена
+      Lines := Lines + [S.NSt(ANew.GetValue(iNew, 'name')) + ' ' + S.NSt(ANew.GetValue(iNew, 'unit')) + ' ' + VarToStr(ANew.GetValue(iNew, 'qnt1')) + ' - добавлено']
+    else begin
+      //есть в обоих - сравним количество
+      QOld := AOld.GetValue(iOld, 'qnt1');
+      QNew := ANew.GetValue(iNew, 'qnt1');
+      if QOld <> QNew then
+        Lines := Lines + [S.NSt(ANew.GetValue(iNew, 'name')) + ' ' + S.NSt(ANew.GetValue(iNew, 'unit')) + ' ' + VarToStr(QOld) + ' -> ' + VarToStr(QNew)];
+    end;
+  end;
+  Result := A.Implode(Lines, #13#10);
+end;
+
+procedure TOrders.LogEstimateChange(AIdEstimate: Variant; ASource: Integer; AChanges: string);
+//пишет строку в estimate_change_log, если AChanges не пуст или ASource = 0 (факт первичной загрузки)
+begin
+  if (AIdEstimate = null) or ((AChanges = '') and (ASource <> 0)) then
+    Exit;
+  Q.QSave('i', 'estimate_change_log', '', 'id$i;id_estimate$i;id_user$i;source$i;changes$s',
+    [-1, AIdEstimate, User.GetId, ASource, AChanges]);
 end;
 
 function TOrders.RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;

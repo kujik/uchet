@@ -1428,13 +1428,19 @@ end;
 /
 
 
-create or replace view v_or_std_items as --!!!
+create or replace view v_or_std_items as --!+
   select
   --вью для справочника стандартныых изделий
     i.*,
     fi.prefix,
     fi.id_format,
     fi.type,
+    case
+      when fi.id_format = 0 then 'Н'
+      when fi.type = 0 then 'П'
+      when fi.type = 1 then 'O'
+      when fi.type = 2 then 'ПФ'
+    end as type_name,
     fi.name as or_format_estimate_name,  
     orf.name as or_format_name,
     decode(fi.id, 0, '', fi.prefix || '_') || i.name as fullname,
@@ -2336,7 +2342,7 @@ begin
         i := null;
       end; 
       if i is not null then
-        p_copyestimate(FIdEst, i, FQnt);
+        p_copy_std_estimate_to_order_item(FIdEst, i, FQnt); --замена p_copyestimate, устаревшей (см. d_estimates.sql)
       end if;
       
     end if;  

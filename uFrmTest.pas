@@ -1474,7 +1474,7 @@ exit;
 
   Wh.ExecReference(myfrm_R_MinRemainsI);
   Exit;
-  Wh.ExecDialog(myfrm_Dlg_NewEstimateInput, FrmMain, [myfoModal, myfoSizeable], fAdd, null, null); //myfoModal, myfoSizeable
+  //старый диалог ввода сметы удален (D_NewEstimateInput), см. TFrmOGedtEstimate
 
 
 

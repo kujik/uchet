@@ -565,8 +565,17 @@ begin
 end;
 / 
 
-create or replace procedure P_CopyEstimate ( 
---копируем смету на стандартное изделие в записи для заказа
+--УСТАРЕЛО, заменяется на p_copy_std_estimate_to_order_item (ниже). Причины замены:
+--  - копирует id_dependent_estimate из позиции сметы-источника прямо в позицию сметы-приемника, хотя это поле
+--    всегда пересчитывается автоматически триггером trg_estimate_items_dep_id при вставке строки (по id_name
+--    и id_estimate ЦЕЛЕВОЙ строки) - явное присваивание в последующем update просто затирает верно посчитанное
+--    триггером значение чужим (от сметы-источника), поэтому в новой процедуре это поле не трогается;
+--  - не копирует id_or_std_item/or_std_item_cnt/contract - эти поля появились в estimate_items позже;
+--  - лога изменений нет - теперь строится оберткой uOrders.LoadEstimate сравнением "было"/"стало".
+--вызовы заменены на новую процедуру (uOrders.pas TOrders.LoadEstimate, d_orders.sql P_CreatePspForSemiproducts).
+--удалить после подтверждения, что новая процедура отработала на реальных данных.
+create or replace procedure P_CopyEstimate ( --!-
+--устарела, см. p_copy_std_estimate_to_order_item ниже - не трогать, кандидат на удаление
   IdEstimate in number,       --запись в estimates должна быть создана
   IdStdEstimate in number,    --айди стандартной, из которой копируем
   OrQnt in number             --количество изделий в заказе 
@@ -627,6 +636,57 @@ begin
 end;
 /
 
+--------------------------------------------------------------------------------
+--копируем состав сметы стандартного изделия в смету изделия заказа, масштабируя количество на кол-во изделий
+--в заказе. заменяет P_CopyEstimate (выше, помечена на удаление) - тот же принцип сравнения по id_name (пометить все удаленными,
+--затем найти/создать и обновить по имени, в конце снести неиспользованные), но:
+--  - копируются также id_or_std_item, or_std_item_cnt, contract;
+--  - id_dependent_estimate не копируется - его сам пересчитает триггер trg_estimate_items_dep_id для целевой строки;
+--  - процедура не логирует изменения и не делает commit - это ответственность вызывающей стороны (обертка
+--    uOrders.LoadEstimate сама снимает смету "до" через LoadEstimateArray, вызывает эту процедуру, снимает "после"
+--    и пишет diff в estimate_change_log).
+create or replace procedure p_copy_std_estimate_to_order_item( --$+
+--копируем состав сметы стандартного изделия в смету изделия заказа, масштабируя количество на кол-во изделий в заказе
+  p_id_estimate     in number,  --смета изделия заказа, в которую копируем (запись в estimates уже должна быть создана)
+  p_id_std_estimate in number,  --смета стандартного изделия, из которой копируем
+  p_or_qnt          in number   --количество изделий в заказе, для масштабирования qnt/qnt_itm от qnt1/qnt1_itm
+) is
+  v_id_item number;
+  v_qnt     number;
+  v_qnt_itm number;
+begin
+  update estimate_items set deleted = 1 where id_estimate = p_id_estimate;
+  for r in (
+    select id_group, id_name, id_unit, id_comment, qnt1, qnt1_itm, id_or_std_item, or_std_item_cnt, contract
+      from estimate_items
+     where id_estimate = p_id_std_estimate
+  ) loop
+    begin
+      select id into v_id_item from estimate_items
+       where id_estimate = p_id_estimate and nvl(id_name, -100) = nvl(r.id_name, -100);
+    exception
+      when no_data_found then
+        insert into estimate_items (id_estimate, id_name)
+          values (p_id_estimate, r.id_name) returning id into v_id_item;
+    end;
+    v_qnt := null;
+    if p_or_qnt is not null and r.qnt1 is not null then
+      v_qnt := ceil(r.qnt1 * p_or_qnt * 1000) / 1000;
+    end if;
+    v_qnt_itm := null;
+    if p_or_qnt is not null and r.qnt1_itm is not null then
+      v_qnt_itm := ceil(r.qnt1_itm * p_or_qnt * 1000) / 1000;
+    end if;
+    update estimate_items
+       set id_group = r.id_group, id_unit = r.id_unit, id_comment = r.id_comment,
+           qnt1 = r.qnt1, qnt = v_qnt, qnt1_itm = r.qnt1_itm, qnt_itm = v_qnt_itm,
+           id_or_std_item = r.id_or_std_item, or_std_item_cnt = r.or_std_item_cnt,
+           contract = r.contract, deleted = 0
+     where id = v_id_item;
+  end loop;
+  delete from estimate_items where id_estimate = p_id_estimate and deleted = 1;
+end;
+/
 
 create or replace procedure P_SendEstimateToItm (
 --копируем смету в ИТМ
@@ -835,128 +895,124 @@ begin
 end;
 /
 
-create or replace procedure p_test_estimate_item(
+select
+  bn.name
+from
+  bcad_nomencl bn,
+  v_or_std_items i
+where
+  i.id_format = 0
+  and bn.name = i.name
+;
+
+select
+  i.name
+from
+  v_or_std_items i,
+  v_or_std_items i2
+where
+  i.id_format = 0 and i2.id_format <> 0
+  and i.name = i2.fullname
+;  
+ 
+  select max(id), max(type), max(id_format) 
+    from v_or_std_items
+    where fullname = 'Вывеска Об.св. буквы 400. Рама левая. ВБ.14.01.00_М01 Ral 7021 шагрень';      
+
+create or replace procedure p_test_estimate_item(  --!+
+--получение по данным типа объекта сметы и сметной позиции дополнительных данных
+--по позиции (айди стандартного изделия (если это изделие), его сметы, типа изделия, есть ли в итм.
+--кроме того, здесь же сосредоточена вся логика проверки допустимости такой позиции в смете
+  p_estimate_type in varchar2, --тип объекта, к которому смета (П,О,ПФ,Н  и И если к нестандартному изделию заказа)
   p_group_id    in  number,  --айди группы бкад
   p_name        in  varchar2,--наименование  
   p_group_std   in  number,  --айди группы стандартных изделий для родительской сметы 
-  p_result      out varchar2,--текст ошибки, первый символ (0 - некритическая, иначе критическая)  
-  p_id_std_item out number,  --айди стандартнорго изделия для данной позиции 
-  p_id_estimate out number   --айди сметы по данной позиции
+  p_result      out number,  --тип результата: 0 = ок, -1 = ошибка, 1 - предупреждение  
+  p_id_std_item out number,  --айди стандартного изделия для данной позиции 
+  p_id_estimate out number,  --айди сметы по данной позиции
+  p_type_of_item out varchar2,  --тип стандартного изделия ('',П,О,ПФ,Н)
+  p_is_new_position out number,  --позиции нет в ИТМ
+  p_message      out varchar2  --текст ошибки, или сообщения
 ) is
   v_is_prod      number(1);
   v_is_semi      number(1);
-  v_cnt          number;
   v_cnt2         number;
   v_id_format    number;
   v_id_std       number;
+  v_type         number;
 begin
   -- инициализация выходных параметров
-  p_result := '';
+  p_result := 0;
   p_id_std_item := null;
   p_id_estimate := null;
+  p_type_of_item := null;
+  p_is_new_position := 0;
+  p_message := null;
 
-  -- признак "изделие" и "полуфабрикат" по группе
-  select is_production, 0  --is_semiproduct
-    into v_is_prod, v_is_semi
-    from bcad_groups
-   where id = p_group_id;
+  --проверка на отсутствие выбранных данных
+  if (p_name is null) or (p_group_id is null) then
+    p_result := -1;
+    p_message := 'Не выбрана позиция или группа!';
+    return;
+  end if;
 
-  -- проверка на изделие (type = 0, id_format <> 0)
-  select count(*), nvl(max(id_format), -1)
-    into v_cnt, v_id_format
+  --найдем айди стандартного изделия, соответствующего по полному наименованию позиции
+  select max(id), max(type), max(id_format) into v_id_std, v_type, v_id_format
     from v_or_std_items
-   where fullname = p_name
-     and type = 0
-     and id_format <> 0;
-
-  if v_cnt <> 0 and v_is_prod = 0 then
-    p_result := '1-Данная позиция является изделием!';
-    return;
-  end if;
-
-  if v_cnt <> 0 and v_id_format <> p_group_std then
-    p_result := '1-изделие из этой группы недопустимо в этой смете!';
-    return;
-  end if;
-
-  -- проверка на полуфабрикат (type = 2)
-  select count(*), nvl(max(id_format), -1)
-    into v_cnt, v_id_format
-    from v_or_std_items
-   where fullname = p_name
-     and type = 2;
-
-  if v_cnt <> 0 and v_is_semi = 0 then
-    p_result := '1-Данная позиция является полуфабрикатом!';
-    return;
-  end if;
-
-  if v_cnt <> 0 and not (v_id_format = p_group_std or v_id_format = 1) then
-    p_result := '1-полуфабрикат из этой группы недопустим в этой смете!';
-    return;
-  end if;
-
-  -- если группа требует изделие или полуфабрикат, но их нет в справочнике
-  if (v_is_prod = 1 or v_is_semi = 1) and v_cnt = 0 then
-    p_result := '2-эту позицию необходимо внести в справочник стандартных изделий!';
-    return;
-  end if;
-
-  -- для изделия: проверка наличия сметы
-  if v_is_prod = 1 and v_cnt <> 0 then
-    select id into v_id_std
+    where fullname = p_name;
+  if v_id_std is null then
+    select max(id), max(type), max(id_format) into v_id_std, v_type, v_id_format
       from v_or_std_items
-     where fullname = p_name
-       and rownum = 1;
-    p_id_std_item := v_id_std;
+      where name = p_name;
+  end if;
+  p_id_std_item := v_id_std;
+  --если найдено стандартное изделие, найдем для него айди сметы
+  if p_id_std_item is not null then
     select count(*) into v_cnt2
       from estimates
-     where id_std_item = v_id_std;
-    if v_cnt2 = 0 then
-      p_result := '3-К этому изделию должна быть подгружена смета!';
-      return;
-    else
-      -- найдём id_estimate (одну из смет, можно минимальную)
+      where id_std_item = v_id_std;
+    if v_cnt2 > 0 then
       select min(id) into p_id_estimate
         from estimates
        where id_std_item = v_id_std;
     end if;
-  end if;
-
-  -- для полуфабриката: аналогично
-  if v_is_semi = 1 and v_cnt <> 0 then
-    select id into v_id_std
-      from v_or_std_items
-     where fullname = p_name
-       and rownum = 1;
-    p_id_std_item := v_id_std;
-    select count(*) into v_cnt2
-      from estimates
-     where id_std_item = v_id_std;
-    if v_cnt2 = 0 then
-      p_result := '3-К этому полуфабрикату должна быть подгружена смета!';
-      return;
-    else
-      select min(id) into p_id_estimate
-        from estimates
-       where id_std_item = v_id_std;
-    end if;
-  end if;
-
-  -- если позиция — материал (не изделие и не полуфабрикат)
-  if v_is_prod = 0 and v_is_semi = 0 then
+    --получим тип позиции
+    p_type_of_item :=
+    case
+      when v_id_format is null then null
+      when v_id_format= 0 then 'Н'
+      when v_type = 0 then 'П'
+      when v_type = 1 then 'О'
+      when v_type = 2 then 'ПФ'
+    end;
+  else
+    --проверим, есть ли эта номенклатура в итм (только для позиций, не являющихся стандартными изделиями)
     select count(*) into v_cnt2
       from dv.nomenclatura
      where name = p_name
        and id_nomencltype = 0;
     if v_cnt2 = 0 then
-      p_result := '0-Внимание! Этой позиции еще нет в базе ИТМ!';
-      return;
+      p_is_new_position := 1;
     end if;
   end if;
 
-  -- успех
-  p_result := '';
+  --признак "изделие" по группе (полуфабрикаты сейчас к группе бкад не привязаны)
+  select nvl(max(is_production), 0), 0  --is_semiproduct
+    into v_is_prod, v_is_semi
+    from bcad_groups
+   where id = p_group_id;
+
+  if p_type_of_item = 'О' then
+    p_message := 'Данная позиция является отгрузочным изделием и недопустимо в смете!';
+    p_result := 1;
+  elsif p_type_of_item is not null and v_is_prod = 0 then
+    p_message := 'Данная позиция является изделием, и должна быть в группе "Готовые изделия"!';
+    p_result := 1;
+  elsif p_type_of_item = 'П' and v_id_format <> p_group_std then
+    p_message := 'Производственное изделие из этой группы недопустимо в этой смете!';
+    p_result := 1;
+  end if;
+
 end;
 /
 
@@ -1018,7 +1074,7 @@ where
 ;
 
 
-create or replace view v_estimate_for_edit_dlg as --!!!
+create or replace view v_estimate_for_edit_dlg as --!+
 select
 --вью для диалога редактирования сметы
   e.*,
@@ -1026,6 +1082,7 @@ select
     when e.id_or_std_item is null then null
     when f.id = 0 then 'Н'
     when f.type = 0 then 'П'
+    when f.type = 1 then 'O'
     when f.type = 2 then 'ПФ'
   end as type_of_item,
   e2.id as id_item_estimate,
@@ -1536,3 +1593,97 @@ create global temporary table tmp_estimate_loaded (
   calc_date date
 ) on commit delete rows;
 ;
+
+--------------------------------------------------------------------------------
+--лог изменений сметы (кто, когда и что изменил в составе/количестве позиций сметы).
+--нужен для отслеживания изменений смет как стандартных изделий, так и изделий заказа
+--(в т.ч. при обновлении сметы изделия заказа из сметы стандартного изделия).
+--
+--изменение количества позиций без изменения состава сметы (пересчет qnt/qnt_itm от
+--qnt1/qnt1_itm при изменении количества изделия в заказе, см. p_CorrectEstimateQnt)
+--НЕ логируется - см. явное указание в постановке задачи.
+--
+--source - источник/повод изменения сметы:
+--  0 - первичная загрузка сметы (смета была пуста, isempty/нет позиций)
+--  1 - загрузка из xls-файла (Bt_LoadClick в старом диалоге)
+--  2 - копирование из "буфера" - временной сметы пользователя (estimates.id_buffer,
+--      см. Bt_PasteEstimateClick/Bt_CopyEstimateClick в старом диалоге)
+--  3 - ручное редактирование состава сметы в диалоге
+--  4 - обновление сметы изделия заказа при обновлении из сметы стандартного изделия
+--      (RefreshEstimatesToOrder/LoadEstimate, ветка IsOrItemStd; P_CreatePspForSemiproducts)
+--для source in (1,2,3,4), если смета не была пуста, changes должен содержать сравнение
+--входного и выходного массивов по наименованию (без учета группы), формат по строкам:
+--  <наименование> <ед.изм.> <кол-во> - добавлено
+--  <наименование> <ед.изм.> <кол-во> - удалено
+--  <наименование> <ед.изм.> <кол-во было> -> <кол-во стало>
+--для source = 0 достаточно зафиксировать сам факт первичной загрузки (changes может
+--быть пустым либо содержать перечень загруженных позиций - уточняется).
+--таблица estimate_change_log
+--лог изменений сметы: пользователь, время, источник изменения (первичная загрузка/xls/
+--буфер/ручное редактирование/обновление из сметы стандартного изделия) и текст диффа
+create table estimate_change_log ( --$+
+  id number(11),
+  id_estimate number(11),                      --смета, к которой относится изменение
+  dt date,                                      --дата/время изменения, проставляется триггером
+  id_user number(11),                           --пользователь, выполнивший изменение
+  source number(2),                             --источник изменения, см. константы выше
+  changes clob,                                 --текст изменений, см. формат выше
+  constraint pk_estimate_change_log primary key (id),
+  constraint fk_estimate_change_log_est foreign key (id_estimate) references estimates(id) on delete cascade,
+  constraint fk_estimate_change_log_user foreign key (id_user) references adm_users(id)
+);
+
+create index idx_estimate_change_log_est on estimate_change_log(id_estimate, dt); --$+
+
+create sequence sq_estimate_change_log start with 100 nocache; --$+
+
+create or replace trigger trg_estimate_change_log_bi_r before insert on estimate_change_log for each row --$+
+begin
+  if nvl(:new.id, 0) > -1 then
+    :new.id := sq_estimate_change_log.nextval;
+  end if;
+  :new.dt := nvl(:new.dt, sysdate);
+end;
+/
+
+create or replace view v_estimate_change_log as select --$+
+--лог изменений сметы с именем пользователя, сделавшего изменение
+  l.*,
+  u.name as username
+from
+  estimate_change_log l,
+  adm_users u
+where
+  l.id_user = u.id (+)
+;
+
+--------------------------------------------------------------------------------
+--ЗАГЛУШКА. Проверка корректности сметной позиции "на лету", при вводе/выборе значения
+--в поле Наименование в новом диалоге сметы (uFrmOGedtEstimate). Заменит со временем
+--текущую проверку в p_test_estimate_item (которая пока не трогается и по-прежнему
+--вызывается из VerifyRow в диалоге без изменений).
+--
+--правила (уточняются, будут дописаны позже отдельным заданием):
+--  - в производственном изделии нельзя использовать отгрузочное изделие как сметную позицию;
+--  - сметная позиция-изделие (производственное/отгрузочное) выбирается только из подгруппы
+--    производственных той же группы (той же group/format) - можно ли из другой подгруппы
+--    той же группы, можно ли с тем же наименованием, что и контейнер - уточняется;
+--  - полуфабрикат можно выбирать из подгрупп типа "полуфабрикат" из любой группы (формата);
+--  - в смете нестандартного изделия заказа стандартных изделий, по-видимому, быть не может,
+--    но полуфабрикат может (уточняется).
+create or replace procedure p_check_estimate_item( --$+
+--заглушка: проверка корректности сметной позиции "на лету" по контексту контейнера, правила будут дописаны позже
+  p_id_container_std_item in  number,   --айди контейнерного стандартного изделия (владельца сметы), null - смета нестандартного изделия заказа
+  p_container_type        in  number,   --тип контейнера: 0-производственное,1-отгрузочное,2-полуфабрикат; null - нестандартное изделие заказа
+  p_group_id               in  number,  --айди группы бкад введенной/выбранной позиции
+  p_name                   in  varchar2,--введенное или полученное из справочника наименование позиции
+  p_id_or_std_item         in  number,  --айди стандартного изделия/полуфабриката, если позиция выбрана из справочника (не введена текстом), иначе null
+  p_status                out varchar2, --'OK' / 'WARNING' / 'ERROR'
+  p_errtext                out varchar2 --текст сообщения для пользователя, пусто - если ошибок/предупреждений нет
+) is
+begin
+  --TODO: реализовать правила выше, когда они будут окончательно согласованы.
+  p_status := 'OK';
+  p_errtext := '';
+end;
+/

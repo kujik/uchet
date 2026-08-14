@@ -4,14 +4,23 @@
 формирется на основе дат в журнале заказов (по слешам, в order_items), для слешей в которых присутствуют кнс/тхн.
 плановые даты формируются на основании регламента заказа
 
-
-
-
-
 */
 
---таблиц лога изменения объектов заказа пользователями
---alter table orders_audit add is_correction number(1) default 1;
+
+
+
+--таблица orders_audit
+--таблица лога изменения объектов заказа пользователями
+--(изменений в заказах, сметах, и прикреплении документов кнс/тхн)
+--
+select * from orders;
+
+--$go begin
+alter table orders_audit add test3 number(1) default 1;
+--alter table orders_audit add test4 number(1) default 1;
+--$go end
+
+--!!!
 create table orders_audit (
   id number(11),
   id_user number(11),
@@ -19,14 +28,18 @@ create table orders_audit (
   name varchar(100),  --наименование объекта
   dt date,            --дата и время события
   is_correction number(1) default 1, --прзнак что это измениене документа, а не первоначальное создание
-  changes varchar(4000),  --что было изменено 
+  changes varchar(4000),  --что было изменено
+  test number(1), --$-
+  test2 number(1), --тестовый столбец--$+
+  
   constraint pk_orders_audit primary key (id),
   constraint fk_orders_audit_id_user foreign key (id_user) references adm_users(id)
 );   
   
 create sequence sq_orders_audit nocache start with 1;
 
-create or replace trigger trg_orders_audit_bi_r before insert on orders_audit for each row
+
+create or replace trigger trg_orders_audit_bi_r before insert on orders_audit for each row --!!!
 begin
   :new.id := sq_orders_audit.nextval;
 end;
@@ -117,7 +130,7 @@ select
   oi.id_order,
   oi.id as id_order_item,
   oi.id_kns as id_user,
-  o.dt_beg + ri.day_end - 1 as dt_by_reglament,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,  --!!!
   oi.dt_est as dt_fact,
   -(nvl(oi.dt_est, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
 from

@@ -232,7 +232,7 @@ begin
     Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
   end
   else if (Tag = mbtTest) then begin
-    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable], fEdit, Fr.ID, 1);
+//    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable], fEdit, Fr.ID, 1);
   end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)

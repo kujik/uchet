@@ -125,12 +125,11 @@ uses
 
   D_Order,
   D_ItmInfo, D_J_Montage,
-  D_NewEstimateInput,
   D_SuppliersMinPart,
   D_Spl_InfoGrid,
   F_Adm_Installer,
 
-  uFrmXGsrvSqlMonitor,
+  uFrmXGsrvSqlMonitor, uFrmXAdmSqlCommentSync, uFrmXAdmSqlUpdater,
 
   uFrmOWInvoiceToSgp, uFrmDlgEditNomenclatura, uFrmOGjrnOrders, uFrmOGjrnSemiproducts,
   uFrmCGrepPaymentsByMonth, uFrmCWCash, uFrmAWOracleSessions, uFrmCDedtCashRevision,
@@ -667,6 +666,10 @@ begin
     TFrmOGrepSnHistory.Show(AOwner, AFormType, Opt + [myfoModal], fNone, 0, AAddParam)
   else if AFormType = myfrm_Srv_SqlMonitor then
     TFrmXGsrvSqlMonitor.Show(Application, AFormType, Opt, FNone, 0, Null)
+  else if AFormType = myfrm_Adm_SqlCommentSync then
+    TFrmXAdmSqlCommentSync.Show(Application, AFormType, Opt, FNone, 0, Null)
+  else if AFormType = myfrm_Adm_SqlUpdater then
+    TFrmXAdmSqlUpdater.Show(Application, AFormType, Opt, FNone, 0, Null)
   else if AFormType = myfrm_Rep_SnCalendarChart then
     // Form := TForm_Rep_SnCalendarChart.Create(...)
   else if AFormType = myfrm_Rep_SnCalendarByMonths then
@@ -946,8 +949,6 @@ begin
     TFrmOWrepOrdersPrimeCost.Show(AOwner, AFormType, Opt, fNone, Null, Null)
   else if AFormType = myfrm_Dlg_R_OrderStdItems then
     TFrmODedtOrStdItem.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
-  else if AFormType = myfrm_Dlg_NewEstimateInput then
-    Form := TDlg_NewEstimateInput.Create(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_SupplierMinPart then
     Form := TDlg_SuppliersMinPart.Create(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Spl_Categoryes then

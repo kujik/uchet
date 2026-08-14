@@ -899,6 +899,9 @@ const
   myfrm_J_OrPayments='J_OrPayments';
   myfrm_J_OrPayments_N='J_OrPayment_N';
   myfrm_Srv_SqlMonitor='Srv_SqlMonitor';
+  myfrm_Adm_SqlCommentSync='Adm_SqlCommentSync';
+  myfrm_Adm_SqlUpdater='Adm_SqlUpdater';
+  myfrm_Adm_SqlUpd_ViewFile='Adm_SqlUpd_ViewFile';
   myfrm_R_EstimatesReplace='R_EstimatesReplace';
   myfrm_Adm_Installer='Adm_Installer';
   myfrm_J_Error_Log='J_Error_Log';
@@ -1021,7 +1024,6 @@ const
   myfrm_Dlg_J_Error_Log='Dlg_J_Error_Log';
   myfrm_Dlg_Rep_Order_Primecost2='Dlg_Rep_Order_Primecost2';
   myfrm_Dlg_R_OrderStdItems='Dlg_R_OrderStdItems';
-  myfrm_Dlg_NewEstimateInput='Dlg_NewEstimateInput';
   myfrm_Dlg_SupplierMinPart='Dlg_SupplierMinPart';
   myfrm_Dlg_R_Spl_Categoryes='Dlg_R_Spl_Categoryes';
   myfrm_Dlg_Spl_InfoGrid_MinPart='Dlg_Spl_InfoGrid_MinPart';
@@ -1079,6 +1081,8 @@ const
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
   myfrm_Dlg_MainSettings='Dlg_MainSettings';
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
+  myfrm_Dlg_EdtEstimate='Dlg_EdtEstimate';
+
 
   myfrm_Dlg_R_PnlOpsPainting = 'Dlg_R_PnlOpsPainting';
   myfrm_Dlg_PnlOpsForItem = 'Dlg_PnlOpsForItem';
@@ -1214,6 +1218,17 @@ const
   mbtUnApprove = 113;
   mbtSave = 114;
   mbtStopOrder = 115;
+  mbtCustom_SqlUpd_ViewFile = 116;
+  mbtCustom_SqlUpd_FullProcess = 117;
+  mbtCustom_SqlUpd_Comments = 118;
+  mbtCustom_SqlUpd_AfterImport = 119;
+  mbtCustom_SqlUpd_ViewLogs = 120;
+  mbtCustom_SqlUpd_More = 121;               //кнопка "Дополнительно" с выпадающим меню
+  mbtCustom_SqlUpd_RestoreTriggers = 122;     //восстановить триггеры действий ($ -> !)
+  mbtCustom_SqlUpd_RemoveTriggers = 123;      //удалить триггеры (--$+/--$- -> --$dropped, --$go begin -> --$completed begin)
+  mbtCustom_SqlUpd_Refresh = 124;
+  mbtCustom_SqlUpd_ClearAttention = 125;      //снять --!!!
+  mbtCustom_SqlUpd_DisableGoBlocks = 126;      //снять (отключить) --!go begin блоки
 
 
 
