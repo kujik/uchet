@@ -57,6 +57,7 @@ end;
 create table bcad_nomencl(
   id number(11),
   name varchar2(1000) unique not null,     --наименование
+  is_purchased number(1) default 0,        --номенклатура является покупной 
   constraint pk_bcad_nomencl primary key (id)
 );
 
@@ -194,6 +195,7 @@ create table estimates(
   dt date,                                    --дата создания сметы
   dt_create date,                             --дата создания, со временем, фиксируется триггером   
   dt_changed date,                            --дата изменения (вставка/удалени позиций, изменение наименования или количества), со временем, фиксируется триггером
+  dt_changed_any date,                        --дата любого изменения сметы    --$+
   dt_changed_depend date,                     --дата изменения смет, от которой зависит эта
   has_influencing number(1) default 0,        --смета имеет влияющие на нее сметы
   dt_influencing_ready date,                  --дата, когда все влияющие подгружены, иначе нулл
@@ -300,7 +302,7 @@ end;
 /
 */
 
-create or replace trigger trg_estimate_items_aiud_r
+create or replace trigger trg_estimate_items_aiud_r   --$-
 --фиксируем дату обновления сметы при добавлении или удалении
 --строк либо при изменении наименования или количества на единицу для 
   after insert or update or delete on estimate_items
@@ -349,7 +351,7 @@ end;
  
 --вызывает ошибки при удалении в ора11хе!!!
 drop trigger trg_estimate_items_master;
-create or replace trigger trg_estimate_items_master
+create or replace trigger trg_estimate_items_master   --!-
   for insert or update or delete on estimate_items
   compound trigger
 
@@ -440,14 +442,15 @@ begin
 end;
 /
 
-create or replace procedure p_CreateEstimateItem(
+create or replace procedure p_CreateEstimateItem(  --$+
   pid_estimate number,                      --родительская смета
   pid_group number,                         --группа бкад
   pname varchar2,                          --наименование бкад
   pid_unit number,                          --единица измерения
   pcomment varchar2,                       --комментарий из сметы
   pqnt1 number,                           --количество на одно изделие
-  pqnt number                            --количество на все изделия   no use
+  pqnt number,                           --количество на все изделия   no use
+  pid_or_std_item number default null    --айди стандартного изделия/полуфабриката, если позиция выбрана из справочника (диалог сметы), иначе null
 ) is 
   iditem number;
   idnameitem number;
@@ -506,7 +509,7 @@ begin
       insert into estimate_items (id_estimate, id_name)
         values(pid_estimate, idnameitem) returning id into iditem;
   end;
-  update estimate_items set id_group = pid_group, id_unit = pid_unit, id_comment = idcommentitem, qnt1 = pqnt1, qnt = qntall, qnt1_itm = pqnt1, qnt_itm = qntall, deleted = 0
+  update estimate_items set id_group = pid_group, id_unit = pid_unit, id_comment = idcommentitem, qnt1 = pqnt1, qnt = qntall, qnt1_itm = pqnt1, qnt_itm = qntall, id_or_std_item = pid_or_std_item, deleted = 0
     where id = iditem;
 end;
 /
@@ -919,7 +922,7 @@ where
     from v_or_std_items
     where fullname = 'Вывеска Об.св. буквы 400. Рама левая. ВБ.14.01.00_М01 Ral 7021 шагрень';      
 
-create or replace procedure p_test_estimate_item(  --!+
+create or replace procedure p_test_estimate_item(  --$+
 --получение по данным типа объекта сметы и сметной позиции дополнительных данных
 --по позиции (айди стандартного изделия (если это изделие), его сметы, типа изделия, есть ли в итм.
 --кроме того, здесь же сосредоточена вся логика проверки допустимости такой позиции в смете
@@ -1079,7 +1082,7 @@ where
 ;
 
 
-create or replace view v_estimate_for_edit_dlg as --!+
+create or replace view v_estimate_for_edit_dlg as --$+
 select
 --вью для диалога редактирования сметы
   e.*,

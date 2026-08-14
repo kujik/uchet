@@ -228,7 +228,7 @@ begin
     for i := 0 to LColCount - 1 do
       vaFields[i] := IntToStr(i);
   end;
-  if Length(vaFields) <> LColCount then
+  if (Length(vaFields) <> LColCount) and (LColCount > 0) then
     raise ENamedArrError.Create('Количество имён полей не совпадает с числом колонок данных');
   // Устанавливаем FFull и F
   FFull := System.Copy(vaFields, 0, Length(vaFields));

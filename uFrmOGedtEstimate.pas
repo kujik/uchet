@@ -10,7 +10,7 @@ uses
 type
   TFrmOGedtEstimate = class(TFrmBasicEditabelGrid)
   private
-    FIdEstimate: Integer;
+    FIdEstimate: Variant;
     Err, Err2: TVarDynArray;
     FIdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
     FIdOfOrder: Integer;      //айди заказа, в составе которого данное изделие
@@ -20,6 +20,10 @@ type
     FFormatCaption: string;
     FName: string;
     FUseInputArray: Boolean;  //признак того, что смета получена/передается через массив (обертка), а не через прямую привязку к БД
+    FOnApply: TProc;          //колбэк для немодального режима (см. EstDlgOnApply) - копируется из бокового канала
+                               //в момент создания формы (см. PrepareForm), т.к. в отличие от EstDlgOnApply,
+                               //привязан к КОНКРЕТНОМУ экземпляру и вызывается позже, асинхронно, при сохранении;
+                               //если не назначен - ведем себя как раньше (модальный режим, см. SaveEstimate)
     FInVerifyTable: Boolean;  //защита от реентерабельного вызова: VerifyTable вызывает Frg1.IsTableCorrect, которая сама
                                //по каждой ячейке дергает обратно OnVeryfyAndCorrectValues (=Frg1VeryfyAndCorrect), а тот снова
                                //вызывает VerifyTable - без этой защиты уходим в бесконечную рекурсию и переполнение стека
@@ -58,6 +62,11 @@ var
   EstDlgInputItems: TNamedArr;     //входной массив (текущий состав сметы: name;id_group;id_unit;qnt1;comm)
   EstDlgResultItems: TNamedArr;    //результат редактирования (тот же состав полей), заполняется при успешном сохранении (Res.ModalResult = mrOk)
   EstDlgSourceUsed: Integer;       //источник данных для estimate_change_log.source (см. TOrders.LogEstimateChange)
+  EstDlgOnApply: TProc;            //колбэк для немодального режима (.Show вместо ShowModal2): диалог вызывает его вместо
+                                    //ожидания синхронного возврата, копируется в FOnApply конкретного экземпляра при создании
+                                    //формы (см. PrepareForm) - т.к. при нескольких одновременно открытых немодальных диалогах
+                                    //этот боковой канал (в отличие от EstDlgHasInput/EstDlgInputItems, которые читаются
+                                    //синхронно и сразу же при создании) не может оставаться общим на все время редактирования
 
 
 implementation
@@ -123,7 +132,7 @@ begin
     ['type_of_item$s','Изделие','85', 'bt=Изделие:И:::009;Смета:С:::909', 'pic=;П;ПФ;Н;О:0;7;7;8;9:+','t=1'],
     ['id_group$i','Группа','250;w;L','e=1:100000:0:N','t=1,2'],
     ['name$s','Наименование','400;w;h','e=1:1000',
-      'bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 'П', ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 'О', ';Выбрать производственное изделие:И:::009') + ';Выбрать нестандартное изделие:Н:::000','t=1'],
+      'bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 'П', ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 'О', ';Выбрать производственное изделие:И:::009') {+ ';Выбрать нестандартное изделие:Н:::000','t=1'}],
     ['id_unit$i','Ед.изм.','100;L','e=1:1000000:0:N','t=1,2'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N','t=1,2'], {недопустимо пустое кол-во}
     ['qnt_on_stock$f','На складе','80','t=1'],
@@ -139,6 +148,8 @@ begin
   //если данные для редактирования переданы оберткой (TOrders.LoadEstimate) через массив - используем их вместо прямой загрузки из БД;
   //признак фиксируем на момент подготовки формы, т.к. EstDlgHasInput - это временный "боковой канал", сбрасываемый вызывающим кодом сразу после ShowModal2
   FUseInputArray := EstDlgHasInput;
+  FOnApply := EstDlgOnApply;
+  EstDlgOnApply := nil; //боковой канал одноразовый, чтобы не "утек" в следующий диалог, если вызывающий код забудет его сбросить
   if FUseInputArray then
     Frg1.SetInitData(EstDlgInputItems)
   else
@@ -146,7 +157,7 @@ begin
   Frg1.Opt.Caption := 'Сметные позиции';
   Frg1.Opt.SetPick('id_group', A.VarDynArray2ColToVD1(Orders.BcadGroups, 0), A.VarDynArray2ColToVD1(Orders.BcadGroups, 1), True);
   Frg1.Opt.SetPick('id_unit', A.VarDynArray2ColToVD1(Orders.BcadUnits, 0), A.VarDynArray2ColToVD1(Orders.BcadUnits, 1), True);
-  Frg1.Opt.SetPick('type', ['Материал', 'Изделие', 'Полуфабрикат'], [0, 1, 2], True);
+  //Frg1.Opt.SetPick('type', ['Материал', 'Изделие', 'Полуфабрикат'], [0, 1, 2], True);
   O.AlwaysVerifyAllTable:= True;
   O.FieldsNoRepaeted:=['name'];
   Frg1.EditOptions := O;
@@ -154,6 +165,10 @@ begin
   'Ввод сметы.'#13#10
   ]];
   Result := inherited;
+  if not Result then
+    Exit;
+  if Frg1.GetRawCount = 0 then
+    Frg1.AddRow;
   //проверим таблицу (с запросом к бд по каждой позиции)
   //VerifyTable;
 end;
@@ -173,6 +188,7 @@ begin
 //    [-1002, FTypeOfItem <> 2, 'Редактировать смету полуфабриката']
     ], cbttBSmall, pnlFrmBtnsR
   );
+  Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow]);
   Result := True;
 end;
 
@@ -180,7 +196,7 @@ procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integ
 //обработка нажатий кнопок фрейма
 begin
   Handled := True;
-  if (Tag = mbtLoad) and (MyQuestionMessage('Загрузить текущую смету из базы данных?') = mrYes) then
+  if (Tag = mbtLoad) and (FIdEstimate <> null) and (MyQuestionMessage('Загрузить текущую смету из базы данных?') = mrYes) then
     Frg1.LoadData('*', [FIdEstimate])
   else if Tag = mbtExcel then
     LoadFromXls
@@ -243,8 +259,11 @@ begin
     LoadItemFromDB(Frg1.RecNo - 1);
   end
   else if TCellButtonEh(Sender).Hint = 'Смета' then begin
+    //редактирование сметы к сметной позиции (если позиция сама является стандартным изделием и имеет свою смету -
+    //см. p_test_estimate_item/VerifyRow) - открываем не напрямую через форму, а той же оберткой, что и везде
+    //(TOrders.LoadEstimate), чтобы сохранение, блокировка окна и признак "нет сметы" работали единообразно
     if not ((Frg1.GetValueS('type_of_item') = '') or (Frg1.GetValueS('type_of_item') = 'Н')) and (Fr.GetValueS('id_item_estimate') <> '') then
-      TFrmOGedtEstimate.Show(Self, myfrm_R_Estimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit, Fr.GetValue('id_or_std_item'), 1);
+      Orders.LoadEstimate(null, null, Fr.GetValue('id_or_std_item'));
   end
   else if TCellButtonEh(Sender).Hint = 'Изделие' then begin
     if not ((Frg1.GetValueS('type_of_item') = '') or (Frg1.GetValueS('type_of_item') = 'Н')) then
@@ -339,7 +358,7 @@ begin
   p_message      out varchar2  --текст ошибки, или сообщения
   }
   var Res := Q.QCallStoredProc('p_test_estimate_item',
-    'i1$s;i2$i;i3$s;i4Si;' +
+    'i1$s;i2$i;i3$s;i4$i;' +
     'o1$io;o2$io;o3$io;o4$so;o5$io;o6$so',
     [FTypeOfItem, Frg1.GetValue('id_group', Row, Filtered), Frg1.GetValueS('name', Row, Filtered), FGroupOfItem, -1, -1, -1, '', -1, '']);
   Frg1.SetValue('err', Row, Filtered, Res[c + 1]);
@@ -354,6 +373,10 @@ procedure TFrmOGedtEstimate.VerifyBeforeSave;
 //стандартная процедура проверки при нажатии кнопки Ок
 begin
   Frg1.SetState(null, False, '');
+  if Frg1.GetRawCount = 0 then begin
+    Frg1.SetState(null, True, '');
+    FErrorMessage := 'Сохранить пустую смету невозможно!';
+  end;
   var LErrorMessage := '';
   var LWarningMessage := '';
   //еще раз проверим путем обращения к хранимой процедуре
@@ -369,6 +392,9 @@ begin
   if LErrorMessage <> '' then begin
     Frg1.SetState(null, True, LErrorMessage);
     FErrorMessage := 'В смете есть ошибки:'#13#10#13#10 + LErrorMessage + #13#10#13#10'Сохранить смету невозможно!';
+  end
+  else if Frg1.HasError then begin
+    FErrorMessage := 'В смете есть ошибки:'#13#10'Сохранить смету невозможно!';
   end
   else if LWarningMessage <> '' then begin
     FErrorMessage := '?' + 'Есть следующие замечания по смете:'#13#10#13#10 + LWarningMessage + #10#13#10#13'Записать смету?';
@@ -481,36 +507,17 @@ begin
     //режим "массив в/массив из" (вызов из обертки TOrders.LoadEstimate) - в БД ничего не пишем,
     //а только формируем результирующий массив, который обертка заберет из EstDlgResultItems и сохранит сама
     EstDlgResultItems := Frg1.ExportToNa('id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm', False);
+    //немодальный режим (.Show): синхронного возврата в обертку не будет, поэтому применяем результат сами -
+    //через колбэк, подготовленный оберткой заранее (см. TOrders.LoadEstimate, ветка AModal = False)
+    if Assigned(FOnApply) then
+      FOnApply();
     Result := True;
   end;
-  Exit;
-  Q.QBeginTrans(True);
-  Q.QSave(S.IIFStr(FIdEstimate = null, 'i', 'u')[1], 'estimates', '',
-   'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
-   [FIdEstimate, S.IIf(AddParam = 1, ID, null), S.IIf(AddParam = 0, ID, null), False, Date]);
-  for i := 0 to Frg1.GetCount(False) - 1 do begin
-    if Length(Q.QCallStoredProc('p_createestimateitem',
-      'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
-       [FIdEstimate, Frg1.GetValue('id_group', i, False), Frg1.GetValue('name', i, False), Frg1.GetValue('id_unit', i, False),
-        Frg1.GetValue('comm', i, False), Frg1.GetValue('qnt1', i, False), Frg1.GetValue('qnt1', i, False) * S.IIf(AddParam = 0, FQntOfItem, 1)] //!!!округление
-       )) = 0 then
-      Break;
-  end;
-  //скорректируем смету с учетом автозамены, проставим количества для итм
-  Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [FIdEstimate]);
-  //удалим смету, если в ней нет ни одного элемента
-  Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [FIdEstimate]);
-  //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
-  if AddParam = 0 then
-    Orders.SyncOrderWithITM(FIdOfOrder, [ID], False);
-  Q.QCommitOrRollback(True);
-  Result := Q.CommitSuccess;
 end;
 
 end.
 
 
 что можно выбирать в нестандартном изделии?????
-
-
 везде проверить работу с фильтром!!!
+какие кнопки выбора изделия когда нужны?

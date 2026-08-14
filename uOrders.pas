@@ -25,6 +25,22 @@ const
 
 
 type
+  //контекст применения массива позиций сметы к БД (см. TOrders.ApplyEstimateArray).
+  //вынесен в отдельный тип/метод из LoadEstimate, чтобы применение можно было вызвать не только
+  //синхронно (после ShowModal2), но и асинхронно - из колбэка диалога при немодальном редактировании
+  //(см. EstDlgOnApply в uFrmOGedtEstimate.pas)
+  TEstimateApplyContext = record
+    IdEstimate: Variant;             //var - при первом сохранении будет заполнен айди созданной сметы
+    IdOrder, IdOrderItem, IdStdItem: Variant;
+    OrderIdUchet: Variant;
+    OrQnt, IsEstimateEmpty, OrDtEst, OrSlash: Variant;
+    ParentIdEstimate: Variant;
+    OrName, FileName: string;
+    OneItem, QntChanged, IsOrItemStd, Silent: Boolean;
+    EstBefore: TNamedArr;
+    EstLogSource: Integer;
+  end;
+
   TOrders = class
   private
     FBcadGroups: TVarDynArray2;
@@ -53,7 +69,16 @@ type
     function LoadSmetaOld(IdOrder: Integer): Integer;
     function EstimateFromFile(var FileName: string; var Est: TVarDynArray2): Boolean;
     function SetEstimateQnt(IdEstimate: Integer; Qnt: extended): Boolean;
-    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False): Integer;
+    //AModal = False - диалог редактирования (если открывается) показывается немодально (.Show); применение
+    //результата к БД произойдет асинхронно, из колбэка диалога, в момент сохранения пользователем;
+    //Result в этом случае не является признаком успеха сохранения (он еще не произошло) - только признаком,
+    //что диалог был открыт (см. TFrmOGedtEstimate.SaveEstimate/EstDlgOnApply)
+    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False): Integer;
+    //применяет отредактированный массив позиций сметы (Est) к БД: создает/обновляет заголовок estimates
+    //(в т.ч. dt_changed/dt_changed_any), пересоздает позиции estimate_items, синхронизирует с ИТМ,
+    //логирует изменения, уведомляет пользователя. Вынесено из LoadEstimate для повторного использования
+    //и из синхронного (после ShowModal2), и из асинхронного (колбэк немодального диалога) сценария
+    function ApplyEstimateArray(var Ctx: TEstimateApplyContext; const Est: TVarDynArray2): Integer;
     //снимок состава сметы (name;unit;qnt1) для последующего сравнения "было"/"стало" и лога изменений;
     //пустой TNamedArr, если AIdEstimate = null (сметы еще нет)
     function LoadEstimateArray(AIdEstimate: Variant): TNamedArr;
@@ -490,9 +515,12 @@ end;
 function TOrders.SetEstimateQnt(IdEstimate: Integer; Qnt: extended): Boolean;
 begin
   Q.QExecSql('update estimate_items set qnt = round(qnt1 * :qnt_or$f, 1) where id_estimate = :id_estimate$i', [Qnt, IdEstimate]);
+  //пересчет производного поля qnt не является изменением состава сметы (dt_changed не трогаем),
+  //но само по себе является изменением, влияющим на актуальность открытой на редактирование сметы
+  Q.QExecSql('update estimates set dt_changed_any = :dt$d where id = :id_estimate$i', [Now, IdEstimate]);
 end;
 
-function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False): Integer;
+function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False): Integer;
 //загружаем смету для изделия в заказе либо стандартного изделия
 //смета грузится из файла для стандартного изделия, на основании наименования изделия для доп. комплектации (стандартной и нет),
 //на основании сметы, уже загруженной для изделия в справочнике, в случае вызова для стандартного изделия в заказе
@@ -530,8 +558,8 @@ var
   EstBefore: TNamedArr;
   MdiRes: TMDIResult;
   EstLogSource: Integer;
+  Ctx: TEstimateApplyContext;
 begin
-{(*}
   InputType:= mrYes;
   OpenEditEstimateDialog:= False;
   if IdStdItem <> null then begin
@@ -646,6 +674,26 @@ begin
   EstBefore := LoadEstimateArray(IdEstimate);
   EstLogSource := S.IIf(IsOrItemStd, 4, 3);
 
+  //контекст применения результата к БД (см. ApplyEstimateArray) собираем заранее и безусловно - он нужен
+  //для всех веток ниже, в т.ч. асинхронно, из колбэка немодального диалога редактирования
+  Ctx.IdEstimate := IdEstimate;
+  Ctx.IdOrder := IdOrder;
+  Ctx.IdOrderItem := IdOrderItem;
+  Ctx.IdStdItem := IdStdItem;
+  Ctx.OrderIdUchet := OrderIdUchet;
+  Ctx.OrQnt := OrQnt;
+  Ctx.IsEstimateEmpty := IsEstimateEmpty;
+  Ctx.OrDtEst := OrDtEst;
+  Ctx.OrSlash := OrSlash;
+  Ctx.ParentIdEstimate := ParentIdEstimate;
+  Ctx.OrName := OrName;
+  Ctx.OneItem := OneItem;
+  Ctx.QntChanged := QntChanged;
+  Ctx.IsOrItemStd := IsOrItemStd;
+  Ctx.Silent := Silent;
+  Ctx.EstBefore := EstBefore;
+  Ctx.EstLogSource := EstLogSource;
+
   if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged) then begin
     //предварительно загрузим группы и единицы бкад - если грузится одна смета, то перечитываем, иначе читаем только если еще не загружен
     LoadBcadGroups(OneItem);
@@ -662,16 +710,51 @@ begin
       EstDlgHasInput := True;
       EstDlgInputItems := LoadEstimateEditArray(IdEstimate);
       EstDlgSourceUsed := 3;
-      MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable], fEdit,
-        S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
-      EstDlgHasInput := False;
-      if MdiRes.ModalResult <> mrOk then
+      Ctx.FileName := FileName;
+      //ADoc = '*' - фреймворк подставит имя класса формы; вместе с myfoMultiCopy и AID = айди стандартного
+      //изделия/позиции заказа (то же значение, что форма использует как свой ID для загрузки данных - см.
+      //TFrmOGedtEstimate.PrepareForm) это включает блокировку повторного открытия ТОЙ ЖЕ сметы (окно поднимется
+      //на передний план), но разрешает параллельно открывать разные сметы (см. TFrmBasicMdi.TestMultiInstances)
+      if AModal then begin
+        MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
+          S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
+        EstDlgHasInput := False;
+        if MdiRes.ModalResult <> mrOk then
+          Exit;
+        Ctx.EstLogSource := EstDlgSourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
+        SetLength(Est, EstDlgResultItems.Count);
+        for i := 0 to EstDlgResultItems.Count - 1 do
+          Est[i] := [EstDlgResultItems.GetValue(i, 'name'), EstDlgResultItems.GetValue(i, 'id_group'),
+            EstDlgResultItems.GetValue(i, 'id_unit'), EstDlgResultItems.GetValue(i, 'qnt1'), EstDlgResultItems.GetValue(i, 'comm'),
+            EstDlgResultItems.GetValue(i, 'id_or_std_item')];
+      end
+      else begin
+        //немодальный режим: диалог откроется и вернет управление немедленно; собственно сохранение (и, соответственно,
+        //применение Ctx к БД) произойдет позже и асинхронно, когда пользователь нажмет "сохранить" внутри диалога.
+        //ВНИМАНИЕ: в отличие от модального режима, здесь НЕ уточняем EstLogSource по EstDlgSourceUsed (загрузка из
+        //файла/буфера внутри диалога) - это общий (на все открытые диалоги) боковой канал, и если параллельно
+        //открыт еще один немодальный диалог, его значение может быть уже перезаписано к моменту сохранения;
+        //источник в этом случае всегда останется 3 (см. выше) - на источник записи в estimate_change_log это влияет,
+        //на сами данные - нет
+        EstDlgOnApply :=
+          procedure
+          var
+            LocalEst: TVarDynArray2;
+            k: Integer;
+          begin
+            SetLength(LocalEst, EstDlgResultItems.Count);
+            for k := 0 to EstDlgResultItems.Count - 1 do
+              LocalEst[k] := [EstDlgResultItems.GetValue(k, 'name'), EstDlgResultItems.GetValue(k, 'id_group'),
+                EstDlgResultItems.GetValue(k, 'id_unit'), EstDlgResultItems.GetValue(k, 'qnt1'), EstDlgResultItems.GetValue(k, 'comm'),
+                EstDlgResultItems.GetValue(k, 'id_or_std_item')];
+            Orders.ApplyEstimateArray(Ctx, LocalEst);
+          end;
+        TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
+          S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
+        EstDlgHasInput := False;
+        Result := 1; //диалог открыт немодально; реальный результат сохранения будет позже, асинхронно
         Exit;
-      EstLogSource := EstDlgSourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
-      SetLength(Est, EstDlgResultItems.Count);
-      for i := 0 to EstDlgResultItems.Count - 1 do
-        Est[i] := [EstDlgResultItems.GetValue(i, 'name'), EstDlgResultItems.GetValue(i, 'id_group'),
-          EstDlgResultItems.GetValue(i, 'id_unit'), EstDlgResultItems.GetValue(i, 'qnt1'), EstDlgResultItems.GetValue(i, 'comm')];
+      end;
     end;
   end
   else if ((IsEstimateEmpty = 1) and not IsOrItemStd) then begin
@@ -680,45 +763,64 @@ begin
     Est := [];
   end;
 
+  //применение массива к БД (модальный путь и все прочие ветки, кроме немодальной - та выходит выше через Exit)
+  Result := ApplyEstimateArray(Ctx, Est);
+  IdEstimate := Ctx.IdEstimate; //мог быть назначен при создании новой сметы
+{*)}
+end;
+
+function TOrders.ApplyEstimateArray(var Ctx: TEstimateApplyContext; const Est: TVarDynArray2): Integer;
+//применяет массив позиций сметы (Est) к БД в рамках контекста Ctx - см. комментарий к объявлению метода
+var
+  Res: Integer;
+  i: Integer;
+  va1: TVarDynArray;
+  st2: string;
+  b: Boolean;
+  DtNow: TDateTime;
+begin
+  DtNow := Now;
   ShowWaitForm('Производится загрузка сметы...');
   Q.QBeginTrans(True);
   repeat
     Res := 1;
-    if (IdOrderItem <> null) and (S.NNum(OrQnt) = 0) then begin
+    if (Ctx.IdOrderItem <> null) and (S.NNum(Ctx.OrQnt) = 0) then begin
     //если это смета по позиции заказа, и по ней количество равно нули, то сметы не создаем, а если она уже есть - удаляем
-      if IdEstimate = null then
+      if Ctx.IdEstimate = null then
         Break
       else
-        Res := Q.QSave('d', 'estimates', '', 'id$i', [IdEstimate]);
+        Res := Q.QSave('d', 'estimates', '', 'id$i', [Ctx.IdEstimate]);
       if Res = -1 then
         Break;
     end
     else begin
     //во всех остальных случаях
     //создадим смету
-      Res := Q.QSave(S.IIFStr(IdEstimate = null, 'i', 'u')[1], 'estimates', '',
-       'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d',
-       [IdEstimate, IdStdItem, IdOrderItem, IsEstimateEmpty, Date]);
+    //dt_changed/dt_changed_any фиксируем здесь явно (замена ненадежных триггеров trg_estimate_items_aiud_r/trg_estimate_items_master,
+    //которые были удалены из БД - см. d_estimates.sql)
+      Res := Q.QSave(S.IIFStr(Ctx.IdEstimate = null, 'i', 'u')[1], 'estimates', '',
+       'id$i;id_std_item$i;id_order_item$i;isempty$i;dt$d;dt_changed$d;dt_changed_any$d',
+       [Ctx.IdEstimate, Ctx.IdStdItem, Ctx.IdOrderItem, Ctx.IsEstimateEmpty, Date, DtNow, DtNow]);
       if Res = -1 then Break;
-      if IdEstimate = null then
-        IdEstimate := Res
+      if Ctx.IdEstimate = null then
+        Ctx.IdEstimate := Res
       else
         //если создается пустая смета (признак заказа Без сметы), то удалим все позицци если они были
-        if IsEstimateEmpty
-          then Q.QExecSql('delete from estimate_items where id_estimate = :id_estimate$i', [IdEstimate]);
+        if Ctx.IsEstimateEmpty
+          then Q.QExecSql('delete from estimate_items where id_estimate = :id_estimate$i', [Ctx.IdEstimate]);
         //если уже была ранее создана, то все позиции пометим на удаление
-        Res := Q.QExecSql('update estimate_items set deleted = 1 where id_estimate = :id_estimate$i', [IdEstimate]);
+        Res := Q.QExecSql('update estimate_items set deleted = 1 where id_estimate = :id_estimate$i', [Ctx.IdEstimate]);
       if Res = -1 then
         Break;
-      if QntChanged then begin
+      if Ctx.QntChanged then begin
       //коррекция количества в смете, передается айди заказа, процедура сама находит количество в заказе
-        va1 := Q.QCallStoredProc('p_CorrectEstimateQnt', 'idorderitem$i', [IdOrderItem]);
+        va1 := Q.QCallStoredProc('p_CorrectEstimateQnt', 'idorderitem$i', [Ctx.IdOrderItem]);
         if Length(va1) = 0 then
           Res := -1;
       end
-      else if IsOrItemStd then begin
+      else if Ctx.IsOrItemStd then begin
       //копируем из стандартной сметы (p_copyestimate устарела, помечена --!- в d_estimates.sql)
-        va1 := Q.QCallStoredProc('p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f', [IdEstimate, ParentIdEstimate, OrQnt]);
+        va1 := Q.QCallStoredProc('p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f', [Ctx.IdEstimate, Ctx.ParentIdEstimate, Ctx.OrQnt]);
         if Length(va1) = 0 then
           Res := -1;
       end
@@ -727,8 +829,8 @@ begin
         for i := 0 to High(Est) do begin
           try
             va1 := Q.QCallStoredProc('p_createestimateitem',
-            'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f',
-             [IdEstimate, Est[i][1], Est[i][0], Est[i][2], Est[i][4], Est[i][3], Est[i][3]]
+            'pid_estimate$i;pid_group$i;pname$s;pid_unit$i;pcomment$s;pqnt1$f;pqnt$f;pid_or_std_item$i',
+             [Ctx.IdEstimate, Est[i][1], Est[i][0], Est[i][2], Est[i][4], Est[i][3], Est[i][3], Est[i][5]]
              );
             if Length(va1) = 0 then
               Res := -1;
@@ -745,46 +847,46 @@ begin
     //удалим позиции, которые остались отмечены на удаление
       if Res = -1 then
         Break;
-      Res := Q.QExecSql('delete from estimate_items where deleted = 1 and id_estimate = :id_estimate$i', [IdEstimate]);
+      Res := Q.QExecSql('delete from estimate_items where deleted = 1 and id_estimate = :id_estimate$i', [Ctx.IdEstimate]);
       if Res = -1 then
         Break;
     //++
     //скорректируем смету с учетом автозамены, проставим количества для итм
-      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [IdEstimate])) = 0 then
+      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [Ctx.IdEstimate])) = 0 then
         Break;
     //удалим смету, если в ней нет ни одного элемента
-      Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [IdEstimate]);
+      Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [Ctx.IdEstimate]);
     end;
     //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
-    if (IdOrderItem <> null) and (OneItem)
-      then SyncOrderWithITM(OrderIdUchet, [IdOrderItem], False);
+    if (Ctx.IdOrderItem <> null) and (Ctx.OneItem)
+      then SyncOrderWithITM(Ctx.OrderIdUchet, [Ctx.IdOrderItem], False);
     //запишем в лог про ручном вводе сметы к нестандартному изделию или ручном обновлении для стандартного изделия в заказе
     //также запишем даты создания и обновления сметы в таблицу слешей
-    if (IdOrder = null) and (IdOrderItem <> null) and not Silent then begin
-      Q.QExecSql('update order_items set dt_est = :dt_est$d, dt_est_last = :dt_est_last$d where id = :id$i', [S.IIf(OrDtEst = null, Date, OrDtEst), Date, IdOrderItem]);
-      ToOrderAudit(ORDER_AUDIT_ESTIMATE, OrDtEst <> null, OrSlash);
+    if (Ctx.IdOrder = null) and (Ctx.IdOrderItem <> null) and not Ctx.Silent then begin
+      Q.QExecSql('update order_items set dt_est = :dt_est$d, dt_est_last = :dt_est_last$d where id = :id$i', [S.IIf(Ctx.OrDtEst = null, Date, Ctx.OrDtEst), Date, Ctx.IdOrderItem]);
+      ToOrderAudit(ORDER_AUDIT_ESTIMATE, Ctx.OrDtEst <> null, Ctx.OrSlash);
     end;
   until True;
   Q.QCommitOrRollback(Res <> -1);
   if not Q.CommitSuccess then begin
-    if (IdOrderItem <> null)
-      then MyWarningMessage('Смета ' + S.IIfStr(IdOrderItem <> null, 'к изделию "' + OrName + '" ') + 'не загружена!')
+    if (Ctx.IdOrderItem <> null)
+      then MyWarningMessage('Смета ' + S.IIfStr(Ctx.IdOrderItem <> null, 'к изделию "' + Ctx.OrName + '" ') + 'не загружена!')
   end
   else begin
     //залогируем изменения состава сметы (пересчет количества по QntChanged - не логируем, см. комментарий к LoadEstimate)
-    if not QntChanged then
-      LogEstimateChange(IdEstimate, S.IIf(EstBefore.Count = 0, 0, EstLogSource),
-        BuildEstimateDiffText(EstBefore, LoadEstimateArray(IdEstimate)));
-    if not Silent then begin
+    if not Ctx.QntChanged then
+      LogEstimateChange(Ctx.IdEstimate, S.IIf(Ctx.EstBefore.Count = 0, 0, Ctx.EstLogSource),
+        BuildEstimateDiffText(Ctx.EstBefore, LoadEstimateArray(Ctx.IdEstimate)));
+    if not Ctx.Silent then begin
       //Только для подгрузки нестандартной сметы по заказу - сформируем отправку сметы в каталог заказа и по почте
-      if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged or (IdStdItem <> null) or not OneItem) then begin
+      if not ((Ctx.IsEstimateEmpty = 1) or Ctx.IsOrItemStd or Ctx.QntChanged or (Ctx.IdStdItem <> null) or not Ctx.OneItem) then begin
         st2 := '';
         b := False;
-        if Q.QLoadValue('select dt_aggr_estimate from orders where id =:id$i', [OrderIdUchet]) <> null then begin
+        if Q.QLoadValue('select dt_aggr_estimate from orders where id =:id$i', [Ctx.OrderIdUchet]) <> null then begin
           FrmXDedtMemo.ShowDialog(nil, 'AttachEstimate', 'Комментарий к смете', '', st2);
           b := True;
         end;
-        TaskForSendEstimate(OrderIdUchet, IdOrderItem, FileName, [], b, st2);
+        TaskForSendEstimate(Ctx.OrderIdUchet, Ctx.IdOrderItem, Ctx.FileName, [], b, st2);
       end;
       if Length(Est) > 0 then
         MyInfoMessage('Смета из ' + IntToStr(Length(Est)) + ' позици' + S.GetEnding(Length(Est), 'и', 'й', 'й') + ' успешно загружена.')
@@ -793,7 +895,6 @@ begin
     end;
   end;
   Result := Res;
-{*)}
 end;
 
 function TOrders.LoadEstimateArray(AIdEstimate: Variant): TNamedArr;
