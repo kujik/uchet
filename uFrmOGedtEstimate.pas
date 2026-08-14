@@ -1,4 +1,90 @@
-﻿unit uFrmOGedtEstimate;
+﻿{
+Диалог ввода/редактирования сметы (позиций сметы - estimate_items) к стандартному изделию либо
+к позиции (изделию) заказа - в зависимости от AddParam (1 - стандартное изделие, ID = его айди;
+0 - позиция заказа, ID = айди order_items).
+
+ОТКРЫТИЕ ДИАЛОГА
+Открывать этот диалог следует только через обертку TOrders.LoadEstimate (uOrders.pas), а не
+напрямую через ShowModal2/.Show - обертка берет на себя создание записи в estimates при первом
+сохранении, проверку признака "без сметы" у стандартного изделия, подготовку бокового канала
+(см. ниже) и уникальный ключ блокировки повторного открытия окна. Пример корректного вызова из
+кода самого диалога - см. Frg1CellButtonClick, кнопка "Смета" (переход к смете сметной позиции).
+
+МОДАЛЬНЫЙ И НЕМОДАЛЬНЫЙ РЕЖИМЫ
+LoadEstimate открывает диалог модально (ShowModal2, AModal = True) либо немодально (.Show,
+AModal = False по умолчанию). В модальном режиме обертка дожидается закрытия диалога и сама
+сохраняет результат в БД. В немодальном режиме .Show возвращает управление немедленно, а
+собственно сохранение происходит позже, асинхронно - когда пользователь нажмет "Ок" в уже
+открытом диалоге, SaveEstimate вызывает заранее подготовленный оберткой колбэк FOnApply (копия
+OnApply из канала, см. ниже), и уже он пишет данные в БД (TOrders.ApplyEstimateArray).
+
+ДАННЫЕ ВСЕГДА ЧЕРЕЗ МАССИВ
+При вызове через обертку диалог всегда работает в режиме FUseInputArray = True и сам не читает
+и не пишет estimate_items в БД. Текущий состав сметы обертка передает в готовом виде (через канал,
+поле InputItems), результат редактирования диалог возвращает тем же способом (ResultItems), а
+собственно запись в БД (создание/обновление позиций, простановка дат изменения и т.п.) целиком
+выполняет TOrders.ApplyEstimateArray на стороне обертки. Если диалог все же открыт в обход
+обертки (FUseInputArray = False) - сохранение ничего не делает, см. SaveEstimate.
+
+БОКОВОЙ КАНАЛ (EstDlgChannels, см. TEstDlgChannel и EstDlgChannelOpen/Find/AddSource/SetResult/Close)
+Общая для модуля структура EstDlgChannels (объявлена ниже) используется вместо параметров, т.к.
+.Show/ShowModal2 не дают вызывающему коду прямого доступа к созданному экземпляру формы. Это
+МАССИВ записей, а не одна общая запись на все диалоги - каждая запись привязана к своему Id (см.
+TEstDlgChannel), и в качестве Id используется то же значение, которым уже пользуется блокировка
+повторного открытия окна (AID в TOrders.LoadEstimate, оно же ID у самого диалога - см.
+PrepareForm). Поскольку в рамках одного процесса нельзя открыть одну и ту же смету дважды (см.
+следующий раздел), у любых одновременно открытых немодальных диалогов заведомо разные Id, и их
+записи в EstDlgChannels никогда не пересекаются - в отличие от прежней реализации на общих (одних
+на все диалоги) переменных, где, например, поле "источник загрузки" могло быть перезаписано
+ДРУГИМ одновременно открытым немодальным диалогом раньше, чем текущий диалог будет сохранен, и
+источник в лог изменений (estimate_change_log.source) для немодального режима принципиально
+нельзя было уточнить корректно.
+Запись канала создает обертка (EstDlgChannelOpen) непосредственно перед ShowModal2/.Show; диалог
+читает ее в PrepareForm (HasInput/InputItems/OnApply) и обновляет при загрузке из файла/буфера
+(SourceUsed - см. LoadFromXls/LoadFromBuffer). Удаляется запись (EstDlgChannelClose) либо
+оберткой - сразу после того как она использовала результат (в модальном режиме - сразу после
+ShowModal2, в немодальном - изнутри колбэка OnApply, при сохранении), либо самим диалогом, в
+FormClose, если диалог закрыт БЕЗ сохранения (Отмена/крестик) - в этом случае ни обертка, ни
+OnApply не вызываются и не удалят запись сами.
+
+SourceUsed (см. TEstDlgChannel) - это СПИСОК кодов канала изменения через запятую (string, не
+одиночный Integer), т.к. за одно открытие диалога может быть использовано несколько каналов
+(например, загрузка из xls, а затем еще и ручная правка нескольких позиций) - см.
+estimate_change_log.source (d_estimates.sql) и просмотрщик истории изменений сметы
+(uFrmOWrepEstimateChanges.pas), который переводит коды в текст. Открывается канал (EstDlgChannelOpen)
+всегда с пустым SourceUsed; коды добавляются по мере использования через EstDlgChannelAddSource
+(без дублирования одного и того же кода) - автоматически из LoadFromXls (код 1) и LoadFromBuffer
+(код 2), а код 3 (ручное редактирование) - только явным вызовом извне публичного метода
+MarkManualInputChannel (см. ниже) - этот вызов НЕ добавлен в код диалога автоматически.
+
+ОДНОВРЕМЕННОЕ РЕДАКТИРОВАНИЕ ОДНОЙ И ТОЙ ЖЕ СМЕТЫ РАЗНЫМИ ПОЛЬЗОВАТЕЛЯМИ
+Блокировка повторного открытия (см. TOrders.LoadEstimate, TFrmBasicMdi.TestMultiInstances,
+Wh.BringToFrontIfExists) хранит список открытых окон в памяти конкретного запущенного процесса
+Учет.exe - она работает только в пределах одного процесса и сама по себе не защищает от того, что
+смету одновременно откроют и будут редактировать разные пользователи на разных компьютерах.
+Для этого в PrepareForm дополнительно берется серверная блокировка по документу (см. FormDbLock,
+Q.DBLock, таблица adm_locks) по тому же ключу (FormDoc, ID) - если смету в момент открытия уже
+редактирует другой пользователь, Mode понижается до fView (только просмотр) с предупреждающим
+сообщением (текст формирует сам Q.DBLock), грид переводится в режим только чтения (см.
+Frg1.Opt.SetGridOperations в PrepareForm), а кнопки загрузки/замены сметы скрываются (см.
+PrepareFormAdd) - т.е. конфликт одновременного редактирования предотвращается заранее, а не
+обнаруживается постфактум. Снимается блокировка автоматически при закрытии формы (см.
+TFrmBasicMdi.FormClose) - никаких дополнительных действий для ее освобождения не требуется. Для
+только что создаваемой сметы (Mode = fAdd, FIdEstimate еще null) блокировка не берется вовсе -
+как и для любых других fAdd-диалогов в проекте (см. Q.DBLock - блокирует только fEdit/fDelete).
+Само сохранение (TOrders.ApplyEstimateArray), тем не менее, по-прежнему каждый раз полностью
+пересобирает состав сметы по массиву, снятому в редакторе (все текущие позиции сначала помечаются
+на удаление, затем заново создаются/обновляются по переданному массиву, а оставшиеся помеченными -
+удаляются) - серверная блокировка защищает от ОДНОВРЕМЕННОГО редактирования, но не от устаревшего
+снимка вообще (например, если первый пользователь успел закрыть диалог и снять блокировку до
+того, как второй его открыл, - тогда второй все равно откроется в режиме редактирования со своим,
+уже не самым свежим на момент сохранения, снимком). Для обнаружения такой ситуации в estimates
+добавлено поле dt_changed_any (дата любого изменения сметы, проставляется в коде - см.
+TOrders.ApplyEstimateArray), но сама проверка "не изменилась ли смета с момента открытия диалога"
+пока не реализована - на данный момент это поле только фиксируется, но нигде не сравнивается и не
+используется.
+}
+unit uFrmOGedtEstimate;
 interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
@@ -10,63 +96,100 @@ uses
 type
   TFrmOGedtEstimate = class(TFrmBasicEditabelGrid)
   private
-    FIdEstimate: Variant;
-    Err, Err2: TVarDynArray;
+    //контекст текущей сметы (см. PrepareForm)
+    FIdEstimate: Variant;     //айди сметы (estimates.id); null, если смета еще не создана (режим добавления, см. Mode := fAdd) -
+                               //тип именно Variant, а не Integer: значение приходит из QLoadValue и может быть null
     FIdOfStdItem: Integer;    //айди стандартного изделия, к которому смета (непосредственно, или из спецификации заказа)
-    FIdOfOrder: Integer;      //айди заказа, в составе которого данное изделие
-    FGroupOfItem: Integer;    //группа стандартных изделий, к которой относится изделие сметы
-    FTypeOfItem: string;      //тип изделия, к которому относиттся смета (Н,П,О,ПФ)
-    FQntOfItem: Extended;     //количество единиц изделия заказа
-    FFormatCaption: string;
-    FName: string;
+    FGroupOfItem: Integer;    //группа (не подгруппа!) стандартных изделий, к которой относится изделие сметы
+    FTypeOfItem: string;      //тип изделия, к которому относится смета (Н,П,О,ПФ)
+    FFormatCaption: string;   //подпись формата/спецификации для заголовка окна (только для AddParam = 1)
+    FName: string;            //наименование изделия для заголовка окна
     FUseInputArray: Boolean;  //признак того, что смета получена/передается через массив (обертка), а не через прямую привязку к БД
-    FOnApply: TProc;          //колбэк для немодального режима (см. EstDlgOnApply) - копируется из бокового канала
-                               //в момент создания формы (см. PrepareForm), т.к. в отличие от EstDlgOnApply,
-                               //привязан к КОНКРЕТНОМУ экземпляру и вызывается позже, асинхронно, при сохранении;
-                               //если не назначен - ведем себя как раньше (модальный режим, см. SaveEstimate)
-    FInVerifyTable: Boolean;  //защита от реентерабельного вызова: VerifyTable вызывает Frg1.IsTableCorrect, которая сама
-                               //по каждой ячейке дергает обратно OnVeryfyAndCorrectValues (=Frg1VeryfyAndCorrect), а тот снова
-                               //вызывает VerifyTable - без этой защиты уходим в бесконечную рекурсию и переполнение стека
+    FOnApply: TProc;          //колбэк для немодального режима - копируется из записи бокового канала (см.
+                               //TEstDlgChannel/EstDlgChannelOpen) в момент создания формы (см. PrepareForm),
+                               //т.к. привязан к КОНКРЕТНОМУ экземпляру и вызывается позже, асинхронно, при
+                               //сохранении; если не назначен - сохранение через массив не выполняет никаких
+                               //действий (см. SaveEstimate)
+    FEstimateSaved: Boolean;  //признак того, что сохранение через массив (SaveEstimate) успешно состоялось -
+                               //используется в FormClose, чтобы понять, нужно ли самостоятельно подчистить за
+                               //собой запись бокового канала (если диалог закрыт без сохранения - см. FormClose)
+
+    //подготовка и закрытие формы
     function  PrepareForm: Boolean; override;
     function  PrepareFormAdd: Boolean; override;
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);  //не override (в TFrmBasicMdi не virtual) - см.
+                                                                      //общий комментарий в начале модуля, раздел
+                                                                      //про боковой канал
+
+    //обработчики событий грида сметных позиций (Frg1)
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
+    procedure LoadItemFromDB(Row: Integer);
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
-    procedure btnClick(Sender: TObject); override;
+    procedure btnClick(Sender: TObject); override;  //похоже, не используется - тело ничего не делает с считанным Tag
+
+    //проверка данных
     procedure VerifyRow(Row: Integer; Filtered: Boolean);
-    procedure VerifyBeforeSave; override;
-    function  Save: Boolean; override;
     procedure VerifyTable(AReloadStatus: boolean = False);
+    procedure VerifyBeforeSave; override;
+
+    //сохранение и загрузка сметы
+    function  Save: Boolean; override;
+    function  SaveEstimate: Boolean;
     procedure LoadFromDB;
     procedure LoadFromXls;
     procedure LoadFromBuffer;
     procedure SaveEstimateToBuffer;
-    procedure LoadItemFromDB(Row: Integer);
-    function  SaveEstimate: Boolean;
   protected
   public
+    //фиксирует использование канала "ручное редактирование" (код 3) для текущей сметы, в дополнение к уже
+    //зафиксированным (загрузка из xls/буфера) - см. TEstDlgChannel.SourceUsed и общий комментарий в начале
+    //модуля, раздел БОКОВОЙ КАНАЛ. Вызывается извне, самим вызывающим кодом (не из этого модуля) - в тех
+    //местах, где он считает нужным явно пометить, что пользователь редактировал смету вручную. Если диалог
+    //открыт в обход обертки TOrders.LoadEstimate (FUseInputArray = False) - ничего не делает
+    procedure MarkManualInputChannel;
   end;
 
 
+type
+  //запись "бокового канала" (см. общий комментарий в начале модуля) для ОДНОГО открытого диалога сметы,
+  //идентифицируемого Id - тем же значением, которым уже пользуется блокировка повторного открытия окна
+  //(AID в TOrders.LoadEstimate, оно же ID у самого диалога)
+  TEstDlgChannel = record
+    Id: Variant;
+    HasInput: Boolean;      //True - диалог должен работать с массивом (InputItems/ResultItems), а не с БД напрямую
+    InputItems: TNamedArr;  //входной массив (текущий состав сметы: name;id_group;id_unit;qnt1;comm)
+    ResultItems: TNamedArr; //результат редактирования (тот же состав полей), заполняется при успешном сохранении
+    SourceUsed: string;     //список кодов источника (через запятую, без дублей) для estimate_change_log.source
+                             //(см. TOrders.LogEstimateChange, EstDlgChannelAddSource) - изначально пустая строка
+    OnApply: TProc;         //колбэк для немодального режима (.Show вместо ShowModal2) - см. FOnApply
+  end;
+
 var
   FrmOGedtEstimate: TFrmOGedtEstimate;
-  //"боковой канал" для передачи массива-снимка сметы в диалог и получения отредактированного массива обратно,
-  //используется оберткой (TOrders.LoadEstimate), т.к. .Show/.ShowModal2 не дают прямого доступа к создаваемому экземпляру формы;
-  //устанавливаются вызывающим кодом непосредственно перед TFrmOGedtEstimate.ShowModal2 и читаются сразу после его завершения
-  EstDlgHasInput: Boolean;         //True - диалог должен работать с массивом (EstDlgInputItems/EstDlgResultItems), а не с БД напрямую
-  EstDlgInputItems: TNamedArr;     //входной массив (текущий состав сметы: name;id_group;id_unit;qnt1;comm)
-  EstDlgResultItems: TNamedArr;    //результат редактирования (тот же состав полей), заполняется при успешном сохранении (Res.ModalResult = mrOk)
-  EstDlgSourceUsed: Integer;       //источник данных для estimate_change_log.source (см. TOrders.LogEstimateChange)
-  EstDlgOnApply: TProc;            //колбэк для немодального режима (.Show вместо ShowModal2): диалог вызывает его вместо
-                                    //ожидания синхронного возврата, копируется в FOnApply конкретного экземпляра при создании
-                                    //формы (см. PrepareForm) - т.к. при нескольких одновременно открытых немодальных диалогах
-                                    //этот боковой канал (в отличие от EstDlgHasInput/EstDlgInputItems, которые читаются
-                                    //синхронно и сразу же при создании) не может оставаться общим на все время редактирования
+  //"боковой канал" для передачи массива-снимка сметы в диалог и получения отредактированного массива обратно -
+  //массив записей (TEstDlgChannel), по одной на каждый одновременно открытый диалог сметы, см. TEstDlgChannel и
+  //общий комментарий в начале модуля
+  EstDlgChannels: array of TEstDlgChannel;
+
+//найти запись канала по Id; возвращает False, если записи нет (диалог открыт в обход обертки TOrders.LoadEstimate)
+function EstDlgChannelFind(const AId: Variant; out AChannel: TEstDlgChannel): Boolean;
+//создать (или полностью перезаписать, если уже была) запись канала для AId - вызывается оберткой перед ShowModal2/.Show;
+//ASourceUsed - начальный список кодов источника (как правило, пустая строка - см. общий комментарий в начале модуля)
+procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc);
+//добавить код канала ASourceCode в список SourceUsed уже открытого канала AId (без дублирования, если код там уже есть) -
+//вызывается диалогом из LoadFromXls/LoadFromBuffer, а также извне - из MarkManualInputChannel; если записи нет - ничего не делает
+procedure EstDlgChannelAddSource(const AId: Variant; ASourceCode: Integer);
+//обновить ResultItems для уже открытого канала AId - вызывается диалогом из SaveEstimate; если записи нет - ничего не делает
+procedure EstDlgChannelSetResult(const AId: Variant; const AResultItems: TNamedArr);
+//удалить запись канала для AId (если она есть) - вызывается либо оберткой сразу после использования результата,
+//либо самим диалогом в FormClose, если диалог был закрыт без сохранения
+procedure EstDlgChannelClose(const AId: Variant);
 
 
 implementation
@@ -87,11 +210,83 @@ const
   cIdKrep = 103;
 
 
-function TFrmOGedtEstimate.PrepareForm: Boolean;
+function EstDlgChannelIndex(const AId: Variant): Integer;
+//внутренний поиск по массиву EstDlgChannels; -1, если не найдено
+begin
+  for var i := 0 to High(EstDlgChannels) do
+    if EstDlgChannels[i].Id = AId then
+      Exit(i);
+  Result := -1;
+end;
+
+function EstDlgChannelFind(const AId: Variant; out AChannel: TEstDlgChannel): Boolean;
 var
   i: Integer;
+begin
+  i := EstDlgChannelIndex(AId);
+  Result := i >= 0;
+  if Result then
+    AChannel := EstDlgChannels[i];
+end;
+
+procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc);
+var
+  i: Integer;
+  LChannel: TEstDlgChannel;
+begin
+  LChannel.Id := AId;
+  LChannel.HasInput := AHasInput;
+  LChannel.InputItems := AInputItems;
+  LChannel.SourceUsed := ASourceUsed;
+  LChannel.OnApply := AOnApply;
+  i := EstDlgChannelIndex(AId);
+  if i < 0 then begin
+    SetLength(EstDlgChannels, Length(EstDlgChannels) + 1);
+    i := High(EstDlgChannels);
+  end;
+  EstDlgChannels[i] := LChannel;
+end;
+
+procedure EstDlgChannelAddSource(const AId: Variant; ASourceCode: Integer);
+var
+  i: Integer;
+  LCode: string;
+begin
+  i := EstDlgChannelIndex(AId);
+  if i < 0 then
+    Exit;
+  LCode := IntToStr(ASourceCode);
+  //не дублируем код, если он уже есть в списке (сравниваем с разделителями по краям, чтобы не спутать, например, "1" и "21")
+  if Pos(',' + LCode + ',', ',' + EstDlgChannels[i].SourceUsed + ',') > 0 then
+    Exit;
+  if EstDlgChannels[i].SourceUsed = ''
+    then EstDlgChannels[i].SourceUsed := LCode
+    else EstDlgChannels[i].SourceUsed := EstDlgChannels[i].SourceUsed + ',' + LCode;
+end;
+
+procedure EstDlgChannelSetResult(const AId: Variant; const AResultItems: TNamedArr);
+var
+  i: Integer;
+begin
+  i := EstDlgChannelIndex(AId);
+  if i >= 0 then
+    EstDlgChannels[i].ResultItems := AResultItems;
+end;
+
+procedure EstDlgChannelClose(const AId: Variant);
+var
+  i: Integer;
+begin
+  i := EstDlgChannelIndex(AId);
+  if i >= 0 then
+    Delete(EstDlgChannels, i, 1);
+end;
+
+function TFrmOGedtEstimate.PrepareForm: Boolean;
+var
   o: TFrDBGridEditOptions;
   va: TVarDynArray;
+  LChannel: TEstDlgChannel;
 begin
   Caption := 'Смета';
   //получим айди сметы по айди стандартного изделия или заказа
@@ -107,19 +302,22 @@ begin
     FIdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
     va := Q.QLoadRow('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID]);
     FName := va[0];
-    FIdOfOrder := va[1];
-    FQntOfItem := va[2];
     FTypeOfItem := 'И';
   end;
   //если сметы еще нет, то перейдем в режим добавления
   if  FIdEstimate = null then
     Mode := fAdd;
-  //получим айди группы (не подгруппыв!) стандартных изделий для данной позиции
+  //защита от одновременного редактирования одной и той же сметы разными пользователями (серверная блокировка,
+  //см. общий комментарий в начале модуля) - для fAdd ничего не делает, для fEdit при конфликте понижает Mode
+  //до fView и показывает предупреждение с именем пользователя, уже редактирующего смету
+  if FormDbLock = fNone then
+    Exit;
+  //получим айди группы (не подгруппы!) стандартных изделий для данной позиции
   FGroupOfItem := Q.QLoadValue('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]);
   //заголовочный лейбл
   FTitleTexts := [S.IIf(AddParam = 1, 'Смета к ' +
     S.Decode([FTypeOfItem, 'О', 'отгрузочному стандартному изделию', 'П', 'производственному стандартному изделию', 'ПФ', 'полуфабрикату', 'стандартному изделию'])  + '  ' +
-    FFormatCaption + ':', 'Смета кизделию заказа:'),  {'$FF0000' + } FName];
+    FFormatCaption + ':', 'Смета к изделию заказа:'),  {'$FF0000' + } FName];
   pnlTop.Height := 50;
   //прочитаем список групп и ед.изм.
   Orders.LoadBcadGroups(True);
@@ -143,15 +341,16 @@ begin
     ['null as errinfo$s','_errinfo','40']
   ]);
   Frg1.Opt.SetTable('v_estimate_for_edit_dlg', 'estimate_items');
-  Frg1.Opt.SetGridOperations('uaid');
+  //если смету сейчас редактирует другой пользователь (см. FormDbLock выше) - грид только для чтения
+  Frg1.Opt.SetGridOperations(S.IIf(Mode = fEdit, 'uaid', ''));
   Frg1.Opt.SetWhere('where id_estimate = :id$i order by id_group');
-  //если данные для редактирования переданы оберткой (TOrders.LoadEstimate) через массив - используем их вместо прямой загрузки из БД;
-  //признак фиксируем на момент подготовки формы, т.к. EstDlgHasInput - это временный "боковой канал", сбрасываемый вызывающим кодом сразу после ShowModal2
-  FUseInputArray := EstDlgHasInput;
-  FOnApply := EstDlgOnApply;
-  EstDlgOnApply := nil; //боковой канал одноразовый, чтобы не "утек" в следующий диалог, если вызывающий код забудет его сбросить
-  if FUseInputArray then
-    Frg1.SetInitData(EstDlgInputItems)
+  //если данные для редактирования переданы оберткой (TOrders.LoadEstimate) через боковой канал - используем их
+  //вместо прямой загрузки из БД; канал ищем по своему ID (см. TEstDlgChannel, общий комментарий в начале модуля)
+  FUseInputArray := EstDlgChannelFind(ID, LChannel) and LChannel.HasInput;
+  if FUseInputArray then begin
+    FOnApply := LChannel.OnApply;
+    Frg1.SetInitData(LChannel.InputItems);
+  end
   else
     Frg1.SetInitData('*', [FIdEstimate]);
   Frg1.Opt.Caption := 'Сметные позиции';
@@ -175,11 +374,14 @@ end;
 
 function TFrmOGedtEstimate.PrepareFormAdd: Boolean;
 begin
+  //загрузка/замена сметы целиком (mbtExcel/mbtLoad/mbtFromClipboard) недоступна, если смету сейчас редактирует
+  //другой пользователь и мы открылись в режиме "только просмотр" (см. FormDbLock в PrepareForm); mbtToClipboard -
+  //это чтение (копирование в буфер), его оставляем доступным всегда
   Frg1.Opt.SetButtons(4, [
-    [mbtExcel, True, 'Загрузить смету из файла'],
-    [mbtLoad, True, 'Загрузить текущую смету из БД'],
+    [mbtExcel, Mode = fEdit, 'Загрузить смету из файла'],
+    [mbtLoad, Mode = fEdit, 'Загрузить текущую смету из БД'],
     [mbtToClipboard, True, 'Скопировать смету в буфер'],
-    [mbtFromClipboard, True, 'Вставить смету из буфера'],
+    [mbtFromClipboard, Mode = fEdit, 'Вставить смету из буфера'],
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
@@ -190,6 +392,26 @@ begin
   );
   Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow]);
   Result := True;
+end;
+
+procedure TFrmOGedtEstimate.FormClose(Sender: TObject; var Action: TCloseAction);
+//не override - в TFrmBasicMdi.FormClose (см. uFrmBasicMdi.pas) не virtual, поэтому просто переопределяем
+//метод с тем же именем; т.к. связывание события OnClose идет по имени метода, это корректно перехватывает
+//закрытие формы и для этого (унаследованного через .dfm) обработчика - подробнее см. общий комментарий в
+//начале модуля, раздел про боковой канал
+begin
+  //если диалог закрывается БЕЗ успешного сохранения (Отмена/крестик) - ни обертка (после ShowModal2 в
+  //модальном режиме), ни колбэк FOnApply (в немодальном) не вызовутся и не удалят за собой запись бокового
+  //канала; подчистим ее сами, чтобы она не осталась висеть до следующего открытия той же сметы
+  if FUseInputArray and not FEstimateSaved then
+    EstDlgChannelClose(ID);
+  inherited FormClose(Sender, Action);
+end;
+
+procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
+begin
+   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
 end;
 
 procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -210,23 +432,15 @@ begin
   end;
 end;
 
-procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
-begin
-   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
-   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
-end;
-
 procedure TFrmOGedtEstimate.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 //обработка нажатий кнопок в таблице
-var
-  va: TVarDynArray;
-  i: Integer;
 begin
   Wh.SelectDialogResult := [];
   if TCellButtonEh(Sender).Hint = 'Выбрать материал' then begin
     Wh.ExecReference(myfrm_R_bCAD_Nomencl_SelMaterials, Self, [myfoDialog, myfoModal], null);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
+    MarkManualInputChannel;
     Frg1.SetValue('name', Wh.SelectDialogResult[2]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
@@ -234,6 +448,7 @@ begin
     Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], FGroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
+    MarkManualInputChannel;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
@@ -241,6 +456,7 @@ begin
     Wh.ExecReference(myfrm_R_OrderStdItems_SelProdStdItem, Self, [myfoDialog, myfoModal], FGroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
+    MarkManualInputChannel;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
@@ -248,6 +464,7 @@ begin
     Wh.ExecReference(myfrm_R_OrderStdItems_SelProdNStdItem, Self, [myfoDialog, myfoModal], FGroupOfItem);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
+    MarkManualInputChannel;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
@@ -255,6 +472,7 @@ begin
     Wh.ExecReference(myfrm_R_OrderStdItems_SEL, Self, [myfoDialog, myfoModal], null);
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
+    MarkManualInputChannel;
     Frg1.SetValue('name', Wh.SelectDialogResult[1]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
@@ -273,9 +491,34 @@ begin
   //VerifyTable;
 end;
 
-procedure TFrmOGedtEstimate.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
-//выполняем действия после изменения данных в ячейках таблицы вручну
+procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
+//загрузим из базы информацию по данному наименованию сметной позиции
+var
+  na: TNamedArr;
 begin
+  Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, True)], na);
+  if na.Count > 0 then
+    Frg1.LoadRow(na, Row, True);
+end;
+
+procedure TFrmOGedtEstimate.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
+//после ручного ввода данных в ячейку
+begin
+  //при изменении наименования - загрузим по нему информацию из бд
+  if A.InArray(FieldName, ['name']) then
+    LoadItemFromDB(Fr.RecNo - 1);
+  //при изменении наименования или группы проверяем валидность, выполняя хранимую процедуру
+  if A.InArray(FieldName, ['name', 'id_group']) then begin
+    VerifyRow(Fr.RecNo - 1, True);
+  end;
+end;
+
+procedure TFrmOGedtEstimate.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+//выполняем действия после изменения данных в ячейках таблицы вручную (тело пока пустое)
+begin
+  //проставим признак Ручное изменение, если менялись наименование или количество
+  if (Mode = dbgvBefore) and A.InArray(FieldName, ['name', 'qnt1']) then
+    MarkManualInputChannel;
 end;
 
 procedure TFrmOGedtEstimate.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -310,9 +553,15 @@ begin
   //запретим менять ед.изм. у готовых изделий и пф
   if ((Fr.GetValueI('id_group') = cIdProduct) or (Fr.GetValueI('id_group') = cIdSemiproduct)) and ({(Fr.CurrField = 'id_group') or }(Fr.CurrField = 'id_unit')) then
     ReadOnly := True;
-  //заперетим ставить галку покупное, если это не ПФ
+  //запретим ставить галку покупное, если это не ПФ
   if (Fr.GetValueI('id_group') <> cIdSemiproduct) and (Fr.CurrField =  'purchase') then
     ReadOnly := True;
+end;
+
+procedure TFrmOGedtEstimate.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+begin
+  if (Fr.CurrField = 'err') and (Fr.GetValueI('err') <> 0) then
+    MyInfoMessage(Fr.GetValueS('errinfo'), 1);
 end;
 
 procedure TFrmOGedtEstimate.btnClick(Sender: TObject);
@@ -320,24 +569,6 @@ var
   Tag: Integer;
 begin
   Tag := TControl(Self).Tag;
-end;
-
-procedure TFrmOGedtEstimate.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
-//после ручного ввода данных в ячейку
-begin
-  //при изменении наименования - загрузим по нему информацию из бд
-  if A.InArray(FieldName, ['name']) then
-    LoadItemFromDB(Fr.RecNo - 1);
-  //при изменепнии наименования или группы проверяем валидность, выполняя хранимую процедуру
-  if A.InArray(FieldName, ['name', 'id_group']) then begin
-    VerifyRow(Fr.RecNo - 1, True);
-  end;
-end;
-
-procedure TFrmOGedtEstimate.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
-begin
-  if (Fr.CurrField = 'err') and (Fr.GetValueI('err') <> 0) then
-    MyInfoMessage(Fr.GetValueS('errinfo'), 1);
 end;
 
 procedure TFrmOGedtEstimate.VerifyRow(Row: Integer; Filtered: Boolean);
@@ -367,6 +598,14 @@ begin
   Frg1.SetValue('type_of_item', Row, Filtered, Res[c + 4]);
   Frg1.SetValue('newpos', Row, Filtered, Res[c + 5]);
   Frg1.SetValue('errinfo', Row, Filtered, Res[c + 6]);
+end;
+
+procedure TFrmOGedtEstimate.VerifyTable(AReloadStatus: boolean = False);
+//проверяем данные в таблице путем вызова хранимой процедуры для каждой строки
+begin
+  for var i := 0 to Frg1.GetRawCount - 1 do begin
+    VerifyRow(i, False);
+  end;
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -401,17 +640,29 @@ begin
   end;
 end;
 
-procedure TFrmOGedtEstimate.VerifyTable(AReloadStatus: boolean = False);
-//проверяем данные в таблице путем вызова хранимой процедуры для каждой строки
-begin
-  for var i := 0 to Frg1.GetRawCount - 1 do begin
-    VerifyRow(i, False);
-  end;
-end;
-
 function TFrmOGedtEstimate.Save: Boolean;
 begin
   Result := SaveEstimate;
+end;
+
+function TFrmOGedtEstimate.SaveEstimate: Boolean;
+begin
+  Result := False;
+  if FUseInputArray then begin
+    //проставим признак, что было ручное изменение, в случае если были удалены строки
+    if Frg1.EditData.IdsDeleted.Count > 0 then
+      MarkManualInputChannel;
+    //режим "массив в/массив из" (вызов из обертки TOrders.LoadEstimate) - в БД ничего не пишем, а только
+    //формируем результирующий массив и кладем его в запись бокового канала (по своему ID), откуда его заберет
+    //и сохранит сама обертка
+    EstDlgChannelSetResult(ID, Frg1.ExportToNa('id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm', False));
+    //немодальный режим (.Show): синхронного возврата в обертку не будет, поэтому применяем результат сами -
+    //через колбэк, подготовленный оберткой заранее (см. TOrders.LoadEstimate, ветка AModal = False)
+    if Assigned(FOnApply) then
+      FOnApply();
+    FEstimateSaved := True; //см. FormClose - при успешном сохранении запись канала подчищает сама обертка
+    Result := True;
+  end;
 end;
 
 procedure TFrmOGedtEstimate.LoadFromDB;
@@ -420,28 +671,26 @@ begin
   VerifyTable;
 end;
 
-
 procedure TFrmOGedtEstimate.LoadFromXls;
 //загрузим смету из файла эксель
 var
-  i, j: Integer;
+  i: Integer;
   Est: TVarDynArray2;
   FileName: string;
-  va: TVarDynArray;
-  va1, va2: TVarDynArray2;
+  va2: TVarDynArray2;
   st : string;
 begin
   FileName := '';
   //смету в массив
   if not Orders.EstimateFromFile(FileName, Est) then
     Exit;
-  EstDlgSourceUsed := 1;
+  EstDlgChannelAddSource(ID, 1);
   //массив в мемтейбл
   Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');
   st := '';
   //пройдем по данным, проверим в группе Крепёж по короткому имени, нет ли совпадения с именем полуфабриката или изделия в группе изделий для данной сметы
   //(такая ситуация будет при выгрузке из бкад, где в эту группу выгрузятся полуфабрикаты, но без префиксов)
-  //если найдено единственнная такая позиция, то поставим группу, соответсвующую типу изделия, если найдено нсколько - очистим группу
+  //если найдено единственная такая позиция, то поставим группу, соответствующую типу изделия, если найдено несколько - очистим группу
   {for i := 0 to Frg1.GetCount(False) do begin
     if Frg1.GetValueI('id_group', i, False) = cIDKrep then begin  //Крепёж
       va2 := Q.QLoad('select fullname, id_format from v_or_std_items where name = :name$s and type = 0 and id_format = :f$i', [Frg1.GetValue('name', i, False), FGroupOfItem]);
@@ -475,19 +724,15 @@ begin
     MyWarningMessage('Буфер обмена смет пуст!');
     Exit;
   end;
-  EstDlgSourceUsed := 2;
+  EstDlgChannelAddSource(ID, 2);
   Frg1.SetInitData('*', [ID]);
   VerifyTable;
 end;
 
-procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
-//загрузим из базы информацию по данному наименованию сметной позиции
-var
-  na: TNamedArr;
+procedure TFrmOGedtEstimate.MarkManualInputChannel;
 begin
-  Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, True)], na);
-  if na.Count > 0 then
-    Frg1.LoadRow(na, Row, True);
+  if FUseInputArray then
+    EstDlgChannelAddSource(ID, 3);
 end;
 
 procedure TFrmOGedtEstimate.SaveEstimateToBuffer;
@@ -495,24 +740,6 @@ begin
   if MyQuestionMessage('В буфер будет скопирована уже сохраненная смета! Изменения, сделанные в этом окне без сохранения сметы, скопированы не будут! Продолжить?') <> mrYes then
     Exit;
    Orders.CopyEstimateToBuffer(S.IIf(AddParam = 1, ID, null), S.IIf(AddParam <> 1, ID, null));
-end;
-
-function TFrmOGedtEstimate.SaveEstimate: Boolean;
-var
-  Res: Integer;
-  i, j: Integer;
-begin
-  Result := False;
-  if FUseInputArray then begin
-    //режим "массив в/массив из" (вызов из обертки TOrders.LoadEstimate) - в БД ничего не пишем,
-    //а только формируем результирующий массив, который обертка заберет из EstDlgResultItems и сохранит сама
-    EstDlgResultItems := Frg1.ExportToNa('id;id_estimate;id_or_std_item;id_item_estimate;type_of_item;id_group;name;id_unit;qnt1;qnt_on_stock;comm', False);
-    //немодальный режим (.Show): синхронного возврата в обертку не будет, поэтому применяем результат сами -
-    //через колбэк, подготовленный оберткой заранее (см. TOrders.LoadEstimate, ветка AModal = False)
-    if Assigned(FOnApply) then
-      FOnApply();
-    Result := True;
-  end;
 end;
 
 end.

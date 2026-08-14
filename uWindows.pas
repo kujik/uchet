@@ -141,7 +141,7 @@ uses
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
-  uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWedtSetOrderRoute,
+  uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWedtSetOrderRoute,
 
   uFrmPWedtPlnOps,
 
@@ -905,6 +905,8 @@ begin
     TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Rep_OrderChanges then
     TFrmOWRepOrderChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
+  else if AFormType = myfrm_Rep_EstimateChanges then
+    TFrmOWrepEstimateChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_SetOrderRoute then
     TFrmOWedtSetOrderRoute.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Candidates_Ad then

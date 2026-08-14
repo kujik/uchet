@@ -28,7 +28,7 @@ type
   //контекст применения массива позиций сметы к БД (см. TOrders.ApplyEstimateArray).
   //вынесен в отдельный тип/метод из LoadEstimate, чтобы применение можно было вызвать не только
   //синхронно (после ShowModal2), но и асинхронно - из колбэка диалога при немодальном редактировании
-  //(см. EstDlgOnApply в uFrmOGedtEstimate.pas)
+  //(см. TEstDlgChannel.OnApply в uFrmOGedtEstimate.pas)
   TEstimateApplyContext = record
     IdEstimate: Variant;             //var - при первом сохранении будет заполнен айди созданной сметы
     IdOrder, IdOrderItem, IdStdItem: Variant;
@@ -38,7 +38,7 @@ type
     OrName, FileName: string;
     OneItem, QntChanged, IsOrItemStd, Silent: Boolean;
     EstBefore: TNamedArr;
-    EstLogSource: Integer;
+    EstLogSource: string;   //список кодов источника через запятую (см. TEstDlgChannel.SourceUsed в uFrmOGedtEstimate.pas)
   end;
 
   TOrders = class
@@ -72,7 +72,7 @@ type
     //AModal = False - диалог редактирования (если открывается) показывается немодально (.Show); применение
     //результата к БД произойдет асинхронно, из колбэка диалога, в момент сохранения пользователем;
     //Result в этом случае не является признаком успеха сохранения (он еще не произошло) - только признаком,
-    //что диалог был открыт (см. TFrmOGedtEstimate.SaveEstimate/EstDlgOnApply)
+    //что диалог был открыт (см. TFrmOGedtEstimate.SaveEstimate, TEstDlgChannel.OnApply)
     function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False): Integer;
     //применяет отредактированный массив позиций сметы (Est) к БД: создает/обновляет заголовок estimates
     //(в т.ч. dt_changed/dt_changed_any), пересоздает позиции estimate_items, синхронизирует с ИТМ,
@@ -88,8 +88,9 @@ type
     //сравнивает два снимка состава сметы (см. LoadEstimateArray) по наименованию без учета группы,
     //возвращает текст диффа построчно (добавлено/удалено/было->стало), пустую строку - если различий нет
     function BuildEstimateDiffText(AOld, ANew: TNamedArr): string;
-    //пишет строку в estimate_change_log, если AChanges не пуст или ASource = 0 (факт первичной загрузки)
-    procedure LogEstimateChange(AIdEstimate: Variant; ASource: Integer; AChanges: string);
+    //пишет строку в estimate_change_log, если AChanges не пуст или ASource = '0' (факт первичной загрузки);
+    //ASource - список кодов через запятую (см. TEstDlgChannel.SourceUsed в uFrmOGedtEstimate.pas)
+    procedure LogEstimateChange(AIdEstimate: Variant; ASource: string; AChanges: string);
     //удаляет смету для переданного стандартного изделия. если не Silent, то перед этим спросит.
     //вернет True, кроме случая ошибки при выполнениии запроса удаления
     function RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;
@@ -557,8 +558,10 @@ var
   OpenEditEstimateDialog: Boolean;
   EstBefore: TNamedArr;
   MdiRes: TMDIResult;
-  EstLogSource: Integer;
+  EstLogSource: string;
   Ctx: TEstimateApplyContext;
+  AID: Variant;             //ключ бокового канала сметы - тот же, что и у блокировки повторного открытия окна (см. uFrmOGedtEstimate.pas)
+  LEstChannel: TEstDlgChannel;
 begin
   InputType:= mrYes;
   OpenEditEstimateDialog:= False;
@@ -672,7 +675,7 @@ begin
 
   //снимок состава сметы "до" - для сравнения и записи в лог изменений
   EstBefore := LoadEstimateArray(IdEstimate);
-  EstLogSource := S.IIf(IsOrItemStd, 4, 3);
+  EstLogSource := S.IIf(IsOrItemStd, '4', '3');
 
   //контекст применения результата к БД (см. ApplyEstimateArray) собираем заранее и безусловно - он нужен
   //для всех веток ниже, в т.ч. асинхронно, из колбэка немодального диалога редактирования
@@ -705,53 +708,58 @@ begin
     end
     else begin}
     if OpenEditEstimateDialog then begin
-      //диалог-сетка для ввода/редактирования сметы; передаем текущий состав сметы через массив,
-      //получаем обратно отредактированный состав тем же способом (см. uFrmOGedtEstimate.pas)
-      EstDlgHasInput := True;
-      EstDlgInputItems := LoadEstimateEditArray(IdEstimate);
-      EstDlgSourceUsed := 3;
-      Ctx.FileName := FileName;
+      //диалог-сетка для ввода/редактирования сметы; передаем текущий состав сметы через боковой канал (по ключу
+      //AID), получаем обратно отредактированный состав тем же способом (см. TEstDlgChannel в uFrmOGedtEstimate.pas)
       //ADoc = '*' - фреймворк подставит имя класса формы; вместе с myfoMultiCopy и AID = айди стандартного
-      //изделия/позиции заказа (то же значение, что форма использует как свой ID для загрузки данных - см.
-      //TFrmOGedtEstimate.PrepareForm) это включает блокировку повторного открытия ТОЙ ЖЕ сметы (окно поднимется
-      //на передний план), но разрешает параллельно открывать разные сметы (см. TFrmBasicMdi.TestMultiInstances)
+      //изделия/позиции заказа (то же значение, что форма использует как свой ID для загрузки данных, и как ключ
+      //бокового канала - см. TFrmOGedtEstimate.PrepareForm) это включает блокировку повторного открытия ТОЙ ЖЕ
+      //сметы (окно поднимется на передний план), но разрешает параллельно открывать разные сметы (см.
+      //TFrmBasicMdi.TestMultiInstances)
+      AID := S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem);
+      Ctx.FileName := FileName;
       if AModal then begin
+        EstDlgChannelOpen(AID, True, LoadEstimateEditArray(IdEstimate), '', nil);
         MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
-          S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
-        EstDlgHasInput := False;
+          AID, S.IIf(IdStdItem <> null, 1, 0));
+        if (MdiRes.ModalResult = mrOk) and EstDlgChannelFind(AID, LEstChannel) then begin
+          Ctx.EstLogSource := LEstChannel.SourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
+          SetLength(Est, LEstChannel.ResultItems.Count);
+          for i := 0 to LEstChannel.ResultItems.Count - 1 do
+            Est[i] := [LEstChannel.ResultItems.GetValue(i, 'name'), LEstChannel.ResultItems.GetValue(i, 'id_group'),
+              LEstChannel.ResultItems.GetValue(i, 'id_unit'), LEstChannel.ResultItems.GetValue(i, 'qnt1'), LEstChannel.ResultItems.GetValue(i, 'comm'),
+              LEstChannel.ResultItems.GetValue(i, 'id_or_std_item')];
+        end;
+        EstDlgChannelClose(AID); //как правило, к этому моменту уже удалена самим диалогом (см. TFrmOGedtEstimate.FormClose) - на всякий случай подчистим и здесь
         if MdiRes.ModalResult <> mrOk then
           Exit;
-        Ctx.EstLogSource := EstDlgSourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
-        SetLength(Est, EstDlgResultItems.Count);
-        for i := 0 to EstDlgResultItems.Count - 1 do
-          Est[i] := [EstDlgResultItems.GetValue(i, 'name'), EstDlgResultItems.GetValue(i, 'id_group'),
-            EstDlgResultItems.GetValue(i, 'id_unit'), EstDlgResultItems.GetValue(i, 'qnt1'), EstDlgResultItems.GetValue(i, 'comm'),
-            EstDlgResultItems.GetValue(i, 'id_or_std_item')];
       end
       else begin
         //немодальный режим: диалог откроется и вернет управление немедленно; собственно сохранение (и, соответственно,
         //применение Ctx к БД) произойдет позже и асинхронно, когда пользователь нажмет "сохранить" внутри диалога.
-        //ВНИМАНИЕ: в отличие от модального режима, здесь НЕ уточняем EstLogSource по EstDlgSourceUsed (загрузка из
-        //файла/буфера внутри диалога) - это общий (на все открытые диалоги) боковой канал, и если параллельно
-        //открыт еще один немодальный диалог, его значение может быть уже перезаписано к моменту сохранения;
-        //источник в этом случае всегда останется 3 (см. выше) - на источник записи в estimate_change_log это влияет,
-        //на сами данные - нет
-        EstDlgOnApply :=
+        //канал привязан к AID (замыкается в колбэке), поэтому, в отличие от прежней реализации на общих на все
+        //диалоги переменных, источник записи в лог изменений (estimate_change_log.source) корректно уточняется
+        //и для немодального режима - параллельно открытый другой немодальный диалог сметы работает с другим AID
+        //и повлиять на этот канал не может (см. общий комментарий в начале uFrmOGedtEstimate.pas)
+        EstDlgChannelOpen(AID, True, LoadEstimateEditArray(IdEstimate), '',
           procedure
           var
             LocalEst: TVarDynArray2;
             k: Integer;
+            LChannel: TEstDlgChannel;
           begin
-            SetLength(LocalEst, EstDlgResultItems.Count);
-            for k := 0 to EstDlgResultItems.Count - 1 do
-              LocalEst[k] := [EstDlgResultItems.GetValue(k, 'name'), EstDlgResultItems.GetValue(k, 'id_group'),
-                EstDlgResultItems.GetValue(k, 'id_unit'), EstDlgResultItems.GetValue(k, 'qnt1'), EstDlgResultItems.GetValue(k, 'comm'),
-                EstDlgResultItems.GetValue(k, 'id_or_std_item')];
+            if not EstDlgChannelFind(AID, LChannel) then
+              Exit;
+            Ctx.EstLogSource := LChannel.SourceUsed;
+            SetLength(LocalEst, LChannel.ResultItems.Count);
+            for k := 0 to LChannel.ResultItems.Count - 1 do
+              LocalEst[k] := [LChannel.ResultItems.GetValue(k, 'name'), LChannel.ResultItems.GetValue(k, 'id_group'),
+                LChannel.ResultItems.GetValue(k, 'id_unit'), LChannel.ResultItems.GetValue(k, 'qnt1'), LChannel.ResultItems.GetValue(k, 'comm'),
+                LChannel.ResultItems.GetValue(k, 'id_or_std_item')];
+            EstDlgChannelClose(AID);
             Orders.ApplyEstimateArray(Ctx, LocalEst);
-          end;
+          end);
         TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
-          S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem), S.IIf(IdStdItem <> null, 1, 0));
-        EstDlgHasInput := False;
+          AID, S.IIf(IdStdItem <> null, 1, 0));
         Result := 1; //диалог открыт немодально; реальный результат сохранения будет позже, асинхронно
         Exit;
       end;
@@ -875,7 +883,7 @@ begin
   else begin
     //залогируем изменения состава сметы (пересчет количества по QntChanged - не логируем, см. комментарий к LoadEstimate)
     if not Ctx.QntChanged then
-      LogEstimateChange(Ctx.IdEstimate, S.IIf(Ctx.EstBefore.Count = 0, 0, Ctx.EstLogSource),
+      LogEstimateChange(Ctx.IdEstimate, S.IIf(Ctx.EstBefore.Count = 0, '0', Ctx.EstLogSource),
         BuildEstimateDiffText(Ctx.EstBefore, LoadEstimateArray(Ctx.IdEstimate)));
     if not Ctx.Silent then begin
       //Только для подгрузки нестандартной сметы по заказу - сформируем отправку сметы в каталог заказа и по почте
@@ -951,12 +959,13 @@ begin
   Result := A.Implode(Lines, #13#10);
 end;
 
-procedure TOrders.LogEstimateChange(AIdEstimate: Variant; ASource: Integer; AChanges: string);
-//пишет строку в estimate_change_log, если AChanges не пуст или ASource = 0 (факт первичной загрузки)
+procedure TOrders.LogEstimateChange(AIdEstimate: Variant; ASource: string; AChanges: string);
+//пишет строку в estimate_change_log, если AChanges не пуст или ASource = '0' (факт первичной загрузки);
+//ASource - список кодов через запятую (см. TEstDlgChannel.SourceUsed в uFrmOGedtEstimate.pas)
 begin
-  if (AIdEstimate = null) or ((AChanges = '') and (ASource <> 0)) then
+  if (AIdEstimate = null) or ((AChanges = '') and (ASource <> '0')) then
     Exit;
-  Q.QSave('i', 'estimate_change_log', '', 'id$i;id_estimate$i;id_user$i;source$i;changes$s',
+  Q.QSave('i', 'estimate_change_log', '', 'id$i;id_estimate$i;id_user$i;source$s;changes$s',
     [-1, AIdEstimate, User.GetId, ASource, AChanges]);
 end;
 

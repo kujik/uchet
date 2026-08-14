@@ -108,6 +108,7 @@ begin
     Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
       [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1003, True, 'История изменений сметы'],
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
   //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
       [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
@@ -183,6 +184,7 @@ begin
     Frg1.Opt.SetButtons(1,[
       [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[],
       [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1003, True, 'История изменений сметы'],
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
       [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
       [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel]
@@ -260,6 +262,11 @@ begin
       Orders.RemoveEstimateForStdItem(Fr.ID);
       Fr.RefreshGrid;
     end;
+  end
+  else if (Tag = 1003) then begin
+    //просмотр истории изменений сметы стандартного изделия (если это не группа общих изделий)
+    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then
+      Wh.ExecDialog(myfrm_Rep_EstimateChanges, Self, [], fView, Fr.ID, 1);
   end
   else if (Tag = 1001) then begin
     if Orders.AddOrItemXMLFile(Self, Fr.ID, null) then

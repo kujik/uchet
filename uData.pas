@@ -968,6 +968,9 @@ const
   myfrm_Rep_OrdersFinMonitoring='Rep_OrdersFinMonitoring';
   myfrm_J_Orders_SEL = 'J_Orders_SEL';
   myfrm_Rep_OrderChanges='Rep_OrderChange';
+  //просмотр истории изменений конкретной сметы (estimate_change_log) - см. uFrmOWrepEstimateChanges.pas;
+  //AddParam = 1/ID=id стандартного изделия либо AddParam <> 1/ID=id позиции заказа (как у myfrm_Dlg_EdtEstimate)
+  myfrm_Rep_EstimateChanges='Rep_EstimateChanges';
 
   {планирование}
   myfrm_R_PnlOpsPainting = 'R_PnlOpsPainting';
@@ -1083,10 +1086,10 @@ const
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
   myfrm_Dlg_EdtEstimate='Dlg_EdtEstimate';
 
-
   myfrm_Dlg_R_PnlOpsPainting = 'Dlg_R_PnlOpsPainting';
   myfrm_Dlg_PnlOpsForItem = 'Dlg_PnlOpsForItem';
   myfrm_Dlg_SetOrderRoute = 'Dlg_SetOrderRoute';
+
 const
   DefHorizMargin = 5;
   DefVertMargin = 5;

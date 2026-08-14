@@ -1611,15 +1611,20 @@ create global temporary table tmp_estimate_loaded (
 --qnt1/qnt1_itm при изменении количества изделия в заказе, см. p_CorrectEstimateQnt)
 --НЕ логируется - см. явное указание в постановке задачи.
 --
---source - источник/повод изменения сметы:
+--source - источник/повод изменения сметы: список кодов через запятую (за одно редактирование
+--может быть использовано несколько каналов - например, загрузка из xls с последующей ручной
+--правкой нескольких позиций); коды не меняются, просто теперь их может быть несколько сразу -
+--см. TEstDlgChannel.SourceUsed/EstDlgChannelAddSource/TFrmOGedtEstimate.MarkManualInputChannel
+--в uFrmOGedtEstimate.pas. Расшифровка кодов в текст - на стороне просмотрщика истории изменений
+--сметы (uFrmOWrepEstimateChanges.pas), не в БД:
 --  0 - первичная загрузка сметы (смета была пуста, isempty/нет позиций)
 --  1 - загрузка из xls-файла (Bt_LoadClick в старом диалоге)
 --  2 - копирование из "буфера" - временной сметы пользователя (estimates.id_buffer,
 --      см. Bt_PasteEstimateClick/Bt_CopyEstimateClick в старом диалоге)
---  3 - ручное редактирование состава сметы в диалоге
+--  3 - ручное редактирование состава сметы в диалоге (см. MarkManualInputChannel)
 --  4 - обновление сметы изделия заказа при обновлении из сметы стандартного изделия
 --      (RefreshEstimatesToOrder/LoadEstimate, ветка IsOrItemStd; P_CreatePspForSemiproducts)
---для source in (1,2,3,4), если смета не была пуста, changes должен содержать сравнение
+--для source, содержащего любой из кодов 1,2,3,4, если смета не была пуста, changes должен содержать сравнение
 --входного и выходного массивов по наименованию (без учета группы), формат по строкам:
 --  <наименование> <ед.изм.> <кол-во> - добавлено
 --  <наименование> <ед.изм.> <кол-во> - удалено
@@ -1634,12 +1639,23 @@ create table estimate_change_log ( --$+
   id_estimate number(11),                      --смета, к которой относится изменение
   dt date,                                      --дата/время изменения, проставляется триггером
   id_user number(11),                           --пользователь, выполнивший изменение
-  source number(2),                             --источник изменения, см. константы выше
+  source varchar2(50),                           --источник изменения (список кодов через запятую), см. константы выше
   changes clob,                                 --текст изменений, см. формат выше
   constraint pk_estimate_change_log primary key (id),
   constraint fk_estimate_change_log_est foreign key (id_estimate) references estimates(id) on delete cascade,
   constraint fk_estimate_change_log_user foreign key (id_user) references adm_users(id)
 );
+
+--$go begin
+--миграция source: number(2) с одним кодом -> varchar2(50) со списком кодов через запятую;
+--через modify не проходит (ORA-01439 - таблица уже не пустая, лог уже накапливался), поэтому
+--через промежуточный столбец
+alter table estimate_change_log add source_txt varchar2(50);
+update estimate_change_log set source_txt = to_char(source);
+alter table estimate_change_log drop column source;
+alter table estimate_change_log rename column source_txt to source;
+!rebuild v_estimate_change_log
+--$go end
 
 create index idx_estimate_change_log_est on estimate_change_log(id_estimate, dt); --$+
 

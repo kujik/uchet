@@ -216,7 +216,8 @@ uses
   uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
   uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo},
   uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges},
-  uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute};
+  uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute},
+  uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges};
 
 var
   MT: Integer;

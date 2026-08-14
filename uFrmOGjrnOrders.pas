@@ -225,6 +225,7 @@ begin
   Frg2.Opt.SetWhere('where id_order = :id_order$i and qnt > 0 order by slash');
   Frg2.Opt.SetButtons(1, [
     [mbtRefresh], [], [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate)], [-mbtCopyEstimate, True, 'Скопировать смету в буфер'],
+    [-1006, True, 'История изменений сметы'],
     [],[-1002, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Прикрепить документы КНС'],
     [],[-mbtCustom_Order_AttachThnDoc, User.Role(rOr_D_Order_AttachThnDocuments)],
     [],[-1003, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper, 'Загрузить XML'],
@@ -571,6 +572,12 @@ begin
     mbtCopyEstimate:
       begin
         Orders.CopyEstimateToBuffer(null, fr.ID);
+      end;
+    1006: //просмотр истории изменений сметы позиции заказа
+      begin
+        //AddParam = 0 (не null!) - см. TFrmOWrepEstimateChanges.Prepare, сравнение "AddParam = 1" с Variant Null
+        //вместо 0 вызовет EVariantInvalidOpError; та же осторожность, что и в TOrders.LoadEstimate/S.IIf(...,1,0)
+        Wh.ExecDialog(myfrm_Rep_EstimateChanges, Self, [], fView, Fr.ID, 0);
       end;
     mbtCustom_Order_AttachThnDoc:
       begin
