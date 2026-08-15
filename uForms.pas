@@ -1765,9 +1765,11 @@ begin
   end;
   if CType = cntCheck then begin
     Result := TDbCheckBoxEh.Create(FSelf);
+    //TDbCheckBoxEh(Result).Width := 200;
   end;
   if CType = cntCheckX then begin
     Result := TDbCheckBoxEh.Create(FSelf);
+    //TDbCheckBoxEh(Result).Width := 200;
     TDbCheckBoxEh(Result).Checked := True;
   end;
   Result.Parent := AParent;
@@ -4499,8 +4501,16 @@ begin
       // рекурсивный обход для дочерних контейнеров
       if c is TWinControl then
         AutoSizeCheckBoxes(TWinControl(c), AIncludeControls, AExcludeControls, AIncludeNames, AExcludeNames);
-      // проверяем, что это чекбокс
-      if not (c is TCustomCheckBox) then
+      // проверяем, что это чекбокс - ВАЖНО: TDBCheckBoxEh (EhLib) НЕ наследуется от стандартного VCL
+      // TCustomCheckBox, поэтому одной этой проверки недостаточно - без учёта TDBCheckBoxEh чекбоксы EhLib
+      // просто пропускались этим циклом (Continue) и никогда не доходили до ветки "if CheckBox is TDBCheckBoxEh"
+      // чуть ниже, которая явно рассчитана на их обработку (для них отдельно считываются Font/Caption) - то
+      // есть код обработки TDBCheckBoxEh уже был написан, но фактически был мёртвым из-за этого фильтра, и
+      // метод НИКОГДА не подгонял ширину чекбоксов EhLib под текст (отсюда обрезанный текст "Редактировать
+      // одно"/"Создать одно" у chb_OneOnly в uFrmODedtOrStdItem.pas, несмотря на явный вызов этого метода).
+      // Приведение c к TCustomCheckBox ниже безопасно и для TDBCheckBoxEh: используются только общие для
+      // TControl свойства (Margins/Padding/Width) плюс is-проверки по РЕАЛЬНОМУ классу объекта.
+      if not ((c is TCustomCheckBox) or (c is TDBCheckBoxEh)) then
         Continue;
       CheckBox := TCustomCheckBox(c);
       // фильтры включения

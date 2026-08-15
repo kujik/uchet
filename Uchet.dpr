@@ -87,7 +87,6 @@ uses
   uFrmTest in 'uFrmTest.pas' {FrmTest},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
-  D_MainSettings in 'D_MainSettings.pas' {Dlg_MainSettings},
   D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
   D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
@@ -98,7 +97,6 @@ uses
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
   D_R_Order_Plans in 'D_R_Order_Plans.pas' {Dlg_R_Order_Plans},
-  D_ItmInfo in 'D_ItmInfo.pas' {Dlg_ItmInfo},
   D_DelayedInProd in 'D_DelayedInProd.pas' {Dlg_DelayedInProd},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
@@ -343,7 +341,6 @@ begin
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
 //  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TDlg_SetPassword, Dlg_SetPassword);
-  Application.CreateForm(TDlg_MainSettings, Dlg_MainSettings);
   Application.CreateForm(TDlg_ModuleSettings, Dlg_ModuleSettings);
   Application.CreateForm(TDlg_Rep_Smeta, Dlg_Rep_Smeta);
   Application.CreateForm(TDlg_Otk, Dlg_Otk);

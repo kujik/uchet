@@ -8,8 +8,8 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
   inherited pnlFrmMain: TPanel
     Width = 837
     Height = 413
-    ExplicitWidth = 837
-    ExplicitHeight = 413
+    ExplicitWidth = 833
+    ExplicitHeight = 412
     inherited pnlFrmClient: TPanel
       Width = 827
       Height = 364

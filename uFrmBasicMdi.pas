@@ -302,6 +302,10 @@ type
     procedure ArrangeControlsOnPanel(APanel: TPanel);                                  // расстановка контролов на панели с центрированием
     procedure SetButtonsVisibilityAndArrange(const ShowIDs, HideIDs: TVarDynArray); overload;   // для всех панелей (Main, L, R, C)
     procedure SetButtonsVisibilityAndArrange(APanelName: string; const ShowIDs, HideIDs: TVarDynArray); overload; // для конкретной панели по имени
+    // сброс кеша порядка контролов панели (FPanelOrderCache) - вызывать после ДИНАМИЧЕСКОГО добавления/удаления
+    // контролов на панели (например, Cth.CreateControls в потомке), иначе GetPanelOrder продолжит отдавать
+    // старый список без нового контрола, и ArrangeControlsOnPanel не учтёт его ширину при пересчёте Width панели
+    procedure InvalidatePanelOrder(APanel: TPanel);
 
     // статические методы для создания и отображения формы
     class function Show(AOwner: TComponent; ADoc: string;
@@ -442,6 +446,21 @@ begin
     BuildPanelOrder(APanel);
     FPanelOrderCache.TryGetValue(APanel, Result);
   end;
+end;
+
+procedure TFrmBasicMdi.InvalidatePanelOrder(APanel: TPanel);
+//удаляет закешированный порядок контролов панели (FPanelOrderCache) - GetPanelOrder строит этот список ОДИН РАЗ,
+//лениво, при первом обращении, и снимком фиксирует APanel.Controls[] на тот момент. Если после этого на панель
+//динамически добавляется новый контрол (например, Cth.CreateControls в потомке уже ПОСЛЕ того, как кеш для
+//этой панели был построен где-то ранее - например, в конструкторе/предыдущем ArrangeControlsOnPanel), кеш
+//остаётся старым НАВСЕГДА - новый контрол не попадёт в Order ни при одном последующем вызове
+//ArrangeControlsOnPanel, и его ширина никогда не будет учтена при пересчёте APanel.Width. Вызывать сразу после
+//динамического добавления/удаления контрола на панели, до первого же ArrangeControlsOnPanel для неё -
+//после сброса GetPanelOrder перестроит список заново (см. её собственный TryGetValue-miss путь).
+begin
+  if not Assigned(APanel) then
+    Exit;
+  FPanelOrderCache.Remove(APanel);
 end;
 
 function TFrmBasicMdi.ArrayContainsId(const AArray: TVarDynArray; AId: Integer): Boolean;

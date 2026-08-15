@@ -57,7 +57,7 @@ end;
 create table bcad_nomencl(
   id number(11),
   name varchar2(1000) unique not null,     --наименование
-  is_purchased number(1) default 0,        --номенклатура является покупной 
+  is_purchased number(1) default 0,        --номенклатура является покупной  --$+
   constraint pk_bcad_nomencl primary key (id)
 );
 

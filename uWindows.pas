@@ -124,7 +124,7 @@ uses
 
 
   D_Order,
-  D_ItmInfo, D_J_Montage,
+  D_J_Montage,
   D_SuppliersMinPart,
   D_Spl_InfoGrid,
   F_Adm_Installer,
@@ -142,6 +142,7 @@ uses
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
   uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWedtSetOrderRoute,
+  uFrmOWItmInfo,
 
   uFrmPWedtPlnOps,
 
@@ -916,7 +917,8 @@ begin
   else if AFormType = myfrm_Dlg_Or_FindNameInEstimates then
     TFrmOWSearchInEstimates.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
   else if AFormType = myfrm_Dlg_Or_ItmInfo then
-    Form := TDlg_ItmInfo.Create(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
+    //D_ItmInfo.pas удален из проекта - функциональность (проверка номенклатуры ИТМ) перенесена в uFrmOWItmInfo
+    TFrmOWItmInfo.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
   else if AFormType = myfrm_Dlg_Bcad_Groups then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'bcad_groups', 'Группа bCAD', 450, 90,
       [['name$s', cntEdit, 'Наименование','1:100']],

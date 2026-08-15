@@ -95,11 +95,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>15817</VerInfo_Build>
+        <VerInfo_Build>15834</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;ADMIN_;TURV_;SRV_;OR;PLN_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.15817;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.08.15 09:21:40;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.15834;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.08.15 16:27:06;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>
@@ -181,9 +181,6 @@
         <DCCReference Include="D_SetPassword.pas">
             <Form>Dlg_SetPassword</Form>
         </DCCReference>
-        <DCCReference Include="D_MainSettings.pas">
-            <Form>Dlg_MainSettings</Form>
-        </DCCReference>
         <DCCReference Include="D_ModuleSettings.pas">
             <Form>Dlg_ModuleSettings</Form>
         </DCCReference>
@@ -214,9 +211,6 @@
         </DCCReference>
         <DCCReference Include="D_R_Order_Plans.pas">
             <Form>Dlg_R_Order_Plans</Form>
-        </DCCReference>
-        <DCCReference Include="D_ItmInfo.pas">
-            <Form>Dlg_ItmInfo</Form>
         </DCCReference>
         <DCCReference Include="D_DelayedInProd.pas">
             <Form>Dlg_DelayedInProd</Form>

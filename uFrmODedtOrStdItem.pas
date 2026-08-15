@@ -92,6 +92,14 @@ type
     //Visible = True, но невидимы, пока пользователь не растянет форму вручную. Взводится в AfterFormActivate
     //(гарантированно после CorrectFormSize) - см. там же.
     FTabsVisReady: Boolean;
+    //id подгрупп (FTabs[1..].IdOrFormatEstimate), временно добавленных в список cmb_id_or_format_estimates
+    //только для отображения на парных вкладках (см. SyncFormatComboWithTabs) - обычный список комбобокса
+    //(LoadCbFormatEstimates) строится только по подгруппам ТОГО ЖЕ типа, что исходная (FItemType), а парные
+    //вкладки всегда ПРОТИВОПОЛОЖНОГО типа, поэтому их подгрупп там нет и без явного добавления значение поля
+    //Формат на этих вкладках отображалось бы пустым (см. SwitchToTab). Список нужен, чтобы при повторном вызове
+    //LoadCounterpartTabs (смена подгруппы на 0-й вкладке в режиме добавления/копирования - см. ControlOnChange)
+    //можно было снять ранее добавленные записи и не копить дубликаты.
+    FComboAppendedIds: TVarDynArray;
     function  Prepare: Boolean; override;
     procedure AfterFormActivate; override;
     procedure ControlOnChange(Sender: TObject); override;
@@ -102,6 +110,9 @@ type
     procedure SetPrefixByFormat;
     //пересоздает вкладки парных изделий (FTabs[1..]) по коду синхронизации (or_format_estimates.sync_group)
     procedure LoadCounterpartTabs;
+    //дополняет список cmb_id_or_format_estimates подгруппами парных вкладок FTabs[1..] (только для отображения,
+    //выбрать их вручную нельзя - см. общий комментарий у FComboAppendedIds); вызывается из LoadCounterpartTabs
+    procedure SyncFormatComboWithTabs;
     procedure pgcFormatChange(Sender: TObject);
     procedure pgcFormatDrawTab(Control: TCustomTabControl; TabIndex: Integer; const Rect: TRect; Active: Boolean);
     //переключение общих контролов (FSyncFields) на данные другой вкладки - см. реализацию
@@ -131,6 +142,51 @@ type
     //отдельным методом, а не только в Prepare, т.к. тип может смениться уже после Prepare, если пользователь
     //выбирает другую подгруппу в комбобоксе Формат (актуально для CallMode = 3, см. ControlOnChange)
     procedure UpdateChbOneOnlyVisible;
+    //проверяет состояние сметы ОТГРУЗОЧНОГО изделия (см. общий комментарий у реализации/у CreateSelfSmeta про
+    //смену модели - смета создается для отгрузочных изделий и ссылается на производственное, а не наоборот).
+    //AIdShipmentItem - id отгрузочного изделия, для которого проверяется смета (Null, если оно еще не
+    //сохранено - новое). AIdProductionItem - id (уже сохраненного к этому моменту) производственного изделия,
+    //на которое должна ссылаться единственная позиция сметы. Возвращает 0 (ничего не требуется), 1 (требуется
+    //создание), 2 (смета уже есть, но отличается - только предупреждаем, не трогаем); ADetails - текст для
+    //диалога подтверждения/предупреждения
+    function CheckSelfSmetaAction(AIdShipmentItem, AIdProductionItem: Variant; const AShipmentDisplayName, AProductionPrefixedName: string; out ADetails: string): Integer;
+    //создает смету отгрузочного изделия (см. CheckSelfSmetaAction) через Orders.ApplyEstimateArray - единственная
+    //позиция ссылается на производственное изделие (по имени через bcad_nomencl И по id через id_or_std_item).
+    //ВАЖНО: открывает и коммитит/откатывает СВОЮ отдельную транзакцию (см. TOrders.ApplyEstimateArray) - вызывать
+    //только ПОСЛЕ фиксации (Q.QCommitTrans) собственной транзакции сохранения изделий, см. комментарий в Save
+    procedure CreateSelfSmeta(AIdShipmentItem, AIdProductionItem: Variant; const AProductionPrefixedName: string);
+    //должна ли вкладка ATabIndex вообще сохраняться - см. подробности у реализации (учитывает "Только одно" и
+    //"Не создавать")
+    function ShouldSaveTab(ATabIndex: Integer): Boolean;
+    //нужна ли вкладке ATabIndex (>0), которая ShouldSaveTab, РЕАЛЬНАЯ запись в БД - см. подробности у
+    //реализации; отличает "нечего менять у уже существующего парного изделия" (синхронизация выключена,
+    //пользователь ничего на этой вкладке не трогал) от настоящего создания/изменения
+    function CounterpartTabNeedsSave(ATabIndex: Integer): Boolean;
+    //разрешает текущее (на момент вызова, с учетом активной вкладки/синхронизации) значение поля AField
+    //(без суффикса типа - см. соглашение FSyncFields) для вкладки ATabIndex - см. подробности у реализации
+    function GetTabFieldValue(ATabIndex: Integer; const AField: string): Variant;
+    //наименование с префиксом подгруппы AIdOrFormatEstimate (см. также FPrefix/SetPrefixByFormat - для 0-й
+    //вкладки то же самое можно получить как FPrefix + '_' + editable-имя, но для других вкладок префикс свой)
+    function GetPrefixedName(AIdOrFormatEstimate: Variant; const AName: string): string;
+    //переименовывает полное (с префиксом подгруппы) наименование в ИТМ (dv.nomenclatura) и bcad_nomencl - общим
+    //методом для 0-й И любой парной вкладки (см. подробности у реализации)
+    procedure RenameNomenclatura(AIdOrFormatEstimate: Variant; const AOldName, ANewName: string; AItemType: Integer);
+    //текст для диалога подтверждения, ЗАРАНЕЕ предсказывающий, что сделает RenameNomenclatura (см. подробности
+    //у реализации) - той же логикой, без изменений в БД
+    function GetNomenclaturaRenamePlanText(AIdOrFormatEstimate: Variant; const AOldName, ANewName: string; AItemType: Integer): string;
+    //id уже существующего (до сохранения) изделия вкладки ATabIndex - см. подробности у реализации
+    function GetTabExistingId(ATabIndex: Integer): Variant;
+    //мандатная (обязательная для каждого сохраняемого изделия, см. общий комментарий в VerifyBeforeSave)
+    //проверка в БД, не занято ли имя (простое/с префиксом) каким-то ДРУГИМ изделием - используется как для 0-й,
+    //так и для остальных сохраняемых вкладок
+    function CheckDuplicateNameInDb(AIdOrFormatEstimate, AExcludeId: Variant; const AName, APrefixedName: string; out AMsg: string): Boolean;
+    //сохраняет изделие парной вкладки ATabIndex (>0) - см. подробности у реализации. Возвращает id
+    //сохраненного/созданного изделия, либо Null при ошибке сохранения (для этого случая - ошибка уже показана
+    //пользователем внутри Q.QSave/QExecSql, ShowError по умолчанию True)
+    function SaveCounterpartTab(ATabIndex: Integer): Variant;
+    //синхронизирует цену/маршрут в шаблонах заказов (order_items с псевдо-id_order) для изделия AId вкладки
+    //ATabIndex - вынесено в общий метод (было только для 0-й вкладки) - см. подробности у реализации
+    procedure SyncOrderItemTemplates(ATabIndex: Integer; AId: Variant);
   protected
     procedure VerifyBeforeSave; override;
     function  Save: Boolean; override;
@@ -148,6 +204,12 @@ implementation
    ;
 
  {$R *.dfm}
+
+const
+  //группа "Готовые изделия" и единица измерения "шт." в bcad_groups/bcad_units (d_estimates.sql) - используются
+  //при автосоздании "самосметы" производственного изделия, см. CheckSelfSmetaAction/CreateSelfSmeta
+  BCAD_GROUP_FINISHED_ITEMS = 104;
+  BCAD_UNIT_PCS = 1;
 
 function TFrmODedtOrStdItem.Prepare: Boolean;
 var
@@ -204,10 +266,23 @@ begin
   //CallMode = 3, где в комбобоксе вперемешку подгруппы всех типов, включая полуфабрикаты - см. ControlOnChange).
   FOneOnly := False;
   if not (Mode in [fView, fDelete]) then begin
-    Cth.CreateControls(pnlFrmBtnsL, cntCheck, S.IIfStr(Mode = fEdit, 'Редактировать одно', 'Создать одно'), 'chb_OneOnly', '', 0, 4, 4);
+    //ВАЖНО: текст подписи специально короткий и ОДИНАКОВЫЙ для режимов "создать"/"редактировать" ("Только
+    //одно", а не "Создать одно"/"Редактировать одно") - в стандартную ширину чекбокса по умолчанию (см.
+    //CreateControls, uForms.pas) не помещался более длинный вариант текста, а автоподгонка ширины под текст
+    //(Cth.AutoSizeCheckBoxes ниже) для TDBCheckBoxEh на практике не работает (проверено - см. TODO ниже,
+    //разбор отложен) - поэтому пока обходим проблему коротким текстом вместо борьбы с шириной контрола.
+    Cth.CreateControls(pnlFrmBtnsL, cntCheck, 'Только одно', 'chb_OneOnly', '', 0, 4, 4);
     TDBCheckBoxEh(Self.FindComponent('chb_OneOnly')).OnClick := ChbOneOnlyClick;
-    //Cth.CreateControls не задаёт ширину чекбокса по тексту (см. её реализацию в uForms.pas) - для более
-    //длинного варианта подписи ("Редактировать одно") текст обрезался; подгоняем ширину под фактический текст
+    //ВАЖНО: сбрасываем кеш порядка контролов панели (InvalidatePanelOrder) сразу после динамического создания
+    //chb_OneOnly, ДО первого же ArrangeControlsOnPanel для этой панели. Причина: GetPanelOrder (uFrmBasicMdi.pas)
+    //кеширует список контролов панели один раз при первом обращении (например, ещё в конструкторе/при более
+    //раннем ArrangeControlsOnPanel), и если это произошло раньше, чем создан chb_OneOnly, кеш навсегда останется
+    //без него - тогда ни один последующий пересчёт ширины панели (в т.ч. ниже, в UpdateChbOneOnlyVisible) не
+    //учтёт чекбокс. Актуально не только для широкого варианта текста - оставляем на будущее.
+    InvalidatePanelOrder(pnlFrmBtnsL);
+    //TODO: подгонка ширины chb_OneOnly под текст (Cth.AutoSizeCheckBoxes) на практике не работает для
+    //TDBCheckBoxEh - см. TODO-список в конце модуля (после end.) с планом на будущее. Пока не убираем вызов -
+    //вреда не приносит, при коротком тексте "Только одно" ширины по умолчанию (см. CreateControls) хватает.
     Cth.AutoSizeCheckBoxes(pnlFrmBtnsL, [], [], ['chb_OneOnly'], []);
   end;
   //видимость (по типу подгруппы) и раскладка панели - см. подробный комментарий в UpdateChbOneOnlyVisible про
@@ -242,7 +317,6 @@ begin
     ['id$i'],
     ['name$s','V=1:400::T'],
     ['price_base$f','V=0:9999999:2:n'],
-    //['price_pp$f','V=0:9999999:2:n'],
     ['wo_estimate$i'],
     ['r0$i'],
     ['by_sgp$i'],
@@ -485,6 +559,37 @@ begin
   end;
 
   pgcFormat.Visible := (not FOneOnly) and (pgcFormat.PageCount > 0);
+  SyncFormatComboWithTabs;
+end;
+
+procedure TFrmODedtOrStdItem.SyncFormatComboWithTabs;
+//см. общий комментарий у FComboAppendedIds в interface-секции. Сначала снимаем записи, добавленные предыдущим
+//вызовом (LoadCounterpartTabs может вызываться повторно - см. ControlOnChange при смене подгруппы 0-й вкладки),
+//затем добавляем по одной записи на каждую парную вкладку (FTabs[1..]), если её подгруппы еще нет в списке
+//(при CallMode = 3 список и так может содержать подгруппы любого типа - дублировать в этом случае не нужно).
+var
+  i, j: Integer;
+  LKey: string;
+begin
+  for i := High(FComboAppendedIds) downto 0 do begin
+    j := cmb_id_or_format_estimates.KeyItems.IndexOf(VarToStr(FComboAppendedIds[i]));
+    if j >= 0 then begin
+      cmb_id_or_format_estimates.Items.Delete(j);
+      cmb_id_or_format_estimates.KeyItems.Delete(j);
+    end;
+  end;
+  SetLength(FComboAppendedIds, 0);
+  for i := 1 to High(FTabs) do begin
+    LKey := VarToStr(FTabs[i].IdOrFormatEstimate);
+    if cmb_id_or_format_estimates.KeyItems.IndexOf(LKey) < 0 then begin
+      //см. комментарий про 3 пробела спереди у LCapt0 в LoadCounterpartTabs - Trim убирает этот резерв,
+      //здесь он не нужен (это не заголовок вкладки, а строка комбобокса)
+      cmb_id_or_format_estimates.Items.Add(Trim(FTabs[i].Sheet.Caption));
+      cmb_id_or_format_estimates.KeyItems.Add(LKey);
+      SetLength(FComboAppendedIds, Length(FComboAppendedIds) + 1);
+      FComboAppendedIds[High(FComboAppendedIds)] := FTabs[i].IdOrFormatEstimate;
+    end;
+  end;
 end;
 
 procedure TFrmODedtOrStdItem.LoadExistingNamesForTab(var ATab: TCounterpartTab);
@@ -530,15 +635,34 @@ procedure TFrmODedtOrStdItem.CheckNameDuplicates;
 //
 //Для вкладок i > 0 (парные подгруппы) совпадение означает, что там уже есть отдельно существующее изделие с
 //таким наименованием - подставляем его данные (цена/маршрут) в поля этой вкладки и снимаем синхронизацию по
-//умолчанию (ApplyExistingItemToTabSlot) - подставляем заново при КАЖДОМ обнаружении, пока совпадение держится
-//(так проще и предсказуемее, чем отслеживать "трогал ли пользователь вкладку вручную", но означает, что ручные
-//правки полей на этой вкладке будут затёрты повторной подстановкой при следующем изменении любого поля формы,
-//пока наименование продолжает совпадать).
+//умолчанию (ApplyExistingItemToTabSlot). ВАЖНО (исправлено - было иначе, см. ниже): подставляем ТОЛЬКО при
+//НОВОМ обнаружении совпадения (переход "не было -> есть", либо сменилась сама найденная строка - например,
+//наименование изменили на другое, тоже совпадающее с каким-то изделием) - а не при КАЖДОМ вызове, пока
+//совпадение просто продолжает держаться. Раньше подстановка (и, соответственно, сброс SyncChecked в False)
+//происходила безусловно при каждом обнаружении - т.к. эта процедура вызывается на ЛЮБОЕ изменение любого поля
+//формы (см. выше), это ломало явное включение синхронизации пользователем через ChbSyncClick: пользователь
+//ставит галку "Синхронизировать" (это тоже "изменение поля" - копируются значения с 0-й вкладки), тут же снова
+//отрабатывает CheckNameDuplicates, повторно находит ТО ЖЕ САМОЕ (не изменившееся) совпадение и немедленно
+//откатывает и синхронизацию, и подставленные значения обратно к данным найденного изделия - внешне выглядело
+//так, будто галка "не ставится". Теперь, пока найденная строка не меняется, ApplyExistingItemToTabSlot повторно
+//не вызывается, и явный выбор пользователя (синхронизировать или нет) сохраняется.
 //Для вкладки 0 (само добавляемое/редактируемое изделие) совпадение - это НЕ пара, а обычный конфликт
 //уникальности (тот же случай, что и так уже блокируется на сохранении - см. VerifyBeforeSave); данные никуда
 //не подставляются, только маркер на вкладке (см. pgcFormatDrawTab) и, только в режиме добавления, подсветка
 //самого поля edt_name (Cth.SetErrorMarker) - в режиме редактирования подсветка поля избыточна, при
 //редактировании без смены имени собственная запись уже исключена запросом (id <> :id$i в LoadExistingNamesForTab).
+//
+//ВАЖНО (найдено по факту - см. переписку с пользователем): в режиме редактирования (Mode = fEdit) для ПАРНЫХ
+//вкладок (i > 0) уже НАЙДЕННАЯ пара (FTabs[i].DuplicateFound) больше НЕ переоценивается заново на каждое
+//изменение edt_name - иначе переименование 0-й вкладки "теряло" уже найденную пару, как только текст edt_name
+//переставал буквально совпадать с ее именем в БД: с этого момента пара считалась ненайденной, и при сохранении
+//вместо ПЕРЕИМЕНОВАНИЯ существующего парного изделия (наравне с самой 0-й вкладкой) создавалось бы НОВОЕ,
+//задваивая изделие. Однажды найденная в режиме редактирования пара теперь считается той же самой записью до
+//конца редактирования, независимо от того, что дальше введено в имени - само переименование (or_std_items.name)
+//найденной записи выполняется позже, при сохранении (см. SaveCounterpartTab/CounterpartTabNeedsSave/
+//VerifyBeforeSave - везде добавлено сравнение текущего edt_name.Text с сохраненным в найденной строке именем).
+//В режиме добавления (fAdd) поведение НЕ меняется - там совпадение по-прежнему может быть случайным (пользователь
+//еще подбирает наименование для НОВОГО изделия), поэтому переоценка на каждое изменение остается прежней.
 var
   i, LRow: Integer;
   LName: string;
@@ -547,14 +671,18 @@ begin
   LName := UpperCase(Trim(edt_name.Text));
   LRedraw := False;
   for i := 0 to High(FTabs) do begin
+    if (Mode = fEdit) and (i > 0) and FTabs[i].DuplicateFound then
+      Continue; //пара уже зафиксирована на время редактирования - см. общий комментарий выше
     LRow := FindExistingNameRow(FTabs[i], LName);
     if (LRow >= 0) <> FTabs[i].DuplicateFound then
       LRedraw := True;
     if LRow >= 0 then begin
+      //подставляем данные найденного изделия только если это НОВОЕ обнаружение (см. общий комментарий выше) -
+      //проверяем ДО того, как ниже перезапишем DuplicateFound/DuplicateRow новыми значениями
+      if (i > 0) and ((not FTabs[i].DuplicateFound) or (FTabs[i].DuplicateRow <> LRow)) then
+        ApplyExistingItemToTabSlot(i, LRow);
       FTabs[i].DuplicateFound := True;
       FTabs[i].DuplicateRow := LRow;
-      if i > 0 then
-        ApplyExistingItemToTabSlot(i, LRow);
     end
     else begin
       if FTabs[i].DuplicateFound and (i > 0) then
@@ -575,6 +703,10 @@ procedure TFrmODedtOrStdItem.ApplyExistingItemToTabSlot(ATabIndex, ARow: Integer
 //первой вкладкой по умолчанию не нужно. Если ATabIndex - активная вкладка прямо сейчас, дополнительно
 //обновляем видимые контролы и их состояние (замок/разблокировка) - см. SwitchToTab/SetTabsControlsState,
 //логика та же, что при обычном переключении на несинхронизированную вкладку.
+//ВАЖНО: вызывается из CheckNameDuplicates только при НОВОМ обнаружении совпадения (см. подробный комментарий
+//там же) - т.е. однократно сбрасывает синхронизацию по умолчанию в момент, когда совпадение только что
+//появилось, но не переустанавливает её принудительно повторно, если пользователь после этого сам включит
+//синхронизацию вручную (ChbSyncClick), пока совпадение продолжает держаться на той же самой строке.
 var
   LFields: TVarDynArray;
   j: Integer;
@@ -677,6 +809,19 @@ procedure TFrmODedtOrStdItem.SwitchToTab(ANewIndex: Integer);
 //это вкладка 0, либо на ней включена синхронизация - подставляются значения из слота 0 (то есть от первой
 //вкладки); иначе - значения из собственного слота этой вкладки (последнее, что там было независимо введено).
 //Наименование (edt_name) в это не входит - оно всегда одно, отдельно управляется в SetTabsControlsState.
+//
+//Формат (cmb_id_or_format_estimates) и Префикс (edt_prefix) - НЕ входят в FSyncFields (это свойства самой
+//подгруппы вкладки, а не синхронизируемые между вкладками значения полей изделия) - раньше вообще не менялись
+//при переключении вкладок и продолжали показывать подгруппу 0-й вкладки на любой вкладке. Подставляем их здесь
+//отдельно, всегда по СОБСТВЕННОЙ подгруппе новой активной вкладки (FTabs[ANewIndex].IdOrFormatEstimate) -
+//независимо от синхронизации по FSyncFields, т.к. подгруппа/префикс парной вкладки не меняются синхронизацией
+//(сама вкладка = сама подгруппа, см. LoadCounterpartTabs). На парных вкладках cmb_id_or_format_estimates всё
+//равно недоступен для редактирования (см. SetTabsControlsState) - его значение здесь выставлено только для
+//отображения, поэтому список комбобокса заранее дополнен подгруппами парных вкладок (SyncFormatComboWithTabs).
+//OnChange комбобокса на время программной установки значения отключаем - иначе сработает ControlOnChangeEvent
+//(uFrmBasicMdi.pas) -> ControlOnChange, которая при смене cmb_id_or_format_estimates заново пересчитывает
+//FIdOrFormatEstimate/FIdFormat/FItemType и перестраивает вкладки (LoadCounterpartTabs) как будто пользователь
+//сам сменил подгруппу 0-й вкладки - здесь это неуместно и разрушило бы уже построенный набор FTabs.
 begin
   if (ANewIndex = FActiveTab) or (ANewIndex < 0) or (ANewIndex > High(FTabs)) then
     Exit;
@@ -686,6 +831,17 @@ begin
     F.SetPropsFromCustom(FSyncFields, 0, fvtVCurr, True)
   else
     F.SetPropsFromCustom(FSyncFields, FActiveTab, fvtVCurr, True);
+  cmb_id_or_format_estimates.OnChange := nil;
+  try
+    Cth.SetControlValue(cmb_id_or_format_estimates, FTabs[FActiveTab].IdOrFormatEstimate);
+  finally
+    cmb_id_or_format_estimates.OnChange := ControlOnChangeEvent;
+  end;
+  if FActiveTab = 0 then
+    edt_prefix.Text := FPrefix
+  else
+    edt_prefix.Text := VarToStr(Q.QLoadValue(
+      'select prefix from or_format_estimates where id = :id$i', [FTabs[FActiveTab].IdOrFormatEstimate]));
   SetTabsControlsState;
 end;
 
@@ -838,10 +994,17 @@ begin
     Cth.SetEhControlColor(nedt_price_base, clWindow);
     chb_R0.Enabled := True;
     chb_Wo_Estimate.Enabled := True;
-    //возвращаем Формат к его обычному (не зависящему от вкладки) состоянию - см. то же поле в Prepare.
+    //Формат редактируем ТОЛЬКО на 0-й вкладке (это подгруппа самого редактируемого/добавляемого изделия) - на
+    //парных вкладках подгруппа берется из уже существующей парной записи (или из выбора пользователя на 0-й
+    //вкладке при первом сохранении, см. LoadCounterpartTabs) и не должна меняться отсюда; раньше здесь ошибочно
+    //разрешалось редактирование Формата на любой (в т.ч. парной) вкладке в режиме добавления/копирования, хотя
+    //реально отображаемое значение при этом всё равно было от 0-й вкладки (см. общий комментарий в SwitchToTab).
     //Префикс сюда не входит - он заблокирован всегда и безусловно, см. отдельно в начале процедуры.
-    cmb_id_or_format_estimates.Enabled := Mode in [fAdd, fCopy];
-    Cth.SetEhControlColor(cmb_id_or_format_estimates, clWindow);
+    cmb_id_or_format_estimates.Enabled := (FActiveTab = 0) and (Mode in [fAdd, fCopy]);
+    if cmb_id_or_format_estimates.Enabled then
+      Cth.SetEhControlColor(cmb_id_or_format_estimates, clWindow)
+    else
+      Cth.SetEhControlColor(cmb_id_or_format_estimates, clmyDisabled);
     SetRoute; //своими правилами восстановит доступность строк маршрута (r0/без сметы)
   end;
 
@@ -899,53 +1062,156 @@ function TFrmODedtOrStdItem.Save: Boolean;
 //запись результатов в бд
 //при изменении значения чекбокса Без сметы в режиме редактирования нам надо подправить смету после записи основной таблицы
 //(если галка была снята, то загрузить пустую смету, если же галка поставлена, то смету просто удалить - будет требовать ввода в дальнешем)
-//запись результатов в бд
-//при изменении значения чекбокса Без сметы в режиме редактирования нам надо подправить смету после записи основной таблицы
-//(если галка была снята, то загрузить пустую смету, если же галка поставлена, то смету просто удалить - будет требовать ввода в дальнешем)
+//
+//ВАЖНО (см. также подробные комментарии у ShouldSaveTab/SaveCounterpartTab/GetTabFieldValue): сохраняются ВСЕ
+//вкладки (изделия), для которых ShouldSaveTab возвращает True - т.е. и 0-я (основная, штатным механизмом
+//диалога), и все парные, не отмеченные "Не создавать" (если не стоит "Только одно" - тогда только 0-я).
+//Обязательно, иначе вся синхронизация парных изделий не имеет смысла (см. переписку с пользователем).
 var
-  name, nameold, prefix, fields: string;
+  nameold: string;
   i: Integer;
-  Res: Integer;
+  LProdPrefixedName, LDummy: string;
+  LTabIds: TVarDynArray;
+  LProdCount, LProdTabIndex: Integer;
+  LProdId: Variant;
 begin
   Q.QBeginTrans(True);
-  //сохраним основные данные
+  //F в этот момент может показывать данные ЧУЖОЙ активной вкладки (FActiveTab <> 0), если пользователь нажал
+  //сохранение, не переключившись обратно на первую - явно подставляем значения слота 0 (см. тот же прием в
+  //SwitchToTab) перед вызовом inherited, иначе сохранились бы price_base/маршрут с чужой вкладки
+  if FActiveTab <> 0 then begin
+    //КРИТИЧНО (найдено по факту - при сохранении активной парной вкладки БЕЗ синхронизации ее только что
+    //введенные значения price_base/маршрута пропадали и вместо них сохранялись значения 0-й вкладки): пока
+    //активна вкладка FActiveTab, F.GetProp(field, fvtVCurr) - это ЕЕ актуальные, только что введенные
+    //пользователем значения (см. GetTabFieldValue - для активной вкладки берется именно fvtVCurr, а не слот).
+    //Подмена ниже (F.SetPropsFromCustom(FSyncFields, 0, ...)) нужна ТОЛЬКО чтобы inherited ниже сохранил
+    //корректные данные 0-й вкладки - но она перезаписывает те же самые live-контролы, которые GetTabFieldValue
+    //будет читать чуть позже для самой FActiveTab (см. цикл сохранения парных вкладок) - без этого сохранения
+    //в слот вкладка FActiveTab потеряла бы свои реальные правки и сохранилась бы с данными 0-й вкладки вместо
+    //своих собственных. Сохраняем текущие (истинные) значения FActiveTab в ее собственный слот - и восстановим
+    //их обратно в live-контролы после вызова inherited, перед циклом сохранения парных вкладок (см. ниже).
+    F.CopyPropToCustom(FSyncFields, fvtVCurr, FActiveTab);
+    F.SetPropsFromCustom(FSyncFields, 0, fvtVCurr, True);
+    //КРИТИЧНО (найдено по факту - ORA-00001 нарушение уникальности IDX_OR_STD_ITEMS_NAME при сохранении с
+    //включенной синхронизацией без возврата на 0-ю вкладку): cmb_id_or_format_estimates - это ЖИВОЙ, связанный
+    //с F контрол поля id_or_format_estimates САМОЙ 0-й вкладки (см. F.DefineFields в Prepare, где это поле
+    //зарегистрировано как 'id_or_format_estimates$i') - inherited ниже читает ЕГО ТЕКУЩЕЕ значение (fvtVCurr)
+    //как то, под какой подгруппой сохранить саму 0-ю вкладку. Но SwitchToTab (см. её комментарий) теперь
+    //подставляет в этот же контрол подгруппу АКТИВНОЙ вкладки для отображения (иначе Формат на парных вкладках
+    //не менялся - см. переписку с пользователем) - в отличие от FSyncFields, это поле НЕ хранится в
+    //пользовательских слотах (fvtCustom), а напрямую подменяет отображаемое/live-значение самого контрола.
+    //Если сохранение происходит, не переключившись обратно на 0-ю вкладку, inherited попытался бы сохранить
+    //0-ю вкладку под ЧУЖОЙ (той, что сейчас отображена для другой вкладки) подгруппой - с тем же именем, что и
+    //реальное изделие в этой подгруппе (например, сама эта парная вкладка) - отсюда и нарушение уникальности
+    //(id_or_format_estimates, lower(name)). OnChange на время программной установки отключаем - см. тот же
+    //прием и то же обоснование в SwitchToTab (иначе сработает полная перестройка вкладок).
+    cmb_id_or_format_estimates.OnChange := nil;
+    try
+      Cth.SetControlValue(cmb_id_or_format_estimates, FTabs[0].IdOrFormatEstimate);
+    finally
+      cmb_id_or_format_estimates.OnChange := ControlOnChangeEvent;
+    end;
+  end;
+  //сохраним основные (0-й вкладки) данные
   Result := inherited;
   if not Result then begin
     Q.QRollbackTrans;
     Exit;
   end;
-  if (Mode = fEdit) and (edt_name.Text <> FNameOld) then begin
-    //если это редактирование и наименование изменилось - попробуем изменить его и в БД ИТМ (с учетом префикса)
-    //получим префикс изедия
-    prefix := '';
-    if FIdEstimateGroup > 0 then
-      prefix := Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [FIdEstimateGroup]);
-    //старое и новое имя
-    name := S.IIFStr(prefix <> '', prefix + '_', '') + Trim(edt_name.Text);
-    nameold := S.IIFStr(prefix <> '', prefix + '_', '') + FNameOld;
-    //проверим, есть ли уже в итм в продукции запись соответствующая новому имени
-    Res := Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, name]);
-    if Res = 0 then begin
-      //если нет, то переименуем запись со старым именем в новое (если она естественно есть)
-      Q.QExecSql('update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s', [name, name, ItmGroups_Production_ID, nameold]);
-    end;
-  end;
+  //переименование полного (с префиксом) наименования в ИТМ/bcad_nomencl - общим методом (см. RenameNomenclatura),
+  //одинаково для 0-й и для каждой реально переименовываемой парной вкладки (см. тот же цикл ниже) - по просьбе
+  //пользователя (см. переписку): обработка должна быть одной и той же для всех сохраняемых вкладок.
+  if (Mode = fEdit) and (edt_name.Text <> FNameOld) then
+    RenameNomenclatura(FIdEstimateGroup, FNameOld, Trim(edt_name.Text), FItemType);
   if (Mode = fEdit) and (Cth.GetControlValue(chb_Wo_Estimate) <> FWoEstimateOld) then begin
     //если изменился признак "Без сметы", то удаляем смету
     //(в проверке перед записью спросит, если при этом была подгружена непустая смета)
     Orders.RemoveEstimateForStdItem(id, True);
   end;
-  if (Mode = fEdit) then begin
-    //утсановим в шаблонах цену и маршрут изделий, соответствующих данному
-    var FieldsArr: TVarDynArray := ['price_base$f', 'r0$i'];
-    for i := 0 to High(RouteFields) do
-      FieldsArr := FieldsArr + ['r' + IntToStr(i + 1)];
-    var FiealdsVal: TVarDynArray := [];
-    for i := 0 to High(FieldsArr) do
-      FiealdsVal := FiealdsVal + [F.GetProp(FieldsArr[i].AsString)];
-    Q.QExecSql(Q.QGetSql('Q', 'order_items', FieldsArr.Implode(';')) + ' where id_order < 0 and id_order > -100000 and id_std_item = :id_std_item$i', FiealdsVal + [ID]);
+  //синхронизация цены/маршрута в шаблоны заказов - теперь общим методом (см. SyncOrderItemTemplates), т.к.
+  //применяется не только к 0-й, но и к каждой сохраняемой парной вкладке (см. ниже)
+  SyncOrderItemTemplates(0, ID);
+
+  //возвращаем в live-контролы истинные значения FActiveTab (см. комментарий в начале Save), сохраненные в ее
+  //слот перед подменой на данные 0-й вкладки для inherited выше - иначе GetTabFieldValue/SaveCounterpartTab
+  //ниже прочитали бы для активной вкладки чужие (0-й вкладки) значения вместо ее собственных только что
+  //введенных пользователем
+  if FActiveTab <> 0 then
+    F.SetPropsFromCustom(FSyncFields, FActiveTab, fvtVCurr, True);
+
+  //--- сохранение ПАРНЫХ вкладок (если не "Только одно" и не отмечены "Не создавать") - см. ShouldSaveTab -------
+  //ВАЖНО: обязательно (см. общий комментарий в начале Save) - без этого вся синхронизация парных изделий
+  //(цена/маршрут/наименование) не имела бы смысла, т.к. фактически в БД сохранялось бы только само редактируемое
+  //изделие (0-я вкладка), а его "пара" оставалась бы нетронутой несмотря на то, что пользователь ее видел и
+  //(вероятно) редактировал на экране.
+  //Но реальную запись (SaveCounterpartTab) делаем только когда есть что писать - см. CounterpartTabNeedsSave:
+  //для уже существующего парного изделия без синхронизации и без ручных правок на его вкладке значения и так
+  //совпадают с БД, лишний (пустой) UPDATE не нужен - достаточно просто взять его текущий id (GetTabExistingId)
+  //для дальнейшего использования (ссылка в смете и т.п.).
+  SetLength(LTabIds, Length(FTabs));
+  LTabIds[0] := ID;
+  if Mode <> fDelete then
+    for i := 1 to High(FTabs) do
+      if ShouldSaveTab(i) and CounterpartTabNeedsSave(i) then begin
+        //ВАЖНО (добавлено - см. общий комментарий в RenameNomenclatura/CheckNameDuplicates): если это найденное
+        //(не новое) парное изделие, и текущее edt_name.Text разошлось с тем, под которым оно значится в БД -
+        //переименовываем его в ИТМ/bcad_nomencl ТАК ЖЕ, как и саму запись or_std_items (см. SaveCounterpartTab)
+        //- запоминаем старое имя ДО вызова SaveCounterpartTab (сам вызов имя записи в FTabs[i].ExistingNames не
+        //меняет, но для ясности - явно фиксируем его именно "до").
+        if FTabs[i].DuplicateFound and (FTabs[i].DuplicateRow >= 0) then
+          nameold := VarToStr(FTabs[i].ExistingNames[FTabs[i].DuplicateRow][0])
+        else
+          nameold := '';
+        LTabIds[i] := SaveCounterpartTab(i);
+        if VarIsNull(LTabIds[i]) then begin
+          Result := False;
+          Break;
+        end;
+        if (nameold <> '') and (UpperCase(Trim(nameold)) <> UpperCase(Trim(edt_name.Text))) then
+          RenameNomenclatura(FTabs[i].IdOrFormatEstimate, nameold, Trim(edt_name.Text), FTabs[i].ItemType);
+        SyncOrderItemTemplates(i, LTabIds[i]);
+      end
+      else if ShouldSaveTab(i) then
+        LTabIds[i] := GetTabExistingId(i)
+      else
+        LTabIds[i] := Null;
+  if not Result then begin
+    Q.QRollbackTrans;
+    Exit;
   end;
+
+  //--- решение по смете(ам) отгрузочных изделий (см. общий комментарий у CheckSelfSmetaAction/CreateSelfSmeta) -
+  //считаем ДО commit (нужны только уже вычисленные id/имена, в БД пока не пишем), выполняем - ТОЛЬКО ПОСЛЕ.
+  //Правило (см. переписку с пользователем): смета создается для ОТГРУЗОЧНЫХ изделий и содержит ссылку на
+  //ПРОИЗВОДСТВЕННОЕ - независимо от того, какое из них было на 0-й (изначально открытой) вкладке. Если среди
+  //СОХРАНЯЕМЫХ вкладок производственных изделий несколько - неоднозначно, на какое ссылаться, смета не создается
+  //вообще ни для одного отгрузочного. Если ровно одно - для каждого сохраняемого отгрузочного изделия создается
+  //(если нужно) одинаковая по содержанию смета (см. CheckSelfSmetaAction), ссылающаяся на это единственное
+  //производственное изделие.
+  LProdCount := 0;
+  LProdTabIndex := -1;
+  if Mode <> fDelete then
+    for i := 0 to High(FTabs) do
+      if ShouldSaveTab(i) and (FTabs[i].ItemType = STDITEM_TYPE_PRODUCTION) then begin
+        Inc(LProdCount);
+        LProdTabIndex := i;
+      end;
+
   Result := Q.QCommitTrans;
+  //ВАЖНО: CreateSelfSmeta (через Orders.ApplyEstimateArray) вызываем ТОЛЬКО ПОСЛЕ фиксации своей транзакции
+  //выше, а не внутри нее. ApplyEstimateArray сама открывает и коммитит/откатывает СВОЮ транзакцию (см. ее
+  //реализацию в uOrders.pas), а Q.QBeginTrans в этом проекте НЕ поддерживает вложенность - при вызове внутри
+  //уже открытой транзакции она сначала ОТКАТЫВАЕТ её целиком (см. комментарий в самой QBeginTrans, uDB.pas) -
+  //вызов отсюда до commit привёл бы к потере уже сделанных выше изменений (запись изделий, переименования и
+  //т.п.), хотя внешне сохранение выглядело бы успешным.
+  if Result and (Mode <> fDelete) and (LProdCount = 1) then begin
+    LProdId := LTabIds[LProdTabIndex];
+    LProdPrefixedName := GetPrefixedName(FTabs[LProdTabIndex].IdOrFormatEstimate, edt_name.Text);
+    for i := 0 to High(FTabs) do
+      if ShouldSaveTab(i) and (FTabs[i].ItemType = STDITEM_TYPE_SHIPMENT) then
+        if CheckSelfSmetaAction(LTabIds[i], LProdId, edt_name.Text, LProdPrefixedName, LDummy) = 1 then
+          CreateSelfSmeta(LTabIds[i], LProdId, LProdPrefixedName);
+  end;
 end;
 
 
@@ -953,14 +1219,26 @@ procedure TFrmODedtOrStdItem.VerifyBeforeSave;
 var
   i, res1, res2, res3: Integer;
   NewEmptyEstimate: Boolean;
+  LPlanText, LPrefixedName, LOldPrefixedName, LDetails, LMsg, LTypeCapt: string;
+  LAction, LProdCount, LProdTabIndex: Integer;
+  LProdId: Variant;
 begin
   //проверки при редактировании или добавлении записи (только если изменилорсь наименование)
   //проверим, нет ли такого наименования среди стандартных изделий того же типа паспорта
   //также наименование с преиксом не должно быть в базе сметных наименований учета    //!!!
   //и также и в базе итм с типом "материалы и комплектующие"
+  //ВАЖНО: эту проверку (для 0-й вкладки) пока намеренно не трогаем и не расширяем (в т.ч. res2/bcad_nomencl
+  //закомментирован не случайно) - в дальнейшем ее надо будет дорабатывать отдельно с учетом нестандартных
+  //изделий и полуфабрикатов. Тот же по смыслу (но не идентичный - см. CheckDuplicateNameInDb) вариант проверки
+  //теперь ОБЯЗАТЕЛЕН и для остальных сохраняемых вкладок - см. блок ниже, после этого, не тронутого блока.
   if (Mode <> fDelete) and (FIdEstimateGroup > 1) and (edt_name.Text <> FNameOld) then begin
     res1 := Q.QLoadValue('select count(1) from or_std_items where id <> :id$i and (id_or_format_estimates = :idf$i) and name = :name$s', [ID, FIdEstimateGroup, edt_name.Text]);
     //res2 := Q.QSelectOneRow('select count(1) from bcad_nomencl where name = :name$s', [Prefix + '_' + edt_name.Text])[0];
+    //ВАЖНО (исправлено): res2 сама проверка отключена намеренно (см. общий комментарий выше), но res2 при этом
+    //нигде не присваивался - использовался в сумме res1 + res2 + res3 НЕИНИЦИАЛИЗИРОВАННЫМ (мусор со стека),
+    //из-за чего проверка могла СЛУЧАЙНО заблокировать сохранение без единой реальной причины в тексте
+    //предупреждения (обе строки-причины для res1/res3 могли оказаться пустыми). Явно обнуляем.
+    res2 := 0;
     res3 := Q.QLoadValue('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [FPrefix + '_' + edt_name.Text]);
     if res1 + res2 + res3 > 0 then begin
       MyWarningMessage(S.IIf(res1 > 0, 'Такое наименование уже существует в этой группе стандартных изделий Учета!'#13#10, '') +
@@ -970,7 +1248,12 @@ begin
       Exit;
     end;
   end;
-  if (Mode = fEdit) and (chb_Wo_Estimate.Checked) then begin
+  //ВАЖНО (исправлено): раньше условие проверяло только ТЕКУЩЕЕ состояние чекбокса (chb_Wo_Estimate.Checked),
+  //без сравнения со старым (FWoEstimateOld) - если "Без сметы" стояло и до, и после (не менялось), это
+  //предупреждение "она будет удалена" всё равно могло показаться, хотя реально Save() ничего не удаляет (см.
+  //там же - Orders.RemoveEstimateForStdItem вызывается ТОЛЬКО когда значение чекбокса РЕАЛЬНО изменилось,
+  //Cth.GetControlValue(chb_Wo_Estimate) <> FWoEstimateOld). Добавлено то же самое условие, что и в Save.
+  if (Mode = fEdit) and (chb_Wo_Estimate.Checked) and (Cth.GetControlValue(chb_Wo_Estimate) <> FWoEstimateOld) then begin
     NewEmptyEstimate := Q.QLoadValue('select count(1) from estimates where id_std_item = :id$i and isempty = 0', [id]) > 0;
     if NewEmptyEstimate then
       if MyQuestionMessage('Для этого изделия выбран тип "без сметы", но сейчас к нему уже подгружена непустая смета.'#13#10'Она будет удалена.'#13#10'Продолжить?') <> mrYes then begin
@@ -978,6 +1261,514 @@ begin
         Exit;
       end;
   end;
+
+  //--- обязательная проверка в БД для каждой ДОПОЛНИТЕЛЬНО сохраняемой (парной) вкладки - см. общий комментарий
+  //в начале Save и CheckDuplicateNameInDb. Для тех, что будут ВСТАВЛЕНЫ как новые записи (DuplicateFound = False)
+  //- проверяем на общих основаниях (имя еще никому не принадлежит). Для тех, что будут ОБНОВЛЕНЫ (найдено
+  //совпадение по имени - FTabs[i].DuplicateFound) - раньше здесь считалось, что переименования вообще не
+  //бывает (найденное имя всегда совпадает с edt_name.Text), но это уже не так (см. общий комментарий в
+  //CheckNameDuplicates - однажды найденная в режиме редактирования пара больше не переоценивается, и
+  //SaveCounterpartTab теперь ее переименовывает наравне с 0-й вкладкой) - если текущее edt_name.Text
+  //разошлось с именем, под которым найденная запись значится в БД, точно так же нужна проверка на занятость
+  //НОВОГО имени (исключая саму переименовываемую запись, см. AExcludeId), иначе возможно нарушение уникальности.
+  for i := 1 to High(FTabs) do
+    if ShouldSaveTab(i) then begin
+      if not FTabs[i].DuplicateFound then begin
+        LPrefixedName := GetPrefixedName(FTabs[i].IdOrFormatEstimate, edt_name.Text);
+        if not CheckDuplicateNameInDb(FTabs[i].IdOrFormatEstimate, Null, edt_name.Text, LPrefixedName, LMsg) then begin
+          MyWarningMessage(LMsg + #13#10'Данные не могут быть сохранены!');
+          HasError := True;
+          Exit;
+        end;
+      end
+      else if (FTabs[i].DuplicateRow >= 0) and
+              (UpperCase(Trim(VarToStr(FTabs[i].ExistingNames[FTabs[i].DuplicateRow][0]))) <> UpperCase(Trim(edt_name.Text))) then begin
+        LPrefixedName := GetPrefixedName(FTabs[i].IdOrFormatEstimate, edt_name.Text);
+        if not CheckDuplicateNameInDb(FTabs[i].IdOrFormatEstimate, FTabs[i].ExistingNames[FTabs[i].DuplicateRow][1], edt_name.Text, LPrefixedName, LMsg) then begin
+          MyWarningMessage(LMsg + #13#10'Данные не могут быть сохранены!');
+          HasError := True;
+          Exit;
+        end;
+      end;
+    end;
+
+  //--- смета(ы) отгрузочных изделий, переименование в bcad_nomencl и список создаваемых/обновляемых парных
+  //изделий - собираем ЗАРАНЕЕ (до транзакции, здесь можно только читать БД) список того, что будет сделано при
+  //сохранении, и одним диалогом просим подтверждение - см. общий комментарий у CheckSelfSmetaAction/Save.
+  //Пока делаем это безусловно при каждом добавлении/сохранении с изменением наименования - это может
+  //потребовать доработки (меньше "надоедать" диалогом), но пользователь явно попросил показывать его в любом
+  //случае, пока эта логика не обкатана.
+  if Mode in [fAdd, fCopy, fEdit] then begin
+    LPlanText := '';
+
+    //список создаваемых/обновляемых парных изделий (сама 0-я вкладка сюда не входит - её сохранение и так
+    //очевидно пользователю, это ведь то, что он и открыл на редактирование/добавление). Уже существующие парные
+    //изделия, которые реально нечем обновлять (синхронизация выключена, пользователь их не трогал - см.
+    //CounterpartTabNeedsSave), в список НЕ включаем - иначе любое не связанное с ними изменение 0-й вкладки
+    //ошибочно выглядело бы как "будет изменено ... изделие", хотя фактически ничего не меняется.
+    for i := 1 to High(FTabs) do
+      if ShouldSaveTab(i) and CounterpartTabNeedsSave(i) then begin
+        LTypeCapt := S.IIf(FTabs[i].ItemType = STDITEM_TYPE_PRODUCTION, 'производственное', 'отгрузочное');
+        //ВАЖНО (добавлено - см. общий комментарий в CheckNameDuplicates/SaveCounterpartTab): если найденная пара
+        //отличается от edt_name.Text именем - это переименование существующей записи (наравне с 0-й вкладкой),
+        //а не обычное "обновление" (цены/маршрута) - показываем это отдельной, более точной формулировкой.
+        if FTabs[i].DuplicateFound and (FTabs[i].DuplicateRow >= 0) and
+           (UpperCase(Trim(VarToStr(FTabs[i].ExistingNames[FTabs[i].DuplicateRow][0]))) <> UpperCase(Trim(edt_name.Text))) then begin
+          S.ConcatStP(LPlanText, Format('- будет переименовано существующее %s изделие "%s" в "%s" (%s)',
+            [LTypeCapt, Trim(VarToStr(FTabs[i].ExistingNames[FTabs[i].DuplicateRow][0])), Trim(edt_name.Text), Trim(FTabs[i].Sheet.Caption)]), #13#10);
+          //ВАЖНО (обобщено - см. общий комментарий в RenameNomenclatura): переименование парной вкладки при
+          //сохранении затрагивает и ее ИТМ/bcad_nomencl (по ее собственному префиксу, FTabs[i].IdOrFormatEstimate)
+          //- предупреждаем об этом тем же способом, что и для 0-й вкладки (см. п.2 ниже).
+          LDetails := GetNomenclaturaRenamePlanText(FTabs[i].IdOrFormatEstimate,
+            VarToStr(FTabs[i].ExistingNames[FTabs[i].DuplicateRow][0]), Trim(edt_name.Text), FTabs[i].ItemType);
+          if LDetails <> '' then
+            S.ConcatStP(LPlanText, LDetails, #13#10);
+        end
+        else if FTabs[i].DuplicateFound then
+          S.ConcatStP(LPlanText, Format('- будет обновлено существующее %s изделие "%s" (%s)', [LTypeCapt, Trim(edt_name.Text), Trim(FTabs[i].Sheet.Caption)]), #13#10)
+        else
+          S.ConcatStP(LPlanText, Format('- будет создано новое %s изделие "%s" (%s)', [LTypeCapt, Trim(edt_name.Text), Trim(FTabs[i].Sheet.Caption)]), #13#10);
+      end;
+
+    if FItemType = STDITEM_TYPE_SEMIPRODUCT then begin
+      //полуфабрикаты - логику смет пока не трогаем совсем (см. TODO в конце модуля), только предупреждаем при
+      //переименовании, что состав смет, где это изделие используется как компонент, автоматически не менялся
+      //(у полуфабрикатов парных вкладок не бывает вовсе - см. LoadCounterpartTabs, поэтому список создаваемых/
+      //обновляемых парных изделий выше для них всегда пуст; но LPlanText в целом пустым не остается - ИТМ
+      //(dv.nomenclatura) переименовывается и для полуфабрикатов тоже, см. п.2 ниже, после этого if/else)
+      if (Mode = fEdit) and (edt_name.Text <> FNameOld) then
+        MyInfoMessage('Наименование изменено. Обратите внимание: позиции в сметах, где это изделие используется как компонент, НЕ изменены - для полуфабрикатов это пока не автоматизировано.');
+    end
+    else begin
+      //не полуфабрикат: 1) смета для ОТГРУЗОЧНЫХ изделий со ссылкой на ЕДИНСТВЕННОЕ производственное - см.
+      //общий комментарий у CheckSelfSmetaAction/Save про правило "производственных вкладок несколько"
+      LProdCount := 0;
+      LProdTabIndex := -1;
+      for i := 0 to High(FTabs) do
+        if ShouldSaveTab(i) and (FTabs[i].ItemType = STDITEM_TYPE_PRODUCTION) then begin
+          Inc(LProdCount);
+          LProdTabIndex := i;
+        end;
+      if LProdCount = 1 then begin
+        LProdId := GetTabExistingId(LProdTabIndex);
+        //LOldPrefixedName здесь временно используется для другой цели - как имя ПРОИЗВОДСТВЕННОГO изделия с
+        //префиксом (переменных на все случаи не напасешься) - к переименованию (см. ниже, п.2) отношения не имеет.
+        //ВАЖНО (исправлено - найдено по факту, см. переписку с пользователем): если производственное изделие
+        //ПЕРЕИМЕНОВЫВАЕТСЯ прямо сейчас (само это редактирование, либо парная вкладка, чье имя переименовывается
+        //наравне с 0-й - см. CheckNameDuplicates/SaveCounterpartTab), то в БД (и в bcad_nomencl, на который
+        //ссылается существующая смета отгрузочного изделия) оно на момент ЭТОЙ проверки еще числится под СТАРЫМ
+        //именем - переименование произойдет только при сохранении. Сравнивать здесь нужно со СТАРЫМ именем,
+        //иначе CheckSelfSmetaAction ложно решит, что смета "отличается от ожидаемой" только из-за еще не
+        //случившегося переименования, хотя на самом деле она соответствует текущему (дореименованному) состоянию.
+        if LProdTabIndex = 0 then
+          LOldPrefixedName := GetPrefixedName(FTabs[0].IdOrFormatEstimate, FNameOld)
+        else if FTabs[LProdTabIndex].DuplicateFound and (FTabs[LProdTabIndex].DuplicateRow >= 0) then
+          LOldPrefixedName := GetPrefixedName(FTabs[LProdTabIndex].IdOrFormatEstimate,
+            VarToStr(FTabs[LProdTabIndex].ExistingNames[FTabs[LProdTabIndex].DuplicateRow][0]))
+        else
+          LOldPrefixedName := GetPrefixedName(FTabs[LProdTabIndex].IdOrFormatEstimate, edt_name.Text);
+        for i := 0 to High(FTabs) do
+          if ShouldSaveTab(i) and (FTabs[i].ItemType = STDITEM_TYPE_SHIPMENT) then begin
+            LAction := CheckSelfSmetaAction(GetTabExistingId(i), LProdId, Trim(edt_name.Text), LOldPrefixedName, LDetails);
+            if LAction = 1 then
+              S.ConcatStP(LPlanText, '- ' + LDetails, #13#10)
+            else if LAction = 2 then
+              //отличается от ожидаемой - это только предупреждение, не входит в подтверждение (действие и так
+              //не выполняется - трогать существующую нестандартную смету автоматически не будем)
+              MyWarningMessage(LDetails);
+          end;
+      end;
+    end;
+    //2) при переименовании 0-й вкладки - переименование записи в номенклатуре ИТМ (dv.nomenclatura) И, ОТДЕЛЬНО,
+    //в справочнике сметных позиций Учета (bcad_nomencl) - общим методом (см. GetNomenclaturaRenamePlanText/
+    //RenameNomenclatura), тем же, что используется выше для парных вкладок. ВАЖНО (исправлено): раньше этот блок
+    //находился ВНУТРИ ветки "не полуфабрикат" выше и для полуфабрикатов вообще не показывался - но Save()
+    //переименовывает запись в ИТМ (dv.nomenclatura) для ЛЮБОГО типа изделия, включая полуфабрикаты (это не
+    //связано со сметами - см. отдельное предупреждение для полуфабрикатов выше); поэтому вынесено сюда, чтобы
+    //выполняться безусловно по типу, как и в Save.
+    if (Mode = fEdit) and (edt_name.Text <> FNameOld) then begin
+      LDetails := GetNomenclaturaRenamePlanText(FIdEstimateGroup, FNameOld, Trim(edt_name.Text), FItemType);
+      if LDetails <> '' then
+        S.ConcatStP(LPlanText, LDetails, #13#10);
+    end;
+    //ВАЖНО (добавлено по просьбе пользователя): собственное переименование 0-й вкладки (самого редактируемого
+    //изделия) нигде выше в LPlanText не попадает - оно и так очевидно пользователю (это то, что он открыл на
+    //редактирование), поэтому диалог подтверждения не показывается ТОЛЬКО из-за него одного (см. общий
+    //комментарий в начале этого if-блока). Но если диалог и так будет показан по другим причинам (счетчик
+    //LPlanText уже не пуст - другие вкладки/ИТМ/смета) - добавляем эту информацию первой строкой, чтобы
+    //пользователь видел полную картину происходящего в одном месте, а не только последствия для остальных вкладок.
+    if (LPlanText <> '') and (Mode = fEdit) and (edt_name.Text <> FNameOld) then
+      LPlanText := Format('- будет переименовано редактируемое изделие "%s" в "%s"', [FNameOld, Trim(edt_name.Text)]) + #13#10 + LPlanText;
+    if LPlanText <> '' then
+      if MyQuestionMessage('Будут внесены следующие изменения:'#13#10 + LPlanText + #13#10'Продолжить сохранение?') <> mrYes then begin
+        HasError := True;
+        Exit;
+      end;
+  end;
+end;
+
+function TFrmODedtOrStdItem.CheckSelfSmetaAction(AIdShipmentItem, AIdProductionItem: Variant; const AShipmentDisplayName, AProductionPrefixedName: string; out ADetails: string): Integer;
+//смета ОТГРУЗОЧНОГО изделия из ОДНОЙ позиции, ссылающейся на ПРОИЗВОДСТВЕННОЕ изделие - и по наименованию (с
+//префиксом, через bcad_nomencl), и по id (id_or_std_item) напрямую, количество 1, единица измерения "шт."
+//(bcad_units.id = 1), группа "Готовые изделия" (bcad_groups.id = 104). Нужна, чтобы у отгрузочного изделия
+//вообще была хоть какая-то смета для последующего учета/списания в готовой продукции (списывается фактически
+//произведенное производственное изделие), даже если само отгрузочное изделие не имеет собственного состава.
+//Создается ТОЛЬКО когда среди сохраняемых вкладок ровно одно производственное изделие - см. общий комментарий
+//у мест вызова (Save/VerifyBeforeSave) про правило "производственных вкладок несколько - не создаем вообще".
+//
+//AIdShipmentItem - id отгрузочного изделия (Null, если оно еще не сохранено - новое). AIdProductionItem - id
+//(уже сохраненного или существующего) производственного изделия, на которое должна ссылаться позиция сметы.
+//
+//Возвращает:
+//  0 - ничего не требуется (смета уже есть и в точности соответствует ожидаемой)
+//  1 - смету нужно создать (либо ее еще нет вовсе, либо отгрузочное изделие только создается)
+//  2 - смета уже есть, но отличается от ожидаемой - только предупреждаем, НЕ трогаем ее автоматически
+//ADetails - текст с описанием (для диалога подтверждения при результате 1, для предупреждения при результате 2)
+var
+  LIdEstimate: Variant;
+  LCnt: Integer;
+  va: TVarDynArray;
+begin
+  ADetails := '';
+  if S.NNum(AIdShipmentItem) = 0 then begin
+    //отгрузочное изделие еще не сохранено (новое) - смету для него по определению проверить негде, всегда создаем
+    Result := 1;
+    ADetails := Format('изделие "%s" (новое) - будет создана смета из 1 позиции со ссылкой на производственное изделие "%s" (шт., группа "Готовые изделия")', [AShipmentDisplayName, AProductionPrefixedName]);
+    Exit;
+  end;
+  LIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id$i', [AIdShipmentItem]);
+  if LIdEstimate = null then begin
+    Result := 1;
+    ADetails := Format('изделие "%s" - смета отсутствует, будет создана из 1 позиции со ссылкой на производственное изделие "%s" (шт., группа "Готовые изделия")', [AShipmentDisplayName, AProductionPrefixedName]);
+    Exit;
+  end;
+  LCnt := Q.QLoadValue('select count(1) from estimate_items where id_estimate = :ide$i and deleted = 0', [LIdEstimate]);
+  if LCnt = 1 then begin
+    va := Q.QLoadRow(
+      'select n.name, ei.id_or_std_item, ei.id_group, ei.id_unit, ei.qnt1 from estimate_items ei, bcad_nomencl n ' +
+      'where ei.id_estimate = :ide$i and ei.deleted = 0 and n.id = ei.id_name',
+      [LIdEstimate]);
+    //ВАЖНО: требуем ЯВНО положительный AIdProductionItem для совпадения (S.NNum(AIdProductionItem) > 0) - без
+    //этого, если производственное изделие еще НЕ сохранено (вызов из VerifyBeforeSave ДО сохранения, id пока
+    //Null) и у существующей позиции сметы ei.id_or_std_item тоже почему-то Null/0 (например, смета была создана
+    //не этим механизмом), S.NNum(Null) = 0 = S.NNum(0) совпали бы СЛУЧАЙНО - результат 0 ("ничего не требуется")
+    //был бы неверным: после реального сохранения производственного изделия (уже с настоящим id) то же самое
+    //сравнение почти наверняка дало бы несовпадение (результат 2). Проверка гарантирует, что "уже всё совпадает"
+    //никогда не сообщается, пока производственное изделие реально не существует.
+    if (VarToStr(va[0]) = AProductionPrefixedName) and (S.NNum(va[1]) = S.NNum(AIdProductionItem)) and
+       (S.NNum(AIdProductionItem) > 0) and
+       (S.NInt(va[2]) = BCAD_GROUP_FINISHED_ITEMS) and (S.NInt(va[3]) = BCAD_UNIT_PCS) and (S.NNum(va[4]) = 1) then begin
+      Result := 0;
+      Exit;
+    end;
+  end;
+  Result := 2;
+  ADetails := Format('изделие "%s" - смета уже существует, но отличается от ожидаемой (не 1 позиция со ссылкой на производственное изделие "%s", шт., группа "Готовые изделия", кол-во 1) - оставлена без изменений, проверьте вручную', [AShipmentDisplayName, AProductionPrefixedName]);
+end;
+
+procedure TFrmODedtOrStdItem.CreateSelfSmeta(AIdShipmentItem, AIdProductionItem: Variant; const AProductionPrefixedName: string);
+//см. общий комментарий у CheckSelfSmetaAction. Вызывать только когда CheckSelfSmetaAction вернул 1 (создание),
+//и только ПОСЛЕ фиксации собственной транзакции сохранения изделий (см. подробный комментарий в Save) -
+//Orders.ApplyEstimateArray сама открывает и коммитит/откатывает отдельную транзакцию.
+var
+  Ctx: TEstimateApplyContext;
+  Est: TVarDynArray2;
+begin
+  Ctx.IdEstimate := Null;
+  Ctx.IdOrder := Null;
+  Ctx.IdOrderItem := Null;
+  Ctx.IdStdItem := AIdShipmentItem; //смета создается ДЛЯ отгрузочного изделия...
+  Ctx.OrderIdUchet := Null;
+  Ctx.OrQnt := Null;
+  Ctx.IsEstimateEmpty := 0;
+  Ctx.OrDtEst := Null;
+  Ctx.OrSlash := Null;
+  Ctx.ParentIdEstimate := Null;
+  Ctx.OrName := AProductionPrefixedName;
+  Ctx.FileName := '';
+  Ctx.OneItem := True;
+  Ctx.QntChanged := False;
+  Ctx.IsOrItemStd := False;
+  //свои сообщения об успехе/ошибке не показываем - пользователь уже был предупрежден и подтвердил действие
+  //заранее, в VerifyBeforeSave (см. общий комментарий там же)
+  Ctx.Silent := True;
+  Ctx.EstBefore := Orders.LoadEstimateArray(Null); //снимок "до" - пустой, смета только создается
+  Ctx.EstLogSource := '0'; //факт первичной загрузки, см. TOrders.LogEstimateChange
+  //...а единственная позиция в ней ссылается на ПРОИЗВОДСТВЕННОЕ изделие - и по имени (через bcad_nomencl,
+  //name), и по id напрямую (id_or_std_item) - см. общий комментарий у CheckSelfSmetaAction про смену модели
+  //[name, id_group, id_unit, qnt1, comment, id_or_std_item] - см. формат в TOrders.ApplyEstimateArray/LoadEstimate
+  Est := [[AProductionPrefixedName, BCAD_GROUP_FINISHED_ITEMS, BCAD_UNIT_PCS, 1, '', AIdProductionItem]];
+  Orders.ApplyEstimateArray(Ctx, Est);
+end;
+
+function TFrmODedtOrStdItem.ShouldSaveTab(ATabIndex: Integer): Boolean;
+//0-я вкладка (само редактируемое/добавляемое изделие) сохраняется всегда - на ней и держится вся форма.
+//Остальные (парные) - только если НЕ отмечено "Только одно" (FOneOnly - тогда вкладки вообще не в счет, как
+//будто их нет) и на конкретной вкладке не отмечено "Не создавать" (FTabs[ATabIndex].NotCreateChecked).
+begin
+  if ATabIndex = 0 then
+    Result := True
+  else
+    Result := (not FOneOnly) and not FTabs[ATabIndex].NotCreateChecked;
+end;
+
+function TFrmODedtOrStdItem.CounterpartTabNeedsSave(ATabIndex: Integer): Boolean;
+//вкладка ATabIndex (>0), для которой ShouldSaveTab уже вернул True - реально нуждается в записи в БД, только
+//если это НОВОЕ изделие (FTabs[ATabIndex].DuplicateFound = False - его в любом случае нужно создать, иначе
+//ссылаться в смете будет не на что, см. общий комментарий в Save) ЛИБО уже существующее, но хотя бы одно из
+//синхронизируемых полей (FSyncFields) сейчас отличается от того, что уже есть в БД (снимок в ExistingNames,
+//см. LoadExistingNamesForTab/ApplyExistingItemToTabSlot).
+//
+//Без этой проверки ЛЮБОЕ изменение 0-й вкладки при ВЫКЛЮЧЕННОЙ синхронизации на парной вкладке приводило бы к
+//тому, что VerifyBeforeSave безусловно показывал бы "будет обновлено существующее ... изделие" для этой парной
+//вкладки, а Save реально выполнял бы её пустое обновление (теми же значениями, что уже в БД) - хотя
+//пользователь эту вкладку вообще не трогал и синхронизацию не включал (см. переписку с пользователем). Когда
+//синхронизация ВКЛЮЧЕНА, GetTabFieldValue для этой вкладки как раз и берет АКТУАЛЬНЫЕ значения 0-й вкладки
+//(см. её общий комментарий) - если они успели разойтись со снимком в БД, здесь это корректно обнаружится как
+//реальное изменение. Сравнение через S.NNum - см. тот же приём и то же обоснование в ChbSyncClick.
+//
+//ВАЖНО (добавлено - найдено по факту, см. переписку с пользователем и общий комментарий в CheckNameDuplicates):
+//раз найденная в режиме редактирования пара теперь "закреплена" независимо от дальнейшего ввода в edt_name,
+//переименование 0-й вкладки САМО ПО СЕБЕ (даже без изменений FSyncFields) - тоже причина, по которой парную
+//вкладку нужно сохранить (переименовать наравне с 0-й) - без этой проверки чистое переименование при
+//неизменных цене/маршруте тут же попало бы на "Result := False" ниже, и SaveCounterpartTab вообще не вызвался бы.
+var
+  LFields: TVarDynArray;
+  j: Integer;
+begin
+  Result := True;
+  if (ATabIndex = 0) or not FTabs[ATabIndex].DuplicateFound or (FTabs[ATabIndex].DuplicateRow < 0) then
+    Exit; //новое изделие (или подстраховка при некорректном состоянии) - всегда нуждается в создании
+  if UpperCase(Trim(VarToStr(FTabs[ATabIndex].ExistingNames[FTabs[ATabIndex].DuplicateRow][0]))) <> UpperCase(Trim(edt_name.Text)) then
+    Exit; //переименовано - см. общий комментарий выше
+  LFields := A.ExplodeV(FSyncFields, ';');
+  for j := 0 to High(LFields) do
+    if (j + 2 <= High(FTabs[ATabIndex].ExistingNames[FTabs[ATabIndex].DuplicateRow])) and
+       (S.NNum(GetTabFieldValue(ATabIndex, VarToStr(LFields[j]))) <>
+        S.NNum(FTabs[ATabIndex].ExistingNames[FTabs[ATabIndex].DuplicateRow][j + 2])) then
+      Exit;
+  Result := False;
+end;
+
+function TFrmODedtOrStdItem.GetTabFieldValue(ATabIndex: Integer; const AField: string): Variant;
+//разрешает АКТУАЛЬНОЕ (на текущий момент, независимо от того, какая вкладка сейчас реально отображается)
+//значение поля AField (без суффикса типа - имя из FSyncFields, например 'price_base', НЕ 'price_base$f') для
+//вкладки ATabIndex:
+//  - если ATabIndex - вкладка, активная ПРЯМО СЕЙЧАС - значения полей формы (fvtVCurr) актуальны напрямую;
+//  - если это НЕ активная вкладка, но >0 и с включенной синхронизацией - синхронизированные поля зеркалят
+//    0-ю вкладку (см. SwitchToTab/ChbSyncClick), поэтому берем АКТУАЛЬНОЕ значение именно 0-й вкладки (не
+//    свой слот - он мог не обновляться с прошлого визита и быть устаревшим, если пользователь менял поля на
+//    0-й вкладке уже после того, как в последний раз покидал/заходил на эту вкладку);
+//  - иначе (не активна, не синхронизирована, либо это 0-я вкладка и она не активна) - берем значение из
+//    собственного слота вкладки (fvtCustom[ATabIndex]) - оно обновляется при каждом уходе с вкладки (см.
+//    SwitchToTab) или при обнаружении совпадения по имени (см. ApplyExistingItemToTabSlot).
+begin
+  if ATabIndex = FActiveTab then
+    Result := F.GetProp(AField, fvtVCurr)
+  else if (ATabIndex > 0) and FTabs[ATabIndex].SyncChecked then begin
+    if FActiveTab = 0 then
+      Result := F.GetProp(AField, fvtVCurr)
+    else
+      Result := F.GetProp(AField, 0)
+  end
+  else
+    Result := F.GetProp(AField, ATabIndex);
+end;
+
+function TFrmODedtOrStdItem.GetPrefixedName(AIdOrFormatEstimate: Variant; const AName: string): string;
+var
+  LPrefix: string;
+begin
+  LPrefix := '';
+  if S.NNum(AIdOrFormatEstimate) > 0 then
+    LPrefix := VarToStr(Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [AIdOrFormatEstimate]));
+  Result := S.IIFStr(LPrefix <> '', LPrefix + '_', '') + Trim(AName);
+end;
+
+procedure TFrmODedtOrStdItem.RenameNomenclatura(AIdOrFormatEstimate: Variant; const AOldName, ANewName: string; AItemType: Integer);
+//переименовывает запись в номенклатуре ИТМ (dv.nomenclatura) и, ОТДЕЛЬНО, в справочнике сметных позиций Учета
+//(bcad_nomencl) - по ПОЛНОМУ (с учетом префикса подгруппы AIdOrFormatEstimate, см. GetPrefixedName) наименованию.
+//ВАЖНО (обобщено по просьбе пользователя - см. переписку): раньше это переименование выполнялось только для
+//0-й вкладки (единственной, которую можно было переименовать) - теперь, когда однажды найденная в режиме
+//редактирования парная вкладка тоже переименовывается наравне с 0-й (см. общий комментарий в
+//CheckNameDuplicates/SaveCounterpartTab), обработка должна быть ОДИНАКОВОЙ для любой сохраняемой вкладки: и
+//сама запись or_std_items (см. SaveCounterpartTab/inherited Save), и ее полное наименование в ИТМ/bcad_nomencl.
+//Вызывается из Save для 0-й вкладки (AIdOrFormatEstimate = FIdEstimateGroup, AOldName = FNameOld) и для каждой
+//реально переименовываемой парной вкладки (AIdOrFormatEstimate = FTabs[i].IdOrFormatEstimate - у каждой
+//подгруппы свой префикс, AOldName - имя, под которым найденная запись значится в БД).
+//
+//Про bcad_nomencl - только для НЕ-полуфабрикатов (AItemType <> STDITEM_TYPE_SEMIPRODUCT; для полуфабрикатов
+//логику смет пока не трогаем, см. TODO в конце модуля и предупреждение в VerifyBeforeSave) - в паре вкладок
+//полуфабрикатов не бывает вовсе (см. LoadCounterpartTabs), так что для i > 0 эта проверка всегда проходит.
+//В estimate_items ссылка на компонент делается ПО ИМЕНИ через bcad_nomencl (id_name) - переименование самой
+//записи bcad_nomencl автоматически "протаскивает" новое имя во все сметы, где изделие уже использовано как
+//компонент, без необходимости искать и править каждую такую смету отдельно.
+//
+//Совпадения полных имён практически исключены, поэтому просто переименовываем существующую запись, если только
+//запись с НОВЫМ именем уже не существует (защита от нарушения уникальности name/dv.nomenclatura.name) - то же
+//самое условие заранее проверяется в VerifyBeforeSave (для текста подтверждения).
+var
+  LOldPrefixedName, LNewPrefixedName: string;
+  Res: Integer;
+begin
+  LOldPrefixedName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
+  LNewPrefixedName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
+  if LOldPrefixedName = LNewPrefixedName then
+    Exit;
+  Res := Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, LNewPrefixedName]);
+  if Res = 0 then
+    Q.QExecSql('update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s',
+      [LNewPrefixedName, LNewPrefixedName, ItmGroups_Production_ID, LOldPrefixedName]);
+  if AItemType <> STDITEM_TYPE_SEMIPRODUCT then begin
+    Res := Q.QLoadValue('select count(1) from bcad_nomencl where name = :name$s', [LNewPrefixedName]);
+    if Res = 0 then
+      Q.QExecSql('update bcad_nomencl set name = :name$s where name = :nameold$s', [LNewPrefixedName, LOldPrefixedName]);
+  end;
+end;
+
+function TFrmODedtOrStdItem.GetNomenclaturaRenamePlanText(AIdOrFormatEstimate: Variant; const AOldName, ANewName: string; AItemType: Integer): string;
+//текст для диалога подтверждения (см. VerifyBeforeSave) - ЗАРАНЕЕ (без изменений в БД) предсказывает, что
+//реально сделает RenameNomenclatura при сохранении - той же самой логикой (в т.ч. той же защитой от нарушения
+//уникальности - "не переименовываем, если целевое имя уже занято"), чтобы обещание в диалоге строго совпадало
+//с тем, что произойдет при сохранении (см. общее требование пользователя в начале VerifyBeforeSave).
+var
+  LOldPrefixedName, LNewPrefixedName: string;
+begin
+  Result := '';
+  LOldPrefixedName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
+  LNewPrefixedName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
+  if LOldPrefixedName = LNewPrefixedName then
+    Exit;
+  if (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LOldPrefixedName]) > 0) and
+     (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LNewPrefixedName]) = 0) then
+    S.ConcatStP(Result, Format('- в номенклатуре ИТМ запись "%s" будет переименована в "%s"', [LOldPrefixedName, LNewPrefixedName]), #13#10);
+  if AItemType <> STDITEM_TYPE_SEMIPRODUCT then
+    if (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LOldPrefixedName]) > 0) and
+       (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LNewPrefixedName]) = 0) then
+      S.ConcatStP(Result, Format('- в справочнике сметных позиций (bcad_nomencl) запись "%s" будет переименована в "%s" (это же затронет сметы, где изделие используется как компонент)', [LOldPrefixedName, LNewPrefixedName]), #13#10);
+end;
+
+function TFrmODedtOrStdItem.GetTabExistingId(ATabIndex: Integer): Variant;
+//id уже существующего (до сохранения) изделия вкладки ATabIndex, если он уже известен - для 0-й вкладки это
+//ID диалога (заполнен в режимах fEdit/fView/fDelete), для остальных - найденное по совпадению имени в
+//ExistingNames (FTabs[i].DuplicateFound/DuplicateRow, см. CheckNameDuplicates), либо Null, если изделие еще
+//не существует и будет создано заново
+begin
+  if ATabIndex = 0 then
+    Result := S.IIf(Mode = fEdit, ID, Null)
+  else if FTabs[ATabIndex].DuplicateFound and (FTabs[ATabIndex].DuplicateRow >= 0) then
+    Result := FTabs[ATabIndex].ExistingNames[FTabs[ATabIndex].DuplicateRow][1]
+  else
+    Result := Null;
+end;
+
+function TFrmODedtOrStdItem.CheckDuplicateNameInDb(AIdOrFormatEstimate, AExcludeId: Variant; const AName, APrefixedName: string; out AMsg: string): Boolean;
+//мандатная проверка в БД (см. общий комментарий в VerifyBeforeSave) - не занято ли наименование (простое -
+//в or_std_items этой же подгруппы, и с префиксом - в ИТМ среди номенклатуры типа "материалы и комплектующие")
+//каким-то ДРУГИМ (не AExcludeId) изделием. По смыслу и структуре сообщений - то же самое, что и старая,
+//намеренно не тронутая проверка для 0-й вкладки (см. начало VerifyBeforeSave), но обобщено на произвольную
+//подгруппу/имя/исключаемый id, чтобы использовать для любой сохраняемой вкладки.
+var
+  res1, res3: Integer;
+begin
+  Result := True;
+  AMsg := '';
+  res1 := Q.QLoadValue('select count(1) from or_std_items where id <> :id$i and id_or_format_estimates = :idf$i and name = :name$s',
+    [S.IIf(S.NNum(AExcludeId) > 0, AExcludeId, -1), AIdOrFormatEstimate, AName]);
+  res3 := Q.QLoadValue('select count(1) from dv.nomenclatura where id_nomencltype = 0 and name = :name$s', [APrefixedName]);
+  if res1 + res3 > 0 then begin
+    AMsg := S.IIf(res1 > 0, 'Такое наименование уже существует в этой группе стандартных изделий Учета!'#13#10, '') +
+      S.IIf(res3 > 0, 'Такое наименование (с учетом префикса) уже есть в ИТМ среди номенклатуры типа "материалы и комплектующие"!'#13#10, '');
+    Result := False;
+  end;
+end;
+
+function TFrmODedtOrStdItem.SaveCounterpartTab(ATabIndex: Integer): Variant;
+//сохраняет изделие парной вкладки ATabIndex (>0): если ранее было найдено совпадение по имени в этой
+//подгруппе (FTabs[ATabIndex].DuplicateFound - см. CheckNameDuplicates/ApplyExistingItemToTabSlot) - обновляет
+//НАЙДЕННУЮ существующую запись (цену/маршрут, и, если наименование успело разойтись - см. ниже - то и само
+//наименование); иначе - создает НОВУЮ запись or_std_items в этой подгруппе. Использует тот же Q.QSave
+//(insert/update по id, Sequence пустая строка - генерация id триггером trg_or_std_items_bi_r + returning), что
+//и базовый механизм диалога (TFrmBasicDbDialog.Save) для самой 0-й вкладки - см. тот же прием там.
+//
+//ВАЖНО про by_sgp: это поле НИКОГДА не синхронизируется между вкладками (см. общий комментарий у FSyncFields) -
+//для новой записи используется значение по умолчанию 0, для уже существующей (обновление) не трогается вовсе.
+//
+//ВАЖНО (исправлено - найдено по факту, см. переписку с пользователем): раньше наименование найденной записи
+//считалось неизменным ("оно уже совпадает") - это было верно, пока CheckNameDuplicates переоценивала совпадение
+//на каждое изменение edt_name. Теперь, в режиме редактирования, однажды найденная пара "закреплена" (см.
+//общий комментарий в CheckNameDuplicates) и дальнейшее редактирование имени 0-й вкладки больше не сбрасывает
+//найденное совпадение - вместо этого парное изделие должно быть ПЕРЕИМЕНОВАНО наравне с 0-й вкладкой. Поэтому
+//name теперь всегда включено в UPDATE (безвредно, если имя не менялось - тогда просто перезапишется тем же).
+//ВАЖНО (обобщено по просьбе пользователя - см. переписку): переименование полного (с префиксом ПОДГРУППЫ ЭТОЙ
+//ЖЕ вкладки) наименования в ИТМ/bcad_nomencl теперь ТОЖЕ выполняется для парных вкладок, той же обработкой, что
+//и для 0-й - см. RenameNomenclatura, вызывается из Save сразу после SaveCounterpartTab (не отсюда - этот метод
+//сам по себе не знает "старое" имя записи после вызова, оно определяется в Save до вызова).
+//
+//Возвращает id сохраненного/созданного изделия, либо Null при ошибке (ошибка уже показана пользователем самим
+//Q.QSave/QExecSql, см. их параметр ShowError по умолчанию True).
+var
+  LFields: string;
+  LValues: TVarDynArray;
+  i: Integer;
+  LId, LRes: Variant;
+begin
+  Result := Null;
+  if FTabs[ATabIndex].DuplicateFound and (FTabs[ATabIndex].DuplicateRow >= 0) then begin
+    LId := FTabs[ATabIndex].ExistingNames[FTabs[ATabIndex].DuplicateRow][1];
+    LFields := 'id$i;name$s;price_base$f;wo_estimate$i;r0$i';
+    LValues := [LId, Trim(edt_name.Text), GetTabFieldValue(ATabIndex, 'price_base'), GetTabFieldValue(ATabIndex, 'wo_estimate'), GetTabFieldValue(ATabIndex, 'r0')];
+    for i := 0 to High(RouteFields) do begin
+      LFields := LFields + ';r' + IntToStr(i + 1) + '$i';
+      LValues := LValues + [GetTabFieldValue(ATabIndex, 'r' + IntToStr(i + 1))];
+    end;
+    LRes := Q.QSave('U', 'or_std_items', '', LFields, LValues);
+    if LRes < 0 then
+      Exit;
+    Result := LId;
+  end
+  else begin
+    LFields := 'id$i;name$s;price_base$f;wo_estimate$i;r0$i;by_sgp$i;id_or_format_estimates$i';
+    LValues := [Null, Trim(edt_name.Text), GetTabFieldValue(ATabIndex, 'price_base'), GetTabFieldValue(ATabIndex, 'wo_estimate'),
+      GetTabFieldValue(ATabIndex, 'r0'), 0, FTabs[ATabIndex].IdOrFormatEstimate];
+    for i := 0 to High(RouteFields) do begin
+      LFields := LFields + ';r' + IntToStr(i + 1) + '$i';
+      LValues := LValues + [GetTabFieldValue(ATabIndex, 'r' + IntToStr(i + 1))];
+    end;
+    LId := Q.QSave('I', 'or_std_items', '', LFields, LValues);
+    if LId < 0 then
+      Exit;
+    Result := LId;
+  end;
+end;
+
+procedure TFrmODedtOrStdItem.SyncOrderItemTemplates(ATabIndex: Integer; AId: Variant);
+//устанавливает в шаблонах (order_items с псевдо-id_order - см. условие ниже) цену и маршрут изделий,
+//соответствующих данному (AId) - было только для 0-й вкладки (в режиме редактирования), вынесено в общий метод,
+//т.к. теперь применяется к КАЖДОМУ сохраняемому изделию (см. общий комментарий в начале Save) - при изменении
+//цены/маршрута любого из них его шаблоны в заказах должны быть скорректированы точно так же (см. FOpt.InfoArray
+//в Prepare - "по изделию", а не только по тому, что открыто в диалоге).
+//
+//Вызывается только для уже СУЩЕСТВОВАВШИХ изделий - для только что созданных шаблонов еще нет и быть не может.
+var
+  i: Integer;
+  LSqlFields, LValues: TVarDynArray;
+  LPlainFields: TVarDynArray;
+begin
+  if (ATabIndex = 0) and (Mode <> fEdit) then
+    Exit;
+  if (ATabIndex > 0) and not FTabs[ATabIndex].DuplicateFound then
+    Exit;
+  LSqlFields := ['price_base$f', 'r0$i'];
+  LPlainFields := ['price_base', 'r0'];
+  for i := 0 to High(RouteFields) do begin
+    LSqlFields := LSqlFields + ['r' + IntToStr(i + 1) + '$i'];
+    LPlainFields := LPlainFields + ['r' + IntToStr(i + 1)];
+  end;
+  LValues := [];
+  for i := 0 to High(LPlainFields) do
+    LValues := LValues + [GetTabFieldValue(ATabIndex, VarToStr(LPlainFields[i]))];
+  Q.QExecSql(Q.QGetSql('Q', 'order_items', LSqlFields.Implode(';')) + ' where id_order < 0 and id_order > -100000 and id_std_item = :id_std_item$i', LValues + [AId]);
 end;
 
 procedure TFrmODedtOrStdItem.SetRoute;
@@ -1001,5 +1792,33 @@ begin
 end;
 
 end.
+
+{
+  TODO (chb_OneOnly / Cth.CreateControls, Cth.AutoSizeCheckBoxes - uForms.pas):
+
+  - Проверить автоширину чекбокса (TDBCheckBoxEh). Сейчас Cth.AutoSizeCheckBoxes фактически не подгоняет
+    Width под текст на практике (по факту Width остаётся дефолтным - проверено, при полной подписи
+    "Редактировать одно"/"Создать одно" текст обрезался) - при этом проверка типа "if not (c is
+    TCustomCheckBox) then Continue" в uForms.pas была расширена до "... or (c is TDBCheckBoxEh)" (т.к.
+    TDBCheckBoxEh не наследуется от TCustomCheckBox), но и это ничего не изменило. У TDBCheckBoxEh нет
+    свойства AutoSize вообще (подтверждено компилятором) - значит автоширина для этого класса, если и
+    работает где-то в проекте, реализована каким-то другим приёмом, не через AutoSize.
+    Пока обходим проблему коротким текстом подписи ("Только одно" вместо двух длинных вариантов) - в
+    дефолтную ширину чекбокса он помещается без подгонки.
+
+  - В Cth.CreateControls (uForms.pas) добавить параметр Width: при 0 - использовать текущую дефолтную ширину
+    (как сейчас), при -1 - автоматическую подгонку под текст. Судя по всему, для вручную созданных
+    TDBCheckBoxEh автоширина где-то в проекте уже работает - см. как это сделано в uFrmOWOrder.pas
+    ("wOrders") - разобрать этот пример и повторить тот же приём здесь.
+    ВАЖНАЯ ЗАЦЕПКА: в uFrmOWOrder.pas вызов Cth.AutoSizeCheckBoxes(Self) сделан не в Prepare, а в
+    AfterFormActivate (т.е. уже ПОСЛЕ показа формы и одноразового замера CorrectFormSize - см. тот же приём,
+    что и с FTabsVisReady в этом модуле). Возможно, дело именно в моменте вызова: в Prepare (рано, контрол
+    ещё может быть не до конца инициализирован - шрифт/размер шрифта через Font могут ещё не соответствовать
+    реальному отображаемому) bmp.Canvas.TextWidth в AutoSizeCheckBoxes мог посчитать неверную (заниженную)
+    ширину. Стоит попробовать перенести вызов для chb_OneOnly в AfterFormActivate по аналогии.
+
+  - Для чекбоксов, создаваемых через CreateControls (в частности chb_OneOnly в этом модуле), по возможности
+    переключить на автоширину по умолчанию, если удастся добиться, чтобы она действительно работала.
+}
 
 

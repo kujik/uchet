@@ -95,7 +95,7 @@ uses
   uWindows,
   uServerTasks,
   D_SetPassword,
-  D_MainSettings, D_ModuleSettings, D_Rep_Smeta,
+  D_ModuleSettings, D_Rep_Smeta,
 
 
   uFrmADedtItmCopyRigths,
@@ -434,8 +434,6 @@ begin
       Dlg_SetPassword.ShowDialog(1)
     else if MenuCaption = 'Копировать права доступа ИТМ' then
       FrmADedtItmCopyRigths.ShowDialog
-    else if MenuCaption = 'Основные настройки' then
-      Dlg_MainSettings.ShowDialog
     else if MenuCaption = 'Настройки модулей' then
       Dlg_ModuleSettings.ShowDialog
     else if MenuCaption = 'Отчет по себестоимости заказов' then
