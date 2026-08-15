@@ -183,8 +183,8 @@ const
   ORDER_ID_STATUS_STOPPED = -1;
   ORDER_ID_STATUS_DELETED = -2;
 
-  cOrdersOrderStatusNames: array [1..3] of string =
-    ('на оформлении', 'проведен', 'запущен в работу');
+  cOrdersOrderStatusNames: array [ORDER_ID_STATUS_DELETED..ORDER_ID_STATUS_STARTED] of string =
+    ('удален', 'остановлен', 'на оформлении', 'проведен', 'запущен в работу');
 
 
   //пароль для отображения архивных заказов по Н, вводится в журнале заказов по нажатии Ctrl-Alt-W
@@ -427,6 +427,7 @@ function TOrders.SyncOrderWithITM(IdOrder: Integer; OrderItems: TVarDynArray; Lo
 var
   st: string;
 begin
+//  if Q.QLoadValue('select id_status from orders where)
   Result:= False;
   //сделаем строку из массива измененяемых смет, и добавим 0, чтобы шла всегда синхронизация переданного массива
   st:=A.Implode(OrderItems, ',', True) + S.IIFStr(not LoadOrderAllItems, ',0');

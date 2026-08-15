@@ -722,6 +722,8 @@ begin
     [],
     ['Мониторинг сделок снабжения', myfrm_J_SplDealsMonitoring, User.Roles([], [rOr_J_SplDealsMonitoring])],
     ['Отчет по закупочным ценам.', myfrm_Rep_Purchase_Prices, User.Roles([], [rOr_Rep_Purchase_Prices])],
+    [],
+    ['Отчет по проблемам в БД', myfrm_Rep_Or_DataCheck, User.Roles([], [rOr_Rep_DataCheck]) or User.IsDeveloper],
 
     ['Сервис'],
     ['Формирование заявок на снабжение', myfrm_R_MinRemains, User.Roles([], [rOr_Other_R_MinRemains_V, rOr_Other_R_MinRemains_Ch, rOr_Other_R_MinRemains_Ch_Suppl])],

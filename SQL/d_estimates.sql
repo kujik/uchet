@@ -351,7 +351,7 @@ end;
  
 --вызывает ошибки при удалении в ора11хе!!!
 drop trigger trg_estimate_items_master;
-create or replace trigger trg_estimate_items_master   --!-
+create or replace trigger trg_estimate_items_master   --$-
   for insert or update or delete on estimate_items
   compound trigger
 
@@ -577,7 +577,7 @@ end;
 --  - лога изменений нет - теперь строится оберткой uOrders.LoadEstimate сравнением "было"/"стало".
 --вызовы заменены на новую процедуру (uOrders.pas TOrders.LoadEstimate, d_orders.sql P_CreatePspForSemiproducts).
 --удалить после подтверждения, что новая процедура отработала на реальных данных.
-create or replace procedure P_CopyEstimate ( --!-
+create or replace procedure P_CopyEstimate ( --$-
 --устарела, см. p_copy_std_estimate_to_order_item ниже - не трогать, кандидат на удаление
   IdEstimate in number,       --запись в estimates должна быть создана
   IdStdEstimate in number,    --айди стандартной, из которой копируем
@@ -737,6 +737,7 @@ begin
       end if; 
       DV.P_SyncSpecIzdel(IdZakaz, IdParentIzdel, FullName, Unit, Qnt_Itm, Comment, IdSpec);
       if IdSpec <> -1 then
+
         ResCount := ResCount + 1;
       end if;
     exception
@@ -748,7 +749,7 @@ begin
   --удалим из ИТМ позиции, которых нет более в смете
   delete from dv.nomenclatura_in_izdel niz
     where niz.checked=1 and niz.id_zakaz=IdZakaz and niz.id_nomizdel_parent_t=IdParentIzdel;
-  insert into adm_db_log (itemname, comm) values ('P_SendEstimateToItm ', 'id_zakaz ' || IdZakaz || '; id_parent_izdel ' || IdParentIzdel || '  изм=' || FlagCnt);
+  --insert into adm_db_log (itemname, comm) values ('P_SendEstimateToItm ', 'id_zakaz ' || IdZakaz || '; id_parent_izdel ' || IdParentIzdel || '  изм=' || FlagCnt);
 end;
 / 
 

@@ -4,9 +4,11 @@ SqlUpdater - обработка sql-скриптов проекта (катал�
 Грид со списком файлов d_*.sql (путь задан константой cSqlFolder), с галочкой отметки
 файлов для обработки. При открытии формы и по кнопке "Обновить" все файлы списка
 предварительно разбираются (ScanFileMarkers) - заполняются колонки "Изменения" (есть ли в
-файле --!!!), "Скрипты" (есть ли взведенные --!go begin/--!go end) и "Создание/удаление" (есть
-ли взведенные --!+/--!-); по клику на галку в этих колонках (cellbutton) показывается
-подробный отчет.
+файле --!!!), "Скрипты" (есть ли взведенные --!go begin/--!go end), "Создание/удаление" (есть
+ли взведенные --!+/--!-) и "Обработано" (есть ли уже обработанные/финальные метки --$+/--$-/
+--$go begin.../--$dropped/--$completed begin - см. BuildProcessedTagsReport, uSqlUpdaterCore.pas);
+по клику на галку в этих колонках (cellbutton) показывается подробный отчет - конкретные
+строки/блоки файла с соответствующими метками.
 
 Теги действия (--!+/--!- на столбцах/объектах, блоки --!go begin/end) - трехсостоятельные:
 взведен ("!", подлежит выполнению) -> обработан ("$", уже выполнен - ставится автоматически) ->
@@ -65,7 +67,7 @@ type
     function  GetCheckedFiles: TStringDynArray;
     procedure ShowResultLog(ALog: TStrings);
     procedure ViewSelectedFile;
-    procedure ViewFileByRow(No: Integer);
+    procedure ViewFileByRow(ARow: Integer);
     procedure RunCommentsOnly;
     procedure RunFullProcess;
     procedure RunAfterImport;
@@ -98,19 +100,20 @@ begin
     ['dt$d','Изменён','110'],
     ['haschanges$i','Изменения','90','chb','bt=Показать'],
     ['hasscripts$i','Скрипты','90','chb','bt=Показать'],
-    ['hastags$i','Создание/удаление','120','chb','bt=Показать']
+    ['hastags$i','Создание/удаление','120','chb','bt=Показать'],
+    ['hasprocessed$i','Обработано','100','chb','bt=Показать']
   ]);
   Frg1.SetInitData([], '');
   Frg1.Opt.SetButtons(1, [
     [mbtCustom_SqlUpd_Refresh, True, 'Обновить', 'refresh'],[],
     [-mbtCustom_SqlUpd_ViewFile, True, 'Открыть файл'],
-    [mbtCustom_SqlUpd_FullProcess, True, 120, 'Полная обработка'],
-    [mbtCustom_SqlUpd_Comments, True, 140, 'Установка комментариев'],[],
-    [mbtCustom_SqlUpd_ClearAttention, True, 80, 'Снять --!!!', ''],
-    [mbtCustom_SqlUpd_DisableGoBlocks, True, 90, 'Снять го-блоки', ''],[],
+    [-mbtCustom_SqlUpd_FullProcess, True, 'Полная обработка'],
+    [-mbtCustom_SqlUpd_Comments, True, 'Установка комментариев'],[],
+    [mbtCustom_SqlUpd_ClearAttention, True, 140, 'Снять --!!!', ''],
+    [mbtCustom_SqlUpd_DisableGoBlocks, True, 150, 'Снять го-блоки', ''],[],
     [-mbtCustom_SqlUpd_ViewLogs, True, 'Просмотр логов'],[],
     [mbtDividorM],
-    [mbtCustom_SqlUpd_More, True, 115, 'Дополнительно', 'ok'],
+    [mbtCustom_SqlUpd_More, True, 106, 'Дополнительно', 'ok'],
     [mbtCustom_SqlUpd_AfterImport, True, 'Действия после импорта'],
     [mbtCustom_SqlUpd_RestoreTriggers, True, 'Восстановить триггеры действий'],
     [mbtCustom_SqlUpd_RemoveTriggers, True, 'Удалить триггеры'],
@@ -128,7 +131,7 @@ begin
 
     'КНОПКИ'#13#10 +
     'Обновить - перечитывает список файлов и заново разбирает признаки в колонках'#13#10 +
-    '  "Изменения"/"Скрипты"/"Создание-удаление".'#13#10 +
+    '  "Изменения"/"Скрипты"/"Создание-удаление"/"Обработано".'#13#10 +
     'Открыть файл - просмотр/редактирование текста файла (то же самое, что целлбаттон на колонке'#13#10 +
     '  "Файл").'#13#10 +
     'Полная обработка - для отмеченных файлов по порядку: комментарии к таблицам/столбцам,'#13#10 +
@@ -179,6 +182,8 @@ begin
     'повторно уже не выполняется) -> финал (--$dropped, ставится вручную кнопкой "Удалить'#13#10 +
     'триггеры" - после этого строку можно удалить из файла). Кнопка "Восстановить триггеры'#13#10 +
     'действий" переводит "$" обратно в "!" для повторного прогона.'#13#10 +
+    'Тег --!- (удаление объекта/столбца): если объекта/столбца в БД уже нет (удален вручную или'#13#10 +
+    'предыдущим прогоном) - это считается успехом без ошибки, тег сразу помечается обработанным.'#13#10 +
     #13#10 +
     'Блок --!go begin ... --!go end - произвольные ddl/dml операторы (через ; для обычных'#13#10 +
     'команд, через одиночную / в своей строке - для plsql-объектов: procedure/function/'#13#10 +
@@ -200,6 +205,10 @@ begin
     #13#10 +
     '--!!! - метка внимания на отдельной строке, для собственных пометок разработчика (не'#13#10 +
     'исполняется). Кнопка "Снять --!!!" убирает такие строки целиком.'#13#10 +
+    #13#10 +
+    'Колонка "Обработано" - показывает, есть ли в файле уже обработанные или финальные метки'#13#10 +
+    '(--$+/--$-, --$go begin...end, --$dropped, --$completed begin) - по клику показывается их'#13#10 +
+    'текст/содержимое, как и для остальных отмеченных галочкой колонок.'#13#10 +
     #13#10 +
 
     'ПРОСМОТРЩИК/РЕДАКТОР ФАЙЛА'#13#10 +
@@ -241,19 +250,27 @@ begin
 end;
 
 procedure TFrmXAdmSqlUpdater.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+//ВАЖНО: No - это НЕ номер строки грида, а номер самого грида на форме (см. FNo/TFrDBGridEh.No,
+//uFrDBGridEh.pas - берется из последнего символа имени компонента, "Frg1" -> 1); раньше здесь по
+//ошибке использовался как номер строки, из-за чего целлбаттон всегда открывал/показывал одну и ту
+//же (случайную по отношению к клику) строку вместо реально нажатой (см. переписку с пользователем).
+//Правильный номер СТРОКИ - Fr.RecNo - 1 (0-based, RecNo - позиция курсора в гриде, которая клик по
+//целлбаттону уже перевел на нужную строку до вызова этого обработчика).
 var
   FileName, Report: string;
   Text, ErrMsg: string;
+  ARow: Integer;
 begin
+  ARow := Fr.RecNo - 1;
   if Fr.CurrField = 'filename' then begin
-    ViewFileByRow(No);
+    ViewFileByRow(ARow);
     Exit;
   end;
 
-  if (Fr.CurrField <> 'haschanges') and (Fr.CurrField <> 'hasscripts') and (Fr.CurrField <> 'hastags') then
+  if not A.InArray(Fr.CurrField, ['haschanges', 'hasscripts', 'hastags', 'hasprocessed']) then
     Exit;
 
-  FileName := IncludeTrailingPathDelimiter(cSqlFolder) + VarToStr(Fr.GetValue('filename', No));
+  FileName := IncludeTrailingPathDelimiter(cSqlFolder) + VarToStr(Fr.GetValue('filename', ARow));
   Text := LoadSqlFileText(FileName, ErrMsg);
   if ErrMsg <> '' then begin
     MyWarningMessage(ErrMsg);
@@ -272,7 +289,9 @@ begin
     if not ParseFileTables(FileName, Tables, ParseErr) then
       Tables := nil;
     Report := BuildTagsReport(Tables, ScanFileObjectTags(Text, FileName));
-  end;
+  end
+  else if Fr.CurrField = 'hasprocessed' then
+    Report := BuildProcessedTagsReport(Text);
 
   if Trim(Report) = '' then
     MyInfoMessage('Ничего не найдено (возможно, признак уже не актуален - нажмите "Обновить").', [])
@@ -286,7 +305,7 @@ var
   SearchRec: TSearchRec;
   i: Integer;
   FullName: string;
-  HasAttn, HasGo, HasTags: Boolean;
+  HasAttn, HasGo, HasTags, HasProcessed: Boolean;
   ErrMsg: string;
 begin
   Frg1.MemTableEh1.EmptyTable;
@@ -299,7 +318,7 @@ begin
           if (SearchRec.Attr and faDirectory) = 0 then begin
             Inc(i);
             FullName := IncludeTrailingPathDelimiter(cSqlFolder) + SearchRec.Name;
-            ScanFileMarkers(FullName, HasAttn, HasGo, HasTags, ErrMsg);
+            ScanFileMarkers(FullName, HasAttn, HasGo, HasTags, HasProcessed, ErrMsg);
             Frg1.MemTableEh1.Append;
             Frg1.MemTableEh1.FieldByName('id').Value := i;
             Frg1.MemTableEh1.FieldByName('num').Value := i;
@@ -309,6 +328,7 @@ begin
             Frg1.MemTableEh1.FieldByName('haschanges').Value := S.IIf(HasAttn, 1, 0);
             Frg1.MemTableEh1.FieldByName('hasscripts').Value := S.IIf(HasGo, 1, 0);
             Frg1.MemTableEh1.FieldByName('hastags').Value := S.IIf(HasTags, 1, 0);
+            Frg1.MemTableEh1.FieldByName('hasprocessed').Value := S.IIf(HasProcessed, 1, 0);
             Frg1.MemTableEh1.Post;
           end;
         until FindNext(SearchRec) <> 0;
@@ -397,11 +417,13 @@ begin
   TFrmXWViewFile.Show(Self, myfrm_Adm_SqlUpd_ViewFile, [myfoSizeable, myfoMulticopy, myfoEnableMaximize], fNone, 0, FileName);
 end;
 
-procedure TFrmXAdmSqlUpdater.ViewFileByRow(No: Integer);
+procedure TFrmXAdmSqlUpdater.ViewFileByRow(ARow: Integer);
+//ARow - 0-based номер строки грида (см. общий комментарий у Frg1CellButtonClick про ошибочное
+//использование No вместо номера строки - здесь параметр переименован для ясности, поведение не менялось)
 var
   FileName: string;
 begin
-  FileName := IncludeTrailingPathDelimiter(cSqlFolder) + VarToStr(Frg1.GetValue('filename', No));
+  FileName := IncludeTrailingPathDelimiter(cSqlFolder) + VarToStr(Frg1.GetValue('filename', ARow));
   TFrmXWViewFile.Show(Self, myfrm_Adm_SqlUpd_ViewFile, [myfoSizeable, myfoMulticopy, myfoEnableMaximize], fNone, 0, FileName);
 end;
 

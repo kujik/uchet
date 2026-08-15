@@ -214,7 +214,10 @@ type
     procedure ReloadRoutesForOrderItems;
     procedure ReloadPricesForOrderItems;
     procedure SetFrgItemsFieldsEditabled;
-    function GetTitleChangesShortText: string;
+    function  GetTitleChangesShortText: string;
+    function  GetEstimateFormatField(AFieldName: string): Variant;
+    function  GetOrderTypeField(AFieldName: string): Variant;
+    procedure SetFrgItemsReadOnly;
 
 
 
@@ -617,7 +620,7 @@ begin
     ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s'],
     ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e,ea'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch,e'],
     ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch,e']
@@ -649,8 +652,8 @@ begin
     //кнопка дополнительныых действий по заказу
       [mbtDividorM],
       [1000, True, 106, 'Действия', 'ok'],
-      [mbtOrderViewHistory,
-      not (FIsTemplate and (Mode in [fEdit, fView])) {and A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])}, //!!!
+      [mbtOrderViewHistory, True,//!!!
+//      not (FIsTemplate and (Mode in [fEdit, fView])) {and A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])}, //!!!
       'Просмотреть историю изменений', ''],
       [],
       [mbtOrderReloadPrices, Mode in [fEdit, fAdd, fCopy], 'Загрузить цены из справочника'],
@@ -792,6 +795,7 @@ begin
   //t - не обязательны в шаблонах
   //td - в шаблонах недоступны и очищены
   //ch - отслеживаются изменения
+  //ea - редактируются и в проведенном и в запущенном заказе
 
   F.DefineFields := [
     ['id$i'],
@@ -824,7 +828,7 @@ begin
     ['or_reference$s','t=td,ch'],
     ['id_reglament$i'],
     ['reglament$s;0', 'V=1:400', 't=t,ch'],
-    ['id_organization$i', 'V=1:400', 't=t,ch'],
+    ['id_organization$i', 'V=1:400', 't=t,ch,t'],
     ['area$i', 'V=1:100', 't=t,ch'],
     ['project$s', 'V=1:500::td', 't=t,ch'],
     ['id_format$i'],
@@ -1130,6 +1134,7 @@ begin
   else
     F.SetProp('id_organization', LOrganization);
   if (Sender = cmb_id_organization) or (LOrganization <> F.GetProp('id_organization').AsInteger) then begin
+    //получим номер заказа (в случае шаблона в процедуре он не будет устанавливаться)
     GetOrderNumber;
   end;
   LOrganization := F.GetProp('id_organization').AsInteger;
@@ -1142,14 +1147,18 @@ begin
   var LUsedEstimateFormatFound := False;
   for i := 0 to FEstimateFormats.High do begin
     if
+      //для шаблона при пустой организации - отгрузочные форматы
+      (FIsTemplate and (LOrganization = 0) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT))
+      or
+      //все остальное может выбраться только при выбранной организации
       (LOrganization <> 0)
       and
       ((
       //отгрузочные
       ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT))
       or
-      //нестандарт
-      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1))
+      //нестандарт (недопустимы в шаблонах)
+      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1) and not FIsTemplate)
       or
       //производственные
       ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_PRODUCTION) and (FOrderTypes.G(ot, 'is_production_order') = 1))
@@ -1245,10 +1254,16 @@ begin
       cmb_cashtype_account.Text := '';
   end;
   //установим из организации ставку НДС и признак оптовой продажи
-  if org >= 0 then begin
+  if org > 0 then begin
     F.SetProps('wholesale', FOrganizations.G(org, 'is_wholesaler'));
     F.SetProps('nds_rate', FOrganizations.G(org, 'nds_rate'));
   end
+  //для производства утсновим розница/0
+  else if org = -1 then begin
+    F.SetProps('wholesale', 0);
+    F.SetProps('nds_rate', 0);
+  end
+  //если организация не выбрана
   else begin
     F.SetProps('wholesale', 0);
     F.SetProps('nds_rate', 0);
@@ -1256,12 +1271,14 @@ begin
 
   SetPermanentFieldProps;
 
-  //сохраним в свойтвах позиции в массивах организации и типа заказа
+  //сохраним в свойствах позиции в массивах организации и типа заказа
   FOrderTypeIndes := ot;
   FOrganizationIndex := org;
 
   if (LNdsRate <> F.GetProp('nds_rate').Asfloat) or (LMargin <> F.GetProp('markup_items_percent').Asfloat) or (LDiscount <> F.GetProp('discount_items_percent').Asfloat) then
     RecalculateItemsPrices;
+
+  SetOrderStatusLabels;
 
   Verify(nil);
 end;
@@ -1971,7 +1988,6 @@ begin
     FStdItems
   );
   //установим список в гриде
-//  FrgItems.Opt.SetPick('itemname', FStdItems.GetCol('name'), FStdItems.GetCol('id'), False, True);
   if LFormat <= 0 then
     FrgItems.UpdatePickKeyList('name', [], [], False, False)
   else
@@ -2114,9 +2130,12 @@ begin
 end;
 
 procedure TFrmOWOrder.CheckBasis;
+//установим статус ошибки для основания заказа
 begin
+  //пропускаем всегда для шаблонов и заказов на оформлении
+  //иначе (пока) требуем или файла ли текста в основании
   frmpcBasis.SetError(not(
-    (FrgBasis.GetRawCount > 0) or (F.GetProp('basis_text').AsString <> '')
+    (FrgBasis.GetRawCount > 0) or (F.GetProp('basis_text').AsString <> '') or FIsTemplate or (F.GetProp('id_status') =  ORDER_ID_STATUS_DRAFT)
   ));
 end;
 
@@ -2192,9 +2211,10 @@ begin
   Msg := '';
   //не корректируеми ввод! если это вызов при вводе данных для возможной коррекции - выходим.
   //иначе некорректно будут выдаваться сообщения, так как мы проверяем не обязательно текущую ячейку!
-  if Mode = dbgvBefore then begin
+  if Mode = dbgvBefore then
     Exit;
-  end;
+  if FrgItems.GridReadOnly then
+    Exit;
   Row := Row - 1;
   var LFieldName := FieldName;
   var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
@@ -2207,7 +2227,13 @@ begin
       LRouteDefined := True;
       Break;
     end;
-  if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
+  if (LFieldName = 'name') and (not LIsStdItem) and (FIsTemplate or (GetOrderTypeField('is_nonstandard').AsInteger = 0)) then begin
+    Msg := 'Нестандартное изделие недопустимо';
+  end
+  else if (LFieldName = 'name') and (LIsStdItem) and (GetOrderTypeField('is_nonstandard_only').AsInteger = 1) then begin
+    Msg := 'Допустимо только нестандартное изделие';
+  end
+  else if (LFieldName[1] = 'r') and (LFieldName[2] in  ['0'..'9']) and not LWoEstimate and not LFromSgp then begin
     Msg := S.IIFStr(not LRouteDefined, 'Не задан маршрут');
   end
   else if (LFieldName[1] = 'r') and (LFieldName[2] in ['0'..'9']) and (LWoEstimate or LFromSgp) then begin
@@ -2367,6 +2393,8 @@ begin
   Cth.SetButtonState(Self, mbtApprove, null, not HasError, True);
   //подсветим измененные поля
   HighlihtCurrentChangedControls;
+  //установим доступность грида изделий для ртедактироывания
+  SetFrgItemsReadOnly;
 end;
 
 function TFrmOWOrder.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
@@ -2742,6 +2770,18 @@ begin
   Result := F.GetProps('ch', fvtVName).Implode(',');
 end;
 
+function TFrmOWOrder.GetEstimateFormatField(AFieldName: string): Variant;
+//получим одно из полей записи форматов смет
+begin
+  Result := FEstimateFormats.GetValueByOtherField(F.GetProp('id_or_format_estimates'), 'id', AFieldName, null);
+end;
+
+function TFrmOWOrder.GetOrderTypeField(AFieldName: string): Variant;
+//получим одно из полей записи типов заказа
+begin
+  Result := FOrderTypes.GetValueByOtherField(F.GetProp('id_type2'), 'id', AFieldName, null);
+end;
+
 procedure TFrmOWOrder.HighlihtCurrentChangedControls;
 //подсветим все контролы, значения которых в строковом виде сейчас не равны первоначальным
 //при FHighlihtCurrentChangedControls = 1 подсветим, 0 - ничего не делаем, -1 - уберем подсветку
@@ -2917,6 +2957,14 @@ begin
   LChanges := A.RemoveDuplicates(LChanges);
   if Length(LChanges) > 0 then
     Result := Result + #13#10#10#10'Тело паспорта:'#13#10'' + LChanges.Implode('  '#13#10);
+end;
+
+procedure TFrmOWOrder.SetFrgItemsReadOnly;
+//делаем таблицу изделий ридонли
+begin
+  //таблица заблокирована для измененмий в режиме диалога Просмтр и Удаление, в статусах заказа Остановлен и Удален, и если не выбран формат изделий
+  //TODO - в uFields способ проверки корректности контрола сооветствующего полю, здесь проверка корректности формата изделия
+  FrgItems.GridReadOnly :=  (Mode in [fView, fDelete]) or (A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])) or (F.GetProp('id_or_format_estimates').AsString = '');
 end;
 
 

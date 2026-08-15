@@ -126,6 +126,9 @@ type
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
     procedure LoadItemFromDB(Row: Integer);
+    //"Создать полуфабрикат" (кнопка тега cBtnCreateSemiproduct - см. PrepareFormAdd/Frg1ButtonClick) - см.
+    //подробный комментарий у реализации
+    procedure CreateSemiproductFromRow;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
@@ -208,6 +211,10 @@ const
   cIdProduct = 104;
   cIdStuff = 1;
   cIdKrep = 103;
+  //кастомный тег кнопки "Создать полуфабрикат" (см. PrepareFormAdd/Frg1ButtonClick/CreateSemiproductFromRow) -
+  //число сохранено таким же, каким оно уже было в предыдущей (нерабочей, закомментированной) заготовке этой
+  //кнопки и в уже существующем Frg1SelectedDataChange (управление доступностью кнопки по текущей строке)
+  cBtnCreateSemiproduct = 1001;
 
 
 function EstDlgChannelIndex(const AId: Variant): Integer;
@@ -385,9 +392,16 @@ begin
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
-    [mbtDividorA],[-4]
-//    [-1001, FTypeOfItem <> 2, 'Создать полуфабрикат'],
-//    [-1002, FTypeOfItem <> 2, 'Редактировать смету полуфабриката']
+    [mbtDividorA],
+    //НОВОЕ (задача пользователя - "Создать полуфабрикат"): создает в справочнике стандартных изделий настоящий
+    //полуфабрикат по наименованию, уже введенному в текущей строке сметы (см. CreateSemiproductFromRow) -
+    //видна, когда грид вообще допускает редактирование строк; активна/неактивна по текущей выбранной строке -
+    //только когда она отнесена к группе "Полуфабрикаты" (см. уже существующий Frg1SelectedDataChange, тег
+    //cBtnCreateSemiproduct сохранен тем же числом, что и там). Раньше здесь была закомментированная нерабочая
+    //заготовка (тег -1001) - отрицательные теги в этом механизме кнопок никогда не создаются (см. CreateButtons,
+    //uForms.pas: "if BtnId < 0 then Continue"), а сравнение FTypeOfItem (string) с числом 2 не скомпилировалось
+    //бы - переписано заново, на реальных типах и с рабочим тегом.
+    [cBtnCreateSemiproduct, alopUpdateEh in Frg1.Opt.AllowedOperations, 'Создать полуфабрикат']
     ], cbttBSmall, pnlFrmBtnsR
   );
   Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow]);
@@ -410,7 +424,9 @@ end;
 
 procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-   Cth.SetButtonState(Fr, 1001, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+   Cth.SetButtonState(Fr, cBtnCreateSemiproduct, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+   //тег 1002 ("Редактировать смету полуфабриката") - отдельная, пока не реализованная задача (соответствующая
+   //кнопка в PrepareFormAdd по-прежнему не создана - см. комментарий там же), оставлено как есть
    Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
 end;
 
@@ -426,6 +442,8 @@ begin
     LoadFromBuffer
   else if Tag = mbtToClipboard then
     SaveEstimateToBuffer
+  else if Tag = cBtnCreateSemiproduct then
+    CreateSemiproductFromRow
   else begin
     Handled := False;
     inherited;
@@ -484,11 +502,19 @@ begin
       Orders.LoadEstimate(null, null, Fr.GetValue('id_or_std_item'));
   end
   else if TCellButtonEh(Sender).Hint = 'Изделие' then begin
-    if not ((Frg1.GetValueS('type_of_item') = '') or (Frg1.GetValueS('type_of_item') = 'Н')) then
+    if not ((Frg1.GetValueS('type_of_item') = '') or (Frg1.GetValueS('type_of_item') = 'Н')) then begin
       //AddParam теперь VarArrayOf([IdOrFormatEstimate, CallMode]) - см. общий комментарий в начале Prepare
-      //(uFrmODedtOrStdItem.pas); просмотр - CallMode = 1, поведение как и раньше (0 здесь и раньше не
-      //использовался предметно - в режиме просмотра список подгруппы все равно схлопывается до одной строки)
-      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fView, Fr.GetValue('id_or_std_item'), VarArrayOf([0, 1]));
+      //(uFrmODedtOrStdItem.pas); CallMode = 1, подгруппу передаем как 0 (Null) - Prepare сам определит
+      //реальную подгруппу изделия по переданному AId (см. новый блок резолвинга FIdOrFormatEstimate там же -
+      //задача пользователя "переделать вызов диалога без справочника, чтобы открывался на редактирование/
+      //просмотр так же, по переданному айди изделия"). Режим - редактирование, если сама смета сейчас
+      //редактируется (иначе только просмотр - как и было раньше); прочие ограничения (права на цены и т.п.)
+      //проверяются уже внутри самого диалога изделия.
+      var LItemMode := fView;
+      if Mode = fEdit then
+        LItemMode := fEdit;
+      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], LItemMode, Fr.GetValue('id_or_std_item'), VarArrayOf([0, 1]));
+    end;
   end;
   VerifyRow(Fr.RecNo - 1, True);
   //VerifyTable;
@@ -502,6 +528,43 @@ begin
   Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, True)], na);
   if na.Count > 0 then
     Frg1.LoadRow(na, Row, True);
+end;
+
+procedure TFrmOGedtEstimate.CreateSemiproductFromRow;
+//"Создать полуфабрикат" (кнопка тега cBtnCreateSemiproduct, см. PrepareFormAdd/Frg1ButtonClick) - для текущей
+//строки сметы, уже отнесенной к группе "Полуфабрикаты" (см. Frg1SelectedDataChange - доступность кнопки), но
+//наименование которой введено вручную и пока не соответствует ни одному реальному изделию в справочнике
+//(id_or_std_item еще не определен). Открывает диалог добавления изделия (uFrmODedtOrStdItem) МОДАЛЬНО, режимом
+//CallMode = 4 (добавление в ЛЮБУЮ активную подгруппу полуфабрикатов - см. общий комментарий у FCallMode там же),
+//с этим наименованием, подставленным по умолчанию (пользователь может изменить его прямо в диалоге).
+//Проверка конфликтов имени (с другими полуфабрикатами/нестандартными/стандартными изделиями) выполняется
+//штатным механизмом самого диалога при сохранении (VerifyBeforeSave/CheckSemiproductNameConflicts,
+//uFrmODedtOrStdItem.pas) - при конфликте диалог просто не даст сохранить, и мы получим ModalResult <> mrOk.
+//После успешного создания подставляет окончательное (возможно, измененное пользователем в диалоге) имя нового
+//изделия в текущую строку сметы и подгружает по нему данные - тем же способом, что и остальные целлбаттоны
+//выбора изделия (см. Frg1CellButtonClick).
+var
+  LName: string;
+  LRes: TMDIResult;
+  LNewName: Variant;
+begin
+  LName := Trim(Frg1.GetValueS('name'));
+  if LName = '' then begin
+    MyWarningMessage('Сначала введите наименование позиции в столбце "Наименование".');
+    Exit;
+  end;
+  //опции - те же, что и по умолчанию использует диспетчер Wh.ExecDialog для этого же диалога (см. ExecDialog,
+  //uWindows.pas) плюс myfoSizeable; вызываем ShowModal2 напрямую, в обход диспетчера, т.к. только так можно
+  //получить обратно TMDIResult с id созданного изделия (Wh.ExecDialog - процедура, результат вызова .Show
+  //внутри нее отбрасывается) - см. общий комментарий выше и FFormResult.Data в TFrmODedtOrStdItem.Save
+  LRes := TFrmODedtOrStdItem.ShowModal2(Self, myfrm_Dlg_R_OrderStdItems, [myfoDialog, myfoRefreshParent, myfoMultiCopy, myfoSizeable], fAdd, Null, VarArrayOf([Null, 4, LName]));
+  if (LRes.ModalResult <> mrOk) or (LRes.Data = Null) then
+    Exit;
+  MarkManualInputChannel;
+  LNewName := Q.QLoadValue('select name from or_std_items where id = :id$i', [LRes.Data]);
+  Frg1.SetValue('name', LNewName);
+  LoadItemFromDB(Frg1.RecNo - 1);
+  VerifyRow(Frg1.RecNo - 1, True);
 end;
 
 procedure TFrmOGedtEstimate.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
@@ -751,3 +814,5 @@ end.
 что можно выбирать в нестандартном изделии?????
 везде проверить работу с фильтром!!!
 какие кнопки выбора изделия когда нужны?
+менять группу в смете для полуфабрикатов на ПФ?
+заменить все такие группы скриптом?

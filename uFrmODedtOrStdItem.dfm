@@ -139,6 +139,19 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Visible = True
         ExplicitWidth = 737
       end
+      object lblSemiproductErrors: TLabel
+        Left = 82
+        Top = 152
+        Width = 200
+        Height = 16
+        Cursor = crHandPoint
+        Caption = 'lblSemiproductErrors'
+        Font.Color = clRed
+        Font.Style = [fsUnderline]
+        ParentFont = False
+        Visible = False
+        OnClick = lblSemiproductErrorsClick
+      end
       object chb_TabSync: TCheckBox
         Left = 8
         Top = 271

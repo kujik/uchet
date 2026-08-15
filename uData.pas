@@ -971,6 +971,8 @@ const
   //просмотр истории изменений конкретной сметы (estimate_change_log) - см. uFrmOWrepEstimateChanges.pas;
   //AddParam = 1/ID=id стандартного изделия либо AddParam <> 1/ID=id позиции заказа (как у myfrm_Dlg_EdtEstimate)
   myfrm_Rep_EstimateChanges='Rep_EstimateChanges';
+  //отчет по проблемам в БД (несоответствия наименований/смет, bcad_nomencl/итм) - см. uFrmOWRepDataCheck.pas
+  myfrm_Rep_Or_DataCheck='Rep_Or_DataCheck';
 
   {планирование}
   myfrm_R_PnlOpsPainting = 'R_PnlOpsPainting';
@@ -1232,6 +1234,10 @@ const
   mbtCustom_SqlUpd_Refresh = 124;
   mbtCustom_SqlUpd_ClearAttention = 125;      //снять --!!!
   mbtCustom_SqlUpd_DisableGoBlocks = 126;      //снять (отключить) --!go begin блоки
+  mbtCustom_DataCheck_OpenItem = 127;          //отчет по проблемам в БД - открыть изделие (1)
+  mbtCustom_DataCheck_ViewEstimate = 128;      //отчет по проблемам в БД - показать смету изделия (1)
+  mbtCustom_DataCheck_OpenItem2 = 129;         //отчет по проблемам в БД - открыть изделие (2)
+  mbtCustom_DataCheck_ViewEstimate2 = 130;     //отчет по проблемам в БД - показать смету изделия (2)
 
 
 
@@ -1341,12 +1347,16 @@ const
   mybtCopyEstimate: TmybtRec = (Bt: mbtCopyEstimate; Pict: 'up'; Caption: 'Скопировать смету в буфер'; hint: '');
   mybtPasteEstimate: TmybtRec = (Bt: mbtPasteEstimate; Pict: 'down'; Caption: 'Вставить смету из буфера'; hint: '');
   mybtPrintPassport2: TmybtRec = (Bt: mbtPrintPassport2; Pict: 'print'; Caption: 'Печать паспорта заказа (с артикулами)'; hint: '');
+  mybtCustom_DataCheck_OpenItem: TmybtRec = (Bt: mbtCustom_DataCheck_OpenItem; Pict: ''; Caption: 'Открыть изделие'; hint: '');
+  mybtCustom_DataCheck_ViewEstimate: TmybtRec = (Bt: mbtCustom_DataCheck_ViewEstimate; Pict: ''; Caption: 'Смета изделия'; hint: '');
+  mybtCustom_DataCheck_OpenItem2: TmybtRec = (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: '');
+  mybtCustom_DataCheck_ViewEstimate2: TmybtRec = (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: '');
   mybt1: TmybtRec = (Bt: 1; Pict: ''; Caption: ''; hint: '');
 
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 110] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 110 + 4] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1461,6 +1471,10 @@ const
   (Bt: mbtSave; Pict: 'save'; Caption:  'Сохранить'; hint: ''),
   (Bt: mbtCustom_PriceCheck; Pict: ''; Caption:  'Контрольная цена'; hint: ''),
   (Bt: mbtStopOrder; Pict: ''; Caption:  'Остановить заказ'; hint: ''),
+  (Bt: mbtCustom_DataCheck_OpenItem; Pict: ''; Caption: 'Открыть изделие'; hint: ''),
+  (Bt: mbtCustom_DataCheck_ViewEstimate; Pict: ''; Caption: 'Смета изделия'; hint: ''),
+  (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: ''),
+  (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: ''),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')

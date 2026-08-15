@@ -101,6 +101,9 @@ function ExtractLineTag(var Line: string): Char;
 function ExtractLineTagEx(var Line: string; AStateChar: Char): Char;
 
 //----------------------------- --!go begin/--!go end и разбор операторов -----------------
+//ExtractGoBlocksByState - общая реализация для взведенных (AStateChar = '!', см. ExtractGoBlocksEx)
+//и уже обработанных (AStateChar = '$', см. BuildProcessedTagsReport) блоков --Xgo begin/--Xgo end
+function ExtractGoBlocksByState(const Text: string; const AStateChar: Char): TSqlGoBlockArray;
 function ExtractGoBlocksEx(const Text: string): TSqlGoBlockArray;
 function ExtractGoBlocks(const Text: string): TStringDynArray;
 function HasActiveGoBlocks(const Text: string): Boolean;
@@ -117,8 +120,16 @@ function ScanFileObjectTags(const Text, ASourceFile: string): TSqlObjectTagInfoA
 function BuildTagsReport(const ATables: TSqlTableInfoArray; const AObjTags: TSqlObjectTagInfoArray): string;
 function HasAnyTags(const ATables: TSqlTableInfoArray; const AObjTags: TSqlObjectTagInfoArray): Boolean;
 
+//----------------------------- уже обработанные/финальные метки --$+/--$-/--$go/--$dropped/--$completed --
+//в отличие от ScanFileObjectTags/ParseFileTables (--!+/--!-), здесь НЕ разбирается, к какому именно
+//объекту/столбцу относится строка - только сам факт наличия метки и её текст (см. общую задачу
+//пользователя - "нужно отображение наличия в файле тегов --$... и также просмотр строк/блоков с ними")
+function FindProcessedMarkerLines(const Text: string): TStringDynArray;
+function HasProcessedTags(const Text: string): Boolean;
+function BuildProcessedTagsReport(const Text: string): string;
+
 //----------------------------- сводный разбор файла для колонок грида ---------------------
-function ScanFileMarkers(const AFileName: string; out AHasAttention, AHasGoBlocks, AHasTags: Boolean; out ErrMsg: string): Boolean;
+function ScanFileMarkers(const AFileName: string; out AHasAttention, AHasGoBlocks, AHasTags, AHasProcessed: Boolean; out ErrMsg: string): Boolean;
 
 //----------------------------- поиск определений объектов (!rebuild/!drop) ---------------
 function FindObjectDefinition(const AFiles: TStringDynArray; const AObjectName: string; out ADef: TSqlObjectDef): Boolean;
@@ -476,18 +487,23 @@ end;
 
 {------------------------------------------------------------------------------------------}
 
-function ExtractGoBlocksEx(const Text: string): TSqlGoBlockArray;
-//находит все пары --!go begin / --!go end (ровно два дефиса, только взведенные; ---!go
-//begin/end - отключено, --$go begin/end - уже обработанные, тоже пропускаются - см.
-//RestoreActionTriggers, чтобы их снова начать выполнять), с позициями строк begin/end (для
-//последующей точечной пометки "обработано") и содержимым между ними по порядку
+function ExtractGoBlocksByState(const Text: string; const AStateChar: Char): TSqlGoBlockArray;
+//находит все пары --<AStateChar>go begin / --<AStateChar>go end (ровно два дефиса; ---Xgo
+//begin/end - отключено), с позициями строк begin/end (для последующей точечной пометки
+//"обработано") и содержимым между ними по порядку. AStateChar = '!' - взведенные (см.
+//ExtractGoBlocksEx/HasActiveGoBlocks; --$go begin/end при этом не попадают в результат - см.
+//RestoreActionTriggers, чтобы их снова начать выполнять), '$' - уже обработанные, еще не
+//финальные (см. BuildProcessedTagsReport)
 var
   Res: TSqlGoBlockArray;
   p, LineStart, LineEnd: Integer;
   TrimmedLn: string;
   InBlock: Boolean;
   BeginPos, ContentStart: Integer;
+  BeginMarker, EndMarker: string;
 begin
+  BeginMarker := '--' + AStateChar + 'go begin';
+  EndMarker := '--' + AStateChar + 'go end';
   SetLength(Res, 0);
   InBlock := False;
   BeginPos := 0;
@@ -503,14 +519,14 @@ begin
       Inc(p); //пропускаем сам #10
 
     if not InBlock then begin
-      if SameText(TrimmedLn, '--!go begin') then begin
+      if SameText(TrimmedLn, BeginMarker) then begin
         InBlock := True;
         BeginPos := LineStart;
         ContentStart := p;
       end;
     end
     else begin
-      if SameText(TrimmedLn, '--!go end') then begin
+      if SameText(TrimmedLn, EndMarker) then begin
         SetLength(Res, Length(Res) + 1);
         Res[High(Res)].BeginLinePos := BeginPos;
         Res[High(Res)].EndLinePos := LineStart;
@@ -520,6 +536,11 @@ begin
     end;
   end;
   Result := Res;
+end;
+
+function ExtractGoBlocksEx(const Text: string): TSqlGoBlockArray;
+begin
+  Result := ExtractGoBlocksByState(Text, '!');
 end;
 
 function ExtractGoBlocks(const Text: string): TStringDynArray;
@@ -747,7 +768,84 @@ begin
       end;
 end;
 
-function ScanFileMarkers(const AFileName: string; out AHasAttention, AHasGoBlocks, AHasTags: Boolean; out ErrMsg: string): Boolean;
+{------------------------------------------------------------------------------------------}
+
+function FindProcessedMarkerLines(const Text: string): TStringDynArray;
+//находит все строки (текст должен быть уже пропущен через StripBlockComments) с уже
+//обработанными или финальными метками: --$+ / --$- в конце строки (столбец/объект),
+//--$dropped, --$completed begin. В отличие от ScanFileObjectTags/ParseFileTables, здесь НЕ
+//разбирается, к какому именно объекту/столбцу относится строка - только сам факт наличия
+//метки и её текст, этого достаточно для обзора (см. общую задачу пользователя). Строки-маркеры
+//--$go begin/--$go end сюда не включаются - целые блоки между ними показываются отдельно (см.
+//BuildProcessedTagsReport/ExtractGoBlocksByState), чтобы не дублировать
+var
+  Lines: TStringList;
+  i: Integer;
+  Ln: string;
+  Res: TStringDynArray;
+begin
+  SetLength(Res, 0);
+  Lines := TStringList.Create;
+  try
+    Lines.Text := Text;
+    for i := 0 to Lines.Count - 1 do begin
+      Ln := Lines[i];
+      if Pos('--$', Ln) = 0 then
+        Continue;
+      if SameText(Trim(Ln), '--$go begin') or SameText(Trim(Ln), '--$go end') then
+        Continue;
+      SetLength(Res, Length(Res) + 1);
+      Res[High(Res)] := Trim(Ln);
+    end;
+  finally
+    Lines.Free;
+  end;
+  Result := Res;
+end;
+
+function HasProcessedTags(const Text: string): Boolean;
+begin
+  Result := (Length(FindProcessedMarkerLines(Text)) > 0) or (Length(ExtractGoBlocksByState(Text, '$')) > 0);
+end;
+
+function BuildProcessedTagsReport(const Text: string): string;
+const
+  cDivider = '-------------------';
+var
+  Lines: TStringDynArray;
+  Blocks: TSqlGoBlockArray;
+  i: Integer;
+  Res: TStringList;
+  First: Boolean;
+begin
+  Result := '';
+  Res := TStringList.Create;
+  try
+    First := True;
+    Lines := FindProcessedMarkerLines(Text);
+    for i := 0 to High(Lines) do begin
+      if not First then
+        Res.Add(cDivider);
+      First := False;
+      Res.Add(Lines[i]);
+    end;
+    Blocks := ExtractGoBlocksByState(Text, '$');
+    for i := 0 to High(Blocks) do begin
+      if not First then
+        Res.Add(cDivider);
+      First := False;
+      Res.Add('--$go begin ... --$go end:');
+      Res.Add(Trim(Blocks[i].Content));
+    end;
+    Result := Res.Text;
+  finally
+    Res.Free;
+  end;
+end;
+
+{------------------------------------------------------------------------------------------}
+
+function ScanFileMarkers(const AFileName: string; out AHasAttention, AHasGoBlocks, AHasTags, AHasProcessed: Boolean; out ErrMsg: string): Boolean;
 var
   Text: string;
   Tables: TSqlTableInfoArray;
@@ -757,6 +855,7 @@ begin
   AHasAttention := False;
   AHasGoBlocks := False;
   AHasTags := False;
+  AHasProcessed := False;
   Text := LoadSqlFileText(AFileName, ErrMsg);
   if ErrMsg <> '' then
     Exit;
@@ -768,6 +867,7 @@ begin
   ErrMsg := '';
   ObjTags := ScanFileObjectTags(Text, AFileName);
   AHasTags := HasAnyTags(Tables, ObjTags);
+  AHasProcessed := HasProcessedTags(Text);
   Result := True;
 end;
 
@@ -1096,6 +1196,14 @@ begin
 end;
 
 function DropObjectByName(const AFiles: TStringDynArray; const AObjectName: string; out ErrMsg: string): Boolean;
+//удаляет объект по имени (используется и для тега --!-, и для директивы !drop - см.
+//ExecObjectTag/DropAndLog). Перед реальным drop для каждого типа проверяем, есть ли объект в
+//бд вообще - если уже нет (удален вручную, или уже был удален предыдущим прогоном, а тег
+//почему-то остался взведенным) - считаем это успехом без выполнения drop и без ошибки (по
+//просьбе пользователя: "если ошибка такая что он уже не существует - ошибку не выводить, тег
+//изменения гасить") - тот же прием, что уже применялся только для таблиц, теперь одинаково для
+//всех типов объектов. Проверка идет по метаданным бд (user_views/user_objects/user_triggers/
+//user_sequences/user_indexes/user_constraints), а не по разбору текста ошибки - надежнее.
 var
   ADef: TSqlObjectDef;
 begin
@@ -1105,23 +1213,62 @@ begin
     ErrMsg := 'определение объекта "' + AObjectName + '" не найдено ни в одном файле';
     Exit;
   end;
-  if SameText(ADef.ObjType, 'table') then
-    Result := ExecRawSql('drop table ' + AObjectName + ' cascade constraints', ErrMsg)
-  else if SameText(ADef.ObjType, 'view') then
-    Result := ExecRawSql('drop view ' + AObjectName, ErrMsg)
-  else if SameText(ADef.ObjType, 'function') then
-    Result := ExecRawSql('drop function ' + AObjectName, ErrMsg)
-  else if SameText(ADef.ObjType, 'procedure') then
-    Result := ExecRawSql('drop procedure ' + AObjectName, ErrMsg)
-  else if SameText(ADef.ObjType, 'trigger') then
-    Result := ExecRawSql('drop trigger ' + AObjectName, ErrMsg)
-  else if SameText(ADef.ObjType, 'sequence') then
-    Result := ExecRawSql('drop sequence ' + AObjectName, ErrMsg)
-  else if SameText(ADef.ObjType, 'index') then
-    Result := ExecRawSql('drop index ' + AObjectName, ErrMsg)
+  if SameText(ADef.ObjType, 'table') then begin
+    if not TableExistsInDb(AObjectName) then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop table ' + AObjectName + ' cascade constraints', ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'view') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_views where view_name = upper(:n$s)', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop view ' + AObjectName, ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'function') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_objects where object_name = upper(:n$s) and object_type = ''FUNCTION''', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop function ' + AObjectName, ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'procedure') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_objects where object_name = upper(:n$s) and object_type = ''PROCEDURE''', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop procedure ' + AObjectName, ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'trigger') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_triggers where trigger_name = upper(:n$s)', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop trigger ' + AObjectName, ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'sequence') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_sequences where sequence_name = upper(:n$s)', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop sequence ' + AObjectName, ErrMsg);
+  end
+  else if SameText(ADef.ObjType, 'index') then begin
+    if VarToStr(Q.QLoadValue('select count(*) from user_indexes where index_name = upper(:n$s)', [AObjectName])) = '0' then begin
+      Result := True;
+      Exit;
+    end;
+    Result := ExecRawSql('drop index ' + AObjectName, ErrMsg);
+  end
   else if SameText(ADef.ObjType, 'constraint') then begin
     if ADef.TableName = '' then begin
       ErrMsg := 'не удалось определить таблицу для констрейнта "' + AObjectName + '"';
+      Exit;
+    end;
+    if VarToStr(Q.QLoadValue('select count(*) from user_constraints where constraint_name = upper(:n$s)', [AObjectName])) = '0' then begin
+      Result := True;
       Exit;
     end;
     Result := ExecRawSql('alter table ' + ADef.TableName + ' drop constraint ' + AObjectName, ErrMsg);

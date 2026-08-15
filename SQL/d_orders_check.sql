@@ -17,18 +17,16 @@ alter session set nls_sort =  binary;
 --проблема 5 - в собственной смете отгрузочного изделия ссылка на производственное изделие не из того же формата,
 --  либо не совпадающая по наименованию с фактическим производственным изделием.
 --проблема 6 - нестандартное изделие встречается как компонент в какой-либо смете.
---проблема 7 - совпадающие без учета регистра наименования в bcad_nomencl (справочник сметных позиций).
+--проблема 7 - проблемы в bcad_nomencl (справочник сметных позиций): совпадающие без учета регистра наименования
+--  разных записей, и/или отсутствие записи с тем же именем в итм (dv.nomenclatura) - вся номенклатура в итм
+--  берется именно из bcad_nomencl (и только из нее), поэтому расхождения ищем только в эту сторону.
 --проблема 8 - совпадающие без учета регистра наименования в итм (dv.nomenclatura).
 --проблема 9 - лишние пробелы (в начале/в конце/двойные) в наименованиях bcad_nomencl.
 --проблема 10 - лишние пробелы (в начале/в конце/двойные) в наименованиях итм (dv.nomenclatura).
---проблема 11 - номенклатура bcad_nomencl, отсутствующая в итм (dv.nomenclatura), при том что для этого уже есть
---  основания (смета стандартного изделия либо смета проведенного заказа) - то есть должна была попасть в итм, но
---  не попала. номенклатура, которая используется только в смете еще НЕ проведенного заказа, за проблему не
---  считается - для нее расхождение с итм ожидаемо (см. подробный комментарий у вью).
 --------------------------------------------------------------------------------
 
 
-create or replace view v_orders_check1_semiprod_name_dups as --!+
+create or replace view v_orders_check1_semiprod_name_dups as --$+
   select
   --проблема 1: одинаковые (без учета регистра) наименования у полуфабрикатов (or_format_estimates.type = 2),
   --относящихся к РАЗНЫМ подгруппам полуфабрикатов (id_or_format_estimates). в пределах одной подгруппы дубли
@@ -57,12 +55,12 @@ create or replace view v_orders_check1_semiprod_name_dups as --!+
     and i.active = 1
 ;
 
-create or replace view v_orders_check1 as --!+
+create or replace view v_orders_check1 as --$+
   select * from v_orders_check1_semiprod_name_dups where dup_subgroup_cnt > 1
 ;
 
 
-create or replace view v_orders_check2 as --!+
+create or replace view v_orders_check2 as --$+
   select
   --проблема 2: совпадение (без учета регистра) наименования полуфабриката (у него нет префикса - это единственное
   --его имя) с наименованием нестандартного изделия (id_or_format_estimates = 0 - у таких изделий тоже нет
@@ -91,7 +89,7 @@ create or replace view v_orders_check2 as --!+
 ;
 
 
-create or replace view v_orders_check3 as --!+
+create or replace view v_orders_check3 as --$+
   with unprefixed as (
     select
       i.id,
@@ -135,7 +133,7 @@ create or replace view v_orders_check3 as --!+
 ;
 
 
-create or replace view v_orders_check4 as --!+
+create or replace view v_orders_check4 as --$+
   select
   --проблема 4: отгрузочное изделие (по полному наименованию, с префиксом) встречается как компонент в какой-либо
   --смете (estimate_items, через bcad_nomencl.name) - отгрузочные изделия сами не производятся и не должны
@@ -171,7 +169,7 @@ create or replace view v_orders_check4 as --!+
 ;
 
 
-create or replace view v_orders_check5 as --!+
+create or replace view v_orders_check5 as --$+
   select
   --проблема 5: в собственной смете отгрузочного изделия (estimates.id_std_item = id отгрузочного изделия) есть
   --позиция, ссылающаяся на производственное изделие (estimate_items.id_or_std_item -> or_std_items с type = 0),
@@ -212,7 +210,7 @@ create or replace view v_orders_check5 as --!+
 ;
 
 
-create or replace view v_orders_check6 as --!+
+create or replace view v_orders_check6 as --$+
   select
   --проблема 6: нестандартное изделие (or_std_items.id_or_format_estimates = 0, наименование без префикса)
   --встречается как компонент в какой-либо смете (estimate_items, через bcad_nomencl.name). нестандартные изделия
@@ -244,25 +242,30 @@ create or replace view v_orders_check6 as --!+
 ;
 
 
-create or replace view v_orders_check7 as --!+
-  with dups as (
+create or replace view v_orders_check7 as --$+
+  with base as (
     select
-    --проблема 7: bcad_nomencl.name уникально только с точностью до регистра (обычный unique-констрейнт, БЕЗ
-    --lower() - см. комментарий "не делаем уникальность без учета регистра" в d_estimates.sql). здесь ищем случаи,
-    --когда несколько разных id имеют одинаковое (без учета регистра) наименование - формально это разные строки
-    --для сравнения "в лоб" (см. проблема 4/5/6), но по смыслу дубли, которые сбивают с толку.
+    --проблема 7: две вещи разом про bcad_nomencl (по просьбе пользователя - объединено в один грид, не отдельная
+    --проблема на каждую):
+    --1) bcad_nomencl.name уникально только с точностью до регистра (обычный unique-констрейнт, БЕЗ lower() - см.
+    --   комментарий "не делаем уникальность без учета регистра" в d_estimates.sql) - dup_cnt > 1, если несколько
+    --   разных id имеют одинаковое (без учета регистра) наименование;
+    --2) наименование отсутствует в итм (dv.nomenclatura) по точному (с учетом регистра) имени - in_itm = 0. вся
+    --   номенклатура в итм берется ИМЕННО из bcad_nomencl (и только из нее), поэтому расхождения ищем только в эту
+    --   сторону - простой признак, без учета того, проведены ли заказы/сметы, использующие эту позицию.
       bn.id,
       bn.name,
       bn.is_purchased,
-      count(*) over (partition by lower(trim(bn.name))) as dup_cnt
+      count(*) over (partition by lower(trim(bn.name))) as dup_cnt,
+      case when exists (select 1 from dv.nomenclatura x where x.name = bn.name) then 1 else 0 end as in_itm
     from
       bcad_nomencl bn
   )
-  select id, name, is_purchased, dup_cnt from dups where dup_cnt > 1
+  select id, name, is_purchased, dup_cnt, in_itm from base where (dup_cnt > 1) or (in_itm = 0)
 ;
 
 
-create or replace view v_orders_check8 as --!+
+create or replace view v_orders_check8 as --$+
   with dups as (
     select
     --проблема 8: то же самое (см. проблема 7), но для номенклатуры итм (dv.nomenclatura.name) - там тоже нет
@@ -283,7 +286,7 @@ create or replace view v_orders_check8 as --!+
 ;
 
 
-create or replace view v_orders_check9 as --!+
+create or replace view v_orders_check9 as --$+
   select
   --проблема 9: лишние пробелы в наименовании bcad_nomencl - пробел в начале, в конце, либо два и более подряд
   --внутри имени. такие имена визуально неотличимы от "нормальных", но являются РАЗНЫМИ строками для точного (с
@@ -303,7 +306,7 @@ create or replace view v_orders_check9 as --!+
 ;
 
 
-create or replace view v_orders_check10 as --!+
+create or replace view v_orders_check10 as --$+
   select
   --проблема 10: то же самое (см. проблема 9), но для номенклатуры итм (dv.nomenclatura.name). id_nomencltype >= 0 -
   --фильтр только реальных позиций номенклатуры, без служебных/папок.
@@ -325,55 +328,6 @@ create or replace view v_orders_check10 as --!+
 ;
 
 
-create or replace view v_orders_check11 as --!+
-  with usage as (
-    --для каждой позиции bcad_nomencl (по id_name в estimate_items): есть ли использование в смете, ПРИВЯЗАННОЙ
-    --к стандартному изделию напрямую (estimates.id_std_item - не зависит от конкретного заказа), и/или в смете,
-    --привязанной к позиции ПРОВЕДЕННОГО заказа (orders.id_status >= 1 - см. комментарий "0 - на оформлении, 1 -
-    --проведен, 2 - запущен в работу" у or_orders.id_status в d_orders.sql). в обоих случаях синхронизация в итм,
-    --по словам пользователя, уже должна была произойти.
-    select
-      ei.id_name,
-      max(case when e.id_std_item is not null then 1 else 0 end) as used_in_std_item_estimate,
-      max(case when o.id_status >= 1 then 1 else 0 end) as used_in_posted_order
-    from
-      estimate_items ei
-      join estimates e on e.id = ei.id_estimate
-      left join order_items oi on oi.id = e.id_order_item
-      left join orders o on o.id = oi.id_order
-    where
-      ei.deleted = 0
-    group by
-      ei.id_name
-  )
-  select
-  --проблема 11: сопоставление номенклатуры bcad_nomencl и итм (dv.nomenclatura) - в норме вся номенклатура из
-  --bcad_nomencl должна быть заведена и в итм под тем же (с точностью до регистра) именем - см. RenameNomenclatura
-  --в uFrmODedtOrStdItem.pas, где переименование ведется синхронно в обе стороны. расхождение считается ОЖИДАЕМЫМ
-  --только тогда, когда номенклатура НИГДЕ не использовалась ни в собственной смете стандартного изделия, ни в
-  --смете уже ПРОВЕДЕННОГО заказа - то есть еще просто не дошла очередь до передачи в итм (например, только в
-  --смете заказа, который пока "на оформлении"). is_ok = 0 в остальных случаях - это уже реальное расхождение.
-  --is_ok/in_itm пока в виде простых 0/1 - иконку ("красный минус" для in_itm = 0) добавим отдельно, когда будет
-  --код картинки.
-    bn.id as id_bcad_nomencl,
-    bn.name,
-    bn.is_purchased,
-    (select min(x.id_nomencl) from dv.nomenclatura x where x.name = bn.name) as id_nomencl_itm,
-    case when exists (select 1 from dv.nomenclatura x where x.name = bn.name) then 1 else 0 end as in_itm,
-    nvl(u.used_in_std_item_estimate, 0) as used_in_std_item_estimate,
-    nvl(u.used_in_posted_order, 0) as used_in_posted_order,
-    case
-      when exists (select 1 from dv.nomenclatura x where x.name = bn.name) then 1 --есть в итм - проблемы нет
-      when nvl(u.used_in_std_item_estimate, 0) = 1 then 0 --должна быть в итм (смета стандартного изделия) - проблема
-      when nvl(u.used_in_posted_order, 0) = 1 then 0 --должна быть в итм (смета проведенного заказа) - проблема
-      else 1 --нигде не использовалась либо только в смете непроведенного заказа - расхождение пока ожидаемо
-    end as is_ok
-  from
-    bcad_nomencl bn
-    left join usage u on u.id_name = bn.id
-;
-
-
 --------------------------------------------------------------------------------
 --проверочные выборки из каждой вью - для быстрого ручного прогона всего файла целиком
 --------------------------------------------------------------------------------
@@ -383,8 +337,7 @@ select * from v_orders_check3; --проблема 3: полное имя любого изделия = голому 
 select * from v_orders_check4; --проблема 4: отгрузочное изделие как компонент чужой сметы
 select * from v_orders_check5; --проблема 5: несоответствие производственного изделия в самосмете отгрузочного
 select * from v_orders_check6; --проблема 6: нестандартное изделие как компонент чужой сметы
-select * from v_orders_check7; --проблема 7: дубли имен в bcad_nomencl без учета регистра
+select * from v_orders_check7; --проблема 7: дубли имен в bcad_nomencl без учета регистра и/или отсутствие в итм
 select * from v_orders_check8; --проблема 8: дубли имен в итм (dv.nomenclatura) без учета регистра
 select * from v_orders_check9; --проблема 9: лишние пробелы в именах bcad_nomencl
 select * from v_orders_check10; --проблема 10: лишние пробелы в именах итм (dv.nomenclatura)
-select * from v_orders_check11; --проблема 11: номенклатура bcad_nomencl, отсутствующая в итм без уважительной причины

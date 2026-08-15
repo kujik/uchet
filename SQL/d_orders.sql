@@ -1966,7 +1966,7 @@ select count(*) from orders;
 
 
 --------------------------------------------------------------------------------
-create or replace procedure P_SyncOrderWithITM(
+create or replace procedure P_SyncOrderWithITM(       --!+
 --синхронизируем полностью заказ в итм с заказом в учете по полученному айди из учета
 --состав изделий заказа итм будет приведен к составу в учете независимо от того что в нем было и
 --был ли вообще в итм заказ создан. позиции с количееством 0, издели€ с пометкой Ѕез сметы,
@@ -2003,6 +2003,16 @@ begin
   --если передан айди заказа, которого нет в таблице, значит это было удаление заказа, тогда удалим и из итм и выйдем
   if i = 0 then 
     delete from dv.zakaz where id_order_dv = AIdOrder;
+    Return;
+  end if;
+  select id_status into i from orders where id = AIdOrder;
+  --статус заказа - удален. удалим и из »“ћ
+  if i = -2 then  --ORDER_ID_STATUS_DELETED 
+    delete from dv.zakaz where id_order_dv = AIdOrder;
+    Return;
+  end if;
+  --статус заказа меньше «апущен - не синхрогнизируем
+  if i < 2 then  --ORDER_ID_STATUS_STARTED 
     Return;
   end if;
   --получим параметры заказа

@@ -142,7 +142,7 @@ uses
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
   uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWedtSetOrderRoute,
-  uFrmOWItmInfo,
+  uFrmOWItmInfo, uFrmOWRepDataCheck,
 
   uFrmPWedtPlnOps,
 
@@ -749,6 +749,8 @@ begin
     TFrmADedtMainSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
   else if AFormType = myfrm_Dlg_OrdersFinReport then
     Orders.OrdersFinReport
+  else if AFormType = myfrm_Rep_Or_DataCheck then
+    TFrmOWRepDataCheck.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else
     raise Exception.Create('Вызвана функция "ExecReference", однако тип "' + AFormType + '" в ней не зарегистрирован!');
 end;
@@ -919,6 +921,8 @@ begin
   else if AFormType = myfrm_Dlg_Or_ItmInfo then
     //D_ItmInfo.pas удален из проекта - функциональность (проверка номенклатуры ИТМ) перенесена в uFrmOWItmInfo
     TFrmOWItmInfo.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
+//  else if AFormType = myfrm_Rep_Or_DataCheck then
+//    TFrmOWRepDataCheck.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
   else if AFormType = myfrm_Dlg_Bcad_Groups then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'bcad_groups', 'Группа bCAD', 450, 90,
       [['name$s', cntEdit, 'Наименование','1:100']],

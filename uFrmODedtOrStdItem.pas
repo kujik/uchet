@@ -58,6 +58,8 @@ type
     chb_TabSync: TCheckBox;
     chb_TabNotCreate: TCheckBox;
     btn_TabCopyRoute: TSpeedButton;
+    lblSemiproductErrors: TLabel;
+    procedure lblSemiproductErrorsClick(Sender: TObject);
   private
     FRcount: Integer;
     FNameOld : string;
@@ -67,10 +69,18 @@ type
     FIsRouteChanged: Boolean;
     FIdOrFormatEstimate: Variant;
     //режим вызова диалога, AddParam[1] - см. общий комментарий в начале Prepare (VarArrayOf([IdOrFormatEstimate,
-    //CallMode])): 1 - обычный вызов из справочника (uFrmOGrefOrStdItems), 2 - только добавление с выбором
-    //подгруппы по прежней (ограниченной по группе/типу) логике, 3 - только добавление с выбором ЛЮБОЙ активной
-    //подгруппы любой активной группы, любого типа изделий (см. LoadCbFormatEstimates)
+    //CallMode]) или VarArrayOf([IdOrFormatEstimate, CallMode, DefaultName]) - см. также FCallMode = 4 ниже):
+    //1 - обычный вызов из справочника (uFrmOGrefOrStdItems), 2 - только добавление с выбором подгруппы по
+    //прежней (ограниченной по группе/типу) логике, 3 - только добавление с выбором ЛЮБОЙ активной подгруппы
+    //любой активной группы, любого типа изделий (см. LoadCbFormatEstimates), 4 - только добавление, подгруппу
+    //можно выбрать из ЛЮБОЙ активной подгруппы ПОЛУФАБРИКАТОВ (тип фиксирован, но без привязки к конкретной
+    //группе форматов) - используется для вызова "Создать полуфабрикат" из диалога сметы (см. общий комментарий
+    //в CreateSemiproductFromRow, uFrmOGedtEstimate.pas)
     FCallMode: Integer;
+    //наименование по умолчанию - необязательный третий элемент AddParam (см. общий комментарий у FCallMode) -
+    //подставляется в поле "Наименование" при добавлении (Mode = fAdd), пользователь может его изменить; для
+    //старых вызовов (AddParam из двух элементов) остается пустым - см. разбор в начале Prepare
+    FDefaultName: string;
     //группа (id_format) и тип (см. STDITEM_TYPE_* в uOrders) переданной (исходной) подгруппы - см. LoadCbFormatEstimates
     FIdFormat: Variant;
     FItemType: Integer;
@@ -100,6 +110,10 @@ type
     //LoadCounterpartTabs (смена подгруппы на 0-й вкладке в режиме добавления/копирования - см. ControlOnChange)
     //можно было снять ранее добавленные записи и не копить дубликаты.
     FComboAppendedIds: TVarDynArray;
+    //текст для окна по клику на lblSemiproductErrors (заполняется в UpdateSemiproductErrorsLabel) - объединяет
+    //и блокирующие, и предупреждающие конфликты имени (см. CheckSemiproductNameConflicts), т.к. здесь это уже
+    //просто информация по СУЩЕСТВУЮЩЕЙ записи, а не гейт перед сохранением
+    FSemiproductErrorsText: string;
     function  Prepare: Boolean; override;
     procedure AfterFormActivate; override;
     procedure ControlOnChange(Sender: TObject); override;
@@ -180,6 +194,17 @@ type
     //проверка в БД, не занято ли имя (простое/с префиксом) каким-то ДРУГИМ изделием - используется как для 0-й,
     //так и для остальных сохраняемых вкладок
     function CheckDuplicateNameInDb(AIdOrFormatEstimate, AExcludeId: Variant; const AName, APrefixedName: string; out AMsg: string): Boolean;
+    //только для полуфабрикатов (см. общий комментарий у реализации и переписку с пользователем) - проверка
+    //"голого" (без префикса) имени AName на конфликты ЗА ПРЕДЕЛАМИ своей подгруппы: с другими подгруппами
+    //полуфабрикатов/нестандартными изделиями и с полным/голым именем стандартных изделий. Result = False, если
+    //найден блокирующий конфликт (AErrorMsg заполнен) - сохранение недопустимо. AWarningMsg заполняется
+    //отдельно и НЕ блокирует сохранение (см. п.3 в реализации).
+    function CheckSemiproductNameConflicts(AExcludeId: Variant; const AName: string; out AErrorMsg, AWarningMsg: string): Boolean;
+    //для полуфабрикатов в режиме fView/fEdit - прогоняет CheckSemiproductNameConflicts по уже сохраненному
+    //имени (ID/FNameOld) и показывает/прячет lblSemiproductErrors по результату (см. общее требование
+    //пользователя - переписка: "получить сразу же" красный подчеркнутый лейбл при просмотре/редактировании).
+    //Вызывается из AfterFormActivate (один раз при показе формы).
+    procedure UpdateSemiproductErrorsLabel;
     //сохраняет изделие парной вкладки ATabIndex (>0) - см. подробности у реализации. Возвращает id
     //сохраненного/созданного изделия, либо Null при ошибке сохранения (для этого случая - ошибка уже показана
     //пользователем внутри Q.QSave/QExecSql, ShowError по умолчанию True)
@@ -234,8 +259,23 @@ begin
   //что-то другое - режимы добавления по смыслу и не предполагают ничего, кроме добавления.
   FIdOrFormatEstimate := AddParam[0];
   FCallMode := S.NInt(AddParam[1]);
-  if FCallMode in [2, 3] then
+  //необязательный третий элемент AddParam - наименование по умолчанию (см. общий комментарий у FCallMode/
+  //FDefaultName) - используется ниже, после inherited, и только для Mode = fAdd
+  FDefaultName := '';
+  if VarIsArray(AddParam) and (VarArrayHighBound(AddParam, 1) >= 2) then
+    FDefaultName := VarToStr(AddParam[2]);
+  if FCallMode in [2, 3, 4] then
     Mode := fAdd;
+
+  //НОВОЕ (см. задачу пользователя - "переделать вызов диалога без справочника, чтобы открывался на
+  //редактирование/просмотр так же, по переданному айди изделия"): при вызове НЕ из справочника
+  //(uFrmOGrefOrStdItems), где исходная подгруппа заведомо не известна вызывающему коду (передан Null/0) и
+  //известен только сам AId (например, целлбаттон "И" в диалоге сметы - см. Frg1CellButtonClick,
+  //uFrmOGedtEstimate.pas) - подгруппу резолвим сами, простым запросом по AId. Делаем это ДО построения
+  //комбобокса "Формат" (LoadCbFormatEstimates) и до inherited - см. комментарий чуть ниже про то, почему
+  //список комбобокса должен быть построен заранее.
+  if (Mode in [fEdit, fView, fDelete]) and (S.NNum(FIdOrFormatEstimate) <= 0) and (S.NNum(ID) > 0) then
+    FIdOrFormatEstimate := Q.QLoadValue('select id_or_format_estimates from or_std_items where id = :id$i', [ID]);
 
   //группа форматов (id_format) и тип (О/П/ПФ) исходной подгруппы нужны для формирования списка комбобокса
   //Формат (см. LoadCbFormatEstimates); делаем это до вызова inherited, т.к. в режиме редактирования inherited
@@ -327,13 +367,45 @@ begin
   Table := 'or_std_items';
   FOpt.UseChbNoClose:= True;
   //Opt.RequestWhereClose:= cqYNC;
-  FOpt.InfoArray:= [[
-     'Ввод параметров стандартного изделия.'#13#10+
-     'Введите или измените все необходимые данные.'#13#10+
-     'При изменении наименования оно будет автоматически изменено во всех изделиях Учета и ИТМ'#13#10+
-     '(но если такое наименование есть в качестве позиции в смете, то там оно изменено не будет!)'#13#10+
-     'При изменении маршрута или цен по изделию, они будут скорректированы во всех шаблонах папортов.'#13#10
-  ]];
+  //подсказки пользователю (иконка Info) - разные тексты для разных режимов вызова диалога (см. общую задачу
+  //пользователя - "напиши подсказку для пользователей для каждого режима"). Формат - см. общий комментарий у
+  //TMDIOpt.InfoArray (uFrmBasicMdi.pas) и TControlsHelper.SetInfoIconText (uForms.pas): [[текст, показывать ли
+  //(True/False)], ...] - элемент без второго значения показывается всегда; здесь у каждого элемента есть
+  //условие показа, поэтому "всегда видимых" элементов нет. FItemType на этом месте (до inherited) уже
+  //корректно определен для fEdit/fView/fDelete (см. блок резолвинга FIdOrFormatEstimate по AId чуть выше) и
+  //для "обычного" добавления с уже переданной исходной подгруппой (CallMode 1/2); для CallMode 3/4 (подгруппа
+  //изначально не выбрана) остается неизвестным (-1) до первого выбора в комбобоксе "Формат" - см. ControlOnChange.
+  FOpt.InfoArray := [
+    ['Ввод параметров нового стандартного изделия.'#13#10 +
+     'Введите все необходимые данные и нажмите "Сохранить" - изделие появится в справочнике стандартных'#13#10 +
+     'изделий. Если такое наименование (с учетом префикса подгруппы) уже занято другим изделием, сохранение'#13#10 +
+     'будет заблокировано с соответствующим сообщением.'#13#10,
+     (Mode in [fAdd, fCopy]) and (FCallMode <> 4)],
+    ['Изменение параметров стандартного изделия.'#13#10 +
+     'Измените необходимые данные и нажмите "Сохранить".'#13#10 +
+     'При изменении наименования оно будет автоматически изменено во всех изделиях Учета и ИТМ'#13#10 +
+     '(но если такое наименование уже используется как позиция в смете, то там оно изменено не будет!).'#13#10 +
+     'При изменении маршрута или цен по изделию, они будут скорректированы во всех шаблонах паспортов заказов.'#13#10,
+     Mode = fEdit],
+    ['Вы просматриваете данные изделия. Изменение значений недоступно - для редактирования закройте это'#13#10 +
+     'окно и откройте изделие заново на изменение.'#13#10,
+     Mode = fView],
+    ['Добавление ПОЛУФАБРИКАТА, вызванное из диалога сметы (кнопка "Создать полуфабрикат" в столбце'#13#10 +
+     '"Наименование" грида сметных позиций). Наименование уже подставлено по тому, что было введено'#13#10 +
+     'в строке сметы - при необходимости его можно изменить прямо здесь.'#13#10 +
+     'Выберите подгруппу полуфабриката в поле "Формат" - доступна ЛЮБАЯ активная подгруппа полуфабрикатов,'#13#10 +
+     'а не только та, что относится к текущей смете.'#13#10 +
+     'Наименование (без учета регистра, БЕЗ ПРЕФИКСА подгруппы) должно быть уникальным среди ВСЕХ'#13#10 +
+     'полуфабрикатов (любых подгрупп) и нестандартных изделий - при совпадении сохранение будет заблокировано.'#13#10 +
+     'Совпадение с ПОЛНЫМ (с префиксом подгруппы) наименованием любого стандартного (производственного или'#13#10 +
+     'отгрузочного) изделия - также ошибка, сохранение заблокировано. Совпадение с "голым" (без префикса)'#13#10 +
+     'наименованием стандартного изделия - только предупреждение, сохранить в этом случае можно.'#13#10,
+     FCallMode = 4],
+    ['Если наименование полуфабриката (без учета регистра, без префикса) совпадает с наименованием другого'#13#10 +
+     'полуфабриката, нестандартного или стандартного изделия, об этом сообщит красная подчеркнутая надпись'#13#10 +
+     '"Есть ошибки!" под полем "Наименование" - нажмите на нее, чтобы увидеть подробности.'#13#10,
+     (FItemType = STDITEM_TYPE_SEMIPRODUCT) and (Mode in [fView, fEdit])]
+  ];
 
   //ранее была ошибочная гипотеза, что нижние (chb_TabSync/chb_TabNotCreate/btn_TabCopyRoute) контролы были не
   //видны после автоподгонки высоты формы из-за размеров формы - на самом деле причина была в том, что на
@@ -361,6 +433,9 @@ begin
     //FPrefix/FIdEstimateGroup - см. SetPrefixByFormat; вызывается и здесь (для начального значения), и из
     //ControlOnChange при смене выбора в комбобоксе Формат (актуально в режиме добавления/копирования)
     SetPrefixByFormat;
+    //наименование по умолчанию (см. общий комментарий у FCallMode/FDefaultName) - только при добавлении
+    if (Mode = fAdd) and (FDefaultName <> '') then
+      F.SetProp('name$s', FDefaultName);
   end;
   if (Mode = fEdit) and not User.Role(rOr_R_StdItems_Set_Prices) then begin
     nedt_price_base.ReadOnly := True;
@@ -402,13 +477,18 @@ procedure TFrmODedtOrStdItem.LoadCbFormatEstimates;
 //- при CallMode = 3 (см. общий комментарий в Prepare) - вообще без ограничений: все активные подгруппы всех
 //  активных групп, любого типа изделий (произв./отгруз./ПФ вперемешку) - используется при вызове диалога только
 //  на добавление откуда угодно (не из справочника), когда исходная подгруппа не важна или вовсе не задана;
+//- при CallMode = 4 (см. общий комментарий в Prepare) - все активные подгруппы ВСЕХ групп форматов, но ТОЛЬКО
+//  типа "полуфабрикат" - используется для "Создать полуфабрикат" из диалога сметы, где исходная подгруппа не
+//  передается вовсе (FIdOrFormatEstimate = Null/0), а FItemType поэтому еще не известен (не может быть =
+//  STDITEM_TYPE_SEMIPRODUCT, как в ветке ниже) - тот же результат, что и следующая ветка, но не зависящий от
+//  FItemType;
 //- иначе (CallMode 1/2), если исходная подгруппа - полуфабрикат (STDITEM_TYPE_SEMIPRODUCT) - все подгруппы всех
 //  групп с типом "полуфабрикат", при этом подгруппы, принадлежащие текущей группе (FIdFormat), идут сразу за
 //  верхней строкой;
 //- иначе (отгрузочное/производственное) - только подгруппы той же группы форматов (того же id_format, FIdFormat)
 //  и того же типа.
 //самая верхняя строка списка - всегда исходная подгруппа (FIdOrFormatEstimate), см. decode(e.id, ..., 0, 1) -
-//если она не задана (Null/0, допустимо при CallMode = 3), верхняя строка ничем не выделяется, список идет в
+//если она не задана (Null/0, допустимо при CallMode = 3 и 4), верхняя строка ничем не выделяется, список идет в
 //обычном алфавитном порядке (decode с NULL-параметром ни с одной реальной e.id не совпадёт).
 //в режиме, отличном от добавления/копирования, в списке остается только эта одна (верхняя) строка -
 //см. cmb_id_or_format_estimates.Enabled в Prepare
@@ -422,6 +502,15 @@ begin
       'where e.id_format = f.id and (e.active = 1 or e.id = :idsel1$i) ' +
       'order by decode(e.id, :idsel2$i, 0, 1), f.name, e.name',
       [FIdOrFormatEstimate, FIdOrFormatEstimate],
+      cmb_id_or_format_estimates, cntComboLK
+    )
+  else if FCallMode = 4 then
+    Q.QLoadToDBComboBoxEh(
+      'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' +
+      'from or_formats f, or_format_estimates e ' +
+      'where e.id_format = f.id and e.type = :type1$i and (e.active = 1 or e.id = :idsel1$i) ' +
+      'order by decode(e.id, :idsel2$i, 0, 1), f.name, e.name',
+      [STDITEM_TYPE_SEMIPRODUCT, FIdOrFormatEstimate, FIdOrFormatEstimate],
       cmb_id_or_format_estimates, cntComboLK
     )
   else if FItemType = STDITEM_TYPE_SEMIPRODUCT then
@@ -1035,6 +1124,7 @@ begin
   inherited;
   FTabsVisReady := True;
   SetTabsControlsState;
+  UpdateSemiproductErrorsLabel;
 end;
 
 function TFrmODedtOrStdItem.VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean;
@@ -1212,6 +1302,15 @@ begin
         if CheckSelfSmetaAction(LTabIds[i], LProdId, edt_name.Text, LProdPrefixedName, LDummy) = 1 then
           CreateSelfSmeta(LTabIds[i], LProdId, LProdPrefixedName);
   end;
+
+  //для модальных вызовов, которым нужен id только что созданной/сохраненной записи (0-й, основной вкладки) -
+  //например, "Создать полуфабрикат" из диалога сметы (см. CreateSemiproductFromRow, uFrmOGedtEstimate.pas) -
+  //возвращаем его через стандартный канал TMDIResult.Data (см. общий комментарий у TMDIResult, uFrmBasicMdi.pas).
+  //ShowModal2 отдает это значение вызывающему коду вместе с ModalResult сразу после закрытия формы с "Ок"
+  //(FFormResult.ModalResult к этому моменту еще не установлен - это сделает сам framework в ShowForm/AForm.ShowModal
+  //уже ПОСЛЕ выхода из Save - поэтому здесь достаточно заполнить только Data).
+  if Result then
+    FFormResult.Data := ID;
 end;
 
 
@@ -1222,6 +1321,7 @@ var
   LPlanText, LPrefixedName, LOldPrefixedName, LDetails, LMsg, LTypeCapt: string;
   LAction, LProdCount, LProdTabIndex: Integer;
   LProdId: Variant;
+  LSemiErrMsg, LSemiWarnMsg: string;
 begin
   //проверки при редактировании или добавлении записи (только если изменилорсь наименование)
   //проверим, нет ли такого наименования среди стандартных изделий того же типа паспорта
@@ -1292,6 +1392,20 @@ begin
       end;
     end;
 
+  //--- для полуфабрикатов: проверка "голого" имени на конфликты за пределами своей подгруппы (см. общее
+  //требование пользователя и комментарий у CheckSemiproductNameConflicts) - при добавлении/копировании (имя
+  //задается заново) или при редактировании, если имя реально изменилось.
+  if (FItemType = STDITEM_TYPE_SEMIPRODUCT) and (Mode in [fAdd, fCopy, fEdit]) and
+     ((Mode <> fEdit) or (edt_name.Text <> FNameOld)) then begin
+    if not CheckSemiproductNameConflicts(S.IIf(Mode = fEdit, ID, Null), Trim(edt_name.Text), LSemiErrMsg, LSemiWarnMsg) then begin
+      MyWarningMessage(LSemiErrMsg + #13#10'Данные не могут быть сохранены!');
+      HasError := True;
+      Exit;
+    end;
+    if LSemiWarnMsg <> '' then
+      MyWarningMessage(LSemiWarnMsg);
+  end;
+
   //--- смета(ы) отгрузочных изделий, переименование в bcad_nomencl и список создаваемых/обновляемых парных
   //изделий - собираем ЗАРАНЕЕ (до транзакции, здесь можно только читать БД) список того, что будет сделано при
   //сохранении, и одним диалогом просим подтверждение - см. общий комментарий у CheckSelfSmetaAction/Save.
@@ -1331,13 +1445,12 @@ begin
       end;
 
     if FItemType = STDITEM_TYPE_SEMIPRODUCT then begin
-      //полуфабрикаты - логику смет пока не трогаем совсем (см. TODO в конце модуля), только предупреждаем при
-      //переименовании, что состав смет, где это изделие используется как компонент, автоматически не менялся
-      //(у полуфабрикатов парных вкладок не бывает вовсе - см. LoadCounterpartTabs, поэтому список создаваемых/
-      //обновляемых парных изделий выше для них всегда пуст; но LPlanText в целом пустым не остается - ИТМ
-      //(dv.nomenclatura) переименовывается и для полуфабрикатов тоже, см. п.2 ниже, после этого if/else)
-      if (Mode = fEdit) and (edt_name.Text <> FNameOld) then
-        MyInfoMessage('Наименование изменено. Обратите внимание: позиции в сметах, где это изделие используется как компонент, НЕ изменены - для полуфабрикатов это пока не автоматизировано.');
+      //полуфабрикаты: собственной сметы/самосметы у них не бывает (парных вкладок тоже - см. LoadCounterpartTabs,
+      //поэтому список создаваемых/обновляемых парных изделий выше для них всегда пуст), поэтому блок ниже (для
+      //непроизводственных типов) для них не выполняется. Отдельное предупреждение здесь больше не нужно - после
+      //появления CheckSemiproductNameConflicts переименование bcad_nomencl теперь выполняется и для
+      //полуфабрикатов тоже (см. RenameNomenclatura), так что позиции в сметах, где изделие используется как
+      //компонент, обновляются автоматически (тем же способом, что и для остальных типов) - см. п.2 ниже.
     end
     else begin
       //не полуфабрикат: 1) смета для ОТГРУЗОЧНЫХ изделий со ссылкой на ЕДИНСТВЕННОЕ производственное - см.
@@ -1597,33 +1710,44 @@ procedure TFrmODedtOrStdItem.RenameNomenclatura(AIdOrFormatEstimate: Variant; co
 //реально переименовываемой парной вкладки (AIdOrFormatEstimate = FTabs[i].IdOrFormatEstimate - у каждой
 //подгруппы свой префикс, AOldName - имя, под которым найденная запись значится в БД).
 //
-//Про bcad_nomencl - только для НЕ-полуфабрикатов (AItemType <> STDITEM_TYPE_SEMIPRODUCT; для полуфабрикатов
-//логику смет пока не трогаем, см. TODO в конце модуля и предупреждение в VerifyBeforeSave) - в паре вкладок
-//полуфабрикатов не бывает вовсе (см. LoadCounterpartTabs), так что для i > 0 эта проверка всегда проходит.
+//Идентифицирующее имя - ПОЛНОЕ (с учетом префикса подгруппы AIdOrFormatEstimate, см. GetPrefixedName) для всех
+//типов, КРОМЕ полуфабрикатов - у полуфабриката собственного префикса в bcad_nomencl/ИТМ нет, он идентифицируется
+//"голым" именем наравне с нестандартными изделиями (см. общее требование пользователя - переписка, и комментарий
+//в CheckSemiproductNameConflicts); поэтому для AItemType = STDITEM_TYPE_SEMIPRODUCT берем Trim(AOldName/ANewName)
+//напрямую, НЕ вызывая GetPrefixedName (не полагаемся на то, что в БД у подгруппы полуфабриката прописан пустой
+//префикс - правило соблюдается явно, в коде).
+//ВАЖНО (обобщено по просьбе пользователя - см. переписку): раньше bcad_nomencl переименовывался только для
+//НЕ-полуфабрикатов - теперь (после появления CheckSemiproductNameConflicts, гарантирующей отсутствие конфликтов
+//имени) переименовываем и для полуфабрикатов тоже, тем же способом, что и ИТМ, ниже.
 //В estimate_items ссылка на компонент делается ПО ИМЕНИ через bcad_nomencl (id_name) - переименование самой
 //записи bcad_nomencl автоматически "протаскивает" новое имя во все сметы, где изделие уже использовано как
 //компонент, без необходимости искать и править каждую такую смету отдельно.
 //
-//Совпадения полных имён практически исключены, поэтому просто переименовываем существующую запись, если только
-//запись с НОВЫМ именем уже не существует (защита от нарушения уникальности name/dv.nomenclatura.name) - то же
-//самое условие заранее проверяется в VerifyBeforeSave (для текста подтверждения).
+//Совпадения полных/голых имён практически исключены (для полуфабрикатов - см. CheckSemiproductNameConflicts,
+//для остальных типов - см. общий комментарий выше), поэтому просто переименовываем существующую запись, если
+//только запись с НОВЫМ именем уже не существует (защита от нарушения уникальности) - то же самое условие
+//заранее проверяется в VerifyBeforeSave (для текста подтверждения).
 var
-  LOldPrefixedName, LNewPrefixedName: string;
+  LOldName, LNewName: string;
   Res: Integer;
 begin
-  LOldPrefixedName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
-  LNewPrefixedName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
-  if LOldPrefixedName = LNewPrefixedName then
+  if AItemType = STDITEM_TYPE_SEMIPRODUCT then begin
+    LOldName := Trim(AOldName);
+    LNewName := Trim(ANewName);
+  end
+  else begin
+    LOldName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
+    LNewName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
+  end;
+  if LOldName = LNewName then
     Exit;
-  Res := Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, LNewPrefixedName]);
+  Res := Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig_group$i and name = :name$s', [ItmGroups_Production_ID, LNewName]);
   if Res = 0 then
     Q.QExecSql('update dv.nomenclatura set name = :name$s, fullname = :fullname$s where id_group = :ig_group$i and name = :nameold$s',
-      [LNewPrefixedName, LNewPrefixedName, ItmGroups_Production_ID, LOldPrefixedName]);
-  if AItemType <> STDITEM_TYPE_SEMIPRODUCT then begin
-    Res := Q.QLoadValue('select count(1) from bcad_nomencl where name = :name$s', [LNewPrefixedName]);
-    if Res = 0 then
-      Q.QExecSql('update bcad_nomencl set name = :name$s where name = :nameold$s', [LNewPrefixedName, LOldPrefixedName]);
-  end;
+      [LNewName, LNewName, ItmGroups_Production_ID, LOldName]);
+  Res := Q.QLoadValue('select count(1) from bcad_nomencl where name = :name$s', [LNewName]);
+  if Res = 0 then
+    Q.QExecSql('update bcad_nomencl set name = :name$s where name = :nameold$s', [LNewName, LOldName]);
 end;
 
 function TFrmODedtOrStdItem.GetNomenclaturaRenamePlanText(AIdOrFormatEstimate: Variant; const AOldName, ANewName: string; AItemType: Integer): string;
@@ -1632,20 +1756,26 @@ function TFrmODedtOrStdItem.GetNomenclaturaRenamePlanText(AIdOrFormatEstimate: V
 //уникальности - "не переименовываем, если целевое имя уже занято"), чтобы обещание в диалоге строго совпадало
 //с тем, что произойдет при сохранении (см. общее требование пользователя в начале VerifyBeforeSave).
 var
-  LOldPrefixedName, LNewPrefixedName: string;
+  LOldName, LNewName: string;
 begin
   Result := '';
-  LOldPrefixedName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
-  LNewPrefixedName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
-  if LOldPrefixedName = LNewPrefixedName then
+  //см. общий комментарий в RenameNomenclatura про "голое" (без префикса) идентифицирующее имя для полуфабрикатов
+  if AItemType = STDITEM_TYPE_SEMIPRODUCT then begin
+    LOldName := Trim(AOldName);
+    LNewName := Trim(ANewName);
+  end
+  else begin
+    LOldName := GetPrefixedName(AIdOrFormatEstimate, AOldName);
+    LNewName := GetPrefixedName(AIdOrFormatEstimate, ANewName);
+  end;
+  if LOldName = LNewName then
     Exit;
-  if (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LOldPrefixedName]) > 0) and
-     (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LNewPrefixedName]) = 0) then
-    S.ConcatStP(Result, Format('- в номенклатуре ИТМ запись "%s" будет переименована в "%s"', [LOldPrefixedName, LNewPrefixedName]), #13#10);
-  if AItemType <> STDITEM_TYPE_SEMIPRODUCT then
-    if (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LOldPrefixedName]) > 0) and
-       (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LNewPrefixedName]) = 0) then
-      S.ConcatStP(Result, Format('- в справочнике сметных позиций (bcad_nomencl) запись "%s" будет переименована в "%s" (это же затронет сметы, где изделие используется как компонент)', [LOldPrefixedName, LNewPrefixedName]), #13#10);
+  if (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LOldName]) > 0) and
+     (Q.QLoadValue('select count(1) from dv.nomenclatura where id_group = :ig$i and name = :n$s', [ItmGroups_Production_ID, LNewName]) = 0) then
+    S.ConcatStP(Result, Format('- в номенклатуре ИТМ запись "%s" будет переименована в "%s"', [LOldName, LNewName]), #13#10);
+  if (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LOldName]) > 0) and
+     (Q.QLoadValue('select count(1) from bcad_nomencl where name = :n$s', [LNewName]) = 0) then
+    S.ConcatStP(Result, Format('- в справочнике сметных позиций (bcad_nomencl) запись "%s" будет переименована в "%s" (это же затронет сметы, где изделие используется как компонент)', [LOldName, LNewName]), #13#10);
 end;
 
 function TFrmODedtOrStdItem.GetTabExistingId(ATabIndex: Integer): Variant;
@@ -1681,6 +1811,105 @@ begin
       S.IIf(res3 > 0, 'Такое наименование (с учетом префикса) уже есть в ИТМ среди номенклатуры типа "материалы и комплектующие"!'#13#10, '');
     Result := False;
   end;
+end;
+
+function TFrmODedtOrStdItem.CheckSemiproductNameConflicts(AExcludeId: Variant; const AName: string; out AErrorMsg, AWarningMsg: string): Boolean;
+//см. общее требование пользователя (переписка): для полуфабрикатов "голое" (без префикса) наименование должно
+//быть уникально среди ВСЕХ групп полуфабрикатов и нестандартных изделий - иначе жесткая ошибка (п.1). также
+//жесткая ошибка, если оно совпадает с ПОЛНЫМ (с префиксом) наименованием какого-либо стандартного
+//(производственного/отгрузочного) изделия (п.2) - именно по полному наименованию идентифицируются позиции и в
+//bcad_nomencl, и в сметах, поэтому такое совпадение реально опасно. отдельно (НЕ блокируя) предупреждаем, если
+//голое имя полуфабриката просто совпало с ГОЛЫМ (без префикса) именем какого-то стандартного изделия (п.3) - у
+//стандартного изделия идентификация все равно только по полному имени, риска подмены нет, но стоит перепроверить.
+//
+//проверка ЗА ПРЕДЕЛАМИ своей подгруппы - совпадения ВНУТРИ своей подгруппы уже проверяются существующей (не
+//тронутой) проверкой в начале VerifyBeforeSave (плюс уникальный индекс idx_or_std_items_name как страховка).
+var
+  LExcludeId: Variant;
+  LRows: TVarDynArray2;
+  i: Integer;
+  LText: string;
+begin
+  Result := True;
+  AErrorMsg := '';
+  AWarningMsg := '';
+  LExcludeId := S.IIf(S.NNum(AExcludeId) > 0, AExcludeId, -1);
+
+  //п.1: совпадение голого имени с другой группой полуфабрикатов или с нестандартным изделием
+  LRows := Q.QLoad(
+    'select i.name, fe.type, fe.name as subgroup_name ' +
+    'from or_std_items i join or_format_estimates fe on fe.id = i.id_or_format_estimates ' +
+    'where i.id <> :excludeid$i and i.active = 1 and lower(trim(i.name)) = lower(trim(:name$s)) ' +
+    'and ((fe.type = 2 and i.id_or_format_estimates <> :idgroup$i) or i.id_or_format_estimates = 0)',
+    [LExcludeId, AName, FIdEstimateGroup]
+  );
+  if Length(LRows) > 0 then begin
+    LText := '';
+    for i := 0 to High(LRows) do
+      if S.NNum(LRows[i][1]) = 2 then
+        S.ConcatStP(LText, Format('- полуфабрикат "%s" (группа "%s")', [VarToStr(LRows[i][0]), VarToStr(LRows[i][2])]), #13#10)
+      else
+        S.ConcatStP(LText, Format('- нестандартное изделие "%s"', [VarToStr(LRows[i][0])]), #13#10);
+    S.ConcatStP(AErrorMsg, 'Такое наименование (без учета регистра, без префикса) уже занято:'#13#10 + LText, #13#10);
+    Result := False;
+  end;
+
+  //п.2: совпадение голого имени с ПОЛНЫМ (с префиксом) наименованием стандартного изделия
+  LRows := Q.QLoad(
+    'select i.name, fe.prefix, fo.name as format_name ' +
+    'from or_std_items i join or_format_estimates fe on fe.id = i.id_or_format_estimates and fe.type in (0, 1) ' +
+    'join or_formats fo on fo.id = fe.id_format ' +
+    'where i.id <> :excludeid$i and i.active = 1 and lower(trim(fe.prefix || ''_'' || i.name)) = lower(trim(:name$s))',
+    [LExcludeId, AName]
+  );
+  if Length(LRows) > 0 then begin
+    LText := '';
+    for i := 0 to High(LRows) do
+      S.ConcatStP(LText, Format('- изделие "%s_%s" (формат "%s")', [VarToStr(LRows[i][1]), VarToStr(LRows[i][0]), VarToStr(LRows[i][2])]), #13#10);
+    S.ConcatStP(AErrorMsg, 'Такое наименование совпадает с полным (с учетом префикса) наименованием стандартного изделия:'#13#10 + LText, #13#10);
+    Result := False;
+  end;
+
+  //п.3: совпадение голого имени с ГОЛЫМ (без префикса) именем стандартного изделия - только предупреждение
+  LRows := Q.QLoad(
+    'select i.name, fe.prefix, fo.name as format_name ' +
+    'from or_std_items i join or_format_estimates fe on fe.id = i.id_or_format_estimates and fe.type in (0, 1) ' +
+    'join or_formats fo on fo.id = fe.id_format ' +
+    'where i.id <> :excludeid$i and i.active = 1 and lower(trim(i.name)) = lower(trim(:name$s))',
+    [LExcludeId, AName]
+  );
+  if Length(LRows) > 0 then begin
+    LText := '';
+    for i := 0 to High(LRows) do
+      S.ConcatStP(LText, Format('- изделие "%s" (полное имя "%s_%s", формат "%s")',
+        [VarToStr(LRows[i][0]), VarToStr(LRows[i][1]), VarToStr(LRows[i][0]), VarToStr(LRows[i][2])]), #13#10);
+    AWarningMsg := 'Внимание: имя совпадает (без учета регистра) с "голым" (без префикса) именем стандартного изделия - само по себе это не ошибка, но стоит перепроверить:'#13#10 + LText;
+  end;
+end;
+
+procedure TFrmODedtOrStdItem.UpdateSemiproductErrorsLabel;
+var
+  LErrorMsg, LWarningMsg: string;
+begin
+  lblSemiproductErrors.Visible := False;
+  FSemiproductErrorsText := '';
+  if (FItemType <> STDITEM_TYPE_SEMIPRODUCT) or not (Mode in [fView, fEdit]) or (S.NNum(ID) <= 0) then
+    Exit;
+  CheckSemiproductNameConflicts(ID, Trim(edt_name.Text), LErrorMsg, LWarningMsg);
+  if LErrorMsg <> '' then
+    S.ConcatStP(FSemiproductErrorsText, LErrorMsg, #13#10);
+  if LWarningMsg <> '' then
+    S.ConcatStP(FSemiproductErrorsText, LWarningMsg, #13#10);
+  if FSemiproductErrorsText <> '' then begin
+    lblSemiproductErrors.Caption := 'Есть ошибки!';
+    lblSemiproductErrors.Visible := True;
+  end;
+end;
+
+procedure TFrmODedtOrStdItem.lblSemiproductErrorsClick(Sender: TObject);
+begin
+  if FSemiproductErrorsText <> '' then
+    MyWarningMessage(FSemiproductErrorsText);
 end;
 
 function TFrmODedtOrStdItem.SaveCounterpartTab(ATabIndex: Integer): Variant;
