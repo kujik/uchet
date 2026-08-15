@@ -737,6 +737,15 @@ begin
     // Получаем значение источника
     if SourceType = fvtCustom then
       val := GetFieldValue(idx, Integer(fvtCustom) + SourceCustomIndex)
+    else if SourceType = fvtVCurr then
+      //ВАЖНО: fvtVCurr читаем через GetProp, а не напрямую GetFieldValue - см. тот же приём в самом GetProp
+      //(PropValueType = fvtVCurr) - "сырое" значение в массиве под индексом fvtVCurr обновляется только явными
+      //вызовами SetProp(..., fvtVCurr) (например, при первоначальной загрузке записи), а НЕ по мере ввода
+      //пользователем в контрол - реальное "текущее" значение все время находится в самом контроле. При прямом
+      //GetFieldValue(idx, fvtVCurr) здесь получали устаревшее (исходное) значение вместо только что введённого
+      //пользователем - из-за этого, например, в uFrmODedtOrStdItem.pas синхронизация вкладок сохраняла в слот
+      //не то, что реально было на экране, и сравнение на расхождения ложно срабатывало/не срабатывало
+      val := GetProp(idx, fvtVCurr)
     else
       val := GetFieldValue(idx, Integer(SourceType));
 

@@ -1606,7 +1606,7 @@ v:=True;
       Frg1.InfoArray:=[['Выберите заказ из списка']];
   end
   else if FormDoc = myfrm_R_StdPspFormats then begin
-    Caption:='Стандартные форматы паспортов';
+    Caption:='Форматы стандартных изделий';
     Frg1.Options := Frg1.Options + [myogGridLabels];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -1623,13 +1623,21 @@ v:=True;
       ['name','Наименование','200'],
       ['type_name', 'Тип', '150'],
       ['prefix','Префикс','120'],
-//      ['prefix_prod','Префикс для производства','120'],
-//      ['is_semiproduct','Полуфабрикаты','80','pic'],
+      ['sync_group','Группа','80','e=0:9:0',User.Role(rOr_R_StdPspFormats_Ch)],
       ['active','Используется','80','pic']
     ]);
-    Frg2.Opt.SetTable('v_or_format_estimates');    //!!!es v_or_format_estimates type_name
+    Frg2.Opt.SetTable('v_or_format_estimates', 'or_format_estimates');    //!!!es v_or_format_estimates type_name
     Frg2.Opt.SetWhere('where id_format = :id_format$i order by name');
     Frg2.Opt.SetButtons(1, 'reacds',User.Role(rOr_R_StdPspFormats_Ch));
+    Frg1.InfoArray:=[[
+      'Форматы стандартных изделий.'#13#10+
+      'Здесь задаются группы и подгруппы стандартных изделий (добавляются/изменяются в диалоге).'#13#10+
+      'Для подгруппы вы должны ввести префикс. Не меняйте префикс, если в подгруппе уже созданы изделия! Это поломает данные!'#13#10+
+      'Также выберите тип изделий (Производственное/Отгрузочное/Полуфабрикат.'#13#10+
+      'Снимите галку "Используется", чтобы неиспользуемые группы не выпадали в справочнике, паспортах и шаблонах паспортов.'#13#10+
+      'Непосредственно в детальной таблице можно установить число в колонке "Группа", оно влияет на диалог ввода стандартного изделия'#13#10+
+      '(синхронизируются при вводе изделия с одинаковой группой; изделия с группой 0 и полуфабрикаты никогда не синхронизируются).'#13#10
+    ]];
   end
   else if FormDoc = myfrm_Rep_PlannedMaterials then begin
     //отчет 'Годовая потребность в материалах'
@@ -3557,6 +3565,9 @@ end;
 
 procedure TFrmXGlstMain.Frg2CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
+  if FormDoc = myfrm_R_StdPspFormats then begin
+    Q.QSave('u', Fr.Opt.Sql.Table, '', 'id$i;' + FieldName, [Fr.ID, Value]);
+  end;
 end;
 
 end.

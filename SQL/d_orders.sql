@@ -299,6 +299,7 @@ create table or_format_estimates (
   --prefix_prod varchar2(20),           --префикс для итм, для производственного паспорта
   --is_semiproduct number(1) default 0, --это группа полуфабрикатов
   type number(1),                     --0 - производственный, 1 - отгрузочный, 2 - п/ф
+  sync_group number(1) default 1,     --код группы синхронизации с парным изделием (произв./отгруз.) в пределах одной id_format; 0 - синхронизация для этой подгруппы не предлагается; подгруппы одной id_format с одинаковым ненулевым кодом образуют пары вкладок (см. uFrmODedtOrStdItem) --$+
   active number(1),                   --признак активности
   constraint pk_or_format_estimates primary key (id),
   constraint fk_or_format_estimates_f foreign key (id_format) references or_formats(id)
@@ -318,7 +319,7 @@ begin
 end;
 /
 
-create or replace view v_or_format_estimates as
+create or replace view v_or_format_estimates as --$+
 select
   fe.*,
   decode(type, 0, 'производственное изделие', 1, 'отгрузочное изделие', 2, 'полуфабрикат') as type_name
@@ -1428,7 +1429,7 @@ end;
 /
 
 
-create or replace view v_or_std_items as --!+
+create or replace view v_or_std_items as --$+
   select
   --вью для справочника стандартныых изделий
     i.*,

@@ -485,7 +485,10 @@ begin
   end
   else if TCellButtonEh(Sender).Hint = 'Изделие' then begin
     if not ((Frg1.GetValueS('type_of_item') = '') or (Frg1.GetValueS('type_of_item') = 'Н')) then
-      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fView, Fr.GetValue('id_or_std_item'), 0);
+      //AddParam теперь VarArrayOf([IdOrFormatEstimate, CallMode]) - см. общий комментарий в начале Prepare
+      //(uFrmODedtOrStdItem.pas); просмотр - CallMode = 1, поведение как и раньше (0 здесь и раньше не
+      //использовался предметно - в режиме просмотра список подгруппы все равно схлопывается до одной строки)
+      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fView, Fr.GetValue('id_or_std_item'), VarArrayOf([0, 1]));
   end;
   VerifyRow(Fr.RecNo - 1, True);
   //VerifyTable;

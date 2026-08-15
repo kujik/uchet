@@ -950,7 +950,7 @@ begin
   else if AFormType = myfrm_Dlg_Rep_Order_Primecost2 then
     TFrmOWrepOrdersPrimeCost.Show(AOwner, AFormType, Opt, fNone, Null, Null)
   else if AFormType = myfrm_Dlg_R_OrderStdItems then
-    TFrmODedtOrStdItem.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
+    TFrmODedtOrStdItem.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_SupplierMinPart then
     Form := TDlg_SuppliersMinPart.Create(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Spl_Categoryes then

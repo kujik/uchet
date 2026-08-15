@@ -662,7 +662,7 @@ begin
     ['Автозамена номенклатуры', myfrm_R_EstimatesReplace, User.Roles([], [rOr_R_BCad_Replace_V, rOr_R_BCad_Replace_Ch])],
     [],
     ['Типовые проекты', myfrm_R_StdProjects, User.Roles([], [rOr_R_StdProjects_V, rOr_R_StdProjects_Ch])],
-    ['Стандартные форматы паспортов', myfrm_R_StdPspFormats, User.Roles([], [rOr_R_StdPspFormats_V, rOr_R_StdPspFormats_Ch])],
+    ['Форматы стандартных изделий', myfrm_R_StdPspFormats, User.Roles([], [rOr_R_StdPspFormats_V, rOr_R_StdPspFormats_Ch])],
     ['Типы заказов', myfrm_R_OrderTypes, User.Role(rOr_R_OrderTypes_Ch)],
     ['Свойства заказов', myfrm_R_OrderProperties, User.Role(rOr_R_OrderProperties_Ch)],
     ['Регламенты заказов', myfrm_R_OrderReglament, User.Roles([], [rOr_R_OrderReglaments_V, rOr_R_OrderReglaments_Ch])],

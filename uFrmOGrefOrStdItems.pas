@@ -231,7 +231,9 @@ begin
       Exit;
     if Fr.IsEmpty and (fMode <> fAdd) then
       Exit;
-    Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, Fr.GetControlValue('CbEstimate'));
+    //AddParam теперь VarArrayOf([IdOrFormatEstimate, CallMode]) - см. общий комментарий в начале Prepare
+    //(uFrmODedtOrStdItem.pas); вызов из справочника - CallMode = 1, вся прежняя логика без изменений
+    Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], fMode, Fr.ID, VarArrayOf([Fr.GetControlValue('CbEstimate'), 1]));
   end
   else if (Tag = mbtTest) then begin
 //    TFrmOGedtEstimate.Show(Self, '1112', [myfoDialog, myfoSizeable], fEdit, Fr.ID, 1);
