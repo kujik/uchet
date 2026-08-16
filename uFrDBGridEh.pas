@@ -377,6 +377,35 @@ type
     myogdmFromSql                   //данные загружаются sql-запросом при создании или вручную, датасет оффлайн
   );
 
+  TFrDBGridProperties = (
+    myogfpName,
+    myogfpNameWithSuffix,
+    myogfpNameDb,
+    myogfpFullName,
+    myogfpCaption,
+    myogfpCaptionFull,
+    myogfpDataType,
+    myogfpFieldSize,
+    myogfpDefOptions,
+    myogfpWidth,
+    myogfpMaxWidth,
+    myogfpVisible,
+    myogfpInvisible,
+    myogfpAddProps,
+    myogfpFChb,
+    myogfpFChbPic,
+    myogfpFChbt,
+    myogfpFChbtPic,
+    myogfpFBt,
+    myogfpFPic,
+    myogfpEditable,
+    myogfpFVerify,
+    myogfpFFormat,
+    myogfpFIsNull,
+    myogfpFTags
+  );
+
+
   //запись параметров для столбца грида
   TFrDBGridRecFieldsList = record
                                     //st$s as name     (алиасы нельзя использовать для полей где будет подстановка null)
@@ -385,6 +414,7 @@ type
     NameDb: string;                 //наименование поля в БД - st
     FullName: string;               //наименование поля полное, как оно было указано в массиве определения полей - st$s as name
     Caption: string;                //заголовок поля
+    CaptionFull: string;            //полный заголовок поля
     DataType: TFieldType;           //тип данных, определяется из наименования поля типа id$i
     FieldSize: Integer;             //размер данных, не используется
     DefOptions: string;             //параметры отображения столбца - ширина, растягивание по ширине, высоте
@@ -405,6 +435,7 @@ type
     FIsNull: Boolean;               //признак, что вместо данных загружается пустое значение; столбцы будут скрыты
     FTags: string;                  //теги для быстрого доступа к группе полей, у одного поля может быть несколько через ,
   end;
+
 
   //массив свойств столбцов грида
   TFrDBGridFieldsList = array of TFrDBGridRecFieldsList;
@@ -535,6 +566,19 @@ type
     procedure SetButtonsIfEmpty(AButtonsIfEmpty: TVarDynArray);
     //передается массив первоначального определения полей
     procedure SetFields(AFields: TVarDynArray2);
+    //получить массив имен всех столбцов таблицы по тегам, на основании данных определения фрейма
+    //возвращает строку полей через ";", определенную комбинацией полей и тегов (может быть как угодно, вперемешку)
+    function  GetFieldNamesBySpec(const AFields: string): string;
+    function  GetColProperty(AIndex: Integer; APropType: TFrDBGridProperties): Variant;
+    procedure SetColProperty(AIndex: Integer; APropType: TFrDBGridProperties; AValue: Variant);
+    //возвращает индекс поля FSql по его имени (без учета регистра); если поле не найдено - возвращает -1
+    function  FieldByName(const AName: string): Integer;
+    //получить свойство APropType для набора столбцов, заданных спецификацией AFields (имена/теги через
+    //GetFieldNamesBySpec) - результат в том же порядке, что и разобранные поля
+    function  GetColumsProperties(const AFields: string; APropType: TFrDBGridProperties): TVarDynArray;
+    //установить свойство APropType равным AValue для всех столбцов, заданных спецификацией AFields
+    //(имена/теги через GetFieldNamesBySpec)
+    procedure SetColumsProperties(const AFields: string; APropType: TFrDBGridProperties; AValue: Variant);
     //настройка свойства полей, переданных через ;, AFeatype передается строкой в том же виде как при определении полей
     procedure SetColFeature(AFields: string; AFeatype: string; ASet: Boolean = true; AClearOther: Boolean = False);
     //параметры sql для запроса
@@ -914,6 +958,12 @@ type
     procedure RestoreRecNo;
     //проверить, есть ли столбец с таким наименованием
     function  IsFieldExists(FieldName: string): Boolean;
+    //получить свойство APropType для набора столбцов, заданных спецификацией AFields (имена/теги через
+    //GetFieldNamesBySpec) - результат в том же порядке, что и разобранные поля
+    function  GetColumsProperties(const AFields: string; APropType: TFrDBGridProperties): TVarDynArray;
+    //установить свойство APropType равным AValue для всех столбцов, заданных спецификацией AFields
+    //(имена/теги через GetFieldNamesBySpec)
+    procedure SetColumsProperties(const AFields: string; APropType: TFrDBGridProperties; AValue: Variant);
     //установка фокуса грида на переданную строку, с единицы
     //procedure SetRecNo(ARecNo: Integer);
     //получить значение поля в текущей строке грида
@@ -959,7 +1009,7 @@ type
     function  GetColumnCaption(FieldName: string; WoCrLf: Boolean = True): string;
     //получить массив имен всех столбцов таблицы (на основании имен колонок мемтейбла)
     function  GetFieldNames: TVarDynArray; overload;
-    //получить массив имен всех столбцов таблицы по тегам, на основании данных определения фрейма
+    //если строка начинается с "-", то наоборот исключает переданные поля/теги из всех
     function  GetFieldNamesEx(Tag: string = ''; WithSuffix: Boolean = False): TVarDynArray; overload;
     //вернуть массив значений поля ID, отмеченных чекбоксами в индикаторном столбце
     function  GetSetlectedIds: TVarDynArray;
@@ -1222,6 +1272,8 @@ begin
     SetFrValue(fr, 'NULL');
     SetFrValue(fr, 'T');
     SetFrValue(fr, 'I');
+    SetFrValue(fr, 'CAPT');
+
     fr.Visible := True;
 //    SetFrValue(fr, '');
     repeat
@@ -1241,6 +1293,103 @@ begin
     then FSql.IdField:= FSql.Fields[0].Name;
 end;
 
+function TFrDBGridEhOpt.GetFieldNamesBySpec(const AFields: string): string;
+//возвращает строку полей через ";", определенную комбинацией полей и тегов (может быть как угодно, вперемешку)
+//если строка начинается с "-", то наоборот исключает переданные поля/теги из всех
+var
+  tokens: TVarDynArray;
+  i, j: Integer;
+  isExclude: Boolean;
+  selectedNames: TVarDynArray;
+  token: string;
+  found: Boolean;
+  allNames: TVarDynArray;
+begin
+  Result := '';
+  if AFields = '' then
+    Exit;
+  // Разбиваем спецификацию на токены
+  tokens := A.Explode(AFields, ';');
+  if Length(tokens) = 0 then
+    Exit;
+  // Проверяем режим исключения
+  isExclude := (tokens[0] = '-');
+  if isExclude then begin
+    Delete(tokens, 0, 1);  // удаляем '-'
+    if Length(tokens) = 0 then begin
+      // Если только '-', возвращаем все поля
+      SetLength(allNames, Length(FSql.Fields));
+      for i := 0 to High(FSql.Fields) do
+        allNames[i] := FSql.Fields[i].Name;
+      Result := A.Implode(allNames, ';');
+      Exit;
+    end;
+  end;
+  selectedNames := nil;
+  // Обрабатываем каждый токен
+  for j := 0 to High(tokens) do begin
+    token := tokens[j];
+    if token = '*' then begin
+      // Добавляем все имена полей
+      for i := 0 to High(FSql.Fields) do begin
+        if A.PosInArray(FSql.Fields[i].Name, selectedNames) = -1 then begin
+          SetLength(selectedNames, Length(selectedNames) + 1);
+          selectedNames[High(selectedNames)] := FSql.Fields[i].Name;
+        end;
+      end;
+      if not isExclude then
+        Break;  // в режиме включения все поля уже добавлены
+    end
+    else begin
+      // Ищем точное совпадение с именем поля
+      found := False;
+      for i := 0 to High(FSql.Fields) do begin
+        if FSql.Fields[i].Name = token then begin
+          if A.PosInArray(FSql.Fields[i].Name, selectedNames) = -1 then begin
+            SetLength(selectedNames, Length(selectedNames) + 1);
+            selectedNames[High(selectedNames)] := FSql.Fields[i].Name;
+          end;
+          found := True;
+          Break;
+        end;
+      end;
+      // Если не имя – считаем тегом
+      if not found then begin
+        for i := 0 to High(FSql.Fields) do begin
+          if S.InCommaStr(token, FSql.Fields[i].FTags, ',') then begin
+            if A.PosInArray(FSql.Fields[i].Name, selectedNames) = -1 then begin
+              SetLength(selectedNames, Length(selectedNames) + 1);
+              selectedNames[High(selectedNames)] := FSql.Fields[i].Name;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+  // Формируем результат в порядке следования полей в FSql.Fields
+  SetLength(allNames, 0);
+  if isExclude then begin
+    // Результат = все поля минус selectedNames
+    for i := 0 to High(FSql.Fields) do begin
+      if A.PosInArray(FSql.Fields[i].Name, selectedNames) = -1 then begin
+        SetLength(allNames, Length(allNames) + 1);
+        allNames[High(allNames)] := FSql.Fields[i].Name;
+      end;
+    end;
+  end
+  else begin
+    // Результат = поля из selectedNames, но в порядке FSql.Fields
+    for i := 0 to High(FSql.Fields) do begin
+      if A.PosInArray(FSql.Fields[i].Name, selectedNames) <> -1 then begin
+        SetLength(allNames, Length(allNames) + 1);
+        allNames[High(allNames)] := FSql.Fields[i].Name;
+      end;
+    end;
+  end;
+  Result := A.Implode(allNames, ';');
+end;
+
+
 procedure TFrDBGridEhOpt.SetColFeature(AFields: string; AFeatype: string; ASet: Boolean = true; AClearOther: Boolean = False);
 //установка свойств указанных колонок
 //поля передаются через ;, может быть передана *, означающая все поля, или теги (которые могут быть и строковыми и которых может быть для поля при определении несколько)
@@ -1258,6 +1407,45 @@ begin
       if (FSql.Fields[i].Name = va[j]) or (va[j] = '*') or uString.S.InCommaStr(va[j], FSql.Fields[i].FTags, ',') then
         SetFrValue(FSql.Fields[i], AFeatype, ASet);
 end;
+
+function TFrDBGridEhOpt.FieldByName(const AName: string): Integer;
+//возвращает индекс поля FSql по его имени (без учета регистра); если поле не найдено - возвращает -1
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to High(FSql.Fields) - 1 do
+    if SameText(FSql.Fields[i].Name, AName) then begin
+      Result := i;
+      Break;
+    end;
+end;
+
+function TFrDBGridEhOpt.GetColumsProperties(const AFields: string; APropType: TFrDBGridProperties): TVarDynArray;
+//получить свойство APropType для набора столбцов, заданных спецификацией AFields (имена/теги через
+//GetFieldNamesBySpec) - результат в том же порядке, что и разобранные поля
+var
+  Names: TVarDynArray;
+  i: Integer;
+begin
+  Names := A.Explode(GetFieldNamesBySpec(AFields), ';', True);
+  SetLength(Result, Length(Names));
+  for i := 0 to High(Names) do
+    Result[i] := GetColProperty(FieldByName(Names[i]), APropType);
+end;
+
+procedure TFrDBGridEhOpt.SetColumsProperties(const AFields: string; APropType: TFrDBGridProperties; AValue: Variant);
+//установить свойство APropType равным AValue для всех столбцов, заданных спецификацией AFields
+//(имена/теги через GetFieldNamesBySpec)
+var
+  Names: TVarDynArray;
+  i: Integer;
+begin
+  Names := A.Explode(GetFieldNamesBySpec(AFields), ';', True);
+  for i := 0 to High(Names) do
+    SetColProperty(FieldByName(Names[i]), APropType, AValue);
+end;
+
 
 procedure TFrDBGridEhOpt.SetButtons(AIndex: Integer; AButtons: TVarDynArray2; AType: Integer = 1; APanel: TPanel = nil; AHeight: Integer = 0; AVertical: Boolean = False);
 var
@@ -1524,10 +1712,73 @@ begin
   if (st = 'C') then begin
     fr.Caption := st1;
   end;
+  if (st = 'CAPT') then
+    if ASet
+      then fr.CaptionFull := st1
+      else fr.CaptionFull := '';
 end;
 
+function TFrDBGridEhOpt.GetColProperty(AIndex: Integer; APropType: TFrDBGridProperties): Variant;
+begin
+  case APropType of
+    myogfpName:            Result := FSql.Fields[AIndex].Name;
+    myogfpNameWithSuffix:  Result := FSql.Fields[AIndex].NameWithSuffix;
+    myogfpNameDb:          Result := FSql.Fields[AIndex].NameDb;
+    myogfpFullName:        Result := FSql.Fields[AIndex].FullName;
+    myogfpCaption:         Result := FSql.Fields[AIndex].Caption;
+    myogfpCaptionFull:     Result := FSql.Fields[AIndex].CaptionFull;
+    myogfpDataType:        Result := FSql.Fields[AIndex].DataType;
+    myogfpFieldSize:       Result := FSql.Fields[AIndex].FieldSize;
+    myogfpDefOptions:      Result := FSql.Fields[AIndex].DefOptions;
+    myogfpWidth:           Result := FSql.Fields[AIndex].Width;
+    myogfpMaxWidth:        Result := FSql.Fields[AIndex].MaxWidth;
+    myogfpVisible:         Result := FSql.Fields[AIndex].Visible;
+    myogfpInvisible:       Result := FSql.Fields[AIndex].Invisible;
+    myogfpAddProps:        Result := FSql.Fields[AIndex].AddProps;
+    myogfpFChb:             Result := FSql.Fields[AIndex].FChb;
+    myogfpFChbPic:          Result := FSql.Fields[AIndex].FChbPic;
+    myogfpFChbt:            Result := FSql.Fields[AIndex].FChbt;
+    myogfpFChbtPic:         Result := FSql.Fields[AIndex].FChbtPic;
+    myogfpFBt:              Result := FSql.Fields[AIndex].FBt;
+    myogfpFPic:             Result := FSql.Fields[AIndex].FPic;
+    myogfpEditable:         Result := FSql.Fields[AIndex].Editable;
+    myogfpFVerify:          Result := FSql.Fields[AIndex].FVerify;
+    myogfpFFormat:          Result := FSql.Fields[AIndex].FFormat;
+    myogfpFIsNull:          Result := FSql.Fields[AIndex].FIsNull;
+    myogfpFTags:            Result := FSql.Fields[AIndex].FTags;
+  end;
+end;
 
-
+procedure TFrDBGridEhOpt.SetColProperty(AIndex: Integer; APropType: TFrDBGridProperties; AValue: Variant);
+begin
+  case APropType of
+    myogfpName:            FSql.Fields[AIndex].Name := AValue;
+    myogfpNameWithSuffix:  FSql.Fields[AIndex].NameWithSuffix := AValue;
+    myogfpNameDb:          FSql.Fields[AIndex].NameDb := AValue;
+    myogfpFullName:        FSql.Fields[AIndex].FullName := AValue;
+    myogfpCaption:         FSql.Fields[AIndex].Caption := AValue;
+    myogfpCaptionFull:     FSql.Fields[AIndex].CaptionFull := AValue;
+    myogfpDataType:        FSql.Fields[AIndex].DataType := AValue;
+    myogfpFieldSize:       FSql.Fields[AIndex].FieldSize := AValue;
+    myogfpDefOptions:      FSql.Fields[AIndex].DefOptions := AValue;
+    myogfpWidth:           FSql.Fields[AIndex].Width := AValue;
+    myogfpMaxWidth:        FSql.Fields[AIndex].MaxWidth := AValue;
+    myogfpVisible:         FSql.Fields[AIndex].Visible := AValue;
+    myogfpInvisible:       FSql.Fields[AIndex].Invisible := AValue;
+    myogfpAddProps:        FSql.Fields[AIndex].AddProps := AValue;
+    myogfpFChb:             FSql.Fields[AIndex].FChb := AValue;
+    myogfpFChbPic:          FSql.Fields[AIndex].FChbPic := AValue;
+    myogfpFChbt:            FSql.Fields[AIndex].FChbt := AValue;
+    myogfpFChbtPic:         FSql.Fields[AIndex].FChbtPic := AValue;
+    myogfpFBt:              FSql.Fields[AIndex].FBt := AValue;
+    myogfpFPic:             FSql.Fields[AIndex].FPic := AValue;
+    myogfpEditable:         FSql.Fields[AIndex].Editable := AValue;
+    myogfpFVerify:          FSql.Fields[AIndex].FVerify := AValue;
+    myogfpFFormat:          FSql.Fields[AIndex].FFormat := AValue;
+    myogfpFIsNull:          FSql.Fields[AIndex].FIsNull := AValue;
+    myogfpFTags:            FSql.Fields[AIndex].FTags := AValue;
+  end;
+end;
 
 
 
@@ -2787,6 +3038,20 @@ procedure TFrDBGridEh.RestoreRecNo;
 //Восстановить позицию в гриде
 begin
   MemTableEh1.RecNo := FSavedRecNo;
+end;
+
+function TFrDBGridEh.GetColumsProperties(const AFields: string; APropType: TFrDBGridProperties): TVarDynArray;
+//получить свойство APropType для набора столбцов, заданных спецификацией AFields (имена/теги через
+//GetFieldNamesBySpec) - результат в том же порядке, что и разобранные поля
+begin
+  Result := FOpt.GetColumsProperties(AFields, APropType);
+end;
+
+procedure TFrDBGridEh.SetColumsProperties(const AFields: string; APropType: TFrDBGridProperties; AValue: Variant);
+//установить свойство APropType равным AValue для всех столбцов, заданных спецификацией AFields
+//(имена/теги через GetFieldNamesBySpec)
+begin
+  FOpt.SetColumsProperties(AFields, APropType, AValue);
 end;
 
 function TFrDBGridEh.IsFieldExists(FieldName: string): Boolean;

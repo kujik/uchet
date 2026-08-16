@@ -881,17 +881,10 @@ var
 begin
   Result := [];
   indices := CollectIndices(PropNames);
-  for i := 0 to High(indices) do
-  begin
+  for i := 0 to High(indices) do begin
     idx := Integer(indices[i]);
     vBeg := GetProp(idx, fvtVBeg);
     vCurr := GetProp(idx, fvtVCurr);
-{    if VarIsNull(vBeg) and VarIsNull(vCurr) then
-      isChanged := False
-    else if VarIsNull(vBeg) or VarIsNull(vCurr) then
-      isChanged := True
-    else
-      isChanged := (vBeg <> vCurr);              }
     isChanged := (vBeg.AsString <> vCurr.AsString);
     if isChanged then
       Result := Result + [GetName(idx)];
@@ -929,8 +922,7 @@ begin
   AErrorSt := '';
   AIsChanged := False;
 
-  for i := 0 to High(FDefineFieldsAdd) do
-  begin
+  for i := 0 to High(FDefineFieldsAdd) do begin
     if VarToStr(GetFieldValue(i, Integer(fvtCheck))) = '' then
       Continue;
 
@@ -944,8 +936,7 @@ begin
     if verRule = '' then
       Continue;
 
-    if not S.VeryfyValue(GetVerifyTypeLetter(i), verRule, VarToStr(vCurr), CorrectValue) then
-    begin
+    if not s.VeryfyValue(GetVerifyTypeLetter(i), verRule, VarToStr(vCurr), CorrectValue) then begin
       AHasError := True;
       caps := GetPropCaptions(GetName(i));
       if Length(caps) > 0 then
@@ -954,7 +945,7 @@ begin
         caption := '';
       if caption = '' then
         caption := GetName(i);
-      S.ConcatStP(AErrorSt, 'Поле "' + caption + '": некорректное значение', #13#10);
+      s.ConcatStP(AErrorSt, 'Поле "' + caption + '": некорректное значение', #13#10);
     end;
   end;
 end;

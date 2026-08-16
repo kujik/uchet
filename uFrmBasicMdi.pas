@@ -71,6 +71,7 @@ type
     RequestWhereClose: TMDICloseQuery;       // реакция на закрытие
     DefFocusedControl: TWinControl;          // контрол для установки фокуса при открытии
     NoSerializeCtrls: Boolean;               // отключить сериализацию значений контролов
+    NoSerializeCtrlNames: TVarDynArray;      // отключить сериализацию для этих контролов
     RefreshParent: Boolean;                  // обновить родительскую форму при нажатии Ок
     NoDbLock: Boolean;                       // не использовать блокировку в БД
     InfoArray: TVarDynArray2;                // информация для иконки справки
@@ -1418,7 +1419,7 @@ begin
   if FOpt.NoSerializeCtrls then
     FCtrlCurrValuesStr := ''
   else
-    FCtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['chb_NoClose']));
+    FCtrlCurrValuesStr := Cth.SerializeControlValuesArr2(Cth.GetControlValuesArr2(Self, nil, [], ['chb_NoClose'] + FOpt.NoSerializeCtrlNames));
 end;
 
 //-----------------------------------------------------------------------------
