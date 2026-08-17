@@ -154,8 +154,14 @@ type
     FHighlihtCurrentChangedControls: Integer;
     //разрешает редакьтирование заказа в статусах Проведен или Запущен
     FEditAll: Boolean;
-    //текстовое описание изменений в шапке заказа - толь перечисление изменений, без указания начальных и конечных значений
-    FTitleChangesShortText: string;
+    //фиксация изменений заказа за сессию редактирования (см. FixOrderChanges) - краткий/полный текст изменений
+    //отдельно по шапке заказа и по табличной части (позициям); пустые, если изменений не было
+    FTitleChangesShort: string;
+    FTitleChangesFull: string;
+    FItemsChangesShort: string;
+    FItemsChangesFull: string;
+    //текст контролов на момент открытия диалога для отслеживания изменений
+    FBegControlsText: TVarDynArray2;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -203,6 +209,9 @@ type
     function  Save: Boolean; override;
     function  SaveOrderItems: Boolean;
     procedure SaveCustomer;
+    procedure SaveComplaintData;
+    procedure SaveOrderAuditTable;
+    procedure SaveOrderStages;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
     function  SetTaskForServer: Boolean;
@@ -218,6 +227,27 @@ type
     function  GetEstimateFormatField(AFieldName: string): Variant;
     function  GetOrderTypeField(AFieldName: string): Variant;
     procedure SetFrgItemsReadOnly;
+    //озвращает массив свойств и соответствующих ему текстовых значений контролов.
+    //нужен для текста изменений, так как последний генерируется по свойствам, а в них Value а не Text
+    function  GetControlsText: TVarDynArray2;
+    //фиксация изменений заказа за сессию редактирования - заполняет FTitleChangesShort/Full, FItemsChangesShort/Full
+    //(см. комментарий у этих полей); вызывается перед сохранением (Save) и перед открытием "текущей" истории изменений
+    procedure FixOrderChanges;
+    //текст изменений шапки заказа: краткий (AShort=True, только заголовки полей с тегом ch, без значений) либо
+    //полный (AShort=False, все поля кроме тега ch0, вида Поле: "было" -> "стало"); порядок полей - по свойству
+    //$sort (см. uFields.pas), если оно где-то задано, иначе поля идут в порядке DefineFields (как и было)
+    function  GetTitleChangesText(AShort: Boolean): string;
+    //сортировка списка внутренних имен полей (F) по их свойству $sort, если оно определено хотя бы для одного поля
+    //формы (см. F.HasCustomProp) - иначе возвращает ANames без изменений (сортировка не задана - оставляем как есть)
+    function  SortPropNamesBySort(const ANames: TVarDynArray): TVarDynArray;
+    //текст изменений табличной части (позиций) заказа: краткий/полный - см. GetTitleChangesText; в отличие от шапки,
+    //считается прямым сравнением старой версии таблицы (FOrderItemsOld) с текущим гридом (FrgItems), а не через F;
+    //любое изменение полей маршрута (r1..rN) объединяется в одну строку "Маршрут"; каждая строка изменений
+    //изделия предваряется его слешем и наименованием
+    function  GetItemsChangesText(AShort: Boolean): string;
+    //сохранение зафиксированных изменений (см. FixOrderChanges) в бд (order_changes), вместе с id_status
+    //до и после сессии редактирования, текущим пользователем и временем; если изменений не было - ничего не пишет
+    procedure SaveOrderChanges;
 
 
 
@@ -360,6 +390,7 @@ begin
   FOpt.StatusBarMode := stbmDialog;
   FOpt.RefreshParent := True;
   FOpt.RequestWhereClose := cqYN;
+  FOpt.NoSerializeCtrlNames := ['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo'];
 
   SetControlsLayout;
   DefineFields;
@@ -384,6 +415,8 @@ begin
   PrepareFrgFiles;
 
   AfterLoadTables;
+
+  FBegControlsText := GetControlsText;
 
   edt_templatename.Visible := FIsTemplate;
   if Mode in [fView, fDelete] then begin
@@ -598,28 +631,32 @@ begin
   //переменная часть, производственные участки
   va2 := [];
   for i := 0 to High(RouteFields) do begin
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,ch,e']]
+    //ch0 у полей маршрута - исключены из общего цикла полного текста изменений (GetItemsChangesText), так как
+    //любое их изменение объединяется в отдельную строку "Маршрут" (см. комментарий в GetItemsChangesText)
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,ch,e,ch0']]
 //    va2 := va2 + [['nvl(r' + IntToStr(i + 1) + ',0) as ' + 'r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e=0:1:0', 't=s,ch']]
   end;
-  //теги: s - сохранение в бд, ch - отслеживание изменений поля, e - редактируется в режиме оформления, ea - редактируеится после проведения
+  //теги: s - сохранение в бд, ch - отслеживание изменений поля, e - редактируется в режиме оформления, ea - редактируеится после проведения,
+  //ch0 - поле исключается из полного текста изменений позиций заказа (см. GetItemsChangesText в этом модуле) -
+  //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей
   var LFields: TVarDynArray2 := [
-    ['id$i', '_id', '40', 't=s'],
-    ['id_std_item$i', '_id_std', '40', 't=s'],
-    ['id_itm$i', '_id_itm', '40', 't=s'],
-    ['ch$s', '_ch', '40', 't=s'],
-    ['pos$i', '_pos', '20', 't=s'],
-    ['std$i', '_std', '20', 't=s'],
-    ['attention$i', '_attention', '40', 't=s'],
-    ['null as status$s', '*', '20', 'pic=e;0:16;12'],
-    ['slash$s', 'Паспорт', '90'],
-    ['prefix$s', 'Префикс', '60;h'],
+    ['id$i', '_id', '40', 't=s,ch0'],
+    ['id_std_item$i', '_id_std', '40', 't=s,ch0'],
+    ['id_itm$i', '_id_itm', '40', 't=s,ch0'],
+    ['ch$s', '_ch', '40', 't=s,ch0'],
+    ['pos$i', '_pos', '20', 't=s,ch0'],
+    ['std$i', '_std', '20', 't=s,ch0'],
+    ['attention$i', '_attention', '40', 't=s,ch0'],
+    ['null as status$s', '*', '20', 'pic=e;0:16;12', 't=ch0'],
+    ['slash$s', 'Паспорт', '90', 't=ch0'],
+    ['prefix$s', 'Префикс', '60;h', 't=ch0'],
     ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=ch,e'],
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,ch'],
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch,e'],
-    ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e'],
-    ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s'],
-    ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s'],
-    ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s'],
+    ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e,ch0'],
+    ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s,ch0'],
+    ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0'],
+    ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0'],
     ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e,ea'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch,e'],
@@ -633,7 +670,7 @@ begin
     ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
     ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
     ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,ch,e,ea'],
-    ['0 as sum$f', 'Сумма', '90', 'f=0.00:']
+    ['0 as sum$f', 'Сумма', '90', 'f=0.00:', 't=ch0']
   ];
   FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
   FrgItems.Opt.SetFields(LFields);
@@ -794,31 +831,35 @@ begin
   //p - свойства, нужные только для отгрузочных заказов
   //t - не обязательны в шаблонах
   //td - в шаблонах недоступны и очищены
-  //ch - отслеживаются изменения
+  //ch - отслеживаются изменения /создается краткий комментарий и идет рассылка/
+  //ch0 - не отслеживаются изменения для полного текста в логе изменений
   //ea - редактируются и в проведенном и в запущенном заказе
 
+  //ch0 - поле исключается из полного текста изменений заказа за сессию (см. FixOrderChanges/GetTitleChangesText
+  //в этом модуле) - для технических/служебных полей и полей, чье значение производно от других (уже отслеживаемых)
+  //полей; id_status/status исключены тегом ch0, так как отслеживаются отдельно (см. FixOrderChanges)
   F.DefineFields := [
-    ['id$i'],
-    ['id_itm;0'],
-    ['sync_with_itm$i'],
+    ['id$i', 't=ch0'],
+    ['id_itm;0', 't=ch0'],
+    ['sync_with_itm$i', 't=ch0'],
     ['year$i'],
     ['prefix$s'],
     ['num$i'],
-    ['path$s'],
-    ['in_archive;0'],
-    ['ch$s'],
-    ['attention_fields$s', 'ch=1'],
+    ['path$s', 't=ch0'],
+    ['in_archive;0', 't=ch0'],
+    ['ch$s', 't=ch0'],
+    ['attention_fields$s', 'ch=1', 't=ch0'],
     ['dt_end;0'],
-    ['dt_to_sgp;0'],
-    ['dt_from_sgp;0'],
+    ['dt_to_sgp;0', 't=ch0'],
+    ['dt_from_sgp;0', 't=ch0'],
     ['ndsd$f', 'ndsd$f'],
-    ['id_status_itm;0'],
-    ['status_itm;0'],
-    ['ids_order_properties$s'],
-    ['id_status$i'],
-    ['status;0'],
-    ['nds_rate$f'],
-    ['wholesale$i'],
+    ['id_status_itm;0', 't=ch0'],
+    ['status_itm;0', 't=ch0'],
+    ['ids_order_properties$s', 't=ch0'],
+    ['id_status$i', 't=ch0'],
+    ['status;0', 't=ch0'],
+    ['nds_rate$f', 't=ch0'],
+    ['wholesale$i', 't=ch0'],
 
 
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
@@ -826,24 +867,24 @@ begin
     ['id_type2$i', 'V=1:400', 't=ch'],
     ['ornum$s', 't=d,ch'],
     ['or_reference$s','t=td,ch'],
-    ['id_reglament$i'],
+    ['id_reglament$i', 't=ch0'],
     ['reglament$s;0', 'V=1:400', 't=t,ch'],
     ['id_organization$i', 'V=1:400', 't=t,ch,t'],
     ['area$i', 'V=1:100', 't=t,ch'],
     ['project$s', 'V=1:500::td', 't=t,ch'],
-    ['id_format$i'],
+    ['id_format$i', 't=ch0'],
     ['id_or_format_estimates$i', 'V=1:400', 't=ch'],
-    ['managername$s;0', 't=d', #0, User.GetName],
-    ['launched_by_name$s;0', 't=d', #0, User.GetName],
-    ['id_manager$i', #0, User.GetId],
-    ['id_launched_by$i', #0, User.GetId],
+    ['managername$s;0', 't=d,ch0', #0, User.GetName],
+    ['launched_by_name$s;0', 't=d,ch0', #0, ''],
+    ['id_manager$i', 't=ch0', #0, User.GetId],
+    ['id_launched_by$i', 't=ch0', #0, null],
     ['complaints$s;0', 't=td,ch'],
-    ['comm$s', 'v=0:4000::N', 't=t,ch'],
+    ['comm$s', 'v=0:4000::N', 't=t,ea,ch'],
     ['basis_text$s', 'v=0:4000::N', 't=t,ch'],
 
-    ['id_customer$i'],
-    ['id_customer_contact$i'],
-    ['id_customer_org$i'],
+    ['id_customer$i', 't=ch0'],
+    ['id_customer_contact$i', 't=ch0'],
+    ['id_customer_org$i', 't=ch0'],
     ['customer$s;0', 'V=0:400', 't=c,t,ch'],
     ['customerman$s;0', 'V=0:400', 't=c,t,ch,ea'],
     ['customercontact$s;0', 'V=0:400', 't=c,t,ch,ea'],
@@ -863,21 +904,21 @@ begin
     ['dt_montage_beg$d', 't=p,t,ch,ea'],
     ['dt_montage_end$d', 't=p,t,ch,ea'],
 
-    ['sum_items_final$f','V=', 't=d,td',#0],
-    ['sum_items_base$f','V=', 't=d,td',#0],
-    ['sum_items_final_wo_nds$f;0;0'],
+    ['sum_items_final$f','V=', 't=d,td,ch0',#0],
+    ['sum_items_base$f','V=', 't=d,td,ch0',#0],
+    ['sum_items_final_wo_nds$f;0;0', 't=ch0'],
     ['markup_items_percent$f', 'N=Наценка для изделий', 'V=0:100:2', 't=p,td,ch',#0],
     ['discount_items_percent$f', 'N=Скидка для изделий','V=0:100:2', 't=p,td,ch',#0],
-    ['sum_montage_final$f','V=', 't=p,td,d',#0],
+    ['sum_montage_final$f','V=', 't=p,td,d,ch0',#0],
     ['sum_montage_base$f', 't=p,td,ch','V=0:9999999:2', #0],
     ['markup_montage_percent$f', 'N=Наценка для монтажа','V=0:100:2', 't=p,td,ch',#0],
     ['discount_montage_percent$f', 'N=Скидка для монтажа','V=0:100:2', 't=p,td,ch',#0],
-    ['sum_delivery_final$f','V=', 't=d,td',#0],
+    ['sum_delivery_final$f','V=', 't=d,td,ch0',#0],
     ['sum_delivery_base$f','V=0:9999999:2', 't=td,ch' ,#0],
     ['markup_delivery_percent$f', 'N=Наценка для доставки', 'V=0:100:2', 't=p,td,ch',#0],
     ['discount_delivery_percent$f', 'N=Скидка для доставки',' V=0:100:2','t=p,td,ch',#0],
-    ['sum_final$f','V=', 't=d,td', #0],
-    ['sum_final_wo_nds$f','V=', 't=d,td' ,#0],
+    ['sum_final$f','V=', 't=d,td,ch0', #0],
+    ['sum_final_wo_nds$f','V=', 't=d,td,ch0' ,#0],
     ['sum_advance$f','V=0:9999999:2', 't=td,ch' ,#0],
 
     ['chg_basis$i;0;0','N=Основание (файлы)','CH=1','t=td,ch'],
@@ -1472,8 +1513,17 @@ begin
         if FIsTemplate or (Mode in [fAdd, fCopy]) or (Fr.GetRawRowCurrent > FOrderItemsOld.High) then
           if MyQuestionMessage('Удалить запись?') = mrYes then
             Fr.DeleteRow;
-    mbtOrderViewHistory:
-      Wh.ExecDialog(myfrm_Rep_OrderChanges, Self, [], fView, ID, null);
+    mbtOrderViewHistory: begin
+      //зафиксируем текущие (еще не сохраненные) изменения заказа и передадим их в просмотрщик истории отдельным,
+      //самым свежим шагом (см. комментарий в шапке uFrmOWRepOrderChanges.pas)
+      FixOrderChanges;
+      Wh.ExecDialog(myfrm_Rep_OrderChanges, Self, [], fView, ID, VarArrayOf([
+        True,
+        F.GetProp('id_status', fvtVBeg),
+        F.GetProp('id_status', fvtVCurr),
+        FTitleChangesShort, FTitleChangesFull, FItemsChangesShort, FItemsChangesFull
+      ]));
+    end;
     mbtOrderEditAll:
       TitleButtonClick(mbtOrderEditAll);
     mbtStopOrder:
@@ -1657,8 +1707,14 @@ begin
         myInfoMessage('Не подтверждена проверка заказа!');
         LOnVerification := True;
       end
-      else if MyQuestionMessage('Вы проверили заказ.'#13#10'Сохранить данные и запустить заказ в работу?') = mrYes then
+      else if MyQuestionMessage('Вы проверили заказ.'#13#10'Сохранить данные и запустить заказ в работу?') = mrYes then begin
+        //установим фактическую заду запуска (не откатится в случае сбоя записи - некритично)
+        F.SetProp('dt_start', Date);
+        //установим айди запустившего заказ пользователя
+        F.SetProp('id_launched_by', User.GetId);
+        F.SetProp('launched_by_name', User.GetName);
         Result := ORDER_ID_STATUS_STARTED;
+      end;
   end
   else if (Tag = mbtDelete) and (FIsTemplate) then begin
     if MyQuestionMessage('Удалить шаблон?') = mrYes then
@@ -1854,11 +1910,15 @@ begin
     //если не установлен флаг Редактировать все, запретим изменения полей кроме выбранных по тегу
 //    if not FEditAll then
 //      F.SetProps('-ea', False, fvtDsbl);
+    dedt_dt_start.ControlLabel.Caption := 'Факт. дата'#13#10'запуска';
   end
   //для всех остальных статусов блокирем все
   else if F.GetProp('id_status').AsInteger <> ORDER_ID_STATUS_DRAFT then begin
     F.SetProps('', False, fvtDsbl);
   end;
+  //никогда ене вводится текст, значения по едитбатотонам
+  edt_reglament.ReadOnly := True;
+  edt_complaints.ReadOnly := True;
 end;
 
 procedure TFrmOWOrder.SetEditButtons;
@@ -2174,7 +2234,7 @@ begin
     Cth.SetErrorMarker(dedt_dt_start, True);
     frmpcDates.SetError(True);
   end
-  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or (dedt_dt_otgr.Value < dedt_dt_start.Value) then begin
+  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or ((dedt_dt_otgr.Value < dedt_dt_start.Value) and (A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED]))) then begin
     Cth.SetErrorMarker(dedt_dt_otgr, True);
     frmpcDates.SetError(True);
   end
@@ -2295,19 +2355,38 @@ var
   CtrlValues2: TVarDynArray;
   FieldsSave2: string;
   UseTransaction: Boolean;
+  Lock: TVarDynArray;
+  LOrNum: string;
 begin
   if False then  //!отладка
     if MyQuestionMessage('Сохранить заказ?') <> mrYes then begin
       Result := True;
       Exit;
     end;
+
   Result := False;
+
+  //для шаблона проверим уникальность наименования (но может быть не изменен в случае редактирования)
+  if (FIsTemplate) and (Mode <> fDelete) then begin
+    if Q.QLoadValue('select count(*) from orders where id < 0 and id <> nvl(:id$i, 0) and lower(templatename) = lower(:n$s)', [S.IIf(Mode = fEdit, ID, 0), Trim(edt_TemplateName.Text)]) > 0 then begin
+      MyWarningMessage('Шаблон с таким наименованием уже есть!');
+      Exit;
+    end;
+  end;
+
+  try
+
+  Lock := Q.DBLock(True, 'ordercreate', F.GetProp('id_organization'), '');
+  if Lock[0] = False then begin
+    MyWarningMessage('Сейчас проводится заказ пользователем ' + Lock[1] + #13#10'Попробуйте чуть позже!');
+    Exit;
+  end;
+
   //сгенерируем номер заказа
-  var LOrNum := F.GetProp('ornum').AsString;
+  LOrNum := F.GetProp('ornum').AsString;
   GetOrderNumber;
   //получим наименование папки заказа
   GetOrderPath;
-var st := F.GetProp('path');
 
   //прочие поля
   F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
@@ -2329,8 +2408,26 @@ var st := F.GetProp('path');
     ID := res;
   //сохраним табличную часть
   SaveOrderItems;
+  //зафиксируем и сохраним изменения заказа за сессию редактирования (только в режиме редактирования - при
+  //создании/копировании заказа это не "изменения", а первоначальное заполнение)
+  if Mode = fEdit then begin
+    FixOrderChanges;
+    SaveOrderChanges;
+  end;
+  SaveComplaintData;
+  SaveOrderStages;
+  SaveOrderAuditTable;
+
   //фиксиоруем транзакцию
   Result := Q.QCommitTrans;
+  Q.DBLock(False, 'ordercreate', F.GetProp('id_organization'),'');
+
+  except on E: Exception do begin
+    Q.DBLock(False, 'ordercreate', F.GetProp('id_organization'),'');
+    Application.ShowException(E);
+    end;
+  end;
+
   //выйдем если не удалось зафиксировать транзакцию
   if not Result then
     Exit;
@@ -2341,6 +2438,74 @@ var st := F.GetProp('path');
   if not FIsTemplate and (not Q.TestDB or (MyQuestionMessage('Выгрузить данные на диск?') = mrYes)) then
     SetTaskForServer;
 end;
+
+(*
+    //если нам нельзя менять состав заказа, то сброси массив, содержащий слеши для обновления смет,
+    //и никакие сметы по заказу обновлены не будут ни в учете, ни в итм!
+    //в ItemsToEstimateChange попадают слеши, по которым были любые изменения!
+    if NoChangeItems then ItemsToEstimateChange:= [];
+    if (not IsTemplate) then begin
+      if (Mode <> fDelete) then begin
+//          Q.QBeginTrans(True);
+        SetOrderSaveStatusText('Обновление смет для изделий');
+        Orders.RefreshEstimatesToOrder(ID, ItemsToEstimateChange, False);
+
+        SetOrderSaveStatusText('Обновление производственных операций для изделий');
+        Q.QBeginTrans(True);
+        Orders.RefreshPlnOpsForOrder(ItemsToPlnOpsSync);
+        Q.QCommitTrans;
+      end;
+      Q.QBeginTrans(True);
+      SetOrderSaveStatusText('Отправка заказа в ИТМ');
+      Orders.SyncOrderWithITM(ID, ItemsToEstimateChange, False);
+      Q.QCommitOrRollback;
+      if not Q.CommitSuccess
+        then MyWarningMessage(
+          'Произошла ошибка при отправке заказа в ИТМ!'#13#10'Попробуйте выполнить "Загрузить смету" в журнале заказов.'
+        )
+        else begin
+          if Q.QLoadValue('select F_TestOrderEstimatesInItm(:id$i) from dual', [ID]) > 0 then begin
+            MyWarningMessage('Внимание! Не все сметы были синхронизированы с ИТМ!');
+          end;
+        end;
+    end;
+*)
+
+procedure TFrmOWOrder.SaveComplaintData;
+begin
+  if GetOrderTypeField('is_complaint') = 1 then
+    for var i := 0 to High(FComplaints) do begin
+      if (S.NNum(FComplaints[i][3]) <> 0) and (S.NNum(FComplaints[i][2]) = 0) then
+        Q.QExecSql('insert into order_complaints (id_order, id_complaint_reason) values (:id_order$i, :id_complaint_reason$i)', [ID, FComplaints[i][0]])
+      else if (S.NNum(FComplaints[i][3]) = 0) and (S.NNum(FComplaints[i][2]) <> 0) then
+        Q.QExecSql('delete from order_complaints where id = :id$i', [FComplaints[i][2]]);
+    end
+  else
+    //для редакстирования, если не стоит признак Рекламация, удалим все с таким айди заказа
+    if Mode = fEdit then
+    Q.QExecSql('delete from order_complaints where id_order = :id_order$i', [ID]);
+end;
+
+
+procedure TFrmOWOrder.SaveOrderAuditTable;
+begin
+  if (Mode <> fDelete) and not FIsTemplate and A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_APPROVED]) then
+    Orders.ToOrderAudit(ORDER_AUDIT_ORDER, Mode <> fAdd, F.GetProp('ornum'), S.IIFStr(Mode <> fAdd, FTitleChangesShort + #13#10'--------'#13#10 + FItemsChangesShort));
+end;
+
+procedure TFrmOWOrder.SaveOrderStages;
+//поправим статусы этапов заказа (на данный момент это приемка на сгп и отгрузка с сгп)
+//могут меняться при изменении в табличной части количеств, в заголовочной - организации (П или другая)
+//пока для простоты запускаем в любом случае при изменении заказа
+var
+  res: Integer;
+begin
+  if (Mode <> fEdit) or (FIsTemplate) or (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) then
+    Exit;
+  Q.QCallStoredProc('p_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', [ID, 2]);
+  Q.QCallStoredProc('p_OrderStage_SetMainTable', 'IdOrder$i;IdStage$i', [ID, 3]);
+end;
+
 
 procedure TFrmOWOrder.SaveCustomer;
 //сохраним данные покупателя
@@ -2619,106 +2784,147 @@ end;
 
 function TFrmOWOrder.SetTaskForServer: Boolean;
 //создадим задачу для серверного процесса
+//статус заказа здесь уже будет новый
 var
-  st, FilesToCopy, FilesToDelete, BasisToCopy, BasisToDelete, TaskDir, Slashes, Addr, Subj, PspName, PspNameOld, DifferenceText: string;
+  st, FilesToCopy, FilesToDelete, BasisToCopy, BasisToDelete, TaskDir, Slashes, Addr, Subj, Body, PspName, PspNameOld, DifferenceText: string;
   i: Integer;
+  ForStatus, MailingCode: Integer;
 begin
   //SetOrderSaveStatusText('Передача данных на сервер');
   Result := True;
   if FIsTemplate then
     Exit;
   Result := False;
+
+  MailingCode := 0;
+  if ((F.GetPropB('id_status') = ORDER_ID_STATUS_STOPPED) or (F.GetPropB('id_status') = ORDER_ID_STATUS_DELETED)) and not (F.GetPropB('id_status') = ORDER_ID_STATUS_DRAFT) then begin
+    Exit;
+  end
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_DRAFT) and (F.GetProp('id_status') = ORDER_ID_STATUS_APPROVED) then begin
+    Subj := 'Проведен заказ';
+    MailingCode := TASK_MAILING_ORDERS_APPROVE;
+  end
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_APPROVED) and (F.GetProp('id_status') = ORDER_ID_STATUS_DRAFT) then begin
+    Subj := 'Отменено проведение заказа';
+    MailingCode := TASK_MAILING_ORDERS_APPROVE;
+  end
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_APPROVED) then begin
+    Subj := 'Изменен проведенный заказ';
+    //если не было изменений по тегам ch - не создаем почтовую рассылку
+    if FTitleChangesShort + FItemsChangesShort <> '' then
+      MailingCode := TASK_MAILING_ORDERS_APPROVE;
+  end
+  else if (F.GetPropB('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') = ORDER_ID_STATUS_STARTED) then begin
+    Subj := 'Запущен заказ';
+    MailingCode := TASK_MAILING_ORDERS;
+  end
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') = ORDER_ID_STATUS_STARTED) then begin
+    Subj := 'Изменен заказ';
+    //если не было изменений по тегам ch - не создаем почтовую рассылку
+    if FTitleChangesShort + FItemsChangesShort <> '' then
+      MailingCode := TASK_MAILING_ORDERS;
+  end
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') = ORDER_ID_STATUS_STOPPED) then begin
+    Subj := 'Остановлен заказ';
+    MailingCode := TASK_MAILING_ORDERS;
+  end
+  else if (F.GetProp('id_status') = ORDER_ID_STATUS_DELETED) then begin
+    Subj := 'Удален заказ';
+    MailingCode := TASK_MAILING_ORDERS;
+  end;
+
   //try
-    Slashes := '';
-    FilesToCopy := '';
-    FilesToDelete := '';
-    DifferenceText := '';
-    if Mode <> fDelete then begin
-      //список слешей для создания каталогов, в формате 001, 005...
-      //создаем только если колво не 0 и не с СГП,
-      for i := 0 to FrgItems.GetRawCount - 1 do
-        if (FrgItems.GetRawValueF('qnt', i) <> 0) and (FrgItems.GetRawValueI('sgp', i) <> 1) then
-          S.ConcatStP(Slashes, S.Right('0000' + IntToStr(i + 1), 3) + ' ' + S.CorrectFileName(S.IIFStr(FrgItems.GetRawValueS('prefix', i) <> '', FrgItems.GetRawValueS('prefix', i) + '_', '') + Trim(FrgItems.GetRawValueS('name', i))), #13#10);
-      //получим поля файлов внешних документов для копипрования на сервер
-      for i := 0 to FrgFiles.GetRawCount - 1 do begin
-        if FrgFiles.GetRawValueI('mode', i) = 3 then
-          S.ConcatStP(FilesToDelete, FrgFiles.GetRawValueS('name', i), #13#10)
-        else if FrgFiles.GetRawValueI('mode', i) <> 0 then
-          S.ConcatStP(FilesToCopy, FrgFiles.GetRawValueS('name', i), #13#10);
-      end;
-      //получим поля файлов основания для копипрования на сервер
-      for i := 0 to FrgBasis.GetRawCount - 1 do begin
-        if FrgBasis.GetRawValueI('mode', i) = 3 then
-          S.ConcatStP(BasisToDelete, FrgBasis.GetRawValueS('name', i), #13#10)
-        else if FrgBasis.GetRawValueI('mode', i) <> 0 then
-          S.ConcatStP(BasisToCopy, FrgBasis.GetRawValueS('name', i), #13#10);
-      end;
-    end;
-    Addr := Tasks.GetMailingAddr(TASK_MAILING_ORDERS);
-    var LOrderPath := F.GetProp('path').AsString;
-    if Mode = fDelete then begin
+  Slashes := '';
+  FilesToCopy := '';
+  FilesToDelete := '';
+  DifferenceText := '';
+  //список слешей для создания каталогов, в формате 001, 005...
+  //создаем только если колво не 0 и не с СГП,
+  for i := 0 to FrgItems.GetRawCount - 1 do
+    if (FrgItems.GetRawValueF('qnt', i) <> 0) and (FrgItems.GetRawValueI('sgp', i) <> 1) then
+      S.ConcatStP(Slashes, S.Right('0000' + IntToStr(i + 1), 3) + ' ' + S.CorrectFileName(S.IIFStr(FrgItems.GetRawValueS('prefix', i) <> '', FrgItems.GetRawValueS('prefix', i) + '_', '') + Trim(FrgItems.GetRawValueS('name', i))), #13#10);
+  //получим поля файлов внешних документов для копипрования на сервер
+  for i := 0 to FrgFiles.GetRawCount - 1 do begin
+    if FrgFiles.GetRawValueI('mode', i) = 3 then
+      S.ConcatStP(FilesToDelete, FrgFiles.GetRawValueS('name', i), #13#10)
+    else if FrgFiles.GetRawValueI('mode', i) <> 0 then
+      S.ConcatStP(FilesToCopy, FrgFiles.GetRawValueS('name', i), #13#10);
+  end;
+  //получим поля файлов основания для копипрования на сервер
+  for i := 0 to FrgBasis.GetRawCount - 1 do begin
+    if FrgBasis.GetRawValueI('mode', i) = 3 then
+      S.ConcatStP(BasisToDelete, FrgBasis.GetRawValueS('name', i), #13#10)
+    else if FrgBasis.GetRawValueI('mode', i) <> 0 then
+      S.ConcatStP(BasisToCopy, FrgBasis.GetRawValueS('name', i), #13#10);
+  end;
+  Addr := Tasks.GetMailingAddr(MailingCode);
+  var LOrderPath := F.GetProp('path').AsString;
+{    if Mode = fDelete then begin
       Subj := 'Удален заказ ' + LOrderPath;
       if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
         TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', LOrderPath], ['in_archive', F.GetProp('in_archive')], ['year', F.GetProp('year')], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
       else
         TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
-    end
-    else begin
-      if Mode = fEdit then
-        Subj := 'Изменен заказ'
-      else
-        Subj := 'Создан заказ';
-      Subj := Orders.GetSubject(Subj, '', ID, null);
-      if Mode = fEdit then begin
-        st := Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetPropB('area')]).AsString;
-        PspNameOld := F.GetPropB('path').AsString + '.xlsx';
-        Delete(PspNameOld, 1, length(st));
-      end
-      else
-        PspNameOld := '';
-//GetOrderChangedFieldCaptions
-      st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetProp('area')]));
-      PspName := LOrderPath + '.xlsx';
-      Delete(PspName, 1, length(st));
-      //создадим таскдир
-      TaskDir := Tasks.CreateTaskRoot(mytskopToPassportChange, [
-        ['directory', LOrderPath],
-        ['old-directory', F.GetPropB('path').AsString],
-        ['in_archive', F.GetPropB('in_archive').AsString],
-        ['year', YearOf(dedt_dt_beg.Value)],
-        ['passport', PspName],
-        ['old-passport', PspNameOld],
-        ['subject', Subj],
-        ['to', Addr],
-        ['body', ''],//DifferencesText],
-        ['files-to-send', PspName],
-        ['files-to-copy', FilesToCopy],
-        ['files-to-delete', FilesToDelete],
-        ['basis_files-to-copy', BasisToCopy],
-        ['basis_files-to-delete', BasisToDelete],
-        ['slashes', Slashes]
-        ],
-        False, False
-      );
-      //скопируем паспорт заказа из временного файла в каталог задачи
-      CopyFile(pWideChar(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
-      //удалим временный файл паспорта
-      DeleteFile(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx');
-      //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
-      for i := 0 to FrgFiles.GetRawCount - 1 do begin
-        if FrgFiles.GetRawValueI('mode',i) in [1, 2] then
-          if FileExists(FrgFiles.GetRawValueS('namenew', i)) then
-            CopyFile(pWideChar(FrgFiles.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgFiles.GetRawValueS('name',i)), True);
-      end;
-      for i := 0 to FrgBasis.GetRawCount - 1 do begin
-        if FrgBasis.GetRawValueI('mode',i) in [1, 2] then
-          if FileExists(FrgBasis.GetRawValueS('namenew', i)) then
-            CopyFile(pWideChar(FrgBasis.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgBasis.GetRawValueS('name',i)), True);
-      end;
-    end;
-    //отправим задачу на выполнение
-    Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
-    Result := True;
+    end}
+
+  Subj := '';
+  Body := '';
+
+
+  if MailingCode > 0 then begin
+    Subj := Orders.GetSubject(Subj, '', ID, null);
+    Body :=
+      S.IIf(FTitleChangesShort <> '',  'Изменения в шапке заказа:'#13#10 + FTitleChangesShort, 'Изменений в шапке заказа не было.') +
+      #13#10#13#10 +
+      S.IIf(FItemsChangesShort <> '',  'Изменения в теле заказа:'#13#10 + FItemsChangesShort, 'Изменений в теле заказа не было.');
+  end;
+
+  PspNameOld := '';
+  if Mode = fEdit then begin
+    st := Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetPropB('area')]).AsString;
+    PspNameOld := F.GetPropB('path').AsString + '.xlsx';
+    Delete(PspNameOld, 1, length(st));
+  end;
+
+  st := S.NSt(Q.QLoadValue('select order_prefix from ref_production_areas where id = :id$i', [F.GetProp('area')]));
+  PspName := LOrderPath + '.xlsx';
+  Delete(PspName, 1, length(st));
+  //создадим таскдир
+  TaskDir := Tasks.CreateTaskRoot(mytskopToPassportChange, [
+    ['directory', LOrderPath],
+    ['old-directory', F.GetPropB('path').AsString],
+    ['in_archive', F.GetPropB('in_archive').AsString],
+    ['year', YearOf(dedt_dt_beg.Value)], ['passport', PspName],
+    ['old-passport', PspNameOld],
+    ['subject', Subj],
+    ['to', Addr],
+    ['body', Body],
+    ['files-to-send', PspName],
+    ['files-to-copy', FilesToCopy],
+    ['files-to-delete', FilesToDelete],
+    ['basis_files-to-copy', BasisToCopy],
+    ['basis_files-to-delete', BasisToDelete],
+    ['slashes', Slashes]
+    ], False, False
+  );
+  //скопируем паспорт заказа из временного файла в каталог задачи
+  CopyFile(pWideChar(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
+  //удалим временный файл паспорта
+  DeleteFile(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx');
+  //скопируем в каталог задачи файлы, которые были прикреплены в качестве внешних документов
+  for i := 0 to FrgFiles.GetRawCount - 1 do begin
+    if FrgFiles.GetRawValueI('mode', i) in [1, 2] then
+      if FileExists(FrgFiles.GetRawValueS('namenew', i)) then
+        CopyFile(pWideChar(FrgFiles.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgFiles.GetRawValueS('name', i)), True);
+  end;
+  for i := 0 to FrgBasis.GetRawCount - 1 do begin
+    if FrgBasis.GetRawValueI('mode', i) in [1, 2] then
+      if FileExists(FrgBasis.GetRawValueS('namenew', i)) then
+        CopyFile(pWideChar(FrgBasis.GetRawValueS('namenew', i)), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + FrgBasis.GetRawValueS('name', i)), True);
+  end;
+  //отправим задачу на выполнение
+  Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + TaskDir);
+  Result := True;
   //except
   //end;
 end;
@@ -2913,7 +3119,8 @@ begin
     Exit;
   //можно все в режиме оформления или в режиме полного редактирования
   if (F.GetProp('id_status').AsInteger = ORDER_ID_STATUS_DRAFT) or FEditAll then begin
-    FrgItems.Opt.SetColFeature('e', 'e', True, False);
+//!!!    FrgItems.Opt.SetColFeature('e', 'e', True, False);
+    FrgItems.SetColumsProperties('e', myogfpEditable, True);
     FrgItems.Opt.SetGridOperations('uaid');
   end
   //можно только заданные поля, и нельзя добавлять/удалять для проведенный и запущенных
@@ -2967,7 +3174,174 @@ begin
   FrgItems.GridReadOnly :=  (Mode in [fView, fDelete]) or (A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])) or (F.GetProp('id_or_format_estimates').AsString = '');
 end;
 
+function TFrmOWOrder.SortPropNamesBySort(const ANames: TVarDynArray): TVarDynArray;
+//сортировка списка внутренних имен полей по их именованному пользовательскому свойству $sort (см. uFields.pas);
+//если $sort нигде не задан для этой формы - возвращает ANames без изменений (порядок DefineFields как и был);
+//поля без собственного значения $sort (Null) уходят в конец, но сохраняя относительный порядок между собой (устойчивая сортировка)
+var
+  i, j: Integer;
+  keys: TVarDynArray;
+  v, tmpKey, tmpName: Variant;
+begin
+  Result := Copy(ANames, 0, Length(ANames));
+  if not F.HasCustomProp('$sort') then
+    Exit;
+  SetLength(keys, Length(Result));
+  for i := 0 to High(Result) do begin
+    v := F.GetProp(VarToStr(Result[i]), '$sort');
+    keys[i] := S.IIfV(VarIsNull(v), MaxInt, v);
+  end;
+  //устойчивая сортировка пузырьком по возрастанию ключа (полей немного, порядок при равных ключах сохраняется)
+  for i := 0 to High(Result) - 1 do
+    for j := 0 to High(Result) - 1 - i do
+      if keys[j].AsInteger > keys[j + 1].AsInteger then begin
+        tmpKey := keys[j]; keys[j] := keys[j + 1]; keys[j + 1] := tmpKey;
+        tmpName := Result[j]; Result[j] := Result[j + 1]; Result[j + 1] := tmpName;
+      end;
+end;
 
+function TFrmOWOrder.GetTitleChangesText(AShort: Boolean): string;
+//см. комментарий у объявления в интерфейсе
+var
+  i: Integer;
+  names: TVarDynArray;
+  caption, vBeg, vCurr: Variant;
+begin
+  Result := '';
+  if AShort then
+    names := F.GetChangedProps('ch')
+  else
+    names := F.GetChangedProps('-ch0');
+  names := SortPropNamesBySort(names);
+  for i := 0 to High(names) do begin
+    caption := F.GetPropCaptions(VarToStr(names[i]))[0];
+    if AShort then
+      S.ConcatStP(Result, VarToStr(caption), #13#10)
+    else begin
+      var p := A.PosInArray(names[i], FBegControlsText, 0);
+      var vaCurr := GetControlsText;
+      if p >= 0 then begin
+        vBeg := FBegControlsText[p][1];
+        vCurr := vaCurr[p][1];
+      end
+      else begin
+        vBeg := F.GetProp(VarToStr(names[i]), fvtVBeg);
+        vCurr := F.GetProp(VarToStr(names[i]), fvtVCurr);
+      end;
+      S.ConcatStP(Result, VarToStr(caption) + ': "' + vBeg.AsString + '" -> "' + vCurr.AsString + '"', #13#10);
+    end;
+  end;
+end;
+
+function TFrmOWOrder.GetItemsChangesText(AShort: Boolean): string;
+//см. комментарий у объявления в интерфейсе
+var
+  i, j: Integer;
+  OrderItems: TNamedArr;
+  PosOld: Integer;
+  LId: Variant;
+  FieldNames: TVarDynArray;
+  FieldName, Caption, ItemHeader, ItemLines: string;
+  IsRouteChanged: Boolean;
+  OldVal, NewVal: Variant;
+begin
+  Result := '';
+  if AShort then
+    FieldNames := FrgItems.GetColumsProperties('ch', myogfpName)
+  else
+    FieldNames := FrgItems.GetColumsProperties('-;ch0', myogfpName);
+  OrderItems := FrgItems.ExportToNa('', False);
+  for i := 0 to OrderItems.High do begin
+    LId := OrderItems.G(i, 'id');
+    ItemLines := '';
+    if LId >= MY_IDS_INSERTED_MIN then
+      ItemLines := 'Добавлено изделие'
+    else begin
+      PosOld := FOrderItemsOld.FindFirst('id', LId);
+      IsRouteChanged := False;
+      for j := 0 to OrderItems.FieldsCount - 1 do begin
+        FieldName := OrderItems.F[j];
+        //поля маршрута (r1..rN) обрабатываем отдельно - объединяем любое изменение в одну строку "Маршрут"
+        if (Length(FieldName) > 1) and (FieldName[1] = 'r') and CharInSet(FieldName[2], ['0'..'9']) then begin
+          if OrderItems.GetValueI(i, j) <> FOrderItemsOld.GetValueI(PosOld, j) then
+            IsRouteChanged := True;
+          Continue;
+        end;
+        if not A.InArray(FieldName, FieldNames) then
+          Continue;
+        OldVal := FOrderItemsOld.GetValueI(PosOld, j);
+        NewVal := OrderItems.GetValueI(i, j);
+        if VarToStr(OldVal) = VarToStr(NewVal) then
+          Continue;
+        Caption := VarToStr(FrgItems.GetColumsProperties(FieldName, myogfpCaption)[0]);
+        if AShort then
+          S.ConcatStP(ItemLines, Caption, #13#10)
+        else
+          S.ConcatStP(ItemLines, Caption + ': "' + VarToStr(OldVal) + '" -> "' + VarToStr(NewVal) + '"', #13#10);
+      end;
+      if IsRouteChanged then
+        S.ConcatStP(ItemLines, 'Маршрут', #13#10);
+    end;
+    if ItemLines <> '' then begin
+      ItemHeader := VarToStr(OrderItems.G(i, 'slash')) + ' / ' + VarToStr(OrderItems.G(i, 'name')) + ':';
+      S.ConcatStP(Result, ItemHeader + #13#10 + ItemLines, #13#10);
+    end;
+  end;
+  //удаленные строки (их уже нет в гриде - берем слеш/наименование из старой версии таблицы)
+  for i := 0 to High(FrgItems.EditData.IdsDeleted) do begin
+    PosOld := FOrderItemsOld.FindFirst('id', FrgItems.EditData.IdsDeleted[i]);
+    if PosOld < 0 then
+      Continue;
+    ItemHeader := VarToStr(FOrderItemsOld.G(PosOld, 'slash')) + ' / ' + VarToStr(FOrderItemsOld.G(PosOld, 'name')) + ':';
+    S.ConcatStP(Result, ItemHeader + #13#10'Удалено изделие', #13#10);
+  end;
+end;
+
+function TFrmOWOrder.GetControlsText: TVarDynArray2;
+//озвращает массив свойств и соответствующих ему текстовых значений контролов.
+//нужен для текста изменений, так как последний генерируется по свойствам, а в них Value а не Text
+//TODO - использовать функкцию из uFields
+begin
+  Result := [];
+  var van := F.GetProps('', fvtVName);
+  var va := F.GetProps('', fvtCtrl);
+  for var i := 0 to High(va) do
+    if va[i].AsString <> '' then begin
+      var c := Self.FindComponent(va[i].AsString);
+      if (c <> nil) then
+        if c is TDBDateTimeEditEh then
+          Result := Result + [[van[i], TDBDateTimeEditEh(c).Text]]
+        else if c is TDBComboBoxEh then
+          Result := Result + [[van[i], TDBComboBoxEh(c).Text]]
+        else if c is TDBCheckBoxEh then
+          Result := Result + [[van[i], S.IIf(TDBCheckBoxEh(c).Checked, 'Выбрано', 'Не выбрано')]];
+    end;
+end;
+
+procedure TFrmOWOrder.FixOrderChanges;
+//см. комментарий у объявления в интерфейсе
+begin
+  FTitleChangesShort := GetTitleChangesText(True);
+  FTitleChangesFull := GetTitleChangesText(False);
+  FItemsChangesShort := GetItemsChangesText(True);
+  FItemsChangesFull := GetItemsChangesText(False);
+end;
+
+procedure TFrmOWOrder.SaveOrderChanges;
+//см. комментарий у объявления в интерфейсе; вызывать после FixOrderChanges
+begin
+  if (FTitleChangesShort = '') and (FTitleChangesFull = '') and (FItemsChangesShort = '') and (FItemsChangesFull = '') and
+     (F.GetProp('id_status', fvtVBeg).AsString = F.GetProp('id_status', fvtVCurr).AsString) then
+    Exit;
+  Q.QExecSql(
+    'insert into order_changes (id_order, dt, id_user, id_status_before, id_status_after, ' +
+    'title_changes_short, title_changes_full, items_changes_short, items_changes_full) values ' +
+    '(:id_order$i, sysdate, :id_user$i, :id_status_before$i, :id_status_after$i, ' +
+    ':title_changes_short$s, :title_changes_full$s, :items_changes_short$s, :items_changes_full$s)',
+    [ID, User.GetId, F.GetProp('id_status', fvtVBeg), F.GetProp('id_status', fvtVCurr),
+     FTitleChangesShort, FTitleChangesFull, FItemsChangesShort, FItemsChangesFull]
+  );
+end;
 
 
 

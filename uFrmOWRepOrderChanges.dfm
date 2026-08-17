@@ -1,13 +1,13 @@
 inherited FrmOWRepOrderChanges: TFrmOWRepOrderChanges
   Caption = 'FrmOWRepOrderChanges'
-  ClientHeight = 560
-  ClientWidth = 700
+  ClientHeight = 559
+  ClientWidth = 696
   ExplicitWidth = 712
   ExplicitHeight = 598
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 700
-    Height = 544
+    Width = 696
+    Height = 543
     ExplicitWidth = 696
     ExplicitHeight = 543
     inherited pnlFrmClient: TPanel
@@ -97,16 +97,22 @@ inherited FrmOWRepOrderChanges: TFrmOWRepOrderChanges
     inherited pnlFrmBtns: TPanel
       Top = 500
       Width = 690
+      ExplicitTop = 500
+      ExplicitWidth = 690
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 544
-    Width = 700
+    Top = 543
+    Width = 696
     ExplicitTop = 543
     ExplicitWidth = 696
     inherited lblStatusBarR: TLabel
       Left = 627
+      Height = 13
       ExplicitLeft = 627
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 13
     end
   end
   inherited tmrAfterCreate: TTimer

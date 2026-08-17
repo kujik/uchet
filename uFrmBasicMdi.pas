@@ -1640,16 +1640,24 @@ begin
   if Sender = nil then begin
     for i := 0 to ComponentCount - 1 do
       if Components[i] is TFrDBGridEh then begin
-        if TFrDBGridEh(Components[i]).HasError then AHasError := True;
-        if TFrDBGridEh(Components[i]).ErrorMessage <> '' then AErrorSt := TFrDBGridEh(Components[i]).ErrorMessage;
-        if TFrDBGridEh(Components[i]).IsDataChanged then AIsChanged := True;
+        if TFrDBGridEh(Components[i]).HasError then
+          AHasError := True;
+        if TFrDBGridEh(Components[i]).ErrorMessage <> '' then begin
+          AErrorSt := TFrDBGridEh(Components[i]).ErrorMessage;
+          AHasError := True;
+        end;
+        if TFrDBGridEh(Components[i]).IsDataChanged then
+          AIsChanged := True;
       end;
   end;
 
   if Sender is TFrDBGridEh then begin
-    if TFrDBGridEh(Sender).HasError then AHasError := True;
-    if TFrDBGridEh(Sender).ErrorMessage <> '' then AErrorSt := TFrDBGridEh(Sender).ErrorMessage;
-    if TFrDBGridEh(Sender).IsDataChanged then AIsChanged := True;
+    if TFrDBGridEh(Sender).HasError then
+      AHasError := True;
+    if TFrDBGridEh(Sender).ErrorMessage <> '' then
+      AErrorSt := TFrDBGridEh(Sender).ErrorMessage;
+    if TFrDBGridEh(Sender).IsDataChanged then
+      AIsChanged := True;
   end;
 
   if Sender = nil then

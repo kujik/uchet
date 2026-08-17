@@ -581,6 +581,54 @@ begin
 end;
 /
 
+--------------------------------------------------------------------------------
+--лог изменений заказа за сессию редактирования (см. TFrmOWOrder.FixOrderChanges/SaveOrderChanges
+--в uFrmOWOrder.pas, а также uFrmOWRepOrderChanges.pas - просмотр истории)
+--краткий текст - только имена измененных полей (без значений), полный - имена и значения "было -> стало";
+--отдельно для шапки заказа и для табличной части (позиций); правила отбора полей (теги ch/ch0),
+--сортировка полей шапки (тег $sort) - см. DefineFields в uFrmOWOrder.pas
+--id_status_before/id_status_after - статус заказа на момент открытия диалога и на момент сохранения
+create table order_changes ( --$+
+  id number(11),
+  id_order number(11),                 --заказ, к которому относится изменение
+  dt date,                             --дата/время изменения, проставляется триггером
+  id_user number(11),                  --пользователь, выполнивший изменение
+  id_status_before number(2),          --статус заказа на момент открытия диалога (начальный)
+  id_status_after number(2),           --статус заказа на момент сохранения (текущий)
+  title_changes_short clob,            --краткий текст изменений шапки заказа (только имена полей)
+  title_changes_full clob,             --полный текст изменений шапки заказа (поле: "было" -> "стало")
+  items_changes_short clob,            --краткий текст изменений позиций заказа (только имена полей, по изделиям)
+  items_changes_full clob,             --полный текст изменений позиций заказа (поле: "было" -> "стало", по изделиям)
+  constraint pk_order_changes primary key (id),
+  constraint fk_order_changes_order foreign key (id_order) references orders(id) on delete cascade,
+  constraint fk_order_changes_user foreign key (id_user) references adm_users(id)
+);
+
+create index idx_order_changes_order on order_changes(id_order, dt); --$+
+
+create sequence sq_order_changes start with 100 nocache; --$+
+
+create or replace trigger trg_order_changes_bi_r before insert on order_changes for each row --$+
+begin
+  if nvl(:new.id, 0) > -1 then
+    :new.id := sq_order_changes.nextval;
+  end if;
+  :new.dt := nvl(:new.dt, sysdate);
+end;
+/
+
+create or replace view v_order_changes as select --$+
+--лог изменений заказа с именем пользователя, сделавшего изменение
+  l.*,
+  u.name as username
+from
+  order_changes l,
+  adm_users u
+where
+  l.id_user = u.id (+)
+;
+
+
 create or replace function f_order_getnewnum
 --получим номер заказа из переданных даты (есть нулл то из текущей) и айди своей организации
 --номер вида М230013
@@ -1097,12 +1145,6 @@ where
 
 select ornum, article from v_order_items where article is not null order by dt_beg desc; 
 select * from v_order_items where id_itm is not null and qnt > 0 and has_itm_est is null and dt_estimate is not null and dt_beg > to_date('01.04.2025', 'DD.MM.YYYY');
-
-/*
-create table order_changes (
-  id number(11),
-  dt date 
-*/
 
 create or replace function F_TestOrderEstimatesInItm(
 --вернем количество изделий в заказе в ИТМ, к которым нет смет
@@ -1966,7 +2008,7 @@ select count(*) from orders;
 
 
 --------------------------------------------------------------------------------
-create or replace procedure P_SyncOrderWithITM(       --!+
+create or replace procedure P_SyncOrderWithITM(       --$+
 --синхронизируем полностью заказ в итм с заказом в учете по полученному айди из учета
 --состав изделий заказа итм будет приведен к составу в учете независимо от того что в нем было и
 --был ли вообще в итм заказ создан. позиции с количееством 0, изделия с пометкой Без сметы,

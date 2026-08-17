@@ -704,14 +704,20 @@ var
 
 begin
   SetLength(Res, 0);
+  //порядок сканирования типов объектов важен: он определяет порядок выполнения тегов --!+ в
+  //ProcessFileTags (объекты выполняются в порядке следования в Res, а не в порядке следования в
+  //тексте файла) - поэтому таблицы и последовательности (от которых ничего не зависит, а от них
+  //могут зависеть индексы/констрейнты/триггеры/представления) должны сканироваться первыми,
+  //а представления/функции/процедуры (которые чаще всего зависят от уже существующих таблиц и
+  //триггеров) - последними
+  Scan('create\s+table\s+([a-zA-Z0-9_\$#]+)\s*\(', 'table', 1);
+  Scan('create\s+sequence\s+([a-zA-Z0-9_\$#]+)\b', 'sequence', 1);
+  Scan('create\s+(?:unique\s+)?index\s+([a-zA-Z0-9_\$#]+)\s+on\s+(\S+)', 'index', 1, 2);
+  Scan('alter\s+table\s+(\S+)\s+add\s+constraint\s+([a-zA-Z0-9_\$#]+)\b', 'constraint', 2, 1);
+  Scan('create\s+(?:or\s+replace\s+)?trigger\s+([a-zA-Z0-9_\$#]+)\b', 'trigger', 1);
   Scan('create\s+(?:or\s+replace\s+)?view\s+([a-zA-Z0-9_\$#]+)\s+as\b', 'view', 1);
   Scan('create\s+(?:or\s+replace\s+)?function\s+([a-zA-Z0-9_\$#]+)\b', 'function', 1);
   Scan('create\s+(?:or\s+replace\s+)?procedure\s+([a-zA-Z0-9_\$#]+)\b', 'procedure', 1);
-  Scan('create\s+(?:or\s+replace\s+)?trigger\s+([a-zA-Z0-9_\$#]+)\b', 'trigger', 1);
-  Scan('create\s+sequence\s+([a-zA-Z0-9_\$#]+)\b', 'sequence', 1);
-  Scan('create\s+(?:unique\s+)?index\s+([a-zA-Z0-9_\$#]+)\s+on\s+(\S+)', 'index', 1, 2);
-  Scan('create\s+table\s+([a-zA-Z0-9_\$#]+)\s*\(', 'table', 1);
-  Scan('alter\s+table\s+(\S+)\s+add\s+constraint\s+([a-zA-Z0-9_\$#]+)\b', 'constraint', 2, 1);
   Result := Res;
 end;
 
