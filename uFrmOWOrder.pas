@@ -160,8 +160,12 @@ type
     FTitleChangesFull: string;
     FItemsChangesShort: string;
     FItemsChangesFull: string;
-    //текст контролов на момент открытия диалога для отслеживания изменений
+    //текст контролов на момент открытия диалога для отслеживания изменений /имя_поля, текст/
     FBegControlsText: TVarDynArray2;
+    //айди изделий, по которым надо синхронизировать сметы
+    FItemsToEstimateChange: TVarDynArray;
+    //айди изделий, по кторорым надо синхронизировать операции по планированию
+    FItemsToPlnOpsSync: TVarDynArray;
     function  Prepare: Boolean; override;
     function  SetControlsLayout: Boolean;
     procedure SetAreasCaptions;
@@ -210,7 +214,11 @@ type
     function  SaveOrderItems: Boolean;
     procedure SaveCustomer;
     procedure SaveComplaintData;
+    procedure SavePlanOperations;
     procedure SaveOrderAuditTable;
+    procedure SaveEstimates;
+    procedure SetOrderSaveStatusText(AStatusText: string);
+    procedure SaveItmData;
     procedure SaveOrderStages;
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
@@ -638,27 +646,29 @@ begin
   end;
   //теги: s - сохранение в бд, ch - отслеживание изменений поля, e - редактируется в режиме оформления, ea - редактируеится после проведения,
   //ch0 - поле исключается из полного текста изменений позиций заказа (см. GetItemsChangesText в этом модуле) -
-  //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей
+  //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей ;
+  //pln - при их изменении нужно синхронизировать операции по планированию
+  //est - при их изменении нужно синхронизировать сметы для изделия
   var LFields: TVarDynArray2 := [
     ['id$i', '_id', '40', 't=s,ch0'],
     ['id_std_item$i', '_id_std', '40', 't=s,ch0'],
     ['id_itm$i', '_id_itm', '40', 't=s,ch0'],
-    ['ch$s', '_ch', '40', 't=s,ch0'],
+    [S.IIFStr(Mode <> fView, 'null as ') + 'ch$s', '_ch', '40', 't=s,ch0'],  //внесенные при прошлой правке изменения загружаем только в режиме просмотра
     ['pos$i', '_pos', '20', 't=s,ch0'],
     ['std$i', '_std', '20', 't=s,ch0'],
     ['attention$i', '_attention', '40', 't=s,ch0'],
     ['null as status$s', '*', '20', 'pic=e;0:16;12', 't=ch0'],
     ['slash$s', 'Паспорт', '90', 't=ch0'],
     ['prefix$s', 'Префикс', '60;h', 't=ch0'],
-    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=ch,e'],
+    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=ch,e,pln,ext'],
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,ch'],
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch,e'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e,ch0'],
     ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s,ch0'],
     ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e,ea'],
-    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e,ea,pln,est'],
+    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e,est'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch,e'],
     ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch,e']
   ];
@@ -666,7 +676,7 @@ begin
   LFields := LFields + va2;
   LFields := LFields +
   [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,ch,e'],
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,ch,e,pln,itm'],
     ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
     ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
     ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,ch,e,ea'],
@@ -1021,6 +1031,9 @@ begin
   //сбросим айди заказа в случае добавления или копирования
   if Mode in [fAdd, fCopy] then
     ID := null;
+  //сбросим поле для подсветки последний изменений, если это не просмотр
+  if Mode <> fView then
+    F.SetProp('ch', '', fvtVBeg);
   Result := True;
 end;
 
@@ -2374,7 +2387,7 @@ begin
     end;
   end;
 
-  try
+  //try
 
   Lock := Q.DBLock(True, 'ordercreate', F.GetProp('id_organization'), '');
   if Lock[0] = False then begin
@@ -2419,14 +2432,23 @@ begin
   SaveOrderAuditTable;
 
   //фиксиоруем транзакцию
-  Result := Q.QCommitTrans;
+  Q.QCommitTrans;
+  Result := Q.CommitSuccess;
   Q.DBLock(False, 'ordercreate', F.GetProp('id_organization'),'');
 
+  //выполняем вне основной транзации
+  SaveEstimates;
+  SavePlanOperations;
+  SaveItmData;
+
+  {
   except on E: Exception do begin
+    Q.QRollbackTrans;
     Q.DBLock(False, 'ordercreate', F.GetProp('id_organization'),'');
     Application.ShowException(E);
     end;
   end;
+  }
 
   //выйдем если не удалось зафиксировать транзакцию
   if not Result then
@@ -2470,6 +2492,65 @@ end;
         end;
     end;
 *)
+
+procedure TFrmOWOrder.SetOrderSaveStatusText(AStatusText: string);
+//TODO
+begin
+
+end;
+
+procedure TFrmOWOrder.SaveItmData;
+//синхронизируем заказ с ИТМ
+//при перехода на статус Запущен, а также на статус Остановлен происходит полная синхронизация.
+//кроме этого, частичная синхронизация происходит только в статусе Запущен.
+//происходит только синхронизация по записям, у которых изменились поля, важные для синхронизации смет.
+begin
+  if FIsTemplate then
+    Exit;
+  SetOrderSaveStatusText('Отправка заказа в ИТМ');
+  Q.QBeginTrans(True);
+  if (F.GetPropB('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetPropB('id_status') = ORDER_ID_STATUS_STARTED) then
+    Orders.SyncOrderWithITM(ID, [], True)
+  else if (F.GetPropB('id_status') = ORDER_ID_STATUS_STARTED) and (F.GetPropB('id_status') = ORDER_ID_STATUS_STOPPED) then
+    Orders.SyncOrderWithITM(ID, [], True)
+  else if (F.GetProp('id_status') = ORDER_ID_STATUS_STARTED) then
+    Orders.SyncOrderWithITM(ID, FItemsToEstimateChange, False)
+  else begin
+    Q.QCommitOrRollback;
+    Exit;
+  end;
+  Q.QCommitTrans;
+  if not Q.CommitSuccess then
+    MyWarningMessage('Произошла ошибка при отправке заказа в ИТМ!'#13#10'Попробуйте выполнить "Загрузить смету" в журнале заказов.')
+  else if Q.QLoadValue('select F_TestOrderEstimatesInItm(:id$i) from dual', [ID]) > 0 then
+    MyWarningMessage('Внимание! Не все сметы были синхронизированы с ИТМ!');
+end;
+
+procedure TFrmOWOrder.SaveEstimates;
+//обновляем сметы на изделия (для нестандартных только пересчитываем количество, для стандартных обновляем из справочника)
+//если заказа еще не запущен, то обновляем по всем изделиям (чтобы была синхронизация со справочным сметами)
+//если заказа запущен - обновляем при изменении наименования или количества (пока обновляем, далее надо просто пересчитывать количества и для стандартных смет!!!)
+begin
+  if FIsTemplate or (Mode = fDelete) then
+    Exit;
+  SetOrderSaveStatusText('Обновление смет для изделий');
+  Q.QBeginTrans(True);
+  if A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_APPROVED]) then
+    Orders.RefreshEstimatesToOrder(ID, [], True)
+  else
+    Orders.RefreshEstimatesToOrder(ID, FItemsToEstimateChange, False);
+  Q.QCommitTrans;
+end;
+
+procedure TFrmOWOrder.SavePlanOperations;
+begin
+  if FIsTemplate and not A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STARTED, ORDER_ID_STATUS_APPROVED]) then
+    Exit;
+  SetOrderSaveStatusText('Обновление производственных операций для изделий');
+  Q.QBeginTrans(True);
+  Orders.RefreshPlnOpsForOrder(FItemsToPlnOpsSync);
+  Q.QCommitTrans;
+end;
 
 procedure TFrmOWOrder.SaveComplaintData;
 begin
@@ -2575,7 +2656,7 @@ function TFrmOWOrder.SaveOrderItems: Boolean;
 //сохранение в бд табличной части заказа
 var
   Frg: TFrDBGridEh;
-  i, j: Integer;
+  i, j, k: Integer;
   LId: Variant;
   IsRowChanged: Boolean;
   ExcludedFields: TVarDynArray;
@@ -2586,6 +2667,10 @@ var
 begin
   if Mode in [fView, fDelete] then
     Exit;
+  //айди изделий, по которым надо синхронизировать сметы
+  FItemsToEstimateChange := [];
+  //айди изделий, по кторорым надо синхронизировать операции по планированию
+  FItemsToPlnOpsSync := [];
   //удалим строки, которые были удалены из таблицы с помощью пользовательского интерфейса
   if Length(FrgItems.EditData.IdsDeleted) > 0 then
     Q.QExecSql('delete from order_items where id in (' + A.Implode(FrgItems.EditData.IdsDeleted, ',') + ')', []);
@@ -2631,7 +2716,24 @@ begin
       OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
     end;
     //сохраним строку в бд
-    Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);
+    var Res := Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);
+    if LId > MY_IDS_INSERTED_MIN then begin
+      FItemsToEstimateChange := FItemsToEstimateChange + [Res];
+      FItemsToPlnOpsSync := FItemsToPlnOpsSync + [Res];
+    end
+    else begin
+      var FieldNamesEst := FrgItems.GetColumsProperties('est', myogfpName);
+      var FieldNamesPln := FrgItems.GetColumsProperties('pln', myogfpName);
+      for j:= 0 to FrgItems.GetRawCount - 1 do begin
+        var chg := FrgItems.GetRawValueS('ch', j);
+        for k := 0 to High(FieldNamesEst) do
+          if S.InCommaStr(FieldNamesEst[k], chg, ';') then
+             FItemsToEstimateChange := FItemsToEstimateChange + [FrgItems.GetRawValueS('id', j)];
+        for k := 0 to High(FieldNamesPln) do
+          if S.InCommaStr(FieldNamesPln[k], chg, ';') then
+             FItemsToPlnOpsSync := FItemsToPlnOpsSync + [FrgItems.GetRawValueS('id', j)];
+      end;
+    end;
   end;
 end;
 
@@ -2857,7 +2959,6 @@ begin
     else if FrgBasis.GetRawValueI('mode', i) <> 0 then
       S.ConcatStP(BasisToCopy, FrgBasis.GetRawValueS('name', i), #13#10);
   end;
-  Addr := Tasks.GetMailingAddr(MailingCode);
   var LOrderPath := F.GetProp('path').AsString;
 {    if Mode = fDelete then begin
       Subj := 'Удален заказ ' + LOrderPath;
@@ -2867,12 +2968,13 @@ begin
         TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
     end}
 
+  Addr := '';
   Subj := '';
   Body := '';
 
-
   if MailingCode > 0 then begin
-    Subj := Orders.GetSubject(Subj, '', ID, null);
+    Addr := Tasks.GetMailingAddr(MailingCode);
+    Subj := Subj + Orders.GetSubject(Subj, '', ID, null);
     Body :=
       S.IIf(FTitleChangesShort <> '',  'Изменения в шапке заказа:'#13#10 + FTitleChangesShort, 'Изменений в шапке заказа не было.') +
       #13#10#13#10 +
@@ -3126,6 +3228,9 @@ begin
   //можно только заданные поля, и нельзя добавлять/удалять для проведенный и запущенных
   else begin
     FrgItems.Opt.SetColFeature('ea', 'e', True, False);
+    //если в ИТМ заказ в статусе Выполнен, то нельзя менять наименование  и количество
+    if F.GetProp('id_status_itm').AsInteger >= cOrItmStatus_Completed then
+      FrgItems.SetColumsProperties('name;qnt', myogfpEditable, False);
     FrgItems.Opt.SetGridOperations('u');
   end;
 end;

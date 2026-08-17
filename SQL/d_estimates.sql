@@ -237,7 +237,7 @@ create table estimate_items(
   id_name number(11),                          --наименование бкад
   id_unit number(11),                          --единица измерения
   id_comment number(11),                       --комментарий из сметы
-  contract number(1) default 0,                --подрядный полуфабрикат
+  --contract number(1) default 0,                --подрядный полуфабрикат  --!-
   qnt1 number(15,5),                           --количество на одно изделие, по учету
   qnt number(15,5),                            --количество на все изделия, по учету, только для заказов 
   qnt1_itm number(15,5),                       --количество на одно изделие, по итм
@@ -600,6 +600,7 @@ is
   QntAll_Itm number;
   IdItem number;
   QidDep number;
+--  v_id_or_std_item number;
   st varchar2(400);
 begin
   update estimate_items set deleted = 1 where id_estimate = IdEstimate;
@@ -660,7 +661,7 @@ create or replace procedure p_copy_std_estimate_to_order_item( --$+
 begin
   update estimate_items set deleted = 1 where id_estimate = p_id_estimate;
   for r in (
-    select id_group, id_name, id_unit, id_comment, qnt1, qnt1_itm, id_or_std_item, or_std_item_cnt, contract
+    select id_group, id_name, id_unit, id_comment, qnt1, qnt1_itm, id_or_std_item, or_std_item_cnt
       from estimate_items
      where id_estimate = p_id_std_estimate
   ) loop
@@ -684,15 +685,17 @@ begin
        set id_group = r.id_group, id_unit = r.id_unit, id_comment = r.id_comment,
            qnt1 = r.qnt1, qnt = v_qnt, qnt1_itm = r.qnt1_itm, qnt_itm = v_qnt_itm,
            id_or_std_item = r.id_or_std_item, or_std_item_cnt = r.or_std_item_cnt,
-           contract = r.contract, deleted = 0
+           deleted = 0
      where id = v_id_item;
   end loop;
   delete from estimate_items where id_estimate = p_id_estimate and deleted = 1;
 end;
 /
 
-create or replace procedure P_SendEstimateToItm (
+create or replace procedure P_SendEstimateToItm (  --$+
 --копируем смету в ИТМ
+--не синхронизируем, если заказ в учете не В работе 
+--на всякий случай, в принципе эта процедура вызываться не должна в такой ситуации
   IdEstimate in number,       --запись в estimates в учете
   IdZakaz in number,          --айди заказа в ИТМ
   IdParentIzdel in number,    --айди изделия в ИТМ 
@@ -714,7 +717,18 @@ is
   IdSpec number;
   Flag number;
   FlagCnt number;
+  v_id_status number;
 begin
+--return;
+/*  --получим статус заказа в учете
+  select o.id_status into v_id_status 
+  from orders o, order_items i, estimates e
+  where i.id = e.id_order_item and o.id = i.id_order and e.id = IdEstimate;
+  --не синхронизируем, если заказ не в работе
+  if v_id_status <> 2 then
+    return;
+  end if;*/
+  
   ResCount:=0;
   FlagCnt :=0;
   --проставим флаг для позиций сметы по данному изделию в ИТМ, для последующего удаления записей, которых более нет
@@ -752,6 +766,32 @@ begin
   --insert into adm_db_log (itemname, comm) values ('P_SendEstimateToItm ', 'id_zakaz ' || IdZakaz || '; id_parent_izdel ' || IdParentIzdel || '  изм=' || FlagCnt);
 end;
 / 
+
+
+--!!!!!!!!!!!!!!!!!!!!!!!!!!
+    select
+      id, name, unit, comm, qnt_itm, qnt_itm_last   --fullname        
+    from 
+      v_estimate
+    where 
+      id_estimate = 131451 and qnt_itm is not null; 
+
+--P_SendEstimateToItm - 131451 - 55777 - 1031823
+
+declare
+i number;
+begin
+P_SendEstimateToItm(131451,55777,1031823,i);
+end;
+/
+
+
+
+
+
+
+
+
 
 create or replace procedure P_CorrectEstimateQnt (
 --пересчитаем количество в смете для данной позиции в заказе,

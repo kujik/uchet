@@ -494,24 +494,6 @@ begin
     'where i.id_order = :id_order$i',
     [IdOrder]
   );
-
-
-(*
-  //удалим из БД помеченные на удаление, и сформируем заявки СН
-  //передается айди в схеме учет, если заказа через итм не проведен (еще нет айди_итм, или уситановлено что он не синхронизируется), то и не закрываем его финишной процедурой ИТМ
-  if (SyncWithITM) and (va1[0][5] = 1) and (va1[0][4] <> null) then begin
-    //финишная процедура по заказу вызывается ТОЛЬКО в случае изменений в составе заказа или смет
-    //сейчас попадет сюда если были ЛЮБЫЕ изменения в табличной части заказа, втч не касающиеся смет
-    if HasestimateUpload then begin
-      va := Q.QCallStoredProc('DV.p_SyncOrder_Finish', 'id_dv$i', [IdOrder]);
-      Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['pnl_SyncOrder_Finish', 'id_order ' + VarToStr(IdOrder)]);
-    end
-    else begin
-      Q.QExecSql('insert into adm_db_log (itemname, comm) values (:itemname$s, :comm$s)', ['Order finished', 'id_order ' + VarToStr(IdOrder)]);
-    end;
-  end;
-//  Res:=S.IIf(Length(va1) = 0, -1, 1);
-*)
 end;
 
 function TOrders.SetEstimateQnt(IdEstimate: Integer; Qnt: extended): Boolean;

@@ -2054,9 +2054,9 @@ begin
     Return;
   end if;
   --статус заказа меньше Запущен - не синхрогнизируем
-  if i < 2 then  --ORDER_ID_STATUS_STARTED 
+/*  if i < 2 then  --ORDER_ID_STATUS_STARTED 
     Return;
-  end if;
+  end if;*/
   --получим параметры заказа
   select 
     o.sync_with_itm, o.id_itm, o.ornum, o.dt_beg, o.dt_otgr, decode(c.wholesale, 1, o.customer, 'Розница'), o.organization
@@ -2148,7 +2148,7 @@ begin
     then
       P_SendEstimateToItm(FIDOrEstimate, FIdZakaz, FIdIzdel, i); 
       FNeedeSyncBoardsEdges := 1; 
-      dbms_output.put_line('P_SendEstimateToItm');
+      dbms_output.put_line('P_SendEstimateToItm' || ' - ' || FIDOrEstimate || ' - ' || FIdZakaz || ' - ' || FIdIzdel || ' - ' || i);
     end if; 
   end loop;
   --заказ в итм существует
@@ -2185,7 +2185,18 @@ begin
   
 
 begin
-  P_SyncOrderWithITM(5427, '179804');
+  P_SyncOrderWithITM(17721,'');
+end;
+/
+exec      dv.P_SyncOrder_Finish(17721);
+
+
+select * from dv.zakaz where id_order_dv = 17721;
+delete from dv.zakaz where id_order_dv = 17721;
+
+--заказ, который не трогали
+begin
+  P_SyncOrderWithITM(17692,'13');
 end;
 /
 
