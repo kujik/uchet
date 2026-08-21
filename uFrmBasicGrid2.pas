@@ -49,7 +49,7 @@ type
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
     //dbgvBefore - можно введенное поправить значение или вернуть сообщение об ошибке
     //dbgvCell - после записи введенного значения и обновления строки, передеется отфильтрованная строка в мемтейбл с 1
-    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
+    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string); virtual;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
     procedure Frg1RowDetailPanelShow(var Fr: TFrDBGridEh; const No: Integer; var Hnadled: Boolean; var CanShow: Boolean); virtual;
 
@@ -70,7 +70,7 @@ type
     //по умолчанию вызывает редактирование или просмотр записи
     procedure Frg2OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); virtual;
     procedure Frg2GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); virtual;
-    procedure Frg2VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); virtual;
+    procedure Frg2VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string); virtual;
     procedure Frg2CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); virtual;
   public
   end;
@@ -149,7 +149,7 @@ procedure TFrmBasicGrid2.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Inte
 begin
 end;
 
-procedure TFrmBasicGrid2.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+procedure TFrmBasicGrid2.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string);
 begin
 end;
 
@@ -219,7 +219,7 @@ procedure TFrmBasicGrid2.Frg2OnDbClick(var Fr: TFrDBGridEh; const No: Integer; S
 begin
 end;
 
-procedure TFrmBasicGrid2.Frg2VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+procedure TFrmBasicGrid2.Frg2VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string);
 begin
 end;
 

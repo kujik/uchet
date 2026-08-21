@@ -8,8 +8,8 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
   inherited pnlFrmMain: TPanel
     Width = 792
     Height = 519
-    ExplicitWidth = 796
-    ExplicitHeight = 520
+    ExplicitWidth = 792
+    ExplicitHeight = 519
     inherited pnlFrmClient: TPanel
       Width = 782
       Height = 470
@@ -299,11 +299,7 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
     ExplicitWidth = 796
     inherited lblStatusBarR: TLabel
       Left = 727
-      Height = 13
       ExplicitLeft = 727
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 13
     end
   end
 end

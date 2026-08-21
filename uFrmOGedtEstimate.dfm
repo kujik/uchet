@@ -47,10 +47,6 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
             inherited DbGridEh1: TDBGridEh
               Width = 634
               Height = 198
-              inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
-                ExplicitHeight = 120
-              end
             end
             inherited pnlStatusBar: TPanel
               Top = 199
@@ -106,10 +102,6 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
             ExplicitWidth = 642
             inherited DbGridEh1: TDBGridEh
               Width = 644
-              inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
-                ExplicitWidth = 32
-              end
             end
             inherited pnlStatusBar: TPanel
               Width = 644

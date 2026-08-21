@@ -678,7 +678,7 @@ type
   //dbgvBefore - когда значение введено но еще не записано в таблицу, можно изменить значение или задать сообщение об ошибке
   //dbgvCell - когда значение в ячейке было изменено вручную, а также при проверке строки/всей таблицы.
   //Row начинается с елдиницы
-  TFrDBGridEhVeryfyAndCorrectValuesEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string) of object;
+  TFrDBGridEhVeryfyAndCorrectValuesEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string) of object;
   //вызывается после ручного ввода данных в ячейку таблицы, после установки значения в мемтейбл
   //здесь можно сохранить значение ячейки если не надо перекрывать TFrDBGridEhColumnsUpdateDataEvent
   TFrDBGridEhCellValueSaveEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean) of object;
@@ -2780,7 +2780,7 @@ begin
 //st:=q.QGetDataTypeAsChar(MemTableEh1.fieldbyname(TColumnEh(Sender).FieldName).DataType);
   IsValueCorrect := (FRec.FVerify = '') or S.VeryfyValue(q.QGetDataTypeAsChar(TColumnEh(Sender).Field.DataType), FRec.FVerify, VarToStr(Value), CorrectValue);
   if IsValueCorrect and Assigned(FOnVeryfyAndCorrectValues) then
-    FOnVeryfyAndCorrectValues(Self, No, dbgvBefore, RecNo, S.ToLower(TColumnEh(Sender).FieldName), Value, Msg);
+    FOnVeryfyAndCorrectValues(Self, No, dbgvBefore, RecNo, S.ToLower(TColumnEh(Sender).FieldName), True, Value, Msg);
   if not IsValueCorrect or (Msg <> '') then begin
     if Msg <> '-' then
       MyWarningMessage(S.IIf((Msg = '') or (Msg = '*'), 'Некорректное значение!', Msg));
@@ -2810,7 +2810,7 @@ begin
       then RefreshRecord;
   end;
   if Assigned(FOnVeryfyAndCorrectValues) then
-    FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RecNo, S.ToLower(TColumnEh(Sender).FieldName), Value, Msg);
+    FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RecNo, S.ToLower(TColumnEh(Sender).FieldName), True, Value, Msg);
   //обязательно
   Handled := True;
 end;
@@ -4760,19 +4760,17 @@ begin
   Result := True;
   if RowNum = -1 then
     RowNum := MemTableEh1.RecNo - 1;
+//if RowNum > 15 then
+//  Result := false;
   b := False;
   for i := 0 to MemTableEh1.Fields.Count - 1 do begin
     FRec := Opt.GetFieldRec(MemTableEh1.Fields[i].FieldName);
     Value := VaRToStr(GetValue(MemTableEh1.Fields[i].FieldName, RowNum, False));
     IsValueCorrect := (FRec.FVerify = '') or S.VeryfyValue(q.QGetDataTypeAsChar(MemTableEh1.Fields[i].DataType), FRec.FVerify, Value, CorrectValue);
     if IsValueCorrect and Assigned(FOnVeryfyAndCorrectValues) then
-      FOnVeryfyAndCorrectValues(Self, No, dbgvCell, RowNum + 1, MemTableEh1.Fields[i].FieldName, Value, Msg);
+      FOnVeryfyAndCorrectValues(Self, No, dbgvRow, RowNum + 1, MemTableEh1.Fields[i].FieldName, False,Value, Msg);
     st := IntToStr(RowNum + 1) + '-' + IntToStr(DbGridEh1.FindFieldColumn(MemTableEh1.Fields[i].FieldName).Index + 1);
     j := A.PosInArray(st, FEditData.CellsWithErrors);
-if (MemTableEh1.Fields[i].FieldName = 'qnt') and (RowNum = 0) then begin
-  b:=True;
-  Msg := '';
-end;
     if not IsValueCorrect or (Msg <> '') then
       Result := False;
     if (not IsValueCorrect or (Msg <> '')) and (j = -1) then begin

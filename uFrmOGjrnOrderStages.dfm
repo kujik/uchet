@@ -1,39 +1,54 @@
 inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
   Caption = 'FrmOGjrnOrderStages'
-  ClientHeight = 538
-  ClientWidth = 800
+  ClientHeight = 537
+  ClientWidth = 796
+  ExplicitWidth = 812
   ExplicitHeight = 576
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 800
-    Height = 522
+    Width = 796
+    Height = 521
+    ExplicitWidth = 800
     ExplicitHeight = 522
     inherited pnlFrmClient: TPanel
-      Width = 790
-      Height = 473
-      ExplicitWidth = 790
-      ExplicitHeight = 473
+      Width = 786
+      Height = 472
+      ExplicitWidth = 786
+      ExplicitHeight = 472
+      inherited pnlTop: TPanel
+        Width = 786
+      end
       inherited pnlBottom: TPanel
-        Top = 427
+        Top = 426
+        Width = 786
         ExplicitTop = 426
       end
       inherited pnlLeft: TPanel
-        Height = 418
+        Height = 417
         ExplicitHeight = 417
       end
       inherited pnlGrid1: TPanel
-        Height = 418
+        Width = 776
+        Height = 417
+        ExplicitWidth = 776
         ExplicitHeight = 417
         inherited Frg1: TFrDBGridEh
-          Height = 416
+          Width = 774
+          Height = 415
+          ExplicitWidth = 774
           ExplicitHeight = 415
           inherited pnlGrid: TPanel
-            Height = 362
+            Width = 764
+            Height = 361
             ExplicitHeight = 361
             inherited DbGridEh1: TDBGridEh
               Width = 762
               Height = 339
               OnKeyDown = Frg1DbGridEh1KeyDown
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 0
+                ExplicitHeight = 0
+              end
             end
             inherited pnlStatusBar: TPanel
               Top = 340
@@ -42,11 +57,18 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
             end
           end
           inherited pnlLeft: TPanel
-            Height = 362
+            Height = 361
             ExplicitHeight = 361
           end
+          inherited pnlTop: TPanel
+            Width = 774
+          end
+          inherited pnlContainer: TPanel
+            Width = 774
+          end
           inherited pnlBottom: TPanel
-            Top = 416
+            Top = 415
+            Width = 774
             ExplicitTop = 415
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -66,16 +88,34 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 432
+        Top = 431
+        Width = 786
         ExplicitTop = 431
+        ExplicitWidth = 786
         inherited Frg2: TFrDBGridEh
+          Width = 784
+          ExplicitWidth = 784
           inherited pnlGrid: TPanel
+            Width = 774
             inherited DbGridEh1: TDBGridEh
               Width = 772
+              inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 0
+                ExplicitWidth = 0
+              end
             end
             inherited pnlStatusBar: TPanel
               Width = 772
             end
+          end
+          inherited pnlTop: TPanel
+            Width = 784
+          end
+          inherited pnlContainer: TPanel
+            Width = 784
+          end
+          inherited pnlBottom: TPanel
+            Width = 784
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -94,24 +134,22 @@ inherited FrmOGjrnOrderStages: TFrmOGjrnOrderStages
         end
       end
       inherited pnlRight: TPanel
-        Height = 418
+        Left = 781
+        Height = 417
         ExplicitHeight = 417
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 478
-      Width = 790
+      Top = 477
+      Width = 786
+      ExplicitTop = 478
+      ExplicitWidth = 790
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 522
-    Width = 800
+    Top = 521
+    Width = 796
     ExplicitTop = 521
-    inherited lblStatusBarR: TLabel
-      Height = 14
-    end
-    inherited lblStatusBarL: TLabel
-      Height = 14
-    end
+    ExplicitWidth = 800
   end
 end

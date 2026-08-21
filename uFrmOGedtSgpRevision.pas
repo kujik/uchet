@@ -16,7 +16,7 @@ type
   TFrmOGedtSgpRevision = class(TFrmBasicEditabelGrid)
   private
     function  PrepareForm: Boolean; override;
-    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string); override;
+    procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string); override;
     procedure VerifyBeforeSave; override;
     function  Save: Boolean; override;
   public
@@ -71,7 +71,7 @@ begin
   Result := inherited;
 end;
 
-procedure TFrmOGedtSgpRevision.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; var Value: Variant; var Msg: string);
+procedure TFrmOGedtSgpRevision.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string);
 begin
   if Mode <> dbgvCell then Exit;
   Fr.SetValue('qnt_diff', Row - 1, True, Fr.GetValueF('qnt_fact', Row - 1) - Fr.GetValueF('qnt', Row - 1));
