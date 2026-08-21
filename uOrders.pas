@@ -94,6 +94,33 @@ type
     //удаляет смету для переданного стандартного изделия. если не Silent, то перед этим спросит.
     //вернет True, кроме случая ошибки при выполнениии запроса удаления
     function RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;
+    //массовое удаление смет для отмеченных стандартных изделий (Frg1.GetSetlectedIds в гриде справочника) -
+    //см. RemoveEstimateForStdItem (одиночный вариант, используется в остальных местах кода без изменений).
+    //запрашивает подтверждение один раз для всех отмеченных изделий, затем выводит лог по каждому
+    //(удалено/пропущено - сметы нет/ошибка)
+    function RemoveEstimatesForStdItems(const AIds: TVarDynArray): Boolean;
+    //диспетчер для пункта меню "Скопировать сметы для отмеченных..." в справочнике стандартных изделий
+    //(TFrmOGrefOrStdItems) - все отмеченные изделия относятся к одной подгруппе (см. Frg1.Opt.SetWhere там же),
+    //соответственно, к одному типу (or_format_estimates.type - см. STDITEM_TYPE_*), который и определяет,
+    //какая из двух операций выполняется: для производственных/полуфабрикатных изделий - копирование полной
+    //сметы из одноименного изделия выбранной подгруппы (см. CopyEstimatesFromSubgroup), для отгрузочных -
+    //создание 1-строчной ссылочной сметы на одноименное производственное изделие (см.
+    //CreateSelfSmetasForShipmentItems - тот же принцип, что и при создании изделия, см.
+    //TFrmODedtOrStdItem.CreateSelfSmeta/CheckSelfSmetaAction)
+    function FillEstimatesForCheckedItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
+    //копирует полные сметы (все позиции estimate_items) для отмеченных производственных/полуфабрикатных
+    //изделий (AType - см. STDITEM_TYPE_*) из одноименных изделий подгруппы того же типа, выбранной
+    //пользователем - только если у целевого изделия сметы еще нет. см. общий комментарий у
+    //FillEstimatesForCheckedItems
+    function CopyEstimatesFromSubgroup(AParent: TForm; const AIds: TVarDynArray; AType: Integer): Boolean;
+    //создает для отмеченных отгрузочных изделий 1-строчную ссылочную смету на производственное изделие с тем
+    //же именем из производственной подгруппы (той же группы форматов), выбранной пользователем - по тому же
+    //принципу, что и при создании изделия (см. TFrmODedtOrStdItem.CreateSelfSmeta/CheckSelfSmetaAction: 1
+    //позиция сметы, шт., группа "Готовые изделия", ссылка на производственное изделие и по имени через
+    //bcad_nomencl, и по id_or_std_item) - только если у целевого изделия сметы еще нет, и только если в
+    //выбранной подгруппе нашлось одноименное производственное изделие. см. общий комментарий у
+    //FillEstimatesForCheckedItems
+    function CreateSelfSmetasForShipmentItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
     //синхронизация заказа в ИТМ с заказом в Учете, с подгрузкой в него смет
     //то же что и SyncOrderWithITM, но в транзакции и с выдачей сообщения
     function RefreshEstimatesAndSyncWithITM(IdOrder: Integer; OrderItems: TVarDynArray; LoadOrderAllItems: Boolean = True): Boolean;
@@ -969,6 +996,249 @@ begin
   Result:=Q.QExecSql('delete from estimates where id_std_item = :id_std_item$i', [IdStdItem]) >= 0;
 end;
 
+function TOrders.RemoveEstimatesForStdItems(const AIds: TVarDynArray): Boolean;
+//массовое удаление смет для отмеченных стандартных изделий - см. комментарий в интерфейсе
+var
+  va2: TVarDynArray2;
+  i, LDeleted: Integer;
+  Msg: string;
+begin
+  Result := False;
+  if Length(AIds) = 0 then begin
+    MyInfoMessage('Отметьте изделия в таблице (галочками в первом столбце).');
+    Exit;
+  end;
+  if MyQuestionMessage('Удалить сметы для ' + IntToStr(Length(AIds)) + ' ' +
+    S.GetEnding(Length(AIds), 'отмеченного изделия', 'отмеченных изделий', 'отмеченных изделий') + '?') <> mrYes then
+    Exit;
+  va2 := Q.QLoad(
+    'select i.id, i.name, e.id from or_std_items i, estimates e ' +
+    'where i.id in (' + AIds.Implode(',') + ') and e.id_std_item (+) = i.id',
+    []
+  );
+  Msg := '';
+  LDeleted := 0;
+  for i := 0 to High(va2) do begin
+    if va2[i][2] = null then begin
+      S.ConcatStP(Msg, VarToStr(va2[i][1]) + ' - пропущено (сметы нет)', #13#10);
+      Continue;
+    end;
+    if Q.QExecSql('delete from estimates where id_std_item = :id_std_item$i', [va2[i][0]]) = -1 then
+      S.ConcatStP(Msg, VarToStr(va2[i][1]) + ' - ошибка при удалении', #13#10)
+    else begin
+      S.ConcatStP(Msg, VarToStr(va2[i][1]) + ' - удалено', #13#10);
+      Inc(LDeleted);
+    end;
+  end;
+  Result := LDeleted > 0;
+  MyInfoMessage('Удалено смет: ' + IntToStr(LDeleted) + ' из ' + IntToStr(Length(va2)) + '.' + #13#10 + Msg, 1);
+end;
+
+function TOrders.FillEstimatesForCheckedItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
+//диспетчер - см. комментарий в интерфейсе
+var
+  LType: Integer;
+begin
+  Result := False;
+  if Length(AIds) = 0 then begin
+    MyInfoMessage('Отметьте изделия в таблице (галочками в первом столбце).');
+    Exit;
+  end;
+  LType := Q.QLoadValue(
+    'select e.type from or_std_items i, or_format_estimates e where i.id = :id$i and e.id = i.id_or_format_estimates',
+    [AIds[0]]
+  );
+  if LType = STDITEM_TYPE_SHIPMENT then
+    Result := CreateSelfSmetasForShipmentItems(AParent, AIds)
+  else if LType in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SEMIPRODUCT] then
+    Result := CopyEstimatesFromSubgroup(AParent, AIds, LType)
+  else
+    MyWarningMessage('Не удалось определить тип отмеченных изделий!');
+end;
+
+function TOrders.CopyEstimatesFromSubgroup(AParent: TForm; const AIds: TVarDynArray; AType: Integer): Boolean;
+//копирование полных смет для производственных/полуфабрикатных изделий - см. комментарий в интерфейсе
+var
+  va2: TVarDynArray2;
+  vak, vav, va, vaEst: TVarDynArray;
+  Est: TVarDynArray2;
+  Ctx: TEstimateApplyContext;
+  i, j, LCopied, LSrcId, LSrcIsEmpty: Integer;
+  LCurSubgroup, LSrcSubgroup: Variant;
+  LTargetName, LSrcName, Msg: string;
+begin
+  Result := False;
+  LCurSubgroup := Q.QLoadValue('select id_or_format_estimates from or_std_items where id = :id$i', [AIds[0]]);
+  va2 := Q.QLoad(
+    'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' +
+    'from or_formats f, or_format_estimates e ' +
+    'where e.id_format = f.id and e.type = :type1$i and e.active = 1 and e.id <> :curid$i ' +
+    'order by f.name, e.name',
+    [AType, LCurSubgroup]
+  );
+  vak := []; vav := [];
+  for i := 0 to High(va2) do begin
+    vav := vav + [va2[i][0]];
+    vak := vak + [va2[i][1]];
+  end;
+  if Length(vav) = 0 then begin
+    MyInfoMessage('Нет других активных подгрупп этого типа для копирования.');
+    Exit;
+  end;
+  va := [];
+  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Копирование смет стандартных изделий', 300, 80,
+   [[cntComboLK, 'Источник', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
+    Exit;
+  LSrcSubgroup := va[0];
+  if MyQuestionMessage('Скопировать сметы для ' + IntToStr(Length(AIds)) + ' ' +
+    S.GetEnding(Length(AIds), 'отмеченного изделия', 'отмеченных изделий', 'отмеченных изделий') + '?') <> mrYes then
+    Exit;
+  Msg := '';
+  LCopied := 0;
+  for i := 0 to High(AIds) do begin
+    LTargetName := VarToStr(Q.QLoadValue('select name from or_std_items where id = :id$i', [AIds[i]]));
+    j := Q.QLoadValue('select count(1) from estimates where id_std_item = :id$i', [AIds[i]]);
+    if j > 0 then begin
+      S.ConcatStP(Msg, LTargetName + ' - пропущено (смета уже есть)', #13#10);
+      Continue;
+    end;
+    vaEst := Q.QLoadRow(
+      'select id, name from or_std_items where id_or_format_estimates = :ide$i and lower(name) = lower(:name$s)',
+      [LSrcSubgroup, LTargetName]);
+    if vaEst[0] = null then begin
+      S.ConcatStP(Msg, LTargetName + ' - пропущено (нет изделия с таким именем в источнике)', #13#10);
+      Continue;
+    end;
+    LSrcId := S.NInt(vaEst[0]);
+    LSrcName := VarToStr(vaEst[1]);
+    vaEst := Q.QLoadRow('select id, isempty from estimates where id_std_item = :id$i', [LSrcId]);
+    if vaEst[0] = null then begin
+      S.ConcatStP(Msg, LTargetName + ' - пропущено (у изделия-источника нет сметы)', #13#10);
+      Continue;
+    end;
+    LSrcIsEmpty := S.NInt(vaEst[1]);
+    Est := Q.QLoad('select name, id_group, id_unit, qnt1, comm, id_or_std_item from v_estimate where id_std_item = :id$i order by id', [LSrcId]);
+    Ctx.IdEstimate := Null;
+    Ctx.IdOrder := Null;
+    Ctx.IdOrderItem := Null;
+    Ctx.IdStdItem := AIds[i];
+    Ctx.OrderIdUchet := Null;
+    Ctx.OrQnt := Null;
+    Ctx.IsEstimateEmpty := LSrcIsEmpty;
+    Ctx.OrDtEst := Null;
+    Ctx.OrSlash := Null;
+    Ctx.ParentIdEstimate := Null;
+    Ctx.OrName := LTargetName;
+    Ctx.FileName := '';
+    Ctx.OneItem := True;
+    Ctx.QntChanged := False;
+    Ctx.IsOrItemStd := False;
+    Ctx.Silent := True;
+    Ctx.EstBefore := LoadEstimateArray(Null);
+    Ctx.EstLogSource := '0';
+    if ApplyEstimateArray(Ctx, Est) = -1 then
+      S.ConcatStP(Msg, LTargetName + ' - ошибка при копировании', #13#10)
+    else begin
+      S.ConcatStP(Msg, LTargetName + ' - скопировано (источник: ' + LSrcName + ')', #13#10);
+      Inc(LCopied);
+    end;
+  end;
+  Result := LCopied > 0;
+  MyInfoMessage('Скопировано смет: ' + IntToStr(LCopied) + ' из ' + IntToStr(Length(AIds)) + '.' + #13#10 + Msg, 1);
+end;
+
+function TOrders.CreateSelfSmetasForShipmentItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
+//создание ссылочных смет для отгрузочных изделий - см. комментарий в интерфейсе
+const
+  cBcadGroupFinishedItems = 104;  //группа bcad "Готовые изделия" - см. BCAD_GROUP_FINISHED_ITEMS в uFrmODedtOrStdItem.pas
+  cBcadUnitPcs = 1;                //единица измерения bcad "шт." - см. BCAD_UNIT_PCS там же
+var
+  va2: TVarDynArray2;
+  vak, vav, va, vaProd: TVarDynArray;
+  Est: TVarDynArray2;
+  Ctx: TEstimateApplyContext;
+  i, j, LCreated: Integer;
+  LIdFormat, LSrcSubgroup, LSrcProdId: Variant;
+  LPrefix, LProdPrefixedName, LTargetName, LSrcProdName, Msg: string;
+begin
+  Result := False;
+  LIdFormat := Q.QLoadValue(
+    'select e.id_format from or_std_items i, or_format_estimates e where i.id = :id$i and e.id = i.id_or_format_estimates',
+    [AIds[0]]
+  );
+  va2 := Q.QLoad(
+    'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id ' +
+    'from or_formats f, or_format_estimates e ' +
+    'where e.id_format = f.id and e.id_format = :idformat$i and e.type = :type1$i and e.active = 1 ' +
+    'order by f.name, e.name',
+    [LIdFormat, STDITEM_TYPE_PRODUCTION]
+  );
+  vak := []; vav := [];
+  for i := 0 to High(va2) do begin
+    vav := vav + [va2[i][0]];
+    vak := vak + [va2[i][1]];
+  end;
+  if Length(vav) = 0 then begin
+    MyInfoMessage('В этой группе форматов нет активных производственных подгрупп.');
+    Exit;
+  end;
+  va := [];
+  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Создание смет отгрузочных изделий', 300, 80,
+   [[cntComboLK, 'Источник (производственные)', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
+    Exit;
+  LSrcSubgroup := va[0];
+  if MyQuestionMessage('Создать сметы для ' + IntToStr(Length(AIds)) + ' ' +
+    S.GetEnding(Length(AIds), 'отмеченного изделия', 'отмеченных изделий', 'отмеченных изделий') + '?') <> mrYes then
+    Exit;
+  LPrefix := VarToStr(Q.QLoadValue('select prefix from or_format_estimates where id = :id$i', [LSrcSubgroup]));
+  Msg := '';
+  LCreated := 0;
+  for i := 0 to High(AIds) do begin
+    LTargetName := VarToStr(Q.QLoadValue('select name from or_std_items where id = :id$i', [AIds[i]]));
+    j := Q.QLoadValue('select count(1) from estimates where id_std_item = :id$i', [AIds[i]]);
+    if j > 0 then begin
+      S.ConcatStP(Msg, LTargetName + ' - пропущено (смета уже есть)', #13#10);
+      Continue;
+    end;
+    vaProd := Q.QLoadRow(
+      'select id, name from or_std_items where id_or_format_estimates = :ide$i and lower(name) = lower(:name$s)',
+      [LSrcSubgroup, LTargetName]);
+    LSrcProdId := vaProd[0];
+    if LSrcProdId = null then begin
+      S.ConcatStP(Msg, LTargetName + ' - пропущено (нет производственного изделия с таким именем в источнике)', #13#10);
+      Continue;
+    end;
+    LSrcProdName := VarToStr(vaProd[1]);
+    LProdPrefixedName := S.IIFStr(LPrefix <> '', LPrefix + '_', '') + Trim(LSrcProdName);
+    Ctx.IdEstimate := Null;
+    Ctx.IdOrder := Null;
+    Ctx.IdOrderItem := Null;
+    Ctx.IdStdItem := AIds[i];
+    Ctx.OrderIdUchet := Null;
+    Ctx.OrQnt := Null;
+    Ctx.IsEstimateEmpty := 0;
+    Ctx.OrDtEst := Null;
+    Ctx.OrSlash := Null;
+    Ctx.ParentIdEstimate := Null;
+    Ctx.OrName := LProdPrefixedName;
+    Ctx.FileName := '';
+    Ctx.OneItem := True;
+    Ctx.QntChanged := False;
+    Ctx.IsOrItemStd := False;
+    Ctx.Silent := True;
+    Ctx.EstBefore := LoadEstimateArray(Null);
+    Ctx.EstLogSource := '0';
+    Est := [[LProdPrefixedName, cBcadGroupFinishedItems, cBcadUnitPcs, 1, '', LSrcProdId]];
+    if ApplyEstimateArray(Ctx, Est) = -1 then
+      S.ConcatStP(Msg, LTargetName + ' - ошибка при создании', #13#10)
+    else begin
+      S.ConcatStP(Msg, LTargetName + ' - создано (источник: ' + LSrcProdName + ')', #13#10);
+      Inc(LCreated);
+    end;
+  end;
+  Result := LCreated > 0;
+  MyInfoMessage('Создано смет: ' + IntToStr(LCreated) + ' из ' + IntToStr(Length(AIds)) + '.' + #13#10 + Msg, 1);
+end;
 
 function TOrders.LoadSmetaOld(IdOrder: Integer): Integer;
 var

@@ -1524,8 +1524,10 @@ begin
       //удаляем строку, правила те же что при вставке
       if (F.GetProp('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') >= 0) then
         if FIsTemplate or (Mode in [fAdd, fCopy]) or (Fr.GetRawRowCurrent > FOrderItemsOld.High) then
-          if MyQuestionMessage('Удалить запись?') = mrYes then
+          if MyQuestionMessage('Удалить запись?') = mrYes then begin
             Fr.DeleteRow;
+            Fr.SetState(True, null, null);
+          end;
     mbtOrderViewHistory: begin
       //зафиксируем текущие (еще не сохраненные) изменения заказа и передадим их в просмотрщик истории отдельным,
       //самым свежим шагом (см. комментарий в шапке uFrmOWRepOrderChanges.pas)
@@ -2284,8 +2286,10 @@ begin
   Msg := '';
   //не корректируеми ввод! если это вызов при вводе данных для возможной коррекции - выходим.
   //иначе некорректно будут выдаваться сообщения, так как мы проверяем не обязательно текущую ячейку!
-  if Mode = dbgvBefore then
+  if Mode = dbgvBefore then begin
+    Fr.SetState(True, null, null);
     Exit;
+  end;
   if FrgItems.GridReadOnly then
     Exit;
   Row := Row - 1;

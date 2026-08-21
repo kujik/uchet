@@ -2,6 +2,7 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
   Caption = 'FrmOGrefOrStdItems'
   ClientWidth = 796
   OnDestroy = FormDestroy
+  ExplicitHeight = 573
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 796
@@ -122,14 +123,19 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 784
-        ExplicitWidth = 784
         inherited pnlFrmBtnsMain: TPanel
+          Left = 685
           ExplicitLeft = 681
         end
+        inherited pnlFrmBtnsChb: TPanel
+          Left = 457
+        end
         inherited pnlFrmBtnsR: TPanel
+          Left = 586
           ExplicitLeft = 582
         end
         inherited pnlFrmBtnsC: TPanel
+          Width = 317
           ExplicitWidth = 313
         end
       end
@@ -140,7 +146,11 @@ inherited FrmOGrefOrStdItems: TFrmOGrefOrStdItems
     ExplicitWidth = 792
     inherited lblStatusBarR: TLabel
       Left = 723
+      Height = 14
       ExplicitLeft = 723
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
   inherited tmrAfterCreate: TTimer

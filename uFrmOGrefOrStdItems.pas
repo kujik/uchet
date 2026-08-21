@@ -71,7 +71,7 @@ function TFrmOGrefOrStdItems.PrepareForm: Boolean;
 begin
   FrmOGrefOrStdItems := Self;
   Caption:='Справочник стандартных изделий';
-  Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+  Frg1.Options := Frg1.Options + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogLoadAfterVisible];
   if FormDoc = myfrm_R_OrderStdItems then begin
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -108,6 +108,7 @@ begin
     Frg1.Opt.SetWhere('where id_or_format_estimates = :id_or_format_estimates$i');
     Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[mbtAdd,1],[mbtCopy,1],[mbtDelete,1],[],
       [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1004, User.Role(rOr_R_StdItems_Estimate), 'Скопировать/создать сметы для отмеченных...'],
       [-1003, True, 'История изменений сметы'],
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
   //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
@@ -184,6 +185,7 @@ begin
     Frg1.Opt.SetButtons(1,[
       [mbtRefresh],[],[mbtView],[mbtEdit,User.Role(rOr_R_StdItems_Ch)],[],
       [mbtViewEstimate],[mbtLoadEstimate,User.Role(rOr_R_StdItems_Estimate)],[-mbtCopyEstimate,1,'Скопировать смету'],[-mbtDeleteEstimate,1],
+      [-1004, User.Role(rOr_R_StdItems_Estimate), 'Скопировать/создать сметы для отмеченных...'],
       [-1003, True, 'История изменений сметы'],
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
       [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
@@ -259,9 +261,17 @@ begin
     end;
   end
   else if (Tag = mbtDeleteEstimate) then begin
-    //в справочнике стандартных изделий удалим смету (если это не группа общих изделий)
+    //в справочнике стандартных изделий удалим сметы для всех отмеченных галочками изделий
+    //(если это не группа общих изделий) - см. TOrders.RemoveEstimatesForStdItems
     if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
-      Orders.RemoveEstimateForStdItem(Fr.ID);
+      Orders.RemoveEstimatesForStdItems(Fr.GetSetlectedIds);
+      Fr.RefreshGrid;
+    end;
+  end
+  else if (Tag = 1004) then begin
+    //скопировать/создать сметы для всех отмеченных галочками изделий - см. TOrders.FillEstimatesForCheckedItems
+    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then begin
+      Orders.FillEstimatesForCheckedItems(Self, Fr.GetSetlectedIds);
       Fr.RefreshGrid;
     end;
   end
@@ -467,7 +477,7 @@ begin
     Exit;
   if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Скопировать стандартные изделия', 300, 80,
    [[cntComboLK, 'Источник', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) >= 0 then begin
-    Fields := 'id$i;id_or_format_estimates$i;name$s;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;r9$i;resale$i;price$f;price_pp$f;setofpan$i';
+    Fields := 'id$i;id_or_format_estimates$i;name$s;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;r9$i;wo_estimate$i;by_sgp$i;price_base$f;setofpan$i';
     if MyQuestionMessage('Будут скопированы изделия из справочника'#13#10 + '"' + vav[A.PosInArray(va[0], vak)] + '"'#13#10 + '(кроме тех, что уже существуют).'#13#10'Продолжить?') <> mrYes then
       Exit;
     va2 := Q.QLoad(Q.QGetSql('A', 'or_std_items', Fields) + ' where id_or_format_estimates = :ide$i', [va[0]]);
