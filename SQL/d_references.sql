@@ -2,9 +2,6 @@
 
 --свои организации для использования в и таблицах снабжения
 --alter table ref_sn_organizations drop column is_customer;
-alter table ref_sn_organizations add is_wholesaler number(1) default 0;  --!!!
-alter table ref_sn_organizations add nds_rate number default 0;  --!!!
-alter table ref_sn_organizations add or_cash number default 0;  --!!!
 create table ref_sn_organizations (
   id number(12),
   name varchar(30),        --наименование

@@ -322,7 +322,10 @@ end;
 create or replace view v_or_format_estimates as --$+
 select
   fe.*,
-  decode(type, 0, 'производственное изделие', 1, 'отгрузочное изделие', 2, 'полуфабрикат') as type_name
+  case when fe.id = 0 
+    then 'нестандартное изделия'
+    else decode(type, 0, 'производственное изделие', 1, 'отгрузочное изделие', 2, 'полуфабрикат') 
+  end as type_name
 from  
   or_format_estimates fe
 ;     
@@ -330,6 +333,7 @@ from
 
 
 --------------------------------------------------------------------------------
+--$go begin
 alter table orders drop column status;
 alter table orders drop column ch_comm;
 
@@ -388,7 +392,7 @@ alter table orders add sum_final_wo_nds number;
 alter table orders add sum_items_final_wo_nds number;
 
 update orders set sum_advance = cost_av;
-
+--$go end
 
 
 
@@ -660,7 +664,7 @@ select f_order_getnewnum(null, 1) from dual;
 
 
 
-create or replace view v_orders as
+create or replace view v_orders as  --$+
 with
   -- единая агрегация по позициям заказа (все показатели за один проход)
   order_items_agg as (
@@ -864,7 +868,7 @@ SELECT /*+ PARALLEL(4) */ * FROM v_orders order by dt_beg desc;
 
 --update orders set active = 1 where id < 0;
 
-create or replace view v_orders_list as 
+create or replace view v_orders_list as --$+
 select
 --расширенная информация по заказу, для журнала заказов и детализаций
   o.*,
@@ -925,6 +929,7 @@ select i.id_order, u.name, sum(length(u.name)+1) over (order by u.name rows unbo
 
 
 --таблица позиций в заказе
+--$go begin
 alter table order_items add price_base  number;  --!!! 
 alter table order_items add nds_rate number;
 alter table order_items add price_adjusted  number;
@@ -937,6 +942,7 @@ update order_items set price_pp = 0;
 update order_items set price_base  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
 update order_items set price_adjusted  = round(price_tmp / 1.22 , 2) where id_order >= 16743 or id_order < 0;
 alter table order_items add attention_fields varchar2(400);
+--$go end
 
 --alter table order_items drop column attention;
  
@@ -1044,7 +1050,7 @@ begin
 end;
 /
 
-create or replace view v_order_items as --!!!
+create or replace view v_order_items as --$+
 with
   -- агрегация по входящим изделиям
   niz_agg as (
@@ -1389,15 +1395,14 @@ end;
 -- id_or_format_estimates=0 - нестандартное изделий
 -- id_or_format_estimates=1 - доп. комплектация (с 20224-06 убрана)
 --alter table or_std_items add dt_changed_price date;
---!!!
+--$go begin
 alter table or_std_items add price_base number;
 update or_std_items set price_base = round(price / 1.22, 2);
 alter table or_std_items add price_tmp number;
 update or_std_items set price_tmp = price;
 alter table or_std_items drop column price;
-
-
 alter table or_std_items add active number(1) default 1;
+--$go end
 
 create table or_std_items (
   id number(11),
@@ -1531,8 +1536,8 @@ create or replace view v_or_std_items as --$+
   ;
     
 
-create or replace procedure p_set_std_item_price(
---установим цену стандартного изделия (без ндс, в price_base),
+create or replace procedure p_set_std_item_price(   --$+
+--установим цену стандартного изделия (без ндс, в pr ice_base),
 --обновим цены в шаблонах заказов
   p_id_std_item in number,  -- айди изделия
   p_price_new   in number,  -- цена
@@ -2040,6 +2045,7 @@ create or replace procedure P_SyncOrderWithITM(       --$+
   FIDOrEstimate number;
   FNeedeSyncBoardsEdges number;
 begin
+  dbms_output.put_line('!');
   --есть ли заказ в базе учета
   select count(*) into i from orders where id = AIdOrder;
   --если передан айди заказа, которого нет в таблице, значит это было удаление заказа, тогда удалим и из итм и выйдем
@@ -2047,14 +2053,14 @@ begin
     delete from dv.zakaz where id_order_dv = AIdOrder;
     Return;
   end if;
-  select id_status into i from orders where id = AIdOrder;
+  /*select id_status into i from orders where id = AIdOrder;
   --статус заказа - удален. удалим и из ИТМ
   if i = -2 then  --ORDER_ID_STATUS_DELETED 
     delete from dv.zakaz where id_order_dv = AIdOrder;
     Return;
   end if;
   --статус заказа меньше Запущен - не синхрогнизируем
-/*  if i < 2 then  --ORDER_ID_STATUS_STARTED 
+  if i < 2 then  --ORDER_ID_STATUS_STARTED 
     Return;
   end if;*/
   --получим параметры заказа
@@ -2068,14 +2074,16 @@ begin
     Return;
   end if;
   --есть ли такой заказ в итм и данные заказа
+  dbms_output.put_line('2');
   begin
     i := 1;
     --получим статус заказа в итм
     select id_status into FIdStatus from dv.zakaz where id_order_dv = AIdOrder;
     --если статус >= выполнен, то ничего не синхронизируем, выйдем
     --статусы в таблице status_zakaza
-    if FIdStatus >= 30 and ASyncIfCompleted = 0 then
-      Return;
+     if FIdStatus >= 30 and ASyncIfCompleted = 0 then
+--!!!отладка      Return;
+  null;
     end if;
   exception
     --нет заказа
@@ -2084,6 +2092,7 @@ begin
   end;
   FNeedeSyncBoardsEdges := 0;
   --если id_itm is null или айди есть, но не найден в итм, то это вставка, иначе изменение
+  dbms_output.put_line('3');
   if FIdZakaz is null or i = 0 then
     update orders set id_itm = null where id = AIdOrder;
     update order_items set id_itm = null where id_order = AIdOrder;      
@@ -2098,6 +2107,7 @@ begin
   --признак что нужно создавать заказ (создадим при первом внесенном изделии), или не удалять в случае, если это изменение
   FCreateZ := 0;
   --проход по изделиям заказа  
+  dbms_output.put_line('3');
   for CVOrderItems in (select * from v_order_items where id_order = AIdOrder order by pos) loop
     FIdIzdel := CVOrderItems.id_itm; 
     FSendEstimate := 0; 
@@ -2196,7 +2206,8 @@ delete from dv.zakaz where id_order_dv = 17721;
 
 --заказ, который не трогали
 begin
-  P_SyncOrderWithITM(17692,'13');
+--  P_SyncOrderWithITM(17692,'13');
+  P_SyncOrderWithITM(17692,'');
 end;
 /
 
@@ -3028,18 +3039,10 @@ where
 
 --------------------------------------------------------------------------------
 --таблица по типам заказов (рекламация, дозаказ...)   --!!!
-alter table order_types add is_production_order number(1);
-alter table order_types add is_semiproduct_order number(1);
-alter table order_types add is_shipment_order number(1);
-alter table order_types add is_additional_order number(1);
-alter table order_types add is_nonstandard number(1);
-alter table order_types add is_nonstandard_only number(1);
-alter table order_types add is_cash_payment number(1);
-alter table order_types add is_reference_allowed number(1);
-alter table order_types add is_reference_required  number(1);
-alter table order_types add is_launch_by_manager number(1);
-alter table order_types add need_ref  number(1);
-alter table order_types drop column need_ref;
+--alter table order_types add need_ref  number(1);
+--!g--=p begin
+--alter table order_types drop column need_ref;
+--end
 
 create table order_types (
   id number(11),

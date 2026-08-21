@@ -349,7 +349,7 @@ begin
   ]);
   Frg1.Opt.SetTable('v_estimate_for_edit_dlg', 'estimate_items');
   //если смету сейчас редактирует другой пользователь (см. FormDbLock выше) - грид только для чтения
-  Frg1.Opt.SetGridOperations(S.IIf(Mode = fEdit, 'uaid', ''));
+  Frg1.Opt.SetGridOperations(S.IIf(Mode in [fEdit, fAdd], 'uaid', ''));
   Frg1.Opt.SetWhere('where id_estimate = :id$i order by id_group');
   //если данные для редактирования переданы оберткой (TOrders.LoadEstimate) через боковой канал - используем их
   //вместо прямой загрузки из БД; канал ищем по своему ID (см. TEstDlgChannel, общий комментарий в начале модуля)

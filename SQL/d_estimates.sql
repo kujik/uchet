@@ -1,5 +1,5 @@
 
-Alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
+alter session set nls_date_format='DD.MM.YYYY HH24:MI:SS';
 alter session set nls_sort =  binary;
 
 
@@ -183,10 +183,6 @@ select * from v_ref_nomencl;
 
 --таблица сметы на позицию заказа или стандартное изделие
 --на данную позицию может быть только одна запись в этой таблице
---alter table estimates add constraint fk_estimates_std_item foreign key (id_std_item) references or_std_items(id) on delete cascade;
---alter table estimates add dt_changed date;
---alter table estimates add dt_create date;
---alter table estimates add dt_changed_depend date;
 create table estimates(
   id number(11),
   id_std_item number(11) unique,              --айди стандартного изделия
@@ -691,6 +687,69 @@ begin
   delete from estimate_items where id_estimate = p_id_estimate and deleted = 1;
 end;
 /
+
+/*
+CREATE OR REPLACE procedure UCHET22.P_SendEstimateToItm (
+--копируем смету в ИТМ
+  IdEstimate in number,       --запись в estimates в учете
+  IdZakaz in number,          --айди заказа в ИТМ
+  IdParentIzdel in number,    --айди изделия в ИТМ 
+  ResCount out number)        --выходной, сколько скопировано строк 
+is
+  cursor c1 is
+    select
+      id, name, unit, comm, qnt_itm, qnt_itm_last   --fullname        
+    from 
+      v_estimate
+    where 
+      id_estimate = IdEstimate and qnt_itm is not null; 
+  FullName varchar2(1000);
+  Unit varchar2(1000);
+  Comment varchar2(1000);
+  EId number;
+  Qnt_Itm number;
+  Qnt_Itm_Last number;
+  IdSpec number;
+  Flag number;
+  FlagCnt number;
+begin
+  ResCount:=0;
+  FlagCnt :=0;
+  --проставим флаг для позиций сметы по данному изделию в ИТМ, для последующего удаления записей, которых более нет
+  update dv.nomenclatura_in_izdel niz
+    set niz.checked=1
+    where niz.id_zakaz=IdZakaz
+      and niz.id_nomizdel_parent_t=IdParentIzdel
+      and niz.id_nominizdel <> IdParentIzdel;
+  --заполняем сметные позиции в ИТМ
+  open c1;
+  loop
+    fetch c1 into EId, FullName, Unit, Comment, Qnt_Itm, Qnt_Itm_Last;
+    exit when c1%notfound;
+    begin
+      Flag := 0;
+      if nvl(Qnt_Itm, -111) <> nvl(Qnt_Itm_Last, -111) then
+        Flag := 1;
+        FlagCnt := FlagCnt + 1;
+        update estimate_items set qnt_itm_last = Qnt_Itm where id = EId;
+      end if; 
+      DV.P_SyncSpecIzdel(IdZakaz, IdParentIzdel, FullName, Unit, Qnt_Itm, Comment, IdSpec);
+      if IdSpec <> -1 then
+        ResCount := ResCount + 1;
+      end if;
+    exception
+      when others then
+        null;
+    end;
+  end loop;
+  close c1;
+  --удалим из ИТМ позиции, которых нет более в смете
+  delete from dv.nomenclatura_in_izdel niz
+    where niz.checked=1 and niz.id_zakaz=IdZakaz and niz.id_nomizdel_parent_t=IdParentIzdel;
+  insert into adm_db_log (itemname, comm) values ('P_SendEstimateToItm ', 'id_zakaz ' || IdZakaz || '; id_parent_izdel ' || IdParentIzdel || '  изм=' || FlagCnt);
+end;
+/
+*/
 
 create or replace procedure P_SendEstimateToItm (  --$+
 --копируем смету в ИТМ
@@ -1736,7 +1795,7 @@ where
 --  - полуфабрикат можно выбирать из подгрупп типа "полуфабрикат" из любой группы (формата);
 --  - в смете нестандартного изделия заказа стандартных изделий, по-видимому, быть не может,
 --    но полуфабрикат может (уточняется).
-create or replace procedure p_check_estimate_item( --$+
+create or replace procedure p_check_estimate_item( --$-
 --заглушка: проверка корректности сметной позиции "на лету" по контексту контейнера, правила будут дописаны позже
   p_id_container_std_item in  number,   --айди контейнерного стандартного изделия (владельца сметы), null - смета нестандартного изделия заказа
   p_container_type        in  number,   --тип контейнера: 0-производственное,1-отгрузочное,2-полуфабрикат; null - нестандартное изделие заказа
