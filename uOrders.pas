@@ -1183,8 +1183,8 @@ begin
     Exit;
   end;
   va := [];
-  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Создание смет отгрузочных изделий', 300, 80,
-   [[cntComboLK, 'Источник (производственные)', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
+  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Создание смет отгрузочных изделий', 350, 120,
+   [[cntComboLK, 'Источник '#13#10'(производственные)', '1:400:0', 210]], [VarArrayOf([vak[0], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
     Exit;
   LSrcSubgroup := va[0];
   if MyQuestionMessage('Создать сметы для ' + IntToStr(Length(AIds)) + ' ' +

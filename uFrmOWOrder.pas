@@ -2294,13 +2294,13 @@ begin
     Exit;
   Row := Row - 1;
   var LFieldName := FieldName;
-  var LIsStdItem := FrgItems.GetValue('nstd', Row).AsInteger <> 1;
-  var LFromSgp := FrgItems.GetValue('sgp', Row).AsInteger = 1;
-  var LWoEstimate := FrgItems.GetValue('wo_estimate', Row).AsInteger = 1;
+  var LIsStdItem := FrgItems.GetValue('nstd', Row, Filtered).AsInteger <> 1;
+  var LFromSgp := FrgItems.GetValue('sgp', Row, Filtered).AsInteger = 1;
+  var LWoEstimate := FrgItems.GetValue('wo_estimate', Row, Filtered).AsInteger = 1;
   var LRouteDefined := False;
   Msg := '';
   for var i := 1 to  High(RouteFields) + 1 do
-    if FrgItems.GetValueI('r' + IntToStr(i), Row) = 1 then begin
+    if FrgItems.GetValueI('r' + IntToStr(i), Row, Filtered) = 1 then begin
       LRouteDefined := True;
       Break;
     end;
@@ -2321,19 +2321,19 @@ begin
       Msg := 'Технолдог для стандартного изделия не может быть задан';
   end;}
   if (LFieldName = 'id_kns') and (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_kns', Row).AsInteger <> - 100 then
+    if FrgItems.GetValue('id_kns', Row, Filtered).AsInteger <> - 100 then
       Msg := 'Конструктор не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
   if (LFieldName = 'id_thn') and  (LFromSgp or LWoEstimate) then begin
-    if FrgItems.GetValue('id_thn', Row).AsInteger <> - 100 then
+    if FrgItems.GetValue('id_thn', Row, Filtered).AsInteger <> - 100 then
       Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
   if (LFieldName = 'id_kns') and  not LIsStdItem then begin
-    if (FrgItems.GetValue('id_kns', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_kns', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
       Msg := 'Конструктор должен быть задан для нестандартного изделия';
   end;
   if (LFieldName = 'id_thn') and not LIsStdItem then begin
-    if (FrgItems.GetValue('id_thn', Row).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_thn', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
       Msg := 'Технолог должен быть задан для нестандартного изделия';
   end;
 //  FrgItems.SetValue('status', Row, True, S.IIf(Msg <> '', 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));

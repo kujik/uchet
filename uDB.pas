@@ -245,6 +245,8 @@ type
     //если пакетный режим, то режим фиксации/отката определяется его результатом and Commit
     //также проставим свойтво статуса последней транзакции
     //если нет открытой транзакции, выйдем с False
+    //иначе вернем в статусе, была ли транзакция зафиксирована.
+    //также сбросим пакетный режим
     function QCommitOrRollback(Commit: Boolean = True; ShowErrors: Boolean = True): Boolean;
     //коммитим транзакцию
     function QCommitTrans: Boolean;
@@ -1551,7 +1553,11 @@ begin
       Application.ShowException(E);
     end;
   end;
+  //сбросим пакетный режим
+  FPackageMode := 0;
   FCommitSuccess := Result and Commit;
+  //изм 2026-08-22 - венрнем  не результат самой операции, но статус фиксации транзакции
+  Result := Result and Commit;
 end;
 
 function TmyDB.QCommitTrans: Boolean;

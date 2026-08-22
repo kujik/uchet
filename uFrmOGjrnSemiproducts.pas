@@ -373,7 +373,7 @@ procedure TFrmOGjrnSemiproducts.Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const 
 begin
   if Mode = dbgvBefore then
     Exit;
-  VerifyTable(Row);
+  VerifyTable(Row);      //!!!
 end;
 
 

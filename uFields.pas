@@ -1,10 +1,8 @@
 ﻿{
 поля для чтения и записи в бд принимаются без изменения, с модификаторами и в том числе могут быть выражениями
 если начинается с _ или равно 0, то оно очищается
-
 теги могут быть множественные, задаются через запятую, регистр не учитывается.
 вся обработка может быть вперемешку по полям и по тегам, также возможно обработка всех полей кроме исключаемых
-
 также среди тегов/значений может встретиться строка вида $propname или $propname=value - это именованное
 пользовательское свойство, аналог позиционных пользовательских индексов (см. fvtCustom), только заданное не
 последовательностью значений после #0, а именем. При первом появлении имени $propname (в теге любого поля) для
@@ -13,17 +11,13 @@
 Если у токена указано =value - значение $propname устанавливается для того поля, в теге которого он встретился;
 у остальных полей до их собственной установки значение будет Null. Если имя $propname нигде не встречалось при
 разборе DefineFields - обращение к нему (чтение или запись) даст обычную ошибку "не найден параметр".
-
 }
 unit uFields;
-
 interface
-
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, DBCtrlsEh, Vcl.ExtCtrls, Vcl.ComCtrls,
   uData, uForms, uDBOra, uString, uMessages;
-
 type
   TDefFiledcValueType = (
     fvtVName = 0,       //внутреннее имя свойства
@@ -50,9 +44,7 @@ type
     fvtSaveVal = 21,    //значение поля сохраняется/восстанавливается в индивидуальном конфиге пользователя (тег SV=1)
     fvtCustom = 22      //начало пользовательских индексов
   );
-
   TDefFiledcValueTypeSet = set of TDefFiledcValueType;
-
 const
   fvpVer = 'V=';        //верификация
   fvpName = 'N=';       //заголовок контрола
@@ -62,14 +54,12 @@ const
   fvpTags = 'T=';       //теги
   fvpCheck = 'CH=';     //включение поля в проверку формы (Verify) и отслеживание изменений
   fvpSaveVal = 'SV=';   //сохранение/восстановление значения поля в индивидуальном конфиге пользователя (Settings)
-
 type
   TDefFiledcValue = (
     _D = -MaxInt + 1,
     fvvClearRep = -MaxInt + 2,
     fvvDsbl = -MaxInt + 3
   );
-
   TFields = class
   private
     FDefineFields: TVarDynArray2;
@@ -83,7 +73,6 @@ type
     //при появлении нового имени (сразу для всех полей)
     FCustomProps: TVarDynArray;
     FCustomPropsValues: TVarDynArray2;
-
     procedure SetFieldValue(AIndex: Integer; ACol: Integer; const AValue: Variant);
     function  GetFieldValue(AIndex, ACol: Integer): Variant;
     procedure PrepareProperty(ARowIndex: Integer);
@@ -102,7 +91,6 @@ type
     property DefineFields: TVarDynArray2 read FDefineFields write FDefineFields;
     property IsFieldsPrepared: Boolean read FIsFieldsPrepared;
     property IsPropControlsSet: Boolean read FIsPropControlsSet;
-
     constructor Create(ASelf: TForm);
     //подготовка расширенного массива из DefineFields
     procedure PrepareDefineFieldsAdd;
@@ -172,12 +160,9 @@ type
     function  Count: Integer;
     function  GetName(i: Integer): string;
   end;
-
 implementation
-
 uses
   uErrors, uSettings;
-
 
 procedure TFields.SetFieldValue(AIndex, ACol: Integer; const AValue: Variant);
 //установка значения в расширенном массиве по индексу строки и колонки; отрицательный ACol адресует именованное
@@ -192,7 +177,6 @@ begin
   else if (AIndex >= 0) and (AIndex < Length(FDefineFieldsAdd)) then
     FDefineFieldsAdd[AIndex][ACol] := AValue;
 end;
-
 function TFields.GetFieldValue(AIndex, ACol: Integer): Variant;
 //получение значения из расширенного массива по индексу строки и колонки; отрицательный ACol - см. SetFieldValue
 begin
@@ -207,7 +191,6 @@ begin
      (ACol >= 0) and (ACol < Length(FDefineFieldsAdd[AIndex])) then
     Result := FDefineFieldsAdd[AIndex][ACol];
 end;
-
 procedure TFields.PrepareProperty(ARowIndex: Integer);
 //подготовка одной строки конфигурации (разбор поля, флагов, значений)
 var
@@ -232,7 +215,6 @@ begin
     else
       FDefineFieldsAdd[ARowIndex][i] := '';
   end;
-
   if Length(row) > 0 then
   begin
     fieldDef := VarToStr(row[0]);
@@ -241,7 +223,6 @@ begin
     var saveName := VarToStr(parts[1]);
     var loadName := VarToStr(parts[2]);
     var cleanName := S.GetDBFieldNameFromSt(fullName);
-
   {        SetF(fvtVName, S.GetDBFieldNameFromSt(va[0]));
         SetF(fvtFName, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0], True)));
         SetF(fvtFNameL, S.IIFStr(Pos('_', va[0]) <> 1, S.GetDBFieldNameFromSt(va[0])));
@@ -252,7 +233,6 @@ begin
     SetFieldValue(ARowIndex, Integer(fvtFNameL), S.IIfStr(Pos('_', fullName) <> 1, S.GetDBFieldNameFromSt(fullName)));
     SetFieldValue(ARowIndex, Integer(fvtFNameS), S.IIfStr((Pos('_', saveName) <> 1) and (Pos('0', saveName) <> 1), S.IIFStr(saveName = '', fullName, saveName)));
     SetFieldValue(ARowIndex, Integer(fvtFNameL), S.IIfStr((Pos('_', loadName) <> 1) and (Pos('0', loadName) <> 1), S.IIFStr(loadName = '', fullName, loadName)));
-
     ctrlName := cleanName;
     c := Cth.FindControlByFieldName(FSelf, ctrlName);
     if c = nil then
@@ -260,7 +240,6 @@ begin
     if c <> nil then
       SetFieldValue(ARowIndex, Integer(fvtCtrl), c.Name);
   end;
-
   isUserMode := False;
   userIndex := 0;
   for i := 1 to High(row) do
@@ -272,7 +251,6 @@ begin
       userIndex := 0;
       Continue;
     end;
-
     if isUserMode then
     begin
       SetFieldValue(ARowIndex, Integer(fvtCustom) + userIndex, v);
@@ -284,7 +262,6 @@ begin
       Inc(userIndex);
       Continue;
     end;
-
     if S.VarType(v) = varString then
     begin
       tagStr := UpperCase(VarToStr(v));
@@ -323,7 +300,6 @@ begin
     end;
   end;
 end;
-
 procedure TFields.DefineCustomProp(ARowIndex: Integer; const ARawToken: string);
 //разбор токена $propname[=value] (см. комментарий в шапке модуля). При первом появлении имени propname
 //заводится общий столбец для ВСЕХ полей (FCustomProps/FCustomPropsValues) - структурно свойство сразу
@@ -348,10 +324,8 @@ begin
     propName := Trim(ARawToken);
     propValue := Null;
   end;
-
   if propName = '$' then
     Exit; //голый $ без имени - игнорируем
-
   ci := FindCustomPropIndex(propName);
   if ci < 0 then
   begin
@@ -364,11 +338,9 @@ begin
       FCustomPropsValues[i][ci] := Null;
     end;
   end;
-
   if hasValue then
     SetFieldValue(ARowIndex, -(ci + 1), propValue);
 end;
-
 function TFields.FindCustomPropIndex(const APropName: string): Integer;
 //индекс имени в FCustomProps (-1, если такое $propname нигде не встречалось)
 var
@@ -382,13 +354,11 @@ begin
       Exit;
     end;
 end;
-
 function TFields.HasCustomProp(const ACustomPropName: string): Boolean;
 //проверка, встречалось ли вообще имя $propname при разборе DefineFields - см. комментарий в интерфейсе
 begin
   Result := FindCustomPropIndex(ACustomPropName) >= 0;
 end;
-
 function TFields.FindPropertyIndex(const APropName: string; out AIndex: Integer; const AErrorIfNotFound: Boolean = True): Boolean;
 //поиск первого индекса свойства по имени или тегу (возвращает true если найден)
 var
@@ -399,7 +369,6 @@ var
 begin
   Result := False;
   AIndex := -1;
-
   for i := 0 to High(FDefineFieldsAdd) do
     if SameText(VarToStr(FDefineFieldsAdd[i][Integer(fvtVName)]), APropName) then
     begin
@@ -407,7 +376,6 @@ begin
       Result := True;
       Exit;
     end;
-
   for i := 0 to High(FDefineFieldsAdd) do
   begin
     tags := VarToStr(FDefineFieldsAdd[i][Integer(fvtTags)]);
@@ -423,11 +391,9 @@ begin
         end;
     end;
   end;
-
   if AErrorIfNotFound and not Result then
     Errors.RaiseErr('FindProp', 'Не найден параметр ' + APropName);
 end;
-
 function TFields.FindAllProps(const APropName: string): TVarDynArray;
 //поиск всех индексов свойств, у которых имя или тег совпадает с APropName
 var
@@ -441,7 +407,6 @@ begin
   cleanName := S.GetDBFieldNameFromSt(APropName);
   if cleanName = '' then
     cleanName := '*EMPTY*';
-
   // поиск по имени (очищенному)
   for i := 0 to High(FDefineFieldsAdd) do
     if SameText(VarToStr(FDefineFieldsAdd[i][Integer(fvtVName)]), cleanName) then
@@ -449,7 +414,6 @@ begin
       SetLength(Result, Length(Result) + 1);
       Result[High(Result)] := i;
     end;
-
   // поиск по тегам (добавляем только те, что ещё не добавлены)
   for i := 0 to High(FDefineFieldsAdd) do
   begin
@@ -470,7 +434,6 @@ begin
     end;
   end;
 end;
-
 function TFields.GetAllPropIndices: TVarDynArray;
 //возвращает массив индексов всех свойств
 var
@@ -480,7 +443,6 @@ begin
   for i := 0 to Count - 1 do
     Result[i] := i;
 end;
-
 function TFields.CollectIndices(const PropNames: string): TVarDynArray;
 //собирает индексы свойств по строке имён/тегов (через ;). Пустая строка → все индексы.
 //Если строка начинается с '-', то исключает перечисленные свойства (все остальные включаются).
@@ -498,18 +460,15 @@ begin
     Result := GetAllPropIndices;
     Exit;
   end;
-
   isExclude := (s[1] = '-');
   if isExclude then
     s := Trim(Copy(s, 2));
-
   if s = '' then
   begin
     // если после '-' ничего нет, возвращаем все индексы (или все? обычно это означает все)
     Result := GetAllPropIndices;
     Exit;
   end;
-
   // разбиваем на имена/теги
   names := A.Explode(s, ';', True);
   if not isExclude then
@@ -549,7 +508,6 @@ begin
     end;
   end;
 end;
-
 function TFields.GetVerifyTypeLetter(AIndex: Integer): string;
 //буква типа значения для S.VeryfyValue, взятая из fvtFName (символ после '$', по умолчанию 's')
 var
@@ -563,16 +521,13 @@ begin
   else
     Result := 's';
 end;
-
 { TFields }
-
 constructor TFields.Create(ASelf: TForm);
 //создание экземпляра, сохранение ссылки на форму
 begin
   inherited Create;
   FSelf := ASelf;
 end;
-
 procedure TFields.PrepareDefineFieldsAdd;
 //подготовка расширенного массива на основе DefineFields
 var
@@ -587,18 +542,15 @@ begin
   for i := 0 to High(FDefineFields) do
     PrepareProperty(i);
 end;
-
 function TFields.FindProp(PropName: string; PropValueType: TDefFiledcValueType = fvtVName; ErrorInNotFouund: Boolean = True): Integer;
 //поиск индекса свойства (обёртка над FindPropertyIndex)
 begin
   PropName := S.GetDBFieldNameFromSt(PropName);
   if PropName = '' then
     PropName := '*EMPTY*';
-
   if not FindPropertyIndex(PropName, Result, ErrorInNotFouund) then
     Result := -1;
 end;
-
 function TFields.GetProp(PropName: string; PropValueType: TDefFiledcValueType = fvtVCurr): Variant;
 //получение значения свойства (если есть контрол и запрошено текущее значение – берёт из контрола)
 var
@@ -643,13 +595,11 @@ begin
       Result := Cth.GetDynProp(TControl(c), dpIsChanged);
   end;
 end;
-
 function TFields.GetProp(PropPos: Integer; PropValueType: TDefFiledcValueType = fvtVCurr): Variant;
 //получение значения свойства по его позиции
 begin
   Result := GetProp(GetName(PropPos), PropValueType);
 end;
-
 function TFields.GetProp(PropName: string; PropValuePos: Integer): Variant;
 //получение пользовательского значения по индексу (после #0)
 var
@@ -658,7 +608,6 @@ begin
   idx := FindProp(PropName);
   Result := GetFieldValue(idx, Integer(fvtCustom) + PropValuePos);
 end;
-
 function TFields.GetProp(PropName: string; const ACustomPropName: string): Variant;
 //получение значения именованного пользовательского свойства $propname для поля PropName (см. шапку модуля)
 var
@@ -719,6 +668,8 @@ begin
         v := TDBDateTimeEditEh(c).ControlLabel.Caption
       else if c is TDBDateTimeEditEh then
         v := TDBDateTimeEditEh(c).ControlLabel.Caption
+      else if c is TDBMemoEh then
+        v := TDBMemoEh(c).ControlLabel.Caption
       else if c is TDbCheckboxEh then
         v := TDbCheckboxEh(c).Caption;
     end
@@ -747,6 +698,8 @@ begin
       v := TDBDateTimeEditEh(c).Text
     else if c is TDBDateTimeEditEh then
       v := TDBDateTimeEditEh(c).Text
+    else if c is TDBMemoEh then
+      v := TDBMemoEh(c).Text
     else if c is TDbCheckboxEh then
       v := s.IIf(TDBCheckBoxEh(c).Checked, 'Выбрано', 'Не выбрано')
     else
@@ -754,7 +707,6 @@ begin
     Result[i] := v;
   end;
 end;
-
 procedure TFields.SetProp(PropName: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
 //установка значения свойства по имени (с обновлением контрола)
 var
@@ -763,7 +715,6 @@ begin
   idx := FindProp(PropName);
   SetProp(idx, Value, PropValueType);
 end;
-
 procedure TFields.SetProp(AIndex: Integer; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
 //установка значения свойства по индексу (без поиска по имени)
 var
@@ -804,7 +755,6 @@ begin
     end;
   end;
 end;
-
 procedure TFields.SetProp(PropName: string; Value: Variant; PropValuePos: Integer);
 //установка пользовательского значения по индексу (после #0)
 var
@@ -813,7 +763,6 @@ begin
   idx := FindProp(PropName);
   SetFieldValue(idx, Integer(fvtCustom) + PropValuePos, Value);
 end;
-
 procedure TFields.SetProp(PropName: string; Value: Variant; const ACustomPropName: string);
 //установка значения именованного пользовательского свойства $propname для поля PropName (см. шапку модуля)
 var
@@ -825,13 +774,11 @@ begin
     Errors.RaiseErr('SetProp', 'Не найден параметр ' + ACustomPropName);
   SetFieldValue(idx, -(ci + 1), Value);
 end;
-
 procedure TFields.SetPropP(PropPos: Integer; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
 //установка значения свойства по его позиции
 begin
   SetProp(GetName(PropPos), Value, PropValueType);
 end;
-
 procedure TFields.SetProps(PropNames: string; ValuesAndTypes: TVarDynArray2);
 //установка нескольких свойств из массива пар [значение, тип] для всех свойств, соответствующих именам/тегам
 var
@@ -843,7 +790,6 @@ begin
     for k := 0 to High(ValuesAndTypes) do
       SetProp(Integer(indices[i]), ValuesAndTypes[k][0], TDefFiledcValueType(ValuesAndTypes[k][1]));
 end;
-
 procedure TFields.SetPropsFromCustom(PropNames: string; SourceType: TDefFiledcValueType;
   TargetType: TDefFiledcValueType; const CustomIndex: Integer = 0;
   const IgnoreMissing: Boolean = True);
@@ -862,7 +808,6 @@ begin
       val := GetFieldValue(idx, Integer(fvtCustom) + CustomIndex)
     else
       val := GetFieldValue(idx, Integer(SourceType));
-
     //если значение не определено (Null) и игнорирование разрешено - пропускаем
     if VarIsNull(val) then
     begin
@@ -871,20 +816,16 @@ begin
       else
         Errors.RaiseErr('SetPropsFromCustom: поле "' + GetName(idx) + '" не имеет значения источника (индекс ' + IntToStr(CustomIndex) +')');
     end;
-
     SetProp(idx, val, TargetType);
   end;
 end;
-
 procedure TFields.SetPropsFromCustom(PropNames: string; CustomIndex: Integer;
   TargetType: TDefFiledcValueType; const IgnoreMissing: Boolean = True);
 //перегрузка: устанавливаем из пользовательского индекса
 begin
   SetPropsFromCustom(PropNames, fvtCustom, TargetType, CustomIndex, IgnoreMissing);
 end;
-
 // Новые методы:
-
 procedure TFields.CopyPropToCustom(PropNames: string; SourceType: TDefFiledcValueType;
   CustomIndex: Integer; const SourceCustomIndex: Integer = 0;
   const IgnoreMissing: Boolean = True);
@@ -913,7 +854,6 @@ begin
       val := GetProp(idx, fvtVCurr)
     else
       val := GetFieldValue(idx, Integer(SourceType));
-
     if VarIsNull(val) then
     begin
       if IgnoreMissing then
@@ -922,19 +862,16 @@ begin
         Errors.RaiseErr('CopyPropToCustom: поле "' + GetName(idx) + '" не имеет значения источника (индекс ' +
           S.IIfStr(SourceType = fvtCustom, 'custom ' + IntToStr(SourceCustomIndex), 'предопределённый ' + IntToStr(Integer(SourceType))) + ')');
     end;
-
     // Устанавливаем в целевое пользовательское свойство
     SetFieldValue(idx, Integer(fvtCustom) + CustomIndex, val);
   end;
 end;
-
 procedure TFields.CopyPropToCustom(PropNames: string; SourceCustomIndex, CustomIndex: Integer;
   const IgnoreMissing: Boolean = True);
 //перегрузка: копирование из пользовательского индекса SourceCustomIndex в пользовательский индекс CustomIndex
 begin
   CopyPropToCustom(PropNames, fvtCustom, CustomIndex, SourceCustomIndex, IgnoreMissing);
 end;
-
 procedure TFields.SetProps(PropNames: string; Value: Variant; PropValueType: TDefFiledcValueType = fvtVCurr);
 //установка одного значения для всех свойств, соответствующих именам/тегам
 var
@@ -945,7 +882,6 @@ begin
   for i := 0 to High(indices) do
     SetProp(Integer(indices[i]), Value, PropValueType);
 end;
-
 function TFields.SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;
 //загрузка данных из результата SELECT (по именам полей)
 var
@@ -966,7 +902,6 @@ begin
   end;
   Result := True;
 end;
-
 function TFields.SetPropsControls(PropNames: string = ''; PropValueTypes: TDefFiledcValueTypeSet = [fvtVBeg, fvtDsbl, fvtVer]): Integer;
 //установка свойств контролов из подготовленного массива
 var
@@ -978,27 +913,21 @@ begin
   FIsPropControlsSet := True;
   Result := 0;
   names := A.Explode(PropNames, ';', True);
-
   for i := 0 to High(FDefineFieldsAdd) do
   begin
     if (Length(PropNames) > 0) and not A.InArray(FDefineFieldsAdd[i][Integer(fvtVName)], names) then
       Continue;
-
     //поля с тегом SV=1 (fvtSaveVal) хранят текущее значение через LoadConfigValues/SaveConfigValues
     //и не имеют осмысленного начального значения (fvtVBeg) - не сбрасываем их здесь
     if VarToStr(FDefineFieldsAdd[i][Integer(fvtSaveVal)]) = '1' then
       Continue;
-
     if fvtVBeg in PropValueTypes then
       SetProp(i, FDefineFieldsAdd[i][Integer(fvtVBeg)], fvtVCurr);
-
     if VarIsNull(FDefineFieldsAdd[i][Integer(fvtCtrl)]) then
       Continue;
-
     c := FSelf.FindComponent(FDefineFieldsAdd[i][Integer(fvtCtrl)]);
     if c = nil then
       Continue;
-
     for PropValueType in PropValueTypes do
     begin
       if PropValueType = fvtVBeg then
@@ -1009,7 +938,6 @@ begin
     Inc(Result);
   end;
 end;
-
 procedure TFields.SetPropsCaptions(PropNames: string = '');
 //устанавливает заголовки контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption;
 //если заголовок начинается с '-', то для этого поля заголовок на контрол не устанавливается
@@ -1035,7 +963,6 @@ begin
       TDbCheckboxEh(c).Caption := S.NSt(v);
   end;
 end;
-
 function TFields.GetChangedProps(PropNames: string = ''): TVarDynArray;
 //возвращает массив имен полей (по PropNames/тегам, все при пустой строке), у которых текущее значение отличается от начального (fvtVCurr <> fvtVBeg)
 var
@@ -1055,7 +982,6 @@ begin
       Result := Result + [GetName(idx)];
   end;
 end;
-
 function TFields.GetChangedPropCaptions(PropNames: string = ''): TVarDynArray;
 //то же самое, что и GetChangedProps (по PropNames/тегам, например по тегу 'ch'), но возвращает заголовки
 //контролов (см. GetPropCaptions) вместо внутренних имён; заголовки идут в том порядке, в котором
@@ -1069,7 +995,6 @@ begin
   else
     Result := GetPropCaptions(changedNames.Implode(';'));
 end;
-
 procedure TFields.VerifyChecked(var AHasError: Boolean; var AErrorSt: string; var AIsChanged: Boolean);
 //проверка полей с тегом fvtCheck (CH=1): контроль изменения значения (fvtVCurr <> fvtVBeg),
 //а если для поля задано fvtVer - также контроль корректности значения через S.VeryfyValue
@@ -1086,21 +1011,17 @@ begin
   AHasError := False;
   AErrorSt := '';
   AIsChanged := False;
-
   for i := 0 to High(FDefineFieldsAdd) do begin
     if VarToStr(GetFieldValue(i, Integer(fvtCheck))) = '' then
       Continue;
-
     vBeg := GetProp(i, fvtVBeg);
     vCurr := GetProp(i, fvtVCurr);
     isChanged := (vBeg.AsString <> vCurr.AsString);
     if isChanged then
       AIsChanged := True;
-
     verRule := VarToStr(GetProp(i, fvtVer));
     if verRule = '' then
       Continue;
-
     if not s.VeryfyValue(GetVerifyTypeLetter(i), verRule, VarToStr(vCurr), CorrectValue) then begin
       AHasError := True;
       caps := GetPropCaptions(GetName(i));
@@ -1114,7 +1035,6 @@ begin
     end;
   end;
 end;
-
 procedure TFields.SaveConfigValues(const AFormDoc: string);
 //сохраняет текущее значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) в индивидуальном
 //конфиге пользователя (Settings.WriteProperty), в качестве имени свойства используется внутреннее имя поля
@@ -1127,7 +1047,6 @@ begin
     if VarToStr(GetFieldValue(i, Integer(fvtSaveVal))) = '1' then
       Settings.WriteProperty(AFormDoc, GetName(i), VarToStr(GetProp(i, fvtVCurr)));
 end;
-
 procedure TFields.LoadConfigValues(const AFormDoc: string);
 //восстанавливает значение (fvtVCurr) каждого поля с тегом fvtSaveVal (SV=1) из индивидуального
 //конфига пользователя (Settings.ReadProperty); если сохранённое значение отсутствует (пустая строка) - не трогает поле
@@ -1145,7 +1064,6 @@ begin
         SetProp(i, val, fvtVCurr);
     end;
 end;
-
 function TFields.PropNameFromControl(C: TObject): string;
 //извлечение имени свойства из имени контрола (после последнего подчёркивания)
 var
@@ -1159,13 +1077,11 @@ begin
     Exit;
   Result := LowerCase(Copy(TControl(C).Name, i + 1));
 end;
-
 function TFields.Count: Integer;
 //количество свойств
 begin
   Result := Length(FDefineFieldsAdd);
 end;
-
 function TFields.GetName(i: Integer): string;
 //внутреннее имя свойства по индексу
 begin
@@ -1174,5 +1090,4 @@ begin
   else
     Result := '';
 end;
-
 end.
