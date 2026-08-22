@@ -670,6 +670,8 @@ begin
         v := TDBDateTimeEditEh(c).ControlLabel.Caption
       else if c is TDBMemoEh then
         v := TDBMemoEh(c).ControlLabel.Caption
+      else if c is TDBComboBoxEh then
+        v := TDBComboBoxEh(c).ControlLabel.Caption
       else if c is TDbCheckboxEh then
         v := TDbCheckboxEh(c).Caption;
     end
@@ -700,6 +702,8 @@ begin
       v := TDBDateTimeEditEh(c).Text
     else if c is TDBMemoEh then
       v := TDBMemoEh(c).Text
+    else if c is TDBComboBoxEh then
+      v := TDBComboBoxEh(c).Text
     else if c is TDbCheckboxEh then
       v := s.IIf(TDBCheckBoxEh(c).Checked, 'Выбрано', 'Не выбрано')
     else

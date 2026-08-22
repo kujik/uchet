@@ -641,10 +641,11 @@ begin
   for i := 0 to High(RouteFields) do begin
     //ch0 у полей маршрута - исключены из общего цикла полного текста изменений (GetItemsChangesText), так как
     //любое их изменение объединяется в отдельную строку "Маршрут" (см. комментарий в GetItemsChangesText)
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,ch,e,ch0']]
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,chg,e,ch0']]
 //    va2 := va2 + [['nvl(r' + IntToStr(i + 1) + ',0) as ' + 'r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e=0:1:0', 't=s,ch']]
   end;
-  //теги: s - сохранение в бд, ch - отслеживание изменений поля, e - редактируется в режиме оформления, ea - редактируеится после проведения,
+  //теги: s - сохранение в бд, chg - отслеживание изменений поля,
+  //e - редактируется в режиме оформления, ea - редактируеится после проведения,
   //ch0 - поле исключается из полного текста изменений позиций заказа (см. GetItemsChangesText в этом модуле) -
   //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей ;
   //pln - при их изменении нужно синхронизировать операции по планированию
@@ -660,26 +661,26 @@ begin
     ['null as status$s', '*', '20', 'pic=e;0:16;12', 't=ch0'],
     ['slash$s', 'Паспорт', '90', 't=ch0'],
     ['prefix$s', 'Префикс', '60;h', 't=ch0'],
-    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=ch,e,pln,ext'],
-    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,ch'],
-    ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,ch,e'],
+    ['name$s', 'Изделие', '400;w;h', 'e=1:400::T', 't=chg,e,pln,ext'],
+    ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,chg'],
+    ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,chg,e'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e,ch0'],
     ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s,ch0'],
     ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0'],
-    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,ch,e,ea,pln,est'],
+    ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,chg,e,ea,pln,est'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e,est'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,ch,e'],
-    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,ch,e']
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,chg,e'],
+    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,chg,e']
   ];
 
   LFields := LFields + va2;
   LFields := LFields +
   [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,ch,e,pln,itm'],
-    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
-    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,ch,e'],
-    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,ch,e,ea'],
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,chg,e,pln,itm'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,chg,e'],
+    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,chg,e'],
+    ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,chg,e,ea'],
     ['0 as sum$f', 'Сумма', '90', 'f=0.00:', 't=ch0']
   ];
   FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
@@ -841,7 +842,7 @@ begin
   //p - свойства, нужные только для отгрузочных заказов
   //t - не обязательны в шаблонах
   //td - в шаблонах недоступны и очищены
-  //ch - отслеживаются изменения /создается краткий комментарий и идет рассылка/
+  //chg - отслеживаются изменения /создается краткий комментарий и идет рассылка/
   //ch0 - не отслеживаются изменения для полного текста в логе изменений
   //ea - редактируются и в проведенном и в запущенном заказе
 
@@ -874,65 +875,65 @@ begin
 
     ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
-    ['id_type2$i', 'V=1:400', 't=ch'],
-    ['ornum$s', 't=d,ch'],
-    ['or_reference$s','t=td,ch'],
+    ['id_type2$i', 'V=1:400', 't=chg'],
+    ['ornum$s', 't=d,chg'],
+    ['or_reference$s','t=td,chg'],
     ['id_reglament$i', 't=ch0'],
-    ['reglament$s;0', 'V=1:400', 't=t,ch'],
-    ['id_organization$i', 'V=1:400', 't=t,ch,t'],
-    ['area$i', 'V=1:100', 't=t,ch'],
-    ['project$s', 'V=1:500::td', 't=t,ch'],
+    ['reglament$s;0', 'V=1:400', 't=t,chg'],
+    ['id_organization$i', 'V=1:400', 't=t,chg,t'],
+    ['area$i', 'V=1:100', 't=t,chg'],
+    ['project$s', 'V=1:500::td', 't=t,chg'],
     ['id_format$i', 't=ch0'],
-    ['id_or_format_estimates$i', 'V=1:400', 't=ch'],
+    ['id_or_format_estimates$i', 'V=1:400', 't=chg'],
     ['managername$s;0', 't=d,ch0', #0, User.GetName],
     ['launched_by_name$s;0', 't=d,ch0', #0, ''],
     ['id_manager$i', 't=ch0', #0, User.GetId],
     ['id_launched_by$i', 't=ch0', #0, null],
-    ['complaints$s;0', 't=td,ch'],
-    ['comm$s', 'v=0:4000::N', 't=t,ea,ch'],
-    ['basis_text$s', 'v=0:4000::N', 't=t,ch'],
+    ['complaints$s;0', 't=td,chg'],
+    ['comm$s', 'v=0:4000::N', 't=t,ea,chg'],
+    ['basis_text$s', 'v=0:4000::N', 't=t,chg'],
 
     ['id_customer$i', 't=ch0'],
     ['id_customer_contact$i', 't=ch0'],
     ['id_customer_org$i', 't=ch0'],
-    ['customer$s;0', 'V=0:400', 't=c,t,ch'],
-    ['customerman$s;0', 'V=0:400', 't=c,t,ch,ea'],
-    ['customercontact$s;0', 'V=0:400', 't=c,t,ch,ea'],
-    ['customerlegal$s;0', 'V=0:400', 't=c,t,ch'],
-    ['customerinn$s;0', 'V=0:400::N', 't=c,t,ch'],
-    ['cashtype_account$s;0','V=1:400::N', 't=c,t,ch'],
-    ['address$s', 'V=1:400', 't=c,t,ch,ea'],
-    ['order_number_customer$s', 'V=1:400::N', 't=c,t,ch'],
+    ['customer$s;0', 'V=0:400', 't=c,t,chg'],
+    ['customerman$s;0', 'V=0:400', 't=c,t,chg,ea'],
+    ['customercontact$s;0', 'V=0:400', 't=c,t,chg,ea'],
+    ['customerlegal$s;0', 'V=0:400', 't=c,t,chg'],
+    ['customerinn$s;0', 'V=0:400::N', 't=c,t,chg'],
+    ['cashtype_account$s;0','V=1:400::N', 't=c,t,chg'],
+    ['address$s', 'V=1:400', 't=c,t,chg,ea'],
+    ['order_number_customer$s', 'V=1:400::N', 't=c,t,chg'],
 
     ['dt_end$d;0', 't=t'],
     ['dt_beg$d', 't=d,t'],
     ['dt_change$d', 't=d,t'],
-    ['dt_start$d', 't=t,ch'],
-    ['dt_otgr$d', 't=t,ch,ea'],
+    ['dt_start$d', 't=t,chg'],
+    ['dt_otgr$d', 't=t,chg,ea'],
 //    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t,ch'],
 //    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t,ch,ea'],
-    ['dt_montage_beg$d', 't=p,t,ch,ea'],
-    ['dt_montage_end$d', 't=p,t,ch,ea'],
+    ['dt_montage_beg$d', 't=p,t,chg,ea'],
+    ['dt_montage_end$d', 't=p,t,chg,ea'],
 
     ['sum_items_final$f','V=', 't=d,td,ch0',#0],
     ['sum_items_base$f','V=', 't=d,td,ch0',#0],
     ['sum_items_final_wo_nds$f;0;0', 't=ch0'],
-    ['markup_items_percent$f', 'N=Наценка для изделий', 'V=0:100:2', 't=p,td,ch',#0],
-    ['discount_items_percent$f', 'N=Скидка для изделий','V=0:100:2', 't=p,td,ch',#0],
+    ['markup_items_percent$f', 'N=Наценка для изделий', 'V=0:100:2', 't=p,td,chg',#0],
+    ['discount_items_percent$f', 'N=Скидка для изделий','V=0:100:2', 't=p,td,chg',#0],
     ['sum_montage_final$f','V=', 't=p,td,d,ch0',#0],
     ['sum_montage_base$f', 't=p,td,ch','V=0:9999999:2', #0],
-    ['markup_montage_percent$f', 'N=Наценка для монтажа','V=0:100:2', 't=p,td,ch',#0],
-    ['discount_montage_percent$f', 'N=Скидка для монтажа','V=0:100:2', 't=p,td,ch',#0],
+    ['markup_montage_percent$f', 'N=Наценка для монтажа','V=0:100:2', 't=p,td,chg',#0],
+    ['discount_montage_percent$f', 'N=Скидка для монтажа','V=0:100:2', 't=p,td,chg',#0],
     ['sum_delivery_final$f','V=', 't=d,td,ch0',#0],
-    ['sum_delivery_base$f','V=0:9999999:2', 't=td,ch' ,#0],
-    ['markup_delivery_percent$f', 'N=Наценка для доставки', 'V=0:100:2', 't=p,td,ch',#0],
-    ['discount_delivery_percent$f', 'N=Скидка для доставки',' V=0:100:2','t=p,td,ch',#0],
+    ['sum_delivery_base$f','V=0:9999999:2', 't=td,chg' ,#0],
+    ['markup_delivery_percent$f', 'N=Наценка для доставки', 'V=0:100:2', 't=p,td,chg',#0],
+    ['discount_delivery_percent$f', 'N=Скидка для доставки',' V=0:100:2','t=p,td,chg',#0],
     ['sum_final$f','V=', 't=d,td,ch0', #0],
     ['sum_final_wo_nds$f','V=', 't=d,td,ch0' ,#0],
-    ['sum_advance$f','V=0:9999999:2', 't=td,ch' ,#0],
+    ['sum_advance$f','V=0:9999999:2', 't=td,chg' ,#0],
 
-    ['chg_basis$i;0;0','N=Основание (файлы)','CH=1','t=td,ch'],
-    ['chg_files$i;0;0','N=Внешние документы','CH=1','t=td,ch']
+    ['chg_basis$i;0;0','N=Основание (файлы)','CH=1','t=td,chg'],
+    ['chg_files$i;0;0','N=Внешние документы','CH=1','t=td,chg']
 
 
     {['','V=',#0],
@@ -3068,7 +3069,7 @@ begin
     LChgSt := 'slash';
   end
   else begin
-    var LFields: TVarDynArray := FrgItems.GetFieldNamesEx('ch', False);
+    var LFields: TVarDynArray := FrgItems.GetFieldNamesEx('chg', False);
     var r := FOrderItemsOld.FindFirst('id', FrgItems.GetValue('id'));
     for var i := 0 to High(LFields) do
       if FOrderItemsOld.G(r, LFields[i]).AsString <> FrgItems.GetValueS(LFields[i]) then
@@ -3079,7 +3080,7 @@ end;
 
 function TFrmOWOrder.GetOrderChangedfieldNames: string;
 begin
-  Result := F.GetProps('ch', fvtVName).Implode(',');
+  Result := F.GetProps('chg', fvtVName).Implode(',');
 end;
 
 function TFrmOWOrder.GetEstimateFormatField(AFieldName: string): Variant;
@@ -3100,7 +3101,7 @@ procedure TFrmOWOrder.HighlihtCurrentChangedControls;
 begin
   if (FHighlihtCurrentChangedControls = 0) or (Mode in [fView, fDelete, fAdd, fCopy]) then
     Exit;
-  var LPropNames: TVarDynArray := F.GetProps(F.GetProps('ch', fvtVName).Implode(';'), fvtVName);
+  var LPropNames: TVarDynArray := F.GetProps(F.GetProps('chg', fvtVName).Implode(';'), fvtVName);
   for var LPropName: string in LPropNames do begin
     var LControlName := F.GetProp(LPropName, fvtCtrl).AsString;
     if LControlName = '' then
@@ -3122,7 +3123,7 @@ procedure TFrmOWOrder.HighlihtPreviousChangedControls;
 begin
   //if FIsTemplate or (Mode <> fView) then
     //Exit;
-  var LPropNames: TVarDynArray := A.Explode(F.GetProp('ch', fvtVName), ',');
+  var LPropNames: TVarDynArray := A.Explode(F.GetProp('chg', fvtVName), ',');
   for var LPropName: string in LPropNames do begin
     var LControlName := F.GetProp(LPropName, fvtCtrl).AsString;
     if LControlName = '' then
@@ -3244,9 +3245,9 @@ function TFrmOWOrder.GetTitleChangesShortText: string;
 //(только имена изменных полей в шапке, и дистинкт имена изменныых полей в теле папорта)
 //порядок полей пока получается случайный!
 begin
-  //заголовки контролов (или свойств), помеченных тегом 'ch', значения которых изменились с момента открытия формы;
+  //заголовки контролов (или свойств), помеченных тегом 'chg', значения которых изменились с момента открытия формы;
   //в том порядке, в котором соответствующие поля объявлены в DefineFields
-  Result := F.GetChangedPropCaptions('ch').Implode(#1);
+  Result := F.GetChangedPropCaptions('chg').Implode(#1);
   Result := StringReplace(Result, #13#10, ' ', [rfReplaceAll]);
   Result := StringReplace(Result, #1, '  #13#10', [rfReplaceAll]);
   if Result <> '' then
@@ -3318,12 +3319,12 @@ var
 begin
   Result := '';
   if AShort then
-    names := F.GetChangedProps('ch')
+    names := F.GetChangedProps('chg')
   else
     names := F.GetChangedProps('-ch0');
   names := SortPropNamesBySort(names);
   for i := 0 to High(names) do begin
-    caption := F.GetPropCaptions(VarToStr(names[i]))[0];
+    caption := StringReplace(F.GetPropCaptions(VarToStr(names[i]))[0] , #13#10, ' ', [rfReplaceAll]);
     if AShort then
       S.ConcatStP(Result, VarToStr(caption), #13#10)
     else begin
@@ -3356,7 +3357,7 @@ var
 begin
   Result := '';
   if AShort then
-    FieldNames := FrgItems.GetColumsProperties('ch', myogfpName)
+    FieldNames := FrgItems.GetColumsProperties('chg', myogfpName)
   else
     FieldNames := FrgItems.GetColumsProperties('-;ch0', myogfpName);
   OrderItems := FrgItems.ExportToNa('', False);
@@ -3382,7 +3383,8 @@ begin
         NewVal := OrderItems.GetValueI(i, j);
         if VarToStr(OldVal) = VarToStr(NewVal) then
           Continue;
-        Caption := VarToStr(FrgItems.GetColumsProperties(FieldName, myogfpCaption)[0]);
+        Caption := StringReplace(VarToStr(FrgItems.GetColumsProperties(FieldName, myogfpCaption)[0]) , #13#10, ' ', [rfReplaceAll]);
+//        Caption := VarToStr(FrgItems.GetColumsProperties(FieldName, myogfpCaption)[0]);
         if AShort then
           S.ConcatStP(ItemLines, Caption, #13#10)
         else
