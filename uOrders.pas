@@ -139,9 +139,14 @@ type
     //корректным. синхронизируются все поля позиции, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems),
     //кроме помеченных там же тегом nosync; для стандартных изделий цена (price_base), признак "без сметы"
     //(wo_estimate) и производственный маршрут не копируются из позиции-источника, а берутся заново из
-    //справочника стандартных изделий для найденного в целевой подгруппе одноименного изделия. перед
-    //синхронизацией проверяется совпадение шаблонов по порядку и количеству наименований позиций (без учета
-    //самого количества штук) - при расхождении требуется подтверждение пользователя, иначе выполняется
+    //справочника стандартных изделий для найденного в целевой подгруппе одноименного изделия. дополнительно,
+    //т.к. в производственных и отгрузочных шаблонах допустимы разные комбинации технологических флагов -
+    //при синхронизации ИЗ производственного шаблона В отгрузочный в целевых позициях всегда проставляется
+    //sgp = 1, маршрут снимается (r1..rN = 0), id_kns = -100, id_thn = -102; при синхронизации ИЗ
+    //отгрузочного В производственный - id_kns = -101, id_thn = -102, sgp = 0, disassembled = 0 (см.
+    //ApplyDirectionOverride). перед синхронизацией проверяется совпадение шаблонов по порядку и количеству
+    //наименований позиций (без учета самого количества штук) - при расхождении показывается подтверждение
+    //(с кратким текстом и кнопкой "Подробно..." для постатейного списка расхождений), иначе выполняется
     //автоматически. если группа форматов или тип подгрупп (произв./отгруз.) шаблонов с момента связывания
     //разошлись - синхронизация пропускается с предупреждением (связь при этом не снимается автоматически)
     function SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
@@ -1359,14 +1364,25 @@ function TOrders.SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
 //нестандартных изделий эти поля синхронизируются как обычно, копированием из источника (см.
 //cGenericFields/cCatalogFields ниже - при изменении состава синхронизируемых полей в LFields не забыть
 //поправить и здесь, по аналогии с FSyncFields в uFrmODedtOrStdItem.pas).
+//поверх этого, т.к. в производственных и отгрузочных шаблонах допустимы разные комбинации технологических
+//флагов, для затрагиваемых позиций целевого шаблона принудительно проставляются финальные значения по
+//направлению синхронизации (см. ApplyDirectionOverride) - направление определяется уже проверенным типом
+//подгрупп (or_format_estimates.type) целевого шаблона, а не полем orders.id_organization.
 //перед синхронизацией сравнивается состав шаблонов по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
-//самого количества штук) - при расхождении синхронизация подтверждается пользователем, при совпадении (либо
-//расхождении только в количестве штук) выполняется, как и раньше, автоматически, без вопроса.
+//самого количества штук) - при расхождении показывается диалог с кратким сообщением (кнопки
+//Синхронизировать/Отмена/Подробно...) и, по кнопке "Подробно...", подробным постатейным списком расхождений;
+//при совпадении (либо расхождении только в количестве штук) синхронизация выполняется, как и раньше,
+//автоматически, без вопроса.
 const
   //поля, синхронизируемые копированием значения из позиции-источника как есть ('f' - числовое поле, иначе -
-  //как есть/строка/целое)
+  //как есть/строка/целое) - индексы см. ниже (cIdxSgp и т.п.), используются в ApplyDirectionOverride
   cGenericFields: array[0..7] of string = ('nstd', 'qnt', 'sgp', 'disassembled', 'control_assembly', 'id_kns', 'id_thn', 'comm');
   cGenericTypes:  array[0..7] of string = ('i', 'f', 'i', 'i', 'i', 'i', 'i', 's');
+  cIdxSgp = 2;
+  cIdxDisassembled = 3;
+  cIdxControlAssembly = 4;
+  cIdxIdKns = 5;
+  cIdxIdThn = 6;
   //поля, для стандартных изделий берущиеся из справочника (or_std_items) целевого изделия вместо копирования
   //из источника - к ним динамически добавляется маршрут (r1..rN, см. RouteFields), тип 'i'
   cCatalogFields: array[0..1] of string = ('price_base', 'wo_estimate');
@@ -1376,11 +1392,11 @@ var
   LRow1, LRow2: TVarDynArray;
   LSrc, LDst: TVarDynArray2;
   LDstGroup: Variant;
-  i, j, LMinLen, LGenericCnt: Integer;
+  i, j, LMinLen, LGenericCnt, LAnswer: Integer;
   LNewStdId: Variant;
   LNewIdOut: TVarDynArray;
-  LSrcName, Msg, LSelFields, LCatFields: string;
-  LChanged, LNamesMismatch, LIsStd: Boolean;
+  LSrcName, Msg, LSelFields, LCatFields, LDiffMsg: string;
+  LChanged, LNamesMismatch, LIsStd, LTargetIsShipment: Boolean;
   LColNames, LColTypes, LValues: TVarDynArray;
 
   function ResolveTargetStdItem(const AName: string; ANstd: Variant): Variant;
@@ -1413,6 +1429,29 @@ var
         Result[k] := ASrcRow[k + 1];
   end;
 
+  //принудительные значения для позиции целевого шаблона по направлению синхронизации - см. общий комментарий
+  //у функции. производственные/отгрузочные шаблоны допускают разные комбинации этих полей, поэтому здесь они
+  //переопределяются финально, поверх generic/каталожных значений из GetSyncValues
+  procedure ApplyDirectionOverride(var AValues: TVarDynArray);
+  var
+    k: Integer;
+  begin
+    if LTargetIsShipment then begin
+      AValues[cIdxSgp] := 1;
+      AValues[cIdxIdKns] := -100;
+      AValues[cIdxIdThn] := -102;
+      for k := LGenericCnt + Length(cCatalogFields) to High(AValues) do
+        AValues[k] := 0;  //маршрут снимаем
+    end
+    else begin
+      AValues[cIdxIdKns] := -101;
+      AValues[cIdxIdThn] := -102;
+      AValues[cIdxSgp] := 0;
+      AValues[cIdxDisassembled] := 0;
+      AValues[cIdxControlAssembly] := 0;
+    end;
+  end;
+
 begin
   Result := False;
   LIdRelated := Q.QLoadValue('select id_related_template from orders where id = :id$i', [AIdOrder]);
@@ -1428,6 +1467,7 @@ begin
     Exit;
   end;
   LDstGroup := Q.QLoadValue('select id_or_format_estimates from orders where id = :id$i', [LIdRelated]);
+  LTargetIsShipment := LRow2[1] = STDITEM_TYPE_SHIPMENT;
 
   //полный список синхронизируемых полей (кроме id_std_item/std, формируемых отдельно по результату
   //ResolveTargetStdItem) - генерик-поля, затем каталожные (price_base/wo_estimate), затем маршрут
@@ -1458,8 +1498,9 @@ begin
   LDst := Q.QLoad('select oi.id, i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [LIdRelated]);
 
   //структурная проверка - совпадают ли шаблоны по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
-  //количества штук) - при расхождении спрашиваем подтверждение, иначе (совпадение либо расхождение только в
-  //количестве штук) синхронизация выполняется, как и раньше, автоматически, без вопроса
+  //количества штук) - при расхождении показываем краткое сообщение с кнопками Синхронизировать/Отмена/
+  //Подробно... (Memo=1 у обоих диалогов - чтобы текст можно было выделить/скопировать), иначе (совпадение
+  //либо расхождение только в количестве штук) синхронизация выполняется, как и раньше, автоматически
   LNamesMismatch := Length(LSrc) <> Length(LDst);
   if not LNamesMismatch then
     for i := 0 to High(LSrc) do
@@ -1467,26 +1508,33 @@ begin
         LNamesMismatch := True;
         Break;
       end;
-  if LNamesMismatch and (MyQuestionMessage(
-    'Состав связанного шаблона отличается от текущего по порядку/количеству наименований позиций.'#13#10 +
-    'Синхронизировать табличную часть шаблона?') <> mrYes) then
-    Exit;
+  if LNamesMismatch then begin
+    LDiffMsg := '';
+    for i := 0 to Max(High(LSrc), High(LDst)) do begin
+      if i > High(LSrc) then
+        S.ConcatStP(LDiffMsg, 'поз. ' + IntToStr(i + 1) + ' - есть только в целевом шаблоне: "' + VarToStr(LDst[i][1]) + '"', #13#10)
+      else if i > High(LDst) then
+        S.ConcatStP(LDiffMsg, 'поз. ' + IntToStr(i + 1) + ' - есть только в текущем шаблоне: "' + VarToStr(LSrc[i][0]) + '"', #13#10)
+      else if LowerCase(VarToStr(LSrc[i][0])) <> LowerCase(VarToStr(LDst[i][1])) then
+        S.ConcatStP(LDiffMsg, 'поз. ' + IntToStr(i + 1) + ' - в текущем: "' + VarToStr(LSrc[i][0]) + '", в целевом: "' + VarToStr(LDst[i][1]) + '"', #13#10);
+    end;
+    repeat
+      LAnswer := MyMessageDlg(
+        'Состав связанного шаблона отличается от текущего по порядку/количеству наименований позиций.'#13#10 +
+        'Синхронизировать табличную часть шаблона?',
+        mtConfirmation, [mbYes, mbNo, mbIgnore], 'Да;Отмена;Подробно...', 1);
+      if LAnswer = mrIgnore then
+        MyInfoMessage(LDiffMsg, 1);
+    until LAnswer <> mrIgnore;
+    if LAnswer <> mrYes then
+      Exit;
+  end;
 
   Msg := '';
   Q.QBeginTrans(True);
   LMinLen := Min(Length(LSrc), Length(LDst));
   for i := 0 to LMinLen - 1 do begin
     LSrcName := VarToStr(LSrc[i][0]);
-    LChanged := LowerCase(LSrcName) <> LowerCase(VarToStr(LDst[i][1]));
-    if not LChanged then
-      for j := 0 to High(LColNames) do
-        if ((LColTypes[j] = 'f') and (S.NNum(LSrc[i][j + 1]) <> S.NNum(LDst[i][j + 2])))
-          or ((LColTypes[j] <> 'f') and (VarToStr(LSrc[i][j + 1]) <> VarToStr(LDst[i][j + 2]))) then begin
-          LChanged := True;
-          Break;
-        end;
-    if not LChanged then
-      Continue;
     LNewStdId := ResolveTargetStdItem(LSrcName, LSrc[i][1 {nstd}]);
     if LNewStdId = null then begin
       S.ConcatStP(Msg, LSrcName + ' - не найдено одноименное изделие в подгруппе цели', #13#10);
@@ -1494,6 +1542,17 @@ begin
     end;
     LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
     LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
+    ApplyDirectionOverride(LValues);
+    LChanged := LowerCase(LSrcName) <> LowerCase(VarToStr(LDst[i][1]));
+    if not LChanged then
+      for j := 0 to High(LColNames) do
+        if ((LColTypes[j] = 'f') and (S.NNum(LValues[j]) <> S.NNum(LDst[i][j + 2])))
+          or ((LColTypes[j] <> 'f') and (VarToStr(LValues[j]) <> VarToStr(LDst[i][j + 2]))) then begin
+          LChanged := True;
+          Break;
+        end;
+    if not LChanged then
+      Continue;
     var LSql := 'update order_items set id_std_item = :sid$i, std = :std$i';
     var LParams: TVarDynArray := [LNewStdId, S.IIf(LIsStd, 1, 0)];
     for j := 0 to High(LColNames) do begin
@@ -1514,6 +1573,7 @@ begin
     end;
     LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
     LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
+    ApplyDirectionOverride(LValues);
     var LSql := 'insert into order_items (id_order, pos, id_std_item, std';
     var LParams: TVarDynArray := [LIdRelated, i + 1, LNewStdId, S.IIf(LIsStd, 1, 0)];
     for j := 0 to High(LColNames) do

@@ -334,7 +334,7 @@ begin
     ['id_estimate$i','_ide','40'],
     ['id_or_std_item$i','_id_or_std_item','40','t=1,2'],
     ['id_item_estimate$i','_id_item_estimate','40','t=1,2'],
-    ['type_of_item$s','Изделие','85', 'bt=Изделие:И:::009;Смета:С:::909', 'pic=;П;ПФ;Н;О:0;7;7;8;9:+','t=1'],
+    ['type_of_item$s','Изделие','85', 'bt=Изделие:И:::009;Смета:С:::909'{, 'pic=;П;ПФ;Н;О:0;7;7;8;9:+'},'t=1'],
     ['id_group$i','Группа','250;w;L','e=1:100000:0:N','t=1,2'],
     ['name$s','Наименование','400;w;h','e=1:1000',
       'bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 'П', ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 'О', ';Выбрать производственное изделие:И:::009') {+ ';Выбрать нестандартное изделие:Н:::000','t=1'}],
@@ -393,15 +393,7 @@ begin
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
     [mbtDividorA],
-    //НОВОЕ (задача пользователя - "Создать полуфабрикат"): создает в справочнике стандартных изделий настоящий
-    //полуфабрикат по наименованию, уже введенному в текущей строке сметы (см. CreateSemiproductFromRow) -
-    //видна, когда грид вообще допускает редактирование строк; активна/неактивна по текущей выбранной строке -
-    //только когда она отнесена к группе "Полуфабрикаты" (см. уже существующий Frg1SelectedDataChange, тег
-    //cBtnCreateSemiproduct сохранен тем же числом, что и там). Раньше здесь была закомментированная нерабочая
-    //заготовка (тег -1001) - отрицательные теги в этом механизме кнопок никогда не создаются (см. CreateButtons,
-    //uForms.pas: "if BtnId < 0 then Continue"), а сравнение FTypeOfItem (string) с числом 2 не скомпилировалось
-    //бы - переписано заново, на реальных типах и с рабочим тегом.
-    [cBtnCreateSemiproduct, alopUpdateEh in Frg1.Opt.AllowedOperations, 'Создать полуфабрикат']
+    [-cBtnCreateSemiproduct, alopUpdateEh in Frg1.Opt.AllowedOperations, 'Создать полуфабрикат']
     ], cbttBSmall, pnlFrmBtnsR
   );
   Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow]);
@@ -424,10 +416,8 @@ end;
 
 procedure TFrmOGedtEstimate.Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer);
 begin
-   Cth.SetButtonState(Fr, cBtnCreateSemiproduct, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
-   //тег 1002 ("Редактировать смету полуфабриката") - отдельная, пока не реализованная задача (соответствующая
-   //кнопка в PrepareFormAdd по-прежнему не создана - см. комментарий там же), оставлено как есть
-   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+//   Cth.SetButtonState(Fr, cBtnCreateSemiproduct, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
+//   Cth.SetButtonState(Fr, 1002, null, null, Fr.GetValue('id_group') = cIdSemiproduct);
 end;
 
 procedure TFrmOGedtEstimate.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
@@ -517,7 +507,7 @@ begin
     end;
   end;
   VerifyRow(Fr.RecNo - 1, True);
-  //VerifyTable;
+  VerifyTable;
 end;
 
 procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
@@ -557,7 +547,7 @@ begin
   //uWindows.pas) плюс myfoSizeable; вызываем ShowModal2 напрямую, в обход диспетчера, т.к. только так можно
   //получить обратно TMDIResult с id созданного изделия (Wh.ExecDialog - процедура, результат вызова .Show
   //внутри нее отбрасывается) - см. общий комментарий выше и FFormResult.Data в TFrmODedtOrStdItem.Save
-  LRes := TFrmODedtOrStdItem.ShowModal2(Self, myfrm_Dlg_R_OrderStdItems, [myfoDialog, myfoRefreshParent, myfoMultiCopy, myfoSizeable], fAdd, Null, VarArrayOf([Null, 4, LName]));
+  LRes := TFrmODedtOrStdItem.ShowModal2(nil{при Self обновит этот диалог!}, myfrm_Dlg_R_OrderStdItems, [myfoDialog, myfoRefreshParent, myfoMultiCopy, myfoSizeable], fAdd, Null, VarArrayOf([Null, 4, LName]));
   if (LRes.ModalResult <> mrOk) or (LRes.Data = Null) then
     Exit;
   MarkManualInputChannel;
