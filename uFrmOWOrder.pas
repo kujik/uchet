@@ -2232,7 +2232,7 @@ begin
   //пропускаем всегда для шаблонов и заказов на оформлении
   //иначе (пока) требуем или файла ли текста в основании
   frmpcBasis.SetError(not(
-    (FrgBasis.GetRawCount > 0) or (F.GetProp('basis_text').AsString <> '') or FIsTemplate or (F.GetProp('id_status') =  ORDER_ID_STATUS_DRAFT)
+    (FrgBasis.GetRawCount > 0) or (F.GetProp('basis_text').AsString <> '') or FIsTemplate// or (F.GetProp('id_status') =  ORDER_ID_STATUS_DRAFT)
   ));
 end;
 
