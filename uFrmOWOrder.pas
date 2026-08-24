@@ -398,7 +398,22 @@ begin
   FOpt.StatusBarMode := stbmDialog;
   FOpt.RefreshParent := True;
   FOpt.RequestWhereClose := cqYN;
-  FOpt.NoSerializeCtrlNames := ['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo'];
+  FOpt.NoSerializeCtrlNames := ['chbIsVerifyed', 'chbVisCustomerэ', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo'];
+
+  if FIsTemplate then
+    FOpt.InfoArray := [
+      ['Шаблоны заказов можно попарно связать (производственный с отгрузочным, в одной и той же'#13#10 +
+       'группе форматов) - пункт меню "Связать с шаблоном..." в справочнике шаблонов заказов.'#13#10 +
+       'После связывания при каждом сохранении ЛЮБОГО из двух шаблонов его табличная часть'#13#10 +
+       'автоматически переносится в связанный шаблон - править состав нужно только в одном из них.'#13#10 +
+       'Для стандартных изделий маршрут, признак "без сметы" и цена при этом берутся заново из'#13#10 +
+       'справочника стандартных изделий, а не из исходного шаблона. Если порядок/количество'#13#10 +
+       'наименований позиций в шаблонах разошлись, перед синхронизацией будет запрошено'#13#10 +
+       'подтверждение. Если формат/тип связанного шаблона с момента связывания изменился,'#13#10 +
+       'синхронизация при сохранении пропускается с предупреждением - проверьте связь заново'#13#10 +
+       'в справочнике шаблонов.'#13#10,
+       True]
+    ];
 
   SetControlsLayout;
   DefineFields;
@@ -650,14 +665,19 @@ begin
   //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей ;
   //pln - при их изменении нужно синхронизировать операции по планированию
   //est - при их изменении нужно синхронизировать сметы для изделия
+  //nosync - поле не переносится при синхронизации табличной части связанного шаблона (см.
+  //TOrders.SyncRelatedTemplateItems) - технические/служебные поля и поля, чье значение производно от других
+  //полей; из полей с тегом s синхронизируются все, кроме помеченных nosync (для стандартных изделий
+  //price_base/wo_estimate/маршрут при этом берутся не из позиции-источника, а заново из справочника
+  //стандартных изделий - см. комментарий у TOrders.SyncRelatedTemplateItems)
   var LFields: TVarDynArray2 := [
-    ['id$i', '_id', '40', 't=s,ch0'],
-    ['id_std_item$i', '_id_std', '40', 't=s,ch0'],
-    ['id_itm$i', '_id_itm', '40', 't=s,ch0'],
-    [S.IIFStr(Mode <> fView, 'null as ') + 'ch$s', '_ch', '40', 't=s,ch0'],  //внесенные при прошлой правке изменения загружаем только в режиме просмотра
-    ['pos$i', '_pos', '20', 't=s,ch0'],
-    ['std$i', '_std', '20', 't=s,ch0'],
-    ['attention$i', '_attention', '40', 't=s,ch0'],
+    ['id$i', '_id', '40', 't=s,ch0,nosync'],
+    ['id_std_item$i', '_id_std', '40', 't=s,ch0,nosync'],
+    ['id_itm$i', '_id_itm', '40', 't=s,ch0,nosync'],
+    [S.IIFStr(Mode <> fView, 'null as ') + 'ch$s', '_ch', '40', 't=s,ch0,nosync'],  //внесенные при прошлой правке изменения загружаем только в режиме просмотра
+    ['pos$i', '_pos', '20', 't=s,ch0,nosync'],
+    ['std$i', '_std', '20', 't=s,ch0,nosync'],
+    ['attention$i', '_attention', '40', 't=s,ch0,nosync'],
     ['null as status$s', '*', '20', 'pic=e;0:16;12', 't=ch0'],
     ['slash$s', 'Паспорт', '90', 't=ch0'],
     ['prefix$s', 'Префикс', '60;h', 't=ch0'],
@@ -665,9 +685,9 @@ begin
     ['nstd$i', 'Н/стд', '40', 'pic=0;1:0;2', 't=s,chg'],
     ['price_base$f', 'Цена без НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=s,chg,e'],
     ['0 as price_base_with_nds$f', 'Цена с НДС', '70', 'f=0.00', 'e=0:999999:2:N', 't=e,ch0'],
-    ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s,ch0'],
-    ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0'],
-    ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0'],
+    ['price_adjusted$f', 'Цена без НДС со скидками', '70', 'f=0.00' , 't=s,ch0,nosync'],
+    ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0,nosync'],
+    ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0,nosync'],
     ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,chg,e,ea,pln,est'],
     ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e,est'],
     ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,chg,e'],
@@ -678,8 +698,8 @@ begin
   LFields := LFields +
   [
     ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,chg,e,pln,itm'],
-    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999', 't=s,chg,e'],
-    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999', 't=s,chg,e'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999:0:N', 't=s,chg,e'],
+    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999:0:N', 't=s,chg,e'],
     ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,chg,e,ea'],
     ['0 as sum$f', 'Сумма', '90', 'f=0.00:', 't=ch0']
   ];
@@ -845,6 +865,7 @@ begin
   //chg - отслеживаются изменения /создается краткий комментарий и идет рассылка/
   //ch0 - не отслеживаются изменения для полного текста в логе изменений
   //ea - редактируются и в проведенном и в запущенном заказе
+  //cp0 - сбрасываем эти поля при копировании заказа
 
   //ch0 - поле исключается из полного текста изменений заказа за сессию (см. FixOrderChanges/GetTitleChangesText
   //в этом модуле) - для технических/служебных полей и полей, чье значение производно от других (уже отслеживаемых)
@@ -860,12 +881,12 @@ begin
     ['in_archive;0', 't=ch0'],
     ['ch$s', 't=ch0'],
     ['attention_fields$s', 'ch=1', 't=ch0'],
-    ['dt_end;0'],
-    ['dt_to_sgp;0', 't=ch0'],
-    ['dt_from_sgp;0', 't=ch0'],
-    ['ndsd$f', 'ndsd$f'],
-    ['id_status_itm;0', 't=ch0'],
-    ['status_itm;0', 't=ch0'],
+    ['dt_end;0', 't=cp0'],
+    ['dt_to_sgp;0', 't=ch0,cp0'],
+    ['dt_from_sgp;0', 't=ch0,cp0'],
+    //['ndsd$f'],
+    ['id_status_itm;0', 't=ch0,cp0'],
+    ['status_itm;0', 't=ch0,cp0'],
     ['ids_order_properties$s', 't=ch0'],
     ['id_status$i', 't=ch0'],
     ['status;0', 't=ch0'],
@@ -885,10 +906,10 @@ begin
     ['project$s', 'V=1:500::td', 't=t,chg'],
     ['id_format$i', 't=ch0'],
     ['id_or_format_estimates$i', 'V=1:400', 't=chg'],
-    ['managername$s;0', 't=d,ch0', #0, User.GetName],
-    ['launched_by_name$s;0', 't=d,ch0', #0, ''],
-    ['id_manager$i', 't=ch0', #0, User.GetId],
-    ['id_launched_by$i', 't=ch0', #0, null],
+    ['managername$s;0', 't=d,ch0,cp0', #0, User.GetName],
+    ['launched_by_name$s;0', 't=d,ch0,cp0', #0, ''],
+    ['id_manager$i', 't=ch0,cp0', #0, User.GetId],
+    ['id_launched_by$i', 't=ch0,cp0', #0, null],
     ['complaints$s;0', 't=td,chg'],
     ['comm$s', 'v=0:4000::N', 't=t,ea,chg'],
     ['basis_text$s', 'v=0:4000::N', 't=t,chg'],
@@ -905,15 +926,15 @@ begin
     ['address$s', 'V=1:400', 't=c,t,chg,ea'],
     ['order_number_customer$s', 'V=1:400::N', 't=c,t,chg'],
 
-    ['dt_end$d;0', 't=t'],
-    ['dt_beg$d', 't=d,t'],
-    ['dt_change$d', 't=d,t'],
-    ['dt_start$d', 't=t,chg'],
-    ['dt_otgr$d', 't=t,chg,ea'],
+    ['dt_end$d;0', 't=t,cp0'],
+    ['dt_beg$d', 't=d,t,cp0'],
+    ['dt_change$d', 't=d,t,cp0'],
+    ['dt_start$d', 't=t,chg,cp0'],
+    ['dt_otgr$d', 't=t,chg,ea,cp0'],
 //    ['dt_start$d', 'v==dedt_dt_beg:=dedt_dt_beg+1000000', 't=t,ch'],
 //    ['dt_otgr$d', 'v==dedt_dt_start:=dedt_dt_start+1000000', 't=t,ch,ea'],
-    ['dt_montage_beg$d', 't=p,t,chg,ea'],
-    ['dt_montage_end$d', 't=p,t,chg,ea'],
+    ['dt_montage_beg$d', 't=p,t,chg,ea,cp0'],
+    ['dt_montage_end$d', 't=p,t,chg,ea,cp0'],
 
     ['sum_items_final$f','V=', 't=d,td,ch0',#0],
     ['sum_items_base$f','V=', 't=d,td,ch0',#0],
@@ -1647,7 +1668,7 @@ begin
   else if F.GetProp('id_status') = ORDER_ID_STATUS_DRAFT then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', S.IIf(Mode in [fAdd, fCopy], mbtDelete, '-'), mbtUnApprove, mbtGo])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_APPROVED then
-    SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtSave])
+    SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove{, mbtSave}])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_STARTED then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtUnApprove, mbtGo])
 end;
@@ -2330,11 +2351,11 @@ begin
       Msg := 'Технолог не может быть задан, если установлена пометка "С СГП" или "Без сметы"';
   end;
   if (LFieldName = 'id_kns') and  not LIsStdItem then begin
-    if (FrgItems.GetValue('id_kns', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row).AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_kns', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_kns', Row, Filtered).AsIntegerM = -100) then
       Msg := 'Конструктор должен быть задан для нестандартного изделия';
   end;
   if (LFieldName = 'id_thn') and not LIsStdItem then begin
-    if (FrgItems.GetValue('id_thn', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row).AsIntegerM = -100) then
+    if (FrgItems.GetValue('id_thn', Row, Filtered).AsIntegerM = -1 ) or (FrgItems.GetValue('id_thn', Row, Filtered).AsIntegerM = -100) then
       Msg := 'Технолог должен быть задан для нестандартного изделия';
   end;
 //  FrgItems.SetValue('status', Row, True, S.IIf(Msg <> '', 'e', S.IIf(FrgItems.GetValue('qnt', Row).AsInteger = 0, '0', '')));
@@ -2394,11 +2415,11 @@ begin
 
   //try
 
-  Lock := Q.DBLock(True, 'ordercreate', F.GetProp('id_organization'), '');
-  if Lock[0] = False then begin
+  //!!!Lock := Q.DBLock(True, 'ordercreate', S.IfEmptyStr(F.GetProp('id_organization'), '---'), '');
+ { if Lock[0] = False then begin
     MyWarningMessage('Сейчас проводится заказ пользователем ' + Lock[1] + #13#10'Попробуйте чуть позже!');
     Exit;
-  end;
+  end;}
 
   //сгенерируем номер заказа
   LOrNum := F.GetProp('ornum').AsString;
@@ -2439,12 +2460,16 @@ begin
   //фиксиоруем транзакцию
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
-  Q.DBLock(False, 'ordercreate', F.GetProp('id_organization'),'');
+  Q.DBLock(False, 'ordercreate', S.IfEmptyStr(F.GetProp('id_organization'), '---'),'');
 
   //выполняем вне основной транзации
   SaveEstimates;
   SavePlanOperations;
   SaveItmData;
+  //если для этого шаблона задан связанный шаблон-пара (см. FOpt.InfoArray выше, orders.id_related_template) -
+  //синхронизируем в него табличную часть (см. TOrders.SyncRelatedTemplateItems)
+  if Result and FIsTemplate and (Mode = fEdit) then
+    Orders.SyncRelatedTemplateItems(ID);
 
   {
   except on E: Exception do begin
@@ -2697,23 +2722,28 @@ begin
     IsRowChanged := LId >= MY_IDS_INSERTED_MIN;
     //признак изменения наименования в этой строке (важно для нестандартных)
     IsNameChanged := False;
-    if not IsRowChanged then begin
+    //PosOld := -1;
+    //if not IsRowChanged then begin
       PosOld := FOrderItemsOld.FindFirst('id', LId);
       //пройдем по всем поолям, сравним нцужные
       for j := 0 to OrderItems.FieldsCount - 1 do begin
         var FieldName := OrderItems.F[j];
         if not A.InArray(FieldName, FieldNames) then
           Continue;
-        if OrderItems.GetValueI(i, j) <> FOrderItemsOld.GetValueI(PosOld, j) then begin
+        if (PosOld >= 0) and (OrderItems.GetValueI(i, j) <> FOrderItemsOld.GetValueI(PosOld, j)) then begin
           IsRowChanged := True;
         end;
-        //значения для смохранения
+//        if (PosOld < 0) then
+        //значения для сохранения
         NewValues := NewValues + [OrderItems.GetValueI(i, j)];
       end;
-    end;
+    //end;
     //признак, что надо создавать запись для нестандартного изделия (или получать айди если такое ужен существует)
-    IsNameChanged := (OrderItems.GetValue(i, 'name') <> FOrderItemsOld.GetValue(PosOld, 'name')) and (OrderItems.GetValue(i, 'nstd') = 1);
-    if not (IsRowChanged or IsNameChanged) then
+    if PosOld >= 0 then
+      IsNameChanged := ((OrderItems.GetValue(i, 'name') <> FOrderItemsOld.GetValue(PosOld, 'name')) and (OrderItems.GetValue(i, 'nstd') = 1))
+    else
+      IsNameChanged := OrderItems.GetValue(i, 'nstd') = 1;
+    if not (IsRowChanged or IsNameChanged or (Length(FrgItems.EditData.IdsDeleted) > 0) or (LId >= MY_IDS_INSERTED_MIN)) then
       Continue;
     if IsNameChanged then begin
       //сорздадим (или получим существующую) запись для нестандратного изделия в or_std_items
@@ -2831,7 +2861,7 @@ begin
     F.SetProp('id_launched_by', User.GetId, fvtVBeg);
     F.SetProp('launched_by_name', null, fvtVBeg);
     F.SetProp('launched_by_name', null, fvtVBeg);
-    F.SetProp('id_status', 0, fvtVBeg);
+    F.SetProp('id_status', ORDER_ID_STATUS_DRAFT, fvtVBeg);
     F.SetProps('dt_end;dt_otgr;dt_montage_beg;dt_montage_end;dt_start;dt_change;id_status_itm;status_itm;status', null, fvtVBeg);
     F.SetProp('dt_beg', Date, fvtVBeg);
   end;
@@ -2880,6 +2910,8 @@ end;
 procedure TFrmOWOrder.GetOrderPath;
 //получим наименование каталога заказа
 begin
+  if FIsTemplate then
+    Exit;
   var LArea := FProdAreas.FindFirst('id', F.GetProp('area'));
   F.SetProp('path',
     S.IIfStr(Q.TestDB, '__') +                           //в тестовой базе добавим подчеркивание в имя каталога
@@ -3590,4 +3622,4 @@ FrgItemsButtonClick - ненльзя удалять.вставлять стро�
 в выпадающий список изделий помещать только активные и уже сувществующие изделий
 
 
-!!!изменение данных фиксирется и при изменении статусов чекбоксов отображения панелей!!!!
++++!!!изменение данных фиксирется и при изменении статусов чекбоксов отображения панелей!!!!

@@ -392,6 +392,8 @@ alter table orders add sum_final_wo_nds number;
 alter table orders add sum_items_final_wo_nds number;
 
 update orders set sum_advance = cost_av;
+
+alter table orders add id_related_template number;
 --$go end
 
 
@@ -438,6 +440,7 @@ create table orders (
   num number(4),                     -- номер заказа 
   ornum varchar(16) unique,          -- полный номер заказа —√230013 
   templatename varchar2(400),        -- название шаблона, только дл€ шаблонов
+  id_related_template number,        -- айди св€занного шаблона (дл€ шаблонов; шаблон из той же группы, но дл€ данного отгрузочного это производственный, и наоборот)    
   id_status number(2) default 0,     -- стутус заказа (0 - на оформлении, 1 - проведен, 2 - запущен в работу)
   basis_text varchar2(4000),         -- основание (текстовое мемо-0поле) 
   area number(1) default 0,          -- производственна€ площадка (0 - ѕў, 1 - »нженерный)
@@ -553,6 +556,8 @@ sum_final_wo_nds number,
   constraint fk_orders_id_reglament foreign key (id_reglament) references order_reglaments(id)
   --constraint fk_orders_id_complaint_reasons foreign key (id_complaint_reasons) references ref_complaint_reasons(id) 
 );
+
+alter table orders add constraint fk_orders_related_template foreign key (id_related_template) references orders(id) on delete set null; --$+
 
 --create unique index idx_order_num on or_formats(lower(name));
 create unique index idx_orders_templatename on orders(lower(templatename));
@@ -818,10 +823,12 @@ select
   case
     when nvl(agg.cnt_thn, 0) = 0 then null
     else decode(o.dt_to_sgp, null, trunc(sysdate) - o.dt_otgr, o.dt_to_sgp - o.dt_otgr)
-  end as early_or_late
+  end as early_or_late,
+  otempl.templatename as related_templatename 
 from
   orders o,
   orders ob,
+  orders otempl,
   ref_sn_organizations ro,
   ref_customers rc,
   ref_customer_contact rcc,
@@ -843,6 +850,7 @@ from
   order_reglaments orr
 where
   ob.ornum (+) = o.or_reference 
+  and otempl.id (+) = o.id_related_template
   and ro.id (+) = o.id_organization 
   and rc.id (+) = o.id_customer 
   and rcc.id (+) = o.id_customer_contact
@@ -2011,6 +2019,68 @@ select count(*) from orders;
 
 
 
+--------------------------------------------------------------------------------
+create or replace function F_CheckTemplatesSync(     --$+
+--проверка пары св€занных шаблонов заказа (см. orders.id_related_template): одинакова€ ли у них
+--группа форматов (id_format), образуют ли их подгруппы пару производственный/отгрузочный (см.
+--or_format_estimates.type, STDITEM_TYPE_* в uOrders.pas), и находитс€ ли таблична€ часть в
+--синхронном состо€нии (одинаковые по пор€дку позиции - совпадают наименовани€ и количество).
+--используетс€ в диалоге св€зывани€ шаблонов (см. TOrders.LinkOrderTemplate в uOrders.pas) как
+--информационна€ проверка. возвращает null, если все три проверки пройдены, иначе текст первой
+--найденной проблемы
+  AId1 in number,
+  AId2 in number
+) return varchar2
+is
+  FFormat1 number; FFormat2 number;
+  FType1 number; FType2 number;
+  FCnt1 number; FCnt2 number;
+  FDiff number;
+begin
+  if (AId1 is null) or (AId2 is null) or (AId1 = AId2) then
+    return 'Ќе выбрана пара шаблонов';
+  end if;
+
+  select o.id_format, e.type into FFormat1, FType1
+  from orders o, or_format_estimates e
+  where o.id = AId1 and e.id = o.id_or_format_estimates;
+
+  select o.id_format, e.type into FFormat2, FType2
+  from orders o, or_format_estimates e
+  where o.id = AId2 and e.id = o.id_or_format_estimates;
+
+  if FFormat1 <> FFormat2 then
+    return 'Ўаблоны относ€тс€ к разным группам форматов';
+  end if;
+
+  if not ((FType1 = 0 and FType2 = 1) or (FType1 = 1 and FType2 = 0)) then
+    return 'ƒл€ св€зки нужна пара из производственного и отгрузочного шаблонов (STDITEM_TYPE_PRODUCTION/STDITEM_TYPE_SHIPMENT)';
+  end if;
+
+  select count(*) into FCnt1 from order_items where id_order = AId1;
+  select count(*) into FCnt2 from order_items where id_order = AId2;
+  if FCnt1 <> FCnt2 then
+    return '–азное количество позиций в табличной части шаблонов';
+  end if;
+
+  select count(*) into FDiff
+  from (
+    select oi1.pos, i1.name as name1, oi1.qnt as qnt1, i2.name as name2, oi2.qnt as qnt2
+    from order_items oi1, or_std_items i1, order_items oi2, or_std_items i2
+    where oi1.id_order = AId1 and i1.id = oi1.id_std_item
+      and oi2.id_order = AId2 and oi2.pos = oi1.pos and i2.id = oi2.id_std_item
+  )
+  where lower(name1) <> lower(name2) or nvl(qnt1, 0) <> nvl(qnt2, 0);
+
+  if FDiff > 0 then
+    return '“аблична€ часть шаблонов не синхронизирована (различаютс€ наименовани€ или количество позиций)';
+  end if;
+
+  return null;
+end;
+/
+
+select F_CheckTemplatesSync(null, null) from dual;
 
 --------------------------------------------------------------------------------
 create or replace procedure P_SyncOrderWithITM(       --$+

@@ -121,6 +121,30 @@ type
     //выбранной подгруппе нашлось одноименное производственное изделие. см. общий комментарий у
     //FillEstimatesForCheckedItems
     function CreateSelfSmetasForShipmentItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
+    //диалог связывания пары шаблонов заказа (произв./отгруз., см. orders.id_related_template) - вызывается
+    //по пункту меню "Связать с шаблоном..." в справочнике шаблонов (myfrm_R_OrderTemplates). предлагает
+    //список активных шаблонов противоположного типа (произв./отгруз.) той же группы форматов, не связанных
+    //с другим шаблоном; выбор заносит id_related_template взаимно в оба шаблона. пункт "(не связывать)" -
+    //снимает существующую связь. после связывания информирует, синхронна ли уже табличная часть (см.
+    //F_CheckTemplatesSync в d_orders.sql) - реальная синхронизация состава при этом не выполняется, она
+    //произойдет автоматически при ближайшем сохранении любого из двух шаблонов (см. SyncRelatedTemplateItems)
+    function LinkOrderTemplate(AParent: TForm; AIdTemplate: Variant): Boolean;
+    //синхронизация табличной части связанного шаблона (см. LinkOrderTemplate/orders.id_related_template) -
+    //вызывается при каждом сохранении шаблона заказа (см. TFrmOWOrder.Save), если для него задан связанный
+    //шаблон. переносит в связанный шаблон текущий состав табличной части - только позиции, найденные
+    //измененными, правятся на месте (по номеру позиции), новые добавляются в конец, лишние в хвосте
+    //удаляются - т.е. полностью пересоздается табличная часть только не выполняется, изменения точечные.
+    //если состав/порядок изменен вставкой или удалением позиции в середине табличной части (а не только в
+    //конце), количество правок будет больше минимально необходимого, но итоговое состояние все равно будет
+    //корректным. синхронизируются все поля позиции, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems),
+    //кроме помеченных там же тегом nosync; для стандартных изделий цена (price_base), признак "без сметы"
+    //(wo_estimate) и производственный маршрут не копируются из позиции-источника, а берутся заново из
+    //справочника стандартных изделий для найденного в целевой подгруппе одноименного изделия. перед
+    //синхронизацией проверяется совпадение шаблонов по порядку и количеству наименований позиций (без учета
+    //самого количества штук) - при расхождении требуется подтверждение пользователя, иначе выполняется
+    //автоматически. если группа форматов или тип подгрупп (произв./отгруз.) шаблонов с момента связывания
+    //разошлись - синхронизация пропускается с предупреждением (связь при этом не снимается автоматически)
+    function SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
     //синхронизация заказа в ИТМ с заказом в Учете, с подгрузкой в него смет
     //то же что и SyncOrderWithITM, но в транзакции и с выдачей сообщения
     function RefreshEstimatesAndSyncWithITM(IdOrder: Integer; OrderItems: TVarDynArray; LoadOrderAllItems: Boolean = True): Boolean;
@@ -1238,6 +1262,277 @@ begin
   end;
   Result := LCreated > 0;
   MyInfoMessage('Создано смет: ' + IntToStr(LCreated) + ' из ' + IntToStr(Length(AIds)) + '.' + #13#10 + Msg, 1);
+end;
+
+function TOrders.LinkOrderTemplate(AParent: TForm; AIdTemplate: Variant): Boolean;
+//диалог связывания пары шаблонов заказа - см. комментарий в интерфейсе
+const
+  cNoLink = 0;   //ключ-заглушка "не связывать/отвязать" в комбо (реальные айди шаблонов всегда < 0)
+var
+  va2: TVarDynArray2;
+  vak, vav, va: TVarDynArray;
+  Row: TVarDynArray;
+  i, LDefaultIdx: Integer;
+  LFormat, LType, LOppositeType, LOldRelated, LNewRelated: Variant;
+  LName, LNewRelatedName, LSyncMsg: string;
+begin
+  Result := False;
+  Row := Q.QLoadRow('select templatename, id_format, id_or_format_estimates, id_related_template from orders where id = :id$i', [AIdTemplate]);
+  LName := VarToStr(Row[0]);
+  LFormat := Row[1];
+  LOldRelated := Row[3];
+  LType := Q.QLoadValue('select type from or_format_estimates where id = :id$i', [Row[2]]);
+  if LType = STDITEM_TYPE_SHIPMENT then
+    LOppositeType := STDITEM_TYPE_PRODUCTION
+  else if LType = STDITEM_TYPE_PRODUCTION then
+    LOppositeType := STDITEM_TYPE_SHIPMENT
+  else begin
+    MyInfoMessage('Связывание доступно только для производственных и отгрузочных шаблонов.');
+    Exit;
+  end;
+
+  va2 := Q.QLoad(
+    'select templatename, id from orders ' +
+    'where id < 0 and id <> :self$i and active = 1 ' +
+    'and (id_related_template is null or id_related_template = :self2$i) ' +
+    'and id_or_format_estimates in (select id from or_format_estimates where id_format = :fmt$i and type = :otype$i and active = 1) ' +
+    'order by templatename',
+    [AIdTemplate, AIdTemplate, LFormat, LOppositeType]
+  );
+  vak := [cNoLink]; vav := ['(не связывать)'];
+  LDefaultIdx := 0;
+  for i := 0 to High(va2) do begin
+    vav := vav + [va2[i][0]];
+    vak := vak + [va2[i][1]];
+    if va2[i][1] = LOldRelated then
+      LDefaultIdx := High(vak);
+  end;
+  if Length(vav) = 1 then begin
+    MyInfoMessage('Нет доступных для связывания шаблонов противоположного типа в этой же группе форматов.');
+    Exit;
+  end;
+
+  va := [];
+  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Связать шаблон "' + LName + '" с...', 350, 80,
+   [[cntComboLK, 'Шаблон-пара', '1:400:0', 210]], [VarArrayOf([vak[LDefaultIdx], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
+    Exit;
+  LNewRelated := va[0];
+  if LNewRelated = LOldRelated then
+    Exit;  //не изменилось
+
+  Q.QBeginTrans(True);
+  //отвяжем старую пару (если была)
+  if LOldRelated <> null then
+    Q.QExecSql('update orders set id_related_template = null where id = :id$i', [LOldRelated]);
+  if LNewRelated = cNoLink then
+    Q.QExecSql('update orders set id_related_template = null where id = :id$i', [AIdTemplate])
+  else begin
+    //на случай если выбранный шаблон уже был с кем-то связан
+    Q.QExecSql('update orders set id_related_template = null where id = :id$i and id_related_template <> :self$i', [LNewRelated, AIdTemplate]);
+    Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [LNewRelated, AIdTemplate]);
+    Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [AIdTemplate, LNewRelated]);
+  end;
+  Result := Q.QCommitTrans;
+  if not Result then
+    Exit;
+
+  if LNewRelated = cNoLink then
+    MyInfoMessage('Связь снята.')
+  else begin
+    LNewRelatedName := VarToStr(Q.QLoadValue('select templatename from orders where id = :id$i', [LNewRelated]));
+    LSyncMsg := VarToStr(Q.QLoadValue('select F_CheckTemplatesSync(:id1$i, :id2$i) from dual', [AIdTemplate, LNewRelated]));
+    if LSyncMsg = '' then
+      MyInfoMessage('Шаблон связан с "' + LNewRelatedName + '". Табличные части уже синхронны.')
+    else
+      MyInfoMessage('Шаблон связан с "' + LNewRelatedName + '".'#13#10'Внимание: ' + LSyncMsg + ' - будет приведено в соответствие при следующем сохранении любого из шаблонов.');
+  end;
+end;
+
+function TOrders.SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
+//синхронизация табличной части связанного шаблона - см. общий комментарий в интерфейсе. синхронизируются все
+//поля позиции заказа, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems/LFields), кроме помеченных там же
+//тегом nosync (id, id_std_item, id_itm, ch, pos, std, attention, price_adjusted, price_final, nds_rate -
+//технические/служебные поля и поля, чье значение производно от других уже синхронизируемых полей). для
+//стандартных изделий (nstd в позиции-источнике <> 1) цена (price_base), признак "без сметы" (wo_estimate) и
+//производственный маршрут (r1..rN) не копируются из позиции-источника, а берутся заново из справочника
+//стандартных изделий (or_std_items) для найденного в целевой подгруппе одноименного изделия - для
+//нестандартных изделий эти поля синхронизируются как обычно, копированием из источника (см.
+//cGenericFields/cCatalogFields ниже - при изменении состава синхронизируемых полей в LFields не забыть
+//поправить и здесь, по аналогии с FSyncFields в uFrmODedtOrStdItem.pas).
+//перед синхронизацией сравнивается состав шаблонов по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
+//самого количества штук) - при расхождении синхронизация подтверждается пользователем, при совпадении (либо
+//расхождении только в количестве штук) выполняется, как и раньше, автоматически, без вопроса.
+const
+  //поля, синхронизируемые копированием значения из позиции-источника как есть ('f' - числовое поле, иначе -
+  //как есть/строка/целое)
+  cGenericFields: array[0..7] of string = ('nstd', 'qnt', 'sgp', 'disassembled', 'control_assembly', 'id_kns', 'id_thn', 'comm');
+  cGenericTypes:  array[0..7] of string = ('i', 'f', 'i', 'i', 'i', 'i', 'i', 's');
+  //поля, для стандартных изделий берущиеся из справочника (or_std_items) целевого изделия вместо копирования
+  //из источника - к ним динамически добавляется маршрут (r1..rN, см. RouteFields), тип 'i'
+  cCatalogFields: array[0..1] of string = ('price_base', 'wo_estimate');
+  cCatalogTypes:  array[0..1] of string = ('f', 'i');
+var
+  LIdRelated: Variant;
+  LRow1, LRow2: TVarDynArray;
+  LSrc, LDst: TVarDynArray2;
+  LDstGroup: Variant;
+  i, j, LMinLen, LGenericCnt: Integer;
+  LNewStdId: Variant;
+  LNewIdOut: TVarDynArray;
+  LSrcName, Msg, LSelFields, LCatFields: string;
+  LChanged, LNamesMismatch, LIsStd: Boolean;
+  LColNames, LColTypes, LValues: TVarDynArray;
+
+  function ResolveTargetStdItem(const AName: string; ANstd: Variant): Variant;
+  begin
+    if S.NInt(ANstd) = 1 then begin
+      LNewIdOut := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [AName, -1]);
+      Result := LNewIdOut[1];
+    end
+    else
+      Result := Q.QLoadValue('select id from or_std_items where id_or_format_estimates = :ide$i and lower(name) = lower(:name$s)', [LDstGroup, AName]);
+  end;
+
+  //значения синхронизируемых полей (в порядке LColNames) для одной позиции - генерик-поля берутся из позиции-
+  //источника как есть, каталожные (price_base/wo_estimate/маршрут) - для стандартных изделий из справочника
+  //целевого изделия (AIdStdItem), для нестандартных - тоже как есть из источника
+  function GetSyncValues(const ASrcRow: TVarDynArray; AIsStd: Boolean; AIdStdItem: Variant): TVarDynArray;
+  var
+    k: Integer;
+    LCatVals: TVarDynArray;
+  begin
+    SetLength(Result, Length(LColNames));
+    if AIsStd then
+      LCatVals := Q.QLoadRow('select ' + LCatFields + ' from or_std_items where id = :id$i', [AIdStdItem]);
+    for k := 0 to LGenericCnt - 1 do
+      Result[k] := ASrcRow[k + 1];
+    for k := LGenericCnt to High(LColNames) do
+      if AIsStd then
+        Result[k] := LCatVals[k - LGenericCnt]
+      else
+        Result[k] := ASrcRow[k + 1];
+  end;
+
+begin
+  Result := False;
+  LIdRelated := Q.QLoadValue('select id_related_template from orders where id = :id$i', [AIdOrder]);
+  if LIdRelated = null then
+    Exit;
+
+  LRow1 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [AIdOrder]);
+  LRow2 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [LIdRelated]);
+  if (LRow1[0] <> LRow2[0]) or
+    not (((LRow1[1] = STDITEM_TYPE_PRODUCTION) and (LRow2[1] = STDITEM_TYPE_SHIPMENT)) or
+         ((LRow1[1] = STDITEM_TYPE_SHIPMENT) and (LRow2[1] = STDITEM_TYPE_PRODUCTION))) then begin
+    MyWarningMessage('Связанный шаблон более не образует пару производственный/отгрузочный в той же группе форматов - синхронизация табличной части пропущена.'#13#10'Проверьте связь в справочнике шаблонов заказов.');
+    Exit;
+  end;
+  LDstGroup := Q.QLoadValue('select id_or_format_estimates from orders where id = :id$i', [LIdRelated]);
+
+  //полный список синхронизируемых полей (кроме id_std_item/std, формируемых отдельно по результату
+  //ResolveTargetStdItem) - генерик-поля, затем каталожные (price_base/wo_estimate), затем маршрут
+  LColNames := []; LColTypes := [];
+  for i := 0 to High(cGenericFields) do begin
+    LColNames := LColNames + [cGenericFields[i]];
+    LColTypes := LColTypes + [cGenericTypes[i]];
+  end;
+  LGenericCnt := Length(LColNames);
+  for i := 0 to High(cCatalogFields) do begin
+    LColNames := LColNames + [cCatalogFields[i]];
+    LColTypes := LColTypes + [cCatalogTypes[i]];
+  end;
+  for i := 0 to High(RouteFields) do begin
+    LColNames := LColNames + ['r' + IntToStr(i + 1)];
+    LColTypes := LColTypes + ['i'];
+  end;
+
+  LSelFields := '';
+  LCatFields := '';
+  for i := 0 to High(LColNames) do begin
+    S.ConcatStP(LSelFields, 'oi.' + VarToStr(LColNames[i]), ', ');
+    if i >= LGenericCnt then
+      S.ConcatStP(LCatFields, VarToStr(LColNames[i]), ', ');
+  end;
+
+  LSrc := Q.QLoad('select i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [AIdOrder]);
+  LDst := Q.QLoad('select oi.id, i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [LIdRelated]);
+
+  //структурная проверка - совпадают ли шаблоны по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
+  //количества штук) - при расхождении спрашиваем подтверждение, иначе (совпадение либо расхождение только в
+  //количестве штук) синхронизация выполняется, как и раньше, автоматически, без вопроса
+  LNamesMismatch := Length(LSrc) <> Length(LDst);
+  if not LNamesMismatch then
+    for i := 0 to High(LSrc) do
+      if LowerCase(VarToStr(LSrc[i][0])) <> LowerCase(VarToStr(LDst[i][1])) then begin
+        LNamesMismatch := True;
+        Break;
+      end;
+  if LNamesMismatch and (MyQuestionMessage(
+    'Состав связанного шаблона отличается от текущего по порядку/количеству наименований позиций.'#13#10 +
+    'Синхронизировать табличную часть шаблона?') <> mrYes) then
+    Exit;
+
+  Msg := '';
+  Q.QBeginTrans(True);
+  LMinLen := Min(Length(LSrc), Length(LDst));
+  for i := 0 to LMinLen - 1 do begin
+    LSrcName := VarToStr(LSrc[i][0]);
+    LChanged := LowerCase(LSrcName) <> LowerCase(VarToStr(LDst[i][1]));
+    if not LChanged then
+      for j := 0 to High(LColNames) do
+        if ((LColTypes[j] = 'f') and (S.NNum(LSrc[i][j + 1]) <> S.NNum(LDst[i][j + 2])))
+          or ((LColTypes[j] <> 'f') and (VarToStr(LSrc[i][j + 1]) <> VarToStr(LDst[i][j + 2]))) then begin
+          LChanged := True;
+          Break;
+        end;
+    if not LChanged then
+      Continue;
+    LNewStdId := ResolveTargetStdItem(LSrcName, LSrc[i][1 {nstd}]);
+    if LNewStdId = null then begin
+      S.ConcatStP(Msg, LSrcName + ' - не найдено одноименное изделие в подгруппе цели', #13#10);
+      Continue;
+    end;
+    LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
+    LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
+    var LSql := 'update order_items set id_std_item = :sid$i, std = :std$i';
+    var LParams: TVarDynArray := [LNewStdId, S.IIf(LIsStd, 1, 0)];
+    for j := 0 to High(LColNames) do begin
+      LSql := LSql + ', ' + VarToStr(LColNames[j]) + ' = :p' + IntToStr(j) + '$' + LColTypes[j];
+      LParams := LParams + [LValues[j]];
+    end;
+    LSql := LSql + ' where id = :id$i';
+    LParams := LParams + [LDst[i][0]];
+    Q.QExecSql(LSql, LParams);
+  end;
+  //добавленные в конце
+  for i := LMinLen to High(LSrc) do begin
+    LSrcName := VarToStr(LSrc[i][0]);
+    LNewStdId := ResolveTargetStdItem(LSrcName, LSrc[i][1 {nstd}]);
+    if LNewStdId = null then begin
+      S.ConcatStP(Msg, LSrcName + ' - не найдено одноименное изделие в подгруппе цели, позиция не добавлена', #13#10);
+      Continue;
+    end;
+    LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
+    LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
+    var LSql := 'insert into order_items (id_order, pos, id_std_item, std';
+    var LParams: TVarDynArray := [LIdRelated, i + 1, LNewStdId, S.IIf(LIsStd, 1, 0)];
+    for j := 0 to High(LColNames) do
+      LSql := LSql + ', ' + VarToStr(LColNames[j]);
+    LSql := LSql + ') values (:ido$i, :pos$i, :sid$i, :std$i';
+    for j := 0 to High(LColNames) do begin
+      LSql := LSql + ', :p' + IntToStr(j) + '$' + LColTypes[j];
+      LParams := LParams + [LValues[j]];
+    end;
+    LSql := LSql + ')';
+    Q.QExecSql(LSql, LParams);
+  end;
+  //удаленные в хвосте
+  for i := Length(LSrc) to High(LDst) do
+    Q.QExecSql('delete from order_items where id = :id$i', [LDst[i][0]]);
+
+  Result := Q.QCommitTrans;
+  if Result and (Msg <> '') then
+    MyWarningMessage('Синхронизация связанного шаблона выполнена не полностью:'#13#10 + Msg);
 end;
 
 function TOrders.LoadSmetaOld(IdOrder: Integer): Integer;

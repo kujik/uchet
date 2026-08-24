@@ -1253,6 +1253,7 @@ v:=True;
       ['id$i','_id','40'],
       ['dt_beg$d','Дата создания','80'],
       ['templatename$s','Шаблон','180'],
+      ['related_templatename$s','Связанный шаблон','180'],
       ['typename$s','Тип заказа','280'],
       ['format_fullname$s','Формат паспорта','200'],
       ['project$s','Проект','200'],
@@ -1260,7 +1261,12 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_orders');
     Frg1.Opt.SetWhere('where id < 0 and active >= :active$i');
-    Frg1.Opt.SetButtons(1, 'rveacdsp', User.Role(rOr_R_Or_Templates_Ch));
+    Frg1.Opt.SetButtons(1,[
+      [mbtRefresh],[],[mbtView],[mbtEdit, User.Role(rOr_R_Or_Templates_Ch)],[mbtAdd, User.Role(rOr_R_Or_Templates_Ch)],
+      [mbtCopy, User.Role(rOr_R_Or_Templates_Ch)],[mbtDelete, User.Role(rOr_R_Or_Templates_Ch)],[],
+      [1000, User.Role(rOr_R_Or_Templates_Ch), 'Связать с шаблоном...'],[],
+      [mbtGridSettings],[],[mbtCtlPanel]
+    ]);
     Frg1.CreateAddControls('1', cntCheck, 'Только используемые', 'ChbActive', '', 5, yrefC, 150);
   end
   //заказы - справочник причин рекламаций
@@ -2825,6 +2831,10 @@ begin
       Exit;
     Orders.CrealeEstimateOnPlannesOrders(Fr.GetControlValue('DeBeg'));
     Fr.RefreshGrid;
+  end
+  else if (FormDoc = myfrm_R_OrderTemplates) and (Tag = 1000) then begin
+    if Orders.LinkOrderTemplate(Self, Fr.ID) then
+      Fr.RefreshGrid;
   end
   else if (FormDoc = myfrm_J_Devel) and (Tag = 1000) then begin
     Wh.ExecReference(myfrm_J_Devel_Ref, Self, [], 0);
