@@ -503,7 +503,7 @@ begin
       var LItemMode := fView;
       if Mode = fEdit then
         LItemMode := fEdit;
-      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, Self, [], LItemMode, Fr.GetValue('id_or_std_item'), VarArrayOf([0, 1]));
+      Wh.ExecDialog(myfrm_Dlg_R_OrderStdItems, nil, [], LItemMode, Fr.GetValue('id_or_std_item'), VarArrayOf([0, 1]));
     end;
   end;
   VerifyRow(Fr.RecNo - 1, True);

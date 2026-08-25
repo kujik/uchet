@@ -57,8 +57,8 @@ type
     bvlTabSync: TBevel;
     chb_TabSync: TCheckBox;
     chb_TabNotCreate: TCheckBox;
-    btn_TabCopyRoute: TSpeedButton;
     lblSemiproductErrors: TLabel;
+    btn_TabCopyRoute: TButton;
     procedure lblSemiproductErrorsClick(Sender: TObject);
   private
     FRcount: Integer;
@@ -418,19 +418,6 @@ begin
      (FItemType <> STDITEM_TYPE_SEMIPRODUCT) and (Mode <> fDelete)]
   ];
 
-  //ранее была ошибочная гипотеза, что нижние (chb_TabSync/chb_TabNotCreate/btn_TabCopyRoute) контролы были не
-  //видны после автоподгонки высоты формы из-за размеров формы - на самом деле причина была в том, что на
-  //момент автоподгонки (CorrectFormSize, вызывается позже, из FormShow) они уже были Visible = False (см.
-  //SetTabsControlsState, FActiveTab = 0 при первом показе) - под изначально невидимые контролы место не
-  //резервируется, см. подробный комментарий у TFrmBasicMdi.CorrectFormSize (uFrmBasicMdi.pas). Решение - именно
-  //FTabsVisReady/AfterFormActivate (см. объявление FTabsVisReady выше и AfterFormActivate ниже), FWHBounds.Y2
-  //ниже к этой проблеме отношения не имеет и трогать его для её решения не нужно было.
-  //
-  //FWHBounds.Y2 := -1 ниже - отдельная, намеренная настройка: форма сделана горизонтально растягиваемой
-  //(myfoSizeable + якоря akRight у pgcFormat/edt_name/bvlTabSync), но НЕ вертикально - логика расположения
-  //контролов (Cth.AlignControls в uForms.pas) не расчитана на вертикальное растягивание. -1 здесь не означает
-  //"без ограничения" - по логике CorrectFormSize (uFrmBasicMdi.pas) это прижимает максимум высоты к уже
-  //посчитанному минимуму, т.е. именно запрещает расти по вертикали - здесь это то, что нужно.
   FWHBounds.Y2 := -1;
   Result := inherited;
   if not Result then
@@ -463,7 +450,7 @@ procedure TFrmODedtOrStdItem.ControlOnChange(Sender: TObject);
 var
   va: TVarDynArray;
 begin
-  if (A.InArray(TControl(Sender).Name, ['chb_R0', 'chb_Wo_Estimate'])) or (Copy(TControl(Sender).Name, 1, 6) = 'chb_r') then
+  if (A.InArray(TControl(Sender).Name, ['chb_R0', 'chb_Wo_Estimate'])) or (Copy(TControl(Sender).Name, 1, 5) = 'chb_r') then
     SetRoute;
   if TControl(Sender).Name = 'cmb_id_or_format_estimates' then begin
     SetPrefixByFormat;
@@ -1108,6 +1095,18 @@ begin
     SetRoute; //своими правилами восстановит доступность строк маршрута (r0/без сметы)
   end;
 
+  //чекбокс "Учет по СГП" имеет смысл только для ОТГРУЗОЧНЫХ изделий (для производственных и полуфабрикатов
+  //прием на СГП по стандартным изделиям не ведется) - для прочих типов принудительно снимаем и блокируем.
+  //В ОТЛИЧИЕ от полей выше (nedt_price_base/chb_R0/chb_Wo_Estimate/chb_r*/cmb_id_or_format_estimates),
+  //доступность НЕ зависит от блокировки LLocked/синхронизации вкладки - by_sgp никогда не входит в FSyncFields
+  //(см. комментарий у объявления FSyncFields) и никогда не копируется с первой вкладки, поэтому на отгрузочной
+  //вкладке должен редактироваться всегда, даже если на ней включена галка "Синхронизировать". Тип берем по
+  //АКТИВНОЙ вкладке (FTabs[FActiveTab].ItemType), а не по FItemType - у парных вкладок тип обычно другой (см.
+  //общий комментарий у TCounterpartTab).
+  chb_by_sgp.Enabled := FTabs[FActiveTab].ItemType = STDITEM_TYPE_SHIPMENT;
+  if not chb_by_sgp.Enabled then
+    chb_by_sgp.Checked := False;
+
   //до первого автовыравнивания формы (FTabsVisReady = False, взводится в AfterFormActivate) НЕ трогаем
   //видимость этих контролов - см. подробный комментарий у поля FTabsVisReady в interface-секции: пусть
   //остаются видимыми по умолчанию (как в .dfm), чтобы CorrectFormSize/Cth.AlignControls зарезервировали под
@@ -1118,6 +1117,8 @@ begin
     chb_TabSync.Visible := pgcFormat.Visible and (FActiveTab > 0);
     chb_TabNotCreate.Visible := pgcFormat.Visible and (FActiveTab > 0);
     btn_TabCopyRoute.Visible := pgcFormat.Visible and (FActiveTab > 0);
+//btn_TabCopyRoute.Left := 20;
+//btn_TabCopyRoute.Top := 4;
   end;
   if FActiveTab > 0 then begin
     chb_TabSync.Checked := FTabs[FActiveTab].SyncChecked;
@@ -1148,13 +1149,25 @@ var
 begin
   Result := False;
   CheckNameDuplicates;
-  j := 0;
-  for i := 0 to ComponentCount - 1 do
-    if (Copy(Components[i].Name, 1, 6) = 'chb_r') and (TDBCheckBoxEh(Components[i]).Checked) then
-      j := j + 1;
-  for i := 0 to ComponentCount - 1 do
-    if (Copy(Components[i].Name, 1, 6) = 'chb_r') then
-      Cth.SetErrorMarker(TDBCheckBoxEh(Components[i]), TDBCheckBoxEh(Components[i]).Enabled and (j = 0));
+  //хотя бы один участок маршрута должен быть выбран, если не стоит "Без маршрута" (r0) и не стоит "Без сметы" -
+  //в этих двух случаях маршрут не требуется вовсе. ВАЖНО (исправлено): было Copy(..., 1, 6) = 'chb_r' - т.к.
+  //'chb_r' САМО состоит из 5 символов, сравнение 6-символьной копии с 5-символьной строкой не выполнялось
+  //никогда (разные длины не равны) - проверка ниже фактически не работала. Значения r0/чекбоксов участков
+  //приходят по Checked, т.к. на этот момент они уже отражают только что введенное пользователем (см. общий
+  //комментарий у SwitchToTab про общие контролы/слоты вкладок) - самой активной вкладки.
+  if (Cth.GetControlValue(chb_R0) <> 1) and (Cth.GetControlValue(chb_Wo_Estimate) <> 1) then begin
+    j := 0;
+    for i := 0 to ComponentCount - 1 do
+      if (Copy(Components[i].Name, 1, 5) = 'chb_r') and (TDBCheckBoxEh(Components[i]).Checked) then
+        j := j + 1;
+    for i := 0 to ComponentCount - 1 do
+      if (Copy(Components[i].Name, 1, 5) = 'chb_r') then
+        Cth.SetErrorMarker(TDBCheckBoxEh(Components[i]), TDBCheckBoxEh(Components[i]).Enabled and (j = 0));
+  end
+  else
+    for i := 0 to ComponentCount - 1 do
+      if (Copy(Components[i].Name, 1, 5) = 'chb_r') then
+        Cth.SetErrorMarker(TDBCheckBoxEh(Components[i]), False);
   //цена перепродажи не должна быть больше общей цены
 //  Cth.SetErrorMarker(nedt_Price_PP, (nedt_Price_PP.Value > nedt_Price.Value) or (nedt_Price_PP.Value = null));
 end;

@@ -8,8 +8,8 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
   inherited pnlFrmMain: TPanel
     Width = 837
     Height = 413
-    ExplicitWidth = 833
-    ExplicitHeight = 412
+    ExplicitWidth = 837
+    ExplicitHeight = 413
     inherited pnlFrmClient: TPanel
       Width = 827
       Height = 364
@@ -22,15 +22,21 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Height = 2
         Anchors = [akLeft, akTop, akRight]
       end
-      object btn_TabCopyRoute: TSpeedButton
-        Left = 310
-        Top = 268
-        Width = 24
-        Height = 21
-        Hint = #1057#1082#1086#1087#1080#1088#1086#1074#1072#1090#1100' '#1084#1072#1088#1096#1088#1091#1090' '#1080' '#1094#1077#1085#1091' '#1089' '#1087#1077#1088#1074#1086#1081' '#1074#1082#1083#1072#1076#1082#1080
-        Caption = '<<'
-        ParentShowHint = False
-        ShowHint = True
+      object lblSemiproductErrors: TLabel
+        Left = 82
+        Top = 152
+        Width = 98
+        Height = 13
+        Cursor = crHandPoint
+        Caption = 'lblSemiproductErrors'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clRed
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = [fsUnderline]
+        ParentFont = False
+        Visible = False
+        OnClick = lblSemiproductErrorsClick
       end
       object pgcFormat: TPageControl
         Left = 8
@@ -139,19 +145,6 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         Visible = True
         ExplicitWidth = 737
       end
-      object lblSemiproductErrors: TLabel
-        Left = 82
-        Top = 152
-        Width = 200
-        Height = 16
-        Cursor = crHandPoint
-        Caption = 'lblSemiproductErrors'
-        Font.Color = clRed
-        Font.Style = [fsUnderline]
-        ParentFont = False
-        Visible = False
-        OnClick = lblSemiproductErrorsClick
-      end
       object chb_TabSync: TCheckBox
         Left = 8
         Top = 271
@@ -163,10 +156,19 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
       object chb_TabNotCreate: TCheckBox
         Left = 160
         Top = 271
-        Width = 140
+        Width = 145
         Height = 17
         Caption = #1053#1077' '#1089#1086#1079#1076#1072#1074#1072#1090#1100
         TabOrder = 9
+      end
+      object btn_TabCopyRoute: TButton
+        Left = 357
+        Top = 268
+        Width = 132
+        Height = 25
+        Hint = #1057#1082#1086#1087#1080#1088#1086#1074#1072#1090#1100' '#1084#1072#1088#1096#1088#1091#1090' '#1080' '#1094#1077#1085#1091' '#1089' '#1087#1077#1088#1074#1086#1081' '#1074#1082#1083#1072#1076#1082#1080
+        Caption = '>> '#1052#1072#1088#1096#1088#1091#1090
+        TabOrder = 10
       end
     end
     inherited pnlFrmBtns: TPanel
