@@ -3975,6 +3975,7 @@ end;
 procedure TOrders.ConvertOrders2026;
 var
   Orders: TNamedArr;
+  Price, NdsRateNew, Sum, SumI, SumIA, SumIF : Extended;
 begin
   if MyQuestionMessage('Рассчитать цены по заказам?') <> mrYes then
     Exit;
@@ -3986,21 +3987,37 @@ begin
     //пересчет цен с 1-06 цена / 1.22
     //ранее П=цена, остальное на /1.22
     var Prices: TVarDynArray2 := [0, 0, 0];
+    //ставка ндс, по которой проводились старыые заказы
     var NdsRate := 0;
     if Orders.G(i, 'dt_beg') >= EncodeDate(2026, 06, 01) then
       NdsRate := 22
-    else if (Orders.G(i, 'dt_beg') >= EncodeDate(2026, 01, 01)) and (Orders.G(i, 'id_organization') <> -1) then
-      NdsRate := 22
+    else if (Orders.G(i, 'dt_beg') < EncodeDate(2026, 01, 01)) and (Orders.G(i, 'id_organization') = -1) then
+      NdsRate := 0
     else if (Orders.G(i, 'id_organization') <> -1) then
       NdsRate := 20;
+    case Orders.G(i, 'id_organization').AsInteger of
+      -1, 7 :NdsRateNew := 0;
+      2: NdsRateNew := 6;
+      else NdsRateNew := 22;
+    end;
+    Price := 0; Sum :=0; SumI := 0; SumIA := 0; SumIF := 0;
     if Orders.G(i, 'id_organization') = -1 then begin
-      var Sum: Extended := 0;
       for var j := 0 to High(Items) do begin
-        var Price := RoundTo(Items[j][1] / 1.22, -2);
+        Price := RoundTo(Items[j][1] / (1 + NdsRate / 100), -2);
         Sum:= Sum + Price * Items[j][2];
         Q.QSave('u', 'order_items', '', 'id$i;nds_rate;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 0, Price, Price, Price]);
       end;
       Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 0, Sum, Sum, Sum]);
+    end
+    //ООО "Меркурий"
+    else if Orders.G(i, 'id_organization') = 1 then begin
+      for var j := 0 to High(Items) do begin
+        Price := RoundTo(Items[j][1] / (1 + NdsRate / 100), -2);
+        SumI:= SumI + Price * Items[j][2];
+        SumIF:= SumIF + Items[j][1] * Items[j][2];
+        Q.QSave('u', 'order_items', '', 'id$i;nds_rate;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 22, Price, Price, Items[j][1]]);
+      end;
+      Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 22, SumI, SumI, SumIF]);
     end;
 
   end;

@@ -1345,7 +1345,7 @@ begin
     F.SetProps('nds_rate', 0);
   end;
 
-  SetPermanentFieldProps;
+  SetPermanentFieldProps; //!!!
 
   //сохраним в свойствах позиции в массивах организации и типа заказа
   FOrderTypeIndes := ot;
@@ -3490,7 +3490,8 @@ end;
 
 procedure TFrmOWOrder.Test;
 begin
-  MyInfoMessage(GetTitleChangesShortText, 1);
+  F.SetProps('markup_items_percent;discount_items_percent;markup_montage_percent;discount_montage_percent;markup_delivery_percent;discount_delivery_percent', False, fvtDsbl);
+//MyInfoMessage(GetTitleChangesShortText, 1);
 end;
 
 

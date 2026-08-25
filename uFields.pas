@@ -886,6 +886,7 @@ begin
   for i := 0 to High(indices) do
     SetProp(Integer(indices[i]), Value, PropValueType);
 end;
+
 function TFields.SetPropsFromSelect(Values: TVarDynArray2; PropValueType: TDefFiledcValueType = fvtVBeg): Boolean;
 //загрузка данных из результата SELECT (по именам полей)
 var
@@ -906,6 +907,7 @@ begin
   end;
   Result := True;
 end;
+
 function TFields.SetPropsControls(PropNames: string = ''; PropValueTypes: TDefFiledcValueTypeSet = [fvtVBeg, fvtDsbl, fvtVer]): Integer;
 //установка свойств контролов из подготовленного массива
 var
@@ -942,6 +944,7 @@ begin
     Inc(Result);
   end;
 end;
+
 procedure TFields.SetPropsCaptions(PropNames: string = '');
 //устанавливает заголовки контролов (ControlLabel.Caption/Caption) из свойства fvtCtrlCaption;
 //если заголовок начинается с '-', то для этого поля заголовок на контрол не устанавливается

@@ -329,6 +329,7 @@ begin
   //прочитаем список групп и ед.изм.
   Orders.LoadBcadGroups(True);
   //теги - 1 = читать при обновлении, 2 = записать
+  Frg1.Options := Frg1.Options - [myogSaveOptions];
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_estimate$i','_ide','40'],
@@ -385,10 +386,10 @@ begin
   //другой пользователь и мы открылись в режиме "только просмотр" (см. FormDbLock в PrepareForm); mbtToClipboard -
   //это чтение (копирование в буфер), его оставляем доступным всегда
   Frg1.Opt.SetButtons(4, [
-    [mbtExcel, Mode = fEdit, 'Загрузить смету из файла'],
-    [mbtLoad, Mode = fEdit, 'Загрузить текущую смету из БД'],
+    [mbtExcel, Mode <> fView, 'Загрузить смету из файла'],
+    [mbtLoad, Mode <> fView, 'Загрузить текущую смету из БД'],
     [mbtToClipboard, True, 'Скопировать смету в буфер'],
-    [mbtFromClipboard, Mode = fEdit, 'Вставить смету из буфера'],
+    [mbtFromClipboard, Mode <> fView, 'Вставить смету из буфера'],
     [mbtInsertRow, alopInsertEh in Frg1.Opt.AllowedOperations],
     [mbtAddRow, alopAppendEh in Frg1.Opt.AllowedOperations],
     [mbtDeleteRow, alopDeleteEh in Frg1.Opt.AllowedOperations],
@@ -434,6 +435,10 @@ begin
     SaveEstimateToBuffer
   else if Tag = cBtnCreateSemiproduct then
     CreateSemiproductFromRow
+  else if Tag = mbtDeleteRow then begin
+    Frg1.DeleteRow;
+    VerifyTable;
+  end
   else begin
     Handled := False;
     inherited;
@@ -662,6 +667,7 @@ begin
   for var i := 0 to Frg1.GetRawCount - 1 do begin
     VerifyRow(i, False);
   end;
+  Frg1.IsTableCorrect;
 end;
 
 procedure TFrmOGedtEstimate.VerifyBeforeSave;
@@ -743,6 +749,9 @@ begin
   EstDlgChannelAddSource(ID, 1);
   //массив в мемтейбл
   Frg1.LoadSourceDataFromArray(Est, 'name;id_group;id_unit;qnt1;comm', '');
+  VerifyTable;
+  Exit;
+
   st := '';
   //пройдем по данным, проверим в группе Крепёж по короткому имени, нет ли совпадения с именем полуфабриката или изделия в группе изделий для данной сметы
   //(такая ситуация будет при выгрузке из бкад, где в эту группу выгрузятся полуфабрикаты, но без префиксов)
