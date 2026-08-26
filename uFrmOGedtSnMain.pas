@@ -1517,6 +1517,7 @@ begin
     ['qnt_onway$f', 'В пути', '80', 'r'],
     ['rezerv$f', 'Резерв', '80', 'r'],
     ['need$f', 'Потребность', '80', 'r'],
+    ['min_ostatok$i','Минимальный остаток','80','r'],
     ['qnt_order$f', 'Кол-во к заказу', '80', 'r'],
     ['sum$f', 'Сумма заказа', '80', 'f=#:', 'r', 's'],
     ['excess$f', 'Превышение, количество', '80', 'r'],
@@ -1526,7 +1527,7 @@ begin
   ];
   Q.QLoad(
      'select ' +
-     'name, price_check, name_unit, qnt, qnt_onway, rezerv, need, qnt_order, qnt_order * price_check as sum, qnt_order + need as excess, ' +
+     'name, price_check, name_unit, qnt, qnt_onway, rezerv, need, min_ostatok, qnt_order, qnt_order * price_check as sum, qnt_order + need as excess, ' +
      'nullif(greatest(-1, round((qnt_order + need) * price_check)), -1) as exceed_sum,  qnt1, qnt3 '+
      'from v_spl_minremains ' +
      'where to_order = 1 and id_category = :id_category$i '+

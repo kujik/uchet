@@ -122,6 +122,8 @@ type
   private
     //заказ является шаблоном
     FIsTemplate: Boolean;
+    //айди истолчника в случае режима копирования
+    FIdSource: Integer;
     //признак для типа обработки заказа, так как менялась логика
     FNewOrderType: Integer;       //1 - новый формат заказа (использует список типов заказа, выбор своййств для расчета даты отгрузки)
     FIdStatus : Integer;               //-
@@ -389,8 +391,9 @@ begin
   Self.DoubleBuffered := True;
   pnlBottom.Hide;
 
-  //это шаблон заказа
-  FIsTemplate := AddParam = 1;
+  ///это шаблон заказа
+  if VarIsArray(AddParam) then
+    FIsTemplate := AddParam[1] = 1;
 
   Caption := S.IIf(FIsTemplate, 'Шаблон заказа', 'Заказ');
 
@@ -430,6 +433,7 @@ begin
   F.SetPropsControls;
 
   AfterLoadData;
+
 
   PrepareWorkCells;
   PrepareFrgItems;
@@ -754,7 +758,7 @@ begin
   var LFieldsSt := '';
   for i:= 0 to High(LFields) do
     S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
-  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [ID], FOrderItemsOld);
+  Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [S.IIf(FIdSource <> 0, FIdSource, ID)], FOrderItemsOld);
   FrgItems.SetInitData(FOrderItemsOld);
   //установим события грида
   FrgItems.OnButtonClick := FrgItemsButtonClick;
@@ -1050,6 +1054,10 @@ begin
         inc(j);
       end;
   end;
+  //если было копирование - сохраним айди источника, позже из него загрузим табличную часть
+  FIdSource := 0;
+  if Mode in [fCopy] then
+    FIdSource := ID.AsInteger;
   //сбросим айди заказа в случае добавления или копирования
   if Mode in [fAdd, fCopy] then
     ID := null;

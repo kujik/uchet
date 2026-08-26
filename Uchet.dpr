@@ -210,6 +210,7 @@ uses
   uServerTasks in 'uServerTasks.pas',
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
+  uFrmODlgOrderStdType in 'uFrmODlgOrderStdType.pas' {FrmODlgOrderStdType},
   uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
   uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
   uFrmOWItmInfo in 'uFrmOWItmInfo.pas' {FrmOWItmInfo},
@@ -368,6 +369,7 @@ begin
   Application.CreateForm(TFrmXDinputPwd, FrmXDinputPwd);
   Application.CreateForm(TFrmExportToXlsx, FrmExportToXlsx);
   Application.CreateForm(TFrmChooseDialog, FrmChooseDialog);
+  Application.CreateForm(TFrmODlgOrderStdType, FrmODlgOrderStdType);
 
   Application.Run;
 

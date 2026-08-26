@@ -1422,8 +1422,8 @@ var
   i: Integer;
   st: string;
 begin
-//    TFrmOWItmInfo.Show(Application, 'asdfghj', [myfoSizeable], FEdit, null, null); Exit;
-
+TasksS.ReportForEstimatesOverdue(1);TasksS.ReportForEstimatesOverdue(2);Exit;
+TasksS.ReportForSuppliersNegativeDemand; Exit;
 TasksS.ReportForOverdueOrdersByStartTpoProductionDate; Exit;
 TasksS.ReportForOverdueOrders(False);TasksS.ReportForOverdueOrders(True);Exit;
 FrmXDinputPwd.ShowDialogP(APPlication);

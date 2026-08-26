@@ -1,13 +1,16 @@
 inherited FrmWGedtAdvance: TFrmWGedtAdvance
   Caption = 'FrmWGedtAdvance'
   ClientHeight = 537
-  ExplicitWidth = 808
+  ExplicitWidth = 800
+  ExplicitHeight = 575
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Height = 521
+    ExplicitHeight = 521
     inherited pnlFrmClient: TPanel
       Height = 472
-      ExplicitWidth = 782
+      ExplicitWidth = 774
+      ExplicitHeight = 471
       inherited pnlBottom: TPanel
         Top = 426
       end
@@ -16,17 +19,19 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
       end
       inherited pnlGrid1: TPanel
         Height = 417
-        ExplicitWidth = 772
+        ExplicitWidth = 764
+        ExplicitHeight = 416
         inherited Frg1: TFrDBGridEh
           Height = 415
-          ExplicitWidth = 770
+          ExplicitWidth = 762
+          ExplicitHeight = 414
           inherited pnlGrid: TPanel
             Height = 361
             inherited DbGridEh1: TDBGridEh
-              Width = 762
+              Width = 754
             end
             inherited pnlStatusBar: TPanel
-              Width = 762
+              Width = 754
             end
           end
           inherited pnlLeft: TPanel
@@ -53,15 +58,16 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
       end
       inherited pnlFrg2: TPanel
         Top = 431
-        ExplicitWidth = 782
+        ExplicitTop = 430
+        ExplicitWidth = 774
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 780
+          ExplicitWidth = 772
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 772
+              Width = 764
             end
             inherited pnlStatusBar: TPanel
-              Width = 772
+              Width = 764
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -86,6 +92,7 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
     end
     inherited pnlFrmBtns: TPanel
       Top = 477
+      ExplicitTop = 476
       inherited bvlFrmBtnsTl: TBevel
         ExplicitWidth = 788
       end
@@ -97,8 +104,9 @@ inherited FrmWGedtAdvance: TFrmWGedtAdvance
   inherited pnlStatusBar: TPanel
     Top = 521
     inherited lblStatusBarR: TLabel
-      Left = 723
+      Left = 715
       Height = 14
+      ExplicitLeft = 715
     end
     inherited lblStatusBarL: TLabel
       Height = 14

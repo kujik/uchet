@@ -329,20 +329,23 @@ begin
   //строки в ведомости сгруппированы по f1
   var GroupingSt := 'job;employee;schedulecode;personnel_number';
   if FPayrollParams.G('id_employee') = null then begin
-    //статусы работников, по которым есть ведомости увольнения
+    //статусы работников, по которым есть ведомости увольнения за любую половину месяца
+    var dt := FPayrollParams.G('dt');
     va := [];
     va := Q.QLoadCol(
       'select '+
       '  p.id '+
       'from '+
-      '  w_advance_calc c, '+
+      '  w_payroll_calc c, '+
       '  v_w_employee_properties p '+
       'where '+
       '  c.id_employee = p.id_employee '+
       '  and p.id_organization is null '+
       '  and c.personnel_number = p.personnel_number '+
-      '  and c.dt = :dt$d',
-      [FPayrollParams.G('dt')]
+      '  and c.dt = :dt1$d',
+      [StartOfTheMonth(dt)]
+{      '  and (c.dt = :dt1$d or c.dt = :dt2$d)',
+      [StartOfTheMonth(dt), EncodeDate(YearOf(dt), MonthOf(dt), 16)]}
     );
     //только для статусов неоформленных
     WhereSt := 'and id_organization is null';

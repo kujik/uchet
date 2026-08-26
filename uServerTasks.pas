@@ -97,6 +97,10 @@ type
     procedure ReportForOverdueOrders(AForProductionOrders: Boolean);
     //отчет по просроченным по дате начала производства производственным заказам
     procedure ReportForOverdueOrdersByStartTpoProductionDate;
+    //отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
+    procedure ReportForSuppliersNegativeDemand;
+    //отчет по просроченным сметам (1) и загрузкам технологов (2)
+    procedure ReportForEstimatesOverdue(ObjType: Integer);
   end;
 
 var
@@ -215,6 +219,9 @@ begin
     ReportForOverdueOrders(True);
     ReportForOverdueOrders(False);
     ReportForOverdueOrdersByStartTpoProductionDate;
+    ReportForSuppliersNegativeDemand;
+    ReportForEstimatesOverdue(1);
+    ReportForEstimatesOverdue(2);
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
       ReportForYesterdayOrders(5);
@@ -802,6 +809,7 @@ begin
     ['price_check$f', 'Контрольная цена', '80', 'r'],
     ['qnt$f', 'Кол-во на складах', '80', 'r'],
     ['need$f', 'Потребность','80', 'f=#:', 'r'],
+    ['min_ostatok$i','Минимальный остаток','80','r'],
     ['rezerv$f', 'Резерв','80', 'f=#:', 'r'],
     ['qnt_onway$f', 'В пути', '80', 'f=#:', 'r'],
     ['qnt_onway_surplus$s', 'Превышение', '80', 'f=#:', 'r'],
@@ -1043,5 +1051,82 @@ begin
     Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
 end;
 
+procedure TTasksS.ReportForSuppliersNegativeDemand;
+//отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Номенклатура с отрицательной потребностью на вчерашний день';
+  TopSt := 'Номенклатура с отрицательной потребностью на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['name_unit$s', 'Ед. изм.', '80'],
+    ['qnt$f', 'Кол-во на складах', '80', 'r'],
+    ['min_ostatok$i','Минимальный остаток','80','r'],
+    ['rezerv$f', 'Резерв','80', 'f=#:', 'r'],
+    ['qnt_onway$f', 'В пути', '80', 'f=#:', 'r'],
+    ['qnt1$f', 'Расход за месяц', '80', 'f=#:', 'r'],      //период по факту может быть любой, он настраивается в таблице снабжения
+    ['need_m$f', 'Потребность с учетом остатка','80', 'f=#:', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_spl_minremains', Fields.Col(0).Implode(';'))+ ' where need_m is not null and need_m < 0 order by need_m asc', [], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>Номенклатура с отрицательной потребностью:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  end
+  else
+    HTML := 'Номенклатура с отрицательной потребностью отсуствует.<br>';
+  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+end;
+
+
+procedure TTasksS.ReportForEstimatesOverdue(ObjType: Integer);
+//отчет по просроченным сметам (1) и загрузкам технологов (2)
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt, ObjSt, SqlWhere: string;
+begin
+  ObjSt := S.IIFStr(ObjType = 1, 'сметы', 'файлы технологов');
+  SqlWhere := S.IIFStr(ObjType = 1, 'Конструктор смета', 'Технолог загрузка');
+  Title := 'Изделия, по которым были просрочены ' + ObjSt;
+  TopSt := 'Изделия, по которым были просрочены ' + ObjSt + ' на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['slash$s', '', '80'],
+    ['itemname$s', 'Наименование', '300;h'],
+    ['project$s', 'Проект', '200'],
+    ['dt_beg$d', 'Дата заказа', '80'],
+    ['dt_otgr$s', 'Дата отгрузки', '80'],
+    ['kns$s', 'Конструктор', '100'],
+    ['thn$s', 'Технолог', '100'],
+    ['dt_by_reglament$d', 'Дата по регламенту', '80'],
+    ['dt_fact$d', 'Дата фактическая', '80'],
+    ['overdue_days_yesterday$i', 'Просрочка', '80']
+  ];
+  //выберем с условием, что смета/файлы еще не загружены,
+  Q.QLoad(Q.QGetSql('A', 'v_rep_orders_overdue_kns_thn', Fields.Col(0).Implode(';'))+ ' where type = ''' + SqlWhere +
+    ''' and dt_fact is null and overdue_days_yesterday < 0 order by overdue_days_yesterday asc', [], na
+  );
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + Title + ':</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+  end
+  else
+    HTML := Title + ', отсуствуют.<br>';
+  Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, [FileToSend], '~');
+end;
 
 end.

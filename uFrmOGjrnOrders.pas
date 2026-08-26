@@ -13,7 +13,6 @@ type
   TFrmOGjrnOrders = class(TFrmBasicGrid2)
     procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
-    function  OpenFromTemplate: Integer;
     procedure ViewInfo1;
   protected
     function  PrepareForm: Boolean; override;
@@ -56,6 +55,7 @@ uses
   uWindows,
   uOrders,
   uFrmOWOrder,
+  uFrmODlgOrderStdType,
   D_Order_UPD,
   uPrintReport,
   D_OrderPrintLabels,
@@ -157,7 +157,7 @@ begin
   Frg1.Opt.SetButtons(1, [
    [mbtRefresh], [],
    [mbtView],
-   [mbtEdit, User.Roles([], [rOr_D_Order_Ch, rOr_D_Order_Start])], [mbtAdd, User.Role(rOr_D_Order_Ch)], [mbtCopy, 1], [mbtCustom_OrderFromTemplate, 1], [mbtDelete, False and User.Role(rOr_D_Order_Del)],
+   [mbtEdit, User.Roles([], [rOr_D_Order_Ch, rOr_D_Order_Start])], [mbtAdd, User.Role(rOr_D_Order_Ch)], [mbtCopy, 1], [mbtDelete, False and User.Role(rOr_D_Order_Del)],
    [],
    [-1006, User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]), 'Поставить отметку завершения менеджером'], [],
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate_All), 'Обновить все сметы по заказу'],
@@ -173,7 +173,6 @@ begin
    [mbtDividorM], [mbtPrint], [mbtPrintPassport], [mbtPrintPassport2], [mbtPrintLabels], [mbtDividorM], [],
    [mbtGridFilter], [], [mbtGridSettings], [], [mbtCtlPanel]
   ]);
-  Frg1.Opt.SetButtonsIfEmpty([mbtCustom_OrderFromTemplate]);
 
 //  Frg1.Opt.FilterRules := [[], ['dt_beg;dt_end'], ['Только производственные', 'prod'], ['Тест', '', True], ['Тест2'], ['ТТТТТТТТ', False]];
   //просмотр себестоимости
@@ -314,10 +313,6 @@ begin
     //печать ПЗ с артикулами
     PrintReport.pnl_Order(1, Fr.ID);
   end
-  else if (Tag = mbtCustom_OrderFromTemplate) then begin
-    //заказ из шаблона
-    OpenFromTemplate;
-  end
   else if (Tag = mbtLoadEstimate) then begin
     //обновление смет по всем изделиям, обновляются на стандартные изделия по данным справочника, на нестандартные,
     //если смета уже есть то пересчитывается количество
@@ -355,6 +350,19 @@ begin
   else if (Tag = 1006) then begin
     if Orders.FinalizeOrdersM(Fr.GetSetlectedIds) then
       Fr.RefreshGrid;
+  end
+  else if fMode = fAdd then begin
+    //при создании нового заказа сначала выбираем тип стандартных изделий, по которому он создаётся,
+    //и, опционально, шаблон заказа этого же типа для копирования (см. uFrmODlgOrderStdType.pas -
+    //заменяет собой прежнюю отдельную кнопку "Заказ из шаблона" (mbtCustom_OrderFromTemplate)
+    var LType: Integer;
+    var LIdTemplate: Variant;
+    if not FrmODlgOrderStdType.ShowDialog(LType, LIdTemplate) then
+      Exit;
+    if LIdTemplate <> null then
+      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fCopy, LIdTemplate, VarArrayOf([LType, 0]))
+    else
+      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fAdd, Fr.ID, VarArrayOf([LType, 0]));
   end
   else if fMode <> fNone then begin
     //диалог ввода заказа
@@ -710,31 +718,6 @@ end;
 {
 дополнительные функции
 }
-
-function TFrmOGjrnOrders.OpenFromTemplate: Integer;
-var
-  va: TvarDynArray;
-  van, vaid: TvarDynArray;
-  va2: TVarDynArray2;
-  i: Integer;
-begin
-  va2:= Q.QLoad('select templatename from v_orders where id <= -1 and active = 1 order by templatename asc', []);
-  if Length(va2) = 0
-    then begin MyInfoMessage('Не найдено ни одного шаблона!'); Exit; end;
-  van:=A.VarDynArray2ColToVD1(va2, 0);
-  vaid:=A.VarDynArray2ColToVD1(Q.QLoad('select id from v_orders where id <= -1 and active = 1 order by templatename asc', []), 0);
-  if TFrmBasicInput.ShowDialog(Self, '', [], fAdd, '~Шаблон заказа', 820, 85, [
-//  if Dlg_BasicInput.ShowDialog(Self, 'Создать заказ из шаблона', 820, 85, fAdd, [
-    [cntComboLK, 'Шаблон заказа','1:500:0']
-   ],
-   [VarArrayOf(['0', VarArrayOf(van), VarArrayOf(vaid)])],
-   va,
-   [['Выберите шаблон заказа для создания паспорта.'#13#10'Скрыть неактуальные шаблоны вы можете в справочнике "Шаблоны заказов"']],
-   nil
-  ) < 0
-  then Exit;
-  Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fCopy, va[0], null);
-end;
 
 procedure TFrmOGjrnOrders.ViewInfo1;
 begin

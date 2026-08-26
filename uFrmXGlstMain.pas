@@ -79,6 +79,7 @@ uses
   uLabelColors2,
   uWindows,
   uOrders,
+  uFrmChooseDialog,
   uTurv,
   uSnCalendar,
 
@@ -2645,7 +2646,19 @@ begin
       Wh.ExecDialog(myfrm_Dlg_EditNomenclatura, Self, [], fMode, Fr.ID, null);
  if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fView) then
     TDlg_Order.ShowDialog(Self, 'od11111', fEdit, Fr.ID, [myfoSizeable, myfoDialog, myfoEnableMaximize], 1);  //!!!
-    if FormDoc = myfrm_R_OrderTemplates then
+    if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fAdd) then begin
+      //при создании нового шаблона сначала выбираем тип стандартных изделий, по которому он создаётся -
+      //в отличие от журнала заказов (см. uFrmODlgOrderStdType.pas) здесь шаблон для копирования не нужен,
+      //поэтому используем напрямую простой выбор варианта (индекс соответствует STDITEM_TYPE_* в uOrders.pas -
+      //порядок вариантов ниже важен: Производственное=0, Отгрузочное=1, Полуфабрикат=2)
+      var LType := FrmChooseDialog.ShowDialog('Тип шаблона', '',
+        ['Производственное', 'Отгрузочное', 'Полуфабрикат'],
+        [['Выберите тип стандартных изделий, для которого создаётся шаблон заказа.']]);
+      if LType < 0 then
+        Exit;
+      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fAdd, Fr.ID, VarArrayOf([LType, 1]));
+    end;
+    if (FormDoc = myfrm_R_OrderTemplates) and (fMode <> fAdd) then
       Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fMode, Fr.ID, 1);
     if FormDoc = myfrm_R_ComplaintReasons then
       Wh.ExecDialog(myfrm_Dlg_R_ComplaintReasons, Self, [], fMode, Fr.ID, null);

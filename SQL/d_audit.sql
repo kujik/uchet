@@ -77,7 +77,9 @@ select
   o.project,
   o.customer,
   s.name as itemname,
-  u.name
+  u.name,
+  oi.kns,
+  oi.thn
 from
 (select
   'Конструктор загрузка' as type,
@@ -195,7 +197,7 @@ where
   or_std_items s,
   order_reglaments r,
   order_reglament_items ri,
-adm_users u
+  adm_users u
 where
   o.dt_beg > date '2026-03-01' and
   oi.qnt <> 0
@@ -206,3 +208,14 @@ where
   and ri.id_reglament = r.id and ri.id_work_cell_type = 5  --приемка на СГГ
   and u.id = t.id_user and u.id > 0 
 ;
+
+
+
+select 
+  t.*
+from 
+  v_rep_orders_overdue_kns_thn t
+where 
+  t.type = 'Конструктор смета' 
+  and t.overdue_days < 0
+; 

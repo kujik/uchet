@@ -239,6 +239,10 @@ const
   ORDER_ID_STATUS_STOPPED = -1;
   ORDER_ID_STATUS_DELETED = -2;
 
+  ITEM_TYPE_PRODUCTION = 0;
+  ITEM_TYPE_SHIPMENT = 1;
+  ITEM_TYPE_SEMIPRODUCT = 2;
+
   cOrdersOrderStatusNames: array [ORDER_ID_STATUS_DELETED..ORDER_ID_STATUS_STARTED] of string =
     ('удален', 'остановлен', 'на оформлении', 'проведен', 'запущен в работу');
 
