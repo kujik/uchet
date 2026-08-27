@@ -3978,12 +3978,12 @@ end;
 
 procedure TOrders.ConvertOrders2026;
 var
-  Orders: TNamedArr;
-  Price, NdsRateNew, Sum, SumI, SumIA, SumIF : Extended;
+  Orders, Order: TNamedArr;
+  Price, PriceA, PriceF, NdsRateNew, Sum, SumI, SumIA, SumIF, SumM, SumMA, SumMF, SumD, SumDA, SumDF : Extended;
 begin
   if MyQuestionMessage('Рассчитать цены по заказам?') <> mrYes then
     Exit;
-  Q.QLoad('select * from orders where dt_beg >= :dt$d', [EncodeDate(2026, 05, 01)], Orders);
+  Q.QLoad('select * from orders where dt_beg >= :dt$d and id > 0', [EncodeDate(2026, 05, 01)], Orders);
   for var i:= 0 to Orders.High do begin
     var OrId := Orders.G(i, 'id');
     var Items := Q.QLoad('select id, price, qnt from order_items where id_order = :id$i', [OrId]);
@@ -4013,19 +4013,59 @@ begin
       end;
       Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 0, Sum, Sum, Sum]);
     end
-    //ООО "Меркурий"
+    //ООО "Меркурий" - опт
     else if Orders.G(i, 'id_organization') = 1 then begin
+      Q.QLoad('select cost_d, cost_m, cost_av from orders where id = :id$i', [OrId], Order);
       for var j := 0 to High(Items) do begin
         Price := RoundTo(Items[j][1] / (1 + NdsRate / 100), -2);
         SumI:= SumI + Price * Items[j][2];
         SumIF:= SumIF + Items[j][1] * Items[j][2];
-        Q.QSave('u', 'order_items', '', 'id$i;nds_rate;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 22, Price, Price, Items[j][1]]);
+        Q.QSave('u', 'order_items', '', 'id$i;nds_rate$f;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 22, Price, Price, Items[j][1]]);
       end;
       Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 22, SumI, SumI, SumIF]);
+      SumDF := Order.G('cost_d').AsFloat;
+      SumMF := Order.G('cost_m').AsFloat;
+      SumD := RoundTo(SumDF / 1.22, -2);
+      SumM := RoundTo(SumMF / 1.22, -2);
+      Q.QSave('u', 'orders', '',
+        'id$i;sum_montage_base$f;sum_montage_adjusted$f;sum_montage_final$f;sum_delivery_base$f;sum_delivery_adjusted$f;sum_delivery_final$f',
+        [OrId, SumM, SumM, SumMF, SumD, SumD, SumDF]);
+    end
+    //розница
+    else begin
+      Q.QLoad('select cost_d, cost_m, cost_av from orders where id = :id$i', [OrId], Order);
+      for var j := 0 to High(Items) do begin
+        Price := RoundTo(Items[j][1] / (1 + NdsRate / 100), -2);
+        SumI:= SumI + Price * Items[j][2];
+        SumIF:= SumIF + Items[j][1] * Items[j][2];
+        Q.QSave('u', 'order_items', '', 'id$i;nds_rate$f;price_base$f;price_adjusted$f;price_final$f', [Items[j][0], 22, Price, Price, Items[j][1]]);
+      end;
+    //  nedt_Items.Value := RoundTo(S.NNum(nedt_Items_0.Value) + S.NNum(nedt_Items_0.Value) / 100 * S.NNum(nedt_Items_M.Value) - S.NNum(nedt_Items_0.Value) / 100 * S.NNum(nedt_Items_D.Value), -2);
+
+      Q.QSave('u', 'orders', '', 'id$i;nds_rate;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f', [OrId, 22, SumI, SumI, SumIF]);
+      SumDF := Order.G('cost_d').AsFloat;
+      SumMF := Order.G('cost_m').AsFloat;
+      SumD := RoundTo(SumDF / 1.22, -2);
+      SumM := RoundTo(SumMF / 1.22, -2);
+      Q.QSave('u', 'orders', '',
+        'id$i;sum_montage_base$f;sum_montage_adjusted$f;sum_montage_final$f;sum_delivery_base$f;sum_delivery_adjusted$f;sum_delivery_final$f',
+        [OrId, SumM, SumM, SumMF, SumD, SumD, SumDF]);
     end;
 
   end;
+{
+  f = p0 + p0 /100 * m - p0 /100 * d
+  f = p0 *( 1 + m /100 - d /100) = p0 * (1 + dm / 100)
 
+  f = 1000 * (1 + 10/100 - 5/100) = 1000 * (1+ 0.1 - 0.05) = 1000 * 1.05 = 1050
+  dm = (m - d)
+  dm = (10 - 5)
+  f = 1000 * (1 + 5 / 100) = 1000 * 1.05
+
+  f = p0 * (1 + dm / 100) = p0 * (1 - md /100)
+
+
+}
 
 end;
 
