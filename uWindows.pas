@@ -141,7 +141,7 @@ uses
   uFrmOWrepOrdersPrimeCost, uFrmOGrepSnHistory, uFrmODedtOrStdItem,
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
-  uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWedtSetOrderRoute,
+  uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWrepStdItemsGroupCheck, uFrmOWedtSetOrderRoute,
   uFrmOWItmInfo, uFrmOWRepDataCheck,
 
   uFrmPWedtPlnOps,
@@ -645,6 +645,7 @@ begin
     myfrm_R_Itm_PostPlus,
     myfrm_R_Itm_Act,
     myfrm_Rep_OrderStdItems_Err,
+    myfrm_Rep_OrderStdItems_GroupSync,
     myfrm_Rep_ItmNomOverEstimate,
     myfrm_Rep_Order_Complaints,
     myfrm_Rep_Sgp2,
@@ -910,6 +911,8 @@ begin
     TFrmOWRepOrderChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Rep_EstimateChanges then
     TFrmOWrepEstimateChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
+  else if AFormType = myfrm_Rep_StdItemsGroupCheck then
+    TFrmOWrepStdItemsGroupCheck.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_SetOrderRoute then
     TFrmOWedtSetOrderRoute.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Candidates_Ad then

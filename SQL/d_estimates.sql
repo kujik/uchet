@@ -1354,6 +1354,117 @@ order by
 ;
 
 --------------------------------------------------------------------------------
+--отчет "Проверить группу" в справочнике стандартных изделий (см. TFrmOGrefOrStdItems.Frg1ButtonClick,
+--Tag = 1005, доступно только при User.IsDataEditor; сама форма отчета - uFrmXGlstMain.pas,
+--FormDoc = myfrm_Rep_OrderStdItems_GroupSync) - для одной группы форматов (or_formats.id = id_format,
+--передается через AddParam при открытии формы) ищет расхождения СОСТАВА между каждой парой подгрупп
+--производственная/отгрузочная, связанных общим ненулевым or_format_estimates.sync_group (тот же принцип
+--парности подгрупп, что и в uFrmODedtOrStdItem.LoadCounterpartTabs - см. её комментарий). если у
+--производственной подгруппы несколько отгрузочных подгрупп с тем же sync_group (группа "1 П + N О") -
+--каждая пара проверяется отдельно, отдельная строка на каждое найденное расхождение.
+--
+--подгруппы, чье имя начинается с 'Alt_' и которые НЕ активны (active = 0) - из проверки исключаются
+--полностью (и как производственная, и как отгрузочная сторона пары) - временное исключение на период
+--ручной коррекции старых данных под новые правила уникальности/синхронизации. прочие подгруппы
+--проверяются независимо от их active - расхождение в неактивной (но не Alt_) подгруппе тоже показывается.
+--
+--ВАЖНО: если у производственной подгруппы (sync_group > 0, не исключенной по правилу Alt_) вообще нет
+--ни одной подходящей отгрузочной подгруппы с тем же sync_group в той же id_format - строк по ней не
+--будет вообще (это отчетом не проверяется - это ошибка настройки самих подгрупп/sync_group, а не
+--расхождение состава изделий)
+create or replace view v_std_items_group_sync as --$+
+--неактивные стандартные изделия (or_std_items.active = 0) из проверки полностью исключаются - см.
+--фильтр по active внутри подзапросов sip/sio ниже (именно подзапрос, а не условие active = 1 прямо в
+--on full outer join - там оно не сработает: для full outer join условие на правой таблице в on не
+--отсекает непарные строки, а оставляет их как непарные с null с другой стороны)
+select
+  row_number() over (order by fp.id_format, fp.id, fo.id, nvl(sip.id,0), nvl(sio.id,0)) as id,
+  fp.id_format,
+  orf.name as format_name,
+  fp.id as id_estimate_prod,
+  fp.name as prod_subgroup_name,
+  fo.id as id_estimate_otgr,
+  fo.name as otgr_subgroup_name,
+  nvl(sip.name, sio.name) as item_name,
+  case when sio.id is null then 1 else 0 end as err_missing_in_otgr, --есть в производстве, нет в этой отгрузочной подгруппе
+  case when sip.id is null then 1 else 0 end as err_missing_in_prod  --есть в этой отгрузочной подгруппе, нет в производстве
+from
+  or_format_estimates fp
+  inner join or_formats orf
+  on orf.id = fp.id_format
+  inner join or_format_estimates fo
+  on fo.id_format = fp.id_format
+  and fo.sync_group = fp.sync_group
+  and fo.type = 1
+  and not (lower(fo.name) like 'alt\_%' escape '\' and fo.active = 0)
+  full outer join (select * from or_std_items where active = 1) sip
+  on sip.id_or_format_estimates = fp.id
+  full outer join (select * from or_std_items where active = 1) sio
+  on sio.id_or_format_estimates = fo.id
+  and lower(sio.name) = lower(sip.name)
+where
+  fp.type = 0
+  and fp.sync_group > 0
+  and not (lower(fp.name) like 'alt\_%' escape '\' and fp.active = 0)
+  and (sio.id is null or sip.id is null)
+;
+
+select * from v_std_items_group_sync where id_format = 1 order by prod_subgroup_name, otgr_subgroup_name, item_name;
+
+--------------------------------------------------------------------------------
+--последняя проверка "Проверить группу"/"Проверить все группы" в справочнике стандартных изделий
+--(см. TOrders.CheckStdItemsGroupSync в uOrders.pas, вызывается из uFrmOGrefOrStdItems.pas (Tag = 1005,
+--1006) и из uFrmXGlstMain.pas (myfrm_R_StdPspFormats, кнопка "Проверить все группы" и Frg1OnDbClick)).
+--история не хранится - только последний результат по каждой группе форматов (id_format - он же PK), и
+--только если проверка нашла предупреждения; если предупреждений нет, строка для этой группы удаляется
+--(отсутствие строки для группы = "предупреждений нет"), см. CheckStdItemsGroupSync.
+--warnings - список кодов предупреждений через запятую (пока только один код - см. CheckStdItemsGroupSync,
+--константа cWarnCodeSync = 'sync' - расхождение состава производственной/отгрузочной подгрупп); при
+--добавлении новых видов проверок в это же поле будут дописываться новые коды через запятую (значение
+--всегда непустое - строка без предупреждений не хранится, см. выше).
+--report - полный текстовый отчет по данному запуску (см. там же).
+create table or_std_items_group_checks ( --$+
+  id_format number(11),                --группа форматов (or_formats.id), она же первичный ключ
+  dt date,                             --дата/время проверки
+  id_user number(11),                  --пользователь, запустивший проверку
+  warnings varchar2(200),              --коды найденных предупреждений через запятую (см. выше)
+  report clob,                         --полный текст отчета по данному запуску проверки
+  constraint pk_or_std_items_group_checks primary key (id_format),
+  constraint fk_or_std_items_grp_chk_fmt foreign key (id_format) references or_formats(id) on delete cascade,
+  constraint fk_or_std_items_grp_chk_user foreign key (id_user) references adm_users(id)
+);
+
+--текущий статус проверки по каждой группе форматов, у которой последняя проверка нашла предупреждения
+--(см. общий комментарий выше), с именем пользователя - используется в отчете просмотра предупреждения
+--(TFrmOWrepStdItemsGroupCheck в uFrmOWrepStdItemsGroupCheck.pas) и для столбца attention (см.
+--v_or_formats_attention ниже)
+create or replace view v_or_std_items_group_checks as select --$+
+  c.*,
+  u.name as username
+from
+  or_std_items_group_checks c,
+  adm_users u
+where
+  c.id_user = u.id (+)
+;
+
+--форматы стандартных изделий (or_formats) с признаком attention (1 - последняя проверка группы нашла
+--предупреждения, 0 - предупреждений нет либо проверка еще не запускалась) - используется в справочнике
+--"Форматы стандартных изделий" (myfrm_R_StdPspFormats в uFrmXGlstMain.pas, столбец "Внимание", по
+--двойному клику - просмотр отчета последней проверки, см. Frg1OnDbClick)
+create or replace view v_or_formats_attention as select --$+
+  f.id,
+  f.name,
+  f.active,
+  case when c.id_format is not null then 1 else 0 end as attention
+from
+  or_formats f,
+  or_std_items_group_checks c
+where
+  f.id = c.id_format (+)
+;
+
+--------------------------------------------------------------------------------
 --!query
 --запрос позиций, по которым сметное наименование соввпадает с наименованием изделия
 --для смет по стандартным изделиям для заказов (нарушает расчет цены)

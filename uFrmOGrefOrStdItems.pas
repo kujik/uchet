@@ -34,6 +34,12 @@ type
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure SetCbEstimate;
+    //красная подсветка заголовка (ControlLabel) комбобокса "Формат", если по группе форматов, к которой
+    //относится выбранная в CbEstimate подгруппа, последняя проверка "Проверить группу"/"Проверить все
+    //группы" нашла предупреждения - см. v_or_formats_attention в d_estimates.sql и TOrders.CheckStdItemsGroupSync
+    //в uOrders.pas. вызывается из SetCbEstimate (при открытии/переключении "Показать архивные") и из
+    //Frg1AddControlChange (при смене значения CbEstimate), а также сразу после запуска "Проверить группу"
+    procedure UpdateFormatAttentionLabel;
     procedure CopyAllItems;
     procedure GetNdsRates;
     procedure SetNdsRateValue;
@@ -113,7 +119,9 @@ begin
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
   //    [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Задать трудоемкость'],[],
       [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
-      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
+      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],
+      [-1005, User.IsDataEditor, 'Проверить группу'],
+      [-1006, True, 'Просмотр предупреждения'],[],[mbtGridSettings],[],[mbtCtlPanel],[],[1000, User.Role(rOr_R_StdItems_Ch), 'Скопировать изделия из...', 'copy']
       ,[mbtTest, User.IsDeveloper]
     ]);
     Frg1.Opt.SetButtonsIfEmpty([1000]);
@@ -189,7 +197,8 @@ begin
       [-1003, True, 'История изменений сметы'],
       [-1001, (User.GetJobID = myjobKNS) or (User.GetJobID = myjobTHN) or User.IsDeveloper or User.Role(rOr_R_StdItems_Estimate), 'Загрузить XML'],[],
       [-1002, User.Role(rOr_R_StdItems_Set_Labor), 'Стоимость работы'],[],
-      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],[],[mbtGridSettings],[],[mbtCtlPanel]
+      [-mbtCustom_RepOrStDItemsErr, True, 'Найти ошибки'],
+      [-1006, True, 'Просмотр предупреждения'],[],[mbtGridSettings],[],[mbtCtlPanel]
       ,[mbtTest, User.IsDeveloper]
     ]);
     Frg1.Opt.SetButtonsIfEmpty([1000]);
@@ -242,6 +251,23 @@ begin
   end
   else if Tag = mbtCustom_RepOrStDItemsErr then begin
     Wh.ExecReference(myfrm_Rep_OrderStdItems_Err)
+  end
+  else if Tag = 1005 then begin
+    //"Проверить группу" - проверка синхронности состава подгрупп (произв./отгруз.) внутри группы форматов,
+    //к которой относится выбранная в CbEstimate подгруппа - см. v_std_items_group_sync в d_estimates.sql
+    var LIdFormat := Q.QLoadValue('select id_format from or_format_estimates where id = :id$i', [Fr.GetControlValue('CbEstimate')]);
+    Wh.ExecReference(myfrm_Rep_OrderStdItems_GroupSync, Self, [myfoSizeable, myfoEnableMaximize, myfoMultiCopyWoId], LIdFormat);
+    //сама проверка (с сохранением отчета и признака предупреждений в or_std_items_group_checks) выполняется
+    //отдельно - см. TOrders.CheckStdItemsGroupSync в uOrders.pas; сразу обновим подсветку заголовка "Формат"
+    Orders.CheckStdItemsGroupSync(LIdFormat);
+    UpdateFormatAttentionLabel;
+  end
+  else if Tag = 1006 then begin
+    //"Просмотр предупреждения" - история проверок группы форматов, к которой относится выбранная в
+    //CbEstimate подгруппа - см. v_or_std_items_group_checks в d_estimates.sql,
+    //диалог - uFrmOWrepStdItemsGroupCheck.pas
+    var LIdFormat := Q.QLoadValue('select id_format from or_format_estimates where id = :id$i', [Fr.GetControlValue('CbEstimate')]);
+    Wh.ExecDialog(myfrm_Rep_StdItemsGroupCheck, Self, [], fView, LIdFormat, null);
   end
   else if Tag = mbtCopyEstimate then begin
     Orders.CopyEstimateToBuffer(Fr.ID, null);
@@ -346,6 +372,7 @@ begin
       Frg1.SetControlValue('CbNdsRate',S.GetStrParam(F.GetProp('nds_rates').AsString, Frg1.GetControlValue('CbEstimate').AsString).AsString);
       Q.QSetContextValue('v_or_std_items_nds_rate', Frg1.GetControlValue('CbNdsRate').AsInteger);
     end;
+    UpdateFormatAttentionLabel;
   end;
   if not Fr.IsPrepared then
     Exit;
@@ -425,6 +452,27 @@ begin
   );
   //нужно в случае первого запуска у пользователя, если значение комбобокса не чиатеся из бд, или он был очищен перед закрытием журнала
   TDBComboBoxEh(Frg1.FindComponent('CbEstimate')).ItemIndex:=0;
+  UpdateFormatAttentionLabel;
+end;
+
+procedure TFrmOGrefOrStdItems.UpdateFormatAttentionLabel;
+//см. общий комментарий в объявлении (interface)
+var
+  LIdEstimate: Variant;
+  LAttention: Extended;
+begin
+  LIdEstimate := Frg1.GetControlValue('CbEstimate');
+  LAttention := 0;
+  if S.NNum(LIdEstimate) > 0 then
+    LAttention := S.NNum(Q.QLoadValue(
+      'select attention from v_or_formats_attention where id = (select id_format from or_format_estimates where id = :id$i)',
+      [LIdEstimate]
+    ));
+  //ControlLabel - см. TControlsHelper.CreateControls в uForms.pas (там же для комбобокса присваивается
+  //именно через TDBEditEh(Result).ControlLabel - используем тот же приведенный тип)
+  if LAttention = 1
+    then TDBEditEh(Frg1.FindComponent('CbEstimate')).ControlLabel.Font.Color := clRed
+    else TDBEditEh(Frg1.FindComponent('CbEstimate')).ControlLabel.Font.Color := clWindowText;
 end;
 
 procedure TFrmOGrefOrStdItems.tmrAfterCreateTimer(Sender: TObject);

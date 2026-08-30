@@ -79,7 +79,8 @@ select
   s.name as itemname,
   u.name,
   oi.kns,
-  oi.thn
+  oi.thn,
+  t.overdue_days + 1 as overdue_days_yesterday
 from
 (select
   'Конструктор загрузка' as type,
@@ -102,31 +103,6 @@ where
   and o.id_reglament = r.id
   and ri.id_reglament = r.id and ri.id_work_cell_type = 1
 union all  
-/*select
-  'Конструктор смета' as type,
-  oi.id_order,
-  oi.id as id_order_item,
-  oi.id_kns as id_user,
-  o.dt_beg + ri.day_end - 1 as dt_by_reglament,
-  es.dt as dt_fact,
-  -(nvl(es.dt_, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
-from
-  v_orders o,
-  order_items oi,
-  estimates es,
-  order_reglaments r,
-  order_reglament_items ri
-where
-  o.dt_beg > date '2026-03-01' and
-  nvl(oi.id_kns, -1) > 0
-  and oi.wo_estimate <> 1
-  and es.dt is null or dt_est is not null  --уитываем строки, по которым сметы еще не подгружены или в любом случае если подгружены в ручном режиме
-  and o.id_reglament is not null 
-  and oi.id_order = o.id
-  and o.id_reglament = r.id
-  and oi.id = es.id_order_item (+) 
-  and ri.id_reglament = r.id and ri.id_work_cell_type = 1
-union all  */
 select
   'Конструктор смета' as type,
   oi.id_order,
@@ -210,12 +186,133 @@ where
 ;
 
 
+create or replace view v_rep_orders_overdue_kns_thn_2 as 
+--отчет по соблюдению сроков обработки заказов конструкторами и технологами
+--модификация для утренних рассылок
+--(выводит информацию по сметам/загрузкам, которые еще не сделаны, и даже если не задан кнс/тхн,
+--и только по незакрытым заказам)
+select
+  t.*,
+--  oi.slash,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  o.dt_beg + ri.day_end - 1 as dt_to_sgp_by_reglament,
+  o.dt_to_sgp,
+  -(nvl(o.dt_to_sgp, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as to_sgp_overdue_days, 
+  o.project,
+  o.customer,
+  s.name as itemname,
+  u.name,
+  oi.kns,
+  oi.thn,
+  t.overdue_days + 1 as overdue_days_yesterday
+from
+(
+select
+  'Конструктор смета' as type,
+  oi.id_order,
+  oi.id as id_order_item,
+  oi.id_kns as id_user,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,  --!!!
+  oi.dt_est as dt_fact,
+  -(nvl(oi.dt_est, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
+from
+  orders o,
+  v_order_items oi,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  o.dt_end is null
+  and o.dt_beg > date '2026-03-01' 
+  --не проверяем отсутствие кнс - критерием необходимости сметы является галк
+  --nvl(oi.id_kns, -1) > 0
+  --выжно: не oi.dt_est !
+  and oi.dt_estimate is null
+  and oi.wo_estimate <> 1
+  and o.id_reglament is not null
+  and oi.id_order = o.id
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 1
+union all  
+select
+  'Технолог загрузка' as type,
+  oi.id_order, 
+  oi.id as id_order_item,
+  oi.id_thn as id_user,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,
+  oi.dt_thn as dt_fact,
+  -(nvl(oi.dt_thn, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
+from
+  orders o,
+  order_items oi,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  o.dt_end is null
+  and o.dt_beg > date '2026-03-01' 
+  and nvl(oi.id_thn, -100) <> -100
+  and oi.dt_thn is null
+  and o.id_reglament is not null 
+  and oi.id_order = o.id
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 2 
+) t,
+  v_orders o,
+  v_order_items oi,
+  or_std_items s,
+  order_reglaments r,
+  order_reglament_items ri,
+  adm_users u
+where
+  o.dt_beg > date '2026-03-01' and
+  oi.qnt <> 0
+  and t.id_order = o.id
+  and t.id_order_item = oi.id
+  and oi.id_std_item = s.id (+) 
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 5  --приемка на СГГ
+  and u.id = t.id_user 
+;
+
+
+
 
 select 
   t.*
 from 
-  v_rep_orders_overdue_kns_thn t
+  v_rep_orders_overdue_kns_thn_2 t
 where 
-  t.type = 'Конструктор смета' 
-  and t.overdue_days < 0
+  id_order_item = 582612
+--  t.type = 'Технолог загрузка'
+--  and dt_fact is null 
+  --and t.overdue_days < 0
+;
+
+
+select
+  'Конструктор смета' as type,
+  oi.id_order,
+  oi.id as id_order_item,
+  oi.id_kns as id_user,
+  o.dt_beg + ri.day_end - 1 as dt_by_reglament,  --!!!
+  oi.dt_est as dt_fact,
+  -(nvl(oi.dt_est, trunc(sysdate)) - (o.dt_beg + ri.day_end - 1)) as overdue_days 
+from
+  orders o,
+  v_order_items oi,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  o.dt_end is null
+  and o.dt_beg > date '2026-03-01' 
+  --nvl(oi.id_kns, -1) > 0
+  and oi.dt_estimate is null
+  and oi.wo_estimate <> 1
+  and o.id_reglament is not null
+  and oi.id_order = o.id
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 1
+and   oi.id = 430287
 ; 
+

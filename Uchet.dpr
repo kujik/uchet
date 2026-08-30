@@ -210,6 +210,7 @@ uses
   uServerTasks in 'uServerTasks.pas',
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
+  uFrmChooseDialogMulti in 'uFrmChooseDialogMulti.pas' {FrmChooseDialogMulti},
   uFrmODlgOrderStdType in 'uFrmODlgOrderStdType.pas' {FrmODlgOrderStdType},
   uFrmOGrepOrdersFinMonitoring in 'uFrmOGrepOrdersFinMonitoring.pas' {FrmOGrepOrdersFinMonitoring},
   uFrmPWedtPlnOps in 'uFrmPWedtPlnOps.pas' {FrmPWedtPlnOps},
@@ -217,7 +218,8 @@ uses
   uFrmOWRepDataCheck in 'uFrmOWRepDataCheck.pas' {FrmOWRepDataCheck},
   uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges},
   uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute},
-  uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges};
+  uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges},
+  uFrmOWrepStdItemsGroupCheck in 'uFrmOWrepStdItemsGroupCheck.pas' {FrmOWrepStdItemsGroupCheck};
 
 var
   MT: Integer;
@@ -369,6 +371,7 @@ begin
   Application.CreateForm(TFrmXDinputPwd, FrmXDinputPwd);
   Application.CreateForm(TFrmExportToXlsx, FrmExportToXlsx);
   Application.CreateForm(TFrmChooseDialog, FrmChooseDialog);
+  Application.CreateForm(TFrmChooseDialogMulti, FrmChooseDialogMulti);
   Application.CreateForm(TFrmODlgOrderStdType, FrmODlgOrderStdType);
 
   Application.Run;

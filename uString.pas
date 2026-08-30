@@ -500,6 +500,9 @@ type
     function VarIntToArray(const AValue: Variant): TVarDynArray; //+++
     //получает массив строк, возвращает вариантный массив
     function StringDynArrayToVarDynArray(const AStringArray: TStringDynArray): TVarDynArray; //+++
+    //аналог S.IIf, но для массивов (S.IIf возвращает Variant и не умеет корректно работать с TVarDynArray -
+    //например, в выражениях вида SomeArray + A.IIfArr(Condition, [SomeValue], []))
+    function IIfArr(const ACondition: Boolean; const ATrue, AFalse: TVarDynArray): TVarDynArray;
     //удаляем дублирующиеся знаения из массива
     function RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;
     procedure RemoveDuplicatesInPlace(var AValues: TVarDynArray);
@@ -3746,6 +3749,15 @@ begin
   SetLength(Result, Length(AStringArray));
   for i := 0 to High(AStringArray) do
     Result[i] := AStringArray[i];
+end;
+
+function TMyArrayHelper.IIfArr(const ACondition: Boolean; const ATrue, AFalse: TVarDynArray): TVarDynArray;
+//аналог S.IIf, но для массивов - см. комментарий у объявления
+begin
+  if ACondition then
+    Result := ATrue
+  else
+    Result := AFalse;
 end;
 
 function TMyArrayHelper.RemoveDuplicates(const AValues: TVarDynArray): TVarDynArray;

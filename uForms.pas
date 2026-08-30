@@ -1708,6 +1708,12 @@ begin
       Result.Name := CName;
     if CLabel <> '' then
       TLabel(Result).Caption := CLabel;
+    //Left/Top ниже не относятся к общему хвосту функции (см. Result.Left/Result.Top в самом конце) - без
+    //этих двух строк все созданные так метки оставались на позиции по умолчанию (0,0) и накладывались друг
+    //на друга в левом верхнем углу родителя вместо переданных координат (см. пример использования и разбор
+    //этого дефекта - uFrmODedtOrStdItem.pas, CreateRowControls/LblCaption)
+    Result.Left := Left;
+    Result.Top := Top;
     Exit;
   end;
   if CType = cntLabelClr then begin

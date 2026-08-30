@@ -1,27 +1,20 @@
 inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
   Caption = 'FrmODedtOrStdItem'
-  ClientHeight = 429
-  ClientWidth = 837
-  ExplicitWidth = 849
-  ExplicitHeight = 467
+  ClientHeight = 544
+  ClientWidth = 833
+  ExplicitWidth = 845
+  ExplicitHeight = 582
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Width = 837
-    Height = 413
-    ExplicitWidth = 837
-    ExplicitHeight = 413
+    Width = 833
+    Height = 528
+    ExplicitWidth = 829
+    ExplicitHeight = 527
     inherited pnlFrmClient: TPanel
-      Width = 827
-      Height = 364
-      ExplicitWidth = 823
-      ExplicitHeight = 363
-      object bvlTabSync: TBevel
-        Left = 8
-        Top = 260
-        Width = 815
-        Height = 2
-        Anchors = [akLeft, akTop, akRight]
-      end
+      Width = 823
+      Height = 479
+      ExplicitWidth = 819
+      ExplicitHeight = 478
       object lblSemiproductErrors: TLabel
         Left = 82
         Top = 152
@@ -37,15 +30,6 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         ParentFont = False
         Visible = False
         OnClick = lblSemiproductErrorsClick
-      end
-      object pgcFormat: TPageControl
-        Left = 8
-        Top = 8
-        Width = 815
-        Height = 25
-        Anchors = [akLeft, akTop, akRight]
-        TabOrder = 7
-        ExplicitWidth = 811
       end
       object cmb_id_or_format_estimates: TDBComboBoxEh
         Left = 82
@@ -99,15 +83,6 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         TabOrder = 5
         Visible = True
       end
-      object chb_by_sgp: TDBCheckBoxEh
-        Left = 86
-        Top = 232
-        Width = 96
-        Height = 17
-        Caption = #1059#1095#1077#1090' '#1087#1086' '#1057#1043#1055
-        DynProps = <>
-        TabOrder = 6
-      end
       object chb_R0: TDBCheckBoxEh
         Left = 85
         Top = 182
@@ -129,7 +104,7 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
       object edt_name: TDBEditEh
         Left = 82
         Top = 127
-        Width = 741
+        Width = 737
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         ControlLabel.Width = 73
@@ -143,78 +118,53 @@ inherited FrmODedtOrStdItem: TFrmODedtOrStdItem
         TabOrder = 2
         Text = 'edt_name'
         Visible = True
-        ExplicitWidth = 737
-      end
-      object chb_TabSync: TCheckBox
-        Left = 8
-        Top = 271
-        Width = 140
-        Height = 17
-        Caption = #1057#1080#1085#1093#1088#1086#1085#1080#1079#1080#1088#1086#1074#1072#1090#1100
-        TabOrder = 8
-      end
-      object chb_TabNotCreate: TCheckBox
-        Left = 160
-        Top = 271
-        Width = 145
-        Height = 17
-        Caption = #1053#1077' '#1089#1086#1079#1076#1072#1074#1072#1090#1100
-        TabOrder = 9
-      end
-      object btn_TabCopyRoute: TButton
-        Left = 357
-        Top = 268
-        Width = 132
-        Height = 25
-        Hint = #1057#1082#1086#1087#1080#1088#1086#1074#1072#1090#1100' '#1084#1072#1088#1096#1088#1091#1090' '#1080' '#1094#1077#1085#1091' '#1089' '#1087#1077#1088#1074#1086#1081' '#1074#1082#1083#1072#1076#1082#1080
-        Caption = '>> '#1052#1072#1088#1096#1088#1091#1090
-        TabOrder = 10
+        ExplicitWidth = 733
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 369
-      Width = 827
-      ExplicitTop = 368
-      ExplicitWidth = 823
+      Top = 484
+      Width = 823
+      ExplicitTop = 483
+      ExplicitWidth = 819
       inherited bvlFrmBtnsTl: TBevel
-        Width = 825
+        Width = 821
         ExplicitWidth = 768
       end
       inherited bvlFrmBtnsB: TBevel
-        Width = 825
+        Width = 821
         ExplicitWidth = 768
       end
       inherited pnlFrmBtnsContainer: TPanel
-        Width = 825
-        ExplicitWidth = 821
+        Width = 821
+        ExplicitWidth = 817
         inherited pnlFrmBtnsMain: TPanel
-          Left = 726
-          ExplicitLeft = 722
+          Left = 722
+          ExplicitLeft = 718
         end
         inherited pnlFrmBtnsChb: TPanel
-          Left = 498
-          ExplicitLeft = 494
+          Left = 494
+          ExplicitLeft = 490
         end
         inherited pnlFrmBtnsR: TPanel
-          Left = 627
-          ExplicitLeft = 623
+          Left = 623
+          ExplicitLeft = 619
         end
         inherited pnlFrmBtnsC: TPanel
-          Width = 358
-          ExplicitWidth = 354
+          Width = 354
+          ExplicitWidth = 350
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 413
-    Width = 837
-    ExplicitTop = 412
-    ExplicitWidth = 833
+    Top = 528
+    Width = 833
+    ExplicitTop = 527
+    ExplicitWidth = 829
     inherited lblStatusBarR: TLabel
-      Left = 764
+      Left = 760
       Height = 14
-      ExplicitLeft = 764
+      ExplicitLeft = 760
     end
     inherited lblStatusBarL: TLabel
       Height = 14

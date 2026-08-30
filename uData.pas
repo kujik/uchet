@@ -933,6 +933,8 @@ const
   myfrm_Rep_PlannedMaterials='Rep_PlannedMaterials';
   myfrm_J_Semiproducts='J_Semiproducts';
   myfrm_Rep_OrderStdItems_Err='Rep_OrderStdItems_Err';
+  myfrm_Rep_OrderStdItems_GroupSync='Rep_OrderStdItems_GroupSync';
+  myfrm_Rep_StdItemsGroupCheck='Rep_StdItemsGroupCheck';
   myfrm_Rep_ItmNomOverEstimate='Rep_ItmNomOverEstimate';
   myfrm_R_Test='R_Test';
   myfrm_J_Tasks='J_Tasks';

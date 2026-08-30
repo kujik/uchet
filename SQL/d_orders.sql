@@ -440,7 +440,7 @@ create table orders (
   num number(4),                     -- номер заказа 
   ornum varchar(16) unique,          -- полный номер заказа СГ230013 
   templatename varchar2(400),        -- название шаблона, только для шаблонов
-  id_related_template number,        -- айди связанного шаблона (для шаблонов; шаблон из той же группы, но для данного отгрузочного это производственный, и наоборот)    
+  id_related_template number,        -- айди связанного шаблона (для шаблонов, группа = 1 производственный + N отгрузочных): у отгрузочного шаблона - id его производственного шаблона группы (или null); у производственного - НЕ используется (историческое поле, группа резолвится обратным поиском - см. TOrders.GetTemplateGroupTargets в uOrders.pas)    
   id_status number(2) default 0,     -- стутус заказа (0 - на оформлении, 1 - проведен, 2 - запущен в работу)
   basis_text varchar2(4000),         -- основание (текстовое мемо-0поле) 
   area number(1) default 0,          -- производственная площадка (0 - ПЩ, 1 - Инженерный)
@@ -2564,12 +2564,13 @@ where
   and n.id_group in ( 
     select id_group
     from dv.groups
-    start with id_group in (14)  
+    start with id_group in (14)  --Материалы основы
     connect by prior id_group = id_parentgroup   
 )
   group by id_zakaz
   order by id_zakaz desc
 ;  
+
 
 create or replace view v_orders_has_prod as
 select

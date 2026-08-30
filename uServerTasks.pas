@@ -1113,7 +1113,7 @@ begin
     ['overdue_days_yesterday$i', 'Просрочка', '80']
   ];
   //выберем с условием, что смета/файлы еще не загружены,
-  Q.QLoad(Q.QGetSql('A', 'v_rep_orders_overdue_kns_thn', Fields.Col(0).Implode(';'))+ ' where type = ''' + SqlWhere +
+  Q.QLoad(Q.QGetSql('A', 'v_rep_orders_overdue_kns_thn_2', Fields.Col(0).Implode(';'))+ ' where type = ''' + SqlWhere +
     ''' and dt_fact is null and overdue_days_yesterday < 0 order by overdue_days_yesterday asc', [], na
   );
   HTML := '';

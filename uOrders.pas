@@ -91,6 +91,33 @@ type
     //пишет строку в estimate_change_log, если AChanges не пуст или ASource = '0' (факт первичной загрузки);
     //ASource - список кодов через запятую (см. TEstDlgChannel.SourceUsed в uFrmOGedtEstimate.pas)
     procedure LogEstimateChange(AIdEstimate: Variant; ASource: string; AChanges: string);
+    //запускает проверку синхронности состава подгрупп (произв./отгруз.) внутри группы форматов AIdFormat -
+    //см. "Проверить группу"/"Просмотр предупреждения" в справочнике стандартных изделий
+    //(uFrmOGrefOrStdItems.pas, Tag = 1005/1006) и "Проверить группу"/столбец "Внимание" в справочнике
+    //"Форматы стандартных изделий" (uFrmXGlstMain.pas, myfrm_R_StdPspFormats). история не хранится - в
+    //or_std_items_group_checks (см. d_estimates.sql) держим только последний результат по AIdFormat:
+    //если предупреждений нет, строка удаляется, если есть - перезаписывается. возвращает True, если
+    //найдены расхождения (нужно для подсветки/атеншена и для итогового сообщения в "Проверить все группы")
+    function CheckStdItemsGroupSync(AIdFormat: Variant): Boolean;
+    //синхронизация "вперед" (только производственные -> отгрузочные) состава подгрупп внутри группы
+    //синхронизации (or_format_estimates.sync_group) - вызывается при создании (в т.ч. копированием) НОВОЙ
+    //подгруппы AIdOrFormatEstimate любого типа, кроме ПФ, в справочнике "Форматы стандартных изделий" (см.
+    //Frg2ButtonClick, uFrmXGlstMain.pas, myfrm_R_StdPspFormats). активные изделия (or_std_items.active = 1),
+    //которые есть в какой-либо активной производственной подгруппе группы синхронизации, но отсутствуют (по
+    //наименованию без учета регистра, среди активных) в какой-либо активной отгрузочной подгруппе ТОЙ ЖЕ
+    //группы синхронизации - добавляются в эту отгрузочную подгруппу (копируется только price_base; маршрут
+    //r0..r8, "без сметы" (wo_estimate) и by_sgp относятся ТОЛЬКО к производственному изделию (см.
+    //TFrmODedtOrStdItem, общий комментарий в начале модуля) - у новых отгрузочных изделий эти поля ВСЕГДА 0,
+    //из источника не копируются. обратное (изделия, которые есть в
+    //отгрузочной, но отсутствуют в производственной) НЕ добавляются и НЕ удаляются. если у
+    //AIdOrFormatEstimate sync_group <= 0 либо type = ПФ (STDITEM_TYPE_SEMIPRODUCT) - выходит сразу, ничего не
+    //делая (Result = False). источник расхождений для копирования - тот же v_std_items_group_sync (см.
+    //d_estimates.sql), что и в CheckStdItemsGroupSync, поэтому неактивные изделия уже исключены на уровне
+    //вью. в конце (если реально была выполнена попытка синхронизации) запускает CheckStdItemsGroupSync по
+    //всей группе форматов - Result = True, если после синхронизации в группе остались расхождения (нужно
+    //вызывающему коду, чтобы решить, показывать ли предупреждение - см. её же комментарий про полярность
+    //Result)
+    function SyncNewSubgroupItems(AIdOrFormatEstimate: Variant): Boolean;
     //удаляет смету для переданного стандартного изделия. если не Silent, то перед этим спросит.
     //вернет True, кроме случая ошибки при выполнениии запроса удаления
     function RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;
@@ -121,34 +148,68 @@ type
     //выбранной подгруппе нашлось одноименное производственное изделие. см. общий комментарий у
     //FillEstimatesForCheckedItems
     function CreateSelfSmetasForShipmentItems(AParent: TForm; const AIds: TVarDynArray): Boolean;
-    //диалог связывания пары шаблонов заказа (произв./отгруз., см. orders.id_related_template) - вызывается
-    //по пункту меню "Связать с шаблоном..." в справочнике шаблонов (myfrm_R_OrderTemplates). предлагает
-    //список активных шаблонов противоположного типа (произв./отгруз.) той же группы форматов, не связанных
-    //с другим шаблоном; выбор заносит id_related_template взаимно в оба шаблона. пункт "(не связывать)" -
-    //снимает существующую связь. после связывания информирует, синхронна ли уже табличная часть (см.
-    //F_CheckTemplatesSync в d_orders.sql) - реальная синхронизация состава при этом не выполняется, она
-    //произойдет автоматически при ближайшем сохранении любого из двух шаблонов (см. SyncRelatedTemplateItems)
+    //возвращает id всех ОСТАЛЬНЫХ (кроме AIdOrder) шаблонов заказа, входящих в одну группу с AIdOrder -
+    //см. orders.id_related_template. группа = один производственный шаблон + N связанных с ним отгрузочных
+    //(N >= 0). семантика поля id_related_template АСИММЕТРИЧНА: у отгрузочного шаблона оно указывает на
+    //"свой" производственный шаблон группы (или Null, если ни в одной группе); у производственного шаблона
+    //это же поле не используется/игнорируется (историческое наследие 1:1 связки, до перехода на группы -
+    //миграция схемы не требуется). если AIdOrder - производственный шаблон, "якорь" группы - он сам;
+    //если отгрузочный - "якорь" берется из его id_related_template. возвращает [] если AIdOrder не входит
+    //ни в одну группу (отгрузочный без связи, или ПФ - шаблоны ПФ в группы не входят) или если он
+    //производственный без единого связанного отгрузочного
+    function GetTemplateGroupTargets(AIdOrder: Variant): TVarDynArray;
+    //диалог связывания шаблона заказа в группу (произв. + N отгруз., см. GetTemplateGroupTargets выше и
+    //orders.id_related_template) - вызывается по пункту меню "Связать с шаблоном..." в справочнике
+    //шаблонов (myfrm_R_OrderTemplates). поведение зависит от типа шаблона AIdTemplate:
+    //  - для ПРОИЗВОДСТВЕННОГО - чеклист (см. uFrmChooseDialogMulti.pas) всех активных отгрузочных
+    //    шаблонов той же группы форматов, с отметками по текущему составу группы; по ОК группа полностью
+    //    пересобирается по итоговым отметкам (можно добавить и/или убрать сразу несколько шаблонов)
+    //  - для ОТГРУЗОЧНОГО - выбор ОДНОГО производственного шаблона той же группы форматов (или
+    //    "не связывать"), т.к. отгрузочный шаблон состоит не более чем в одной группе
+    //  - для шаблона ПФ связывание недоступно
+    //после связывания по каждой заново образованной паре (производственный/данный отгрузочный) информирует,
+    //синхронна ли уже табличная часть (см. F_CheckTemplatesSync в d_orders.sql, по-прежнему принимает ровно
+    //2 id - вызывается для каждой пары внутри группы отдельно) - реальная синхронизация при этом не
+    //выполняется, она произойдет автоматически при ближайшем сохранении любого из шаблонов группы (см.
+    //SyncRelatedTemplateItems)
     function LinkOrderTemplate(AParent: TForm; AIdTemplate: Variant): Boolean;
-    //синхронизация табличной части связанного шаблона (см. LinkOrderTemplate/orders.id_related_template) -
-    //вызывается при каждом сохранении шаблона заказа (см. TFrmOWOrder.Save), если для него задан связанный
-    //шаблон. переносит в связанный шаблон текущий состав табличной части - только позиции, найденные
-    //измененными, правятся на месте (по номеру позиции), новые добавляются в конец, лишние в хвосте
-    //удаляются - т.е. полностью пересоздается табличная часть только не выполняется, изменения точечные.
-    //если состав/порядок изменен вставкой или удалением позиции в середине табличной части (а не только в
-    //конце), количество правок будет больше минимально необходимого, но итоговое состояние все равно будет
-    //корректным. синхронизируются все поля позиции, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems),
-    //кроме помеченных там же тегом nosync; для стандартных изделий цена (price_base), признак "без сметы"
-    //(wo_estimate) и производственный маршрут не копируются из позиции-источника, а берутся заново из
-    //справочника стандартных изделий для найденного в целевой подгруппе одноименного изделия. дополнительно,
-    //т.к. в производственных и отгрузочных шаблонах допустимы разные комбинации технологических флагов -
-    //при синхронизации ИЗ производственного шаблона В отгрузочный в целевых позициях всегда проставляется
-    //sgp = 1, маршрут снимается (r1..rN = 0), id_kns = -100, id_thn = -102; при синхронизации ИЗ
-    //отгрузочного В производственный - id_kns = -101, id_thn = -102, sgp = 0, disassembled = 0 (см.
-    //ApplyDirectionOverride). перед синхронизацией проверяется совпадение шаблонов по порядку и количеству
-    //наименований позиций (без учета самого количества штук) - при расхождении показывается подтверждение
-    //(с кратким текстом и кнопкой "Подробно..." для постатейного списка расхождений), иначе выполняется
-    //автоматически. если группа форматов или тип подгрупп (произв./отгруз.) шаблонов с момента связывания
-    //разошлись - синхронизация пропускается с предупреждением (связь при этом не снимается автоматически)
+    //синхронизация табличной части ОДНОЙ пары шаблонов AIdSrc -> AIdDst - внутренний помощник, вызывается
+    //только из SyncRelatedTemplateItems (по одному разу на каждый элемент GetTemplateGroupTargets), см. её
+    //комментарий - там же описаны все детали алгоритма синхронизации одной пары (что переносится, правила
+    //ApplyDirectionOverride, диалог при расхождении состава и т.п.). сам SyncTemplatePair не читает
+    //id_related_template - целевой шаблон AIdDst задается вызывающим кодом явно
+    function SyncTemplatePair(AIdSrc, AIdDst: Variant): Boolean;
+    //синхронизация табличной части ВСЕХ шаблонов группы, связанных с AIdOrder (см. GetTemplateGroupTargets
+    //выше) - вызывается при каждом сохранении шаблона заказа (см. TFrmOWOrder.Save). для каждого шаблона
+    //группы (кроме самого AIdOrder) выполняется SyncTemplatePair(AIdOrder, <шаблон группы>) - т.е. если
+    //изменен, например, производственный шаблон группы "1П + 2О", синхронизируются оба отгрузочных; если
+    //изменен один из отгрузочных - синхронизируется только производственный (остальные отгрузочные группы
+    //не затрагиваются - между собой отгрузочные шаблоны не синхронизируются напрямую, только через
+    //производственный при его следующем сохранении). каждая пара синхронизируется в своей отдельной
+    //транзакции и с отдельным диалогом подтверждения при расхождении состава - см. SyncTemplatePair.
+    //
+    //SyncTemplatePair переносит в целевой шаблон текущий состав табличной части шаблона-источника - только
+    //позиции, найденные измененными, правятся на месте (по номеру позиции), новые добавляются в конец,
+    //лишние в хвосте удаляются - т.е. полностью пересоздается табличная часть только не выполняется,
+    //изменения точечные. если состав/порядок изменен вставкой или удалением позиции в середине табличной
+    //части (а не только в конце), количество правок будет больше минимально необходимого, но итоговое
+    //состояние все равно будет корректным. синхронизируются все поля позиции, сохраняемые в бд (тег s в
+    //TFrmOWOrder.PrepareFrgItems), кроме помеченных там же тегом nosync; для стандартных изделий цена
+    //(price_base), признак "без сметы" (wo_estimate) и производственный маршрут не копируются из позиции-
+    //источника, а берутся заново из справочника стандартных изделий для найденного в целевой подгруппе
+    //одноименного изделия. дополнительно, т.к. в производственных и отгрузочных шаблонах допустимы разные
+    //комбинации технологических флагов - при синхронизации ИЗ производственного шаблона В отгрузочный в
+    //целевых позициях всегда проставляется sgp = 1, маршрут снимается (r1..rN = 0), id_kns = -100,
+    //id_thn = -102; при синхронизации ИЗ отгрузочного В производственный - id_kns = -101, id_thn = -102,
+    //sgp = 0, disassembled = 0, control_assembly = 0 (см. ApplyDirectionOverride - там же, прямо в теле
+    //процедуры, отмечены комментариями места, куда можно дописать свои алгоритмы простановки полей
+    //табличной части в зависимости от типа ЦЕЛЕВОГО шаблона - отдельно для отгрузочного и для
+    //производственного направления). перед синхронизацией проверяется совпадение шаблонов по порядку и
+    //количеству наименований позиций (без учета самого количества штук) - при расхождении показывается
+    //подтверждение (с кратким текстом и кнопкой "Подробно..." для постатейного списка расхождений), иначе
+    //выполняется автоматически. если группа форматов или тип подгрупп (произв./отгруз.) пары с момента
+    //связывания разошлись - синхронизация этой пары пропускается с предупреждением (связь при этом не
+    //снимается автоматически)
     function SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
     //синхронизация заказа в ИТМ с заказом в Учете, с подгрузкой в него смет
     //то же что и SyncOrderWithITM, но в транзакции и с выдачей сообщения
@@ -260,7 +321,7 @@ implementation
 uses
   uSettings, uForms, uDBOra, uData, uWindows, uMessages, uExcel, uExcel2,
   LibXL, uFrmMain, uTasks, uSys, uFrmBasicInput, uFrmXDedtMemo, uWaitForm,
-  uServerTasks, uFrmChooseDialog, uFrmBasicMdi, uFrmOGedtEstimate
+  uServerTasks, uFrmChooseDialog, uFrmChooseDialogMulti, uFrmBasicMdi, uFrmOGedtEstimate
   ;
 
 constructor TOrders.Create;
@@ -1012,6 +1073,102 @@ begin
     [-1, AIdEstimate, User.GetId, ASource, AChanges]);
 end;
 
+function TOrders.CheckStdItemsGroupSync(AIdFormat: Variant): Boolean;
+//см. общий комментарий в интерфейсе. текст отчета формируется на основе v_std_items_group_sync
+//(см. d_estimates.sql) - результата сравнения СОСТАВА для каждой пары подгрупп произв./отгруз. внутри
+//группы AIdFormat. при добавлении в будущем новых видов проверок сюда можно дописать дополнительные
+//блоки, формирующие свои строки в LReport и дописывающие свой код через запятую в LWarnings (см. также
+//комментарий у or_std_items_group_checks.warnings в d_estimates.sql). история не хранится - старая
+//строка по AIdFormat всегда удаляется, новая пишется только если найдены предупреждения
+const
+  cWarnCodeSync = 'sync';
+var
+  va: TVarDynArray2;
+  i: Integer;
+  LFormatName, LReport, LWarnings, LWhere: string;
+begin
+  LFormatName := VarToStr(Q.QLoadValue('select name from or_formats where id = :id$i', [AIdFormat]));
+  va := Q.QLoad(
+    'select prod_subgroup_name, otgr_subgroup_name, item_name, err_missing_in_otgr ' +
+    'from v_std_items_group_sync where id_format = :id_format$i ' +
+    'order by prod_subgroup_name, otgr_subgroup_name, item_name',
+    [AIdFormat]
+  );
+  LReport := 'Проверка группы форматов "' + LFormatName + '" от ' + DateTimeToStr(Now) + '.'#13#10#13#10;
+  LWarnings := '';
+  if Length(va) = 0 then
+    LReport := LReport + 'Расхождений в составе производственных и отгрузочных подгрупп не найдено.'
+  else begin
+    LWarnings := cWarnCodeSync;
+    LReport := LReport + 'Найдено расхождений в составе подгрупп: ' + IntToStr(Length(va)) + '.'#13#10#13#10;
+    for i := 0 to High(va) do begin
+      if S.NNum(va[i][3]) = 1
+        then LWhere := 'нет в отгрузочной подгруппе'
+        else LWhere := 'нет в производственной подгруппе';
+      LReport := LReport +
+        'Произв. "' + VarToStr(va[i][0]) + '" / Отгруз. "' + VarToStr(va[i][1]) + '": "' + VarToStr(va[i][2]) + '" - ' + LWhere + #13#10;
+    end;
+  end;
+  Result := LWarnings <> '';
+  //история не хранится - только последний результат по группе (см. общий комментарий выше).
+  //Sequence = '-' - id_format НЕ генерируется (не суррогат), а берется как есть из первого поля
+  //(см. TmyDB.QSave в uDB.pas) - иначе (при Sequence = '') QSave считает первое поле
+  //автогенерируемым триггером суррогатным id и оставляет его NULL, что дает ORA-01400
+  Q.QExecSql('delete from or_std_items_group_checks where id_format = :id_format$i', [AIdFormat]);
+  if Result then
+    //dt обязателен - без него v_or_std_items_group_checks.dt = NULL, и просмотрщик (см. Prepare в
+    //uFrmOWrepStdItemsGroupCheck.pas, va[0] = null) считает, что предупреждений нет, хотя строка есть
+    Q.QSave('i', 'or_std_items_group_checks', '-', 'id_format$i;id_user$i;dt$d;warnings$s;report$s',
+      [AIdFormat, User.GetId, Now, LWarnings, LReport]);
+end;
+
+function TOrders.SyncNewSubgroupItems(AIdOrFormatEstimate: Variant): Boolean;
+//см. общий комментарий в интерфейсе
+var
+  va, LProdRow: TVarDynArray;
+  va2Rows: TVarDynArray2;
+  i: Integer;
+  LIdFormat, LSyncGroup, LType: Variant;
+begin
+  Result := False;
+  va := Q.QLoadRow('select id_format, sync_group, type from or_format_estimates where id = :id$i', [AIdOrFormatEstimate]);
+  LIdFormat := va[0];
+  LSyncGroup := va[1];
+  LType := va[2];
+  if (S.NNum(LSyncGroup) <= 0) or (S.NInt(LType) = STDITEM_TYPE_SEMIPRODUCT) then
+    Exit;
+
+  //все пары произв./отгруз. подгрупп группы форматов, где в отгрузочной не хватает изделия, найденного в
+  //производственной (см. v_std_items_group_sync, err_missing_in_otgr = 1) - не обязательно относящиеся к
+  //подгруппе AIdOrFormatEstimate: если добавленная подгруппа - производственная, недостающие изделия
+  //подтянутся во ВСЕ отгрузочные подгруппы её группы синхронизации; если отгрузочная - в неё саму
+  //подтянутся недостающие изделия из производственной подгруппы этой же группы синхронизации
+  va2Rows := Q.QLoad(
+    'select id_estimate_prod, id_estimate_otgr, item_name ' +
+    'from v_std_items_group_sync where id_format = :id_format$i and err_missing_in_otgr = 1',
+    [LIdFormat]
+  );
+  for i := 0 to High(va2Rows) do begin
+    //берем актуальную цену изделия-источника заново по имени (а не из вью) - вью не отдает нужные поля.
+    //ВАЖНО: маршрут (r0..r8) и признак "без сметы" (wo_estimate) относятся ТОЛЬКО к производственному
+    //изделию (см. TFrmODedtOrStdItem, общий комментарий в начале модуля и SaveRow/Save/SyncOrderItemTemplates
+    //там же) - у отгрузочного изделия эти поля ВСЕГДА 0, поэтому из источника не копируются вовсе, только
+    //price_base
+    LProdRow := Q.QLoadRow(
+      'select price_base from or_std_items where id_or_format_estimates = :ide$i and active = 1 and lower(name) = lower(:name$s)',
+      [va2Rows[i][0], va2Rows[i][2]]
+    );
+    if LProdRow[0] = null then
+      Continue;  //источник пропал между чтением вью и этим запросом - пропускаем, попадет в отчет CheckStdItemsGroupSync
+    Q.QSave('i', 'or_std_items', '',
+      'id$i;id_or_format_estimates$i;name$s;price_base$f;wo_estimate$i;r0$i;r1$i;r2$i;r3$i;r4$i;r5$i;r6$i;r7$i;r8$i;by_sgp$i;active$i',
+      [Null, va2Rows[i][1], va2Rows[i][2], LProdRow[0], 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+    );
+  end;
+
+  Result := CheckStdItemsGroupSync(LIdFormat);
+end;
+
 function TOrders.RemoveEstimateForStdItem(IdStdItem: Variant; Silent: Boolean = False): Boolean;
 //удаляет смету для переданного стандартного изделия. если не Silent, то перед этим спросит.
 //вернет True, кроме случая ошибки при выполнениии запроса удаления
@@ -1273,110 +1430,183 @@ begin
   MyInfoMessage('Создано смет: ' + IntToStr(LCreated) + ' из ' + IntToStr(Length(AIds)) + '.' + #13#10 + Msg, 1);
 end;
 
+function TOrders.GetTemplateGroupTargets(AIdOrder: Variant): TVarDynArray;
+//см. комментарий в интерфейсе - группа = 1 производственный шаблон + N отгрузочных, связь асимметрична
+var
+  Row, va: TVarDynArray;
+  LType, LAnchor: Variant;
+  i: Integer;
+begin
+  Result := [];
+  Row := Q.QLoadRow('select e.type, o.id_related_template from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [AIdOrder]);
+  LType := Row[0];
+  if LType = STDITEM_TYPE_PRODUCTION then
+    LAnchor := AIdOrder
+  else if LType = STDITEM_TYPE_SHIPMENT then begin
+    LAnchor := Row[1];
+    if LAnchor = null then
+      Exit;  //отгрузочный шаблон не входит ни в одну группу
+    Result := Result + [LAnchor];  //сам производственный шаблон группы - тоже цель синхронизации/группы
+  end
+  else
+    Exit;  //шаблоны ПФ в группы не входят
+
+  va := Q.QLoadCol('select id from orders where id_related_template = :anchor$i and id <> :self$i and active = 1', [LAnchor, AIdOrder]);
+  for i := 0 to High(va) do
+    Result := Result + [va[i][0]];
+end;
+
 function TOrders.LinkOrderTemplate(AParent: TForm; AIdTemplate: Variant): Boolean;
-//диалог связывания пары шаблонов заказа - см. комментарий в интерфейсе
+//диалог связывания шаблона заказа в группу - см. комментарий в интерфейсе
 const
   cNoLink = 0;   //ключ-заглушка "не связывать/отвязать" в комбо (реальные айди шаблонов всегда < 0)
 var
   va2: TVarDynArray2;
   vak, vav, va: TVarDynArray;
+  AChecked, ADefaultChecked: TVarDynArray;
   Row: TVarDynArray;
   i, LDefaultIdx: Integer;
-  LFormat, LType, LOppositeType, LOldRelated, LNewRelated: Variant;
-  LName, LNewRelatedName, LSyncMsg: string;
+  LFormat, LType, LOldRelated, LNewRelated: Variant;
+  LName, LTargetName, LSyncMsg: string;
+  LAnyChange: Boolean;
 begin
   Result := False;
-  Row := Q.QLoadRow('select templatename, id_format, id_or_format_estimates, id_related_template from orders where id = :id$i', [AIdTemplate]);
+  Row := Q.QLoadRow('select templatename, id_format, id_or_format_estimates from orders where id = :id$i', [AIdTemplate]);
   LName := VarToStr(Row[0]);
   LFormat := Row[1];
-  LOldRelated := Row[3];
   LType := Q.QLoadValue('select type from or_format_estimates where id = :id$i', [Row[2]]);
-  if LType = STDITEM_TYPE_SHIPMENT then
-    LOppositeType := STDITEM_TYPE_PRODUCTION
-  else if LType = STDITEM_TYPE_PRODUCTION then
-    LOppositeType := STDITEM_TYPE_SHIPMENT
+
+  if LType = STDITEM_TYPE_PRODUCTION then begin
+    //производственный шаблон - чеклист всех активных отгрузочных шаблонов той же группы форматов, с
+    //отметками по текущему составу группы (id_related_template = AIdTemplate)
+    va2 := Q.QLoad(
+      'select templatename, id, id_related_template from orders ' +
+      'where id < 0 and id <> :self$i and active = 1 ' +
+      'and id_or_format_estimates in (select id from or_format_estimates where id_format = :fmt$i and type = :otype$i and active = 1) ' +
+      'order by templatename',
+      [AIdTemplate, LFormat, STDITEM_TYPE_SHIPMENT]
+    );
+    if Length(va2) = 0 then begin
+      MyInfoMessage('Нет доступных для связывания отгрузочных шаблонов в этой же группе форматов.');
+      Exit;
+    end;
+    vav := []; vak := []; ADefaultChecked := [];
+    for i := 0 to High(va2) do begin
+      vav := vav + [va2[i][0]];
+      vak := vak + [va2[i][1]];
+      ADefaultChecked := ADefaultChecked + [va2[i][2] = AIdTemplate];
+    end;
+
+    if not FrmChooseDialogMulti.ShowDialog('Связать шаблон "' + LName + '" с отгрузочными...',
+      'Отметьте отгрузочные шаблоны, входящие в одну группу с производственным шаблоном "' + LName + '". ' +
+      'При изменении любого шаблона группы табличные части остальных синхронизируются с ним.',
+      vav, [['Отметьте нужные отгрузочные шаблоны и нажмите ОК.']], ADefaultChecked, AChecked) then
+      Exit;
+
+    Q.QBeginTrans(True);
+    LAnyChange := False;
+    for i := 0 to High(vak) do begin
+      if (AChecked[i] = True) and (ADefaultChecked[i] <> True) then begin
+        Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [AIdTemplate, vak[i]]);
+        LAnyChange := True;
+      end
+      else if (AChecked[i] <> True) and (ADefaultChecked[i] = True) then begin
+        Q.QExecSql('update orders set id_related_template = null where id = :id$i', [vak[i]]);
+        LAnyChange := True;
+      end;
+    end;
+    Result := Q.QCommitTrans;
+    if not Result then
+      Exit;
+
+    if not LAnyChange then
+      MyInfoMessage('Изменений нет.')
+    else begin
+      LSyncMsg := '';
+      for i := 0 to High(vak) do
+        if AChecked[i] = True then begin
+          var LPairMsg := VarToStr(Q.QLoadValue('select F_CheckTemplatesSync(:id1$i, :id2$i) from dual', [AIdTemplate, vak[i]]));
+          if LPairMsg <> '' then
+            S.ConcatStP(LSyncMsg, VarToStr(vav[i]) + ' - ' + LPairMsg, #13#10);
+        end;
+      if LSyncMsg = '' then
+        MyInfoMessage('Группа шаблонов обновлена. Табличные части синхронны.')
+      else
+        MyInfoMessage('Группа шаблонов обновлена.'#13#10'Внимание, не синхронно:'#13#10 + LSyncMsg + #13#10'Будет приведено в соответствие при следующем сохранении любого из шаблонов группы.');
+    end;
+  end
+
+  else if LType = STDITEM_TYPE_SHIPMENT then begin
+    //отгрузочный шаблон - выбор ОДНОГО производственного шаблона (или "не связывать"), т.к. отгрузочный
+    //шаблон состоит не более чем в одной группе
+    LOldRelated := Q.QLoadValue('select id_related_template from orders where id = :id$i', [AIdTemplate]);
+    va2 := Q.QLoad(
+      'select templatename, id from orders ' +
+      'where id < 0 and id <> :self$i and active = 1 ' +
+      'and id_or_format_estimates in (select id from or_format_estimates where id_format = :fmt$i and type = :otype$i and active = 1) ' +
+      'order by templatename',
+      [AIdTemplate, LFormat, STDITEM_TYPE_PRODUCTION]
+    );
+    vak := [cNoLink]; vav := ['(не связывать)'];
+    LDefaultIdx := 0;
+    for i := 0 to High(va2) do begin
+      vav := vav + [va2[i][0]];
+      vak := vak + [va2[i][1]];
+      if va2[i][1] = LOldRelated then
+        LDefaultIdx := High(vak);
+    end;
+    if Length(vav) = 1 then begin
+      MyInfoMessage('Нет доступных для связывания производственных шаблонов в этой же группе форматов.');
+      Exit;
+    end;
+
+    va := [];
+    if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Связать шаблон "' + LName + '" с...', 350, 80,
+     [[cntComboLK, 'Производственный шаблон группы', '1:400:0', 210]], [VarArrayOf([vak[LDefaultIdx], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
+      Exit;
+    LNewRelated := va[0];
+    if LNewRelated = LOldRelated then
+      Exit;  //не изменилось
+
+    Q.QBeginTrans(True);
+    if LNewRelated = cNoLink then
+      Q.QExecSql('update orders set id_related_template = null where id = :id$i', [AIdTemplate])
+    else
+      Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [LNewRelated, AIdTemplate]);
+    Result := Q.QCommitTrans;
+    if not Result then
+      Exit;
+
+    if LNewRelated = cNoLink then
+      MyInfoMessage('Связь снята.')
+    else begin
+      LTargetName := VarToStr(Q.QLoadValue('select templatename from orders where id = :id$i', [LNewRelated]));
+      LSyncMsg := VarToStr(Q.QLoadValue('select F_CheckTemplatesSync(:id1$i, :id2$i) from dual', [AIdTemplate, LNewRelated]));
+      if LSyncMsg = '' then
+        MyInfoMessage('Шаблон связан с "' + LTargetName + '". Табличные части уже синхронны.')
+      else
+        MyInfoMessage('Шаблон связан с "' + LTargetName + '".'#13#10'Внимание: ' + LSyncMsg + ' - будет приведено в соответствие при следующем сохранении любого из шаблонов.');
+    end;
+  end
+
   else begin
     MyInfoMessage('Связывание доступно только для производственных и отгрузочных шаблонов.');
     Exit;
   end;
-
-  va2 := Q.QLoad(
-    'select templatename, id from orders ' +
-    'where id < 0 and id <> :self$i and active = 1 ' +
-    'and (id_related_template is null or id_related_template = :self2$i) ' +
-    'and id_or_format_estimates in (select id from or_format_estimates where id_format = :fmt$i and type = :otype$i and active = 1) ' +
-    'order by templatename',
-    [AIdTemplate, AIdTemplate, LFormat, LOppositeType]
-  );
-  vak := [cNoLink]; vav := ['(не связывать)'];
-  LDefaultIdx := 0;
-  for i := 0 to High(va2) do begin
-    vav := vav + [va2[i][0]];
-    vak := vak + [va2[i][1]];
-    if va2[i][1] = LOldRelated then
-      LDefaultIdx := High(vak);
-  end;
-  if Length(vav) = 1 then begin
-    MyInfoMessage('Нет доступных для связывания шаблонов противоположного типа в этой же группе форматов.');
-    Exit;
-  end;
-
-  va := [];
-  if TFrmBasicInput.ShowDialog(AParent, '', [], fAdd, '~Связать шаблон "' + LName + '" с...', 350, 80,
-   [[cntComboLK, 'Шаблон-пара', '1:400:0', 210]], [VarArrayOf([vak[LDefaultIdx], VarArrayOf(vav), VarArrayOf(vak)])], va, [['']], nil) < 0 then
-    Exit;
-  LNewRelated := va[0];
-  if LNewRelated = LOldRelated then
-    Exit;  //не изменилось
-
-  Q.QBeginTrans(True);
-  //отвяжем старую пару (если была)
-  if LOldRelated <> null then
-    Q.QExecSql('update orders set id_related_template = null where id = :id$i', [LOldRelated]);
-  if LNewRelated = cNoLink then
-    Q.QExecSql('update orders set id_related_template = null where id = :id$i', [AIdTemplate])
-  else begin
-    //на случай если выбранный шаблон уже был с кем-то связан
-    Q.QExecSql('update orders set id_related_template = null where id = :id$i and id_related_template <> :self$i', [LNewRelated, AIdTemplate]);
-    Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [LNewRelated, AIdTemplate]);
-    Q.QExecSql('update orders set id_related_template = :related$i where id = :id$i', [AIdTemplate, LNewRelated]);
-  end;
-  Result := Q.QCommitTrans;
-  if not Result then
-    Exit;
-
-  if LNewRelated = cNoLink then
-    MyInfoMessage('Связь снята.')
-  else begin
-    LNewRelatedName := VarToStr(Q.QLoadValue('select templatename from orders where id = :id$i', [LNewRelated]));
-    LSyncMsg := VarToStr(Q.QLoadValue('select F_CheckTemplatesSync(:id1$i, :id2$i) from dual', [AIdTemplate, LNewRelated]));
-    if LSyncMsg = '' then
-      MyInfoMessage('Шаблон связан с "' + LNewRelatedName + '". Табличные части уже синхронны.')
-    else
-      MyInfoMessage('Шаблон связан с "' + LNewRelatedName + '".'#13#10'Внимание: ' + LSyncMsg + ' - будет приведено в соответствие при следующем сохранении любого из шаблонов.');
-  end;
 end;
 
-function TOrders.SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
-//синхронизация табличной части связанного шаблона - см. общий комментарий в интерфейсе. синхронизируются все
-//поля позиции заказа, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems/LFields), кроме помеченных там же
-//тегом nosync (id, id_std_item, id_itm, ch, pos, std, attention, price_adjusted, price_final, nds_rate -
-//технические/служебные поля и поля, чье значение производно от других уже синхронизируемых полей). для
-//стандартных изделий (nstd в позиции-источнике <> 1) цена (price_base), признак "без сметы" (wo_estimate) и
-//производственный маршрут (r1..rN) не копируются из позиции-источника, а берутся заново из справочника
-//стандартных изделий (or_std_items) для найденного в целевой подгруппе одноименного изделия - для
-//нестандартных изделий эти поля синхронизируются как обычно, копированием из источника (см.
-//cGenericFields/cCatalogFields ниже - при изменении состава синхронизируемых полей в LFields не забыть
-//поправить и здесь, по аналогии с FSyncFields в uFrmODedtOrStdItem.pas).
-//поверх этого, т.к. в производственных и отгрузочных шаблонах допустимы разные комбинации технологических
-//флагов, для затрагиваемых позиций целевого шаблона принудительно проставляются финальные значения по
-//направлению синхронизации (см. ApplyDirectionOverride) - направление определяется уже проверенным типом
-//подгрупп (or_format_estimates.type) целевого шаблона, а не полем orders.id_organization.
-//перед синхронизацией сравнивается состав шаблонов по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
-//самого количества штук) - при расхождении показывается диалог с кратким сообщением (кнопки
-//Синхронизировать/Отмена/Подробно...) и, по кнопке "Подробно...", подробным постатейным списком расхождений;
-//при совпадении (либо расхождении только в количестве штук) синхронизация выполняется, как и раньше,
-//автоматически, без вопроса.
+function TOrders.SyncTemplatePair(AIdSrc, AIdDst: Variant): Boolean;
+//синхронизация табличной части ОДНОЙ пары шаблонов AIdSrc -> AIdDst - см. общий комментарий у
+//SyncRelatedTemplateItems в интерфейсе (в т.ч. про блоки ручной настройки в ApplyDirectionOverride ниже).
+//синхронизируются все поля позиции заказа, сохраняемые в бд (тег s в TFrmOWOrder.PrepareFrgItems/LFields),
+//кроме помеченных там же тегом nosync (id, id_std_item, id_itm, ch, pos, std, attention, price_adjusted,
+//price_final, nds_rate - технические/служебные поля и поля, чье значение производно от других уже
+//синхронизируемых полей). для стандартных изделий (nstd в позиции-источнике <> 1) цена (price_base),
+//признак "без сметы" (wo_estimate) и производственный маршрут (r1..rN) не копируются из позиции-источника,
+//а берутся заново из справочника стандартных изделий (or_std_items) для найденного в целевой подгруппе
+//одноименного изделия - для нестандартных изделий эти поля синхронизируются как обычно, копированием из
+//источника (см. cGenericFields/cCatalogFields ниже - при изменении состава синхронизируемых полей в
+//LFields не забыть поправить и здесь, по аналогии с FSyncFields в uFrmODedtOrStdItem.pas).
 const
   //поля, синхронизируемые копированием значения из позиции-источника как есть ('f' - числовое поле, иначе -
   //как есть/строка/целое) - индексы см. ниже (cIdxSgp и т.п.), используются в ApplyDirectionOverride
@@ -1392,7 +1622,6 @@ const
   cCatalogFields: array[0..1] of string = ('price_base', 'wo_estimate');
   cCatalogTypes:  array[0..1] of string = ('f', 'i');
 var
-  LIdRelated: Variant;
   LRow1, LRow2: TVarDynArray;
   LSrc, LDst: TVarDynArray2;
   LDstGroup: Variant;
@@ -1435,8 +1664,11 @@ var
 
   //принудительные значения для позиции целевого шаблона по направлению синхронизации - см. общий комментарий
   //у функции. производственные/отгрузочные шаблоны допускают разные комбинации этих полей, поэтому здесь они
-  //переопределяются финально, поверх generic/каталожных значений из GetSyncValues
-  procedure ApplyDirectionOverride(var AValues: TVarDynArray);
+  //переопределяются финально, поверх generic/каталожных значений из GetSyncValues.
+  //AItemName/AIsStdItem/AIdTargetStdItem - контекст текущей позиции (имя, признак "стандартное изделие", id
+  //найденного в целевой подгруппе изделия по ResolveTargetStdItem) - для алгоритмов, которым нужно знать,
+  //к какой именно позиции применяется переопределение (см. блоки "МЕСТО ДЛЯ РУЧНОЙ НАСТРОЙКИ" ниже)
+  procedure ApplyDirectionOverride(var AValues: TVarDynArray; const AItemName: string; AIsStdItem: Boolean; AIdTargetStdItem: Variant);
   var
     k: Integer;
   begin
@@ -1446,6 +1678,13 @@ var
       AValues[cIdxIdThn] := -102;
       for k := LGenericCnt + Length(cCatalogFields) to High(AValues) do
         AValues[k] := 0;  //маршрут снимаем
+
+      //--- МЕСТО ДЛЯ РУЧНОЙ НАСТРОЙКИ: синхронизация -> В ОТГРУЗОЧНЫЙ шаблон -------------------------------
+      //здесь можно дополнительно скорректировать AValues (индексы см. cIdxSgp/cIdxDisassembled/
+      //cIdxControlAssembly/cIdxIdKns/cIdxIdThn выше, либо LColNames[k]/LColTypes[k] по индексу k) для
+      //позиции AItemName (AIsStdItem - стандартное ли изделие, AIdTargetStdItem - его id в целевой
+      //подгруппе, если стандартное) в зависимости от типа целевого шаблона - ОТГРУЗОЧНЫЙ.
+      //------------------------------------------------------------------------------------------------------
     end
     else begin
       AValues[cIdxIdKns] := -101;
@@ -1453,24 +1692,25 @@ var
       AValues[cIdxSgp] := 0;
       AValues[cIdxDisassembled] := 0;
       AValues[cIdxControlAssembly] := 0;
+
+      //--- МЕСТО ДЛЯ РУЧНОЙ НАСТРОЙКИ: синхронизация -> В ПРОИЗВОДСТВЕННЫЙ шаблон --------------------------
+      //здесь можно дополнительно скорректировать AValues для позиции AItemName (AIsStdItem/AIdTargetStdItem -
+      //см. выше) в зависимости от типа целевого шаблона - ПРОИЗВОДСТВЕННЫЙ.
+      //------------------------------------------------------------------------------------------------------
     end;
   end;
 
 begin
   Result := False;
-  LIdRelated := Q.QLoadValue('select id_related_template from orders where id = :id$i', [AIdOrder]);
-  if LIdRelated = null then
-    Exit;
-
-  LRow1 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [AIdOrder]);
-  LRow2 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [LIdRelated]);
+  LRow1 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [AIdSrc]);
+  LRow2 := Q.QLoadRow('select o.id_format, e.type from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates', [AIdDst]);
   if (LRow1[0] <> LRow2[0]) or
     not (((LRow1[1] = STDITEM_TYPE_PRODUCTION) and (LRow2[1] = STDITEM_TYPE_SHIPMENT)) or
          ((LRow1[1] = STDITEM_TYPE_SHIPMENT) and (LRow2[1] = STDITEM_TYPE_PRODUCTION))) then begin
     MyWarningMessage('Связанный шаблон более не образует пару производственный/отгрузочный в той же группе форматов - синхронизация табличной части пропущена.'#13#10'Проверьте связь в справочнике шаблонов заказов.');
     Exit;
   end;
-  LDstGroup := Q.QLoadValue('select id_or_format_estimates from orders where id = :id$i', [LIdRelated]);
+  LDstGroup := Q.QLoadValue('select id_or_format_estimates from orders where id = :id$i', [AIdDst]);
   LTargetIsShipment := LRow2[1] = STDITEM_TYPE_SHIPMENT;
 
   //полный список синхронизируемых полей (кроме id_std_item/std, формируемых отдельно по результату
@@ -1498,8 +1738,8 @@ begin
       S.ConcatStP(LCatFields, VarToStr(LColNames[i]), ', ');
   end;
 
-  LSrc := Q.QLoad('select i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [AIdOrder]);
-  LDst := Q.QLoad('select oi.id, i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [LIdRelated]);
+  LSrc := Q.QLoad('select i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [AIdSrc]);
+  LDst := Q.QLoad('select oi.id, i.name, ' + LSelFields + ' from order_items oi, or_std_items i where oi.id_order = :id$i and i.id = oi.id_std_item order by oi.pos', [AIdDst]);
 
   //структурная проверка - совпадают ли шаблоны по порядку и количеству НАИМЕНОВАНИЙ позиций (без учета
   //количества штук) - при расхождении показываем краткое сообщение с кнопками Синхронизировать/Отмена/
@@ -1546,7 +1786,7 @@ begin
     end;
     LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
     LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
-    ApplyDirectionOverride(LValues);
+    ApplyDirectionOverride(LValues, LSrcName, LIsStd, LNewStdId);
     LChanged := LowerCase(LSrcName) <> LowerCase(VarToStr(LDst[i][1]));
     if not LChanged then
       for j := 0 to High(LColNames) do
@@ -1577,9 +1817,9 @@ begin
     end;
     LIsStd := S.NInt(LSrc[i][1 {nstd}]) <> 1;
     LValues := GetSyncValues(LSrc[i], LIsStd, LNewStdId);
-    ApplyDirectionOverride(LValues);
+    ApplyDirectionOverride(LValues, LSrcName, LIsStd, LNewStdId);
     var LSql := 'insert into order_items (id_order, pos, id_std_item, std';
-    var LParams: TVarDynArray := [LIdRelated, i + 1, LNewStdId, S.IIf(LIsStd, 1, 0)];
+    var LParams: TVarDynArray := [AIdDst, i + 1, LNewStdId, S.IIf(LIsStd, 1, 0)];
     for j := 0 to High(LColNames) do
       LSql := LSql + ', ' + VarToStr(LColNames[j]);
     LSql := LSql + ') values (:ido$i, :pos$i, :sid$i, :std$i';
@@ -1597,6 +1837,20 @@ begin
   Result := Q.QCommitTrans;
   if Result and (Msg <> '') then
     MyWarningMessage('Синхронизация связанного шаблона выполнена не полностью:'#13#10 + Msg);
+end;
+
+function TOrders.SyncRelatedTemplateItems(AIdOrder: Variant): Boolean;
+//синхронизация табличной части ВСЕХ шаблонов группы, связанных с AIdOrder - см. подробный комментарий в
+//интерфейсе. сама синхронизация одной пары выполняется в SyncTemplatePair - здесь только определяется
+//состав группы (GetTemplateGroupTargets) и она обходится целиком, каждая пара - в своей транзакции
+var
+  LTargets: TVarDynArray;
+  i: Integer;
+begin
+  Result := True;
+  LTargets := GetTemplateGroupTargets(AIdOrder);
+  for i := 0 to High(LTargets) do
+    Result := SyncTemplatePair(AIdOrder, LTargets[i]) and Result;
 end;
 
 function TOrders.LoadSmetaOld(IdOrder: Integer): Integer;

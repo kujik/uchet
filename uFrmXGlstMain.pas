@@ -71,6 +71,7 @@ implementation
 uses
   uFrmMain,
   uSys,
+  uWaitForm,
   uTasks,
   uServerTasks,
   uErrors,
@@ -1618,11 +1619,27 @@ v:=True;
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['name','Наименование формата','300'],
-      ['active','Используется','80','pic']
+      ['active','Используется','80','pic'],
+      ['attention$i','Внимание','80','pic']
     ]);
-    Frg1.Opt.SetTable('or_formats');
+    //v_or_formats_attention - or_formats + признак attention (были ли предупреждения в последней проверке
+    //"Проверить группу"/"Проверить все группы" - см. TOrders.CheckStdItemsGroupSync в uOrders.pas и
+    //v_or_formats_attention в d_estimates.sql); второй параметр - таблица для записи, как обычно
+    Frg1.Opt.SetTable('v_or_formats_attention', 'or_formats');
     Frg1.Opt.SetWhere(S.IIfStr(not User.IsDataEditor, ' where id > 0'));
-    Frg1.Opt.SetButtons(1, 'reacds', User.Role(rOr_R_StdPspFormats_Ch));
+    //расписано явным списком (было SetButtons(1, 'reacds', ...)), чтобы добавить кнопку "Проверить все
+    //группы" - см. Frg1ButtonClick (Tag = -1007) и TOrders.CheckStdItemsGroupSync в uOrders.pas
+    Frg1.Opt.SetButtons(1,[
+      [mbtSelectFromList, False], [],
+      [mbtRefresh, True], [],
+      [mbtView, False], [],
+      [mbtEdit, User.Role(rOr_R_StdPspFormats_Ch)], [mbtAdd, User.Role(rOr_R_StdPspFormats_Ch)], [mbtInsert, False],
+      [mbtCopy, User.Role(rOr_R_StdPspFormats_Ch)], [mbtDelete, User.Role(rOr_R_StdPspFormats_Ch)], [],
+      [mbtGridFilter, False], [],
+      [mbtGridSettings, True], [],
+      [mbtCtlPanel, False], [],
+      [-1007, User.IsDataEditor, 'Проверить все группы']
+    ]);
 
     Frg2.Opt.SetFields([
       ['id$i','_id','40'],
@@ -1643,7 +1660,11 @@ v:=True;
       'Также выберите тип изделий (Производственное/Отгрузочное/Полуфабрикат.'#13#10+
       'Снимите галку "Используется", чтобы неиспользуемые группы не выпадали в справочнике, паспортах и шаблонах паспортов.'#13#10+
       'Непосредственно в детальной таблице можно установить число в колонке "Группа", оно влияет на диалог ввода стандартного изделия'#13#10+
-      '(синхронизируются при вводе изделия с одинаковой группой; изделия с группой 0 и полуфабрикаты никогда не синхронизируются).'#13#10
+      '(синхронизируются при вводе изделия с одинаковой группой; изделия с группой 0 и полуфабрикаты никогда не синхронизируются).'#13#10+
+      'При создании новой подгруппы (кроме полуфабриката) недостающие изделия автоматически подтягиваются в отгрузочные подгруппы'#13#10+
+      'из производственных подгрупп той же группы синхронизации; обратное (изделия, которых нет в производственной подгруппе) не удаляется.'#13#10+
+      'Столбец "Внимание" показывает, что последняя проверка синхронности группы (см. кнопку "Проверить все группы", а также'#13#10+
+      '"Проверить группу" в справочнике стандартных изделий) нашла расхождения - дважды щелкните по нему для просмотра отчета.'#13#10
     ]];
   end
   else if FormDoc = myfrm_Rep_PlannedMaterials then begin
@@ -2184,6 +2205,31 @@ v:=True;
     ]);
     Frg1.Opt.SetTable('v_std_items_errors');
     Frg1.Opt.SetButtons(1, 'r');
+  end
+  else if FormDoc = myfrm_Rep_OrderStdItems_GroupSync then begin
+    //отчет "Проверить группу" - см. TFrmOGrefOrStdItems.Frg1ButtonClick (Tag = 1005) и комментарий у
+    //v_std_items_group_sync в d_estimates.sql. AddParam - id_format проверяемой группы форматов
+    Caption := 'Проверка синхронности группы стандартных изделий';
+    Frg1.Opt.SetFields([
+      ['id$i','_id'],
+      ['format_name','Группа форматов','200;h'],
+      ['prod_subgroup_name','Подгруппа (произв.)','160;h'],
+      ['otgr_subgroup_name','Подгруппа (отгруз.)','160;h'],
+      ['item_name','Наименование','300;h'],
+      ['err_missing_in_otgr$i','Нет в отгрузке','90','pic=1:3'],
+      ['err_missing_in_prod$i','Нет в производстве','90','pic=1:3']
+    ]);
+    Frg1.Opt.SetTable('v_std_items_group_sync');
+    Frg1.Opt.SetWhere('where id_format = ' + VarToStr(AddParam) + ' order by prod_subgroup_name, otgr_subgroup_name, item_name');
+    Frg1.Opt.SetButtons(1, 'r');
+    Frg1.InfoArray := [
+      [Caption + '.'#13#10+
+       'Список расхождений состава между производственной подгруппой и каждой связанной с ней (по коду синхронизации) '#13#10+
+       'отгрузочной подгруппой в пределах выбранной группы форматов.'#13#10+
+       '"Нет в отгрузке" - изделие есть в производственной подгруппе, но отсутствует в указанной отгрузочной.'#13#10+
+       '"Нет в производстве" - изделие есть в отгрузочной подгруппе, но отсутствует в производственной.'#13#10+
+       'Подгруппы с именем, начинающимся на "Alt_", и при этом неактивные - из проверки исключены.'#13#10]
+    ];
   end
   else if FormDoc = myfrm_J_Tasks then begin
     Frg1.Options := Frg1.Options + [myogGridLabels];
@@ -2876,7 +2922,24 @@ begin
     end;
   end
 
-
+  else if (FormDoc = myfrm_R_StdPspFormats) and (Tag = -1007) then begin
+    //"Проверить все группы" - последовательный запуск проверки (TOrders.CheckStdItemsGroupSync, см.
+    //uOrders.pas) по всем группам форматов (or_formats), с индикацией прогресса через ShowWaitForm;
+    //после - обновление грида (подтянутся новые значения attention) и итоговое сообщение
+    var LGroups := Q.QLoad('select id, name from or_formats order by name', []);
+    var LWithWarnings := 0;
+    for i := 0 to High(LGroups) do
+      ShowWaitForm('Проверяем группу "' + VarToStr(LGroups[i][1]) + '"...', 0,
+        procedure
+        begin
+          if Orders.CheckStdItemsGroupSync(LGroups[i][0]) then
+            Inc(LWithWarnings);
+        end
+      );
+    Fr.RefreshGrid;
+    MyInfoMessage('Проверено групп: ' + IntToStr(Length(LGroups)) + '.'#13#10 +
+      'Найдены предупреждения в группах: ' + IntToStr(LWithWarnings) + '.');
+  end
 
   else inherited;
 
@@ -3434,6 +3497,12 @@ begin
     v:= VararrayOf([Fr.GetValueS('name'), S.NNum(Copy(Fr.CurrField, 4, 2))]);
     TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_PlanneDOrders, [myfoModal, myfoSizeable, myfoDialog], fView, id, v);
     Handled := True;
+  end
+  else if (FormDoc = myfrm_R_StdPspFormats) and (Fr.CurrField = 'attention') then begin
+    //просмотр истории проверок группы (Fr.ID здесь = or_formats.id = id_format) - см. v_or_formats_attention
+    //в d_estimates.sql и TFrmOWrepStdItemsGroupCheck в uFrmOWrepStdItemsGroupCheck.pas
+    Wh.ExecDialog(myfrm_Rep_StdItemsGroupCheck, Self, [], fView, Fr.ID, null);
+    Handled := True;
   end;
 
 end;
@@ -3458,6 +3527,7 @@ end;
 procedure TFrmXGlstMain.Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 var
   va: TVarDynArray;
+  LNewId: Integer;
 begin
   if fMode <> fNone then begin
     if ((FormDoc = myfrm_J_OrPayments)or(FormDoc = myfrm_J_OrPayments_N)) then begin
@@ -3497,10 +3567,23 @@ begin
        ], va, va, [['']], nil) < 0
       then Exit;
       if Frg1.ID = 1 then
-        va[2] := 2;  //всегда полуфабрикат в группе п/ф
-      if Q.QSave(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;type$i;prefix$s;active$i',
-        [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3]]) < 0 then
-        MyWarningMessage('Не удалось изменить данные!');
+        va[1] := 2;  //всегда полуфабрикат в группе п/ф
+      LNewId := Q.QSave(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;type$i;prefix$s;active$i',
+        [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3]]);
+      if LNewId < 0 then
+        MyWarningMessage('Не удалось изменить данные!')
+      else if (fMode in [fAdd, fCopy]) and (S.NInt(va[1]) <> STDITEM_TYPE_SEMIPRODUCT) then begin
+        //новая подгруппа (не ПФ) - подтянем в отгрузочные недостающие изделия из производственных подгрупп
+        //той же группы синхронизации (см. TOrders.SyncNewSubgroupItems, uOrders.pas); сообщение покажем,
+        //только если после синхронизации в группе форматов остались расхождения - сама функция при этом
+        //ничего не выводит
+        if Orders.SyncNewSubgroupItems(LNewId) then
+          MyWarningMessage(
+            'Подгруппа создана, недостающие изделия скопированы из производственных подгрупп, но в группе форматов остались расхождения в составе.'+
+            #13#10'См. столбец "Внимание" в таблице групп или отчет "Проверить группу"/"Просмотр предупреждения" в справочнике стандартных изделий.'
+          );
+        Frg1.RefreshRecord;  //обновим индикатор "Внимание" у группы в первом гриде
+      end;
       if fMode in [fAdd, fDelete]
         then Fr.RefreshGrid
         else Fr.RefreshRecord;
