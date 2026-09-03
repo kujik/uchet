@@ -95,11 +95,11 @@
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>16129</VerInfo_Build>
+        <VerInfo_Build>16133</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <DCC_Define>PC_;ADMIN_;TURV_;SRV_;OR;PLN_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.16129;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.09.03 21:52:31;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.16133;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.09.03 22:07:52;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>
@@ -224,8 +224,8 @@
         <DCCReference Include="uFrmODedtOrderUPD.pas">
             <Form>FrmODedtOrderUPD</Form>
         </DCCReference>
-        <DCCReference Include="D_R_EstimateReplace.pas">
-            <Form>Dlg_R_EstimateReplace</Form>
+        <DCCReference Include="uFrmODedtReplaceEstimateItem.pas">
+            <Form>FrmODedtReplaceEstimateItem</Form>
         </DCCReference>
         <DCCReference Include="F_MdiDialogTemplate.pas">
             <Form>Form_MdiDialogTemplate</Form>

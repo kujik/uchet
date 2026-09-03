@@ -86,7 +86,7 @@ uses
 
   D_Order,
   D_OrderPrintLabels,
-  D_R_EstimateReplace,
+  uFrmODedtReplaceEstimateItem,
   uFrmXWErrorLog, //диалог просмотра ошибки (на TFrmBasicMdi)
   D_Spl_InfoGrid,
 
@@ -2726,7 +2726,7 @@ begin
         VarArrayOf([S.IIf(fMode = fAdd, 0, Fr.GetValue('state')), Fr.GetControlValue('CbArea'), Fr.GetValue('ornum')])
       );
     if FormDoc = myfrm_R_EstimatesReplace then
-      Dlg_R_EstimateReplace.ShowDialog(Fr.GetValue('id_old'), fMode);
+      FrmODedtReplaceEstimateItem.ShowDialog(Self, Fr.GetValue('id_old'), fMode);
     if FormDoc = myfrm_R_Spl_Categoryes then
       Wh.ExecDialog(myfrm_Dlg_R_Spl_Categoryes, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Itm_Units then

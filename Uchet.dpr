@@ -102,7 +102,7 @@ uses
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
   F_TestTree in 'F_TestTree.pas' {Form_TestTree},
   uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
-  D_R_EstimateReplace in 'D_R_EstimateReplace.pas' {Dlg_R_EstimateReplace},
+  uFrmODedtReplaceEstimateItem in 'uFrmODedtReplaceEstimateItem.pas' {FrmODedtReplaceEstimateItem},
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
   F_Adm_Installer in 'F_Adm_Installer.pas' {Form_Adm_Installer},
   uFrmXWErrorLog in 'uFrmXWErrorLog.pas' {FrmXWErrorLog},
@@ -357,7 +357,7 @@ begin
   Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
   Application.CreateForm(TForm_TestTree, Form_TestTree);
   Application.CreateForm(TFrmODedtOrderUPD, FrmODedtOrderUPD);
-  Application.CreateForm(TDlg_R_EstimateReplace, Dlg_R_EstimateReplace);
+  Application.CreateForm(TFrmODedtReplaceEstimateItem, FrmODedtReplaceEstimateItem);
   Application.CreateForm(TFrmTestDropDownEh, FrmTestDropDownEh);
 
   Application.CreateForm(TFrmCWAcoountBasis, FrmCWAcoountBasis);
