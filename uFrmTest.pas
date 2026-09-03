@@ -1422,6 +1422,8 @@ var
   i: Integer;
   st: string;
 begin
+Q.QExecSql('select st from dual where f = :f$f and st = :st$s and dt = :dt$d', [1.44, 'Кин-дзя-дза', Date]); Exit;
+
 TasksS.ReportForNegativeQuantityOnSgp;
 TasksS.ReportForOrdersPlannedToStartTomorrow;
 TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;

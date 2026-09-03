@@ -951,6 +951,7 @@ begin
     ['dt_end;0', 't=cp0'],
     ['dt_to_sgp;0', 't=ch0,cp0'],
     ['dt_from_sgp;0', 't=ch0,cp0'],
+    ['addfiles;0;0', 't=ch0,cp0'],   //маркер для блокировки внешних документов
     //['ndsd$f'],
     ['id_status_itm;0', 't=ch0,cp0'],
     ['status_itm;0', 't=ch0,cp0'],
@@ -1882,6 +1883,10 @@ begin
     //покаже все контролы панели кнопок
     SetButtonsVisibilityAndArrange(['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', 'edt_templatename1', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo], []);
     var LStatus := F.GetProp('id_status').AsInteger;
+  //если для отгрузочных заказов Проведение отключено константой (см. uOrders.pas) - скроем кнопки Провести/Отменить
+  //проведение совсем (ни ниже по коду, ни выше их обратно не показываем - единственный путь: оформление -> запуск)
+  if cOrderDisableApproveForShipment and (F.GetProp('std_item_type') = STDITEM_TYPE_SHIPMENT) then
+    SetButtonsVisibilityAndArrange([], [mbtApprove, mbtUnApprove]);
   //уберем кнопку удаления
   if not FIsTemplate or (Mode <> fEdit) or (not A.InArray(LStatus, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_STOPPED])) or (not User.Role(rOr_D_Order_Del) and  (LStatus <> ORDER_ID_STATUS_DRAFT)) then
     SetButtonsVisibilityAndArrange([], [mbtDelete]);
@@ -1909,7 +1914,11 @@ begin
     //отклоненный заказ: доступна только кнопка "Отменить проведение" (видимость которой уже определяется правом rOr_D_Order_UnApprove выше)
     SetButtonsVisibilityAndArrange([], ['edt_templatename', 'chbIsVerifyed', mbtSave, mbtApprove, mbtGo])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_DRAFT then
-    SetButtonsVisibilityAndArrange([], ['edt_templatename', S.IIf(Mode in [fAdd, fCopy], mbtDelete, '-'), mbtUnApprove, mbtGo])
+    //для отгрузочных заказов кнопка "Запустить" видна уже на этапе оформления (менеджер может запустить заказ,
+    //минуя Проведение) - см. также ChangeOrderStatus (Tag = mbtGo): там же проверка роли и статуса
+    //производственного заказа-основания
+    SetButtonsVisibilityAndArrange([], ['edt_templatename', S.IIf(Mode in [fAdd, fCopy], mbtDelete, '-'), mbtUnApprove,
+      S.IIf(F.GetProp('std_item_type') = STDITEM_TYPE_SHIPMENT, '-', mbtGo)])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_APPROVED then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove{, mbtSave}])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_STARTED then
@@ -1976,9 +1985,28 @@ begin
       F.SetProp('id_status', ORDER_ID_STATUS_DRAFT);
   end
   else if (Tag = mbtGo) and (not FOnVerification) then begin
-    if not User.Role(rOr_D_Order_Start) then begin
+    //отгрузочный заказ менеджер (rOr_D_Order_Ch) может запустить в работу и минуя Проведение (см. также SetButtons -
+    //кнопка "Запустить" видна для отгрузочных заказов уже на этапе оформления); право rOr_D_Order_Start по-прежнему
+    //достаточно само по себе для любых заказов (в т.ч. после Проведения)
+    if not (User.Role(rOr_D_Order_Start) or ((F.GetProp('std_item_type') = STDITEM_TYPE_SHIPMENT) and User.Role(rOr_D_Order_Ch))) then begin
       MyInfoMessage('Вы не можете запустить в работу этот заказ!');
       Exit;
+    end;
+    //если у отгрузочного заказа есть производственный заказ-основание (id_production_order) - запустить его можно,
+    //только если производственный заказ сам уже запущен в работу; проверяем именно "сырой" id_status (а не полный
+    //статус status_itm с учетом состояния итм) - см. постановку задачи; для показа в сообщении берем текстовый
+    //статус из поля status (v_orders) - не status_itm
+    var LIdProductionOrder := S.NInt(F.GetProp('id_production_order'));
+    if (F.GetProp('std_item_type') = STDITEM_TYPE_SHIPMENT) and (LIdProductionOrder > 0) then begin
+      var LProdRow := Q.QLoadRow('select id_status, dt_start, status from v_orders where id = :id$i', [LIdProductionOrder]);
+      if S.NInt(LProdRow[0]) <> ORDER_ID_STATUS_STARTED then begin
+        MyInfoMessage(
+          'Нельзя запустить отгрузочный заказ: производственный заказ-основание еще не запущен в работу!'#13#10 +
+          'Плановая дата запуска производственного заказа: ' + S.IIfStr(VarIsNull(LProdRow[1]), '?', FormatDateTime('dd.mm.yyyy', LProdRow[1])) + #13#10 +
+          'Статус производственного заказа: ' + VarToStr(LProdRow[2])
+        );
+        Exit;
+      end;
     end;
     chbIsVerifyed.Checked := False;
     MyInfoMessage('Проверьте заказ перед запуском в работу!'#13#10'После этого поставьте галочку "Проверено" и нажмите кнопку "Запустить" повторно.');
@@ -2220,7 +2248,6 @@ begin
     //если не установлен флаг Редактировать все, запретим изменения полей кроме выбранных по тегу
 //    if not FEditAll then
 //      F.SetProps('-ea', False, fvtDsbl);
-    dedt_dt_start.ControlLabel.Caption := 'Факт. дата'#13#10'запуска';
   end
   //для всех остальных статусов блокирем все
   else if F.GetProp('id_status').AsInteger <> ORDER_ID_STATUS_DRAFT then begin
@@ -2229,6 +2256,8 @@ begin
   //никогда ене вводится текст, значения по едитбатотонам
   edt_reglament.ReadOnly := True;
   edt_complaints.ReadOnly := True;
+  dedt_dt_start.ControlLabel.Caption := S.IIfStr(A.InArray(
+    F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_REJECTED]), 'Факт', 'План') + '. дата'#13#10'запуска';
 end;
 
 procedure TFrmOWOrder.SetEditButtons;
@@ -2526,16 +2555,15 @@ begin
   if FIsTemplate then
     Exit;
   if LOrganization = -1 then begin
-    //для производства монтаж недоступен (сбросим значения и зблокируем)
-    F.SetProps('dt_start', True, fvtDsbl);
+    //для производства монтаж недоступен (сбросим значения и заблокируем)
     F.SetProps('dt_montage_beg;dt_montage_end', False, fvtDsbl);
     F.SetProps('dt_montage_beg;dt_montage_end', null, fvtVCurr);
   end
   else begin
-    F.SetProps('dt_start', True, fvtDsbl);   //!!!
     F.SetProps('dt_start', F.GetProp('dt_beg'), fvtVCurr);
     F.SetProps('dt_montage_beg;dt_montage_end', True, fvtDsbl);
   end;
+  F.SetProps('dt_start', F.GetProp('id_status').AsInteger = ORDER_ID_STATUS_DRAFT, fvtDsbl);
   F.SetProps('dt_start;dt_montage_beg;dt_montage_end', '', fvtVer);
   frmpcDates.SetError(False);
   //каждая дата ниже в блоке должна быть не ранее той что идет выше.
@@ -2544,7 +2572,13 @@ begin
     Cth.SetErrorMarker(dedt_dt_start, True);
     frmpcDates.SetError(True);
   end
-  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or ((dedt_dt_otgr.Value < dedt_dt_start.Value) and (A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED]))) then begin
+  //
+  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or (dedt_dt_otgr.Value < dedt_dt_beg.Value) then begin
+    Cth.SetErrorMarker(dedt_dt_otgr, True);
+    frmpcDates.SetError(True);
+  end
+  //для уже запущенного заказа включаем в проверку плановую дату запуска (она стала уже фактической), иначе мы ее не контролируем
+  else if (not Cth.DteValueIsDate(dedt_dt_otgr)) or ((dedt_dt_otgr.Value < dedt_dt_start.Value) and (not A.InArray(F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED]))) then begin
     Cth.SetErrorMarker(dedt_dt_otgr, True);
     frmpcDates.SetError(True);
   end
@@ -2563,7 +2597,11 @@ begin
 end;
 
 procedure TFrmOWOrder.FrgFilesButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
+//добавление и уделение файлов для гридов Основание и Внешние документы
 begin
+  //ничего не делаем, если нельзя изменять соотвествующее свойство
+  if F.GetProp(S.IIfStr(Fr = FrgBasis, 'basis_text', 'addfiles'), fvtDsbl) = False then
+    Exit;
   AddAddFile(Fr, Tag);
   if Fr = FrgBasis then
     CheckBasis;
@@ -2701,7 +2739,14 @@ begin
   GetOrderPath;
 
   //прочие поля
+
   F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
+  //тип оплаты
+  F.SetProp('cashtype', S.Decode([F.GetProp('cashtype_account').AsString, 'наличные', 2, 'безнал (нет счета)', 1, 1]));
+  //номер счета
+  F.SetProp('account', S.Decode([F.GetProp('cashtype_account').AsString, 'наличные', '', 'безнал (нет счета)', '', F.GetProp('cashtype_account').AsString]));
+
+
   F.SetProp('ch', GetOrderChangedFieldNames);
 
   //сохраняем заголовочную часть
@@ -3921,3 +3966,6 @@ FrgItemsButtonClick - ненльзя удалять.вставлять стро�
 не сделана блокировка и не открываются несколько окон
 поправить подсказку/расположения в окнах связывания шаблонов
 при создании на соновании шаблона не сохраняется табличная часть
+после изменения статуса заказа подсвечивается поле Тип заказа как измененное
+вероятно, не всегда сохраняется регламент
++++работают кнопки добавления файлов в основании и внешних документах когда не должны

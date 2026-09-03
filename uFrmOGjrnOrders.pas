@@ -77,7 +77,7 @@ var
   va2: TVarDynArray2;
 begin
   Caption:='Журнал заказов';
-  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogRowDetailPanel, myogLoadAfterVisible];
+  Frg1.Options := Frg1.Options {- [myogsaveoptions]} + [myogIndicatorCheckBoxes, myogMultiSelect, myogGridLabels, myogRowDetailPanel, myogLoadAfterVisible, myogUsePresets];
   Frg1.Opt.SetFields([
     ['id$i','_id','d=40'],
     ['id_itm$i','_id_itm','40'],

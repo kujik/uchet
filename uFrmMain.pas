@@ -165,7 +165,7 @@ begin
   end;
   FrmMain.StatusBar.Panels[0].Text := '';
   //опции дбэхгридов - дефолтное меню гридов
-  DBGridEhCenter.OnBuildIndicatorTitleMenu := CreateGridIndicatorTitleMenu;
+  //!!!DBGridEhCenter.OnBuildIndicatorTitleMenu := CreateGridIndicatorTitleMenu;
   //действия после логина пользователя (а форма не будет создана пока нет логина пользователя)
   AfterUserLogged;
 end;
@@ -522,6 +522,9 @@ begin
     [],
     //['Комментарии к столбцам из SQL-скриптов в БД', myfrm_Adm_SqlCommentSync, User.IsDeveloper],
     ['SqlUpdater - обработка SQL-скриптов', myfrm_Adm_SqlUpdater, User.IsDeveloper],
+    //журнал ошибок - в общем разделе меню (а не только в {$IFDEF ADMIN}), чтобы был доступен разработчику из
+    //любого модуля (Заказы, Работники, Планирование, Платежный календарь, Сервер), а не только из Администрирования
+    ['Журнал ошибок', myfrm_J_Error_Log, User.IsDeveloper],
     [],
     ['Тестовый справочник', myfrm_R_Test, User.IsDeveloper],
     ['Тест 1', '_', User.IsDeveloper],
@@ -565,7 +568,8 @@ begin
     ['Просмотр сессий', myfrm_Dlg_Adm_Sessions, User.Role(rAdm_Installer)],
     [],
     ['Лог событий БД', myfrm_Adm_Db_Log, User.IsDeveloper],
-    ['Журнал ошибок', myfrm_J_Error_Log, User.IsDeveloper],
+    //'Журнал ошибок' перенесен в общий раздел меню в начале DefineMainMenu (рядом с SqlUpdater) - виден теперь
+    //не только в Администрировании, но и в остальных модулях
     [],
     ['Журнал задач', myfrm_J_Tasks, User.IsDeveloper],
     []

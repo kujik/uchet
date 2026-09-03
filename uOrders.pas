@@ -336,6 +336,11 @@ const
   STDITEM_TYPE_SHIPMENT = 1;
   STDITEM_TYPE_SEMIPRODUCT= 2;
 
+  //если True - для отгрузочных заказов (std_item_type = STDITEM_TYPE_SHIPMENT) этап Проведения полностью
+  //отключается (кнопки "Провести"/"Отменить проведение" не показываются вообще, независимо от статуса) -
+  //единственная доступная цепочка статусов: на оформлении -> запущен в работу (см. uFrmOWOrder.pas, SetButtons)
+  cOrderDisableApproveForShipment = True;
+
 
 implementation
 

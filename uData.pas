@@ -1031,7 +1031,7 @@ const
   myfrm_Dlg_Or_ItmInfo='Dlg_Or_ItmInfo';
   myfrm_Dlg_J_Montage='Dlg_J_Montage';
   myfrm_Dlg_Adm_Sessions='Dlg_Adm_Sessions';
-  myfrm_Dlg_J_Error_Log='Dlg_J_Error_Log';
+  myfrm_Dlg_J_Error_Log2='Dlg_J_Error_Log2'; //диалог просмотра ошибки (uFrmXWErrorLog)
   myfrm_Dlg_Rep_Order_Primecost2='Dlg_Rep_Order_Primecost2';
   myfrm_Dlg_R_OrderStdItems='Dlg_R_OrderStdItems';
   myfrm_Dlg_SupplierMinPart='Dlg_SupplierMinPart';
@@ -1545,6 +1545,7 @@ const
   rAdm_Other_IsDeveloper = '0-m-d';
   rAdm_Other_IsDataEditor = '0-m-de';
   rAdm_Other_SessionManager = '0-m-sm';
+  rAdm_Other_InterfaceAdmin = '0-m-ia';
   rAdm_Settings_Main = '0-90';
   rAdm_Settings_Modules = '0-91';
   rAdm_Other_Tasks = '0-92';
@@ -1831,7 +1832,7 @@ const
 
 
   const
-  URights : array [0..283] of array [0..3] of string = (
+  URights : array [0..284] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1841,6 +1842,7 @@ const
     (rAdm_Other_IsDeveloper,'','Разное','Пользователь является разработчиком'),
     (rAdm_Other_IsDataEditor,'','Разное','Пользователь является администратором данных'),
     (rAdm_Other_SessionManager,'','Разное','Просмотр сессий и принудительное завершение работы пользователей'),
+    (rAdm_Other_InterfaceAdmin,'','Разное','Администрирование интерфейса (в т.ч. создание общих пресетов гридов)'),
     (rAdm_Other_Tasks,'','Разное','Управеление фоновыми задачами'),
     (rAdm_Other_DeleteOnServer,'','Разное','Удаление файлов и папок на сервере'),
     (rAdm_DeleteOutdatedOrdersAndAccounts,'','Разное','Удаление старых счетов и заказов'),

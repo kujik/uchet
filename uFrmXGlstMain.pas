@@ -87,7 +87,7 @@ uses
   D_Order,
   D_OrderPrintLabels,
   D_R_EstimateReplace,
-  D_J_Error_Log,
+  uFrmXWErrorLog, //диалог просмотра ошибки (на TFrmBasicMdi)
   D_Spl_InfoGrid,
 
   uFrmOGedtSnMain,
@@ -184,19 +184,27 @@ begin
   end
   else if FormDoc = myfrm_J_Error_Log then begin
     Caption:='Лог ошибок';
-    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
+    Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible, myogIndicatorCheckBoxes, myogMultiSelect];
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
       ['dt','Время события','150','bt=Подробности'],
       ['modulename','Модуль','120'],
       ['userloginandname','Пользователь','150'],
       ['message','Сообщение об ошибке','300'],
-      ['sql','SQL-запрос','200']
+      ['sql','SQL-запрос','200'],
+      ['comm$s','Комментарий','200','e']
     ]);
-    Frg1.Opt.SetTable('v_adm_error_log');
+    //второй параметр SetTable (реальная таблица) обязателен, чтобы правка "comm" прямо в ячейке грида сохранялась в
+    //бд - без него update не формируется (см. FOpt.Sql.Table <> '' в TFrDBGridEh.ColumnsSetEditText, uFrDBGridEh.pas)
+    Frg1.Opt.SetTable('v_adm_error_log', 'adm_error_log');
     Frg1.Opt.SetWhere('where userlogin like :userlogin$s and ide <= :ide$i /*ANDWHERE*/');
     Frg1.Opt.FilterRules := [[], ['dt']];
-    Frg1.Opt.SetButtons(1, 'rvdfsp', User.IsDeveloper);
+    //кнопки: просмотр/подробности - всем, удаление (в т.ч. массовое, по отмеченным галочками) - только разработчикам,
+    //как и раньше (см. старый вызов SetButtons(1, 'rvdfsp', User.IsDeveloper))
+    Frg1.Opt.SetButtons(1, [
+      [mbtRefresh],[],[mbtView],[],[mbtDelete, User.IsDeveloper],[],
+      [-1001, User.IsDeveloper, 'Удалить выбранные', 'delete'],[],[mbtGridFilter],[],[mbtGridSettings],[],[mbtCtlPanel]
+    ]);
     Frg1.CreateAddControls('1', cntCheck, 'Только свои записи', 'ChbMy', '', 50, yrefC, 150);
     Frg1.CreateAddControls('1', cntCheck, 'Показывать отладочные', 'ChbDebug', '', -1, yrefC, 150);
   end
@@ -1217,7 +1225,7 @@ v:=True;
     Frg1.InfoArray:=[[Caption + '.'#13#10]];
   end
   else if FormDoc = myfrm_R_Bcad_Nomencl then begin
-    Frg1.Options := Frg1.Options + [myogLoadAfterVisible];
+    Frg1.Options := Frg1.Options + [myogLoadAfterVisible, myogUsePresets];
     Caption:='Сметные позиции';
     Frg1.Opt.SetFields([
       ['id$i','_id','40'],
@@ -2567,7 +2575,7 @@ begin
       Fr.RefreshGrid;
     end;
     if (FormDoc = myfrm_J_Error_Log) and (fMode = fView) then
-      TDlg_J_Error_Log.Create(Self, myfrm_Dlg_J_Error_Log, [myfoSizeable], fNone, Fr.ID, null);
+      TFrmXWErrorLog.Show(Self, myfrm_Dlg_J_Error_Log2, [myfoSizeable], fNone, Fr.ID, null);
     if FormDoc = myfrm_R_Organizations then
       Wh.ExecDialog(myfrm_Dlg_R_Organizations, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Locations then
@@ -2853,6 +2861,19 @@ begin
     else
       MyInfoMessage('Отметьте те ведомости, которые нужено удалить.');
   end
+  else if (FormDoc = myfrm_J_Error_Log) and (Tag = 1001) then begin
+    //удалить все отмеченные (галочками в индикаторном столбце) записи лога ошибок
+    va := A.VarDynArray2ColToVD1(Gh.GetGridArrayOfChecked(Fr.DBGridEh1, -1), 0);
+    if (Length(va) > 0) then begin
+      if MyQuestionMessage('Удалить ' + S.GetEndingFull(Length(va), ' запис', 'ь', 'и', 'ей' ) + ' лога ошибок?') <> mrYes then
+        Exit;
+      for i := 0 to High(va) do
+        Q.QExecSql('delete from adm_error_log where id = :id$i', [va[i]]);
+      Fr.RefreshGrid;
+    end
+    else
+      MyInfoMessage('Отметьте те записи, которые нужно удалить.');
+  end
   else if (FormDoc = myfrm_R_Holideys) and (Tag = mbtCustom_LoadFromInet) and (S.Nst(Fr.GetControlValue('CbYear')) <> '') and
     (MyQuestionMessage('Загрузить производственный календарь из сети Интернет'#13#10'(с сайта http://xmlcalendar.ru)?'#13#10'При этом данные будут заменены.') = mrYes) then begin
      case TasksS.GetProductionCalendar(S.NInt(Fr.GetControlValue('CbYear'))) of
@@ -2948,7 +2969,7 @@ end;
 procedure TFrmXGlstMain.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 begin
   if FormDoc = myfrm_J_Error_Log then
-     TDlg_J_Error_Log.Create(Self, myfrm_Dlg_J_Error_Log, [myfoSizeable], fNone, Fr.ID, null);
+     TFrmXWErrorLog.Show(Self, myfrm_Dlg_J_Error_Log2, [myfoSizeable], fNone, Fr.ID, null);
 
   //платежный календарь - счета
   if (FormDoc = myfrm_J_Accounts) or (FormDoc = myfrm_J_Payments) then begin
@@ -3567,7 +3588,7 @@ begin
        ], va, va, [['']], nil) < 0
       then Exit;
       if Frg1.ID = 1 then
-        va[1] := 2;  //всегда полуфабрикат в группе п/ф
+        va[2] := 2;  //всегда полуфабрикат в группе п/ф
       LNewId := Q.QSave(Q.QFModeToIUD(fMode), 'or_format_estimates', '', 'id$i;id_format$i;name$s;type$i;prefix$s;active$i',
         [Fr.ID, Frg1.ID, va[0], va[1], va[2], va[3]]);
       if LNewId < 0 then
@@ -3579,8 +3600,8 @@ begin
         //ничего не выводит
         if Orders.SyncNewSubgroupItems(LNewId) then
           MyWarningMessage(
-            'Подгруппа создана, недостающие изделия скопированы из производственных подгрупп, но в группе форматов остались расхождения в составе.'+
-            #13#10'См. столбец "Внимание" в таблице групп или отчет "Проверить группу"/"Просмотр предупреждения" в справочнике стандартных изделий.'
+            'Подгруппа создана, недостающие изделия скопированы из производственных подгрупп, но в группе форматов остались расхождения в составе.'#13#10+
+            'См. столбец "Внимание" в таблице групп или отчет "Проверить группу"/"Просмотр предупреждения" в справочнике стандартных изделий.'
           );
         Frg1.RefreshRecord;  //обновим индикатор "Внимание" у группы в первом гриде
       end;

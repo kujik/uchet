@@ -301,7 +301,10 @@ type
     myogNoTextEditing,                        //запретить открытие InplaceEditor
     myogToNextRowAfterDeleting,               //переход к следующей строке после удаления строки (иначе окажется на той, что была перед удаленной; работает при обновлении из TFrmBasicMDI или в вызове RefreshGrit(fDelete)
     myogFastRefresh,                          //быстрое обновление грида (добавлением/удалениеем/апдейтом записи). если вызывает потомок tfrmbasicmdi, то он должен обновлять id (как tfrmbasicinput). Если ади не числовое, сработает обычное обновление.
-    myogGrayTitle                             //раскраска заголовка серым цветом
+    myogGrayTitle,                             //раскраска заголовка серым цветом
+    myogUsePresets                            //включить пресеты (именованные наборы настроек грида с быстрым переключением через
+                                               //выпадающее меню в углу индикатора). добавлять только в конец списка опций -
+                                               //ordinal-номера опций используются при сохранении настроек в (Settings), см. WriteFrDBGridEhSettings
   );
 
   TFrDBGridOptions = set of TFrDBGridOption;
@@ -712,6 +715,8 @@ type
     tmrAfterCreate: TTimer;
     CProp: TDBEditEh;
     ImgState: TImage;
+    PmPresets: TPopupMenu;
+    N1111: TMenuItem;
     {собития фрейма}
     procedure FrameResize(Sender: TObject);
     procedure tmrAfterCreateTimer(Sender: TObject);
@@ -760,8 +765,14 @@ type
     //Sql=* формирует sql автоматом по данным полей
     FInitData: TFrDBGridInitData;
     //ссылка на фрейм для детальной панели грида
-
     FGrid2: TFRDbgridEh;
+    //меню пресетовS
+    FPmPresets: TPopupMenu;
+    //имя пресета, примененного последним в этом сеансе (для отметки галочкой в меню), '' - если не применялся
+    //ни один (не хранится в настройках - актуально только пока открыт грид/форма)
+    FActivePresetName: string;
+    //признак, что активный пресет (FActivePresetName) - общий; значим только если FActivePresetName <> ''
+    FActivePresetShared: Boolean;
 
     //признак ошибки в гриде. учитывается родительской формой
     FHasError: Boolean;
@@ -832,6 +843,13 @@ type
     function GetGridReadOnly: Boolean;
     procedure SetGridReadOnly(const Value: Boolean);
 
+    //пресеты грида (см. myogUsePresets) - выпадающее меню в углу индикатора (DbGridEh1.IndicatorTitle.DropDownMenu)
+    procedure PreparePresetsMenu;
+    procedure PresetsMenuPopup(Sender: TObject);
+    procedure PresetsMenuItemClick(Sender: TObject);
+    procedure PresetsMenuSaveClick(Sender: TObject);
+    procedure PresetsMenuDeleteClick(Sender: TObject);
+    procedure PresetsMenuUpdateClick(Sender: TObject);
   protected
     {функции и процедуры для получения и установки свойств поля которых определеня в разделе Private}
 
@@ -1160,6 +1178,7 @@ implementation
 
 uses
 
+  System.Types,
   uErrors,
   uForms,
   uDBOra,
@@ -1171,7 +1190,8 @@ uses
   uFrmMain,
   uFrmBasicMdi,
   uFrmXWGridOptions,
-  uFrmXDedtGridFilter
+  uFrmXDedtGridFilter,
+  uFrmXDedtGridPreset
   ;
 
 
@@ -2917,7 +2937,13 @@ begin
   if FStatusBarText = '' then begin
     if Pos('~', st1) = 1 then
       Delete(st1, 1, 1);
-    st := S.IIfStr(st1 <> '', '$FF0000' + st1 + '$000000' + ':  ') + Gh.GetGridInfoStr(DbGridEh1);
+    st := S.IIfStr(st1 <> '', '$FF0000' + st1 + '$000000' + ':  ');
+    //если у грида используются пресеты (myogUsePresets) и в этом сеансе выбран (или сохранен) один из них -
+    //покажем его имя между заголовком и статистикой (см. FActivePresetName в PresetsMenuItemClick/
+    //PresetsMenuSaveClick/PresetsMenuUpdateClick)
+    if (myogUsePresets in Options) and (FActivePresetName <> '') then
+      st := st + 'Пресет "' + FActivePresetName + '".  ';
+    st := st + Gh.GetGridInfoStr(DbGridEh1);
   end
   else st := FStatusBarText;
   if st = FLastStatusBarText then begin
@@ -3407,6 +3433,9 @@ begin
     CreateDataSet;
   //создадим панели кнопок и контектное меню
   SetButtonsAndMenu;
+  //меню пресетов в углу индикатора грида (не для всех гридов - см. myogUsePresets)
+  if myogUsePresets in Options then
+    PreparePresetsMenu;
   //настроим дополнительные панели фрейма
   SetPanels;
   //отрисуем колоризованные лейблы
@@ -4271,6 +4300,249 @@ begin
     Cth.CreatePopupMenu(PmGrid, MenuItems, ButtonOrPopupMenuClick, '');
     FPanelsBtn:= FPanelsBtn + [DBGridEh1.PopupMenu];
   end;
+end;
+
+{ПРЕСЕТЫ ГРИДА (см. myogUsePresets) - выпадающее меню в углу индикатора}
+
+procedure TFrDBGridEh.PreparePresetsMenu;
+//создает меню пресетов и вешает его на выпадающее меню угла индикатора грида.
+//содержимое меню строится заново перед каждым показом (см. PresetsMenuPopup), т.к. список пресетов динамический
+begin
+  FPmPresets := pmPresets;
+  FPmPresets.OnPopup := PresetsMenuPopup;
+  DbGridEh1.IndicatorTitle.TitleButton := True;
+  DbGridEh1.IndicatorTitle.DropDownMenu := FPmPresets;
+  DbGridEh1.IndicatorTitle.ShowDropDownSign := True;
+  DbGridEh1.IndicatorTitle.UseGlobalMenu := False; //свое меню, не общее для всех гридов
+  //наполним меню сразу же, не дожидаясь события OnPopup - не до конца ясно, вызывает ли его EhLib при показе
+  //выпадающего меню IndicatorTitle (в отличие от обычного показа TPopupMenu.Popup), поэтому не полагаемся
+  //только на OnPopup: он оставлен как есть (лишним не будет, если сработает), но актуальность списка
+  //дополнительно обеспечивается принудительным вызовом здесь и после каждого сохранения/удаления пресета
+  //(см. PresetsMenuSaveClick, PresetsMenuDeleteClick)
+  PresetsMenuPopup(Self);
+end;
+
+procedure TFrDBGridEh.PresetsMenuPopup(Sender: TObject);
+var
+  Section: string;
+  Personal, Shared: TStringDynArray;
+  i: Integer;
+  Mi, SubMi: TMenuItem;
+  CanShared: Boolean;
+begin
+  FPmPresets.Items.Clear;
+  if not (Owner is TFrmBasicMdi) or (TFrmBasicMdi(Owner).FormDoc = '') then
+    Exit;
+  Section := TFrmBasicMdi(Owner).FormDoc;
+  CanShared := User.Role(rAdm_Other_InterfaceAdmin);
+  Settings.GetGridPresetNames(Section, Personal, Shared);
+
+  if (Length(Personal) = 0) and (Length(Shared) = 0) then begin
+    Mi := TMenuItem.Create(FPmPresets);
+    Mi.Caption := '(пресетов пока нет)';
+    Mi.Enabled := False;
+    FPmPresets.Items.Add(Mi);
+  end else begin
+    if Length(Personal) > 0 then begin
+      Mi := TMenuItem.Create(FPmPresets);
+      Mi.Caption := 'Личные';
+      Mi.Enabled := False;
+      FPmPresets.Items.Add(Mi);
+      for i := 0 to High(Personal) do begin
+        SubMi := TMenuItem.Create(FPmPresets);
+        SubMi.Caption := Personal[i];
+        SubMi.Tag := 0; //0 - личный пресет (M), 1 - общий (MA)
+        SubMi.OnClick := PresetsMenuItemClick;
+        //отметим галочкой пресет, примененный последним в этом сеансе (см. FActivePresetName)
+        SubMi.Checked := (FActivePresetName <> '') and not FActivePresetShared and (Personal[i] = FActivePresetName);
+        FPmPresets.Items.Add(SubMi);
+      end;
+    end;
+    if Length(Shared) > 0 then begin
+      Mi := TMenuItem.Create(FPmPresets);
+      Mi.Caption := 'Общие';
+      Mi.Enabled := False;
+      FPmPresets.Items.Add(Mi);
+      for i := 0 to High(Shared) do begin
+        SubMi := TMenuItem.Create(FPmPresets);
+        SubMi.Caption := Shared[i];
+        SubMi.Tag := 1;
+        SubMi.OnClick := PresetsMenuItemClick;
+        SubMi.Checked := (FActivePresetName <> '') and FActivePresetShared and (Shared[i] = FActivePresetName);
+        FPmPresets.Items.Add(SubMi);
+      end;
+    end;
+  end;
+
+  Mi := TMenuItem.Create(FPmPresets);
+  Mi.Caption := '-';
+  FPmPresets.Items.Add(Mi);
+
+  //обновление пресета, примененного последним в этом сеансе (переименование и/или смена флажков без
+  //создания нового пресета) - см. FActivePresetName/PresetsMenuUpdateClick. Для общего пресета доступно
+  //только при наличии права "Администрирование интерфейса" (иначе TSettings.SaveGridPreset внутри все равно
+  //откажет, но лучше не показывать пункт, который заведомо ничего не даст сделать)
+  if (FActivePresetName <> '') and (not FActivePresetShared or CanShared) then begin
+    Mi := TMenuItem.Create(FPmPresets);
+    Mi.Caption := 'Обновить текущий пресет ("' + FActivePresetName + '")...';
+    Mi.OnClick := PresetsMenuUpdateClick;
+    FPmPresets.Items.Add(Mi);
+  end;
+
+  //пункты удаления - ОКОНЧАТЕЛЬНО плоским списком: вложенное подменю ("Удалить пресет" -> дочерние пункты)
+  //проверено дважды (после чистого ребилда) и оба раза видно только сам родительский пункт, подменю не
+  //разворачивается - похоже, это реальное ограничение выпадающего меню угла индикатора EhLib
+  //(IndicatorTitle.DropDownMenu), а не глюк IDE. Больше вложенность не пробуем.
+  //Tag = Idx*2 + Ord(AShared): настоящее имя пресета не хранится на самом пункте меню, а берется свежим
+  //списком в PresetsMenuDeleteClick по этому индексу
+  if (Length(Personal) > 0) or (CanShared and (Length(Shared) > 0)) then begin
+    Mi := TMenuItem.Create(FPmPresets);
+    Mi.Caption := '-';
+    FPmPresets.Items.Add(Mi);
+    for i := 0 to High(Personal) do begin
+      SubMi := TMenuItem.Create(FPmPresets);
+      SubMi.Caption := 'Удалить "' + Personal[i] + '"';
+      SubMi.Tag := i * 2; //+ Ord(False)
+      SubMi.OnClick := PresetsMenuDeleteClick;
+      FPmPresets.Items.Add(SubMi);
+    end;
+    //удаление общих пресетов - только с правом "Администрирование интерфейса"
+    if CanShared then
+      for i := 0 to High(Shared) do begin
+        SubMi := TMenuItem.Create(FPmPresets);
+        SubMi.Caption := 'Удалить общий "' + Shared[i] + '"';
+        SubMi.Tag := i * 2 + 1;
+        SubMi.OnClick := PresetsMenuDeleteClick;
+        FPmPresets.Items.Add(SubMi);
+      end;
+  end;
+
+  Mi := TMenuItem.Create(FPmPresets);
+  Mi.Caption := 'Сохранить текущий вид как пресет...';
+  Mi.Tag := 0;
+  Mi.OnClick := PresetsMenuSaveClick;
+  FPmPresets.Items.Add(Mi);
+
+  //создание/перезапись общих пресетов - только с правом "Администрирование интерфейса" (см. uUser.Role,
+  //rAdm_Other_InterfaceAdmin в uData.pas)
+  if CanShared then begin
+    Mi := TMenuItem.Create(FPmPresets);
+    Mi.Caption := 'Сохранить как общий пресет...';
+    Mi.Tag := 1;
+    Mi.OnClick := PresetsMenuSaveClick;
+    FPmPresets.Items.Add(Mi);
+  end;
+end;
+
+procedure TFrDBGridEh.PresetsMenuItemClick(Sender: TObject);
+//применение выбранного из меню пресета (Tag пункта: 0 - личный, 1 - общий)
+begin
+  FActivePresetName := TMenuItem(Sender).Caption;
+  FActivePresetShared := TMenuItem(Sender).Tag = 1;
+  Settings.ApplyGridPreset(TFrmBasicMdi(Owner).FormDoc, Self, FActivePresetName, FActivePresetShared);
+  //перестроим меню, чтобы отметить галочкой примененный пресет (см. FActivePresetName/Checked выше)
+  PresetsMenuPopup(Self);
+end;
+
+procedure TFrDBGridEh.PresetsMenuSaveClick(Sender: TObject);
+//сохранение текущего вида грида как нового (или существующего с тем же именем - перезапишется) пресета.
+//Tag пункта меню: 0 - личный, 1 - общий (доступен только при наличии права rAdm_Other_InterfaceAdmin)
+var
+  AName: string;
+  AShared, AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter: Boolean;
+begin
+  AShared := TMenuItem(Sender).Tag = 1;
+  AName := '';
+  AIncludeSort := True;
+  AIncludeColumnFilters := True;
+  AIncludeGridFilter := True;
+  if not FrmXDedtGridPreset.ShowDialog(Self, TFrmBasicMdi(Owner).FormDoc,
+       S.IIfStr(AShared, 'Сохранить как общий пресет', 'Сохранить текущий вид как пресет'),
+       AName, AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter)
+  then
+    Exit;
+  Settings.SaveGridPreset(TFrmBasicMdi(Owner).FormDoc, Self, AName, AShared,
+    AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter);
+  //текущий вид грида сейчас точно соответствует только что сохраненному пресету - отметим его активным
+  FActivePresetName := AName;
+  FActivePresetShared := AShared;
+  //обновим содержимое меню сразу - см. комментарий в PreparePresetsMenu про то, что не полагаемся только на OnPopup
+  PresetsMenuPopup(Self);
+  //обновим статусбар сразу (Grid.RefreshGrid здесь не вызывается, поэтому имя пресета там само не перерисуется)
+  PrintStatusBar;
+end;
+
+procedure TFrDBGridEh.PresetsMenuDeleteClick(Sender: TObject);
+//удаление пресета. Tag пункта = Idx*2 + Ord(AShared) (см. PresetsMenuPopup) - требует rAdm_Other_InterfaceAdmin
+//для общих (см. TSettings.DeleteGridPreset). настоящее имя пресета не хранится на пункте меню, а берется
+//свежим списком по индексу
+var
+  APresetName: string;
+  AShared: Boolean;
+  Idx: Integer;
+  Personal, Shared: TStringDynArray;
+begin
+  Idx := TMenuItem(Sender).Tag;
+  AShared := Odd(Idx);
+  Idx := Idx div 2;
+  Settings.GetGridPresetNames(TFrmBasicMdi(Owner).FormDoc, Personal, Shared);
+  if AShared then begin
+    if (Idx < 0) or (Idx > High(Shared)) then
+      Exit;
+    APresetName := Shared[Idx];
+  end else begin
+    if (Idx < 0) or (Idx > High(Personal)) then
+      Exit;
+    APresetName := Personal[Idx];
+  end;
+  if MyQuestionMessage('Удалить пресет "' + APresetName + '"?') <> mrYes then
+    Exit;
+  Settings.DeleteGridPreset(TFrmBasicMdi(Owner).FormDoc, APresetName, AShared);
+  //если удалили пресет, отмеченный как активный - снимем отметку
+  if (FActivePresetName = APresetName) and (FActivePresetShared = AShared) then begin
+    FActivePresetName := '';
+    PrintStatusBar; //уберем имя удаленного пресета из статусбара
+  end;
+  //обновим содержимое меню сразу - см. комментарий в PreparePresetsMenu про то, что не полагаемся только на OnPopup
+  PresetsMenuPopup(Self);
+end;
+
+procedure TFrDBGridEh.PresetsMenuUpdateClick(Sender: TObject);
+//обновление пресета, примененного последним в этом сеансе (см. FActivePresetName/FActivePresetShared):
+//пересохраняет текущий вид грида под тем же (или новым - с проверкой на совпадение с другими) именем, с
+//возможностью поменять и флажки (что включать при последующем восстановлении)
+var
+  OldName, AName: string;
+  AShared, AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter: Boolean;
+begin
+  if FActivePresetName = '' then
+    Exit;
+  OldName := FActivePresetName;
+  AShared := FActivePresetShared;
+  AName := OldName;
+  Settings.GetGridPresetFlags(TFrmBasicMdi(Owner).FormDoc, OldName, AShared,
+    AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter);
+  if not FrmXDedtGridPreset.ShowDialog(Self, TFrmBasicMdi(Owner).FormDoc,
+       S.IIfStr(AShared, 'Обновить общий пресет', 'Обновить пресет'),
+       AName, AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter)
+  then
+    Exit;
+  //если имя изменили - проверим, что оно не совпадает с ДРУГИМ уже существующим пресетом той же области
+  if (AName <> OldName) and Settings.GridPresetExists(TFrmBasicMdi(Owner).FormDoc, AName, AShared) then begin
+    MyWarningMessage('Пресет с именем "' + AName + '" уже существует.');
+    Exit;
+  end;
+  Settings.SaveGridPreset(TFrmBasicMdi(Owner).FormDoc, Self, AName, AShared,
+    AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter);
+  //если пресет переименовали - старая запись (под прежним именем) сама по себе не исчезнет, ее нужно стереть
+  //отдельно
+  if AName <> OldName then
+    Settings.DeleteGridPreset(TFrmBasicMdi(Owner).FormDoc, OldName, AShared);
+  FActivePresetName := AName;
+  FActivePresetShared := AShared;
+  PresetsMenuPopup(Self);
+  //обновим статусбар сразу (имя пресета там могло измениться при переименовании)
+  PrintStatusBar;
 end;
 
 procedure TFrDBGridEh.SetPanels;

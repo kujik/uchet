@@ -1,0 +1,337 @@
+inherited FrmXWErrorLog: TFrmXWErrorLog
+  Caption = 'FrmXWErrorLog'
+  ClientHeight = 425
+  ClientWidth = 1020
+  ExplicitWidth = 1032
+  ExplicitHeight = 463
+  TextHeight = 13
+  inherited pnlFrmMain: TPanel
+    Width = 1020
+    Height = 409
+    ExplicitWidth = 1020
+    ExplicitHeight = 409
+    inherited pnlFrmClient: TPanel
+      Width = 1010
+      Height = 360
+      ExplicitWidth = 1010
+      ExplicitHeight = 360
+      object PageControl1: TPageControl
+        Left = 0
+        Top = 0
+        Width = 1010
+        Height = 360
+        ActivePage = TabSheet1
+        Align = alClient
+        TabOrder = 0
+        object TabSheet1: TTabSheet
+          Caption = 'Information'
+          object lbl_Module: TLabel
+            Left = 16
+            Top = 3
+            Width = 41
+            Height = 13
+            Caption = #1052#1086#1076#1091#1083#1100':'
+          end
+          object lbl_User: TLabel
+            Left = 16
+            Top = 86
+            Width = 79
+            Height = 13
+            Caption = #1055#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1100'::'
+          end
+          object lbl_Ver: TLabel
+            Left = 16
+            Top = 22
+            Width = 40
+            Height = 13
+            Caption = #1042#1077#1088#1089#1080#1103':'
+          end
+          object lbl_Compile: TLabel
+            Left = 152
+            Top = 22
+            Width = 94
+            Height = 13
+            Caption = #1044#1072#1090#1072' '#1082#1086#1084#1087#1080#1083#1103#1094#1080#1080':'
+          end
+          object lbl_ErrDt: TLabel
+            Left = 16
+            Top = 54
+            Width = 158
+            Height = 13
+            Caption = #1042#1088#1077#1084#1103' '#1074#1086#1079#1085#1080#1082#1085#1086#1074#1077#1085#1080#1103' '#1086#1096#1080#1073#1082#1080':'
+          end
+          object mem_ErrorText: TDBMemoEh
+            Left = 16
+            Top = 128
+            Width = 980
+            Height = 89
+            ControlLabel.Width = 117
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1057#1086#1086#1073#1097#1077#1085#1080#1077' '#1086#1073' '#1086#1096#1080#1073#1082#1077':'
+            ControlLabel.Visible = True
+            Anchors = [akLeft, akTop, akRight]
+            AutoSize = False
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 0
+            Visible = True
+            WantReturns = True
+          end
+        end
+        object TabSheet2: TTabSheet
+          Caption = 'General'
+          ImageIndex = 1
+          object DBGridEh1: TDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 332
+            Align = alClient
+            DynProps = <>
+            TabOrder = 0
+          end
+        end
+        object TabSheet3: TTabSheet
+          Caption = 'Call stack'
+          ImageIndex = 2
+          object DBGridEh2: TDBGridEh
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 332
+            Align = alClient
+            DynProps = <>
+            TabOrder = 0
+            OnDblClick = DBGridEh2DblClick
+          end
+        end
+        object TabSheet4: TTabSheet
+          Caption = 'Sourde code'
+          ImageIndex = 3
+          object pnl1: TPanel
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 41
+            Align = alTop
+            BevelOuter = bvNone
+            TabOrder = 0
+            object lbl_SrcPath: TLabel
+              Left = 8
+              Top = 3
+              Width = 27
+              Height = 13
+              Caption = #1055#1091#1090#1100':'
+            end
+            object lbl_FileName: TLabel
+              Left = 8
+              Top = 22
+              Width = 32
+              Height = 13
+              Caption = #1060#1072#1081#1083':'
+            end
+            object lbl_ErrorInfo: TLabel
+              Left = 200
+              Top = 22
+              Width = 76
+              Height = 13
+              Caption = #1052#1077#1089#1090#1086' '#1074#1099#1079#1086#1074#1072':'
+            end
+          end
+          object mem_SourceFile: TfsSyntaxMemo
+            Left = 0
+            Top = 41
+            Width = 1002
+            Height = 291
+            Cursor = crIBeam
+            Align = alClient
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Courier New'
+            Font.Style = []
+            ParentColor = False
+            ParentFont = False
+            TabOrder = 1
+            TabStop = True
+            BlockColor = clHighlight
+            BlockFontColor = clHighlightText
+            CommentAttr.Charset = DEFAULT_CHARSET
+            CommentAttr.Color = clNavy
+            CommentAttr.Height = -13
+            CommentAttr.Name = 'Courier New'
+            CommentAttr.Style = [fsItalic]
+            KeywordAttr.Charset = DEFAULT_CHARSET
+            KeywordAttr.Color = clWindowText
+            KeywordAttr.Height = -13
+            KeywordAttr.Name = 'Courier New'
+            KeywordAttr.Style = [fsBold]
+            StringAttr.Charset = DEFAULT_CHARSET
+            StringAttr.Color = clNavy
+            StringAttr.Height = -13
+            StringAttr.Name = 'Courier New'
+            StringAttr.Style = []
+            TextAttr.Charset = DEFAULT_CHARSET
+            TextAttr.Color = clWindowText
+            TextAttr.Height = -13
+            TextAttr.Name = 'Courier New'
+            TextAttr.Style = []
+            Lines.Strings = (
+              '')
+            ReadOnly = False
+            SyntaxType = stPascal
+            ShowFooter = True
+            ShowGutter = True
+          end
+        end
+        object TabSheet5: TTabSheet
+          Caption = 'Oracle'
+          ImageIndex = 4
+          object Panel2: TPanel
+            Left = 0
+            Top = 291
+            Width = 1002
+            Height = 41
+            Align = alBottom
+            TabOrder = 0
+          end
+          object mem_OraParams: TDBMemoEh
+            Left = 0
+            Top = 188
+            Width = 1002
+            Height = 103
+            ControlLabel.Width = 104
+            ControlLabel.Height = 13
+            ControlLabel.Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1079#1072#1087#1088#1086#1089#1072
+            ControlLabel.Visible = True
+            Lines.Strings = (
+              '')
+            Align = alBottom
+            AutoSize = False
+            DynProps = <>
+            EditButtons = <>
+            TabOrder = 1
+            Visible = True
+            WantReturns = True
+          end
+          object Panel3: TPanel
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 73
+            Align = alTop
+            TabOrder = 2
+            object mem_OraError: TDBMemoEh
+              Left = 1
+              Top = 16
+              Width = 1000
+              Height = 56
+              ControlLabel.Width = 71
+              ControlLabel.Height = 13
+              ControlLabel.Caption = #1058#1077#1082#1089#1090' '#1086#1096#1080#1073#1082#1080
+              ControlLabel.Visible = True
+              Lines.Strings = (
+                '')
+              Align = alBottom
+              AutoSize = False
+              DynProps = <>
+              EditButtons = <>
+              TabOrder = 0
+              Visible = True
+              WantReturns = True
+            end
+          end
+          object Panel4: TPanel
+            Left = 0
+            Top = 73
+            Width = 1002
+            Height = 115
+            Align = alClient
+            TabOrder = 3
+            object mem_OraSQL: TDBMemoEh
+              Left = 1
+              Top = 23
+              Width = 1000
+              Height = 91
+              ControlLabel.Width = 60
+              ControlLabel.Height = 13
+              ControlLabel.Caption = 'SQL-'#1079#1072#1087#1088#1086#1089
+              ControlLabel.Visible = True
+              Lines.Strings = (
+                '')
+              Anchors = [akLeft, akTop, akRight, akBottom]
+              AutoSize = False
+              DynProps = <>
+              EditButtons = <>
+              TabOrder = 0
+              Visible = True
+              WantReturns = True
+            end
+          end
+        end
+        object TabSheet6: TTabSheet
+          Caption = 'Screenshot'
+          ImageIndex = 5
+          OnShow = TabSheet6Show
+          object Im_Pict: TImage
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 332
+            Align = alClient
+            Proportional = True
+          end
+        end
+        object TabSheet7: TTabSheet
+          Caption = 'Full report'
+          ImageIndex = 6
+          object mem_FullReport: TfsSyntaxMemo
+            Left = 0
+            Top = 0
+            Width = 1002
+            Height = 332
+            Cursor = crIBeam
+            Align = alClient
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Courier New'
+            Font.Style = []
+            ParentColor = False
+            ParentFont = False
+            TabOrder = 0
+            TabStop = True
+            BlockColor = clHighlight
+            BlockFontColor = clHighlightText
+            CommentAttr.Charset = DEFAULT_CHARSET
+            CommentAttr.Color = clNavy
+            CommentAttr.Height = -13
+            CommentAttr.Name = 'Courier New'
+            CommentAttr.Style = [fsItalic]
+            KeywordAttr.Charset = DEFAULT_CHARSET
+            KeywordAttr.Color = clWindowText
+            KeywordAttr.Height = -13
+            KeywordAttr.Name = 'Courier New'
+            KeywordAttr.Style = [fsBold]
+            StringAttr.Charset = DEFAULT_CHARSET
+            StringAttr.Color = clNavy
+            StringAttr.Height = -13
+            StringAttr.Name = 'Courier New'
+            StringAttr.Style = []
+            TextAttr.Charset = DEFAULT_CHARSET
+            TextAttr.Color = clWindowText
+            TextAttr.Height = -13
+            TextAttr.Name = 'Courier New'
+            TextAttr.Style = []
+            Lines.Strings = (
+              '')
+            ReadOnly = False
+            SyntaxType = stPascal
+            ShowFooter = True
+            ShowGutter = True
+          end
+        end
+      end
+    end
+  end
+end

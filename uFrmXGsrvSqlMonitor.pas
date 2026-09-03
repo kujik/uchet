@@ -16,6 +16,9 @@ type
   private
     function  PrepareForm: Boolean; override;
     procedure LoadLogToGrid;
+  protected
+    //двойной клик по строке лога - показываем окно подробностей запроса (текст, параметры, ошибка)
+    procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
   public
     procedure LoadLogRowToGrid(Row: Integer = -1);
   end;
@@ -28,7 +31,8 @@ implementation
 {$R *.dfm}
 
 uses
-  uDB;
+  uDB,
+  uFrmXWOracleError;
 
 
 function TFrmXGsrvSqlMonitor.PrepareForm: Boolean;
@@ -44,7 +48,22 @@ begin
   ]);
   Frg1.SetInitData([], '');
   Result := inherited;
-  LoadLogRowToGrid;
+  //при открытии показываем все запросы, накопленные в логе за текущую сессию работы программы
+  //(а не только последнюю запись - Q.LogArray пишется сразу при выполнении запроса, независимо от того, открыт ли журнал)
+  LoadLogToGrid;
+end;
+
+procedure TFrmXGsrvSqlMonitor.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
+//двойной клик по строке лога - показываем окно подробностей запроса (аналогично окну ошибки БД)
+begin
+  Handled := True;
+  if not Fr.IsNotEmpty then
+    Exit;
+  FrmXWOracleError.ShowDialog(-1,
+    Fr.MemTableEh1.FieldByName('error').AsString,
+    Fr.MemTableEh1.FieldByName('query').AsString,
+    Fr.MemTableEh1.FieldByName('params').AsString
+  );
 end;
 
 procedure TFrmXGsrvSqlMonitor.FormCreate(Sender: TObject);

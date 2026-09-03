@@ -105,7 +105,7 @@ uses
   D_R_EstimateReplace in 'D_R_EstimateReplace.pas' {Dlg_R_EstimateReplace},
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
   F_Adm_Installer in 'F_Adm_Installer.pas' {Form_Adm_Installer},
-  D_J_Error_Log in 'D_J_Error_Log.pas' {Dlg_J_Error_Log},
+  uFrmXWErrorLog in 'uFrmXWErrorLog.pas' {FrmXWErrorLog},
   F_MdiGridDialogTemplate in 'F_MdiGridDialogTemplate.pas' {Form_MdiGridDialogTemplate},
   D_SuppliersMinPart in 'D_SuppliersMinPart.pas' {Dlg_SuppliersMinPart},
   D_Spl_InfoGrid in 'D_Spl_InfoGrid.pas' {Dlg_Spl_InfoGrid},
@@ -147,6 +147,7 @@ uses
   uFrmOGlstEstimate in 'uFrmOGlstEstimate.pas' {FrmOGlstEstimate},
   uFrmXGlstMain in 'uFrmXGlstMain.pas' {FrmXGlstMain},
   uFrmXDedtMemo in 'uFrmXDedtMemo.pas' {FrmXDedtMemo},
+  uFrmXDedtGridPreset in 'uFrmXDedtGridPreset.pas' {FrmXDedtGridPreset},
   uFrmADedtItmCopyRigths in 'uFrmADedtItmCopyRigths.pas' {FrmADedtItmCopyRigths},
   uFrmOGinfSgp in 'uFrmOGinfSgp.pas' {FrmOGinfSgp},
   uFrmBasicEditabelGrid in 'uFrmBasicEditabelGrid.pas' {FrmBasicEditabelGrid},
@@ -364,6 +365,7 @@ begin
   Application.CreateForm(TFrmCWAcoountBasis, FrmCWAcoountBasis);
   Application.CreateForm(TFrmADedtItmCopyRigths, FrmADedtItmCopyRigths);
   Application.CreateForm(TFrmXDedtMemo, FrmXDedtMemo);
+  Application.CreateForm(TFrmXDedtGridPreset, FrmXDedtGridPreset);
   Application.CreateForm(TFrmXWOracleError, FrmXWOracleError);
   Application.CreateForm(TFrmXDedtMailingCustomAddr, FrmXDedtMailingCustomAddr);
   Application.CreateForm(TFrmWWsrvTurvComment, FrmWWsrvTurvComment);

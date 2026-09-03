@@ -23,6 +23,7 @@ type
     MAChanged: Boolean;
     procedure SetCurrGridWriteDoDef(Value: Boolean);
     function  GetCurrGridWriteDoDef: Boolean;
+    procedure EnsureGrid2Prepared(Grid: TFrDBGridEh);
   public
     CurrGridWriteDoDef: Boolean;
     InterfaceDialogsN: Integer;
@@ -50,9 +51,24 @@ type
     function  IsDefaultExists(Section: string; Grid: TDBGridEh): Boolean;
  //   property CurrGridWriteDoDef: Boolean  read GetCurrGridWriteDoDef write SetCurrGridWriteDoDef;
 
-    procedure WriteFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; ToDef: Boolean = False);
-    procedure RestoreFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; SetDefault: Boolean = False);
+    procedure WriteFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; ToDef: Boolean = False; IsPresetMode: Boolean = False);
+    procedure RestoreFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; SetDefault: Boolean = False; IsPresetMode: Boolean = False);
     function  IsDefaultFrDBGridEhSettingsExists(Section: string; Grid: TFrDBGridEh): Boolean;
+
+    //пресеты грида (см. опцию myogUsePresets у TFrDBGridEh) - именованные наборы настроек грида (видимость/
+    //порядок столбцов, при желании - сортировка, фильтры в столбцах, гридфильтр) с быстрым переключением.
+    //личные пресеты видны только своему автору, общие - всем пользователям модуля (создание/удаление общих
+    //пресетов требует права rAdm_Other_InterfaceAdmin). если у грида задан Grid2 (связанный грид в детальной
+    //панели), настройки обоих гридов сохраняются/восстанавливаются одним пресетом
+    function  GridPresetSection(const Section, APresetName: string): string;
+    function  GetGridPresetNames(Section: string; out Personal, Shared: TStringDynArray): Boolean;
+    function  GridPresetExists(Section: string; const PresetName: string; AShared: Boolean): Boolean;
+    function  GetGridPresetFlags(Section: string; const PresetName: string; AShared: Boolean;
+                out AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter: Boolean): Boolean;
+    procedure SaveGridPreset(Section: string; Grid: TFrDBGridEh; const PresetName: string; AShared: Boolean;
+                AIncludeSort: Boolean = True; AIncludeColumnFilters: Boolean = True; AIncludeGridFilter: Boolean = True);
+    procedure ApplyGridPreset(Section: string; Grid: TFrDBGridEh; const PresetName: string; AShared: Boolean);
+    procedure DeleteGridPreset(Section: string; const PresetName: string; AShared: Boolean);
 
   end;
 
@@ -64,9 +80,26 @@ implementation
 uses
   VCL.Themes,
   uSys,
+  uForms,
+  uMessages,
 
   uFrmMain
   ;
+
+const
+  //переключатель алгоритма восстановления порядка столбцов детального грида (см. RestoreFrDBGridEhSettings).
+  //True - новый алгоритм: та же сборка целевого порядка (va), но переиндексация обернута в BeginUpdate/EndUpdate
+  //+ LayoutChanged (как это делает сам EhLib в оригинальном TCustomDBGridEh.RestoreColumnsLayoutProducer), и
+  //отдельная "битая" запись (сохраненное имя поля, которого больше нет в гриде) пропускается без прерывания
+  //всего цикла. False - старый алгоритм (с тем же минимальным фиксом пропуска битой записи, но без
+  //BeginUpdate/EndUpdate/LayoutChanged) - оставлен для быстрого отката/сравнения, если новый алгоритм
+  //проявит себя хуже на реальных данных
+  cUseNewGridColumnReorderAlgorithm: Boolean = True;
+
+  //маркер, отделяющий имя секции пресета от имени секции обычных (авто-сохраняемых) настроек грида (см.
+  //GridPresetSection). личные пресеты хранятся в M (как обычные личные настройки), общие - в MA (как
+  //настройки "по умолчанию"); в остальном формат данных внутри секции идентичен обычным настройкам
+  cGridPresetSectionMarker = '~Preset~';
 
 //создаем ИНИ-Файл либо пользовательский, либо дефолтный
 //дефолтный используется если в пользовательском не найдена секция, если ForceToUser (ставить при записи в файл!) то всегда пользовательский
@@ -194,6 +227,18 @@ end;
 function TSettings.GetCurrGridWriteDoDef: Boolean;
 begin
   Result:= CurrGridWriteDoDef;
+end;
+
+procedure TSettings.EnsureGrid2Prepared(Grid: TFrDBGridEh);
+//Grid.Grid2 (детальная панель строки, см. myogRowDetailPanel) готовится (IsPrepared становится True) лениво -
+//только когда пользователь раскрыл детальную панель хотя бы у одной строки (см.
+//TFrDBGridEh.DbGridEh1RowDetailPanelShow, который в этот момент вызывает Grid2.RefreshGrid). если ни одна
+//строка не была раскрыта, Grid2.IsPrepared=False, и настройки Grid2 недоступны для сохранения/восстановления
+//в пресете - поэтому перед операциями с пресетом принудительно готовим Grid2 тем же способом (Grid2.RefreshGrid),
+//если у грида вообще включена детальная панель (иначе, если она не раскрыта пользователем, ничего не делаем)
+begin
+  if (myogRowDetailPanel in Grid.Options) and Assigned(Grid.Grid2) and not Grid.Grid2.IsPrepared then
+    Grid.Grid2.RefreshGrid;
 end;
 
 procedure TSettings.WriteProperty(Section, Name, Value: string);
@@ -595,7 +640,7 @@ begin
   Result:= Result and (MA.ReadString(Section, Format('%s.%s', [Grid.Name, '(Settings)']), '--') <> '--');
 end;
 
-procedure TSettings.WriteFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; ToDef: Boolean = False);
+procedure TSettings.WriteFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; ToDef: Boolean = False; IsPresetMode: Boolean = False);
 //запись настроек грида в ини-файл (в поле БД)
 //данные сохраняются в секциях, соответствующих FormDoc родительского окна
 //строки начинаются с именти фрейма грида, далее через точку тип значение (.(Version), (.Settings), (.Filter) или имя столбца
@@ -632,7 +677,13 @@ begin
   if myogPanelFilter in Grid.Options
     then st := '';
   //сохраним фильтр в столбцах, если у грида установлено свойство SaveSTFilter, и это не запись дефолтных настроек
-  if not(ToDef) and (myogSaveFilter in Grid.Options) then begin
+  //(а не пресета - при сохранении пресета (IsPresetMode) фильтры столбцов пишем даже в общий (MA) пресет,
+  //иначе общий пресет не смог бы донести настроенные фильтры столбцов до других пользователей).
+  //!!!для пресета (IsPresetMode) пишем фильтры столбцов ВСЕГДА, вне зависимости от myogSaveFilter - это опция
+  //обычного (непресетного) поведения грида ("сохранять фильтр столбцов в обычных настройках"), у большинства
+  //гридов она не установлена, но это не должно мешать пресету (у которого есть собственный независимый флаг
+  //AIncludeColumnFilters, см. SaveGridPreset/ApplyGridPreset) захватывать и восстанавливать фильтры столбцов
+  if (not(ToDef) or IsPresetMode) and (IsPresetMode or (myogSaveFilter in Grid.Options)) then begin
     //запишем фильтр из всех столбцов, с указанием наименования поля столбца
     St:='';
     for i:= 0 to Grid.DbGridEh1.Columns.Count - 1 do begin
@@ -669,11 +720,12 @@ begin
       ], #2), #1);
    end;
    MC.WriteString(Section, Format('%s.%s', [Grid.Name, '(Columns)']), St);
+   //TmyCustomDBGridEh(Grid.DbGridEh1).CallSaveGridLayoutProducer(MC, Section + '_' + Grid.Name + '_GridLayout', False); //+++
    va:=A.Explode(st, #1);
    va:=A.Explode(va[0], #2);
 end;
 
-procedure TSettings.RestoreFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; SetDefault: Boolean = False);
+procedure TSettings.RestoreFrDBGridEhSettings(Section: string; Grid: TFrDBGridEh; SetDefault: Boolean = False; IsPresetMode: Boolean = False);
 type
   TColumnInfo = record
     Column: TColumnEh;
@@ -812,8 +864,16 @@ begin
       //получим массив STFilter - фильтр в стольбцах
       //в массиве [[fieldname, stfilter_string],]
       ar2 := [];
-      if myogSaveFilter in oplus then begin
-        si := M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), '');
+      //!!!см. аналогичный комментарий в WriteFrDBGridEhSettings - для пресета (IsPresetMode) читаем фильтры
+      //столбцов ВСЕГДА, вне зависимости от того, был ли myogSaveFilter установлен у грида на момент сохранения
+      //пресета (иначе Write мог записать (Filter), а Read его бы никогда не прочитал)
+      if IsPresetMode or (myogSaveFilter in oplus) then begin
+        //обычная логика (не пресет) сознательно всегда берет фильтр из M, даже если MC = MA (SetDefault) - это
+        //поведение оставлено как было. при восстановлении пресета (IsPresetMode) читаем из MC - то есть оттуда,
+        //куда реально был записан пресет (M для личного, MA для общего) - см. Write, там аналогичная логика
+        if IsPresetMode
+          then si := MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), '')
+          else si := M.ReadString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), '');
         if si <> '' then begin
           a1 := A.ExplodeS(si, #1);
           SetLength(ar2, Length(a1));
@@ -928,15 +988,49 @@ begin
     //!!! в каких-то случаях похоже логическая ошибка при переиндексации, хотя если проверить все стобцы в гриде есть и до и после процедуры, все индексы идут подряд, и их столько же,
     //но в программе в дбгридех исчезают в отображегнии столбцы слева и в ячейках оказываются не те данные, хотя при этом соотвествие и количество
     //в определении полей и гриде также сохраняются (проверяем  Grid.TestCompareFC;)
-    //случилось только в деитальной таблице заказов у двоих пользователей при изменении в коде определения полей.
-//    for i := High(va) downto 0 do begin
-    try
-    for i := 0 to High(va) do begin
-      j := Grid.DbGridEh1.FindFieldColumn(va[i]).Index;
-      if j <> i then
-        Grid.DbGridEh1.FindFieldColumn(va[i]).Index := i;
-    end;
-    except
+    //случилось только в деитальной таблице заказов у пользователей при изменении в коде определения полей.
+    //также в одном гриде на этой строке может возникать ошибка!
+    //
+    //РАЗБОР: старая версия оборачивала весь цикл в try/except без какого-либо действия внутри - если
+    //FindFieldColumn(va[i]) возвращал nil (сохраненное имя поля больше не соответствует ни одному текущему
+    //столбцу), .Index на nil валил исключение, которое try/except молча гасил, но ПРИ ЭТОМ обрывал весь
+    //ОСТАЛЬНОЙ цикл - все столбцы, идущие в va после сбойного, оставались с индексами от предыдущего открытия
+    //окна. Это объясняет случаи со видимым исключением на этой строке (см. переписку), но не объясняет
+    //устойчивый (без исключения) сдвиг именно в загруженной столбцами детальной таблице заказов: там
+    //"заголовки верны, а данные в ячейках уезжают" - это похоже на то, что часть внутренних кэшей грида
+    //(сопоставление "сырого"/видимого столбца данным в ячейках) не пересчитывается корректно после серии
+    //Column.Index:=, если не оборачивать это в BeginUpdate/EndUpdate + завершающий LayoutChanged - именно так
+    //поступает сам EhLib в оригинальном TCustomDBGridEh.RestoreColumnsLayoutProducer (см. присланный код).
+    //ниже - оба варианта, переключаемые константой cUseNewGridColumnReorderAlgorithm выше, чтобы можно было
+    //быстро сравнить/откатиться, если новый вариант проявит себя хуже на реальных данных.
+    if cUseNewGridColumnReorderAlgorithm then begin
+      //новый алгоритм: пропуск отдельной "битой" записи (Continue) вместо прерывания всего цикла +
+      //BeginUpdate/EndUpdate/LayoutChanged вокруг переиндексации (через "cracker"-helper из uForms.pas,
+      //т.к. эти методы protected)
+      Grid.DbGridEh1.CallBeginUpdate;
+      try
+        for i := 0 to High(va) do begin
+          col := Grid.DbGridEh1.FindFieldColumn(va[i]);
+          if col = nil then
+            Continue;
+          if col.Index <> i then
+            col.Index := i;
+        end;
+      finally
+        Grid.DbGridEh1.CallEndUpdate;
+        Grid.DbGridEh1.CallLayoutChanged;
+      end;
+    end
+    else begin
+      //старый алгоритм с минимальным фиксом (пропуск битой записи вместо try/except на весь цикл),
+      //без BeginUpdate/EndUpdate/LayoutChanged - для сравнения/отката через константу выше
+      for i := 0 to High(va) do begin
+        col := Grid.DbGridEh1.FindFieldColumn(va[i]);
+        if col = nil then
+          Continue;
+        if col.Index <> i then
+          col.Index := i;
+      end;
     end;
 
     Grid.Options := Grid.Options + oplus - ominus;
@@ -944,6 +1038,221 @@ begin
   end;
 
 
+end;
+
+{пресеты фрейма грида (см. myogUsePresets)}
+
+function TSettings.GridPresetSection(const Section, APresetName: string): string;
+//имя секции, в которой хранится конкретный пресет - обычная секция грида (Section, = FormDoc) с добавленным
+//маркером и очищенным от недопустимых для ини-секции символов именем пресета
+var
+  Nm: string;
+  i: Integer;
+const
+  cMaxPresetNameLen = 60;
+begin
+  Nm := Trim(APresetName);
+  for i := Length(Nm) downto 1 do
+    if CharInSet(Nm[i], ['[', ']', '=', #13, #10]) then
+      Delete(Nm, i, 1);
+  if Length(Nm) > cMaxPresetNameLen then
+    Nm := Copy(Nm, 1, cMaxPresetNameLen);
+  Result := Section + cGridPresetSectionMarker + Nm;
+end;
+
+function TSettings.GetGridPresetNames(Section: string; out Personal, Shared: TStringDynArray): Boolean;
+//список имен пресетов для секции (=FormDoc) грида - отдельно личные (из M) и общие (из MA).
+//отдельного реестра имен не ведем - список стоится по факту существующих в ини-файле секций с нужным префиксом
+var
+  Sections: TStringList;
+  i: Integer;
+  Prefix: string;
+begin
+  Personal := [];
+  Shared := [];
+  Prefix := Section + cGridPresetSectionMarker;
+  Sections := TStringList.Create;
+  try
+    M.ReadSections(Sections);
+    for i := 0 to Sections.Count - 1 do
+      if Pos(Prefix, Sections[i]) = 1 then
+        Personal := Personal + [Copy(Sections[i], Length(Prefix) + 1, MaxInt)];
+    Sections.Clear;
+    MA.ReadSections(Sections);
+    for i := 0 to Sections.Count - 1 do
+      if Pos(Prefix, Sections[i]) = 1 then
+        Shared := Shared + [Copy(Sections[i], Length(Prefix) + 1, MaxInt)];
+  finally
+    Sections.Free;
+  end;
+  Result := (Length(Personal) > 0) or (Length(Shared) > 0);
+end;
+
+function TSettings.GridPresetExists(Section: string; const PresetName: string; AShared: Boolean): Boolean;
+var
+  MC: TMemIniFile;
+begin
+  if AShared then MC := MA else MC := M;
+  Result := MC.SectionExists(GridPresetSection(Section, PresetName));
+end;
+
+function TSettings.GetGridPresetFlags(Section: string; const PresetName: string; AShared: Boolean;
+  out AIncludeSort, AIncludeColumnFilters, AIncludeGridFilter: Boolean): Boolean;
+//читает ранее сохраненные флажки пресета (без применения самого пресета) - нужно для диалога
+//"Обновить текущий пресет", чтобы предзаполнить его текущим состоянием пресета, а не значениями по умолчанию
+var
+  MC: TMemIniFile;
+  PresetSection, Flags: string;
+begin
+  AIncludeSort := True;
+  AIncludeColumnFilters := True;
+  AIncludeGridFilter := True;
+  if AShared then MC := MA else MC := M;
+  PresetSection := GridPresetSection(Section, PresetName);
+  Result := MC.SectionExists(PresetSection);
+  if not Result then
+    Exit;
+  Flags := MC.ReadString(PresetSection, '(PresetFlags)', '1,1,1');
+  AIncludeSort          := StrToIntDef(ExtractWord(1, Flags, [',']), 1) <> 0;
+  AIncludeColumnFilters  := StrToIntDef(ExtractWord(2, Flags, [',']), 1) <> 0;
+  AIncludeGridFilter     := StrToIntDef(ExtractWord(3, Flags, [',']), 1) <> 0;
+end;
+
+procedure TSettings.SaveGridPreset(Section: string; Grid: TFrDBGridEh; const PresetName: string; AShared: Boolean;
+  AIncludeSort: Boolean = True; AIncludeColumnFilters: Boolean = True; AIncludeGridFilter: Boolean = True);
+//сохраняет текущий вид грида (и, если задан, связанного Grid.Grid2) как именованный пресет.
+//AIncludeSort/AIncludeColumnFilters/AIncludeGridFilter влияют не на запись (пресет всегда пишется полностью -
+//это то же самое, что и обычное сохранение вида грида), а на то, что будет реально применено при
+//восстановлении пресета - см. ApplyGridPreset
+var
+  MC: TMemIniFile;
+  PresetSection: string;
+begin
+  if Trim(PresetName) = '' then
+    Exit;
+  //общий пресет может создавать/перезаписывать только пользователь с правом "Администрирование интерфейса"
+  if AShared and not User.Role(rAdm_Other_InterfaceAdmin) then begin
+    MyInfoMessage('Недостаточно прав для сохранения общего пресета!');
+    Exit;
+  end;
+  //если у грида есть детальная панель (myogRowDetailPanel), но Grid2 еще ни разу не готовился (пользователь
+  //не раскрывал детальную панель ни у одной строки) - принудительно подготовим его, иначе его настройки
+  //никогда не попадут в пресет (см. EnsureGrid2Prepared)
+  EnsureGrid2Prepared(Grid);
+  PresetSection := GridPresetSection(Section, PresetName);
+  WriteFrDBGridEhSettings(PresetSection, Grid, AShared, True);
+  if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+    WriteFrDBGridEhSettings(PresetSection, Grid.Grid2, AShared, True);
+  if AShared then MC := MA else MC := M;
+  MC.WriteString(PresetSection, '(PresetFlags)', Format('%d,%d,%d',
+    [Integer(AIncludeSort), Integer(AIncludeColumnFilters), Integer(AIncludeGridFilter)]));
+  if AShared then MAChanged := True;
+  //пишем в БД сразу, не дожидаясь закрытия программы (см. обсуждение) - иначе для общего пресета до
+  //перезапуска программы его не увидит вообще никто, включая автора при следующем открытии этой же формы.
+  //другие пользователи в любом случае увидят общий пресет только после перезапуска (M/MA перечитываются
+  //из БД один раз при входе), это ограничение архитектуры настроек, а не этого метода
+  Save;
+end;
+
+procedure TSettings.ApplyGridPreset(Section: string; Grid: TFrDBGridEh; const PresetName: string; AShared: Boolean);
+//применяет ранее сохраненный пресет к гриду (и, если задан, к связанному Grid.Grid2)
+var
+  MC: TMemIniFile;
+  PresetSection: string;
+  Flags: string;
+  IncludeSort, IncludeColumnFilters, IncludeGridFilter: Boolean;
+  i: Integer;
+begin
+  if AShared then MC := MA else MC := M;
+  PresetSection := GridPresetSection(Section, PresetName);
+  if not MC.SectionExists(PresetSection) then
+    Exit;
+  Flags := MC.ReadString(PresetSection, '(PresetFlags)', '1,1,1');
+  IncludeSort          := StrToIntDef(ExtractWord(1, Flags, [',']), 1) <> 0;
+  IncludeColumnFilters  := StrToIntDef(ExtractWord(2, Flags, [',']), 1) <> 0;
+  IncludeGridFilter     := StrToIntDef(ExtractWord(3, Flags, [',']), 1) <> 0;
+
+  //см. комментарий в SaveGridPreset про EnsureGrid2Prepared - без этого, если пользователь не раскрывал
+  //детальную панель ни у одной строки, настройки Grid2 из пресета никогда не восстановятся
+  EnsureGrid2Prepared(Grid);
+  RestoreFrDBGridEhSettings(PresetSection, Grid, AShared, True);
+  if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+    RestoreFrDBGridEhSettings(PresetSection, Grid.Grid2, AShared, True);
+  //RestoreFrDBGridEhSettings только записывает "желаемую" видимость столбцов в модель полей
+  //(Grid.Opt.SetFieldVisible) - в обычном потоке (TFrDBGridEh.MemTableEh1AfterOpen) следом ВСЕГДА вызывается
+  //Grid.SetColumnsVisible, которая и применяет эту модель к реальным столбцам грида (TColumnEh.Visible).
+  //здесь этот вызов происходит не через AfterOpen (датасет не переоткрывается), поэтому его нужно сделать
+  //явно - без этого видимость столбцов из пресета визуально не применяется, хотя ширина/порядок/сортировка
+  //(они меняются в самих объектах колонок напрямую) применяются нормально
+  Grid.SetColumnsVisible;
+  if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+    Grid.Grid2.SetColumnsVisible;
+
+  //ниже - откат тех аспектов пресета, которые пользователь не захотел включать при его создании (сам пресет
+  //хранит данные полностью, см. SaveGridPreset)
+  if not IncludeSort then begin
+    for i := 0 to Grid.DbGridEh1.Columns.Count - 1 do begin
+      //!!!TSortMarkerEh(0) - в этом проекте нигде не встретился именованный литерал "нет сортировки", ноль
+      //использован по аналогии с тем, как эта же величина уже кодируется/раскодируется в этом файле через
+      //Integer(col.Title.SortMarker) / TSortMarkerEh(StrToIntDef(...)) - пожалуйста, проверьте при компиляции,
+      //что 0 - это действительно "без сортировки" в вашей версии EhLib
+      Grid.DbGridEh1.Columns[i].Title.SortMarker := TSortMarkerEh(0);
+      Grid.DbGridEh1.Columns[i].Title.SortIndex := -1;
+    end;
+    if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+      for i := 0 to Grid.Grid2.DbGridEh1.Columns.Count - 1 do begin
+        Grid.Grid2.DbGridEh1.Columns[i].Title.SortMarker := TSortMarkerEh(0);
+        Grid.Grid2.DbGridEh1.Columns[i].Title.SortIndex := -1;
+      end;
+  end;
+  if not IncludeColumnFilters then begin
+    Gh.GridFilterClear(Grid.DbGridEh1, True, False);
+    if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+      Gh.GridFilterClear(Grid.Grid2.DbGridEh1, True, False);
+  end;
+  if not IncludeGridFilter then begin
+    Grid.Opt.FilterResult := '';
+    if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+      Grid.Grid2.Opt.FilterResult := '';
+  end;
+
+  //применим сортировку/фильтр столбцов сразу же, не дожидаясь Grid.RefreshGrid ниже - у RefreshGrid разные
+  //внутренние ветки в зависимости от режима данных (см. TFrDBGridEh.RefreshGrid), и не во всех местах
+  //однозначно гарантирован повторный вызов DefaultApplySorting/DefaultApplyFilter именно после того, как
+  //мы расставили маркеры/фильтры столбцов выше. сами по себе Title.SortMarker/STFilter.ExpressionStr -
+  //это только настройка "что должно быть применено"; собственно применение (реальная сортировка/фильтрация
+  //уже загруженных данных) делают именно эти два метода (см. также TGridEhHelper.GridFilterRestore в
+  //uForms.pas - тот же паттерн: сначала STFilter.ExpressionStr, потом DefaultApplyFilter)
+  Grid.DbGridEh1.DefaultApplySorting;
+  Grid.DbGridEh1.DefaultApplyFilter;
+  if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then begin
+    Grid.Grid2.DbGridEh1.DefaultApplySorting;
+    Grid.Grid2.DbGridEh1.DefaultApplyFilter;
+  end;
+
+  //гридфильтр (Opt.FilterResult) влияет на SQL, которым грузятся данные - поэтому для применения на лету
+  //нужен полный перезапрос, недостаточно просто перерисовать грид
+  Grid.RefreshGrid;
+  if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+    Grid.Grid2.RefreshGrid;
+end;
+
+procedure TSettings.DeleteGridPreset(Section: string; const PresetName: string; AShared: Boolean);
+var
+  MC: TMemIniFile;
+  PresetSection: string;
+begin
+  if AShared and not User.Role(rAdm_Other_InterfaceAdmin) then begin
+    MyInfoMessage('Недостаточно прав для удаления общего пресета!');
+    Exit;
+  end;
+  if AShared then MC := MA else MC := M;
+  PresetSection := GridPresetSection(Section, PresetName);
+  if not MC.SectionExists(PresetSection) then
+    Exit;
+  MC.EraseSection(PresetSection);
+  if AShared then MAChanged := True;
+  Save;
 end;
 
 (*

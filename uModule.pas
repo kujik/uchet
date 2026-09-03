@@ -383,9 +383,13 @@ var
   QueryResult: Variant;
   MinutesLeft: Integer;
 begin
+  //этот служебный запрос не должен попадать в лог запросов (выполняется каждую минуту таймером главной формы)
   Q.SetEnableLoG(False);
-  QueryResult := Q.QLoadRow('select round((sysdate - autoclosedt)*24*60,2), autoclosemin from adm_modules where id = :id$i', [cMainModule]);
-  Q.SetEnableLoG(True);
+  try
+    QueryResult := Q.QLoadRow('select round((sysdate - autoclosedt)*24*60,2), autoclosemin from adm_modules where id = :id$i', [cMainModule]);
+  finally
+    Q.SetEnableLoG(True);
+  end;
   if (QueryResult[0] > 0) and (QueryResult[0] < 3) then
   begin
     if QueryToExit = 0 then

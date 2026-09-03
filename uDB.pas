@@ -762,8 +762,14 @@ var
 begin
 //st :=  AdoQuery.SQL.Text;
   Result := True;
-  FLastParamsStr := '';
-  FLastParamsErr := '';
+  //строку параметров для лога/окна показа ошибки БД обновляем только если лог включен -
+  //иначе запрос, исключенный из лога (Q.SetEnableLog(False), например служебный запрос
+  //в таймере главной формы), затер бы собой данные последнего "настоящего" запроса,
+  //которые используются при показе окна ошибки БД
+  if FIsLogEnabled then begin
+    FLastParamsStr := '';
+    FLastParamsErr := '';
+  end;
   ParamNamesA := A.ExplodeV(ParamNames, ';');
   if (Length(ParamNamesA) = 0) or (ParamNamesA[0] = '') then
     Exit;
@@ -776,7 +782,8 @@ begin
       st2 := S.IIf(VarIsNull(ParamValues[i]), '<Null>', VarToStr(ParamValues[i]))
     else
       st2 := '<Unknown>';
-    S.ConcatStP(FLastParamsStr, '[' + st1 + ']=' + st2, sLineBreak);
+    if FIsLogEnabled then
+      S.ConcatStP(FLastParamsStr, '[' + st1 + ']=' + st2, sLineBreak);
   end;
   try
     Result := False;
@@ -897,7 +904,10 @@ begin
     Exit;
   Result := -1;
   ErrMsg := '';
-  FLastSql := Sql;
+  //FLastSql (как и FLastParamsStr в QSetParams) обновляем только если лог включен - иначе запрос,
+  //исключенный из лога, затер бы собой данные последнего "настоящего" запроса
+  if FIsLogEnabled then
+    FLastSql := Sql;
   try
     AdoQuery.Close;
     AdoQuery.SQL.Text := Sql;
@@ -930,7 +940,11 @@ begin
   try
     AdoQuery.Close;
     AdoQuery.SQL.Text := Sql;
-    FLastSql := Sql;
+    //FLastSql (как и FLastParamsStr в QSetParams) обновляем только если лог включен - иначе запрос,
+    //исключенный из лога (например, служебный запрос в таймере главной формы), затер бы собой данные
+    //последнего "настоящего" запроса, которые используются при показе окна ошибки БД
+    if FIsLogEnabled then
+      FLastSql := Sql;
     if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
       ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
       Exit;

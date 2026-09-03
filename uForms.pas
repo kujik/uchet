@@ -18,6 +18,25 @@ type
     Color: TColor;
   end;
 
+type
+  //SaveGridLayoutProducer - protected метод именно TCustomDBGridEh (самой грид-таблицы), а не TCustomDBEditEh -
+  //поэтому "cracker"-класс и helper должны быть объявлены для TCustomDBGridEh
+  TmyCustomDBGridEh = class(TCustomDBGridEh)
+  end;
+
+type
+  TmyCustomDBGridEhHelper  =  class helper for TCustomDBGridEh
+  public
+    procedure CallSaveGridLayoutProducer(ARegIni: TObject; const Section: String; DeleteSection: Boolean);
+    //BeginUpdate/EndUpdate/LayoutChanged нужны извне (см. uSettings.pas, RestoreFrDBGridEhSettings) для
+    //корректной массовой перестановки Column.Index - именно так поступает сам EhLib в оригинальном
+    //TCustomDBGridEh.RestoreColumnsLayoutProducer (BeginUpdate/.../EndUpdate + LayoutChanged в конце)
+    procedure CallBeginUpdate;
+    procedure CallEndUpdate;
+    procedure CallLayoutChanged;
+  end;
+
+
 const
   //константы, задающие размеры контролов на форме, отступы между ними и тп
   MY_FORMPRM_V_TOP = 4;                    //отступ от верха формы/панели до верха первого контрола
@@ -1297,7 +1316,11 @@ begin
     DbGridEh1.SearchPanel.SearchingText := st;
     DbGridEh1.SearchPanel.ApplySearchFilter;
   end;
-  TMemTableEh(DbGridEh1.DataSet).RecNo := rn;
+  try
+  if rn >= 1 then
+    TMemTableEh(DbGridEh1.DataSet).RecNo := rn;
+  except
+  end;
   DbGridEh1.DataSet.EnableControls;
 end;
 
@@ -5645,6 +5668,33 @@ end;
 procedure TWinControlHelper.SetBottomKeepTop(const Value: Integer);
 begin
   Height := Value - Top;
+end;
+
+procedure TmyCustomDBGridEhHelper.CallSaveGridLayoutProducer(ARegIni: TObject; const Section: String; DeleteSection: Boolean);
+//SaveGridLayoutProducer - protected метод TCustomDBGridEh (грид-таблицы, EhLib DBGridEh.pas), а НЕ TCustomDBEditEh -
+//первая версия helper'а была объявлена не для того класса, отсюда и "Undeclared identifier". class helper сам по
+//себе не дает доступа к protected-членам класса, если объявлен в другом модуле, чем сам класс (это не наследование,
+//а просто набор доп. методов с обычными правилами видимости) - поэтому используем "class cracker": TmyCustomDBGridEh -
+//класс-потомок TCustomDBGridEh, объявленный здесь же, в uForms.pas (см. выше) - он имеет доступ к protected по
+//наследованию независимо от модуля, где объявлен сам TCustomDBGridEh; приведение типа не создает новый объект и
+//безопасно, т.к. TmyCustomDBGridEh не переопределяет структуру/конструктор
+begin
+  TmyCustomDBGridEh(Self).SaveGridLayoutProducer(ARegIni, Section, DeleteSection);
+end;
+
+procedure TmyCustomDBGridEhHelper.CallBeginUpdate;
+begin
+  TmyCustomDBGridEh(Self).BeginUpdate;
+end;
+
+procedure TmyCustomDBGridEhHelper.CallEndUpdate;
+begin
+  TmyCustomDBGridEh(Self).EndUpdate;
+end;
+
+procedure TmyCustomDBGridEhHelper.CallLayoutChanged;
+begin
+  TmyCustomDBGridEh(Self).LayoutChanged;
 end;
 
 

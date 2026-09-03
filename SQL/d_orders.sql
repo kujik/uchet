@@ -330,10 +330,17 @@ from
   or_format_estimates fe
 ;     
 
+--!go begin
+insert into or_formats (id, name, active) values (-1, 'Нестандартные изделия', 0);
+insert into or_format_estimates (id, id_format, name, type, active) values (-1, -1, 'Нестандартные изделия Производство',0 , 0);
+insert into or_format_estimates (id, id_format, name, type, active) values (-2, -1, 'Нестандартные изделия Огрузка',1 , 0);
+insert into or_format_estimates (id, id_format, name, type, active) values (-3, -1, 'Нестандартные изделия ПФ',2 , 0);
+--!go end
 
 
 --------------------------------------------------------------------------------
 --$go begin
+
 alter table orders drop column status;
 alter table orders drop column ch_comm;
 
@@ -1427,8 +1434,8 @@ end;
 --$go begin
 alter table or_std_items add price_base number;
 update or_std_items set price_base = round(price / 1.22, 2);
-alter table or_std_items add price_tmp number;
-update or_std_items set price_tmp = price;
+--alter table or_std_items add price_tmp number;
+--update or_std_items set price_tmp = price;
 alter table or_std_items drop column price;
 alter table or_std_items add active number(1) default 1;
 --$go end
