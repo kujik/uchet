@@ -218,8 +218,8 @@
         <DCCReference Include="D_J_Montage.pas">
             <Form>Dlg_J_Montage</Form>
         </DCCReference>
-        <DCCReference Include="F_TestTree.pas">
-            <Form>Form_TestTree</Form>
+        <DCCReference Include="uFrmOGselItmGroupFromTree.pas">
+            <Form>FrmOGselItmGroupFromTree</Form>
         </DCCReference>
         <DCCReference Include="uFrmODedtOrderUPD.pas">
             <Form>FrmODedtOrderUPD</Form>

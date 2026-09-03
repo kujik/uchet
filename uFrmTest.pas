@@ -143,7 +143,7 @@ uses
   uFrmOWItmInfo,
 
 
-  F_TestTree,
+  //F_TestTree,
   uSys,
   uErrors,
 
@@ -1314,7 +1314,7 @@ end;
 procedure TFrmTest.Bt_TreeClick(Sender: TObject);
 begin
   inherited;
-  Form_TestTree.Showmodal;
+  //Form_TestTree.Showmodal;
 end;
 
 procedure TFrmTest.Bt_FastReportClick(Sender: TObject);

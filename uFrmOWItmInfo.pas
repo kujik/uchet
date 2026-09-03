@@ -75,7 +75,7 @@ uses
 
   uFrmBasicInput,
   uFrmODedtNomenclFiles,
-  F_TestTree
+  uFrmOGselItmGroupFromTree
   ;
 
 
@@ -266,7 +266,7 @@ begin
   else if Tag = mbtCustom_MoveToGroup then begin
     Handled := True;
     if Fr.GetCount(False) > 0
-      then MoveNomToNewGroup(Form_TestTree.ShowDialog(null));
+      then MoveNomToNewGroup(FrmOGselItmGroupFromTree.ShowDialog(Self, null));
   end
   else if Tag = mbtCustom_SupplierNom then begin
     Handled := True;

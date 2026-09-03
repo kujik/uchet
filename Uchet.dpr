@@ -100,7 +100,7 @@ uses
   uFrmODEdtOrdersDelayedInProduction in 'uFrmODEdtOrdersDelayedInProduction.pas' {FrmODEdtOrdersDelayedInProduction},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
-  F_TestTree in 'F_TestTree.pas' {Form_TestTree},
+  uFrmOGselItmGroupFromTree in 'uFrmOGselItmGroupFromTree.pas' {FrmOGselItmGroupFromTree},
   uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
   uFrmODedtReplaceEstimateItem in 'uFrmODedtReplaceEstimateItem.pas' {FrmODedtReplaceEstimateItem},
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
@@ -355,7 +355,7 @@ begin
   Application.CreateForm(TFrmODedtOrdersFinancePlans, FrmODedtOrdersFinancePlans);
   Application.CreateForm(TFrmODEdtOrdersDelayedInProduction, FrmODEdtOrdersDelayedInProduction);
   Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
-  Application.CreateForm(TForm_TestTree, Form_TestTree);
+  Application.CreateForm(TFrmOGselItmGroupFromTree, FrmOGselItmGroupFromTree);
   Application.CreateForm(TFrmODedtOrderUPD, FrmODedtOrderUPD);
   Application.CreateForm(TFrmODedtReplaceEstimateItem, FrmODedtReplaceEstimateItem);
   Application.CreateForm(TFrmTestDropDownEh, FrmTestDropDownEh);

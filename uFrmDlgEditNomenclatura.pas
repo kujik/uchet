@@ -51,7 +51,7 @@ uses
   uDBOra,
   uString,
   uMessages,
-  F_TestTree
+  uFrmOGselItmGroupFromTree
 ;
 
 {$R *.dfm}
@@ -71,7 +71,7 @@ end;
 procedure TFrmDlgEditNomenclatura.edt_id_group_itmEditButtons0click(Sender: TObject; var Handled: Boolean);
 begin
   inherited;
-  FIdGroupItm := Form_TestTree.ShowDialog(FIdGroupItm);
+  FIdGroupItm := FrmOGselItmGroupFromTree.ShowDialog(Self, FIdGroupItm);
   GetGroupItm;
 end;
 
