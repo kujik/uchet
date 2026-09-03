@@ -53,8 +53,8 @@ uses
 
   uWindows,
   uSettings,
-  V_MDI,
-  uFrmXWGridAdminOptions
+  V_MDI
+  //uFrmXWGridAdminOptions
   ;
 
 const
@@ -255,7 +255,7 @@ begin
     SetLoadDefaultEnabled;
   end;
   if TButton(Sender).Tag = 1002 then begin
-    FrmXWGridAdminOptions.ShowDialog(FFrDbGrid);
+    //FrmXWGridAdminOptions.ShowDialog(FFrDbGrid);
   end;
   if TButton(Sender).Tag = 1000 then begin
     //По умолчанию

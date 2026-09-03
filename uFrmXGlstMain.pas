@@ -94,7 +94,6 @@ uses
   uFrmDlgRItmSupplier,
   uFrmODedtNomenclFiles,
   uFrmOWPlannedOrder,
-  uFrmXWGridAdminOptions,
   uFrmOGinfSgp,
   uFrmWDedtCreatePayrollN,
   uFrmWDedtCreatePayrollCalc,

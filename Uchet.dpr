@@ -111,7 +111,6 @@ uses
   D_Spl_InfoGrid in 'D_Spl_InfoGrid.pas' {Dlg_Spl_InfoGrid},
   uFrmTestDropDownEh in 'uFrmTestDropDownEh.pas' {FrmTestDropDownEh: TCustomDropDownFormEh},
   uFrDBGridEh in 'uFrDBGridEh.pas' {FrDBGridEh: TFrame},
-  uFrmXWGridAdminOptions in 'uFrmXWGridAdminOptions.pas' {FrmXWGridAdminOptions},
   uFrmTestMdi1 in 'uFrmTestMdi1.pas' {FrmTestMdi1},
   uFrmDlgRItmSupplier in 'uFrmDlgRItmSupplier.pas' {FrmDlgRItmSupplier},
   uFrmBasicInput in 'uFrmBasicInput.pas' {FrmBasicInput},
