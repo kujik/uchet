@@ -80,7 +80,6 @@ uses
   uMailingInterface in 'uMailingInterface.pas',
   uFrmMain in 'uFrmMain.pas' {FrmMain},
   V_MDI in 'V_MDI.pas' {Form_MDI},
-  V_Normal in 'V_Normal.pas' {Form_Normal},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
   uFrmXDmsgNoConnection in 'uFrmXDmsgNoConnection.pas' {Dlg_D_SQLNoConnection},
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
@@ -88,17 +87,17 @@ uses
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   uFrmADEdtSetPassword in 'uFrmADEdtSetPassword.pas' {FrmADEdtSetPassword},
   uFrmADedtModuleSettings in 'uFrmADedtModuleSettings.pas' {FrmADedtModuleSettings},
-  D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
+  uFrmOWGenerateAggregateEstimteInExcel in 'uFrmOWGenerateAggregateEstimteInExcel.pas' {FrmOWGenerateAggregateEstimteInExcel},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
-  D_Otk in 'D_Otk.pas' {Dlg_Otk},
+//  D_Otk in 'D_Otk.pas' {Dlg_Otk},
   D_Order in 'D_Order.pas' {Dlg_Order},
   D_Order_Complaints in 'D_Order_Complaints.pas' {Dlg_Order_Complaints: TCustomDropDownFormEh},
 //  D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
-  D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
-  D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
+  uFrmOGedtOrderPrintLabels in 'uFrmOGedtOrderPrintLabels.pas' {FrmOGedtOrderPrintLabels},
+  uFrmOGedtOrderStages in 'uFrmOGedtOrderStages.pas' {FrmOGedtOrderStages},
   uFrmODedtOrdersFinancePlans in 'uFrmODedtOrdersFinancePlans.pas' {FrmODedtOrdersFinancePlans},
   uFrmODEdtOrdersDelayedInProduction in 'uFrmODEdtOrdersDelayedInProduction.pas' {FrmODEdtOrdersDelayedInProduction},
-  D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
+  uFrmOGedtOrderStagesOtkRejected in 'uFrmOGedtOrderStagesOtkRejected.pas' {FrmOGedtOrderStagesOtkRejected},
   uFrmODedtMontage in 'uFrmODedtMontage.pas' {FrmODedtMontage},
   uFrmOGselItmGroupFromTree in 'uFrmOGselItmGroupFromTree.pas' {FrmOGselItmGroupFromTree},
   uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
@@ -341,20 +340,15 @@ begin
   Application.Title := ModuleRecArr[cMainModule].Caption;
   Application.CreateForm(TFrmMain, FrmMain);
 
-  Application.CreateForm(TForm_Normal, Form_Normal);
   Application.CreateForm(TFrmXWAbout, FrmXWAbout);
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
 //  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TFrmADEdtSetPassword, FrmADEdtSetPassword);
-  Application.CreateForm(TDlg_Rep_Smeta, Dlg_Rep_Smeta);
-  Application.CreateForm(TDlg_Otk, Dlg_Otk);
+//  Application.CreateForm(TDlg_Otk, Dlg_Otk);
   Application.CreateForm(TDlg_Order_Complaints, Dlg_Order_Complaints);
 //  Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
-  Application.CreateForm(TDlg_OrderPrintLabels, Dlg_OrderPrintLabels);
-  Application.CreateForm(TDlg_Order_Stages1, Dlg_Order_Stages1);
   Application.CreateForm(TFrmODedtOrdersFinancePlans, FrmODedtOrdersFinancePlans);
   Application.CreateForm(TFrmODEdtOrdersDelayedInProduction, FrmODEdtOrdersDelayedInProduction);
-  Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
   Application.CreateForm(TFrmOGselItmGroupFromTree, FrmOGselItmGroupFromTree);
   Application.CreateForm(TFrmODedtOrderUPD, FrmODedtOrderUPD);
   Application.CreateForm(TFrmODedtReplaceEstimateItem, FrmODedtReplaceEstimateItem);

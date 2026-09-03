@@ -95,7 +95,7 @@ uses
   uWindows,
   uServerTasks,
   uFrmADEdtSetPassword,
-  D_Rep_Smeta,
+  uFrmOWGenerateAggregateEstimteInExcel,
 
 
   uFrmADedtItmCopyRigths,
@@ -441,7 +441,7 @@ begin
     else if MenuCaption = 'Информация по ИТМ' then
       Wh.ExecDialog(myfrm_Dlg_Or_ItmInfo, Self, [myfoDialog, myfoOneCopy], fNone, -1, null)
     else if MenuCaption = 'Общая смета по выбранным заказам' then
-      Dlg_Rep_Smeta.ShowModal
+      TFrmOWGenerateAggregateEstimteInExcel.Show(Self, 'FrmOWGenerateAggregateEstimteInExcel', [], fNone, Null, Null)
     else if MenuCaption = 'О программе' then
       FrmXWAbout.ShowAbout
     else if MenuCaption = '' then;

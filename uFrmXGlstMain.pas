@@ -85,7 +85,6 @@ uses
   uSnCalendar,
 
   D_Order,
-  D_OrderPrintLabels,
   uFrmODedtReplaceEstimateItem,
   uFrmXWErrorLog, //диалог просмотра ошибки (на TFrmBasicMdi)
   D_Spl_InfoGrid,

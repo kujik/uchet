@@ -58,7 +58,7 @@ uses
   uFrmODlgOrderStdType,
   uFrmODedtOrderUPD,
   uPrintReport,
-  D_OrderPrintLabels,
+  uFrmOGedtOrderPrintLabels,
   uFrmOGrefOrStdItems,
   uFrmXDedtGridFilter,
   uFrmBasicInput,
@@ -336,7 +336,7 @@ begin
     Fr.RefreshRecord;
   end
   else if (Tag = mbtPrintLabels) then begin
-    Dlg_OrderPrinTLabels.ShowDialog(Fr.ID);
+    TFrmOGedtOrderPrintLabels.Show(Self, 'FrmOGedtOrderPrintLabels', [myfoDialog, myfoSizeable], fView, Fr.ID, null);
   end
   else if (Tag = mbtCustom_CreateAggregateEstimate) then begin
     Orders.CreateAggregateEstimate(Fr.ID, 0);

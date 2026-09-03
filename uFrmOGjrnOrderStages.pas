@@ -59,10 +59,10 @@ var
 implementation
 
 uses
-  D_Order_Stages1,
-  D_Order_Stages_Otk2,
   uFrmODEdtOrdersDelayedInProduction,
   uFrmODedtMontage,
+  uFrmOGedtOrderStages,
+  uFrmOGedtOrderStagesOtkRejected,
   uLabelColors,
   uTurv,
   uOrders,
@@ -459,12 +459,12 @@ begin
     Exit;
   Changed := False;
   if (TCellButtonEh(Sender).Hint = 'Непринятые') and (Fr.CurrField = 'rej') then begin
-    if Dlg_Order_Stages_Otk2.ShowDialog(S.IIf(FEditMode = 0, fView, fEdit), Fr.ID, FOpMode, FDtEditMin, FDtEdit) then
+    if TFrmOGedtOrderStagesOtkRejected.ShowModal2(Self, 'FrmOGedtOrderStagesOtkRejected', [myfoModal, myfoDialog, myfoSizeable], S.IIf(FEditMode = 0, fView, fEdit), Fr.ID, VarArrayOf([FDtEditMin, FDtEdit])).ModalResult = mrOk then
       Changed := True;
   end
   else if TRegEx.IsMatch(Fr.CurrField, '^qnt[0-9]{1,2}$') then
-    //в колонке общего принятого количества - диалог календаря приемки
-    if Dlg_Order_Stages1.ShowDialog(S.IIf(FEditMode = 0, fView, fEdit), Fr.ID, FOpMode, FDtEditMin) then begin
+    //в колонке общего принятого количества - диалог календаря приемки (модальный)
+    if TFrmOGedtOrderStages.ShowModal2(Self, 'FrmOGedtOrderStages', [myfoModal, myfoDialog], S.IIf(FEditMode = 0, fView, fEdit), Fr.ID, VarArrayOf([FOpMode, FDtEditMin])).ModalResult = mrOk then begin
       Changed := True;
       if (FOpMode in [mToSgp, mFromSgp]) then
         Orders.FinalizeOrder(Frg1.ID, S.Decode([FOpMode, mToSgp, myOrFinalizeToSgp, mFromSgp, myOrFinalizeFromSgp]));

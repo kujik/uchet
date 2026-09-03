@@ -76,7 +76,7 @@ type
     //если есть, переключим его на передний план и вернем False
     function BringToFrontIfExists(AFormDoc: string; AId: Variant): Boolean;
     //получим количество открытых мди-форм с таким же FormDoc как у переданной
-    //(для форм, не являющихся TForm_MDI или TForm_Normal используется заголовок формы)
+    //(для форм, не являющихся TForm_MDI используется заголовок формы)
     //также может учитывать АйДи (только для TForm_MDI), если AId не null
     //форма может не передаваться, тогда ищет по FormDoc и Id
     function GetWindowsCount(var AForm: TForm; AFormDoc: string; AId: Variant; var MaxNum: Integer): Integer; overload;
@@ -106,7 +106,7 @@ implementation
 
 uses
 
-  V_MDI, V_Normal, uFrmBasicMdi,
+  V_MDI, uFrmBasicMdi,
   uFrmMain,
   uTurv,
   uSnCalendar,
@@ -187,7 +187,7 @@ begin
   then Exit;
   st:=TForm(Sender).Name;
   if st = '' then Exit;}
- // if (Sender is TForm_MDI)or(Sender is TForm_Normal) then
+ // if (Sender is TForm_MDI) then
 //  WindowsBarChange(TForm(Sender), GetForegroundWindow, mywscmChange);
   WindowsBarChange(nil, GetForegroundWindow, mywscmChange);
 end;
@@ -243,8 +243,7 @@ begin
 
   if (IsParent(AHandle)) or
      ((AForm is TForm_MDI) and (TForm_MDI(AForm).ModuleId = cMainModule)) or
-     ((AForm is TFrmBasicMdi) and (TFrmBasicMdi(AForm).ModuleId = cMainModule)) or
-     ((AForm is TForm_Normal) and (TForm_Normal(AForm).ModuleId = cMainModule)) then begin
+     ((AForm is TFrmBasicMdi) and (TFrmBasicMdi(AForm).ModuleId = cMainModule)) then begin
   //все добавления кнопок для окон только если форма принадлежит приложению,
   //либо это один из наших основных типов форм
   //(почему-то не всегда проверка IsParent возвращает для них True, в частности вызов диалога просмотра заказа из уже дималогового окна (отчет по изд в заказах),
@@ -267,7 +266,7 @@ begin
     //получим количество открытых мди-форм и нормал-форм с таким же заголовком как у переданной
     //WindowsCount вылетает по ошибке на получении Form.Captions, если это например окно стандартного диалога,
     //поэтому эта проверка нужна
-    if (AForm is TForm_MDI) or (AForm is TForm_Normal) or (AForm is TFrmBasicMdi) then
+    if (AForm is TForm_MDI) or (AForm is TFrmBasicMdi) then
       WindowsCount := GetWindowsCount(AForm, '', null, MaxNum)
     else
       WindowsCount := 0; //111
@@ -292,8 +291,6 @@ begin
     FrmMain.SetFormsToolButtonClick;
     //соберем данные для массива окон
     fd := '';
-    if (AForm is TForm_Normal) then
-      fd := TForm_Normal(AForm).FormDoc;
     if (AForm is TForm_MDI) then
       fd := TForm_MDI(AForm).FormDoc;
     if (AForm is TFrmBasicMdi) then
@@ -444,7 +441,7 @@ end;
 
 function TWindowsHelper.GetWindowsCount(var AForm: TForm; AFormDoc: string; AId: Variant; var MaxNum: Integer): Integer;
 //получим количество открытых мди-форм с таким же FormDoc как у переданной
-//(для форм, не являющихся TForm_MDI или TForm_Normal используется заголовок формы)
+//(для форм, не являющихся TForm_MDI используется заголовок формы)
 //также может учитывать АйДи (только для TForm_MDI), если AId не null
 //форма может не передаваться, тогда ищет по FormDoc и Id
 var
@@ -464,8 +461,6 @@ begin
     st1 := TFrmBasicMdi(AForm).FormDoc;
     id1 := TFrmBasicMdi(AForm).ID;
   end;
-  if AForm is TForm_Normal then
-    st1 := TForm_Normal(AForm).FormDoc;
   //WindowsCount вылетает по ошибке на получении Form.Captions, если это например окно стандартного диалога а не наши шаблонные формы
 //  if st1 = '' then
 //    st1 := AForm.Caption;      //111
@@ -480,8 +475,6 @@ begin
         st2 := TFrmBasicMdi(FWindows[i].Form).FormDoc;
         id1 := TFrmBasicMdi(FWindows[i].Form).id;
       end;
-      if FWindows[i].Form is TForm_Normal then
-        st2 := TForm_Normal(FWindows[i].Form).FormDoc;
     end;
     if (FWindows[i].Form <> nil) and (st1 = st2) and ((AId = null) or (AId = id1)) then begin
       inc(Result);
