@@ -251,7 +251,7 @@ var
 implementation
 
 uses
-  System.StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2, uFrmOGselOrReglament, uWindows, D_LoadKBLog, uSys, uOrders, uFrmBasicMdi;
+  System.StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2, uFrmOGselOrReglament, uWindows, {D_LoadKBLog,} uSys, uOrders, uFrmBasicMdi;
 
 const
   cControl = 0;
@@ -3444,7 +3444,7 @@ end;
 
 procedure TDlg_Order.LoadKBLog;
 begin
-  Dlg_LoadKBLog.ShowDialog(LoadKBLogArr);
+//  Dlg_LoadKBLog.ShowDialog(LoadKBLogArr); //---
 end;
 
 procedure TDlg_Order.Pmi_Format_LoadKBClick(Sender: TObject);
@@ -3659,7 +3659,7 @@ begin
   SetSumInHeader;
   if Length(LoadKBLogArr) = 0 then
     LoadKBLogArr := [[#1]];  //признак, что загржено без ошибок
-  Dlg_LoadKBLog.ShowDialog(LoadKBLogArr);
+  //Dlg_LoadKBLog.ShowDialog(LoadKBLogArr);
 end;
 
 procedure TDlg_Order.SetOrderSaveStatusText(Text: string);

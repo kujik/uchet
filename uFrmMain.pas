@@ -95,7 +95,7 @@ uses
   uWindows,
   uServerTasks,
   uFrmADEdtSetPassword,
-  D_ModuleSettings, D_Rep_Smeta,
+  D_Rep_Smeta,
 
 
   uFrmADedtItmCopyRigths,
@@ -434,8 +434,6 @@ begin
       FrmADEdtSetPassword.ShowDialog(Self, 0)
     else if MenuCaption = 'Копировать права доступа ИТМ' then
       FrmADedtItmCopyRigths.ShowDialog
-    else if MenuCaption = 'Настройки модулей' then
-      Dlg_ModuleSettings.ShowDialog
     else if MenuCaption = 'Отчет по себестоимости заказов' then
       Wh.ExecDialog(myfrm_Dlg_Rep_Order_Primecost2, Self, [], fNone, null, null)
     else if MenuCaption = 'Поиск изделия / сметной позиции' then
@@ -553,7 +551,7 @@ begin
 
     ['Настройки'],
     ['Основные настройки', myfrm_Dlg_MainSettings, User.Role(rAdm_Settings_Main)],
-    ['Настройки модулей', '_', User.Role(rAdm_Settings_Modules)],
+    ['Настройки модулей', myfrm_Dlg_ModuleSettings, User.Role(rAdm_Settings_Modules)],
 
     ['Сервис'],
     ['Пользователи в AD', myfrm_Adm_LdapUsers, User.Role(rAdm_ActiveDirectoryUsers)],

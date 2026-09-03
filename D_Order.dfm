@@ -4,8 +4,8 @@ inherited Dlg_Order: TDlg_Order
   ClientWidth = 1264
   OnCloseQuery = FormCloseQuery
   OnResize = FormResize
-  ExplicitWidth = 1276
-  ExplicitHeight = 708
+  ExplicitWidth = 1280
+  ExplicitHeight = 709
   TextHeight = 13
   inherited pnl_StatusBar: TPanel
     Top = 626
@@ -15,11 +15,7 @@ inherited Dlg_Order: TDlg_Order
     ExplicitWidth = 1260
     inherited lbl_StatusBar_Right: TLabel
       Left = 1177
-      Height = 17
       ExplicitLeft = 1177
-    end
-    inherited lbl_StatusBar_Left: TLabel
-      Height = 17
     end
   end
   object pnl_Top: TPanel [1]

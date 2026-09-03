@@ -1090,6 +1090,7 @@ const
   myfrm_Dlg_DeleteOutdatedOrders='Dlg_DeleteOutdatedOrders';
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
   myfrm_Dlg_MainSettings='Dlg_MainSettings';
+  myfrm_Dlg_ModuleSettings='Dlg_ModuleSettings';
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
   myfrm_Dlg_EdtEstimate='Dlg_EdtEstimate';
 

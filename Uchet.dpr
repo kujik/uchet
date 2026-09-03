@@ -87,13 +87,13 @@ uses
   uFrmTest in 'uFrmTest.pas' {FrmTest},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
   uFrmADEdtSetPassword in 'uFrmADEdtSetPassword.pas' {FrmADEdtSetPassword},
-  D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
+  uFrmADedtModuleSettings in 'uFrmADedtModuleSettings.pas' {FrmADedtModuleSettings},
   D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
   D_Otk in 'D_Otk.pas' {Dlg_Otk},
   D_Order in 'D_Order.pas' {Dlg_Order},
   D_Order_Complaints in 'D_Order_Complaints.pas' {Dlg_Order_Complaints: TCustomDropDownFormEh},
-  D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
+//  D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
   D_R_Order_Plans in 'D_R_Order_Plans.pas' {Dlg_R_Order_Plans},
@@ -346,11 +346,10 @@ begin
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
 //  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TFrmADEdtSetPassword, FrmADEdtSetPassword);
-  Application.CreateForm(TDlg_ModuleSettings, Dlg_ModuleSettings);
   Application.CreateForm(TDlg_Rep_Smeta, Dlg_Rep_Smeta);
   Application.CreateForm(TDlg_Otk, Dlg_Otk);
   Application.CreateForm(TDlg_Order_Complaints, Dlg_Order_Complaints);
-  Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
+//  Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
   Application.CreateForm(TDlg_OrderPrintLabels, Dlg_OrderPrintLabels);
   Application.CreateForm(TDlg_Order_Stages1, Dlg_Order_Stages1);
   Application.CreateForm(TDlg_R_Order_Plans, Dlg_R_Order_Plans);

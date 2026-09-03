@@ -112,7 +112,7 @@ uses
   uSnCalendar,
   uOrders,
 
-  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmADedtMainSettings,
+  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmADedtMainSettings, uFrmADedtModuleSettings,
 
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
@@ -748,6 +748,8 @@ begin
     Orders.EraseOutdatedOrders(AOwner)
   else if AFormType = myfrm_Dlg_MainSettings then
     TFrmADedtMainSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
+  else if AFormType = myfrm_Dlg_ModuleSettings then
+    TFrmADedtModuleSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
   else if AFormType = myfrm_Dlg_OrdersFinReport then
     Orders.OrdersFinReport
   else if AFormType = myfrm_Rep_Or_DataCheck then
