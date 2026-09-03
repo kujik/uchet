@@ -142,7 +142,7 @@ uses
   uFrmOWedtOrReglament, uFrmOGrepEstimatePrices, uFrmOGrepOrReglament,
   uFrmOGjrnProdCalculations, uFrmOWedtProdCalculation, uFrmOGrepOrdersFinMonitoring,
   uFrmOWOrder, uFrmOWRepOrderChanges, uFrmOWrepEstimateChanges, uFrmOWrepStdItemsGroupCheck, uFrmOWedtSetOrderRoute,
-  uFrmOWItmInfo, uFrmOWRepDataCheck,
+  uFrmOWItmInfo, uFrmOWRepDataCheck, uFrmOGedtDistributeQnt,
 
   uFrmPWedtPlnOps,
 
@@ -906,7 +906,16 @@ begin
     // Form := ...
   else if AFormType = myfrm_Dlg_Order then
 //    Form := TDlg_Order.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
-    TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
+    //myfoMulticopy (как и у остальных диалогов выше) - без него нельзя было открыть второй диалог заказа, пока
+    //не закрыт первый (см. TFrmBasicMdi.TestMultiInstances) - это мешало, например, последовательному созданию
+    //нескольких отгрузочных заказов на основании одного производственного (см. TFrmOWOrder.TitleButtonClick/
+    //FCreateShipmentFromProductionId), и вообще не позволяло редактировать/создавать два разных заказа одновременно
+    TFrmOWOrder.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize, myfoMulticopy], AMode, AId, AAddParam)
+  else if AFormType = myfrm_Dlg_DistributeQnt then
+    //распределение количества изделий по отгрузочным заказам, созданным на основании производственного (см.
+    //uFrmOGedtDistributeQnt.pas, вызов из uFrmOGjrnOrders.pas, Tag = 1009); myfoMulticopy - чтобы можно было
+    //одновременно открыть этот диалог для разных производственных заказов
+    TFrmOGedtDistributeQnt.Show(AOwner, AFormType, [myfoSizeable, myfoDialog, myfoEnableMaximize, myfoMulticopy], AMode, AId, AAddParam)
   else if AFormType = myfrm_Rep_OrderChanges then
     TFrmOWRepOrderChanges.Show(AOwner, AFormType, Opt + [myfoSizeable, myfoDialog, myfoEnableMaximize], AMode, AId, AAddParam)
   else if AFormType = myfrm_Rep_EstimateChanges then

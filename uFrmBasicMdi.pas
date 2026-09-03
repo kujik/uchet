@@ -303,6 +303,15 @@ type
     procedure ArrangeControlsOnPanel(APanel: TPanel);                                  // расстановка контролов на панели с центрированием
     procedure SetButtonsVisibilityAndArrange(const ShowIDs, HideIDs: TVarDynArray); overload;   // для всех панелей (Main, L, R, C)
     procedure SetButtonsVisibilityAndArrange(APanelName: string; const ShowIDs, HideIDs: TVarDynArray); overload; // для конкретной панели по имени
+    // приостановить/возобновить перерисовку панели кнопок (pnlFrmBtnsContainer) - оборачивать вызовом этой пары
+    // ПОСЛЕДОВАТЕЛЬНОСТЬ из нескольких вызовов SetButtonsVisibilityAndArrange (как в TFrmOWOrder.SetButtons), иначе
+    // каждый вызов (Visible/Left/Top/Width у нескольких контролов + Width самой alRight/alLeft-панели, что тянет за
+    // собой пересчёт выравнивания ВСЕХ панелей-соседей в pnlFrmBtnsContainer) отрисовывается сразу же, без пакетной
+    // отрисовки - отсюда заметное мерцание и медленная перерисовка бара кнопок при смене статуса заказа и т.п.
+    // ВАЖНО: EndButtonsUpdate обязательно вызывать в finally, иначе при исключении внутри блока перерисовка панели
+    // так и останется выключенной
+    procedure BeginButtonsUpdate;
+    procedure EndButtonsUpdate;
     // сброс кеша порядка контролов панели (FPanelOrderCache) - вызывать после ДИНАМИЧЕСКОГО добавления/удаления
     // контролов на панели (например, Cth.CreateControls в потомке), иначе GetPanelOrder продолжит отдавать
     // старый список без нового контрола, и ArrangeControlsOnPanel не учтёт его ширину при пересчёте Width панели
@@ -592,6 +601,22 @@ begin
   ArrangeControlsOnPanel(pnlFrmBtnsL);
   ArrangeControlsOnPanel(pnlFrmBtnsR);
   ArrangeControlsOnPanel(pnlFrmBtnsC);
+end;
+
+procedure TFrmBasicMdi.BeginButtonsUpdate;
+//приостанавливает перерисовку панели кнопок (см. комментарий у объявления) - парная EndButtonsUpdate
+begin
+  if Assigned(pnlFrmBtnsContainer) and pnlFrmBtnsContainer.HandleAllocated then
+    SendMessage(pnlFrmBtnsContainer.Handle, WM_SETREDRAW, 0, 0);
+end;
+
+procedure TFrmBasicMdi.EndButtonsUpdate;
+//возобновляет перерисовку панели кнопок и сразу перерисовывает её целиком одним проходом
+begin
+  if Assigned(pnlFrmBtnsContainer) and pnlFrmBtnsContainer.HandleAllocated then begin
+    SendMessage(pnlFrmBtnsContainer.Handle, WM_SETREDRAW, 1, 0);
+    RedrawWindow(pnlFrmBtnsContainer.Handle, nil, 0, RDW_INVALIDATE or RDW_ALLCHILDREN or RDW_ERASE or RDW_UPDATENOW);
+  end;
 end;
 
 procedure TFrmBasicMdi.SetButtonsVisibilityAndArrange(const ShowIDs, HideIDs: TVarDynArray);
@@ -1640,24 +1665,16 @@ begin
   if Sender = nil then begin
     for i := 0 to ComponentCount - 1 do
       if Components[i] is TFrDBGridEh then begin
-        if TFrDBGridEh(Components[i]).HasError then
-          AHasError := True;
-        if TFrDBGridEh(Components[i]).ErrorMessage <> '' then begin
-          AErrorSt := TFrDBGridEh(Components[i]).ErrorMessage;
-          AHasError := True;
-        end;
-        if TFrDBGridEh(Components[i]).IsDataChanged then
-          AIsChanged := True;
+        if TFrDBGridEh(Components[i]).HasError then AHasError := True;
+        if TFrDBGridEh(Components[i]).ErrorMessage <> '' then AErrorSt := TFrDBGridEh(Components[i]).ErrorMessage;
+        if TFrDBGridEh(Components[i]).IsDataChanged then AIsChanged := True;
       end;
   end;
 
   if Sender is TFrDBGridEh then begin
-    if TFrDBGridEh(Sender).HasError then
-      AHasError := True;
-    if TFrDBGridEh(Sender).ErrorMessage <> '' then
-      AErrorSt := TFrDBGridEh(Sender).ErrorMessage;
-    if TFrDBGridEh(Sender).IsDataChanged then
-      AIsChanged := True;
+    if TFrDBGridEh(Sender).HasError then AHasError := True;
+    if TFrDBGridEh(Sender).ErrorMessage <> '' then AErrorSt := TFrDBGridEh(Sender).ErrorMessage;
+    if TFrDBGridEh(Sender).IsDataChanged then AIsChanged := True;
   end;
 
   if Sender = nil then

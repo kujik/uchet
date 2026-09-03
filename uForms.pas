@@ -2585,6 +2585,12 @@ var
   c: TControl;
   b: Boolean;
 begin
+  //b не была инициализирована и оставалась не выставленной в False при пустом ACaptions (цикл ниже, где она
+  //выставляется в True, просто не выполняется) - из-за этого при вызове с пустым массивом заголовков (например,
+  //если у формы нет FTitleTexts) Result мог случайно получиться ненулевым (мусорное значение b на стеке), и тогда
+  //вызывающий код (см. TFrmBasicEditabelGrid.PrepareForm: if i > 0 then pnlTop.Height := i;) непредсказуемо
+  //перезатирал высоту pnlTop, заданную в дизайнтайме - см. также диагностику этого в uFrmOGedtDistributeQnt.pas
+  b := False;
   j := MY_FORMPRM_V_TOP;
   for i := 0 to High(ACaptions) do begin
     if Pos('$', ACaptions[i]) > 0 then

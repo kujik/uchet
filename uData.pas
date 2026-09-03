@@ -1010,6 +1010,9 @@ const
   myfrm_Dlg_R_Candidates_Ad = 'Dlg_R_Candidates_Ad';
   myfrm_Dlg_Vacancy = 'Dlg_Vacancy';
   myfrm_Dlg_Order = 'Dlg_Order';
+  //диалог распределения количества изделий по отгрузочным заказам, созданным на основании одного производственного
+  //(см. TFrmOGedtDistributeQnt, вызов из TFrmOGjrnOrders.pas, Tag = 1009)
+  myfrm_Dlg_DistributeQnt = 'Dlg_DistributeQnt';
   myfrm_Dlg_R_StdProjects = 'Dlg_R_StdProjects';
   myfrm_Dlg_R_StdPspFormats='myfrm_Dlg_R_StdPspFormats';
   myfrm_Dlg_R_StdPspEstimate='myfrm_Dlg_R_StdPspEstimate';

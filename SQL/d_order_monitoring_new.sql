@@ -1255,8 +1255,12 @@ select
 --регламентная дата определяется следующим днем после окончанимя участка Планирование
   o.id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference,
   o.dt_to_prod as dt_control, 
+  --дата и просрочка от даты оформления
   o.dt_beg + ri.day_end - 0 as dt_by_reglament,
-  (nvl(o.dt_to_prod, trunc(sysdate)) - (o.dt_beg + ri.day_end - 0)) as overdue_days 
+  (nvl(o.dt_to_prod, trunc(sysdate)) - (o.dt_beg + ri.day_end - 0)) as overdue_days,
+  --дата и просрочка, если регламент применять обратным образом от даты отгрузки 
+  o.dt_otgr - r.deadline + ri.day_end + 1 as dt_by_reglament_from_otgr,
+  (nvl(o.dt_to_prod, trunc(sysdate)) - (o.dt_otgr - r.deadline + ri.day_end + 1)) as overdue_days_from_otgr 
 from
   v_orders o,
   order_reglaments r,
@@ -1273,4 +1277,54 @@ order by dt_beg
 
 
 
+create or replace view v_rep_for_orders_planned_to_start_tomorrow as
+select
+--отчет по заказм, планируемым в работу на завтра
+--по производственным заказам.
+--дата запуска в работу определяется следующим днем после окончанимя участка Планирование
+  o.id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference
+from
+  v_orders o,
+  order_reglaments r,
+  order_reglament_items ri
+where
+  o.id > 0 and o.dt_beg > date '2023-03-01' and id_organization = -1 
+  and o.id_reglament is not null 
+  and o.id_reglament = r.id
+  and ri.id_reglament = r.id and ri.id_work_cell_type = 7 --планирование
+  and o.dt_to_prod is null
+  and o.dt_end is null
+  --если надо считать от даты оформления заказа
+  and o.dt_beg + ri.day_end - 0 = trunc(sysdate) + 1
+  --если надо считать регламент от даты отгрузки
+  --and o.dt_otgr - r.deadline + ri.day_end + 1 = trunc(sysdate) + 1
+order by dt_beg  
+;
 
+
+create or replace view v_rep_required_materials_for_planned_orders_tomorrow as
+select
+--потребные материалы по заказам, которые должны пойти в работу завтра
+  t.*,
+  nvl(s.qnt, 0) as qnt_on_stocks,
+  nvl(s.qnt, 0) - t.qnt as qnt_diff
+from 
+  (  
+    select 
+      max(groupname) as groupname,
+      max(artikul) as artikul, 
+      name,
+      max(unit) as unit,
+      sum(qnt+0) as qnt
+    from 
+      v_aggregate_estimate 
+    where 
+      id_order in (select id from v_rep_for_orders_planned_to_start_tomorrow) 
+    group by name
+  ) t,
+  dv.nomenclatura n,
+  v_spl_qntonstocks_sum s
+where
+  n.name(+) = t.name
+  and s.id_nomencl(+) = n.id_nomencl
+;

@@ -230,6 +230,21 @@ type
     function FinalizeOrder(IdOrder: Variant; OpMode: Integer; Mode: Integer = 1; Silent: Boolean = True): Integer;
     function FinalizeOrderM(IdOrder: Variant): Integer;
     function FinalizeOrdersM(AIds: TVarDynArray): Boolean;
+    //отклонение производственного заказа в статусе "Проведен" (действие из журнала заказов), см. ORDER_ID_STATUS_REJECTED
+    function RejectOrder(IdOrder: Variant): Boolean;
+    //проверка допустимости + подтверждение создания отгрузочного заказа на основании производственного (действие
+    //из журнала заказов, см. uFrmOGjrnOrders.pas, Tag = 1008); показывает пользователю информацию о родительском
+    //производственном заказе; само создание заказа выполняется штатным диалогом заказа. APreferTemplate - True,
+    //если по этому производственному уже есть отгрузочные И при этом есть парный отгрузочный шаблон, и
+    //пользователь на дополнительный вопрос ответил, что не хочет дублировать шапку уже существующего отгрузочного,
+    //а хочет использовать шаблон - см. uFrmOGjrnOrders.pas (передаётся 4-ым элементом AddParam только для ПЕРВОГО
+    //создаваемого в серии заказа) и uFrmOWOrder.pas/LoadOrderComboBoxes (сам выбор источника копирования шапки)
+    function ConfirmCreateShipmentOrderFromProduction(IdProduction: Variant; out APreferTemplate: Variant): Boolean;
+    //проверка допустимости открытия диалога распределения количества изделий по отгрузочным заказам, созданным на
+    //основании производственного заказа IdProduction (действие из журнала заказов, см. uFrmOGjrnOrders.pas,
+    //Tag = 1009); проверяет, что заказ производственный, и что по нему уже есть хотя бы один отгрузочный заказ
+    //(иначе распределять нечего) - сам диалог открывается в TFrmOGjrnOrders.pas через Wh.ExecDialog
+    function ConfirmDistributeQntFromProduction(IdProduction: Variant): Boolean;
     //переименование номенклатурных позиций в базах Учета и ИТМ
     //на данный момент исходным является айди номенклатуры в ИТМ
     //переименовывает, только если тип номенклатуры Материалы, и если целевой номенклатуры
@@ -285,6 +300,11 @@ const
   //айди, начиная с которого обновленный формат заказов (добавлены регламенты), не использовать новый формат - 0
   cOrderNewTypeID = 11674;//100000000;
 
+  //айди, начиная с которого действует новый (2026) формат заказов с явным разделением по типу изделий заказа (см. std_item_type);
+  //заказы с меньшим id остаются в режиме совместимости (только чтение, редактирование - см. worder)
+  //ЗНАЧЕНИЕ-ЗАГЛУШКА, до активации режима совместимости надо выставить реальный айди-порог
+  cOrderNew26TypeID = 100000000;
+
   cOrderReglamentSnTypes: array[1..4] of string = (
     'Плитные/кромка','Фурнитура','ЛКМ','Заказн. Поз'
   );
@@ -297,15 +317,16 @@ const
   ORDER_ID_STATUS_DRAFT = 0;
   ORDER_ID_STATUS_APPROVED = 1;
   ORDER_ID_STATUS_STARTED = 2;
-  ORDER_ID_STATUS_STOPPED = -1;
-  ORDER_ID_STATUS_DELETED = -2;
+  ORDER_ID_STATUS_REJECTED = -1;
+  ORDER_ID_STATUS_STOPPED = -2;
+  ORDER_ID_STATUS_DELETED = -3;
 
   ITEM_TYPE_PRODUCTION = 0;
   ITEM_TYPE_SHIPMENT = 1;
   ITEM_TYPE_SEMIPRODUCT = 2;
 
   cOrdersOrderStatusNames: array [ORDER_ID_STATUS_DELETED..ORDER_ID_STATUS_STARTED] of string =
-    ('удален', 'остановлен', 'на оформлении', 'проведен', 'запущен в работу');
+    ('удален', 'остановлен', 'отклонен', 'на оформлении', 'проведен', 'запущен в работу');
 
 
   //пароль для отображения архивных заказов по Н, вводится в журнале заказов по нажатии Ctrl-Alt-W
@@ -1453,7 +1474,7 @@ begin
 
   va := Q.QLoadCol('select id from orders where id_related_template = :anchor$i and id <> :self$i and active = 1', [LAnchor, AIdOrder]);
   for i := 0 to High(va) do
-    Result := Result + [va[i][0]];
+    Result := Result + [va[i]];
 end;
 
 function TOrders.LinkOrderTemplate(AParent: TForm; AIdTemplate: Variant): Boolean;
@@ -3258,6 +3279,137 @@ begin
   end;
   Q.QLog('FinalizeOrder', VartoStr(va2[2]) + ' ' + User.GetName + '  [' + st + ']');
   Result := 1;
+end;
+
+function TOrders.RejectOrder(IdOrder: Variant): Boolean;
+//отклоняет производственный заказ, находящийся в статусе "Проведен" (действие "Отклонить заказ" из меню
+//"Действия" журнала заказов) - переводит его в статус ORDER_ID_STATUS_REJECTED;
+//доступно только пользователям с правом запуска заказов в производство (та же роль, что и на кнопку "Запустить")
+//рассылает уведомление по рассылке TASK_MAILING_ORDERS_REJECT, и всегда - пользователю, оформившему заказ (id_manager)
+var
+  va: TVarDynArray;
+  LOrNum: string;
+  LIdManager: Variant;
+  LAddr: string;
+begin
+  Result := False;
+  if not User.Role(rOr_D_Order_Start) then
+    Exit;
+  va := Q.QLoadRow('select id_status, std_item_type, ornum, id_manager from v_orders where id = :id$i', [IdOrder]);
+  if va[0] = null then
+    Exit;
+  if S.NInt(va[0]) <> ORDER_ID_STATUS_APPROVED then begin
+    MyWarningMessage('Отклонить можно только заказ в статусе "Проведен"!');
+    Exit;
+  end;
+  if S.NInt(va[1]) <> STDITEM_TYPE_PRODUCTION then begin
+    MyWarningMessage('Отклонение доступно только для производственных заказов!');
+    Exit;
+  end;
+  LOrNum := va[2];
+  LIdManager := va[3];
+  if MyQuestionMessage('Отклонить заказ ' + LOrNum + '?') <> mrYes then
+    Exit;
+  if Q.QExecSql('update orders set id_status = :s$i where id = :id$i', [ORDER_ID_STATUS_REJECTED, IdOrder]) = -1 then
+    Exit;
+  Q.QLog('RejectOrder', LOrNum + ' ' + User.GetName + '  [заказ отклонен]');
+  //рассылка: адреса по коду рассылки + всегда пользователь, оформивший заказ
+  LAddr := Tasks.GetMailingAddr(TASK_MAILING_ORDERS_REJECT);
+  if S.NNum(LIdManager) <> 0 then
+    S.ConcatStP(LAddr, Q.QLoadValue('select emailaddr from v_users where id = :id$i', [LIdManager]).AsString, ',');
+  Tasks.SendMail(LAddr, 'Заказ ' + LOrNum + ' отклонен', 'Заказ ' + LOrNum + ' отклонен пользователем ' + User.GetName + '.', []);
+  Result := True;
+end;
+
+function TOrders.ConfirmCreateShipmentOrderFromProduction(IdProduction: Variant; out APreferTemplate: Variant): Boolean;
+//проверяет, что заказ IdProduction - производственный (действие "Создать отгрузочный заказ на основании
+//производственного" из меню журнала заказов), показывает пользователю подробную информацию о нём и запрашивает
+//подтверждение; само создание нового заказа выполняется штатным диалогом заказа (см. вызов в uFrmOGjrnOrders.pas,
+//Tag = 1008) - сюда передаётся только IdProduction, используется исключительно для проверки/показа информации.
+//см. также APreferTemplate в комментарии интерфейса
+var
+  va: TVarDynArray;
+  LOrNum, LTypeName, LProject, LDtBegStr, LDtOtgrStr, LMsg: string;
+  LCntCreated, LCntStarted: Integer;
+begin
+  Result := False;
+  APreferTemplate := null;
+  va := Q.QLoadRow('select std_item_type, id_status, ornum, typename, project, dt_beg, dt_otgr from v_orders where id = :id$i', [IdProduction]);
+  if va[0] = null then
+    Exit;
+  if S.NInt(va[0]) <> STDITEM_TYPE_PRODUCTION then begin
+    MyWarningMessage('Создать отгрузочный заказ можно только на основании производственного заказа!');
+    Exit;
+  end;
+  //!отладка - на время отладки проверка статуса отключена, раскомментировать перед вводом в эксплуатацию
+  {if S.NInt(va[1]) <> ORDER_ID_STATUS_APPROVED then begin
+    MyWarningMessage('Создать отгрузочный заказ можно только на основании производственного заказа в статусе "Проведен"!');
+    Exit;
+  end;}
+  LOrNum := va[2];
+  LTypeName := va[3];
+  LProject := va[4];
+  if va[5] = null then LDtBegStr := '-' else LDtBegStr := DateToStr(va[5]);
+  if va[6] = null then LDtOtgrStr := '-' else LDtOtgrStr := DateToStr(va[6]);
+  //сколько отгрузочных/п,ф заказов уже создано на основании этого производственного (исключая удаленные), и
+  //сколько из них уже запущено в работу - покажем эту информацию в вопросе, если таковые вообще есть
+  LCntCreated := S.NInt(Q.QLoadValue('select count(*) from orders where id_production_order = :id$i and id_status <> :del$i', [IdProduction, ORDER_ID_STATUS_DELETED]));
+  LCntStarted := S.NInt(Q.QLoadValue('select count(*) from orders where id_production_order = :id$i and id_status = :st$i', [IdProduction, ORDER_ID_STATUS_STARTED]));
+  LMsg :=
+    'Создать отгрузочный заказ на основании производственного заказа:' + #13#10#13#10 +
+    'Номер: ' + LOrNum + #13#10 +
+    'Тип: ' + LTypeName + #13#10 +
+    'Проект: ' + LProject + #13#10 +
+    'Дата создания: ' + LDtBegStr + #13#10 +
+    'Дата отгрузки: ' + LDtOtgrStr;
+  if LCntCreated > 0 then begin
+    LMsg := LMsg + #13#10#13#10 + 'Уже создано отгрузочных заказов на основании этого производственного: ' + IntToStr(LCntCreated);
+    if LCntStarted > 0 then
+      LMsg := LMsg + #13#10 + 'Из них запущено в работу: ' + IntToStr(LCntStarted);
+  end;
+  Result := MyQuestionMessage(LMsg) = mrYes;
+  if not Result then
+    Exit;
+  //если отгрузочные уже есть, и при этом у производственного (если он сам создан из шаблона) есть парный
+  //отгрузочный шаблон - неоднозначность источника шапки для ПЕРВОГО создаваемого в этой серии заказа
+  //(см. uFrmOWOrder.pas/LoadOrderComboBoxes: по умолчанию источник - последний созданный отгрузочный, тег 'o'
+  //тут ни при чём) - спросим явно, что предпочесть
+  if LCntCreated > 0 then begin
+    var LIdProdTemplate := Q.QLoadValue('select id_template from orders where id = :id$i', [IdProduction]);
+    if not VarIsNull(LIdProdTemplate) then begin
+      var LHasPairedTemplate := S.NInt(Q.QLoadValue('select count(*) from orders where id_related_template = :id$i and active = 1', [LIdProdTemplate])) > 0;
+      if LHasPairedTemplate then
+        APreferTemplate :=
+          MyQuestionMessage(
+            'Уже создан отгрузочный заказ по данному производственному.'#13#10 +
+            'Продублировать шапку заказа из него на все вновь создаваемые?'
+          ) <> mrYes;
+    end;
+  end;
+end;
+
+function TOrders.ConfirmDistributeQntFromProduction(IdProduction: Variant): Boolean;
+//проверяет, что заказ IdProduction - производственный, и что по нему уже есть хотя бы один (не удаленный)
+//отгрузочный заказ - иначе распределять количество не между чем. сам диалог (см. uFrmOGedtDistributeQnt.pas)
+//открывается в uFrmOGjrnOrders.pas, Tag = 1009, через Wh.ExecDialog(myfrm_Dlg_DistributeQnt, ...)
+var
+  LStdItemType: Variant;
+  LCntCreated: Integer;
+begin
+  Result := False;
+  LStdItemType := Q.QLoadValue('select std_item_type from orders where id = :id$i', [IdProduction]);
+  if LStdItemType = null then
+    Exit;
+  if S.NInt(LStdItemType) <> STDITEM_TYPE_PRODUCTION then begin
+    MyWarningMessage('Распределить количество изделий можно только по производственному заказу!');
+    Exit;
+  end;
+  LCntCreated := S.NInt(Q.QLoadValue('select count(*) from orders where id_production_order = :id$i and id_status <> :del$i', [IdProduction, ORDER_ID_STATUS_DELETED]));
+  if LCntCreated = 0 then begin
+    MyWarningMessage('По этому производственному заказу ещё не создано ни одного отгрузочного заказа - распределять количество не между чем!');
+    Exit;
+  end;
+  Result := True;
 end;
 
 procedure TOrders.SetOrderProperty_SyncWithITM;

@@ -83,6 +83,7 @@ const
   TASK_MAILING_EARLY_COMPLETION_ACTS = 8;
   TASK_MAILING_MONITORING_STOCKS = 9;
   TASK_MAILING_ORDERS_APPROVE = 10;
+  TASK_MAILING_ORDERS_REJECT = 11;
   //пользователь (подпись) для служебных почтовых рассылок
   TASK_DEFAULT_SENDER = 'Учёт';
 

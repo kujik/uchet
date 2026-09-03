@@ -54,7 +54,7 @@ LoadCounterpartRows строит FRows из ОДНОЙ строки (сама о
 переспрашивается явное предупреждение (см. начало VerifyBeforeSave). УДАЛИТЬ ПОСЛЕ ЗАВЕРШЕНИЯ МИГРАЦИИ - сам
 чекбокс, поле chb_SingleItemOnly и все связанные с ним проверки (искать по имени chb_SingleItemOnly).
 
-ДВЕ ПОПРАВКИ (по факту тестирования):
+ЧЕТЫРЕ ПОПРАВКИ (по факту тестирования):
 1) Поля маршрута/"без сметы"/"без маршрута" (chb_Wo_Estimate/chb_R0/chb_r1..N) относятся ТОЛЬКО к
 производственному изделию семейства (см. выше), но базовый механизм диалога (F.DefineFields) загружает их
 напрямую из записи, физически открытой по ID - т.е. если диалог открыт на ОТГРУЗОЧНОЙ подгруппе, показывались бы
@@ -71,6 +71,23 @@ production-строка сохраняется как сиблинг именн�
 изделия не переименовывалась - и последующая CheckSelfSmetaAction ошибочно сообщала, что уже верная смета
 "не соответствует ожидаемой" (она продолжала ссылаться на старое имя). Исправлено - SaveRow теперь тоже вызывает
 RenameNomenclatura при изменении имени сохраняемой строки.
+3) Общие чекбоксы маршрута (chb_Wo_Estimate/chb_R0/chb_r1..N), хоть и показывают (см. п.1 выше) реальный маршрут
+производственного изделия, оставались доступны для редактирования и при открытой ОТГРУЗОЧНОЙ строке - хотя
+изменить там ничего фактически нельзя (при сохранении отгрузочного изделия они принудительно обнуляются, см.
+Save/SaveRow), что вводило в заблуждение. Исправлено в SetRowsControlsState - при открытой отгрузочной строке
+семейства эти чекбоксы теперь принудительно недоступны (Enabled = False).
+4) (Найдено при проверке поправки 3 - реальный, более серьезный баг.) SaveRow (сохранение остальных строк
+семейства, НЕ FSourceRowIndex) и SyncOrderItemTemplates при сохранении ПРОИЗВОДСТВЕННОЙ строки как "соседа"
+(т.е. когда диалог открыт на ОТГРУЗОЧНОЙ подгруппе) брали значения маршрута из общих чекбоксов формы - а они, с
+учетом поправки 1/3, в этом случае лишь ОТОБРАЖАЮТ реальный маршрут и заблокированы для редактирования; при
+любом сохранении, вызванном переименованием/изменением цены со стороны отгрузочной подгруппы, это приводило к
+перезаписи (фактически обнулению или порче) реального маршрута производственного изделия в БД. Исправлено:
+SaveRow при ОБНОВЛЕНИИ существующего производственного изделия как соседа теперь вообще не включает поля
+маршрута в SQL (оставляет как есть в БД); значения из чекбоксов там больше не участвуют. Аналогично
+SyncOrderItemTemplates не трогает маршрут в шаблонах заказов для производственной строки-соседа. Поля маршрута
+из чекбоксов используются в SaveRow только при СОЗДАНИИ нового производственного изделия впервые именно отсюда -
+и то не из чекбоксов, а жестким нулем (маршрут в этом случае еще не задан нигде, задается позже, при
+редактировании самого производственного изделия).
 }
 
 
@@ -892,10 +909,13 @@ procedure TFrmODedtOrStdItem.SetRowsControlsState;
 //блокировка/разблокировка полей строк семейства - право на изменение цены (та же роль, что и раньше для
 //единственного поля цены - rOr_R_StdItems_Set_Prices, только теперь в режиме fEdit применяется ко ВСЕМ строкам)
 //и режим просмотра/удаления (там нечего редактировать вовсе). Плюс живая подсветка занятых имен - см.
-//UpdateAddDuplicateMarkers.
+//UpdateAddDuplicateMarkers. Плюс (см. ниже) блокировка общих чекбоксов маршрута для отгрузочной строки -
+//вызывается после LoadCounterpartRows/SetRoute во всех трех местах, где меняется состав FRows/FSourceRowIndex
+//(Prepare, ControlOnChange - смена подгруппы в комбобоксе Формат и переключение chb_SingleItemOnly), поэтому
+//это общее подходящее место и для пересчета блокировки по типу открытой строки.
 var
   i: Integer;
-  LReadOnly: Boolean;
+  LReadOnly, LIsShipmentRow: Boolean;
 begin
   LReadOnly := (Mode in [fView, fDelete]) or ((Mode = fEdit) and not User.Role(rOr_R_StdItems_Set_Prices));
   for i := 0 to High(FRows) do begin
@@ -907,6 +927,22 @@ begin
       FRows[i].ChbBySgp.Enabled := not (Mode in [fView, fDelete]);
   end;
   UpdateAddDuplicateMarkers;
+  //поправка по факту тестирования - см. общий комментарий в начале модуля и LoadRouteFromProductionItem: поля
+  //маршрута/"без сметы"/"без маршрута" относятся ТОЛЬКО к производственному изделию семейства - если открыта
+  //ОТГРУЗОЧНАЯ строка (FRows[FSourceRowIndex]), эти чекбоксы хоть и показывают (см. LoadRouteFromProductionItem)
+  //реальный маршрут производственного изделия, редактировать их отсюда бессмысленно: при сохранении отгрузочного
+  //изделия они все равно принудительно записываются как 0, независимо от того, что тут показано (см. Save/
+  //SaveRow) - поэтому просто блокируем, чтобы не вводить в заблуждение.
+  //chb_r1..rN НЕ трогаем в обратную сторону (когда открыта НЕ отгрузочная строка) - их доступность в этом случае
+  //уже корректно выставлена только что отработавшим SetRoute (взаимоисключение с chb_Wo_Estimate/chb_R0), не
+  //нужно ее здесь перезатирать; а вот chb_Wo_Estimate/chb_R0 сам SetRoute не трогает вовсе, поэтому для них
+  //обязательны ОБЕ ветки (иначе после блокировки по отгрузочной строке они останутся заблокированы навсегда,
+  //даже если пользователь потом переключится на производственную подгруппу в комбобоксе Формат).
+  LIsShipmentRow := (Length(FRows) > 0) and (FRows[FSourceRowIndex].ItemType = STDITEM_TYPE_SHIPMENT);
+  SetControlsEditable([chb_Wo_Estimate, chb_R0], not LIsShipmentRow and not (Mode in [fView, fDelete]));
+  if LIsShipmentRow then
+    for i := 0 to High(RouteFields) do
+      SetControlsEditable([TDBCheckBoxEh(FindComponent('chb_r' + IntToStr(i + 1)))], False);
 end;
 
 procedure TFrmODedtOrStdItem.UpdateAddDuplicateMarkers;
@@ -1513,44 +1549,52 @@ end;
 function TFrmODedtOrStdItem.SaveRow(ARowIndex: Integer): Variant;
 //сохраняет изделие строки ARowIndex (не FSourceRowIndex): если сопоставление с уже существующим изделием было
 //найдено при загрузке строк (FRows[ARowIndex].ExistingId - см. LoadCounterpartRows) - обновляет найденную
-//запись (цену/маршрут/учет по СГП, и, если наименование успело разойтись, то и само наименование); иначе -
-//создает НОВУЮ запись or_std_items в этой подгруппе.
+//запись (цену/учет по СГП, маршрут - см. ниже, и, если наименование успело разойтись, то и само наименование);
+//иначе - создает НОВУЮ запись or_std_items в этой подгруппе.
+//
+//поправка по факту тестирования (маршрут производственного изделия обнулялся при редактировании со стороны
+//отгрузочной подгруппы): строка ARowIndex здесь - ВСЕГДА "сосед", не сама открытая (ту сохраняет базовый
+//механизм диалога, inherited Save, см. Save). Соответственно, если это ПРОИЗВОДСТВЕННАЯ строка - а это
+//единственный случай, когда SaveRow вообще может сохранять производственное изделие, т.к. открытая строка
+//(FSourceRowIndex) в этом случае обязательно ОТГРУЗОЧНАЯ (см. общий комментарий у LoadRouteFromProductionItem) -
+//поля маршрута НЕЛЬЗЯ брать из общих чекбоксов формы: сейчас они лишь ОТОБРАЖАЮТ реальный маршрут (см.
+//LoadRouteFromProductionItem) и заблокированы для редактирования (см. SetRowsControlsState) - изменить маршрут
+//производственного изделия можно только через диалог, открытый непосредственно на нем самом. Поэтому при
+//ОБНОВЛЕНИИ уже существующего производственного изделия как соседа поля маршрута теперь вообще НЕ включаются в
+//SQL (LIncludeRoute=False) - в БД остается то, что там уже было; они включаются (с жестким нулем, не из
+//чекбоксов) только при СОЗДАНИИ нового производственного изделия впервые именно отсюда - его маршрут в этом
+//случае еще не задан нигде, задать его можно будет позже, отредактировав само производственное изделие. Для
+//отгрузочной строки поведение прежнее - маршрут всегда 0, и всегда включается в SQL (что при создании, что при
+//обновлении), независимо от того, что показывают общие чекбоксы (даже если открыта на редактирование сама
+//отгрузочная строка - см. также Save).
 var
   LFields: string;
   LValues: TVarDynArray;
   i: Integer;
   LId, LRes: Variant;
-  LBySgp, LWoEstimate, LR0: Integer;
+  LBySgp: Integer;
   LRoute: TVarDynArray;
+  LIncludeRoute: Boolean;
 begin
   Result := Null;
   LBySgp := 0;
   if Assigned(FRows[ARowIndex].ChbBySgp) then
     LBySgp := S.IIf(FRows[ARowIndex].ChbBySgp.Checked, 1, 0);
-  //поля маршрута/"без сметы"/"без маршрута" относятся ТОЛЬКО к производственному изделию (см. общий
-  //комментарий в начале модуля) - общие чекбоксы формы (chb_Wo_Estimate/chb_R0/chb_r1..N) отражают их именно
-  //для производственной строки семейства; для отгрузочной строки эти поля всегда 0, независимо от того, что
-  //показывают общие чекбоксы (даже если открыта на редактирование сама отгрузочная строка - см. также Save)
   SetLength(LRoute, Length(RouteFields));
-  if FRows[ARowIndex].ItemType = STDITEM_TYPE_SHIPMENT then begin
-    LWoEstimate := 0;
-    LR0 := 0;
-    for i := 0 to High(RouteFields) do
-      LRoute[i] := 0;
-  end
-  else begin
-    LWoEstimate := Cth.GetControlValue(chb_Wo_Estimate);
-    LR0 := Cth.GetControlValue(chb_R0);
-    for i := 0 to High(RouteFields) do
-      LRoute[i] := Cth.GetControlValue(TDBCheckBoxEh(FindComponent('chb_r' + IntToStr(i + 1))));
-  end;
+  for i := 0 to High(RouteFields) do
+    LRoute[i] := 0;
+  LIncludeRoute := (FRows[ARowIndex].ItemType = STDITEM_TYPE_SHIPMENT) or (S.NNum(FRows[ARowIndex].ExistingId) <= 0);
   if S.NNum(FRows[ARowIndex].ExistingId) > 0 then begin
     LId := FRows[ARowIndex].ExistingId;
-    LFields := 'id$i;name$s;price_base$f;wo_estimate$i;r0$i';
-    LValues := [LId, Trim(edt_name.Text), FRows[ARowIndex].NEdtPriceBase.Value, LWoEstimate, LR0];
-    for i := 0 to High(RouteFields) do begin
-      LFields := LFields + ';r' + IntToStr(i + 1) + '$i';
-      LValues := LValues + [LRoute[i]];
+    LFields := 'id$i;name$s;price_base$f';
+    LValues := [LId, Trim(edt_name.Text), FRows[ARowIndex].NEdtPriceBase.Value];
+    if LIncludeRoute then begin
+      LFields := LFields + ';wo_estimate$i;r0$i';
+      LValues := LValues + [0, 0];
+      for i := 0 to High(RouteFields) do begin
+        LFields := LFields + ';r' + IntToStr(i + 1) + '$i';
+        LValues := LValues + [LRoute[i]];
+      end;
     end;
     if Assigned(FRows[ARowIndex].ChbBySgp) then begin
       LFields := LFields + ';by_sgp$i';
@@ -1570,9 +1614,12 @@ begin
     Result := LId;
   end
   else begin
-    LFields := 'id$i;name$s;price_base$f;wo_estimate$i;r0$i;by_sgp$i;id_or_format_estimates$i';
-    LValues := [Null, Trim(edt_name.Text), FRows[ARowIndex].NEdtPriceBase.Value, LWoEstimate,
-      LR0, LBySgp, FRows[ARowIndex].IdOrFormatEstimate];
+    LFields := 'id$i;name$s;price_base$f;by_sgp$i;id_or_format_estimates$i';
+    LValues := [Null, Trim(edt_name.Text), FRows[ARowIndex].NEdtPriceBase.Value, LBySgp, FRows[ARowIndex].IdOrFormatEstimate];
+    //LIncludeRoute здесь всегда True (см. условие выше - ExistingId <= 0 в этой ветке всегда) - жесткий 0, не
+    //из чекбоксов, см. общий комментарий у процедуры
+    LFields := LFields + ';wo_estimate$i;r0$i';
+    LValues := LValues + [0, 0];
     for i := 0 to High(RouteFields) do begin
       LFields := LFields + ';r' + IntToStr(i + 1) + '$i';
       LValues := LValues + [LRoute[i]];
@@ -1592,20 +1639,31 @@ var
   i: Integer;
   LSqlFields: TVarDynArray;
   LValues: TVarDynArray;
-  LIsShipment: Boolean;
+  LIsShipment, LIncludeRoute: Boolean;
 begin
   if (ARowIndex = FSourceRowIndex) and (Mode <> fEdit) then
     Exit;
   if (ARowIndex <> FSourceRowIndex) and (S.NNum(FRows[ARowIndex].ExistingId) <= 0) then
     Exit;
   //поля маршрута относятся только к производственному изделию (см. общий комментарий в начале модуля и
-  //SaveRow) - для отгрузочной строки семейства всегда пишем 0, независимо от общих чекбоксов формы
+  //SaveRow) - для отгрузочной строки семейства всегда пишем 0, независимо от общих чекбоксов формы.
+  //Поправка по факту тестирования (см. тот же по смыслу комментарий у SaveRow): общие чекбоксы формы отражают
+  //АКТУАЛЬНЫЙ, редактируемый маршрут только когда сама эта строка и есть FSourceRowIndex (диалог открыт
+  //непосредственно на ней); если производственная строка синхронизируется здесь как "сосед" (диалог открыт на
+  //отгрузочной подгруппе) - чекбоксы сейчас лишь отображают маршрут, заблокированы для правки, и в SaveRow
+  //маршрут этой строки уже НЕ переписывается - соответственно, и здесь (в шаблонах заказов) его трогать не
+  //нужно: raз or_std_items не менялся, и шаблоны менять незачем.
   LIsShipment := FRows[ARowIndex].ItemType = STDITEM_TYPE_SHIPMENT;
-  LSqlFields := ['price_base$f', 'r0$i'];
-  LValues := [FRows[ARowIndex].NEdtPriceBase.Value, S.IIf(LIsShipment, 0, Cth.GetControlValue(chb_R0))];
-  for i := 0 to High(RouteFields) do begin
-    LSqlFields := LSqlFields + ['r' + IntToStr(i + 1) + '$i'];
-    LValues := LValues + [S.IIf(LIsShipment, 0, Cth.GetControlValue(TDBCheckBoxEh(FindComponent('chb_r' + IntToStr(i + 1)))))];
+  LIncludeRoute := LIsShipment or (ARowIndex = FSourceRowIndex);
+  LSqlFields := ['price_base$f'];
+  LValues := [FRows[ARowIndex].NEdtPriceBase.Value];
+  if LIncludeRoute then begin
+    LSqlFields := LSqlFields + ['r0$i'];
+    LValues := LValues + [S.IIf(LIsShipment, 0, Cth.GetControlValue(chb_R0))];
+    for i := 0 to High(RouteFields) do begin
+      LSqlFields := LSqlFields + ['r' + IntToStr(i + 1) + '$i'];
+      LValues := LValues + [S.IIf(LIsShipment, 0, Cth.GetControlValue(TDBCheckBoxEh(FindComponent('chb_r' + IntToStr(i + 1)))))];
+    end;
   end;
   Q.QExecSql(Q.QGetSql('Q', 'order_items', LSqlFields.Implode(';')) + ' where id_order < 0 and id_order > -100000 and id_std_item = :id_std_item$i', LValues + [AId]);
 end;

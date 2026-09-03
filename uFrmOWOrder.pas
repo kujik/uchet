@@ -1,5 +1,4 @@
-﻿
-unit uFrmOWOrder;
+﻿unit uFrmOWOrder;
 
 interface
 
@@ -110,6 +109,7 @@ type
     edt_templatename: TDBEditEh;
     edt_customerinn: TDBEditEh;
     lbl_status_2: TLabel;
+    cmb_id_production_order: TDBComboBoxEh;
     procedure cmb_cashtype_accountKeyPress(Sender: TObject; var Key: Char);
     procedure edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
     procedure edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
@@ -124,8 +124,17 @@ type
     FIsTemplate: Boolean;
     //айди истолчника в случае режима копирования
     FIdSource: Integer;
+    //если не null - заказ создаётся автоматически как отгрузочный на основании производственного (см.
+    //LoadOrderComboBoxes/AddParam[2], Orders.ConfirmCreateShipmentOrderFromProduction) - хранит айди этого
+    //производственного заказа; используется после успешного сохранения (см. TitleButtonClick), чтобы сразу
+    //(а не сразу после открытия немодального диалога - было ошибкой, см. правку в uFrmOGjrnOrders.pas) спросить
+    //пользователя, создавать ли следующий такой же заказ, и если да - открыть следующий экземпляр диалога
+    FCreateShipmentFromProductionId: Variant;
     //признак для типа обработки заказа, так как менялась логика
     FNewOrderType: Integer;       //1 - новый формат заказа (использует список типов заказа, выбор своййств для расчета даты отгрузки)
+    //признак нового (2026) формата заказа с явным разделением по типу изделий заказа (см. std_item_type, cOrderNew26TypeID);
+    //устанавливается в LoadOrderComboBoxes, используется в т.ч. в SetOrderTypeOrOrganization для доп. фильтра организаций
+    FNew26Format: Boolean;
     FIdStatus : Integer;               //-
     FOnVerification: Boolean;
     //типы заказов
@@ -310,7 +319,8 @@ uses
   uTasks,
   D_Order_Complaints,
   uExcel2,
-  uFrmOGselOrReglament
+  uFrmOGselOrReglament,
+  uFrmChooseDialog
   ;
 
 {$R *.dfm}
@@ -370,6 +380,11 @@ begin
   edt_managername.Width := (cmb_project.Width  -  100) div 2;
   edt_launched_by_name.Width := edt_managername.Width;
   edt_launched_by_name.Right := cmb_project.Right;
+  cmb_id_production_order.Left := cmb_or_reference.Right + 16;
+  w := (cmb_project.Right - cmb_project.Left) div 2 - 2;
+  cmb_id_type2.Width := w;
+  edt_reglament.Width := w;
+  edt_reglament.Right := cmb_project.Right;
   edt_templatename.SetRightKeepLeft(pnlFrmBtnsC.Parent.Right - 4);
   //растягиваем панель отображения статуса заказа в заголовке грида изделия
   if FrgItems.FindComponent('Bt_1000') <> nil then
@@ -391,9 +406,19 @@ begin
   Self.DoubleBuffered := True;
   pnlBottom.Hide;
 
+  //по умолчанию заказ не является автоматически создаваемым отгрузочным на основании производственного -
+  //см. FCreateShipmentFromProductionId, устанавливается ниже в LoadOrderComboBoxes при наличии AddParam[2]
+  FCreateShipmentFromProductionId := null;
+
   ///это шаблон заказа
+  //AddParam может быть как массивом (см. AddParam[1] в вызовах создания/копирования заказа -
+  //там же в AddParam[2]/[3] передаются id шаблона/производственного заказа и признак предпочтения шаблона),
+  //так и простым скалярным значением 1 (см. вызов при редактировании/просмотре/удалении шаблона
+  //из справочника шаблонов заказов, uFrmXGlstMain.pas) - учитываем оба варианта
   if VarIsArray(AddParam) then
-    FIsTemplate := AddParam[1] = 1;
+    FIsTemplate := AddParam[1] = 1
+  else
+    FIsTemplate := AddParam = 1;
 
   Caption := S.IIf(FIsTemplate, 'Шаблон заказа', 'Заказ');
 
@@ -759,6 +784,42 @@ begin
   for i:= 0 to High(LFields) do
     S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
   Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [S.IIf(FIdSource <> 0, FIdSource, ID)], FOrderItemsOld);
+  //при автоматическом создании отгрузочного заказа на основании производственного (см. FCreateShipmentFromProductionId,
+  //LoadOrderComboBoxes) состав только что скопирован из производственного заказа как есть (FIdSource) - для
+  //ПЕРВОГО заказа серии количество по позициям должно остаться как в производственном, а для КАЖДОГО СЛЕДУЮЩЕГО -
+  //за вычетом уже отгруженного в предыдущих заказах ЭТОЙ ЖЕ серии (не уходя в минус). сопоставляем позиции по
+  //id_std_item (при простом копировании заказа, как и здесь, он не переопределяется - остаётся тем же, что и у
+  //источника, в т.ч. для нестандартных изделий - см. FIdSource/LoadOrder), суммарное "уже отгружено" на позицию
+  //при первом заказе серии просто равно 0 (предыдущих заказов ещё нет), поэтому отдельная ветка для "первого"
+  //не нужна - формула работает единообразно
+  if not VarIsNull(FCreateShipmentFromProductionId) then begin
+    var LAlreadyShipped: TNamedArr;
+    Q.QLoad(
+      'select id_std_item, sum(qnt) as qnt from v_order_items ' +
+      'where id_order in (select id from orders where id_production_order = :id$i) ' +
+      'group by id_std_item',
+      [FCreateShipmentFromProductionId], LAlreadyShipped
+    );
+    for i := 0 to FOrderItemsOld.High do begin
+      var LShippedIdx := LAlreadyShipped.FindFirst('id_std_item', FOrderItemsOld.G(i, 'id_std_item'));
+      if LShippedIdx >= 0 then
+        FOrderItemsOld.SetValue(i, 'qnt', Max(0, FOrderItemsOld.G(i, 'qnt').AsFloat - LAlreadyShipped.G(LShippedIdx, 'qnt').AsFloat));
+      //строки выше загружены как есть из производственного заказа (FIdSource) и несут его РЕАЛЬНЫЕ id позиций
+      //(order_items.id). SaveOrderItems решает, вставлять новую строку или обновлять существующую, только по
+      //значению id (см. MY_IDS_INSERTED_MIN/Q.QSave в этом модуле) - и если строка не была вручную изменена (что
+      //для авто-создания обычно так и есть), она сочла бы её "неизмененной строкой производственного заказа" и
+      //при сохранении выполнила бы UPDATE по этому же id, переустановив ему id_order = айди СОЗДАВАЕМОГО
+      //отгрузочного заказа - т.е. реально переставила бы саму позицию производственного заказа в отгрузочный, а
+      //не скопировала бы её. именно это и вызывало "исчезновение" изделий из производственного заказа. подменяем
+      //id на заведомо новый, по тому же правилу что и для строк, добавленных вручную через AddRow/InsertRow (см.
+      //TFrDBGridEh, MY_IDS_INSERTED_MIN + порядковый номер добавления с 1, само граничное значение без добавки
+      //не используется - см. его сравнение через ">" (не ">=") в SaveOrderItems при постановке в очередь
+      //синхронизации смет/операций планирования) - тогда независимо от того, правились ли поля вручную, строка
+      //всегда будет сохранена как INSERT новой, самостоятельной позиции ЭТОГО заказа, а состав производственного
+      //заказа останется нетронутым
+      FOrderItemsOld.SetValue(i, 'id', MY_IDS_INSERTED_MIN + i + 1);
+    end;
+  end;
   FrgItems.SetInitData(FOrderItemsOld);
   //установим события грида
   FrgItems.OnButtonClick := FrgItemsButtonClick;
@@ -870,6 +931,8 @@ begin
   //ch0 - не отслеживаются изменения для полного текста в логе изменений
   //ea - редактируются и в проведенном и в запущенном заказе
   //cp0 - сбрасываем эти поля при копировании заказа
+  //o - при автоматическом создании отгрузочного заказа на основании производственного (см. LoadOrderComboBoxes/
+  //    AddParam[2], Orders.ConfirmCreateShipmentOrderFromProduction) значение копируется из производственного
 
   //ch0 - поле исключается из полного текста изменений заказа за сессию (см. FixOrderChanges/GetTitleChangesText
   //в этом модуле) - для технических/служебных полей и полей, чье значение производно от других (уже отслеживаемых)
@@ -898,18 +961,28 @@ begin
     ['wholesale$i', 't=ch0'],
 
 
-    ['templatename$s', S.IIFStr(FIsTemplate, 'V=1:400::N')],
+    ['templatename$s' + S.IIFStr(not FIsTemplate, ';0'), S.IIFStr(FIsTemplate, 'V=1:400::N')],
 
-    ['id_type2$i', 'V=1:400', 't=chg'],
+    ['id_type2$i', 'V=1:400', 't=chg,o'],
     ['ornum$s', 't=d,chg'],
     ['or_reference$s','t=td,chg'],
     ['id_reglament$i', 't=ch0'],
     ['reglament$s;0', 'V=1:400', 't=t,chg'],
     ['id_organization$i', 'V=1:400', 't=t,chg,t'],
     ['area$i', 'V=1:100', 't=t,chg'],
-    ['project$s', 'V=1:500::td', 't=t,chg'],
+    ['project$s', 'V=1:500::td', 't=t,chg,o'],
     ['id_format$i', 't=ch0'],
     ['id_or_format_estimates$i', 'V=1:400', 't=chg'],
+    ['std_item_type$i', 't=ch0'],
+    //айди шаблона, из которого создан заказ копированием (см. std_item_type выше и AfterLoadOrder/LoadOrderComboBoxes -
+    //устанавливается один раз при создании, далее не редактируется); НЕ путать с id_related_template (uOrders.pas)
+    ['id_template$i', 't=ch0'],
+    //айди производственного заказа, на основании которого автоматически сформирован этот (отгрузочный/п,ф) заказ;
+    //устанавливается один раз при создании (см. LoadOrderComboBoxes/AddParam[2]), далее не редактируется - контрол
+    //cmb_id_production_order всегда нередактируем (см. AfterLoadData); НЕ путать с id_or_reference (uOrders.pas)
+    //d - поле всегда нередактируемо (см. SetPermanentFieldProps): заполняется автоматически в LoadOrderComboBoxes,
+    //    ручной выбор основания при создании отгрузочного заказа вручную - отдельная задача на будущее
+    ['id_production_order$i', 't=ch0,d'],
     ['managername$s;0', 't=d,ch0,cp0', #0, User.GetName],
     ['launched_by_name$s;0', 't=d,ch0,cp0', #0, ''],
     ['id_manager$i', 't=ch0,cp0', #0, User.GetId],
@@ -970,6 +1043,9 @@ end;
 
 function TFrmOWOrder.LoadOrderComboBoxes: Boolean;
 //загрузим влияющие данные, которые потребуются для оформления заказа, и установим их в комболбоксы и поля класса
+var
+  LReqType: Variant;
+  LTypeFilterSql: string;
 begin
   //новывй формат данных заказа №1
   FNewOrderType := 0;
@@ -978,8 +1054,146 @@ begin
       FNewOrderType := 1;
   end;
 
+  //признак нового (2026) формата заказа - используется здесь и в SetOrderTypeOrOrganization (доп. фильтр организаций)
+  FNew26Format := (Mode in [fAdd, fCopy]) or FIsTemplate or (S.NNum(ID) >= cOrderNew26TypeID);
+
+  //тип изделий заказа (см. std_item_type/STDITEM_TYPE_*): при создании (в т.ч. из шаблона) берём тип,
+  //выбранный в стартовом диалоге uFrmODlgOrderStdType (AddParam[0]), и фиксируем его на заказе на всё время его
+  //существования; при редактировании/просмотре/обычном копировании - уже сохранённое на заказе значение.
+  //используем его для первичного отсева типов паспорта (order_types) по флагам is_production_order/is_shipment_order/is_semiproduct_order
+  LReqType := null;
+  if (Mode in [fAdd, fCopy]) and VarIsArray(AddParam) then begin
+    LReqType := AddParam[0];
+    //достаточно установить fvtVBeg (см. AfterLoadOrder) - поле std_item_type не привязано к контролу,
+    //а обычный (fvtVCurr) SetProp здесь позже перетирается стандартной инициализацией контролов на "начальное" значение
+    F.SetProp('std_item_type', LReqType, fvtVBeg);
+  end
+  else if Mode <> fAdd then
+    LReqType := F.GetProp('std_item_type');
+  LTypeFilterSql := '';
+  if not VarIsNull(LReqType) then begin
+    case S.NInt(LReqType) of
+      STDITEM_TYPE_PRODUCTION: LTypeFilterSql := ' and is_production_order = 1';
+      STDITEM_TYPE_SHIPMENT: LTypeFilterSql := ' and is_shipment_order = 1';
+      STDITEM_TYPE_SEMIPRODUCT: LTypeFilterSql := ' and is_semiproduct_order = 1';
+    end;
+  end;
+
+  //если заказ создаётся автоматически на основании производственного (см. uFrmOGjrnOrders.pas, Tag = 1008,
+  //Orders.ConfirmCreateShipmentOrderFromProduction) - 3-им элементом AddParam передан айди этого производственного
+  //заказа; сохраним его в id_production_order и заполним им (единственным значением) комбобокс cmb_id_production_order
+  //(сам контрол делаем нередактируемым - см. AfterLoadData). источник для копирования шапки в создаваемый заказ
+  //определяется по приоритету (LIdCopySource ниже):
+  //  1) если на основании этого же производственного уже создавались отгрузочные - источник последний из них
+  //     (максимальный id, LIdPrevShipment) - копируем ВСЕ поля с привязанным контролом (кроме номера заказа).
+  //     ИСКЛЮЧЕНИЕ: если это первый заказ, создаваемый в ТЕКУЩЕЙ серии (см. uFrmOGjrnOrders.pas, Tag = 1008),
+  //     и пользователь на вопрос Orders.ConfirmCreateShipmentOrderFromProduction ответил, что не хочет
+  //     дублировать шапку уже существующего - 4-ым элементом AddParam придёт True, и этот источник пропускается
+  //     в пользу шаблона (п.2 ниже); для 2-го и последующих заказов серии AddParam[3] уже не передаётся, и они
+  //     штатно подхватывают предыдущий заказ ЭТОЙ серии как источник (включая тот, что скопирован из шаблона)
+  //  2) иначе, если производственный сам создан из шаблона (id_template) и у этого производственного шаблона
+  //     есть парные отгрузочные (orders.id_related_template = id_template производственного - см.
+  //     TOrders.GetTemplateGroupTargets/id_related_template в uOrders.pas) - источник один из них: если он один -
+  //     берём его, если несколько - спрашиваем пользователя, какой использовать (шапки у них могут отличаться);
+  //     копируем тоже ВСЕ поля с привязанным контролом (кроме номера заказа) - как и из предыдущего заказа серии
+  //  3) иначе (нет ни предыдущих отгрузочных, ни парного шаблона) - как и раньше, поля с тегом 'o' (см.
+  //     DefineFields; сейчас это project и id_type2) из самого производственного заказа
+  //полноценный выбор основания вручную (при создании отгрузочного заказа не из этого пункта меню) - отдельная
+  //задача, сделаем позже
+  if (Mode = fAdd) and VarIsArray(AddParam) and (VarArrayHighBound(AddParam, 1) >= 2) and not VarIsNull(AddParam[2]) then begin
+    var LIdProduction := AddParam[2];
+    //используется после успешного сохранения (см. TitleButtonClick), чтобы спросить про создание следующего
+    //такого же заказа - см. комментарий у объявления поля
+    FCreateShipmentFromProductionId := LIdProduction;
+    F.SetProp('id_production_order', LIdProduction, fvtVBeg);
+    var LProdOrNum := VarToStr(Q.QLoadValue('select ornum from v_orders where id = :id$i', [LIdProduction]));
+    Cth.AddToComboBoxEh(cmb_id_production_order, [LProdOrNum], [LIdProduction]);
+
+    //табличная часть (состав) всегда копируется из самого производственного заказа - она у отгрузочного должна
+    //быть идентична производственному (не из выбранного ниже источника шапки - шаблона/предыдущего отгрузочного,
+    //это ДРУГОЙ, независимый источник только для полей шапки). количество по позициям корректируется ниже
+    //в PrepareFrgItems (см. FCreateShipmentFromProductionId) - для первого заказа серии остаётся как в
+    //производственном, для последующих - за вычетом уже отгруженного в предыдущих заказах этой же серии
+    FIdSource := S.NInt(LIdProduction);
+
+    //True - пользователь на вопросе о дублировании явно попросил использовать шаблон, а не уже существующий
+    //отгрузочный (см. п.1 в комментарии выше); передаётся только для первого заказа серии
+    var LPreferTemplate := VarIsArray(AddParam) and (VarArrayHighBound(AddParam, 1) >= 3) and (AddParam[3] = True);
+
+    var LIdCopySource: Variant := null;
+    if not LPreferTemplate then
+      LIdCopySource := Q.QLoadValue('select max(id) from orders where id_production_order = :id$i', [LIdProduction]);
+
+    if VarIsNull(LIdCopySource) then begin
+      //источник п.1 недоступен (нет предыдущих отгрузочных этой серии) или явно пропущен (LPreferTemplate) -
+      //ищем парный отгрузочный шаблон (п.2)
+      var LIdProdTemplate := Q.QLoadValue('select id_template from orders where id = :id$i', [LIdProduction]);
+      if not VarIsNull(LIdProdTemplate) then begin
+        //QLoadCol возвращает плоский массив значений (одна колонка) - каждый элемент уже готовое значение id,
+        //без дополнительной индексации (в отличие от QLoad/QLoadRow, где элемент - это строка-массив колонок)
+        var LPairedIds := Q.QLoadCol('select id from orders where id_related_template = :id$i and active = 1 order by id', [LIdProdTemplate]);
+        if Length(LPairedIds) = 1 then
+          LIdCopySource := LPairedIds[0]
+        else if Length(LPairedIds) > 1 then begin
+          //несколько парных отгрузочных шаблонов у одного производственного - шапки у них могут отличаться,
+          //спрашиваем пользователя, на основании какого создавать (если отменит выбор - LIdCopySource останется
+          //Null, и ниже сработает переход к копированию тегом 'o' из самого производственного заказа, п.3)
+          var LNames: TVarDynArray := [];
+          for var i := 0 to High(LPairedIds) do
+            LNames := LNames + [VarToStr(Q.QLoadValue('select templatename from orders where id = :id$i', [LPairedIds[i]]))];
+          var LChoice := FrmChooseDialog.ShowDialog('Выбор шаблона отгрузочного заказа',
+            'Для производственного заказа найдено несколько связанных отгрузочных шаблонов с разными шапками.'#13#10 +
+            'Выберите, на основании какого из них скопировать шапку создаваемого заказа:', LNames, [], 0, 0);
+          if LChoice >= 0 then
+            LIdCopySource := LPairedIds[LChoice];
+        end;
+      end;
+    end;
+
+    if not VarIsNull(LIdCopySource) then begin
+      //источник п.1 (предыдущий отгрузочный этой серии) или п.2 (парный шаблон) - копируем все поля с контролом,
+      //кроме номера заказа, а также кроме:
+      //  - полей с тегом 'cp0' ("сбрасываем эти поля при копировании заказа", см. DefineFields) - это те же поля,
+      //    которые для Mode=fAdd уже установлены в текущее значение в AfterLoadOrder (текущий менеджер, дата
+      //    создания, статус Черновик и т.п. - см. там) - не должны затираться значениями источника копирования
+      //  - id_production_order - он уже верно установлен выше из AddParam[2] (текущий производственный заказ);
+      //    если источник копирования - шаблон, там это поле пустое, и не глядя на тег его затёрло бы null'ом
+      var LExcludeNames := F.GetProps('cp0', fvtVName) + ['id_production_order'];
+      var LNamesAll: TVarDynArray := [];
+      var LFieldsAll := '';
+      S.ConcatStP(LFieldsAll, 'id', ';');
+      for var i := 0 to F.Count - 1 do
+        if (VarToStr(F.GetProp(i, fvtCtrl)) <> '') and (VarToStr(F.GetProp(i, fvtVName)) <> 'ornum') and
+           (VarToStr(F.GetProp(i, fvtFNameL)) <> '') and
+           not A.InArray(F.GetProp(i, fvtVName), LExcludeNames) then begin
+          S.ConcatStP(LFieldsAll, F.GetProp(i, fvtFNameL), ';');
+          LNamesAll := LNamesAll + [F.GetProp(i, fvtVName)];
+        end;
+      if Length(LNamesAll) > 0 then begin
+        var LValuesAll := Q.QLoadRow0(Q.QGetSql('s', 'v_orders', LFieldsAll), [LIdCopySource]);
+        for var i := 0 to High(LNamesAll) do
+          F.SetProp(VarToStr(LNamesAll[i]), LValuesAll[i + 1], fvtVBeg);
+      end;
+    end
+    else begin
+      //п.3 - ни предыдущих отгрузочных серии, ни парного шаблона (или выбор шаблона отменён) - поля с тегом 'o'
+      //из самого производственного заказа
+      var LNamesO := F.GetProps('o', fvtVName);
+      var LLoadNamesO := F.GetProps('o', fvtFNameL);
+      if Length(LNamesO) > 0 then begin
+        var LFieldsO := '';
+        S.ConcatStP(LFieldsO, 'id', ';');
+        for var i := 0 to High(LLoadNamesO) do
+          S.ConcatStP(LFieldsO, VarToStr(LLoadNamesO[i]), ';');
+        var LValuesO := Q.QLoadRow0(Q.QGetSql('s', 'v_orders', LFieldsO), [LIdProduction]);
+        for var i := 0 to High(LNamesO) do
+          F.SetProp(VarToStr(LNamesO[i]), LValuesO[i + 1], fvtVBeg);
+      end;
+    end;
+  end;
+
   //типы паспортов
-  Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i) order by pos', [cmb_id_type2.Value], FOrderTypes);
+  Q.QLoad('select * from order_types where posstd is null and (active = 1 or id = :id$i)' + LTypeFilterSql + ' order by pos', [cmb_id_type2.Value], FOrderTypes);
   Cth.AddToComboBoxEh(cmb_id_type2, FOrderTypes.GetCol('name'), FOrderTypes.GetCol('id'));
 
   //вид оплаты
@@ -1167,6 +1381,9 @@ begin
   var LOrderType := F.GetProp('id_type2').AsInteger;
   var LOrganization := F.GetProp('id_organization').AsInteger;
   var LEstimate := F.GetProp('id_or_format_estimates').AsInteger;
+  //тип изделий заказа (std_item_type) - для нового (2026) формата заказа используется и для фильтра организаций,
+  //и для фильтра доступных форматов стандартных изделий (см. ниже)
+  var LStdItemType := S.NInt(F.GetProp('std_item_type'));
   ot := FOrderTypes.FindFirst('id', F.GetProp('id_type2'));
   va2 := [];
   //покажем/скроем информацию по рекламачии
@@ -1178,8 +1395,12 @@ begin
   end
   else begin
     //создадим список организации, которые доступны для данного типа заказа
+    //для нового (2026) формата заказа (см. FNew26Format) после фильтрации по флагам типа заказа (id_type2) дополнительно
+    //фильтруем по типу изделий заказа (std_item_type): производственные и п/ф - только организация -1 (Производство),
+    //отгрузочные - наоборот, любая организация кроме -1
     for i := 0 to FOrganizations.High do begin
       if
+        (
         //допустимо Прозводство (есть прозводственные или пф)
         ((FOrganizations.G(i, 'id') = -1) and ((FOrderTypes.G(ot, 'is_production_order') = 1) or (FOrderTypes.G(ot, 'is_semiproduct_order') = 1)))
         or
@@ -1188,6 +1409,9 @@ begin
         or
         //допустиммы остальные (есть отгруузочные)
         ((FOrganizations.G(i, 'or_cash').AsInteger <> 1) and (FOrganizations.G(i, 'id') <> -1) and (FOrderTypes.G(ot, 'is_shipment_order') = 1))
+        )
+        and
+        ((not FNew26Format) or ((FOrganizations.G(i, 'id') = -1) = (LStdItemType <> STDITEM_TYPE_SHIPMENT)))
       then
         va2 := va2 + [[FOrganizations.G(i, 'name'), FOrganizations.G(i, 'id')]];
     end;
@@ -1239,16 +1463,16 @@ begin
       and
       ((
       //отгрузочные
-      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT))
+      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT) and ((not FNew26Format) or (LStdItemType = STDITEM_TYPE_SHIPMENT)))
       or
       //нестандарт (недопустимы в шаблонах)
       ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1) and not FIsTemplate)
       or
       //производственные
-      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_PRODUCTION) and (FOrderTypes.G(ot, 'is_production_order') = 1))
+      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_PRODUCTION) and (FOrderTypes.G(ot, 'is_production_order') = 1) and ((not FNew26Format) or (LStdItemType = STDITEM_TYPE_PRODUCTION)))
       or
-      //отгрузочные
-      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SEMIPRODUCT) and (FOrderTypes.G(ot, 'is_semiproduct_order') = 1))
+      //п/ф
+      ((FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SEMIPRODUCT) and (FOrderTypes.G(ot, 'is_semiproduct_order') = 1) and ((not FNew26Format) or (LStdItemType = STDITEM_TYPE_SEMIPRODUCT)))
       )
       //только нестандартные изделия
       and
@@ -1646,10 +1870,15 @@ begin
 end;
 
 procedure TFrmOWOrder.SetButtons;
+//внутри - до десятка последовательных вызовов SetButtonsVisibilityAndArrange (каждый из них - Visible/Left/Top/Width
+//у части контролов + Width самих панелей Main/L/R/C, что тянет пересчёт выравнивания всех соседних панелей) - без
+//приостановки перерисовки это заметно мерцает и долго перерисовывается (см. BeginButtonsUpdate/EndButtonsUpdate)
 begin
-  //покаже все контролы панели кнопок
-  SetButtonsVisibilityAndArrange(['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', 'edt_templatename1', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo], []);
-  var LStatus := F.GetProp('id_status').AsInteger;
+  BeginButtonsUpdate;
+  try
+    //покаже все контролы панели кнопок
+    SetButtonsVisibilityAndArrange(['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', 'edt_templatename1', mbtSave, mbtDelete, mbtApprove, mbtUnApprove, mbtGo], []);
+    var LStatus := F.GetProp('id_status').AsInteger;
   //уберем кнопку удаления
   if not FIsTemplate or (Mode <> fEdit) or (not A.InArray(LStatus, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_STOPPED])) or (not User.Role(rOr_D_Order_Del) and  (LStatus <> ORDER_ID_STATUS_DRAFT)) then
     SetButtonsVisibilityAndArrange([], [mbtDelete]);
@@ -1673,12 +1902,18 @@ begin
     SetButtonsVisibilityAndArrange([], ['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', mbtSave, mbtApprove, mbtUnApprove, mbtGo])
   else if FIsTemplate then
     SetButtonsVisibilityAndArrange([], ['chbIsVerifyed', 'chbVisDates', 'chbVisFinance', 'chbVisAddInfo', mbtDelete, mbtApprove, mbtUnApprove, mbtGo])
+  else if LStatus = ORDER_ID_STATUS_REJECTED then
+    //отклоненный заказ: доступна только кнопка "Отменить проведение" (видимость которой уже определяется правом rOr_D_Order_UnApprove выше)
+    SetButtonsVisibilityAndArrange([], ['edt_templatename', 'chbIsVerifyed', mbtSave, mbtApprove, mbtGo])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_DRAFT then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', S.IIf(Mode in [fAdd, fCopy], mbtDelete, '-'), mbtUnApprove, mbtGo])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_APPROVED then
     SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove{, mbtSave}])
   else if F.GetProp('id_status') = ORDER_ID_STATUS_STARTED then
-    SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtUnApprove, mbtGo])
+    SetButtonsVisibilityAndArrange([], ['edt_templatename', mbtApprove, mbtUnApprove, mbtGo]);
+  finally
+    EndButtonsUpdate;
+  end;
 end;
 
 function TFrmOWOrder.ChangeOrderStatus(Tag: Integer): Integer;
@@ -1835,6 +2070,9 @@ begin
   SetEditButtons;
   F.CopyPropToCustom('', fvtVer, PROP_NUM_VER_BEG);
   SetControlsEditable([], Mode in [fEdit, fCopy, fAdd]);
+  //cmb_id_production_order всегда нередактируем - см. тег 'd' у поля id_production_order (DefineFields) и
+  //SetPermanentFieldProps; управлять через SetControlsEditable здесь бесполезно - SetPermanentFieldProps
+  //вызывается позже (в конце этой же процедуры) и заново разблокирует поля без тега 'd'
   SetOrderTypeOrOrganization(nil);
   SetCustomer(True);
 
@@ -1913,6 +2151,30 @@ begin
       Self.ModalResult := mrOk;
       FOpt.RequestWhereClose := cqNone;
       //RefreshParentForm;  //!отладка
+      //запомним родительскую форму и айди производственного заказа - используются ниже, если понадобится открыть
+      //следующий диалог серии
+      var LParentForm := Self.ParentForm;
+      var LCreateShipmentFromProductionId := FCreateShipmentFromProductionId;
+      //если заказ создан автоматически как отгрузочный на основании производственного (см. FCreateShipmentFromProductionId,
+      //LoadOrderComboBoxes/AddParam[2]) - предложим сразу создать ещё один такой же. делаем это ЗДЕСЬ, после
+      //реального успешного сохранения ЭТОГО заказа, а не сразу после открытия диалога (как было раньше в
+      //uFrmOGjrnOrders.pas, Tag = 1008) - диалог немодален, и раньше вопрос всплывал мгновенно, ещё до того как
+      //пользователь успевал вообще увидеть первый заказ, не то что сохранить его. LPreferTemplate не передаём -
+      //источником для копирования шапки следующего заказа серии штатно станет только что сохранённый этот заказ
+      //(см. приоритет п.1 в LoadOrderComboBoxes). AOwner передаем как исходную родительскую форму (журнал заказов),
+      //а не Self, чтобы у всех заказов серии был один и тот же "верхний" родитель, а не цепочка друг через друга.
+      //ВАЖНО: вызываем ExecDialog ДО Close (а не после, как пробовали раньше) - раньше это было нужно из-за
+      //отсутствия myfoMulticopy у диалога заказа (см. правку в uWindows.pas), но создание нового тяжёлого диалога
+      //синхронно, посреди еще не завершенного закрытия этого диалога, приводило к access violation в коде
+      //фреймворка и к нестабильной потере значений части полей (регламент, плановая дата запуска, тип оплаты/счет)
+      //в новом диалоге - судя по всему, из-за пересечения с ещё не отработавшей до конца процедурой закрытия
+      //текущего диалога. теперь, когда у диалога заказа есть myfoMulticopy, оба диалога могут быть открыты
+      //одновременно, поэтому открываем новый диалог, пока текущий ещё жив, и только потом закрываем текущий - как
+      //и было изначально, и как это сделано у остальных диалогов с myfoMulticopy
+      if not VarIsNull(LCreateShipmentFromProductionId) then
+        if MyQuestionMessage('Создать ещё один отгрузочный заказ на основании этого же производственного заказа?') = mrYes then
+          Wh.ExecDialog(myfrm_Dlg_Order, LParentForm, [], fAdd, LCreateShipmentFromProductionId,
+            VarArrayOf([STDITEM_TYPE_SHIPMENT, 0, LCreateShipmentFromProductionId, null]));
       //закроем форму
       Close;
     end
@@ -2438,17 +2700,20 @@ begin
   //прочие поля
   F.SetProp('id_format', FEstimateFormats.G(FEstimateFormats.FindFirst('id', F.GetProp('id_or_format_estimates')), 'id_format'));
   F.SetProp('ch', GetOrderChangedFieldNames);
+
+  //сохраняем заголовочную часть
+  Q.QBeginTrans(True);
+  //сохраним/создадим данные покупателя; возврат процедура запишет в поля
+  SaveCustomer;
+
+  //получим поля и их значения, по тем для которых указано сохранение
   FieldsSave2 := '';
   CtrlValues2 := [];
-  //получим поля и их значения, по тем для которых указано сохранение
   for i := 0 to F.Count - 1 do
     if F.GetProp(i, fvtFNameS) <> '' then begin
       S.ConcatStP(FieldsSave2, F.GetProp(i, fvtFNameS), ';');
       CtrlValues2 := CtrlValues2 + [S.NullIfEmpty(F.GetProp(i, fvtVCurr))];
     end;
-  //сохраняем заголовочную часть
-  Q.QBeginTrans(True);
-  SaveCustomer;
   res := Q.QSave(Q.QFModeToIUD(Mode), 'orders', '', FieldsSave2, CtrlValues2);
   //получим айди заказа в случае его создания
   if not (Mode in [fEdit, fDelete]) then
@@ -2864,6 +3129,21 @@ begin
   //при копировании установим поля в начальное значение, так как они были загружены из исходдного паспорта
   //достаточно установить fvtVBeg
   if Mode in [fCopy, fAdd] then begin
+    //id_template: fCopy используется для ДВУХ разных действий - копирования из шаблона (пункт меню "Заказ из
+    //шаблона", см. uFrmOGjrnOrders.pas, FrmODlgOrderStdType) и обычного копирования произвольного существующего
+    //заказа (кнопка "Скопировать"/mbtCopy в журнале - тогда AddParam = null). различаем их не по Mode (он в обоих
+    //случаях fCopy), а по явно переданному айди шаблона 3-им элементом AddParam - см. правку в uFrmOGjrnOrders.pas
+    if Mode = fCopy then begin
+      if VarIsArray(AddParam) and (VarArrayHighBound(AddParam, 1) >= 2) then
+        F.SetProp('id_template', AddParam[2], fvtVBeg)
+      else
+        //обычное копирование существующего заказа не из шаблона - id_template НЕ наследуем от скопированного
+        //заказа (сбрасываем), хотя LoadOrder и подгрузил его вместе с остальными полями исходного заказа.
+        //!ПОМЕТКА НА БУДУЩЕЕ: возможно, стоит наследовать id_template от источника копирования (если у него
+        //тоже был задан) - скопированный заказ мог с момента создания разойтись с шаблоном по составу, но
+        //вероятность этого сравнительно невелика; уточнить с пользователем при необходимости
+        F.SetProp('id_template', null, fvtVBeg);
+    end;
     F.SetProp('id_manager', User.GetId, fvtVBeg);
     F.SetProp('managername', User.GetName, fvtVBeg);
     F.SetProp('id_launched_by', User.GetId, fvtVBeg);
@@ -3319,9 +3599,9 @@ end;
 procedure TFrmOWOrder.SetFrgItemsReadOnly;
 //делаем таблицу изделий ридонли
 begin
-  //таблица заблокирована для измененмий в режиме диалога Просмтр и Удаление, в статусах заказа Остановлен и Удален, и если не выбран формат изделий
+  //таблица заблокирована для измененмий в режиме диалога Просмтр и Удаление, в статусах заказа Остановлен, Удален и Отклонен, и если не выбран формат изделий
   //TODO - в uFields способ проверки корректности контрола сооветствующего полю, здесь проверка корректности формата изделия
-  FrgItems.GridReadOnly :=  (Mode in [fView, fDelete]) or (A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED])) or (F.GetProp('id_or_format_estimates').AsString = '');
+  FrgItems.GridReadOnly :=  (Mode in [fView, fDelete]) or (A.InArray(F.GetProp('id_status'), [ORDER_ID_STATUS_STOPPED, ORDER_ID_STATUS_DELETED, ORDER_ID_STATUS_REJECTED])) or (F.GetProp('id_or_format_estimates').AsString = '');
 end;
 
 function TFrmOWOrder.SortPropNamesBySort(const ANames: TVarDynArray): TVarDynArray;
@@ -3637,3 +3917,4 @@ FrgItemsButtonClick - ненльзя удалять.вставлять стро�
 не обновляется грид родительской формы
 не сделана блокировка и не открываются несколько окон
 поправить подсказку/расположения в окнах связывания шаблонов
+при создании на соновании шаблона не сохраняется табличная часть

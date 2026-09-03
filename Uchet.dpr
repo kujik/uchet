@@ -219,7 +219,8 @@ uses
   uFrmOWRepOrderChanges in 'uFrmOWRepOrderChanges.pas' {FrmOWRepOrderChanges},
   uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute},
   uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges},
-  uFrmOWrepStdItemsGroupCheck in 'uFrmOWrepStdItemsGroupCheck.pas' {FrmOWrepStdItemsGroupCheck};
+  uFrmOWrepStdItemsGroupCheck in 'uFrmOWrepStdItemsGroupCheck.pas' {FrmOWrepStdItemsGroupCheck},
+  uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt};
 
 var
   MT: Integer;

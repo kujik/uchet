@@ -159,7 +159,10 @@ begin
    [mbtView],
    [mbtEdit, User.Roles([], [rOr_D_Order_Ch, rOr_D_Order_Start])], [mbtAdd, User.Role(rOr_D_Order_Ch)], [mbtCopy, 1], [mbtDelete, False and User.Role(rOr_D_Order_Del)],
    [],
-   [-1006, User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]), 'Поставить отметку завершения менеджером'], [],
+   [-1006, User.Roles([], [rOr_D_Order_SetCompletedM, rOr_D_Order_SetCompletedMA]), 'Поставить отметку завершения менеджером'],
+   [-1007, User.Role(rOr_D_Order_Start), 'Отклонить заказ'], [],
+   [-1008, User.Role(rOr_D_Order_Ch), 'Создать отгрузочный заказ на основании производственного'], [],
+   [-1009, User.Role(rOr_D_Order_Ch), 'Распределить изделия в отгрузочных паспортах'], [],
    [mbtViewEstimate], [mbtLoadEstimate, User.Role(rOr_D_Order_Estimate_All), 'Обновить все сметы по заказу'],
    [-mbtCustom_CreateAggregateEstimate, 1],
    [-1001, True, 'Пересчитать данные для производства'], [],
@@ -351,6 +354,45 @@ begin
     if Orders.FinalizeOrdersM(Fr.GetSetlectedIds) then
       Fr.RefreshGrid;
   end
+  else if (Tag = 1007) then begin
+    //отклонить заказ; допустимость (производственный заказ в статусе "Проведен") проверяется внутри Orders.RejectOrder
+    if Orders.RejectOrder(Fr.ID) then
+      Fr.RefreshRecord;
+  end
+  else if (Tag = 1008) then begin
+    //создание одного или нескольких отгрузочных заказов на основании производственного; допустимость (тип заказа,
+    //на время отладки проверка статуса "Проведен" закомментирована) и показ подробной информации о родительском
+    //заказе с запросом подтверждения - внутри Orders.ConfirmCreateShipmentOrderFromProduction; само создание
+    //заказа выполняется штатным диалогом заказа (см. uFrmOWOrder.pas) - вся его логика (заполнение полей,
+    //проверки, сохранение) не дублируется; производственный заказ передаётся туда 3-им элементом AddParam
+    //(должен быть сохранён в id_production_order создаваемого заказа)
+    //если нужно сформировать сразу несколько отгрузочных заказов на основании одного производственного (например,
+    //отгрузка несколькими партиями) - вопрос "создать ещё один?" и повторный вызов ExecDialog теперь не здесь,
+    //а внутри самого диалога заказа (см. TFrmOWOrder.TitleButtonClick/FCreateShipmentFromProductionId) - диалог
+    //немодален, и заданный сразу после ExecDialog (как было раньше) вопрос всплывал мгновенно, ещё до того как
+    //пользователь успевал увидеть и тем более сохранить первый заказ. здесь вопрос задаётся и диалог открывается
+    //только один раз - для первого заказа серии
+    //LPreferTemplate (см. Orders.ConfirmCreateShipmentOrderFromProduction) - если по производственному уже есть
+    //отгрузочные и при этом найден парный отгрузочный шаблон, пользователь мог явно попросить не дублировать шапку
+    //уже существующего, а взять шаблон; актуально только для этого, первого заказа серии - второй и последующие
+    //(создаваемые уже из диалога) штатно подхватят предыдущий заказ этой же серии как источник (см. каскад в
+    //uFrmOWOrder.pas/LoadOrderComboBoxes), повторно спрашивать не нужно
+    var LIdProduction := Fr.ID;
+    var LPreferTemplate: Variant;
+    if Orders.ConfirmCreateShipmentOrderFromProduction(LIdProduction, LPreferTemplate) then
+      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fAdd, LIdProduction,
+        VarArrayOf([STDITEM_TYPE_SHIPMENT, 0, LIdProduction, LPreferTemplate]));
+  end
+  else if (Tag = 1009) then begin
+    //распределение количества изделий по отгрузочным заказам, созданным на основании производственного; допустимость
+    //(тип заказа, наличие хотя бы одного отгрузочного) проверяется внутри Orders.ConfirmDistributeQntFromProduction;
+    //сам диалог - см. uFrmOGedtDistributeQnt.pas. AId - айди производственного заказа (в отличие от Tag = 1008 выше,
+    //где заказ создаётся заново и AId по факту не используется - здесь же диалог открывается сразу НАД этим
+    //производственным заказом, поэтому передаём его id как AId, а не через AddParam)
+    var LIdProduction := Fr.ID;
+    if Orders.ConfirmDistributeQntFromProduction(LIdProduction) then
+      Wh.ExecDialog(myfrm_Dlg_DistributeQnt, Self, [], fEdit, LIdProduction, null); //+++
+  end
   else if fMode = fAdd then begin
     //при создании нового заказа сначала выбираем тип стандартных изделий, по которому он создаётся,
     //и, опционально, шаблон заказа этого же типа для копирования (см. uFrmODlgOrderStdType.pas -
@@ -360,7 +402,10 @@ begin
     if not FrmODlgOrderStdType.ShowDialog(LType, LIdTemplate) then
       Exit;
     if LIdTemplate <> null then
-      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fCopy, LIdTemplate, VarArrayOf([LType, 0]))
+      //LIdTemplate передаём явно и 3-им элементом AddParam - именно по нему uFrmOWOrder.pas (AfterLoadOrder)
+      //отличает копирование ИЗ ШАБЛОНА от обычного копирования произвольного заказа (кнопка "Скопировать"/
+      //mbtCopy ниже, тоже режим fCopy, но AddParam = null) и заполняет id_template
+      Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fCopy, LIdTemplate, VarArrayOf([LType, 0, LIdTemplate]))
     else
       Wh.ExecDialog(myfrm_Dlg_Order, Self, [], fAdd, Fr.ID, VarArrayOf([LType, 0]));
   end

@@ -1422,6 +1422,11 @@ var
   i: Integer;
   st: string;
 begin
+TasksS.ReportForNegativeQuantityOnSgp;
+TasksS.ReportForOrdersPlannedToStartTomorrow;
+TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;
+Exit;
+
 TasksS.ReportForEstimatesOverdue(1);TasksS.ReportForEstimatesOverdue(2);Exit;
 TasksS.ReportForSuppliersNegativeDemand; Exit;
 TasksS.ReportForOverdueOrdersByStartTpoProductionDate; Exit;

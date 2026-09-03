@@ -101,6 +101,13 @@ type
     procedure ReportForSuppliersNegativeDemand;
     //отчет по просроченным сметам (1) и загрузкам технологов (2)
     procedure ReportForEstimatesOverdue(ObjType: Integer);
+    //отчет по позициям с отрицательной потребностью из текущего состояния сгп
+    procedure ReportForNegativeNeedBySgp;
+    //отчет по производственным заказам, планирующемся к выдаче в производтство на завтра
+    //(дата определяется следующим днем поле участка планирования по регламенту)
+    procedure ReportForOrdersPlannedToStartTomorrow;
+    //Недостающие материалы для производства заказов, запланированных на завтра
+    procedure ReportForRequiredMaterialsForPlannedOrdersTomorrow;
   end;
 
 var
@@ -216,12 +223,15 @@ begin
     ReportForActsWriteoffReceipt;
     ReportForNegativeQuantityOnStocks;
     ReportForNegativeQuantityOnSgp;
+    ReportForNegativeNeedBySgp;
     ReportForOverdueOrders(True);
     ReportForOverdueOrders(False);
     ReportForOverdueOrdersByStartTpoProductionDate;
     ReportForSuppliersNegativeDemand;
     ReportForEstimatesOverdue(1);
     ReportForEstimatesOverdue(2);
+    ReportForOrdersPlannedToStartTomorrow;
+    ReportForRequiredMaterialsForPlannedOrdersTomorrow;
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
       ReportForYesterdayOrders(5);
@@ -1012,6 +1022,7 @@ end;
 
 procedure TTasksS.ReportForOverdueOrdersByStartTpoProductionDate;
 //отчет по просроченным по дате начала производства производственным заказам
+//даты по регламенту считаются не от даты оформления заказы, а обратныым образом, от даты отгрузки!
 var
   na: TNamedArr;
   Fields: TVarDynArray2;
@@ -1029,9 +1040,9 @@ begin
     ['or_reference$s', 'Основание', '80'],
     ['area_short$s', 'Площадка', '80'],
     ['dt_otgr$d', 'Плановая дата отгрузки', ''],
-    ['dt_by_reglament$d', 'Плановая дата запуска', '100'],
+    ['dt_by_reglament_from_otgr$d', 'Плановая дата запуска', '100'],
 //    ['dt_to_prod$d', 'Запущен в производство', '100'],
-    ['overdue_days$i', 'Просрочка', '100']
+    ['overdue_days_from_otgr$i', 'Просрочка', '100']
   ];
   Q.QLoad(Q.QGetSql('A', 'v_rep_overdue_start_production_orders',
     Fields.Col(0).Implode(';')) + ' where dt_control is null and overdue_days > 0 order by dt_beg, ornum', [], na
@@ -1129,4 +1140,119 @@ begin
   Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, [FileToSend], '~');
 end;
 
+procedure TTasksS.ReportForNegativeNeedBySgp;
+//отчет по позициям с отрицательной потребностью из текущего состояния сгп
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Изделия с отрицательной потребностью на СГП';
+  TopSt := Title + ' на ' + DateTimeToStr(IncDay(Date, -1));
+  Fields := [
+    ['format_name$s', 'Формат', '150'],
+    ['slash$s', 'Слеш', '00'],
+    ['name$s', 'Наименование', '500;h'],
+    ['qnt$f', 'Кол-во', '80', 'r'],
+    ['qnt_need$f', 'Потребность', '80', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_sgp_items', Fields.Col(0).Implode(';')) + ' where qnt_need < 0 order by qnt_need, format_name, name', [IncDay(Date, -1)], na);
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := 'На СГП нет позиций с отрицательной потребностью.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
+end;
+
+procedure TTasksS.ReportForOrdersPlannedToStartTomorrow;
+//отчет по производственным заказам, планирующемся к выдаче в производтство на завтра
+//(дата определяется следующим днем поле участка планирования по регламенту)
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Заказы, запланированные к производству на завтра';
+  TopSt := Title + ' (на ' + DateTimeToStr(IncDay(Date, +1)) + ')';
+  Fields := [
+    ['ornum$s', 'Заказ', '90'],
+    ['dt_beg$d', 'Дата создания', '100'],
+    ['project$s', 'Проект', '300;h'],
+    ['or_reference$s', 'Основание', '80'],
+    ['area_short$s', 'Площадка', '80'],
+    ['dt_otgr$d', 'Плановая дата отгрузки', '']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_for_orders_planned_to_start_tomorrow',
+    Fields.Col(0).Implode(';')) + ' order by dt_beg, ornum', [], na
+  );
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := TopSt + ', отсутствуют.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+end;
+
+
+procedure TTasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;
+//Недостающие материалы для производства заказов, запланированных на завтра
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Недостающие материалы для производства заказов, запланированных на завтра';
+  TopSt := Title + ' (на ' + DateTimeToStr(IncDay(Date, +1)) + ')';
+  Fields := [
+    ['groupname$s','Группа','200'],
+    ['artikul$s','Артикул','120'],
+    ['name$s','Наименование','300;h'],
+    ['unit$s','Ед.изм','70'],
+    ['qnt$f','Кол-во по смете','90','f=f'],
+    ['qnt_diff$f','Незватка','90','f=f']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_required_materials_for_planned_orders_tomorrow',
+    Fields.Col(0).Implode(';')) + ' where qnt_diff < 0 order by groupname, name', [], na
+  );
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := TopSt + ', отсутствуют.';
+  if HTML <> '' then
+    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+end;
+
 end.
+
+

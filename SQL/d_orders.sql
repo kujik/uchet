@@ -394,6 +394,19 @@ alter table orders add sum_items_final_wo_nds number;
 update orders set sum_advance = cost_av;
 
 alter table orders add id_related_template number;
+
+alter table orders add std_item_type number(1); -- тип изделий заказа: 0-производственный, 1-отгрузочный, 2-п/ф; дублирует or_format_estimates.type, сохраняется на заказе, чтобы не пересчитывать при каждом обращении (в т.ч. во вьюхах)
+update orders o set std_item_type = (select fe.type from or_format_estimates fe where fe.id = o.id_or_format_estimates) where o.id_or_format_estimates is not null and o.std_item_type is null;
+
+alter table orders add id_template number(11); -- айди шаблона, из которого создан заказ (копированием); НЕ путать с id_related_template (связь шаблонов друг с другом внутри группы шаблонов); при удалении шаблона - обнуляется (см. fk_orders_id_template ниже, после create table orders)
+
+alter table orders add id_production_order number(11); -- айди производственного заказа, на основании которого автоматически сформирован данный (отгрузочный/п,ф) заказ; НЕ путать с id_or_reference (ссылка заказов-рекламаций/дозаказов на заказ, к которому они относятся)
+alter table orders add constraint fk_orders_id_production_order foreign key (id_production_order) references orders(id);
+
+-- переразметка статусов заказов: добавлен статус 'отклонен' = -1 (см. ORDER_ID_STATUS_REJECTED в uOrders.pas), остановлен и удален сдвинуты дальше в минус
+-- порядок важен: сначала удаленные (-2->-3), потом остановленные (-1->-2), иначе последующий update затронет уже сдвинутые строки
+update orders set id_status = -3 where id_status = -2;
+update orders set id_status = -2 where id_status = -1;
 --$go end
 
 
@@ -434,6 +447,7 @@ create table orders (
   id_itm number(11) unique,
   sync_with_itm number(1) default 1, --если 1, то синхронизируем заказа с ИТМ
   id_or_format_estimates number(11), --айди типа стандартной сметы 
+  std_item_type number(1),           -- тип изделий заказа: 0-производственный, 1-отгрузочный, 2-п/ф (дублирует or_format_estimates.type)
   --id_complaint_reasons number(11),   --айди причины рекламации
   year number(4),                    -- год  (2023)
   prefix varchar(10),                -- префикс заказа (М, СГ...)
@@ -441,6 +455,8 @@ create table orders (
   ornum varchar(16) unique,          -- полный номер заказа СГ230013 
   templatename varchar2(400),        -- название шаблона, только для шаблонов
   id_related_template number,        -- айди связанного шаблона (для шаблонов, группа = 1 производственный + N отгрузочных): у отгрузочного шаблона - id его производственного шаблона группы (или null); у производственного - НЕ используется (историческое поле, группа резолвится обратным поиском - см. TOrders.GetTemplateGroupTargets в uOrders.pas)    
+  id_template number(11),            -- айди шаблона, из которого создан заказ (копированием, см. миграцию выше); НЕ путать с id_related_template
+  id_production_order number(11),    -- айди производственного заказа, на основании которого сформирован данный заказ (см. миграцию выше); НЕ путать с id_or_reference
   id_status number(2) default 0,     -- стутус заказа (0 - на оформлении, 1 - проведен, 2 - запущен в работу)
   basis_text varchar2(4000),         -- основание (текстовое мемо-0поле) 
   area number(1) default 0,          -- производственная площадка (0 - ПЩ, 1 - Инженерный)
@@ -558,6 +574,7 @@ sum_final_wo_nds number,
 );
 
 alter table orders add constraint fk_orders_related_template foreign key (id_related_template) references orders(id) on delete set null; --$+
+alter table orders add constraint fk_orders_id_template foreign key (id_template) references orders(id) on delete set null; --$+
 
 --create unique index idx_order_num on or_formats(lower(name));
 create unique index idx_orders_templatename on orders(lower(templatename));
@@ -737,16 +754,17 @@ select
   o.*,
   ro.name as organization,
   case 
-    when o.id_status = -1 then 'остановлен'
-    when o.id_status = -2 then 'удален'
+    when o.id_status = -1 then 'отклонен'
+    when o.id_status = -2 then 'остановлен'
+    when o.id_status = -3 then 'удален'
     when o.id_status =  0 then 'на оформлении'
     when o.id_status =  1 then 'проведен'
     when o.id_status =  2 and nvl(z.id_status, 0) < 28 then 'запущен в работу'
-    when o.id_status =  3 and nvl(z.id_status, 0) = 28 then 'на выполнении'
-    when o.id_status =  3 and nvl(z.id_status, 0) = 30 then 'выполнен'
-    when o.id_status =  3 and o.dt_to_sgp is not null then 'на сгп'
-    when o.id_status =  3 and o.dt_from_sgp is not null then 'отгружен'
-    when o.id_status =  3 and o.dt_end is not null then 'закрыт'
+    when o.id_status =  2 and nvl(z.id_status, 0) = 28 then 'на выполнении'
+    when o.id_status =  2 and nvl(z.id_status, 0) = 30 then 'выполнен'
+    when o.id_status =  2 and o.dt_to_sgp is not null then 'на сгп'
+    when o.id_status =  2 and o.dt_from_sgp is not null then 'отгружен'
+    when o.id_status =  2 and o.dt_end is not null then 'закрыт'
   end as status,  
   rc.name as customer,
   rcc.name as customerman,
