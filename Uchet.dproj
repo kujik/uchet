@@ -178,8 +178,8 @@
         <DCCReference Include="uFrmXWNoConnectionAfterStart.pas">
             <Form>FrmXWNoConnectionAfterStart</Form>
         </DCCReference>
-        <DCCReference Include="D_SetPassword.pas">
-            <Form>Dlg_SetPassword</Form>
+        <DCCReference Include="uFrmADEdtSetPassword.pas">
+            <Form>FrmADEdtSetPassword</Form>
         </DCCReference>
         <DCCReference Include="D_ModuleSettings.pas">
             <Form>Dlg_ModuleSettings</Form>

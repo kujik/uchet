@@ -86,7 +86,7 @@ uses
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
   uFrmTest in 'uFrmTest.pas' {FrmTest},
   uFrmXWNoConnectionAfterStart in 'uFrmXWNoConnectionAfterStart.pas' {FrmXWNoConnectionAfterStart},
-  D_SetPassword in 'D_SetPassword.pas' {Dlg_SetPassword},
+  uFrmADEdtSetPassword in 'uFrmADEdtSetPassword.pas' {FrmADEdtSetPassword},
   D_ModuleSettings in 'D_ModuleSettings.pas' {Dlg_ModuleSettings},
   D_Rep_Smeta in 'D_Rep_Smeta.pas' {Dlg_Rep_Smeta},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
@@ -346,7 +346,7 @@ begin
   Application.CreateForm(TFrmXWAbout, FrmXWAbout);
   Application.CreateForm(TFrmXDmsgNoConnection, FrmXDmsgNoConnection);
 //  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
-  Application.CreateForm(TDlg_SetPassword, Dlg_SetPassword);
+  Application.CreateForm(TFrmADEdtSetPassword, FrmADEdtSetPassword);
   Application.CreateForm(TDlg_ModuleSettings, Dlg_ModuleSettings);
   Application.CreateForm(TDlg_Rep_Smeta, Dlg_Rep_Smeta);
   Application.CreateForm(TDlg_Otk, Dlg_Otk);

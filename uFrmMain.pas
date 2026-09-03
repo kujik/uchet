@@ -94,7 +94,7 @@ uses
 
   uWindows,
   uServerTasks,
-  D_SetPassword,
+  uFrmADEdtSetPassword,
   D_ModuleSettings, D_Rep_Smeta,
 
 
@@ -429,9 +429,9 @@ begin
     else if MenuCaption = 'Тест 3' then
       TestProcedure3
     else if MenuCaption = 'Пароль администратора' then
-      Dlg_SetPassword.ShowDialog(1)
+      FrmADEdtSetPassword.ShowDialog(Self, 1)
     else if MenuCaption = 'Универсальный пароль' then
-      Dlg_SetPassword.ShowDialog(1)
+      FrmADEdtSetPassword.ShowDialog(Self, 0)
     else if MenuCaption = 'Копировать права доступа ИТМ' then
       FrmADedtItmCopyRigths.ShowDialog
     else if MenuCaption = 'Настройки модулей' then
