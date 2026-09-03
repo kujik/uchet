@@ -97,7 +97,7 @@ uses
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
   uFrmODedtOrdersFinancePlans in 'uFrmODedtOrdersFinancePlans.pas' {FrmODedtOrdersFinancePlans},
-  D_DelayedInProd in 'D_DelayedInProd.pas' {Dlg_DelayedInProd},
+  uFrmODEdtOrdersDelayedInProduction in 'uFrmODEdtOrdersDelayedInProduction.pas' {FrmODEdtOrdersDelayedInProduction},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
   F_TestTree in 'F_TestTree.pas' {Form_TestTree},
@@ -353,7 +353,7 @@ begin
   Application.CreateForm(TDlg_OrderPrintLabels, Dlg_OrderPrintLabels);
   Application.CreateForm(TDlg_Order_Stages1, Dlg_Order_Stages1);
   Application.CreateForm(TFrmODedtOrdersFinancePlans, FrmODedtOrdersFinancePlans);
-  Application.CreateForm(TDlg_DelayedInProd, Dlg_DelayedInProd);
+  Application.CreateForm(TFrmODEdtOrdersDelayedInProduction, FrmODEdtOrdersDelayedInProduction);
   Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
   Application.CreateForm(TForm_TestTree, Form_TestTree);
   Application.CreateForm(TFrmODedtOrderUPD, FrmODedtOrderUPD);

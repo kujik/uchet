@@ -61,7 +61,7 @@ implementation
 uses
   D_Order_Stages1,
   D_Order_Stages_Otk2,
-  D_DelayedInProd,
+  uFrmODEdtOrdersDelayedInProduction,
   uLabelColors,
   uTurv,
   uOrders,
@@ -308,7 +308,7 @@ begin
   end
   else if Fr.CurrField = 'delreasonname' then begin
     //клик по причине просрочки в журнале просрочки в производстве
-    if Dlg_DelayedInProd.ShowDialog(S.IIf(FEditMode <> 0, fEdit, fView), Fr.ID) then begin
+    if FrmODEdtOrdersDelayedInProduction.ShowDialog(Self, S.IIf(FEditMode <> 0, fEdit, fView), Fr.ID) then begin
       Frg1.RefreshRecord;
       Frg2.RefreshGrid;
     end;
