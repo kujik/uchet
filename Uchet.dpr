@@ -101,7 +101,7 @@ uses
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
   F_TestTree in 'F_TestTree.pas' {Form_TestTree},
-  D_Order_UPD in 'D_Order_UPD.pas' {Dlg_Order_UPD},
+  uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
   D_R_EstimateReplace in 'D_R_EstimateReplace.pas' {Dlg_R_EstimateReplace},
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
   F_Adm_Installer in 'F_Adm_Installer.pas' {Form_Adm_Installer},
@@ -356,7 +356,7 @@ begin
   Application.CreateForm(TDlg_DelayedInProd, Dlg_DelayedInProd);
   Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
   Application.CreateForm(TForm_TestTree, Form_TestTree);
-  Application.CreateForm(TDlg_Order_UPD, Dlg_Order_UPD);
+  Application.CreateForm(TFrmODedtOrderUPD, FrmODedtOrderUPD);
   Application.CreateForm(TDlg_R_EstimateReplace, Dlg_R_EstimateReplace);
   Application.CreateForm(TFrmTestDropDownEh, FrmTestDropDownEh);
 

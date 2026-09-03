@@ -56,7 +56,7 @@ uses
   uOrders,
   uFrmOWOrder,
   uFrmODlgOrderStdType,
-  D_Order_UPD,
+  uFrmODedtOrderUPD,
   uPrintReport,
   D_OrderPrintLabels,
   uFrmOGrefOrStdItems,
@@ -429,7 +429,7 @@ begin
       then Fr.RefreshRecord;
   end
   else if Fr.CurrField = 'dt_upd_reg' then begin
-    if Dlg_Order_UPD.ShowDialog(Fr.id)
+    if FrmODedtOrderUPD.ShowDialog(Self, Fr.id)
       then Fr.RefreshRecord;
   end
   else if Fr.CurrField = 'dt_account_reg' then begin
