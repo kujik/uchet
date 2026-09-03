@@ -99,7 +99,7 @@ uses
   uFrmODedtOrdersFinancePlans in 'uFrmODedtOrdersFinancePlans.pas' {FrmODedtOrdersFinancePlans},
   uFrmODEdtOrdersDelayedInProduction in 'uFrmODEdtOrdersDelayedInProduction.pas' {FrmODEdtOrdersDelayedInProduction},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
-  D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
+  uFrmODedtMontage in 'uFrmODedtMontage.pas' {FrmODedtMontage},
   uFrmOGselItmGroupFromTree in 'uFrmOGselItmGroupFromTree.pas' {FrmOGselItmGroupFromTree},
   uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
   uFrmODedtReplaceEstimateItem in 'uFrmODedtReplaceEstimateItem.pas' {FrmODedtReplaceEstimateItem},

@@ -124,7 +124,6 @@ uses
 
 
   D_Order,
-  D_J_Montage,
   D_SuppliersMinPart,
   D_Spl_InfoGrid,
   F_Adm_Installer,
@@ -965,8 +964,6 @@ begin
        ['inn$s', cntEdit, 'ИНН','10:12'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])
-  else if AFormType = myfrm_Dlg_J_Montage then
-    Form := TDlg_J_Montage.Create(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_Rep_Order_Primecost2 then
     TFrmOWrepOrdersPrimeCost.Show(AOwner, AFormType, Opt, fNone, Null, Null)
   else if AFormType = myfrm_Dlg_R_OrderStdItems then

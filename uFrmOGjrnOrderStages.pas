@@ -62,6 +62,7 @@ uses
   D_Order_Stages1,
   D_Order_Stages_Otk2,
   uFrmODEdtOrdersDelayedInProduction,
+  uFrmODedtMontage,
   uLabelColors,
   uTurv,
   uOrders,
@@ -278,7 +279,7 @@ var
 begin
   if fMode <> fNone then begin
     if FOpMode = mMontage then
-      Wh.ExecDialog(myfrm_Dlg_J_Montage, Self, [], S.IIf(FEditMode <> 1, fView, fMode), Fr.ID, FDtEditMin);
+      TFrmODedtMontage.ShowModal2(Self, 'FrmODedtMontage', [myfoModal, myfoDialog, myfoRefreshParent], S.IIf(FEditMode <> 1, fView, fMode), Fr.ID, FDtEditMin);
   end
   else if Tag = mbtUchetlog then begin
     fd := S.Decode([FOpMode, mToSgp, myfrm_J_OrderStages_ToSgp_Log, mFromSgp, myfrm_J_OrderStages_FromSgp_Log, mOtk, myfrm_J_OrderStages_Otk_Log, '']);
