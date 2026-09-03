@@ -1000,6 +1000,9 @@ begin
     ['customerlegal$s;0', 'V=0:400', 't=c,t,chg'],
     ['customerinn$s;0', 'V=0:400::N', 't=c,t,chg'],
     ['cashtype_account$s;0','V=1:400::N', 't=c,t,chg'],
+    ['cashtype$i','t=ch0'],
+    ['account$s','t=ch0'],
+
     ['address$s', 'V=1:400', 't=c,t,chg,ea'],
     ['order_number_customer$s', 'V=1:400::N', 't=c,t,chg'],
 
