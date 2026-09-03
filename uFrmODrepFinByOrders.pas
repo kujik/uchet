@@ -216,7 +216,7 @@ uses
   uString,
   uData,
   uMessages,
-  D_R_Order_Plans
+  uFrmODedtOrdersFinancePlans
   ;
 
 function TFrmODrepFinByOrders.GetDateFromComboBox(st: string; LastDay: Boolean = False): TDateTime;
@@ -537,8 +537,8 @@ procedure TFrmODrepFinByOrders.btnClick(Sender: TObject);
 begin
   if TControl(Sender).Tag = 1000 then begin
     if cmb_DtB.text = ''
-      then Dlg_R_Order_Plans.ShowDialog(IncMonth(Date, 1))
-      else Dlg_R_Order_Plans.ShowDialog(GetDateFromComboBox(cmb_DtB.Value));
+      then FrmODedtOrdersFinancePlans.ShowDialog(Self, IncMonth(Date, 1))
+      else FrmODedtOrdersFinancePlans.ShowDialog(Self, GetDateFromComboBox(cmb_DtB.Value));
   end
   else begin
     if (cmb_DtB.ItemIndex = -1) or (cmb_DtE.ItemIndex = -1) or (cmb_DtE.ItemIndex > cmb_DtB.ItemIndex) then begin

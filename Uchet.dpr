@@ -96,7 +96,7 @@ uses
 //  D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
   D_OrderPrintLabels in 'D_OrderPrintLabels.pas' {Dlg_OrderPrintLabels},
   D_Order_Stages1 in 'D_Order_Stages1.pas' {Dlg_Order_Stages1},
-  D_R_Order_Plans in 'D_R_Order_Plans.pas' {Dlg_R_Order_Plans},
+  uFrmODedtOrdersFinancePlans in 'uFrmODedtOrdersFinancePlans.pas' {FrmODedtOrdersFinancePlans},
   D_DelayedInProd in 'D_DelayedInProd.pas' {Dlg_DelayedInProd},
   D_Order_Stages_Otk2 in 'D_Order_Stages_Otk2.pas' {Dlg_Order_Stages_Otk2},
   D_J_Montage in 'D_J_Montage.pas' {Dlg_J_Montage},
@@ -352,7 +352,7 @@ begin
 //  Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
   Application.CreateForm(TDlg_OrderPrintLabels, Dlg_OrderPrintLabels);
   Application.CreateForm(TDlg_Order_Stages1, Dlg_Order_Stages1);
-  Application.CreateForm(TDlg_R_Order_Plans, Dlg_R_Order_Plans);
+  Application.CreateForm(TFrmODedtOrdersFinancePlans, FrmODedtOrdersFinancePlans);
   Application.CreateForm(TDlg_DelayedInProd, Dlg_DelayedInProd);
   Application.CreateForm(TDlg_Order_Stages_Otk2, Dlg_Order_Stages_Otk2);
   Application.CreateForm(TForm_TestTree, Form_TestTree);
