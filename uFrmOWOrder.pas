@@ -317,7 +317,7 @@ uses
   uWindows,
   uSys,
   uTasks,
-  D_Order_Complaints,
+  uFrmDehOrderComplaintReasons,
   uExcel2,
   uFrmOGselOrReglament,
   uFrmChooseDialog
@@ -685,11 +685,13 @@ begin
   for i := 0 to High(RouteFields) do begin
     //ch0 у полей маршрута - исключены из общего цикла полного текста изменений (GetItemsChangesText), так как
     //любое их изменение объединяется в отдельную строку "Маршрут" (см. комментарий в GetItemsChangesText)
-    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=s,chg,e,ch0']]
+    va2 := va2 + [['r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e', 't=0,p,pf,s,chg,e,ch0']]
 //    va2 := va2 + [['nvl(r' + IntToStr(i + 1) + ',0) as ' + 'r' + IntToStr(i + 1) + '$i', 'Производственный маршрут|' + RouteFields[i], '25', 'chb', 'e=0:1:0', 't=s,ch']]
   end;
-  //теги: s - сохранение в бд, chg - отслеживание изменений поля,
+  //теги: s - сохранение в бд,
+  //chg - отслеживание изменений поля,
   //e - редактируется в режиме оформления, ea - редактируеится после проведения,
+  //o - видны для отгрузочного заказа, p - для производственного, pf - ПФ, 0 - для старых, без этих тегов видны всегда
   //ch0 - поле исключается из полного текста изменений позиций заказа (см. GetItemsChangesText в этом модуле) -
   //технические/служебные поля и поля, чье значение производно от других (уже отслеживаемых) полей ;
   //pln - при их изменении нужно синхронизировать операции по планированию
@@ -703,7 +705,7 @@ begin
     ['id$i', '_id', '40', 't=s,ch0,nosync'],
     ['id_std_item$i', '_id_std', '40', 't=s,ch0,nosync'],
     ['id_itm$i', '_id_itm', '40', 't=s,ch0,nosync'],
-    [S.IIFStr(Mode <> fView, 'null as ') + 'ch$s', '_ch', '40', 't=s,ch0,nosync'],  //внесенные при прошлой правке изменения загружаем только в режиме просмотра
+    [S.IIFStr(Mode <> fView, 'null as ') + 'ch$s', '_ch', '40', 't=0,p,pf,s,ch0,nosync'],  //внесенные при прошлой правке изменения загружаем только в режиме просмотра
     ['pos$i', '_pos', '20', 't=s,ch0,nosync'],
     ['std$i', '_std', '20', 't=s,ch0,nosync'],
     ['attention$i', '_attention', '40', 't=s,ch0,nosync'],
@@ -718,22 +720,37 @@ begin
     ['price_final$f', 'Цена с НДС и скидками', '70', 'f=0.00', 't=s,ch0,nosync'],
     ['nds_rate$f', 'Ставка НДС', '70', 'f=0', 't=s,ch0,nosync'],
     ['qnt$f', 'Кол-во', '40', 'e=0:9999999:0:N', 't=s,chg,e,ea,pln,est'],
-    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=s,ch,e,est'],
-    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=s,chg,e'],
-    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=s,chg,e']
+    ['sgp$f', 'С СГП', '40', 'e', 'chb', 't=0,s,ch,e,est'],
+    ['null as qnt_on_sgp$f', 'на СГП', '70', 't=o'],
+    ['disassembled$i', 'В раз'#13#10'боре', '40', 'e', 'chb', 't=0,o,s,chg,e'],
+    ['control_assembly$i', 'Контр. сборка', '40', 'e', 'chb', 't=0,o,s,chg,e']
   ];
 
   LFields := LFields + va2;
   LFields := LFields +
   [
-    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=s,chg,e,pln,itm'],
-    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999:0:N', 't=s,chg,e'],
-    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999:0:N', 't=s,chg,e'],
+    ['wo_estimate$i', 'Без'#13#10'сметы', '40', 'chb', 'e', 't=0,p,pf,s,chg,e,pln,itm'],
+    ['id_kns$i', 'Конструктор', '100;L', 'e=-99999999:99999999:0:N', 't=0,p,pf,s,chg,e'],
+    ['id_thn$i', 'Технолог', '100;L', 'e=-99999999:99999999:0:N', 't=0,p,pf,s,chg,e'],
     ['comm$s', 'Дополнение', '200;w;h', 'e=0:400::N', 't=s,chg,e,ea'],
     ['0 as sum$f', 'Сумма', '90', 'f=0.00:', 't=ch0']
   ];
   FrgItems.Opt.Caption := S.IIf(FIsTemplate, 'Состав шаблона', 'Состав заказа');
   FrgItems.Opt.SetFields(LFields);
+  //скрытие полей по тегам o/p/pf/0 (см. комментарий к тегам у LFields выше) - в зависимости от типа изделий заказа
+  //(std_item_type) и формата заказа (FNew26Format); поля без этих тегов не трогаем - статус скрытия ('i') у них
+  //не меняется. Сначала скрываем все поля с любым из этих тегов, затем показываем обратно только те, что относятся
+  //к текущему варианту заказа: для старых заказов (не FNew26Format) - тег '0', для новых - тег, соответствующий
+  //std_item_type (o/p/pf); поле может нести сразу несколько тегов (например '0,o') - тогда оно видно в обоих случаях.
+  FrgItems.Opt.SetColFeature('o;p;pf;0', 'i', True);
+  if not FNew26Format then
+    FrgItems.Opt.SetColFeature('0', 'i', False)
+  else
+    case S.NInt(F.GetProp('std_item_type')) of
+      STDITEM_TYPE_SHIPMENT: FrgItems.Opt.SetColFeature('o', 'i', False);
+      STDITEM_TYPE_PRODUCTION: FrgItems.Opt.SetColFeature('p', 'i', False);
+      STDITEM_TYPE_SEMIPRODUCT: FrgItems.Opt.SetColFeature('pf', 'i', False);
+    end;
   //верхняя панель (кнопки и панели контролов)
   FrgItems.Opt.SetButtons(1, [
     [mbtRefresh, True, 1, 'Обновить данные из справочника изделий'],
@@ -1223,7 +1240,7 @@ begin
 
   //форматы стандартных изделий
   Q.QLoad(
-    'select f.name || '' ['' || e.name || '']'' as name, e.id as id, e.id_format, e.type ' +
+    'select f.name || '' ['' || e.name || '']'' as name, e.id as id, e.id_format, e.type, e.sync_group ' +
     'from or_formats f, or_format_estimates e ' +
     'where e.id_format = f.id and ((e.active = 1 and f.active = 1) or e.id = :id$i) and ' +
     '((e.id_format > 1) or (e.id_format = 0)) ' +
@@ -1328,7 +1345,7 @@ begin
   edt_complaints.ReadOnly := True;
   edt_complaints.Hint := edt_complaints.Text;
   edt_complaints.ShowHint := True;
-  edt_complaints.EditButtons[0].DropDownFormParams.DropDownForm := Dlg_Order_Complaints;
+  edt_complaints.EditButtons[0].DropDownFormParams.DropDownForm := FrmDehOrderComplaintReasons;
 end;
 
 procedure TFrmOWOrder.edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
@@ -1456,6 +1473,21 @@ begin
   if (LOrderType = 0) or ((LOrganization = 0) and not FIsTemplate) then begin
 
   end;
+  //если отгрузочный заказ оформлен на основании производственного (id_production_order, см. LoadOrderComboBoxes) -
+  //формат сметы должен быть из ТОЙ ЖЕ группы синхронизации (or_format_estimates.sync_group), что и формат,
+  //выбранный на производственном заказе-основании (но, разумеется, именно отгрузочного типа) - иначе состав
+  //отгрузочного заказа может не совпасть по номенклатуре с производственным при синхронизации подгрупп (см.
+  //TOrders.SyncNewSubgroupItems). если у формата производственного заказа sync_group не задан (пусто или <= 0,
+  //группа синхронизации не используется - см. тот же комментарий) - ограничение не накладываем, как и раньше.
+  var LIdProductionOrder := S.NInt(F.GetProp('id_production_order'));
+  var LProductionSyncGroup: Variant := null;
+  if LIdProductionOrder > 0 then
+    LProductionSyncGroup := Q.QLoadValue(
+      'select e.sync_group from orders o, or_format_estimates e where o.id = :id$i and e.id = o.id_or_format_estimates',
+      [LIdProductionOrder]
+    );
+  if S.NInt(LProductionSyncGroup) <= 0 then
+    LProductionSyncGroup := null;
   var LUsedEstimateFormatFound := False;
   for i := 0 to FEstimateFormats.High do begin
     if
@@ -1466,8 +1498,9 @@ begin
       (LOrganization <> 0)
       and
       ((
-      //отгрузочные
-      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT) and ((not FNew26Format) or (LStdItemType = STDITEM_TYPE_SHIPMENT)))
+      //отгрузочные; если заказ оформлен на основании производственного - только из той же группы синхронизации
+      ((LOrganization <> -1) and (FEstimateFormats.G(i, 'type') = STDITEM_TYPE_SHIPMENT) and ((not FNew26Format) or (LStdItemType = STDITEM_TYPE_SHIPMENT))
+        and (VarIsNull(LProductionSyncGroup) or (FEstimateFormats.G(i, 'sync_group') = LProductionSyncGroup)))
       or
       //нестандарт (недопустимы в шаблонах)
       ((LOrganization <> -1) and (FEstimateFormats.G(i, 'id') = 0) and (FOrderTypes.G(ot, 'is_nonstandard') = 1) and not FIsTemplate)
@@ -1501,7 +1534,7 @@ begin
   Cth.AddToComboBoxEh(cmb_id_or_format_estimates, va2);
   //если таблица заполнена, то установим формат равным формату в талице и заблокируем поле выбора формата сметы
   if (FrgItems.GetRawCount > 0) and (FUsedEstimateFormat > -1) then begin
-    //F.SetProp('id_or_format_estimates', False, fvtDsbl);   //!отладка - закомментироывать для проврки изменений
+    F.SetProp('id_or_format_estimates', False, fvtDsbl);
     LEstimate := FUsedEstimateFormat;
   end;
   //позиция в массиве форматов смет
@@ -1581,7 +1614,9 @@ begin
     F.SetProps('nds_rate', 0);
   end;
 
-  SetPermanentFieldProps; //!!!
+  SetPermanentFieldProps; //!!!  - он не изменит статусы по markup_items_percent;discount_items_percent....??????
+  if (FrgItems.GetRawCount > 0) and (FUsedEstimateFormat > -1) then
+    F.SetProp('id_or_format_estimates', False, fvtDsbl);
 
   //сохраним в свойствах позиции в массивах организации и типа заказа
   FOrderTypeIndes := ot;
@@ -2493,6 +2528,30 @@ begin
   var LFromSgp := FrgItems.GetValue('sgp').AsInteger = 1;
   var LWoEstimate:= FrgItems.GetValue('wo_estimate').AsInteger = 1;
 
+  //ввод наименования для новых заказов П/ПФ (FNew26Format, std_item_type): если оно введено не выбором из
+  //справочника стандартных изделий (не найдено в FStdItems) - нормализуем текст (см. S.NormalizeText), ещё
+  //раз проверяем совпадение со справочником уже по нормализованному тексту, и если по-прежнему не совпадает -
+  //подбираем (не создавая запись, p_create=0) уникальное имя нестандартного изделия через
+  //p_create_or_std_item_nonstandard_new_format. для О и для старых заказов не трогаем - как было.
+  if (AFieldName = 'name') and (not LIsStdItem)
+    and FNew26Format and (S.NInt(F.GetProp('std_item_type')) in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SEMIPRODUCT])
+  then begin
+    var LNormalizedName := S.NormalizeText(FrgItems.GetValue('name').AsString);
+    if LNormalizedName <> FrgItems.GetValue('name').AsString then
+      FrgItems.SetValue('name', LNormalizedName);
+    LItemNamePos := FStdItems.FindFirst('name', LNormalizedName);
+    LIsStdItem := LItemNamePos >= 0;
+    if not LIsStdItem then begin
+      var LProposedName := Q.QCallStoredProc(
+        'p_create_or_std_item_nonstandard_new_format',
+        'p_name_item$s;p_std_item_type$i;p_create$i;p_name_item_out$so;p_id_item$io',
+        [LNormalizedName, S.NInt(F.GetProp('std_item_type')), 0, '', -1]
+      );
+      if LProposedName[3].AsString <> LNormalizedName then
+        FrgItems.SetValue('name', LProposedName[3]);
+    end;
+  end;
+
   FrgItems.SetValue('nstd', S.IIf(LIsStdItem, 0, 1));
   if AFieldName = 'name' then
   if LIsStdItem then begin
@@ -3067,9 +3126,23 @@ begin
     if not (IsRowChanged or IsNameChanged or (Length(FrgItems.EditData.IdsDeleted) > 0) or (LId >= MY_IDS_INSERTED_MIN)) then
       Continue;
     if IsNameChanged then begin
-      //сорздадим (или получим существующую) запись для нестандратного изделия в or_std_items
-      var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);
-      OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
+      //создадим (или получим существующую) запись для нестандартного изделия в or_std_items;
+      //для новых заказов П/ПФ (FNew26Format, std_item_type) - через новую процедуру
+      //p_create_or_std_item_nonstandard_new_format с p_create=1 (создаёт запись сразу в нужных
+      //группах -1/-2/-3, см. её описание в d_orders.sql); для О (пока) и для старых заказов -
+      //как раньше, через старую p_CreateOrStdItem_Nstd
+      if FNew26Format and (S.NInt(F.GetProp('std_item_type')) in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SEMIPRODUCT]) then begin
+        var LNewOrStdItem26: TVarDynArray := Q.QCallStoredProc(
+          'p_create_or_std_item_nonstandard_new_format',
+          'p_name_item$s;p_std_item_type$i;p_create$i;p_name_item_out$so;p_id_item$io',
+          [OrderItems.GetValue(i, 'name'), S.NInt(F.GetProp('std_item_type')), 1, '', -1]
+        );
+        OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem26[4]);
+      end
+      else begin
+        var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);
+        OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
+      end;
     end;
     //сохраним строку в бд
     var Res := Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);

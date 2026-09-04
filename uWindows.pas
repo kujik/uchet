@@ -126,7 +126,7 @@ uses
   D_Order,
   D_SuppliersMinPart,
   D_Spl_InfoGrid,
-  F_Adm_Installer,
+  uFrmAWInstallModule,
 
   uFrmXGsrvSqlMonitor, uFrmXAdmSqlCommentSync, uFrmXAdmSqlUpdater,
 
@@ -713,7 +713,7 @@ begin
   else if AFormType = myfrm_Dlg_CashRevision then
     TFrmCDedtCashRevision.Show(Application, '', [], fNone, 1, Null)
   else if AFormType = myfrm_Adm_Installer then
-    TForm_Adm_Installer.Create(Application, AFormType, [myfoOneCopy], fNone, 0, Null)
+    TFrmAWInstallModule.Show(Application, AFormType, [myfoOneCopy], fNone, 0, Null)
   else if AFormType = myfrm_Adm_DomainUsers then
     TFrmAGlstDomainUsers.Show(Application, AFormType, [myfoSizeable], fNone, Null, Null)
   else if AFormType = myfrm_Adm_LdapUsers then

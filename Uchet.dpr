@@ -91,7 +91,7 @@ uses
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
 //  D_Otk in 'D_Otk.pas' {Dlg_Otk},
   D_Order in 'D_Order.pas' {Dlg_Order},
-  D_Order_Complaints in 'D_Order_Complaints.pas' {Dlg_Order_Complaints: TCustomDropDownFormEh},
+  uFrmDehOrderComplaintReasons in 'uFrmDehOrderComplaintReasons.pas' {FrmDehOrderComplaintReasons: TCustomDropDownFormEh},
 //  D_LoadKBLog in 'D_LoadKBLog.pas' {Dlg_LoadKBLog},
   uFrmOGedtOrderPrintLabels in 'uFrmOGedtOrderPrintLabels.pas' {FrmOGedtOrderPrintLabels},
   uFrmOGedtOrderStages in 'uFrmOGedtOrderStages.pas' {FrmOGedtOrderStages},
@@ -103,7 +103,7 @@ uses
   uFrmODedtOrderUPD in 'uFrmODedtOrderUPD.pas' {FrmODedtOrderUPD},
   uFrmODedtReplaceEstimateItem in 'uFrmODedtReplaceEstimateItem.pas' {FrmODedtReplaceEstimateItem},
   F_MdiDialogTemplate in 'F_MdiDialogTemplate.pas' {Form_MdiDialogTemplate},
-  F_Adm_Installer in 'F_Adm_Installer.pas' {Form_Adm_Installer},
+  uFrmAWInstallModule in 'uFrmAWInstallModule.pas' {FrmAWInstallModule},
   uFrmXWErrorLog in 'uFrmXWErrorLog.pas' {FrmXWErrorLog},
   F_MdiGridDialogTemplate in 'F_MdiGridDialogTemplate.pas' {Form_MdiGridDialogTemplate},
   D_SuppliersMinPart in 'D_SuppliersMinPart.pas' {Dlg_SuppliersMinPart},
@@ -345,7 +345,7 @@ begin
 //  Application.CreateForm(TDlg_SnOrder, Dlg_SnOrder);
   Application.CreateForm(TFrmADEdtSetPassword, FrmADEdtSetPassword);
 //  Application.CreateForm(TDlg_Otk, Dlg_Otk);
-  Application.CreateForm(TDlg_Order_Complaints, Dlg_Order_Complaints);
+  Application.CreateForm(TFrmDehOrderComplaintReasons, FrmDehOrderComplaintReasons);
 //  Application.CreateForm(TDlg_LoadKBLog, Dlg_LoadKBLog);
   Application.CreateForm(TFrmODedtOrdersFinancePlans, FrmODedtOrdersFinancePlans);
   Application.CreateForm(TFrmODEdtOrdersDelayedInProduction, FrmODEdtOrdersDelayedInProduction);

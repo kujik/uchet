@@ -251,7 +251,7 @@ var
 implementation
 
 uses
-  System.StrUtils, uExcel, uTasks, D_Order_Complaints, uExcel2, uFrmOGselOrReglament, uWindows, {D_LoadKBLog,} uSys, uOrders, uFrmBasicMdi;
+  System.StrUtils, uExcel, uTasks, uFrmDehOrderComplaintReasons, uExcel2, uFrmOGselOrReglament, uWindows, {D_LoadKBLog,} uSys, uOrders, uFrmBasicMdi;
 
 const
   cControl = 0;
@@ -1641,7 +1641,7 @@ begin
   edt_Complaints.ReadOnly := True;
   edt_Complaints.Hint := edt_Complaints.Text;
   edt_Complaints.ShowHint := True;
-  edt_Complaints.EditButtons[0].DropDownFormParams.DropDownForm := Dlg_Order_Complaints;
+  edt_Complaints.EditButtons[0].DropDownFormParams.DropDownForm := FrmDehOrderComplaintReasons;
 //  edt_Complaints.EditButtons[0].DropDownFormParams.Align:=daRight;
 end;
 

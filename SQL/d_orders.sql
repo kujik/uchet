@@ -332,9 +332,10 @@ from
 
 --!go begin
 insert into or_formats (id, name, active) values (-1, 'Нестандартные изделия', 0);
-insert into or_format_estimates (id, id_format, name, type, active) values (-1, -1, 'Нестандартные изделия Производство',0 , 0);
-insert into or_format_estimates (id, id_format, name, type, active) values (-2, -1, 'Нестандартные изделия Огрузка',1 , 0);
-insert into or_format_estimates (id, id_format, name, type, active) values (-3, -1, 'Нестандартные изделия ПФ',2 , 0);
+--delete from or_format_estimates where id <= -1;
+insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-1, -1, 'НСТД.П', 'Нестандартные изделия Производство',0 , 0);
+insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-2, -1, 'НСТД.О', 'Нестандартные изделия Огрузка',1 , 0);
+insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-3, -1, 'НСТД.ПФ', 'Нестандартные изделия ПФ',2 , 0);
 --!go end
 
 
@@ -1687,6 +1688,101 @@ begin
       insert into or_std_items (name, id_or_format_estimates)
       values(NameItem, 0) returning id into IdItem;
   end;
+end;
+/
+
+create or replace procedure p_create_or_std_item_nonstandard_new_format(
+--создадим (или просто подберём) наименование нестандартного изделия для НОВОГО формата заказов (2026),
+--аналог P_CreateOrStdItem_Nstd, но с изделиями в группах -1 (нестандарт производства), -2 (нестандарт
+--отгрузки) и -3 (нестандарт п/ф) вместо единой старой группы 0.
+--
+--p_std_item_type - тип изделия (значения совпадают с or_format_estimates.type и с константами
+--STDITEM_TYPE_PRODUCTION=0/STDITEM_TYPE_SHIPMENT=1/STDITEM_TYPE_SEMIPRODUCT=2 в uOrders.pas).
+--
+--проверка уникальности наименования (без учёта регистра) ведётся не только среди групп -1/-2/-3/0, но и
+--среди "настоящих" (не нестандартных) подгрупп or_format_estimates ТОГО ЖЕ типа, что и p_std_item_type -
+--то есть по сути среди всех or_std_items, которые в принципе могут оказаться в одной табличной части
+--заказа рядом с создаваемым нестандартным изделием. Для П/О это дополнительно согласуется с тем, что
+--состав отгрузочного заказа синхронизируется с производственным по совпадению наименований (см.
+--TOrders.SyncNewSubgroupItems) - совпадение с "настоящим" стандартным изделием того же типа тоже должно
+--приводить к появлению суффикса. Для ПФ синхронизации нет, но требование уникальности среди ВСЕХ подгрупп
+--ПФ (и групп 0/-1/-2/-3) выполняется той же проверкой.
+--
+--если p_name_item уже оканчивается суффиксом вида "_NNNN" (4 цифры) - считаем, что суффикс уже
+--подбирался ранее, и при необходимости продолжаем нумерацию с него, а не добавляем ещё один суффикс.
+--
+--режимы работы:
+--  p_create = 0 - только подобрать и вернуть уникальное наименование (p_name_item_out), запись не создаётся
+--                 (используется при вводе нестандартного изделия на этапе оформления заказа);
+--  p_create = 1 - подобрать наименование и реально создать запись(и) в or_std_items, вернуть p_id_item
+--                 (используется при сохранении заказа). Наименование, подобранное на этапе оформления и
+--                 на этапе сохранения, может отличаться - это нормально (за это время могли появиться
+--                 другие изделия с похожим именем).
+--
+--при создании (p_create=1) изделия типа "производство" (p_std_item_type=0) запись создаётся сразу в ОБЕИХ
+--группах -1 и -2 (чтобы при последующем формировании отгрузочного заказа на основании производственного
+--находилось совпадение по наименованию), а p_id_item возвращает айди записи именно в группе -1. Для
+--"отгрузки" (p_std_item_type=1) запись создаётся только в группе -2, для "п/ф" (p_std_item_type=2) -
+--только в группе -3.
+  p_name_item      in  varchar2,
+  p_std_item_type  in  number,
+  p_create         in  number,
+  p_name_item_out  out varchar2,
+  p_id_item        out number
+) is
+  v_base_name varchar2(400);
+  v_num       number;
+  v_candidate varchar2(400);
+  v_cnt       number;
+  c_max_num   constant number := 9999;
+begin
+  if regexp_like(p_name_item, '_[0-9]{4}$') then
+    v_base_name := regexp_replace(p_name_item, '_[0-9]{4}$', '');
+    v_num := to_number(regexp_substr(p_name_item, '[0-9]{4}$'));
+  else
+    v_base_name := p_name_item;
+    v_num := 0; --суффикса ещё нет, первая попытка - без суффикса
+  end if;
+
+  v_candidate := p_name_item;
+
+  loop
+    select count(*) into v_cnt
+    from or_std_items i
+    where lower(i.name) = lower(v_candidate)
+      and (
+        i.id_or_format_estimates in (-1, -2, -3, 0)
+        or i.id_or_format_estimates in (
+          select e.id from or_format_estimates e where e.type = p_std_item_type
+        )
+      );
+    exit when v_cnt = 0;
+    v_num := v_num + 1;
+    if v_num > c_max_num then
+      raise_application_error(-20001, 'p_create_or_std_item_nonstandard_new_format: не удалось подобрать уникальное наименование для "' || p_name_item || '"');
+    end if;
+    v_candidate := v_base_name || '_' || lpad(v_num, 4, '0');
+  end loop;
+
+  p_name_item_out := v_candidate;
+  p_id_item := null;
+
+  if p_create = 1 then
+    if p_std_item_type = 0 then --STDITEM_TYPE_PRODUCTION - создаём пару -1/-2
+      insert into or_std_items (name, id_or_format_estimates)
+      values (v_candidate, -1) returning id into p_id_item;
+      insert into or_std_items (name, id_or_format_estimates)
+      values (v_candidate, -2);
+    elsif p_std_item_type = 1 then --STDITEM_TYPE_SHIPMENT
+      insert into or_std_items (name, id_or_format_estimates)
+      values (v_candidate, -2) returning id into p_id_item;
+    elsif p_std_item_type = 2 then --STDITEM_TYPE_SEMIPRODUCT
+      insert into or_std_items (name, id_or_format_estimates)
+      values (v_candidate, -3) returning id into p_id_item;
+    else
+      raise_application_error(-20002, 'p_create_or_std_item_nonstandard_new_format: неизвестный тип изделия p_std_item_type=' || p_std_item_type);
+    end if;
+  end if;
 end;
 /
 

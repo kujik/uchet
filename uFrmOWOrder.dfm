@@ -82,6 +82,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -213,6 +214,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -431,6 +433,7 @@ inherited FrmOWOrder: TFrmOWOrder
                   ExplicitLeft = 18
                   ExplicitTop = 17
                   ExplicitWidth = 58
+                  ExplicitHeight = 0
                   inherited PRowDetailPanel: TPanel
                     Width = 56
                     Height = 0
@@ -1503,7 +1506,6 @@ inherited FrmOWOrder: TFrmOWOrder
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
-                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
                 ExplicitHeight = 7
