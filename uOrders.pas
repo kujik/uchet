@@ -73,7 +73,14 @@ type
     //результата к БД произойдет асинхронно, из колбэка диалога, в момент сохранения пользователем;
     //Result в этом случае не является признаком успеха сохранения (он еще не произошло) - только признаком,
     //что диалог был открыт (см. TFrmOGedtEstimate.SaveEstimate, TEstDlgChannel.OnApply)
-    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False): Integer;
+    //ForceEstimateFromStdItem - для нестандартного изделия (IdOrderItem<>null, std=0) заказа - принудительно
+    //считать его "стандартным" для целей сметы: смета в заказе будет не пересчётом количества, а копией из
+    //сметы-эталона на уровне стандартного изделия (estimates.id_std_item = order_items.id_std_item), как для
+    //настоящих стандартных изделий. используется для нестандартных изделий новых (26) заказов П/О - см.
+    //TOrders.RefreshEstimatesToOrder; для П сама смета-эталон редактируется вручную (см. ниже в реализации -
+    //переход на уровень стандартного изделия), для О создаётся автоматически при заведении изделия (см.
+    //p_create_or_std_item_nonstandard_new_format в d_orders.sql)
+    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False): Integer;
     //применяет отредактированный массив позиций сметы (Est) к БД: создает/обновляет заголовок estimates
     //(в т.ч. dt_changed/dt_changed_any), пересоздает позиции estimate_items, синхронизирует с ИТМ,
     //логирует изменения, уведомляет пользователя. Вынесено из LoadEstimate для повторного использования
@@ -613,6 +620,19 @@ var
   IdEstimate: Variant;
   HasestimateUpload: Boolean;
 begin
+  //для новых заказов (26) типа П или О нестандартные изделия имеют собственную смету-эталон на уровне
+  //стандартного изделия (or_std_items в группе -1 для П, -2 для О - см.
+  //p_create_or_std_item_nonstandard_new_format в d_orders.sql): для П она редактируется вручную (см.
+  //TOrders.LoadEstimate - там для такого изделия правка позиции заказа перенаправляется на правку сметы
+  //именно уровня стандартного изделия), для О создаётся автоматически (1 строка - ссылка на изделие П,
+  //см. тот же SQL). для таких изделий смету в заказе теперь не пересчитываем по количеству (как для прочих
+  //нестандартных), а копируем из этой сметы-эталона - точно так же, как для настоящих стандартных изделий
+  //(см. LoadEstimate, ForceEstimateFromStdItem)
+  var LNew26 := IdOrder >= cOrderNew26TypeID;
+  var LStdItemType := -1;
+  if LNew26 then
+    LStdItemType := S.NInt(Q.QLoadValue('select std_item_type from orders where id = :id$i', [IdOrder]));
+  var LUseStdLikeEstimate := LNew26 and (LStdItemType in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SHIPMENT]);
   //получим массив изделий в заказе
   va1 := Q.QLoad('select id, nstd, 0 as resale, id_std_item, id_order_itm, sync_with_itm from v_order_items where id_order = :id_order$i', [IdOrder]);
 //  exit;
@@ -624,11 +644,16 @@ begin
   for i := 0 to High(va1) do begin
     if (not LoadOrderAllItems) and (not A.InArray(va1[i][0], OrderItems)) then
       Continue;
-    if (va1[i][1] = 1) and (va1[i][2] <> 1)
-      //это нестандартное и при этом не покупное (не д/к) - изменим количество оставив существующие позиции
-      then  LoadEstimate(null, va1[i][0], null, False, True, True)
-      //иначе добавим смету из стандратных либо на основании наименования д/к
-      else  LoadEstimate(null, va1[i][0], null, False, False, True);
+    if (va1[i][1] = 1) and (va1[i][2] <> 1) then begin
+      //это нестандартное и при этом не покупное (не д/к)
+      if LUseStdLikeEstimate and (S.NInt(va1[i][3]) > 0)
+        //копируем из сметы-эталона стандартного изделия, как для настоящих стандартных
+        then LoadEstimate(null, va1[i][0], null, False, False, True, False, True)
+        //прежнее поведение - изменим количество оставив существующие позиции
+        else LoadEstimate(null, va1[i][0], null, False, True, True);
+    end
+    //иначе добавим смету из стандратных либо на основании наименования д/к
+    else LoadEstimate(null, va1[i][0], null, False, False, True);
     HasestimateUpload := True;
   end;
   //обновим данные по панелям со сверловкой, факту загрузки xml и трудоемкости
@@ -650,7 +675,7 @@ begin
   Q.QExecSql('update estimates set dt_changed_any = :dt$d where id = :id_estimate$i', [Now, IdEstimate]);
 end;
 
-function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False): Integer;
+function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False): Integer;
 //загружаем смету для изделия в заказе либо стандартного изделия
 //смета грузится из файла для стандартного изделия, на основании наименования изделия для доп. комплектации (стандартной и нет),
 //на основании сметы, уже загруженной для изделия в справочнике, в случае вызова для стандартного изделия в заказе
@@ -678,6 +703,7 @@ var
   OrName: string;
   va1: TVarDynArray;
   IsOrItemStd: Boolean;
+  LReadOnlyEstimate: Boolean;
   OrQnt: Variant;
   OrItemIdItm, OrItemName, OrSlash, OrFullItemName, OrderIdItm, OrderIdUchet, OrStdPrefix, IsEstimateEmpty, OrSyncWithITM, OrDtEst: Variant;
   b: Boolean;
@@ -694,8 +720,14 @@ var
 begin
   InputType:= mrYes;
   OpenEditEstimateDialog:= False;
+  LReadOnlyEstimate := False;
   if IdStdItem <> null then begin
     //для стандартного изделия
+    //для нестандартного изделия группы -2 (нестандарт отгрузки нового формата (26) заказов, см.
+    //p_create_or_std_item_nonstandard_new_format в d_orders.sql) смета-эталон создаётся и поддерживается
+    //автоматически - открываем её только для просмотра
+    if S.NInt(Q.QLoadValue('select id_or_format_estimates from or_std_items where id = :id$i', [IdStdItem])) = -2 then
+      LReadOnlyEstimate := True;
     dt1 := null;
     va1 := Q.QLoadRow('select id, dt from estimates where id_std_item = :id_std_item$i', [IdStdItem]);
     IdEstimate := va1[0];
@@ -762,6 +794,24 @@ begin
     OrQnt := va1[5];
     //заказ Завершен или Выполнен (в итм) - выдадим сообщение и выйдем.
     if Orders.IsOrderFinalized(OrderIdUchet, not Silent) > 0 then Exit;
+    //для нестандартного изделия (std=0) заказа нового формата (26) типа П - редактирование сметы позиции
+    //заказа перенаправляется на редактирование сметы-эталона стандартного изделия (or_std_items в группе -1,
+    //см. p_create_or_std_item_nonstandard_new_format); синхронизация в саму позицию заказа (копированием и
+    //пересчётом количества) происходит отдельно, при сохранении заказа - см. TOrders.RefreshEstimatesToOrder.
+    //для О - наоборот, смета уже скопирована автоматически и доступна только для просмотра. при вызове из
+    //RefreshEstimatesToOrder (ForceEstimateFromStdItem=True) редирект не выполняется - там нужно именно
+    //скопировать смету в позицию заказа, а не открыть смету-эталон
+    if (not IsOrItemStd) and (not ForceEstimateFromStdItem) and (ParentIdStdItem <> null) and (S.NInt(OrderIdUchet) >= cOrderNew26TypeID) then begin
+      case S.NInt(Q.QLoadValue('select std_item_type from orders where id = :id$i', [OrderIdUchet])) of
+        STDITEM_TYPE_PRODUCTION: begin
+          Result := LoadEstimate(IdOrder, null, ParentIdStdItem, OneItem, False, Silent, AModal);
+          Exit;
+        end;
+        STDITEM_TYPE_SHIPMENT: LReadOnlyEstimate := True;
+      end;
+    end;
+    if ForceEstimateFromStdItem then
+      IsOrItemStd := True;
     if IsOrItemStd then begin
       ParentIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id_std_item$i', [ParentIdStdItem]);
       if not Silent then
@@ -848,7 +898,7 @@ begin
       Ctx.FileName := FileName;
       if AModal then begin
         EstDlgChannelOpen(AID, True, LoadEstimateEditArray(IdEstimate), '', nil);
-        MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
+        MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], S.IIf(LReadOnlyEstimate, fView, fEdit),
           AID, S.IIf(IdStdItem <> null, 1, 0));
         if (MdiRes.ModalResult = mrOk) and EstDlgChannelFind(AID, LEstChannel) then begin
           Ctx.EstLogSource := LEstChannel.SourceUsed;  //уточним источник (мог смениться внутри диалога - загрузка из файла/буфера)
@@ -887,7 +937,7 @@ begin
             EstDlgChannelClose(AID);
             Orders.ApplyEstimateArray(Ctx, LocalEst);
           end);
-        TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fEdit,
+        TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], S.IIf(LReadOnlyEstimate, fView, fEdit),
           AID, S.IIf(IdStdItem <> null, 1, 0));
         Result := 1; //диалог открыт немодально; реальный результат сохранения будет позже, асинхронно
         Exit;
@@ -957,7 +1007,10 @@ begin
       end
       else if Ctx.IsOrItemStd then begin
       //копируем из стандартной сметы (p_copyestimate устарела, помечена --!- в d_estimates.sql)
-        va1 := Q.QCallStoredProc('p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f', [Ctx.IdEstimate, Ctx.ParentIdEstimate, Ctx.OrQnt]);
+        va1 := Q.QCallStoredProc(
+          'p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f',
+          [Ctx.IdEstimate, Ctx.ParentIdEstimate, Ctx.OrQnt]
+        );
         if Length(va1) = 0 then
           Res := -1;
       end

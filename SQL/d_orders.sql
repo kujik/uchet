@@ -1735,6 +1735,8 @@ create or replace procedure p_create_or_std_item_nonstandard_new_format(        
   v_candidate varchar2(400);
   v_cnt       number;
   c_max_num   constant number := 9999;
+  v_id_stditem2 number;  --айди созданного издели€ группы -2 (нестандарт отгрузки), дл€ пары ѕ/ќ
+  v_id_estimate number;  --айди сметы-эталона, автоматически создаваемой дл€ группы -2
 begin
   if regexp_like(p_name_item, '_[0-9]{4}$') then
     v_base_name := regexp_replace(p_name_item, '_[0-9]{4}$', '');
@@ -1772,7 +1774,15 @@ begin
       insert into or_std_items (name, id_or_format_estimates)
       values (v_candidate, -1) returning id into p_id_item;
       insert into or_std_items (name, id_or_format_estimates)
-      values (v_candidate, -2);
+      values (v_candidate, -2) returning id into v_id_stditem2;
+      --дл€ нестандартного издели€ отгрузки (группа -2) сразу создаЄм смету-эталон из одной позиции -
+      --ссылка на соответствующее нестандартное изделие производства (группа -1, p_id_item) в количестве
+      --1 шт. (id_unit = 1 - 'шт.', см. bcad_units); эта смета используетс€ только дл€ копировани€ в
+      --позиции заказов (см. TOrders.LoadEstimate/RefreshEstimatesToOrder в uOrders.pas) и открываетс€
+      --только дл€ просмотра (вручную не редактируетс€)
+      insert into estimates (id_std_item, isempty, dt, dt_changed, dt_changed_any)
+      values (v_id_stditem2, 0, sysdate, sysdate, sysdate) returning id into v_id_estimate;
+      p_CreateEstimateItem(v_id_estimate, null, v_candidate, 1, null, 1, null, p_id_item);
     elsif p_std_item_type = 1 then --STDITEM_TYPE_SHIPMENT
       insert into or_std_items (name, id_or_format_estimates)
       values (v_candidate, -2) returning id into p_id_item;
