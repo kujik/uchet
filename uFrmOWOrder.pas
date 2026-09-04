@@ -2411,16 +2411,35 @@ begin
   //поля маршщрутов
   for i := 1 to High(RouteFields) + 1 do
     S.ConcatStP(st, 'nvl(r' + IntToStr(i) + ', 0) as r' + IntToStr(i), ', ');
-  //стандартные изделия по данному типу сметы
-  Q.QLoad(
-    'select id, name, price_wo_nds, wo_estimate, ' + st + ' ' +
+  //стандартные изделия по данному типу сметы; для nstd_ref используем 0 (признак "настоящее" стандартное
+  //изделие) - см. ниже второй union-блок для О с nstd_ref=1
+  var LSql :=
+    'select id, name, price_wo_nds, wo_estimate, 0 as nstd_ref, ' + st + ' ' +
     'from v_or_std_items ' +
     'where ' + '(id_or_format_estimates = :id$i) and (id_or_format_estimates <> 0) ' +
-    S.IIfStr(LFormat <= 0, ' and 1 = 2 ') +  //простой вариант создания FStdItems с полями, но без данных
-    'order by name asc',
-    [LFormat],
-    FStdItems
-  );
+    S.IIfStr(LFormat <= 0, ' and 1 = 2 ');  //простой вариант создания FStdItems с полями, но без данных
+  var LParams: TVarDynArray := [LFormat];
+  //для отгрузочных (О) заказов нового формата, оформленных на основании производственного - добавим
+  //последними в список нестандартные изделия, использованные в этом родительском производственном заказе
+  //(те же наименования, что и там - для О своих нестандартных изделий заводить нельзя, допустимы только
+  //эти). берём их по имени из группы -2 (нестандарт отгрузки, парная той, что создана в группе -1 при
+  //создании изделия в производственном заказе - см. p_create_or_std_item_nonstandard_new_format).
+  //nstd_ref=1 отличает их от настоящих стандартных изделий - используется в CalculateFrgItemsRow, чтобы
+  //при выборе такого наименования строка всё равно считалась нестандартной (nstd=1), а её айди на
+  //сохранении подтверждался через p_get_or_std_item_id_nonstandard_shipment (см. SaveOrderItems) - тут
+  //айди уже верный (из группы -2), но перепроверяется ещё раз при сохранении для надёжности.
+  if FNew26Format and (S.NInt(F.GetProp('std_item_type')) = STDITEM_TYPE_SHIPMENT) and (S.NInt(F.GetProp('id_production_order')) > 0) then begin
+    LSql := LSql +
+      'union all ' +
+      'select id, name, price_wo_nds, wo_estimate, 1 as nstd_ref, ' + st + ' ' +
+      'from v_or_std_items ' +
+      'where id_or_format_estimates = -2 and lower(name) in (' +
+        'select lower(oi.name) from order_items oi where oi.id_order = :id_production$i and oi.nstd = 1' +
+      ') ';
+    LParams := LParams + [S.NInt(F.GetProp('id_production_order'))];
+  end;
+  LSql := LSql + 'order by nstd_ref asc, name asc';
+  Q.QLoad(LSql, LParams, FStdItems);
   //установим список в гриде
   if LFormat <= 0 then
     FrgItems.UpdatePickKeyList('name', [], [], False, False)
@@ -2552,7 +2571,14 @@ begin
     end;
   end;
 
-  FrgItems.SetValue('nstd', S.IIf(LIsStdItem, 0, 1));
+  //для заказов О нового формата в FStdItems (см. LoadStdItems) последними могут быть подмешаны нестандартные
+  //изделия родительского производственного заказа - помечены там nstd_ref=1; несмотря на совпадение с
+  //FStdItems (LIsStdItem=True), такая строка по смыслу остаётся нестандартной (nstd=1), чтобы при
+  //сохранении сработала её отдельная обработка (см. SaveOrderItems, p_get_or_std_item_id_nonstandard_shipment)
+  var LIsNstdEcho := False;
+  if LIsStdItem then
+    LIsNstdEcho := S.NInt(FStdItems.G(LItemNamePos, 'nstd_ref')) = 1;
+  FrgItems.SetValue('nstd', S.IIf(LIsStdItem and not LIsNstdEcho, 0, 1));
   if AFieldName = 'name' then
   if LIsStdItem then begin
     FrgItems.SetValue('id_std_item', FStdItems.G(LItemNamePos, 'id'));
@@ -3129,7 +3155,8 @@ begin
       //создадим (или получим существующую) запись для нестандартного изделия в or_std_items;
       //для новых заказов П/ПФ (FNew26Format, std_item_type) - через новую процедуру
       //p_create_or_std_item_nonstandard_new_format с p_create=1 (создаёт запись сразу в нужных
-      //группах -1/-2/-3, см. её описание в d_orders.sql); для О (пока) и для старых заказов -
+      //группах -1/-2/-3, см. её описание в d_orders.sql); для новых заказов О - см. отдельную ветку ниже
+      //(для О своё нестандартное изделие создавать нельзя); для старых заказов (всех типов) -
       //как раньше, через старую p_CreateOrStdItem_Nstd
       if FNew26Format and (S.NInt(F.GetProp('std_item_type')) in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SEMIPRODUCT]) then begin
         var LNewOrStdItem26: TVarDynArray := Q.QCallStoredProc(
@@ -3138,6 +3165,25 @@ begin
           [OrderItems.GetValue(i, 'name'), S.NInt(F.GetProp('std_item_type')), 1, '', -1]
         );
         OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem26[4]);
+      end
+      else if FNew26Format and (S.NInt(F.GetProp('std_item_type')) = STDITEM_TYPE_SHIPMENT) then begin
+        //для О нового формата собственных нестандартных изделий заводить нельзя - допустимы только те,
+        //что уже созданы (в паре) для родительского производственного заказа; найдём их айди в группе -2
+        //по имени (см. p_get_or_std_item_id_nonstandard_shipment). если не найдено - это либо не связанное
+        //с производственным заказом нестандартное наименование, либо отсутствующее среди его изделий -
+        //сохранять такое нельзя.
+        var LNewOrStdItemShp: TVarDynArray := Q.QCallStoredProc(
+          'p_get_or_std_item_id_nonstandard_shipment',
+          'p_name_item$s;p_id_item$io',
+          [OrderItems.GetValue(i, 'name'), -1]
+        );
+        if VarIsNull(LNewOrStdItemShp[1]) then
+          raise Exception.Create(
+            'Нестандартное изделие "' + VarToStr(OrderItems.GetValue(i, 'name')) + '" недопустимо для отгрузочного заказа: ' +
+            'для заказов "О" нового формата допустимы только нестандартные изделия, уже созданные в родительском ' +
+            'производственном заказе (см. ссылку на заказ-основание).'
+          );
+        OrderItems.SetValue(i, 'id_std_item', LNewOrStdItemShp[1]);
       end
       else begin
         var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);

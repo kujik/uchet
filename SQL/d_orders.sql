@@ -1691,7 +1691,7 @@ begin
 end;
 /
 
-create or replace procedure p_create_or_std_item_nonstandard_new_format(
+create or replace procedure p_create_or_std_item_nonstandard_new_format(                                                      --!+
 --создадим (или просто подберём) наименование нестандартного изделия для НОВОГО формата заказов (2026),
 --аналог P_CreateOrStdItem_Nstd, но с изделиями в группах -1 (нестандарт производства), -2 (нестандарт
 --отгрузки) и -3 (нестандарт п/ф) вместо единой старой группы 0.
@@ -1783,6 +1783,28 @@ begin
       raise_application_error(-20002, 'p_create_or_std_item_nonstandard_new_format: неизвестный тип изделия p_std_item_type=' || p_std_item_type);
     end if;
   end if;
+end;
+/
+
+create or replace procedure p_get_or_std_item_id_nonstandard_shipment(                                                --!+
+--находит айди изделия в or_std_items в группе -2 (нестандарт отгрузки, новый формат заказов 2026) по
+--совпадению наименования (без учёта регистра). используется для заказов "О" нового формата, оформленных
+--на основании производственного заказа - там создание собственных нестандартных изделий не допускается,
+--разрешены только те, что уже созданы (в паре, см. p_create_or_std_item_nonstandard_new_format) для
+--родительского производственного заказа; этой процедурой при сохранении находится их айди именно в группе
+--(-2) (в родительском производственном заказе тот же нестандартный товар числится в группе -1 - см.
+--TFrmOWOrder.SaveOrderItems в uFrmOWOrder.pas). если совпадений нет - p_id_item = null.
+  p_name_item in  varchar2,
+  p_id_item   out number
+) is
+begin
+  begin
+    select id into p_id_item from or_std_items
+    where lower(name) = lower(p_name_item) and id_or_format_estimates = -2;
+  exception
+    when no_data_found then
+      p_id_item := null;
+  end;
 end;
 /
 
