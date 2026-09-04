@@ -2434,7 +2434,7 @@ begin
       'select id, name, price_wo_nds, wo_estimate, 1 as nstd_ref, ' + st + ' ' +
       'from v_or_std_items ' +
       'where id_or_format_estimates = -2 and lower(name) in (' +
-        'select lower(oi.name) from order_items oi where oi.id_order = :id_production$i and oi.nstd = 1' +
+        'select lower(oi.itemname) from v_order_items oi where oi.id_order = :id_production$i and oi.nstd = 1' +
       ') ';
     LParams := LParams + [S.NInt(F.GetProp('id_production_order'))];
   end;
