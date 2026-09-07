@@ -127,25 +127,34 @@ create table sgp_act_out_items(
 drop index idx_sgp_act_out_items;
 --create unique index idx_sgp_act_out_items on sgp_act_out_items(id_std_item, id_act_out);
 
-create or replace view v_sgp_revisions as
+create or replace view v_sgp_revisions as --$+
 --список актов оприходования и списания по СГП
+--(07.09.2026: переопределено на ГРУППУ (or_formats), а не на отгрузочный подформат
+--(or_format_estimates), т.к. readonly-отчёт (uFrmOGrepSgp.pas) теперь выбирает группу
+--целиком - см. !алгоритмы.txt, раздел про СГП. Колонка id_format в выдаче теперь = id
+--группы (не подформата); фильтр "id_format = ..." в uFrmXGlstMain.pas (myfrm_J_Sgp_Acts)
+--от этого не меняется - он как принимал числовой параметр из вызывающего экрана, так и
+--принимает, просто теперь это id группы. Единственный другой вызывающий (myfrm_Rep_Sgp2,
+--нестандартные изделия) всегда передавал 0 - для него поведение не меняется.)
 select
   a.id,
-  doctype, 
-  id_format,
-  dt, 
-  f.name as formatname, 
+  doctype,
+  ofe.id_format as id_format,
+  dt,
+  orf.name as formatname,
   u.name as username
 from
   (
-  (select 'акт оприходования' as doctype, id_format, id, id_user, dt from sgp_act_in)
+  (select 'Акт оприходования' as doctype, id_format, id, id_user, dt from sgp_act_in)
   union
-  (select 'акт списания' as doctype, id_format, id, id_user, dt from sgp_act_out)
+  (select 'Акт списания' as doctype, id_format, id, id_user, dt from sgp_act_out)
   ) a,
-  v_sgp_sell_formats f, 
+  or_format_estimates ofe,
+  or_formats orf,
   adm_users u
 where
-  a.id_format = f.id (+)
+  a.id_format = ofe.id (+)
+  and ofe.id_format = orf.id (+)
   and a.id_user = u.id
 ;
 
@@ -249,7 +258,7 @@ where
 select * from v_sgp_sell_formats;
 
 --!!!?
-create or replace view v_sgp_sell_items as
+create or replace view v_sgp_sell_items as  --$+
 --список изделий по паспорту отгрузки по данному формату, для по которому формируем состояние СГП
 select
   si.id,  --айди именно отгрузочного изделия, изделие с таким же названием и другим айди в or_std_items будет еще (для П)
@@ -259,7 +268,7 @@ select
   max(orf.name) as orf_name, 
   max(fe.name) as orfe_name, 
   substr(max(oi.slash), 2, 3) as slash,   --цифровая часть (3 символа) слеша
-  max(si.price) as price                  --цена по данным спрвочника изделий (отгрузочных) 
+  max(si.price_base) as price                  --цена по данным спрвочника изделий (отгрузочных) 
 from
   or_std_items si
   inner join or_format_estimates fe
@@ -908,7 +917,7 @@ where
   
   
   
-create or replace view v_sgp_item_prices as 
+create or replace view v_sgp_item_prices as --$+
 select
 --считает закупочные суммы изделий из отгрузочных паспортов, находя соответствующие им папорта производственные,
 --позиции, являющиеся изделиями, не разворачивает,
@@ -958,3 +967,352 @@ group by
   
   
   
+
+--------------------------------------------------------------------------------
+--(07.09.2026) снимок текущего состояния СГП (переход старых заказов на новую
+--логику учёта) - см. подробности в !алгоритмы.txt, раздел 2. Снимок-таблицы
+--для стандартных изделий: ключ - id_or_formats (группа, or_formats.id) +
+--наименование изделия (item_name), полный набор разрезов, как в текущем отчёте
+--(uFrmOGrepSgp.pas/v_sgp_items), но просуммированный/пересчитанный по ГРУППЕ
+--(а не по отгрузочному подформату or_format_estimates/or_std_items.id, как сейчас) -
+--это одновременно устраняет дублирование остатка при нескольких отгрузочных
+--подформатах группы (см. v_sgp_items.qnt, комментарий к v_sgp_items_by_group ниже).
+--Нестандартных изделий - id_order_item (order_items.id), без агрегации по имени
+--(нестандартное изделие встречается ровно один раз в одном заказе).
+create table sgp_snapshot_std_items ( --$+
+  id number(11),                       --свой суррогат, по нём индекс
+  id_or_formats number(11),            --ссылка группы (or_formats.id)
+  item_name varchar2(400),             --наименование изделия
+  qnt_psp_sell number(15,3),           --заказано всего (по отгрузочным паспортам)
+  qnt_psp_prod number(15,3),           --запущено в производство всего
+  qnt_sgp_registered number(15,3),     --принято на СГП всего (по производственным паспортам)
+  qnt_shipped number(15,3),            --отгружено всего (по отгрузочным паспортам)
+  qnt_in_prod number(15,3),            --в производстве (не оприходовано на СГП)
+  qnt_to_shipped number(15,3),         --отгрузка план (не отгружено с СГП)
+  qnt number(15,3),                    --текущий остаток на момент снимка
+  qnt_need number(15,3),               --избыток/потребность на момент снимка
+  price number(12,2),                  --цена продажи на момент снимка (при нескольких
+                                        --отгрузочных подформатах группы - среднее)
+  summ number(14,2),                   --сумма продажи текущего остатка на момент снимка
+  priceraw number(12,2),               --цена по смете (ИТМ) на момент снимка
+  sumraw number(14,2),                 --сумма по смете текущего остатка на момент снимка
+  dt_snapshot date,                    --дата и время снимка
+  comm varchar2(400),                  --комментарий
+  constraint pk_sgp_snapshot_std_items primary key (id),
+  constraint fk_sgp_snapshot_std_items_f foreign key (id_or_formats) references or_formats(id)
+);
+
+create sequence sq_sgp_snapshot_std_items increment by 1 nocache; --!++
+
+create or replace trigger trg_sgp_snapshot_std_items_bi_r --$+
+  before insert on sgp_snapshot_std_items for each row
+begin
+  if :new.id is null then
+    select sq_sgp_snapshot_std_items.nextval into :new.id from dual;
+  end if;
+end;
+/
+
+
+--снимок для нестандартных изделий (аналог v_sgp2) - ключ по позиции заказа
+--(id_order_item), без агрегации по имени, так как нестандартное изделие уникально
+--для своего заказа (см. подтверждение пользователя, !алгоритмы.txt, раздел 2) -
+--для нестандартных изделий, в отличие от стандартных, дальше НЕ ведётся текущий
+--(живой) учёт по актам - только просмотр этого снимка (новые нестандартные изделия
+--нового формата со старыми никак не пересекаются, промежуточные акты не нужны).
+create table sgp_snapshot_nstd_items ( --$+
+  id number(11),                       --свой суррогат, по нём индекс
+  id_order_item number(11),            --ссылка позиции заказа (order_items.id), = v_sgp2.id
+  id_std_item number(11),              --ссылка нестандартного изделия (v_sgp2.id_std_item)
+  item_name varchar2(400),             --наименование изделия на момент снимка (справочно,
+                                        --на случай если позиция потом будет удалена)
+  slash varchar2(50),                  --слеш позиции заказа на момент снимка (справочно)
+  dt_beg date,                         --дата оформления заказа на момент снимка
+  dt_otgr date,                        --плановая дата отгрузки на момент снимка
+  qnt_psp number(15,3),                --заказано (по паспорту) на момент снимка
+  qnt_in_prod number(15,3),            --в производстве на момент снимка
+  sum_in_prod number(14,2),            --сумма в производстве на момент снимка
+  qnt_sgp_registered number(15,3),     --принято на СГП на момент снимка
+  qnt_shipped number(15,3),            --отгружено на момент снимка
+  qnt number(15,3),                    --текущий остаток на момент снимка
+  price number(12,2),                  --цена на момент снимка
+  summ number(14,2),                   --сумма на момент снимка
+  dt_snapshot date,                    --дата и время снимка
+  comm varchar2(400),                  --комментарий
+  constraint pk_sgp_snapshot_nstd_items primary key (id),
+  constraint fk_sgp_snapshot_nstd_items_oi foreign key (id_order_item) references order_items(id) on delete cascade
+);
+
+create sequence sq_sgp_snapshot_nstd_items increment by 1 nocache;
+
+create or replace trigger trg_sgp_snapshot_nstd_items_bi_r --$+
+  before insert on sgp_snapshot_nstd_items for each row
+begin
+  if :new.id is null then
+    select sq_sgp_snapshot_nstd_items.nextval into :new.id from dual;
+  end if;
+end;
+/
+
+
+--(07.09.2026) агрегация текущего состояния СГП по ГРУППЕ (or_formats), а не по
+--отгрузочному подформату, как v_sgp_items. Не переиспользует v_sgp_items напрямую
+--(его нельзя просто просуммировать по дублирующимся строкам одного изделия в разных
+--подформатах группы - часть его колонок (qnt_psp_sell/qnt_psp_prod/qnt_sgp_registered/
+--qnt_shipped/qnt_in_prod/qnt_to_shipped) уже посчитана на уровне группы и ПОВторяется
+--на каждой строке-подформате, а часть (поправки по актам sgp_act_in/out) считаны именно
+--по конкретному id_std_item подформата и потому у дублей различаются - простой sum()
+--завысил бы первые и просуммировал бы вторые верно, а max()/min() - наоборот) - поэтому
+--считает нужные компоненты заново от первичных данных, сгруппированными сразу по
+--(id_format, name), и суммирует только то, что действительно уникально по подформату
+--(поправки по актам). Используется ТОЛЬКО процедурой p_sgp_create_snapshot (см. ниже) -
+--сам текущий отчёт (uFrmOGrepSgp.pas) остаётся на v_sgp_items до перевода в readonly.
+create or replace view v_sgp_items_by_group as --$+
+select
+  g.id_format,
+  g.name,
+  nvl(sell.qnt, 0) as qnt_psp_sell,
+  nvl(prod.qnt, 0) as qnt_psp_prod,
+  nvl(reg.qnt, 0) as qnt_sgp_registered,
+  nvl(shp.qnt, 0) as qnt_shipped,
+  nvl(inprod.qnt, 0) as qnt_in_prod,
+  nvl(toship.qnt, 0) as qnt_to_shipped,
+  (nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) as qnt,
+  (nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0))
+    + nvl(inprod.qnt, 0) - nvl(toship.qnt, 0) as qnt_need,
+  round(nvl(prc.avg_price, 0), 2) as price,
+  round((nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) * nvl(prc.avg_price, 0), 2) as summ,
+  round(nvl(pr.avg_priceraw, 0), 2) as priceraw,
+  round((nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) * nvl(pr.avg_priceraw, 0), 2) as sumraw
+from
+  --список всех отслеживаемых пар (группа, изделие)
+  (select distinct id_format, name from v_sgp_sell_items) g
+  left outer join
+  --заказано всего (по отгрузочным паспортам) - уже на уровне (группа, имя)
+  (select id_format, itemname, sum(qnt) as qnt from v_order_items__
+    where id_organization <> -1 and dt_beg >= dt_base_beg group by id_format, itemname) sell
+  on sell.id_format = g.id_format and sell.itemname = g.name
+  left outer join
+  --запущено в производство всего
+  (select id_format, itemname, sum(qnt) as qnt from v_order_items__
+    where id_organization = -1 and dt_beg >= dt_base_beg group by id_format, itemname) prod
+  on prod.id_format = g.id_format and prod.itemname = g.name
+  left outer join
+  --принято на СГП всего, с даты sgp_params.dt_beg
+  (select oi.id_format, oi.itemname, sum(ois.qnt) as qnt
+    from v_order_items__ oi,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages s, sgp_params p
+        where s.id_stage = 2 and s.dt > p.dt_beg group by id_order_item) ois
+    where oi.id_organization = -1 and ois.id_order_item (+) = oi.id
+    group by oi.id_format, oi.itemname
+  ) reg
+  on reg.id_format = g.id_format and reg.itemname = g.name
+  left outer join
+  --отгружено всего, с даты sgp_params.dt_beg
+  (select oi.id_format, oi.itemname, sum(ois.qnt) as qnt
+    from v_order_items__ oi,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages s, sgp_params p
+        where s.id_stage = 3 and s.dt > p.dt_beg group by id_order_item) ois
+    where oi.id_organization <> -1 and ois.id_order_item (+) = oi.id
+    group by oi.id_format, oi.itemname
+  ) shp
+  on shp.id_format = g.id_format and shp.itemname = g.name
+  left outer join
+  --в производстве (не оприходовано на СГП), без учёта даты отсечки
+  (select oi.id_format, oi.itemname, sum(oi.qnt - nvl(ois.qnt, 0)) as qnt
+    from v_order_items__ oi,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages s where s.id_stage = 2 group by id_order_item) ois
+    where oi.id_organization = -1 and oi.dt_end is null and ois.id_order_item (+) = oi.id
+      and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+    group by oi.id_format, oi.itemname
+  ) inprod
+  on inprod.id_format = g.id_format and inprod.itemname = g.name
+  left outer join
+  --отгрузка план (не отгружено с СГП), без учёта даты отсечки
+  (select oi.id_format, oi.itemname, sum(oi.qnt - nvl(ois.qnt, 0)) as qnt
+    from v_order_items__ oi,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages s where s.id_stage = 3 group by id_order_item) ois
+    where oi.id_organization <> -1 and oi.dt_end is null and ois.id_order_item (+) = oi.id
+      and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+    group by oi.id_format, oi.itemname
+  ) toship
+  on toship.id_format = g.id_format and toship.itemname = g.name
+  left outer join
+  --акты оприходования - реально уникальны по конкретному id_std_item подформата,
+  --поэтому здесь корректно суммируются по всем подформатам с этим именем в группе
+  (select ofe.id_format, osi.name, sum(aii.qnt) as qnt
+    from sgp_act_in_items aii, or_std_items osi, or_format_estimates ofe
+    where aii.id_std_item = osi.id and osi.id_or_format_estimates = ofe.id
+    group by ofe.id_format, osi.name
+  ) ai
+  on ai.id_format = g.id_format and ai.name = g.name
+  left outer join
+  --акты списания - аналогично
+  (select ofe.id_format, osi.name, sum(aoi.qnt) as qnt
+    from sgp_act_out_items aoi, or_std_items osi, or_format_estimates ofe
+    where aoi.id_std_item = osi.id and osi.id_or_format_estimates = ofe.id
+    group by ofe.id_format, osi.name
+  ) ao
+  on ao.id_format = g.id_format and ao.name = g.name
+  left outer join
+  --цена продажи - если у группы несколько отгрузочных подформатов с разной ценой
+  --на изделие с этим именем, берётся среднее (см. ограничение в !алгоритмы.txt)
+  (select ofe.id_format, osi.name, avg(osi.price_base) as avg_price
+    from or_std_items osi, or_format_estimates ofe
+    where osi.id_or_format_estimates = ofe.id and osi.by_sgp = 1
+    group by ofe.id_format, osi.name
+  ) prc
+  on prc.id_format = g.id_format and prc.name = g.name
+  left outer join
+  --цена по смете (ИТМ) - берётся от производственного изделия, физически одна и та же
+  --себестоимость независимо от отгрузочного подформата/канала продаж
+  (select ofe.id_format, osi.name, avg(vip.sum) as avg_priceraw
+    from v_sgp_item_prices vip, or_std_items osi, or_format_estimates ofe
+    where vip.id = osi.id and osi.id_or_format_estimates = ofe.id
+    group by ofe.id_format, osi.name
+  ) pr
+  on pr.id_format = g.id_format and pr.name = g.name
+;
+
+
+--(07.09.2026) создание снимка текущего состояния СГП (запускается один раз вручную
+--при переходе старого отчёта "Текущее состояние СГП" (uFrmOGrepSgp.pas) в readonly-режим).
+--Для стандартных изделий берёт полностью пересчитанную по группе (не по подформату)
+--агрегацию v_sgp_items_by_group (см. выше, почему нельзя просто просуммировать
+--v_sgp_items); для нестандартных - текущий v_sgp2 как есть (без изменения агрегации,
+--там и так один заказ = одна строка).
+--p_force = 1 позволяет пересоздать уже существующий снимок (например, для тестирования),
+--по умолчанию процедура защищается ошибкой, если снимок уже существует, чтобы случайно
+--не затереть исторический снимок.
+create or replace procedure p_sgp_create_snapshot( --$+
+  p_force in number default 0
+) is
+  v_cnt number;
+begin
+  select count(1) into v_cnt from sgp_snapshot_std_items;
+  if v_cnt > 0 and nvl(p_force, 0) = 0 then
+    raise_application_error(-20001, 'Снимок СГП уже существует, для пересоздания используйте p_force = 1');
+  end if;
+  delete from sgp_snapshot_std_items;
+  delete from sgp_snapshot_nstd_items;
+
+  insert into sgp_snapshot_std_items (
+    id_or_formats, item_name,
+    qnt_psp_sell, qnt_psp_prod, qnt_sgp_registered, qnt_shipped, qnt_in_prod, qnt_to_shipped,
+    qnt, qnt_need, price, summ, priceraw, sumraw, dt_snapshot
+  )
+  select
+    id_format, name,
+    qnt_psp_sell, qnt_psp_prod, qnt_sgp_registered, qnt_shipped, qnt_in_prod, qnt_to_shipped,
+    qnt, qnt_need, price, summ, priceraw, sumraw, sysdate
+  from
+    v_sgp_items_by_group;
+
+  insert into sgp_snapshot_nstd_items (
+    id_order_item, id_std_item, item_name, slash, dt_beg, dt_otgr,
+    qnt_psp, qnt_in_prod, sum_in_prod, qnt_sgp_registered, qnt_shipped,
+    qnt, price, summ, dt_snapshot
+  )
+  select
+    id, id_std_item, name, slash, dt_beg, dt_otgr,
+    qnt_psp, qnt_in_prod, sum_in_prod, qnt_sgp_registered, qnt_shipped,
+    qnt, price, sum, sysdate
+  from
+    v_sgp2;
+
+  commit;
+end;
+/
+
+
+--(07.09.2026) представления поверх таблиц-снимков - для показа в readonly-версии
+--uFrmOGrepSgp.pas/Rep_Sgp2 (см. !алгоритмы.txt, раздел 2.8). Названия колонок
+--подобраны так, чтобы совпадать с полями, которые уже показывает текущий грид -
+--это позволяет просто переключить Frg1.Opt.SetTable на снимок, почти не трогая
+--список колонок в Delphi.
+create or replace view v_sgp_snapshot_std_items as --$+
+select
+  s.id,
+  s.id_or_formats,
+  f.name as format_name,
+  s.item_name as name,
+  s.qnt_psp_sell,
+  s.qnt_psp_prod,
+  s.qnt_sgp_registered,
+  s.qnt_shipped,
+  s.qnt_in_prod,
+  s.qnt_to_shipped,
+  s.qnt,
+  s.qnt_need,
+  s.price,
+  s.summ,
+  s.priceraw,
+  s.sumraw,
+  s.dt_snapshot
+from
+  sgp_snapshot_std_items s,
+  or_formats f
+where
+  f.id = s.id_or_formats
+;
+
+create or replace view v_sgp_snapshot_nstd_items as --$+
+select
+  s.id,
+  s.id_order_item,
+  s.id_std_item,
+  s.item_name as name,
+  s.slash,
+  s.dt_beg,
+  s.dt_otgr,
+  s.qnt_psp,
+  s.qnt_in_prod,
+  s.sum_in_prod,
+  s.qnt_sgp_registered,
+  s.qnt_shipped,
+  s.qnt,
+  s.price,
+  s.summ as sum,
+  s.dt_snapshot
+from
+  sgp_snapshot_nstd_items s
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--(07.09.2026) пробный запуск создания снимка СГП - см. p_sgp_create_snapshot выше.
+--Выполнить ОДИН РАЗ при переходе старого отчёта "Текущее состояние СГП" на readonly
+--(см. !алгоритмы.txt, раздел про СГП). Повторный запуск без p_force => 1 вызовет
+--raise_application_error - это защита от случайной перезаписи уже созданного снимка,
+--а не ошибка скрипта.
+set serveroutput on;
+
+declare
+  v_cnt_std number;
+  v_cnt_nstd number;
+begin
+  p_sgp_create_snapshot;
+  select count(1) into v_cnt_std from sgp_snapshot_std_items;
+  select count(1) into v_cnt_nstd from sgp_snapshot_nstd_items;
+  dbms_output.put_line('Снимок СГП создан: строк по стандартным изделиям - ' || v_cnt_std ||
+    ', строк по нестандартным изделиям - ' || v_cnt_nstd);
+end;
+/

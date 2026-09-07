@@ -3599,9 +3599,6 @@ begin
       S.ConcatStP(BasisToCopy, FrgBasis.GetRawValueS('name', i), #13#10);
   end;
   var LOrderPath := F.GetProp('path').AsString;
-{    if Mode = fDelete then begin
-        TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', LOrderPath], ['in_archive', F.GetProp('in_archive')], ['year', F.GetProp('year')], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
-    end}
 
   Addr := '';
   Subj := '';
@@ -3610,7 +3607,7 @@ begin
   if MailingCode > 0 then begin
     Addr := Tasks.GetMailingAddr(MailingCode);
     Subj := Subj + Orders.GetSubject(Subj, '', ID, null);
-    Body :=
+    Body := Subj +
       S.IIf(FTitleChangesShort <> '',  'Изменения в шапке заказа:'#13#10 + FTitleChangesShort, 'Изменений в шапке заказа не было.') +
       #13#10#13#10 +
       S.IIf(FItemsChangesShort <> '',  'Изменения в теле заказа:'#13#10 + FItemsChangesShort, 'Изменений в теле заказа не было.');

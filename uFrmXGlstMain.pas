@@ -2115,7 +2115,13 @@ v:=True;
 
 
   else if FormDoc = myfrm_Rep_Sgp2 then begin
-    Caption:='Состояние СГП (нестандартные изделия)';
+    //07.09.2026: экран переведён в режим архива (только просмотр) - показывает остаток СГП
+    //по нестандартным изделиям СТАРОГО формата, замороженный на момент перехода на новую
+    //логику учёта (см. !алгоритмы.txt, раздел про СГП). Новые нестандартные изделия нового
+    //формата со старыми никак не пересекаются - ни начальное состояние, ни последующие акты
+    //им не нужны, поэтому (в отличие от стандартных изделий) достаточно только снимка, без
+    //дальнейшего пополнения актами - см. убранную кнопку "Ревизия" и удалённый Frg1OnDbClick.
+    Caption:='Состояние СГП (нестандартные изделия) - архив на момент перехода на новую логику учёта';
     Frg1.Opt.SetFields([
       ['id$i','_id'],
       ['slash','№','80'],
@@ -2129,21 +2135,20 @@ v:=True;
       ['qnt_shipped','Отгружено','80','f=:'],
       ['qnt','Текущий остаток','80','f=:'],
       ['price','Цена','80', 'f=r'],
-      ['sum','Сумма','80','f=r:']
+      ['sum','Сумма','80','f=r:'],
+      ['dt_snapshot','Дата снимка','90']
     ]);
-    Frg1.Opt.SetTable('v_sgp2');
-    //Frg1.Opt.SetButtons(1, 'rfsp');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGridFilter],[-mbtCustom_Revision, User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions, 1,'Журнал ревизий'],[],[mbtGridSettings]]);
+    Frg1.Opt.SetTable('v_sgp_snapshot_nstd_items');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtGridFilter],[-mbtCustom_JRevisions, 1,'Журнал ревизий'],[],[mbtGridSettings]]);
     Frg1.CreateAddControls('1', cntCheck, 'Только в наличии на СГП', 'ChbNot0', '', 4, yrefC, 200);
     Frg1.Opt.FilterRules := [[], ['dt_beg;dt_otgr']];
     Frg1.InfoArray:=[[Caption + '.'#13#10], [
-      'В таблице отображается и по ней контролируется состояние склада готовой продукции '#13#10+
-      'только по нестандартным изделиям.'#13#10+
-      'Каждое изделия в ПЗ с пометкой "Нестандарт" считается уникальным изделием, если в'#13#10+
-      'других паспортах были изделия с такими же наименованиями, то они пойдут отдельными строками в таблице.'#13#10+
-      'Приход и расход учитывается по факту поступления и отгрузки с СГП данного слеша.'#13#10+
-      'Для коррекции остатков возможно сдделать ревизию СГП, выберите этот пункт в контекстном меню.'#13#10+
-      'Двойной клик на столбце "Текущий остаток" откроет окно движения по данной номенклатуре.'#13#10
+      'Эта таблица - архив (только для чтения) состояния склада готовой продукции по '#13#10+
+      'нестандартным изделиям СТАРОГО формата на момент перехода на новую логику учёта СГП.'#13#10+
+      'Дальше эти цифры не пересчитываются - новые нестандартные изделия нового формата '#13#10+
+      'со старыми никак не пересекаются, поэтому дальнейший учёт по ним здесь не ведётся.'#13#10+
+      'Кнопка "Журнал ревизий" показывает акты, созданные до перехода на архивный режим.'#13#10+
+      'Подробности - в файле "!Алгоритмы" проекта, раздел про СГП.'#13#10
     ]];
 
   end
@@ -2903,10 +2908,10 @@ begin
     Wh.ExecDialog(myfrm_Dlg_Or_FindNameInEstimates, Self, [], fNone, Fr.ID, null);
   end
   else if FormDoc = myfrm_Rep_Sgp2 then begin
-    if Tag = mbtCustom_Revision then begin
-      Wh.ExecDialog(myfrm_Dlg_Sgp_Revision, Self, [], fEdit, 0, null);
-    end
-    else if Tag = mbtCustom_JRevisions then begin
+    //07.09.2026: кнопка "Ревизия" (mbtCustom_Revision) убрана - экран переведён в архив,
+    //новых актов по этим (замороженным) данным больше не создаётся; "Журнал ревизий" оставлен
+    //для просмотра уже существовавших ранее актов
+    if Tag = mbtCustom_JRevisions then begin
       Wh.ExecReference(myfrm_J_Sgp_Acts, Self, [], 0);
     end
   end
@@ -3509,12 +3514,9 @@ begin
     Fr.RefreshRecord;
     Handled := True;
   end
-  else if (FormDoc = myfrm_Rep_Sgp2) then begin
-    if Fr.CurrField = 'qnt' then begin
-      TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_Move, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, fr.ID, 1);
-      Handled := True;
-    end;
-  end
+  //07.09.2026: детализация движения по столбцу "qnt" для myfrm_Rep_Sgp2 убрана - экран
+  //переведён в readonly-архив, id строки больше не соответствует order_items.id (см.
+  //v_sgp_snapshot_nstd_items/!алгоритмы.txt), да и живая детализация статичному снимку не нужна
   else if FormDoc = myfrm_Rep_ItmNomOverEstimate then begin
     try
     if FrmOGedtSnMain <> nil then

@@ -18,9 +18,7 @@ type
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
-    procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
-    procedure Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean); override;
   public
   end;
 
@@ -30,20 +28,27 @@ var
 implementation
 
 uses
-  uWindows,
-  uFrmOGinfSgp
+  uWindows
   ;
 
 {$R *.dfm}
 
 function TFrmOGrepSgp.PrepareForm: Boolean;
 begin
-  Caption:= 'Состояние СГП (стандартные изделия)';
+  //07.09.2026: экран переведён в режим архива (только просмотр) - показывает остаток СГП
+  //по стандартным изделиям, замороженный на момент перехода на новую логику учёта (см.
+  //!алгоритмы.txt, раздел про СГП). Источник данных - таблица-снимок (sgp_snapshot_std_items
+  //через v_sgp_snapshot_std_items), а не живая v_sgp_items; выбор в комбобоксе - ГРУППА
+  //(or_formats) целиком, а не отдельный отгрузочный подформат, как раньше (это же исправляет
+  //дублирование остатка одного изделия по нескольким отгрузочным подформатам одной группы).
+  //Правка/ревизия из этого экрана больше не производится - см. удалённые Frg1CellValueSave
+  //(правка "мин. остатка") и Frg1OnDbClick (детализация движения) - для статичного архива
+  //они не имеют смысла (лежащие в их основе живые вью считают по подформату, а не по группе).
+  Caption:= 'Состояние СГП (стандартные изделия) - архив на момент перехода на новую логику учёта';
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible];
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
-    ['format_name','Формат','250;h'],
-    ['slash','Слеш','110'],
+    ['format_name','Группа','250;h'],
     ['name','Изделие','300;h'],
     ['qnt_psp_sell','Заказано всего','80'],
     ['qnt_psp_prod','Запущено в производство','80'],
@@ -52,86 +57,69 @@ begin
     ['qnt','Текущий остаток','80'],
     ['qnt_in_prod','В производстве','80'],
     ['qnt_to_shipped','Отгрузка план','80'],
-    ['qnt_min','Минимальный остаток','80','e=0:9999999:0',User.Role(rOr_Rep_Sgp_Ch1)], //пустое допустимо
     ['qnt_need','Избыток / Потребность','80'],
     ['price','Цена продажи','80','f=r','i',not User.Role(rOr_Rep_Sgp_ViewPrice)],
     ['summ','Сумма продажи','80','f=r:','i',not User.Role(rOr_Rep_Sgp_ViewPrice)],
     ['priceraw','Цена по смете','80','f=r','i',not User.Role(rOr_Rep_Sgp_ViewPrice)],
-    ['sumraw','Сумма по смете','80','f=r:','i',not User.Role(rOr_Rep_Sgp_ViewPrice)]
+    ['sumraw','Сумма по смете','80','f=r:','i',not User.Role(rOr_Rep_Sgp_ViewPrice)],
+    ['dt_snapshot','Дата снимка','90']
   ]);
-  Frg1.Opt.SetTable('v_sgp_items');
-  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[-mbtCustom_Revision,User.Role(rOr_Rep_Sgp_Rev),'Ревизия'],[-mbtCustom_JRevisions,1,'Журнал ревизий'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  Frg1.Opt.SetTable('v_sgp_snapshot_std_items');
+  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[-mbtCustom_JRevisions,1,'Журнал ревизий'],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetButtonsIfEmpty([mbtCustom_JRevisions]);
-  Frg1.CreateAddControls('1', cntComboLK, 'Формат:', 'CbFormat', '', 50, yrefC, 400);
+  Frg1.CreateAddControls('1', cntComboLK, 'Группа:', 'CbFormat', '', 50, yrefC, 400);
   FFormats:=Q.QLoad(
-    'select name, id from (select ''[все]'' as name, -1000 as id, 0 as srt from dual union all select name, id, 1 as srt from v_sgp_sell_formats order by srt, name)', []
+    'select name, id from (select ''[все]'' as name, -1000 as id, 0 as srt from dual union all ' +
+    'select f.name, f.id, 1 as srt from or_formats f where f.id in (select distinct id_or_formats from sgp_snapshot_std_items) order by srt, name)', []
   );
   Cth.AddToComboBoxEh(TDBComboBoxEh(Frg1.FindComponent('CbFormat')), FFormats);
   TDBComboBoxEh(Frg1.FindComponent('CbFormat')).ItemIndex := 0;
   FIdFormat:= Frg1.GetControlValue('CbFormat');
   Frg1.InfoArray:=[
     [Caption + '.'#13#10#13#10],[
-      'В таблице отображается и по ней контролируется состояние склада готовой продукции в разрезе '#13#10+
-      'выбранного формата паспортов (стандартных изделий, что то же).'#13#10+
-      'Какие форматы и изделия будут отображаться в данной таблице, определяет менеджер.'#13#10+
+      'Эта таблица - архив (только для чтения) состояния склада готовой продукции по '#13#10+
+      'стандартным изделиям СТАРЫХ заказов на момент перехода на новую логику учёта СГП.'#13#10+
+      'Дальше эти цифры не пересчитываются и не редактируются.'#13#10+
       ''#13#10+
-      'Для отображения нужного вам формата выберите его в выпадающем списке сверху.'#13#10+
+      'Учёт по новым заказам ведётся отдельным отчётом. По старым заказам, пока они не будут '#13#10+
+      'полностью приняты и отгружены, движение продолжает фиксироваться отдельными актами - '#13#10+
+      'см. кнопку "Журнал ревизий". Подробности - в файле "!Алгоритмы" проекта, раздел про СГП.'#13#10+
+      ''#13#10+
+      'Для отображения нужной вам группы выберите её в выпадающем списке сверху.'#13#10+
       'Не набираете в этом поле текст и не прокручивайте колесиком мыши, в этих случаях программа может надолго зависнуть!'#13#10+
       'Найдите необходимую позицию, двигая мышкой ползунок справа, и кликните на нее.'#13#10+
       ''#13#10+
-      'Данные заполняются на основании принятых заказов (по журналу заказов), журналу приемки на СГП, журналу отгрузки с СГП,'#13#10+
-      'а также внутренним ревизиям склада.'#13#10+
-      ''#13#10+
-      'Приход на склад вычисляется как суммарный приход изделия на склад СГП по соответствующему журналу, только по производственным паспортам.'#13#10+
-      'Расход, аналогично приходу, по отгрузочным папортам в разрезе выбранных изделий, по моменту отгрузки с СГП.'#13#10+
-      'Сопоставление изделий между производственными и отгрузочными паспортами производится по их наименованию!'#13#10+
-      '(префикс не учитывается)'#13#10+
-      ''#13#10+
-      'Дополнительные данные в таблице представлены колонками '#13#10+
-      '"Заказано всего", "Запущено в производство", "В производстве", "Отгрузка план.", "Мин. остаток"'#13#10+
-      'Вычисляемая графа "Потребность" показывает разницу текущего остатка плюс значения "В производстве" за минусом'#13#10+
-      'планируемой отгрузки. Она будет положительной, если на складе останется запас для отгрузки при этих условиях, если же его не хватает, '#13#10+
-      'значение будет отрицательным и отметится розовым цветом.'#13#10+
-      ''#13#10+
-      'Значение в графе "Минимальный остаток" вводится в этой же таблице вручную и является справочным.'#13#10+
-      ''#13#10+
-      'Чтобы провести ревизию склада, воспользуйтесь соответствующим пунктом выпадающего меню в таблице.'#13#10+
-      'Также через меню можно просмотреть и журнал ревизий.'#13#10+
-      ''#13#10+
-      'Двойной клик мышкой по ячейке, как правило, открывает окно детализации во времени для изделия из текущей строки, по параметру, который показывавет столбец.'#13#10
+      'На момент снимка сопоставление изделий между производственными и отгрузочными паспортами '#13#10+
+      'производилось по их наименованию, в разрезе группы целиком (а не отдельного отгрузочного '#13#10+
+      'подформата, как было раньше) - поэтому остаток по одноимённому изделию показан одной строкой, '#13#10+
+      'даже если у группы несколько отгрузочных подформатов.'#13#10
     ]];
   Frg1.Opt.ColumnsInfo:=[
-    ['slash', 'Слеш изделия, выбирается из самого нового шаблона паспорта, если таковой найден для данного формата. '+
-     'Если найти не удается, или данного изделия нет в этом шаблоне, то поле останется пустым.'],
-    ['name', 'Наименование изделия, как оно задано в списке станадртных изделий, без префикса типа изделия. Все сопоставления отгрузочных и производственных паспортов производятся по наименованию.'],
-    ['qnt_psp_sell', 'Информация, сколько всего изделия было заказано по отгрузочным паспортам (т.е. их количества в теле паспорта) за весь отчетный период'],
-    ['qnt_psp_prod', 'Информация, сколько всего изделия было запущено по производственным паспортам за весь отчетный период'],
-    ['qnt_sgp_registered', 'Столько изделий принято на СГП по производственым паспортам'],
-    ['qnt_shipped', 'Столько изделий отгружено по производственным паспортам'],
-    ['qnt', 'Текущее расчетное количество изделия на складе.'#13#10'Является разницей принятых на СГП по производственным и отгруженных с СГП по отгрузочным паспортам'#13#10+
-    'также здесь учитываются созданные на основании ревизий акты приемки и списания на/с СГП.'#13#10'По даблклику вы можете посмотреть движение по складу СГП в разрезе данного изделия.'+
-    ''],
-    ['qnt_in_prod', 'Количество изделий, находящихся сейчас в производстве (это количество в позиции из незакрытых производственных паспортов по изделиям, которое еще не было оприходовано на СГП.)'],
-    ['qnt_to_shipped', 'Отгрузка план. Количество изделия из отгрузочных паспортов, которые еще не были отгружены с СГП'],
-    ['qnt_min', 'Минимальное количество, которое требуется поддерживать на складе. Вводится непосредственнно в ячейку таблицы. Несет справочную функцию, на другие данные не влияет.'],
-    ['qnt_need', 'Суммма текущего количества на складе, с прибавкой количества "В производстве", и за вычетом количества "К отгрузке".'+
-    'Характеризует запас изделий, отрицательное значение (подсвечивается) означает, что количество на складе и текущее запущенное в производство не покроют уже запланированных отгрузок.'],
-    ['price', 'Цена изделий из справочника стандартных изделий (по отгрузке).'],
-    ['summ', 'Стоимость текущего остатка изделия на СГП. Цена берется из справочника стандартных изделий (по отгрузке).'],
-    ['priceraw', 'Цена по смете соотвествующего изделия из группы производственных изделий, взятая из ИТМ.'],
-    ['sumraw', 'Стоимость по смете текущего остатка изделия на СГП.']
+    ['name', 'Наименование изделия, как оно было задано в списке стандартных изделий на момент снимка, без префикса типа изделия.'],
+    ['qnt_psp_sell', 'Информация, сколько всего изделия было заказано по отгрузочным паспортам на момент снимка'],
+    ['qnt_psp_prod', 'Информация, сколько всего изделия было запущено по производственным паспортам на момент снимка'],
+    ['qnt_sgp_registered', 'Столько изделий было принято на СГП по производственым паспортам на момент снимка'],
+    ['qnt_shipped', 'Столько изделий было отгружено по отгрузочным паспортам на момент снимка'],
+    ['qnt', 'Расчётное количество изделия на складе на момент снимка (см. дату снимка).'],
+    ['qnt_in_prod', 'Количество изделий, находившихся в производстве на момент снимка (в позициях из незакрытых производственных паспортов, ещё не оприходованных на СГП)'],
+    ['qnt_to_shipped', 'Отгрузка план. Количество изделия из отгрузочных паспортов, ещё не отгруженное с СГП на момент снимка'],
+    ['qnt_need', 'Сумма текущего количества на складе на момент снимка, с прибавкой количества "В производстве" и за вычетом количества "К отгрузке".'],
+    ['price', 'Цена изделия из справочника стандартных изделий на момент снимка (по отгрузке).'],
+    ['summ', 'Стоимость остатка изделия на СГП на момент снимка.'],
+    ['priceraw', 'Цена по смете соответствующего изделия из группы производственных изделий (ИТМ) на момент снимка.'],
+    ['sumraw', 'Стоимость по смете остатка изделия на СГП на момент снимка.'],
+    ['dt_snapshot', 'Дата и время, когда был сделан этот снимок (переход на новую логику учёта СГП).']
   ];
   Result := inherited;
 end;
 
 procedure TFrmOGrepSgp.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);
 begin
-  if Tag = mbtCustom_Revision then begin
-    //ревизия сгп по формату
-    Wh.ExecDialog(myfrm_Dlg_Sgp_Revision, Self, [], fEdit, FIdFormat, null);
-  end
-  else if Tag = mbtCustom_JRevisions then begin
-    //журнал актов списания/оприходования по данному формату
+  //07.09.2026: кнопка "Ревизия" (mbtCustom_Revision) убрана - экран переведён в архив,
+  //новых актов по этим (замороженным) данным больше не создаётся
+  if Tag = mbtCustom_JRevisions then begin
+    //журнал актов списания/оприходования по данной группе (см. v_sgp_revisions - теперь
+    //переопределено на группу, а не на отгрузочный подформат, см. !алгоритмы.txt)
     Wh.ExecReference(myfrm_J_Sgp_Acts, Self, [], FIdFormat);
   end
   else inherited;
@@ -146,13 +134,10 @@ end;
 procedure TFrmOGrepSgp.Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string);
 begin
   FIdFormat := Fr.GetControlValue('CbFormat');
-  SqlWhere := S.IIfStr(FIdFormat >= 0, 'id_format_est = :id_format_est$i');
-  Fr.SetSqlParameters('id_format_est$i', [FIdFormat]);
-end;
-
-procedure TFrmOGrepSgp.Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
-begin
-  Q.QCallStoredProc('p_SetSgpItemAdd', 'IdNomencl$i;PMode$i;PValue$f', VarArrayOf([Fr.ID, 1, S.NullIfEmpty(Value)]));
+  //07.09.2026: фильтр теперь по группе (id_or_formats), а не по отгрузочному подформату
+  //(id_format_est) - см. v_sgp_snapshot_std_items/!алгоритмы.txt
+  SqlWhere := S.IIfStr(FIdFormat >= 0, 'id_or_formats = :id_or_formats$i');
+  Fr.SetSqlParameters('id_or_formats$i', [FIdFormat]);
 end;
 
 procedure TFrmOGrepSgp.Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh);
@@ -161,24 +146,6 @@ begin
     if (Fr.GetValueF('qnt_need') < 0) then
       Params.Background :=clmyPink;  //розовый
   end;
-end;
-
-procedure TFrmOGrepSgp.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
-begin
-  if Fr.CurrField = 'qnt_psp_sell' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_PspSell, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt_psp_prod' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_PspProd, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt_shipped' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_Shipped, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt_sgp_registered' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_Registered, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt_to_shipped' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_Shipped_Plan, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt_in_prod' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_In_Prod, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null)
-  else if Fr.CurrField = 'qnt' then
-    TFrmOGinfSgp.Show(Self, myfrm_Dlg_Sgp_InfoGrid_Move, [myfoMultiCopy, myfoSizeable, myfoDialog], fView, Fr.ID, null);
 end;
 
 
