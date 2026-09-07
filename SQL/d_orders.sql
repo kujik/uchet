@@ -330,13 +330,14 @@ from
   or_format_estimates fe
 ;     
 
---!go begin
+--$go begin
 insert into or_formats (id, name, active) values (-1, 'Нестандартные изделия', 0);
 --delete from or_format_estimates where id <= -1;
-insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-1, -1, 'НСТД.П', 'Нестандартные изделия Производство',0 , 0);
-insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-2, -1, 'НСТД.О', 'Нестандартные изделия Огрузка',1 , 0);
+insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-1, -1, 'НСТД.П', 'Нестандартные изделия Производство',0 , 1);
+insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-2, -1, 'НСТД.О', 'Нестандартные изделия Огрузка',1 , 1);
 insert into or_format_estimates (id, id_format, prefix, name, type, active) values (-3, -1, 'НСТД.ПФ', 'Нестандартные изделия ПФ',2 , 0);
---!go end
+update bcad_groups set is_production = 0 where id <> 104; 
+--$go end
 
 
 --------------------------------------------------------------------------------
@@ -1131,6 +1132,27 @@ with
   s.name as itemname,
   case when ee.id > 0 then ee.prefix else '' end as prefix,
   case when ee.id > 0 then ee.prefix || '_' else '' end || s.name as fullitemname,
+  --тип стандартного изделия заказа (Н,НП,НO,НПФ,П,O,ПФ) - аналогично v_or_std_items.type_name, тем же
+  --способом (по ee.id_format/ee.type); ee - or_format_estimates того же стандартного изделия, что и у
+  --позиции заказа (см. i.id_std_item = s.id, s.id_or_format_estimates = ee.id выше) - используется
+  --TFrmOGedtEstimate.PrepareForm (uFrmOGedtEstimate.pas) вместо прежнего захардкоженного 'И' (05.09.2026)
+  --БАГ (исправлен 06.09.2026): ee.id_format у ВСЕХ трёх виртуальных групп -1/-2/-3 (см. 1.2) равен -1
+  --(это FK на or_formats.id='Нестандартные изделия', общий для всех трёх - он и должен быть одинаков),
+  --поэтому проверка по ee.id_format всегда попадала в ветку -1 ('НП') первой, независимо от реального
+  --типа изделия - НСТД.О и НСТД.ПФ показывались как НСТД.П. Различать группы -1/-2/-3/0 нужно по
+  --s.id_or_format_estimates (сама уникальная группа), а не по ee.id_format
+  --06.09.2026: type = 1 (отгрузочное) теперь возвращает ЛАТИНСКУЮ 'O' (было кириллическое 'О') -
+  --для единообразия с 'НO' чуть ниже и с сравнениями в uFrmOGedtEstimate.pas (LTypePhrase/кнопка
+  --"Вставить производственное изделие") - см. 1.10 и правку в !алгоритмы.txt
+  case
+    when s.id_or_format_estimates = 0 then 'Н'
+    when s.id_or_format_estimates = -1 then 'НП'
+    when s.id_or_format_estimates = -2 then 'НO'
+    when s.id_or_format_estimates = -3 then 'НПФ'
+    when ee.type = 0 then 'П'
+    when ee.type = 1 then 'O'
+    when ee.type = 2 then 'ПФ'
+  end as type_name,
   r.route_val as route,
   r.route_val as route2,
   es.dt as dt_estimate,
@@ -1520,8 +1542,16 @@ create or replace view v_or_std_items as --$+
     fi.prefix,
     fi.id_format,
     fi.type,
+    --та же ошибка, что и в v_order_items.type_name выше (см. комментарий там) - исправлено 06.09.2026:
+    --различаем группы -1/-2/-3/0 по i.id_or_format_estimates (сама группа), а не по fi.id_format (у всех
+    --трёх виртуальных групп он одинаков - см. or_formats.id='Нестандартные изделия')
+    --06.09.2026: type = 1 (отгрузочное) теперь возвращает ЛАТИНСКУЮ 'O' - та же правка, что и в
+    --v_order_items.type_name выше (см. комментарий там)
     case
-      when fi.id_format = 0 then 'Н'
+      when i.id_or_format_estimates = 0 then 'Н'
+      when i.id_or_format_estimates = -1 then 'НП'
+      when i.id_or_format_estimates = -2 then 'НO'
+      when i.id_or_format_estimates = -3 then 'НПФ'
       when fi.type = 0 then 'П'
       when fi.type = 1 then 'O'
       when fi.type = 2 then 'ПФ'
@@ -1691,7 +1721,7 @@ begin
 end;
 /
 
-create or replace procedure p_create_or_std_item_nonstandard_new_format(                                                      --!+
+create or replace procedure p_create_or_std_item_nonstandard_new_format(                                                      --$+
 --создадим (или просто подберём) наименование нестандартного изделия для НОВОГО формата заказов (2026),
 --аналог P_CreateOrStdItem_Nstd, но с изделиями в группах -1 (нестандарт производства), -2 (нестандарт
 --отгрузки) и -3 (нестандарт п/ф) вместо единой старой группы 0.
@@ -1736,7 +1766,6 @@ create or replace procedure p_create_or_std_item_nonstandard_new_format(        
   v_cnt       number;
   c_max_num   constant number := 9999;
   v_id_stditem2 number;  --айди созданного изделия группы -2 (нестандарт отгрузки), для пары П/О
-  v_id_estimate number;  --айди сметы-эталона, автоматически создаваемой для группы -2
 begin
   if regexp_like(p_name_item, '_[0-9]{4}$') then
     v_base_name := regexp_replace(p_name_item, '_[0-9]{4}$', '');
@@ -1775,14 +1804,15 @@ begin
       values (v_candidate, -1) returning id into p_id_item;
       insert into or_std_items (name, id_or_format_estimates)
       values (v_candidate, -2) returning id into v_id_stditem2;
-      --для нестандартного изделия отгрузки (группа -2) сразу создаём смету-эталон из одной позиции -
-      --ссылка на соответствующее нестандартное изделие производства (группа -1, p_id_item) в количестве
-      --1 шт. (id_unit = 1 - 'шт.', см. bcad_units); эта смета используется только для копирования в
-      --позиции заказов (см. TOrders.LoadEstimate/RefreshEstimatesToOrder в uOrders.pas) и открывается
-      --только для просмотра (вручную не редактируется)
-      insert into estimates (id_std_item, isempty, dt, dt_changed, dt_changed_any)
-      values (v_id_stditem2, 0, sysdate, sysdate, sysdate) returning id into v_id_estimate;
-      p_CreateEstimateItem(v_id_estimate, null, v_candidate, 1, null, 1, null, p_id_item);
+      --для нестандартного изделия отгрузки (группа -2) сразу создаём смету-ссылку из одной позиции -
+      --ссылка на соответствующее нестандартное изделие производства (группа -1, p_id_item), с группой
+      --"Готовые изделия" (bcad_groups.is_production=1) и префиксом подгруппы -1 ('НСТД.П_') в наименовании -
+      --см. p_create_shipment_estimate_from_production_item (d_estimates.sql; общая с TFrmODedtOrStdItem.
+      --CreateSelfSmeta, uFrmODedtOrStdItem.pas, для настоящих стандартных изделий - исправлено 05.09.2026,
+      --раньше здесь смета создавалась БЕЗ группы и БЕЗ префикса в наименовании). Эта смета используется
+      --только для копирования в позиции заказов (см. TOrders.LoadEstimate/RefreshEstimatesToOrder в
+      --uOrders.pas) и открывается только для просмотра (вручную не редактируется)
+      p_create_shipment_estimate_from_production_item(v_id_stditem2, p_id_item, -1, v_candidate);
     elsif p_std_item_type = 1 then --STDITEM_TYPE_SHIPMENT
       insert into or_std_items (name, id_or_format_estimates)
       values (v_candidate, -2) returning id into p_id_item;
@@ -1796,7 +1826,7 @@ begin
 end;
 /
 
-create or replace procedure p_get_or_std_item_id_nonstandard_shipment(                                                --!+
+create or replace procedure p_get_or_std_item_id_nonstandard_shipment(                                                --$+
 --находит айди изделия в or_std_items в группе -2 (нестандарт отгрузки, новый формат заказов 2026) по
 --совпадению наименования (без учёта регистра). используется для заказов "О" нового формата, оформленных
 --на основании производственного заказа - там создание собственных нестандартных изделий не допускается,

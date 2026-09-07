@@ -12,8 +12,8 @@ alter session set nls_sort =  binary;
 create table bcad_groups(
   id number(11),
   name varchar2(1000) unique not null,     --наименование
-  is_production number(1) default 0,       --это группа, содержащая готовые изделия  
-  is_semiproduct number(1) default 0,       --это группа, содержащая полуфабрикаты  
+  is_production number(1) default 0,       --это группа, содержащая готовые изделия /должны быть удинственной/ 
+  is_semiproduct number(1) default 0,       --это группа, содержащая полуфабрикаты  /не используется/
   constraint pk_bcad_groups primary key (id)
 );
 
@@ -509,6 +509,72 @@ begin
     where id = iditem;
 end;
 /
+  
+  
+--++ создание/дополнение сметы-ссылки отгрузочного изделия на переданное производственное - общая для
+--настоящих стандартных изделий и для нестандартных изделий типа П нового формата (05.09.2026)
+create or replace procedure p_create_shipment_estimate_from_production_item(                                                       --$+
+--создаёт "смету-ссылку" отгрузочного изделия (or_std_items, id_std_item = p_id_shipment_item) из ОДНОЙ
+--позиции, ссылающейся на переданное производственное изделие - и по наименованию (через bcad_nomencl, с
+--префиксом производственной подгруппы p_id_production_format), и по id (estimate_items.id_or_std_item =
+--p_id_production_item) напрямую; количество 1, единица измерения "шт." (bcad_units.id = 1), группа -
+--единственная запись bcad_groups с is_production = p_is_production (сейчас везде передаётся 1 - группа
+--"Готовые изделия"; вынесено в параметр на случай появления в будущем других групп для стандартных и
+--нестандартных готовых изделий - см. пожелание пользователя от 05.09.2026).
+--
+--Если сметы (estimates.id_std_item = p_id_shipment_item) ещё нет - создаёт её; если уже есть - добавляет
+--или обновляет в ней позицию через p_CreateEstimateItem (идемпотентно, безопасно вызывать повторно).
+--
+--Общая для двух ранее независимых, дублировавших друг друга реализаций:
+--  - настоящие стандартные изделия - см. TFrmODedtOrStdItem.CreateSelfSmeta (uFrmODedtOrStdItem.pas) -
+--    раньше делала то же самое из Delphi, через Orders.ApplyEstimateArray, с захардкоженной в Delphi
+--    группой (BCAD_GROUP_FINISHED_ITEMS = 104) и отдельно вычисленным (GetPrefixedName) префиксом;
+--  - нестандартные изделия типа П нового (26) формата - см. p_create_or_std_item_nonstandard_new_format
+--    (d_orders.sql) - раньше вызывала p_CreateEstimateItem напрямую, БЕЗ группы (pid_group = null) и БЕЗ
+--    префикса в наименовании (отсюда и правка - в исходном виде смета создавалась некорректно).
+  p_id_shipment_item      in number,            --or_std_items.id отгрузочного изделия (id_std_item создаваемой/дополняемой сметы)
+  p_id_production_item    in number,            --or_std_items.id производственного изделия (id_or_std_item позиции сметы)
+  p_id_production_format  in number,            --or_format_estimates.id производственной подгруппы, для префикса имени (null - без префикса; допускает и отрицательные "псевдо-подгруппы" -1/-2/-3, см. d_orders.sql)
+  p_production_name       in varchar2,          --"голое" наименование производственного изделия, без префикса
+  p_is_production         in number default 1   --признак bcad_groups.is_production для поиска группы позиции сметы (id_group)
+) is
+  v_id_estimate number;
+  v_id_group    number;
+  v_prefix      varchar2(20);
+  v_pname       varchar2(400);
+begin
+  begin
+    select id into v_id_group from bcad_groups where is_production = p_is_production;
+  exception
+    when no_data_found then
+      raise_application_error(-20003, 'p_create_shipment_estimate_from_production_item: не найдена группа bcad_groups с is_production=' || p_is_production);
+    when too_many_rows then
+      raise_application_error(-20004, 'p_create_shipment_estimate_from_production_item: несколько групп bcad_groups с is_production=' || p_is_production || ' - ожидалась ровно одна');
+  end;
+  v_prefix := null;
+  if p_id_production_format is not null then
+    begin
+      select prefix into v_prefix from or_format_estimates where id = p_id_production_format;
+    exception
+      when no_data_found then v_prefix := null;
+    end;
+  end if;
+  --ВАЖНО: в Oracle пустая строка '' - это NULL, поэтому "v_prefix <> ''" всегда даёт NULL/false и НИКОГДА не срабатывает -
+  --эта проверка была лишней и приводила к тому, что префикс не подставлялся вообще никогда (05.09.2026, найдено тестом)
+  v_pname := case when v_prefix is not null then v_prefix || '_' || p_production_name else p_production_name end;
+  begin
+    select id into v_id_estimate from estimates where id_std_item = p_id_shipment_item;
+  exception
+    when no_data_found then
+      --dt - без временнОй метки (trunc), как и Ctx.EstBefore.../ApplyEstimateArray.Date для всех прочих
+      --смет (uOrders.pas) - только dt_changed/dt_changed_any хранят полное время изменения
+      insert into estimates (id_std_item, isempty, dt, dt_changed, dt_changed_any)
+      values (p_id_shipment_item, 0, trunc(sysdate), sysdate, sysdate) returning id into v_id_estimate;
+  end;
+  p_CreateEstimateItem(v_id_estimate, v_id_group, v_pname, 1, null, 1, null, p_id_production_item);
+end;
+/
+
 
 --++ процедура коррекции сметы с учетом справочника автозамены
 create or replace procedure P_CorrectEstimateWithReplace (
@@ -887,8 +953,11 @@ create or replace procedure p_deletefreeestimate (
 )   
 is
 begin
+  --правка: isempty <> 1 при isempty is null в Oracle даёт NULL (не TRUE), условие where не срабатывает,
+  --и пустая смета с isempty is null не удаляется (например, автоматически созданная смета позиции
+  --заказа нестандартного изделия нового (26) формата, см. TOrders.LoadEstimate в uOrders.pas); защищаемся nvl.
   delete from estimates where 
-    id = IdEstimate and isempty <> 1 and (select count(*) from estimate_items where id_estimate = IdEstimate) = 0;
+    id = IdEstimate and nvl(isempty, 0) <> 1 and (select count(*) from estimate_items where id_estimate = IdEstimate) = 0;
 end;  
 
 -------------------------------------------------------------------------------
@@ -1189,8 +1258,11 @@ select
   case
     when e.id_or_std_item is null then null
     when f.id = 0 then 'Н'
+    when f.id = -1 then 'НП'
+    when f.id = -2 then 'НO'
+    when f.id = -3 then 'НПФ'
     when f.type = 0 then 'П'
-    when f.type = 1 then 'O'
+    when f.type = 1 then 'О'
     when f.type = 2 then 'ПФ'
   end as type_of_item,
   e2.id as id_item_estimate,

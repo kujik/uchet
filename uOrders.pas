@@ -39,6 +39,8 @@ type
     OneItem, QntChanged, IsOrItemStd, Silent: Boolean;
     EstBefore: TNamedArr;
     EstLogSource: string;   //список кодов источника через запятую (см. TEstDlgChannel.SourceUsed в uFrmOGedtEstimate.pas)
+    //см. комментарий к параметру ASyncOrderItemAfterSave в объявлении LoadEstimate - 0, если не требуется
+    SyncOrderItemAfterSave: Integer;
   end;
 
   TOrders = class
@@ -80,7 +82,30 @@ type
     //TOrders.RefreshEstimatesToOrder; для П сама смета-эталон редактируется вручную (см. ниже в реализации -
     //переход на уровень стандартного изделия), для О создаётся автоматически при заведении изделия (см.
     //p_create_or_std_item_nonstandard_new_format в d_orders.sql)
-    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False): Integer;
+    //ASyncOrderItemAfterSave - id позиции заказа (order_items), собственную смету которой нужно немедленно
+    //пересинхронизировать (тем же способом, что и ForceEstimateFromStdItem) сразу после успешного сохранения
+    //ТЕКУЩЕЙ сметы-эталона (см. редирект для П ниже в реализации) - 0, если не требуется. Раньше собственная
+    //смета позиции заказа обновлялась только при следующем сохранении заказа целиком (см.
+    //TOrders.RefreshEstimatesToOrder) - для нестандартного изделия, привязанного всегда к единственной позиции
+    //единственного заказа, это создавало видимость "не сохранившихся" правок и пустую/неактуальную историю
+    //изменений на уровне позиции заказа до тех пор, пока заказ не пересохраняли
+    //AOrderContextCaption - для внутреннего использования (редирект для П ниже в реализации): готовая строка
+    //"слеш   наименование  [кол-во: N]" по исходной нестандартной позиции заказа, ради которой сработал
+    //редирект на смету-эталон - передается диалогу редактирования (TFrmOGedtEstimate) через боковой канал
+    //(TEstDlgChannel.OrderCaption), чтобы заголовок диалога показывал, к какой именно позиции заказа
+    //относится редактируемый эталон (иначе, при редиректе, диалог открывается на уровне стандартного изделия
+    //и не видит позицию заказа вовсе) - см. также TFrmOGlstEstimate.PrepareForm, аналогичная надпись для
+    //просмотра сметы (myfrm_R_Estimate); '' - редирект не применяется, диалог не должен ничего добавлять
+    function LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False; ASyncOrderItemAfterSave: Integer = 0; AOrderContextCaption: string = ''): Integer;
+    //определяет, нужно ли для ПРОСМОТРА сметы/истории изменений позиции заказа AIdOrderItem показывать
+    //смету-эталон стандартного изделия вместо сметы самой позиции заказа - для нестандартного изделия
+    //типа П нового (26) формата содержательное редактирование идёт именно на уровне эталона (см. комментарий
+    //к ForceEstimateFromStdItem выше и редирект в реализации LoadEstimate), а собственная смета позиции
+    //заказа - лишь производная копия, актуальная только на момент последнего сохранения заказа. Используется
+    //в TFrmOWrepEstimateChanges (история изменений) и TFrmOGlstEstimate (просмотр сметы, myfrm_R_Estimate),
+    //которые, в отличие от LoadEstimate, сами таким редиректом не занимаются. Result=True - нужен редирект,
+    //тогда AIdStdItem - id записи в or_std_items (группа -1), которую и следует показывать вместо позиции
+    function ResolveEstimateDisplayTarget(AIdOrderItem: Variant; out AIdStdItem: Variant): Boolean;
     //применяет отредактированный массив позиций сметы (Est) к БД: создает/обновляет заголовок estimates
     //(в т.ч. dt_changed/dt_changed_any), пересоздает позиции estimate_items, синхронизирует с ИТМ,
     //логирует изменения, уведомляет пользователя. Вынесено из LoadEstimate для повторного использования
@@ -675,7 +700,7 @@ begin
   Q.QExecSql('update estimates set dt_changed_any = :dt$d where id = :id_estimate$i', [Now, IdEstimate]);
 end;
 
-function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False): Integer;
+function TOrders.LoadEstimate(IdOrder, IdOrderItem, IdStdItem: Variant; OneItem: Boolean = True; QntChanged: Boolean = False; Silent: Boolean = False; AModal: Boolean = False; ForceEstimateFromStdItem: Boolean = False; ASyncOrderItemAfterSave: Integer = 0; AOrderContextCaption: string = ''): Integer;
 //загружаем смету для изделия в заказе либо стандартного изделия
 //смета грузится из файла для стандартного изделия, на основании наименования изделия для доп. комплектации (стандартной и нет),
 //на основании сметы, уже загруженной для изделия в справочнике, в случае вызова для стандартного изделия в заказе
@@ -804,7 +829,16 @@ begin
     if (not IsOrItemStd) and (not ForceEstimateFromStdItem) and (ParentIdStdItem <> null) and (S.NInt(OrderIdUchet) >= cOrderNew26TypeID) then begin
       case S.NInt(Q.QLoadValue('select std_item_type from orders where id = :id$i', [OrderIdUchet])) of
         STDITEM_TYPE_PRODUCTION: begin
-          Result := LoadEstimate(IdOrder, null, ParentIdStdItem, OneItem, False, Silent, AModal);
+          //передаём ЭТУ ЖЕ позицию заказа (S.NInt, т.к. IdOrderItem - Variant, а ASyncOrderItemAfterSave - Integer)
+          //как ASyncOrderItemAfterSave - см. комментарий к параметру: сразу после успешного сохранения самой
+          //сметы-эталона ApplyEstimateArray немедленно скопирует изменения и в собственную смету этой позиции
+          //заказа, не дожидаясь следующего сохранения заказа целиком (прежде синхронизация происходила только там)
+          //также передаём готовую строку с данными исходной позиции заказа (слеш/наименование/кол-во - те же
+          //переменные, что уже загружены выше по IdOrderItem) как AOrderContextCaption - см. комментарий к
+          //параметру - чтобы диалог редактирования смог показать в заголовке, к какой позиции заказа относится
+          //редактируемый эталон (см. также TFrmOGlstEstimate.PrepareForm - тот же формат надписи для просмотра)
+          Result := LoadEstimate(IdOrder, null, ParentIdStdItem, OneItem, False, Silent, AModal, False, S.NInt(IdOrderItem),
+            OrSlash + '    ' + OrItemName + '  [кол-во: ' + S.NSt(OrQnt) + ']');
           Exit;
         end;
         STDITEM_TYPE_SHIPMENT: LReadOnlyEstimate := True;
@@ -814,11 +848,17 @@ begin
       IsOrItemStd := True;
     if IsOrItemStd then begin
       ParentIdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id_std_item$i', [ParentIdStdItem]);
-      if not Silent then
-        if ParentIdEstimate = null then begin
+      //если сметы-эталона у стандартного изделия ещё нет - копировать реально нечего; раньше эта проверка
+      //срабатывала только в интерактивном режиме (not Silent), а при тихом вызове (см.
+      //TOrders.RefreshEstimatesToOrder) выполнение шло дальше, и ApplyEstimateArray всё равно создавала
+      //для позиции заказа пустую запись в estimates (с сегодняшней датой, но без единой позиции) - убрать
+      //её должна была p_DeleteFreeEstimate, но это не гарантировано (см. также правку isempty/wo_estimate
+      //и nvl в p_deletefreeestimate). теперь просто не создаём эту запись вообще, ни в тихом, ни в обычном режиме
+      if ParentIdEstimate = null then begin
+        if not Silent then
           MyWarningMessage('Смета к стандартному изделию к этой позиции заказа еше не загружена!');
-          Exit;
-        end;
+        Exit;
+      end;
       if not Silent then
         if (IdEstimate = null) and
            (MyQuestionMessage(
@@ -875,6 +915,7 @@ begin
   Ctx.Silent := Silent;
   Ctx.EstBefore := EstBefore;
   Ctx.EstLogSource := EstLogSource;
+  Ctx.SyncOrderItemAfterSave := ASyncOrderItemAfterSave;
 
   if not ((IsEstimateEmpty = 1) or IsOrItemStd or QntChanged) then begin
     //предварительно загрузим группы и единицы бкад - если грузится одна смета, то перечитываем, иначе читаем только если еще не загружен
@@ -897,7 +938,7 @@ begin
       AID := S.IIf(IdStdItem <> null, IdStdItem, IdOrderItem);
       Ctx.FileName := FileName;
       if AModal then begin
-        EstDlgChannelOpen(AID, True, LoadEstimateEditArray(IdEstimate), '', nil);
+        EstDlgChannelOpen(AID, True, LoadEstimateEditArray(IdEstimate), '', nil, AOrderContextCaption);
         MdiRes := TFrmOGedtEstimate.ShowModal2(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], S.IIf(LReadOnlyEstimate, fView, fEdit),
           AID, S.IIf(IdStdItem <> null, 1, 0));
         if (MdiRes.ModalResult = mrOk) and EstDlgChannelFind(AID, LEstChannel) then begin
@@ -936,7 +977,7 @@ begin
                 LChannel.ResultItems.GetValue(k, 'id_or_std_item')];
             EstDlgChannelClose(AID);
             Orders.ApplyEstimateArray(Ctx, LocalEst);
-          end);
+          end, AOrderContextCaption);
         TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], S.IIf(LReadOnlyEstimate, fView, fEdit),
           AID, S.IIf(IdStdItem <> null, 1, 0));
         Result := 1; //диалог открыт немодально; реальный результат сохранения будет позже, асинхронно
@@ -954,6 +995,31 @@ begin
   Result := ApplyEstimateArray(Ctx, Est);
   IdEstimate := Ctx.IdEstimate; //мог быть назначен при создании новой сметы
 {*)}
+end;
+
+function TOrders.ResolveEstimateDisplayTarget(AIdOrderItem: Variant; out AIdStdItem: Variant): Boolean;
+//см. комментарий к объявлению - копия условия редиректа для П из LoadEstimate (IdOrderItem<>null branch),
+//но только для определения ЦЕЛИ ПРОСМОТРА - никаких действий с БД не производит и Silent-параметра не имеет
+var
+  va1: TVarDynArray;
+  IsOrItemStd: Boolean;
+  ParentIdStdItem, OrderIdUchet: Variant;
+begin
+  Result := False;
+  AIdStdItem := null;
+  if AIdOrderItem = null then
+    Exit;
+  va1 := Q.QLoadRow('select std, id_std_item, id_order from v_order_items where id = :id$i', [AIdOrderItem]);
+  if Length(va1) = 0 then
+    Exit;
+  IsOrItemStd := va1[0] = 1;
+  ParentIdStdItem := va1[1];
+  OrderIdUchet := va1[2];
+  if (not IsOrItemStd) and (ParentIdStdItem <> null) and (S.NInt(OrderIdUchet) >= cOrderNew26TypeID) then
+    if S.NInt(Q.QLoadValue('select std_item_type from orders where id = :id$i', [OrderIdUchet])) = STDITEM_TYPE_PRODUCTION then begin
+      Result := True;
+      AIdStdItem := ParentIdStdItem;
+    end;
 end;
 
 function TOrders.ApplyEstimateArray(var Ctx: TEstimateApplyContext; const Est: TVarDynArray2): Integer;
@@ -1063,10 +1129,25 @@ begin
       then MyWarningMessage('Смета ' + S.IIfStr(Ctx.IdOrderItem <> null, 'к изделию "' + Ctx.OrName + '" ') + 'не загружена!')
   end
   else begin
-    //залогируем изменения состава сметы (пересчет количества по QntChanged - не логируем, см. комментарий к LoadEstimate)
-    if not Ctx.QntChanged then
+    //залогируем изменения состава сметы (пересчет количества по QntChanged - не логируем, см. комментарий к LoadEstimate).
+    //если смета в итоге оказалась пустой и её только что удалила отработавшая выше p_DeleteFreeEstimate (типичная
+    //ситуация при копировании из ещё не заполненной вручную сметы-эталона нестандартного изделия новых (26)
+    //заказов, см. LoadEstimate/ForceEstimateFromStdItem/RefreshEstimatesToOrder - пока пользователь ни разу не
+    //отредактировал смету стандартного изделия -1, копировать из неё в позицию заказа реально нечего) - логировать
+    //нечего, а попытка вставить строку в estimate_change_log с айди уже удалённой сметы упадёт по внешнему ключу
+    //(fk_estimate_change_log_est, ORA-02291 - "данные не найдены в справочнике")
+    if (not Ctx.QntChanged) and (Ctx.IdEstimate <> null) and
+       (Q.QLoadValue('select 1 from estimates where id = :id$i', [Ctx.IdEstimate]) = 1) then
       LogEstimateChange(Ctx.IdEstimate, S.IIf(Ctx.EstBefore.Count = 0, '0', Ctx.EstLogSource),
         BuildEstimateDiffText(Ctx.EstBefore, LoadEstimateArray(Ctx.IdEstimate)));
+    //это было сохранение сметы-эталона нестандартного изделия типа П, инициированное редактированием конкретной
+    //позиции заказа (см. LoadEstimate/ASyncOrderItemAfterSave и редирект для П) - сразу скопируем изменения и в
+    //собственную смету именно этой позиции заказа, тем же вызовом, каким это делает штатная синхронизация при
+    //сохранении заказа (см. TOrders.RefreshEstimatesToOrder) - не дожидаясь, пока заказ пересохранят целиком.
+    //если сама смета-эталон только что оказалась пустой и была удалена выше (p_DeleteFreeEstimate) - LoadEstimate
+    //ниже тихо ничего не сделает (см. её собственную проверку ParentIdEstimate = null)
+    if Ctx.SyncOrderItemAfterSave <> 0 then
+      LoadEstimate(null, Ctx.SyncOrderItemAfterSave, null, False, False, True, False, True);
     if not Ctx.Silent then begin
       //Только для подгрузки нестандартной сметы по заказу - сформируем отправку сметы в каталог заказа и по почте
       if not ((Ctx.IsEstimateEmpty = 1) or Ctx.IsOrItemStd or Ctx.QntChanged or (Ctx.IdStdItem <> null) or not Ctx.OneItem) then begin

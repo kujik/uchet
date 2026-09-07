@@ -6,15 +6,23 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, DBGridEhGrouping, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
   MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd, ADODataDriverEh, MemTableEh, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math,
   Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh, uFrmBasicGrid2,
+  uLabelColors
   ;
 
 type
   TFrmOGlstEstimate = class(TFrmBasicGrid2)
+    lblCapt1: TLabel;  //шапка (см. pnlTop в .dfm) - только для FormDoc = myfrm_R_Estimate (см. PrepareForm);
+    lblCapt2: TLabel;  //для myfrm_R_AggEstimate шапка по-прежнему через Frg1.CreateAddControls(cntLabel), как раньше
     procedure DBGridEh1CanUserSelectRow(Grid: TCustomDBGridEh; var CanSelectRow: Boolean);
   private
     FCapt: string;
     FIsPrepared: Boolean;
+    //если для просмотра передана позиция заказа (AddParam[0]), но по ней сработал редирект на смету-эталон
+    //нестандартного изделия типа П нового (26) формата (см. TOrders.ResolveEstimateDisplayTarget) - здесь
+    //хранится id этого стандартного изделия (or_std_items, группа -1), чтобы Frg1OnSetSqlParams подставил
+    //именно его, а не id самой (пустой/неактуальной) позиции заказа
+    FIdStdItemForEstimate: Variant;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
     procedure Frg1SelectedDataChange(var Fr: TFrDBGridEh; const No: Integer); override;
@@ -32,10 +40,18 @@ var
 implementation
 
 uses
-  uPrintReport
+  uPrintReport,
+  uOrders,
+  uFrmMain,
+  uFrmOGedtEstimate
   ;
 
 {$R *.dfm}
+
+const
+  //кастомный (отрицательный, по аналогии с cBtnCreateSemiproduct в uFrmOGedtEstimate.pas - чтобы не путать с
+  //положительными framework-овыми mbt*) тег кнопки "Альтернативный просмотр" (см. PrepareForm/Frg1ButtonClick)
+  cBtnAltView = 1001;
 
 function TFrmOGlstEstimate.PrepareForm: Boolean;
 var
@@ -43,10 +59,26 @@ var
   va: TVarDynArray;
   va2: TVarDynArray2;
   i, j: Integer;
+  LCapt1, LCapt2: string;
 begin
   FCapt := '';
+  //шапка (нередактируемая, см. pnlTop в .dfm) - раскрашенные статичные метки lblCapt1/lblCapt2, по аналогии с
+  //uFrmOGedtDistributeQnt.pas (там же комментарий, почему не через FTitleTexts/CreateLabelColors - было
+  //нечитаемо); используется только для FormDoc = myfrm_R_Estimate (см. ниже) - раньше вся информация (слеш
+  //заказа, наименование изделия, кол-во, признак сметы-эталона) шла ОДНОЙ строкой без расцветки через общий
+  //для обоих FormDoc динамический Frg1.CreateAddControls(cntLabel, FCapt, ...) - для myfrm_R_AggEstimate этот
+  //механизм оставлен без изменений (см. ниже), поэтому саму шапку скрываем/показываем по FormDoc (06.09.2026)
+  pnlTop.Visible := FormDoc = myfrm_R_Estimate;
+  lblCapt1.Caption := '';
+  lblCapt2.Caption := '';
   Frg1.Options := Frg1.Options + [myogLoadAfterVisible, myogIndicatorCheckBoxes, myogMultiSelect];
-  Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtPrint],[],[mbtGridSettings],[],[mbtCtlPanel]]);
+  //кнопка "Альтернативный просмотр" (см. Frg1ButtonClick) - только для просмотра сметы по одному слешу
+  //(FormDoc = myfrm_R_Estimate: позиция заказа или отдельно стандартное изделие), а не общей сметы по
+  //заказу/заказам (myfrm_R_AggEstimate, там понятия "один слеш" нет) - открывает тот же диалог, что и для
+  //редактирования (uFrmOGedtEstimate), но в режиме просмотра (fView) - см. общий комментарий у Frg1ButtonClick
+  if FormDoc = myfrm_R_Estimate
+    then Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtPrint],[],[mbtGridSettings],[],[mbtCtlPanel],[],[-cBtnAltView, True, 'Альтернативный просмотр']])
+    else Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtPrint],[],[mbtGridSettings],[],[mbtCtlPanel]]);
   Frg1.Opt.SetGrouping(['groupname'], [], [clGradientActiveCaption], True);
   if FormDoc = myfrm_R_Estimate then begin
     Caption := 'Смета';
@@ -65,15 +97,41 @@ begin
       ['0 as chb','_chb','60']
     ]);
     Frg1.Opt.SetTable('v_estimate_add');  //v_estimate_prices
+    FIdStdItemForEstimate := null;
     if AddParam[0] <> null then begin
-      Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
-      FCapt := Q.QLoadValue('select slash || ''    '' || itemname || ''  [кол-во: '' || qnt || '']'' from v_order_items where id = :id$i', [AddParam[0]]);
+      //раньше все три поля (слеш, наименование, кол-во) грузились одним QLoadValue сразу в готовую строку
+      //FCapt - для шапки это и было причиной "все на одной строке"; теперь грузим их по отдельности, чтобы
+      //разнести по двум меткам (см. ниже), а FCapt (для печати - см. Print) по-прежнему собираем целиком
+      va := Q.QLoadRow('select slash, itemname, qnt from v_order_items where id = :id$i', [AddParam[0]]);
+      FCapt := va[0] + '    ' + va[1] + '  [кол-во: ' + S.NSt(va[2]) + ']';
       IsNstd := Q.QLoadValue('select nstd from v_order_items where id = :id$i', [AddParam[0]]) = 1;
+      //заказ (слеш) - отдельной строкой (lblCapt1), изделие и количество - отдельной (lblCapt2)
+      LCapt1 := '$FF00FFЗаказ, слеш:$FF0000 ' + va[0];
+      LCapt2 := '$000000Изделие:$FF0000 ' + va[1] + '$000000    Кол-во:$FF0000 ' + S.NSt(va[2]);
+      //для нестандартного изделия типа П нового (26) формата содержательная смета лежит в эталоне
+      //стандартного изделия, а не в копии самой позиции заказа (см. TOrders.LoadEstimate, редирект для П,
+      //и TOrders.ResolveEstimateDisplayTarget) - без этой проверки просмотр показывал бы пустую смету
+      if Orders.ResolveEstimateDisplayTarget(AddParam[0], FIdStdItemForEstimate) then begin
+        Frg1.Opt.SetWhere('where deleted = 0 and id_std_item = :id$i /*ANDWHERE*/');
+        //текст сознательно НЕ раскрывает архитектуру хранения (эталон/группа -1 и т.п.) - пользователю
+        //это неинтересно и только запутает (см. правку 06.09.2026); слеш/наименование уже показаны выше
+        //(LCapt1/LCapt2), поэтому здесь только сама отметка, без повтора контекста
+        FCapt := FCapt + '  (к производственному (отгрузочному) изделию заказа)';
+        //признак редиректа - отдельным, заметным (красным) хвостом первой строки шапки
+        LCapt1 := LCapt1 + '$0000FF    (к производственному (отгрузочному) изделию заказа)';
+      end
+      else
+        Frg1.Opt.SetWhere('where deleted = 0 and id_order_item = :id$i /*ANDWHERE*/');
+      lblCapt1.SetCaption2(LCapt1);
+      lblCapt2.SetCaption2(LCapt2);
     end;
     if AddParam[1] <> null then begin
       Frg1.Opt.SetWhere('where deleted = 0 and id_std_item = :id$i /*ANDWHERE*/');
       FCapt := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [AddParam[1]]);
       IsNstd := False;
+      //нет позиции заказа - показывать нечего, кроме наименования самого стандартного изделия; вторую
+      //строку (lblCapt2) не используем вовсе (она уже очищена выше)
+      lblCapt1.SetCaption2('$FF00FFСтандартное изделие:$FF0000 ' + FCapt);
     end;
     //Frg1.CreateAddControls('1', cntComboLK, 'Площадка:', 'CbArea', '', 80, yrefC, 80);
     Frg1.InfoArray:=[];
@@ -121,7 +179,10 @@ begin
       FCapt := A.Implode(A.VarDynArray2ColToVD1(va2, 0), ', ') + S.IIf(j <= 0, '', ' и еще ' + IntToStr(j));
     end;
   end;
-  Frg1.CreateAddControls('1', cntLabel, FCapt, 'LbCapt', '', 5, yrefT, 3000);
+  //для myfrm_R_Estimate шапка теперь показывается через lblCapt1/lblCapt2 в pnlTop (см. выше) - этот
+  //динамический ярлык внутри грида больше не дублирует ее; для myfrm_R_AggEstimate поведение не меняем
+  if FormDoc = myfrm_R_AggEstimate then
+    Frg1.CreateAddControls('1', cntLabel, FCapt, 'LbCapt', '', 5, yrefT, 3000);
   Frg1.CreateAddControls('1', cntCheck, 'Показать по группам', 'ChbGrouping', '', 5, yrefB, 200);
   if True then begin
     Frg1.CreateAddControls('1', cntComboLK, 'Склад:', 'CbStock', '', 180, yrefB, 170);
@@ -155,6 +216,23 @@ begin
   end
   else if Tag = mbtPrint then begin
     Print;
+    Handled := True;
+  end
+  else if Tag = cBtnAltView then begin
+    //"Альтернативный просмотр" - кнопка добавлена только для FormDoc = myfrm_R_Estimate (см. PrepareForm),
+    //поэтому здесь ID/AddParam всегда однозначны. Открываем ТОТ ЖЕ диалог, что и для полноценного
+    //редактирования сметы (uFrmOGedtEstimate) - но в режиме fView (только чтение, без блокировки документа -
+    //см. Q.DBLock/FormDbLock там же), напрямую, в обход TOrders.LoadEstimate/бокового канала (EstDlgChannel) -
+    //никакой загрузки массива и сохранения тут не требуется, диалог сам прочитает текущий состав сметы из БД
+    //(см. TFrmOGedtEstimate.PrepareForm, ветка FUseInputArray = False). Если для просмотра сработал редирект на
+    //смету-эталон нестандартного изделия (см. FIdStdItemForEstimate/Frg1OnSetSqlParams выше) - открываем именно
+    //ее (AddParam = 1), а не пустую/неактуальную позицию заказа - иначе увидели бы не то же самое, что в гриде
+    if FIdStdItemForEstimate <> null then
+      TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fView, FIdStdItemForEstimate, 1)
+    else if AddParam[0] <> null then
+      TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fView, AddParam[0], 0)
+    else if AddParam[1] <> null then
+      TFrmOGedtEstimate.Show(FrmMain, myfrm_Dlg_EdtEstimate, [myfoDialog, myfoSizeable, myfoMultiCopy], fView, AddParam[1], 1);
     Handled := True;
   end
   else
@@ -253,9 +331,13 @@ begin
     Fr.ADODataDriverEh1.SelectSQL.Text := StringReplace(Fr.ADODataDriverEh1.SelectSQL.Text, 'sum(qnt+0)', 'sum(qnt_itm+0)', []);
   end;
   if FormDoc = myfrm_R_Estimate then
-    if AddParam[0] <> null
-      then Fr.SetSqlParameters('id$i', [AddParam[0]])
-      else Fr.SetSqlParameters('id$i', [AddParam[1]]);
+    if FIdStdItemForEstimate <> null
+      //редирект на смету-эталон нестандартного изделия (см. PrepareForm) - подставляем id эталона,
+      //а не исходной (пустой/неактуальной) позиции заказа из AddParam[0]
+      then Fr.SetSqlParameters('id$i', [FIdStdItemForEstimate])
+      else if AddParam[0] <> null
+        then Fr.SetSqlParameters('id$i', [AddParam[0]])
+        else Fr.SetSqlParameters('id$i', [AddParam[1]]);
   if (FormDoc = myfrm_R_AggEstimate) and (Length(TVarDynArray(AddParam)) = 1) then begin
     v := AddParam[0];
     Fr.SetSqlParameters('id_order$i', [AddParam[0]]);

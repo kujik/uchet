@@ -234,11 +234,20 @@ type
     procedure Verify(Sender: TObject; onInput: Boolean = False); override;
     function  VerifyAdd(Sender: TObject; onInput: Boolean = False): Boolean; override;
     function  SetTaskForServer: Boolean;
+    //решает, нужно ли в ЭТОМ сохранении (пере)создавать и отправлять паспорт заказа - см. общий комментарий
+    //у реализации и у SetTaskForServer/PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED
+    function  NeedPassportExport: Boolean;
     procedure GetFrgItemsRowChanges;
     function  GetOrderChangedfieldNames: string;
+    //аналогично GetOrderChangedfieldNames, но для табличной части (тег 'chg' у колонок грида изделий) - см.
+    //комментарий у реализации про особый случай добавления/удаления позиций ('*')
+    function  GetItemsChangedFieldNames: string;
     procedure HighlihtPreviousChangedControls;
     procedure HighlihtCurrentChangedControls;
     function  ChangeOrderStatus(Tag: Integer): Integer;
+    //обработка кнопки "Удалить заказ" (mbtOrderDelete) для заказа в статусе Оформление (ORDER_ID_STATUS_DRAFT) -
+    //см. общий комментарий у реализации и у TitleButtonClick/ChangeOrderStatus (там же - остальные статусы)
+    procedure DeleteOrderPhysically;
     procedure ReloadRoutesForOrderItems;
     procedure ReloadPricesForOrderItems;
     procedure SetFrgItemsFieldsEditabled;
@@ -335,6 +344,13 @@ const
   mbtOrderReloadRoutes = 1003;
   mbtOrderDelete = 1004;
   mbtOrderEditAll = 1005;
+
+  //если False - паспорт заказа (см. SetTaskForServer/NeedPassportExport) экспортируется и отправляется в
+  //задаче на сервер при КАЖДОМ сохранении заказа в статусе Запущен, независимо от того, изменились ли поля,
+  //задействованные в шаблоне паспорта (см. GetXlsxTemplateTags, uExcel2.pas) - откат к прежнему безусловному
+  //поведению (как в TDlg_Order), на случай проблем с определением набора тегов шаблона. На переход САМОГО
+  //статуса в Запущен эта константа не влияет - паспорт создаётся и отправляется в любом случае (05.09.2026)
+  PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED = False;
 
 const
   clMyChangesColor = $A0FFFF; // RGB(255, 255, 100)
@@ -801,6 +817,25 @@ begin
   for i:= 0 to High(LFields) do
     S.ConcatStP(LFieldsSt, Copy(LFields[i][0].AsString, 1, Pos('$', LFields[i][0].AsString) - 1), ', ');
   Q.QLoad('select ' + LFieldsSt + ' from v_order_items where id_order = :id_order$i order by pos', [S.IIf(FIdSource <> 0, FIdSource, ID)], FOrderItemsOld);
+  //если табличная часть загружена НЕ из этого же заказа, а из ЧУЖОГО источника (FIdSource<>0 - копирование
+  //существующего заказа и создание заказа из шаблона, оба идут через Mode=fCopy, см. FIdSource := ID.AsInteger
+  //выше; либо автосоздание отгрузочного заказа на основании производственного, см. FCreateShipmentFromProductionId
+  //ниже и LoadOrderComboBoxes) - в FOrderItemsOld оказываются РЕАЛЬНЫЕ id позиций ЧУЖОГО заказа (source).
+  //SaveOrderItems решает, вставлять новую строку или обновлять существующую, только по значению id (см.
+  //MY_IDS_INSERTED_MIN/Q.QSave в этом модуле) - и если строка не была вручную изменена (обычная ситуация при
+  //копировании/создании из шаблона, если пользователь не тронул позицию), она сочла бы её "неизменной строкой
+  //ЧУЖОГО заказа" и просто пропустила бы сохранение вовсе (см. условие Continue в SaveOrderItems), оставив
+  //id_order этой строки как есть (у заказа-источника) - в результате позиция молча пропадает из СОЗДАВАЕМОГО
+  //заказа (сам заказ-источник при этом не портится - его данные просто не трогаются, но нужная позиция в новый
+  //заказ так и не попадает). подменяем id на заведомо новый, по тому же правилу что и для строк, добавленных
+  //вручную через AddRow/InsertRow (см. TFrDBGridEh, MY_IDS_INSERTED_MIN + порядковый номер добавления с 1, само
+  //граничное значение без добавки не используется - см. его сравнение через ">" (не ">=") в SaveOrderItems при
+  //постановке в очередь синхронизации смет/операций планирования) - тогда независимо от того, правились ли поля
+  //вручную, строка всегда будет сохранена как INSERT новой, самостоятельной позиции ЭТОГО заказа, а заказ-источник
+  //останется нетронутым
+  if FIdSource <> 0 then
+    for i := 0 to FOrderItemsOld.High do
+      FOrderItemsOld.SetValue(i, 'id', MY_IDS_INSERTED_MIN + i + 1);
   //при автоматическом создании отгрузочного заказа на основании производственного (см. FCreateShipmentFromProductionId,
   //LoadOrderComboBoxes) состав только что скопирован из производственного заказа как есть (FIdSource) - для
   //ПЕРВОГО заказа серии количество по позициям должно остаться как в производственном, а для КАЖДОГО СЛЕДУЮЩЕГО -
@@ -821,20 +856,6 @@ begin
       var LShippedIdx := LAlreadyShipped.FindFirst('id_std_item', FOrderItemsOld.G(i, 'id_std_item'));
       if LShippedIdx >= 0 then
         FOrderItemsOld.SetValue(i, 'qnt', Max(0, FOrderItemsOld.G(i, 'qnt').AsFloat - LAlreadyShipped.G(LShippedIdx, 'qnt').AsFloat));
-      //строки выше загружены как есть из производственного заказа (FIdSource) и несут его РЕАЛЬНЫЕ id позиций
-      //(order_items.id). SaveOrderItems решает, вставлять новую строку или обновлять существующую, только по
-      //значению id (см. MY_IDS_INSERTED_MIN/Q.QSave в этом модуле) - и если строка не была вручную изменена (что
-      //для авто-создания обычно так и есть), она сочла бы её "неизмененной строкой производственного заказа" и
-      //при сохранении выполнила бы UPDATE по этому же id, переустановив ему id_order = айди СОЗДАВАЕМОГО
-      //отгрузочного заказа - т.е. реально переставила бы саму позицию производственного заказа в отгрузочный, а
-      //не скопировала бы её. именно это и вызывало "исчезновение" изделий из производственного заказа. подменяем
-      //id на заведомо новый, по тому же правилу что и для строк, добавленных вручную через AddRow/InsertRow (см.
-      //TFrDBGridEh, MY_IDS_INSERTED_MIN + порядковый номер добавления с 1, само граничное значение без добавки
-      //не используется - см. его сравнение через ">" (не ">=") в SaveOrderItems при постановке в очередь
-      //синхронизации смет/операций планирования) - тогда независимо от того, правились ли поля вручную, строка
-      //всегда будет сохранена как INSERT новой, самостоятельной позиции ЭТОГО заказа, а состав производственного
-      //заказа останется нетронутым
-      FOrderItemsOld.SetValue(i, 'id', MY_IDS_INSERTED_MIN + i + 1);
     end;
   end;
   FrgItems.SetInitData(FOrderItemsOld);
@@ -1963,6 +1984,44 @@ begin
   end;
 end;
 
+procedure TFrmOWOrder.DeleteOrderPhysically;
+//см. общий комментарий у объявления и у TitleButtonClick (Tag = mbtOrderDelete, LStatus = ORDER_ID_STATUS_DRAFT
+//- заказ ещё в оформлении, не запущен в работу). В отличие от остальных действий заголовка, это не смена
+//статуса с последующим обычным Save, а прямое физическое удаление записи заказа из БД - полагаемся на
+//каскадные внешние ключи (on delete cascade) у order_items, estimates (по id_order_item), order_changes,
+//order_complaints, or_payments, orders_add и т.п. - при удалении orders все зависимые записи должны
+//удалиться сами. Если по каким-то данным этого заказа каскад не настроен (см., например, некаскадные
+//ссылки j_tasks/order_item_route на order_items) - delete упадёт по внешнему ключу, транзакция откатится
+//(см. Q.QCommitOrRollback и пакетный режим QBeginTrans(True)), сообщение об ошибке покажет сам QExecSql -
+//в этом случае просто остаёмся в диалоге, ничего не закрываем.
+begin
+  if MyQuestionMessage('Заказ будет удален безвозвратно.'#13#10'Продолжить?') <> mrYes then
+    Exit;
+  Q.QBeginTrans(True);
+  Q.QExecSql('delete from orders where id = :id$i', [ID]);
+  if not Q.QCommitOrRollback then
+    Exit;
+  //поставим серверному процессу задачу на удаление папки заказа в архиве на диске (если она там была
+  //создана) - аналогично Mode = fDelete в старом диалоге D_Order.pas (SetTask). AutoRun=False у
+  //CreateTaskRoot - задачу финализируем отдельным вызовом FinalizeTaskDir ниже (05.09.2026)
+  var LOrderPath := F.GetProp('path').AsString;
+  var LAddr := S.NSt(Q.QLoadValue('select addresses from adm_mailing where id = :i$i', [1]));
+  var LSubj := 'Удален заказ ' + LOrderPath;
+  var LTaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [
+    ['directory', LOrderPath],
+    ['in_archive', F.GetProp('in_archive')],
+    ['year', F.GetProp('year')],
+    ['to', LAddr],
+    ['subject', LSubj],
+    ['body', LSubj]
+  ], False, False);
+  Tasks.FinalizeTaskDir(Module.GetPath_Tasks + '\' + LTaskDir);
+  //успешно удалено - закрываем диалог, как и при обычном успешном сохранении (см. TitleButtonClick)
+  Self.ModalResult := mrOk;
+  FOpt.RequestWhereClose := cqNone;
+  Close;
+end;
+
 function TFrmOWOrder.ChangeOrderStatus(Tag: Integer): Integer;
 //изменение статуса заказа
 //фактически - действия по нажатию кнопки в заголовке либо из меню Действия
@@ -2107,6 +2166,18 @@ begin
         Exit;
       FEditAll := True;
     end;
+  end
+  else if (Tag = mbtOrderDelete) then begin
+    //физическое удаление (для заказов в оформлении, ORDER_ID_STATUS_DRAFT) обрабатывается ОТДЕЛЬНО, в
+    //TitleButtonClick, до вызова ChangeOrderStatus (см. там) - сюда с Tag=mbtOrderDelete и LStatus=DRAFT
+    //мы никогда не попадаем. Здесь - только "мягкое" удаление (пометка статусом) для заказа в статусе
+    //Остановлен, и заглушка для всех остальных статусов, для которых удаление недопустимо.
+    if LStatus = ORDER_ID_STATUS_STOPPED then begin
+      if MyQuestionMessage('Заказ будет помечен как "Удаленный", и останется доступным для просмотра.'#13#10'Продолжить?') = mrYes then
+        Result := ORDER_ID_STATUS_DELETED;
+    end
+    else
+      MyInfoMessage('Действие недопустимо для этого заказа!');
   end;
 
   if Result >= 0 then F.SetProp('id_status', Result);  //!отладка
@@ -2183,6 +2254,14 @@ begin
   //специально обработаем кнопку Закрыть
   if Tag = mbtClose then begin
     btnCancelClick(nil);
+  end
+  //специально обработаем "Удалить заказ" для заказа в оформлении (ORDER_ID_STATUS_DRAFT) - это ФИЗИЧЕСКОЕ
+  //удаление записи заказа из БД (см. DeleteOrderPhysically), а не смена статуса с последующим обычным Save,
+  //поэтому в общий механизм ChangeOrderStatus/Save (см. ниже) не идёт вовсе. Для остальных статусов (в
+  //частности, Остановлен - "мягкое" удаление пометкой статуса) mbtOrderDelete обрабатывается ниже, ветку
+  //см. в ChangeOrderStatus, обычным порядком.
+  else if (Tag = mbtOrderDelete) and (F.GetProp('id_status').AsInteger = ORDER_ID_STATUS_DRAFT) then begin
+    DeleteOrderPhysically;
   end
   //остальные кнопки
   else begin
@@ -2292,7 +2371,7 @@ begin
   edt_reglament.ReadOnly := True;
   edt_complaints.ReadOnly := True;
   dedt_dt_start.ControlLabel.Caption := S.IIfStr(A.InArray(
-    F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_REJECTED]), 'Факт', 'План') + '. дата'#13#10'запуска';
+    F.GetProp('id_status').AsInteger, [ORDER_ID_STATUS_DRAFT, ORDER_ID_STATUS_APPROVED, ORDER_ID_STATUS_REJECTED]), 'План', 'Факт') + '. дата'#13#10'запуска';
 end;
 
 procedure TFrmOWOrder.SetEditButtons;
@@ -2587,7 +2666,12 @@ begin
   end
   else begin
     FrgItems.SetValue('id_std_item', null);
-    FrgItems.SetValue('wo_estimate', null);
+    //по умолчанию у нового нестандартного изделия смета есть (просто ещё не загружена) - 0, как и у
+    //стандартных изделий (or_std_items.wo_estimate default 0); null здесь ранее приводил к тому, что
+    //этот же null уходил в order_items.wo_estimate, а оттуда - в estimates.isempty при автоматическом
+    //создании сметы позиции заказа (см. TOrders.LoadEstimate/ApplyEstimateArray) - из-за чего
+    //p_deletefreeestimate (isempty <> 1) не удалял такую пустую смету при null (см. также правку там же)
+    FrgItems.SetValue('wo_estimate', 0);
     FrgItems.SetValue('price_base', null);
   end;
   if LFromSgp or LWoEstimate then begin
@@ -3151,12 +3235,22 @@ begin
       IsNameChanged := OrderItems.GetValue(i, 'nstd') = 1;
     if not (IsRowChanged or IsNameChanged or (Length(FrgItems.EditData.IdsDeleted) > 0) or (LId >= MY_IDS_INSERTED_MIN)) then
       Continue;
-    if IsNameChanged then begin
+    //для отгрузочного заказа нового формата id_std_item нестандартного изделия ВСЕГДА должен указывать на
+    //группу -2 этого наименования (см. p_get_or_std_item_id_nonstandard_shipment) - даже если имя позиции
+    //не менялось. Типичный случай, когда это важно - копирование состава из производственного заказа при
+    //автосоздании отгрузочного на его основании (см. FCreateShipmentFromProductionId, PrepareFrgItems):
+    //строка копируется как отдельная НОВАЯ позиция (LId >= MY_IDS_INSERTED_MIN), но т.к. имя при этом не
+    //меняется, IsNameChanged = False, и БЕЗ этой проверки id_std_item ушёл бы в БД как есть - тем же, что
+    //был у позиции производственного заказа, т.е. группа -1 (эталон производства), а не -2 (эталон
+    //отгрузки) - такая позиция навсегда осталась бы привязана к чужой производственной группе
+    var LForceResolveShpNstd := FNew26Format and (S.NInt(F.GetProp('std_item_type')) = STDITEM_TYPE_SHIPMENT) and (OrderItems.GetValue(i, 'nstd') = 1);
+    if IsNameChanged or LForceResolveShpNstd then begin
       //создадим (или получим существующую) запись для нестандартного изделия в or_std_items;
       //для новых заказов П/ПФ (FNew26Format, std_item_type) - через новую процедуру
       //p_create_or_std_item_nonstandard_new_format с p_create=1 (создаёт запись сразу в нужных
       //группах -1/-2/-3, см. её описание в d_orders.sql); для новых заказов О - см. отдельную ветку ниже
-      //(для О своё нестандартное изделие создавать нельзя); для старых заказов (всех типов) -
+      //(для О своё нестандартное изделие создавать нельзя, только резолвим id_std_item в группу -2, в т.ч.
+      //принудительно - см. LForceResolveShpNstd); для старых заказов (всех типов) -
       //как раньше, через старую p_CreateOrStdItem_Nstd
       if FNew26Format and (S.NInt(F.GetProp('std_item_type')) in [STDITEM_TYPE_PRODUCTION, STDITEM_TYPE_SEMIPRODUCT]) then begin
         var LNewOrStdItem26: TVarDynArray := Q.QCallStoredProc(
@@ -3189,6 +3283,15 @@ begin
         var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);
         OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
       end;
+      //NewValues сформирован ВЫШЕ (в цикле по OrderItems.FieldsCount), ДО того как здесь было получено/создано
+      //актуальное id_std_item для нового или переименованного нестандартного изделия - OrderItems.SetValue
+      //меняет только саму структуру OrderItems, а не уже снятый в NewValues снимок значений. без этой правки
+      //в order_items ушло бы старое значение id_std_item (обычно null для только что добавленной строки), из-за
+      //чего v_order_items.itemname/name/fullitemname (они берутся из or_std_items по id_std_item) оказывались
+      //бы null. точечно обновляем позицию id_std_item в NewValues актуальным значением из OrderItems.
+      var LIdStdItemPos := A.PosInArray('id_std_item', FieldNames);
+      if LIdStdItemPos >= 0 then
+        NewValues[LIdStdItemPos] := OrderItems.GetValue(i, 'id_std_item');
     end;
     //сохраним строку в бд
     var Res := Q.QSave(S.IIf(LId >= MY_IDS_INSERTED_MIN, 'i', 'u'), 'order_items', '', Fields.Implode(';') + ';id_order$i', NewValues + [ID]);
@@ -3376,6 +3479,50 @@ begin
   );
 end;
 
+function TFrmOWOrder.NeedPassportExport: Boolean;
+//решает, нужно ли в ЭТОМ сохранении (пере)создавать и отправлять паспорт заказа (см. общий комментарий у
+//константы PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED). Вызывается из SetTaskForServer, когда статус
+//заказа (уже новый, после сохранения) равен ORDER_ID_STATUS_STARTED:
+// - если это ПЕРЕХОД в Запущен (был другой статус, стал Запущен) - паспорт нужен всегда;
+// - если заказ УЖЕ был в Запущен и остается в нем - паспорт нужен, только если константа
+//   PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED = False (проверка отключена), либо среди изменившихся
+//   полей заголовка (GetOrderChangedfieldNames) или таблицы изделий (GetItemsChangedFieldNames) есть хотя бы
+//   одно, встречающееся среди тегов шаблона паспорта (Module.GetReportFileXlsx('ПЗ'), см. GetXlsxTemplateTags,
+//   uExcel2.pas); если тегов шаблона получить не удалось (например, файл шаблона не найден) - на всякий
+//   случай считаем, что паспорт нужен. Особое значение '*' в списке изменившихся полей (добавление/удаление
+//   позиций в таблице изделий - см. GetItemsChangedFieldNames) считается изменением всегда (05.09.2026)
+var
+  LTemplateTags, LChangedFields: TVarDynArray;
+  LField: Variant;
+begin
+  //переход в Запущен из другого статуса - создаем и отправляем в любом случае
+  if (F.GetPropB('id_status') <> ORDER_ID_STATUS_STARTED) and (F.GetProp('id_status') = ORDER_ID_STATUS_STARTED) then begin
+    Result := True;
+    Exit;
+  end;
+  Result := True;
+  if not PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED then
+    Exit;
+  LTemplateTags := GetXlsxTemplateTags(Module.GetReportFileXlsx('ПЗ'));
+  //не удалось получить теги шаблона (например, файл не найден) - на всякий случай создаем/отправляем
+  if Length(LTemplateTags) = 0 then
+    Exit;
+  LChangedFields := A.ExplodeV(GetOrderChangedfieldNames, ',') + A.ExplodeV(GetItemsChangedFieldNames, ',');
+  Result := False;
+  for LField in LChangedFields do begin
+    if VarToStr(LField) = '' then
+      Continue;
+    if VarToStr(LField) = '*' then begin
+      Result := True;
+      Break;
+    end;
+    if A.PosInArray(VarToStr(LField), LTemplateTags, True) >= 0 then begin
+      Result := True;
+      Break;
+    end;
+  end;
+end;
+
 function TFrmOWOrder.SetTaskForServer: Boolean;
 //создадим задачу для серверного процесса
 //статус заказа здесь уже будет новый
@@ -3453,11 +3600,7 @@ begin
   end;
   var LOrderPath := F.GetProp('path').AsString;
 {    if Mode = fDelete then begin
-      Subj := 'Удален заказ ' + LOrderPath;
-      if MyQuestionMessage('Удалить папку заказа на диске со всем содержимым?') = mrYes then
         TaskDir := Tasks.CreateTaskRoot(mytskopDeleteFromArchive, [['directory', LOrderPath], ['in_archive', F.GetProp('in_archive')], ['year', F.GetProp('year')], ['to', Addr], ['subject', Subj], ['body', Subj]], False, False)
-      else
-        TaskDir := Tasks.CreateTaskRoot(mytskopmail, [['to', Addr], ['subject', Subj], ['body', Subj]], False, False);
     end}
 
   Addr := '';
@@ -3501,6 +3644,13 @@ begin
     ['slashes', Slashes]
     ], False, False
   );
+  //создадим (пересоздадим) паспорт заказа во временном файле, если заказ в статусе Запущен и условия
+  //NeedPassportExport считают, что это нужно сделать именно в этом сохранении (см. общий комментарий у
+  //NeedPassportExport/PASSPORT_EXPORT_ONLY_IF_TEMPLATE_FIELDS_CHANGED). Если паспорт в этот раз не нужен -
+  //временного файла не будет, и следующий CopyFile его просто не найдет - тогда рассылка на сервере пройдет
+  //без вложения паспорта (компромисс, принятый вместо переделки серверного процесса - см. комментарий выше)
+  //!debug if (F.GetProp('id_status') = ORDER_ID_STATUS_STARTED) and NeedPassportExport then
+    Orders.ExportPassportToXLSX(ID, LOrderPath, False, True);
   //скопируем паспорт заказа из временного файла в каталог задачи
   CopyFile(pWideChar(Sys.GetWinTemp + '\' + LOrderPath + '.xlsx'), pWideChar(Module.GetPath_Tasks + '\' + TaskDir + '\Files\' + PspName), True);
   //удалим временный файл паспорта
@@ -3568,6 +3718,49 @@ end;
 function TFrmOWOrder.GetOrderChangedfieldNames: string;
 begin
   Result := F.GetProps('chg', fvtVName).Implode(',');
+end;
+
+function TFrmOWOrder.GetItemsChangedFieldNames: string;
+//возвращает объединенный (по всем строкам грида изделий) список уникальных имен полей (тег 'chg' у колонок),
+//которые фактически изменились - используется в NeedPassportExport для проверки пересечения изменившихся
+//полей с тегами шаблона паспорта (в шаблоне ПЗ одна строка таблицы, повторяющаяся для всех позиций, поэтому
+//одного объединенного по всем строкам списка достаточно). Особый случай - если позиции были добавлены или
+//удалены, состав самой таблицы меняется, а не только значения конкретных полей - в этом случае в результат
+//дополнительно добавляется фиктивное имя '*', чтобы NeedPassportExport в любом случае считал табличную часть
+//изменившейся, независимо от набора тегов шаблона (05.09.2026)
+var
+  i, j: Integer;
+  OrderItems: TNamedArr;
+  PosOld: Integer;
+  LId: Variant;
+  FieldNames, Res: TVarDynArray;
+  FieldName: string;
+begin
+  Res := [];
+  FieldNames := FrgItems.GetColumsProperties('chg', myogfpName);
+  OrderItems := FrgItems.ExportToNa('', False);
+  for i := 0 to OrderItems.High do begin
+    LId := OrderItems.G(i, 'id');
+    if LId >= MY_IDS_INSERTED_MIN then begin
+      if A.PosInArray('*', Res, True) < 0 then
+        Res := Res + ['*'];
+      Continue;
+    end;
+    PosOld := FOrderItemsOld.FindFirst('id', LId);
+    for j := 0 to OrderItems.FieldsCount - 1 do begin
+      FieldName := OrderItems.F[j];
+      if not A.InArray(FieldName, FieldNames) then
+        Continue;
+      if VarToStr(OrderItems.GetValueI(i, j)) = VarToStr(FOrderItemsOld.GetValueI(PosOld, j)) then
+        Continue;
+      if A.PosInArray(FieldName, Res, True) < 0 then
+        Res := Res + [FieldName];
+    end;
+  end;
+  if Length(FrgItems.EditData.IdsDeleted) > 0 then
+    if A.PosInArray('*', Res, True) < 0 then
+      Res := Res + ['*'];
+  Result := Res.Implode(',');
 end;
 
 function TFrmOWOrder.GetEstimateFormatField(AFieldName: string): Variant;
@@ -4088,3 +4281,4 @@ FrgItemsButtonClick - ненльзя удалять.вставлять стро�
 после изменения статуса заказа подсвечивается поле Тип заказа как измененное
 вероятно, не всегда сохраняется регламент
 +++работают кнопки добавления файлов в основании и внешних документах когда не должны
+регламент, площадка - вероятно, вообще не нужжны для отгрузочного???

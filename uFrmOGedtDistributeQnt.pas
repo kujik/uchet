@@ -125,11 +125,11 @@ begin
   end;
   if LHeaderRow[2] = null then LDtBegStr := '-' else LDtBegStr := DateToStr(LHeaderRow[2]);
   if LHeaderRow[3] = null then LDtOtgrStr := '-' else LDtOtgrStr := DateToStr(LHeaderRow[3]);
-  Caption := 'Распределение количества изделий в отгрузочных заказах';
+  Caption := '~Распределение количества изделий в отгрузочных заказах';
   //шапка - статичные метки в pnlTop (см. .dfm), а не FTitleTexts/CreateLabelColors (по аналогии с
   //uFrmOWrepStdItemsGroupCheck.pas); подсказка про двойной клик вынесена в Frg1.InfoArray (см. ниже)
-  lblCapt1.SetCaption2('$0000A0Производственный заказ № ' + VarToStr(LHeaderRow[0]) + '  (' + VarToStr(LHeaderRow[1]) + ')');
-  lblCapt2.Caption := 'Дата создания: ' + LDtBegStr + '    Дата отгрузки: ' + LDtOtgrStr + '    Проект: ' + VarToStr(LHeaderRow[4]);
+  lblCapt1.SetCaption2('$FF00FFПроизводственный заказ № $FF0000' + VarToStr(LHeaderRow[0]) + '  (' + VarToStr(LHeaderRow[1]) + ')');
+  lblCapt2.SetCaption2('$000000Дата создания:$FF0000 ' + LDtBegStr + '    $000000Дата отгрузки:$FF0000 ' + LDtOtgrStr + '    $000000Проект:$FF0000 ' + VarToStr(LHeaderRow[4]));
 
   //отгрузочные заказы, созданные на основании этого производственного (без удаленных), по порядку создания
   Q.QLoad(

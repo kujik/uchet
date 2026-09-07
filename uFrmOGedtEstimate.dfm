@@ -17,7 +17,36 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
       ExplicitHeight = 331
       inherited pnlTop: TPanel
         Width = 658
+        Height = 65
         ExplicitWidth = 654
+        ExplicitHeight = 65
+        object lblCapt1: TLabel
+          Left = 12
+          Top = 8
+          Width = 46
+          Height = 13
+          Caption = 'lblCapt1'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = [fsBold]
+          ParentFont = False
+        end
+        object lblCapt2: TLabel
+          Left = 12
+          Top = 27
+          Width = 39
+          Height = 13
+          Caption = 'lblCapt2'
+        end
+        object lblCapt3: TLabel
+          Left = 12
+          Top = 46
+          Width = 39
+          Height = 13
+          Caption = 'lblCapt3'
+        end
       end
       inherited pnlBottom: TPanel
         Top = 286
@@ -26,38 +55,48 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
         ExplicitWidth = 654
       end
       inherited pnlLeft: TPanel
-        Height = 277
-        ExplicitHeight = 276
+        Top = 65
+        Height = 221
+        ExplicitTop = 65
+        ExplicitHeight = 220
       end
       inherited pnlGrid1: TPanel
+        Top = 65
         Width = 648
-        Height = 277
+        Height = 221
+        ExplicitTop = 65
         ExplicitWidth = 644
-        ExplicitHeight = 276
+        ExplicitHeight = 220
         inherited Frg1: TFrDBGridEh
           Width = 646
-          Height = 275
+          Height = 219
           ExplicitWidth = 642
-          ExplicitHeight = 274
+          ExplicitHeight = 218
           inherited pnlGrid: TPanel
             Width = 636
-            Height = 221
+            Height = 165
             ExplicitWidth = 632
-            ExplicitHeight = 220
+            ExplicitHeight = 164
             inherited DbGridEh1: TDBGridEh
               Width = 634
-              Height = 198
+              Height = 142
+              inherited RowDetailData: TRowDetailPanelControlEh
+                inherited PRowDetailPanel: TPanel
+                  Height = 100
+                  ExplicitHeight = 100
+                end
+              end
             end
             inherited pnlStatusBar: TPanel
-              Top = 199
+              Top = 143
               Width = 634
-              ExplicitTop = 198
+              ExplicitTop = 142
               ExplicitWidth = 630
             end
           end
           inherited pnlLeft: TPanel
-            Height = 221
-            ExplicitHeight = 220
+            Height = 165
+            ExplicitHeight = 164
           end
           inherited pnlTop: TPanel
             Width = 646
@@ -68,9 +107,9 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
             ExplicitWidth = 642
           end
           inherited pnlBottom: TPanel
-            Top = 275
+            Top = 219
             Width = 646
-            ExplicitTop = 274
+            ExplicitTop = 218
             ExplicitWidth = 642
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -138,9 +177,11 @@ inherited FrmOGedtEstimate: TFrmOGedtEstimate
       end
       inherited pnlRight: TPanel
         Left = 653
-        Height = 277
+        Top = 65
+        Height = 221
         ExplicitLeft = 649
-        ExplicitHeight = 276
+        ExplicitTop = 65
+        ExplicitHeight = 220
       end
     end
     inherited pnlFrmBtns: TPanel

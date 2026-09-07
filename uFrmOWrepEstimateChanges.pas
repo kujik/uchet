@@ -66,7 +66,8 @@ uses
   uSettings,
   uForms,
   uDBOra,
-  uMessages
+  uMessages,
+  uOrders
   ;
 
 function TFrmOWrepEstimateChanges.SourceCodesToText(const ASource: string): string;
@@ -150,6 +151,7 @@ var
   va: TVarDynArray;
   IdEstimate: Variant;
   LName, LTypeOfItem, LFormatCaption: string;
+  LIdStdItemForHistory: Variant;
 begin
   Result := False;
   Caption := 'История изменений сметы';
@@ -172,16 +174,31 @@ begin
     LName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [ID]);
     LTypeOfItem := Q.QLoadValue('select type_name from v_or_std_items where id = :id$i', [ID]);
     LFormatCaption := Q.QLoadValue('select or_format_name || '' / '' || or_format_estimate_name || '' ['' || prefix || '']'' from v_or_std_items where id = :id$i', [ID]);
+    //06.09.2026: v_or_std_items.type_name для отгрузочных изделий отдаёт ЛАТИНСКУЮ 'O' (см. d_orders.sql,
+    //!алгоритмы.txt) - ключ ниже приведён в соответствие (было кириллическое 'О' - из-за этого несоответствия
+    //заголовок для настоящего отгрузочного изделия не показывал "отгрузочному", попадая в default)
     lblCapt1.SetCaption2('История изменений сметы к ' +
-      S.Decode([LTypeOfItem, 'О', 'отгрузочному стандартному изделию', 'П', 'производственному стандартному изделию', 'ПФ', 'полуфабрикату', 'стандартному изделию']) +
+      S.Decode([LTypeOfItem, 'O', 'отгрузочному стандартному изделию', 'П', 'производственному стандартному изделию', 'ПФ', 'полуфабрикату', 'стандартному изделию']) +
       '  $FF0000' + LFormatCaption + ':');
   end
   else begin
-    //позиция (изделие) заказа - ID это айди order_items
-    IdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
-    va := Q.QLoadRow('select slash || '' '' || name from v_order_items where id = :id$i', [ID]);
-    LName := va[0];
-    lblCapt1.Caption := 'История изменений сметы к изделию заказа:';
+    //позиция (изделие) заказа - ID это айди order_items;
+    //для нестандартного изделия типа П нового (26) формата содержательное редактирование сметы фактически
+    //происходит на уровне сметы-эталона стандартного изделия (см. TOrders.LoadEstimate, редирект для П, и
+    //TOrders.ResolveEstimateDisplayTarget) - собственная смета позиции заказа лишь производная копия,
+    //синхронизируемая только при сохранении заказа. Покажем историю именно эталона, иначе для такого
+    //изделия история почти всегда будет пустой/неактуальной, хотя правки реально вносились
+    if Orders.ResolveEstimateDisplayTarget(ID, LIdStdItemForHistory) then begin
+      IdEstimate := Q.QLoadValue('select id from estimates where id_std_item = :id$i', [LIdStdItemForHistory]);
+      LName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [LIdStdItemForHistory]);
+      lblCapt1.Caption := 'История изменений сметы-эталона нестандартного изделия (правки вносятся там):';
+    end
+    else begin
+      IdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
+      va := Q.QLoadRow('select slash || '' '' || name from v_order_items where id = :id$i', [ID]);
+      LName := va[0];
+      lblCapt1.Caption := 'История изменений сметы к изделию заказа:';
+    end;
   end;
   lblCapt2.SetCaption2('$FF0000' + LName);
 

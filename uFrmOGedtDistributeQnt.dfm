@@ -1,8 +1,12 @@
 inherited FrmOGedtDistributeQnt: TFrmOGedtDistributeQnt
   Caption = 'FrmOGedtDistributeQnt'
+  ExplicitWidth = 800
+  ExplicitHeight = 572
   TextHeight = 13
   inherited pnlFrmMain: TPanel
+    ExplicitHeight = 518
     inherited pnlFrmClient: TPanel
+      ExplicitWidth = 774
       inherited pnlTop: TPanel
         Height = 55
         ExplicitHeight = 55
@@ -29,39 +33,41 @@ inherited FrmOGedtDistributeQnt: TFrmOGedtDistributeQnt
       end
       inherited pnlLeft: TPanel
         Top = 55
-        Height = 369
+        Height = 368
         ExplicitTop = 55
-        ExplicitHeight = 368
+        ExplicitHeight = 367
       end
       inherited pnlGrid1: TPanel
         Top = 55
-        Height = 369
+        Height = 368
         ExplicitTop = 55
-        ExplicitHeight = 368
+        ExplicitWidth = 764
+        ExplicitHeight = 367
         inherited Frg1: TFrDBGridEh
-          Height = 367
-          ExplicitHeight = 366
+          Height = 366
+          ExplicitWidth = 762
+          ExplicitHeight = 365
           inherited pnlGrid: TPanel
-            Height = 313
-            ExplicitHeight = 312
+            Height = 312
+            ExplicitHeight = 311
             inherited DbGridEh1: TDBGridEh
-              Width = 758
-              Height = 290
+              Width = 754
+              Height = 289
             end
             inherited pnlStatusBar: TPanel
-              Top = 291
-              Width = 758
-              ExplicitTop = 290
-              ExplicitWidth = 754
+              Top = 290
+              Width = 754
+              ExplicitTop = 289
+              ExplicitWidth = 750
             end
           end
           inherited pnlLeft: TPanel
-            Height = 313
-            ExplicitHeight = 312
+            Height = 312
+            ExplicitHeight = 311
           end
           inherited pnlBottom: TPanel
-            Top = 367
-            ExplicitTop = 366
+            Top = 366
+            ExplicitTop = 365
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
@@ -80,14 +86,16 @@ inherited FrmOGedtDistributeQnt: TFrmOGedtDistributeQnt
         end
       end
       inherited pnlFrg2: TPanel
+        ExplicitWidth = 774
         inherited Frg2: TFrDBGridEh
+          ExplicitWidth = 772
           inherited pnlGrid: TPanel
             inherited DbGridEh1: TDBGridEh
-              Width = 768
+              Width = 764
             end
             inherited pnlStatusBar: TPanel
-              Width = 768
-              ExplicitWidth = 764
+              Width = 764
+              ExplicitWidth = 760
             end
           end
           inherited PrintDBGridEh1: TPrintDBGridEh
@@ -108,17 +116,17 @@ inherited FrmOGedtDistributeQnt: TFrmOGedtDistributeQnt
       end
       inherited pnlRight: TPanel
         Top = 55
-        Height = 369
+        Height = 368
         ExplicitTop = 55
-        ExplicitHeight = 368
+        ExplicitHeight = 367
       end
     end
   end
   inherited pnlStatusBar: TPanel
     inherited lblStatusBarR: TLabel
-      Left = 719
+      Left = 715
       Height = 14
-      ExplicitLeft = 719
+      ExplicitLeft = 715
     end
     inherited lblStatusBarL: TLabel
       Height = 14

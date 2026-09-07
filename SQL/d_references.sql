@@ -53,10 +53,14 @@ create unique index idx_ref_sn_cartypes_name on ref_sn_cartypes(lower(name));
 create sequence sq_ref_sn_cartypes start with 1 nocache;
 
 
-
+--!go begin
+alter table j_tasks drop constraint fk_j_tasks_order_item;
+alter table j_tasks add constraint fk_j_tasks_order_item foreign key (id_order_item) references order_items(id) on delete set null;
+alter table j_tasks drop constraint fk_j_tasks_order;
+alter table j_tasks add constraint fk_j_tasks_order foreign key (id_order) references orders(id) on delete set null, 
+--!go end
 
 --журнал задач
-drop  table j_tasks cascade constraints;
 create table j_tasks (
   id number(11),
   id_user1 number(11),
@@ -77,8 +81,8 @@ create table j_tasks (
   constraint pk_j_tasks primary key (id),
   constraint fk_j_tasks_user1 foreign key (id_user1) references adm_users(id),
   constraint fk_j_tasks_user2 foreign key (id_user2) references adm_users(id),
-  constraint fk_j_tasks_order foreign key (id_order) references orders(id),
-  constraint fk_j_tasks_order_item foreign key (id_order_item) references order_items(id)
+  constraint fk_j_tasks_order foreign key (id_order) references orders(id) on delete set null,
+  constraint fk_j_tasks_order_item foreign key (id_order_item) references order_items(id) on delete set null
 );
 
 drop index idx_user1_name;

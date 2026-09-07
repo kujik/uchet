@@ -2070,11 +2070,18 @@ v:=True;
     Caption:='Выбор полуфабриката';
      Frg1.Opt.SetFields([
       ['id$i','_id','40'],
-      ['fullname','Наименование','']
+      ['fullname','Наименование',''],
+      //голое наименование (без префикса группы) - именно оно должно попадать в саму смету, см. общий
+      //комментарий у вызова (uFrmOGedtEstimate.pas, Frg1CellButtonClick) - fullname (с префиксом) остается
+      //только для отображения в этом списке выбора (05.09.2026)
+      ['name','_name','40']
     ]);
     Frg1.Opt.SetTable('v_or_std_items');
-    //поиск  во всех группах полуфабрикатов
-    Frg1.Opt.SetWhere('where type = 2 order by fullname' {and (id_format = 1 or id_format like ''' + VarToStr(AddParam) + ''')'});
+    //поиск во всех группах полуфабрикатов; AddParam = [FGroupOfItem (пока не используется для фильтра),
+    //IsParentStdItem] - если родительское изделие само стандартное (IsParentStdItem = 1), недопустим
+    //НЕстандартный полуфабрикат (id_format = -3, НПФ) - см. общий комментарий у вызова. НПФ сейчас неактивен
+    //(or_format_estimates.active = 0), но фильтр ставим заранее, на будущее (05.09.2026)
+    Frg1.Opt.SetWhere('where type = 2' + S.IIFStr(VarToStr(AddParam[1]) = '1', ' and id_format <> -3') + ' order by fullname');
     Frg1.Opt.SetButtons(1, 'ls');
   end
   else if FormDoc = myfrm_R_OrderStdItems_SelProdNStdItem then begin
@@ -2094,8 +2101,11 @@ v:=True;
       ['fullname','Наименование','']
     ]);
     Frg1.Opt.SetTable('v_or_std_items');
-    //производсьтвенное той же группы, но не нестандартное
-    Frg1.Opt.SetWhere('where type = 0 and and id_format <> 0 id_format like ''' + VarToStr(AddParam) + ''' order by fullname');
+    //производсьтвенное той же группы, но не нестандартное (05.09.2026: была синтаксическая ошибка в SQL -
+    //"and and" и пропущенное "and" между условиями - диалог падал при открытии; по новой логике кнопка "П"
+    //в uFrmOGedtEstimate.pas вставляет производственное изделие сразу, без этого диалога - см. общий
+    //комментарий там же, диалог оставлен как запасной вариант)
+    Frg1.Opt.SetWhere('where type = 0 and id_format <> 0 and id_format like ''' + VarToStr(AddParam) + ''' order by fullname');
     Frg1.Opt.SetButtons(1, 'ls');
   end
 
@@ -2734,7 +2744,7 @@ begin
       TFrmDlgRItmSupplier.Show(Self, myfrm_Dlg_R_Itm_Suppliers, [myfoMultiCopy, myfoDialog, myfoSizeable], fMode, Fr.ID, null);
     if (FormDoc = myfrm_J_Orders) and (Fr.CurrField = 'ornum') then
       Sys.ExecFile(Module.GetPath_Order(IntToStr(YearOf(Fr.GetValueD('dt_beg'))), Fr.GetValue('in_archive')) + '\' + Fr.GetValueS('path'));
-    if (FormDoc = myfrm_R_StdPspFormats) and ((fMode in [fAdd, fCopy]) or (Fr.ID > 1)) then
+    if (FormDoc = myfrm_R_StdPspFormats) and ((fMode in [fAdd, fCopy]) or (not A.InArray(Fr.ID, [0, 1]))) then
       Wh.ExecDialog(myfrm_Dlg_R_StdPspFormats, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_J_Devel then
       Wh.ExecDialog(myfrm_Dlg_J_Devel, Self, [], fMode, Fr.ID, null);
@@ -3568,7 +3578,7 @@ begin
   //журнал стандартных форматов паспортов
     if (FormDoc = myfrm_R_StdPspFormats) then begin
       //форматы смет для стандартных паспортов заказа (иначе группы изделий)
-      if Frg1.ID <= 1 then
+      if A.InArray(Fr.ID, [0, 1]) then
         Exit; //для общих и доп.компл. нельзя создавать / редактировать группы
       if Fr.IsNotEmpty and (fMode <> fAdd)
 //        then va := [Fr.GetValueS('name'), Fr.GetValueS('prefix'), Fr.GetValueS('prefix_prod'), S.IIf(Fr.GetValueI('is_semiproduct') = 1 , True, False), S.IIf(Fr.GetValueI('active') = 1 , True, False)]

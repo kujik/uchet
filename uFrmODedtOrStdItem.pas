@@ -229,12 +229,15 @@ type
     //создание), 2 (смета уже есть, но отличается - только предупреждаем, не трогаем); ADetails - текст для
     //диалога подтверждения/предупреждения. БЕЗ ИЗМЕНЕНИЙ с прежней версии.
     function CheckSelfSmetaAction(AIdShipmentItem, AIdProductionItem: Variant; const AShipmentDisplayName, AProductionPrefixedName: string; out ADetails: string): Integer;
-    //создает смету отгрузочного изделия (см. CheckSelfSmetaAction) через Orders.ApplyEstimateArray - единственная
-    //позиция ссылается на производственное изделие (по имени через bcad_nomencl И по id через id_or_std_item).
-    //ВАЖНО: открывает и коммитит/откатывает СВОЮ отдельную транзакцию (см. TOrders.ApplyEstimateArray) - вызывать
-    //только ПОСЛЕ фиксации (Q.QCommitTrans) собственной транзакции сохранения изделий, см. комментарий в Save.
-    //БЕЗ ИЗМЕНЕНИЙ с прежней версии.
-    procedure CreateSelfSmeta(AIdShipmentItem, AIdProductionItem: Variant; const AProductionPrefixedName: string);
+    //создает смету отгрузочного изделия (см. CheckSelfSmetaAction) - единственная позиция ссылается на
+    //производственное изделие (по имени через bcad_nomencl И по id через id_or_std_item). Начиная с 05.09.2026
+    //само создание вынесено в общую (с нестандартными изделиями типа П нового формата, см.
+    //p_create_or_std_item_nonstandard_new_format в d_orders.sql) хранимую процедуру
+    //p_create_shipment_estimate_from_production_item (d_estimates.sql) - группа "Готовые изделия" и правило
+    //именования (префикс) больше не дублируются отдельно в Delphi и в SQL.
+    //ВАЖНО: открывает и коммитит/откатывает СВОЮ отдельную транзакцию - вызывать только ПОСЛЕ фиксации
+    //(Q.QCommitTrans) собственной транзакции сохранения изделий, см. комментарий в Save.
+    procedure CreateSelfSmeta(AIdShipmentItem, AIdProductionItem, AIdProductionFormat: Variant; const AProductionName: string);
     //нужна ли строке ARowIndex (не IsSource) РЕАЛЬНАЯ запись в БД - см. подробности у реализации (то же по
     //смыслу, что и прежний CounterpartTabNeedsSave, но проще - синхронизация теперь безусловна, сравнение идет
     //просто с ExistingXxx-снимком строки, без индирекции через активную вкладку/слоты)
@@ -1089,14 +1092,14 @@ begin
 
   Result := Q.QCommitTrans;
   //ВАЖНО: CreateSelfSmeta вызываем ТОЛЬКО ПОСЛЕ фиксации своей транзакции выше, а не внутри нее - см. подробный
-  //комментарий у CreateSelfSmeta про собственную транзакцию Orders.ApplyEstimateArray.
+  //комментарий у CreateSelfSmeta про собственную транзакцию.
   if Result and (LProdCount = 1) then begin
     LProdId := LRowIds[LProdRowIndex];
     LProdPrefixedName := GetPrefixedName(FRows[LProdRowIndex].IdOrFormatEstimate, edt_name.Text);
     for i := 0 to High(FRows) do
       if FRows[i].ItemType = STDITEM_TYPE_SHIPMENT then
         if CheckSelfSmetaAction(LRowIds[i], LProdId, edt_name.Text, LProdPrefixedName, LDummy) = 1 then
-          CreateSelfSmeta(LRowIds[i], LProdId, LProdPrefixedName);
+          CreateSelfSmeta(LRowIds[i], LProdId, FRows[LProdRowIndex].IdOrFormatEstimate, edt_name.Text);
   end;
 
   //для модальных вызовов, которым нужен id только что созданной/сохраненной записи (0-й, основной вкладки) -
@@ -1322,32 +1325,22 @@ begin
   ADetails := Format('изделие "%s" - смета уже существует, но отличается от ожидаемой (не 1 позиция со ссылкой на производственное изделие "%s", шт., группа "Готовые изделия", кол-во 1) - оставлена без изменений, проверьте вручную', [AShipmentDisplayName, AProductionPrefixedName]);
 end;
 
-procedure TFrmODedtOrStdItem.CreateSelfSmeta(AIdShipmentItem, AIdProductionItem: Variant; const AProductionPrefixedName: string);
-//см. общий комментарий у CheckSelfSmetaAction. БЕЗ ИЗМЕНЕНИЙ с прежней версии.
-var
-  Ctx: TEstimateApplyContext;
-  Est: TVarDynArray2;
+procedure TFrmODedtOrStdItem.CreateSelfSmeta(AIdShipmentItem, AIdProductionItem, AIdProductionFormat: Variant; const AProductionName: string);
+//см. общий комментарий у CheckSelfSmetaAction/у объявления. Раньше делала то же самое из Delphi, через
+//Orders.ApplyEstimateArray, с захардкоженной здесь же группой (BCAD_GROUP_FINISHED_ITEMS) и заранее
+//вычисленным (GetPrefixedName) префиксованным именем - теперь единственная общая (с нестандартными изделиями,
+//см. d_orders.sql) точка создания такой сметы - хранимая процедура p_create_shipment_estimate_from_production_item
+//(d_estimates.sql), сама находящая группу "Готовые изделия" (по bcad_groups.is_production) и подставляющая
+//префикс переданной подгруппы AIdProductionFormat. BCAD_GROUP_FINISHED_ITEMS/BCAD_UNIT_PCS/GetPrefixedName
+//продолжают использоваться в CheckSelfSmetaAction (сверка уже сохранённой сметы) - там правка не нужна.
 begin
-  Ctx.IdEstimate := Null;
-  Ctx.IdOrder := Null;
-  Ctx.IdOrderItem := Null;
-  Ctx.IdStdItem := AIdShipmentItem;
-  Ctx.OrderIdUchet := Null;
-  Ctx.OrQnt := Null;
-  Ctx.IsEstimateEmpty := 0;
-  Ctx.OrDtEst := Null;
-  Ctx.OrSlash := Null;
-  Ctx.ParentIdEstimate := Null;
-  Ctx.OrName := AProductionPrefixedName;
-  Ctx.FileName := '';
-  Ctx.OneItem := True;
-  Ctx.QntChanged := False;
-  Ctx.IsOrItemStd := False;
-  Ctx.Silent := True;
-  Ctx.EstBefore := Orders.LoadEstimateArray(Null);
-  Ctx.EstLogSource := '0';
-  Est := [[AProductionPrefixedName, BCAD_GROUP_FINISHED_ITEMS, BCAD_UNIT_PCS, 1, '', AIdProductionItem]];
-  Orders.ApplyEstimateArray(Ctx, Est);
+  Q.QBeginTrans(True);
+  Q.QCallStoredProc(
+    'p_create_shipment_estimate_from_production_item',
+    'p_id_shipment_item$i;p_id_production_item$i;p_id_production_format$i;p_production_name$s',
+    [AIdShipmentItem, AIdProductionItem, AIdProductionFormat, AProductionName]
+  );
+  Q.QCommitOrRollback;
 end;
 
 function TFrmODedtOrStdItem.RowNeedsSave(ARowIndex: Integer): Boolean;

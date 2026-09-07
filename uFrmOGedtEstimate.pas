@@ -91,10 +91,17 @@ uses
   MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math,
   Buttons, PrnDbgEh, DBCtrlsEh, Types,
   uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrmBasicGrid2, uFrDBGridEh, uFrmBasicEditabelGrid,
-  uNamedArr
+  uNamedArr, uLabelColors
   ;
 type
   TFrmOGedtEstimate = class(TFrmBasicEditabelGrid)
+    //шапка (см. pnlTop в .dfm, PrepareForm) - раскрашенные статичные метки по аналогии с
+    //uFrmOGedtDistributeQnt.pas/uFrmOGlstEstimate.pas (там же общий комментарий, почему НЕ через
+    //FTitleTexts/CreateLabelColors - было нечитаемо); lblCapt3 используется только при редиректе для
+    //нестандартного изделия типа П (см. PrepareForm) - в остальных случаях пустая и невидимая
+    lblCapt1: TLabel;
+    lblCapt2: TLabel;
+    lblCapt3: TLabel;
   private
     //контекст текущей сметы (см. PrepareForm)
     FIdEstimate: Variant;     //айди сметы (estimates.id); null, если смета еще не создана (режим добавления, см. Mode := fAdd) -
@@ -129,6 +136,9 @@ type
     //"Создать полуфабрикат" (кнопка тега cBtnCreateSemiproduct - см. PrepareFormAdd/Frg1ButtonClick) - см.
     //подробный комментарий у реализации
     procedure CreateSemiproductFromRow;
+    //"Вставить производственное изделие" (кнопка "И", видна только при FTypeOfItem in ['O','НO'] - см.
+    //PrepareForm/Frg1CellButtonClick) - см. подробный комментарий у реализации
+    procedure InsertProductionItemFromRow;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1VeryfyAndCorrect(var Fr: TFrDBGridEh; const No: Integer; Mode: TFrDBGridVerifyMode; Row: Integer; FieldName: string; Filtered: Boolean; var Value: Variant; var Msg: string); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
@@ -171,6 +181,10 @@ type
     SourceUsed: string;     //список кодов источника (через запятую, без дублей) для estimate_change_log.source
                              //(см. TOrders.LogEstimateChange, EstDlgChannelAddSource) - изначально пустая строка
     OnApply: TProc;         //колбэк для немодального режима (.Show вместо ShowModal2) - см. FOnApply
+    OrderCaption: string;   //готовая строка с данными исходной позиции заказа (слеш/наименование/кол-во), если
+                             //диалог открыт через редирект для нестандартного изделия типа П (см.
+                             //TOrders.LoadEstimate, AOrderContextCaption) - используется в заголовке диалога
+                             //(см. PrepareForm); пустая строка - редирект не применялся, ничего не добавляем
   end;
 
 var
@@ -183,8 +197,9 @@ var
 //найти запись канала по Id; возвращает False, если записи нет (диалог открыт в обход обертки TOrders.LoadEstimate)
 function EstDlgChannelFind(const AId: Variant; out AChannel: TEstDlgChannel): Boolean;
 //создать (или полностью перезаписать, если уже была) запись канала для AId - вызывается оберткой перед ShowModal2/.Show;
-//ASourceUsed - начальный список кодов источника (как правило, пустая строка - см. общий комментарий в начале модуля)
-procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc);
+//ASourceUsed - начальный список кодов источника (как правило, пустая строка - см. общий комментарий в начале модуля);
+//AOrderCaption - см. TEstDlgChannel.OrderCaption, TOrders.LoadEstimate/AOrderContextCaption - как правило, пустая строка
+procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc; AOrderCaption: string = '');
 //добавить код канала ASourceCode в список SourceUsed уже открытого канала AId (без дублирования, если код там уже есть) -
 //вызывается диалогом из LoadFromXls/LoadFromBuffer, а также извне - из MarkManualInputChannel; если записи нет - ничего не делает
 procedure EstDlgChannelAddSource(const AId: Variant; ASourceCode: Integer);
@@ -236,7 +251,7 @@ begin
     AChannel := EstDlgChannels[i];
 end;
 
-procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc);
+procedure EstDlgChannelOpen(const AId: Variant; AHasInput: Boolean; const AInputItems: TNamedArr; ASourceUsed: string; AOnApply: TProc; AOrderCaption: string = '');
 var
   i: Integer;
   LChannel: TEstDlgChannel;
@@ -246,6 +261,7 @@ begin
   LChannel.InputItems := AInputItems;
   LChannel.SourceUsed := ASourceUsed;
   LChannel.OnApply := AOnApply;
+  LChannel.OrderCaption := AOrderCaption;
   i := EstDlgChannelIndex(AId);
   if i < 0 then begin
     SetLength(EstDlgChannels, Length(EstDlgChannels) + 1);
@@ -294,6 +310,8 @@ var
   o: TFrDBGridEditOptions;
   va: TVarDynArray;
   LChannel: TEstDlgChannel;
+  LSlash: string;   //слеш позиции заказа (см. ветку AddParam <> 1 ниже) - для раздельного отображения в
+                     //шапке (lblCapt2, см. ниже); '' для AddParam = 1 (у стандартного изделия своего заказа нет)
 begin
   Caption := 'Смета';
   //получим айди сметы по айди стандартного изделия или заказа
@@ -307,9 +325,14 @@ begin
   else begin
     FIdOfStdItem := Q.QLoadValue('select id_std_item from order_items where id = :id$i', [ID]);
     FIdEstimate := Q.QLoadValue('select id from estimates where id_order_item = :id$i', [ID]);
-    va := Q.QLoadRow('select slash || '' '' || name, id_order, qnt from v_order_items where id = :id$i', [ID]);
-    FName := va[0];
-    FTypeOfItem := 'И';
+    //тип берем по типу стандартного изделия заказа (v_order_items.type_name, аналогично v_or_std_items.type_name
+    //у AddParam = 1) - изделие заказа без привязки к стандартному изделию не встречается (05.09.2026)
+    //слеш и наименование теперь грузим ОТДЕЛЬНЫМИ полями (раньше - одним ''slash || name''), т.к. для шапки
+    //(см. ниже) их надо показывать раздельными строками (06.09.2026)
+    va := Q.QLoadRow('select slash, name, id_order, qnt, type_name from v_order_items where id = :id$i', [ID]);
+    LSlash := va[0];
+    FName := va[1];
+    FTypeOfItem := va[4];
   end;
   //если сметы еще нет, то перейдем в режим добавления
   if  FIdEstimate = null then
@@ -321,15 +344,56 @@ begin
     Exit;
   //получим айди группы (не подгруппы!) стандартных изделий для данной позиции
   FGroupOfItem := Q.QLoadValue('select id_format from or_format_estimates where id = (select id_or_format_estimates from or_std_items where id = :id$i)', [FIdOfStdItem]);
-  //заголовочный лейбл
-  FTitleTexts := [S.IIf(AddParam = 1, 'Смета к ' +
-    S.Decode([FTypeOfItem, 'О', 'отгрузочному стандартному изделию', 'П', 'производственному стандартному изделию', 'ПФ', 'полуфабрикату', 'стандартному изделию'])  + '  ' +
-    FFormatCaption + ':', 'Смета к изделию заказа:'),  {'$FF0000' + } FName];
-  pnlTop.Height := 50;
+  //заголовочная шапка (lblCapt1/lblCapt2/lblCapt3, см. .dfm) - раньше собиралась через FTitleTexts/
+  //CreateLabelColors (базовый механизм TFrmBasicEditabelGrid) в одну-две строки без расцветки и со смешением
+  //разнородной информации (тип изделия, формат, заказ, наименование) - плохо читалось (аналогичная жалоба и
+  //по uFrmOGlstEstimate.pas - см. правку там же). Переделано по тому же образцу, что и там, и что в
+  //uFrmOGedtDistributeQnt.pas: несколько раскрашенных статичных меток вместо одной сплошной строки (06.09.2026)
+  //ВАЖНО: type_name (v_or_std_items/v_order_items) для отгрузочных изделий - латинская 'O' (fi.type = 1), а
+  //не кириллическая 'О' - раньше сравнение здесь и в условии кнопки ниже шло с кириллической, из-за чего
+  //подпись и кнопка "Выбрать производственное изделие" не срабатывали для настоящих отгрузочных изделий
+  //(исправлено 05.09.2026, заодно добавлены новые типы НП/НO - НПФ пока не используется)
+  //РЕДИРЕКТ ДЛЯ НСТД.П: для нестандартного изделия типа П нового (26) формата TOrders.LoadEstimate
+  //перенаправляет редактирование на смету-эталон стандартного изделия (см. комментарий там же) - диалог в этом
+  //случае открывается с AddParam = 1 и ID = айди этого эталона (or_std_items, группа -1), и БЕЗ данного блока
+  //совсем не показывал бы, к какой позиции заказа относится редактируемая смета (FName у эталона - голое имя,
+  //без слеша). Если редирект был - боковой канал (см. TEstDlgChannel.OrderCaption) несет готовую строку с
+  //данными исходной позиции заказа - показываем ее отдельной (третьей) строкой шапки
+  var LChannelForCaption: TEstDlgChannel;
+  var LOrderCaption := '';
+  if EstDlgChannelFind(ID, LChannelForCaption) then
+    LOrderCaption := LChannelForCaption.OrderCaption;
+  var LTypePhrase := S.Decode([FTypeOfItem, 'O', 'отгрузочному стандартному изделию', 'НO', 'нестандартному отгрузочному изделию', 'П', 'производственному стандартному изделию',
+    'НП', 'нестандартному производственному изделию', 'ПФ', 'полуфабрикату', 'Н', 'нестандартному изделию старого образца', 'стандартному изделию']);
+  if AddParam = 1 then begin
+    lblCapt1.SetCaption2('$FF00FFСмета к:$FF0000 ' + LTypePhrase);
+    lblCapt2.SetCaption2('$000000Изделие:$FF0000 ' + FName + '$000000    Формат:$FF0000 ' + FFormatCaption);
+    //текст сознательно НЕ раскрывает архитектуру хранения (эталон/группа -1 и т.п.) - пользователю это
+    //неинтересно и только запутает (см. правку 06.09.2026) - просто отсылка к позиции заказа, ради которой
+    //реально редактируется эта смета
+    if LOrderCaption <> ''
+      then lblCapt3.SetCaption2('$0000FFК производственному (отгрузочному) изделию заказа:$FF0000 ' + LOrderCaption)
+      else lblCapt3.Caption := '';
+  end
+  else begin
+    lblCapt1.SetCaption2('$FF00FFСмета к:$FF0000 ' + LTypePhrase + '$FF00FF заказа');
+    lblCapt2.SetCaption2('$000000Заказ, слеш:$FF0000 ' + LSlash + '$000000    Изделие:$FF0000 ' + FName);
+    lblCapt3.Caption := '';
+  end;
+  pnlTop.Height := 65;
   //прочитаем список групп и ед.изм.
   Orders.LoadBcadGroups(True);
   //теги - 1 = читать при обновлении, 2 = записать
   Frg1.Options := Frg1.Options - [myogSaveOptions];
+  var LNameBtns := A.Implode([
+    S.IIFStr(A.InArray(FTypeOfItem, ['П', 'НП', 'Н']), '-Выбрать материал:М:::090'),
+    S.IIFStr(A.InArray(FTypeOfItem, ['П', 'НП', 'Н']), '-Выбрать полуфабрикат:П:::909'),
+    //не "Выбрать", а "Вставить" - без диалога выбора, см. InsertProductionItemFromRow
+    S.IIFStr(A.InArray(FTypeOfItem, ['O', 'НO']), '-Вставить производственное изделие:И:::009')
+    ], ';', True
+  );
+  if LNameBtns <> '' then
+    LNameBtns := 'bt=' + LNameBtns;
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
     ['id_estimate$i','_ide','40'],
@@ -337,8 +401,7 @@ begin
     ['id_item_estimate$i','_id_item_estimate','40','t=1,2'],
     ['type_of_item$s','Изделие','85', 'bt=Изделие:И:::009;Смета:С:::909'{, 'pic=;П;ПФ;Н;О:0;7;7;8;9:+'},'t=1'],
     ['id_group$i','Группа','250;w;L','e=1:100000:0:N','t=1,2'],
-    ['name$s','Наименование','400;w;h','e=1:1000',
-      'bt=Выбрать материал:М:::090' + S.IIFStr(FTypeOfItem <> 'П', ';Выбрать полуфабрикат:П:::909') + S.IIFStr(FTypeOfItem = 'О', ';Выбрать производственное изделие:И:::009') {+ ';Выбрать нестандартное изделие:Н:::000','t=1'}],
+    ['name$s','Наименование','400;w;h','e=1:1000', S.IIfStr(Mode <> fView, LNameBtns)],
     ['id_unit$i','Ед.изм.','100;L','e=1:1000000:0:N','t=1,2'],
     ['qnt1$f','Кол-во','80','e=0:999999:5:N','t=1,2'], {недопустимо пустое кол-во}
     ['qnt_on_stock$f','На складе','80','t=1'],
@@ -397,7 +460,7 @@ begin
     [-cBtnCreateSemiproduct, alopUpdateEh in Frg1.Opt.AllowedOperations, 'Создать полуфабрикат']
     ], cbttBSmall, pnlFrmBtnsR
   );
-  Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow]);
+  Frg1.Opt.SetButtonsIfEmpty([mbtExcel, mbtFromClipboard, mbtInsertRow, mbtAddRow]);
   Result := True;
 end;
 
@@ -458,20 +521,21 @@ begin
     LoadItemFromDB(Frg1.RecNo - 1);
   end
   else if TCellButtonEh(Sender).Hint = 'Выбрать полуфабрикат' then begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], FGroupOfItem);
+    //полуфабрикат ищем по всем группам (см. myfrm_R_OrderStdItems_SelSemiproduct, uFrmXGlstMain.pas); вторым
+    //параметром передаем признак "родительское изделие - стандартное" (AddParam = 1) - для него недопустим
+    //НЕстандартный полуфабрикат (id_format = -3, НПФ; сейчас неактивен, но фильтр ставим заранее) - см. общий
+    //комментарий у диалога. В гриде выбора показываем fullname (с префиксом, для наглядности при выборе среди
+    //полуфабрикатов разных групп), но в саму смету полуфабрикат всегда вставляется БЕЗ префикса - см. bare-имя
+    //в SelectDialogResult[2] (было SelectDialogResult[1] = fullname - отсюда и был баг с префиксом, 05.09.2026)
+    Wh.ExecReference(myfrm_R_OrderStdItems_SelSemiproduct, Self, [myfoDialog, myfoModal], VarArrayOf([FGroupOfItem, S.IIf(AddParam = 1, 1, 0)]));
     if Length(Wh.SelectDialogResult) = 0 then
       Exit;
     MarkManualInputChannel;
-    Frg1.SetValue('name', Wh.SelectDialogResult[1]);
+    Frg1.SetValue('name', Wh.SelectDialogResult[2]);
     LoadItemFromDB(Frg1.RecNo - 1);
   end
-  else if TCellButtonEh(Sender).Hint = 'Выбрать производственное изделие' then begin
-    Wh.ExecReference(myfrm_R_OrderStdItems_SelProdStdItem, Self, [myfoDialog, myfoModal], FGroupOfItem);
-    if Length(Wh.SelectDialogResult) = 0 then
-      Exit;
-    MarkManualInputChannel;
-    Frg1.SetValue('name', Wh.SelectDialogResult[1]);
-    LoadItemFromDB(Frg1.RecNo - 1);
+  else if TCellButtonEh(Sender).Hint = 'Вставить производственное изделие' then begin
+    InsertProductionItemFromRow;
   end
   else if TCellButtonEh(Sender).Hint = 'Выбрать нестандартное изделие' then begin
     Wh.ExecReference(myfrm_R_OrderStdItems_SelProdNStdItem, Self, [myfoDialog, myfoModal], FGroupOfItem);
@@ -520,9 +584,52 @@ procedure TFrmOGedtEstimate.LoadItemFromDB(Row: Integer);
 var
   na: TNamedArr;
 begin
+  //так как привязки остальных данных в смете к наименованию нет, загрузим первую строку стаким наименованием из всех смет,
+  //и возьмем из нее группу и единицу измерения (они могут быть разные в разных сметах)
   Q.QLoadRow('select ' + Frg1.GetFieldNamesEx('1').Implode(', ') + ' from ' + Frg1.Opt.Sql.View + ' where name = :name$s', [Frg1.GetValue('name', Row, True)], na);
-  if na.Count > 0 then
+  if na.Count > 0 then begin
+    for var i := 0 to na.FieldsCount - 1 do
+      if not A.InArray(na.F[i], ['ID', 'NAME' ,'ID_GROUP', 'ID_UNIT']) then
+        na.SetValue(0, na.F[i], null);
     Frg1.LoadRow(na, Row, True);
+  end;
+end;
+
+procedure TFrmOGedtEstimate.InsertProductionItemFromRow;
+//"Вставить производственное изделие" (кнопка "И", тег в bt= - "Вставить производственное изделие",
+//видна только при FTypeOfItem in ['O','НO'] - см. PrepareForm). В отличие от прежней версии кнопки, диалог
+//выбора (myfrm_R_OrderStdItems_SelProdStdItem) больше не открывается - производственное изделие,
+//соответствующее ТЕКУЩЕМУ отгрузочному (родительскому) изделию сметы, определяется ОДНОЗНАЧНО и
+//вставляется сразу, по логике пользователя (05.09.2026):
+//  - в группе (FGroupOfItem) должна быть РОВНО ОДНА производственная подгруппа (or_format_estimates,
+//    type = 0) - как правило, так и есть; пользователь отдельно приводит справочники к этому виду;
+//  - в найденной производственной подгруппе ищем изделие с ТЕМ ЖЕ ГОЛЫМ наименованием (or_std_items.name,
+//    без префикса), что и у родительского отгрузочного изделия (FIdOfStdItem) - именно оно и есть
+//    "производственная версия" текущего изделия.
+//Если производственных подгрупп в группе нет или больше одной, либо изделие с таким именем в найденной
+//подгруппе не найдено - сообщаем об этом и НИЧЕГО не вставляем (по решению пользователя - запасной вариант
+//в виде диалога выбора не открываем; такие ситуации должны стать редкими/невозможными после приведения
+//справочников в порядок).
+var
+  LBaseName: string;
+  LProdFormatIds, LProdFormaItem: TVarDynArray;
+begin
+  LBaseName := Q.QLoadValue('select name from v_or_std_items where id = :id$i', [FIdOfStdItem]);
+  LProdFormatIds := Q.QLoadCol('select id from or_format_estimates where id_format = :f$i and type = 0', [FGroupOfItem]);
+  if Length(LProdFormatIds) <> 1 then begin
+    MyWarningMessage(S.IIf(Length(LProdFormatIds) = 0,
+      'В этой группе не найдена производственная подгруппа стандартных изделий - обратитесь к администратору справочников.',
+      'В этой группе найдено несколько (' + IntToStr(Length(LProdFormatIds)) + ') производственных подгрупп стандартных изделий - обратитесь к администратору справочников.'));
+    Exit;
+  end;
+  LProdFormaItem := Q.QLoadRow('select id, fullname from v_or_std_items where id_or_format_estimates = :f$i and name = :n$s', [LProdFormatIds[0], LBaseName]);
+  if LProdFormaItem[0] = null then begin
+    MyWarningMessage('В производственной подгруппе этой группы не найдено изделие с наименованием "' + LBaseName + '".');
+    Exit;
+  end;
+  MarkManualInputChannel;
+  Frg1.SetValue('name', LProdFormaItem[1]);
+  LoadItemFromDB(Frg1.RecNo - 1);
 end;
 
 procedure TFrmOGedtEstimate.CreateSemiproductFromRow;
@@ -810,9 +917,7 @@ end;
 end.
 
 
-что можно выбирать в нестандартном изделии?????
 везде проверить работу с фильтром!!!
-какие кнопки выбора изделия когда нужны?
 менять группу в смете для полуфабрикатов на ПФ?
 заменить все такие группы скриптом?
-при вставке ПФ из окна выбора ошибка - вставляется наименование с префиксом!!!
+

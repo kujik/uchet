@@ -6,7 +6,7 @@ unit uExcel2;
 interface
 
 uses
-  Graphics, Classes, Variants, SysUtils, uString, LibXL, Windows
+  Graphics, Classes, Variants, SysUtils, RegularExpressions, uString, LibXL, Windows
   ;
 
 
@@ -14,6 +14,12 @@ uses
 function BookCreateAndLoad(var Book: TBook; FileName: string; var IsXML: Boolean): Boolean;
 function myxlsGetSheet(var Book: TBook; SheetName: Variant; var Sheet: TSheet): Boolean;
 function myxlsLoadSheetToArray(FileName: string; SheetName: Variant; r1, c1, r2, c2, rmax, cmax: Integer; var Res: TVarDynArray2): Boolean;
+//читает файл шаблона (xls/xlsx) через LibXL (без реального Excel - быстро) и возвращает МАССИВ УНИКАЛЬНЫХ имён
+//тегов вида #имя# (без символов #, в нижнем регистре), найденных в текстовых значениях ячеек ПЕРВОГО листа
+//книги. Используется, чтобы проверить, стоит ли пересоздавать отчет/паспорт при изменении конкретных полей
+//заказа - см. TFrmOWOrder.NeedPassportExport (uFrmOWOrder.pas). Если файл не найден/не открылся - вернет
+//пустой массив (без сообщения об ошибке - вызывающий код сам решает, как на это реагировать)
+function GetXlsxTemplateTags(FileName: string): TVarDynArray;
 
 
 
@@ -56,6 +62,47 @@ begin
   Book.Load(S.StringToPAnsiChar(FileName));
   except
   Result:= False;
+  end;
+end;
+
+function GetXlsxTemplateTags(FileName: string): TVarDynArray;
+var
+  Book: TBook;
+  Sheet: TSheet;
+  IsXML: Boolean;
+  i, j: Integer;
+  st, LTag: string;
+  RE: TRegEx;
+  M: TMatch;
+begin
+  Result := [];
+  Book := nil;
+  Sheet := nil;
+  try
+    if not BookCreateAndLoad(Book, FileName, IsXML) then
+      Exit;
+    if not myxlsGetSheet(Book, 0, Sheet) then
+      Exit;
+    RE := TRegEx.Create('#([^#\s]+)#');
+    for i := 0 to Sheet.LastRow do
+      for j := 0 to Sheet.LastCol do begin
+        if Sheet.getCellType(i, j) <> CELLTYPE_STRING then
+          Continue;
+        st := Sheet.readStr(i, j);
+        if Pos('#', st) = 0 then
+          Continue;
+        for M in RE.Matches(st) do begin
+          LTag := LowerCase(M.Groups[1].Value);
+          if A.PosInArray(LTag, Result, True) < 0 then
+            Result := Result + [LTag];
+        end;
+      end;
+  finally
+    try
+      if Sheet <> nil then Sheet.Free;
+      if Book <> nil then Book.Free;
+    except
+    end;
   end;
 end;
 

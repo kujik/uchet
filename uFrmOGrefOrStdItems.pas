@@ -273,8 +273,7 @@ begin
     Orders.CopyEstimateToBuffer(Fr.ID, null);
   end
   else if (Tag = mbtViewEstimate) then begin
-    //в справочнике стандартных изделий покажем смету (если это не группа общих изделий)
-    if (Fr.GetCol > 0)and(Fr.GetValueI('id_or_format_estimates') > 0) then
+    //в справочнике стандартных изделий покажем смету
       Wh.ExecReference(myfrm_R_Estimate, Self, [myfoDialog, myfoMultiCopyWoId, myfoSizeable, myfoEnableMaximize], VarArrayOf([null, Fr.ID]));
   end
   else if (Tag = mbtLoadEstimate) then begin
@@ -445,7 +444,7 @@ begin
   Q.QLoadToDBComboBoxEh(
     'select f.name || '' ['' || e.name || '']'' as estimate, e.id as id '+
     'from or_formats f, or_format_estimates e '+
-    'where e.id_format = f.id and e.active >= :c1$i and f.active >= :c2$i and ((e.id_format > 1)or(e.id_format = 0))'+
+    'where e.id_format = f.id and e.active >= :c1$i and f.active >= :c2$i and ((e.id_format > 1)or(e.id_format <= 0))'+
     'order by 1 asc',
     [S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0), S.IIf(Frg1.GetControlValue('chbAll') = 0, 1, 0)],
     TDBComboBoxEh(Frg1.FindComponent('CbEstimate')), cntComboLK
