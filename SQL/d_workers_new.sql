@@ -36,6 +36,9 @@ create or replace view v_w_job_salaries_grid as
 select
 --вью для журнала "Плановые начисления по должностям" - сводная по всем активным должностям:
 --данные за прошлый, текущий и следующий календарный месяц (07.09.2026)
+--can_edit_prev/can_edit_cur - редактирование месяца разрешено, если по должности за этот месяц
+--нет реальных данных из зарплатных ведомостей (v_w_payroll_calc_item, id_target_employee is null,
+--fixed_pay/variable_pay не оба null/0) - см. также p_w_job_salaries_set_value (08.09.2026)
   j.id as id,
   j.name as job,
   trunc(add_months(sysdate, -1), 'mm') as dt_prev,
@@ -50,7 +53,20 @@ select
   sn.fixed_pay as fixed_pay_next,
   sn.variable_pay as variable_pay_next,
   case when sn.id_job is null then to_number(null) else nvl(sn.fixed_pay, 0) + nvl(sn.variable_pay, 0) end as total_pay_next,
-  case when sp.id_job is null then 1 else 0 end as can_edit_cur
+  case when exists (
+    select 1 from v_w_payroll_calc_item pi
+    where pi.id_job = j.id
+      and trunc(pi.dt, 'mm') = trunc(add_months(sysdate, -1), 'mm')
+      and pi.id_target_employee is null
+      and (nvl(pi.fixed_pay, 0) <> 0 or nvl(pi.variable_pay, 0) <> 0)
+  ) then 0 else 1 end as can_edit_prev,
+  case when exists (
+    select 1 from v_w_payroll_calc_item pi
+    where pi.id_job = j.id
+      and trunc(pi.dt, 'mm') = trunc(sysdate, 'mm')
+      and pi.id_target_employee is null
+      and (nvl(pi.fixed_pay, 0) <> 0 or nvl(pi.variable_pay, 0) <> 0)
+  ) then 0 else 1 end as can_edit_cur
 from
   w_jobs j
   left outer join w_job_salaries sp on sp.id_job = j.id and sp.dt = trunc(add_months(sysdate, -1), 'mm')
@@ -72,16 +88,81 @@ from
   w_job_salaries s
 ;
 
+--заполнение w_job_salaries данными за все месяцы, по которым есть данные во вью
+--v_w_payroll_calc_item (dt там - первое число месяца): по каждой паре должность+месяц
+--берём строку с id_target_employee is null (не привязана к целевому работнику-замене) и
+--максимальным плановым начислением (planned_pay), из неё - fixed_pay и variable_pay;
+--существующие в w_job_salaries строки не трогаем
+--insert into w_job_salaries (id_job, dt, fixed_pay, variable_pay)
+select
+  v.id_job,
+  trunc(v.dt, 'mm'),
+  v.fixed_pay,
+  v.variable_pay
+from
+  v_w_payroll_calc_item v,
+  (
+    select
+      mx.id_job,
+      mx.dt,
+      max(id) as id
+    from
+      v_w_payroll_calc_item,
+      (
+        select id_job, trunc(dt, 'mm') as dt, max(planned_pay) as planned_pay
+        from v_w_payroll_calc_item
+        where id_target_employee is null
+        group by id_job, trunc(dt, 'mm')
+      ) mx
+    where
+      v_w_payroll_calc_item.id_job = mx.id_job
+      and trunc(v_w_payroll_calc_item.dt, 'mm') = mx.dt
+      and v_w_payroll_calc_item.planned_pay = mx.planned_pay
+      and v_w_payroll_calc_item.id_target_employee is null
+    group by mx.id_job, mx.dt
+  ) pick
+where
+  v.id = pick.id
+  and not exists (
+    select 1 from w_job_salaries s
+    where s.id_job = v.id_job and s.dt = trunc(v.dt, 'mm')
+  )
+;
+
+--разовое копирование плановых начислений с августа 2026 на сентябрь 2026: суточное задание
+--w_job_salaries_fill_next_month_job уже не переносит текущий месяц на следующий - sysdate к
+--моменту выполнения этой правки уже перешла на сентябрь, и задание копирует сентябрь в октябрь;
+--существующие строки за сентябрь не трогаем
+--insert into w_job_salaries (id_job, dt, fixed_pay, variable_pay)
+select
+  s.id_job,
+  date '2026-09-01',
+  s.fixed_pay,
+  s.variable_pay
+from
+  w_job_salaries s
+where
+  s.dt = date '2026-08-01'
+  and not exists (
+    select 1 from w_job_salaries s2
+    where s2.id_job = s.id_job and s2.dt = date '2026-09-01'
+  )
+;
+
 create or replace procedure p_w_job_salaries_set_value(
-  p_id_job in number,
-  p_dt     in date,
-  p_field  in varchar2,   --'FIXED_PAY' либо 'VARIABLE_PAY'
-  p_value  in number
+  p_id_job   in number,
+  p_dt       in date,
+  p_field    in varchar2,   --'FIXED_PAY' либо 'VARIABLE_PAY'
+  p_value    in number,
+  p_override in number default 0   --1 - расширенный режим редактирования (обходит проверку ниже)
 ) is 
 --сохранение одного значения из журнала "Плановые начисления по должностям": если строки за месяц
 --ещё нет - создаётся, не заданное явно поле обнуляется (суммарное начисление не хранится, считается
---как fixed_pay + variable_pay). Редактировать можно только следующий месяц, и текущий - если по
---должности ещё нет записи за прошлый месяц (бизнес-правило проверяется и здесь же).
+--как fixed_pay + variable_pay). Редактировать можно следующий месяц - всегда, текущий и прошлый -
+--если по должности за этот месяц нет реальных данных из зарплатных ведомостей
+--(v_w_payroll_calc_item, id_target_employee is null, fixed_pay/variable_pay не оба null/0), либо
+--если включен расширенный режим (p_override = 1) - дублирует бизнес-правило вью
+--v_w_job_salaries_grid (can_edit_prev/can_edit_cur) (08.09.2026)
   v_dt      date := trunc(p_dt, 'mm');
   v_dt_cur  date := trunc(sysdate, 'mm');
   v_dt_next date := trunc(add_months(sysdate, 1), 'mm');
@@ -90,13 +171,20 @@ create or replace procedure p_w_job_salaries_set_value(
 begin
   if v_dt = v_dt_next then
     null; --следующий месяц редактируется всегда
-  elsif v_dt = v_dt_cur then
-    select count(*) into v_cnt from w_job_salaries where id_job = p_id_job and dt = v_dt_prev;
-    if v_cnt > 0 then
-      raise_application_error(-20001, 'Редактирование текущего месяца запрещено: по должности уже есть данные за прошлый месяц.');
+  elsif v_dt in (v_dt_cur, v_dt_prev) then
+    if nvl(p_override, 0) <> 1 then
+      select count(*) into v_cnt
+      from v_w_payroll_calc_item
+      where id_job = p_id_job
+        and trunc(dt, 'mm') = v_dt
+        and id_target_employee is null
+        and (nvl(fixed_pay, 0) <> 0 or nvl(variable_pay, 0) <> 0);
+      if v_cnt > 0 then
+        raise_application_error(-20001, 'Редактирование запрещено: по должности уже есть данные из зарплатных ведомостей за этот месяц.');
+      end if;
     end if;
   else
-    raise_application_error(-20001, 'Редактировать можно только текущий (при отсутствии данных за прошлый месяц) и следующий месяц.');
+    raise_application_error(-20001, 'Редактировать можно только прошлый, текущий и следующий месяц.');
   end if;
   merge into w_job_salaries t
   using (select p_id_job as id_job, v_dt as dt from dual) s
@@ -777,14 +865,16 @@ last_transfer as (
 )
 --сам запрос получения данных
 select
+--last_terminated/is_working_now: уволенным считается, если дата увольнения >= даты последнего
+--приёма (в т.ч. если уволен в тот же день, когда принят - даты событий совпадают) (08.09.2026)
   e.id,
   e.birthday,
   floor(months_between(sysdate, e.birthday) / 12) as age,
   f_fio(e.f, e.i, e.o) as name,
   f.dt_beg as dt_reg,
   h.dt_beg as last_hired,
-  case when t.dt_beg > h.dt_beg then t.dt_beg else null end as last_terminated,
-  case when t.dt_beg > h.dt_beg then 'уволен' when h.dt_beg is not null then 'работает' else null end as is_working_now,
+  case when t.dt_beg >= h.dt_beg then t.dt_beg else null end as last_terminated,
+  case when t.dt_beg >= h.dt_beg then 'уволен' when h.dt_beg is not null then 'работает' else null end as is_working_now,
   lt.dt_beg as dt_last_transfer,
   d.name as departament,
   j.name as job,
@@ -849,17 +939,6 @@ where
   ep.id_schedule = s.id (+) and
   ep.id_manager = u.id (+)
   ;
-
---!
---delete from w_employee_properties;
---insert into w_employee_properties(id, dt, id_employee, id_job, id_departament, is_hired, is_terminated, dt_beg) 
---  select id, dt, id_worker, id_job, id_division, decode(status, 1, 1, 0), decode(status ,3 , 1, 0), dt from j_worker_status;
-  
-
-select distinct employee from v_w_employee_properties where is_terminated = 1 and dt_beg > date '2025-12-01';
-
---в случае незанесения айди работника в таблицу по днямм, проставим эту информацию (т.к. она избыточна и соответственно имеется)
-update w_turv_day d set id_employee = (select id_employee from w_employee_properties p where p.id = d.id_employee_properties) where d.id_employee is null; 
 
 
 drop view v_employee_status; 

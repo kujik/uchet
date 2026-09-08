@@ -6,11 +6,14 @@ Frg1 - список активных должностей, по каждой - �
 d_workers_new.sql). Суммарное начисление - вычисляемое, в базе не хранится.
 
 Редактирование (галочка "Редактировать" вверху формы, доступна только при наличии права
-rW_J_JobSalaries_Ch) разрешено только для следующего месяца, а также для текущего - если по
-должности ещё нет ни одной записи за прошлый месяц (флаг can_edit_cur из вью). Сохранение
-каждого значения идёт через хранимую процедуру p_w_job_salaries_set_value, которая при первом
-вводе по месяцу заполняет несохранённую графу нулём и дополнительно перепроверяет то же
-бизнес-правило редактируемости на сервере.
+rW_J_JobSalaries_Ch) разрешено всегда для следующего месяца, а для текущего и прошлого -
+если по должности за этот месяц нет реальных данных из зарплатных ведомостей (флаги
+can_edit_cur/can_edit_prev из вью v_w_job_salaries_grid), либо если включен расширенный режим
+редактирования (Ctrl+Shift+E, только для User.IsDataEditor, см. GlobalEvent) - тогда
+блокировка снимается для текущего и прошлого месяца (08.09.2026). Сохранение каждого значения
+идёт через хранимую процедуру p_w_job_salaries_set_value, которая при первом вводе по месяцу
+заполняет несохранённую графу нулём и дополнительно перепроверяет то же бизнес-правило
+редактируемости на сервере (с учётом переданного признака расширенного режима).
 
 Frg2 - детальная таблица, история плановых начислений по выбранной должности за все месяцы
 (view v_w_job_salaries_history), только для просмотра.
@@ -33,7 +36,9 @@ uses
 type
   TFrmWGjrnJobSalaries = class(TFrmBasicGrid2)
   private
+    FExtendedEdit: Boolean;
     function  PrepareForm: Boolean; override;
+    procedure GlobalEvent(AEvent: Integer); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
@@ -74,11 +79,12 @@ begin
 
   Frg1.Opt.SetFields([
     ['id$i','_id','40'],
+    ['can_edit_prev$i','_can_edit_prev','40'],
     ['can_edit_cur$i','_can_edit_cur','40'],
     ['job$s','Должность','250;h'],
     [ 'total_pay_prev$i', MonthCaption(DtPrev) + '|Итого', '90', 'f=r'],
-    ['fixed_pay_prev$i','!Постоянная','90','f=r'],
-    ['variable_pay_prev$i','!Стиму-'#13#10'лирующая','90','f=r'],
+    ['fixed_pay_prev$i','!Постоянная','90','f=r','e',CanEdit],
+    ['variable_pay_prev$i','!Стиму-'#13#10'лирующая','90','f=r','e',CanEdit],
     [ 'total_pay_cur$i', MonthCaption(DtCur) + '|Итого', '90', 'f=r'],
     ['fixed_pay_cur$i','!Постоянная','90','f=r','e',CanEdit],
     ['variable_pay_cur$i','!Стиму-'#13#10'лирующая','90','f=r','e',CanEdit],
@@ -109,8 +115,9 @@ begin
     ['Плановые начисления по должностям.'#13#10#13#10+
     'Отображаются суммарное плановое начисление, а также его фиксированная и стимулирующая части '+
     'за прошлый, текущий и следующий месяц по каждой должности.'#13#10],
-    ['Редактирование доступно только за следующий месяц, а также за текущий месяц - '+
-    'если по должности ещё нет данных за прошлый месяц.'#13#10, CanEdit],
+    ['Редактирование доступно всегда за следующий месяц, а за текущий и прошлый - '+
+    'если по должности нет реальных данных из зарплатных ведомостей за этот месяц '+
+    #13#10, CanEdit],
     ['Данные для расчетных ведомостей и штатного расписания берутся из этого журнала.'#13#10],
     ['В детальной таблице - полная история плановых начислений по выбранной должности.']
   ];
@@ -129,7 +136,9 @@ begin
     Exit;
   if A.InArray(Fr.CurrField, ['fixed_pay_next', 'variable_pay_next']) then
     ReadOnly := False
-  else if A.InArray(Fr.CurrField, ['fixed_pay_cur', 'variable_pay_cur']) and (Fr.GetValue('can_edit_cur') = 1) then
+  else if A.InArray(Fr.CurrField, ['fixed_pay_cur', 'variable_pay_cur']) and (FExtendedEdit or (Fr.GetValue('can_edit_cur') = 1)) then
+    ReadOnly := False
+  else if A.InArray(Fr.CurrField, ['fixed_pay_prev', 'variable_pay_prev']) and (FExtendedEdit or (Fr.GetValue('can_edit_prev') = 1)) then
     ReadOnly := False;
 end;
 
@@ -138,7 +147,15 @@ var
   Dt: TDateTime;
   Fld: string;
 begin
-  if FieldName = 'fixed_pay_cur' then begin
+  if FieldName = 'fixed_pay_prev' then begin
+    Dt := IncMonth(StartOfTheMonth(Date), -1);
+    Fld := 'FIXED_PAY';
+  end
+  else if FieldName = 'variable_pay_prev' then begin
+    Dt := IncMonth(StartOfTheMonth(Date), -1);
+    Fld := 'VARIABLE_PAY';
+  end
+  else if FieldName = 'fixed_pay_cur' then begin
     Dt := StartOfTheMonth(Date);
     Fld := 'FIXED_PAY';
   end
@@ -156,7 +173,7 @@ begin
   end
   else
     Exit;
-  Q.QCallStoredProc('p_w_job_salaries_set_value', 'p_id_job$i;p_dt$d;p_field$s;p_value$f', [Fr.GetValue('id'), Dt, Fld, S.NNum(Value)]);
+  Q.QCallStoredProc('p_w_job_salaries_set_value', 'p_id_job$i;p_dt$d;p_field$s;p_value$f;p_override$i', [Fr.GetValue('id'), Dt, Fld, S.NNum(Value), Ord(FExtendedEdit)]);
   Fr.RefreshRecord;
 end;
 
@@ -170,6 +187,25 @@ procedure TFrmWGjrnJobSalaries.Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No:
 begin
   Fr.SetSqlParameters('id_job$i', [Frg1.ID]);
   Fr.Opt.Caption := 'История: ' + Frg1.GetValueS('job');
+end;
+
+procedure TFrmWGjrnJobSalaries.GlobalEvent(AEvent: Integer);
+begin
+  if AEvent <> 1 then
+    Exit;
+  if not User.IsDataEditor then
+    Exit;
+  if not FExtendedEdit then begin
+    if MyQuestionMessage('Включить расширенный режим редактирования (прошлый и текущий месяц - без ограничений)?') <> mrYes then
+      Exit;
+    FExtendedEdit := True;
+  end
+  else begin
+    if MyQuestionMessage('Выключить расширенный режим редактирования?') <> mrYes then
+      Exit;
+    FExtendedEdit := False;
+  end;
+  Frg1.InvalidateGrid;
 end;
 
 end.
