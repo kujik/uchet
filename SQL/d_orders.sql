@@ -1534,6 +1534,49 @@ begin
 end;
 /
 
+--(07.09.2026) прямая id-связь ОТГРУЗОЧНОГО стандартного изделия с ПРОИЗВОДСТВЕННЫМ - нужна для
+--нового модуля "Текущее состояние СГП" для заказов нового формата (см. !алгоритмы.txt), чтобы
+--не сопоставлять производство/отгрузку по наименованию, как раньше. Заполняется только когда у
+--отгрузочной подгруппы (or_format_estimates.sync_group > 0 - т.е. синхронизация семейства вообще
+--включена, см. uFrmODedtOrStdItem.pas) в её (id_format, sync_group) РОВНО ОДНА активная
+--производственная подгруппа (type = 0) - при нескольких сопоставление по имени неоднозначно,
+--оставляем null (тот же принцип, что и в Delphi - см. Save/LProdCount в uFrmODedtOrStdItem.pas).
+--Для самих производственных изделий, для нестандартных и для sync_group = 0 (синхронизация
+--отключена) поле не заполняется.
+--$go begin
+alter table or_std_items add id_prod_std_item number(11);
+alter table or_std_items add constraint fk_or_std_items_prod foreign key (id_prod_std_item) references or_std_items(id);
+
+update or_std_items ship
+set id_prod_std_item = (
+  select prod.id
+  from or_std_items prod, or_format_estimates prod_fe, or_format_estimates ship_fe
+  where prod.id_or_format_estimates = prod_fe.id
+    and ship_fe.id = ship.id_or_format_estimates
+    and prod_fe.id_format = ship_fe.id_format
+    and prod_fe.sync_group = ship_fe.sync_group
+    and prod_fe.type = 0
+    and prod_fe.active = 1
+    and lower(prod.name) = lower(ship.name)
+    and 1 = (
+      select count(*) from or_format_estimates fe2
+      where fe2.id_format = ship_fe.id_format and fe2.sync_group = ship_fe.sync_group
+        and fe2.type = 0 and fe2.active = 1
+    )
+)
+where ship.id_or_format_estimates in (
+  select id from or_format_estimates where type = 1 and active = 1 and sync_group > 0
+);
+--$go end
+
+--список отгрузочных изделий, для которых связь НЕ проставилась автоматически (несколько производственных
+--подгрупп в семействе, либо нет одноимённого производственного изделия вовсе) - потребуют либо ручной
+--простановки id_prod_std_item, либо ручной проверки, что для них это действительно не нужно.
+select ship.id, ship.name, fe.id_format, fe.sync_group
+from or_std_items ship, or_format_estimates fe
+where ship.id_or_format_estimates = fe.id and fe.type = 1 and fe.active = 1
+  and ship.id_prod_std_item is null;
+
 
 create or replace view v_or_std_items as --$+
   select
@@ -1804,6 +1847,11 @@ begin
       values (v_candidate, -1) returning id into p_id_item;
       insert into or_std_items (name, id_or_format_estimates)
       values (v_candidate, -2) returning id into v_id_stditem2;
+      --(07.09.2026) та же id-связь отгрузка->производство, что и у настоящих стандартных изделий (см.
+      --or_std_items.id_prod_std_item, общий комментарий там же, и uFrmODedtOrStdItem.pas/Save) - чтобы
+      --новый модуль "Текущее состояние СГП" мог работать с этим полем единообразно для стандартных и
+      --нестандартных изделий, не различая их отдельной веткой кода.
+      update or_std_items set id_prod_std_item = p_id_item where id = v_id_stditem2;
       --для нестандартного изделия отгрузки (группа -2) сразу создаём смету-ссылку из одной позиции -
       --ссылка на соответствующее нестандартное изделие производства (группа -1, p_id_item), с группой
       --"Готовые изделия" (bcad_groups.is_production=1) и префиксом подгруппы -1 ('НСТД.П_') в наименовании -

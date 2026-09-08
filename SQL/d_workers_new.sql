@@ -1,7 +1,5 @@
 --------------------------------------------------------------------------------
 --профессии
-alter table w_jobs drop column has_hazard_comp;
-alter table w_jobs add has_milk_compensation number(1) default 0;
 create table w_jobs(
   id number(11),
   name varchar2(400),
@@ -21,8 +19,127 @@ begin
 end;
 /
 
---!
---insert into w_jobs (id, name, active) select id,name,active from ref_jobs;
+--таблица w_job_salaries
+--плановые начисления (фиксированная и стимулирующая часть) по должностям за каждый месяц
+--
+create table w_job_salaries(
+  id_job number(11),
+  dt date,
+--  planned_pay number,             --плановое начисление
+  fixed_pay number,               --постоянная часть
+  variable_pay number,            --стимулирующая часть
+  constraint pk_w_job_salaries primary key (id_job, dt),
+  constraint fk_w_job_salaries_id_job foreign key (id_job) references w_jobs(id)
+);
+
+create or replace view v_w_job_salaries_grid as 
+select
+--вью для журнала "Плановые начисления по должностям" - сводная по всем активным должностям:
+--данные за прошлый, текущий и следующий календарный месяц (07.09.2026)
+  j.id as id,
+  j.name as job,
+  trunc(add_months(sysdate, -1), 'mm') as dt_prev,
+  trunc(sysdate, 'mm') as dt_cur,
+  trunc(add_months(sysdate, 1), 'mm') as dt_next,
+  sp.fixed_pay as fixed_pay_prev,
+  sp.variable_pay as variable_pay_prev,
+  case when sp.id_job is null then to_number(null) else nvl(sp.fixed_pay, 0) + nvl(sp.variable_pay, 0) end as total_pay_prev,
+  sc.fixed_pay as fixed_pay_cur,
+  sc.variable_pay as variable_pay_cur,
+  case when sc.id_job is null then to_number(null) else nvl(sc.fixed_pay, 0) + nvl(sc.variable_pay, 0) end as total_pay_cur,
+  sn.fixed_pay as fixed_pay_next,
+  sn.variable_pay as variable_pay_next,
+  case when sn.id_job is null then to_number(null) else nvl(sn.fixed_pay, 0) + nvl(sn.variable_pay, 0) end as total_pay_next,
+  case when sp.id_job is null then 1 else 0 end as can_edit_cur
+from
+  w_jobs j
+  left outer join w_job_salaries sp on sp.id_job = j.id and sp.dt = trunc(add_months(sysdate, -1), 'mm')
+  left outer join w_job_salaries sc on sc.id_job = j.id and sc.dt = trunc(sysdate, 'mm')
+  left outer join w_job_salaries sn on sn.id_job = j.id and sn.dt = trunc(add_months(sysdate, 1), 'mm')
+where
+  j.active = 1
+;
+
+create or replace view v_w_job_salaries_history as 
+select
+--история плановых начислений по должности (детальная таблица журнала)
+  s.id_job,
+  s.dt,
+  s.fixed_pay,
+  s.variable_pay,
+  nvl(s.fixed_pay, 0) + nvl(s.variable_pay, 0) as total_pay
+from
+  w_job_salaries s
+;
+
+create or replace procedure p_w_job_salaries_set_value(
+  p_id_job in number,
+  p_dt     in date,
+  p_field  in varchar2,   --'FIXED_PAY' либо 'VARIABLE_PAY'
+  p_value  in number
+) is 
+--сохранение одного значения из журнала "Плановые начисления по должностям": если строки за месяц
+--ещё нет - создаётся, не заданное явно поле обнуляется (суммарное начисление не хранится, считается
+--как fixed_pay + variable_pay). Редактировать можно только следующий месяц, и текущий - если по
+--должности ещё нет записи за прошлый месяц (бизнес-правило проверяется и здесь же).
+  v_dt      date := trunc(p_dt, 'mm');
+  v_dt_cur  date := trunc(sysdate, 'mm');
+  v_dt_next date := trunc(add_months(sysdate, 1), 'mm');
+  v_dt_prev date := trunc(add_months(sysdate, -1), 'mm');
+  v_cnt     number;
+begin
+  if v_dt = v_dt_next then
+    null; --следующий месяц редактируется всегда
+  elsif v_dt = v_dt_cur then
+    select count(*) into v_cnt from w_job_salaries where id_job = p_id_job and dt = v_dt_prev;
+    if v_cnt > 0 then
+      raise_application_error(-20001, 'Редактирование текущего месяца запрещено: по должности уже есть данные за прошлый месяц.');
+    end if;
+  else
+    raise_application_error(-20001, 'Редактировать можно только текущий (при отсутствии данных за прошлый месяц) и следующий месяц.');
+  end if;
+  merge into w_job_salaries t
+  using (select p_id_job as id_job, v_dt as dt from dual) s
+  on (t.id_job = s.id_job and t.dt = s.dt)
+  when matched then update set
+    fixed_pay    = case when upper(p_field) = 'FIXED_PAY' then p_value else fixed_pay end,
+    variable_pay = case when upper(p_field) = 'VARIABLE_PAY' then p_value else variable_pay end
+  when not matched then insert (id_job, dt, fixed_pay, variable_pay)
+  values (
+    p_id_job,
+    v_dt,
+    case when upper(p_field) = 'FIXED_PAY' then p_value else 0 end,
+    case when upper(p_field) = 'VARIABLE_PAY' then p_value else 0 end
+  );
+  commit;
+end p_w_job_salaries_set_value;
+/
+
+create or replace procedure p_w_job_salaries_fill_next_month is 
+--перенос плановых начислений по должностям на следующий месяц - копирует текущий месяц туда,
+--где следующий ещё не заполнен (вызывается из задания планировщика, см. d_sheduled_tesks.sql,
+--w_job_salaries_fill_next_month_job)
+begin
+  insert into w_job_salaries (id_job, dt, fixed_pay, variable_pay)
+  select
+    c.id_job,
+    trunc(add_months(sysdate, 1), 'mm'),
+    c.fixed_pay,
+    c.variable_pay
+  from
+    w_job_salaries c
+  where
+    c.dt = trunc(sysdate, 'mm')
+    and not exists (
+      select 1 from w_job_salaries n
+      where n.id_job = c.id_job and n.dt = trunc(add_months(sysdate, 1), 'mm')
+    )
+  ;
+  commit;
+end p_w_job_salaries_fill_next_month;
+/
+
+
 
 --------------------------------------------------------------------------------
 --обозначения в турв

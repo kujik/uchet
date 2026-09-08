@@ -56,6 +56,19 @@ begin
 end;
 /
 
+begin
+  dbms_scheduler.drop_job('w_job_salaries_fill_next_month_job');
+  dbms_scheduler.create_job (
+    job_name        => 'w_job_salaries_fill_next_month_job',
+    job_type        => 'plsql_block',
+    job_action      => 'begin p_run_w_job_salaries_fill_next_month; end;',
+    repeat_interval => 'freq=daily; byhour=2; byminute=15; bysecond=0;',
+    enabled         => true,
+    comments        => 'перенос плановых начислений по должност€м на следующий мес€ц'
+  );
+end;
+/
+
 --прервать задание
 exec dbms_scheduler.stop_job('orders_fin_monitoring_job');
 --¬ключить/выключить: 
@@ -74,6 +87,7 @@ select log_date, run_duration, status, additional_info from dba_scheduler_job_ru
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'ORDERS_FIN_MONITORING_JOB' order by log_date desc;
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'VM_OR_STD_ITEMS_JOB' order by log_date desc;
 select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'PURGE_SCHEDULER_LOG_JOB' order by log_date desc;
+select log_date, run_duration, status, additional_info from dba_scheduler_job_run_details where job_name = 'W_JOB_SALARIES_FILL_NEXT_MONTH_JOB' order by log_date desc;
 
 
 --------------------------------------------------------------------------------
@@ -121,6 +135,19 @@ exception
     p_log_job_end(v_log_id, 'FAILED', sqlerrm);
     raise;
 end p_run_refresh_vm_or_std_items;
+/
+
+create or replace procedure p_run_w_job_salaries_fill_next_month is
+  v_log_id number;
+begin
+  p_log_job_start('w_job_salaries_fill_next_month_job', v_log_id);
+  p_w_job_salaries_fill_next_month;
+  p_log_job_end(v_log_id, 'SUCCESS');
+exception
+  when others then
+    p_log_job_end(v_log_id, 'FAILED', sqlerrm);
+    raise;
+end p_run_w_job_salaries_fill_next_month;
 /
 
 

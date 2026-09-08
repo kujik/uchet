@@ -117,7 +117,7 @@ uses
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
 
-  uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees,
+  uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGJrnJobSalaries,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
   uFrmWGrepTurv,
@@ -133,7 +133,7 @@ uses
   uFrmOWInvoiceToSgp, uFrmDlgEditNomenclatura, uFrmOGjrnOrders, uFrmOGjrnSemiproducts,
   uFrmCGrepPaymentsByMonth, uFrmCWCash, uFrmAWOracleSessions, uFrmCDedtCashRevision,
   uFrmAWUsersAndRoles, uFrmWGjrnParsec, uFrmOGjrnUchetLog, uFrmOGrefOrStdItems,
-  uFrmOGrepSgp, uFrmWGrepSalary, uFrmOGjrnOrderStages, uFrmOGrepItemsInOrder,
+  uFrmOGrepSgp, uFrmOGrepSgpNew, uFrmWGrepSalary, uFrmOGjrnOrderStages, uFrmOGrepItemsInOrder,
   uFrmODedtTasks, uFrmOGedtSnMain, uFrmODrepFinByOrders, uFrmOGedtSnByAreas,
   uFrmOGlstEstimate, uFrmDlgRItmSupplier, uFrmOGedtSgpRevision, uFrmXWndUserInterface,
   uFrmODedtDevel, uFrmODedtItmUnits, uFrmODedtSplCategoryes, uFrmOWSearchInEstimates,
@@ -704,6 +704,11 @@ begin
     TFrmOGedtSnByAreas.Show(Application, AFormType, Opt, fNone, 0, AAddParam)
   else if AFormType = myfrm_Rep_Sgp then
     TFrmOGrepSgp.Show(Application, AFormType, Opt, fNone, 0, AAddParam)
+  else if AFormType = myfrm_Rep_SgpNew then
+    //(07.09.2026) живой отчёт "Текущее состояние СГП" для заказов нового формата -
+    //см. uFrmOGrepSgpNew.pas; архивный myfrm_Rep_Sgp (TFrmOGrepSgp) остался, доступен
+    //из новой формы кнопкой "Архив по старым заказам"
+    TFrmOGrepSgpNew.Show(Application, AFormType, Opt, fNone, 0, AAddParam)
   else if A.InArray(AFormType, [myfrm_J_OrderStages_Full_Log, myfrm_J_OrderStages_ToSgp_Log, myfrm_J_OrderStages_FromSgp_Log, myfrm_J_OrderStages_Otk_Log]) then
     TFrmOGjrnUchetLog.Show(AOwner, AFormType, Opt, fNone, 0, AAddParam)
   else if AFormType = myfrm_J_Semiproducts then
@@ -730,6 +735,8 @@ begin
     TFrmWGrepTurv.Show(AOwner, AFormType, Opt, fView, Null, AAddParam)
   else if AFormType = myfrm_R_Workers then
     TFrmWGjrnEmployees.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if AFormType = myfrm_J_JobSalaries then
+    TFrmWGJrnJobSalaries.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_Rep_OrdersFinMonitoring then
     TFrmOGrepOrdersFinMonitoring.Show(AOwner, AFormType, Opt, fView, Null, Null)
   else if AFormType = myfrm_Dlg_ExportTurvToXls then

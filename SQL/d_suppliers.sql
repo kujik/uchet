@@ -1900,6 +1900,34 @@ where
 
 --------------------------------------------------------------------------------
 
+create or replace view v_rep_suppliers_negative_demand as 
+--отчет по сырью с отрицательной потребностью для рассылки снабжению
+select
+  v.id,
+  v.name,
+  v.name_unit,
+  v.qnt,
+  v.min_ostatok,
+  v.rezerv,
+  v.qnt_onway,
+  v.qnt1,
+  v.need,
+  abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need)) as need_cost,
+  v.need_m,
+  abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need_m)) as need_m_cost,
+  v.id_category,
+  nvl(c.name, 'без категории') as category_name
+from
+  v_spl_minremains v
+  left outer join spl_categoryes c
+  on c.id = v.id_category
+;
+
+select * from v_rep_suppliers_negative_demand where need_m < 0 order by category_name, need_m;
+
+
+--------------------------------------------------------------------------------
+
 --(select id_nomencl, max(rezerv) as rezerv, max(name_unit) as name_unit, sum(decode(nvl(id_sklad, 0), 0, 0, 842, 0, 922, 0, qnt)) as qnt from v_itm_ext_nomencl group by id_nomencl) vn
 
 select rezerv from v_itm_ext_nomencl where id_nomencl = 14786;

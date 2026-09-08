@@ -624,6 +624,8 @@ begin
     [],
     ['Журнал прихода/ухода работников', myfrm_J_Parsec, User.Roles([], [rW_J_Parsec_V, rW_J_Parsec_V_All])],
     [],
+    ['Плановые начисления по должностям', myfrm_J_JobSalaries, User.Roles([], [rW_J_JobSalaries_V, rW_J_JobSalaries_Ch])],
+    [],
     ['Авансовые расчетные ведомости', myfrm_J_AdvanceCalculations,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Авансовые ведомости к перечислению', myfrm_J_AdvanceTransfer,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
     ['Авансовые ведомости к выдаче', myfrm_J_AdvanceCash,User.Roles([], [rW_J_Payroll_V, rW_J_Payroll_Ch])],
@@ -706,7 +708,10 @@ begin
     ['Планирование - даты заказа', myfrm_J_Pdo_Order_Stage_Dates, User.Roles([], [rOr_J_Pdo_Order_Stage_Dates, rOr_J_Pdo_Order_Stage_Dates_Ch])],
 
     ['Отчеты'],
-    ['Текущее состояние СГП (стандартные изделия)', myfrm_Rep_Sgp, User.Roles([], [rOr_Rep_Sgp_V])],
+    //(07.09.2026) пункт меню теперь ведёт на живой отчёт нового формата (uFrmOGrepSgpNew.pas) -
+    //архивный отчёт по старым заказам (myfrm_Rep_Sgp, TFrmOGrepSgp) доступен из него самого,
+    //кнопкой "Архив по старым заказам"
+    ['Текущее состояние СГП (стандартные изделия)', myfrm_Rep_SgpNew, User.Roles([], [rOr_Rep_Sgp_V])],
     ['Текущее состояние СГП (нестандартные изделия)', myfrm_Rep_Sgp2, User.Roles([], [rOr_Rep_Sgp_V])],
     [],
     ['Годовая потребность в материалах', myfrm_Rep_PlannedMaterials, User.Roles([], [rOr_Rep_PlannedMaterials_V, rOr_Rep_PlannedMaterials_Calc])],

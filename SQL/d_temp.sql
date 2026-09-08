@@ -415,6 +415,27 @@ f_get_estitem_raw_price
 v_order_items
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--!!! sqlUpdater неверно обрабатывает строки с exec в --$go begin
+
+
 --------------------------------------------------------------------------------
 --2026-08 ЗАКАЗЫ
 --сразу полетит все что связано с полем id_order_items.price
@@ -425,3 +446,41 @@ v_order_items
 --вторым этапом удаление старых полей заказа, там вообще все будет неверно
 
 --некоторые вью не попрравляются статус при автоматической перекомпиляции!!!
+
+--------------------------------------------------------------------------------
+--07.09.2026 - константа cOrderNew26TypeID (uOrders.pas) продублирована в SQL через
+--таблицу properties/P_SetProp (d_adm.sql), чтобы её можно было читать из триггеров/
+--процедур (нужна в trg_order_item_stages_biud_r для различения старых и новых
+--заказов при автосоздании актов СГП, см. d_sgp.sql/!алгоритмы.txt).
+--имя свойства - id_order_format_26 (нормальный оракловый snake_case, а не
+--корявое cOrderNew26TypeID из Delphi); prop и subprop совпадают.
+--$go begin
+exec P_SetProp('id_order_format_26', 'id_order_format_26', null, null, 18510, null);
+--$go end
+
+
+--------------------------------------------------------------------------------
+--07.09.2026 - одноразовый backfill or_std_items.id_prod_std_item (см. d_orders.sql) для УЖЕ
+--существующих пар нестандартных изделий нового формата (группы -1 производство / -2 отгрузка,
+--см. p_create_or_std_item_nonstandard_new_format) - у них эта связь при создании ещё не
+--проставлялась. Сопоставление по имени (без учёта регистра), только когда в группе -1 находится
+--РОВНО ОДНО изделие с таким именем - иначе (не должно происходить при штатной работе процедуры
+--создания, но на всякий случай) оставляем null.
+--используем begin/end, а не exec - см. пометку выше про exec в --$go/--!go блоках.
+--$go begin
+begin
+  update or_std_items ship
+  set id_prod_std_item = (
+    select prod.id from or_std_items prod
+    where prod.id_or_format_estimates = -1
+      and lower(prod.name) = lower(ship.name)
+      and 1 = (
+        select count(*) from or_std_items p2
+        where p2.id_or_format_estimates = -1 and lower(p2.name) = lower(ship.name)
+      )
+  )
+  where ship.id_or_format_estimates = -2
+    and ship.id_prod_std_item is null;
+end;
+/
+--$go end

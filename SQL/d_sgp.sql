@@ -1002,7 +1002,7 @@ create table sgp_snapshot_std_items ( --$+
   constraint fk_sgp_snapshot_std_items_f foreign key (id_or_formats) references or_formats(id)
 );
 
-create sequence sq_sgp_snapshot_std_items increment by 1 nocache; --!++
+create sequence sq_sgp_snapshot_std_items increment by 1 nocache; --$+
 
 create or replace trigger trg_sgp_snapshot_std_items_bi_r --$+
   before insert on sgp_snapshot_std_items for each row
@@ -1012,6 +1012,36 @@ begin
   end if;
 end;
 /
+
+--(07.09.2026, часть 5) разовая привязка строк замороженного снимка к производственному
+--эталону через id_prod_std_item - решение пользователя: изменить снимок, а не добавлять
+--логику сравнения по имени в сам вью СГП (см. !алгоритмы.txt)
+--$go begin
+alter table sgp_snapshot_std_items add id_prod_std_item number(11);
+alter table sgp_snapshot_std_items add constraint fk_sgp_snapshot_std_items_prod
+  foreign key (id_prod_std_item) references or_std_items(id);
+
+update sgp_snapshot_std_items s
+set id_prod_std_item = (
+  select p.id
+  from or_std_items p, or_format_estimates ofe
+  where p.id_or_format_estimates = ofe.id
+    and ofe.type = 0 and ofe.active = 1
+    and ofe.id_format = s.id_or_formats
+    and lower(p.name) = lower(s.item_name)
+    and 1 = (
+      select count(*)
+      from or_std_items p2, or_format_estimates ofe2
+      where p2.id_or_format_estimates = ofe2.id
+        and ofe2.type = 0 and ofe2.active = 1
+        and ofe2.id_format = s.id_or_formats
+        and lower(p2.name) = lower(s.item_name)
+    )
+)
+where s.id_prod_std_item is null;
+--$go end
+
+select * from sgp_snapshot_std_items where id_prod_std_item is null;
 
 
 --снимок для нестандартных изделий (аналог v_sgp2) - ключ по позиции заказа
@@ -1043,7 +1073,7 @@ create table sgp_snapshot_nstd_items ( --$+
   constraint fk_sgp_snapshot_nstd_items_oi foreign key (id_order_item) references order_items(id) on delete cascade
 );
 
-create sequence sq_sgp_snapshot_nstd_items increment by 1 nocache;
+create sequence sq_sgp_snapshot_nstd_items increment by 1 nocache; --$+
 
 create or replace trigger trg_sgp_snapshot_nstd_items_bi_r --$+
   before insert on sgp_snapshot_nstd_items for each row
@@ -1303,6 +1333,405 @@ from
 --(см. !алгоритмы.txt, раздел про СГП). Повторный запуск без p_force => 1 вызовет
 --raise_application_error - это защита от случайной перезаписи уже созданного снимка,
 --а не ошибка скрипта.
+--------------------------------------------------------------------------------
+--(07.09.2026, часть 2) Живой отчёт "Текущее состояние СГП" для НОВОГО формата
+--заказов - в отличие от архивной v_sgp_items_by_group (см. выше, заморожена
+--на дату перехода и больше не пересчитывается), этот отчёт ЖИВОЙ, отдельный
+--и предназначен только для заказов нового формата (id_order >= порога
+--properties.id_order_format_26). Сопоставление производство<->отгрузка идёт
+--по or_std_items.id_prod_std_item (id-связь, см. d_orders.sql), а НЕ по
+--совпадению наименования - поэтому при переименовании изделия отчёт не
+--ломается, и не задваивается остаток при нескольких отгрузочных подформатах
+--одной группы. Единица агрегации строки - ПРОИЗВОДСТВЕННОЕ стандартное
+--изделие (or_std_items.id производственного эталона, by_sgp=1) - вокруг
+--него "стягиваются" все связанные отгрузочные изделия через id_prod_std_item,
+--независимо от того, в каком именно отгрузочном подформате они заведены.
+--Источник остатка - order_item_stages (этапы 2/3, текущее значение qnt по
+--каждой (order_item, этап), а НЕ история изменений - см. комментарий у
+--trg_order_item_stages_biud_r в d_order_stages.sql), а не устаревший
+--механизм производственных/отгрузочных паспортов, которым считает архивный
+--v_sgp_items_by_group. Плюс ручные акты sgp_act_in/sgp_act_out (журнал
+--ревизий) - но ТОЛЬКО те, что относятся к позициям заказов НОВОГО формата
+--(проверяем через их id_or_item -> order_items.id_order -> orders.id;
+--акты без id_or_item или по позициям старых заказов сюда не подмешиваются,
+--они уже учтены в архивном отчёте по старым заказам).
+create or replace view v_sgp_new_format_items as --$+
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  g.id_prod_std_item as id,
+  g.id_format,
+  g.orf_name as format_name,
+  g.name,
+  nvl(sell.qnt, 0) as qnt_psp_sell,
+  nvl(prod.qnt, 0) as qnt_psp_prod,
+  nvl(reg.qnt, 0) as qnt_sgp_registered,
+  nvl(shp.qnt, 0) as qnt_shipped,
+  nvl(inprod.qnt, 0) as qnt_in_prod,
+  nvl(toship.qnt, 0) as qnt_to_shipped,
+  (nvl(snap.qnt, 0) + nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) as qnt,
+  (nvl(snap.qnt, 0) + nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0))
+    + nvl(inprod.qnt, 0) - nvl(toship.qnt, 0) as qnt_need,
+  round(nvl(prc.avg_price, 0), 2) as price,
+  round((nvl(snap.qnt, 0) + nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) * nvl(prc.avg_price, 0), 2) as summ,
+  round(nvl(rawp.sum, 0), 2) as priceraw,
+  round((nvl(snap.qnt, 0) + nvl(reg.qnt, 0) - nvl(shp.qnt, 0) + nvl(ai.qnt, 0) - nvl(ao.qnt, 0)) * nvl(rawp.sum, 0), 2) as sumraw
+from
+  --группа строк отчёта - реальные производственные стандартные изделия (эталоны).
+  --(07.09.2026, исправлено) признак by_sgp физически стоит ТОЛЬКО на отгрузочных
+  --изделиях (пользователь подтвердил - "отметка учета по сгп именно и только в
+  --отгрузочных"), у производственных всегда 0 - поэтому фильтруем производственный
+  --эталон не по своему by_sgp (у него его никогда не будет), а по наличию связанного
+  --через id_prod_std_item отгрузочного изделия с by_sgp=1 (см. общий комментарий у
+  --or_std_items.id_prod_std_item, d_orders.sql)
+  (select p.id as id_prod_std_item, p.name, ofe.id_format, orf.name as orf_name
+    from or_std_items p, or_format_estimates ofe, or_formats orf
+    where p.id_or_format_estimates = ofe.id and ofe.id_format = orf.id
+      and ofe.type = 0 and ofe.active = 1
+      and exists (
+        select 1 from or_std_items ship
+        where ship.id_prod_std_item = p.id and ship.by_sgp = 1
+      )
+  ) g
+  left outer join
+  --запущено в производство - позиции ПРОИЗВОДСТВЕННЫХ заказов нового формата
+  (select oi.id_std_item, sum(oi.qnt) as qnt
+    from order_items oi, orders o, thr
+    where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+    group by oi.id_std_item
+  ) prod
+  on prod.id_std_item = g.id_prod_std_item
+  left outer join
+  --заказано всего на отгрузку - позиции ОТГРУЗОЧНЫХ заказов нового формата,
+  --сопоставление по id_prod_std_item (через or_std_items), а не по имени
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, sum(oi.qnt) as qnt
+    from order_items oi, orders o, or_std_items osi, thr
+    where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+      and osi.id = oi.id_std_item
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) sell
+  on sell.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --принято на СГП всего - этап 2 по позициям производственных заказов нового формата
+  (select oi.id_std_item, sum(ois.qnt) as qnt
+    from order_items oi, orders o, order_item_stages ois, thr
+    where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+      and ois.id_order_item = oi.id and ois.id_stage = 2
+    group by oi.id_std_item
+  ) reg
+  on reg.id_std_item = g.id_prod_std_item
+  left outer join
+  --отгружено всего - этап 3 по позициям отгрузочных заказов нового формата, через семью
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, sum(ois.qnt) as qnt
+    from order_items oi, orders o, order_item_stages ois, or_std_items osi, thr
+    where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+      and ois.id_order_item = oi.id and ois.id_stage = 3
+      and osi.id = oi.id_std_item
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) shp
+  on shp.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --в производстве - открытые производственные заказы нового формата, ещё не принято полностью
+  (select oi.id_std_item, sum(oi.qnt - nvl(ois.qnt, 0)) as qnt
+    from order_items oi, orders o, thr,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages where id_stage = 2 group by id_order_item) ois
+    where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+      and o.dt_end is null
+      and ois.id_order_item (+) = oi.id
+      and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+    group by oi.id_std_item
+  ) inprod
+  on inprod.id_std_item = g.id_prod_std_item
+  left outer join
+  --план отгрузки - открытые отгрузочные заказы нового формата, ещё не отгружено полностью, через семью
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, sum(oi.qnt - nvl(ois.qnt, 0)) as qnt
+    from order_items oi, orders o, or_std_items osi, thr,
+      (select id_order_item, sum(qnt) as qnt from order_item_stages where id_stage = 3 group by id_order_item) ois
+    where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+      and o.dt_end is null
+      and osi.id = oi.id_std_item
+      and ois.id_order_item (+) = oi.id
+      and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) toship
+  on toship.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --(07.09.2026, часть 5) остаток на момент перехода на новый формат - разовая привязка
+  --строк замороженного снимка к производственному эталону через id_prod_std_item (см.
+  --backfill выше, начало файла) - подтягиваем как стартовую цифру, чтобы у изделий,
+  --по которым уже был реальный остаток на складе на дату снимка, отчёт не показывал 0
+  (select id_prod_std_item, sum(qnt) as qnt, max(dt_snapshot) as dt_snapshot
+    from sgp_snapshot_std_items
+    where id_prod_std_item is not null
+    group by id_prod_std_item
+  ) snap
+  on snap.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --(07.09.2026, часть 5) ручные И авто-акты прихода (журнал ревизий) - решение
+  --пользователя: акты считаем ВСЕ, независимо от того, относятся ли они к заказу
+  --старого формата (продолжающееся движение после снимка - stage-триггер продолжает
+  --создавать их автоматически, см. d_order_stages.sql) или нового (движение по этому
+  --отчёту либо ручная правка). Условие отсечения - дата акта позже даты снимка ЭТОЙ
+  --семьи (то, что было до снимка, уже включено в его qnt выше) - если снимка для
+  --семьи нет (изделие появилось уже после перехода), считаем вообще все акты по ней
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, sum(aii.qnt) as qnt
+    from sgp_act_in_items aii, sgp_act_in ain, or_std_items osi
+    left outer join
+      (select id_prod_std_item, max(dt_snapshot) as dt_snapshot
+        from sgp_snapshot_std_items where id_prod_std_item is not null
+        group by id_prod_std_item
+      ) snap2
+      on snap2.id_prod_std_item = coalesce(osi.id_prod_std_item, osi.id)
+    where aii.id_act_in = ain.id
+      and aii.id_std_item = osi.id
+      and ain.dt > nvl(snap2.dt_snapshot, to_date('01.01.0001', 'dd.mm.yyyy'))
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) ai
+  on ai.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --(07.09.2026, часть 5) ручные и авто-акты списания - см. комментарий у ai выше, то же самое
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, sum(aoi.qnt) as qnt
+    from sgp_act_out_items aoi, sgp_act_out aon, or_std_items osi
+    left outer join
+      (select id_prod_std_item, max(dt_snapshot) as dt_snapshot
+        from sgp_snapshot_std_items where id_prod_std_item is not null
+        group by id_prod_std_item
+      ) snap3
+      on snap3.id_prod_std_item = coalesce(osi.id_prod_std_item, osi.id)
+    where aoi.id_act_out = aon.id
+      and aoi.id_std_item = osi.id
+      and aon.dt > nvl(snap3.dt_snapshot, to_date('01.01.0001', 'dd.mm.yyyy'))
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) ao
+  on ao.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --средняя цена без НДС из справочника стандартных изделий, по семье
+  (select coalesce(osi.id_prod_std_item, osi.id) as id_prod_std_item, avg(osi.price_base) as avg_price
+    from or_std_items osi
+    where osi.by_sgp = 1
+    group by coalesce(osi.id_prod_std_item, osi.id)
+  ) prc
+  on prc.id_prod_std_item = g.id_prod_std_item
+  left outer join
+  --цена по смете (v_sgp_item_prices существует и работает по имени изделия -
+  --для производственного эталона это по-прежнему корректно и без изменений)
+  v_sgp_item_prices rawp
+  on rawp.id = g.id_prod_std_item
+;
+
+select * from v_sgp_new_format_items;
+select * from v_sgp_new_format_items where qnt < 0;
+
+
+--(07.09.2026, часть 6) детализация по двойному клику для живого отчёта нового формата
+--(uFrmOGrepSgpNew.pas) - переиспользуем диалог uFrmOGinfSgp.pas (раньше обслуживал
+--старый живой отчёт uFrmOGrepSgp.pas, но детализация там была убрана при переводе того
+--отчёта в архив - см. !алгоритмы.txt). Ключ везде - g.id_prod_std_item (id производственного
+--эталона, как в v_sgp_new_format_items), а не id_or_format_estimates/имя, как было раньше.
+--Каждое представление - детализация одной колонки отчёта; v_sgp_new_move_list - общая
+--лента движения (клик по колонке "Текущий остаток"), включает стартовый остаток на дату
+--снимка отдельной строкой, чтобы сумма по ленте сходилась с колонкой "qnt" отчёта.
+
+create or replace view v_sgp_new_psp_prod_list as --$+
+--детализация колонки "Запущено в производство" (qnt_psp_prod)
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  oi.id_std_item as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  oi.qnt
+from order_items oi, orders o, thr
+where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+;
+
+create or replace view v_sgp_new_psp_sell_list as --$+
+--детализация колонки "Заказано всего" (qnt_psp_sell)
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  coalesce(osi.id_prod_std_item, osi.id) as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  oi.qnt
+from order_items oi, orders o, or_std_items osi, thr
+where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+  and osi.id = oi.id_std_item
+;
+
+create or replace view v_sgp_new_registered_list as --$+
+--детализация колонки "Принято на СГП всего" (qnt_sgp_registered) - этап 2
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  oi.id_std_item as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  ois.dt,
+  ois.qnt
+from order_items oi, orders o, order_item_stages ois, thr
+where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+  and ois.id_order_item = oi.id and ois.id_stage = 2
+;
+
+create or replace view v_sgp_new_shipped_list as --$+
+--детализация колонки "Отгружено всего" (qnt_shipped) - этап 3, через семью
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  coalesce(osi.id_prod_std_item, osi.id) as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  ois.dt,
+  ois.qnt
+from order_items oi, orders o, order_item_stages ois, or_std_items osi, thr
+where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+  and ois.id_order_item = oi.id and ois.id_stage = 3
+  and osi.id = oi.id_std_item
+;
+
+create or replace view v_sgp_new_in_prod_list as --$+
+--детализация колонки "В производстве" (qnt_in_prod) - открытые произв. заказы, ещё не принято полностью
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  oi.id_std_item as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  oi.qnt as qnt_in_order,
+  oi.qnt - nvl(ois.qnt, 0) as qnt
+from order_items oi, orders o, thr,
+  (select id_order_item, sum(qnt) as qnt from order_item_stages where id_stage = 2 group by id_order_item) ois
+where oi.id_order = o.id and o.std_item_type = 0 and o.id >= thr.v
+  and o.dt_end is null
+  and ois.id_order_item (+) = oi.id
+  and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+;
+
+create or replace view v_sgp_new_to_shipped_list as --$+
+--детализация колонки "Отгрузка план" (qnt_to_shipped) - открытые отгруз. заказы, ещё не отгружено полностью, через семью
+with thr as (
+  select i as v from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26'
+)
+select
+  coalesce(osi.id_prod_std_item, osi.id) as id,
+  o.id as id_order,
+  o.dt_end,
+  o.ornum || '_' || substr('000000' || oi.pos, -3) as slash,
+  o.dt_beg,
+  o.dt_otgr,
+  oi.qnt - nvl(ois.qnt, 0) as qnt
+from order_items oi, orders o, or_std_items osi, thr,
+  (select id_order_item, sum(qnt) as qnt from order_item_stages where id_stage = 3 group by id_order_item) ois
+where oi.id_order = o.id and o.std_item_type = 1 and o.id >= thr.v
+  and o.dt_end is null
+  and osi.id = oi.id_std_item
+  and ois.id_order_item (+) = oi.id
+  and oi.qnt <> 0 and oi.qnt <> nvl(ois.qnt, 0)
+;
+
+create or replace view v_sgp_new_move_list as --$+
+--общая лента движения по изделию (клик по колонке "Текущий остаток") - остаток на дату
+--снимка (если есть) + приёмка на СГП (+) + отгрузка с СГП (-) + акты прихода (+) + акты
+--списания (-); акты - все, независимо от формата заказа, но только после даты снимка ЭТОЙ
+--семьи (то, что было до снимка, уже включено стартовым остатком) - см. v_sgp_new_format_items
+(select
+  'остаток на дату снимка' as doctype,
+  id_prod_std_item as id,
+  to_number(null) as id_order,
+  to_char(id_prod_std_item) as slash,
+  cast(null as date) as dt_beg,
+  cast(null as date) as dt_otgr,
+  dt_snapshot as dt_end,
+  dt_snapshot as dt,
+  qnt
+from
+  (select id_prod_std_item, sum(qnt) as qnt, max(dt_snapshot) as dt_snapshot
+    from sgp_snapshot_std_items
+    where id_prod_std_item is not null
+    group by id_prod_std_item
+  )
+)
+union all
+(select
+  'производственный паспорт' as doctype, id, id_order, slash, dt_beg, dt_otgr, dt_end, dt, qnt
+from v_sgp_new_registered_list
+)
+union all
+(select
+  'отгрузочный паспорт' as doctype, id, id_order, slash, dt_beg, dt_otgr, dt_end, dt, -qnt as qnt
+from v_sgp_new_shipped_list
+)
+union all
+(select
+  'акт оприходования' as doctype,
+  coalesce(osi.id_prod_std_item, osi.id) as id,
+  ain.id as id_order,
+  to_char(ain.id) as slash,
+  cast(null as date) as dt_beg,
+  cast(null as date) as dt_otgr,
+  trunc(ain.dt) as dt_end,
+  trunc(ain.dt) as dt,
+  aii.qnt
+from sgp_act_in_items aii, sgp_act_in ain, or_std_items osi
+left outer join
+  (select id_prod_std_item, max(dt_snapshot) as dt_snapshot
+    from sgp_snapshot_std_items where id_prod_std_item is not null
+    group by id_prod_std_item
+  ) snap2
+  on snap2.id_prod_std_item = coalesce(osi.id_prod_std_item, osi.id)
+where aii.id_act_in = ain.id
+  and aii.id_std_item = osi.id
+  and ain.dt > nvl(snap2.dt_snapshot, to_date('01.01.0001', 'dd.mm.yyyy'))
+)
+union all
+(select
+  'акт списания' as doctype,
+  coalesce(osi.id_prod_std_item, osi.id) as id,
+  aon.id as id_order,
+  to_char(aon.id) as slash,
+  cast(null as date) as dt_beg,
+  cast(null as date) as dt_otgr,
+  trunc(aon.dt) as dt_end,
+  trunc(aon.dt) as dt,
+  -aoi.qnt as qnt
+from sgp_act_out_items aoi, sgp_act_out aon, or_std_items osi
+left outer join
+  (select id_prod_std_item, max(dt_snapshot) as dt_snapshot
+    from sgp_snapshot_std_items where id_prod_std_item is not null
+    group by id_prod_std_item
+  ) snap3
+  on snap3.id_prod_std_item = coalesce(osi.id_prod_std_item, osi.id)
+where aoi.id_act_out = aon.id
+  and aoi.id_std_item = osi.id
+  and aon.dt > nvl(snap3.dt_snapshot, to_date('01.01.0001', 'dd.mm.yyyy'))
+)
+;
+
+select * from v_sgp_new_move_list order by id, dt_beg desc, id_order desc;
+
+
 set serveroutput on;
 
 declare

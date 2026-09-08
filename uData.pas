@@ -848,6 +848,7 @@ const
   myfrm_R_Divisions = 'R_Divisions';
   myfrm_R_DivisionMembers = 'R_DivisionMembers';
   myfrm_J_WorkerStatus ='J_WorkerStatus_N';
+  myfrm_J_JobSalaries = 'J_JobSalaries';
   myfrm_J_Turv ='J_Turv';
 //  myfrm_J_Payrolls ='J_Payrolls';
   myfrm_J_PayrollCalculations ='J_PayrollCalculations';
@@ -921,6 +922,7 @@ const
   myfrm_R_Itm_InBill='R_Itm_InBill';
   myfrm_R_Itm_Nomencl='R_Itm_Nomencl';
   myfrm_Rep_Sgp='Rep_Sgp';
+  myfrm_Rep_SgpNew='Rep_SgpNew';
   myfrm_Rep_Sgp2='Rep_Sgp2';
   myfrm_J_Sgp_Acts='J_Sgp_Acts';
   myfrm_R_Sgp_Act='R_Sgp_Act';
@@ -1661,6 +1663,8 @@ const
   rW_ActiveDirectoryUsers_ChAll = '2-102';
   rW_ActiveDirectoryUsers_ABook = '2-103';
   rW_J_Payroll_V_Ceh = '2-104';
+  rW_J_JobSalaries_V = '2-105';
+  rW_J_JobSalaries_Ch = '2-106';
 
   rProd_R_Materials_V = '5-01';
   rProd_J_Otk_V = '5-02';
@@ -1833,7 +1837,7 @@ const
 
 
   const
-  URights : array [0..284] of array [0..3] of string = (
+  URights : array [0..286] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1933,6 +1937,8 @@ const
     (rW_R_Workers_Ch,'Модуль "Работники"','Журналы: Работники','Добавление, изменение, удаление работников'),
     (rW_J_WorkerStatus_Ch,'Модуль "Работники"','Журналы: Работники','Прприем, перевод, увольнение'),
     (rW_J_WorkerStatus_V,'Модуль "Работники"','Журналы: Статусы работников','Просмотр журнала'),
+    (rW_J_JobSalaries_V,'Модуль "Работники"','Журналы: Плановые начисления по должностям','Просмотр журнала'),
+    (rW_J_JobSalaries_Ch,'Модуль "Работники"','Журналы: Плановые начисления по должностям','Внесение данных за текущий/следующий месяц'),
     (rW_J_PersBonus_V,'Модуль "Работники"','Журналы: Журнал персональных надбавок','Просмотр журнала'),
     (rW_J_PersBonus_Ch,'Модуль "Работники"','Журналы: Журнал персональных надбавок','Изменение'),
     (rW_J_Candidates_V,'Модуль "Работники"','Журналы: Соискатели','Просмотр журнала'),

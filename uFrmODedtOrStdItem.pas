@@ -1090,6 +1090,19 @@ begin
       LProdRowIndex := i;
     end;
 
+  //(07.09.2026) прямая id-связь отгрузочных изделий семейства с производственным - см. or_std_items.
+  //id_prod_std_item (d_orders.sql) и общий комментарий там же. Пишем ВНУТРИ этой же транзакции (не после
+  //commit, в отличие от CreateSelfSmeta ниже) - это просто денормализованная ссылка на уже сохраненные выше
+  //(LRowIds) записи семейства, никаких новых записей/побочных эффектов не создает. При LProdCount <> 1
+  //(нет производственного соседа либо их несколько - сопоставление неоднозначно) оставляем как есть.
+  if LProdCount = 1 then
+    for i := 0 to High(FRows) do
+      if FRows[i].ItemType = STDITEM_TYPE_SHIPMENT then
+        Q.QExecSql(
+          'update or_std_items set id_prod_std_item = :id_prod$i where id = :id$i',
+          [LRowIds[LProdRowIndex], LRowIds[i]]
+        );
+
   Result := Q.QCommitTrans;
   //ВАЖНО: CreateSelfSmeta вызываем ТОЛЬКО ПОСЛЕ фиксации своей транзакции выше, а не внутри нее - см. подробный
   //комментарий у CreateSelfSmeta про собственную транзакцию.

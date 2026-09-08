@@ -332,12 +332,80 @@ begin
 end;
 /
 
-create or replace trigger trg_order_item_stages_biud_r
+create or replace trigger trg_order_item_stages_biud_r --$+
 --в триггере пишем события изменения таблицы этапов заказа в лог действий 
+--(07.09.2026: здесь же теперь автосоздание актов sgp_act_in/sgp_act_out по СТАРЫМ
+--заказам при приёмке/отгрузке СТАНДАРТНЫХ изделий со склада - см. вложенную процедуру
+--p_sgp_act_on_stage_change ниже и !алгоритмы.txt, раздел про СГП. Это единая точка,
+--т.к. в order_item_stages пишут и p_OrderStage_SetItem, и uFrmOGedtOrderStages.pas
+--напрямую (insert/update/delete по id) - триггер на таблице ловит оба пути.)
   before insert or update or delete on order_item_stages for each row
 declare
   orslash varchar2(30); 
   std varchar2(30); 
+
+  procedure p_sgp_act_on_stage_change(
+  --по дельте количества на этапе 2 (приёмка на СГП) или 3 (отгрузка с СГП) старого
+  --заказа по СТАНДАРТНОМУ изделию создаёт компенсирующую строку в sgp_act_in/
+  --sgp_act_out (см. таблицы в d_sgp.sql). Для новых заказов (id_order >= порога
+  --id_order_format_26 из properties, см. d_temp.sql) и для нестандартных изделий
+  --(order_items.std <> 1) ничего не делает - см. !алгоритмы.txt.
+    p_id_order_item in number,
+    p_id_stage in number,
+    p_delta in number,
+    p_dt in date
+  ) is
+    v_id_order number;
+    v_std number;
+    v_id_std_item number;
+    v_pos number;
+    v_ornum varchar2(100);
+    v_threshold number;
+    v_id_format number;
+    v_qnt number;
+    v_comm varchar2(400);
+    v_id_act number;
+    v_is_in number;
+  begin
+    if nvl(p_delta, 0) = 0 or p_id_stage not in (2, 3) then
+      return;
+    end if;
+    select id_order, std, id_std_item, pos into v_id_order, v_std, v_id_std_item, v_pos
+      from order_items where id = p_id_order_item;
+    if nvl(v_std, 0) <> 1 or v_id_std_item is null then
+      return;  --нестандартное изделие - ongoing-акты по нему не ведём
+    end if;
+    select i into v_threshold from properties
+      where prop = 'id_order_format_26' and subprop = 'id_order_format_26';
+    if v_id_order >= v_threshold then
+      return;  --заказ нового формата - обрабатывается новой (id-based) логикой, не здесь
+    end if;
+    select id_or_format_estimates into v_id_format from or_std_items where id = v_id_std_item;
+    select ornum into v_ornum from orders where id = v_id_order;
+    --этап 2 (приёмка): +дельта - пришло (acr_in), -дельта - откорректировали вниз (act_out)
+    --этап 3 (отгрузка): +дельта - отгрузили (act_out), -дельта - отгрузку отменили/уменьшили (act_in)
+    v_is_in := case when p_id_stage = 2 then case when p_delta > 0 then 1 else 0 end
+                    else case when p_delta > 0 then 0 else 1 end end;
+    v_qnt := abs(p_delta);
+    v_comm := 'Авто по этапам заказа №' || v_ornum || ', поз. ' || v_pos ||
+      ' (order_item_stages, этап ' || p_id_stage || ', ' || to_char(nvl(p_dt, sysdate), 'dd.mm.yyyy') || ')';
+    if v_is_in = 1 then
+      insert into sgp_act_in (id_format, id_user, dt, comm)
+        values (v_id_format, F_GetCurrentUser, nvl(p_dt, sysdate), v_comm)
+        returning id into v_id_act;
+      insert into sgp_act_in_items (id_act_in, id_std_item, id_or_item, qnt)
+        values (v_id_act, v_id_std_item, p_id_order_item, v_qnt);
+    else
+      insert into sgp_act_out (id_format, id_user, dt, comm)
+        values (v_id_format, F_GetCurrentUser, nvl(p_dt, sysdate), v_comm)
+        returning id into v_id_act;
+      insert into sgp_act_out_items (id_act_out, id_std_item, id_or_item, qnt)
+        values (v_id_act, v_id_std_item, p_id_order_item, v_qnt);
+    end if;
+  exception
+    when no_data_found then
+      null;  --нет строки order_items/or_std_items/orders или не задана properties - тихо пропускаем
+  end;
 begin
   begin
   if deleting then
@@ -348,6 +416,7 @@ begin
       update order_items set qnt_to_sgp = qnt_to_sgp - :old.qnt where id = :old.id_order_item;
     end if;   
     P_ToUchetLog(:old.id_stage, null, :old.id_order_item, null, -:old.qnt, null, :old.dt, null, null, null);
+    p_sgp_act_on_stage_change(:old.id_order_item, :old.id_stage, -:old.qnt, :old.dt);
   end if;
   if updating then
     --select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
@@ -357,6 +426,7 @@ begin
       update order_items set qnt_to_sgp = qnt_to_sgp - :old.qnt + :new.qnt where id = :new.id_order_item;
     end if;   
     P_ToUchetLog(:new.id_stage, null, :new.id_order_item, null, nvl(:new.qnt,0) - nvl(:old.qnt,0), null, :new.dt, null, null, null);
+    p_sgp_act_on_stage_change(:new.id_order_item, :new.id_stage, nvl(:new.qnt,0) - nvl(:old.qnt,0), :new.dt);
   end if;
   if inserting then
     --select decode(:new.id_stage, 2, 'СГП-приемка', 3, 'СГП-отгрузка', 4, 'ОТК', :new.id_stage) into std from dual;
@@ -366,6 +436,7 @@ begin
       update order_items set qnt_to_sgp = qnt_to_sgp + :new.qnt where id = :new.id_order_item;
     end if;   
     P_ToUchetLog(:new.id_stage, null, :new.id_order_item, null, :new.qnt, null, :new.dt, null, null, null);
+    p_sgp_act_on_stage_change(:new.id_order_item, :new.id_stage, :new.qnt, :new.dt);
   end if;
   exception
   when others then

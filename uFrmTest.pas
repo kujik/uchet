@@ -1422,7 +1422,7 @@ var
   i: Integer;
   st: string;
 begin
-Q.QExecSql('select st from dual where f = :f$f and st = :st$s and dt = :dt$d', [1.44, 'Кин-дзя-дза', Date]); Exit;
+TasksS.ReportForSuppliersNegativeDemand; Exit;
 
 TasksS.ReportForNegativeQuantityOnSgp;
 TasksS.ReportForOrdersPlannedToStartTomorrow;
@@ -1430,7 +1430,6 @@ TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;
 Exit;
 
 TasksS.ReportForEstimatesOverdue(1);TasksS.ReportForEstimatesOverdue(2);Exit;
-TasksS.ReportForSuppliersNegativeDemand; Exit;
 TasksS.ReportForOverdueOrdersByStartTpoProductionDate; Exit;
 TasksS.ReportForOverdueOrders(False);TasksS.ReportForOverdueOrders(True);Exit;
 FrmXDinputPwd.ShowDialogP(APPlication);

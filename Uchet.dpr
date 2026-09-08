@@ -219,6 +219,7 @@ uses
   uFrmOWedtSetOrderRoute in 'uFrmOWedtSetOrderRoute.pas' {FrmOWedtSetOrderRoute},
   uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges},
   uFrmOWrepStdItemsGroupCheck in 'uFrmOWrepStdItemsGroupCheck.pas' {FrmOWrepStdItemsGroupCheck},
+  uFrmWGjrnJobSalaries in 'uFrmWGjrnJobSalaries.pas' {FrmWGjrnJobSalaries},
   uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt};
 
 var

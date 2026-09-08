@@ -1,5 +1,13 @@
 ﻿{
 таблица подробной информации по различным параметрам для отчета Состояние СГП по стандартным изделиям
+
+(07.09.2026, часть 6) диалог переработан под живой отчёт НОВОГО формата (uFrmOGrepSgpNew.pas,
+v_sgp_new_format_items) - раньше обслуживал старый живой отчёт (uFrmOGrepSgp.pas), но тот
+переведён в статичный архив и детализация из него убрана (см. !алгоритмы.txt), поэтому этот
+диалог был не нужен и переиспользован здесь вместо создания копии. Ключевое отличие - ID
+теперь означает g.id_prod_std_item (id производственного эталона, семья), а не отдельный
+отгрузочный подформат/изделие, как раньше; соответственно все исходные вью ниже (кроме
+разреза "Движение") заменены на новые (см. d_sgp.sql, v_sgp_new_*_list).
 }
 unit uFrmOGinfSgp;
 
@@ -53,8 +61,9 @@ begin
      myfrm_Dlg_Sgp_InfoGrid_Move, 'Движение по изделию.',
      'Информация'
   ]);
-  //заголовочный лейбл - наименование выбранного для детализации изделия
-  va:= Q.QLoadRow('select slash, name from v_sgp_sell_items where id = :id$i', [ID]);
+  //заголовочный лейбл - группа и наименование выбранного для детализации изделия
+  //(07.09.2026) ID теперь id_prod_std_item - берём группу/имя прямо из основного отчёта
+  va:= Q.QLoadRow('select format_name, name from v_sgp_new_format_items where id = :id$i', [ID]);
   lblCaption.SetCaption2('$FF0000 ' + S.NSt(va[0]) + ' $000000 ' + S.NSt(va[1]));
 
   FldDef := [
@@ -67,19 +76,19 @@ begin
   Frg1.Opt.SetWhere('where id = :id$i order by dt_beg desc');
 
   if FormDoc = myfrm_Dlg_Sgp_InfoGrid_PspSell then begin
-    //информация по отгрузочным паспортам, когда-либо оформелнным по данной позиции
+    //информация по отгрузочным заказам нового формата, когда-либо оформленным по данной позиции
     Frg1.Opt.SetFields(FldDef + [
       ['qnt','Кол-во','80','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_by_psp_sell_list');
+    Frg1.Opt.SetTable('v_sgp_new_psp_sell_list');
     Frg1.InfoArray:=[];
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_PspProd then begin
-    //информация по производственным паспортам, когда-либо оформелнным по данной позиции
+    //информация по производственным заказам нового формата, когда-либо оформленным по данной позиции
     Frg1.Opt.SetFields(FldDef + [
       ['qnt','Кол-во','80','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_by_psp_prod_list');
+    Frg1.Opt.SetTable('v_sgp_new_psp_prod_list');
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Shipped then begin
     //информация по отгрузке с сгп
@@ -87,7 +96,7 @@ begin
       ['dt','Отгрузка факт','75'],
       ['qnt','Кол-во','80','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_shipped_list');
+    Frg1.Opt.SetTable('v_sgp_new_shipped_list');
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Shipped_Plan then begin
     //информация по запланированным отгрузкам
@@ -96,7 +105,7 @@ begin
     Frg1.Opt.SetFields(FldDef + [
       ['qnt','Кол-во','80','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_shipped_plan_list');
+    Frg1.Opt.SetTable('v_sgp_new_to_shipped_list');
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Registered then begin
     //информация по приемке на сгп
@@ -104,7 +113,7 @@ begin
       ['dt','Дата приемки','75'],
       ['qnt','Кол-во','80','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_registered_list');
+    Frg1.Opt.SetTable('v_sgp_new_registered_list');
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_In_Prod then begin
     //информация по изделиям В производстве
@@ -112,10 +121,12 @@ begin
       ['qnt_in_order','Кол-во всего','75'],
       ['qnt','Кол-во в производстве','75','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_in_prod_list');
+    Frg1.Opt.SetTable('v_sgp_new_in_prod_list');
   end
   else if FormDoc = myfrm_Dlg_Sgp_InfoGrid_Move then begin
-    //информация общая по движению изделия
+    //информация общая по движению изделия - включая стартовый остаток на дату снимка
+    //(строка "остаток на дату снимка") и ВСЕ акты прихода/списания после даты снимка
+    //семьи (см. v_sgp_new_move_list, d_sgp.sql)
     Frg1.Opt.SetFields([
       ['id_order','_id','40'],
       ['dt_end','_dt_end','40'],
@@ -126,7 +137,7 @@ begin
       ['dt','Дата приемки','75'],
       ['qnt','Кол-во','75','f=f:']
     ]);
-    Frg1.Opt.SetTable('v_sgp_move_list');
+    Frg1.Opt.SetTable('v_sgp_new_move_list');
     Frg1.Opt.SetWhere('where id = :id$i order by dt_beg desc, id_order desc');
   end;
   Result := Inherited;

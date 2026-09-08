@@ -1065,11 +1065,13 @@ end;
 procedure TTasksS.ReportForSuppliersNegativeDemand;
 //отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
 var
-  na: TNamedArr;
+  na, naCats: TNamedArr;
   Fields: TVarDynArray2;
   FileToSend: string;
+  FileToSendArr: TVarDynArray;
   Tbl: THTMLTable;
-  HTML, Title, TopSt: string;
+  HTML, Title, TopSt, CatName: string;
+  i: Integer;
 begin
   Title := 'Номенклатура с отрицательной потребностью на вчерашний день';
   TopSt := 'Номенклатура с отрицательной потребностью на ' + DateTimeToStr(IncDay(Date, -1));
@@ -1081,20 +1083,33 @@ begin
     ['rezerv$f', 'Резерв','80', 'f=#:', 'r'],
     ['qnt_onway$f', 'В пути', '80', 'f=#:', 'r'],
     ['qnt1$f', 'Расход за месяц', '80', 'f=#:', 'r'],      //период по факту может быть любой, он настраивается в таблице снабжения
-    ['need_m$f', 'Потребность с учетом остатка','80', 'f=#:', 'r']
+    ['need$f', 'Мин. потребность','80', 'f=#:', 'r'],
+    ['need_cost$f', 'Стоимость мин. потребности','100', 'f=#:', 'r'],  //стоимость по price_main, если ее нет то по контрольной!
+    ['need_m$f', 'Потребность с учетом остатка','80', 'f=#:', 'r'],
+    ['need_m_cost$f', 'Стоимость потребности с учетом остатка','100', 'f=#:', 'r']
   ];
-  Q.QLoad(Q.QGetSql('A', 'v_spl_minremains', Fields.Col(0).Implode(';'))+ ' where need_m is not null and need_m < 0 order by need_m asc', [], na);
+  //список категорий, по которым вообще есть отрицательная потребность, по возрастанию айди
+  //категории (у "снабжение" id=1, обычно должна идти первой), "без категории" - последней
+  Q.QLoad('select distinct category_name, nvl(id_category, 999999) as sortord from v_rep_suppliers_negative_demand ' +
+    'where need_m < 0 order by sortord, category_name', [], naCats);
   HTML := '';
-  if na.Count > 0 then begin
-    Tbl.InitDefaults;
-    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
-    HTML := '<b>Номенклатура с отрицательной потребностью:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
-    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
-    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
-  end
-  else
+  FileToSendArr := [];
+  for i := 0 to naCats.Count - 1 do begin
+    CatName := naCats.GetValue(i, 'category_name');
+    Q.QLoad(Q.QGetSql('A', 'v_rep_suppliers_negative_demand', Fields.Col(0).Implode(';'))+
+      ' where need_m < 0 and category_name = :category_name$s order by need_m asc', [CatName], na);
+    if na.Count > 0 then begin
+      Tbl.InitDefaults;
+      Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+      HTML := HTML + '<b>' + CatName + ':</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0) + '<br>';
+      FileToSend := Sys.GetWinTemp + '\' + TopSt + ' - ' + CatName + '.xlsx';
+      ExportToXlsx(FileToSend, na, Fields, TopSt + ' - ' + CatName, '', True);
+      FileToSendArr := FileToSendArr + [FileToSend];
+    end;
+  end;
+  if HTML = '' then
     HTML := 'Номенклатура с отрицательной потребностью отсуствует.<br>';
-  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, FileToSendArr, '~');
 end;
 
 
