@@ -88,7 +88,7 @@ uses
   uExportToXlsx,
   uTasks,
 
-  D_Spl_InfoGrid,
+  uFrmOGinfSn,
   uFrmODedtNomenclFiles,
   uExcel,
   uSys,
@@ -901,41 +901,41 @@ begin
     Fr.RefreshRecord;
   end;
   if Fr.CurrField = 'qnt_order_opt' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_MinPart, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_MinPart, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'rezerv' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_Rezerv, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_Rezerv, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'qnt' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_QntOnStore, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_QntOnStore, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'qnt_onway' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_OnWay, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_OnWay, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'qnt_in_processing' then begin
 //    Info_QntInProccessing;
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_OnDemand, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_OnDemand, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'price_main' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_InBillList, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_InBillList, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'order_cost' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_SpSchetList, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_SpSchetList, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'name' then begin
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnt[0-9]{1}$') then begin
     AddParamD:= VararrayOf(AddParamAr + [FDays[StrtoInt(Fr.CurrField[4])]]);
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_Consumption, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_Consumption, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnti[0-9]{1}$') then begin
     AddParamD:= VararrayOf(AddParamAr + [FDays[StrtoInt(Fr.CurrField[5])]]);
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_Incoming, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_Incoming, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if TRegEx.IsMatch(Fr.CurrField, '^qnt_pl[1-3]{1}$') then begin
     AddParamD[1] := -S.NNum(Copy(Fr.CurrField, 7, 1));
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_PlannedOrders, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_PlannedOrders, [myfoModal, myfoSizeable, myfoDialog], fView, Fr.ID, AddParamD);
   end;
   if Fr.CurrField = 'has_files' then begin
     TFrmODedtNomenclFiles.ShowDialog(Self, Fr.ID);

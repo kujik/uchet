@@ -107,7 +107,7 @@ uses
   uFrmXWErrorLog in 'uFrmXWErrorLog.pas' {FrmXWErrorLog},
   F_MdiGridDialogTemplate in 'F_MdiGridDialogTemplate.pas' {Form_MdiGridDialogTemplate},
   D_SuppliersMinPart in 'D_SuppliersMinPart.pas' {Dlg_SuppliersMinPart},
-  D_Spl_InfoGrid in 'D_Spl_InfoGrid.pas' {Dlg_Spl_InfoGrid},
+  uFrmOGinfSn in 'uFrmOGinfSn.pas' {FrmOGinfSn},
   uFrmTestDropDownEh in 'uFrmTestDropDownEh.pas' {FrmTestDropDownEh: TCustomDropDownFormEh},
   uFrDBGridEh in 'uFrDBGridEh.pas' {FrDBGridEh: TFrame},
   uFrmTestMdi1 in 'uFrmTestMdi1.pas' {FrmTestMdi1},

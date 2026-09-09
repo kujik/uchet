@@ -2493,6 +2493,45 @@ where
 select * from v_spl_minremains where qnt < 0;     
 
 
+--09-09-2026 вьюха для диалога информации по номенклатуре в uFrmOGinfSn.pas (раньше D_Spl_InfoGrid.pas), ветка MinPart
+create or replace view v_spl_nomencl_minpart as select
+  n.id_nomencl,
+  n.id_supplier,
+  k.full_name as supplier,
+  n.name_pos as name,
+  u.name_unit as unit,
+  n.base_unit_k,
+  n.minpart
+from
+  dv.namenom_supplier n,
+  dv.kontragent k,
+  dv.unit u
+where
+  n.id_supplier = k.id_kontragent
+  and n.id_base_unit = u.id_unit
+;
+--минимальная партия по всем поставщикам данной номенклатуры (dv.namenom_supplier), отдельно по каждому поставщику, агрегации нет
+
+
+--09-09-2026 вьюха для детализации входящих накладных по счёту поставщику в диалоге uFrmOGinfSn.pas, ветка OnWay
+--(раскрывающаяся панель строки, раньше строилась сырым запросом прямо в D_Spl_InfoGrid.pas)
+create or replace view v_spl_onway_inbills_detail as select
+  i.id_inbill,
+  i.inbilldate as dt,
+  i.inbillnum as num,
+  ii.id_nomencl,
+  i.docid,
+  ii.fact_quantity as qnt
+from
+  dv.in_bill i,
+  dv.in_bill_spec ii
+where
+  i.id_docstate = 3
+  and ii.id_inbill = i.id_inbill
+;
+--приходные накладные (принятые, id_docstate = 3), заведённые по конкретному счёту поставщику (docid) и позиции номенклатуры (id_nomencl)
+
+
 
 
 

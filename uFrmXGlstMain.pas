@@ -87,7 +87,7 @@ uses
   D_Order,
   uFrmODedtReplaceEstimateItem,
   uFrmXWErrorLog, //диалог просмотра ошибки (на TFrmBasicMdi)
-  D_Spl_InfoGrid,
+  uFrmOGinfSn,
 
   uFrmOGedtSnMain,
   uFrmDlgRItmSupplier,
@@ -3008,12 +3008,12 @@ begin
   if (FormDoc = myfrm_R_Itm_Nomencl) then begin
     //тут не обновляется список номенклатуры при ищзменениях в диаллоге, тк он не модальный и обновление в нем не реализовано
     if TCellButtonEh(Sender).Hint = 'Движение по номенклатуре' then
-      TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
+      TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
     if TCellButtonEh(Sender).Hint = 'Поставщики' then begin
       Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
     end;
     if TCellButtonEh(Sender).Hint = 'Приходные накладные' then
-      TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_InBillList, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
+      TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_InBillList, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
     if TCellButtonEh(Sender).Hint = 'Файлы' then begin
       TFrmODedtNomenclFiles.ShowDialog(Self, Fr.ID);
     end;
@@ -3526,7 +3526,7 @@ begin
   end
   else if (FormDoc = myfrm_Rep_PlannedMaterials)and(TRegEx.IsMatch(Fr.CurrField, '^qnt[0-9]{1,2}$')) then begin
     v:= VararrayOf([Fr.GetValueS('name'), S.NNum(Copy(Fr.CurrField, 4, 2))]);
-    TDlg_Spl_InfoGrid.Create(Self, myfrm_Dlg_Spl_InfoGrid_PlanneDOrders, [myfoModal, myfoSizeable, myfoDialog], fView, id, v);
+    TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_PlanneDOrders, [myfoModal, myfoSizeable, myfoDialog], fView, id, v);
     Handled := True;
   end
   else if (FormDoc = myfrm_R_StdPspFormats) and (Fr.CurrField = 'attention') then begin

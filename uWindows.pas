@@ -125,7 +125,7 @@ uses
 
   D_Order,
   D_SuppliersMinPart,
-  D_Spl_InfoGrid,
+  uFrmOGinfSn,
   uFrmAWInstallModule,
 
   uFrmXGsrvSqlMonitor, uFrmXAdmSqlCommentSync, uFrmXAdmSqlUpdater,
@@ -973,7 +973,7 @@ begin
   else if AFormType = myfrm_Dlg_R_Spl_Categoryes then
     TFrmODedtSplCategoryes.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
   else if A.InArray(AFormType, [myfrm_Dlg_Spl_InfoGrid_MoveNomencl, myfrm_Dlg_Spl_InfoGrid_DiffInOrder]) then
-    Form := TDlg_Spl_InfoGrid.Create(AOwner, AFormType, [myfoModal, myfoSizeable, myfoDialog], fView, AId, AAddParam)
+    TFrmOGinfSn.Show(AOwner, AFormType, [myfoModal, myfoSizeable, myfoDialog], fView, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Itm_Units then
     TFrmODedtItmUnits.Show(AOwner, AFormType, Opt + [myfoDialog], AMode, AId, Null)
   else if AFormType = myfrm_Dlg_R_Itm_Suppliers then

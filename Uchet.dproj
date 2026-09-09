@@ -236,8 +236,8 @@
         <DCCReference Include="D_SuppliersMinPart.pas">
             <Form>Dlg_SuppliersMinPart</Form>
         </DCCReference>
-        <DCCReference Include="D_Spl_InfoGrid.pas">
-            <Form>Dlg_Spl_InfoGrid</Form>
+        <DCCReference Include="uFrmOGinfSn.pas">
+            <Form>FrmOGinfSn</Form>
         </DCCReference>
         <DCCReference Include="uFrmTestDropDownEh.pas">
             <Form>FrmTestDropDownEh</Form>
