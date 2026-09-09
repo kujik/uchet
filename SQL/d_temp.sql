@@ -484,3 +484,20 @@ begin
 end;
 /
 --$go end
+
+
+-- 1. применён ли backfill-блок с порогом нового формата (d_temp.sql)
+select * from properties where prop = 'id_order_format_26' and subprop = 'id_order_format_26';
+
+-- 2. есть ли вообще производственные стандартные изделия с признаком "Учет по СГП"
+select count(*) from or_std_items where by_sgp = 1;
+
+-- 3. то же самое, но уже с условиями, которые использует базовая выборка отчёта (g)
+select p.id, p.name, ofe.id_format, ofe.type, ofe.active
+from or_std_items p, or_format_estimates ofe
+where p.id_or_format_estimates = ofe.id
+  and ofe.type = 0 and ofe.active = 1 and p.by_sgp = 1;
+
+-- 4. сам итоговый view
+select count(*) from v_sgp_new_format_items;
+select * from v_sgp_new_format_items where rownum <= 20;

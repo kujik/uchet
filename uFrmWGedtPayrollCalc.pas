@@ -1,8 +1,5 @@
 ﻿{
 зарплатная расчетная ведомость
-
-!!!сделать изключение пользователей, по которым есть отдельные расчетныые ведомости, из общей при загрузке турв
-(сейчас исключаются только уволенные за тот же период по статусу!!!)
 }
 
 unit uFrmWGedtPayrollCalc;
@@ -288,7 +285,6 @@ begin
     WhereSt := '';
     if Length(va) <> 0 then
       WhereSt := 'and not id in (' + A.Implode(va, ',') + ')';
-//    FTurv.Create(FIdTurv, GroupingSt, GroupingSt, 0, 0, -1, -1, WhereSt, True, 1);
     FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 1);
   end
   else begin
@@ -296,27 +292,20 @@ begin
     'and nvl(personnel_number, -100) = nvl(''' + FPayrollParams.G('personnel_number').AsString + ''', -100)';
     FTurv.Create(null, GroupingSt, GroupingSt, FPayrollParams.G('dt1'), FPayrollParams.G('dt2'), FPayrollParams.G('id_departament'), -1, WhereSt, True, 0);
   end;
-  //получим данные по плановой зарплате и фиксированной части из прошлой ведомости
-  Q.QLoad(
-    'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt = :dt1$d',
-    [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt'), -1)], naprev
-  );
-{
-  //временно!!!
-  Q.QLoad(
-    'select i.id_employee, id_job, planned_pay, fixed_pay from temp_w_payroll_calc_item i, temp_w_payroll_calc p where i.id_payroll_calc = p.id and p.dt1 = :dt1$d',
-    [IncMonth(FPayrollParams.G('dt1'), -1)], naprev
-  );}
 
-{  for i:=0 to FTurv.List.high do begin
-     var st:=FTurv.List.G(i, 'employee');
-//     var ppp:=FTurv.List.G(i, 'personal_pay');
-  end;
-  for i:=0 to FTurv.Count - 1 do begin
-     FTurv.CalculateTotals(i);
-//     var st:=FTurv.rows[i].G(i, 'employee');
-     var ppp:=FTurv.Rows[i].Totals.G('personal_pay');
-  end;}
+  //получим данные по плановой зарплате и фиксированной части из справочника "Плановые начисления
+  //по должностям" (w_job_salaries, d_workers_new.sql) - по текущему месяцу ведомости и должности,
+  //а не из прошлой ведомости, как раньше (08.09.2026)
+  //СТАРЫЙ ВАРИАНТ (данные брались из прошлой ведомости, только по тому же работнику и должности) -
+  //закомментировано 08.09.2026, см. новый код ниже и в цикле сопоставления далее:
+  //Q.QLoad(
+  //  'select id_employee, id_job, planned_pay, fixed_pay from v_w_payroll_calc_item where id_target_employee is null and nvl(id_target_departament, -100) = :idd$i and dt = :dt1$d',
+  //  [FPayrollParams.G('id_departament'), IncMonth(FPayrollParams.G('dt'), -1)], naprev
+  //);
+  Q.QLoad(
+    'select id_job, fixed_pay, nvl(fixed_pay, 0) + nvl(variable_pay, 0) as planned_pay from w_job_salaries where dt = trunc(:dt$d, ''mm'')',
+    [FPayrollParams.G('dt')], naprev
+  );
 
 
   NoData := Frg1.GetCount = 0;
@@ -431,10 +420,24 @@ begin
     end;
   end;
 
-  for i := 0 to na.High do
-  for j:= 0 to naprev.High do begin
+  //СТАРЫЙ ВАРИАНТ (сопоставление по работнику и должности - для каждого работника бралась строка
+  //его же прошлой ведомости) - закомментировано 08.09.2026, см. новый код ниже:
+  //for i := 0 to na.High do
+  //for j:= 0 to naprev.High do begin
+  //  if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
+  //    if na.G(i, 'planned_pay') = null then
+  //      na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
+  //    if na.G(i, 'fixed_pay') = null then
+  //      na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
+  //    Break;
+  //  end;
+  //end;
 
-    if (na.G(i, 'id_employee') = naprev.G(j, 'id_employee')) and (na.G(i, 'id_job') = naprev.G(j, 'id_job')) then begin
+  //теперь сопоставляем только по должности - плановое начисление и фиксированная часть из
+  //справочника устанавливаются всем работникам с данной должностью (08.09.2026)
+  for i := 0 to na.High do
+  for j := 0 to naprev.High do begin
+    if na.G(i, 'id_job') = naprev.G(j, 'id_job') then begin
       if na.G(i, 'planned_pay') = null then
         na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
       if na.G(i, 'fixed_pay') = null then
@@ -564,6 +567,7 @@ begin
           e := RoundTo(sh.Cells[cSum - 1, j].Value * 100, -2);
           except
             st := st + fio + ': В файле расчета ОРС не число!' + #13#10;
+            Inc(i);
             Continue;
           end;
           if Frg1.GetValue('ors', i, False).AsFloat <> e then begin
