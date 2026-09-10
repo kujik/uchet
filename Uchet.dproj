@@ -91,15 +91,15 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <DCC_MapFile>3</DCC_MapFile>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <Debugger_RunParams>/test</Debugger_RunParams>
+        <Debugger_RunParams>/scanapi</Debugger_RunParams>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_MinorVer>6</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Build>16276</VerInfo_Build>
+        <VerInfo_Build>16294</VerInfo_Build>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
-        <DCC_Define>PC_;ADMIN;TURV_;SRV_;OR_;PLN_;madExcept;$(DCC_Define)</DCC_Define>
+        <DCC_Define>PC_;ADMIN_;TURV_;SRV;OR_;PLN_;madExcept;$(DCC_Define)</DCC_Define>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.16276;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.09.10 07:57:43;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=Fresh;FileVersion=1.6.0.16294;InternalName=;LegalCopyright=GlavMonstr;LegalTrademarks=;OriginalFilename=;ProductName=Учёт - автоматизация работы;ProductVersion=1.3.0.0;Comments=;LastCompiledTime=2026.09.10 13:58:45;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);SpecialBuild=;PrivateBuild=</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_Special>true</VerInfo_Special>
@@ -522,6 +522,8 @@
             <Form>FrmExportToXlsx</Form>
         </DCCReference>
         <DCCReference Include="uServerTasks.pas"/>
+        <DCCReference Include="uScanApi.pas"/>
+        <DCCReference Include="uBarcode128.pas"/>
         <DCCReference Include="uFrmODedtOrStdItem.pas">
             <Form>FrmODedtOrStdItem</Form>
         </DCCReference>

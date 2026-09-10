@@ -25,6 +25,10 @@ type
     FItemId: Integer;
     //допустимые ставки НДС (из справоника организаций, по продавцам)
     FNdsRates: TVarDynArray;
+    //сохранённый обработчик грида Frg1, вызывается первым в
+    //Frg1DbGridEh1KeyDown - см. по аналогии uFrmWGjrnEmployees.pas
+    FOldFrg1DbGridEh1KeyDown: TKeyEvent;
+    procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     function  Prepare: Boolean; override;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);  override;
@@ -58,7 +62,8 @@ uses
   uWindows,
   uOrders,
   uFrmOGedtEstimate,
-  uFrmODedtOrStdItem
+  uFrmODedtOrStdItem,
+  uBarcode128
   ;
 
 {$R *.dfm}
@@ -218,7 +223,34 @@ begin
     ];
 
   end;
+
+  //отладка сканера штрихкодов: Ctrl+Shift+B на выделенном изделии показывает
+  //экранный штрихкод SI<id>, Ctrl+Alt+Shift+B - печатает его (см. Алгоритмы,
+  //раздел 5; по аналогии с uFrmWGjrnEmployees.pas)
+  FOldFrg1DbGridEh1KeyDown := Frg1.DbGridEh1.OnKeyDown;
+  Frg1.DbGridEh1.OnKeyDown := Frg1DbGridEh1KeyDown;
+
   Result := inherited;
+end;
+
+procedure TFrmOGrefOrStdItems.Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  IdStdItem: Integer;
+begin
+  if Assigned(FOldFrg1DbGridEh1KeyDown) then
+    FOldFrg1DbGridEh1KeyDown(Sender, Key, Shift);
+  //Ctrl+Shift+B - экранный штрихкод стандартного изделия для отладки сканера;
+  //Ctrl+Alt+Shift+B - печать того же штрихкода
+  if (Key = Ord('B')) and ((Shift = [ssCtrl, ssShift]) or (Shift = [ssCtrl, ssAlt, ssShift])) then begin
+    if Frg1.GetCount(False) = 0 then
+      Exit;
+    IdStdItem := Frg1.GetValueI('id');
+    if IdStdItem <= 0 then
+      Exit;
+    if Shift = [ssCtrl, ssAlt, ssShift]
+      then PrintBarcode128('Штрихкод стандартного изделия', 'SI' + IntToStr(IdStdItem), Frg1.GetValueS('name'))
+      else ShowBarcode128Popup('Штрихкод стандартного изделия (отладка)', 'SI' + IntToStr(IdStdItem), Frg1.GetValueS('name'));
+  end;
 end;
 
 procedure TFrmOGrefOrStdItems.Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean);

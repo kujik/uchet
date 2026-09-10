@@ -202,6 +202,8 @@ uses
   uHtmlUtils in 'uHtmlUtils.pas',
   uExportToXlsx in 'uExportToXlsx.pas' {FrmExportToXlsx},
   uServerTasks in 'uServerTasks.pas',
+  uScanApi in 'uScanApi.pas',
+  uBarcode128 in 'uBarcode128.pas',
   uFrmODedtOrStdItem in 'uFrmODedtOrStdItem.pas' {FrmODedtOrStdItem},
   uFrmChooseDialog in 'uFrmChooseDialog.pas' {FrmChooseDialog},
   uFrmChooseDialogMulti in 'uFrmChooseDialogMulti.pas' {FrmChooseDialogMulti},

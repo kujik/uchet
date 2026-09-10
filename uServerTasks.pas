@@ -112,6 +112,12 @@ type
     procedure ReportForPlannedShipments;
   end;
 
+const
+  //название команды запуска сервера сканера штрихкодов продукции (uScanApi.pas) -
+  //отдельно от прочих задач, т.к. после её запуска процесс не завершается, а
+  //остаётся резидентно висеть, обслуживая HTTP-запросы (см. TTasksS.Run)
+  TASK_SCAN_API = '/scanapi';
+
 var
   TasksS: TTasksS;
 
@@ -133,7 +139,8 @@ uses
   uExportToXlsx,
   uFrDBGridEh,
   DBGridEh,
-  uOrders
+  uOrders,
+  uScanApi
   ;
 
 procedure TTasksS.Run;
@@ -187,6 +194,11 @@ begin
       if ParamStr(1) = '/test' then begin
         IsIscorrectTask := True;
       end;
+      if ParamStr(1) = TASK_SCAN_API then begin
+        IsIscorrectTask := True;
+        //в отличие от прочих задач - не завершает работу, см. ниже FrmMain.Close
+        ScanApi.Start;
+      end;
       HasError := False;
     finally
       //на всякий случай откатим транзакцию, если была незафиксированная
@@ -196,8 +208,10 @@ begin
     if IsIscorrectTask then
       Module.ToLogFile(ParamStr(1) + S.IIf(HasError, ' [Ошибка!]', ''));
   until True;
-  //завершает приложение
-  FrmMain.Close;
+  //завершает приложение - кроме сервера сканера штрихкодов, который должен
+  //оставаться резидентно запущенным и обслуживать HTTP-запросы (см. uScanApi.pas)
+  if ParamStr(1) <> TASK_SCAN_API then
+    FrmMain.Close;
 end;
 
 procedure TTasksS.HourlyTasks;

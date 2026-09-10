@@ -32,9 +32,14 @@ uses
 type
   TFrmWGjrnEmployees = class(TFrmBasicGrid2)
   private
+    //сохранённый обработчик грида Frg1, вызывается первым в
+    //Frg1DbGridEh1KeyDown (см. ниже), чтобы не потерять уже существующие
+    //горячие клавиши общего грида (Ctrl+F3, Ctrl+R, Ctrl+C и т.д.)
+    FOldFrg1DbGridEh1KeyDown: TKeyEvent;
     function  PrepareForm: Boolean; override;
     procedure Frg1OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
+    procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure Frg2ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg2OnSetSqlParams(var Fr: TFrDBGridEh; const No: Integer; var SqlWhere: string); override;
     procedure Frg2ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
@@ -55,7 +60,8 @@ uses
   System.Variants, StrUtils,
   uForms, uMessages, uWindows, uFrmBasicMdi, uDBOra, uFrmBasicInput,
   uTurv,
-  uFrmWDedtEmployeeProperties
+  uFrmWDedtEmployeeProperties,
+  uBarcode128
   ;
 
 function TFrmWGjrnEmployees.PrepareForm: Boolean;
@@ -89,6 +95,13 @@ begin
   Frg1.CreateAddControls('1', cntCheck, 'Только работающие', 'chbActive', '', 4, yrefC, 200);
   Frg1.Opt.SetButtons(1, 'rveads', User.Role(rW_R_Workers_Ch));
   Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_Workers;
+
+  //отладка сканера штрихкодов: Ctrl+Shift+B на выделенной строке показывает
+  //экранный штрихкод EM<id> для проверки сканирования телефоном без печати
+  //настоящего бейджика (см. Алгоритмы, раздел 5) - перехватываем событие
+  //только в этой форме, не трогая общий обработчик в uFrDBGridEh.pas
+  FOldFrg1DbGridEh1KeyDown := Frg1.DbGridEh1.OnKeyDown;
+  Frg1.DbGridEh1.OnKeyDown := Frg1DbGridEh1KeyDown;
 
   Frg2.Opt.Caption:='Работники';
   Frg2.Options := Frg2.Options + [myogGridLabels];
@@ -142,6 +155,26 @@ begin
   if TControl(Sender).Name = 'chbActive' then begin
     Frg1.Opt.SetWhere(S.IIfStr(Frg1.GetControlValue('chbActive').AsInteger = 1, 'where is_working_now = ''работает'''));
     Frg1.RefreshGrid;
+  end;
+end;
+
+procedure TFrmWGjrnEmployees.Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  IdEmployee: Integer;
+begin
+  if Assigned(FOldFrg1DbGridEh1KeyDown) then
+    FOldFrg1DbGridEh1KeyDown(Sender, Key, Shift);
+  //Ctrl+Shift+B - экранный штрихкод сотрудника для отладки сканера (см. выше);
+  //Ctrl+Alt+Shift+B - печать того же штрихкода на принтере (бейджик)
+  if (Key = Ord('B')) and ((Shift = [ssCtrl, ssShift]) or (Shift = [ssCtrl, ssAlt, ssShift])) then begin
+    if Frg1.GetCount(False) = 0 then
+      Exit;
+    IdEmployee := Frg1.GetValueI('id');
+    if IdEmployee <= 0 then
+      Exit;
+    if Shift = [ssCtrl, ssAlt, ssShift]
+      then PrintBarcode128('Штрихкод сотрудника', 'EM' + IntToStr(IdEmployee), Frg1.GetValueS('name'))
+      else ShowBarcode128Popup('Штрихкод сотрудника (отладка)', 'EM' + IntToStr(IdEmployee), Frg1.GetValueS('name'));
   end;
 end;
 

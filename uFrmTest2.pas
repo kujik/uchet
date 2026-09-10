@@ -54,7 +54,6 @@ uses
   uFrmXDedtMemo,
   idmessage,
   uFrmXWAbout,
-  F_Adm_Installer,
   uFrmTestMdi1,
   uFrmBasicInput,
   uFrmOGedtSnMain,
@@ -466,9 +465,6 @@ q.QLoadRow('select 1, 45, sysdate from dual where id = :id$s and sysdate = :sysd
 Q.QRollbackTrans;
 exit;
 
-  TForm_Adm_Installer.Create(FrmMain, myfrm_Adm_Installer, [myfoOneCopy], fAdd, 0, null);
-exit;
-MyInfoMessage(Module.GetFileVersion('')); exit;
 
 end;
 

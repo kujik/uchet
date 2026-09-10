@@ -13,6 +13,11 @@ type
   TFrmOGjrnOrders = class(TFrmBasicGrid2)
     procedure Frg1DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
+    //сохранённый обработчик грида Frg2 (позиции заказа), вызывается первым в
+    //Frg2DbGridEh1KeyDown, чтобы не потерять штатные горячие клавиши грида
+    //(см. по аналогии uFrmWGjrnEmployees.pas)
+    FOldFrg2DbGridEh1KeyDown: TKeyEvent;
+    procedure Frg2DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ViewInfo1;
   protected
     function  PrepareForm: Boolean; override;
@@ -65,7 +70,8 @@ uses
   uFrmODEdtInputOrderAccount,
   uFrmXDinputPwd,
   uFrmChooseDialog,
-  D_Order
+  D_Order,
+  uBarcode128
   ;
 
 
@@ -238,6 +244,11 @@ begin
     [], [mbtGridSettings], [-mbtTest, User.IsDeveloper]
   ]);
 
+  //отладка сканера штрихкодов: Ctrl+Shift+B на выделенной позиции заказа
+  //показывает экранный штрихкод OI<id>, Ctrl+Alt+Shift+B - печатает его
+  //(см. Алгоритмы, раздел 5; по аналогии с uFrmWGjrnEmployees.pas)
+  FOldFrg2DbGridEh1KeyDown := Frg2.DbGridEh1.OnKeyDown;
+  Frg2.DbGridEh1.OnKeyDown := Frg2DbGridEh1KeyDown;
 
   Frg1.ReadControlValues;
   if not (User.Role(rOr_J_Orders_Sum)or(User.Role(rOr_J_Orders_PrimeCost))) then begin
@@ -574,6 +585,29 @@ begin
     end;
   end;
   Frg1.DbGridEh1KeyDown(Sender, Key, Shift);
+end;
+
+procedure TFrmOGjrnOrders.Frg2DbGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  IdOrderItem: Integer;
+  BarcodeCaption: string;
+begin
+  if Assigned(FOldFrg2DbGridEh1KeyDown) then
+    FOldFrg2DbGridEh1KeyDown(Sender, Key, Shift);
+  //Ctrl+Shift+B - экранный штрихкод позиции заказа для отладки сканера;
+  //Ctrl+Alt+Shift+B - печать того же штрихкода
+  if (Key = Ord('B')) and ((Shift = [ssCtrl, ssShift]) or (Shift = [ssCtrl, ssAlt, ssShift])) then begin
+    if Frg2.GetCount(False) = 0 then
+      Exit;
+    IdOrderItem := Frg2.GetValueI('id');
+    if IdOrderItem <= 0 then
+      Exit;
+    BarcodeCaption := 'Заказ ' + Frg1.GetValueS('ornum') + ', слеш ' + Frg2.GetValueS('slash') +
+      ': ' + Frg2.GetValueS('fullitemname');
+    if Shift = [ssCtrl, ssAlt, ssShift]
+      then PrintBarcode128('Штрихкод позиции заказа', 'OI' + IntToStr(IdOrderItem), BarcodeCaption)
+      else ShowBarcode128Popup('Штрихкод позиции заказа (отладка)', 'OI' + IntToStr(IdOrderItem), BarcodeCaption);
+  end;
 end;
 
 procedure TFrmOGjrnOrders.Frg1OnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
