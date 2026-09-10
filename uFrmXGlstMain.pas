@@ -81,6 +81,7 @@ uses
   uWindows,
   uOrders,
   uFrmChooseDialog,
+  uFrmOGedtSupplierNomencl,
   uTurv,
   uSnCalendar,
 
@@ -3010,7 +3011,7 @@ begin
     if TCellButtonEh(Sender).Hint = 'Движение по номенклатуре' then
       TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_MoveNomencl, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
     if TCellButtonEh(Sender).Hint = 'Поставщики' then begin
-      Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
+      TFrmOGedtSupplierNomencl.Show(Self, myfrm_Dlg_SupplierMinPart, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));
     end;
     if TCellButtonEh(Sender).Hint = 'Приходные накладные' then
       TFrmOGinfSn.Show(Self, myfrm_Dlg_Spl_InfoGrid_InBillList, [myfoSizeable, myfoDialog], fView, Fr.ID, VarArrayOf([Fr.GetValueS('name'), Fr.GetValueS('name_unit')]));

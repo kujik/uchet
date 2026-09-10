@@ -1,20 +1,20 @@
 inherited FrmAWInstallModule: TFrmAWInstallModule
   Caption = #1054#1073#1085#1086#1074#1083#1077#1085#1080#1077' '#1087#1088#1086#1075#1088#1072#1084#1084#1099
-  ClientHeight = 584
+  ClientHeight = 628
   ClientWidth = 807
   ExplicitWidth = 819
-  ExplicitHeight = 622
+  ExplicitHeight = 666
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     Width = 807
-    Height = 568
-    ExplicitWidth = 850
-    ExplicitHeight = 496
+    Height = 612
+    ExplicitWidth = 807
+    ExplicitHeight = 600
     inherited pnlFrmClient: TPanel
       Width = 797
-      Height = 519
-      ExplicitWidth = 836
-      ExplicitHeight = 446
+      Height = 563
+      ExplicitWidth = 793
+      ExplicitHeight = 550
       object lbl_CompareInfo: TLabel
         Left = 8
         Top = 51
@@ -28,9 +28,16 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         Font.Style = []
         ParentFont = False
       end
-      object lbl_FilesStatus: TLabel
+      object lbl_InstallLog: TLabel
         Left = 8
-        Top = 520
+        Top = 303
+        Width = 91
+        Height = 13
+        Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
+      end
+      object lbl_FilesStatus: TLabel
+        Left = 4
+        Top = 489
         Width = 87
         Height = 16
         Anchors = [akLeft, akBottom]
@@ -41,11 +48,11 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        ExplicitTop = 448
+        ExplicitTop = 550
       end
       object lbl_ResultStatus: TLabel
-        Left = 480
-        Top = 550
+        Left = 8
+        Top = 489
         Width = 96
         Height = 16
         Anchors = [akLeft, akBottom]
@@ -56,14 +63,7 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         Font.Name = 'MS Sans Serif'
         Font.Style = []
         ParentFont = False
-        ExplicitTop = 478
-      end
-      object lbl_InstallLog: TLabel
-        Left = 8
-        Top = 303
-        Width = 91
-        Height = 13
-        Caption = #1059#1089#1090#1072#1085#1086#1074#1082#1080' '#1088#1072#1085#1077#1077':'
+        ExplicitTop = 477
       end
       object cmb_Module: TDBComboBoxEh
         Left = 8
@@ -187,38 +187,28 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         Visible = True
         WantReturns = True
       end
-      object Bt_Install: TBitBtn
-        Left = 576
-        Top = 543
-        Width = 195
-        Height = 33
-        Anchors = [akRight, akBottom]
-        Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
-        TabOrder = 7
-        OnClick = Bt_InstallClick
-        ExplicitLeft = 615
-        ExplicitTop = 470
-      end
       inline FrgInstallLog: TFrDBGridEh
         Left = 8
         Top = 322
-        Width = 265
+        Width = 778
         Height = 118
-        TabOrder = 8
+        TabOrder = 7
         ExplicitLeft = 8
         ExplicitTop = 322
-        ExplicitWidth = 265
+        ExplicitWidth = 778
         ExplicitHeight = 118
         inherited pnlGrid: TPanel
-          Width = 255
+          Width = 768
           Height = 64
-          ExplicitWidth = 255
+          ExplicitWidth = 768
           ExplicitHeight = 64
           inherited DbGridEh1: TDBGridEh
-            Width = 253
+            Width = 766
             Height = 41
             inherited RowDetailData: TRowDetailPanelControlEh
+              ExplicitLeft = 30
               ExplicitTop = 35
+              ExplicitWidth = 32
               ExplicitHeight = 2
               inherited PRowDetailPanel: TPanel
                 Height = 0
@@ -228,9 +218,9 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
           end
           inherited pnlStatusBar: TPanel
             Top = 42
-            Width = 253
+            Width = 766
             ExplicitTop = 42
-            ExplicitWidth = 253
+            ExplicitWidth = 766
             inherited lblStatusBarL: TLabel
               Height = 13
               ExplicitHeight = 13
@@ -246,18 +236,18 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
           ExplicitHeight = 64
         end
         inherited pnlTop: TPanel
-          Width = 265
-          ExplicitWidth = 265
+          Width = 778
+          ExplicitWidth = 778
         end
         inherited pnlContainer: TPanel
-          Width = 265
-          ExplicitWidth = 265
+          Width = 778
+          ExplicitWidth = 778
         end
         inherited pnlBottom: TPanel
           Top = 118
-          Width = 265
+          Width = 778
           ExplicitTop = 118
-          ExplicitWidth = 265
+          ExplicitWidth = 778
         end
         inherited PrintDBGridEh1: TPrintDBGridEh
           BeforeGridText_Data = {
@@ -275,10 +265,10 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         end
       end
       object mem_InstallLogComment: TDBMemoEh
-        Left = 289
-        Top = 324
-        Width = 498
-        Height = 118
+        Left = 8
+        Top = 456
+        Width = 777
+        Height = 81
         ControlLabel.Width = 67
         ControlLabel.Height = 13
         ControlLabel.Caption = #1050#1086#1084#1084#1077#1085#1090#1072#1088#1080#1081
@@ -289,35 +279,51 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
         EditButtons = <>
         MaxLength = 4000
         ReadOnly = True
-        TabOrder = 9
+        TabOrder = 8
         Visible = True
         WantReturns = True
       end
       object chb_CloseSessions: TDBCheckBoxEh
-        Left = 592
-        Top = 455
+        Left = 590
+        Top = 488
         Width = 195
         Height = 17
+        Anchors = [akLeft, akBottom]
         Caption = #1047#1072#1074#1077#1088#1096#1080#1090#1100' '#1089#1077#1089#1089#1080#1080' '#1087#1086#1083#1100#1079#1086#1074#1072#1090#1077#1083#1077#1081
         DynProps = <>
-        TabOrder = 10
+        TabOrder = 9
+        ExplicitTop = 475
       end
       object pgb_Install: TProgressBar
-        Left = 8
-        Top = 477
-        Width = 457
+        Left = 4
+        Top = 511
+        Width = 580
         Height = 33
+        Anchors = [akLeft, akBottom]
         Style = pbstMarquee
         MarqueeInterval = 20
         Step = 20
+        TabOrder = 10
+        ExplicitTop = 498
+      end
+      object Bt_Install: TBitBtn
+        Left = 590
+        Top = 511
+        Width = 195
+        Height = 33
+        Anchors = [akRight, akBottom]
+        Caption = #1059#1089#1090#1072#1085#1086#1074#1080#1090#1100' '#1084#1086#1076#1091#1083#1100
         TabOrder = 11
+        OnClick = Bt_InstallClick
+        ExplicitLeft = 586
+        ExplicitTop = 498
       end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 524
+      Top = 568
       Width = 797
-      ExplicitTop = 451
-      ExplicitWidth = 836
+      ExplicitTop = 555
+      ExplicitWidth = 793
       inherited bvlFrmBtnsTl: TBevel
         Width = 795
         ExplicitWidth = 838
@@ -328,44 +334,48 @@ inherited FrmAWInstallModule: TFrmAWInstallModule
       end
       inherited pnlFrmBtnsContainer: TPanel
         Width = 795
-        ExplicitWidth = 834
+        ExplicitWidth = 791
         inherited pnlFrmBtnsMain: TPanel
           Left = 696
-          ExplicitLeft = 735
+          ExplicitLeft = 692
         end
         inherited pnlFrmBtnsChb: TPanel
           Left = 468
-          ExplicitLeft = 507
+          ExplicitLeft = 464
         end
         inherited pnlFrmBtnsR: TPanel
           Left = 597
-          ExplicitLeft = 636
+          ExplicitLeft = 593
         end
         inherited pnlFrmBtnsC: TPanel
           Width = 328
-          ExplicitWidth = 367
+          ExplicitWidth = 324
         end
       end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 568
+    Top = 612
     Width = 807
-    ExplicitTop = 495
-    ExplicitWidth = 846
+    ExplicitTop = 599
+    ExplicitWidth = 803
     inherited lblStatusBarR: TLabel
       Left = 734
       Height = 14
-      ExplicitLeft = 777
+      ExplicitLeft = 734
     end
     inherited lblStatusBarL: TLabel
       Height = 14
     end
   end
+  inherited tmrAfterCreate: TTimer
+    Left = 168
+    Top = 48
+  end
   object tmr_Poll: TTimer
     Interval = 10000
     OnTimer = tmr_PollTimer
-    Left = 184
-    Top = 460
+    Left = 288
+    Top = 572
   end
 end

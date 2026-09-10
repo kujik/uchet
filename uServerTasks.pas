@@ -108,6 +108,8 @@ type
     procedure ReportForOrdersPlannedToStartTomorrow;
     //Недостающие материалы для производства заказов, запланированных на завтра
     procedure ReportForRequiredMaterialsForPlannedOrdersTomorrow;
+    //заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
+    procedure ReportForPlannedShipments;
   end;
 
 var
@@ -232,6 +234,7 @@ begin
     ReportForEstimatesOverdue(2);
     ReportForOrdersPlannedToStartTomorrow;
     ReportForRequiredMaterialsForPlannedOrdersTomorrow;
+    ReportForPlannedShipments;
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
       ReportForYesterdayOrders(5);
@@ -1080,12 +1083,13 @@ begin
     ['name_unit$s', 'Ед. изм.', '80'],
     ['qnt$f', 'Кол-во на складах', '80', 'r'],
     ['min_ostatok$i','Минимальный остаток','80','r'],
-    ['rezerv$f', 'Резерв','80', 'f=#:', 'r'],
-    ['qnt_onway$f', 'В пути', '80', 'f=#:', 'r'],
+    ['rezerv$f', 'Резерв','80', 'f=#', 'r'],
+    ['qnt_onway$f', 'В пути', '80', 'f=#', 'r'],
     ['qnt1$f', 'Расход за месяц', '80', 'f=#:', 'r'],      //период по факту может быть любой, он настраивается в таблице снабжения
-    ['need$f', 'Мин. потребность','80', 'f=#:', 'r'],
+    ['price$f', 'Цена','80', 'f=#', 'r'],
+    ['need$f', 'Мин. потребность','80', 'f=#', 'r'],
     ['need_cost$f', 'Стоимость мин. потребности','100', 'f=#:', 'r'],  //стоимость по price_main, если ее нет то по контрольной!
-    ['need_m$f', 'Потребность с учетом остатка','80', 'f=#:', 'r'],
+    ['need_m$f', 'Потребность с учетом остатка','80', 'f=#', 'r'],
     ['need_m_cost$f', 'Стоимость потребности с учетом остатка','100', 'f=#:', 'r']
   ];
   //список категорий, по которым вообще есть отрицательная потребность, по возрастанию айди
@@ -1266,6 +1270,59 @@ begin
     HTML := TopSt + ', отсутствуют.';
   if HTML <> '' then
     Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+end;
+
+procedure TTasksS.ReportForPlannedShipments;
+//заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
+var
+  naOrders, naItems: TNamedArr;
+  FieldsOrders, FieldsItems: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Запланированные отгрузки';
+  TopSt := Title + ' (' + DateTimeToStr(Date) + ' - ' + DateTimeToStr(IncDay(Date, 2)) + ')';
+  FieldsOrders := [
+    ['ornum$s', 'Заказ', '90'],
+    ['dt_beg$d', 'Дата создания', '100'],
+    ['customer$s', 'Покупатель', '300;h'],
+    ['project$s', 'Проект', '300;h'],
+    ['cost$f', 'Стоимость заказа', '100', 'f=#:', 'r'],
+    ['dt_otgr$d', 'Дата отгрузки', '100']
+  ];
+  FieldsItems := [
+    ['ornum$s', 'Заказ', '90'],
+    ['dt_otgr$d', 'Дата отгрузки', '100'],
+    ['fullitemname$s', 'Изделие', '400;h'],
+    ['qnt$f', 'Количество', '80', 'r'],
+    ['qnt_on_sgp$f', 'Количество на СГП', '80', 'r'],
+    ['qnt_shortage$f', 'Нехватка', '80', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_planned_shipments_orders', FieldsOrders.Col(0).Implode(';')) + ' order by dt_otgr, ornum', [], naOrders);
+  Q.QLoad(Q.QGetSql('A', 'v_rep_planned_shipments_items', FieldsItems.Col(0).Implode(';')) + ' order by dt_otgr, ornum, pos', [], naItems);
+  HTML := '';
+  FileToSendArr := [];
+  if naOrders.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(naOrders, FieldsOrders, 1, 2, 0) + '<br>';
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + ' - заказы.xlsx';
+    ExportToXlsx(FileToSend, naOrders, FieldsOrders, TopSt, '', True);
+    FileToSendArr := FileToSendArr + [FileToSend];
+  end
+  else
+    HTML := TopSt + ' - заказы отсутствуют.<br>';
+  if naItems.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := HTML + '<b>Изделия по заказам:</b><br>' + Tbl.GenerateEmail(naItems, FieldsItems, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + ' - изделия.xlsx';
+    ExportToXlsx(FileToSend, naItems, FieldsItems, TopSt + ' - изделия', '', True);
+    FileToSendArr := FileToSendArr + [FileToSend];
+  end;
+  Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
 end;
 
 end.

@@ -1328,3 +1328,49 @@ where
   n.name(+) = t.name
   and s.id_nomencl(+) = n.id_nomencl
 ;
+
+
+--------------------------------------------------------------------------------
+
+create or replace view v_rep_planned_shipments_orders as
+select
+--заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
+--(информация п осами мзаказам)
+  id, ornum, dt_beg, customer, project, cost, dt_otgr
+from
+  v_orders
+where
+  id > 0
+  and id_organization <> -1
+  and trunc(dt_otgr) between trunc(sysdate) and trunc(sysdate) + 2
+order by 
+  dt_otgr, ornum
+;
+
+
+create or replace view v_rep_planned_shipments_items as
+select
+--заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
+--(информация п изделиям мзаказам)
+  i.id, 
+  i.id_order, 
+  i.ornum, 
+  i.dt_beg, 
+  i.customer, 
+  i.project, 
+  i.dt_otgr,
+  i.pos, 
+  i.fullitemname, 
+  i.qnt, 
+  sgp.qnt as qnt_on_sgp,
+  case when sgp.qnt < i.qnt then i.qnt - sgp.qnt else null end as qnt_shortage   
+from
+  v_order_items i,
+  v_sgp_items sgp
+where
+  i.id_order in (select id from v_rep_planned_shipments_orders)
+  and sgp.id = i.id_std_item
+  and i.qnt > 0
+order by 
+  i.ornum, i.dt_otgr, i.pos
+;

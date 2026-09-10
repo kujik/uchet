@@ -72,6 +72,7 @@ uses
   uMessages,
   uWindows,
   uOrders,
+  uFrmOGedtSupplierNomencl,
 
   uFrmBasicInput,
   uFrmODedtNomenclFiles,
@@ -270,7 +271,7 @@ begin
   end
   else if Tag = mbtCustom_SupplierNom then begin
     Handled := True;
-    Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
+    TFrmOGedtSupplierNomencl.Show(Self, myfrm_Dlg_SupplierMinPart, [myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
       Fr.GetValue('id_nomencl'),
       VararrayOf([Fr.GetValueS('name'), ''])
     );
@@ -300,7 +301,7 @@ end;
 procedure TFrmOWItmInfo.FrgFromCADOnDbClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 //по даблклику в гриде "Номенклатура из CAD" - открываем диалог ввода номенклатуры поставщиков
 begin
-  Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
+  TFrmOGedtSupplierNomencl.Show(Self, myfrm_Dlg_SupplierMinPart, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView),
     Fr.GetValue('id_nomencl'),
     VararrayOf([Fr.GetValueS('name'), ''])
   );

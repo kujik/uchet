@@ -124,7 +124,7 @@ uses
 
 
   D_Order,
-  D_SuppliersMinPart,
+  uFrmOGedtSupplierNomencl,
   uFrmOGinfSn,
   uFrmAWInstallModule,
 
@@ -969,7 +969,7 @@ begin
   else if AFormType = myfrm_Dlg_R_OrderStdItems then
     TFrmODedtOrStdItem.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_SupplierMinPart then
-    Form := TDlg_SuppliersMinPart.Create(AOwner, AFormType, Opt, AMode, AId, AAddParam)
+    TFrmOGedtSupplierNomencl.Show(AOwner, AFormType, Opt, AMode, AId, AAddParam)
   else if AFormType = myfrm_Dlg_R_Spl_Categoryes then
     TFrmODedtSplCategoryes.Show(AOwner, AFormType, Opt + [myfoSizeable], AMode, AId, Null)
   else if A.InArray(AFormType, [myfrm_Dlg_Spl_InfoGrid_MoveNomencl, myfrm_Dlg_Spl_InfoGrid_DiffInOrder]) then

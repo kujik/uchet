@@ -114,7 +114,8 @@ end;
 
 function  TUser.IsDeveloper: Boolean;
 begin
-  Result:=Role(rAdm_Other_IsDeveloper);
+//  Result:=Role(rAdm_Other_IsDeveloper);
+  Result:=User.GetLogin = 'sprokopenko';
 end;
 
 function  TUser.IsDataEditor: Boolean;

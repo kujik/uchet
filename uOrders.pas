@@ -4520,6 +4520,12 @@ begin
 end;
 
 
+(*
+======================================================================================
+ИСХОДНАЯ ПРОЦЕДУРА ПОЛЬЗОВАТЕЛЯ - закомментирована полностью (по требованию: если
+правится код - оригинал не удаляется, а комментируется). Актуальная версия - ниже,
+после закрывающего комментария.
+======================================================================================
 procedure TOrders.ConvertOrders2026;
 var
   Orders, Order: TNamedArr;
@@ -4610,7 +4616,147 @@ begin
 
 
 }
+end;
+======================================================================================
+Конец исходной процедуры.
+======================================================================================
+*)
 
+procedure TOrders.ConvertOrders2026;
+//======================================================================================
+// Конвертация цен/скидок/наценок/сумм заказов из старого формата (D_Order) в новый
+// формат (uFrmOWOrder). Исправления относительно исходной версии пользователя (см.
+// закомментированный код выше):
+//
+// 1. nds_rate, который сохраняется в order_items и orders - берётся из NdsRateNew
+//    (ставка по организации: -1 и 7 -> 0%, 2 -> 6%, остальные, включая 1 -> 22%),
+//    а не хардкодится буквально 0/22 по веткам. Историческая ставка NdsRate
+//    (0%/20%/22%, в зависимости от даты и организации - подтверждена как верная)
+//    используется ТОЛЬКО чтобы извлечь "сумму без ндс" (base) из старой, уже
+//    посчитанной с ндс величины. Из-за этого price_final/sum_*_final у части
+//    заказов будет немного отличаться от исходной cost/price старого заказа -
+//    там, где NdsRateNew не совпадает с исторической NdsRate на момент заказа
+//    (например, розница/опт до 01.06.2026: было 20%, новая ставка - 22%).
+//    ВАЖНО: NdsRateNew не зависит от даты (в т.ч. для организации -1 "производство" -
+//    исторически с 01.06.2026 такие заказы велись с ндс 22%, а не 0%, но
+//    сохранённый nds_rate для них всё равно будет 0%, как и для более ранних
+//    заказов производства).
+//
+// 2. Убрано дублирование кода: раньше "производство"/"опт"/"розница" были тремя
+//    почти одинаковыми копиями. NdsRate/NdsRateNew уже вычисляются по организации,
+//    поэтому используется один проход по всем заказам.
+//
+// 3. Скидка/наценка по группам (m_i/d_i, m_m/d_m, m_d/d_d) теперь реально
+//    учитывается по старой АДДИТИВНОЙ формуле f = p0*(1 + m/100 - d/100)
+//    (см. комментарий пользователя выше и D_Order.SetSumInHeader) - раньше
+//    sum_items_adjusted/final и sum_montage/delivery_base считались БЕЗ учёта
+//    скидки/наценки, что не совпадало с исторической cost_i/cost_m/cost_d.
+//    Также заполняются новые поля markup_items_percent/discount_items_percent
+//    и аналоги для montage/delivery - раньше не заполнялись вообще.
+//
+// 3а. orders.sum_items_adjusted нигде не читается формой заказа (TFrmOWOrder) -
+//    реально используется sum_items_final_wo_nds (RecalculateItemsPrices/
+//    RecalculateSum в uFrmOWOrder.pas). Заполняются ОБА поля одним и тем же
+//    значением (без ндс, с учётом скидки/наценки), чтобы старые заказы
+//    корректно отображались в новой форме, а не только в справочном поле,
+//    которое реально нигде не используется.
+//
+// 4. База для монтажа/доставки теперь берётся из cost_m_0/cost_d_0 (сумма ДО
+//    скидки/наценки), а не выводится из cost_m/cost_d (сумма ПОСЛЕ) делением на
+//    захардкоженное 1.22 - последнее было неверно для случаев, когда историческая
+//    ставка ндс была не 22% (например, розница/опт до 01.06.2026 - 20%).
+//
+// 5. Добавлено sum_advance := cost_av (в старом формате - cost_av, в новой схеме
+//    есть готовое поле sum_advance, миграция уже подразумевалась в d_orders.sql:
+//    "update orders set sum_advance = cost_av") - раньше не переносилось.
+//
+// 6. Добавлены sum_final и sum_final_wo_nds (итоговые суммы по заказу) - раньше
+//    не считались вообще.
+//
+// 7. Категория "покупные"/перепродажа (cost_a, m_a/d_a, price_pp) сознательно НЕ
+//    переносится - по подтверждению пользователя эта категория раньше не
+//    использовалась (всегда 0), и отдельного места в новом формате для неё нет.
+//
+// Суммы по группам (изделия/монтаж/доставка) считаются от значений из шапки
+// старого заказа (cost_i_0/cost_i, cost_m_0/cost_m, cost_d_0/cost_d), а не
+// суммированием округлённых цен по строкам - так итоговые суммы точно совпадают
+// с тем, что реально сохранено в старом заказе. Цены по строкам (price_base/
+// price_adjusted/price_final в order_items) - лучшее доступное разбиение по
+// позициям для справки, в старом формате скидка/наценка на уровне отдельной
+// позиции никогда не хранилась.
+//======================================================================================
+var
+  Orders, Order: TNamedArr;
+  Price, PriceA, PriceF: Extended;
+  NdsRate, NdsRateNew: Extended;
+  DmI, DmM, DmD: Extended;
+  SumIBase, SumIAdj, SumIFin: Extended;
+  SumMBase, SumMAdj, SumMFin: Extended;
+  SumDBase, SumDAdj, SumDFin: Extended;
+begin
+  if MyQuestionMessage('Рассчитать цены по заказам?') <> mrYes then
+    Exit;
+  Q.QLoad('select * from orders where dt_beg >= :dt$d and id > 0', [EncodeDate(2026, 05, 01)], Orders);
+  for var i := 0 to Orders.High do begin
+    var OrId := Orders.G(i, 'id');
+    var Items := Q.QLoad('select id, price, qnt from order_items where id_order = :id$i', [OrId]);
+
+    //историческая ставка ндс, по которой был посчитан старый price/cost (только для извлечения base)
+    if Orders.G(i, 'dt_beg') >= EncodeDate(2026, 06, 01) then
+      NdsRate := 22
+    else if Orders.G(i, 'id_organization') = -1 then
+      NdsRate := 0
+    else
+      NdsRate := 20;
+
+    //новая ставка ндс по организации - сохраняется в nds_rate и используется для price_final/sum_*_final
+    case Orders.G(i, 'id_organization').AsInteger of
+      -1, 7: NdsRateNew := 0;
+      2: NdsRateNew := 6;
+      else NdsRateNew := 22;
+    end;
+
+    Q.QLoad('select cost_i_0, cost_i, m_i, d_i, cost_m_0, cost_m, m_m, d_m, '+
+      'cost_d_0, cost_d, m_d, d_d, cost_av from orders where id = :id$i', [OrId], Order);
+
+    DmI := 1 + Order.G('m_i').AsFloat / 100 - Order.G('d_i').AsFloat / 100;
+    DmM := 1 + Order.G('m_m').AsFloat / 100 - Order.G('d_m').AsFloat / 100;
+    DmD := 1 + Order.G('m_d').AsFloat / 100 - Order.G('d_d').AsFloat / 100;
+
+    //изделия - по строкам заказа
+    for var j := 0 to High(Items) do begin
+      Price := RoundTo(Items[j][1] / (1 + NdsRate / 100), -2);
+      PriceA := RoundTo(Price * DmI, -2);
+      PriceF := RoundTo(PriceA * (1 + NdsRateNew / 100), -2);
+      Q.QSave('u', 'order_items', '', 'id$i;nds_rate$f;price_base$f;price_adjusted$f;price_final$f',
+        [Items[j][0], NdsRateNew, Price, PriceA, PriceF]);
+    end;
+
+    //итоговые суммы по группам - от значений шапки старого заказа (см. комментарий выше)
+    SumIBase := RoundTo(Order.G('cost_i_0').AsFloat / (1 + NdsRate / 100), -2);
+    SumIAdj := RoundTo(SumIBase * DmI, -2);
+    SumIFin := RoundTo(SumIAdj * (1 + NdsRateNew / 100), -2);
+
+    SumMBase := RoundTo(Order.G('cost_m_0').AsFloat / (1 + NdsRate / 100), -2);
+    SumMAdj := RoundTo(SumMBase * DmM, -2);
+    SumMFin := RoundTo(SumMAdj * (1 + NdsRateNew / 100), -2);
+
+    SumDBase := RoundTo(Order.G('cost_d_0').AsFloat / (1 + NdsRate / 100), -2);
+    SumDAdj := RoundTo(SumDBase * DmD, -2);
+    SumDFin := RoundTo(SumDAdj * (1 + NdsRateNew / 100), -2);
+
+    Q.QSave('u', 'orders', '',
+      'id$i;nds_rate$f;'+
+      'markup_items_percent$f;discount_items_percent$f;sum_items_base$f;sum_items_adjusted$f;sum_items_final$f;sum_items_final_wo_nds$f;'+
+      'markup_montage_percent$f;discount_montage_percent$f;sum_montage_base$f;sum_montage_adjusted$f;sum_montage_final$f;'+
+      'markup_delivery_percent$f;discount_delivery_percent$f;sum_delivery_base$f;sum_delivery_adjusted$f;sum_delivery_final$f;'+
+      'sum_advance$f;sum_final$f;sum_final_wo_nds$f',
+      [OrId, NdsRateNew,
+       Order.G('m_i').AsFloat, Order.G('d_i').AsFloat, SumIBase, SumIAdj, SumIFin, SumIAdj,
+       Order.G('m_m').AsFloat, Order.G('d_m').AsFloat, SumMBase, SumMAdj, SumMFin,
+       Order.G('m_d').AsFloat, Order.G('d_d').AsFloat, SumDBase, SumDAdj, SumDFin,
+       Order.G('cost_av').AsFloat, SumIFin + SumMFin + SumDFin, SumIAdj + SumMAdj + SumDAdj]);
+  end;
 end;
 
 

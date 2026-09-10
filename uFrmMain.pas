@@ -100,7 +100,6 @@ uses
 
   uFrmADedtItmCopyRigths,
 
-  uFrmTest,
   uFrmTest2
   ;
 
@@ -762,4 +761,3 @@ end;
 
 initialization
 end.
-

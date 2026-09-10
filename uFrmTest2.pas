@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uString, uMessages
-  , uPSCompiler, uPSRuntime, Vcl.Buttons
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, uFrmBasicMdi, Vcl.ExtCtrls, Vcl.StdCtrls, uString, uMessages,
+  uPSCompiler, uPSRuntime, Vcl.Buttons, uNamedArr
   ;
 
 type
@@ -24,7 +24,48 @@ type
 var
   FrmTest2: TFrmTest2;
 
+procedure TestProcedure1;
+procedure TestProcedure2;
+procedure TestProcedure3;
+
+
 implementation
+
+uses
+  uFrmMain,
+  uForms,
+  uDBOra,
+  uWindows,
+  uData,
+  uTurv,
+  uExcel,
+  ZLib,
+  uWaitForm,
+  uTasks,
+  uOrders,
+  uExportToXlsx,
+  uServerTasks,
+  uFrmChooseDialog,
+  uFrmOWItmInfo,
+  uSys,
+  uErrors,
+  uFrmCWAcoountBasis,
+  uFrmOWedtProdCalculation,
+  uFrmXDedtMemo,
+  idmessage,
+  uFrmXWAbout,
+  F_Adm_Installer,
+  uFrmTestMdi1,
+  uFrmBasicInput,
+  uFrmOGedtSnMain,
+  uFrmCDedtCashRevision,
+  uFrmBasicEditabelGrid,
+  uFrmOWOrder,
+  uFrmOGedtEstimate,
+  uFrmCDedtAccount,
+  uFrmWWedtWorkSchedule,
+  uFrmXDinputPwd
+  ;
 
 {$R *.dfm}
 
@@ -223,6 +264,219 @@ begin
 end;
 
 *)
+
+//==============================================================================
+//==============================================================================
+//==============================================================================
+
+
+procedure TestProcedure1;
+begin
+
+end;
+
+procedure TestProcedure2;
+var
+  res: TFrmXWAbout;
+  va: TVarDynArray;
+//  Form: TFrmMDI;
+  i: Integer;
+  st: string;
+begin
+TasksS.ReportForPlannedShipments; Exit;
+TasksS.ReportForSuppliersNegativeDemand; Exit;
+
+TasksS.ReportForNegativeQuantityOnSgp;
+TasksS.ReportForOrdersPlannedToStartTomorrow;
+TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;
+Exit;
+
+TasksS.ReportForEstimatesOverdue(1);TasksS.ReportForEstimatesOverdue(2);Exit;
+TasksS.ReportForOverdueOrdersByStartTpoProductionDate; Exit;
+TasksS.ReportForOverdueOrders(False);TasksS.ReportForOverdueOrders(True);Exit;
+FrmXDinputPwd.ShowDialogP(APPlication);
+
+exit;
+//TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
+//TasksS.ReportForActsWriteoffReceipt; exit;
+//TasksS.ReportForSupplyisOnwaySurplus; exit;
+//TasksS.ReportForYesterdayOrders(5);
+//TasksS.ReportForYesterdayOrders(6);
+TasksS.ReportForYesterdayOrders(1);
+TasksS.ReportForYesterdayOrders(3);
+Exit;
+//TasksS.ReportForYesterdayOrders(False);Exit;
+TasksS.ReportForEarlyCompletionActs;Exit;
+va:=[1,2];
+va.Add(2);
+va.Add(3);
+Exit;
+  Wh.ExecReference(myfrm_R_Itm_Nomencl_SEL, nil, [myfoDialog,  myfoSizeable], null);
+Exit;
+//  q.QExecSql('select 1 from www', [1]); exit;
+
+  TFrmOWOrder.Show(Application, myfrm_Dlg_UsersAndRoles, [myfoSizeable, myfoDialog, myfoEnableMaximize], fNone, null, null); exit;
+
+  Exit;
+  //Wh.ExecReference(myfrm_Rep_PlannedMaterials); Exit;
+//  TFrmGridRef.Show(Self, 'myfrm_R_StdProjects_1', [myfoSizeable], fNone, 10, null); exit;
+  TFrmTestMdi1.Show(Application, '123456789', [], fNone, 0, null); exit;
+//TfrmDlgRItmSupplier.Create(Self, 'dddddddd', [myfoMultiCopy, myfoDialog, myfoSizeable, myfoModal], fView, 5753, null);   //id 5753
+//i:=TFrmDlgRItmSupplier.ShowModal(Self, 'dddddddd', [myfoMultiCopy, myfoDialog{, myfoSizeable}, myfoModal], fView, 5753, '444444444');   //id 5753
+//i:=TFrmDlgRItmSupplier.Show(Self, 'dddddddd', [myfoMultiCopy, myfoDialog, myfoSizeable], fView, 5753, null);   //id 5753
+//i:=FrmMDI.width;
+//st:=TFrmDlgRItmSupplier(FrmMdi).BitBtn1.Caption;
+//TFrmDlgRItmSupplier(FrmMdi).btnOk.free;
+//st:=TFrmDlgRItmSupplier(FrmMdi).btnOk.Caption;
+//st:=TFrmDlgRItmSupplier(FrmMdi).BitBtn1.Caption;
+//TFrmDlgRItmSupplier(FrmMdi).btnOk.OnClick(nil);
+//st:=TFrmDlgRItmSupplier(FrmMdi).dbediteh1.Text;
+//st:=TFrmDlgRItmSupplier(FrmMdi).edt_name_org.text;
+exit;
+
+//  TFrmDlgFindNameInEstimates.Show(Self, 'ddd', [myfoSizeable], fNone, null, null);  exit;
+
+//  TFrmAWUsersAndRoles.Show(Self, 'dddddddd', [myfoSizeable], fNone, null, null);
+//  Form:= TFrmMDI.Create(Application, 'sdfsdfgdsfgd', [], fNone, 0, null);
+exit;
+
+  Wh.ExecReference(myfrm_R_MinRemainsI);
+  Exit;
+  //старый диалог ввода сметы удален (D_NewEstimateInput), см. TFrmOGedtEstimate
+
+
+
+
+
+
+//TForm_References.Create(Self, myfrm_R_DelayedInprodReasons, [myfoEnableMaximize, myfoMultiCopy, myfoSizeable], fNone, 0, null);
+//  res := TFrmXWAbout.Create(Self, False);
+//  res.ShowModal;
+end;
+
+procedure TestProcedure3;
+var
+//  res: TFrmXWAbout;
+  res: TForm;
+  i: Integer;
+  st: string;
+  va2: tvardynarray2;
+  v: TVarDynArray;
+  na: TNamedArr;
+begin
+  Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
+  Orders.ConvertOrders2026;  Exit;
+
+  va2 := Q.QLoad('select id, format_name,slash,name,qnt_psp_sell,qnt_psp_prod,qnt_sgp_registered,qnt_shipped,qnt,qnt_in_prod,qnt_to_shipped,qnt_min,qnt_need,price,summ,priceraw,sumraw from v_sgp_items where id_format_est  = :id_format_est$i', [26]);
+  Exit;
+
+
+var ln := Cth.GetTextWidth('sdfsdfsd', frmmain.Font);
+  FrmChooseDialog.ShowDialog('Test', 'отступы между кнопками и по веритикали и по горизонтали для панелей из TSpeedButton', ['выбор 1', 'самый-самый правильный выбора','1','1','1','1','1'], [['ququ']]); exit;
+//FrmExportToXlsx.RunExport;Exit;
+  Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
+
+  Q.QLoad('SELECT /*+ PARALLEL(4) */ * FROM v_orders', [], na);
+  myinfomessage('!!!');
+  exit;
+
+//Exit;
+Turv.SaveAllTurvToExportTable; Exit;
+//  ShowWaitForm('111111111111', nil, True, 1);
+  ShowWaitForm;
+  Sleep(3000);
+  //i:=i div i;
+  //FrmCWAcoountBasis.ShowDialog(nil, 0, fAdd, 0);
+  ShowWaitForm('Привет!'#13#10'Производится очень долгая операция!');
+  Sleep(3000);
+
+
+
+  Exit;
+
+
+Turv.SaveAllTurvToExportTable; Exit;
+
+  na.Create([[1,2]]);
+  na.g('3');
+  Exit;
+
+
+  TFrmCDEdtAccount.Show(Application, '2222212', [myfoDialog, myfoSizeable], fEdit, 38236, null); exit;
+//  Exit;
+//Turv.LoadDataFromParsec; Exit;
+//  Tasks.SplMonitorReportDay; Exit;
+
+
+
+  v:=Q.QLoadRow('select count(*) from adm_user_cfg', []);
+  exit;
+
+
+  //LoadPersonnelNumber; Exit;
+
+    Orders.LoadEstimate(null, null, 1129); exit;
+
+   TFrmOGedtEstimate.Show(Application, '222221', [myfoDialog, myfoSizeable], fEdit, 32098, null); exit;
+
+
+
+  TFrmBasicEditabelGrid.Show(Application, '2222', [myfoSizeable], fNone, 0, null); exit;
+
+  FrmXDedtMemo.ShowDialog(nil, 'AttachAggregateEstimate', 'Комментарий к общей смете', 'wqewqe', st);exit;
+
+
+  Wh.ExecReference(myfrm_Rep_Salary);exit; //myfrm_J_Parsec
+  TFrmOGedtSnMain.Show(FrmMain, 'dddddddd', [myfoSizeable], fNone, 1, null); exit;
+
+
+
+  FrmCWAcoountBasis.ShowDialog(nil, 0, fAdd, 0); exit;
+  TFrmCDedtCashRevision.Show(FrmMain, 'dddddddd', [], fNone, 1, null); exit;
+
+  Wh.ExecReference(myfrm_Rep_SnCalendar_AccMontage);exit;
+
+  q.QLoad('select id_act,id_docstate,actnum,actdate,numzakaz,zakazname,itogo,comments,zakazcostend,firm,doc_owner,doc_date from dv.v_acts', []);
+  myinfomessage('!!!');exit;
+
+
+  i:=i div i; Exit;
+//  TFrmGMtPspCreate.Show(Self, '1234567890-3', [myfoSizeable], fNone, 10, null); exit;
+TFrmBasicInput._TestFunctionDB;
+//i:=FrmMDI.width;
+//st:=TFrmDlgRItmSupplier(FrmMdi).Edit1.Text;
+//st:=TFrmDlgRItmSupplier(FrmMdi).edt_name_org.text;
+exit;
+
+//  TFrmDlgRItmSupplier.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fAdd, null, null); exit;
+//myfoMultiCopyWoID - не реализовано нигде
+//myfoMultiCopy - запускает несколько копий всегда в режимах fNone, fAdd, fCopy, иначе только если нет формы с таким ID
+  TFrmTestMdi1.Show(FrmMain, 'dddddddd', [myfoMultiCopy, myfoSizeable], fAdd, 1, null);
+//  TFrmTestMdi1.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fNone, 2, null);
+//  TFrmTestMdi1.Create(Self, 'dddddddd', [myfoMultiCopy, myfoSizeable], fEdit, 1, null);
+  Exit;
+
+
+//  TForm_Grid.Show(Self, 'dddddddd', [myfoSizeable], fNone, null, null);
+  Exit;
+
+
+Q.QBeginTrans;
+q.QLoadRow('select 1, 45, sysdate from dual where id = :id$s and sysdate = :sysdate$d', [1,date]);
+Q.QRollbackTrans;
+exit;
+
+  TForm_Adm_Installer.Create(FrmMain, myfrm_Adm_Installer, [myfoOneCopy], fAdd, 0, null);
+exit;
+MyInfoMessage(Module.GetFileVersion('')); exit;
+
+end;
+
+//==============================================================================
+//==============================================================================
+//==============================================================================
+
+
 var
   v : variant;
   i: integer;
@@ -238,3 +492,12 @@ begin
     '  ShowMessage(''Результат: '' + IntToStr(result));' + #13#10 +
     'end.';
 end.
+
+
+
+
+
+
+
+
+

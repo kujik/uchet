@@ -89,6 +89,7 @@ uses
   uTasks,
 
   uFrmOGinfSn,
+  uFrmOGedtSupplierNomencl,
   uFrmODedtNomenclFiles,
   uExcel,
   uSys,
@@ -636,7 +637,7 @@ end;
 procedure TFrmOGedtSnMain.Frg1CellButtonClick(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Handled: Boolean);
 begin
   if Fr.CurrField = 'supplierinfo' then begin
-    Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID,
+    TFrmOGedtSupplierNomencl.Show(Self, myfrm_Dlg_SupplierMinPart, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID,
       VararrayOf([Fr.GetValue('name'), Fr.GetValue('name_unit')])
     );
     Fr.RefreshRecord;
@@ -897,7 +898,7 @@ begin
   AddParamAr:= [Fr.GetValue('name'), Fr.GetValue('name_unit')];
   AddParamD:= VararrayOf(AddParamAr);
   if Fr.CurrField = 'supplierinfo' then begin
-    Wh.ExecDialog(myfrm_Dlg_SupplierMinPart, Self, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, AddParamD);
+    TFrmOGedtSupplierNomencl.Show(Self, myfrm_Dlg_SupplierMinPart, [myfoModal, myfoSizeable], S.IIf(User.Role(rOr_Other_R_MinRemains_Ch_Suppl), fEdit, fView), Fr.ID, AddParamD);
     Fr.RefreshRecord;
   end;
   if Fr.CurrField = 'qnt_order_opt' then begin

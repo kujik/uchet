@@ -1911,8 +1911,9 @@ select
   v.rezerv,
   v.qnt_onway,
   v.qnt1,
+  (round(nvl(v.price_main, nvl(v.price_check, null)))) as price,
   v.need,
-  abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need)) as need_cost,
+  case when v.need > 0 then 0 else abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need)) end as need_cost,
   v.need_m,
   abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need_m)) as need_m_cost,
   v.id_category,
@@ -2493,8 +2494,10 @@ where
 select * from v_spl_minremains where qnt < 0;     
 
 
---09-09-2026 вьюха для диалога информации по номенклатуре в uFrmOGinfSn.pas (раньше D_Spl_InfoGrid.pas), ветка MinPart
-create or replace view v_spl_nomencl_minpart as select
+create or replace view v_spl_nomencl_minpart as 
+select
+--для диалога информации по номенклатуре в uFrmOGinfSn
+--минимальная партия по всем поставщикам данной номенклатуры (dv.namenom_supplier), отдельно по каждому поставщику, агрегации нет
   n.id_nomencl,
   n.id_supplier,
   k.full_name as supplier,
@@ -2510,12 +2513,11 @@ where
   n.id_supplier = k.id_kontragent
   and n.id_base_unit = u.id_unit
 ;
---минимальная партия по всем поставщикам данной номенклатуры (dv.namenom_supplier), отдельно по каждому поставщику, агрегации нет
 
 
---09-09-2026 вьюха для детализации входящих накладных по счёту поставщику в диалоге uFrmOGinfSn.pas, ветка OnWay
---(раскрывающаяся панель строки, раньше строилась сырым запросом прямо в D_Spl_InfoGrid.pas)
-create or replace view v_spl_onway_inbills_detail as select
+create or replace view v_spl_onway_inbills_detail as 
+select
+--для детализации входящих накладных по счёту поставщику в диалоге uFrmOGinfSn, детальная панель
   i.id_inbill,
   i.inbilldate as dt,
   i.inbillnum as num,
@@ -2529,12 +2531,11 @@ where
   i.id_docstate = 3
   and ii.id_inbill = i.id_inbill
 ;
---приходные накладные (принятые, id_docstate = 3), заведённые по конкретному счёту поставщику (docid) и позиции номенклатуры (id_nomencl)
 
 
 
 
-
+select id_inbill, dt, num, qnt from v_spl_onway_inbills_detail where id_nomencl = 47171 and docid = 51431 order by dt desc;
 
 
 

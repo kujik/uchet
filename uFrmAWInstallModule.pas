@@ -145,8 +145,8 @@ begin
   //грид истории установок - только чтение, данные грузятся целиком одним запросом (см. RefreshModuleInfo)
   FrgInstallLog.Options := FrDBGridOptionDef;
   FrgInstallLog.Opt.SetFields([
-    ['dt$d', 'Дата', '75'],
-    ['compile_dt$s', 'Компиляция', '105'],
+    ['dt$d', 'Дата', '110'],
+    ['compile_dt$s', 'Компиляция', '110'],
     ['ver$s', 'Версия', '80'],
     ['comm$s', 'Комментарий', '70;w']
   ]);
@@ -159,12 +159,16 @@ begin
 
   tmr_PollTimer(nil);
   pgb_Install.Visible := False;
+  RefreshModuleInfo;
+
   Result := True;
 end;
 
 procedure TFrmAWInstallModule.ModuleParamsChange(Sender: TObject);
 begin
-  //RefreshModuleInfo;
+  if FInPrepare then
+    Exit;
+  RefreshModuleInfo;
 end;
 
 procedure TFrmAWInstallModule.RefreshModuleInfo;
@@ -228,7 +232,7 @@ begin
 
   tmr_PollTimer(nil);
   if not CollectSourceFiles then
-    lbl_FilesStatus.SetCaption('$0000FFФайлы исходников новее скомпилированной программы. Необходимо перекомпилировать проект!')
+    lbl_FilesStatus.SetCaption('$0000FFФайлы исходников новее скомпилированной программы.'#13#10'Необходимо перекомпилировать проект!')
   else
     lbl_FilesStatus.SetCaption('$FF0000Файлы исходников - найдено ' + IntToStr(Length(FSourceFiles)) + ' шт.');
 
