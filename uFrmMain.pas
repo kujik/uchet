@@ -443,6 +443,16 @@ begin
       TFrmOWGenerateAggregateEstimteInExcel.Show(Self, 'FrmOWGenerateAggregateEstimteInExcel', [], fNone, Null, Null)
     else if MenuCaption = 'О программе' then
       FrmXWAbout.ShowAbout
+    else if MenuCaption = 'Выполнить задание...' then begin
+      //ручной запуск любого задания сервера вне расписания - см. заголовок
+      //uServerTasks.pas, раздел "Режим разработки и выполнение заданий вручную"
+      var TaskName := InputBox('Выполнить задание', 'Название задания (например, /hourly, /fromparsec, /calcplanned):', '');
+      if TaskName <> '' then begin
+        if TasksS.ExecuteTaskByName(TaskName)
+          then MyInfoMessage('Задание "' + TaskName + '" выполнено (подробности - в журнале сервера).')
+          else MyInfoMessage('Задание "' + TaskName + '" не распознано.');
+      end;
+    end
     else if MenuCaption = '' then;
   end;
 end;
@@ -754,7 +764,8 @@ begin
     ['Заказы', myfrm_J_Pnl_Orders, User.Roles([], [rPln_J_Orders_V])]
     {$ENDIF}
     {$IFDEF SRV}
-    []
+    ['Задания'],
+    ['Выполнить задание...', '_', True]
     {$ENDIF}
   ];
 end;

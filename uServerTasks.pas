@@ -2,54 +2,44 @@
 
 Модуль, обеспечивающий выполнение фоновых задач.
 
-Программа Сервер в этом режиме запускается по планировщику заданий, с
-передачей в параметре наименования задачи, которую нужно выполнить.
-Управление передается процедуре TasksS.Run, которая выполняет необходимые
-задачи и после выполнения завершаает программу.
-В случае ошибок в обработчике предусмотрено закрытие программы без вывода
-диалога с ожиданием.
+----------------
+Резидентный режим - общее устройство.
 
-для каждой задачи имеется параметр командной строки, который и определяет тип задачи, при старте "сервер.exe /задача"
-в тот же момент выполняеся данная задача, после чего происходит выход из программы
-несколько задач одновременно в одном экземпляре программы - не могут быть выполнены
+Сервер полностью резидентен: с каким бы параметром командной строки он ни был
+запущен ("сервер.exe /задача"), после разовой попытки выполнить
+соответствующую параметру задачу (см. TTasksS.ExecuteTaskByName) процесс НЕ
+завершается - остаётся работать неограниченно долго, и делает две вещи:
+1) обслуживает HTTP-сервер сканера штрихкодов (ScanApi, см. заголовок
+   uScanApi.pas) - эта задача работает всегда, независимо от параметра, с
+   которым запущен процесс, конфликтов с прочими задачами по доступу к БД нет;
+2) выполняет по расписанию все прочие задачи - TTasksS.HourlyTasks (раз в час)
+   и TTasksS.MinutelyTasks (задачи с жёстко заданным в коде временем
+   выполнения, без проверки пересечений между ними - если у двух задач
+   совпадёт минута, выполнятся одна за другой) - обе вызываются из минутного
+   таймера, см. TServerWatchdog ниже в этом модуле.
+Единственность резидентного процесса (независимо от параметра, с которым он
+запущен) обеспечена мьютексом в Uchet.dpr (CheckInstance) - мьютекс общий для
+модуля Сервер целиком, параметр командной строки в его имени больше не
+участвует (иначе процессы, запущенные с разными параметрами, могли бы
+одновременно работать резидентно, дублируя выполнение задач).
 
-приложение Сервер не стартует, если ему не передан параметр (и только один параметр)
-в случае запуска из дельфи, будет еще вопрос для подтверждения выполнения задачи (чтобы не выполнилась случайно)
-
-в случае ошибки во время выполнения задачи, выдается окно ошибки, и через 3 минуты программа закроется
-
-на данный момент для создания расписания задач нужно использовать планировщик виндовс, где запускается приложение Сервер с параметром
-как правило, устанавливаем время старта задачи в расписании ежедневно
-если надо повторять в течении дня (как загрузка парсек), то ставим в нижней части повтор в течении напр 12ч, с интервалом в час.
-
-/fromparsec
-ежедневно в 8:10, повтор ежечасно, в течении 12ч
-/turvreport
-две задачи, ежедневно в 8ч и в 15ч (задача сама определяем когда надо сделать рассылку, с учетом выходных дней)
-
+Планировщик виндовс должен быть настроен на повторный запуск "Сервер.exe" (с
+любым распознаваемым параметром, см. TTasksS.ExecuteTaskByName, либо просто
+TASK_SCAN_API) каждые 5 минут (это отдельная настройка планировщика, не код) -
+это даёт "сторожевой" эффект на случай аварийного завершения процесса или
+сервера: если резидентный процесс жив - новый запуск тут же завершится по
+мьютексу выше; если не жив (упал, либо сам завершился по любой из причин
+ниже) - именно этот запуск станет новым резидентным процессом.
+Индивидуальные задания планировщика для отдельных задач (/fromparsec,
+/turvreport и т.п.) по мере переноса их логики на жёстко заданное время внутри
+MinutelyTasks/HourlyTasks становятся не нужны и постепенно удаляются -
+до этого момента они не мешают резидентному процессу (просто выполняют свою
+задачу ещё раз при срабатывании, см. ExecuteTaskByName).
 
 ----------------
-В этом же модуле находятся и сами выполняемые сервером задания.
+Обновление сервера.
 
-----------------
-Резидентный режим (задача /scanapi, см. TASK_SCAN_API и TScanApi в uScanApi.pas).
-
-В отличие от всех прочих задач, эта не завершает процесс сразу после выполнения,
-а остаётся резидентно висеть и обслуживает HTTP-сервер сканера штрихкодов
-(см. заголовок uScanApi.pas). Единственность запущенного экземпляра для этого
-параметра уже обеспечена мьютексом в Uchet.dpr (CheckInstance, имя мьютекса
-учитывает параметр командной строки) - если процесс с /scanapi уже работает,
-новый запуск того же параметра тихо завершится сам (Halt), ничего специально
-проверять для этого в коде задачи не нужно.
-
-Планировщик виндовс должен быть настроен на повторный запуск "Сервер.exe /scanapi"
-каждые 5 минут (это отдельная настройка планировщика, не код) - это даёт
-"сторожевой" эффект на случай аварийного завершения процесса или сервера: если
-резидентный процесс жив - новый запуск тут же завершится по мьютексу выше; если
-не жив (упал, либо сам завершился по любой из причин ниже) - именно этот запуск
-станет новым резидентным процессом.
-
-Пока сервер резидентно работает, TScanApiWatchdog (см. ниже в этом модуле) раз в
+Пока сервер резидентно работает, TServerWatchdog (см. ниже в этом модуле) раз в
 5 минут проверяет, не появилась ли на сервере дистрибутива новая версия exe -
 тем же приёмом, что и uUpdater.CheckForUpdatesAndRunUpdater для обычных
 клиентских модулей: по файлу Updater\updater.dir рядом с exe сравнивается дата
@@ -60,13 +50,43 @@ IsExeUpdateAvailable в uUpdater.pas). Сам исполняемый файл т
 запускается Uchet_Updater.exe (RunUpdaterAndHalt), который дожидается закрытия
 процесса и подменяет файл уже после этого - см. заголовок uUpdater.pas.
 
-Он же раз в минуту вызывает TTasksS.MinutelyTasks - задачи с жёстко заданным в
-коде временем выполнения (без проверки пересечений времени между задачами - если
-у двух задач совпадёт минута, выполнятся одна за другой). Список задач/времени
-заполняется прямо в теле MinutelyTasks, по аналогии с HourlyTasks выше. Это
-отдельный, новый механизм - перенос уже существующих задач (/fromparsec,
-/turvreport и т.п.) с планировщика Windows на MinutelyTasks выполняется отдельно
-и постепенно, сам факт наличия старых задач в планировщике этому не мешает.
+----------------
+Соединение с БД.
+
+Если пропало соединение с БД (Q.Connected = False), процесс сразу
+завершается (см. TServerWatchdog.MinutelyTimerTimer) - без соединения ни
+сканирование, ни прочие задачи всё равно не могут работать. Следующая
+попытка запуска - через 5 минут, по сторожевому заданию планировщика (см.
+выше).
+
+----------------
+Логирование.
+
+Каждое выполнение задачи (и разовой, при старте, и по расписанию - в том
+числе КАЖДАЯ отдельная процедура внутри HourlyTasks/MinutelyTasks, а не
+только вся пачка целиком) логируется отдельной строкой, и в файловый лог
+(Module.ToLogFile), и в БД (таблица adm_db_log, см. TmyDBOra.QLog) - см.
+LogTaskEvent ниже в этом модуле. Ошибка внутри отдельной задачи логируется и
+не прерывает работу резидентного процесса - выполнение остальных задач (и
+работа сканера штрихкодов) продолжается, см. RunLoggedTask/
+ExecuteTaskByName. Это отдельный, дополнительный уровень защиты сверх
+имеющегося глобального перехвата необработанных исключений (madExcept) -
+последний по-прежнему завершает процесс с выводом окна (что приемлемо,
+процесс перезапустится по сторожевому заданию планировщика), но благодаря
+LogTaskEvent ошибка в любом случае успевает попасть в лог до этого.
+
+----------------
+Режим разработки и выполнение заданий вручную.
+
+При наличии в каталоге программы файла "dev" (см. Module.DevFileExists) при
+старте резидентного процесса выводится вопрос, выполнять ли задания по
+расписанию (см. TTasksS.Run) - это позволяет поднять сервер для отладки, не
+запуская автоматически реальные ежедневные/ежечасные задачи (рассылки,
+изменения данных и т.п.); сканирование и самообновление при этом всё равно
+продолжают работать. Независимо от режима (не только в режиме разработки),
+выполнить произвольное задание вручную, вне расписания, можно через пункт
+главного меню "Выполнить задание..." (см. TFrmMain.ExecuteMainMenuItem) -
+он обращается к тому же TTasksS.ExecuteTaskByName, что и старт процесса.
 
 }
 
@@ -85,16 +105,26 @@ type
   private
   public
     //процедура выполняется при старте модуля Сервер
-    //выполняет задачу в соответствии с переданным параметром
+    //запускает сканер штрихкодов (работает всегда) и резидентный сторож
+    //(TServerWatchdog), затем выполняет разовую задачу в соответствии с
+    //переданным параметром - см. заголовок модуля
     procedure Run;
+    //выполняет одну задачу по её "имени" (совпадает с параметром командной
+    //строки, см. константы вида "/задача" по тексту модуля и TASK_SCAN_API);
+    //используется и при старте процесса (см. Run), и при выполнении задания
+    //вручную (см. TFrmMain - пункт главного меню "Выполнить задание...").
+    //возвращает False, если имя задачи не распознано. ошибка внутри задачи
+    //не прерывает работу резидентного процесса - логируется (и в файл, и в
+    //БД, см. LogTaskEvent) и выполнение продолжается
+    function ExecuteTaskByName(const ATaskName: string): Boolean;
     //вополняет задачи раз в час
     //сейчас здесь же прописываю выполнение ежедневных задач в жестко заданное время
+    //вызывается из минутного таймера в начале каждого часа, см. TServerWatchdog
     procedure HourlyTasks;
     //выполняет задачи с жёстко заданным временем в минутах, без проверки
     //пересечений - вызывается раз в минуту, пока сервер работает в резидентном
-    //режиме (см. TASK_SCAN_API и TScanApiWatchdog в этом модуле); конкретные
-    //задачи и их время добавляются прямо в теле этой процедуры, по аналогии с
-    //HourlyTasks выше
+    //режиме (см. TServerWatchdog в этом модуле); конкретные задачи и их время
+    //добавляются прямо в теле этой процедуры, по аналогии с HourlyTasks выше
     procedure MinutelyTasks;
 
     //удаление устаревших данных
@@ -186,22 +216,69 @@ uses
   uScanApi,
   uUpdater,
   Forms,
+  Controls,
   ExtCtrls,
   IOUtils
   ;
 
+var
+  //разрешено ли выполнение заданий по расписанию (HourlyTasks/MinutelyTasks
+  //из минутного таймера) в текущем запуске резидентного процесса; в обычном
+  //режиме всегда True, в режиме разработки (Module.DevFileExists) - по
+  //ответу на вопрос при старте, см. TTasksS.Run. Сканирование и проверка
+  //обновлений от этого флага не зависят - работают всегда
+  IsScheduleEnabled: Boolean = True;
+
+procedure LogTaskEvent(const ATaskName, AComment: string);
+//логирует событие, связанное с выполнением задачи, одновременно в файловый
+//лог (Module.ToLogFile) и в БД (таблица adm_db_log, см. TmyDBOra.QLog) -
+//см. заголовок модуля, раздел "Логирование". ошибку записи в БД (например,
+//если только что пропало соединение) не считаем фатальной для самого
+//логирования - в файл запись в любом случае уже сделана выше
+begin
+  Module.ToLogFile(ATaskName + ' - ' + AComment);
+  try
+    Q.QLog(ATaskName, AComment);
+  except
+  end;
+end;
+
+procedure RunLoggedTask(const ATaskName: string; ATaskProc: TProc);
+//выполняет одну задачу (переданную как ссылку на процедуру) с
+//индивидуальным логированием результата - см. LogTaskEvent. ошибка внутри
+//задачи не прерывает работу резидентного процесса и не мешает выполнению
+//остальных задач - логируется, и выполнение продолжается со следующей
+//задачи (см. заголовок модуля, раздел "Логирование"); используется в
+//HourlyTasks/MinutelyTasks, чтобы логировать каждую отдельную процедуру, а
+//не всю пачку задач целиком
+begin
+  try
+    ATaskProc();
+    LogTaskEvent(ATaskName, 'выполнено');
+  except
+    on E: Exception do
+      LogTaskEvent(ATaskName, 'ошибка: ' + E.Message);
+  end;
+end;
+
 type
-  //резидентный "сторож" процесса сервера сканера штрихкодов (см. TASK_SCAN_API):
-  //пока сервер работает, следит за двумя вещами через собственные таймеры -
+  //резидентный "сторож" процесса сервера (см. заголовок модуля выше):
+  //пока сервер работает, следит через собственные таймеры за -
   //1) не появилась ли на сервере дистрибутива новая версия exe - если да,
   //   безопасно запускает обновление и штатно завершает процесс (см.
   //   UpdateCheckTimerTimer ниже - самих файлов запущенного процесса не трогаем);
-  //2) не наступило ли время одной из задач с жёстко заданным временем
-  //   выполнения (см. TTasksS.MinutelyTasks).
-  //создаётся и стартует только в резидентном режиме (TASK_SCAN_API), см. TTasksS.Run;
-  //единственность самого резидентного процесса уже обеспечена мьютексом в
-  //Uchet.dpr (CheckInstance) - здесь это заново не проверяется
-  TScanApiWatchdog = class
+  //2) есть ли соединение с БД - если пропало, процесс сразу завершается
+  //   (см. MinutelyTimerTimer), следующая попытка - через 5 минут, по
+  //   сторожевому заданию планировщика;
+  //3) не наступило ли время одной из задач с жёстко заданным временем
+  //   выполнения (см. TTasksS.MinutelyTasks), и не начался ли новый час
+  //   (см. TTasksS.HourlyTasks) - обе выполняются, только если разрешено
+  //   расписание (см. IsScheduleEnabled выше).
+  //создаётся и стартует в TTasksS.Run при любом старте процесса (сервер
+  //полностью резидентен, см. заголовок модуля); единственность самого
+  //резидентного процесса обеспечена мьютексом в Uchet.dpr (CheckInstance) -
+  //здесь это заново не проверяется
+  TServerWatchdog = class
   private
     FUpdateCheckTimer: TTimer;
     FMinutelyTimer: TTimer;
@@ -213,12 +290,13 @@ type
   end;
 
 var
-  //не nil только пока сервер резидентно работает (TASK_SCAN_API), см. TTasksS.Run
-  ScanApiWatchdog: TScanApiWatchdog;
+  //не nil, пока сервер резидентно работает (то есть всегда, после того как
+  //TTasksS.Run отработает разовую часть), см. TTasksS.Run
+  ServerWatchdog: TServerWatchdog;
 
-{ TScanApiWatchdog }
+{ TServerWatchdog }
 
-constructor TScanApiWatchdog.Create;
+constructor TServerWatchdog.Create;
 begin
   inherited Create;
   FUpdateCheckTimer := TTimer.Create(Application);
@@ -229,14 +307,14 @@ begin
   FMinutelyTimer.OnTimer := MinutelyTimerTimer;
 end;
 
-destructor TScanApiWatchdog.Destroy;
+destructor TServerWatchdog.Destroy;
 begin
   FreeAndNil(FUpdateCheckTimer);
   FreeAndNil(FMinutelyTimer);
   inherited Destroy;
 end;
 
-procedure TScanApiWatchdog.UpdateCheckTimerTimer(Sender: TObject);
+procedure TServerWatchdog.UpdateCheckTimerTimer(Sender: TObject);
 //раз в 5 минут - проверка, не появилась ли на сервере дистрибутива (см.
 //Updater\updater.dir рядом с exe - тот же приём, что и в
 //uUpdater.CheckForUpdatesAndRunUpdater для обычных клиентских модулей) новая
@@ -253,7 +331,7 @@ begin
     Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
   if not IsExeUpdateAvailable(ServerBasePath) then
     Exit;
-  Module.ToLogFile('Обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - сервер сканера штрихкодов запускает обновление и завершается');
+  LogTaskEvent('Сервер', 'обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - запускается обновление, процесс завершается');
   ScanApi.Stop;
   try
     RunUpdaterAndHalt(ServerBasePath, UpdaterDir); //при успехе - Halt(0) внутри, сюда управление не вернётся
@@ -262,150 +340,154 @@ begin
       //не удалось запустить обновление (например, нет Uchet_Updater.exe) -
       //логируем и восстанавливаем работу сервера со старой версией, попробуем
       //снова через 5 минут на следующем срабатывании таймера
-      Module.ToLogFile('Не удалось запустить обновление сервера сканера штрихкодов: ' + E.Message);
+      LogTaskEvent('Сервер', 'не удалось запустить обновление: ' + E.Message);
       ScanApi.Start;
     end;
   end;
 end;
 
-procedure TScanApiWatchdog.MinutelyTimerTimer(Sender: TObject);
-//раз в минуту - выполнение задач с жёстко заданным временем (см. TTasksS.MinutelyTasks);
-//отдельный try/except, чтобы ошибка в одной из задач не уронила резидентный
-//процесс целиком (сервер должен продолжать обслуживать HTTP-запросы)
+procedure TServerWatchdog.MinutelyTimerTimer(Sender: TObject);
+//раз в минуту - проверка соединения с БД (при его отсутствии дальнейшая
+//работа невозможна ни для сканирования, ни для прочих задач - процесс сразу
+//завершается), и, если разрешено расписание (см. IsScheduleEnabled), задачи
+//с фиксированным часом (TTasksS.HourlyTasks, в начале каждого часа) и с
+//фиксированным временем в минутах (TTasksS.MinutelyTasks). Ошибки внутри
+//самих задач логируются и не прерывают их выполнение - см. RunLoggedTask,
+//используемый внутри HourlyTasks/MinutelyTasks; внешний try/except здесь -
+//дополнительная защита на случай ошибки в самой логике планирования
 begin
+  if not Q.Connected then begin
+    LogTaskEvent('Сервер', 'потеряно соединение с БД - процесс завершается');
+    Halt;
+  end;
+  if not IsScheduleEnabled then
+    Exit;
   try
+    if MinuteOf(Now) = 0 then
+      TasksS.HourlyTasks;
     TasksS.MinutelyTasks;
   except
     on E: Exception do
-      Module.ToLogFile('Ошибка в MinutelyTasks: ' + E.Message);
+      LogTaskEvent('Сервер', 'ошибка при выполнении заданий по расписанию: ' + E.Message);
   end;
 end;
 
 procedure TTasksS.Run;
-//процедура выполняется при старте модуля Сервер
-//выполняет задачу в соответствии с переданным параметром
-var
-  IsIscorrectTask: Boolean;
-  HasError: Boolean;
+//процедура выполняется при старте модуля Сервер - см. заголовок модуля.
+//сервер полностью резидентен: какой бы параметр ни был передан при старте,
+//после разовой попытки выполнить соответствующую ему задачу процесс не
+//завершается - остаётся работать, обслуживая HTTP-сервер сканера штрихкодов
+//(ScanApi, работает всегда, независимо от параметра) и выполняя все
+//прочие задачи по расписанию через ServerWatchdog (см. выше в этом модуле)
 begin
-  repeat
-    IsIscorrectTask := False;
-    HasError := True;
+  ScanApi.Start;
+  if Module.DevFileExists then
+    IsScheduleEnabled := MyQuestionMessage('Обнаружен файл "dev" (режим разработки).' + sLineBreak + 'Выполнять задания по расписанию?') = mrYes;
+  if not ExecuteTaskByName(ParamStr(1)) then
+    LogTaskEvent(ParamStr(1), 'параметр запуска не распознан');
+  ServerWatchdog := TServerWatchdog.Create;
+end;
+
+function TTasksS.ExecuteTaskByName(const ATaskName: string): Boolean;
+//выполняет одну задачу по её "имени" - см. описание в интерфейсной части
+var
+  IsMatched: Boolean;
+begin
+  IsMatched := True;
+  try
     try
-      if ParamStr(1) = '/turvreport1' then begin
-        IsIscorrectTask := True;
-      //if DayOf(Date) in [1, 16] then TestTurvComplete;
-      end;
-      if ParamStr(1) = '/turvreport2' then begin
-        IsIscorrectTask := True;
-      //RunTestTurvDifferences;
-      end;
-      if ParamStr(1) = '/fromparsec' then begin
-        IsIscorrectTask := True;
-        TURV.LoadParsecData;
-      end;
-      if ParamStr(1) = '/ReportForOrdersWithoutEstimate' then begin
-        IsIscorrectTask := True;
-        ReportForOrdersWithoutEstimate;
-      end;
-      if ParamStr(1) = '/deleteolddata' then begin
-        IsIscorrectTask := True;
-        DeleteOldData;
-      end;
-      if ParamStr(1) = '/getcalendar' then begin
-        IsIscorrectTask := True;
+      if ATaskName = '/turvreport1' then begin
+        //if DayOf(Date) in [1, 16] then TestTurvComplete;
+      end
+      else if ATaskName = '/turvreport2' then begin
+        //RunTestTurvDifferences;
+      end
+      else if ATaskName = '/fromparsec' then
+        TURV.LoadParsecData
+      else if ATaskName = '/ReportForOrdersWithoutEstimate' then
+        ReportForOrdersWithoutEstimate
+      else if ATaskName = '/deleteolddata' then
+        DeleteOldData
+      else if ATaskName = '/getcalendar' then begin
         GetProductionCalendar(YearOf(Date));
         GetProductionCalendar(YearOf(Date) + 1);
-      end;
-      if ParamStr(1) = '/calcplanned' then begin
-        IsIscorrectTask := True;
-        CalcPlannedOrders;
-      end;
-      if ParamStr(1) = '/CloseItmWorkPeriod' then begin
-        IsIscorrectTask := True;
+      end
+      else if ATaskName = '/calcplanned' then
+        CalcPlannedOrders
+      else if ATaskName = '/CloseItmWorkPeriod' then
         CloseItmWorkPeriod
-      end;
-      if ParamStr(1) = '/hourly' then begin
-        IsIscorrectTask := True;
-        HourlyTasks;
-      end;
-      if ParamStr(1) = '/test' then begin
-        IsIscorrectTask := True;
-      end;
-      if ParamStr(1) = TASK_SCAN_API then begin
-        IsIscorrectTask := True;
-        //в отличие от прочих задач - не завершает работу (если запуск HTTP-
-        //сервера удался, см. ScanApi.Active ниже), см. FrmMain.Close в конце
-        //процедуры; дальше живёт резидентно: обслуживает HTTP-запросы (ScanApi)
-        //и следит за необходимостью самообновления/выполнения минутных задач
-        //(ScanApiWatchdog, см. выше в этом модуле)
-        ScanApi.Start;
-        if ScanApi.Active then
-          ScanApiWatchdog := TScanApiWatchdog.Create;
-      end;
-      HasError := False;
-    finally
-      //на всякий случай откатим транзакцию, если была незафиксированная
-      Q.QRollbackTrans;
+      else if ATaskName = '/hourly' then
+        HourlyTasks
+      else if ATaskName = '/test' then begin
+        //
+      end
+      else if ATaskName = TASK_SCAN_API then begin
+        //сама задача сканирования запускается отдельно и всегда, при старте
+        //TTasksS.Run (см. выше) - по этому имени дополнительно ничего не
+        //требуется, ветка нужна только для распознавания параметра
+      end
+      else
+        IsMatched := False;
+      if IsMatched then
+        LogTaskEvent(ATaskName, 'выполнено');
+    except
+      on E: Exception do
+        LogTaskEvent(ATaskName, 'ошибка: ' + E.Message);
     end;
-    //запишем в лог
-    if IsIscorrectTask then
-      Module.ToLogFile(ParamStr(1) + S.IIf(HasError, ' [Ошибка!]', ''));
-  until True;
-  //завершает приложение - кроме сервера сканера штрихкодов, который должен
-  //оставаться резидентно запущенным и обслуживать HTTP-запросы (см. uScanApi.pas);
-  //если же и для него запуск HTTP-сервера не удался (например, порт уже занят
-  //предыдущим не до конца завершившимся процессом) - тоже завершаем как обычную
-  //задачу, следующая попытка запуска по расписанию планировщика (раз в 5 минут)
-  //начнёт всё заново
-  if (ParamStr(1) <> TASK_SCAN_API) or not ScanApi.Active then
-    FrmMain.Close;
+  finally
+    //на всякий случай откатим транзакцию, если была незафиксированная
+    Q.QRollbackTrans;
+  end;
+  Result := IsMatched;
 end;
 
 procedure TTasksS.HourlyTasks;
 //вополняет задачи раз в час
 //сейчас здесь же прописываю выполнение ежедневных задач в жестко заданное время
+//вызывается из минутного таймера в начале каждого часа, см. TServerWatchdog;
+//каждая отдельная процедура логируется индивидуально (и в файл, и в БД) и
+//ошибка одной из них не мешает выполнению остальных - см. RunLoggedTask
 begin
   //задачи, выполняющиеся каждый час
-  CalcPlannedOrders;
-  SetProdustionDataForOrders;
-  ReportForHorlySupplyDeals;
-  Turv.LoadDataFromParsec;
-  Turv.SaveAllTurvToExportTable;
-  Turv.ExtendPersBonuses;
+  RunLoggedTask('CalcPlannedOrders', procedure begin CalcPlannedOrders; end);
+  RunLoggedTask('SetProdustionDataForOrders', procedure begin SetProdustionDataForOrders; end);
+  RunLoggedTask('ReportForHorlySupplyDeals', procedure begin ReportForHorlySupplyDeals; end);
+  RunLoggedTask('Turv.LoadDataFromParsec', procedure begin Turv.LoadDataFromParsec; end);
+  RunLoggedTask('Turv.SaveAllTurvToExportTable', procedure begin Turv.SaveAllTurvToExportTable; end);
+  RunLoggedTask('Turv.ExtendPersBonuses', procedure begin Turv.ExtendPersBonuses; end);
   if HourOf(Now) = 4 then begin
-    Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []);
+    RunLoggedTask('p_run_insert_orders_fin_monitoring', procedure begin Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []); end);
   end;
   //задачи, выполняющиеся в начале рабочего дня
   if HourOf(Now) = 8 then begin
-    ReportForYesterdaySupplyDeals;
-    ReportForYesterdayOrders(1);
-    ReportForYesterdayOrders(3);
-    ReportForEarlyCompletionActs;
-    ReportForSupplyisOnwaySurplus;
-    ReportForRawMaterialsOnSgp;
-    ReportForActsWriteoffReceipt;
-    ReportForNegativeQuantityOnStocks;
-    ReportForNegativeQuantityOnSgp;
-    ReportForNegativeNeedBySgp;
-    ReportForOverdueOrders(True);
-    ReportForOverdueOrders(False);
-    ReportForOverdueOrdersByStartTpoProductionDate;
-    ReportForSuppliersNegativeDemand;
-    ReportForEstimatesOverdue(1);
-    ReportForEstimatesOverdue(2);
-    ReportForOrdersPlannedToStartTomorrow;
-    ReportForRequiredMaterialsForPlannedOrdersTomorrow;
-    ReportForPlannedShipments;
+    RunLoggedTask('ReportForYesterdaySupplyDeals', procedure begin ReportForYesterdaySupplyDeals; end);
+    RunLoggedTask('ReportForYesterdayOrders(1)', procedure begin ReportForYesterdayOrders(1); end);
+    RunLoggedTask('ReportForYesterdayOrders(3)', procedure begin ReportForYesterdayOrders(3); end);
+    RunLoggedTask('ReportForEarlyCompletionActs', procedure begin ReportForEarlyCompletionActs; end);
+    RunLoggedTask('ReportForSupplyisOnwaySurplus', procedure begin ReportForSupplyisOnwaySurplus; end);
+    RunLoggedTask('ReportForRawMaterialsOnSgp', procedure begin ReportForRawMaterialsOnSgp; end);
+    RunLoggedTask('ReportForActsWriteoffReceipt', procedure begin ReportForActsWriteoffReceipt; end);
+    RunLoggedTask('ReportForNegativeQuantityOnStocks', procedure begin ReportForNegativeQuantityOnStocks; end);
+    RunLoggedTask('ReportForNegativeQuantityOnSgp', procedure begin ReportForNegativeQuantityOnSgp; end);
+    RunLoggedTask('ReportForNegativeNeedBySgp', procedure begin ReportForNegativeNeedBySgp; end);
+    RunLoggedTask('ReportForOverdueOrders(True)', procedure begin ReportForOverdueOrders(True); end);
+    RunLoggedTask('ReportForOverdueOrders(False)', procedure begin ReportForOverdueOrders(False); end);
+    RunLoggedTask('ReportForOverdueOrdersByStartTpoProductionDate', procedure begin ReportForOverdueOrdersByStartTpoProductionDate; end);
+    RunLoggedTask('ReportForSuppliersNegativeDemand', procedure begin ReportForSuppliersNegativeDemand; end);
+    RunLoggedTask('ReportForEstimatesOverdue(1)', procedure begin ReportForEstimatesOverdue(1); end);
+    RunLoggedTask('ReportForEstimatesOverdue(2)', procedure begin ReportForEstimatesOverdue(2); end);
+    RunLoggedTask('ReportForOrdersPlannedToStartTomorrow', procedure begin ReportForOrdersPlannedToStartTomorrow; end);
+    RunLoggedTask('ReportForRequiredMaterialsForPlannedOrdersTomorrow', procedure begin ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
+    RunLoggedTask('ReportForPlannedShipments', procedure begin ReportForPlannedShipments; end);
     //задачи по понедельникам
     if DayOfWeek(Date) = 1 then begin
-      ReportForYesterdayOrders(5);
-      ReportForYesterdayOrders(7);
+      RunLoggedTask('ReportForYesterdayOrders(5)', procedure begin ReportForYesterdayOrders(5); end);
+      RunLoggedTask('ReportForYesterdayOrders(7)', procedure begin ReportForYesterdayOrders(7); end);
     end;
     //задачи первого числа месяца
     if DayOf(Date) = 1 then begin
-      ReportForYesterdayOrders(6);
-      ReportForYesterdayOrders(8);
+      RunLoggedTask('ReportForYesterdayOrders(6)', procedure begin ReportForYesterdayOrders(6); end);
+      RunLoggedTask('ReportForYesterdayOrders(8)', procedure begin ReportForYesterdayOrders(8); end);
     end;
   end;
 end;
@@ -414,11 +496,14 @@ procedure TTasksS.MinutelyTasks;
 //выполняет задачи с жёстко заданным временем в минутах, без проверки
 //пересечений - если у двух задач совпадёт минута, выполнятся одна за другой в
 //порядке перечисления. вызывается раз в минуту, пока сервер работает в
-//резидентном режиме (см. TASK_SCAN_API и TScanApiWatchdog выше в этом модуле)
+//резидентном режиме (см. TServerWatchdog выше в этом модуле). каждую
+//задачу следует оборачивать в RunLoggedTask (как в HourlyTasks выше) -
+//тогда её выполнение будет залогировано индивидуально (и в файл, и в БД), а
+//ошибка не помешает выполнению остальных задач и работе сканера штрихкодов
 //
 //конкретные задачи добавляются прямо здесь, например:
 //  if (HourOf(Now) = 8) and (MinuteOf(Now) = 10) then
-//    Turv.LoadParsecData;
+//    RunLoggedTask('Turv.LoadParsecData', procedure begin Turv.LoadParsecData; end);
 begin
   //пока пусто - задачи и их время добавляются по мере переноса с планировщика Windows
 end;
