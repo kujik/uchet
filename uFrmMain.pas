@@ -94,6 +94,7 @@ uses
 
   uWindows,
   uServerTasks,
+  uFrmChooseDialog,
   uFrmADEdtSetPassword,
   uFrmOWGenerateAggregateEstimteInExcel,
 
@@ -444,13 +445,12 @@ begin
     else if MenuCaption = 'О программе' then
       FrmXWAbout.ShowAbout
     else if MenuCaption = 'Выполнить задание...' then begin
-      //ручной запуск любого задания сервера вне расписания - см. заголовок
+      //ручной запуск любой задачи расписания вне очереди - см. заголовок
       //uServerTasks.pas, раздел "Режим разработки и выполнение заданий вручную"
-      var TaskName := InputBox('Выполнить задание', 'Название задания (например, /hourly, /fromparsec, /calcplanned):', '');
-      if TaskName <> '' then begin
-        if TasksS.ExecuteTaskByName(TaskName)
-          then MyInfoMessage('Задание "' + TaskName + '" выполнено (подробности - в журнале сервера).')
-          else MyInfoMessage('Задание "' + TaskName + '" не распознано.');
+      var TaskIndex := FrmChooseDialog.ShowDialog('Выполнить задание', 'Выберите задание для немедленного выполнения:', TasksS.ScheduledTaskNames, []);
+      if TaskIndex >= 0 then begin
+        TasksS.RunScheduledTask(TaskIndex);
+        MyInfoMessage('Задание запущено (подробности - в журнале сервера).');
       end;
     end
     else if MenuCaption = '' then;

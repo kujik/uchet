@@ -12,11 +12,8 @@
 1) обслуживает HTTP-сервер сканера штрихкодов (ScanApi, см. заголовок
    uScanApi.pas) - эта задача работает всегда, независимо от параметра, с
    которым запущен процесс, конфликтов с прочими задачами по доступу к БД нет;
-2) выполняет по расписанию все прочие задачи - TTasksS.HourlyTasks (раз в час)
-   и TTasksS.MinutelyTasks (задачи с жёстко заданным в коде временем
-   выполнения, без проверки пересечений между ними - если у двух задач
-   совпадёт минута, выполнятся одна за другой) - обе вызываются из минутного
-   таймера, см. TServerWatchdog ниже в этом модуле.
+2) выполняет по расписанию все прочие задачи - см. раздел "Расписание задач"
+   ниже.
 Единственность резидентного процесса (независимо от параметра, с которым он
 запущен) обеспечена мьютексом в Uchet.dpr (CheckInstance) - мьютекс общий для
 модуля Сервер целиком, параметр командной строки в его имени больше не
@@ -31,10 +28,41 @@ TASK_SCAN_API) каждые 5 минут (это отдельная настро
 мьютексу выше; если не жив (упал, либо сам завершился по любой из причин
 ниже) - именно этот запуск станет новым резидентным процессом.
 Индивидуальные задания планировщика для отдельных задач (/fromparsec,
-/turvreport и т.п.) по мере переноса их логики на жёстко заданное время внутри
-MinutelyTasks/HourlyTasks становятся не нужны и постепенно удаляются -
-до этого момента они не мешают резидентному процессу (просто выполняют свою
-задачу ещё раз при срабатывании, см. ExecuteTaskByName).
+/turvreport и т.п.) по мере переноса их логики в расписание (см. ниже)
+становятся не нужны и постепенно удаляются - до этого момента они не мешают
+резидентному процессу (просто выполняют свою задачу ещё раз при срабатывании,
+см. ExecuteTaskByName).
+
+----------------
+Расписание задач.
+
+Задача расписания - это запись в массиве ScheduledTasks: краткое название на
+русском (для лога и меню ручного запуска), необязательный комментарий,
+ссылка на выполняемую процедуру и расписание в формате cron (пять полей -
+минута, час, день месяца, месяц, день недели; поддерживаются "*", списки,
+диапазоны и шаг - см. CronMatches/CronFieldMatches). Массив заполняется один
+раз при старте резидентного процесса - см. InitScheduledTasks, куда сейчас
+перенесены все задачи из прежней TTasksS.HourlyTasks (время каждой из них
+было и раньше жёстко задано в коде - здесь оно просто выражено в виде cron
+вместо вложенных if). Задачи, время которых не привязано к уже
+существующему коду (перенос со старых заданий планировщика Windows -
+/fromparsec и т.п.), в расписание пока не добавлены - это делается отдельно,
+по мере переноса.
+
+Расписание проверяется раз в минуту, из TServerWatchdog (см. ниже) -
+TTasksS.ProcessScheduledTasks сравнивает cron каждой задачи с каждой минутой,
+прошедшей с прошлой проверки, и выполняет совпавшие задачи. Обычно это ровно
+одна (текущая) минута, но диапазон может быть шире одной минуты, если
+предыдущая проверка долго выполняла другую задачу (просрочка) - в этом
+случае все задачи, чьё время наступило за это время (их может быть
+несколько), не теряются, а выполняются одна за другой сразу после
+освобождения таймера, СТРОГО В ПОРЯДКЕ ИХ РАСПОЛОЖЕНИЯ В МАССИВЕ
+ScheduledTasks (а не в порядке просроченных минут).
+
+Для ручного запуска (см. раздел "Режим разработки и выполнение заданий
+вручную" ниже) выбор идёт из тех же названий задач расписания (см.
+TTasksS.ScheduledTaskNames/RunScheduledTask) - отдельного списка для этого
+не заводится.
 
 ----------------
 Обновление сервера.
@@ -63,8 +91,8 @@ IsExeUpdateAvailable в uUpdater.pas). Сам исполняемый файл т
 Логирование.
 
 Каждое выполнение задачи (и разовой, при старте, и по расписанию - в том
-числе КАЖДАЯ отдельная процедура внутри HourlyTasks/MinutelyTasks, а не
-только вся пачка целиком) логируется отдельной строкой, и в файловый лог
+числе КАЖДАЯ отдельная задача расписания по отдельности, а не пачкой)
+логируется отдельной строкой, и в файловый лог
 (Module.ToLogFile), и в БД (таблица adm_db_log, см. TmyDBOra.QLog) - см.
 LogTaskEvent ниже в этом модуле. Ошибка внутри отдельной задачи логируется и
 не прерывает работу резидентного процесса - выполнение остальных задач (и
@@ -84,9 +112,11 @@ LogTaskEvent ошибка в любом случае успевает попас
 запуская автоматически реальные ежедневные/ежечасные задачи (рассылки,
 изменения данных и т.п.); сканирование и самообновление при этом всё равно
 продолжают работать. Независимо от режима (не только в режиме разработки),
-выполнить произвольное задание вручную, вне расписания, можно через пункт
-главного меню "Выполнить задание..." (см. TFrmMain.ExecuteMainMenuItem) -
-он обращается к тому же TTasksS.ExecuteTaskByName, что и старт процесса.
+выполнить любую задачу расписания вручную, немедленно и вне расписания,
+можно через пункт главного меню "Выполнить задание..." (см.
+TFrmMain.ExecuteMainMenuItem) - он показывает список названий задач
+расписания (TTasksS.ScheduledTaskNames) и выполняет выбранную
+(TTasksS.RunScheduledTask).
 
 }
 
@@ -117,15 +147,13 @@ type
     //не прерывает работу резидентного процесса - логируется (и в файл, и в
     //БД, см. LogTaskEvent) и выполнение продолжается
     function ExecuteTaskByName(const ATaskName: string): Boolean;
-    //вополняет задачи раз в час
-    //сейчас здесь же прописываю выполнение ежедневных задач в жестко заданное время
-    //вызывается из минутного таймера в начале каждого часа, см. TServerWatchdog
-    procedure HourlyTasks;
-    //выполняет задачи с жёстко заданным временем в минутах, без проверки
-    //пересечений - вызывается раз в минуту, пока сервер работает в резидентном
-    //режиме (см. TServerWatchdog в этом модуле); конкретные задачи и их время
-    //добавляются прямо в теле этой процедуры, по аналогии с HourlyTasks выше
-    procedure MinutelyTasks;
+    //имена всех задач расписания (см. InitScheduledTasks в реализации) - в
+    //порядке их следования в расписании - для выбора при ручном запуске
+    //задания (см. TFrmMain.ExecuteMainMenuItem, пункт "Выполнить задание...")
+    function ScheduledTaskNames: TVarDynArray;
+    //выполняет одну задачу расписания по индексу (см. ScheduledTaskNames)
+    //немедленно, вне очереди - для ручного запуска
+    procedure RunScheduledTask(AIndex: Integer);
 
     //удаление устаревших данных
     procedure DeleteOldData;
@@ -222,10 +250,10 @@ uses
   ;
 
 var
-  //разрешено ли выполнение заданий по расписанию (HourlyTasks/MinutelyTasks
-  //из минутного таймера) в текущем запуске резидентного процесса; в обычном
-  //режиме всегда True, в режиме разработки (Module.DevFileExists) - по
-  //ответу на вопрос при старте, см. TTasksS.Run. Сканирование и проверка
+  //разрешено ли выполнение заданий по расписанию (см. ProcessScheduledTasks,
+  //вызывается из минутного таймера) в текущем запуске резидентного процесса;
+  //в обычном режиме всегда True, в режиме разработки (Module.DevFileExists) -
+  //по ответу на вопрос при старте, см. TTasksS.Run. Сканирование и проверка
   //обновлений от этого флага не зависят - работают всегда
   IsScheduleEnabled: Boolean = True;
 
@@ -248,9 +276,9 @@ procedure RunLoggedTask(const ATaskName: string; ATaskProc: TProc);
 //индивидуальным логированием результата - см. LogTaskEvent. ошибка внутри
 //задачи не прерывает работу резидентного процесса и не мешает выполнению
 //остальных задач - логируется, и выполнение продолжается со следующей
-//задачи (см. заголовок модуля, раздел "Логирование"); используется в
-//HourlyTasks/MinutelyTasks, чтобы логировать каждую отдельную процедуру, а
-//не всю пачку задач целиком
+//задачи (см. заголовок модуля, раздел "Логирование"); используется для
+//каждой отдельной задачи расписания (см. ProcessScheduledTasks ниже), а
+//не для всей пачки задач целиком
 begin
   try
     ATaskProc();
@@ -262,6 +290,194 @@ begin
 end;
 
 type
+  TScheduledTaskProc = reference to procedure;
+
+  //одна задача расписания - см. заголовок модуля, раздел "Расписание задач".
+  //Cron - расписание в стандартном 5-польном формате
+  //"минута час день_месяца месяц день_недели" (день недели: 0 = воскресенье,
+  //1 = понедельник, ..., 6 = суббота); поддерживаются "*", список через
+  //запятую ("1,3,5"), диапазон ("8-19") и шаг ("*/15", "8-19/2") - см.
+  //CronMatches/CronFieldMatches ниже. День недели в расписании сознательно
+  //не используется нигде в InitScheduledTasks - см. пояснение там же
+  TScheduledTask = record
+    Name: string;     //краткое имя на русском - в лог, в БД, в меню ручного запуска
+    Comment: string;   //необязательный комментарий
+    Cron: string;      //расписание
+    Proc: TScheduledTaskProc;
+  end;
+
+var
+  //расписание всех задач, выполняемых по времени - заполняется один раз при
+  //старте резидентного процесса, см. InitScheduledTasks и TTasksS.Run. порядок
+  //элементов важен - см. ProcessScheduledTasks
+  ScheduledTasks: array of TScheduledTask;
+
+function TruncToMinute(ADateTime: TDateTime): TDateTime;
+//отбрасывает секунды и миллисекунды - для поминутного сравнения времени
+begin
+  Result := RecodeMilliSecond(RecodeSecond(ADateTime, 0), 0);
+end;
+
+function CronFieldMatches(const AField: string; AValue: Integer): Boolean;
+//проверяет, попадает ли AValue в одно поле расписания в стиле cron -
+//поддерживается "*", список через запятую ("1,3,5"), диапазон ("8-19") и
+//шаг ("*/15" или "8-19/2"). поля принимают только числа (без имён месяцев
+//или дней недели)
+var
+  Parts, RangeParts: TStringDynArray;
+  i, RangeFrom, RangeTo, Step: Integer;
+  Part, RangeSt, StepSt: string;
+begin
+  Result := False;
+  Parts := A.ExplodeS(AField, ',');
+  for i := 0 to High(Parts) do begin
+    Part := Trim(Parts[i]);
+    if Pos('/', Part) > 0 then begin
+      RangeSt := Copy(Part, 1, Pos('/', Part) - 1);
+      StepSt := Copy(Part, Pos('/', Part) + 1, Length(Part));
+      Step := StrToIntDef(StepSt, 1);
+    end
+    else begin
+      RangeSt := Part;
+      Step := 1;
+    end;
+    if Step < 1 then
+      Step := 1;
+    if RangeSt = '*' then begin
+      RangeFrom := 0;
+      RangeTo := 59; //достаточно широко - реальные границы поля здесь не важны
+    end
+    else if Pos('-', RangeSt) > 0 then begin
+      RangeParts := A.ExplodeS(RangeSt, '-');
+      RangeFrom := StrToIntDef(RangeParts[0], -1);
+      RangeTo := StrToIntDef(RangeParts[High(RangeParts)], -1);
+    end
+    else begin
+      RangeFrom := StrToIntDef(RangeSt, -1);
+      RangeTo := RangeFrom;
+    end;
+    if (AValue >= RangeFrom) and (AValue <= RangeTo) and ((AValue - RangeFrom) mod Step = 0) then begin
+      Result := True;
+      Exit;
+    end;
+  end;
+end;
+
+function CronMatches(const ACron: string; AMoment: TDateTime): Boolean;
+//проверяет, подходит ли момент времени AMoment (с точностью до минуты) под
+//расписание в формате cron - пять полей через пробел: "минута час
+//день_месяца месяц день_недели" (день недели: 0 = воскресенье, ..., 6 = суббота)
+var
+  Fields: TStringDynArray;
+begin
+  Fields := A.ExplodeS(Trim(ACron), ' ');
+  Result := Length(Fields) = 5;
+  if not Result then
+    Exit;
+  Result :=
+    CronFieldMatches(Fields[0], MinuteOf(AMoment)) and
+    CronFieldMatches(Fields[1], HourOf(AMoment)) and
+    CronFieldMatches(Fields[2], DayOf(AMoment)) and
+    CronFieldMatches(Fields[3], MonthOf(AMoment)) and
+    CronFieldMatches(Fields[4], DayOfWeek(AMoment) - 1);
+end;
+
+procedure InitScheduledTasks;
+//заполняет расписание всех задач, выполняемых по времени (см. ScheduledTasks
+//выше) - вызывается один раз при старте резидентного процесса, см.
+//TTasksS.Run. порядок задач в массиве важен - см. ProcessScheduledTasks:
+//задачи, просроченные из-за выполнения другой задачи, выполняются именно в
+//этом порядке (порядке следования в массиве), а не в порядке просроченных
+//минут.
+//
+//расписание перенесено сюда из прежних TTasksS.HourlyTasks (время каждой
+//задачи было и раньше жёстко задано в коде - здесь оно просто выражено в
+//виде cron вместо вложенных if). День недели ("по понедельникам")
+//сознательно не выражен через поле cron, а проверяется прямо в теле
+//задачи - в модуле есть два разных модуля (DateUtils и SysUtils),
+//объявляющих функцию DayOfWeek с разными соглашениями о нумерации дней, и
+//чтобы не ошибиться в этом при переносе в расписание, здесь используется
+//то же самое условие, что было в исходном коде, без изменений
+  procedure AddTask(const AName, AComment, ACron: string; AProc: TScheduledTaskProc);
+  begin
+    SetLength(ScheduledTasks, Length(ScheduledTasks) + 1);
+    ScheduledTasks[High(ScheduledTasks)].Name := AName;
+    ScheduledTasks[High(ScheduledTasks)].Comment := AComment;
+    ScheduledTasks[High(ScheduledTasks)].Cron := ACron;
+    ScheduledTasks[High(ScheduledTasks)].Proc := AProc;
+  end;
+begin
+  SetLength(ScheduledTasks, 0);
+  //задачи, выполняющиеся каждый час, в начале часа
+  AddTask('Обновление плановых заказов', '', '0 * * * *', procedure begin TasksS.CalcPlannedOrders; end);
+  AddTask('Производственные данные по заказам из ИТМ', '', '0 * * * *', procedure begin TasksS.SetProdustionDataForOrders; end);
+  AddTask('Мониторинг цен по счетам снабжения', '', '0 * * * *', procedure begin TasksS.ReportForHorlySupplyDeals; end);
+  AddTask('Загрузка данных ТУРВ из Парсек', '', '0 * * * *', procedure begin Turv.LoadDataFromParsec; end);
+  AddTask('Выгрузка ТУРВ в таблицу экспорта', '', '0 * * * *', procedure begin Turv.SaveAllTurvToExportTable; end);
+  AddTask('Продление персональных бонусов', '', '0 * * * *', procedure begin Turv.ExtendPersBonuses; end);
+  //задача, выполняющаяся раз в сутки в 4 часа
+  AddTask('Финансовый мониторинг заказов', 'p_run_insert_orders_fin_monitoring', '0 4 * * *',
+    procedure begin Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []); end);
+  //задачи, выполняющиеся в начале рабочего дня, в 8 часов
+  AddTask('Счета снабжения за вчерашний день', '', '0 8 * * *', procedure begin TasksS.ReportForYesterdaySupplyDeals; end);
+  AddTask('Производственные заказы за вчерашний день', '', '0 8 * * *', procedure begin TasksS.ReportForYesterdayOrders(1); end);
+  AddTask('Отгрузочные заказы за вчерашний день', '', '0 8 * * *', procedure begin TasksS.ReportForYesterdayOrders(3); end);
+  AddTask('Преждевременно созданные АВР', '', '0 8 * * *', procedure begin TasksS.ReportForEarlyCompletionActs; end);
+  AddTask('Сырьё в пути без резерва', '', '0 8 * * *', procedure begin TasksS.ReportForSupplyisOnwaySurplus; end);
+  AddTask('Материалы на складах СГП, являющиеся сырьём', '', '0 8 * * *', procedure begin TasksS.ReportForRawMaterialsOnSgp; end);
+  AddTask('Акты списания и оприходования за вчерашний день', '', '0 8 * * *', procedure begin TasksS.ReportForActsWriteoffReceipt; end);
+  AddTask('Отрицательные остатки на складах', '', '0 8 * * *', procedure begin TasksS.ReportForNegativeQuantityOnStocks; end);
+  AddTask('Отрицательные остатки на СГП', '', '0 8 * * *', procedure begin TasksS.ReportForNegativeQuantityOnSgp; end);
+  AddTask('Отрицательная потребность по текущему состоянию СГП', '', '0 8 * * *', procedure begin TasksS.ReportForNegativeNeedBySgp; end);
+  AddTask('Просроченные производственные заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrders(True); end);
+  AddTask('Просроченные отгрузочные заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrders(False); end);
+  AddTask('Просроченные по дате начала производства заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrdersByStartTpoProductionDate; end);
+  AddTask('Отрицательная потребность по сырью у поставщиков', '', '0 8 * * *', procedure begin TasksS.ReportForSuppliersNegativeDemand; end);
+  AddTask('Просроченные сметы', '', '0 8 * * *', procedure begin TasksS.ReportForEstimatesOverdue(1); end);
+  AddTask('Просроченные загрузки технологов', '', '0 8 * * *', procedure begin TasksS.ReportForEstimatesOverdue(2); end);
+  AddTask('Производственные заказы к выдаче завтра', '', '0 8 * * *', procedure begin TasksS.ReportForOrdersPlannedToStartTomorrow; end);
+  AddTask('Недостающие материалы для заказов, запланированных на завтра', '', '0 8 * * *', procedure begin TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
+  AddTask('Заказы, запланированные к отгрузке (сегодня/завтра/послезавтра)', '', '0 8 * * *', procedure begin TasksS.ReportForPlannedShipments; end);
+  //задачи по понедельникам - день недели проверяется внутри задачи, см.
+  //комментарий к InitScheduledTasks выше
+  AddTask('Производственные заказы за прошедшую неделю', 'выполняется только по понедельникам', '0 8 * * *',
+    procedure begin if DayOfWeek(Date) = 1 then TasksS.ReportForYesterdayOrders(5); end);
+  AddTask('Отгрузочные заказы за прошедшую неделю', 'выполняется только по понедельникам', '0 8 * * *',
+    procedure begin if DayOfWeek(Date) = 1 then TasksS.ReportForYesterdayOrders(7); end);
+  //задачи первого числа месяца - день месяца задан прямо в расписании
+  AddTask('Производственные заказы за прошедший месяц', '', '0 8 1 * *', procedure begin TasksS.ReportForYesterdayOrders(6); end);
+  AddTask('Отгрузочные заказы за прошедший месяц', '', '0 8 1 * *', procedure begin TasksS.ReportForYesterdayOrders(8); end);
+end;
+
+procedure ProcessScheduledTasks(AFrom, ATo: TDateTime);
+//проверяет расписание всех задач (см. ScheduledTasks) на каждую минуту в
+//диапазоне [AFrom; ATo] (включительно, с точностью до минуты), и выполняет
+//те, для которых нашлось хотя бы одно совпадение - строго в порядке их
+//расположения в массиве ScheduledTasks (а не в порядке просроченных минут).
+//диапазон шире одной минуты бывает, если предыдущий тик минутного таймера
+//долго выполнял другую задачу (просрочка, см. заголовок модуля) - таким
+//образом просроченные задачи не теряются, а выполняются одна за другой
+//сразу после освобождения таймера
+var
+  i: Integer;
+  Moment: TDateTime;
+  IsDue: array of Boolean;
+begin
+  SetLength(IsDue, Length(ScheduledTasks));
+  Moment := AFrom;
+  while Moment <= ATo do begin
+    for i := 0 to High(ScheduledTasks) do
+      if not IsDue[i] then
+        if CronMatches(ScheduledTasks[i].Cron, Moment) then
+          IsDue[i] := True;
+    Moment := IncMinute(Moment, 1);
+  end;
+  for i := 0 to High(ScheduledTasks) do
+    if IsDue[i] then
+      RunLoggedTask(ScheduledTasks[i].Name, ScheduledTasks[i].Proc);
+end;
+
+type
   //резидентный "сторож" процесса сервера (см. заголовок модуля выше):
   //пока сервер работает, следит через собственные таймеры за -
   //1) не появилась ли на сервере дистрибутива новая версия exe - если да,
@@ -270,10 +486,9 @@ type
   //2) есть ли соединение с БД - если пропало, процесс сразу завершается
   //   (см. MinutelyTimerTimer), следующая попытка - через 5 минут, по
   //   сторожевому заданию планировщика;
-  //3) не наступило ли время одной из задач с жёстко заданным временем
-  //   выполнения (см. TTasksS.MinutelyTasks), и не начался ли новый час
-  //   (см. TTasksS.HourlyTasks) - обе выполняются, только если разрешено
-  //   расписание (см. IsScheduleEnabled выше).
+  //3) не наступило ли время одной из задач расписания (см. ScheduledTasks,
+  //   InitScheduledTasks, ProcessScheduledTasks выше) - выполняется, только
+  //   если разрешено расписание (см. IsScheduleEnabled выше).
   //создаётся и стартует в TTasksS.Run при любом старте процесса (сервер
   //полностью резидентен, см. заголовок модуля); единственность самого
   //резидентного процесса обеспечена мьютексом в Uchet.dpr (CheckInstance) -
@@ -282,6 +497,7 @@ type
   private
     FUpdateCheckTimer: TTimer;
     FMinutelyTimer: TTimer;
+    FLastScheduleCheckMoment: TDateTime;
     procedure UpdateCheckTimerTimer(Sender: TObject);
     procedure MinutelyTimerTimer(Sender: TObject);
   public
@@ -299,6 +515,10 @@ var
 constructor TServerWatchdog.Create;
 begin
   inherited Create;
+  //расписание проверяется только начиная с текущей минуты - то, что могло
+  //быть пропущено, пока резидентный процесс не работал, не наверстывается
+  //(см. ProcessScheduledTasks)
+  FLastScheduleCheckMoment := TruncToMinute(Now);
   FUpdateCheckTimer := TTimer.Create(Application);
   FUpdateCheckTimer.Interval := 5 * 60 * 1000;
   FUpdateCheckTimer.OnTimer := UpdateCheckTimerTimer;
@@ -349,12 +569,16 @@ end;
 procedure TServerWatchdog.MinutelyTimerTimer(Sender: TObject);
 //раз в минуту - проверка соединения с БД (при его отсутствии дальнейшая
 //работа невозможна ни для сканирования, ни для прочих задач - процесс сразу
-//завершается), и, если разрешено расписание (см. IsScheduleEnabled), задачи
-//с фиксированным часом (TTasksS.HourlyTasks, в начале каждого часа) и с
-//фиксированным временем в минутах (TTasksS.MinutelyTasks). Ошибки внутри
-//самих задач логируются и не прерывают их выполнение - см. RunLoggedTask,
-//используемый внутри HourlyTasks/MinutelyTasks; внешний try/except здесь -
-//дополнительная защита на случай ошибки в самой логике планирования
+//завершается), и, если разрешено расписание (см. IsScheduleEnabled),
+//выполнение задач расписания за все минуты, прошедшие с прошлой проверки
+//(см. ProcessScheduledTasks - обычно это ровно одна минута, но может быть
+//больше, если предыдущий тик долго выполнял задачу, см. заголовок модуля).
+//Ошибки внутри самих задач логируются и не прерывают их выполнение - см.
+//RunLoggedTask, используемый внутри ProcessScheduledTasks; внешний
+//try/except здесь - дополнительная защита на случай ошибки в самой логике
+//планирования
+var
+  CheckFrom, CheckTo: TDateTime;
 begin
   if not Q.Connected then begin
     LogTaskEvent('Сервер', 'потеряно соединение с БД - процесс завершается');
@@ -363,9 +587,12 @@ begin
   if not IsScheduleEnabled then
     Exit;
   try
-    if MinuteOf(Now) = 0 then
-      TasksS.HourlyTasks;
-    TasksS.MinutelyTasks;
+    CheckTo := TruncToMinute(Now);
+    CheckFrom := IncMinute(FLastScheduleCheckMoment, 1);
+    if CheckFrom <= CheckTo then begin
+      ProcessScheduledTasks(CheckFrom, CheckTo);
+      FLastScheduleCheckMoment := CheckTo;
+    end;
   except
     on E: Exception do
       LogTaskEvent('Сервер', 'ошибка при выполнении заданий по расписанию: ' + E.Message);
@@ -381,6 +608,7 @@ procedure TTasksS.Run;
 //прочие задачи по расписанию через ServerWatchdog (см. выше в этом модуле)
 begin
   ScanApi.Start;
+  InitScheduledTasks;
   if Module.DevFileExists then
     IsScheduleEnabled := MyQuestionMessage('Обнаружен файл "dev" (режим разработки).' + sLineBreak + 'Выполнять задания по расписанию?') = mrYes;
   if not ExecuteTaskByName(ParamStr(1)) then
@@ -416,8 +644,9 @@ begin
         CalcPlannedOrders
       else if ATaskName = '/CloseItmWorkPeriod' then
         CloseItmWorkPeriod
-      else if ATaskName = '/hourly' then
-        HourlyTasks
+      //'/hourly' больше не поддерживается - вся его прежняя нагрузка перенесена
+      //в расписание (см. ScheduledTasks/InitScheduledTasks), которое выполняется
+      //резидентным процессом само, без внешнего запуска по этому параметру
       else if ATaskName = '/test' then begin
         //
       end
@@ -441,71 +670,22 @@ begin
   Result := IsMatched;
 end;
 
-procedure TTasksS.HourlyTasks;
-//вополняет задачи раз в час
-//сейчас здесь же прописываю выполнение ежедневных задач в жестко заданное время
-//вызывается из минутного таймера в начале каждого часа, см. TServerWatchdog;
-//каждая отдельная процедура логируется индивидуально (и в файл, и в БД) и
-//ошибка одной из них не мешает выполнению остальных - см. RunLoggedTask
+function TTasksS.ScheduledTaskNames: TVarDynArray;
+//имена всех задач расписания - см. описание в интерфейсной части
+var
+  i: Integer;
 begin
-  //задачи, выполняющиеся каждый час
-  RunLoggedTask('CalcPlannedOrders', procedure begin CalcPlannedOrders; end);
-  RunLoggedTask('SetProdustionDataForOrders', procedure begin SetProdustionDataForOrders; end);
-  RunLoggedTask('ReportForHorlySupplyDeals', procedure begin ReportForHorlySupplyDeals; end);
-  RunLoggedTask('Turv.LoadDataFromParsec', procedure begin Turv.LoadDataFromParsec; end);
-  RunLoggedTask('Turv.SaveAllTurvToExportTable', procedure begin Turv.SaveAllTurvToExportTable; end);
-  RunLoggedTask('Turv.ExtendPersBonuses', procedure begin Turv.ExtendPersBonuses; end);
-  if HourOf(Now) = 4 then begin
-    RunLoggedTask('p_run_insert_orders_fin_monitoring', procedure begin Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []); end);
-  end;
-  //задачи, выполняющиеся в начале рабочего дня
-  if HourOf(Now) = 8 then begin
-    RunLoggedTask('ReportForYesterdaySupplyDeals', procedure begin ReportForYesterdaySupplyDeals; end);
-    RunLoggedTask('ReportForYesterdayOrders(1)', procedure begin ReportForYesterdayOrders(1); end);
-    RunLoggedTask('ReportForYesterdayOrders(3)', procedure begin ReportForYesterdayOrders(3); end);
-    RunLoggedTask('ReportForEarlyCompletionActs', procedure begin ReportForEarlyCompletionActs; end);
-    RunLoggedTask('ReportForSupplyisOnwaySurplus', procedure begin ReportForSupplyisOnwaySurplus; end);
-    RunLoggedTask('ReportForRawMaterialsOnSgp', procedure begin ReportForRawMaterialsOnSgp; end);
-    RunLoggedTask('ReportForActsWriteoffReceipt', procedure begin ReportForActsWriteoffReceipt; end);
-    RunLoggedTask('ReportForNegativeQuantityOnStocks', procedure begin ReportForNegativeQuantityOnStocks; end);
-    RunLoggedTask('ReportForNegativeQuantityOnSgp', procedure begin ReportForNegativeQuantityOnSgp; end);
-    RunLoggedTask('ReportForNegativeNeedBySgp', procedure begin ReportForNegativeNeedBySgp; end);
-    RunLoggedTask('ReportForOverdueOrders(True)', procedure begin ReportForOverdueOrders(True); end);
-    RunLoggedTask('ReportForOverdueOrders(False)', procedure begin ReportForOverdueOrders(False); end);
-    RunLoggedTask('ReportForOverdueOrdersByStartTpoProductionDate', procedure begin ReportForOverdueOrdersByStartTpoProductionDate; end);
-    RunLoggedTask('ReportForSuppliersNegativeDemand', procedure begin ReportForSuppliersNegativeDemand; end);
-    RunLoggedTask('ReportForEstimatesOverdue(1)', procedure begin ReportForEstimatesOverdue(1); end);
-    RunLoggedTask('ReportForEstimatesOverdue(2)', procedure begin ReportForEstimatesOverdue(2); end);
-    RunLoggedTask('ReportForOrdersPlannedToStartTomorrow', procedure begin ReportForOrdersPlannedToStartTomorrow; end);
-    RunLoggedTask('ReportForRequiredMaterialsForPlannedOrdersTomorrow', procedure begin ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
-    RunLoggedTask('ReportForPlannedShipments', procedure begin ReportForPlannedShipments; end);
-    //задачи по понедельникам
-    if DayOfWeek(Date) = 1 then begin
-      RunLoggedTask('ReportForYesterdayOrders(5)', procedure begin ReportForYesterdayOrders(5); end);
-      RunLoggedTask('ReportForYesterdayOrders(7)', procedure begin ReportForYesterdayOrders(7); end);
-    end;
-    //задачи первого числа месяца
-    if DayOf(Date) = 1 then begin
-      RunLoggedTask('ReportForYesterdayOrders(6)', procedure begin ReportForYesterdayOrders(6); end);
-      RunLoggedTask('ReportForYesterdayOrders(8)', procedure begin ReportForYesterdayOrders(8); end);
-    end;
-  end;
+  SetLength(Result, Length(ScheduledTasks));
+  for i := 0 to High(ScheduledTasks) do
+    Result[i] := ScheduledTasks[i].Name;
 end;
 
-procedure TTasksS.MinutelyTasks;
-//выполняет задачи с жёстко заданным временем в минутах, без проверки
-//пересечений - если у двух задач совпадёт минута, выполнятся одна за другой в
-//порядке перечисления. вызывается раз в минуту, пока сервер работает в
-//резидентном режиме (см. TServerWatchdog выше в этом модуле). каждую
-//задачу следует оборачивать в RunLoggedTask (как в HourlyTasks выше) -
-//тогда её выполнение будет залогировано индивидуально (и в файл, и в БД), а
-//ошибка не помешает выполнению остальных задач и работе сканера штрихкодов
-//
-//конкретные задачи добавляются прямо здесь, например:
-//  if (HourOf(Now) = 8) and (MinuteOf(Now) = 10) then
-//    RunLoggedTask('Turv.LoadParsecData', procedure begin Turv.LoadParsecData; end);
+procedure TTasksS.RunScheduledTask(AIndex: Integer);
+//выполняет одну задачу расписания по индексу - см. описание в интерфейсной части
 begin
-  //пока пусто - задачи и их время добавляются по мере переноса с планировщика Windows
+  if (AIndex < 0) or (AIndex > High(ScheduledTasks)) then
+    Exit;
+  RunLoggedTask(ScheduledTasks[AIndex].Name, ScheduledTasks[AIndex].Proc);
 end;
 
 procedure TTasksS.DeleteOldData;
