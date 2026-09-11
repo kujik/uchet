@@ -37,6 +37,29 @@ uses
 procedure CheckForUpdatesAndRunUpdater;
 function SyncFilesFromServer(const AFileList: TVarDynArray): Boolean;
 
+//ниже - самостоятельные, не привязанные к запуску из %LOCALAPPDATA%\Uchet\
+//функции того же назначения, что и CheckForUpdatesAndRunUpdater выше, но без
+//побочных эффектов внутри самой проверки - используются, например, резидентным
+//сервером сканера штрихкодов (см. TScanApiWatchdog в uServerTasks.pas), который
+//сам решает, когда и как завершаться, и не должен зависать на MessageBox
+
+//читает Updater\updater.dir из указанного каталога (с завершающим слэшем) и
+//возвращает путь к дистрибутиву на сервере (тоже с завершающим слэшем);
+//False, если файла нет или он пуст. Никаких файлов не меняет
+function GetUpdateServerBasePath(const AUpdaterDir: string; out AServerBasePath: string): Boolean;
+//сравнивает дату изменения текущего исполняемого файла с его копией на сервере
+//(AServerBasePath + 'Application\' + имя текущего exe); ничего не меняет
+function IsExeUpdateAvailable(const AServerBasePath: string): Boolean;
+//синхронизирует локальную папку Updater с сервера и запускает Uchet_Updater.exe
+//с текущими параметрами командной строки, затем Halt(0) - сюда управление не
+//возвращается при успехе. При ошибке (например, не найден Uchet_Updater.exe)
+//поднимает исключение, ничего сама не завершая - решение за вызывающим кодом.
+//ВАЖНО: сам исполняемый файл текущего процесса этой процедурой не трогается и
+//не перезаписывается - его подменит уже сам обновлятор, дождавшись закрытия
+//процесса (см. заголовок модуля); прямая перезапись работающего exe приводит
+//к краху приложения
+procedure RunUpdaterAndHalt(const AServerBasePath, AUpdaterDir: string);
+
 implementation
 
 uses
@@ -256,6 +279,69 @@ begin
   except
     Result := False;
   end;
+end;
+
+function GetUpdateServerBasePath(const AUpdaterDir: string; out AServerBasePath: string): Boolean;
+var
+  Lines: TStringList;
+begin
+  Result := False;
+  AServerBasePath := '';
+  if not TFile.Exists(AUpdaterDir + 'updater.dir') then
+    Exit;
+  Lines := TStringList.Create;
+  try
+    Lines.LoadFromFile(AUpdaterDir + 'updater.dir', TEncoding.ANSI);
+    if Lines.Count = 0 then
+      Exit;
+    AServerBasePath := Trim(Lines[0]);
+    if AServerBasePath = '' then
+      Exit;
+    AServerBasePath := IncludeTrailingPathDelimiter(AServerBasePath);
+    Result := True;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function IsExeUpdateAvailable(const AServerBasePath: string): Boolean;
+var
+  ExeFullPath, ExeName, ServerFile: string;
+begin
+  Result := False;
+  ExeFullPath := ParamStr(0);
+  ExeName := ExtractFileName(ExeFullPath);
+  ServerFile := AServerBasePath + 'Application' + PathDelim + ExeName;
+  if not TFile.Exists(ServerFile) then
+    Exit;
+  Result := (not TFile.Exists(ExeFullPath)) or (TFile.GetLastWriteTime(ExeFullPath) <> TFile.GetLastWriteTime(ServerFile));
+end;
+
+procedure RunUpdaterAndHalt(const AServerBasePath, AUpdaterDir: string);
+var
+  ServerUpdaterDir, UpdaterExe, Parameters: string;
+  ServerFiles: TArray<string>;
+  LocalFile, S: string;
+begin
+  ServerUpdaterDir := AServerBasePath + 'Updater' + PathDelim;
+  if TDirectory.Exists(ServerUpdaterDir) then begin
+    if not TDirectory.Exists(AUpdaterDir) then
+      TDirectory.CreateDirectory(AUpdaterDir);
+    ServerFiles := TDirectory.GetFiles(ServerUpdaterDir, '*.*', TSearchOption.soTopDirectoryOnly);
+    for S in ServerFiles do begin
+      LocalFile := AUpdaterDir + ExtractFileName(S);
+      if (not TFile.Exists(LocalFile)) or (TFile.GetLastWriteTime(LocalFile) <> TFile.GetLastWriteTime(S)) then
+        TFile.Copy(S, LocalFile, True);
+    end;
+  end;
+  UpdaterExe := AUpdaterDir + 'Uchet_Updater.exe';
+  if not TFile.Exists(UpdaterExe) then
+    raise Exception.Create('Не найден файл обновлятора: ' + UpdaterExe);
+  Parameters := GetAllParams;
+  if Parameters <> '' then
+    Parameters := ' ' + Parameters;
+  ShellExecute(0, 'open', PChar(UpdaterExe), PChar(IntToStr(cMainModule) + Parameters), nil, SW_SHOWNORMAL);
+  Halt(0);
 end;
 
 end.

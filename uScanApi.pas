@@ -148,11 +148,26 @@ begin
 end;
 
 procedure TScanApi.Start(APort: Integer = 8098);
+//запускает HTTP-сервер; если порт уже занят (например, предыдущий процесс не
+//успел до конца освободить его после аварийного завершения) - не даём подняться
+//необработанному исключению (раньше из-за этого мог зависнуть процесс на
+//диалоге ошибки, которую некому закрыть - отсюда и пропадавшее диагностическое
+//окно), а спокойно логируем и выходим с FActive = False. Вызывающий код
+//(TTasksS.Run в uServerTasks.pas) в этом случае штатно завершает процесс, а
+//следующая попытка запуска той же задачи по расписанию планировщика Windows
+//(раз в 5 минут) начнёт всё заново
 begin
   if FActive then
     Exit;
   FHttpServer.DefaultPort := APort;
-  FHttpServer.Active := True;
+  try
+    FHttpServer.Active := True;
+  except
+    on E: Exception do begin
+      Module.ToLogFile('Не удалось запустить сервер сканера штрихкодов на порту ' + IntToStr(APort) + ': ' + E.Message);
+      Exit;
+    end;
+  end;
   FActive := True;
   Module.ToLogFile('Сервер сканера штрихкодов запущен на порту ' + IntToStr(APort));
   LogDebug('Сервер запущен, порт ' + IntToStr(APort));

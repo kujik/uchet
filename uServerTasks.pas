@@ -31,6 +31,43 @@
 ----------------
 В этом же модуле находятся и сами выполняемые сервером задания.
 
+----------------
+Резидентный режим (задача /scanapi, см. TASK_SCAN_API и TScanApi в uScanApi.pas).
+
+В отличие от всех прочих задач, эта не завершает процесс сразу после выполнения,
+а остаётся резидентно висеть и обслуживает HTTP-сервер сканера штрихкодов
+(см. заголовок uScanApi.pas). Единственность запущенного экземпляра для этого
+параметра уже обеспечена мьютексом в Uchet.dpr (CheckInstance, имя мьютекса
+учитывает параметр командной строки) - если процесс с /scanapi уже работает,
+новый запуск того же параметра тихо завершится сам (Halt), ничего специально
+проверять для этого в коде задачи не нужно.
+
+Планировщик виндовс должен быть настроен на повторный запуск "Сервер.exe /scanapi"
+каждые 5 минут (это отдельная настройка планировщика, не код) - это даёт
+"сторожевой" эффект на случай аварийного завершения процесса или сервера: если
+резидентный процесс жив - новый запуск тут же завершится по мьютексу выше; если
+не жив (упал, либо сам завершился по любой из причин ниже) - именно этот запуск
+станет новым резидентным процессом.
+
+Пока сервер резидентно работает, TScanApiWatchdog (см. ниже в этом модуле) раз в
+5 минут проверяет, не появилась ли на сервере дистрибутива новая версия exe -
+тем же приёмом, что и uUpdater.CheckForUpdatesAndRunUpdater для обычных
+клиентских модулей: по файлу Updater\updater.dir рядом с exe сравнивается дата
+локального файла с копией на сервере (см. GetUpdateServerBasePath/
+IsExeUpdateAvailable в uUpdater.pas). Сам исполняемый файл текущего процесса
+при этом НЕ трогаем и не перезаписываем напрямую - на живом процессе это
+приводит к краху приложения; вместо этого, как и для обычного клиента,
+запускается Uchet_Updater.exe (RunUpdaterAndHalt), который дожидается закрытия
+процесса и подменяет файл уже после этого - см. заголовок uUpdater.pas.
+
+Он же раз в минуту вызывает TTasksS.MinutelyTasks - задачи с жёстко заданным в
+коде временем выполнения (без проверки пересечений времени между задачами - если
+у двух задач совпадёт минута, выполнятся одна за другой). Список задач/времени
+заполняется прямо в теле MinutelyTasks, по аналогии с HourlyTasks выше. Это
+отдельный, новый механизм - перенос уже существующих задач (/fromparsec,
+/turvreport и т.п.) с планировщика Windows на MinutelyTasks выполняется отдельно
+и постепенно, сам факт наличия старых задач в планировщике этому не мешает.
+
 }
 
 
@@ -53,6 +90,12 @@ type
     //вополняет задачи раз в час
     //сейчас здесь же прописываю выполнение ежедневных задач в жестко заданное время
     procedure HourlyTasks;
+    //выполняет задачи с жёстко заданным временем в минутах, без проверки
+    //пересечений - вызывается раз в минуту, пока сервер работает в резидентном
+    //режиме (см. TASK_SCAN_API и TScanApiWatchdog в этом модуле); конкретные
+    //задачи и их время добавляются прямо в теле этой процедуры, по аналогии с
+    //HourlyTasks выше
+    procedure MinutelyTasks;
 
     //удаление устаревших данных
     procedure DeleteOldData;
@@ -140,8 +183,103 @@ uses
   uFrDBGridEh,
   DBGridEh,
   uOrders,
-  uScanApi
+  uScanApi,
+  uUpdater,
+  Forms,
+  ExtCtrls,
+  IOUtils
   ;
+
+type
+  //резидентный "сторож" процесса сервера сканера штрихкодов (см. TASK_SCAN_API):
+  //пока сервер работает, следит за двумя вещами через собственные таймеры -
+  //1) не появилась ли на сервере дистрибутива новая версия exe - если да,
+  //   безопасно запускает обновление и штатно завершает процесс (см.
+  //   UpdateCheckTimerTimer ниже - самих файлов запущенного процесса не трогаем);
+  //2) не наступило ли время одной из задач с жёстко заданным временем
+  //   выполнения (см. TTasksS.MinutelyTasks).
+  //создаётся и стартует только в резидентном режиме (TASK_SCAN_API), см. TTasksS.Run;
+  //единственность самого резидентного процесса уже обеспечена мьютексом в
+  //Uchet.dpr (CheckInstance) - здесь это заново не проверяется
+  TScanApiWatchdog = class
+  private
+    FUpdateCheckTimer: TTimer;
+    FMinutelyTimer: TTimer;
+    procedure UpdateCheckTimerTimer(Sender: TObject);
+    procedure MinutelyTimerTimer(Sender: TObject);
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+var
+  //не nil только пока сервер резидентно работает (TASK_SCAN_API), см. TTasksS.Run
+  ScanApiWatchdog: TScanApiWatchdog;
+
+{ TScanApiWatchdog }
+
+constructor TScanApiWatchdog.Create;
+begin
+  inherited Create;
+  FUpdateCheckTimer := TTimer.Create(Application);
+  FUpdateCheckTimer.Interval := 5 * 60 * 1000;
+  FUpdateCheckTimer.OnTimer := UpdateCheckTimerTimer;
+  FMinutelyTimer := TTimer.Create(Application);
+  FMinutelyTimer.Interval := 60 * 1000;
+  FMinutelyTimer.OnTimer := MinutelyTimerTimer;
+end;
+
+destructor TScanApiWatchdog.Destroy;
+begin
+  FreeAndNil(FUpdateCheckTimer);
+  FreeAndNil(FMinutelyTimer);
+  inherited Destroy;
+end;
+
+procedure TScanApiWatchdog.UpdateCheckTimerTimer(Sender: TObject);
+//раз в 5 минут - проверка, не появилась ли на сервере дистрибутива (см.
+//Updater\updater.dir рядом с exe - тот же приём, что и в
+//uUpdater.CheckForUpdatesAndRunUpdater для обычных клиентских модулей) новая
+//версия текущего exe. Файл САМОГО работающего процесса при этом не трогаем и
+//не перезаписываем напрямую - это приводит к краху приложения; вместо этого,
+//как и обычный клиентский апдейтер, запускаем Uchet_Updater.exe и штатно
+//завершаемся - обновлятор дождётся закрытия процесса и подменит файл уже
+//после этого (см. заголовок uUpdater.pas)
+var
+  UpdaterDir, ServerBasePath: string;
+begin
+  UpdaterDir := ExtractFilePath(ParamStr(0)) + 'Updater' + PathDelim;
+  if not GetUpdateServerBasePath(UpdaterDir, ServerBasePath) then
+    Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
+  if not IsExeUpdateAvailable(ServerBasePath) then
+    Exit;
+  Module.ToLogFile('Обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - сервер сканера штрихкодов запускает обновление и завершается');
+  ScanApi.Stop;
+  try
+    RunUpdaterAndHalt(ServerBasePath, UpdaterDir); //при успехе - Halt(0) внутри, сюда управление не вернётся
+  except
+    on E: Exception do begin
+      //не удалось запустить обновление (например, нет Uchet_Updater.exe) -
+      //логируем и восстанавливаем работу сервера со старой версией, попробуем
+      //снова через 5 минут на следующем срабатывании таймера
+      Module.ToLogFile('Не удалось запустить обновление сервера сканера штрихкодов: ' + E.Message);
+      ScanApi.Start;
+    end;
+  end;
+end;
+
+procedure TScanApiWatchdog.MinutelyTimerTimer(Sender: TObject);
+//раз в минуту - выполнение задач с жёстко заданным временем (см. TTasksS.MinutelyTasks);
+//отдельный try/except, чтобы ошибка в одной из задач не уронила резидентный
+//процесс целиком (сервер должен продолжать обслуживать HTTP-запросы)
+begin
+  try
+    TasksS.MinutelyTasks;
+  except
+    on E: Exception do
+      Module.ToLogFile('Ошибка в MinutelyTasks: ' + E.Message);
+  end;
+end;
 
 procedure TTasksS.Run;
 //процедура выполняется при старте модуля Сервер
@@ -196,8 +334,14 @@ begin
       end;
       if ParamStr(1) = TASK_SCAN_API then begin
         IsIscorrectTask := True;
-        //в отличие от прочих задач - не завершает работу, см. ниже FrmMain.Close
+        //в отличие от прочих задач - не завершает работу (если запуск HTTP-
+        //сервера удался, см. ScanApi.Active ниже), см. FrmMain.Close в конце
+        //процедуры; дальше живёт резидентно: обслуживает HTTP-запросы (ScanApi)
+        //и следит за необходимостью самообновления/выполнения минутных задач
+        //(ScanApiWatchdog, см. выше в этом модуле)
         ScanApi.Start;
+        if ScanApi.Active then
+          ScanApiWatchdog := TScanApiWatchdog.Create;
       end;
       HasError := False;
     finally
@@ -209,8 +353,12 @@ begin
       Module.ToLogFile(ParamStr(1) + S.IIf(HasError, ' [Ошибка!]', ''));
   until True;
   //завершает приложение - кроме сервера сканера штрихкодов, который должен
-  //оставаться резидентно запущенным и обслуживать HTTP-запросы (см. uScanApi.pas)
-  if ParamStr(1) <> TASK_SCAN_API then
+  //оставаться резидентно запущенным и обслуживать HTTP-запросы (см. uScanApi.pas);
+  //если же и для него запуск HTTP-сервера не удался (например, порт уже занят
+  //предыдущим не до конца завершившимся процессом) - тоже завершаем как обычную
+  //задачу, следующая попытка запуска по расписанию планировщика (раз в 5 минут)
+  //начнёт всё заново
+  if (ParamStr(1) <> TASK_SCAN_API) or not ScanApi.Active then
     FrmMain.Close;
 end;
 
@@ -260,6 +408,19 @@ begin
       ReportForYesterdayOrders(8);
     end;
   end;
+end;
+
+procedure TTasksS.MinutelyTasks;
+//выполняет задачи с жёстко заданным временем в минутах, без проверки
+//пересечений - если у двух задач совпадёт минута, выполнятся одна за другой в
+//порядке перечисления. вызывается раз в минуту, пока сервер работает в
+//резидентном режиме (см. TASK_SCAN_API и TScanApiWatchdog выше в этом модуле)
+//
+//конкретные задачи добавляются прямо здесь, например:
+//  if (HourOf(Now) = 8) and (MinuteOf(Now) = 10) then
+//    Turv.LoadParsecData;
+begin
+  //пока пусто - задачи и их время добавляются по мере переноса с планировщика Windows
 end;
 
 procedure TTasksS.DeleteOldData;
