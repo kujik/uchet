@@ -474,7 +474,7 @@ begin
   end;
   for i := 0 to High(ScheduledTasks) do
     if IsDue[i] then
-      RunLoggedTask(ScheduledTasks[i].Name, ScheduledTasks[i].Proc);
+      RunLoggedTask(ScheduledTasks[i].Name, TProc(ScheduledTasks[i].Proc));
 end;
 
 type
@@ -685,7 +685,7 @@ procedure TTasksS.RunScheduledTask(AIndex: Integer);
 begin
   if (AIndex < 0) or (AIndex > High(ScheduledTasks)) then
     Exit;
-  RunLoggedTask(ScheduledTasks[AIndex].Name, ScheduledTasks[AIndex].Proc);
+  RunLoggedTask(ScheduledTasks[AIndex].Name, TProc(ScheduledTasks[AIndex].Proc));
 end;
 
 procedure TTasksS.DeleteOldData;

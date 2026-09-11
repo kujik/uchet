@@ -143,7 +143,10 @@ begin
   FHttpServer.Free;
   FSessions.Free;
   FSessionsLock.Free;
-  FreeAndNil(FDebugForm);
+  try
+    FreeAndNil(FDebugForm);
+  except
+  end;
   inherited Destroy;
 end;
 
