@@ -79,7 +79,6 @@ uses
   uWaitForm in 'uWaitForm.pas',
   uMailingInterface in 'uMailingInterface.pas',
   uFrmMain in 'uFrmMain.pas' {FrmMain},
-  V_MDI in 'V_MDI.pas' {Form_MDI},
   uFrmXWAbout in 'uFrmXWAbout.pas' {FrmXWAbout},
   uFrmXDmsgNoConnection in 'uFrmXDmsgNoConnection.pas' {Dlg_D_SQLNoConnection},
   uFrmXDsrvAuth in 'uFrmXDsrvAuth.pas' {FrmXDsrvAuth},
@@ -88,7 +87,7 @@ uses
   uFrmADedtModuleSettings in 'uFrmADedtModuleSettings.pas' {FrmADedtModuleSettings},
   uFrmOWGenerateAggregateEstimteInExcel in 'uFrmOWGenerateAggregateEstimteInExcel.pas' {FrmOWGenerateAggregateEstimteInExcel},
   uFrmXDmsgIncorrectDate in 'uFrmXDmsgIncorrectDate.pas' {FrmXDmsgIncorrectDate},
-  D_Order in 'D_Order.pas' {Dlg_Order},
+  uFrmWOrderOld in 'uFrmWOrderOld.pas' {FrmWOrderOld},
   uFrmDehOrderComplaintReasons in 'uFrmDehOrderComplaintReasons.pas' {FrmDehOrderComplaintReasons: TCustomDropDownFormEh},
   uFrmOGedtOrderPrintLabels in 'uFrmOGedtOrderPrintLabels.pas' {FrmOGedtOrderPrintLabels},
   uFrmOGedtOrderStages in 'uFrmOGedtOrderStages.pas' {FrmOGedtOrderStages},
@@ -274,6 +273,14 @@ begin
   //для вырианта "Ссервер"
   //обязательно должен быть один параметр
   if ParamCount <> 1 then
+    Halt;
+  //сервер запускается только параметром /run (штатный резидентный режим,
+  //см. заголовок uServerTasks.pas), либо из-под IDE (для отладки) - прочие
+  //параметры больше не поддерживаются: все задачи теперь выполняются
+  //изнутри резидентного процесса по расписанию (см. TTasksS.Run в
+  //uServerTasks.pas), а не по отдельному параметру командной строки на
+  //каждую задачу
+  if (ParamStr(1) <> '/run') and (DebugHook <> 1) then
     Halt;
   //получаем мютекс с учетом только имени модуля, без параметра - сервер
   //полностью резидентен независимо от того, с каким параметром он запущен

@@ -85,7 +85,7 @@ uses
   uTurv,
   uSnCalendar,
 
-  D_Order,
+//  D_Order,
   uFrmODedtReplaceEstimateItem,
   uFrmXWErrorLog, //диалог просмотра ошибки (на TFrmBasicMdi)
   uFrmOGinfSn,
@@ -237,6 +237,46 @@ begin
     ]);
     Frg1.Opt.SetTable('ref_sn_cartypes');
     Frg1.Opt.SetButtons(1, 'readsp');
+  end
+  else if FormDoc = myfrm_R_ServerTasks then begin
+    //настройка расписания заданий сервера (cron, активность) - см. заголовок
+    //uServerTasks.pas, раздел "Настройка расписания через модуль
+    //Администратор". Наименование задания - только для чтения (задаётся в
+    //коде, см. InitScheduledTasks), Расписание и Активно - правятся прямо в
+    //ячейке грида; второй параметр SetTable ('adm_scheduled_tasks' совпадает
+    //с таблицей, поэтому можно не указывать отдельно) - обычная таблица, не
+    //представление, добавление/удаление строк не разрешаем (набор заданий
+    //определяется кодом, см. SyncScheduledTasksFromDb) - кнопки только
+    //обновить/фильтр/настройки
+    Caption := 'Расписание заданий сервера';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['task_name$s','Задание','300'],
+      ['cron$s','Расписание (cron)','150','e'],
+      ['active','Активно','80', true, 'chb', 'e']
+    ]);
+    Frg1.Opt.SetTable('adm_scheduled_tasks');
+    Frg1.Opt.SetButtons(1, 'rfs');
+  end
+  else if FormDoc = myfrm_R_ServerTasksLog then begin
+    //журнал КАЖДОГО выполнения задачи расписания сервера (и по расписанию, и
+    //вручную, через "Выполнить задание...") - структурированная таблица
+    //adm_scheduled_tasks_log (наименование, время начала/окончания,
+    //продолжительность, текст ошибки), см. заголовок uServerTasks.pas,
+    //раздел "Логирование", и LogTaskRun там же. только просмотр - строки
+    //пишутся исключительно кодом, добавление/редактирование/удаление вручную
+    //не предусмотрено
+    Caption := 'Журнал выполнения заданий сервера';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['task_name$s','Задание','280'],
+      ['dt_start$d','Начало','130'],
+      ['dt_end$d','Окончание','130'],
+      ['duration_sec$i','Длительность, сек','130'],
+      ['error_message$s','Ошибка','300']
+    ]);
+    Frg1.Opt.SetTable('adm_scheduled_tasks_log');
+    Frg1.Opt.SetButtons(1, 'rfs');
   end
 
 
@@ -2712,8 +2752,8 @@ begin
       Wh.ExecDialog(myfrm_Dlg_Bcad_Units, Self, [], fMode, Fr.ID, null);
     if FormDoc = myfrm_R_Bcad_Nomencl then
       Wh.ExecDialog(myfrm_Dlg_EditNomenclatura, Self, [], fMode, Fr.ID, null);
- if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fView) then
-    TDlg_Order.ShowDialog(Self, 'od11111', fEdit, Fr.ID, [myfoSizeable, myfoDialog, myfoEnableMaximize], 1);  //!!!
+// if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fView) then
+//    TDlg_Order.ShowDialog(Self, 'od11111', fEdit, Fr.ID, [myfoSizeable, myfoDialog, myfoEnableMaximize], 1);  //!!!
     if (FormDoc = myfrm_R_OrderTemplates) and (fMode = fAdd) then begin
       //при создании нового шаблона сначала выбираем тип стандартных изделий, по которому он создаётся -
       //в отличие от журнала заказов (см. uFrmODlgOrderStdType.pas) здесь шаблон для копирования не нужен,

@@ -939,6 +939,12 @@ const
   myfrm_Rep_StdItemsGroupCheck='Rep_StdItemsGroupCheck';
   myfrm_Rep_ItmNomOverEstimate='Rep_ItmNomOverEstimate';
   myfrm_R_Test='R_Test';
+  myfrm_R_ServerTasks='R_ServerTasks';
+  //журнал выполнения заданий расписания сервера (таблица
+  //adm_scheduled_tasks_log, только просмотр) - см. заголовок
+  //uServerTasks.pas, раздел "Логирование", и блок FormDoc =
+  //myfrm_R_ServerTasksLog в uFrmXGlstMain.pas
+  myfrm_R_ServerTasksLog='R_ServerTasksLog';
   myfrm_J_Tasks='J_Tasks';
   myfrm_R_OrderTypes='R_OrderTypes';
   myfrm_R_WorkCellTypes='R_WorkCellTypes';
@@ -1093,6 +1099,7 @@ const
   myfrm_Dlg_DeleteOutdatedAccounts='Dlg_DeleteOutdatedAccounts';
   myfrm_Dlg_MainSettings='Dlg_MainSettings';
   myfrm_Dlg_ModuleSettings='Dlg_ModuleSettings';
+  myfrm_Dlg_MailingSettings='Dlg_MailingSettings';
   myfrm_Dlg_OrdersFinReport='Dlg_OrdersFinReport';
   myfrm_Dlg_EdtEstimate='Dlg_EdtEstimate';
 
@@ -1551,7 +1558,19 @@ const
   rAdm_Other_InterfaceAdmin = '0-m-ia';
   rAdm_Settings_Main = '0-90';
   rAdm_Settings_Modules = '0-91';
+  //право на редактирование расписания фоновых заданий сервера (экран
+  //"Расписание заданий сервера", myfrm_R_ServerTasks) - право существовало и
+  //раньше, но нигде не проверялось (экран был доступен только
+  //User.IsDeveloper); теперь используется по назначению, см. uFrmMain.pas
   rAdm_Other_Tasks = '0-92';
+  //право на просмотр журнала выполнения заданий расписания сервера (экран
+  //"Журнал выполнения заданий сервера", myfrm_R_ServerTasksLog) - отдельное
+  //от rAdm_Other_Tasks, так как это просмотр, а не редактирование
+  rAdm_Other_ServerTasksLog = '0-93';
+  //право на настройку почтовых рассылок (экран "Настройки почтовых
+  //рассылок", myfrm_Dlg_MailingSettings) - выделено в отдельное право,
+  //раньше было завязано на общее rAdm_Settings_Main
+  rAdm_Settings_Mailing = '0-94';
   rAdm_Other_DeleteOnServer = '0-01';
   rAdm_Itm_CopyUserRights = '0-02';
   rAdm_Installer = '0-10';
@@ -1848,12 +1867,14 @@ const
     (rAdm_Other_IsDataEditor,'','Разное','Пользователь является администратором данных'),
     (rAdm_Other_SessionManager,'','Разное','Просмотр сессий и принудительное завершение работы пользователей'),
     (rAdm_Other_InterfaceAdmin,'','Разное','Администрирование интерфейса (в т.ч. создание общих пресетов гридов)'),
-    (rAdm_Other_Tasks,'','Разное','Управеление фоновыми задачами'),
+    (rAdm_Other_Tasks,'','Разное','Редактирование расписания фоновых заданий сервера'),
+    (rAdm_Other_ServerTasksLog,'','Разное','Просмотр журнала выполнения фоновых заданий сервера'),
     (rAdm_Other_DeleteOnServer,'','Разное','Удаление файлов и папок на сервере'),
     (rAdm_DeleteOutdatedOrdersAndAccounts,'','Разное','Удаление старых счетов и заказов'),
     (rAdm_Itm_CopyUserRights,'','Разное','Копирование прав пользователя для ИТМ'),
     (rAdm_Settings_Main,'','Настройки','Общие настройки приложения'),
     (rAdm_Settings_Modules,'','Настройки','Настройки модулей'),
+    (rAdm_Settings_Mailing,'','Настройки','Настройки почтовых рассылок'),
     (rAdm_Installer,'','Разное','Установщик модулей Учета'),
     (rAdm_ActiveDirectoryUsers,'','Разное','Пользователи AD, просмотр'),
     (rAdm_ActiveDirectoryUsers_Ch,'','Разное','Пользователи AD, редактирование именных записей'),

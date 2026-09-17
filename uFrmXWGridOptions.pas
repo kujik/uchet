@@ -52,8 +52,7 @@ uses
 
 
   uWindows,
-  uSettings,
-  V_MDI
+  uSettings
   //uFrmXWGridAdminOptions
   ;
 
@@ -312,9 +311,11 @@ begin
 
   FOwnerFormDoc := '';
   if ParentForm is TFrmBasicMdi
-    then FOwnerFormDoc:= TFrmBasicMdi(ParentForm).FormDoc
-    else if ParentForm is TForm_MDI
-      then FOwnerFormDoc:= TForm_MDI(ParentForm).FormDoc;
+    then FOwnerFormDoc:= TFrmBasicMdi(ParentForm).FormDoc;
+  //ветка ParentForm is TForm_MDI убрана - этот класс (V_MDI) выведен из
+  //проекта, потомков среди форм больше нет
+  //else if ParentForm is TForm_MDI
+  //  then FOwnerFormDoc:= TForm_MDI(ParentForm).FormDoc;
 
   FFrDbGrid := TFrDBGridEh(ParentControl);
 

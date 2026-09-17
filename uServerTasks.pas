@@ -5,46 +5,50 @@
 ----------------
 Резидентный режим - общее устройство.
 
-Сервер полностью резидентен: с каким бы параметром командной строки он ни был
-запущен ("сервер.exe /задача"), после разовой попытки выполнить
-соответствующую параметру задачу (см. TTasksS.ExecuteTaskByName) процесс НЕ
-завершается - остаётся работать неограниченно долго, и делает две вещи:
+Сервер запускается только параметром /run, либо из-под IDE (для отладки) -
+это проверяется в Uchet.dpr, ещё до создания главной формы; любой другой
+параметр (в том числе все прежние "/задача" на конкретную разовую задачу)
+приводит к немедленному завершению без создания форм и подключения к БД.
+Никакого разбора параметра внутри самого модуля больше нет - TTasksS.Run
+безусловно переводит процесс в резидентный режим, и он работает
+неограниченно долго, делая две вещи:
 1) обслуживает HTTP-сервер сканера штрихкодов (ScanApi, см. заголовок
-   uScanApi.pas) - эта задача работает всегда, независимо от параметра, с
-   которым запущен процесс, конфликтов с прочими задачами по доступу к БД нет;
+   uScanApi.pas) - эта задача работает всегда, конфликтов с прочими
+   задачами по доступу к БД нет;
 2) выполняет по расписанию все прочие задачи - см. раздел "Расписание задач"
    ниже.
-Единственность резидентного процесса (независимо от параметра, с которым он
-запущен) обеспечена мьютексом в Uchet.dpr (CheckInstance) - мьютекс общий для
-модуля Сервер целиком, параметр командной строки в его имени больше не
-участвует (иначе процессы, запущенные с разными параметрами, могли бы
-одновременно работать резидентно, дублируя выполнение задач).
+Единственность резидентного процесса обеспечена мьютексом в Uchet.dpr
+(CheckInstance) - мьютекс общий для модуля Сервер целиком (параметр
+командной строки в нём не участвует, так как теперь он всегда один и тот
+же - /run).
 
-Планировщик виндовс должен быть настроен на повторный запуск "Сервер.exe" (с
-любым распознаваемым параметром, см. TTasksS.ExecuteTaskByName, либо просто
-TASK_SCAN_API) каждые 5 минут (это отдельная настройка планировщика, не код) -
-это даёт "сторожевой" эффект на случай аварийного завершения процесса или
+Планировщик виндовс должен быть настроен на повторный запуск "Сервер.exe
+/run" каждые 5 минут (это отдельная настройка планировщика, не код) - это
+даёт "сторожевой" эффект на случай аварийного завершения процесса или
 сервера: если резидентный процесс жив - новый запуск тут же завершится по
 мьютексу выше; если не жив (упал, либо сам завершился по любой из причин
-ниже) - именно этот запуск станет новым резидентным процессом.
-Индивидуальные задания планировщика для отдельных задач (/fromparsec,
-/turvreport и т.п.) по мере переноса их логики в расписание (см. ниже)
-становятся не нужны и постепенно удаляются - до этого момента они не мешают
-резидентному процессу (просто выполняют свою задачу ещё раз при срабатывании,
-см. ExecuteTaskByName).
+ниже) - именно этот запуск станет новым резидентным процессом. Прежние
+отдельные задания планировщика на конкретные задачи (/fromparsec,
+/turvreport и т.п.) больше не нужны и должны быть удалены из планировщика
+Windows - соответствующие им параметры командной строки сервер больше не
+принимает (см. выше).
 
 ----------------
 Расписание задач.
 
 Задача расписания - это запись в массиве ScheduledTasks: краткое название на
 русском (для лога и меню ручного запуска), необязательный комментарий,
-ссылка на выполняемую процедуру и расписание в формате cron (пять полей -
+ссылка на выполняемую процедуру, расписание в формате cron (пять полей -
 минута, час, день месяца, месяц, день недели; поддерживаются "*", списки,
-диапазоны и шаг - см. CronMatches/CronFieldMatches). Массив заполняется один
-раз при старте резидентного процесса - см. InitScheduledTasks, куда сейчас
-перенесены все задачи из прежней TTasksS.HourlyTasks (время каждой из них
-было и раньше жёстко задано в коде - здесь оно просто выражено в виде cron
-вместо вложенных if). Задачи, время которых не привязано к уже
+диапазоны и шаг - см. CronMatches/CronFieldMatches) и признак Active
+(разрешено ли автоматическое выполнение по расписанию). Массив заполняется
+один раз при старте резидентного процесса (см. InitScheduledTasks) - в
+код перенесены все задачи из прежней TTasksS.HourlyTasks (время каждой из
+них было и раньше жёстко задано в коде - здесь оно просто выражено в виде
+cron вместо вложенных if), после чего Cron и Active каждой задачи
+переопределяются значениями из таблицы adm_scheduled_tasks, если для неё
+там задана своя настройка - см. раздел "Настройка расписания через модуль
+Администратор" ниже. Задачи, время которых не привязано к уже
 существующему коду (перенос со старых заданий планировщика Windows -
 /fromparsec и т.п.), в расписание пока не добавлены - это делается отдельно,
 по мере переноса.
@@ -96,12 +100,36 @@ IsExeUpdateAvailable в uUpdater.pas). Сам исполняемый файл т
 (Module.ToLogFile), и в БД (таблица adm_db_log, см. TmyDBOra.QLog) - см.
 LogTaskEvent ниже в этом модуле. Ошибка внутри отдельной задачи логируется и
 не прерывает работу резидентного процесса - выполнение остальных задач (и
-работа сканера штрихкодов) продолжается, см. RunLoggedTask/
-ExecuteTaskByName. Это отдельный, дополнительный уровень защиты сверх
+работа сканера штрихкодов) продолжается, см. RunLoggedTask. Это отдельный,
+дополнительный уровень защиты сверх
 имеющегося глобального перехвата необработанных исключений (madExcept) -
 последний по-прежнему завершает процесс с выводом окна (что приемлемо,
 процесс перезапустится по сторожевому заданию планировщика), но благодаря
 LogTaskEvent ошибка в любом случае успевает попасть в лог до этого.
+
+Дополнительно к этому общему логу, для КАЖДОГО выполнения задачи расписания
+(и по расписанию, и вручную) пишется отдельная строка в структурированный
+журнал - таблицу adm_scheduled_tasks_log (наименование задачи, время начала,
+время окончания, продолжительность в секундах, текст ошибки, если она была) -
+см. LogTaskRun, вызывается из RunLoggedTask. Ошибка записи в эту таблицу (как
+и в LogTaskEvent) не считается фатальной.
+
+----------------
+Настройка расписания через модуль Администратор.
+
+Cron-расписание и признак Active (разрешено ли автоматическое выполнение)
+для каждой задачи хранятся в таблице adm_scheduled_tasks (наименование
+задачи, cron, active) и могут быть изменены в модуле Администратор - см.
+myfrm_R_ServerTasks в uData.pas, зарегистрировано в uWindows.pas
+(TWindowsHelper.ExecReference) и открывается через общий справочник
+TFrmXGlstMain (см. блок FormDoc = myfrm_R_ServerTasks в
+TFrmXGlstMain.PrepareForm) - отдельная форма для этого не создавалась. При
+старте резидентного процесса (см. InitScheduledTasks) для каждой задачи, для
+которой в таблице ещё нет строки, она создаётся автоматически со значением
+cron по умолчанию, взятым из кода, и Active = 1 - таким образом, вся текущая
+конфигурация сразу видна в admin-интерфейсе без ручного заполнения таблицы.
+Признак Active влияет только на автоматическое выполнение по расписанию
+(см. ProcessScheduledTasks) - на ручной запуск (см. ниже) не влияет.
 
 ----------------
 Режим разработки и выполнение заданий вручную.
@@ -113,10 +141,13 @@ LogTaskEvent ошибка в любом случае успевает попас
 изменения данных и т.п.); сканирование и самообновление при этом всё равно
 продолжают работать. Независимо от режима (не только в режиме разработки),
 выполнить любую задачу расписания вручную, немедленно и вне расписания,
-можно через пункт главного меню "Выполнить задание..." (см.
-TFrmMain.ExecuteMainMenuItem) - он показывает список названий задач
+можно через пункт главного меню "Выполнить задание..." - он есть и в модуле
+Сервер, и в модуле Администратор (см. TFrmMain.ExecuteMainMenuItem, один и
+тот же обработчик для обоих модулей) - показывает список названий задач
 расписания (TTasksS.ScheduledTaskNames) и выполняет выбранную
-(TTasksS.RunScheduledTask).
+(TTasksS.RunScheduledTask). В модуле Администратор, который сам TTasksS.Run
+не вызывает, массив ScheduledTasks при этом заполняется лениво, при первом
+обращении - см. ScheduledTaskNames/RunScheduledTask в реализации.
 
 }
 
@@ -134,19 +165,10 @@ type
   TTasksS = record
   private
   public
-    //процедура выполняется при старте модуля Сервер
+    //процедура выполняется при старте модуля Сервер - см. заголовок модуля.
     //запускает сканер штрихкодов (работает всегда) и резидентный сторож
-    //(TServerWatchdog), затем выполняет разовую задачу в соответствии с
-    //переданным параметром - см. заголовок модуля
+    //(TServerWatchdog), который затем выполняет все задачи по расписанию
     procedure Run;
-    //выполняет одну задачу по её "имени" (совпадает с параметром командной
-    //строки, см. константы вида "/задача" по тексту модуля и TASK_SCAN_API);
-    //используется и при старте процесса (см. Run), и при выполнении задания
-    //вручную (см. TFrmMain - пункт главного меню "Выполнить задание...").
-    //возвращает False, если имя задачи не распознано. ошибка внутри задачи
-    //не прерывает работу резидентного процесса - логируется (и в файл, и в
-    //БД, см. LogTaskEvent) и выполнение продолжается
-    function ExecuteTaskByName(const ATaskName: string): Boolean;
     //имена всех задач расписания (см. InitScheduledTasks в реализации) - в
     //порядке их следования в расписании - для выбора при ручном запуске
     //задания (см. TFrmMain.ExecuteMainMenuItem, пункт "Выполнить задание...")
@@ -198,6 +220,7 @@ type
     procedure ReportForOverdueOrders(AForProductionOrders: Boolean);
     //отчет по просроченным по дате начала производства производственным заказам
     procedure ReportForOverdueOrdersByStartTpoProductionDate;
+    //Потребность в материалах
     //отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
     procedure ReportForSuppliersNegativeDemand;
     //отчет по просроченным сметам (1) и загрузкам технологов (2)
@@ -207,17 +230,13 @@ type
     //отчет по производственным заказам, планирующемся к выдаче в производтство на завтра
     //(дата определяется следующим днем поле участка планирования по регламенту)
     procedure ReportForOrdersPlannedToStartTomorrow;
-    //Недостающие материалы для производства заказов, запланированных на завтра
+    //Потребность в материалах на завтра
     procedure ReportForRequiredMaterialsForPlannedOrdersTomorrow;
     //заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
     procedure ReportForPlannedShipments;
+    //материалы, по которым не закрыта потребность
+    procedure ReportForOpenMaterialRequirements;
   end;
-
-const
-  //название команды запуска сервера сканера штрихкодов продукции (uScanApi.pas) -
-  //отдельно от прочих задач, т.к. после её запуска процесс не завершается, а
-  //остаётся резидентно висеть, обслуживая HTTP-запросы (см. TTasksS.Run)
-  TASK_SCAN_API = '/scanapi';
 
 var
   TasksS: TTasksS;
@@ -246,7 +265,8 @@ uses
   Forms,
   Controls,
   ExtCtrls,
-  IOUtils
+  IOUtils,
+  uWaitForm
   ;
 
 var
@@ -271,22 +291,93 @@ begin
   end;
 end;
 
+procedure LogTaskRun(const ATaskName: string; AStart, AEnd: TDateTime; const AError: string);
+//пишет строку в структурированный журнал выполнения заданий расписания
+//(таблица adm_scheduled_tasks_log) - имя, время начала/окончания,
+//продолжительность в секундах и текст ошибки (пустая строка, если ошибки не
+//было); вызывается из RunLoggedTask при каждом выполнении задачи расписания.
+//ошибку записи в БД не считаем фатальной - основной лог (см. LogTaskEvent)
+//в любом случае уже записан
+begin
+  try
+    Q.QSave('i', 'adm_scheduled_tasks_log', 'sq_adm_scheduled_tasks_log',
+      'id$i;task_name$s;dt_start$d;dt_end$d;duration_sec$i;error_message$s',
+      [-1, ATaskName, AStart, AEnd, SecondsBetween(AEnd, AStart), AError]);
+  except
+  end;
+end;
+
+procedure ShowCurrentTaskIndicator(const ATaskName: string);
+//отображает имя выполняющейся сейчас задачи расписания - сразу двумя
+//способами, по явному решению (и статусбар, и uWaitForm сразу): в левой
+//панели статусбара главной формы (StatusBar.Panels[0] - на практике почти
+//не используется другим кодом, см. uErrors.TMyErrors.myError, где вывод в
+//неё фактически не задействован, так как ветка с GetOraMessages не
+//реализована) и всплывающим окном uWaitForm. вызывается из RunLoggedTask
+//перед запуском задачи, см. также HideCurrentTaskIndicator ниже.
+//
+//важно: ShowWaitForm сама вызывает Application.ProcessMessages - то есть
+//это ровно тот вызов, что мог бы вызвать реентрантный повторный вход в
+//обработчики таймеров TServerWatchdog (см. комментарий у FIsBusy в его
+//описании); безопасно это только потому, что RunLoggedTask (единственное
+//место вызова) всегда выполняется либо уже под защитой FIsBusy (вызов из
+//ProcessScheduledTasks/MinutelyTimerTimer), либо вручную, из пункта меню
+//"Выполнить задание..." (TTasksS.RunScheduledTask) - в этом случае
+//реентрантный вызов таймеров сторожа тоже безопасен, так как FIsBusy к
+//этому моменту не установлен и обычная (не вложенная) обработка тика
+//пройдёт штатно
+begin
+  if Assigned(FrmMain) and Assigned(FrmMain.StatusBar) then
+    FrmMain.StatusBar.Panels[0].Text := 'Выполняется задание: ' + ATaskName;
+  //второй параметр (0) обязателен - иначе форма (см. её заголовок, значение
+  //по умолчанию ATimeoutSec = 0.001) закроется сама почти сразу же при
+  //первой прокачке очереди сообщений (в т.ч. изнутри самой задачи, если она
+  //вызовет ProcessMessages) - закрываем её только явно, из
+  //HideCurrentTaskIndicator ниже
+  ShowWaitForm('Выполняется задание:' + sLineBreak + ATaskName, 0);
+end;
+
+procedure HideCurrentTaskIndicator;
+//см. ShowCurrentTaskIndicator выше
+begin
+  if Assigned(FrmMain) and Assigned(FrmMain.StatusBar) then
+    FrmMain.StatusBar.Panels[0].Text := '';
+  HideWaitForm;
+end;
+
 procedure RunLoggedTask(const ATaskName: string; ATaskProc: TProc);
 //выполняет одну задачу (переданную как ссылку на процедуру) с
-//индивидуальным логированием результата - см. LogTaskEvent. ошибка внутри
+//индивидуальным логированием результата - и в общий лог событий (см.
+//LogTaskEvent), и в структурированный журнал выполнения заданий с временем
+//начала/окончания и продолжительностью (см. LogTaskRun). ошибка внутри
 //задачи не прерывает работу резидентного процесса и не мешает выполнению
 //остальных задач - логируется, и выполнение продолжается со следующей
 //задачи (см. заголовок модуля, раздел "Логирование"); используется для
 //каждой отдельной задачи расписания (см. ProcessScheduledTasks ниже), а
-//не для всей пачки задач целиком
+//не для всей пачки задач целиком. дополнительно, на время выполнения
+//задачи показывает индикатор "выполняется задание ..." (см.
+//ShowCurrentTaskIndicator/HideCurrentTaskIndicator выше)
+var
+  StartMoment: TDateTime;
+  ErrorMessage: string;
 begin
+  StartMoment := Now;
+  ErrorMessage := '';
+  ShowCurrentTaskIndicator(ATaskName);
   try
-    ATaskProc();
-    LogTaskEvent(ATaskName, 'выполнено');
-  except
-    on E: Exception do
-      LogTaskEvent(ATaskName, 'ошибка: ' + E.Message);
+    try
+      ATaskProc();
+      LogTaskEvent(ATaskName, 'выполнено');
+    except
+      on E: Exception do begin
+        ErrorMessage := E.Message;
+        LogTaskEvent(ATaskName, 'ошибка: ' + E.Message);
+      end;
+    end;
+  finally
+    HideCurrentTaskIndicator;
   end;
+  LogTaskRun(ATaskName, StartMoment, Now, ErrorMessage);
 end;
 
 type
@@ -303,6 +394,7 @@ type
     Name: string;     //краткое имя на русском - в лог, в БД, в меню ручного запуска
     Comment: string;   //необязательный комментарий
     Cron: string;      //расписание
+    Active: Boolean;   //разрешено ли выполнение по расписанию (см. adm_scheduled_tasks)
     Proc: TScheduledTaskProc;
   end;
 
@@ -384,11 +476,18 @@ end;
 
 procedure InitScheduledTasks;
 //заполняет расписание всех задач, выполняемых по времени (см. ScheduledTasks
-//выше) - вызывается один раз при старте резидентного процесса, см.
-//TTasksS.Run. порядок задач в массиве важен - см. ProcessScheduledTasks:
+//выше) - вызывается один раз при старте резидентного процесса (см.
+//TTasksS.Run), а также лениво, при первом обращении из модуля Администратор
+//(см. ScheduledTaskNames/RunScheduledTask ниже), который сам TTasksS.Run не
+//вызывает. порядок задач в массиве важен - см. ProcessScheduledTasks:
 //задачи, просроченные из-за выполнения другой задачи, выполняются именно в
 //этом порядке (порядке следования в массиве), а не в порядке просроченных
 //минут.
+//
+//Cron и Active каждой задачи в конце дополнительно переопределяются
+//значениями из таблицы adm_scheduled_tasks, если они там заданы - см.
+//SyncScheduledTasksFromDb ниже; это позволяет настраивать время выполнения
+//и признак активности через модуль Администратор, не трогая код
 //
 //расписание перенесено сюда из прежних TTasksS.HourlyTasks (время каждой
 //задачи было и раньше жёстко задано в коде - здесь оно просто выражено в
@@ -404,19 +503,42 @@ procedure InitScheduledTasks;
     ScheduledTasks[High(ScheduledTasks)].Name := AName;
     ScheduledTasks[High(ScheduledTasks)].Comment := AComment;
     ScheduledTasks[High(ScheduledTasks)].Cron := ACron;
+    ScheduledTasks[High(ScheduledTasks)].Active := True;
     ScheduledTasks[High(ScheduledTasks)].Proc := AProc;
+  end;
+  procedure SyncScheduledTasksFromDb;
+  //переопределяет Cron/Active каждой задачи значениями из таблицы
+  //adm_scheduled_tasks (настраивается в модуле Администратор - см. заголовок
+  //модуля, myfrm_R_ServerTasks в uData.pas); если для задачи ещё нет строки
+  //в таблице (например, задача только что добавлена в код), создаёт её со
+  //значениями по умолчанию, взятыми из кода (см. AddTask выше), чтобы её
+  //сразу можно было увидеть и отредактировать в admin-интерфейсе
+  var
+    i: Integer;
+    Row: Variant;
+  begin
+    for i := 0 to High(ScheduledTasks) do begin
+      Row := Q.QLoadRow('select cron, active from adm_scheduled_tasks where task_name = :task_name$s', [ScheduledTasks[i].Name]);
+      if VarIsNull(Row[0]) then
+        Q.QSave('i', 'adm_scheduled_tasks', 'sq_adm_scheduled_tasks', 'id$i;task_name$s;cron$s;active$i',
+          [-1, ScheduledTasks[i].Name, ScheduledTasks[i].Cron, 1])
+      else begin
+        ScheduledTasks[i].Cron := Row[0];
+        ScheduledTasks[i].Active := Row[1] = 1;
+      end;
+    end;
   end;
 begin
   SetLength(ScheduledTasks, 0);
   //задачи, выполняющиеся каждый час, в начале часа
   AddTask('Обновление плановых заказов', '', '0 * * * *', procedure begin TasksS.CalcPlannedOrders; end);
-  AddTask('Производственные данные по заказам из ИТМ', '', '0 * * * *', procedure begin TasksS.SetProdustionDataForOrders; end);
+  AddTask('Выгрузка производственных данных по заказам из ИТМ', '', '0 * * * *', procedure begin TasksS.SetProdustionDataForOrders; end);
   AddTask('Мониторинг цен по счетам снабжения', '', '0 * * * *', procedure begin TasksS.ReportForHorlySupplyDeals; end);
-  AddTask('Загрузка данных ТУРВ из Парсек', '', '0 * * * *', procedure begin Turv.LoadDataFromParsec; end);
+  AddTask('Выгрузка времени прихода/ухода из Парсек', '', '0 * * * *', procedure begin Turv.LoadDataFromParsec; end);
   AddTask('Выгрузка ТУРВ в таблицу экспорта', '', '0 * * * *', procedure begin Turv.SaveAllTurvToExportTable; end);
-  AddTask('Продление персональных бонусов', '', '0 * * * *', procedure begin Turv.ExtendPersBonuses; end);
+  AddTask('Продление персональных надбавок', '', '0 * * * *', procedure begin Turv.ExtendPersBonuses; end);
   //задача, выполняющаяся раз в сутки в 4 часа
-  AddTask('Финансовый мониторинг заказов', 'p_run_insert_orders_fin_monitoring', '0 4 * * *',
+  AddTask('Фиксация данных для финансового мониторинга заказов', 'p_run_insert_orders_fin_monitoring', '0 4 * * *',
     procedure begin Q.QCallStoredProc('p_run_insert_orders_fin_monitoring', '', []); end);
   //задачи, выполняющиеся в начале рабочего дня, в 8 часов
   AddTask('Счета снабжения за вчерашний день', '', '0 8 * * *', procedure begin TasksS.ReportForYesterdaySupplyDeals; end);
@@ -432,11 +554,12 @@ begin
   AddTask('Просроченные производственные заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrders(True); end);
   AddTask('Просроченные отгрузочные заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrders(False); end);
   AddTask('Просроченные по дате начала производства заказы', '', '0 8 * * *', procedure begin TasksS.ReportForOverdueOrdersByStartTpoProductionDate; end);
-  AddTask('Отрицательная потребность по сырью у поставщиков', '', '0 8 * * *', procedure begin TasksS.ReportForSuppliersNegativeDemand; end);
+  AddTask('Потребность в материалах', '', '0 8 * * *', procedure begin TasksS.ReportForSuppliersNegativeDemand; end);
   AddTask('Просроченные сметы', '', '0 8 * * *', procedure begin TasksS.ReportForEstimatesOverdue(1); end);
   AddTask('Просроченные загрузки технологов', '', '0 8 * * *', procedure begin TasksS.ReportForEstimatesOverdue(2); end);
   AddTask('Производственные заказы к выдаче завтра', '', '0 8 * * *', procedure begin TasksS.ReportForOrdersPlannedToStartTomorrow; end);
-  AddTask('Недостающие материалы для заказов, запланированных на завтра', '', '0 8 * * *', procedure begin TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
+  AddTask('Потребность в материалах на завтра', '', '0 8 * * *', procedure begin TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
+  AddTask('Материалы, по которым не закрыта потребность', '', '0 8 * * *', procedure begin TasksS.ReportForOpenMaterialRequirements; end);
   AddTask('Заказы, запланированные к отгрузке (сегодня/завтра/послезавтра)', '', '0 8 * * *', procedure begin TasksS.ReportForPlannedShipments; end);
   //задачи по понедельникам - день недели проверяется внутри задачи, см.
   //комментарий к InitScheduledTasks выше
@@ -447,6 +570,14 @@ begin
   //задачи первого числа месяца - день месяца задан прямо в расписании
   AddTask('Производственные заказы за прошедший месяц', '', '0 8 1 * *', procedure begin TasksS.ReportForYesterdayOrders(6); end);
   AddTask('Отгрузочные заказы за прошедший месяц', '', '0 8 1 * *', procedure begin TasksS.ReportForYesterdayOrders(8); end);
+  //подхватим настройки (Cron/Active) из таблицы adm_scheduled_tasks, если
+  //они там заданы (см. SyncScheduledTasksFromDb выше) - ошибку (например,
+  //нет соединения с БД в момент вызова) не считаем фатальной, расписание
+  //в этом случае просто останется таким, как задано по умолчанию в коде
+  try
+    SyncScheduledTasksFromDb;
+  except
+  end;
 end;
 
 procedure ProcessScheduledTasks(AFrom, ATo: TDateTime);
@@ -467,7 +598,7 @@ begin
   Moment := AFrom;
   while Moment <= ATo do begin
     for i := 0 to High(ScheduledTasks) do
-      if not IsDue[i] then
+      if ScheduledTasks[i].Active and not IsDue[i] then
         if CronMatches(ScheduledTasks[i].Cron, Moment) then
           IsDue[i] := True;
     Moment := IncMinute(Moment, 1);
@@ -493,11 +624,44 @@ type
   //полностью резидентен, см. заголовок модуля); единственность самого
   //резидентного процесса обеспечена мьютексом в Uchet.dpr (CheckInstance) -
   //здесь это заново не проверяется
+  //
+  //Защита от реентрантного вызова (FIsBusy). Оба обработчика таймеров
+  //(UpdateCheckTimerTimer, MinutelyTimerTimer) выполняются на главном
+  //(VCL) потоке, но это НЕ гарантирует отсутствие вложенного повторного
+  //входа: если внутри задачи расписания (RunLoggedTask -> ATaskProc) где-то
+  //встретится Application.ProcessMessages, этот вызов прокачает очередь
+  //сообщений прямо оттуда - и если к этому моменту реальное время уже
+  //прошло на очередной интервал таймера (60 сек для FMinutelyTimer, 5 мин
+  //для FUpdateCheckTimer), Windows сгенерирует для него новое WM_TIMER,
+  //которое ProcessMessages тут же продиспетчеризирует - то есть тот же
+  //самый обработчик (или другой обработчик этого же класса) будет вызван
+  //ПОВТОРНО, поверх ещё не завершившегося внешнего вызова, на той же самой
+  //нити стека вызовов. Для MinutelyTimerTimer это означало бы: вложенный
+  //вызов увидит тот же FLastScheduleCheckMoment (внешний вызов ещё не
+  //дошёл до его обновления) и заново выполнит ProcessScheduledTasks за то
+  //же (или более широкое) время - то есть повторно запустит уже
+  //выполняющиеся и/или уже выполненные в эту минуту задачи; после
+  //возврата внешний вызов затем ЗАПИШЕТ СВОЁ (более раннее) значение
+  //FLastScheduleCheckMoment поверх уже обновлённого вложенным вызовом -
+  //отматывая назад отметку времени и создавая почву для дальнейших
+  //повторов на следующем тике. Для UpdateCheckTimerTimer риск ещё серьёзнее:
+  //при обнаружении новой версии он вызывает RunUpdaterAndHalt, который
+  //завершает процесс через Halt(0) - если это произойдёт вложенно, посреди
+  //выполнения другой задачи (например, посреди транзакции БД), процесс
+  //оборвётся, не завершив эту задачу штatно. FIsBusy - простой флаг "занято",
+  //выставляемый на входе в любой из двух обработчиков и снимаемый на
+  //выходе; повторный (реентрантный) вход в ЛЮБОЙ из них, пока флаг
+  //установлен, немедленно завершается без выполнения тела - никакая
+  //задача при этом не теряется: пропущенные минуты будут учтены на
+  //следующем обычном (невложенном) срабатывании FMinutelyTimer, так как
+  //ProcessScheduledTasks и так рассчитан на диапазон нескольких минут
+  //(см. его заголовок, механизм "просрочки")
   TServerWatchdog = class
   private
     FUpdateCheckTimer: TTimer;
     FMinutelyTimer: TTimer;
     FLastScheduleCheckMoment: TDateTime;
+    FIsBusy: Boolean; //см. комментарий выше, раздел про защиту от реентрантного вызова
     procedure UpdateCheckTimerTimer(Sender: TObject);
     procedure MinutelyTimerTimer(Sender: TObject);
   public
@@ -543,26 +707,36 @@ procedure TServerWatchdog.UpdateCheckTimerTimer(Sender: TObject);
 //как и обычный клиентский апдейтер, запускаем Uchet_Updater.exe и штатно
 //завершаемся - обновлятор дождётся закрытия процесса и подменит файл уже
 //после этого (см. заголовок uUpdater.pas)
+//см. комментарий у TServerWatchdog (защита от реентрантного вызова, FIsBusy)
 var
   UpdaterDir, ServerBasePath: string;
 begin
-  UpdaterDir := ExtractFilePath(ParamStr(0)) + 'Updater' + PathDelim;
-  if not GetUpdateServerBasePath(UpdaterDir, ServerBasePath) then
-    Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
-  if not IsExeUpdateAvailable(ServerBasePath) then
-    Exit;
-  LogTaskEvent('Сервер', 'обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - запускается обновление, процесс завершается');
-  ScanApi.Stop;
+  if FIsBusy then
+    Exit; //реентрантный вызов (например, из ProcessMessages внутри выполняющейся задачи) - пропускаем, следующий тик через 5 минут повторит проверку
+  FIsBusy := True;
   try
-    RunUpdaterAndHalt(ServerBasePath, UpdaterDir); //при успехе - Halt(0) внутри, сюда управление не вернётся
-  except
-    on E: Exception do begin
-      //не удалось запустить обновление (например, нет Uchet_Updater.exe) -
-      //логируем и восстанавливаем работу сервера со старой версией, попробуем
-      //снова через 5 минут на следующем срабатывании таймера
-      LogTaskEvent('Сервер', 'не удалось запустить обновление: ' + E.Message);
-      ScanApi.Start;
+    UpdaterDir := ExtractFilePath(ParamStr(0)) + 'Updater' + PathDelim;
+    if not GetUpdateServerBasePath(UpdaterDir, ServerBasePath) then
+      Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
+    if not IsExeUpdateAvailable(ServerBasePath) then
+      Exit;
+    LogTaskEvent('Сервер', 'обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - запускается обновление, процесс завершается');
+    ScanApi.Stop;
+    try
+      RunUpdaterAndHalt(ServerBasePath, UpdaterDir); //при успехе - Halt(0) внутри, сюда управление не вернётся
+    except
+      on E: Exception do begin
+        //не удалось запустить обновление (например, нет Uchet_Updater.exe) -
+        //логируем и восстанавливаем работу сервера со старой версией, попробуем
+        //снова через 5 минут на следующем срабатывании таймера
+        LogTaskEvent('Сервер', 'не удалось запустить обновление: ' + E.Message);
+        //сканер временно отключен (см. TTasksS.Run) - не перезапускаем его и
+        //здесь, чтобы не включить обратно в обход общего отключения
+        //ScanApi.Start;
+      end;
     end;
+  finally
+    FIsBusy := False;
   end;
 end;
 
@@ -577,6 +751,7 @@ procedure TServerWatchdog.MinutelyTimerTimer(Sender: TObject);
 //RunLoggedTask, используемый внутри ProcessScheduledTasks; внешний
 //try/except здесь - дополнительная защита на случай ошибки в самой логике
 //планирования
+//см. комментарий у TServerWatchdog (защита от реентрантного вызова, FIsBusy)
 var
   CheckFrom, CheckTo: TDateTime;
 begin
@@ -586,103 +761,70 @@ begin
   end;
   if not IsScheduleEnabled then
     Exit;
+  if FIsBusy then
+    Exit; //реентрантный вызов (например, из ProcessMessages внутри уже выполняющейся задачи расписания) - пропускаем, пропущенные минуты не теряются, см. FLastScheduleCheckMoment и "просрочку" в ProcessScheduledTasks
+  FIsBusy := True;
   try
-    CheckTo := TruncToMinute(Now);
-    CheckFrom := IncMinute(FLastScheduleCheckMoment, 1);
-    if CheckFrom <= CheckTo then begin
-      ProcessScheduledTasks(CheckFrom, CheckTo);
-      FLastScheduleCheckMoment := CheckTo;
+    try
+      CheckTo := TruncToMinute(Now);
+      CheckFrom := IncMinute(FLastScheduleCheckMoment, 1);
+      if CheckFrom <= CheckTo then begin
+        ProcessScheduledTasks(CheckFrom, CheckTo);
+        FLastScheduleCheckMoment := CheckTo;
+      end;
+    except
+      on E: Exception do
+        LogTaskEvent('Сервер', 'ошибка при выполнении заданий по расписанию: ' + E.Message);
     end;
-  except
-    on E: Exception do
-      LogTaskEvent('Сервер', 'ошибка при выполнении заданий по расписанию: ' + E.Message);
+  finally
+    FIsBusy := False;
   end;
 end;
 
 procedure TTasksS.Run;
 //процедура выполняется при старте модуля Сервер - см. заголовок модуля.
-//сервер полностью резидентен: какой бы параметр ни был передан при старте,
-//после разовой попытки выполнить соответствующую ему задачу процесс не
-//завершается - остаётся работать, обслуживая HTTP-сервер сканера штрихкодов
-//(ScanApi, работает всегда, независимо от параметра) и выполняя все
-//прочие задачи по расписанию через ServerWatchdog (см. выше в этом модуле)
+//параметр запуска (/run или из-под IDE) уже проверен в Uchet.dpr, до
+//создания главной формы - здесь никакого разбора параметра больше нет,
+//процесс безусловно переводится в резидентный режим: запускается HTTP-сервер
+//сканера штрихкодов (ScanApi) и создаётся ServerWatchdog, выполняющий все
+//прочие задачи по расписанию (см. выше в этом модуле).
+//ВРЕМЕННО (см. текущую отладку остальных функций модуля Сервер) запуск
+//сканера отключен - ScanApi.Start закомментирован ниже, чтобы полностью
+//вывести HTTP-сервер и связанные с ним потоки Indy из процесса, пока не
+//налажена основная резидентная функциональность. Включить обратно - просто
+//раскомментировать вызов
 begin
-  ScanApi.Start;
+  //ScanApi.Start;
   InitScheduledTasks;
   if Module.DevFileExists then
     IsScheduleEnabled := MyQuestionMessage('Обнаружен файл "dev" (режим разработки).' + sLineBreak + 'Выполнять задания по расписанию?') = mrYes;
-  if not ExecuteTaskByName(ParamStr(1)) then
-    LogTaskEvent(ParamStr(1), 'параметр запуска не распознан');
+  LogTaskEvent('Сервер', 'запущен');
   ServerWatchdog := TServerWatchdog.Create;
 end;
 
-function TTasksS.ExecuteTaskByName(const ATaskName: string): Boolean;
-//выполняет одну задачу по её "имени" - см. описание в интерфейсной части
-var
-  IsMatched: Boolean;
-begin
-  IsMatched := True;
-  try
-    try
-      if ATaskName = '/turvreport1' then begin
-        //if DayOf(Date) in [1, 16] then TestTurvComplete;
-      end
-      else if ATaskName = '/turvreport2' then begin
-        //RunTestTurvDifferences;
-      end
-      else if ATaskName = '/fromparsec' then
-        TURV.LoadParsecData
-      else if ATaskName = '/ReportForOrdersWithoutEstimate' then
-        ReportForOrdersWithoutEstimate
-      else if ATaskName = '/deleteolddata' then
-        DeleteOldData
-      else if ATaskName = '/getcalendar' then begin
-        GetProductionCalendar(YearOf(Date));
-        GetProductionCalendar(YearOf(Date) + 1);
-      end
-      else if ATaskName = '/calcplanned' then
-        CalcPlannedOrders
-      else if ATaskName = '/CloseItmWorkPeriod' then
-        CloseItmWorkPeriod
-      //'/hourly' больше не поддерживается - вся его прежняя нагрузка перенесена
-      //в расписание (см. ScheduledTasks/InitScheduledTasks), которое выполняется
-      //резидентным процессом само, без внешнего запуска по этому параметру
-      else if ATaskName = '/test' then begin
-        //
-      end
-      else if ATaskName = TASK_SCAN_API then begin
-        //сама задача сканирования запускается отдельно и всегда, при старте
-        //TTasksS.Run (см. выше) - по этому имени дополнительно ничего не
-        //требуется, ветка нужна только для распознавания параметра
-      end
-      else
-        IsMatched := False;
-      if IsMatched then
-        LogTaskEvent(ATaskName, 'выполнено');
-    except
-      on E: Exception do
-        LogTaskEvent(ATaskName, 'ошибка: ' + E.Message);
-    end;
-  finally
-    //на всякий случай откатим транзакцию, если была незафиксированная
-    Q.QRollbackTrans;
-  end;
-  Result := IsMatched;
-end;
-
 function TTasksS.ScheduledTaskNames: TVarDynArray;
-//имена всех задач расписания - см. описание в интерфейсной части
+//имена всех задач расписания - см. описание в интерфейсной части. массив
+//заполняется лениво (см. InitScheduledTasks), если это ещё не было сделано -
+//нужно для модуля Администратор, который (в отличие от модуля Сервер) не
+//вызывает TTasksS.Run
 var
   i: Integer;
 begin
+  if Length(ScheduledTasks) = 0 then
+    InitScheduledTasks;
   SetLength(Result, Length(ScheduledTasks));
   for i := 0 to High(ScheduledTasks) do
     Result[i] := ScheduledTasks[i].Name;
 end;
 
 procedure TTasksS.RunScheduledTask(AIndex: Integer);
-//выполняет одну задачу расписания по индексу - см. описание в интерфейсной части
+//выполняет одну задачу расписания по индексу - см. описание в интерфейсной
+//части. выполняется вручную, вне очереди, независимо от признака Active
+//(он влияет только на автоматическое выполнение по расписанию, см.
+//ProcessScheduledTasks)
 begin
+  if Length(ScheduledTasks) = 0 then
+    InitScheduledTasks;
   if (AIndex < 0) or (AIndex > High(ScheduledTasks)) then
     Exit;
   RunLoggedTask(ScheduledTasks[AIndex].Name, TProc(ScheduledTasks[AIndex].Proc));
@@ -994,7 +1136,7 @@ begin
       Tbl.InitDefaults;
       Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
       HTML := '<b>По следующей номенклатуре были выставлены счета, в которых цена номенклатуры превышает контрольную цену:</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
-      Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [], '~');
+      Tasks.SendMail(TASK_MAILING_SUPPLY_DEALS_HOURLY_MONITORING, Title, HTML, [], '~');
     end;
     //сохраним в таблице информцию по номенклатуре и ПН из еще не обработанных приходных накладных, где округленные до рубля закупочная и контрольная цена различаются
     IdIb := S.IfNotEmpty(Q.QLoadValue('select i from properties where prop = ''spl_deals_monitoring'' and subprop = ''id_inbill''', []), 113205);
@@ -1078,7 +1220,7 @@ begin
   end;
   if HTML = '' then
     Exit;
-  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+  Tasks.SendMail(TASK_MAILING_SUPPLY_DEALS_YESTERDAY, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForYesterdayOrders(AOrderTypes: Integer; AMailing: Boolean = True);
@@ -1098,6 +1240,7 @@ var
   HTML, Title, TopSt, FileToSend, st1, st2, st3: string;
   DtBeg: TDateTime;
   DataType: Integer;
+  MailingId: Integer;
 begin
   case AOrderTypes of
     1:
@@ -1107,6 +1250,8 @@ begin
         st3 := DateTimeToStr(IncDay(Date, -1));
         DtBeg := IncDay(Date, -1);
         DataType := 1;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_PRODUCTION_ORDERS_YESTERDAY;
       end;
     3:
       begin
@@ -1115,6 +1260,8 @@ begin
         st3 := DateTimeToStr(IncDay(Date, -1));
         DtBeg := IncDay(Date, -1);
         DataType := 1;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_SHIPMENT_ORDERS_YESTERDAY;
       end;
     5:
       begin
@@ -1123,6 +1270,8 @@ begin
         st3 := 'прошлую неделю';
         DtBeg := Date - DayOfTheWeek(Date);
         DataType := 5;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_PRODUCTION_ORDERS_LAST_WEEK;
       end;
     6:
       begin
@@ -1131,6 +1280,8 @@ begin
         st3 := 'прошлый месяц';
         DtBeg := DateOf(EndOfTheMonth(IncMonth(Date, -1)));
         DataType := 6;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_PRODUCTION_ORDERS_LAST_MONTH;
       end;
     7:
       begin
@@ -1140,6 +1291,8 @@ begin
         //дата окончания периода!
         DtBeg := Date - DayOfTheWeek(Date);
         DataType := 5;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_SHIPMENT_ORDERS_LAST_WEEK;
       end;
     8:
       begin
@@ -1149,6 +1302,8 @@ begin
         //дата окончания периода!
         DtBeg := DateOf(EndOfTheMonth(IncMonth(Date, -1)));
         DataType := 6;
+        MailingId := TASK_MAILING_ORDERS_FIN;
+//        MailingId := TASK_MAILING_SHIPMENT_ORDERS_LAST_MONTH;
       end;
   end;
   Title := 'Отчет по ' + st1 + ' заказам за ' + st2 + '.';
@@ -1201,7 +1356,7 @@ begin
     ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
   end;
   if AMailing then
-    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, [FileToSend], '~');
+    Tasks.SendMail(MailingId, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForEarlyCompletionActs;
@@ -1279,7 +1434,7 @@ begin
   end
   else
     HTML := 'Номенклатура в пути без резерва отсуствует.<br>';
-  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+  Tasks.SendMail(TASK_MAILING_SUPPLY_ONWAY_SURPLUS, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForRawMaterialsOnSgp;
@@ -1310,7 +1465,7 @@ begin
   else
     HTML := '';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, [FileToSend], '~');
+    Tasks.SendMail(TASK_MAILING_RAW_MATERIALS_ON_SGP, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForActsWriteoffReceipt;
@@ -1346,7 +1501,7 @@ begin
   else
     HTML := '';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, [FileToSend], '~');
+    Tasks.SendMail(TASK_MAILING_ACTS_WRITEOFF_RECEIPT, Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForNegativeQuantityOnSgp;
@@ -1380,7 +1535,7 @@ begin
   else
     HTML := 'На СГП нет позиций с отрицательными остатками.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_NEGATIVE_QUANTITY_ON_SGP, Title, HTML, FileToSendArr, '~');
 end;
 
 procedure TTasksS.ReportForNegativeQuantityOnStocks;
@@ -1414,7 +1569,7 @@ begin
   else
     HTML := 'На складах нет материалов с отрицательными остатками.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_NEGATIVE_QUANTITY_ON_STOCKS, Title, HTML, FileToSendArr, '~');
 end;
 
 
@@ -1460,7 +1615,7 @@ begin
   else
     HTML := TopSt + ' отсутствуют.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(S.IIf(AForProductionOrders, TASK_MAILING_OVERDUE_PRODUCTION_ORDERS, TASK_MAILING_OVERDUE_SHIPMENT_ORDERS), Title, HTML, FileToSendArr, '~');
 end;
 
 procedure TTasksS.ReportForOverdueOrdersByStartTpoProductionDate;
@@ -1502,10 +1657,11 @@ begin
   else
     HTML := TopSt + ' отсутствуют.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_OVERDUE_ORDERS_BY_PRODUCTION_START_DATE, Title, HTML, FileToSendArr, '~');
 end;
 
 procedure TTasksS.ReportForSuppliersNegativeDemand;
+//Потребность в материалах
 //отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
 var
   na, naCats: TNamedArr;
@@ -1516,8 +1672,8 @@ var
   HTML, Title, TopSt, CatName: string;
   i: Integer;
 begin
-  Title := 'Номенклатура с отрицательной потребностью на вчерашний день';
-  TopSt := 'Номенклатура с отрицательной потребностью на ' + DateTimeToStr(IncDay(Date, -1));
+  Title := 'Потребность в материалах';
+  TopSt := 'Потребность в материалах на ' + DateTimeToStr(IncDay(Date, -1));
   Fields := [
     ['name$s', 'Наименование', '500;h'],
     ['name_unit$s', 'Ед. изм.', '80'],
@@ -1553,7 +1709,7 @@ begin
   end;
   if HTML = '' then
     HTML := 'Номенклатура с отрицательной потребностью отсуствует.<br>';
-  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, FileToSendArr, '~');
+  Tasks.SendMail(TASK_MAILING_SUPPLIERS_NEGATIVE_DEMAND, Title, HTML, FileToSendArr, '~');
 end;
 
 
@@ -1596,7 +1752,7 @@ begin
   end
   else
     HTML := Title + ', отсуствуют.<br>';
-  Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, [FileToSend], '~');
+  Tasks.SendMail(S.IIf(ObjType = 1, TASK_MAILING_ESTIMATES_OVERDUE, TASK_MAILING_TECHNOLOGISTS_LOAD_OVERDUE), Title, HTML, [FileToSend], '~');
 end;
 
 procedure TTasksS.ReportForNegativeNeedBySgp;
@@ -1631,7 +1787,7 @@ begin
   else
     HTML := 'На СГП нет позиций с отрицательной потребностью.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_MONITORING_STOCKS, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_NEGATIVE_NEED_BY_SGP, Title, HTML, FileToSendArr, '~');
 end;
 
 procedure TTasksS.ReportForOrdersPlannedToStartTomorrow;
@@ -1670,12 +1826,12 @@ begin
   else
     HTML := TopSt + ', отсутствуют.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_ORDERS_PLANNED_TO_START_TOMORROW, Title, HTML, FileToSendArr, '~');
 end;
 
 
 procedure TTasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow;
-//Недостающие материалы для производства заказов, запланированных на завтра
+//Потребность в материалах на завтра
 var
   na: TNamedArr;
   Fields: TVarDynArray2;
@@ -1684,7 +1840,7 @@ var
   Tbl: THTMLTable;
   HTML, Title, TopSt: string;
 begin
-  Title := 'Недостающие материалы для производства заказов, запланированных на завтра';
+  Title := 'Потребность в материалах на завтра';
   TopSt := Title + ' (на ' + DateTimeToStr(IncDay(Date, +1)) + ')';
   Fields := [
     ['groupname$s','Группа','200'],
@@ -1707,9 +1863,9 @@ begin
     FileToSendArr := [FileToSend];
   end
   else
-    HTML := TopSt + ', отсутствуют.';
+    HTML := TopSt + ' отсутствует.';
   if HTML <> '' then
-    Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+    Tasks.SendMail(TASK_MAILING_REQUIRED_MATERIALS_TOMORROW, Title, HTML, FileToSendArr, '~');
 end;
 
 procedure TTasksS.ReportForPlannedShipments;
@@ -1762,7 +1918,60 @@ begin
     ExportToXlsx(FileToSend, naItems, FieldsItems, TopSt + ' - изделия', '', True);
     FileToSendArr := FileToSendArr + [FileToSend];
   end;
-  Tasks.SendMail(TASK_MAILING_ORDERS_FIN, Title, HTML, FileToSendArr, '~');
+  Tasks.SendMail(TASK_MAILING_PLANNED_SHIPMENTS, Title, HTML, FileToSendArr, '~');
+end;
+
+procedure TTasksS.ReportForOpenMaterialRequirements;
+//материалы, по которым не закрыта потребность
+//попадают в таблицу в момент, когда есть нехватака материала на завтрашний заказ,
+//удаляются из неё, когда количество на складе окажется не меньше потребности без учета остатка
+var
+  na: TNamedArr;
+  vaNew: TVarDynArray2;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+  i: Integer;
+begin
+  //заносим в sn_material_open_requirements новые материалы с нехваткой на завтра
+  vaNew := Q.QLoad(Q.QGetSql('A', 'v_rep_required_materials_for_planned_orders_tomorrow', 'id_nomencl$i;groupname$s') +
+    ' where qnt_diff < 0 and id_nomencl is not null', []
+  );
+  for i := 0 to High(vaNew) do
+    if Q.QLoadValue('select count(*) from sn_material_open_requirements where id = :id$i', [vaNew[i][0]]) = 0 then
+      Q.QSave('i', 'sn_material_open_requirements', '-', 'id$i;groupname$s;dt$d', [vaNew[i][0], vaNew[i][1], Date]);
+  //убираем материалы, по которым потребность уже покрыта
+  Q.QExecSql('delete from sn_material_open_requirements t where exists ' +
+    '(select 1 from v_spl_minremains m where m.id = t.id and m.qnt >= m.need)', []
+  );
+  //формируем отчет по оставшимся
+  Title := 'Материалы, по которым не закрыта потребность';
+  TopSt := Title + ' на ' + DateTimeToStr(Date);
+  Fields := [
+    ['groupname$s', 'Группа', '200'],
+    ['artikul$s', 'Артикул', '120'],
+    ['name$s', 'Наименование', '300;h'],
+    ['unit$s', 'Ед.изм', '70'],
+    ['dt$d', 'Дата возникновения', '90'],
+    ['qnt_on_stocks$f', 'Кол-во на складах', '90', 'f=f']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_sn_material_open_requirements', Fields.Col(0).Implode(';')) +
+    ' order by groupname, name', [], na
+  );
+  HTML := '';
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := TopSt + ', отсутствуют.';
+  Tasks.SendMail(TASK_MAILING_MATERIAL_OPEN_REQUIREMENTS, Title, HTML, FileToSendArr, '~');
 end;
 
 end.

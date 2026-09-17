@@ -1306,6 +1306,7 @@ create or replace view v_rep_required_materials_for_planned_orders_tomorrow as
 select
 --потребные материалы по заказам, которые должны пойти в работу завтра
   t.*,
+  n.id_nomencl,
   nvl(s.qnt, 0) as qnt_on_stocks,
   nvl(s.qnt, 0) - t.qnt as qnt_diff
 from 
@@ -1326,6 +1327,39 @@ from
   v_spl_qntonstocks_sum s
 where
   n.name(+) = t.name
+  and s.id_nomencl(+) = n.id_nomencl
+;
+
+--------------------------------------------------------------------------------
+--таблица sn_material_open_requirements
+--материалы, по которым не закрыта потребность.
+--попадают сюда при наличии отрицательной потребности на момент необходимости из для завтрашних заказов,
+--удаляются по факту их наличиЯ на складах не менеепотребности без учета остатка
+--
+--drop table sn_material_open_requirements;
+create table sn_material_open_requirements (
+  id number primary key,
+  groupname varchar2(400),
+  dt date
+);
+
+create or replace view v_rep_sn_material_open_requirements as
+select
+--материалы, по которым не закрыта потребность.
+  name,
+  groupname,
+  artikul,
+  u.name_unit as unit,
+  dt,
+  nvl(s.qnt, 0) as qnt_on_stocks
+from 
+  sn_material_open_requirements t,
+  dv.nomenclatura n,
+  dv.unit u,
+  v_spl_qntonstocks_sum s
+where
+  t.id = n.id_nomencl
+  and u.id_unit = n.id_unit  
   and s.id_nomencl(+) = n.id_nomencl
 ;
 

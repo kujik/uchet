@@ -20,26 +20,31 @@ type
     edt_filespath: TDBEditEh;
     edt_ordercurrentpath: TDBEditEh;
     edt_orderarchivepath: TDBEditEh;
-    tsMail: TTabSheet;
+    //вкладка "Настройки почты" (tsMail) убрана по заданию пользователя -
+    //перенесена в отдельную форму uFrmADedtMailingSettings.pas, где адресаты
+    //рассылок настраиваются динамически создаваемыми контролами по данным
+    //adm_mailing (сортировка по pos, pos <= 0 исключается). соответствующие
+    //компоненты убраны и из .dfm (там комментарии не поддерживаются)
+    {tsMail: TTabSheet;
     edt_MailingOrdersCh: TDBEditEh;
     edt_MailingAttachSmeta: TDBEditEh;
     edt_MailingReportSmeta: TDBEditEh;
-    edt_MailingAttachTHN: TDBEditEh;
+    edt_MailingAttachTHN: TDBEditEh;}
     tsDeleteOld: TTabSheet;
     nedt_or_to_archive: TDBNumberEditEh;
     nedt_orders_n: TDBNumberEditEh;
     nedt_accounts_n: TDBNumberEditEh;
     nedt_turv: TDBNumberEditEh;
     nedt_payrolls: TDBNumberEditEh;
-    edt_mailing_order_fin: TDBEditEh;
+    {edt_mailing_order_fin: TDBEditEh;
     edt_mailing_sn: TDBEditEh;
     edt_mailing_early_acts: TDBEditEh;
     edt_mailing_for_stocks: TDBEditEh;
-    edt_mailing_for_orders_approve: TDBEditEh;
+    edt_mailing_for_orders_approve: TDBEditEh;}
   private
-    MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8, MI9, MI10: TMailingInterface;
+    //MI1, MI2, MI3, MI4, MI5, MI6, MI7, MI8, MI9, MI10: TMailingInterface;
     function Prepare: Boolean; override;
-    function LoadComboBoxes: Boolean; override;
+    //function LoadComboBoxes: Boolean; override;
     procedure VerifyBeforeSave; override;
     function Save: Boolean; override;
   public
@@ -53,7 +58,7 @@ implementation
 {$R *.dfm}
 
 
-function TFrmADedtMainSettings.LoadComboBoxes: Boolean;
+{function TFrmADedtMainSettings.LoadComboBoxes: Boolean;
 begin
   MI1 := TMailingInterface.Create(Self, edt_MailingOrdersCh, 1, '*', True);
   MI1.Load;
@@ -74,7 +79,7 @@ begin
   MI10 := TMailingInterface.Create(Self, edt_mailing_for_orders_approve, 10, '*', True);
   MI10.Load;
   Result := True;
-end;
+end;}
 
 function TFrmADedtMainSettings.Prepare: Boolean;
 begin
@@ -98,7 +103,6 @@ begin
   Height := 600;
   FWHBounds.Y2:= -1;
   Result := inherited;
-  //Cth.AlignControls(tsMail, [], False);
   pgcMain.TabIndex := 0;
   if not Result then
     Exit;
@@ -114,7 +118,10 @@ begin
   Q.QExecSql(Q.QGetSql('q','adm_main_settings','filespath;ordercurrentpath;orderarchivepath'),
     [edt_filespath.Value, edt_ordercurrentpath.Value, edt_orderarchivepath.Value]
   );
-  MI1.Save;
+  //настройка адресатов почтовых рассылок перенесена в отдельную форму
+  //uFrmADedtMailingSettings.pas (см. также комментарий у объявления полей
+  //MI1..MI10 выше)
+  {MI1.Save;
   MI3.Save;
   MI4.Save;
   MI5.Save;
@@ -122,7 +129,7 @@ begin
   MI7.Save;
   MI8.Save;
   MI9.Save;
-  MI10.Save;
+  MI10.Save;}
   Q.QCommitTrans;
   Result := Q.CommitSuccess;
 end;

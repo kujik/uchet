@@ -654,7 +654,7 @@ select module, machine, osuser from v$session where username = 'UCHET22';
 
 
 --таблица для указания пользователей почтовых рассылок
-alter table adm_mailing add customemail varchar2(4000);
+alter table adm_mailing add pos number;
 create table adm_mailing (
   id number(11) not null,        --айди рассылки
   userids varchar2(4000),        --список айди пользователей (пользователи программы Учет, не почта!!!) через запятую
@@ -662,6 +662,7 @@ create table adm_mailing (
   comm varchar2(500),            --просто комментарий 
   addresses varchar2(4000),      --итоговый список адресов, выисляется триггером
   dt date, 
+  pos number,                    --позиция в интерфейсе рассылок; если 0 - рассылка не используется
   constraint pk_adm_mailing primary key (id)
 );
 
@@ -1177,3 +1178,46 @@ create table adm_ldap_users_ext (
   guid varchar2(256),       --objectguid
   comm varchar2(1000)       --произвольный комментарий
 );  
+
+
+--------------------------------------------------------------------------------
+--Расписание заданий сервера - настройка времени выполнения (в формате cron)
+--и признака активности для каждой задачи расписания (см. uServerTasks.pas,
+--TScheduledTask/InitScheduledTasks); редактируется в модуле Администратор
+--через общий справочник TFrmXGlstMain (см. myfrm_R_ServerTasks в uData.pas)
+
+create table adm_scheduled_tasks (
+--расписание заданий сервера
+--настройка времени выполнения (в формате cron)
+id number(12),
+  task_name varchar2(200) not null,
+  cron varchar2(50) not null,
+  active number(1) default 1,
+  constraint pk_adm_scheduled_tasks primary key (id)
+);
+
+create sequence sq_adm_scheduled_tasks nocache start with 1;
+
+create unique index idx_adm_scheduled_tasks_name on adm_scheduled_tasks(lower(task_name));
+
+
+--------------------------------------------------------------------------------
+--Журнал выполнения заданий расписания сервера - имя задачи, время начала и
+--окончания, продолжительность в секундах, текст ошибки (если была); строка
+--пишется из uServerTasks.pas (RunLoggedTask/LogTaskRun) при каждом
+--выполнении задачи расписания - и по расписанию, и вручную
+
+create table adm_scheduled_tasks_log (
+--журнал выполнения заданий расписания сервера
+  id number(12),
+  task_name varchar2(200) not null,
+  dt_start date not null,
+  dt_end date not null,
+  duration_sec number(10),
+  error_message varchar2(4000),
+  constraint pk_adm_scheduled_tasks_log primary key (id)
+);
+
+create sequence sq_adm_scheduled_tasks_log nocache start with 1;
+
+create index idx_adm_scheduled_tasks_log_name on adm_scheduled_tasks_log(task_name);

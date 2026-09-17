@@ -519,44 +519,59 @@ begin
 end;
 
 procedure TScanApi.HttpCommand(AContext: TIdContext; ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+//вызывается Indy в отдельном потоке на каждое соединение (см. заголовок
+//модуля). HandleScan/HandleStageAction/EmployeeJsonFields обращаются к
+//общему Oracle-соединению Q (TADOConnection, uDB.pas) - это COM-объект,
+//созданный и живущий на главном (VCL) потоке; вызывать его методы напрямую
+//из чужого потока небезопасно (COM ждёт обслуживания от потока-владельца) -
+//в частности, это было причиной зависания процесса при закрытии сервера
+//(TScanApi.Stop мог ждать завершения этого же потока Indy, а тот - ждать
+//обслуживания от главного потока, который к этому моменту уже не качает
+//сообщения). Поэтому вся обработка запроса теперь целиком выполняется на
+//главном потоке через TThread.Synchronize - поток Indy при этом просто
+//ждёт результата, снаружи (для Indy) ничего не меняется: AResponseInfo
+//по-прежнему полностью заполнен к моменту возврата из HttpCommand
 var
   Doc, FileName: string;
 begin
-  try
-    Doc := ARequestInfo.Document;
-    if (Doc = '') or (Doc = '/') or (Doc = '/scan.html') then begin
-      FileName := ExtractFilePath(ParamStr(0)) + 'scan.html';
-      if FileExists(FileName) then begin
-        AResponseInfo.ContentType := 'text/html';
-        AResponseInfo.CharSet := 'utf-8';
-        AResponseInfo.ContentStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+  TThread.Synchronize(nil, procedure
+  begin
+    try
+      Doc := ARequestInfo.Document;
+      if (Doc = '') or (Doc = '/') or (Doc = '/scan.html') then begin
+        FileName := ExtractFilePath(ParamStr(0)) + 'scan.html';
+        if FileExists(FileName) then begin
+          AResponseInfo.ContentType := 'text/html';
+          AResponseInfo.CharSet := 'utf-8';
+          AResponseInfo.ContentStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+        end
+        else begin
+          AResponseInfo.ResponseNo := 404;
+          AResponseInfo.CharSet := 'utf-8';
+          AResponseInfo.ContentText := 'scan.html не найден рядом с программой';
+        end;
       end
+      else if Doc = '/api/scan' then
+        HandleScan(ARequestInfo, AResponseInfo)
+      else if Doc = '/api/accept' then
+        HandleStageAction(ARequestInfo, AResponseInfo, 2)
+      else if Doc = '/api/ship' then
+        HandleStageAction(ARequestInfo, AResponseInfo, 3)
       else begin
         AResponseInfo.ResponseNo := 404;
         AResponseInfo.CharSet := 'utf-8';
-        AResponseInfo.ContentText := 'scan.html не найден рядом с программой';
+        AResponseInfo.ContentText := 'Не найдено';
       end;
-    end
-    else if Doc = '/api/scan' then
-      HandleScan(ARequestInfo, AResponseInfo)
-    else if Doc = '/api/accept' then
-      HandleStageAction(ARequestInfo, AResponseInfo, 2)
-    else if Doc = '/api/ship' then
-      HandleStageAction(ARequestInfo, AResponseInfo, 3)
-    else begin
-      AResponseInfo.ResponseNo := 404;
-      AResponseInfo.CharSet := 'utf-8';
-      AResponseInfo.ContentText := 'Не найдено';
-    end;
-  except
-    on E: Exception do begin
-      Module.ToLogFile('Ошибка сервера сканера штрихкодов: ' + E.Message);
-      try
-        SendError(AResponseInfo, 'Внутренняя ошибка сервера');
-      except
+    except
+      on E: Exception do begin
+        Module.ToLogFile('Ошибка сервера сканера штрихкодов: ' + E.Message);
+        try
+          SendError(AResponseInfo, 'Внутренняя ошибка сервера');
+        except
+        end;
       end;
     end;
-  end;
+  end);
 end;
 
 initialization

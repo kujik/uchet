@@ -1543,7 +1543,7 @@ begin
   HTML := '<b>' + TopSt + '</b><br><b>Номенклатура к заказу:</b><br>' + Tbl.GenerateEmail(na, Fields) + '<br>';
   FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
   ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
-  Tasks.SendMail(TASK_MAILING_MONITORING_SN, Title, HTML, [FileToSend], '~');
+  Tasks.SendMail(TASK_MAILING_CREATED_SUPPLIER_DEMAND, Title, HTML, [FileToSend], '~');
 end;
 
 

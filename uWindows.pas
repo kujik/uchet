@@ -106,13 +106,14 @@ implementation
 
 uses
 
-  V_MDI, uFrmBasicMdi,
+  uFrmBasicMdi,
   uFrmMain,
   uTurv,
   uSnCalendar,
   uOrders,
 
   uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmADedtMainSettings, uFrmADedtModuleSettings,
+  uFrmADedtMailingSettings,
 
   uFrmCDedtAccount,
   uFrmCDedtExpenseItem,
@@ -123,7 +124,7 @@ uses
   uFrmWGrepTurv,
 
 
-  D_Order,
+  uFrmWOrderOld,
   uFrmOGedtSupplierNomencl,
   uFrmOGinfSn,
   uFrmAWInstallModule,
@@ -242,7 +243,9 @@ begin
   //Sys.SaveTextToFile('r:\321', VarToStr(mode) + '   ' + VarToStr(Ahandle) + '   ' + Sys.GetWindowHeader(Ahandle) + '   ' +  Sys.GetModuleFileByHandle(handle) + #13#10, True);
 
   if (IsParent(AHandle)) or
-     ((AForm is TForm_MDI) and (TForm_MDI(AForm).ModuleId = cMainModule)) or
+     //ветка для TForm_MDI убрана - этот класс (V_MDI) выведен из проекта,
+     //потомков среди форм больше нет
+     //((AForm is TForm_MDI) and (TForm_MDI(AForm).ModuleId = cMainModule)) or
      ((AForm is TFrmBasicMdi) and (TFrmBasicMdi(AForm).ModuleId = cMainModule)) then begin
   //все добавления кнопок для окон только если форма принадлежит приложению,
   //либо это один из наших основных типов форм
@@ -266,7 +269,8 @@ begin
     //получим количество открытых мди-форм и нормал-форм с таким же заголовком как у переданной
     //WindowsCount вылетает по ошибке на получении Form.Captions, если это например окно стандартного диалога,
     //поэтому эта проверка нужна
-    if (AForm is TForm_MDI) or (AForm is TFrmBasicMdi) then
+    //проверка на TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+    if (AForm is TFrmBasicMdi) then
       WindowsCount := GetWindowsCount(AForm, '', null, MaxNum)
     else
       WindowsCount := 0; //111
@@ -291,8 +295,9 @@ begin
     FrmMain.SetFormsToolButtonClick;
     //соберем данные для массива окон
     fd := '';
-    if (AForm is TForm_MDI) then
-      fd := TForm_MDI(AForm).FormDoc;
+    //ветка для TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+    //if (AForm is TForm_MDI) then
+    //  fd := TForm_MDI(AForm).FormDoc;
     if (AForm is TFrmBasicMdi) then
       fd := TFrmBasicMdi(AForm).FormDoc;
     WRec.Handle := AHandle;
@@ -335,7 +340,8 @@ begin
         end;
       end;
       IsTargetButton := (AHandle = Buttons[i].Tag);
-      if (IsModalFormOpen) or ((AForm is TForm_MDI) and (AForm.FormStyle = fsNormal)) or ((AForm is TFrmBasicMdi) and (AForm.FormStyle = fsNormal)) then begin
+      //проверка на TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+      if (IsModalFormOpen) or ((AForm is TFrmBasicMdi) and (AForm.FormStyle = fsNormal)) then begin
         //если модальный режим - переведем галки в точки, на текущую поставим красную галку
         if Buttons[i].ImageIndex = cGreenGalka then
           Buttons[i].ImageIndex := cGreenDot
@@ -407,8 +413,9 @@ begin
   Result := True;
   for i := 0 to High(FWindows) do begin
     id1 := #1#2;
-    if FWindows[i].Form is TForm_Mdi then
-      id1 := TForm_Mdi(FWindows[i].Form).Id;
+    //ветка для TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+    //if FWindows[i].Form is TForm_Mdi then
+    //  id1 := TForm_Mdi(FWindows[i].Form).Id;
     if FWindows[i].Form is TFrmBasicMdi then
       id1 := TFrmBasicMdi(FWindows[i].Form).Id;
     if (AFormDoc = FWindows[i].FormDoc) and ((AId = null) or (AId = id1)) then begin
@@ -453,10 +460,11 @@ begin
   MaxNum := 0;
   id1 := null;
   st1 := '';
-  if AForm is TForm_MDI then begin
-    st1 := TForm_MDI(AForm).FormDoc;
-    id1 := TForm_MDI(AForm).ID;
-  end;
+  //ветка для TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+  //if AForm is TForm_MDI then begin
+  //  st1 := TForm_MDI(AForm).FormDoc;
+  //  id1 := TForm_MDI(AForm).ID;
+  //end;
   if AForm is TFrmBasicMdi then begin
     st1 := TFrmBasicMdi(AForm).FormDoc;
     id1 := TFrmBasicMdi(AForm).ID;
@@ -467,10 +475,11 @@ begin
   for i := 0 to High(FWindows) do begin
     if (FWindows[i].Form is TForm) then begin
 //      st2 := FWindows[i].Form.Caption;    //вызывает ошибку в некоторых случаях даже при проверке FWindows[i].Form is TForm
-      if FWindows[i].Form is TForm_MDI then begin
-        st2 := TForm_MDI(FWindows[i].Form).FormDoc;
-        id1 := TForm_MDI(FWindows[i].Form).id;
-      end;
+      //ветка для TForm_MDI убрана - этот класс (V_MDI) выведен из проекта
+      //if FWindows[i].Form is TForm_MDI then begin
+      //  st2 := TForm_MDI(FWindows[i].Form).FormDoc;
+      //  id1 := TForm_MDI(FWindows[i].Form).id;
+      //end;
       if FWindows[i].Form is TFrmBasicMdi then begin
         st2 := TFrmBasicMdi(FWindows[i].Form).FormDoc;
         id1 := TFrmBasicMdi(FWindows[i].Form).id;
@@ -553,6 +562,8 @@ begin
   if A.InArray(AFormType, [
     //общие и администрирование
     myfrm_R_Test,
+    myfrm_R_ServerTasks,
+    myfrm_R_ServerTasksLog,
     myfrm_Adm_Db_Log,
     myfrm_J_Error_Log,
     myfrm_R_Organizations,
@@ -749,6 +760,8 @@ begin
     TFrmADedtMainSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
   else if AFormType = myfrm_Dlg_ModuleSettings then
     TFrmADedtModuleSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
+  else if AFormType = myfrm_Dlg_MailingSettings then
+    TFrmADedtMailingSettings.Show(AOwner, AFormType, Opt, fEdit, Null, Null)
   else if AFormType = myfrm_Dlg_OrdersFinReport then
     Orders.OrdersFinReport
   else if AFormType = myfrm_Rep_Or_DataCheck then
@@ -906,7 +919,7 @@ begin
   else if AFormType = myfrm_Dlg_Vacancy then
     // Form := ...
   else if AFormType = myfrm_Dlg_Order then
-//    Form := TDlg_Order.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
+//    Form := TFrmWOrderOld.ShowDialog(AOwner, AFormType, AMode, AId, Opt, AAddParam)
     //myfoMulticopy (как и у остальных диалогов выше) - без него нельзя было открыть второй диалог заказа, пока
     //не закрыт первый (см. TFrmBasicMdi.TestMultiInstances) - это мешало, например, последовательному созданию
     //нескольких отгрузочных заказов на основании одного производственного (см. TFrmOWOrder.TitleButtonClick/

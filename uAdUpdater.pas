@@ -1,9 +1,8 @@
 ﻿unit uADUpdater;
-
 interface
 
 uses
-  System.SysUtils, System.Variants, System.Win.ComObj, Winapi.ActiveX, Web.Win.ADsTypes, ActiveDs_TLB;
+  System.SysUtils, System.Variants, System.Win.ComObj, Winapi.ActiveX, Web.Win.ADsTypes, uActiveDs_TLB;
 
 
 function UpdateADAttributes(const ADsPath, AdminUser, AdminPassword: string; const AttrNames: array of string; const AttrValues: array of Variant): Boolean;

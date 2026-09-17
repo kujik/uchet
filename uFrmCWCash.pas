@@ -10,7 +10,7 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ExtCtrls, ComCtrls, ToolCtrlsEh, StdCtrls, DBGridEhToolCtrls,
   MemTableDataEh, Db, ADODB, DataDriverEh, Clipbrd, GridsEh, DBAxisGridsEh, DBGridEh, Menus, Math,
   Buttons, PrnDbgEh, DBCtrlsEh, Types,
-  uString, uData, uMessages, uForms, uDBOra, V_MDI, uFrmBasicMdi, uFrDBGridEh,
+  uString, uData, uMessages, uForms, uDBOra, uFrmBasicMdi, uFrDBGridEh,
   Vcl.Mask
   ;
 

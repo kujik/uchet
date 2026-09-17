@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  uFrmXWAbout, uData, uDBOra, V_MDI, uFrmBasicMdi,
+  uFrmXWAbout, uData, uDBOra, uFrmBasicMdi,
 
   uWindows,
   uServerTasks,
@@ -201,10 +201,8 @@ begin
   AfterCreate := False;
   AfterStart := False;
   {$IFDEF SRV}
-  if ParamCount <> 1 then
-    Exit;
-  if (Module.RunFromIDE) and (MyQuestionMessage('Выполнить задачу ' + ParamStr(1) + '?') <> mrYes) then
-    Exit;
+  //проверка параметра запуска (/run или из-под IDE) уже сделана в Uchet.dpr,
+  //до создания главной формы - сюда попадаем только при корректном запуске
   TasksS.Run;
   {$ENDIF}
 end;
@@ -548,6 +546,9 @@ begin
     ['Свои адреса', myfrm_R_Locations, User.Role(rAdm_R_Locations)],
     ['Виды транспортных средств', myfrm_R_CarTypes, User.Role(rAdm_R_Cartypes)],
     [],
+    ['Расписание заданий сервера', myfrm_R_ServerTasks, User.Role(rAdm_Other_Tasks)],
+    ['Журнал выполнения заданий сервера', myfrm_R_ServerTasksLog, User.Role(rAdm_Other_ServerTasksLog)],
+    [],
     ['Журнал задач', myfrm_J_Tasks, True],
 
     ['Пользователи и роли'],
@@ -561,6 +562,7 @@ begin
     ['Настройки'],
     ['Основные настройки', myfrm_Dlg_MainSettings, User.Role(rAdm_Settings_Main)],
     ['Настройки модулей', myfrm_Dlg_ModuleSettings, User.Role(rAdm_Settings_Modules)],
+    ['Настройки почтовых рассылок', myfrm_Dlg_MailingSettings, User.Role(rAdm_Settings_Mailing)],
 
     ['Сервис'],
     ['Пользователи в AD', myfrm_Adm_LdapUsers, User.Role(rAdm_ActiveDirectoryUsers)],
@@ -579,7 +581,13 @@ begin
     //не только в Администрировании, но и в остальных модулях
     [],
     ['Журнал задач', myfrm_J_Tasks, User.IsDeveloper],
-    []
+    [],
+
+    //ручной запуск любого задания расписания сервера вне очереди - тот же
+    //пункт меню и тот же обработчик, что и в модуле Сервер, см.
+    //ExecuteMainMenuItem и заголовок uServerTasks.pas
+    ['Задания'],
+    ['Выполнить задание...', '_', User.IsDeveloper]
     {$ENDIF}
 
     {$IFDEF  PC}

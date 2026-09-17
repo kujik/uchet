@@ -1,4 +1,4 @@
-﻿unit D_Order;
+﻿unit uFrmWOrderOld;
 
 interface
 
@@ -8,12 +8,12 @@ uses
   uString, uMessages, System.Types, Vcl.ExtCtrls, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
   MemTableDataEh, MemTableEh, Data.DB, Vcl.Menus,
-  Vcl.Imaging.pngimage, V_MDI, DateUtils, Vcl.ComCtrls, Data.Win.ADODB,
+  Vcl.Imaging.pngimage, uFrmBasicMdi, DateUtils, Vcl.ComCtrls, Data.Win.ADODB,
   System.ImageList, Vcl.ImgList, IOUtils, EhLibVclUtils, DBGridEhGrouping,
   Vcl.Mask;
 
 type
-  TDlg_Order = class(TForm_MDI)
+  TFrmWOrderOld = class(TFrmBasicMdi)
     pnl_Top: TPanel;
     Bt_Ok: TBitBtn;
     pnl_Bottom: TPanel;
@@ -246,12 +246,12 @@ type
   end;
 
 var
-  Dlg_Order: TDlg_Order;
+  FrmWOrderOld: TFrmWOrderOld;
 
 implementation
 
 uses
-  System.StrUtils, uExcel, uTasks, uFrmDehOrderComplaintReasons, uExcel2, uFrmOGselOrReglament, uWindows, {D_LoadKBLog,} uSys, uOrders, uFrmBasicMdi;
+  System.StrUtils, uExcel, uTasks, uFrmDehOrderComplaintReasons, uExcel2, uFrmOGselOrReglament, uWindows, {D_LoadKBLog,} uSys, uOrders;
 
 const
   cControl = 0;
@@ -270,7 +270,7 @@ const
 
 {$R *.dfm}
 
-procedure TDlg_Order.BitBtn1Click(Sender: TObject);
+procedure TFrmWOrderOld.BitBtn1Click(Sender: TObject);
 var
   v: Variant;
   res, i, j, RecNo: Integer;
@@ -324,18 +324,18 @@ begin
   end;
 end;
 
-procedure TDlg_Order.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TFrmWOrderOld.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   inherited;
   //Settings.SaveWindowPos(Self, FormDoc);
 end;
 
-function TDlg_Order.GetDiffColor: TColor;
+function TFrmWOrderOld.GetDiffColor: TColor;
 begin
   Result := RGB(255, 255, 100);
 end;
 
-procedure TDlg_Order.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TFrmWOrderOld.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 //при закрытии формы, если не был сохранен заказ, для режимов добавления/изменения
 //выдадим предупреждение в случае, если были изменены данные
 var
@@ -347,7 +347,7 @@ begin
   end;
   CanClose := True;
   //не удалось открыть, например, из-за блокировки
-  if InPrepare then
+  if FInPrepare then
     Exit;
   //заказ был сохранен по кнопке Ок
   if OrderSaved then
@@ -368,20 +368,20 @@ begin
   inherited;
 end;
 
-procedure TDlg_Order.FormResize(Sender: TObject);
+procedure TFrmWOrderOld.FormResize(Sender: TObject);
 begin
   inherited;
 //  pnl_Header_1.Width:= (pnl_Header.Width - pnl_Header_3.Width - pnl_Header_4.Width - pnl_Header_5.Width) div 2;
   pnl_Header_1.Width := (pnl_Header.Width - pnl_Header_3.Width - pnl_Header_5.Width) div 2;
 end;
 
-constructor TDlg_Order.ShowDialog(aOwner: TComponent; aFormDoc: string; aMode: TDialogType; aID: Variant; AMyFormOptions: TMyFormOptions; aV: Variant);
+constructor TFrmWOrderOld.ShowDialog(aOwner: TComponent; aFormDoc: string; aMode: TDialogType; aID: Variant; AMyFormOptions: TMyFormOptions; aV: Variant);
 begin
   IsTemplate := aV = 1;
-  inherited Create(aOwner, aFormDoc, [myfoDialog, myfoRefreshParent, myfoSizeable, myfoEnableMaximize, myfoMultiCopy], aMode, aID, null);
+  inherited Create(aOwner, aFormDoc, [myfoDialog, myfoRefreshParent, myfoSizeable, myfoEnableMaximize, myfoMultiCopy], aMode, aID, null, []);
 end;
 
-function TDlg_Order.GetFieldsArrPos(FieldName: string): Integer;
+function TFrmWOrderOld.GetFieldsArrPos(FieldName: string): Integer;
 var
   i: Integer;
 begin
@@ -393,7 +393,7 @@ begin
     end;
 end;
 
-function TDlg_Order.GetBegValueFromFieldsArr(FieldName: string): Variant;
+function TFrmWOrderOld.GetBegValueFromFieldsArr(FieldName: string): Variant;
 var
   i: Integer;
 begin
@@ -405,7 +405,7 @@ begin
     end;
 end;
 
-procedure TDlg_Order.SetFieldsArrValue(AFieldType: Integer; AFindValue: Variant; ANewFieldValue: Variant);
+procedure TFrmWOrderOld.SetFieldsArrValue(AFieldType: Integer; AFindValue: Variant; ANewFieldValue: Variant);
 //сохраняет в массиве конечное значение ANewFieldValue
 //запись ищет по любому полю (который задаются константами, напр cFieldName), для его значения AFindValue
 var
@@ -418,7 +418,7 @@ begin
     end;
 end;
 
-procedure TDlg_Order.SetControlDisabled(c: TComponent; enable: Boolean);
+procedure TFrmWOrderOld.SetControlDisabled(c: TComponent; enable: Boolean);
 begin
   if enable then begin
     TCustomDbEditEh(c).Enabled := True;
@@ -431,7 +431,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.EnableControls;
+procedure TFrmWOrderOld.EnableControls;
 var
   i: Integer;
 begin
@@ -448,7 +448,7 @@ begin
     end;
 end;
 
-function TDlg_Order.Prepare: Boolean;
+function TFrmWOrderOld.Prepare: Boolean;
 var
   i, j: Integer;
   v: Variant;
@@ -801,8 +801,12 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 //  DBGridEh1.OptionsEh:= DBGridEh1.OptionsEh + [dghAutoFitRowHeight];
   //Gh._SetDBGridEhSumFooter(DBGridEh1, 'qnt', '0');
 
-  MinWidth := 1100;
-  MinHeight := 500;
+  //эта форма использует свои Bt_Ok/Bt_Cancel/pnl_Bottom, а не общую
+  //панель кнопок фреймворка (pnlFrmBtns) - отключаем ее, иначе она тоже
+  //будет видна (см. TFrmBasicMdi.RefreshDlgPanel)
+  FOpt.DlgPanelStyle := dpsNone;
+  FWHBounds.X := 1100;
+  FWHBounds.Y := 500;
   //pnl_Top.Height := 175; //!!!
   Self.Resize;
 
@@ -863,7 +867,7 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
   EnableDeleteItemInEdit := False;
   Pmi1_ShowColumns.Visible := User.IsDeveloper;
-  SetStatusBar('', '', False);
+  RefreshStatusBar('', '', False);
 
   //скроем пустые позиции
   HideEmptyItems;
@@ -878,14 +882,14 @@ DBGridEh1.FindFieldColumn('resale').ReadOnly:=True;
 
 end;
 
-procedure TDlg_Order.pnl_HeaderClick(Sender: TObject);
+procedure TFrmWOrderOld.pnl_HeaderClick(Sender: TObject);
 begin
   inherited;
 
 end;
 
 (*
-procedure TDlg_Order.BitBtn2Click(Sender: TObject);
+procedure TFrmWOrderOld.BitBtn2Click(Sender: TObject);
 var
 v: tvardynarray;
 begin
@@ -922,19 +926,19 @@ myinfomessage(vartostr(ADOStoredProc1.Parameters[5].Value));
 end;
 
 *)
-procedure TDlg_Order.Bt_CancelClick(Sender: TObject);
+procedure TFrmWOrderOld.Bt_CancelClick(Sender: TObject);
 begin
   inherited;
   Close;
 end;
 
-procedure TDlg_Order.Bt_CreateXLSClick(Sender: TObject);
+procedure TFrmWOrderOld.Bt_CreateXLSClick(Sender: TObject);
 begin
   inherited;
   ExportPassportToXLSX(True, True);
 end;
 
-procedure TDlg_Order.Bt_OkClick(Sender: TObject);
+procedure TFrmWOrderOld.Bt_OkClick(Sender: TObject);
 //по клику на кнопку Провести
 var
   i, j: Integer;
@@ -1069,7 +1073,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.HighlightDifferences;
+procedure TFrmWOrderOld.HighlightDifferences;
 var
   i, j: Integer;
   st: string;
@@ -1086,7 +1090,7 @@ begin
     lbl_Files.Font.Color := GetDiffColor;
 end;
 
-function TDlg_Order.GetDifferences: string;
+function TFrmWOrderOld.GetDifferences: string;
 var
   i, j: Integer;
   st: string;
@@ -1118,7 +1122,7 @@ begin
   SetFieldsArrValue(cFieldName, 'ch', Differences);
 end;
 
-procedure TDlg_Order.LoadCustomer(DataType: Integer);
+procedure TFrmWOrderOld.LoadCustomer(DataType: Integer);
 var
   id_customer, i, j: Integer;
 begin
@@ -1170,7 +1174,7 @@ begin
   end;
 end;
 
-function TDlg_Order.Save_ItmFinish: Boolean;
+function TFrmWOrderOld.Save_ItmFinish: Boolean;
 //вызов финальнов процедуры синхронизации заказа в ИТМ
 //удалит все сметы по изменным изделиям, если они не были подгружены
 //и вызовет процедуру формирования заявок поставщикам
@@ -1196,7 +1200,7 @@ begin
   Result := True;
 end;
 
-function TDlg_Order.Save: Boolean;
+function TFrmWOrderOld.Save: Boolean;
 var
   i, j: Integer;
   v: Variant;
@@ -1350,7 +1354,7 @@ begin
   FieldsArr := Copy(FieldsArrCopy);
 end;
 
-function TDlg_Order.SaveOrderStages: Boolean;
+function TFrmWOrderOld.SaveOrderStages: Boolean;
 //поправим статусы этапов заказа (на данный момент это приемка на сгп и отгрузка с сгп)
 //могут меняться при изменении в табличной части количеств, в заголовочной - организации (П или другая)
 //пока для простоты запускаем в любом случае при изменении заказа
@@ -1371,12 +1375,12 @@ begin
   Result := True;
 end;
 
-procedure TDlg_Order.ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean);
+procedure TFrmWOrderOld.ControlCheckDrawRequiredState(Sender: TObject; var DrawState: Boolean);
 begin
   Cth.VerifyVisualise(Self);
 end;
 
-procedure TDlg_Order.ControlOnChange(Sender: TObject);
+procedure TFrmWOrderOld.ControlOnChange(Sender: TObject);
 var
   st: string;
   Canvas: TControlCanvas;
@@ -1466,7 +1470,7 @@ begin
   DBGridEh1.Enabled := (cmb_EstimatePath.Text <> '') and (cmb_Format.Text <> '');
 end;
 
-procedure TDlg_Order.ControlOnExit(Sender: TObject);
+procedure TFrmWOrderOld.ControlOnExit(Sender: TObject);
 //потеря фокуса
 var
   st: string;
@@ -1487,7 +1491,7 @@ end;
 //проверка правлильн6ости данных
 //передается контрол для проверки, или нил - проверить все
 //и признак что проверка при вводе данных в контроле (в событии onChange)
-procedure TDlg_Order.Verify(Sender: TObject; onInput: Boolean = False);
+procedure TFrmWOrderOld.Verify(Sender: TObject; onInput: Boolean = False);
 var
   i, j, sm: Integer;
   c: TControl;
@@ -1574,7 +1578,7 @@ begin
 //    Ok := FieldsArr[GetFieldsArrPos('id_reglament'), cNewValue] <> null;
 end;
 
-procedure TDlg_Order.SetComplaints;
+procedure TFrmWOrderOld.SetComplaints;
 //вызывается при изменении типа заказа (навый/рекламация)
 var
   i: Integer;
@@ -1597,7 +1601,7 @@ begin
   mem_Comment.Height := mem_Comment.Parent.Height - mem_Comment.Top - 4;
 end;
 
-procedure TDlg_Order.LoadComplaints;
+procedure TFrmWOrderOld.LoadComplaints;
 //загрузим в массив справочник причин рекламации, и данные по статьям рекламациии по заказу
 var
   i, j: Integer;
@@ -1627,7 +1631,7 @@ begin
   GetComplaintsString;
 end;
 
-procedure TDlg_Order.GetComplaintsString;
+procedure TFrmWOrderOld.GetComplaintsString;
 //строковое представление причин рекламаций по заказу
 var
   i: Integer;
@@ -1645,7 +1649,7 @@ begin
 //  edt_Complaints.EditButtons[0].DropDownFormParams.Align:=daRight;
 end;
 
-procedure TDlg_Order.GetEstimateList;
+procedure TFrmWOrderOld.GetEstimateList;
 //получаем список стандартных смет для всех форматов паспортов
 //в массиве поучаются в виде "формат паспорта\формат сметы"
 var
@@ -1672,7 +1676,7 @@ begin
   EstimateDirs := Q.QLoad('select f.name || ''\'' || e.name || '''' as estimate, e.id as id, e.prefix ' + 'from or_formats f, or_format_estimates e ' + 'where e.id_format = f.id and e.id > 1 ' + S.IIFStr(Mode = fAdd, 'and e.active = 1 and f.active = 1', '') + 'order by 1 asc', []);
 end;
 
-procedure TDlg_Order.SetEstimateList(PreserveValue: Boolean = False);
+procedure TFrmWOrderOld.SetEstimateList(PreserveValue: Boolean = False);
 //загружаем в комбобокс список выриантов смет, соотвествующих формату паспорта
 //(начинаются напр с ТШ/
 var
@@ -1723,7 +1727,7 @@ end;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-procedure TDlg_Order.LoadStdItems;
+procedure TFrmWOrderOld.LoadStdItems;
 //загрузим стандартнуую номенклатуру
 //проба из ИТМ:
 //groups id_group=2996
@@ -1782,7 +1786,7 @@ begin
   bmp.Free;
 end;
 
-procedure TDlg_Order.LoadKnsThn;
+procedure TFrmWOrderOld.LoadKnsThn;
 //загрузим и создадиим в таблице списки конструкторов и технологов
 //добавим в список кроме действующих еще тех, кто есть в данном заказе (или шаблоне идли заказе, который копируется)
 //если этих пользователей не добалять, то поле в мемтейбл все равно установится в айди, но в списке такого айди нет и оно будет с виду пустое
@@ -1825,12 +1829,12 @@ begin
   end;
 end;
 
-function TDlg_Order.GetItemNum(r: Integer): string;
+function TFrmWOrderOld.GetItemNum(r: Integer): string;
 begin
   Result := edt_OrderNum.Text + '_' + AnsiRightStr('000' + IntToStr(r), 3);
 end;
 
-function TDlg_Order.IsRowEmpty(r: Integer): Boolean;
+function TFrmWOrderOld.IsRowEmpty(r: Integer): Boolean;
 //проверяем строку таблицы на валидность
 var
   i, j: Integer;
@@ -1855,7 +1859,7 @@ begin
   Result := True;
 end;
 
-function TDlg_Order.IsItemValid(r: Integer): Boolean;
+function TFrmWOrderOld.IsItemValid(r: Integer): Boolean;
 //проверяем строку таблицы на валидность
 var
   b: Boolean;
@@ -1965,7 +1969,7 @@ begin
   end;}
 end;
 
-procedure TDlg_Order.DBGridEh1ColEnter(Sender: TObject);
+procedure TFrmWOrderOld.DBGridEh1ColEnter(Sender: TObject);
 begin
   inherited;
   if InLoadData then
@@ -1974,7 +1978,7 @@ begin
   MemTableEh1.Edit;
 end;
 
-procedure TDlg_Order.MemTableEh1AfterEdit(DataSet: TDataSet);
+procedure TFrmWOrderOld.MemTableEh1AfterEdit(DataSet: TDataSet);
 var
   i, j: Integer;
 begin
@@ -1992,13 +1996,13 @@ begin
   MemTableEh1.Edit;}
 end;
 
-procedure TDlg_Order.EnableTablePopupMenu;
+procedure TFrmWOrderOld.EnableTablePopupMenu;
 begin
   //меню удаления строки разрешено, кроме режима редактирования при строках не более начальных (которые уже были - удалять нельзя!)
   Pmi1_DeleteRow.Enabled := not ((Mode = fEdit) and (MemTableEh1.FieldByName('id').Value <> null) and not (IsTemplate or EnableDeleteItemInEdit))//  Pmi1_DeleteRow.Enabled:=(Mode <> fEdit) or IsTemplate or (MemTableEh1.RecNo > BegItemsCount);
 end;
 
-procedure TDlg_Order.MemTableEh1AfterScroll(DataSet: TDataSet);
+procedure TFrmWOrderOld.MemTableEh1AfterScroll(DataSet: TDataSet);
 begin
   inherited;
   //при переходе на другую сразу постим данные
@@ -2017,7 +2021,7 @@ begin
 //  cmb_EstimatePath.Enabled:=cmb_Format.Enabled;
 end;
 
-procedure TDlg_Order.mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TFrmWOrderOld.mem_CommentKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 //установим признак важности комментария
 begin
   inherited;
@@ -2029,7 +2033,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.Pmi1_ShowColumnsClick(Sender: TObject);
+procedure TFrmWOrderOld.Pmi1_ShowColumnsClick(Sender: TObject);
 var
   i: Integer;
 begin
@@ -2038,14 +2042,14 @@ begin
     DBGridEh1.Columns[i].Visible := True;
 end;
 
-procedure TDlg_Order.CalculateTable;
+procedure TFrmWOrderOld.CalculateTable;
 var
   i, j, k, RecNo: Integer;
   Sum, SumR: Variant;
 begin
 end;
 
-procedure TDlg_Order.CalculateTableRow;
+procedure TFrmWOrderOld.CalculateTableRow;
   //посчитаем сумма по текущей строке таблицы
 var
   i, j, k, RecNo: Integer;
@@ -2083,7 +2087,7 @@ begin
   SetSumInHeader;
 end;
 
-procedure TDlg_Order.cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TFrmWOrderOld.cmb_CustomerLegalNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   inherited;
   ImageIndex := -1;
@@ -2093,7 +2097,7 @@ begin
     ImageIndex := 0;
 end;
 
-procedure TDlg_Order.cmb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TFrmWOrderOld.cmb_CustomerManGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   inherited;
   ImageIndex := -1;
@@ -2103,13 +2107,13 @@ begin
     ImageIndex := 0;
 end;
 
-procedure TDlg_Order.cmb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
+procedure TFrmWOrderOld.cmb_CustomerNameGetItemImageIndex(Sender: TObject; ItemIndex: Integer; var ImageIndex: Integer);
 begin
   //если здесь задаем ImageIndex, то картинка отображается в самом комбобоксе и во всех строках выпадающего списка
   //если же просто задать Images для комбобокса, то картинка бедт браться из имиджлиста в соответствии с итеминдекс, при этом и в выпадающем списке они будут разные
   //отличаются, надо разбираться:
-  //procedure TDlg_Order.cmb_CustomerManGetImageIndex(Sender: TObject;
-  //procedure TDlg_Order.cmb_CustomerManGetItemImageIndex(Sender: TObject;
+  //procedure TFrmWOrderOld.cmb_CustomerManGetImageIndex(Sender: TObject;
+  //procedure TFrmWOrderOld.cmb_CustomerManGetItemImageIndex(Sender: TObject;
 //  cmb_CustomerName.Images:=nil; //Il_Columns;
 //  cmb_CustomerMan.Images:=Il_Columns;
 //  cmb_CustomerLegalName.Images:=Il_Columns;
@@ -2123,7 +2127,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.cmb_OrderTypeEditButtons0Click(Sender: TObject; var Handled: Boolean);
+procedure TFrmWOrderOld.cmb_OrderTypeEditButtons0Click(Sender: TObject; var Handled: Boolean);
 var
   res: TMDIResult;
 begin
@@ -2151,7 +2155,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.chb_ViewEmptyItemsClick(Sender: TObject);
+procedure TFrmWOrderOld.chb_ViewEmptyItemsClick(Sender: TObject);
 begin
   inherited;
   if InLoadData then
@@ -2159,13 +2163,13 @@ begin
   HideEmptyItems;
 end;
 
-procedure TDlg_Order.cmb_OrderReferenceEnter(Sender: TObject);
+procedure TFrmWOrderOld.cmb_OrderReferenceEnter(Sender: TObject);
 begin
   if cmb_OrderReference.Items.Count = 0 then
     Q.QLoadToDBComboBoxEh('select ornum from v_orders where id >= 0 order by ornum', [], cmb_OrderReference, cntComboE, 0);
 end;
 
-procedure TDlg_Order.SetSumInHeader;
+procedure TFrmWOrderOld.SetSumInHeader;
 //расчет сумм по заказу, суммы по изделиям и доп комплектации берутся из футеров таблицы
 var
   i: Integer;
@@ -2199,7 +2203,7 @@ begin
   nedt_Sum.Value:=Gh.GetGridColumn(DBGridEh1, 'sum').Footer.SumValue + S.NNum(nedt_SumOtgr.Value) + S.NNum(nedt_SumMontage.Value);}
 end;
 
-procedure TDlg_Order.DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
+procedure TFrmWOrderOld.DBGridEh1ColumnsUpdateData(Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean);
 //вызывается после ввода данных в грида (только при ручном вводе, не в мемтейбл в коде)
 //если неверный формат, то сбросим (произойдет откат к ранее введенному значения, даже без cancel)
 //строки и столбцы нумеруются с единицы
@@ -2285,7 +2289,7 @@ end;
   IsItemValid(0);
 end;
 
-procedure TDlg_Order.CorrectRowIfNameChanged(DisableOnly: Boolean = False);
+procedure TFrmWOrderOld.CorrectRowIfNameChanged(DisableOnly: Boolean = False);
 //проверяем, является ли изделие в поле наименование стандартным - есть ли в списке, и также дествия зависят от галки СГП
 //в зависимости от этого или только блокирем изменение зависимых ячеек (это при переходе по записям в мемтейбл),
 //либо корректируем еще и их значения (при вызове при изменении значения вручную, и при загрузке таблицы в режиме копирования заказа)
@@ -2368,7 +2372,7 @@ begin
 
 end;
 
-procedure TDlg_Order.LockStdFormat;
+procedure TFrmWOrderOld.LockStdFormat;
 //заблокируем изменение косбобоксов выбора типа формата/сметы, вернем зависящий от типа сметы айди и префикс для изделий
 var
   i, j: Integer;
@@ -2387,19 +2391,19 @@ begin
     end;
 end;
 
-procedure TDlg_Order.DBGridEh1Enter(Sender: TObject);
+procedure TFrmWOrderOld.DBGridEh1Enter(Sender: TObject);
 begin
   inherited;
   LoadStdItems;
 end;
 
-procedure TDlg_Order.DBGridEh1Exit(Sender: TObject);
+procedure TFrmWOrderOld.DBGridEh1Exit(Sender: TObject);
 begin
   inherited;
   //
 end;
 
-procedure TDlg_Order.DBGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
+procedure TFrmWOrderOld.DBGridEh1GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
 begin
   inherited;
   //подсветим в таблице измененные поля желтым цветом фона
@@ -2413,7 +2417,7 @@ begin
     AFont.Color := RGB(255, 0, 0);
 end;
 
-procedure TDlg_Order.DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TFrmWOrderOld.DBGridEh1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 //установим признак важности комментария или строки шаблона
 begin
   inherited;
@@ -2432,7 +2436,7 @@ begin
   end;
 end;
 
-procedure TDlg_Order.Pmi1_DeleteRowClick(Sender: TObject);
+procedure TFrmWOrderOld.Pmi1_DeleteRowClick(Sender: TObject);
 var
   i, j, k, RecNo: Integer;
 begin
@@ -2467,7 +2471,7 @@ begin
   SetSumInHeader;
 end;
 
-function TDlg_Order.VerifyTable: Boolean;
+function TFrmWOrderOld.VerifyTable: Boolean;
 //перед записью таблицы
 //проверим на корректность таблицу, и уберем пустые строки с конца
 var
@@ -2501,7 +2505,7 @@ begin
 //    then MyWarningMessage('Информация в таблице изделий некорректна!');
 end;
 
-function TDlg_Order.RenameSlashes: Boolean;
+function TFrmWOrderOld.RenameSlashes: Boolean;
 //переименуем слэши в таблице, соотвественно номеру заказа
 //вызывается при изменении организации
 var
@@ -2520,7 +2524,7 @@ begin
   MemTableEh1.EnableControls;
 end;
 
-function TDlg_Order.IsTableChanged: Integer;
+function TFrmWOrderOld.IsTableChanged: Integer;
 //проверим, были ли изменения в таблице  (0 - не было изменнний, 1 - были, -1 - есть ошибки в таблице, -2 - таблица пустая)
 var
   i, j, RecNo: Integer;
@@ -2556,7 +2560,7 @@ begin
   Result := S.IIf((Mode <> fEdit) or (Length(DeletedItems) > 0), 1, 0);
 end;
 
-function TDlg_Order.SaveTable: Boolean;
+function TFrmWOrderOld.SaveTable: Boolean;
 var
   va1: TVarDynArray2;
   va2: TVarDynArray;
@@ -2701,7 +2705,7 @@ begin
   MemTableEh1.EnableControls;
 end;
 
-procedure TDlg_Order.CreateEstimateToItem(rn, id_item, id_item_itm, id_item_name: Integer);
+procedure TFrmWOrderOld.CreateEstimateToItem(rn, id_item, id_item_itm, id_item_name: Integer);
 var
   chgst: string;
   CreateNew: Boolean;
@@ -2725,7 +2729,7 @@ begin
 *)
 end;
 
-procedure TDlg_Order.SetTableChanges(fn: string);
+procedure TFrmWOrderOld.SetTableChanges(fn: string);
 //получим список измененных полей (только те что были загружены, а не расчетных), и сохраним его в поле 'chg' через запятую
 //вызывается при изменении значения вручную, потому только при ручном редактировании таблице, притом если было изменение значения
 var
@@ -2761,7 +2765,7 @@ begin
   MemTableEh1.FieldByName('chg').Value := st;
 end;
 
-procedure TDlg_Order.LoadTable;
+procedure TFrmWOrderOld.LoadTable;
 var
   va1: TVarDynArray2;
   i, j, k, m: Integer;
@@ -2855,7 +2859,7 @@ begin
   SetSumInHeader;
 end;
 
-procedure TDlg_Order.GetChangesText(AFullText: Boolean = False);
+procedure TFrmWOrderOld.GetChangesText(AFullText: Boolean = False);
 //получим текстовое описание изменений в паспорте
 var
   i, j, k, RecNo: Integer;
@@ -2975,7 +2979,7 @@ begin
   end;
 end;
 
-function TDlg_Order.ExportPassportToXLSX(Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
+function TFrmWOrderOld.ExportPassportToXLSX(Open: Boolean = False; OnlyNot0: Boolean = False): Boolean;
 var
   i, j, d1, d2, x, y, k: Integer;
   sm, sum, sumall: Double;
@@ -3125,7 +3129,7 @@ begin
   SetOrderSaveStatusText('');
 end;
 
-procedure TDlg_Order.edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+procedure TFrmWOrderOld.edt_ComplaintsCloseDropDownForm(EditControl: TControl; Button: TEditButtonEh; Accept: Boolean; DropDownForm: TCustomForm; DynParams: TDynVarsEh);
 //закрытие выпадающей формы причин рекламаций
 var
   va: TVarDynArray;
@@ -3141,7 +3145,7 @@ begin
   GetComplaintsString;
 end;
 
-procedure TDlg_Order.edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
+procedure TFrmWOrderOld.edt_ComplaintsOpenDropDownForm(EditControl: TControl; Button: TEditButtonEh; var DropDownForm: TCustomForm; DynParams: TDynVarsEh);
 //открытие выпадающей формы причин рекламаций
 //передаем в выпадающую форму рекламаций произвольные параметры
 var
@@ -3168,7 +3172,7 @@ begin
   DynParams['readonly'].AsString := S.IIfV(Mode in [fDelete, fView], '1', '0');
 end;
 
-function TDlg_Order.SetTask: Boolean;
+function TFrmWOrderOld.SetTask: Boolean;
 //создадим задачу для серверного процесса
 //в случае удаления делаем сейчас просто рассылку, не затрагивая диск Z
 var
@@ -3267,12 +3271,12 @@ begin
   end;
 end;
 
-function TDlg_Order.PathToOrders: string;
+function TFrmWOrderOld.PathToOrders: string;
 begin
   Result := Module.GetPath_Order(IntToStr(YearOf(Cth.GetControlValue(dedt_Beg))), FieldsArr[GetFieldsArrPos('in_archive'), cBegValue]);
 end;
 
-procedure TDlg_Order.ViewAddFile;
+procedure TFrmWOrderOld.ViewAddFile;
 var
   st: string;
 begin
@@ -3286,7 +3290,7 @@ begin
   Sys.OpenFileOrDirectory(ExtractFilePath(st), 'Файл не найден!', ExtractFileName(st));
 end;
 
-procedure TDlg_Order.Pm_FilesClick(Sender: TObject);
+procedure TFrmWOrderOld.Pm_FilesClick(Sender: TObject);
 //обработка кликов контекстного меню грида внешних документов
 //просмотреть - добавить - удалить файл
 var
@@ -3356,14 +3360,14 @@ begin
   end;
 end;
 
-procedure TDlg_Order.DBGridEh2DblClick(Sender: TObject);
+procedure TFrmWOrderOld.DBGridEh2DblClick(Sender: TObject);
 //даблклик в таблице внешних документов - откроем файл
 begin
   inherited;
   ViewAddFile;
 end;
 
-procedure TDlg_Order.DBGridEh2GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
+procedure TFrmWOrderOld.DBGridEh2GetCellParams(Sender: TObject; Column: TColumnEh; AFont: TFont; var Background: TColor; State: TGridDrawState);
 //раскрасим столбец грида внешних документов в зависимости от статуса файла
 begin
   inherited;
@@ -3377,7 +3381,7 @@ begin
     AFont.Color := RGB(0, 155, 0);
 end;
 
-function TDlg_Order.IsAddFilesChanged: Boolean;
+function TFrmWOrderOld.IsAddFilesChanged: Boolean;
 //вернем статус, были ли изменения в дополнительных файлах
 var
   i, j, RecNo: Integer;
@@ -3394,7 +3398,7 @@ begin
   MemTableEh2.EnableControls;
 end;
 
-procedure TDlg_Order.GetAddFiles;
+procedure TFrmWOrderOld.GetAddFiles;
 //строим грид внешних документов, и здесь же загрузим файлы из ВД, которые есть в папке заказа
 var
   st, st1, TaskDir: string;
@@ -3442,18 +3446,18 @@ begin
   MemTableEh2.EnableControls;
 end;
 
-procedure TDlg_Order.LoadKBLog;
+procedure TFrmWOrderOld.LoadKBLog;
 begin
 //  Dlg_LoadKBLog.ShowDialog(LoadKBLogArr); //---
 end;
 
-procedure TDlg_Order.Pmi_Format_LoadKBClick(Sender: TObject);
+procedure TFrmWOrderOld.Pmi_Format_LoadKBClick(Sender: TObject);
 begin
   inherited;
   LoadKB;
 end;
 
-procedure TDlg_Order.SetAddTasksMenu;
+procedure TFrmWOrderOld.SetAddTasksMenu;
 begin
   if cmb_Format.Text = 'КБ' then
     Pm_Format.AutoPopup := True
@@ -3461,13 +3465,13 @@ begin
     Pm_Format.AutoPopup := False;
 end;
 
-procedure TDlg_Order.Pmi_Format_LoadKBLogClick(Sender: TObject);
+procedure TFrmWOrderOld.Pmi_Format_LoadKBLogClick(Sender: TObject);
 begin
   inherited;
   LoadKBLog;
 end;
 
-procedure TDlg_Order.Pmi_RecalcPricesClick(Sender: TObject);
+procedure TFrmWOrderOld.Pmi_RecalcPricesClick(Sender: TObject);
 //пересчитаем цены для всех стандарных изделий
 var
   i, j, RecNo, ChCnt: Integer;
@@ -3511,7 +3515,7 @@ begin
   MyInfoMessage(S.IIFStr(ChCnt = 0, 'Цены не изменились.', 'Цены пересчитаны по ' + IntToStr(ChCnt) + ' позици' + S.GetEnding(ChCnt, 'и', 'ям', 'ям') + '.'));
 end;
 
-procedure TDlg_Order.LoadKB;
+procedure TFrmWOrderOld.LoadKB;
 //формирования заказа по КБ по присланному заказчиком файлу стандартного формата
 //выбирается файл, проверяется формат
 //изделиям, которые есть в присланном файле и найдены в шаблоне паспорта, присвиваетя количество из файла,
@@ -3662,7 +3666,7 @@ begin
   //Dlg_LoadKBLog.ShowDialog(LoadKBLogArr);
 end;
 
-procedure TDlg_Order.SetOrderSaveStatusText(Text: string);
+procedure TFrmWOrderOld.SetOrderSaveStatusText(Text: string);
 //показываем внизу формы статус сохранения заказа
 begin
   Application.ProcessMessages;
@@ -3673,7 +3677,7 @@ begin
   Application.ProcessMessages;
 end;
 
-procedure TDlg_Order.HideEmptyItems;
+procedure TFrmWOrderOld.HideEmptyItems;
 //скроем пустые позиции в заказе при просмотре
 begin
   DBGridEh1.STFilter.local := True;
@@ -3682,7 +3686,7 @@ begin
   DBGridEh1.DefaultApplyFilter;
 end;
 
-function TDlg_Order.VerifyItm: Boolean;
+function TFrmWOrderOld.VerifyItm: Boolean;
 var
   v: Variant;
   st: string;
@@ -3704,7 +3708,7 @@ begin
   Result := True;
 end;
 
-procedure TDlg_Order.DBGridEh1Columns0GetCellParams(Sender: TObject; EditMode: Boolean; Params: TColCellParamsEh);
+procedure TFrmWOrderOld.DBGridEh1Columns0GetCellParams(Sender: TObject; EditMode: Boolean; Params: TColCellParamsEh);
 var
   i: Integer;
   IsDK: Boolean;
@@ -3726,7 +3730,7 @@ end;
 
 
 {==============================================================================}
-function TDlg_Order.GetOrderTypeOldValue: Variant;
+function TFrmWOrderOld.GetOrderTypeOldValue: Variant;
 //вернем результат типа заказа в старом формате
 //(если для типа признак Рекламация, то "2", иначе "1")
 var
@@ -3755,13 +3759,13 @@ end.
 
 //присваивание слешей при редактировании или переходе вниз так:
 //таблица при этом может расти бесконечно
-procedure TDlg_Order.MemTableEh1AfterEdit(DataSet: TDataSet);
+procedure TFrmWOrderOld.MemTableEh1AfterEdit(DataSet: TDataSet);
 begin
   inherited;
   MemTableEh1.FieldByName('slash').Value:=GetItemNum(MemTableEh1.RecNo);
 end;
 
-procedure TDlg_Order.MemTableEh1AfterScroll(DataSet: TDataSet);
+procedure TFrmWOrderOld.MemTableEh1AfterScroll(DataSet: TDataSet);
 begin
   inherited;
   Mth.Post(MemTableEh1);
