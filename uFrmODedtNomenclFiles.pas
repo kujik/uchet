@@ -126,7 +126,7 @@ procedure TFrmODedtNomenclFiles.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   if ((FQntFiles = 0) and (Frg1.RecordCount > 0)) or ((FQntFiles > 0) and (Frg1.RecordCount = 0)) then begin
-    Q.QCallStoredProc('p_SetSplDemandValue', 'id$i;op$i;v$i', [ID, 8, Min(Frg1.RecordCount, 1)]);
+    Q.QCallStoredProc('p_SetSplDemandValue', 'IdNomencl$i;PMode$i;PValue$f', [ID, 8, Min(Frg1.RecordCount, 1)]);
     RefreshParentForm;
   end;
   inherited;

@@ -507,7 +507,7 @@ begin
     Qty := 1;
   Q.QBeginTrans(True);
   ResArr := Q.QCallStoredProc(
-    'p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo;AddQnt$i',
+    'p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrders$i;ResQnt$fo;Adding$i',
     VarArrayOf([IdOrderItem, AIdStage, Date, Qty, 1, -1, 1])
   );
   if not Q.QCommitOrRollback then begin

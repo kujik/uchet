@@ -397,6 +397,31 @@ procedure TPrintReport.pnl_Order(Mode: Integer; Id: Integer);
 //печать паспорта заказа, на основе даннх из БД
 begin
   try
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.16): frxQB/frxQT - это TADOQuery
+  //(uPrintReport.dfm), подключенные к Connection = myDBOra.AdoConnection - "myDBOra" здесь это
+  //Name компонента Q (TmyDBOra), а не отдельная переменная, т.е. фактически это Q.AdoConnection.
+  //При Backend = mydbbFireDac обычный TmyDB.Connect (uDB.pas) больше не устанавливает ADO-
+  //подключение вовсе (см. 6.10) - поэтому без явного подключения здесь frxQB/frxQT падали бы
+  //с ошибкой "не подключено". Открываем ADO только здесь и только по требованию (при первой
+  //печати этого отчета за сеанс работы программы), а не постоянно для всего приложения, как было
+  //до 6.10 - это не отменяет исправление 6.10 (два сеанса на Oracle не создаются, пока это не
+  //понадобится). ВАЖНО: это требует наличия секции [Oracle.ADO] в uchet.cfg/uchet_test.cfg (см.
+  //6.11) - если её когда-нибудь уберут совсем, этот отчет тоже придется переводить на FireDAC
+  //(TFDQuery вместо TADOQuery, править uPrintReport.dfm).
+  if not Q.AdoConnection.Connected then begin
+    if Q.ConnectionString = '' then begin
+      MyWarningMessage('Не удалось напечатать паспорт заказа - нет ADO-подключения к БД (нет секции [Oracle.ADO] в uchet.cfg)');
+      Exit;
+    end;
+    try
+      Q.AdoConnection.ConnectionString := Q.ConnectionString;
+      Q.AdoConnection.LoginPrompt := False;
+      Q.AdoConnection.Connected := True;
+    except
+      MyWarningMessage('Не удалось напечатать паспорт заказа - не удалось установить ADO-подключение к БД');
+      Exit;
+    end;
+  end;
   frxDsB.DataSet:=frxQB;
   frxDsT.DataSet:=frxQT;
   frxReport1.LoadFromFile(GetReportFileFr3(S.Decode([Mode, 1, 'ПЗ с артикулами', 'ПЗ'])), True);

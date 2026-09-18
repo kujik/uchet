@@ -1253,6 +1253,7 @@ const
   mbtCustom_DataCheck_ViewEstimate = 128;      //отчет по проблемам в БД - показать смету изделия (1)
   mbtCustom_DataCheck_OpenItem2 = 129;         //отчет по проблемам в БД - открыть изделие (2)
   mbtCustom_DataCheck_ViewEstimate2 = 130;     //отчет по проблемам в БД - показать смету изделия (2)
+  mbtClearAllGridFilters = 131;                //сбросить ВСЕ фильтры грида (стандартный постолбцовый во всех столбцах + все альт-фильтры) - TFrDBGridEh.ClearAllFilters
 
 
 
@@ -1371,7 +1372,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 110 + 4] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 111 + 4] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1490,6 +1491,7 @@ const
   (Bt: mbtCustom_DataCheck_ViewEstimate; Pict: ''; Caption: 'Смета изделия'; hint: ''),
   (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: ''),
   (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: ''),
+  (Bt: mbtClearAllGridFilters; Pict: ''; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
@@ -1856,7 +1858,7 @@ const
 
 
   const
-  URights : array [0..286] of array [0..3] of string = (
+  URights : array [0..288] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),

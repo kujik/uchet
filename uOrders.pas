@@ -610,7 +610,10 @@ begin
   //сделаем строку из массива измененяемых смет, и добавим 0, чтобы шла всегда синхронизация переданного массива
   st:=A.Implode(OrderItems, ',', True) + S.IIFStr(not LoadOrderAllItems, ',0');
  // if SyncWithITM then begin  //!!!глюк. код внутри не выполняется никогда, хотя константа SyncWithITM = True !!!
-  if Length(Q.QCallStoredProc('p_SyncOrderWithITM', 'AIdOrder$i;AOrItems$s', [IdOrder, st])) = 0 then Exit;
+  //ВНИМАНИЕ: имя параметра AOrImems (с опечаткой) - это РЕАЛЬНОЕ имя аргумента в
+  //хранимой процедуре (d_orders.sql, P_SyncOrderWithITM) - под FireDAC биндинг идет по
+  //имени, поэтому здесь нужно повторить опечатку, а не "исправлять" ее (см. 6.15)
+  if Length(Q.QCallStoredProc('p_SyncOrderWithITM', 'AIdOrder$i;AOrImems$s', [IdOrder, st])) = 0 then Exit;
 //  end;
   Result:= True;
 end;
@@ -1074,7 +1077,7 @@ begin
       else if Ctx.IsOrItemStd then begin
       //копируем из стандартной сметы (p_copyestimate устарела, помечена --!- в d_estimates.sql)
         va1 := Q.QCallStoredProc(
-          'p_copy_std_estimate_to_order_item', 'idestimate$i;idstdestimate$i;pqntinor$f',
+          'p_copy_std_estimate_to_order_item', 'p_id_estimate$i;p_id_std_estimate$i;p_or_qnt$f',
           [Ctx.IdEstimate, Ctx.ParentIdEstimate, Ctx.OrQnt]
         );
         if Length(va1) = 0 then
@@ -1108,10 +1111,10 @@ begin
         Break;
     //++
     //скорректируем смету с учетом автозамены, проставим количества для итм
-      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'id_estimate$i', [Ctx.IdEstimate])) = 0 then
+      if Length(Q.QCallStoredProc('p_CorrectEstimateWithReplace', 'IdEstimate$i', [Ctx.IdEstimate])) = 0 then
         Break;
     //удалим смету, если в ней нет ни одного элемента
-      Q.QCallStoredProc('p_DeleteFreeEstimate', 'id_estimate$i', [Ctx.IdEstimate]);
+      Q.QCallStoredProc('p_DeleteFreeEstimate', 'IdEstimate$i', [Ctx.IdEstimate]);
     end;
     //синхронизируем с ИТМ, в случае если загружается смета только по одному изделию заказа
     if (Ctx.IdOrderItem <> null) and (Ctx.OneItem)
@@ -1794,7 +1797,7 @@ var
   function ResolveTargetStdItem(const AName: string; ANstd: Variant): Variant;
   begin
     if S.NInt(ANstd) = 1 then begin
-      LNewIdOut := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [AName, -1]);
+      LNewIdOut := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'NameItem$s;IdItem$io', [AName, -1]);
       Result := LNewIdOut[1];
     end
     else
@@ -3868,8 +3871,8 @@ begin
       );
     end;
     //сохраним в таблице общих параметров дату начала периода и дату расчета
-    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_beg', '', DtBeg, null, null]);
-    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['planned_order_estimate12', 'dt_calc', '', Now, null, null]);
+    Q.QCallStoredProc('p_SetProp', 'AProp$s;ASubProp$s;ASt$s;ADt$d;AI$i;AF$f', ['planned_order_estimate12', 'dt_beg', '', DtBeg, null, null]);
+    Q.QCallStoredProc('p_SetProp', 'AProp$s;ASubProp$s;ASt$s;ADt$d;AI$i;AF$f', ['planned_order_estimate12', 'dt_calc', '', Now, null, null]);
     Q.QCommitOrRollback;
   end;
 end;
@@ -4079,7 +4082,7 @@ procedure TOrders.CopyEstimateToBuffer(IdStdItem, IdOrItem: Variant);
 begin
   Q.QCallStoredProc(
     'p_CopyEstimateToUserTemp',
-    'id_user$i;id_std_item$i;id_or_item$i',
+    'AIdUser$i;AIdStdItem$i;AIdOrItem$i',
      [User.GetId, IdStdItem, IdOrItem]
   );
 end;

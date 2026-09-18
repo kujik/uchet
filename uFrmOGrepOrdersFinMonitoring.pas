@@ -132,7 +132,7 @@ begin
       dte := S.IIf(Fr.GetControlValue('dteEnd', True, True) = null, dtb, Fr.GetControlValue('dteEnd', True, True));
       Q.QCallStoredProc(
         'p_insert_fin_monitoring_data',
-        'p1;p2;p3;p_id_order$i;p_dt_beg_from$d;p_dt_beg_to$d;p_filter_dt_end_zero$i',
+        'p_dt$d;p_data_type$i;p_use_wo_list$i;p_id_order$i;p_dt_beg_from$d;p_dt_beg_to$d;p_filter_dt_end_zero$i',
         [null, null, null, null, dtb, dte, Fr.GetControlValue('chbIncompleted')]
       );
     end
@@ -145,7 +145,7 @@ begin
       ShowWaitForm('Получение данных...');
       Q.QCallStoredProc(
         'p_insert_fin_monitoring_data',
-        'p1;p2;p3;p_id_order$i;p_dt_beg_from$d;p_dt_beg_to$d;p_filter_dt_end_zero$i',
+        'p_dt$d;p_data_type$i;p_use_wo_list$i;p_id_order$i;p_dt_beg_from$d;p_dt_beg_to$d;p_filter_dt_end_zero$i',
         [null, null, null, Wh.SelectDialogResult[0], null, null, null]
       );
     end;

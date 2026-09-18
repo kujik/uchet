@@ -357,7 +357,7 @@ begin
   end
   else if (Tag = 1001) then begin
     Q.QBeginTrans(True);
-    Q.QCallStoredProc('P_SetOrderProdData', ':id$i', [Fr.ID]);
+    Q.QCallStoredProc('P_SetOrderProdData', 'AIdOrder$i', [Fr.ID]);
     Q.QCommitOrRollback(True);
     Fr.RefreshRecord;
   end

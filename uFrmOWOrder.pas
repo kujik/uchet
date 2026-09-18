@@ -3121,7 +3121,7 @@ begin
     F.SetProps('id_customer;id_customer_contact;id_customer_org', null, fvtVCurr);
   end
   else begin
-    LCustomer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_customer.Text, cmb_customerman.Text, edt_customercontact.Text, cmb_customerlegal.Text, edt_customerinn.Text, -1, -1, -1]);
+    LCustomer := Q.QCallStoredProc('p_add_customer', 'customernamenew$s;contactnamenew$s;contactnew$s;legalnamenew$s;innnew$s;id_customer$io;id_contact$io;id_legal$io', [cmb_customer.Text, cmb_customerman.Text, edt_customercontact.Text, cmb_customerlegal.Text, edt_customerinn.Text, -1, -1, -1]);
     if Length(LCustomer) = 0 then
       Exit;
     F.SetProp('id_customer', LCustomer[5], fvtVCurr);
@@ -3280,7 +3280,7 @@ begin
         OrderItems.SetValue(i, 'id_std_item', LNewOrStdItemShp[1]);
       end
       else begin
-        var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [OrderItems.GetValue(i, 'name'), -1]);
+        var LNewOrStdItem: TVarDynArray := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'NameItem$s;IdItem$io', [OrderItems.GetValue(i, 'name'), -1]);
         OrderItems.SetValue(i, 'id_std_item', LNewOrStdItem[1]);
       end;
       //NewValues сформирован ВЫШЕ (в цикле по OrderItems.FieldsCount), ДО того как здесь было получено/создано

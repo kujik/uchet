@@ -1,0 +1,1 @@
+C:\RADStudio\23.0\bin\rc.exe TestDemo-Resources.rc

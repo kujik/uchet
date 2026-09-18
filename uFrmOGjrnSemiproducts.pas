@@ -712,7 +712,7 @@ var
     StC := 'К заказу ' + Frg1.GetValue('ornum', rb, False);
     va := Q.QCallStoredProc(
       'p_CreatePspForSemiproducts',
-      'id_t$i;items$s;id_u$i;comm$s;dt_otgr$d;id_reg$i;id_ortype$i;orprops$s;id$io;ornum$so',
+      'AIdTemplate$i;AStdItems$s;AIdManager$i;AComment$s;ADtOtgr$d;AIdReglament$i;AIdType$i;AProps$s;AIdOrder$io;AOrNum$so',
        [IdT, StI, User.GetId, StC, DtO, IdReg, IdOrType, OrProps, -1, -1]
     );
     if Length(va) = 0 then

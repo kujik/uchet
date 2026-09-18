@@ -757,8 +757,8 @@ begin
   p_message      out varchar2  --текст ошибки, или сообщения
   }
   var Res := Q.QCallStoredProc('p_test_estimate_item',
-    'i1$s;i2$i;i3$s;i4$i;' +
-    'o1$io;o2$io;o3$io;o4$so;o5$io;o6$so',
+    'p_estimate_type$s;p_group_id$i;p_name$s;p_group_std$i;' +
+    'p_result$io;p_id_std_item$io;p_id_estimate$io;p_type_of_item$so;p_is_new_position$io;p_message$so',
     [FTypeOfItem, Frg1.GetValue('id_group', Row, Filtered), Frg1.GetValueS('name', Row, Filtered), FGroupOfItem, -1, -1, -1, '', -1, '']);
   Frg1.SetValue('err', Row, Filtered, Res[c + 1]);
   Frg1.SetValue('id_or_std_item', Row, Filtered, Res[c + 2]);
@@ -920,4 +920,4 @@ end.
 везде проверить работу с фильтром!!!
 менять группу в смете для полуфабрикатов на ПФ?
 заменить все такие группы скриптом?
-
++++прописать функции проверки парамкетры из Оракла

@@ -28,9 +28,13 @@ type
     { Private declarations }
   public
     { Public declarations }
+    //FdConnection/Backend теперь унаследованы от базового TmyDB (см. !алгоритмы.txt, раздел 6) -
+    //FireDAC-инфраструктура была специфична только для Oracle, пока это был единственный DbType,
+    //которому она требовалась, но сам механизм от Oracle не зависел - перенесена в TmyDB, DriverName
+    //там выбирается по FDbType (see TmyDB.GetFdConnection).
     //создаем объект базы данных
     //передается файл настроек соединения (только имя файла, без расширения), если AConnectAfterCreate то тут же пытаемся подключиться
-    constructor CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = true); reintroduce;
+    constructor CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = true; ABackend: TmyDbBackend = mydbbAdo); reintroduce;
     //установка в контексте сеайнса переданного параметра равному переданному значению
     //поскольку сессий две (для запросов и для dbgrideh, устанавливаются и в том и в том контексте
     function  QSetContextValue(Par: string; Val: Variant): Integer;
@@ -82,13 +86,15 @@ begin
 //
 end;
 
-constructor TmyDBOra.CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = true);
+constructor TmyDBOra.CreateObject(AOwner: TComponent; AConnectionFile: string; AConnectAfterCreate: Boolean = true; ABackend: TmyDbBackend = mydbbAdo);
 //создаем объект базы данных
 //передается файл настроек соединения (только имя файла, без расширения), если AConnectAfterCreate то тут же пытаемся подключиться
+//ABackend - см. !алгоритмы.txt, раздел 6.10 - должен быть передан СРАЗУ сюда (а не выставлен отдельной
+//строкой Q.Backend := ... после CreateObject), иначе Connect уже успеет подключиться через ADO
 var
   va: TVarDynArray;
 begin
-  Inherited CreateObject(AOwner, mydbtOra, AConnectionFile, AConnectAfterCreate);
+  Inherited CreateObject(AOwner, mydbtOra, AConnectionFile, AConnectAfterCreate, ABackend);
 end;
 
 function TmyDBOra.QSetContextValue(Par: string; Val: Variant): Integer;
@@ -108,7 +114,7 @@ begin
     if S.VarType(Val) = varDouble then
       ValType := 'f';
     //для контекста сессии ehlib
-    if AdoConnectionProviderEh.Connection <> nil then begin
+    if AdoConnectionProviderEh.Connection <> nil then begin  //!!!
       ADODataDriverEh.SelectSQL.Text:='select f_set_context_value(:par$s, :val$' + ValType + ') from dual';
       ADODataDriverEh.SelectCommand.Parameters.ParamByName('par$s').Value:= Par;
       ADODataDriverEh.SelectCommand.Parameters.ParamByName('val$' + ValType + '').Value:=Val;
@@ -116,7 +122,8 @@ begin
       MemTableEh1.Active:=false;
     end;
     //для контекста основной сессии
-    QCallStoredProc('set_context_value', 'par$s;val$' + ValType + '', [Par, Val]);
+//    QCallStoredProc('set_context_value', 'par$s;val$' + ValType + '', [Par, Val]);
+    QCallStoredProc('set_context_value', 'par$s;val$s', [Par, Val.AsString]);
     Result:=0;
   except on E: Exception do Application.ShowException(E);
   end;

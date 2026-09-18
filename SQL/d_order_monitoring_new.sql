@@ -1377,6 +1377,7 @@ where
   id > 0
   and id_organization <> -1
   and trunc(dt_otgr) between trunc(sysdate) and trunc(sysdate) + 2
+  and dt_from_sgp is null
 order by 
   dt_otgr, ornum
 ;

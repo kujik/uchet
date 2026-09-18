@@ -25,10 +25,22 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms,
   MemTableDataEh, DataDriverEh, Math, Types, Dialogs, StdCtrls, DBCtrlsEh, DB,
   AdoDB, uString, Variants, MemTableEh, IniFiles, ADODataDriverEh, DBGridEh,
-  uFrmXDmsgNoConnection, uErrors, uData, uNamedArr;
+  uFrmXDmsgNoConnection, uErrors, uData, uNamedArr,
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6): базовый TmyDB теперь параллельно (не взамен ADO)
+  //поддерживает исполнение запросов через FireDAC - выбор на уровне объекта, см. TmyDB.Backend.
+  FireDAC.Comp.Client, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.DApt,
+  FireDAC.Phys, FireDAC.Phys.Oracle, FireDAC.Phys.OracleDef, FireDAC.VCLUI.Wait,
+  //TFDParam/TFDParams (TFDStoredProc.Params.CreateParam возвращает именно TFDParam, не базовый TParam -
+  //см. QCallStoredProc, переменная fp) объявлены здесь; юнит нужно указать явно в uses этого модуля,
+  //т.к. видимость идентификаторов не наследуется транзитивно через FireDAC.Comp.Client.
+  FireDAC.Stan.Param;
 
 type
   TmydbType = (mydbtOra, mydbtMsSql, mydbtSqLite);
+  //бэкенд, через который TmyDB реально исполняет запросы (см. TmyDB.Backend) - ОБА бэкенда доступны
+  //параллельно на одном объекте, ADO при этом не отключается и не заменяется (см. раздел 6 !алгоритмы.txt)
+  TmyDbBackend = (mydbbAdo, mydbbFireDac);
 
 const
   cmydbLogId = 0;
@@ -56,8 +68,37 @@ type
     //вернем статус соединения
     //функция проверяем и сессию Adoconnection и сессию AdoconnectionEh
     function GetConnectState: Boolean;
+    //МИГРАЦИЯ НА FIREDAC: единое на объект (лениво создаваемое) FireDAC-подключение/запрос/сторед-прок -
+    //см. пояснение у FFdConnection. Перенесено сюда (в базовый класс) из TmyDBOra - было специфично только
+    //для Oracle, теперь DriverName выбирается по FDbType, работает для любого потомка TmyDB.
+    function GetFdConnection: TFDConnection;
+    function GetFdQuery: TFDQuery;
+    function GetFdStoredProc: TFDStoredProc;
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): имя секции этой БД в новом общем
+    //конфиг-файле подключений uchet.cfg/uchet_test.cfg - см. реализацию и ReadConnectionFile.
+    function GetAppConfigSectionName: string;
   protected
     FDbType: TMyDbType;
+    //МИГРАЦИЯ НА FIREDAC: выбор бэкенда исполнения запросов для этого объекта Q - см. свойство Backend.
+    //По умолчанию mydbbAdo - без явной установки в mydbbFireDac поведение объекта не меняется НИКАК.
+    FBackend: TmyDbBackend;
+    //единое на всё приложение (для этого объекта Q) FireDAC-подключение - см. property FdConnection.
+    //Создаётся лениво в GetFdConnection по образцу наработок UchetFD (R:\Projects\UchetFD\uQF.pas),
+    //парсится из уже имеющейся ADO-строки ConnectionString (см. ExtractAdoConnParam в implementation) -
+    //отдельного пароля/файла настроек под FireDAC не заводим.
+    FFdConnection: TFDConnection;
+    //рабочий TFDQuery для примитивов QOpen/QExecSql/QSetParams и т.д. в режиме Backend = mydbbFireDac -
+    //аналог AdoQuery, но для FireDAC; создаётся лениво (GetFdQuery), Connection выставляется на FdConnection
+    FFdQuery: TFDQuery;
+    //рабочий TFDStoredProc для QCallStoredProc в режиме Backend = mydbbFireDac - аналог AdoStoredProc
+    FFdStoredProc: TFDStoredProc;
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): если для этой БД в uchet.cfg/uchet_test.cfg
+    //задана секция [Секция.FireDAC] - сюда (в ReadConnectionFile) копируются её "Имя=Значение" пары
+    //(TIniFile.ReadSectionValues уже возвращает их в формате, ожидаемом TFDConnection.Params) - явные и
+    //ПОЛНОСТЬЮ ОТДЕЛЬНЫЕ от ADO параметры FireDAC-подключения (см. GetFdConnection). Nil/пусто, если
+    //секции нет - тогда GetFdConnection по-прежнему выводит параметры из ConnectionString (ADO), как
+    //было изначально (см. раздел 6).
+    FFdConfigParams: TStrings;
     FConnectionFile: string;
     FConnectionFileFull: string;
     FConnectionString: string;
@@ -84,6 +125,11 @@ type
     _FLastParamsErr: string;
     //массив лога
     FLogArray: TVarDynArray2;
+    //возвращает "текущий" датасет (AdoQuery либо FdQuery) в зависимости от Backend - используется теми
+    //методами верхнего уровня (QLoadToRec/QLoadToMemTableEh/QLoadToDBComboBoxEh/QLoadToTStringList),
+    //которые после QOpen обходят результат только через базовые методы TDataSet (EOF/Fields/Next) -
+    //поэтому им не требуется собственное дублирование под каждый бэкенд.
+    function ActiveDataSet: TDataSet;
   public
     { Public declarations }
 
@@ -123,12 +169,33 @@ type
     //массив лога sql-запросов для публичного доступа
     property LogArray: TVarDynArray2 read FLogArray;
 
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6): какой бэкенд реально исполняет запросы этого
+    //объекта - QOpen/QClose/QExecSql/QSetParams/QRowsAffected/QGetReturnValues/QCallStoredProc/транзакции
+    //(и всё, что построено поверх них - QLoad*/QSave/QLoadToMemTableEh и т.д.). По умолчанию mydbbAdo -
+    //поведение объекта без явной установки в mydbbFireDac не меняется НИКАК, ADO при этом никогда не
+    //отключается и не заменяется - это ПАРАЛЛЕЛЬНАЯ поддержка двух бэкендов на одном объекте, а не миграция
+    //с потерей старого. QSetParamsEh и ToLogEh к этому флагу не относятся - они всегда только ADO/EhLib
+    //(старый мост живого драйвера гридов), при Backend = mydbbFireDac не используются вообще.
+    property Backend: TmyDbBackend read FBackend write FBackend;
+    //единое FireDAC-подключение этого объекта (см. FFdConnection) - используется как примитивами Q при
+    //Backend = mydbbFireDac, так и напрямую TFrDBGridEh (режим myogdmWithFdDriver, PrepareFdConnection) -
+    //в обоих случаях нужна ОДНА сессия FireDAC на всё приложение, а не по одной на каждого потребителя
+    property FdConnection: TFDConnection read GetFdConnection;
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.7): применяет к переданному TFDQuery опытным
+    //путём подобранные настройки FetchOptions/UpdateOptions (иначе FireDAC заметно медленнее ADO на
+    //больших выборках) - публичный, т.к. используется не только внутри Q (GetFdQuery), но и напрямую
+    //из TFrDBGridEh.PrepareFdConnection для собственных FFdQuery/FFdRefreshQuery грида.
+    procedure TuneFdQuery(AQuery: TFDQuery);
+
     //конструктор
     //создаем объект базы данных
     //передается файл настроек соединения (только имя файла, без расширения, оно всегда ".udl"),
     //если AConnectAfterCreate то тут же пытаемся подключиться
     //конструктор пытается загрузить файл "AConnectionFile"_test, если удалось то считает что это тестовый режим
-    constructor CreateObject(AOwner: TComponent; ADbType: TMyDbType; AConnectionFile: string; AConnectAfterCreate: Boolean = True); virtual;
+    constructor CreateObject(AOwner: TComponent; ADbType: TMyDbType; AConnectionFile: string; AConnectAfterCreate: Boolean = True; ABackend: TmyDbBackend = mydbbAdo); virtual;
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): освобождает FFdConfigParams (см. поле) -
+    //до этого у TmyDB не было собственного деструктора вообще.
+    destructor Destroy; override;
     //получим ConnectionString для oracle и mssql (в которой крутится парсек)
     //вернем статус рабочей базы True (если найден файл тестовой версии, то читаем настройки из него и вернем False)
     function ReadConnectionFile: Boolean;
@@ -289,6 +356,12 @@ type
 var
   myDB: TmyDB;
 
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10) - см. пояснение у реализации в implementation.
+//Объявлена в interface, т.к. вызывается из Uchet.dpr ДО создания Q/myDBParsec, чтобы решить, какой
+//бэкенд передать в CreateObject (см. TmyDB.CreateObject/Connect - бэкенд должен быть известен ДО
+//попытки подключения, чтобы установить только одну сессию, а не обе сразу).
+function ReadAppDbBackend(const ADbSectionName: string; ADefault: TmyDbBackend): TmyDbBackend;
+
 implementation
 
 uses
@@ -301,15 +374,21 @@ uses
 {$R *.dfm}
 
 
-constructor TmyDB.CreateObject(AOwner: TComponent; ADbType: TMyDbType; AConnectionFile: string; AConnectAfterCreate: Boolean = True);
+constructor TmyDB.CreateObject(AOwner: TComponent; ADbType: TMyDbType; AConnectionFile: string; AConnectAfterCreate: Boolean = True; ABackend: TmyDbBackend = mydbbAdo);
 //конструктор
 //создаем объект базы данных
 //передается файл настроек соединения (только имя файла, без расширения, оно всегда ".udl"),
 //если AConnectAfterCreate то тут же пытаемся подключиться
 //конструктор пытается загрузить файл "AConnectionFile"_test, если удалось то считает что это тестовый режим
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): ABackend теперь передаётся СРАЗУ в конструктор
+//(а не выставляется отдельной строкой Q.Backend := ... ПОСЛЕ CreateObject, как было раньше) - именно
+//потому, что Connect (см. ниже) должен ЗНАТЬ нужный бэкенд ДО того, как реально устанавливает
+//соединение, чтобы установить ТОЛЬКО одну сессию (ADO либо FireDAC), а не обе сразу. По умолчанию
+//mydbbAdo - для существующих вызовов без этого параметра (MSSQL/Парсек) поведение не меняется никак.
 begin
   inherited Create(AOwner);
   FDbType := ADbType;
+  FBackend := ABackend;
   FConnectionFile := AConnectionFile;
   ReadConnectionFile;
   FConnected := False;
@@ -320,19 +399,104 @@ begin
   FIsLogEnabled := True;
 end;
 
+destructor TmyDB.Destroy;
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): единственное, что требует явного освобождения
+//из добавленных за миграцию полей - FFdConfigParams (обычный TStrings, не компонент-владелец).
+begin
+  FFdConfigParams.Free;
+  inherited;
+end;
+
+function TmyDB.GetAppConfigSectionName: string;
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): имя секции этой БД в новом общем конфиг-файле
+//подключений uchet.cfg/uchet_test.cfg - используется ReadConnectionFile для поиска секций
+//[Секция]/[Секция.ADO]/[Секция.FireDAC] (по аналогии с уже существующей ReadAppDbBackend, которая читает
+//из [Секция] ключ Backend). Специально НЕ привязано к FConnectionFile ('connect'/'parsec') - чтобы не
+//требовать переименования уже существующих *.udl-файлов при переходе на новый формат.
+//Пустой результат (неизвестный/новый FDbType, например будущий Firebird до того, как он тут прописан) -
+//сигнал ReadConnectionFile пропустить новый конфиг и использовать старый *.udl-режим как раньше.
+begin
+  case FDbType of
+    mydbtOra: Result := 'Oracle';
+    mydbtMsSql: Result := 'MSSQL';
+  else
+    Result := '';
+  end;
+end;
+
 function TmyDB.ReadConnectionFile: Boolean;
 //получим ConnectionString для oracle и mssql (в которой крутится парсек)
 //вернем статус рабочей базы True (если найден файл тестовой версии, то читаем настройки из него и вернем False)
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): СНАЧАЛА проверяем новый общий конфиг-файл
+//подключений uchet.cfg/uchet_test.cfg (секции [Секция]/[Секция.ADO]/[Секция.FireDAC], имя секции - см.
+//GetAppConfigSectionName). Если для этой БД там задана строка подключения (ключ ConnectionString в
+//[Секция.ADO]) и/или секция [Секция.FireDAC] - используем ИХ, полностью в обход *.udl. Если подходящей
+//секции/файла нет - падаем в СТАРЫЙ режим (*.udl) БЕЗ ИЗМЕНЕНИЙ (код ниже не тронут) - это защищает любую
+//БД (в первую очередь MSSQL/Парсек), для которой новая секция ещё не заведена.
 var
   f: TIniFile;
   st: string;
 const
   FileExt = '.udl';
+
+  function TryReadAppConfig: Boolean;
+  var
+    cf: TIniFile;
+    cfSt, SectionName: string;
+    FdParams: TStrings;
+  begin
+    Result := False;
+    SectionName := GetAppConfigSectionName;
+    if SectionName = '' then
+      Exit;
+    cfSt := Module.ExePath + '\uchet_test.cfg';
+    if not FileExists(cfSt) then
+      cfSt := Module.ExePath + '\uchet.cfg';
+    if not FileExists(cfSt) then
+      Exit;
+    cf := TIniFile.Create(cfSt);
+    try
+      if cf.SectionExists(SectionName + '.ADO') then
+        FConnectionString := Trim(cf.ReadString(SectionName + '.ADO', 'ConnectionString', ''));
+      if cf.SectionExists(SectionName + '.FireDAC') then begin
+        FdParams := TStringList.Create;
+        cf.ReadSectionValues(SectionName + '.FireDAC', FdParams);
+        if FdParams.Count > 0 then
+          FFdConfigParams := FdParams
+        else
+          FdParams.Free;
+      end;
+    finally
+      cf.Free;
+    end;
+    if (FConnectionString = '') and (FFdConfigParams = nil) then
+      Exit; //в новом файле нет ни одной секции для этой БД - используем старый *.udl-режим
+    FTestDB := SameText(ExtractFileName(cfSt), 'uchet_test.cfg');
+    FConnectionFileFull := cfSt;
+    if FConnectionString <> '' then begin
+      FCurrentShema := copy(ConnectionString, pos(';User ID=', ConnectionString) + 9, 1000);
+      FCurrentShema := copy(CurrentShema, 1, pos(';', CurrentShema) - 1);
+    end
+    else if FFdConfigParams <> nil then
+      FCurrentShema := FFdConfigParams.Values['User_Name'];
+    Result := True;
+  end;
+
 begin
   Result := False;
   FConnectionString := '';
   FCurrentShema := '';
   FConnectionFileFull := '';
+  FreeAndNil(FFdConfigParams);
+  try
+    if TryReadAppConfig then begin
+      Result := True;
+      Exit;
+    end;
+  except
+    FErrorState := 'Не удалось прочитать конфиг-файл настроек соединения с базой данных (uchet.cfg).';
+    Exit;
+  end;
   try
     f := nil;
     st := Module.ExePath + '\' + FConnectionFile + '_test' + FileExt;
@@ -369,6 +533,40 @@ begin
   end;}
 end;
 
+function ReadAppDbBackend(const ADbSectionName: string; ADefault: TmyDbBackend): TmyDbBackend;
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): читает выбор бэкенда (ADO/FireDAC) для указанной
+//БД (секция ADbSectionName, например 'Oracle' или 'MSSQL') из общего конфиг-файла подключений всех БД -
+//uchet.cfg, а если рядом лежит uchet_test.cfg - то ИЗ НЕГО (по аналогии с уже существующим соглашением
+//"<файл>_test.udl" для тестового режима у каждой БД по отдельности, см. TmyDB.ReadConnectionFile).
+//Если ни один файл не найден, либо в нём нет секции/ключа Backend, либо значение не распознано -
+//возвращает ADefault: отсутствие файла НИКАК не меняет поведение приложения (обратная совместимость).
+//Формат секции в файле:
+//  [Oracle]
+//  Backend=FireDAC
+//Допустимые значения ключа Backend: "ADO" и "FireDAC" (без учета регистра).
+var
+  f: TIniFile;
+  st, BackendSt: string;
+begin
+  Result := ADefault;
+  st := Module.ExePath + '\uchet_test.cfg';
+  if not FileExists(st) then
+    st := Module.ExePath + '\uchet.cfg';
+  if not FileExists(st) then
+    Exit;
+  f := TIniFile.Create(st);
+  try
+    BackendSt := Trim(f.ReadString(ADbSectionName, 'Backend', ''));
+    if SameText(BackendSt, 'FireDAC') then
+      Result := mydbbFireDac
+    else if SameText(BackendSt, 'ADO') then
+      Result := mydbbAdo;
+    //пустое/нераспознанное значение - оставляем ADefault
+  finally
+    f.Free;
+  end;
+end;
+
 function TmyDB.Connect(MessageIfError: Boolean = True): Boolean;
 //подключаемся к базе данных
 //если это подключение к Oracle, то в случае ошибки подключения, выводим окно и завершаем программу
@@ -378,6 +576,31 @@ var
   ok: Boolean;
 begin
   if FDbType = mydbtOra then begin
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): при Backend = mydbbFireDac устанавливаем
+  //ТОЛЬКО FireDAC-подключение, ADO вообще не трогаем - раньше при переключении Backend на FireDAC
+  //ADO всё равно подключался здесь (см. ветку ниже), и в сессиях Oracle было видно ДВЕ сессии на одно
+  //приложение (одна ADO, одна FireDAC) вместо одной. В этом режиме старые "онлайн"-гриды для Oracle
+  //(myogdmWithAdoDriver, через ADODataDriverEh1/AdoConnectionProviderEh) работать не будут - это
+  //ожидаемо для тестового режима "всё через один бэкенд", а не баг.
+  if FBackend = mydbbFireDac then begin
+    ok := False;
+    try
+      ok := FdConnection.Connected;
+    except
+    end;
+    //ВРЕМЕННО ОТКЛЮЧЕНО по просьбе пользователя (см. !алгоритмы.txt, раздел 6.13): в момент этого вызова
+    //(not AfterProgramStart - т.е. самое первое подключение Q при старте программы, см. Uchet.dpr) форма
+    //FrmXDmsgNoConnection ЕЩЁ НЕ СОЗДАНА (Application.CreateForm(TFrmXDmsgNoConnection, ...) в Uchet.dpr
+    //выполняется ПОЗЖЕ) - ShowModal здесь фактически вызывался бы на ещё не созданном объекте формы.
+    //Ошибку подключения при старте программы и так корректно показывает TFrmXWNoConnectionAfterStart.Execute
+    //(Uchet.dpr, вызывается сразу после создания Q и myDBParsec, уже после AfterProgramStart := True) - он
+    //создаёт свою форму заново и сам проверяет Q.Connected. Нужно решить отдельно, вызывать ли что-то
+    //(и что именно) отсюда, из Connect, для этого случая - пока просто не показываем ничего.
+    {if (not ok) and (not AfterProgramStart) and MessageIfError then
+      FrmXDmsgNoConnection.ShowModal;}
+    Result := ok;
+    Exit;
+  end;
   i := 0;
   repeat
     try
@@ -405,9 +628,13 @@ begin
     except
     end;
     finally
-    if (not ok) and (not AfterProgramStart) then
+    //ВРЕМЕННО ОТКЛЮЧЕНО - см. подробное объяснение у аналогичного места чуть выше (ветка FBackend =
+    //mydbbFireDac), !алгоритмы.txt раздел 6.13: FrmXDmsgNoConnection ещё не создана в момент первого
+    //подключения Q при старте программы (not AfterProgramStart) - ShowModal здесь был потенциальным
+    //обращением к ещё не созданной форме.
+    {if (not ok) and (not AfterProgramStart) then
       if MessageIfError
-        then FrmXDmsgNoConnection.ShowModal;
+        then FrmXDmsgNoConnection.ShowModal;}
     end;
     inc(i);
   until (GetConnectState) or (i > 0);
@@ -437,8 +664,152 @@ end;
 function TmyDB.GetConnectState: Boolean;
 //возвращает статус соединения
 //должны быть подключены AdoDriver (и AdoDriverEh в случае AdoDriverEh.Connection = null)
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): при Backend = mydbbFireDac ADO вообще не
+//подключается (см. Connect) - поэтому статус соединения в этом режиме проверяем по FdConnection,
+//а не по AdoConnection/AdoConnectionProviderEh
 begin
-  Result := AdoConnection.Connected and ((AdoConnectionProviderEh.Connection <> nil) or (AdoConnectionProviderEh.InlineConnection.Connected));
+  if FBackend = mydbbFireDac
+    then Result := (FFdConnection <> nil) and FFdConnection.Connected
+    else Result := AdoConnection.Connected and ((AdoConnectionProviderEh.Connection <> nil) or (AdoConnectionProviderEh.InlineConnection.Connected));
+end;
+
+{================== МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6) =========}
+
+function ExtractAdoConnParam(const AConnStr, AParamName: string): string;
+//разбирает строку ADO-подключения вида "Provider=...;Data Source=X;User ID=Y;Password=Z;..." и возвращает
+//значение параметра AParamName (без учета регистра, пустая строка если не найден).
+//используется ТОЛЬКО для настройки параллельного FireDAC-подключения (TmyDB.GetFdConnection) по уже
+//имеющейся ADO-строке ConnectionString, не запрашивая и не храня пароль отдельно нигде в коде.
+//перенесена сюда из uDBOra.pas при переносе FireDAC-инфраструктуры в базовый класс.
+var
+  parts: TStringList;
+  i, eqpos: Integer;
+  pname, pvalue: string;
+begin
+  Result := '';
+  parts := TStringList.Create;
+  try
+    parts.Delimiter := ';';
+    parts.StrictDelimiter := True;
+    parts.DelimitedText := AConnStr;
+    for i := 0 to parts.Count - 1 do begin
+      eqpos := Pos('=', parts[i]);
+      if eqpos = 0 then Continue;
+      pname := Trim(Copy(parts[i], 1, eqpos - 1));
+      pvalue := Trim(Copy(parts[i], eqpos + 1, MaxInt));
+      if SameText(pname, AParamName) then begin
+        Result := pvalue;
+        Exit;
+      end;
+    end;
+  finally
+    parts.Free;
+  end;
+end;
+
+function TmyDB.GetFdConnection: TFDConnection;
+//создаём ОДНО FireDAC-подключение лениво при первом обращении и переиспользуем его для всех дальнейших
+//операций этого объекта (как через Backend = mydbbFireDac, так и напрямую из гридов, TFrDBGridEh) -
+//нужна одна сессия FireDAC на всё приложение, как и с ADO (см. комментарий в начале файла)
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.11): если ReadConnectionFile нашёл для этой БД секцию
+//[Секция.FireDAC] в uchet.cfg/uchet_test.cfg (FFdConfigParams <> nil) - используем ЕЁ параметры как есть
+//(явно и полностью отдельно от ADO, включая DriverID/Database/User_Name/Password и любые другие, вплоть
+//до таймингов). Иначе (старый режим, нет секции в конфиге) - параметры, как и раньше, выводятся из уже
+//имеющейся ADO ConnectionString через ExtractAdoConnParam.
+var
+  vDatabase, vUser, vPassword: string;
+begin
+  if FFdConnection = nil then begin
+    FFdConnection := TFDConnection.Create(Self);
+    try
+      if (FFdConfigParams <> nil) and (FFdConfigParams.Count > 0) then
+        FFdConnection.Params.AddStrings(FFdConfigParams)
+      else begin
+        vDatabase := ExtractAdoConnParam(ConnectionString, 'Data Source');
+        vUser := ExtractAdoConnParam(ConnectionString, 'User ID');
+        vPassword := ExtractAdoConnParam(ConnectionString, 'Password');
+        if vDatabase = '' then
+          raise Exception.CreateFmt('TmyDB.GetFdConnection: не удалось извлечь "Data Source" из ConnectionString. ' +
+            'User ID распознан как [%s]. Ожидаемый формат ConnectionString (ADO OLEDB): ' +
+            '"...;Data Source=...;User ID=...;Password=...;", либо явно задайте параметры FireDAC в ' +
+            'секции [%s.FireDAC] конфиг-файла uchet.cfg.', [vUser, GetAppConfigSectionName]);
+        case FDbType of
+          mydbtOra: FFdConnection.DriverName := 'Ora';
+          mydbtMsSql: FFdConnection.DriverName := 'MSSQL';
+        else
+          raise Exception.Create('TmyDB.GetFdConnection: FireDAC-подключение для этого типа БД (DbType) пока не настроено');
+        end;
+        FFdConnection.Params.Values['Database'] := vDatabase;
+        FFdConnection.Params.Values['User_name'] := vUser;
+        FFdConnection.Params.Values['Password'] := vPassword;
+      end;
+      //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.7): опытным путём подобранные в прототипе
+      //UchetFD (uQF.pas, ReadConnectionFile) настройки FormatOptions - без них FireDAC заметно медленнее
+      //ADO на "большой таблице" (сложное вью)
+      FFdConnection.FormatOptions.StrsEmpty2Null := True;
+      FFdConnection.FormatOptions.StrsTrim := False;
+      try
+        FFdConnection.Connected := True;
+      except
+        on E: Exception do
+          raise Exception.CreateFmt('TmyDB.GetFdConnection: не удалось подключиться через FireDAC. Исходная ошибка: %s', [E.Message]);
+      end;
+    except
+      FreeAndNil(FFdConnection);
+      raise;
+    end;
+  end;
+  Result := FFdConnection;
+end;
+
+function TmyDB.GetFdQuery: TFDQuery;
+//рабочий TFDQuery для примитивов Q (QOpen/QExecSql/QSetParams...) при Backend = mydbbFireDac - аналог
+//AdoQuery, создаётся лениво один раз на объект
+begin
+  if FFdQuery = nil then begin
+    FFdQuery := TFDQuery.Create(Self);
+    FFdQuery.Connection := FdConnection;
+    TuneFdQuery(FFdQuery);
+  end;
+  Result := FFdQuery;
+end;
+
+procedure TmyDB.TuneFdQuery(AQuery: TFDQuery);
+//МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.7): применяет к любому TFDQuery, использующему
+//FdConnection, опытным путём подобранные (в более раннем прототипе UchetFD, uQF.pas) настройки -
+//настройки FireDAC по умолчанию оказались заметно медленнее ADO на "большой таблице" (сложное вью,
+//много строк): 9-10 сек на FireDAC против 5-6 на ADO. ВАЖНО: для Oracle БОЛЬШОЙ RowsetSize (пробовали
+//2500) оказался МЕДЛЕННЕЕ умеренного (100) - поэтому не увеличивать не проверив опытным путём заново.
+//Используется как из GetFdQuery (примитивы Q), так и напрямую из TFrDBGridEh.PrepareFdConnection
+//(FFdQuery/FFdRefreshQuery грида "большой таблицы") - отсюда метод публичный, а не protected.
+begin
+  if AQuery = nil then
+    Exit;
+  AQuery.FetchOptions.Items := AQuery.FetchOptions.Items - [fiMeta, fiDetails];
+  AQuery.FetchOptions.Mode := fmAll;
+  AQuery.FetchOptions.RowsetSize := 100;
+  AQuery.FetchOptions.CursorKind := ckDefault;
+  AQuery.FetchOptions.LiveWindowParanoic := False;
+  AQuery.UpdateOptions.RefreshMode := rmManual;
+end;
+
+function TmyDB.GetFdStoredProc: TFDStoredProc;
+//рабочий TFDStoredProc для QCallStoredProc при Backend = mydbbFireDac - аналог AdoStoredProc, создаётся
+//лениво один раз на объект
+begin
+  if FFdStoredProc = nil then begin
+    FFdStoredProc := TFDStoredProc.Create(Self);
+    FFdStoredProc.Connection := FdConnection;
+  end;
+  Result := FFdStoredProc;
+end;
+
+function TmyDB.ActiveDataSet: TDataSet;
+//см. пояснение у объявления в interface-секции
+begin
+  if FBackend = mydbbFireDac
+    then Result := GetFdQuery
+    else Result := AdoQuery;
 end;
 
 {================== СОБЫТИЯ КОИПОНЕНТОВ =======================================}
@@ -794,27 +1165,54 @@ begin
           CurrParamName := ParamNamesA[i];
           CurrParamValue := VarToStr(ParamValues[i]);
           CurrParamType := QGetParamTypeCharFromName(ParamNamesA[i]);
-          case CurrParamType[1] of
-            's', 't':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftString;
-            'd':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftDate;
-            'h':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftDateTime;
-            'i':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftInteger;
-            'f':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftFloat;
-            'c':
-              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftCurrency;
+          //МИГРАЦИЯ НА FIREDAC: FdQuery.Params - это стандартный Data.DB.TParams (TFDParams - его потомок),
+          //в отличие от ADO, у которого свой собственный TParameters/TParameter (Direction/Attributes) -
+          //поэтому здесь два разных API, а не общий код через ActiveDataSet
+          if FBackend = mydbbFireDac then begin
+            case CurrParamType[1] of
+              's', 't':
+                GetFdQuery.ParamByName(ParamNamesA[i]).DataType := ftString;
+              'd':
+                FFdQuery.ParamByName(ParamNamesA[i]).DataType := ftDate;
+              'h':
+                FFdQuery.ParamByName(ParamNamesA[i]).DataType := ftDateTime;
+              'i':
+                FFdQuery.ParamByName(ParamNamesA[i]).DataType := ftInteger;
+              'f':
+                FFdQuery.ParamByName(ParamNamesA[i]).DataType := ftFloat;
+              'c':
+                FFdQuery.ParamByName(ParamNamesA[i]).DataType := ftCurrency;
+            end;
+            if CurrParamType[2] = 'r' then
+              FFdQuery.ParamByName(ParamNamesA[i]).ParamType := ptResult
+            else
+              FFdQuery.ParamByName(ParamNamesA[i]).ParamType := ptInput;
+            //пустую строку всегда преобразуем в null!!!  2025-07-28
+            FFdQuery.ParamByName(ParamNamesA[i]).Value := S.NullIfEmpty(ParamValues[i]);
+          end
+          else begin
+            case CurrParamType[1] of
+              's', 't':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftString;
+              'd':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftDate;
+              'h':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftDateTime;
+              'i':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftInteger;
+              'f':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftFloat;
+              'c':
+                AdoQuery.Parameters.ParamByName(ParamNamesA[i]).DataType := ftCurrency;
+            end;
+            if CurrParamType[2] = 'r' then
+              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Direction := pdReturnValue
+            else
+              AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Direction := pdInput;
+            AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Attributes := [paNullable];
+            //пустую строку всегда преобразуем в null!!!  2025-07-28
+            AdoQuery.Parameters.ParamValues[ParamNamesA[i]] := S.NullIfEmpty(ParamValues[i]);
           end;
-          if CurrParamType[2] = 'r' then
-            AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Direction := pdReturnValue
-          else
-            AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Direction := pdInput;
-          AdoQuery.Parameters.ParamByName(ParamNamesA[i]).Attributes := [paNullable];
-          //пустую строку всегда преобразуем в null!!!  2025-07-28
-          AdoQuery.Parameters.ParamValues[ParamNamesA[i]] := S.NullIfEmpty(ParamValues[i]);
         end;
       except
         on E: Exception do begin
@@ -858,13 +1256,22 @@ begin
     if (Length(ParamNamesA) = 0) or (ParamNamesA[0] = '') then
       Exit;
     for i := 0 to High(ParamNamesA) do begin
-      for j := 0 to AdoQuery.Parameters.Count - 1 do begin
-        b := False;
-        if (ParamNamesA[i] = AdoQuery.Parameters[j].Name) or (Pos(ParamNamesA[i] + '$', AdoQuery.Parameters[j].Name) = 1) then begin
-          ParamValuesA := ParamValuesA + [AdoQuery.Parameters[j].Value];
-          b := True;
-          Break;
-        end;
+      b := False;
+      if FBackend = mydbbFireDac then begin
+        for j := 0 to FFdQuery.Params.Count - 1 do
+          if (ParamNamesA[i] = FFdQuery.Params[j].Name) or (Pos(ParamNamesA[i] + '$', FFdQuery.Params[j].Name) = 1) then begin
+            ParamValuesA := ParamValuesA + [FFdQuery.Params[j].Value];
+            b := True;
+            Break;
+          end;
+      end
+      else begin
+        for j := 0 to AdoQuery.Parameters.Count - 1 do
+          if (ParamNamesA[i] = AdoQuery.Parameters[j].Name) or (Pos(ParamNamesA[i] + '$', AdoQuery.Parameters[j].Name) = 1) then begin
+            ParamValuesA := ParamValuesA + [AdoQuery.Parameters[j].Value];
+            b := True;
+            Break;
+          end;
       end;
       if not b then
         Break;
@@ -885,7 +1292,9 @@ end;
 function TmyDB.QRowsAffected: Integer;
 //вернуть количество затронутых запросом строк
 begin
-  Result := AdoQuery.RowsAffected;
+  if FBackend = mydbbFireDac
+    then Result := GetFdQuery.RowsAffected
+    else Result := AdoQuery.RowsAffected;
   FRowsAffected := Result;
 end;
 
@@ -909,13 +1318,25 @@ begin
   if FIsLogEnabled then
     FLastSql := Sql;
   try
-    AdoQuery.Close;
-    AdoQuery.SQL.Text := Sql;
-    if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
-      ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
-      Exit;
+    if FBackend = mydbbFireDac then begin
+      GetFdQuery.Close;
+      FFdQuery.SQL.Text := Sql;
+      if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
+        ToLog('Fd', Sql, FLastParamsStr, FLastParamsErr);
+        Exit;
+      end;
+      FFdQuery.ExecSQL;
+      Result := FFdQuery.RowsAffected;
+    end
+    else begin
+      AdoQuery.Close;
+      AdoQuery.SQL.Text := Sql;
+      if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
+        ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
+        Exit;
+      end;
+      Result := AdoQuery.ExecSQL;
     end;
-    Result := AdoQuery.ExecSQL;
   except
     on E: Exception do begin
       Errors.SetParam('', '*', myerrTypeDB, ShowErrors);
@@ -923,7 +1344,7 @@ begin
       Application.ShowException(E);
     end;
   end;
-  ToLog('Ado', Sql, FLastParamsStr, ErrMsg);
+  ToLog(S.IIf(FBackend = mydbbFireDac, 'Fd', 'Ado'), Sql, FLastParamsStr, ErrMsg);
   if (PackageMode = 1) and (Result < 0) then
     FPackageMode := -1;
 end;
@@ -938,34 +1359,46 @@ var
 begin
   Result := -1;
   try
-    AdoQuery.Close;
-    AdoQuery.SQL.Text := Sql;
     //FLastSql (как и FLastParamsStr в QSetParams) обновляем только если лог включен - иначе запрос,
     //исключенный из лога (например, служебный запрос в таймере главной формы), затер бы собой данные
     //последнего "настоящего" запроса, которые используются при показе окна ошибки БД
     if FIsLogEnabled then
       FLastSql := Sql;
-    if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
-      ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
-      Exit;
+    if FBackend = mydbbFireDac then begin
+      GetFdQuery.Close;
+      FFdQuery.SQL.Text := Sql;
+      if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
+        ToLog('Fd', Sql, FLastParamsStr, FLastParamsErr);
+        Exit;
+      end;
+      FFdQuery.Open;
+      Result := FFdQuery.RecordCount;
+    end
+    else begin
+      AdoQuery.Close;
+      AdoQuery.SQL.Text := Sql;
+      if not QSetParams(QGetParamNamesFromSql(Sql), ParamValues) then begin
+        ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
+        Exit;
+      end;
+      AdoQuery.Open;
+      Result := AdoQuery.RecordCount;
     end;
-    AdoQuery.Open;
-    Result := AdoQuery.RecordCount;
   except
     on E: Exception do begin
       Errors.SetParam('', '*', myerrTypeDB);
-      AdoQuery.Close;
+      try ActiveDataSet.Close; except end;
       Application.ShowException(E);
     end;
   end;
-  ToLog('Ado', Sql, FLastParamsStr, FLastParamsErr);
+  ToLog(S.IIf(FBackend = mydbbFireDac, 'Fd', 'Ado'), Sql, FLastParamsStr, FLastParamsErr);
 end;
 
 procedure TmyDB.QClose;
 //закрываем запрос
 begin
   try
-    AdoQuery.Close;
+    ActiveDataSet.Close;
   except
   end;
 end;
@@ -1117,17 +1550,19 @@ begin
     FLastReceivedFiedNames := [];
     if QOpen(Sql, ParamValues) < 0 then
       Exit;
+    //МИГРАЦИЯ НА FIREDAC: ActiveDataSet (AdoQuery либо FdQuery, см. Backend) - оба обходятся тут только
+    //через базовые методы TDataSet (EOF/FieldCount/Fields/Next), поэтому отдельного FD-варианта не нужно
     if Length(FLastReceivedFiedNames) = 0 then
-      for i := 0 to AdoQuery.FieldCount - 1 do
-        FLastReceivedFiedNames := FLastReceivedFiedNames + [AdoQuery.Fields[i].FieldName];
-    while not AdoQuery.EOF do begin
+      for i := 0 to ActiveDataSet.FieldCount - 1 do
+        FLastReceivedFiedNames := FLastReceivedFiedNames + [ActiveDataSet.Fields[i].FieldName];
+    while not ActiveDataSet.EOF do begin
       SetLength(Result.V, Length(Result.V) + 1);
-      SetLength(Result.V[High(Result.V)], AdoQuery.FieldCount);
-      for i := 0 to AdoQuery.FieldCount - 1 do
-        Result.V[High(Result.V)][i] := AdoQuery.Fields[i].AsVariant;
+      SetLength(Result.V[High(Result.V)], ActiveDataSet.FieldCount);
+      for i := 0 to ActiveDataSet.FieldCount - 1 do
+        Result.V[High(Result.V)][i] := ActiveDataSet.Fields[i].AsVariant;
       if OneRow then
         Break;
-      AdoQuery.Next;
+      ActiveDataSet.Next;
     end;
     Result.FFull := FLastReceivedFiedNames;
     Result.F := FLastReceivedFiedNames;
@@ -1336,18 +1771,18 @@ begin
       MemTableEh.Delete;
     end;
   end;
-  while not AdoQuery.EOF do begin
+  while not ActiveDataSet.EOF do begin
     if Append = 2 then
       MemTableEh.Last;
     MemTableEh.Append;
-    for i := 0 to AdoQuery.FieldCount - 1 do begin
-      FName := AdoQuery.Fields[i].FieldName;
+    for i := 0 to ActiveDataSet.FieldCount - 1 do begin
+      FName := ActiveDataSet.Fields[i].FieldName;
       if (FieldNames = '') or (S.InCommaStrI(FName, FieldNames, ';')) then
-        MemTableEh.FieldByName(AdoQuery.Fields[i].FieldName).Value := AdoQuery.Fields[i].AsVariant
+        MemTableEh.FieldByName(ActiveDataSet.Fields[i].FieldName).Value := ActiveDataSet.Fields[i].AsVariant
       else if (FieldNames = '-') then
-        MemTableEh.Fields[i].Value := AdoQuery.Fields[i].AsVariant;
+        MemTableEh.Fields[i].Value := ActiveDataSet.Fields[i].AsVariant;
     end;
-    AdoQuery.Next;
+    ActiveDataSet.Next;
   end;
   QClose;
   MemTableEh.First;
@@ -1375,11 +1810,11 @@ begin
     DBComboboxEh.Items.Add('');
   if (ComboBoxMode = cntComboLK0) then
     DBComboboxEh.KeyItems.Add('0');
-  while not AdoQuery.EOF do begin
-    DBComboboxEh.Items.Add(AdoQuery.Fields[0].AsString);
+  while not ActiveDataSet.EOF do begin
+    DBComboboxEh.Items.Add(ActiveDataSet.Fields[0].AsString);
     if (ComboBoxMode = cntComboLK) or (ComboBoxMode = cntComboLK0) or (ComboBoxMode = cntComboEK) then
-      DBComboboxEh.KeyItems.Add(AdoQuery.Fields[1].AsString);
-    AdoQuery.Next;
+      DBComboboxEh.KeyItems.Add(ActiveDataSet.Fields[1].AsString);
+    ActiveDataSet.Next;
     inc(Result);
   end;
   QClose;
@@ -1397,12 +1832,12 @@ begin
   if Append = 0 then begin
     StringList.Clear;
   end;
-  while not AdoQuery.EOF do begin
-    if AdoQuery.Fields.Count = 1 then
-      StringList.Add(AdoQuery.Fields[0].AsString)
+  while not ActiveDataSet.EOF do begin
+    if ActiveDataSet.Fields.Count = 1 then
+      StringList.Add(ActiveDataSet.Fields[0].AsString)
     else
-      StringList.Add(AdoQuery.Fields[1].AsString + '=' + AdoQuery.Fields[0].AsString);
-    AdoQuery.Next;
+      StringList.Add(ActiveDataSet.Fields[1].AsString + '=' + ActiveDataSet.Fields[0].AsString);
+    ActiveDataSet.Next;
     inc(Result);
   end;
   QClose;
@@ -1420,7 +1855,22 @@ var
   ParamNamesA, ParamValuesA: TVarDynArray;
   pt: TFieldType;
   pd: TParameterDirection;
+  //МИГРАЦИЯ НА FIREDAC: у FdStoredProc.Params (стандартный Data.DB.TParams) направление параметра
+  //задаётся через ParamType: TParamType (ptInput/ptOutput/ptInputOutput/ptResult), а не через
+  //Direction: TParameterDirection (pdInput/...), как у ADO - поэтому отдельная переменная
+  fpt: TParamType;
+  //TFDStoredProc.Params.CreateParam переопределен в FireDAC и возвращает ковариантный TFDParam,
+  //а не базовый TParam ([dcc32] E2010 Incompatible types: 'TParam' and 'TFDParam') - поэтому тип
+  //переменной должен быть именно TFDParam (см. FireDAC.Stan.Param в uses)
+  fp: TFDParam;
   ps: Integer;
+  //МИГРАЦИЯ НА FIREDAC: имя параметра в ParamNamesA[i] содержит наш модификатор типа/направления
+  //через "$" (например "par$s") - для ADO это неважно (Oracle-провайдер ADO вызывает процедуру чисто
+  //позиционно через {call proc(?,?)}, имя параметра игнорируется), а для FireDAC (нативный OCI) это
+  //реальное имя параметра, которое используется для сопоставления с фактическим именем аргумента
+  //хранимой процедуры в БД (см. ORA-28106 при вызове set_context_value - "par$s"/"val$i" не совпадали
+  //с настоящими именами аргументов par/val) - поэтому для FD-параметра модификатор нужно отрезать
+  RawParamName: string;
 begin
   if PackageMode = -1 then
     Exit;
@@ -1432,8 +1882,28 @@ begin
     if (Length(ParamNamesA) = 0) or (ParamNamesA[0] = '') then
       ParamNamesA := [];
     ParamValuesA := ParamValues;
-    AdoStoredProc.Parameters.Clear;
-    AdoStoredProc.ProcedureName := ProcName;
+    if FBackend = mydbbFireDac then begin
+      GetFdStoredProc.Params.Clear;
+      FFdStoredProc.StoredProcName := ProcName;
+      //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.17): Prepare здесь заставляет FireDAC
+      //сразу подтянуть из каталога БД реальные параметры процедуры - с их настоящими типами
+      //(для "голого" number, без точности/масштаба, это обычно ftFMTBcd). Это нужно, чтобы НИЖЕ,
+      //при простановке значений, не пытаться создавать параметр заново со СВОИМ типом (по "$"-
+      //модификатору, ftInteger/ftFloat/...) - если имя совпадает с реальным аргументом (как и
+      //должно быть), но тип отличается от того, что уже определил FireDAC, вылетает
+      //[FireDAC][Phys][Ora]-338 "Param ... type changed ... Query must be reprepared" (было на
+      //p_UserLogon после исправления имён параметров в 6.15). Если Prepare не удался (например,
+      //нет прав на просмотр метаданных, или процедура не найдена) - не страшно, ниже все равно
+      //есть запасной путь (создание параметра вручную, как было раньше).
+      try
+        FFdStoredProc.Prepare;
+      except
+      end;
+    end
+    else begin
+      AdoStoredProc.Parameters.Clear;
+      AdoStoredProc.ProcedureName := ProcName;
+    end;
     if (High(ParamNamesA)) = (High(ParamValuesA))       //!!!!!!!!!!
       then begin
       for i := Low(ParamNamesA) to High(ParamNamesA) do
@@ -1470,22 +1940,50 @@ begin
               ps := 4000;
             end;
           end;
-          case st1[2] of
-            'r':
-              pd := pdReturnValue;
-            'i':
-              pd := pdInput;
-            'b':
-              pd := pdInputOutput;
-            'o':
-              pd := pdOutput;
-          else
-            begin
-              pd := pdInput
+          if FBackend = mydbbFireDac then begin
+            case st1[2] of
+              'r':
+                fpt := ptResult;
+              'i':
+                fpt := ptInput;
+              'b':
+                fpt := ptInputOutput;
+              'o':
+                fpt := ptOutput;
+            else
+              fpt := ptInput;
             end;
+            RawParamName := ParamNamesA[i];
+            j := Pos('$', RawParamName);
+            if j > 0 then
+              RawParamName := Copy(RawParamName, 1, j - 1);
+            //см. комментарий у Prepare выше (6.17): если Prepare уже создал параметр с этим
+            //именем (по реальным метаданным БД) - используем его как есть, НЕ пересоздавая и не
+            //меняя его тип (только значение) - иначе конфликт типов. Создаём вручную (со своим
+            //типом по "$"-модификатору) только если такого параметра не нашлось
+            fp := TFDParam(FFdStoredProc.Params.FindParam(RawParamName));
+            if fp = nil then
+              fp := FFdStoredProc.Params.CreateParam(pt, RawParamName, fpt);
+            fp.Value := ParamValuesA[i];
+          end
+          else begin
+            case st1[2] of
+              'r':
+                pd := pdReturnValue;
+              'i':
+                pd := pdInput;
+              'b':
+                pd := pdInputOutput;
+              'o':
+                pd := pdOutput;
+            else
+              begin
+                pd := pdInput
+              end;
+            end;
+            AdoStoredProc.Parameters.CreateParameter(ParamNamesA[i], pt, pd, ps, ParamValuesA[i]);
+            AdoStoredProc.Parameters[i].Attributes := [paNullable];
           end;
-          AdoStoredProc.Parameters.CreateParameter(ParamNamesA[i], pt, pd, ps, ParamValuesA[i]);
-          AdoStoredProc.Parameters[i].Attributes := [paNullable];
         end;
       except
         on E: Exception do begin
@@ -1503,9 +2001,32 @@ begin
         FPackageMode := -1;
       Exit;
     end;
-    AdoStoredProc.ExecProc;
-    for i := 0 to AdoStoredProc.Parameters.Count - 1 do
-      Result := Result + [AdoStoredProc.Parameters[i].Value];
+    if FBackend = mydbbFireDac then begin
+      FFdStoredProc.ExecProc;
+      //МИГРАЦИЯ НА FIREDAC (см. 6.17): после Prepare (см. выше) FFdStoredProc.Params может
+      //содержать БОЛЬШЕ параметров, чем передано в ParamNames (Prepare подтягивает ВСЕ реальные
+      //параметры процедуры из каталога БД, включая необязательные с default, которые вызывающий
+      //код мог не передавать) - поэтому результат нужно собирать не по всем FFdStoredProc.Params,
+      //а только по тем именам, что реально были в ParamNames (и в том же порядке) - иначе длина и
+      //порядок Result разъедутся с тем, что ожидают вызывающие (они обращаются к Result по индексу,
+      //соответствующему позиции параметра в исходной строке ParamNames)
+      for i := Low(ParamNamesA) to High(ParamNamesA) do begin
+        RawParamName := ParamNamesA[i];
+        j := Pos('$', RawParamName);
+        if j > 0 then
+          RawParamName := Copy(RawParamName, 1, j - 1);
+        fp := TFDParam(FFdStoredProc.Params.FindParam(RawParamName));
+        if fp <> nil then
+          Result := Result + [fp.Value]
+        else
+          Result := Result + [Null];
+      end;
+    end
+    else begin
+      AdoStoredProc.ExecProc;
+      for i := 0 to AdoStoredProc.Parameters.Count - 1 do
+        Result := Result + [AdoStoredProc.Parameters[i].Value];
+    end;
   except
     on E: Exception do begin
       Errors.SetParam('', '', myerrTypeDB);
@@ -1514,8 +2035,6 @@ begin
         FPackageMode := -1;
     end;
   end;
-//  if (PackageMode = 1) and (Length(Result) = 0) then
-//    FPackageMode := -1;
 end;
 
 
@@ -1529,9 +2048,18 @@ function TmyDB.QBeginTrans(APackageMode: Boolean = False; ShowErrors: Boolean = 
 begin
   try
     Result := False;
-    if AdoConnection.InTransaction then
-      AdoConnection.RollbackTrans;
-    AdoConnection.BeginTrans;
+    //МИГРАЦИЯ НА FIREDAC: у TFDConnection транзакции - StartTransaction/Commit/Rollback/InTransaction,
+    //а не BeginTrans/CommitTrans/RollbackTrans, как у ADO - разные имена методов, поэтому ветвление
+    if FBackend = mydbbFireDac then begin
+      if FdConnection.InTransaction then
+        FdConnection.Rollback;
+      FdConnection.StartTransaction;
+    end
+    else begin
+      if AdoConnection.InTransaction then
+        AdoConnection.RollbackTrans;
+      AdoConnection.BeginTrans;
+    end;
     Result := True;
   except
     on E: Exception do begin
@@ -1548,18 +2076,34 @@ function TmyDB.QCommitOrRollback(Commit: Boolean = True; ShowErrors: Boolean = T
 //также проставим свойтво статуса последней транзакции
 //если нет открытой транзакции, выйдем с False
 begin
-  if not AdoConnection.InTransaction then begin
-    Result := False;
-    Exit;
+  if FBackend = mydbbFireDac then begin
+    if not FdConnection.InTransaction then begin
+      Result := False;
+      Exit;
+    end;
+  end
+  else begin
+    if not AdoConnection.InTransaction then begin
+      Result := False;
+      Exit;
+    end;
   end;
   if PackageMode <> 0 then
     Commit := (PackageMode = 1) and (Commit);
   try
     Result := False;
-    if Commit then
-      AdoConnection.CommitTrans
-    else
-      AdoConnection.RollbackTrans;
+    if FBackend = mydbbFireDac then begin
+      if Commit then
+        FdConnection.Commit
+      else
+        FdConnection.Rollback;
+    end
+    else begin
+      if Commit then
+        AdoConnection.CommitTrans
+      else
+        AdoConnection.RollbackTrans;
+    end;
     Result := True;
   except
     on E: Exception do begin

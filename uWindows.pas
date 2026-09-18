@@ -894,7 +894,7 @@ begin
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])
   else if AFormType = myfrm_Dlg_R_CarTypes then
-    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_otk_reject_reasons', 'Типы транспортных средств', 400, 100,
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_sn_cartypes', 'Типы транспортных средств', 400, 100,
       [['name$s', cntEdit, 'Тип','1:100'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])

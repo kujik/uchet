@@ -322,7 +322,14 @@ begin
   //созадем объект TModule (общие параметры и методы модуля)
   Module := TModule.Create;
   //Создаем экземпляр БД Oracle и пытаемся подключиться к БД
-  Q := TmyDBOra.CreateObject(Application, 'connect', True);
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): бэкенд передаём СРАЗУ в CreateObject (а не
+  //отдельной строкой Q.Backend := ... ПОСЛЕ, как было раньше) - Connect должен знать нужный бэкенд ДО
+  //попытки подключения, чтобы установить ТОЛЬКО одну сессию Oracle (либо ADO, либо FireDAC), а не обе
+  //сразу. Выбор бэкенда читается из uchet.cfg/uchet_test.cfg (секция [Oracle], ключ Backend=ADO|FireDAC,
+  //см. ReadAppDbBackend в uDB.pas) - если файла нет, используется значение по умолчанию mydbbFireDac
+  //ниже (продолжаем тестировать FireDAC для Oracle, как и раньше, пока файл не создан).
+  //MSSQL (myDBParsec) этот механизм не получает и продолжает работать через ADO как раньше.
+  Q := TmyDBOra.CreateObject(Application, 'connect', True, ReadAppDbBackend('Oracle', mydbbFireDac));
   //Создаем экземпляр БД типа MsSQL для подключения Парсек
   myDBParsec := TmyDBParsec.CreateObject(Application, 'parsec', False);
 

@@ -464,7 +464,7 @@ begin
             S.ConcatStP(st, IntToStr(k) + '-' + S.FormatNumberWithComma(FData[Yn].HoursN[i - 1][j + 1].AsFloat, False), ',');
           end;
       end;
-      Q.QCallStoredProc('P_SaveScheduleHours', 'Id$i;y$i;h$s', [ID, y, st]);
+      Q.QCallStoredProc('P_SaveScheduleHours', 'AIdSchedule$i;AYear$i;AHours$s', [ID, y, st]);
     end;
     b := False;
     if Q.QLoadValue('select count(*) from w_schedule_periods where id_schedule = :id$i and dt >= :dt1$d and dt < :dt2$d order by dt', [ID, EncodeDate(y, 1, 1), EncodeDate(y + 1, 1, 1)]) = 0 then begin

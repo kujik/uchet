@@ -244,12 +244,24 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
+  System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   MemTableDataEh, Data.DB, Data.Win.ADODB, DBGridEhGrouping, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
   DataDriverEh, ADODataDriverEh, MemTableEh, Math, PrnDbgEh, ClipBrd,
   ComCtrls, Buttons, Vcl.Menus, DBCtrlsEh, Vcl.Mask,
-  uData, uString, uLabelColors, Vcl.Imaging.pngimage, EhLibVclUtils, uNamedArr
+  uData, uString, uLabelColors, Vcl.Imaging.pngimage, EhLibVclUtils, uNamedArr, uWaitForm,
+  //ЭКСПЕРИМЕНТАЛЬНО (пилот перевода на FireDAC, режим myogdmWithFdDriver, см. PrepareFdConnection/LoadFdData) -
+  //если этот набор юнитов не устанавливается (FireDAC не подключен к проекту), режим myogdmWithFdDriver
+  //использовать нельзя, но на остальную работу грида (ADO-режим) это никак не влияет
+  FireDAC.Comp.Client, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.Stan.Def, FireDAC.Stan.Pool, FireDAC.Stan.Async, FireDAC.DApt,
+  FireDAC.Phys, FireDAC.Phys.Oracle, FireDAC.Phys.OracleDef,
+  //при работе с FireDAC-компонентами, созданными в коде (не через дизайнер), IDE не успевает сама подключить
+  //юнит с "GUIx"-хуком (курсор ожидания и т.п.) - без него падает "Object factory for class {...} is missing.
+  //To register it, you can drop component [TFDGUIxWaitCursor]...". Юнит ниже регистрирует нужную фабрику
+  //сам, в своей инициализации - реально создавать компонент TFDGUIxWaitCursor не требуется.
+  FireDAC.VCLUI.Wait
   ;
 
 const
@@ -260,6 +272,25 @@ const
   mydefGridRowHeight = 18;    //дефолтная высота строки грида
 
   MY_IDS_INSERTED_MIN = MaxInt - 100000;
+
+  //см. !алгоритмы.txt, 6.20/6.21: собственное сообщение для отложенного показа меню
+  //ShowAltColumnFilter (см. комментарий у WMAltColumnFilter - показывать popup-меню сразу же,
+  //синхронно, в обработчике KeyDown по Alt-<клавиша> нельзя - Windows еще не закончил обработку
+  //системной Alt-комбинации, из-за этого клики по уже показанному меню не доходят до OnClick)
+  WM_MY_ALTCOLUMNFILTER = WM_USER + 733;
+
+  //см. !алгоритмы.txt, 6.26 - режим пересчета кэша цветов для фильтра по цвету (Alt-F): True -
+  //пересчитываем сразу всю таблицу (все загруженные строки, все столбцы) после каждого обновления
+  //грида (RefreshGrid) и строки (RefreshRecord) - см. RefreshColorCacheAll/RefreshColorCacheCurrentRow;
+  //False - кэш считается "лениво", только для конкретного столбца и только в момент открытия окна
+  //фильтра по цвету на нем (см. RefreshColorCacheField) - тестируем оба варианта на реальных данных,
+  //переключение одной константой
+  ALT_COLOR_CACHE_EAGER = False;
+
+  //см. !алгоритмы.txt, 6.27 - цвет заголовка столбца, в котором активен хотя бы один фильтр (обычный
+  //постолбцовый ехlib ИЛИ любой из наших альт-фильтров - числовой/по дате/по диапазону дней/по цвету) -
+  //см. UpdateFilterActiveIndicators
+  ALT_FILTER_INDICATOR_COLOR = clNavy;
 
 
 type
@@ -377,9 +408,39 @@ type
   TFrDBGridDataMode = (
     myogdmWithAdoDriver,            //испольуется AdoDriver, датасет будет онлайн
     myogdmFromArray,                //данные загружаются сразу из массива, датасет оффлайн
-    myogdmFromSql                   //данные загружаются sql-запросом при создании или вручную, датасет оффлайн
+    myogdmFromSql,                  //данные загружаются sql-запросом при создании или вручную, датасет оффлайн
+    myogdmWithFdDriver               //ЭКСПЕРИМЕНТАЛЬНО (пилот перевода на FireDAC, версия 2 - через массивы): FireDAC
+                                      //используется только как "движок выборки" - реальный select выполняется в
+                                      //LoadFdData при каждом обновлении, структура полей MemTableEh1 строится из
+                                      //реальных метаданных FFdQuery.FieldDefs (без $-аннотаций типов полей), а
+                                      //данные построчно копируются - "живой" driver-мост (TDataSetDriverEh) не
+                                      //используется. Формально это ближе к оффлайн-режиму (полная пересборка при
+                                      //каждом обновлении), но по остальным правилам поведения грида приравнен к
+                                      //онлайн-режиму (см. RefreshGrid/PrepareFdConnection/LoadFdData)
   );
 
+var
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.12): резервный DataMode для гридов, у которых явно
+  //не был вызван Opt.SetDataMode (см. TFrDBGridEhOpt.Create) - используется, ТОЛЬКО пока глобальный Q ещё
+  //не создан (например, design-time в IDE) - как только Q доступен, реальный дефолт вычисляется из
+  //Q.Backend (см. TFrDBGridEhOpt.Create), а НЕ берётся из этой константы: ручной выбор дефолта отдельно
+  //от Backend не имеет смысла, т.к. myogdmWithFdDriver жёстко привязан к Q.FdConnection и не умеет
+  //работать через ADO (см. PrepareFdConnection/LoadFdData), а при Backend = mydbbFireDac ADO-подключение к
+  //Oracle вообще не устанавливается (см. раздел 6.10) - значит "старый" онлайн-режим (myogdmWithAdoDriver)
+  //в этом случае гарантированно не будет работать. Экраны, у которых DataMode уже задан явным вызовом
+  //SetDataMode (как сейчас myfrm_R_CarTypes/"большая таблица", независимо от Backend), этот механизм не
+  //затрагивает - явный вызов всегда побеждает над любым дефолтом.
+  DefaultFrGridDataMode: TFrDBGridDataMode = myogdmWithAdoDriver;
+  //ОТЛАДКА (см. !алгоритмы.txt, раздел 6.8): если True, LoadFdData после каждого выполнения выводит через
+  //MyInfoMessage разбивку времени (мс) по шагам - выполнение FFdQuery.Open (запрос+фетч на сервере/сети),
+  //пересборка FieldDefs+CreateDataset (структура MemTableEh1), настройка колонок грида, построчное
+  //копирование данных в MemTableEh1. Нужно, чтобы понять, где именно уходит разница между ADO- и
+  //FD-режимом "большой таблицы" (сырое выполнение запроса по замерам TestProcedure3 у ADO и FD почти
+  //одинаковое - значит разница, скорее всего, в чём-то из перечисленного ниже, а не в самом запросе).
+  //Временный переключатель, по умолчанию выключен.
+  FdLoadDataProfilingEnabled: Boolean = False;
+
+type
   TFrDBGridProperties = (
     myogfpName,
     myogfpNameWithSuffix,
@@ -675,6 +736,15 @@ type
   TFrDBGridEhColumnsUpdateDataEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var Text: string; var Value: Variant; var UseText, Handled: Boolean) of object;
   //здесь можем устанавливать параметры ячейки (номер картинки, readonly, фон, шрифт) в зависимости от данных в текущей записи
   TFrDBGridEhColumnsGetCellParamsEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh) of object;
+  //см. !алгоритмы.txt, 6.26: явно заданный (переопределяющий цвет столбца по умолчанию) формат ячейки -
+  //для кэша цветов и фильтра по цвету (Alt-F). HasFont/HasBg - был ли явно задан цвет шрифта/фона
+  //соответственно (если оба False - явного цвета нет вообще - см. GetCachedCellColorFmt)
+  TCellColorFmt = record
+    HasFont: Boolean;
+    FontColor: TColor;
+    HasBg: Boolean;
+    BgColor: TColor;
+  end;
   //задать статус ReadOnly для ячейки (например в зависимости от данных), если она в редактируемом столбце, но именно ее редактировать нельзя
   TGetFrDBGridEhCellReadOnlyEvent = procedure (var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean) of object;
   //вызывается при изменении данных в таблице с разными Mode в зависимости от типа вызова
@@ -766,6 +836,38 @@ type
     FInitData: TFrDBGridInitData;
     //ссылка на фрейм для детальной панели грида
     FGrid2: TFRDbgridEh;
+    //ЭКСПЕРИМЕНТАЛЬНО (пилот перевода на FireDAC, режим myogdmWithFdDriver, версия 2 - через массивы, см.
+    //LoadFdData). Прежняя версия использовала "живой" TDataSetDriverEh поверх постоянно открытого FFdQuery в
+    //качестве DataDriver для MemTableEh1 - на практике вскрылось несколько трудноуловимых проблем во внутренней
+    //кухне EhLib (побочные эффекты TDataDriverEh.ConsumerClosed при MemTableEh1.Close, защелка ProviderEOF в
+    //TDataDriverEh.ReadData, устаревание Locate-кеша в DefaultRefreshRecord), из-за которых миогLoadAfterVisible
+    //и обновление строк не работали надежно. Текущая версия использует FireDAC ТОЛЬКО как "движок выборки":
+    //FFdQuery открывается, читается построчно и закрывается заново при КАЖДОМ обновлении (полная пересборка
+    //структуры и данных MemTableEh1 - как в оффлайн-режимах myogdmFromArray/myogdmFromSql), driver-мост не
+    //используется вообще (MemTableEh1.DataDriver = nil в этом режиме).
+    //Само FireDAC-соединение (Q.FdConnection) сюда не входит - оно ОДНО на всё приложение и живет в Q
+    //(TmyDBOra, uDBOra.pas), а не по одному на каждый грид - см. комментарий у TmyDBOra.FdConnection.
+    FFdQuery: TFDQuery;
+    //отдельный лёгкий запрос для перечитывания ОДНОЙ строки по id (см. RefreshFdRecordDirect) - нужен,
+    //потому что FFdQuery не держится постоянно открытым и не видит изменений, сделанных отдельной сессией Q (ADO)
+    FFdRefreshQuery: TFDQuery;
+    //базовый select без where (тот же, что раньше уходил в ADODataDriverEh1.GetRecCommand) - заполняется в
+    //SetDataDriverCommandSelect, используется RefreshFdRecordDirect для перечитывания одной строки
+    FFdBaseSelectSql: string;
+    //текст select, "отложенный" SetSelectSqlText до следующего вызова LoadFdData (см. GetSelectSqlText/
+    //SetSelectSqlText) - в этой версии FFdQuery не держится постоянно открытым, поэтому его SQL.Text не
+    //годится как постоянное хранилище "текущего" select-а между обновлениями
+    FFdPendingSelectSql: string;
+    //признак того, что "разовая" косметическая настройка грида (SetColumnsPropertyes/RestoreFrDBGridEhSettings/
+    //SetColumnsVisible/SetOptions - обычно выполняется один раз в MemTableEh1AfterOpen) уже была сделана хотя бы
+    //раз для этого экземпляра фрейма в FD-режиме - см. LoadFdData. LoadFdData пересоздает MemTableEh1 и его
+    //Fields заново при КАЖДОМ обновлении (в отличие от ADO/офлайн режимов, где структура строится один раз), а
+    //MemTableEh1AfterOpen подавлен флагом InLoadData - поэтому эту настройку приходится делать вручную, и именно
+    //поэтому нужен отдельный флаг: применять ее заново на каждое обновление грида нельзя - иначе на каждое
+    //"Обновить" сбрасывались бы ширины столбцов, подогнанные пользователем вручную, и заново перезаписывались
+    //бы его сохраненные настройки (см. MemTableEh1BeforeClose, который пишет настройки при каждом закрытии
+    //датасета - а LoadFdData закрывает/переоткрывает MemTableEh1 при каждом обновлении)
+    FFdColumnsPrepared: Boolean;
     //меню пресетовS
     FPmPresets: TPopupMenu;
     //имя пресета, примененного последним в этом сеансе (для отметки галочкой в меню), '' - если не применялся
@@ -817,6 +919,56 @@ type
     FGridLabelsIds: TVarDynArray2;
     //был клик по иконке фильтра в столбце
     FLastFilterClick: Boolean;
+    //см. !алгоритмы.txt, 6.20: активные "альтернативные" фильтры по Alt-F (независимо от стандартного
+    //постолбцового фильтра ехлиб), пока только для числовых столбцов - условие "Больше 0"/"Меньше 0"/"Равно 0".
+    //[i][0] - имя поля (в нижнем регистре), [i][1] - условие ('>0'/'<0'/'=0')
+    FAltNumFilters: TVarDynArray2;
+    //см. !алгоритмы.txt, 6.24: активные альтернативные фильтры по периоду дат (Alt-F на столбце с
+    //датой/датой-временем). [i][0] - имя поля (в нижнем регистре), [i][1] - DateFrom, [i][2] - DateTo
+    //(обе границы включительно, с учетом временной части внутри дня DateTo - см. MemTableEh1FilterRecord)
+    FAltDateFilters: TVarDynArray2;
+    //см. !алгоритмы.txt, 6.27: альтернативный фильтр по дате "диапазон от сегодня" (в днях, может быть
+    //отрицательным) - в отличие от FAltDateFilters (фиксированные границы дат), тут границы каждый раз
+    //пересчитываются заново от текущей даты (Date) в момент проверки строки (см. MemTableEh1FilterRecord) -
+    //поэтому храним не даты, а смещения в днях. [i][0] - имя поля (в нижнем регистре), [i][1] -
+    //DaysForward (сколько дней ВПЕРЕД от сегодня еще принимать, может быть отрицательным), [i][2] -
+    //DaysBack (сколько дней НАЗАД от сегодня еще принимать, может быть отрицательным). На одно и то же
+    //поле не может быть одновременно активен и FAltDateFilters, и FAltDateRelFilters - см. SetAltDateFilter/
+    //SetAltDateRelFilter, они сбрасывают друг друга
+    FAltDateRelFilters: TVarDynArray2;
+    //см. !алгоритмы.txt, 6.25: выбранный пункт списка периодов в окне ShowAltDateFilterWindow -
+    //вынесено в поле класса, т.к. вложенная (nested) процедура несовместима с типом "процедура объекта"
+    //(TNotifyEvent) для назначения в OnClick - только методы класса совместимы с такими событиями
+    FAltDateFilterPickedPeriod: Integer;
+    //см. !алгоритмы.txt, 6.26: кэш явно заданных (переопределяющих цвет столбца по умолчанию) цветов
+    //шрифта/фона по ячейкам, для фильтра по цвету (Alt-F). Внешний ключ - имя поля (нижний регистр),
+    //внутренний - ID записи (Opt.Sql.IdField); отсутствие записи в кэше означает "явного цвета нет".
+    //Кэш заполняется вызовом уже существующего FOnColumnsGetCellParams (того самого обработчика,
+    //что красит ячейки при отрисовке, см. ColumnsGetCellParams) - расчет цвета НЕ дублируется отдельным
+    //кодом, только переиспользуется. См. ComputeCurrentRowColorFmt/RefreshColorCacheAll/
+    //RefreshColorCacheField/RefreshColorCacheCurrentRow/GetCachedCellColorFmt/GetDistinctColorFmtsForField
+    FColorCache: TObjectDictionary<string, TDictionary<Integer, TCellColorFmt>>;
+    //см. !алгоритмы.txt, 6.26: активные альтернативные фильтры по цвету (Alt-F). Ключ - имя поля
+    //(нижний регистр), значение - список ПРИНИМАЕМЫХ форматов (условие ИЛИ), может включать "пустой"
+    //TCellColorFmt (HasFont=False, HasBg=False), означающий "принимать и строки без явного цвета"
+    FAltColorFilters: TObjectDictionary<string, TList<TCellColorFmt>>;
+    //см. !алгоритмы.txt, 6.26: рабочие TFont/TColCellParamsEh для пересчета кэша цветов - создаются
+    //один раз в конструкторе, чтобы не пересоздавать объекты на каждую ячейку при полном проходе по
+    //таблице (см. ComputeCurrentRowColorFmt)
+    FColorCacheFont: TFont;
+    FColorCacheParams: TColCellParamsEh;
+    //см. !алгоритмы.txt, 6.26: список различных форматов текущего столбца и параллельный массив их
+    //отмеченных чекбоксов - временное состояние на время показа окна ShowAltColorFilterWindow, доступное
+    //методам-обработчикам списка (ColorFilterListDrawItem/ColorFilterListClick/ColorFilterListKeyPress),
+    //которые (см. !алгоритмы.txt, 6.25) обязаны быть методами класса, а не вложенными процедурами
+    FColorFilterFormats: TArray<TCellColorFmt>;
+    FColorFilterChecked: TArray<Boolean>;
+    //см. !алгоритмы.txt, 6.27: запомненный "родной" шрифт заголовка каждого столбца (по имени поля, в
+    //нижнем регистре) - заполняется лениво, при первом вызове UpdateFilterActiveIndicators, до первого
+    //изменения. Нужен, чтобы можно было надежно вернуть заголовку исходный вид после снятия фильтра,
+    //независимо от того, что именно каждая конкретная форма изначально задала для Title.Font данного
+    //столбца (жирность/цвет могут отличаться от формы к форме)
+    FTitleDefaultFont: TObjectDictionary<string, TFont>;
     //произвольно задаваемый тект для статусбара; если не задан, то будет инфа о количестве записей; задается публичной процедурой
     FStatusBarText: string;
     //последний тект в статусбаре (чтобы не перерисовывать постоянно; при этом тормозит)
@@ -850,6 +1002,26 @@ type
     procedure PresetsMenuSaveClick(Sender: TObject);
     procedure PresetsMenuDeleteClick(Sender: TObject);
     procedure PresetsMenuUpdateClick(Sender: TObject);
+    //см. !алгоритмы.txt, 6.23: нажатие Esc в окне ShowAltColumnFilter (закрыть без изменений)
+    procedure AltColumnFilterFormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    //см. !алгоритмы.txt, 6.25: клик по пункту списка периодов в ShowAltDateFilterWindow
+    procedure AltDateFilterListClick(Sender: TObject);
+    //см. !алгоритмы.txt, 6.26: вычисляет формат (явно заданные цвета) ТЕКУЩЕЙ записи датасета для
+    //указанного столбца, вызывая (без дублирования логики раскраски) уже существующий FOnColumnsGetCellParams
+    procedure ComputeCurrentRowColorFmt(Column: TColumnEh; out Fmt: TCellColorFmt);
+    //см. !алгоритмы.txt, 6.26: отрисовка/переключение пункта списка форматов в ShowAltColorFilterWindow -
+    //методы класса, а не вложенные процедуры (см. 6.25, почему)
+    procedure ColorFilterListDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    procedure ColorFilterListClick(Sender: TObject);
+    procedure ColorFilterListKeyPress(Sender: TObject; var Key: Char);
+    procedure ToggleColorFilterCheck(Index: Integer);
+    //см. !алгоритмы.txt, 6.20: проверка альтернативных фильтров (FAltNumFilters) для MemTableEh1.OnFilterRecord -
+    //работает НЕЗАВИСИМО от стандартного постолбцового фильтра ехлиб, т.к. TDataSet.Filtered учитывает
+    //Filter (задается ехлиб через STFilter) и OnFilterRecord одновременно, через И
+    procedure MemTableEh1FilterRecord(DataSet: TDataSet; var Accept: Boolean);
+    //см. !алгоритмы.txt, 6.21: отложенный (через PostMessage) показ меню ShowAltColumnFilter -
+    //см. комментарий у WM_MY_ALTCOLUMNFILTER
+    procedure WMAltColumnFilter(var Msg: TMessage); message WM_MY_ALTCOLUMNFILTER;
   protected
     {функции и процедуры для получения и установки свойств поля которых определеня в разделе Private}
 
@@ -1052,6 +1224,23 @@ type
     function  Prepare: Boolean;
     //создаем датасет по данным массива полей; используется в режиме загрузки из массива или командой скл, но не с DataDriver
     procedure CreateDataSet;
+    //ЭКСПЕРИМЕНТАЛЬНО (пилот перевода на FireDAC): подготавливает (при первом обращении) FFdQuery/FFdRefreshQuery,
+    //используя единое на все гриды подключение Q.FdConnection. Никакого DataDriver не создает и не подключает -
+    //в этой версии FireDAC используется только как "движок выборки" для LoadFdData/RefreshFdRecordDirect,
+    //структура полей MemTableEh1 строится из реальных метаданных FFdQuery.FieldDefs напрямую в LoadFdData -
+    //$-аннотации типов полей (Opt.Sql.Fields[i].DataType/FieldSize) здесь не используются.
+    procedure PrepareFdConnection;
+    //ЭКСПЕРИМЕНТАЛЬНО (FD-режим, версия 2 - через массивы): выполняет ASql через FFdQuery, полностью
+    //перестраивает структуру MemTableEh1.FieldDefs из реальных метаданных FFdQuery.FieldDefs и построчно
+    //копирует все строки результата в MemTableEh1 (обычными Append/Post, без какого-либо DataDriver).
+    //Вызывается из RefreshGrid при каждом обновлении грида в режиме myogdmWithFdDriver - и при первом открытии,
+    //и при последующих обновлениях (включая вторую фазу myogLoadAfterVisible) - именно поэтому она не
+    //подвержена проблемам версии с "живым" driver-мостом: каждый раз все строится заново с нуля.
+    procedure LoadFdData(const ASql: string);
+    //ЭКСПЕРИМЕНТАЛЬНО (FD-режим, версия 2): обновление ОДНОЙ текущей строки грида (аналог Ctrl+R) - свежий
+    //select по id через FFdRefreshQuery (используя FFdBaseSelectSql), затем обычные MemTableEh1.Edit/Post.
+    //Не использует MemRec/DataDriver API вообще - в этой версии driver-моста нет.
+    procedure RefreshFdRecordDirect;
     //загружаем в таблицу данные, получаемые sql-запросом на основе списка полей данных,
     procedure LoadSourceDataFromSql(ASqlParams: TVarDynArray; AEmptyBefore: Boolean = true);
     //загружаем в таблицу данные из массива (предварительно таблицу очистив)
@@ -1149,6 +1338,11 @@ type
     procedure SetDataDriverCommandSelect;
     //настроим команды датадрайвера
     procedure SetDataDriverCommands;
+    //читает/устанавливает текст select-запроса (ADODataDriverEh1.SelectSQL, или, ЭКСПЕРИМЕНТАЛЬНО в режиме
+    //myogdmWithFdDriver, FFdPendingSelectSql - см. PrepareFdConnection/LoadFdData). В FD-режиме SetSelectSqlText
+    //только запоминает текст - реальное выполнение происходит позже, в LoadFdData (вызывается из RefreshGrid)
+    function  GetSelectSqlText: string;
+    procedure SetSelectSqlText(const ASql: string);
     //установить параметры запроса CommandType (переданные строкой через ;)
     //если параметр не найден в запросе, то он игнорируется
     procedure SetSqlParameters(ParamNames: string; ParamValues: TVarDynArray; CommandType: string = 's');
@@ -1171,6 +1365,68 @@ type
     function ExportToNa(AFields: string = ''; AFiltered: Boolean = True): TNamedArr;
     //загрузить в стороку грида (по умолчанию - в текущую) найденные поля из TNamedArr
     procedure LoadRow(AData: TNamedArr; ARow: Integer = -1; AFiltered: Boolean = False);
+
+    //см. !алгоритмы.txt, 6.20/6.24/6.26: альтернативное окно фильтра по текущему столбцу, вызывается по
+    //Alt-F - для числовых столбцов ("Больше 0"/"Меньше 0"/"Равно 0"/сброс + кнопка "Цвет..."), для дат
+    //(быстрый выбор периода/произвольный период/сброс + кнопка "Цвет..."), для всех прочих столбцов -
+    //сразу фильтр по цвету (см. ShowAltColorFilterWindow)
+    procedure ShowAltColumnFilter;
+    //см. !алгоритмы.txt, 6.23. окно для числового столбца (вынесено из ShowAltColumnFilter в 6.24,
+    //когда добавилась ветка для дат)
+    procedure ShowAltNumFilterWindow(Fld: TField);
+    //см. !алгоритмы.txt, 6.24. окно для столбца с датой/датой-временем
+    procedure ShowAltDateFilterWindow(Fld: TField);
+    //см. !алгоритмы.txt, 6.26. окно альтернативного фильтра по цвету - список реально встречающихся в
+    //столбце форматов (шрифт/фон, включая "без явного цвета"), чекбоксы, условие ИЛИ. Доступно для
+    //столбца любого типа - как отдельная ветка диспетчера ShowAltColumnFilter, так и по кнопке
+    //"Цвет..." в окнах числового/датового альт-фильтров
+    procedure ShowAltColorFilterWindow(Fld: TField);
+    //установить (Condition = '>0'/'<0'/'=0') или сбросить (Condition = '') альтернативный числовой
+    //фильтр по указанному полю (см. ShowAltNumFilterWindow), и немедленно переприменить фильтр грида
+    procedure SetAltNumFilter(FieldName: string; Condition: string);
+    //см. !алгоритмы.txt, 6.24. установить альтернативный фильтр по периоду дат [DateFrom, DateTo]
+    //(включительно, с учетом возможной временной части - см. MemTableEh1FilterRecord) по указанному
+    //полю, и немедленно переприменить фильтр грида
+    procedure SetAltDateFilter(FieldName: string; DateFrom, DateTo: TDateTime);
+    //см. !алгоритмы.txt, 6.24. сбросить альтернативный фильтр по дате для указанного поля
+    procedure ClearAltDateFilter(FieldName: string);
+    //см. !алгоритмы.txt, 6.27. установить альтернативный фильтр "диапазон от сегодня" (в днях, см.
+    //FAltDateRelFilters) по указанному полю - сбрасывает для этого же поля обычный FAltDateFilters
+    //(одновременно оба вида фильтра по одному полю не действуют), и немедленно переприменяет фильтр грида
+    procedure SetAltDateRelFilter(FieldName: string; DaysForward, DaysBack: Integer);
+    //см. !алгоритмы.txt, 6.27. сбросить альтернативный фильтр "диапазон от сегодня" для указанного поля
+    procedure ClearAltDateRelFilter(FieldName: string);
+    //см. !алгоритмы.txt, 6.26. установить (AFormats - принимаемые форматы, условие ИЛИ) или сбросить
+    //(Length(AFormats)=0) альтернативный фильтр по цвету для указанного поля
+    procedure SetAltColorFilter(FieldName: string; const AFormats: TArray<TCellColorFmt>);
+    //см. !алгоритмы.txt, 6.26. сбросить альтернативный фильтр по цвету для указанного поля
+    procedure ClearAltColorFilter(FieldName: string);
+    //см. !алгоритмы.txt, 6.26. пересчитать кэш цветов для ВСЕЙ таблицы (режим ALT_COLOR_CACHE_EAGER=True) -
+    //вызывается после RefreshGrid
+    procedure RefreshColorCacheAll;
+    //см. !алгоритмы.txt, 6.26. пересчитать кэш цветов ТЕКУЩЕЙ записи, все столбцы (режим
+    //ALT_COLOR_CACHE_EAGER=True) - вызывается после RefreshRecord
+    procedure RefreshColorCacheCurrentRow;
+    //см. !алгоритмы.txt, 6.26. пересчитать кэш цветов для ОДНОГО столбца, все загруженные строки
+    //(режим ALT_COLOR_CACHE_EAGER=False) - вызывается при открытии окна фильтра по цвету на этом столбце
+    procedure RefreshColorCacheField(const AFieldName: string);
+    //см. !алгоритмы.txt, 6.26. True, если в кэше для ячейки (AFieldName, AID) есть явно заданный формат
+    //(тогда возвращается в Fmt); False - явного формата нет (в т.ч. если кэш для столбца еще не заполнен)
+    function GetCachedCellColorFmt(const AFieldName: string; AID: Integer; out Fmt: TCellColorFmt): Boolean;
+    //см. !алгоритмы.txt, 6.26. список различных форматов, реально встречающихся в столбце (для окна
+    //фильтра, аналог "доступные форматы" в Excel) - первый элемент всегда "пустой" формат ("без явного
+    //цвета"). При ALT_COLOR_CACHE_EAGER=False сначала досчитывает кэш для этого столбца
+    function GetDistinctColorFmtsForField(const AFieldName: string): TArray<TCellColorFmt>;
+    //см. !алгоритмы.txt, 6.27. единая индикация "фильтр в столбце активен" (жирный + цветной заголовок,
+    //см. ALT_FILTER_INDICATOR_COLOR) - учитывает и стандартный постолбцовый фильтр ехlib, и все наши
+    //альт-фильтры (числа/дата/диапазон дней/цвет) сразу по всем столбцам. Вызывается после любого
+    //изменения любого из фильтров (см. места вызова)
+    procedure UpdateFilterActiveIndicators;
+    //см. !алгоритмы.txt, 6.27. полный сброс ВСЕХ фильтров грида сразу - стандартного постолбцового
+    //(во всех столбцах) и всех альт-фильтров (числа/дата/диапазон дней/цвет); в отличие от
+    //ClearOrRestoreFilter (Ctrl-Q), который работает только со стандартным фильтром и умеет его
+    //запоминать/восстанавливать вместо полного сброса. См. mbtClearAllGridFilters/Ctrl-Shift-Q
+    procedure ClearAllFilters;
  end;
 
 
@@ -1181,6 +1437,7 @@ uses
   System.Types,
   uErrors,
   uForms,
+  uDB,
   uDBOra,
   uSettings,
   uWindows,
@@ -1212,10 +1469,23 @@ begin
   inherited Create;
   FrDBGridEh := AOwner;
   //поставим настройки по умолчанию
+  //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.12): дефолтный режим работы с данными для гридов,
+  //у которых конкретный экран НЕ вызывает Opt.SetDataMode явно, теперь следует за фактическим бэкендом
+  //объекта Q (Q.Backend), а не за фиксированной константой - раньше при Backend = mydbbFireDac все такие
+  //"дефолтные" гриды оставались в myogdmWithAdoDriver и переставали работать вообще (ADO для Oracle не
+  //подключается, см. 6.10), хотя данные им были доступны через Q.FdConnection в режиме myogdmWithFdDriver.
+  //Q гарантированно уже создан к моменту создания реальных экранных гридов (создаётся в Uchet.dpr до
+  //Application.CreateForm) - проверка Assigned(Q) нужна только для design-time (IDE), где Q ещё nil.
+  //Если конкретный экран вызовет Opt.SetDataMode явно (как сейчас myfrm_R_CarTypes/"большая таблица" -
+  //независимо от Backend), этот дефолт будет тут же перезаписан этим явным вызовом.
+  if Assigned(Q) and (Q.Backend = mydbbFireDac) then
+    FDataMode := myogdmWithFdDriver
+  else
+    FDataMode := DefaultFrGridDataMode;
   //по умолчанию допускаем апдейт данных в гриде
   TFrDBGridEh(FrDBGridEh).DbGridEh1.AllowedOperations := [alopUpdateEh];
   //кнопки, которые доступны при пустом гриде
-  FButtonsIfEmpty := [mbtRefresh, mbtAdd, mbtGridFilter, mbtGridSettings];
+  FButtonsIfEmpty := [mbtRefresh, mbtAdd, mbtGridFilter, mbtGridSettings, mbtClearAllGridFilters];
 end;
 
 procedure TFrDBGridEhOpt.SetFields(AFields: TVarDynArray2);
@@ -1826,6 +2096,16 @@ begin
   FDynProps.CreateDynVar('vvv', 'qqq');
   pnlStatusBar.Height := 1;
   ColumnTemp := nil;
+  //см. !алгоритмы.txt, 6.20: наши альтернативные фильтры (Alt-F) проверяются здесь, независимо
+  //от стандартного постолбцового фильтра ехлиб (см. MemTableEh1FilterRecord)
+  MemTableEh1.OnFilterRecord := MemTableEh1FilterRecord;
+  //см. !алгоритмы.txt, 6.26: кэш цветов и активные фильтры по цвету (Alt-F) - см. комментарии у полей
+  FColorCache := TObjectDictionary<string, TDictionary<Integer, TCellColorFmt>>.Create([doOwnsValues]);
+  FAltColorFilters := TObjectDictionary<string, TList<TCellColorFmt>>.Create([doOwnsValues]);
+  FColorCacheFont := TFont.Create;
+  FColorCacheParams := TColCellParamsEh.Create;
+  //см. !алгоритмы.txt, 6.27
+  FTitleDefaultFont := TObjectDictionary<string, TFont>.Create([doOwnsValues]);
 end;
 
 destructor TFrDBGridEh.Destroy;
@@ -1844,6 +2124,13 @@ begin
   FDynProps.Destroy;
   if ColumnTemp <> nil then
     ColumnTemp.Destroy;
+  //см. !алгоритмы.txt, 6.26
+  FColorCacheParams.Free;
+  FColorCacheFont.Free;
+  FAltColorFilters.Free;
+  FColorCache.Free;
+  //см. !алгоритмы.txt, 6.27
+  FTitleDefaultFont.Free;
   inherited;
 //  MadExcept.GetLeakReport;
 end;
@@ -1945,7 +2232,7 @@ procedure TFrDBGridEh.MemTableEh1AfterPost(DataSet: TDataSet);
 //после выполнения Post;
 begin
   if not ((alopInsertEh in FOpt.AllowedOperations) or (alopAppendEh in FOpt.AllowedOperations)) or
-    (GetValue(FOpt.Sql.IdField) <> null) or (FOpt.DataMode = myogdmWithAdoDriver) then
+    (GetValue(FOpt.Sql.IdField) <> null) or (FOpt.DataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) then
     Exit;
   //только если была добавлена строка в оффлайн-режиме - вставим айди, если он еще путой
   //(это нужно например для сортировки)
@@ -2070,6 +2357,9 @@ procedure TFrDBGridEh.DbGridEh1ApplyFilter(Sender: TObject);
 begin
   FLastFilterClick := False;
   DBGridEh1.DefaultApplyFilter;
+  //см. !алгоритмы.txt, 6.27: обновим индикацию активных фильтров в заголовках - сюда попадаем и при
+  //применении/сбросе стандартного постолбцового фильтра (не только наших альт-фильтров)
+  UpdateFilterActiveIndicators;
 end;
 
 
@@ -2271,6 +2561,22 @@ begin
     DbGridEh1.DefaultApplySorting;
     DbGridEh1.Invalidate;
   end;
+  //альтернативное меню фильтра по текущему столбцу (см. !алгоритмы.txt, 6.20/6.21) - пока только
+  //для числовых столбцов, вместо неудобного стандартного окна фильтра ехлиб (список всех
+  //уникальных значений с чекбоксами). ВАЖНО (6.21): показ меню отложен через PostMessage, а не
+  //вызывается прямо здесь - см. комментарий у WM_MY_ALTCOLUMNFILTER/WMAltColumnFilter: показ
+  //popup-меню синхронно, прямо в обработчике KeyDown по Alt-комбинации, не работал - меню
+  //появлялось, но клики по нему не доходили до OnClick (Windows еще не закончил свою системную
+  //обработку Alt как модификатора меню - see тж. WM_SYSCOMMAND/SC_KEYMENU)
+  if (Key = Ord('F')) and (Shift = [ssAlt]) then begin
+    Key := 0;
+    PostMessage(Handle, WM_MY_ALTCOLUMNFILTER, 0, 0);
+  end;
+  //см. !алгоритмы.txt, 6.27: Ctrl-Shift-Q - полный сброс ВСЕХ фильтров (стандартного во всех столбцах
+  //и всех альт-фильтров); отдельно от Ctrl-Q (mbtClearOrRestoreGridFilter/ClearOrRestoreFilter), который
+  //работает только со стандартным фильтром и умеет его запоминать/восстанавливать, а не сбрасывать
+  if (Key = Ord('Q')) and (Shift = [ssCtrl, ssShift]) then
+    ClearAllFilters;
 end;
 
 procedure TFrDBGridEh.DbGridEh1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -2493,8 +2799,20 @@ begin
   if not (b) and MemTableEh1.Active then
     Gh.GridFilterClear(DbGridEh1, True, False);
   if b then begin
-    //!!! не понял пока за что ттвечает
-    DBGridEh1.STFilter.InstantApply := False;
+    //см. !алгоритмы.txt, 6.27: было InstantApply := False - выяснилось (чтение исходников ехlib), что
+    //при STFilter.Location = stflInTitleFilterEh (как здесь) именно это было причиной того, что фильтр
+    //по условию ("Пользовательский фильтр..." в стандартном окне) не применялся сразу - ветка кода
+    //ехlib, которая обрабатывает диалог условия, вызывает SetDataFilter (а значит и OnApplyFilter)
+    //ТОЛЬКО если InstantApply = True, без этого - никакого запасного варианта нет вообще. Из-за этого
+    //в проекте появились два обходных костыля - принудительный DbGridEh1.DefaultApplyFilter по клику в
+    //области грида (см. FLastFilterClick в DbGridEh1CellMouseClick) и по F3 (см. DbGridEh1KeyDown).
+    //При Local=True (как здесь) InstantApply в любом случае по умолчанию равен True, если явно не
+    //задать False - т.е. это отключение было чисто искусственным. Раз чекбоксы в выпадающем списке
+    //(при STFilter.Location = stflInTitleFilterEh) применяются по закрытию окна БЕЗ учета InstantApply,
+    //реального выигрыша (не дергать фильтр на каждый клик по чекбоксу) это отключение не давало - только
+    //ломало диалог условия. Костыли (клик по гриду, F3) оставлены как есть, на всякий случай - вреда от
+    //них при InstantApply=True никакого, а перестраховка не помешает.
+    DBGridEh1.STFilter.InstantApply := True;
   end;
   //фильтр или поиск в панели
   b:=(myogPanelFilter in FOptions) or (myogPanelFind  in FOptions); //(myogColumnFilter in FOptions) or
@@ -2644,6 +2962,10 @@ begin
     //сбросим/восстановим фильтр
     ClearOrRestoreFilter;
   end
+  else if Tag = mbtClearAllGridFilters then begin
+    //см. !алгоритмы.txt, 6.27: полный сброс всех фильтров грида (стандартный + все альт-фильтры)
+    ClearAllFilters;
+  end
   else if Tag = mbtSelectAll then begin
     //отметим все ОТФИЛЬТРОВАННЫЕ строки, скрытые не трогаем
     FDisableChangeSelectedData := True;
@@ -2780,7 +3102,7 @@ begin
   FRec := Opt.GetFieldRec(TColumnEh(Sender).FieldName);
   ReadOnly := False;
   Msg := '';
-  if (FOpt.FDataMode = myogdmWithAdoDriver) and FOpt.Sql.RefreshBeforeSave then begin
+  if (FOpt.FDataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) and FOpt.Sql.RefreshBeforeSave then begin
     OldId := GetValue(FOpt.Sql.IdField);
     //выйдем, если запись исчезла после обновления (была любая ошибка при обновлении текущей записи)
     if not RefreshRecord then
@@ -2809,7 +3131,7 @@ begin
     Exit;
   end;
   //установим в текущей строке, по умолчанию делаем Post (фильтр в столбце сработает)
-  if (FOpt.FDataMode <> myogdmWithAdoDriver) or not FOpt.Sql.RefreshAfterSave then
+  if not (FOpt.FDataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) or not FOpt.Sql.RefreshAfterSave then
     SetValue(TColumnEh(Sender).FieldName, S.IIf(Text = '', null, Value));
   //сохраним айди измененной строки в массиве
   MakrIdAsChanged;
@@ -2821,7 +3143,7 @@ begin
   EvSaveHandled := False;
   if Assigned(FOnCellValueSave) then
     FOnCellValueSave(Self, No, S.ToLower(TColumnEh(Sender).FieldName), S.IIf(Text = '', null, Value), EvSaveHandled);
-  if (FOpt.FDataMode = myogdmWithAdoDriver) then begin
+  if (FOpt.FDataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) then begin
     //сохраним значение текущего поля, должна быть определена таблица, поле айди и тип изменеемого поля (напр dt$d), последнее не обязательно но может вызывать ошибку в ряде случаев.
     if (not EvSaveHandled) and (FOpt.Sql.Table <> '') then
       Q.QExecSql('update ' + FOpt.Sql.Table + ' set ' + FRec.Name + ' = :' + FRec.NameDb + ' where ' + FOpt.Sql.IdField + ' = :id', [Value, ID]);
@@ -3428,8 +3750,10 @@ begin
   //так как датасет неактивен, прочитаются только параметры фильтра
   if (TFrmBasicMdi(Owner).FormDoc <> '') and (myogSaveOptions in Options) then
     Settings.RestoreFrDBGridEhSettings(TFrmBasicMdi(Owner).FormDoc, Self);
-  //создадим датасет для режимов без адодрайвера
-  if FOpt.DataMode <> myogdmWithAdoDriver then
+  //создадим датасет для режимов без адодрайвера (myogdmWithFdDriver - экспериментальный FireDAC-режим -
+  //приравнен к онлайн-режиму по остальным правилам поведения грида, датасет для него строит не CreateDataSet,
+  //а LoadFdData - при первом же вызове RefreshGrid)
+  if not (FOpt.DataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) then
     CreateDataSet;
   //создадим панели кнопок и контектное меню
   SetButtonsAndMenu;
@@ -3458,6 +3782,223 @@ begin
   ImGState.OnMouseLeave := Module.InfoOnMouseLeave;
   ImGState.OnClick := Module.InfoOnClick;
   Result := True;
+end;
+
+procedure TFrDBGridEh.PrepareFdConnection;
+//ЭКСПЕРИМЕНТАЛЬНО (пилот перевода на FireDAC, версия 2 - через массивы) - см. пояснение у объявления поля
+//FFdQuery. Только гарантирует наличие FFdQuery/FFdRefreshQuery на общем Q.FdConnection - никакого DataDriver
+//здесь больше не создается и не подключается (см. LoadFdData/RefreshFdRecordDirect).
+begin
+  if FFdQuery = nil then begin
+    FFdQuery := TFDQuery.Create(Self);
+    FFdQuery.Connection := Q.FdConnection;
+    //см. !алгоритмы.txt, раздел 6.7 - без этого FireDAC заметно медленнее ADO на "большой таблице"
+    Q.TuneFdQuery(FFdQuery);
+  end;
+  if FFdRefreshQuery = nil then begin
+    FFdRefreshQuery := TFDQuery.Create(Self);
+    FFdRefreshQuery.Connection := Q.FdConnection;
+    Q.TuneFdQuery(FFdRefreshQuery);
+  end;
+end;
+
+function TFrDBGridEh.GetSelectSqlText: string;
+begin
+  if FOpt.DataMode = myogdmWithFdDriver then
+    Result := FFdPendingSelectSql
+  else
+    Result := ADODataDriverEh1.SelectSQL.Text;
+end;
+
+procedure TFrDBGridEh.SetSelectSqlText(const ASql: string);
+begin
+  if FOpt.DataMode = myogdmWithFdDriver then
+    //только запоминаем текст - реальное выполнение происходит в LoadFdData (см. комментарий у объявления
+    //FFdPendingSelectSql и у объявления метода в интерфейсной части класса)
+    FFdPendingSelectSql := ASql
+  else
+    ADODataDriverEh1.SelectSQL.Text := ASql;
+end;
+
+procedure TFrDBGridEh.LoadFdData(const ASql: string);
+//см. комментарий у объявления метода в интерфейсной части класса
+var
+  KeyString: string;
+  i: Integer;
+  SrcDef: TFieldDef;
+  DstDef: TFieldDef;
+  //ОТЛАДКА (см. FdLoadDataProfilingEnabled, !алгоритмы.txt раздел 6.8) - контрольные точки времени
+  TProfStart, TAfterOpen, TAfterStructure, TAfterColumns, TAfterCopy: UInt64;
+begin
+  PrepareFdConnection;
+  KeyString := '';
+  if MemTableEh1.Active then
+    KeyString := Gh.GetGridServiceFields(DBGridEh1);
+  if (KeyString <> '') and MemTableEh1.Active then
+    DBGridEh1.SaveVertPos(KeyString);
+  InLoadData := True;
+  try
+    TProfStart := GetTickCount64;
+    FFdQuery.Close;
+    FFdQuery.SQL.Text := ASql;
+    FFdQuery.Open;
+    TAfterOpen := GetTickCount64;
+    //полностью пересобираем структуру MemTableEh1 из реальных метаданных только что выполненного запроса -
+    //именно это (а не $-аннотации Opt.Sql.Fields) и было исходной целью FD-пилота.
+    //ftBCD/ftFMTBcd (так FireDAC обычно показывает Oracle NUMBER без явных precision/scale в запросе) намеренно
+    //не копируем как есть, а сводим к ftFloat: копирование "родных" Precision/Size давало здесь "BCD overflow"
+    //при копировании реальных значений (видимо, метаданные не всегда точно описывают фактический диапазон
+    //значений NUMBER без явного объявления точности). В остальном коде проекта числовые поля из БД и так всегда
+    //только ftFloat/ftInteger ($f/$i в системе аннотаций) - BCD-типы этот проект нигде больше не использует.
+    MemTableEh1.Active := False;
+    MemTableEh1.DataDriver := nil;
+    MemTableEh1.FieldDefs.Clear;
+    for i := 0 to FFdQuery.FieldDefs.Count - 1 do begin
+      SrcDef := FFdQuery.FieldDefs[i];
+      DstDef := MemTableEh1.FieldDefs.AddFieldDef;
+      DstDef.Name := SrcDef.Name;
+      if SrcDef.DataType in [ftBCD, ftFMTBcd] then begin
+        DstDef.DataType := ftFloat;
+        DstDef.Size := 0;
+        DstDef.Precision := 0;
+      end
+      else begin
+        DstDef.DataType := SrcDef.DataType;
+        DstDef.Size := SrcDef.Size;
+        DstDef.Precision := SrcDef.Precision;
+      end;
+    end;
+    MemTableEh1.CreateDataset;
+    MemTableEh1.Active := True;
+    //как и в офлайн-загрузчиках (LoadSourceDataFromSql/LoadSourceDataFromArray/LoadData) - явно снимаем ReadOnly.
+    //дизайнтаймовое значение MemTableEh1.ReadOnly = True, и без этой строки после первого же Close/Open
+    //(а LoadFdData всегда делает полный Close/Open) грид остается нередактируемым: клик по чекбоксу или попытка
+    //ввода в ячейке падает с "Dataset not in edit or insert mode", так как MemTableEh1.Edit молча не переводит
+    //датасет в dsEdit при ReadOnly = True.
+    MemTableEh1.ReadOnly := False;
+    TAfterStructure := GetTickCount64;
+    //обычно столбцы грида (DbGridEh1.Columns) строятся по MemTableEh1.Fields в MemTableEh1AfterOpen ->
+    //SetColumnsAndEvents, срабатывающем на MemTableEh1.Active:=True. Но именно здесь этот вызов подавляется
+    //флагом InLoadData (см. его комментарий у объявления и в MemTableEh1AfterOpen) - в отличие от офлайн-режимов,
+    //где структура (CreateDataSet) строится ОТДЕЛЬНО и ЗАРАНЕЕ, вне InLoadData, а сюда, под InLoadData, попадает
+    //только сама загрузка строк. Здесь же структуру приходится (пере)строить в каждом вызове LoadFdData вместе
+    //с данными, поэтому обычный AfterOpen для этого не срабатывает - настраиваем грид вручную, повторяя нужную
+    //часть того, что обычно делает MemTableEh1AfterOpen (см. его текст) - иначе в гриде остается только столбец,
+    //созданный в дизайнтайме (ColumnTemp), без данных остальных полей, а внешний вид (границы, цвета, чекбоксы,
+    //скрытые поля, заголовки) не настраивается вовсе.
+    //SetColumnsAndEvents (пересвязка Field у столбцов) нужен КАЖДЫЙ раз - после CreateDataset все объекты
+    //TField пересоздаются заново. А "разовую" косметику (заголовки/чекбоксы/видимость/сохраненные пользователем
+    //настройки/опции грида) делаем только ОДИН раз за время жизни фрейма (см. FFdColumnsPrepared) - иначе на
+    //каждое "Обновить" сбрасывались бы ширины столбцов, подогнанные пользователем, и заново перезаписывались бы
+    //его сохраненные настройки (MemTableEh1BeforeClose пишет настройки при каждом закрытии датасета, а
+    //LoadFdData закрывает/переоткрывает MemTableEh1 при каждом обновлении).
+    SetColumnsAndEvents;
+    if not FFdColumnsPrepared then begin
+      SetColumnsPropertyes;
+      if (TFrmBasicMdi(Owner).FormDoc <> '') and (myogSaveOptions in Options) then
+        Settings.RestoreFrDBGridEhSettings(TFrmBasicMdi(Owner).FormDoc, Self);
+      SetColumnsVisible;
+    end;
+    //MemTableEh1BeforeClose (не подавляется InLoadData) сбрасывает FIsPrepared в False при каждом закрытии
+    //датасета выше (MemTableEh1.Active := False) - восстанавливаем его после каждого успешного открытия,
+    //как это обычно делает MemTableEh1AfterOpen
+    FIsPrepared := True;
+    if not FFdColumnsPrepared then begin
+      SetOptions(Options);
+      FFdColumnsPrepared := True;
+    end;
+    TAfterColumns := GetTickCount64;
+    MemTableEh1.DisableControls;
+    try
+      FFdQuery.First;
+      while not FFdQuery.Eof do begin
+        MemTableEh1.Append;
+        for i := 0 to MemTableEh1.FieldCount - 1 do begin
+          //для ftBCD/ftFMTBcd читаем и пишем через AsFloat явно (а не через Value/Variant) - Value у
+          //BCD-полей может по пути пытаться сохранить "бцд-натуру" значения и упереться в ту же
+          //"BCD overflow" при попытке уместить его в ftFloat-поле назначения; AsFloat всегда работает
+          //через Double и никогда не бросает переполнение по этой причине
+          if FFdQuery.Fields[i].IsNull then
+            MemTableEh1.Fields[i].Clear
+          else if FFdQuery.Fields[i].DataType in [ftBCD, ftFMTBcd] then
+            MemTableEh1.Fields[i].AsFloat := FFdQuery.Fields[i].AsFloat
+          else
+            MemTableEh1.Fields[i].Value := FFdQuery.Fields[i].Value;
+        end;
+        MemTableEh1.Post;
+        FFdQuery.Next;
+      end;
+      MemTableEh1.First;
+    finally
+      MemTableEh1.EnableControls;
+    end;
+    TAfterCopy := GetTickCount64;
+    //данные уже скопированы в MemTableEh1 - держать FFdQuery открытым между обновлениями не нужно
+    FFdQuery.Close;
+    //сортировку/фильтр применяем ПОСЛЕ загрузки строк (как и в оффлайн-режимах, см. RefreshGrid) - до этого
+    //момента MemTableEh1 пуст, и применять их раньше не имеет смысла
+    if myogSorting in Options then
+      DBGridEh1.DefaultApplySorting;
+    DBGridEh1.DefaultApplyFilter;
+    if FdLoadDataProfilingEnabled then
+      //см. FdLoadDataProfilingEnabled, !алгоритмы.txt раздел 6.8
+      MyInfoMessage(Format(
+        'LoadFdData: всего %d мс'#13#10 +
+        '  FFdQuery.Open (запрос+фетч): %d мс'#13#10 +
+        '  пересборка FieldDefs/CreateDataset: %d мс'#13#10 +
+        '  настройка колонок грида: %d мс'#13#10 +
+        '  построчное копирование в MemTableEh1: %d мс',
+        [TAfterCopy - TProfStart, TAfterOpen - TProfStart, TAfterStructure - TAfterOpen,
+         TAfterColumns - TAfterStructure, TAfterCopy - TAfterColumns]), 1);
+  finally
+    InLoadData := False;
+  end;
+  if KeyString <> '' then
+    DBGridEh1.RestoreVertPos(KeyString);
+end;
+
+procedure TFrDBGridEh.RefreshFdRecordDirect;
+//см. комментарий у объявления метода в интерфейсной части класса
+var
+  vId: Variant;
+  i: Integer;
+  SrcField: TField;
+begin
+  PrepareFdConnection;
+  //защитная проверка: FFdBaseSelectSql заполняется в SetDataDriverCommandSelect, до сюда должен успеть
+  //дойти хотя бы один RefreshGrid; если он почему-то пуст - лучше явно и понятно сказать об этом,
+  //чем получить синтаксическую ошибку БД на "where ..." без "select..from" и гадать, в чем дело
+  if Trim(FFdBaseSelectSql) = '' then
+    raise Exception.Create('RefreshFdRecordDirect: FFdBaseSelectSql не заполнен (не было вызова SetDataDriverCommandSelect для FD-режима)');
+  vId := GetValue(Opt.Sql.IdField);
+  FFdRefreshQuery.Close;
+  FFdRefreshQuery.SQL.Text := FFdBaseSelectSql + ' where ' + Opt.Sql.IdField + ' = :fdrefreshid';
+  FFdRefreshQuery.ParamByName('fdrefreshid').Value := vId;
+  try
+    FFdRefreshQuery.Open;
+  except
+    on E: Exception do
+      raise Exception.CreateFmt('RefreshFdRecordDirect: ошибка запроса перечитывания строки (id=[%s]): %s. SQL: %s',
+        [VarToStrDef(vId, '?'), E.Message, FFdRefreshQuery.SQL.Text]);
+  end;
+  try
+    if FFdRefreshQuery.IsEmpty then
+      raise Exception.Create('Key is not found');
+    MemTableEh1.Edit;
+    for i := 0 to MemTableEh1.FieldCount - 1 do begin
+      SrcField := FFdRefreshQuery.FindField(MemTableEh1.Fields[i].FieldName);
+      if Assigned(SrcField) then
+        MemTableEh1.Fields[i].Value := SrcField.Value;
+    end;
+    MemTableEh1.Post;
+    //см. !алгоритмы.txt, 6.27: в отличие от MemTableEh1.RefreshRecord (используется в ADO-режиме),
+    //обычный Post сам по себе не пересчитывает принадлежность записи текущему фильтру (ни
+    //стандартному, ни нашим альт-фильтрам) - нужен явный Resync, иначе строка, переставшая
+    //проходить фильтр после правки, не исчезнет из грида в FD-режиме
+    MemTableEh1.Resync([]);
+  finally
+    FFdRefreshQuery.Close;
+  end;
 end;
 
 procedure TFrDBGridEh.CreateDataSet;
@@ -3860,7 +4401,7 @@ begin
     ReadControlValues;
     SetDataDriverCommands;
     //обновление грида в оффлайн-режиме
-    if (Opt.DataMode <> myogdmWithAdoDriver) and InitData.IsDefined then begin
+    if not (Opt.DataMode in [myogdmWithAdoDriver, myogdmWithFdDriver]) and InitData.IsDefined then begin
       if myogIndicatorCheckBoxes in Options then begin
         charr := Gh.GetGridArrayOfChecked(DBGridEh1, DBGridEh1.FindFieldColumn(Opt.Sql.IdField).Index);
         DBGridEh1.SelectedRows.Clear;
@@ -3885,6 +4426,25 @@ begin
         SetIndicatorCheckBoxesByField(Opt.Sql.IdField, charr.Col(0));
     end
     //обновление грида в онлайн-режиме
+    else if Opt.DataMode = myogdmWithFdDriver then begin
+      //ЭКСПЕРИМЕНТАЛЬНО (FD-режим, версия 2, через массивы - см. LoadFdData): не используем Gh.GridRefresh/
+      //MemTableEh1.Refresh вообще, независимо от того, был ли МemTableEh1 уже открыт (первое открытие или
+      //повторное обновление) - LoadFdData сама строит структуру и данные с нуля в обоих случаях
+      //на время (не одной строки, а полной) загрузки показываем окно "Загрузка данных..." - через uWaitForm,
+      //а не через BeginOperation/EndOperation (DBGridEh1.StartLoadingStatus/FinishLoadingStatus): последнее
+      //уже проверено (и в оффлайн-ветке выше, и здесь) - вызывает тот же самый известный глюк с этим гридом:
+      //грид остается темным, данные не отображаются. uWaitForm - отдельное независимое окошко поверх формы,
+      //с гридом никак не связано, и само гарантированно скрывается по выходу из процедуры (см. ShowWaitForm).
+      if myogGrayedWhenRefresh in Options then
+        ShowWaitForm('Загрузка данных...', 0,
+          procedure
+          begin
+            LoadFdData(FFdPendingSelectSql);
+          end)
+      else
+        LoadFdData(FFdPendingSelectSql);
+      ChangeSelectedData;
+    end
     else begin
       if MemTableEh1.Active then begin
         if myogIndicatorCheckBoxes in Options then begin
@@ -3945,6 +4505,12 @@ begin
       end;
       ChangeSelectedData;
     end;
+    //см. !алгоритмы.txt, 6.26: "энергичный" пересчет кэша цветов для фильтра по цвету (Alt-F) - сразу
+    //для всей (уже обновленной) таблицы, после любой из веток обновления грида выше
+    if ALT_COLOR_CACHE_EAGER then
+      RefreshColorCacheAll;
+    //см. !алгоритмы.txt, 6.27: обновим индикацию активных фильтров в заголовках столбцов
+    UpdateFilterActiveIndicators;
   except
     on E: Exception do begin
       Errors.SetErrorCapt(Self.Name, 'Ошибка при обновлении грида ' + TFrmBasicMdi(Owner).FormDoc + '.' + Name);
@@ -3964,12 +4530,26 @@ begin
   try
     //получим айди текущей записи. далее делаем проверку после обновления записи, не исчезла ли из грида она из-за действия фильтра
     OldID := GetValue(Opt.Sql.IdField);
-    MemTableEh1.RefreshRecord;
+    if FOpt.DataMode = myogdmWithFdDriver
+      then RefreshFdRecordDirect
+      else MemTableEh1.RefreshRecord;
     ChangeSelectedData;
     if OldID = GetValue(Opt.Sql.IdField) then
       Result := True;
+    //см. !алгоритмы.txt, 6.26: "энергичный" пересчет кэша цветов для фильтра по цвету (Alt-F) - только
+    //для текущей (уже обновленной) записи, после успешного обновления строки
+    if Result and ALT_COLOR_CACHE_EAGER then
+      RefreshColorCacheCurrentRow;
   except
-    MyWarningMessage('Эта запись была удалена.')
+    on E: Exception do begin
+      //ЭКСПЕРИМЕНТАЛЬНО: в FD-режиме показываем реальный текст ошибки вместе с обычным сообщением -
+      //иначе любая ошибка (например, синтаксическая ошибка SQL в RefreshFdRecordDirect, а не
+      //реальное отсутствие записи) маскируется одним и тем же текстом "запись была удалена", и не
+      //получится понять настоящую причину без отладчика на стороне пользователя
+      if FOpt.DataMode = myogdmWithFdDriver
+        then MyWarningMessage('Эта запись была удалена.' + sLineBreak + '(диагностика FD: ' + E.Message + ')')
+        else MyWarningMessage('Эта запись была удалена.');
+    end;
   end;
 end;
 
@@ -4063,6 +4643,7 @@ begin
       Gh.GridFilterRestore(DbGridEh1, FLastFilter, true, False);
       FLastFilter := [];
     end;
+    UpdateFilterActiveIndicators;
 end;
 
 procedure TFrDBGridEh.SetGridLabel(Mode: Integer = 0);
@@ -4097,7 +4678,7 @@ begin
       Exit;
     FGridLabelsIds := [];
   end;
-  Q.QCallStoredProc('p_SetGridLabel', 'pdoc$s;piduser$i;ptablerow$i;ptablenum$i;plabelnum$i',
+  Q.QCallStoredProc('p_SetGridLabel', 'pdoc$s;pid_user$i;ptablerow$i;ptablenum$i;plabelnum$i',
     [TFrmBasicMdi(Owner).FormDoc, User.GetId, S.IIf(Mode < -1, -1, ID), 1, labelnum
   ]);
 {    if pos('0 as collabel', Pr[1].Fields) > 0 then begin
@@ -4281,7 +4862,10 @@ begin
     if myogGridLabels in Options then
       MenuItems := MenuItems + [[mbtDividor], [mbtSetGridLabel], [mbtToGridLabelDown], {[mbtShowGridLabels],} [mbtClearGridLabels]];
     if myogColumnFilter in Options then
-      MenuItems := MenuItems + [[mbtDividor], [mbtClearOrRestoreGridFilter]];
+      //см. !алгоритмы.txt, 6.27: mbtClearAllGridFilters - полный сброс ВСЕХ фильтров (стандартного во
+      //всех столбцах и всех альт-фильтров), отдельно от mbtClearOrRestoreGridFilter (тот сворачивает/
+      //восстанавливает только стандартный)
+      MenuItems := MenuItems + [[mbtDividor], [mbtClearOrRestoreGridFilter], [mbtClearAllGridFilters]];
     if (myogIndicatorCheckBoxes in Options) and (myogMultiSelect in Options) then
       MenuItems := MenuItems + [[mbtDividor], [mbtSelectAll], [mbtDeSelectAll], [mbtInvertSelection]];
     if myogSaveOptions in Options then
@@ -4641,28 +5225,36 @@ begin
     then stwa := 'where 1 = 2'
     else stwa := Trim(FOpt.SQL.WhereAllways);
   if FOpt.SQL.Select = '=' then
-    sts := ADODataDriverEh1.SelectSQL.Text
+    sts := GetSelectSqlText
   else if FOpt.SQL.Select = '' then
     sts := st;
+  //сохраним базовый select (без where) - нужен для RefreshFdRecordDirect (перечитывание одной строки по id
+  //отдельным легким запросом FFdRefreshQuery, см. PrepareFdConnection/RefreshFdRecordDirect). Важно сохранить
+  //именно здесь - до того, как sts будет объединен с stw/stwa в итоговый select с условиями.
+  if FOpt.DataMode = myogdmWithFdDriver then
+    FFdBaseSelectSql := sts;
   if stw <> '' then begin
     if Pos('/*WHERE*/', sts + stwa) > 0 then
-      ADODataDriverEh1.SelectSQL.Text := StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*WHERE*/', ' where (' + stw + ') ', [])
+      SetSelectSqlText(StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*WHERE*/', ' where (' + stw + ') ', []))
     else if Pos('/*ANDWHERE*/', sts + stwa) > 0 then
-      ADODataDriverEh1.SelectSQL.Text := StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*ANDWHERE*/', ' and (' + stw + ') ', [])
+      SetSelectSqlText(StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*ANDWHERE*/', ' and (' + stw + ') ', []))
     else if Pos('/*WHEREONLY*/', sts + stwa) > 0 then
-      ADODataDriverEh1.SelectSQL.Text := StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*WHEREONLY*/', stw, [])
+      SetSelectSqlText(StringReplace(sts + S.IIf(stwa <> '', ' ' + stwa, ''), '/*WHEREONLY*/', stw, []))
     else begin
       i := pos('where ', stwa);
       if i > 0 then
         Insert(stw + ' and ', stwa, 7)
       else
         stwa := 'where ' + stw + S.IIf(stwa <> '', ' ', '') + stwa;
-      ADODataDriverEh1.SelectSQL.Text := sts + S.IIf(stwa <> '', ' ', '') + stwa;
+      SetSelectSqlText(sts + S.IIf(stwa <> '', ' ', '') + stwa);
     end;
   end
   else
-    ADODataDriverEh1.SelectSQL.Text := sts + S.IIf(stwa <> '', ' ', '') + stwa;
-  if FOpt.SQL.GetRec = '' then
+    SetSelectSqlText(sts + S.IIf(stwa <> '', ' ', '') + stwa);
+  //GetRecCommand - специфика ADODataDriverEh1, в экспериментальном FireDAC-режиме (myogdmWithFdDriver) не
+  //используется: перечитывание одной строки (RefreshRecord) там делается через отдельный легкий запрос
+  //FFdRefreshQuery по FFdBaseSelectSql + where IdField = :id (см. RefreshFdRecordDirect)
+  if (FOpt.SQL.GetRec = '') and (FOpt.DataMode <> myogdmWithFdDriver) then
     ADODataDriverEh1.GetRecCommand.CommandText.Text := sts + ' where ' + FOpt.SQL.IdField + ' = :' + FOpt.SQL.IdField;
   //снова вызываем событие для установки параметров скл (только для sqlselect и sqlgetrec), изменение им части запроса where здесь уже не обрабатываем
   if Assigned(FOnSetSqlParams)
@@ -4686,21 +5278,26 @@ begin
     st := 'to_char(id) as id' + Copy(st, 3);
   end;
   SetDataDriverCommandSelect;
-  if Opt.SQL.Update <> '=' then
-    if Opt.SQL.Update = '*' then
-      ADODataDriverEh1.UpdateCommand.CommandText.Text := Q.QGetSql('u', Opt.SQL.Table, st)
-    else if Opt.SQL.Update = '' then
-      ADODataDriverEh1.UpdateCommand.CommandText.Text := 'select 1 from dual';
-  if Opt.SQL.Insert <> '=' then
-    if Opt.SQL.Insert = '*' then
-      ADODataDriverEh1.InsertCommand.CommandText.Text := Q.QGetSql('i', Opt.SQL.Table, st)
-    else if Opt.SQL.Insert = '' then
-      ADODataDriverEh1.InsertCommand.CommandText.Text := 'select 1 from dual';
-  if Opt.SQL.Delete <> '=' then
-    if Opt.SQL.Delete = '*' then
-      ADODataDriverEh1.DeleteCommand.CommandText.Text := Q.QGetSql('d', Opt.SQL.Table, st)
-    else if Opt.SQL.Delete = '' then
-      ADODataDriverEh1.DeleteCommand.CommandText.Text := 'select 1 from dual';
+  //Update/Insert/DeleteCommand - специфика ADODataDriverEh1 (TCustomSQLDataDriverEh); в экспериментальном
+  //FireDAC-режиме (myogdmWithFdDriver) их нет и не нужны - в этой версии там вообще нет никакого DataDriver,
+  //реальное сохранение строк везде идет отдельным явным вызовом Q, грид только для отображения/выборки
+  if FOpt.DataMode <> myogdmWithFdDriver then begin
+    if Opt.SQL.Update <> '=' then
+      if Opt.SQL.Update = '*' then
+        ADODataDriverEh1.UpdateCommand.CommandText.Text := Q.QGetSql('u', Opt.SQL.Table, st)
+      else if Opt.SQL.Update = '' then
+        ADODataDriverEh1.UpdateCommand.CommandText.Text := 'select 1 from dual';
+    if Opt.SQL.Insert <> '=' then
+      if Opt.SQL.Insert = '*' then
+        ADODataDriverEh1.InsertCommand.CommandText.Text := Q.QGetSql('i', Opt.SQL.Table, st)
+      else if Opt.SQL.Insert = '' then
+        ADODataDriverEh1.InsertCommand.CommandText.Text := 'select 1 from dual';
+    if Opt.SQL.Delete <> '=' then
+      if Opt.SQL.Delete = '*' then
+        ADODataDriverEh1.DeleteCommand.CommandText.Text := Q.QGetSql('d', Opt.SQL.Table, st)
+      else if Opt.SQL.Delete = '' then
+        ADODataDriverEh1.DeleteCommand.CommandText.Text := 'select 1 from dual';
+  end;
   //читаем все данные
   MemTableEh1.FetchAllOnOpen := true;
 end;
@@ -4795,6 +5392,1028 @@ begin
   if i <= High(Opt.ColumnsInfo) then
     st := st + #13#10 + Opt.ColumnsInfo[i][1];
   MyInfoMessage(st);
+end;
+
+procedure TFrDBGridEh.WMAltColumnFilter(var Msg: TMessage);
+//см. !алгоритмы.txt, 6.21. отложенный показ ShowAltColumnFilter (см. комментарий в
+//DbGridEh1KeyDown, где отправляется это сообщение через PostMessage)
+begin
+  ShowAltColumnFilter;
+end;
+
+procedure TFrDBGridEh.AltColumnFilterFormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+//см. !алгоритмы.txt, 6.23. Esc в окне ShowAltColumnFilter - закрыть без изменений. Специально
+//mrCancel (не mrNone=0 - им ModalResult не закрыл бы окно вообще) - это тот же результат, что VCL
+//сам подставляет при закрытии модальной формы системной кнопкой [x]/Alt+F4, поэтому оба способа
+//закрыть окно "мимо" явных кнопок ведут к одному и тому же (ничего не менять)
+begin
+  if Key = VK_ESCAPE then
+    TForm(Sender).ModalResult := mrCancel;
+end;
+
+procedure TFrDBGridEh.AltDateFilterListClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.25. клик по пункту списка периодов (TListBox) в ShowAltDateFilterWindow -
+//сразу применяем выбор и закрываем окно (как и кнопки в окне числового фильтра). Sender - TListBox,
+//у которого Owner - само модальное окно TForm (создано как TListBox.Create(frm)), поэтому можно
+//добраться до формы через Sender без замыкания на локальные переменные окружающей процедуры -
+//вложенная (nested) процедура для этого не подходит, т.к. она "обычная процедура" и несовместима
+//с типом "процедура объекта" (TNotifyEvent), которого требует OnClick (E2009 при попытке так сделать)
+begin
+  FAltDateFilterPickedPeriod := TListBox(Sender).ItemIndex;
+  if FAltDateFilterPickedPeriod >= 0 then
+    TForm(TListBox(Sender).Owner).ModalResult := mrOk;
+end;
+
+procedure TFrDBGridEh.ShowAltColumnFilter;
+//см. !алгоритмы.txt, 6.20/6.23/6.24/6.26. альтернативное окно фильтра по текущему столбцу, вызывается
+//по Alt-F вместо стандартного (неудобного) окна фильтра ехлиб (список всех уникальных значений с
+//чекбоксами). Диспетчер по типу поля - собственно окна вынесены в ShowAltNumFilterWindow (числа),
+//ShowAltDateFilterWindow (даты) и ShowAltColorFilterWindow (цвет - для всех прочих типов столбцов
+//напрямую, а для чисел/дат - дополнительно по кнопке "Цвет..." в соответствующем окне).
+//см. 6.23 (почему окно, а не меню): изначально это было меню (TPopupMenu) - оказалось, что в этом
+//месте (показ из отложенного, через PostMessage, обработчика после Alt-комбинации) клики по
+//пунктам TPopupMenu до OnClick не доходили вообще (подтверждено отладочным выводом - Popup
+//корректно ждал закрытия несколько секунд, но обработчик пункта меню ни разу не вызывался) -
+//причина осталась не до конца понятной (похоже на особенность взаимодействия TrackPopupMenu
+//именно с этим сочетанием обстоятельств), но вместо дальнейшего разбора заменили на обычное
+//модальное окно - ShowModal гораздо надежнее (не зависит от тонкостей маршрутизации WM_COMMAND)
+var
+  Fld: TField;
+begin
+  if (DBGridEh1.DataSet = nil) or not DBGridEh1.DataSet.Active then
+    Exit;
+  Fld := DBGridEh1.Columns[GetCol].Field;
+  if Fld = nil then
+    Exit;
+  if Fld.DataType in [ftSmallint, ftInteger, ftWord, ftLargeint, ftFloat, ftCurrency, ftBCD, ftFMTBcd] then
+    ShowAltNumFilterWindow(Fld)
+  else if Fld.DataType in [ftDate, ftDateTime, ftTimeStamp, ftTime] then
+    ShowAltDateFilterWindow(Fld)
+  else
+    ShowAltColorFilterWindow(Fld);
+end;
+
+procedure TFrDBGridEh.ShowAltNumFilterWindow(Fld: TField);
+//см. !алгоритмы.txt, 6.23/6.26. окно альтернативного фильтра для числового столбца - кнопки "Больше 0"/
+//"Меньше 0"/"Равно 0", сброс, и (6.26) "Цвет..." - открывает ShowAltColorFilterWindow ПОСЛЕ закрытия
+//этого окна (см. OpenColorFilter ниже) - т.к. нельзя открыть второе модальное окно, не закрыв текущее
+var
+  frm: TForm;
+  btn: TButton;
+  CellR: TRect;
+  pt: TPoint;
+  i, y: Integer;
+  CurrCondition: string;
+  OpenColorFilter: Boolean;
+
+  procedure AddBtn(ACaption: string; AModalResult: TModalResult; AEnabled, ABold: Boolean);
+  begin
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := ACaption;
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := AModalResult;
+    btn.Enabled := AEnabled;
+    if ABold then
+      btn.Font.Style := btn.Font.Style + [fsBold];
+    y := y + btn.Height + 3;
+  end;
+
+begin
+  OpenColorFilter := False;
+  CurrCondition := '';
+  i := A.PosInArray(LowerCase(Fld.FieldName), FAltNumFilters, 0, True);
+  if i >= 0 then
+    CurrCondition := VarToStr(FAltNumFilters[i][1]);
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsToolWindow;
+    frm.Caption := 'Фильтр: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.ClientWidth := 180;
+    frm.ClientHeight := 5 * 28 + 8;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+    y := 4;
+    AddBtn('Больше 0', mrYes, True, CurrCondition = '>0');
+    AddBtn('Меньше 0', mrNo, True, CurrCondition = '<0');
+    AddBtn('Равно 0', mrAll, True, CurrCondition = '=0');
+    AddBtn('Цвет...', mrRetry, True, False);
+    AddBtn('Сбросить фильтр по столбцу', mrIgnore, CurrCondition <> '', False);
+    case frm.ShowModal of
+      mrYes: SetAltNumFilter(Fld.FieldName, '>0');
+      mrNo: SetAltNumFilter(Fld.FieldName, '<0');
+      mrAll: SetAltNumFilter(Fld.FieldName, '=0');
+      mrRetry: OpenColorFilter := True;
+      mrIgnore: SetAltNumFilter(Fld.FieldName, '');
+      //mrCancel (Esc, или системное закрытие крестиком/Alt+F4 - VCL сам подставляет mrCancel,
+      //если оно не было явно установлено) - ничего не делаем, оставляем фильтр как был
+    end;
+  finally
+    frm.Free;
+  end;
+  if OpenColorFilter then
+    ShowAltColorFilterWindow(Fld);
+end;
+
+procedure TFrDBGridEh.ShowAltDateFilterWindow(Fld: TField);
+//см. !алгоритмы.txt, 6.24/6.26/6.27. окно альтернативного фильтра для столбца с датой/датой-временем -
+//быстрый выбор периода (список DatePeriods, как в uFrmXDedtGridFilter/PmPeriodClick, только для
+//отбора уже загруженных строк, а не для условия в SQL), произвольный период "с..по", (6.27) диапазон
+//дней от сегодня (вперед/назад, могут быть отрицательными - например "от -7 до +2" - неделю назад -
+//послезавтра), сброс, и (6.26) "Цвет..." - открывает ShowAltColorFilterWindow ПОСЛЕ закрытия этого
+//окна (см. OpenColorFilter ниже)
+var
+  frm: TForm;
+  lst: TListBox;
+  lbl: TLabel;
+  dtpFrom, dtpTo: TDateTimePicker;
+  edtDaysForward, edtDaysBack: TEdit;
+  btn: TButton;
+  CellR: TRect;
+  pt: TPoint;
+  i, y: Integer;
+  HasCurr, HasCurrRel: Boolean;
+  CurrFrom, CurrTo: TDateTime;
+  CurrDaysForward, CurrDaysBack: Integer;
+  OpenColorFilter: Boolean;
+begin
+  //выбор пункта списка периодов обрабатывается методом AltDateFilterListClick (см. !алгоритмы.txt,
+  //6.25) - нельзя было использовать вложенную процедуру этой процедуры для OnClick, т.к. это
+  //"обычная процедура", а не "процедура объекта" (несовместимые типы для TNotifyEvent)
+  OpenColorFilter := False;
+  FAltDateFilterPickedPeriod := -1;
+  HasCurr := False;
+  CurrFrom := Date;
+  CurrTo := Date;
+  i := A.PosInArray(LowerCase(Fld.FieldName), FAltDateFilters, 0, True);
+  if i >= 0 then begin
+    HasCurr := True;
+    CurrFrom := FAltDateFilters[i][1];
+    CurrTo := FAltDateFilters[i][2];
+  end;
+  HasCurrRel := False;
+  CurrDaysForward := 0;
+  CurrDaysBack := 0;
+  i := A.PosInArray(LowerCase(Fld.FieldName), FAltDateRelFilters, 0, True);
+  if i >= 0 then begin
+    HasCurrRel := True;
+    CurrDaysForward := FAltDateRelFilters[i][1];
+    CurrDaysBack := FAltDateRelFilters[i][2];
+  end;
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsToolWindow;
+    frm.Caption := 'Фильтр: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.ClientWidth := 200;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+
+    y := 4;
+    lst := TListBox.Create(frm);
+    lst.Parent := frm;
+    for i := 0 to High(DatePeriods) do
+      lst.Items.Add(DatePeriods[i]);
+    lst.SetBounds(4, y, frm.ClientWidth - 8, 200);
+    lst.OnClick := AltDateFilterListClick;
+    y := y + lst.Height + 6;
+
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.SetBounds(4, y + 4, 16, 17);
+    lbl.Caption := 'с';
+    dtpFrom := TDateTimePicker.Create(frm);
+    dtpFrom.Parent := frm;
+    dtpFrom.Kind := dtkDate;
+    dtpFrom.SetBounds(24, y, frm.ClientWidth - 28, 21);
+    dtpFrom.Date := CurrFrom;
+    y := y + dtpFrom.Height + 4;
+
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.SetBounds(4, y + 4, 16, 17);
+    lbl.Caption := 'по';
+    dtpTo := TDateTimePicker.Create(frm);
+    dtpTo.Parent := frm;
+    dtpTo.Kind := dtkDate;
+    dtpTo.SetBounds(24, y, frm.ClientWidth - 28, 21);
+    dtpTo.Date := CurrTo;
+    y := y + dtpTo.Height + 6;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Применить период';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrYes;
+    y := y + btn.Height + 6;
+
+    //см. !алгоритмы.txt, 6.27: диапазон дней от сегодня - границы пересчитываются заново от текущей
+    //даты при каждой проверке строки (см. MemTableEh1FilterRecord), а не фиксируются сейчас
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.SetBounds(4, y, frm.ClientWidth - 8, 17);
+    lbl.Caption := 'Диапазон от сегодня (дней):';
+    y := y + lbl.Height + 2;
+
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.SetBounds(4, y + 4, 46, 17);
+    lbl.Caption := 'вперед';
+    edtDaysForward := TEdit.Create(frm);
+    edtDaysForward.Parent := frm;
+    edtDaysForward.SetBounds(54, y, frm.ClientWidth - 58, 21);
+    edtDaysForward.Text := IntToStr(CurrDaysForward);
+    y := y + edtDaysForward.Height + 4;
+
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.SetBounds(4, y + 4, 46, 17);
+    lbl.Caption := 'назад';
+    edtDaysBack := TEdit.Create(frm);
+    edtDaysBack.Parent := frm;
+    edtDaysBack.SetBounds(54, y, frm.ClientWidth - 58, 21);
+    edtDaysBack.Text := IntToStr(CurrDaysBack);
+    y := y + edtDaysBack.Height + 4;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Применить диапазон';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrAll;
+    y := y + btn.Height + 6;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Цвет...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrRetry;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Сбросить фильтр по столбцу';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrIgnore;
+    btn.Enabled := HasCurr or HasCurrRel;
+    y := y + btn.Height + 4;
+
+    frm.ClientHeight := y;
+    case frm.ShowModal of
+      mrOk: if FAltDateFilterPickedPeriod >= 0 then begin
+        S.GetDatePeriod(FAltDateFilterPickedPeriod, Date, CurrFrom, CurrTo);
+        SetAltDateFilter(Fld.FieldName, CurrFrom, CurrTo);
+      end;
+      mrYes:
+        //если случайно перепутаны местами - поменяем, а не покажем пустой грид без объяснений
+        if dtpTo.Date < dtpFrom.Date
+          then SetAltDateFilter(Fld.FieldName, dtpTo.Date, dtpFrom.Date)
+          else SetAltDateFilter(Fld.FieldName, dtpFrom.Date, dtpTo.Date);
+      mrAll:
+        //не проверяем введенный текст на число заранее - просто не завалим все окно, если ввели
+        //что-то не то (StrToIntDef с 0 по умолчанию), это не критичное условие, как в стандартном
+        //фильтре ехlib по произвольному условию
+        SetAltDateRelFilter(Fld.FieldName, StrToIntDef(Trim(edtDaysForward.Text), 0),
+          StrToIntDef(Trim(edtDaysBack.Text), 0));
+      mrRetry: OpenColorFilter := True;
+      mrIgnore: begin
+        ClearAltDateFilter(Fld.FieldName);
+        ClearAltDateRelFilter(Fld.FieldName);
+      end;
+      //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
+    end;
+  finally
+    frm.Free;
+  end;
+  if OpenColorFilter then
+    ShowAltColorFilterWindow(Fld);
+end;
+
+procedure TFrDBGridEh.SetAltNumFilter(FieldName: string; Condition: string);
+//см. !алгоритмы.txt, 6.20. установить (Condition = '>0'/'<0'/'=0') или сбросить (Condition = '')
+//альтернативный числовой фильтр по указанному полю, и немедленно переприменить фильтр грида
+var
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltNumFilters, 0, True);
+  if Condition = '' then begin
+    if i >= 0 then begin
+      va2 := [];
+      for j := 0 to High(FAltNumFilters) do
+        if j <> i then
+          va2 := va2 + [FAltNumFilters[j]];
+      FAltNumFilters := va2;
+    end;
+  end
+  else begin
+    if i >= 0
+      then FAltNumFilters[i][1] := Condition
+      else FAltNumFilters := FAltNumFilters + [[FieldName, Condition]];
+  end;
+  //переприменим фильтр - переключением Filtered (не полагаемся на DefaultApplyFilter ехлиб, т.к. он
+  //управляет своим собственным условием STFilter и может не знать о нашем FAltNumFilters вовсе;
+  //само же переключение Filtered False->True гарантированно заново прогоняет и Filter, и OnFilterRecord)
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.SetAltDateFilter(FieldName: string; DateFrom, DateTo: TDateTime);
+//см. !алгоритмы.txt, 6.24. установить альтернативный фильтр по периоду дат для указанного поля
+//(добавляет или заменяет запись в FAltDateFilters), и немедленно переприменить фильтр грида
+var
+  i: Integer;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltDateFilters, 0, True);
+  if i >= 0 then begin
+    FAltDateFilters[i][1] := DateFrom;
+    FAltDateFilters[i][2] := DateTo;
+  end
+  else
+    FAltDateFilters := FAltDateFilters + [[FieldName, DateFrom, DateTo]];
+  //см. !алгоритмы.txt, 6.27: обычный (фиксированный) и "диапазон от сегодня" фильтры по дате на одном
+  //и том же поле одновременно не действуют - включение одного сбрасывает другой
+  ClearAltDateRelFilter(FieldName);
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAltDateFilter(FieldName: string);
+//см. !алгоритмы.txt, 6.24. сбросить альтернативный фильтр по дате для указанного поля (если он был)
+var
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltDateFilters, 0, True);
+  if i >= 0 then begin
+    va2 := [];
+    for j := 0 to High(FAltDateFilters) do
+      if j <> i then
+        va2 := va2 + [FAltDateFilters[j]];
+    FAltDateFilters := va2;
+    MemTableEh1.Filtered := False;
+    MemTableEh1.Filtered := True;
+  end;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.SetAltDateRelFilter(FieldName: string; DaysForward, DaysBack: Integer);
+//см. !алгоритмы.txt, 6.27. установить альтернативный фильтр "диапазон от сегодня" (в днях) для
+//указанного поля (добавляет или заменяет запись в FAltDateRelFilters), и немедленно переприменить
+//фильтр грида. Границы пересчитываются от текущей даты каждый раз заново при проверке строки
+//(см. MemTableEh1FilterRecord), а не фиксируются в момент вызова этого метода
+var
+  i: Integer;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltDateRelFilters, 0, True);
+  if i >= 0 then begin
+    FAltDateRelFilters[i][1] := DaysForward;
+    FAltDateRelFilters[i][2] := DaysBack;
+  end
+  else
+    FAltDateRelFilters := FAltDateRelFilters + [[FieldName, DaysForward, DaysBack]];
+  //см. комментарий в SetAltDateFilter - оба вида фильтра по дате взаимно исключают друг друга
+  ClearAltDateFilter(FieldName);
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAltDateRelFilter(FieldName: string);
+//см. !алгоритмы.txt, 6.27. сбросить альтернативный фильтр "диапазон от сегодня" для указанного поля
+var
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltDateRelFilters, 0, True);
+  if i >= 0 then begin
+    va2 := [];
+    for j := 0 to High(FAltDateRelFilters) do
+      if j <> i then
+        va2 := va2 + [FAltDateRelFilters[j]];
+    FAltDateRelFilters := va2;
+    MemTableEh1.Filtered := False;
+    MemTableEh1.Filtered := True;
+  end;
+  UpdateFilterActiveIndicators;
+end;
+
+function SameColorFmt(const A, B: TCellColorFmt): Boolean;
+//см. !алгоритмы.txt, 6.26 - сравнение двух TCellColorFmt (используется вместо оператора "=", т.к. для
+//обычных record он в Delphi не определен по умолчанию)
+begin
+  Result := (A.HasFont = B.HasFont) and (A.HasBg = B.HasBg);
+  if not Result then
+    Exit;
+  if A.HasFont and (A.FontColor <> B.FontColor) then begin
+    Result := False;
+    Exit;
+  end;
+  if A.HasBg and (A.BgColor <> B.BgColor) then
+    Result := False;
+end;
+
+procedure TFrDBGridEh.ComputeCurrentRowColorFmt(Column: TColumnEh; out Fmt: TCellColorFmt);
+//см. !алгоритмы.txt, 6.26. вычисляет формат (явно заданные цвета шрифта/фона) ТЕКУЩЕЙ записи датасета
+//для указанного столбца - вызывая тот же самый обработчик FOnColumnsGetCellParams, что раскрашивает
+//ячейки при отрисовке (см. ColumnsGetCellParams) - т.е. без дублирования логики раскраски. Базовые
+//("неявные") цвета для сравнения - Column.Font.Color и Column.Color - ровно то же самое, что ехlib
+//устанавливает в Params ДО вызова обработчика при обычной отрисовке (см. TAxisBarEh.FillColCellParams
+//в исходниках ехlib) - поэтому подходят и для этого "синтетического" вызова вне отрисовки
+begin
+  Fmt.HasFont := False;
+  Fmt.FontColor := clNone;
+  Fmt.HasBg := False;
+  Fmt.BgColor := clNone;
+  if not Assigned(FOnColumnsGetCellParams) then
+    Exit;
+  FColorCacheFont.Assign(Column.Font);
+  FColorCacheParams.Font := FColorCacheFont;
+  FColorCacheParams.Background := Column.Color;
+  FColorCacheParams.ReadOnly := False;
+  try
+    FOnColumnsGetCellParams(Self, No, Column, LowerCase(Column.FieldName), False, FColorCacheParams);
+  except
+    //ошибка в чьей-то раскраске не должна ломать весь пересчет кэша - считаем, что явного цвета нет
+    Exit;
+  end;
+  if FColorCacheParams.Font.Color <> Column.Font.Color then begin
+    Fmt.HasFont := True;
+    Fmt.FontColor := FColorCacheParams.Font.Color;
+  end;
+  if FColorCacheParams.Background <> Column.Color then begin
+    Fmt.HasBg := True;
+    Fmt.BgColor := FColorCacheParams.Background;
+  end;
+end;
+
+procedure TFrDBGridEh.RefreshColorCacheCurrentRow;
+//см. !алгоритмы.txt, 6.26. пересчитать кэш цветов ТЕКУЩЕЙ записи (все столбцы с полем) - режим
+//ALT_COLOR_CACHE_EAGER=True, вызывается после RefreshRecord ("после обновления строки", см.
+//изначальное описание задачи). В "ленивом" режиме кэш для не запрошенных еще столбцов сознательно не
+//ведется - здесь обновляем только уже существующие в кэше столбцы (только это может быть вызвано и при
+//ALT_COLOR_CACHE_EAGER=False, если понадобится обновить кэш точечно - сейчас метод вызывается только
+//при ALT_COLOR_CACHE_EAGER=True, но сама процедура работает корректно в обоих случаях)
+var
+  i, ID: Integer;
+  Fmt: TCellColorFmt;
+  Dict: TDictionary<Integer, TCellColorFmt>;
+  FieldNameLower: string;
+begin
+  if not Assigned(FOnColumnsGetCellParams) or IsEmpty then
+    Exit;
+  ID := GetValue(Opt.Sql.IdField);
+  for i := 0 to DBGridEh1.Columns.Count - 1 do begin
+    if DBGridEh1.Columns[i].Field = nil then
+      Continue;
+    FieldNameLower := LowerCase(DBGridEh1.Columns[i].FieldName);
+    if not ALT_COLOR_CACHE_EAGER and not FColorCache.ContainsKey(FieldNameLower) then
+      Continue;
+    if not FColorCache.TryGetValue(FieldNameLower, Dict) then begin
+      Dict := TDictionary<Integer, TCellColorFmt>.Create;
+      FColorCache.Add(FieldNameLower, Dict);
+    end;
+    ComputeCurrentRowColorFmt(DBGridEh1.Columns[i], Fmt);
+    if Fmt.HasFont or Fmt.HasBg
+      then Dict.AddOrSetValue(ID, Fmt)
+      else Dict.Remove(ID);
+  end;
+end;
+
+procedure TFrDBGridEh.RefreshColorCacheAll;
+//см. !алгоритмы.txt, 6.26. пересчитать кэш цветов для ВСЕЙ таблицы (полный проход по всем загруженным
+//строкам и столбцам с полем) - режим ALT_COLOR_CACHE_EAGER=True, вызывается после RefreshGrid ("после
+//обновления грида", см. изначальное описание задачи). DisableControls/EnableControls и сохранение/
+//восстановление текущей позиции (RecNo) - как в аналогичных полных проходах по MemTableEh1 в этом же
+//модуле (см., например, SetIndicatorCheckBoxesByField)
+var
+  i, rn, ID: Integer;
+  Cols: array of TColumnEh;
+  Dicts: array of TDictionary<Integer, TCellColorFmt>;
+  Fmt: TCellColorFmt;
+begin
+  if not Assigned(FOnColumnsGetCellParams) or not MemTableEh1.Active then
+    Exit;
+  SetLength(Cols, 0);
+  SetLength(Dicts, 0);
+  for i := 0 to DBGridEh1.Columns.Count - 1 do begin
+    if DBGridEh1.Columns[i].Field = nil then
+      Continue;
+    SetLength(Cols, Length(Cols) + 1);
+    SetLength(Dicts, Length(Dicts) + 1);
+    Cols[High(Cols)] := DBGridEh1.Columns[i];
+    Dicts[High(Dicts)] := TDictionary<Integer, TCellColorFmt>.Create;
+    FColorCache.AddOrSetValue(LowerCase(DBGridEh1.Columns[i].FieldName), Dicts[High(Dicts)]);
+  end;
+  if (Length(Cols) = 0) or IsEmpty then
+    Exit;
+  rn := MemTableEh1.RecNo;
+  MemTableEh1.DisableControls;
+  try
+    MemTableEh1.First;
+    while not MemTableEh1.Eof do begin
+      ID := GetValue(Opt.Sql.IdField);
+      for i := 0 to High(Cols) do begin
+        ComputeCurrentRowColorFmt(Cols[i], Fmt);
+        if Fmt.HasFont or Fmt.HasBg then
+          Dicts[i].Add(ID, Fmt);
+      end;
+      MemTableEh1.Next;
+    end;
+  finally
+    MemTableEh1.EnableControls;
+    MemTableEh1.RecNo := rn;
+  end;
+end;
+
+procedure TFrDBGridEh.RefreshColorCacheField(const AFieldName: string);
+//см. !алгоритмы.txt, 6.26. пересчитать кэш цветов для ОДНОГО столбца (полный проход по всем
+//загруженным строкам) - режим ALT_COLOR_CACHE_EAGER=False, вызывается перед показом окна фильтра по
+//цвету для этого столбца (см. ShowAltColorFilterWindow/GetDistinctColorFmtsForField) - до этого кэш
+//для столбца в "ленивом" режиме мог быть еще не заполнен вовсе
+var
+  Column: TColumnEh;
+  Dict: TDictionary<Integer, TCellColorFmt>;
+  Fmt: TCellColorFmt;
+  ID, rn: Integer;
+begin
+  Column := DBGridEh1.FindFieldColumn(AFieldName);
+  if (Column = nil) or not Assigned(FOnColumnsGetCellParams) or not MemTableEh1.Active then
+    Exit;
+  Dict := TDictionary<Integer, TCellColorFmt>.Create;
+  FColorCache.AddOrSetValue(LowerCase(AFieldName), Dict);
+  if IsEmpty then
+    Exit;
+  rn := MemTableEh1.RecNo;
+  MemTableEh1.DisableControls;
+  try
+    MemTableEh1.First;
+    while not MemTableEh1.Eof do begin
+      ID := GetValue(Opt.Sql.IdField);
+      ComputeCurrentRowColorFmt(Column, Fmt);
+      if Fmt.HasFont or Fmt.HasBg then
+        Dict.Add(ID, Fmt);
+      MemTableEh1.Next;
+    end;
+  finally
+    MemTableEh1.EnableControls;
+    MemTableEh1.RecNo := rn;
+  end;
+end;
+
+function TFrDBGridEh.GetCachedCellColorFmt(const AFieldName: string; AID: Integer; out Fmt: TCellColorFmt): Boolean;
+//см. !алгоритмы.txt, 6.26. True, если для этой ячейки в кэше есть явно заданный формат (тогда он
+//возвращается в Fmt); False - явного формата нет (в т.ч. если кэш для этого столбца еще не заполнен -
+//актуально для "ленивого" режима, пока фильтр по этому столбцу еще не открывали) - в обоих случаях
+//False Fmt все равно заполняется "пустым" форматом (HasFont=False, HasBg=False)
+var
+  Dict: TDictionary<Integer, TCellColorFmt>;
+begin
+  Fmt.HasFont := False;
+  Fmt.FontColor := clNone;
+  Fmt.HasBg := False;
+  Fmt.BgColor := clNone;
+  Result := False;
+  if FColorCache.TryGetValue(LowerCase(AFieldName), Dict) then
+    Result := Dict.TryGetValue(AID, Fmt);
+end;
+
+function TFrDBGridEh.GetDistinctColorFmtsForField(const AFieldName: string): TArray<TCellColorFmt>;
+//см. !алгоритмы.txt, 6.26. список различных форматов, реально встречающихся в столбце - для окна
+//фильтра (аналог "доступные форматы" в Excel). Первый элемент результата - всегда "пустой" формат
+//(HasFont=False, HasBg=False), означающий "без явного цвета" (пункт нужен всегда, даже если сейчас в
+//столбце нет ни одной такой строки - данные могут измениться)
+var
+  Dict: TDictionary<Integer, TCellColorFmt>;
+  Fmt: TCellColorFmt;
+  Found: Boolean;
+  i: Integer;
+begin
+  if not ALT_COLOR_CACHE_EAGER then
+    RefreshColorCacheField(AFieldName);
+  SetLength(Result, 1);
+  Result[0].HasFont := False;
+  Result[0].FontColor := clNone;
+  Result[0].HasBg := False;
+  Result[0].BgColor := clNone;
+  if not FColorCache.TryGetValue(LowerCase(AFieldName), Dict) then
+    Exit;
+  for Fmt in Dict.Values do begin
+    Found := False;
+    for i := 0 to High(Result) do
+      if SameColorFmt(Result[i], Fmt) then begin
+        Found := True;
+        Break;
+      end;
+    if not Found then
+      Result := Result + [Fmt];
+  end;
+end;
+
+procedure TFrDBGridEh.SetAltColorFilter(FieldName: string; const AFormats: TArray<TCellColorFmt>);
+//см. !алгоритмы.txt, 6.26. установить (AFormats - принимаемые форматы, условие ИЛИ) или сбросить
+//(Length(AFormats)=0 - равносильно ClearAltColorFilter) альтернативный фильтр по цвету для столбца
+var
+  i: Integer;
+  Lst: TList<TCellColorFmt>;
+begin
+  FieldName := LowerCase(FieldName);
+  if Length(AFormats) = 0 then begin
+    ClearAltColorFilter(FieldName);
+    Exit;
+  end;
+  Lst := TList<TCellColorFmt>.Create;
+  for i := 0 to High(AFormats) do
+    Lst.Add(AFormats[i]);
+  FAltColorFilters.AddOrSetValue(FieldName, Lst);
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAltColorFilter(FieldName: string);
+//см. !алгоритмы.txt, 6.26. сбросить альтернативный фильтр по цвету для указанного поля (если он был)
+begin
+  FieldName := LowerCase(FieldName);
+  if FAltColorFilters.ContainsKey(FieldName) then begin
+    FAltColorFilters.Remove(FieldName);
+    MemTableEh1.Filtered := False;
+    MemTableEh1.Filtered := True;
+  end;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ColorFilterListDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+//см. !алгоритмы.txt, 6.26. отрисовка одного пункта списка форматов в ShowAltColorFilterWindow -
+//обычный TListBox (не TCheckListBox - чтобы не зависеть от недокументированной раскладки области
+//отрисовки последнего), чекбокс рисуется вручную через DrawFrameControl. После чекбокса - цветной
+//образец (прямоугольник фона + образец текста цветом шрифта, если они заданы явно), затем подпись
+var
+  Cnv: TCanvas;
+  ChkRect, SwatchRect: TRect;
+  Fmt: TCellColorFmt;
+  Caption: string;
+  ChkFlags: Cardinal;
+begin
+  Cnv := TListBox(Control).Canvas;
+  Cnv.Brush.Color := clWindow;
+  Cnv.FillRect(Rect);
+  if (Index < 0) or (Index > High(FColorFilterFormats)) then
+    Exit;
+  Fmt := FColorFilterFormats[Index];
+  //чекбокс
+  ChkRect := Rect;
+  ChkRect.Right := ChkRect.Left + (ChkRect.Bottom - ChkRect.Top);
+  InflateRect(ChkRect, -3, -3);
+  ChkFlags := DFCS_BUTTONCHECK;
+  if (Index <= High(FColorFilterChecked)) and FColorFilterChecked[Index] then
+    ChkFlags := ChkFlags or DFCS_CHECKED;
+  DrawFrameControl(Cnv.Handle, ChkRect, DFC_BUTTON, ChkFlags);
+  //цветной образец
+  SwatchRect := Rect;
+  SwatchRect.Left := Rect.Left + (Rect.Bottom - Rect.Top) + 4;
+  SwatchRect.Right := SwatchRect.Left + 30;
+  InflateRect(SwatchRect, 0, -2);
+  if Fmt.HasBg
+    then Cnv.Brush.Color := Fmt.BgColor
+    else Cnv.Brush.Color := clWindow;
+  Cnv.FillRect(SwatchRect);
+  Cnv.Brush.Style := bsClear;
+  Cnv.Pen.Color := clBtnShadow;
+  Cnv.Rectangle(SwatchRect);
+  Cnv.Brush.Style := bsSolid;
+  if Fmt.HasFont
+    then Cnv.Font.Color := Fmt.FontColor
+    else Cnv.Font.Color := clWindowText;
+  Cnv.Brush.Style := bsClear;
+  Cnv.TextOut(SwatchRect.Left + 3, SwatchRect.Top + 1, 'Aa');
+  Cnv.Brush.Style := bsSolid;
+  //подпись
+  if not Fmt.HasFont and not Fmt.HasBg then
+    Caption := 'Без явного цвета'
+  else begin
+    Caption := '';
+    if Fmt.HasFont then
+      Caption := Caption + 'шрифт ' + ColorToString(Fmt.FontColor);
+    if Fmt.HasBg then begin
+      if Caption <> '' then
+        Caption := Caption + ', ';
+      Caption := Caption + 'фон ' + ColorToString(Fmt.BgColor);
+    end;
+  end;
+  Cnv.Brush.Style := bsClear;
+  Cnv.Font.Color := clWindowText;
+  Cnv.TextOut(SwatchRect.Right + 6, Rect.Top + 2, Caption);
+  Cnv.Brush.Style := bsSolid;
+end;
+
+procedure TFrDBGridEh.ToggleColorFilterCheck(Index: Integer);
+//см. !алгоритмы.txt, 6.26
+begin
+  if (Index >= 0) and (Index <= High(FColorFilterChecked)) then
+    FColorFilterChecked[Index] := not FColorFilterChecked[Index];
+end;
+
+procedure TFrDBGridEh.ColorFilterListClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.26. клик по пункту списка форматов - переключает чекбокс (весь пункт целиком,
+//без разбора координат клика - как в обычном TCheckListBox)
+begin
+  ToggleColorFilterCheck(TListBox(Sender).ItemIndex);
+  TListBox(Sender).Invalidate;
+end;
+
+procedure TFrDBGridEh.ColorFilterListKeyPress(Sender: TObject; var Key: Char);
+//см. !алгоритмы.txt, 6.26. пробел - тоже переключает чекбокс текущего пункта (как в TCheckListBox)
+begin
+  if Key = ' ' then begin
+    ToggleColorFilterCheck(TListBox(Sender).ItemIndex);
+    TListBox(Sender).Invalidate;
+    Key := #0;
+  end;
+end;
+
+procedure TFrDBGridEh.ShowAltColorFilterWindow(Fld: TField);
+//см. !алгоритмы.txt, 6.26. окно альтернативного фильтра по цвету - список реально встречающихся в
+//столбце форматов (GetDistinctColorFmtsForField), с чекбоксами (условие ИЛИ), плюс сброс. Доступно для
+//столбца любого типа - см. диспетчер ShowAltColumnFilter, а также кнопка "Цвет..." в окнах числового и
+//датового альт-фильтров
+var
+  frm: TForm;
+  lst: TListBox;
+  btnApply, btnReset: TButton;
+  CellR: TRect;
+  pt: TPoint;
+  i: Integer;
+  y: Integer;
+  HasCurr: Boolean;
+  CurFormats: TList<TCellColorFmt>;
+  AcceptedList: TList<TCellColorFmt>;
+  j: Integer;
+  Checked: Boolean;
+begin
+  FColorFilterFormats := GetDistinctColorFmtsForField(Fld.FieldName);
+  SetLength(FColorFilterChecked, Length(FColorFilterFormats));
+  HasCurr := FAltColorFilters.TryGetValue(LowerCase(Fld.FieldName), CurFormats);
+  for i := 0 to High(FColorFilterFormats) do begin
+    Checked := False;
+    if HasCurr then
+      for j := 0 to CurFormats.Count - 1 do
+        if SameColorFmt(CurFormats[j], FColorFilterFormats[i]) then begin
+          Checked := True;
+          Break;
+        end;
+    FColorFilterChecked[i] := Checked;
+  end;
+
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsToolWindow;
+    frm.Caption := 'Фильтр по цвету: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.ClientWidth := 220;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+
+    y := 4;
+    lst := TListBox.Create(frm);
+    lst.Parent := frm;
+    lst.Style := lbOwnerDrawFixed;
+    lst.ItemHeight := 20;
+    lst.OnDrawItem := ColorFilterListDrawItem;
+    lst.OnClick := ColorFilterListClick;
+    lst.OnKeyPress := ColorFilterListKeyPress;
+    for i := 0 to High(FColorFilterFormats) do
+      lst.Items.Add(''); //текст не используется - все рисуется вручную в ColorFilterListDrawItem
+    lst.SetBounds(4, y, frm.ClientWidth - 8, 160);
+    y := y + lst.Height + 6;
+
+    btnApply := TButton.Create(frm);
+    btnApply.Parent := frm;
+    btnApply.Caption := 'Применить';
+    btnApply.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btnApply.ModalResult := mrYes;
+    y := y + btnApply.Height + 3;
+
+    btnReset := TButton.Create(frm);
+    btnReset.Parent := frm;
+    btnReset.Caption := 'Сбросить фильтр по столбцу';
+    btnReset.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btnReset.ModalResult := mrIgnore;
+    btnReset.Enabled := HasCurr;
+    y := y + btnReset.Height + 4;
+
+    frm.ClientHeight := y;
+    case frm.ShowModal of
+      mrYes: begin
+        AcceptedList := TList<TCellColorFmt>.Create;
+        try
+          for i := 0 to High(FColorFilterFormats) do
+            if FColorFilterChecked[i] then
+              AcceptedList.Add(FColorFilterFormats[i]);
+          SetAltColorFilter(Fld.FieldName, AcceptedList.ToArray);
+        finally
+          AcceptedList.Free;
+        end;
+      end;
+      mrIgnore: ClearAltColorFilter(Fld.FieldName);
+      //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
+    end;
+  finally
+    frm.Free;
+  end;
+end;
+
+procedure TFrDBGridEh.MemTableEh1FilterRecord(DataSet: TDataSet; var Accept: Boolean);
+//см. !алгоритмы.txt, 6.20/6.24/6.26/6.27. проверка альтернативных числовых (FAltNumFilters), по дате
+//(FAltDateFilters), по диапазону дней от сегодня (FAltDateRelFilters) и по цвету (FAltColorFilters)
+//фильтров (Alt-F) - работает независимо от и вместе со стандартным постолбцовым фильтром ехлиб
+//(см. комментарий у объявления FAltNumFilters) - TDataSet.Filtered учитывает Filter и OnFilterRecord
+//одновременно, через И
+var
+  i, j: Integer;
+  v: Double;
+  vd, TodayD: TDateTime;
+  DaysForward, DaysBack: Integer;
+  Fld: TField;
+  ColorPair: TPair<string, TList<TCellColorFmt>>;
+  CurFmt: TCellColorFmt;
+  CurID: Integer;
+  ColorMatched: Boolean;
+begin
+  Accept := True;
+  for i := 0 to High(FAltNumFilters) do begin
+    Fld := DataSet.FindField(VarToStr(FAltNumFilters[i][0]));
+    if Fld = nil then
+      Continue; //поля с таким именем нет в этом наборе данных - пропустим это условие, а не завалим фильтр целиком
+    try
+      v := Fld.AsFloat;
+    except
+      Continue;
+    end;
+    if (FAltNumFilters[i][1] = '>0') and not (v > 0) then begin
+      Accept := False;
+      Exit;
+    end;
+    if (FAltNumFilters[i][1] = '<0') and not (v < 0) then begin
+      Accept := False;
+      Exit;
+    end;
+    //сравнение с 0 без допуска (эпсилон) - для полей, посчитанных с накоплением погрешности
+    //(например, суммы дробных операций), может не сработать на значении, которое "должно" быть
+    //нулем, но по факту хранится как что-то вроде 0.0000000001 - если это проявится, надо будет
+    //добавить сюда допуск (Abs(v) < некоторого малого значения)
+    if (FAltNumFilters[i][1] = '=0') and not (v = 0) then begin
+      Accept := False;
+      Exit;
+    end;
+  end;
+  for i := 0 to High(FAltDateFilters) do begin
+    Fld := DataSet.FindField(VarToStr(FAltDateFilters[i][0]));
+    if Fld = nil then
+      Continue; //поля с таким именем нет в этом наборе данных - пропустим это условие, а не завалим фильтр целиком
+    try
+      vd := Fld.AsDateTime;
+    except
+      Continue;
+    end;
+    //верхняя граница не включительно и увеличена на 1 день - чтобы захватить весь последний день
+    //периода независимо от возможной временной части в значении поля (например, 23:59:59.999)
+    if (vd < VarToDateTime(FAltDateFilters[i][1])) or (vd >= VarToDateTime(FAltDateFilters[i][2]) + 1) then begin
+      Accept := False;
+      Exit;
+    end;
+  end;
+  //см. !алгоритмы.txt, 6.27: фильтр "диапазон от сегодня" (FAltDateRelFilters) - границы пересчитываются
+  //от текущей даты (TodayD) заново на каждую проверку строки, а не фиксируются один раз при установке
+  //фильтра - иначе "от сегодня" переставало бы соответствовать действительности на следующий день
+  if Length(FAltDateRelFilters) > 0 then begin
+    TodayD := Date; //дата без временной части - как и везде в этом модуле (см. ShowAltDateFilterWindow)
+    for i := 0 to High(FAltDateRelFilters) do begin
+      Fld := DataSet.FindField(VarToStr(FAltDateRelFilters[i][0]));
+      if Fld = nil then
+        Continue;
+      try
+        vd := Fld.AsDateTime;
+      except
+        Continue;
+      end;
+      //DaysForward/DaysBack - целые (могут быть отрицательными), см. SetAltDateRelFilter. Верхняя
+      //граница, как и у обычного FAltDateFilters, не включительно и увеличена на 1 день - чтобы
+      //захватить весь последний день диапазона независимо от временной части значения поля
+      DaysForward := FAltDateRelFilters[i][1];
+      DaysBack := FAltDateRelFilters[i][2];
+      if (vd < TodayD - DaysBack) or (vd >= TodayD + DaysForward + 1) then begin
+        Accept := False;
+        Exit;
+      end;
+    end;
+  end;
+  if FAltColorFilters.Count > 0 then begin
+    Fld := DataSet.FindField(Opt.Sql.IdField);
+    if Fld <> nil then begin
+      try
+        CurID := Fld.AsInteger;
+      except
+        CurID := -1;
+      end;
+      for ColorPair in FAltColorFilters do begin
+        //GetCachedCellColorFmt возвращает False и для "явного цвета нет", и для "кэш для этого
+        //столбца еще не заполнен" (актуально в "ленивом" режиме, ALT_COLOR_CACHE_EAGER=False) - в
+        //обоих случаях в CurFmt уже будет "пустой" формат, этого достаточно для сравнения ниже
+        GetCachedCellColorFmt(ColorPair.Key, CurID, CurFmt);
+        ColorMatched := False;
+        for j := 0 to ColorPair.Value.Count - 1 do
+          if SameColorFmt(ColorPair.Value[j], CurFmt) then begin
+            ColorMatched := True;
+            Break;
+          end;
+        if not ColorMatched then begin
+          Accept := False;
+          Exit;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TFrDBGridEh.UpdateFilterActiveIndicators;
+//см. !алгоритмы.txt, 6.27. единый визуальный индикатор "фильтр в столбце активен" - жирный шрифт +
+//ALT_FILTER_INDICATOR_COLOR в заголовке столбца, если для него активен ЛЮБОЙ из фильтров: обычный
+//постолбцовый ехlib (Column.STFilter.ExpressionStr <> '' - именно эту проверку использует само ехlib
+//в отрисовке кнопки фильтра, см. GridFilterInColumnUsed в uForms.pas) или любой из наших альт-фильтров
+//(FAltNumFilters/FAltDateFilters/FAltDateRelFilters/FAltColorFilters). Родной вид заголовка запоминается
+//лениво (FTitleDefaultFont), при первом обращении к столбцу, чтобы корректно возвращаться к нему -
+//независимо от того, что каждая конкретная форма изначально задала для Title.Font данного столбца
+var
+  i: Integer;
+  Col: TColumnEh;
+  FieldNameLower: string;
+  IsFiltered: Boolean;
+  DefFont: TFont;
+begin
+  if not Assigned(DBGridEh1) then
+    Exit;
+  for i := 0 to DBGridEh1.Columns.Count - 1 do begin
+    Col := DBGridEh1.Columns[i];
+    if Col.FieldName = '' then
+      Continue;
+    FieldNameLower := LowerCase(Col.FieldName);
+    if not FTitleDefaultFont.TryGetValue(FieldNameLower, DefFont) then begin
+      DefFont := TFont.Create;
+      DefFont.Assign(Col.Title.Font);
+      FTitleDefaultFont.Add(FieldNameLower, DefFont);
+    end;
+    IsFiltered :=
+      (Col.STFilter.ExpressionStr <> '') or
+      (A.PosInArray(FieldNameLower, FAltNumFilters, 0, True) >= 0) or
+      (A.PosInArray(FieldNameLower, FAltDateFilters, 0, True) >= 0) or
+      (A.PosInArray(FieldNameLower, FAltDateRelFilters, 0, True) >= 0) or
+      FAltColorFilters.ContainsKey(FieldNameLower);
+    Col.Title.Font.Assign(DefFont);
+    if IsFiltered then begin
+      Col.Title.Font.Style := Col.Title.Font.Style + [fsBold];
+      Col.Title.Font.Color := ALT_FILTER_INDICATOR_COLOR;
+    end;
+  end;
+end;
+
+procedure TFrDBGridEh.ClearAllFilters;
+//см. !алгоритмы.txt, 6.27. полный сброс ВСЕХ фильтров грида сразу - стандартного постолбцового
+//(во всех столбцах, и текста в SearchPanel - через уже существующую Gh.GridFilterClear) и всех наших
+//альт-фильтров (числа/дата/диапазон дней/цвет). В отличие от ClearOrRestoreFilter (Ctrl-Q), не
+//запоминает предыдущий фильтр для восстановления - это осознанный полный сброс, а не временное
+//отключение. См. mbtClearAllGridFilters/Ctrl-Shift-Q
+begin
+  Gh.GridFilterClear(DbGridEh1, True, True);
+  FAltNumFilters := [];
+  FAltDateFilters := [];
+  FAltDateRelFilters := [];
+  FAltColorFilters.Clear;
+  //если стандартный фильтр был запомнен (Ctrl-Q) - раз мы сбрасываем вообще все, забудем и его тоже,
+  //иначе следующий Ctrl-Q неожиданно восстановил бы то, что пользователь только что явно сбросил
+  FLastFilter := [];
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
 end;
 
 procedure TFrDBGridEh.DataGrouping;

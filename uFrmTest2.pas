@@ -34,6 +34,7 @@ implementation
 uses
   uFrmMain,
   uForms,
+  uDB,
   uDBOra,
   uWindows,
   uData,
@@ -362,7 +363,60 @@ var
   va2: tvardynarray2;
   v: TVarDynArray;
   na: TNamedArr;
+  //===== ТЕСТ СКОРОСТИ ADO/FD НА ЗАГРУЗКЕ В МАССИВ (см. !алгоритмы.txt, раздел 6.7) =====
+  //отдельный экземпляр TmyDBOra - чтобы не трогать состояние (соединение/транзакции) "боевого" Q
+  TestQ: TmyDBOra;
+  TestVolumes: array of Integer;
+  TestReport: string;
+
+  procedure RunVolumeTest(ABackend: TmyDbBackend; const ABackendName: string);
+  //прогоняет QLoadToRec с ограничением rownum <= N для каждого объема из TestVolumes на бэкенде
+  //ABackend, дописывает время (мс) и число полученных строк в TestReport
+  var
+    vi, RowLimit: Integer;
+    StartTick, ElapsedMs: UInt64;
+    Rec: TNamedArr;
+    TestSql: string;
+  begin
+    //ВАЖНО: подставьте сюда реальный текст SELECT "большой таблицы" (тот же, что уходит в
+    //FFdPendingSelectSql / ADODataDriverEh1.SelectSQL для экрана "большая таблица"/OGlstSnMain) -
+    //в этой сессии текст этого запроса недоступен (модуль экрана не выгружался). Внешний
+    //"select * from (...) where rownum <= :n" позволяет ограничить объем без переписывания
+    //самого запроса - ORDER BY внутри подзапроса лучше убрать/не важен для замера чистой выборки.
+    TestSql := 'select * from v_spl_minremains where rownum <= :n$i';
+    TestQ.Backend := ABackend;
+    //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, 6.8): "прогревочный" запрос ДО замера - у FireDAC
+    //FdConnection создаётся и подключается лениво при первом реальном обращении (см.
+    //TmyDB.GetFdConnection), а у ADO соединение уже открыто заранее в CreateObject; без прогрева
+    //время установления FireDAC-подключения попадало бы в замер первого (самого маленького) объема
+    //и искажало бы сравнение - поэтому засекаем и показываем его отдельной строкой.
+    StartTick := GetTickCount64;
+    TestQ.QLoadValue('select 1 from dual', []);
+    ElapsedMs := GetTickCount64 - StartTick;
+    TestReport := TestReport + '--- ' + ABackendName + ' (прогрев/установление соединения: ' + IntToStr(ElapsedMs) + ' мс) ---' + sLineBreak;
+    for vi := 0 to High(TestVolumes) do begin
+      RowLimit := TestVolumes[vi];
+      StartTick := GetTickCount64;
+      Rec := TestQ.QLoadToRec(TestSql, [RowLimit]);
+      ElapsedMs := GetTickCount64 - StartTick;
+      TestReport := TestReport + Format('  rownum <= %d: %d мс, получено строк: %d', [RowLimit, ElapsedMs, Length(Rec.V)]) + sLineBreak;
+    end;
+  end;
+
 begin
+  //===== ТЕСТ СКОРОСТИ ADO/FD НА ЗАГРУЗКЕ В МАССИВ (см. !алгоритмы.txt, раздел 6.7) =====
+  TestVolumes := [100, 1000, 5000, 20000, 100000];
+  TestReport := '';
+  TestQ := TmyDBOra.CreateObject(Application, 'connect', True);
+  try
+    RunVolumeTest(mydbbAdo, 'ADO');
+    RunVolumeTest(mydbbFireDac, 'FireDAC');
+  finally
+    TestQ.Free;
+  end;
+  MyInfoMessage(TestReport, 1);
+  Exit;
+
   Wh.ExecReference(myfrm_Dlg_MainSettings);exit;
   Orders.ConvertOrders2026;  Exit;
 

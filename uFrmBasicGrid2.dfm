@@ -91,8 +91,10 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
                 ExplicitWidth = 46
+                ExplicitHeight = 120
                 inherited PRowDetailPanel: TPanel
                   Width = 44
                   ExplicitWidth = 44
@@ -186,7 +188,9 @@ inherited FrmBasicGrid2: TFrmBasicGrid2
                   Footers = <>
                 end>
               inherited RowDetailData: TRowDetailPanelControlEh
+                ExplicitLeft = 30
                 ExplicitTop = 35
+                ExplicitWidth = 32
                 ExplicitHeight = 2
                 inherited PRowDetailPanel: TPanel
                   Height = 0

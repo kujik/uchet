@@ -1258,7 +1258,7 @@ begin
         Customer := [null, null, null, null, null, null, null, null];
       end
       else begin
-        Customer := Q.QCallStoredProc('p_add_customer', '1;2;3;4;5;id1$io;id2$io;id3$io', [cmb_CustomerName.Text, cmb_CustomerMan.Text, edt_CustomerContacts.Text, cmb_CustomerLegalName.Text, edt_CustomerINN.Text, -1, -1, -1]);
+        Customer := Q.QCallStoredProc('p_add_customer', 'customernamenew$s;contactnamenew$s;contactnew$s;legalnamenew$s;innnew$s;id_customer$io;id_contact$io;id_legal$io', [cmb_CustomerName.Text, cmb_CustomerMan.Text, edt_CustomerContacts.Text, cmb_CustomerLegalName.Text, edt_CustomerINN.Text, -1, -1, -1]);
         if Length(Customer) = 0 then
           Break;
         Fields := Fields + ';id_customer$i;id_customer_contact$i;id_customer_org$i';
@@ -2643,7 +2643,7 @@ begin
         if (Fdbs[j] = 'pos$i') then v := i;
         if (Fmts[j] = 'id_std') then begin
           if S.NNum(MemTableEh1.FieldByName('nstd').Value) = 1 then begin
-            n := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'name$s;newid$io', [MemTableEh1.FieldByName('name').AsString, -1]);
+            n := Q.QCallStoredProc('p_CreateOrStdItem_Nstd', 'NameItem$s;IdItem$io', [MemTableEh1.FieldByName('name').AsString, -1]);
             if Length(n) = 0
               then Res := -1 else v := n[1];
           end;

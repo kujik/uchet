@@ -1,0 +1,40 @@
+//ehlib_win7style			RCDATA "Styles\EhLib.Win10.Style"
+//ehlib_win8style			RCDATA "EhLib.Win8.Style"
+ehlib_win10style			RCDATA "Styles\EhLib.Win10.Style"
+
+ehlib_fmx_down_triangle	     RCDATA "Styles\EhLib.Win10\Png_x1\DownTriangle_4x7_10x10.png"
+ehlib_fmx_left_triangle      RCDATA "Styles\EhLib.Win10\Png_x1\LeftTriangle_4x7_10x10.png"
+ehlib_fmx_right_triangle     RCDATA "Styles\EhLib.Win10\Png_x1\RightTriangle_4x7_10x10.png"
+
+ehlib_fmx_grid_current_row   RCDATA "Styles\EhLib.Win10\Png_x1\GridCurrentRow_12x12.png"
+ehlib_fmx_grid_edit_row      RCDATA "Styles\EhLib.Win10\Png_x1\GridEditRow_12x12.png"
+ehlib_fmx_grid_new_row       RCDATA "Styles\EhLib.Win10\Png_x1\GridNewRow_12x12.png"
+
+ehlib_fmx_nav_first          RCDATA "Styles\EhLib.Win10\Png_x1\NavFirst_12x12.png"
+ehlib_fmx_nav_last           RCDATA "Styles\EhLib.Win10\Png_x1\NavLast_12x12.png"
+ehlib_fmx_nav_new_record     RCDATA "Styles\EhLib.Win10\Png_x1\NavNewRecord_12x12.png"
+ehlib_fmx_nav_next           RCDATA "Styles\EhLib.Win10\Png_x1\NavNext_12x12.png"
+ehlib_fmx_nav_previous          RCDATA "Styles\EhLib.Win10\Png_x1\NavPrevious_12x12.png"
+
+ehlib_fmx_nav_delete_record       RCDATA "Styles\EhLib.Win10\Png_x1\NavDeleteRecord_12x12.png"
+ehlib_fmx_nav_edit_record         RCDATA "Styles\EhLib.Win10\Png_x1\NavEditRecord_12x12.png"
+ehlib_fmx_nav_post               RCDATA "Styles\EhLib.Win10\Png_x1\NavPost_12x12.png"
+ehlib_fmx_nav_cancel             RCDATA "Styles\EhLib.Win10\Png_x1\NavCancel_12x12.png"
+ehlib_fmx_nav_reload             RCDATA "Styles\EhLib.Win10\Png_x1\NavReload_12x12.png"
+
+ehlib_fmx_cross                  RCDATA "Styles\EhLib.Win10\Png_x1\Cross12_12x12.png"
+
+ehlib_fmx_find_next_down          RCDATA "Styles\EhLib.Win10\Png_x1\FindNextDown_12x12.png"
+ehlib_fmx_find_prior_up           RCDATA "Styles\EhLib.Win10\Png_x1\FindPriorUp_12x12.png"
+ehlib_fmx_ellipsis              RCDATA "Styles\EhLib.Win10\Png_x1\Ellipsis_12x12.png"
+ehlib_fmx_filter                RCDATA "Styles\EhLib.Win10\Png_x1\Filter_12x12.png"
+ehlib_fmx_has_filter_open         RCDATA "Styles\EhLib.Win10\Png_x1\HasFilterOpen_12x12.png"
+
+cols_dialog_down                RCDATA "Styles\EhLib.Win10\Png_x1\ColsDialogDown_16x16.png"
+cols_dialog_left                RCDATA "Styles\EhLib.Win10\Png_x1\ColsDialogLeft_16x16.png"
+cols_dialog_right               RCDATA "Styles\EhLib.Win10\Png_x1\ColsDialogRight_16x16.png"
+cols_dialog_set_col_width       RCDATA "Styles\EhLib.Win10\Png_x1\ColsDialogSetColWidth_16x16.png"
+cols_dialog_up                  RCDATA "Styles\EhLib.Win10\Png_x1\ColsDialogUp_16x16.png"
+
+ehlib_fmx_expander_sign_collapsed					RCDATA "Styles\EhLib.Win10\Png_x1\ExpanderSignCollapsed16x16.png"
+ehlib_fmx_expander_sign_expanded          RCDATA "Styles\EhLib.Win10\Png_x1\ExpanderSignExpanded16x16.png"

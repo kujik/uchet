@@ -176,7 +176,7 @@ begin
       F.SetProps('is_preorder;is_plannedorder', [[0, fvtDsbl]]);
     end;
     try
-      F.SetProp('num', StrtoInt(Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io;ns$i;yp$i;dg$i', ['planned_order', YearOf(Date), -1, 1, 1, 4])[2]), fvtVBeg);
+      F.SetProp('num', StrtoInt(Q.QCallStoredProc('p_GetDocumNum', 'ADocum$s;AYear$i;ANum$io;ANoStore$i;AYPrefix$i;ADigits$i', ['planned_order', YearOf(Date), -1, 1, 1, 4])[2]), fvtVBeg);
     except
     end;
     F.SetPropsControls;

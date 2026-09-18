@@ -237,6 +237,11 @@ begin
     ]);
     Frg1.Opt.SetTable('ref_sn_cartypes');
     Frg1.Opt.SetButtons(1, 'readsp');
+    //ЭКСПЕРИМЕНТАЛЬНО: пилот перевода онлайн-грида на FireDAC (см. uFrDBGridEh.PrepareFdDriver и комментарий у
+    //TFrDBGridDataMode.myogdmWithFdDriver) - выбран как самый простой справочник (плоская таблица без join,
+    //поля name/active намеренно без $-аннотации типа, чтобы проверить, что структура берется из реальных
+    //метаданных FDQuery, а не из аннотаций). При проблемах - удалить эту строку, вернется обычный ADO-режим.
+    Frg1.Opt.SetDataMode(myogdmWithFdDriver);
   end
   else if FormDoc = myfrm_R_ServerTasks then begin
     //настройка расписания заданий сервера (cron, активность) - см. заголовок
@@ -2992,7 +2997,7 @@ begin
   //перемещение строки вверх/вниз
   else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_OrderProperties, myfrm_R_WorkCellTypes, myfrm_R_PnlOpsPainting]) then begin
     if (Tag = 1001) or (Tag = 1002) then begin
-      Q.QCallStoredProc('p_ExchangePositions', 't$s;f$s;p$i;d$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
+      Q.QCallStoredProc('p_ExchangePositions', 'ATable$s;AField$s;APos$i;ADirection$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
       Fr.RefreshGrid;
     end;
   end

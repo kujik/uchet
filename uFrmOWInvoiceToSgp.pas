@@ -242,7 +242,7 @@ begin
   //режим создания (заполенния мастером)
   if Mode = fAdd then begin
     if FNum = 0 then
-      FNum := Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
+      FNum := Q.QCallStoredProc('p_GetDocumNum', 'ADocum$s;AYear$i;ANum$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
     for i := 0 to Frg1.GetCount - 1 do
       if S.NSt(Frg1.GetValue('qnt_m', i)) <> '' then
         S.ConcatStP(items, Frg1.GetValue('slash', i), ', ');
@@ -284,7 +284,7 @@ begin
         Break;
     //вызовем процедуру охранения оприходованных позиций в таблице order_stages по stage = 2 (приход на сгп), в режиме добавления к уже оприходованным на текущую дату
     if S.NNum(Frg1.GetValue('qnt_s', i)) <> 0 then
-      Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo;AddQnt$i',
+      Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrders$i;ResQnt$fo;Adding$i',
         VarArrayOf([Frg1.GetValue('id_order_item', i), 2, Date, Frg1.GetValue('qnt_s', i), 1, -1, 1])
       );
   end;
@@ -365,7 +365,7 @@ begin
     Exit;
   //если еще не присвоен номер - получим его функцией бд
   if FNum = 0 then
-    FNum := Q.QCallStoredProc('p_GetDocumNum', 'd$s;y$i;n$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
+    FNum := Q.QCallStoredProc('p_GetDocumNum', 'ADocum$s;AYear$i;ANum$io', ['InvoiceToSgp', YearOf(Date), -1])[2];
   //перерисуем заголовочную часть
   SetTitle;
   Frg1.MemTableEh1.DisableControls;

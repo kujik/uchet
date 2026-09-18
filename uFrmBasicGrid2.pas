@@ -235,7 +235,16 @@ procedure TFrmBasicGrid2.FrgSetEvents(AFrg: TFrDBGridEh);
 //установим события переданного фрейма
 begin
   AFrg.Options:= FrDBGridOptionDef + FrDBGridOptionRefDef;
-  AFrg.Opt.SetDataMode;
+  //УДАЛЕНО (см. !алгоритмы.txt, раздел 6.14): здесь стоял безусловный вызов "AFrg.Opt.SetDataMode;" без
+  //параметра - т.к. у SetDataMode параметр по умолчанию = myogdmWithAdoDriver, это было ЭКВИВАЛЕНТНО
+  //"AFrg.Opt.SetDataMode(myogdmWithAdoDriver);" - то есть ПРИНУДИТЕЛЬНО сбрасывало DataMode в ADO-режим
+  //для ЛЮБОГО грида на базе TFrmBasicGrid2 (и Frg1, и Frg2), затирая дефолт, который TFrDBGridEhOpt.Create
+  //теперь вычисляет из Q.Backend (см. раздел 6.12). Из-за этого при Backend = mydbbFireDac ВСЕ такие гриды
+  //всё равно оставались в ADO-режиме (переставая работать вообще, см. 6.10) - кроме экранов, чей
+  //PrepareForm (вызывается уже ПОСЛЕ FrgSetEvents, см. Prepare) явно переустанавливает DataMode ПОСЛЕ
+  //этого сброса (как сейчас myfrm_R_CarTypes/Frg1). Явные вызовы Opt.SetDataMode(...) в PrepareForm
+  //конкретных экранов (в т.ч. на Frg2) это удаление никак не затрагивает - они выполняются позже и, как и
+  //раньше, побеждают.
 
   Frg1.Opt.SetPanelsSaved(['*']);
 

@@ -335,7 +335,7 @@ begin
     va2 := Q.QLoad('select id, qnt from v_order_item_stages1 where id_order = :id_order$i and st' + IntToStr(FOpMode) + ' in (0,1)', [Fr.ID]);
     for i:=0 to High(va2) do
       //для каждой позиции выполним процедуру с количество, равным кол-ву в заказе, если нужно меньше - все обрабатывается в хранимой процедуре
-      Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo',
+      Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrders$i;ResQnt$fo',
         VarArrayOf([va2[i,0], FOpMode, FDtEdit, va2[i,1], 0, -1])
       );
     if FOpMode in [mToProd,mToSgp,mFromSgp] then
@@ -474,7 +474,7 @@ begin
     if Frg1.GetValue('dt_end') <> null then
       Exit;
     Q.QBeginTrans(True);
-    Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo', [Fr.ID, FOpMode, FDtEdit, Fr.GetValue('qnt'), 1, -1]);
+    Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrders$i;ResQnt$fo', [Fr.ID, FOpMode, FDtEdit, Fr.GetValue('qnt'), 1, -1]);
     Q.QCommitOrRollback(True);
     if (FOpMode in [mToSgp, mFromSgp]) then
       Orders.FinalizeOrder(Frg1.ID, S.Decode([FOpMode, mToSgp, myOrFinalizeToSgp, mFromSgp, myOrFinalizeFromSgp]));
@@ -494,7 +494,7 @@ end;
 procedure TFrmOGjrnOrderStages.Frg2CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean);
 begin
   Q.QBeginTrans(True);
-  Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrder$i;ResQnt$fo',
+  Q.QCallStoredProc('p_OrderStage_SetItem', 'IdOrderItem$i;IdStage$i;NewDt$d;NewQnt$f;UpdateOrders$i;ResQnt$fo',
     VarArrayOf([Fr.ID, FOpMode, FDtEdit, S.NNum(Value), 1, -1])
   );
   Q.QCommitOrRollback;

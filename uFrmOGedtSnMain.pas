@@ -124,6 +124,8 @@ begin
   FCustomOnWay:=Q.QLoadRow0('select onway_custom, onway_dt2, onway_dt1, onway_old_days from spl_minremains_params', []);
   //поля
   Frg1.Options := Frg1.Options + [myogGridLabels, myogLoadAfterVisible, myogIndicatorCheckboxes, myogMultiSelect];
+//Frg1.Opt.SetDataMode(myogdmWithFdDriver);
+//Frg2.Opt.SetDataMode(myogdmWithFdDriver);
   FFields := [
     ['id$i','_id','40'],
     ['aprc_min_ost$f','_aprc_min_ost','40'],
@@ -728,12 +730,10 @@ begin
         Fr.MemTableEh1.Cancel;
       end
       else begin
+        Fr.MemTableEh1.Edit; //+++
         Fr.MemTableEh1.FieldByName(Fr.CurrField).AsInteger := i;
         Mth.PostAndEdit(Fr.MemTableEh1);
-//        Exit;
       end;
-      //MemTableEh1.RefreshRecord;
-      //Mth.PostAndEdit(MemTableEh1);
     end;
     if (Fr.CurrField = 'qnt_order') then begin
       if not (S.IsNumber(Value, 0, 1000000) or (VarToStr(Value) = '')) then
@@ -745,6 +745,7 @@ begin
         Fr.MemTableEh1.Cancel;
       end
       else begin
+        Fr.MemTableEh1.Edit; //+++
         Fr.MemTableEh1.FieldByName(Fr.CurrField).AsVariant := S.NullIfEmpty(Value);
         Fr.MemTableEh1.FieldByName('order_cost').AsVariant := S.NullIf0(Round(S.NNum(Value) * S.NNum(Fr.MemTableEh1.FieldByName('price_main').AsFloat)));
         Fr.MemTableEh1.FieldByName('e_qnt_order').AsInteger := 1;
@@ -1377,7 +1378,7 @@ begin
   SendMail;
   //вызовем процедуру формирования заявки поставщику по переданной категории
   Q.QBeginTrans(True);
-  Q.QCallStoredProc('p_Spl_Create_History', 'st$s', ['Заказ']);
+  Q.QCallStoredProc('p_Spl_Create_History', 'AState$s', ['Заказ']);
   Q.QCallStoredProc('p_CreateSplDemand', 'IdCategory$i', [id_category]);
   Q.QCommitOrRollback();
   //если завершилось неудачно, сообщим и выйдем

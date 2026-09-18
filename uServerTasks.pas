@@ -1131,7 +1131,7 @@ begin
     Q.QLoad(Q.QGetSql('A', 'v_prices_from_sp_schet', Fields.Col(0).Implode(';')) + ' where monitor_price = 1 and id_schet > :id$i order by name asc', [IdSch], na);
     IdSchN := Q.QLoadValue('select max(id_schet) from dv.sp_schet', []);
     //сохраним айди обработанного счета
-    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
+    Q.QCallStoredProc('p_SetProp', 'AProp$s;ASubProp$s;ASt$s;ADt$d;AI$i;AF$f', ['spl_monitoring_prices', 'id_schet_mon', '', null, IdSchN, null]);
     if na.Count > 0 then begin
       Tbl.InitDefaults;
       Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
@@ -1153,7 +1153,7 @@ begin
     Q.QExecSql('update spl_itm_nom_props t set price_check = nvl((select price_new from v_spl_prices_check_get g where g.id_nomencl = t.id), t.price_check)', []);
     //получим и сохраним айди последней накладной
     IdIbN := Q.QLoadValue('select max(id_inbill) from dv.in_bill', []);
-    Q.QCallStoredProc('p_SetProp', 'p$s;sp$s;st$s;dt$d;i$i;f$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
+    Q.QCallStoredProc('p_SetProp', 'AProp$s;ASubProp$s;ASt$s;ADt$d;AI$i;AF$f', ['spl_deals_monitoring', 'id_inbill', '', null, IdIbN, null]);
   except
     Q.QRollbackTrans;
   end;
