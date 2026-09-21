@@ -153,5 +153,6 @@ unapproved RCDATA "R:\Buttons\NEW\unapproved_20.png"
 unapproved2 RCDATA "R:\Buttons\NEW\unapproved_32.png"
 save RCDATA "R:\Buttons\NEW\save_20.png" 
 save32 RCDATA "R:\Buttons\NEW\save_32.png"
+clearfilters RCDATA "R:\Buttons\NEW\claerfilters_20.png"
 
 

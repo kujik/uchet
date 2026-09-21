@@ -246,6 +246,8 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
+  //см. !алгоритмы.txt, 6.28: TCheckListBox для списка уникальных значений в "полном" альт-фильтре
+  Vcl.CheckLst,
   MemTableDataEh, Data.DB, Data.Win.ADODB, DBGridEhGrouping, ToolCtrlsEh,
   DBGridEhToolCtrls, DynVarsEh, GridsEh, DBAxisGridsEh, DBGridEh,
   DataDriverEh, ADODataDriverEh, MemTableEh, Math, PrnDbgEh, ClipBrd,
@@ -291,6 +293,32 @@ const
   //постолбцовый ехlib ИЛИ любой из наших альт-фильтров - числовой/по дате/по диапазону дней/по цвету) -
   //см. UpdateFilterActiveIndicators
   ALT_FILTER_INDICATOR_COLOR = clNavy;
+
+  //см. !алгоритмы.txt, 6.29/6.30: порог числа строк, выше которого форматы для альт-фильтра по цвету
+  //НЕ считаются сразу при открытии вкладки "Цвет" - вместо этого показывается кнопка "Получить цвета",
+  //и расчет идет только по явному клику на нее. Сравнивается с GetCount(True) - числом строк в уже
+  //ОТФИЛЬТРОВАННОМ (текущими фильтрами) наборе, а не GetCount(False) (все загруженные строки) - именно
+  //отфильтрованный набор реально сканирует RefreshColorCacheField (через MemTableEh1.First/Next,
+  //учитывающий Filtered), поэтому и порог должен сравниваться с тем же количеством (испр. по замечанию
+  //пользователя в 6.30 - раньше по ошибке сравнивалось с общим количеством строк, не с отфильтрованным)
+  ALT_COLOR_FILTER_LAZY_THRESHOLD = 3000;
+
+  //см. !алгоритмы.txt, 6.30: фиксированное (одно на все столбцы и все гриды - "сквозняком", по просьбе
+  //пользователя) имя секции в конфиге пользователя для сохранения/восстановления размеров (ширина/высота)
+  //единого окна альт-фильтра (ShowAltFullFilterWindow) - специально НЕ включает имя столбца/грида
+  ALT_FULL_FILTER_WINDOW_SECTION = 'ALT_FULL_FILTER_WINDOW';
+
+  //см. !алгоритмы.txt, 6.28. ЭКСПЕРИМЕНТАЛЬНО: True - вместо (точнее, в дополнение к) вызова окна
+  //альт-фильтра по Alt-F пытаемся рисовать и обрабатывать кастомную кнопку прямо в заголовке столбца
+  //(правая часть заголовка), заменяя тем самым необходимость пользоваться стандартной кнопкой фильтра
+  //ехlib - см. DbGridEh1MouseDown/SetColumnsPropertyes (там же отключается Column.STFilter.Visible
+  //для всех столбцов, если константа True, иначе кнопки ехlib и наша могли бы визуально накладываться
+  //друг на друга). НЕ ПРОВЕРЕНО на реальном экране (нет возможности скомпилировать/запустить самому) -
+  //в частности, неизвестно, не вызовет ли клик по нашей кнопке ПОСЛЕ обработки в MouseDown еще и
+  //штатную сортировку по клику на заголовке (dghAutoSortMarking) как побочный эффект. Включать для
+  //осторожного тестирования, по умолчанию False (тогда единственный способ вызвать альт-фильтр - Alt-F,
+  //как и было)
+  ALT_FILTER_CUSTOM_HEADER_BUTTON = False;
 
 
 type
@@ -969,6 +997,47 @@ type
     //независимо от того, что именно каждая конкретная форма изначально задала для Title.Font данного
     //столбца (жирность/цвет могут отличаться от формы к форме)
     FTitleDefaultFont: TObjectDictionary<string, TFont>;
+    //см. !алгоритмы.txt, 6.28: активные альтернативные фильтры "список значений" (аналог чекбоксов в
+    //стандартном фильтре ехlib, но свой - список строится по РЕАЛЬНО встречающимся в столбце значениям,
+    //см. GetDistinctFieldValues). Ключ - имя поля (нижний регистр), значение - список ПРИНИМАЕМЫХ
+    //значений (как строки, см. GetFieldValueKey - для NULL используется значение '(пусто)', как и в
+    //отображаемом списке; коллизия с реальным значением '(пусто)' в данных теоретически возможна, но
+    //намеренно не обрабатывается отдельно - см. похожие допущения у FAltDateRelFilters/условия)
+    FAltValueListFilters: TObjectDictionary<string, TStringList>;
+    //см. !алгоритмы.txt, 6.28: активные альтернативные фильтры "условие" (аналог "Пользовательский
+    //фильтр..." в стандартном окне ехlib, но с проверкой типа значения при вводе, см.
+    //AltConditionFormCloseQuery). [i][0] - имя поля (нижний регистр), [i][1] - код операции ('='/'<>'/
+    //'>'/'>='/'<'/'<='/'между' для чисел и дат; '='/'<>'/'содержит'/'не содержит'/'начинается с'/
+    //'заканчивается на' для строк), [i][2] - значение (Variant: Double для чисел, TDateTime для дат,
+    //string для строк), [i][3] - второе значение, только для 'между'
+    FAltConditionFilters: TVarDynArray2;
+    //см. !алгоритмы.txt, 6.28: временные ссылки на контролы окон ShowAltValueListWindow/
+    //ShowAltConditionDialog, нужны обработчикам-методам класса (AltValueListSelectAllClick/
+    //AltValueListSelectNoneClick/AltConditionOperatorChange/AltConditionFormCloseQuery) - вложенные
+    //процедуры несовместимы с типом "процедура объекта" (см. похожее решение у FAltDateFilterPickedPeriod/
+    //FColorFilterFormats)
+    FAltValueListBox: TCheckListBox;
+    FCondFld: TField;
+    FCondCombo: TComboBox;
+    FCondEdt1, FCondEdt2: TEdit;
+    FCondLbl2: TLabel;
+    FCondOps: TArray<string>;
+    //см. !алгоритмы.txt, 6.29: единое окно альт-фильтра с вкладками (ShowAltFullFilterWindow) - поле,
+    //по которому открыто окно (общее на все вкладки; FCondFld при этом используется только внутри
+    //вкладки "Условие", как и раньше), и контролы вкладок, нужные их собственным обработчикам-методам
+    FAltFullFld: TField;
+    FAltFullValueListAll: TArray<string>;
+    FAltFullDtpFrom, FAltFullDtpTo: TDateTimePicker;
+    FAltFullEdtFwd, FAltFullEdtBack: TEdit;
+    FAltFullColorListBox: TListBox;
+    FAltFullColorGetBtn: TButton;
+    //см. !алгоритмы.txt, 6.30: множество ключей значений (см. GetFieldValueKey), встречающихся среди
+    //строк, проходящих ВСЕ ОСТАЛЬНЫЕ активные фильтры (кроме фильтров по этому же полю) - используется
+    //на вкладке "Значения" единого окна, чтобы поднять такие значения наверх списка и подсветить
+    //отсутствующие (нет ни одной строки под них при текущих прочих фильтрах) красным - см.
+    //GetPresentValueKeysExcludingOwnFilters/AltValueListBoxDrawItem. Заполняется заново при каждом
+    //открытии окна, освобождается в ShowAltFullFilterWindow
+    FAltValueListPresentKeys: TDictionary<string, Boolean>;
     //произвольно задаваемый тект для статусбара; если не задан, то будет инфа о количестве записей; задается публичной процедурой
     FStatusBarText: string;
     //последний тект в статусбаре (чтобы не перерисовывать постоянно; при этом тормозит)
@@ -1427,6 +1496,100 @@ type
     //ClearOrRestoreFilter (Ctrl-Q), который работает только со стандартным фильтром и умеет его
     //запоминать/восстанавливать вместо полного сброса. См. mbtClearAllGridFilters/Ctrl-Shift-Q
     procedure ClearAllFilters;
+    //см. !алгоритмы.txt, 6.28. категория поля для целей альт-фильтра "список значений"/"условие": 0 -
+    //числовое, 1 - дата/время, 2 - все прочие (строки и т.п.). Тот же набор типов, что и в диспетчере
+    //ShowAltColumnFilter (числа/даты), вынесен сюда, чтобы не дублировать в нескольких местах
+    function GetFilterFieldCategory(Fld: TField): Integer;
+    //см. !алгоритмы.txt, 6.29. текстовое представление значения поля для альт-фильтра "список значений" -
+    //ПРИНИМАЕТ ГОТОВЫЙ Variant (не TField) и категорию поля (см. GetFilterFieldCategory) - используется
+    //как для построения списка уникальных значений (GetDistinctFieldValues, там значение читается напрямую
+    //из внутреннего массива MemTableEh, без TField), так и при проверке текущей записи на соответствие
+    //фильтру (MemTableEh1FilterRecord, там значение - Fld.Value). Важно использовать ОДНУ и ту же функцию
+    //в обоих местах с одной и той же категорией - иначе сравнение не сработает (раньше, до 6.29, здесь
+    //использовался Fld.AsString, что было и медленно строить массово, и не гарантированно давало то же
+    //самое представление, что дало бы прямое чтение значения). NULL/Unassigned представляется как '(пусто)'
+    function GetFieldValueKey(const V: Variant; Cat: Integer): string;
+    //см. !алгоритмы.txt, 6.29. список уникальных значений поля (текстом, см. GetFieldValueKey) - ПЕРЕПИСАНО
+    //с полного прохода по MemTableEh1 через курсор датасета (First/Next+TField, было неприемлемо медленно
+    //на больших таблицах) на прямое чтение из внутреннего массива (MemTableEh1.RecordsView.MemTableData.
+    //RecordsList) - по тому же принципу, что и существующие GetValue/GetCount(False) в этом же модуле,
+    //без обращения к курсору датасета вообще. Не учитывает текущие фильтры (всегда по ВСЕМ загруженным
+    //строкам, Filtered=False) - иначе, однажды сузив список выбранных значений, нельзя было бы вернуть
+    //снятые обратно, т.к. они пропали бы из самого списка. Отсортирован, без повторов
+    function GetDistinctFieldValues(Fld: TField): TArray<string>;
+    //см. !алгоритмы.txt, 6.28. установить (AValues - принимаемые значения, см. GetFieldValueKey) или
+    //сбросить (AValues = []) альтернативный фильтр "список значений" по указанному полю, и немедленно
+    //переприменить фильтр грида
+    procedure SetAltValueListFilter(FieldName: string; const AValues: TArray<string>);
+    //см. !алгоритмы.txt, 6.28. сбросить альтернативный фильтр "список значений" для указанного поля
+    procedure ClearAltValueListFilter(FieldName: string);
+    //см. !алгоритмы.txt, 6.28. установить альтернативный фильтр "условие" по указанному полю (Op - код
+    //операции, см. комментарий у FAltConditionFilters; Val2 используется только для Op = 'между') и
+    //немедленно переприменить фильтр грида
+    procedure SetAltConditionFilter(FieldName: string; const Op: string; Val1, Val2: Variant);
+    //см. !алгоритмы.txt, 6.28. сбросить альтернативный фильтр "условие" для указанного поля
+    procedure ClearAltConditionFilter(FieldName: string);
+    //см. !алгоритмы.txt, 6.28. сбросить ВСЕ альт-фильтры (числовой/дата/диапазон дней/цвет/список
+    //значений/условие) для ОДНОГО указанного поля - используется кнопкой "Сбросить фильтр по
+    //столбцу" в окнах ShowAltNumFilterWindow/ShowAltDateFilterWindow/ShowAltColorFilterWindow, т.к.
+    //в одном окне теперь может быть отмечена комбинация разных видов альт-фильтра по одному полю
+    procedure ClearAllAltFiltersForField(FieldName: string);
+    //см. !алгоритмы.txt, 6.28. окно альтернативного фильтра "список значений" (чекбоксы по РЕАЛЬНО
+    //встречающимся значениям столбца, см. GetDistinctFieldValues) - часть "полной версии" альт-фильтра,
+    //вызывается как из диспетчера ShowAltColumnFilter (кнопка "Значения..."), так и из окон числового/
+    //датового/цветового альт-фильтра (та же кнопка)
+    procedure ShowAltValueListWindow(Fld: TField);
+    //см. !алгоритмы.txt, 6.28. окно альтернативного фильтра "условие" - в отличие от стандартного окна
+    //ехlib ("Пользовательский фильтр..."), проверяет тип введенного значения (число/дата) ДО применения,
+    //с понятным сообщением об ошибке вместо потенциального исключения при сравнении
+    procedure ShowAltConditionDialog(Fld: TField);
+    //см. !алгоритмы.txt, 6.28. кнопки "Выбрать все"/"Снять все" в окне ShowAltValueListWindow -
+    //методы класса, а не вложенные процедуры (см. комментарий у FAltValueListBox)
+    procedure AltValueListSelectAllClick(Sender: TObject);
+    procedure AltValueListSelectNoneClick(Sender: TObject);
+    //см. !алгоритмы.txt, 6.28. смена операции в окне ShowAltConditionDialog - показывает/скрывает
+    //второе поле значения (только для операции "между")
+    procedure AltConditionOperatorChange(Sender: TObject);
+    //см. !алгоритмы.txt, 6.28. проверка введенного значения (значений) в окне ShowAltConditionDialog
+    //ПЕРЕД закрытием по ОК - если значение не соответствует типу поля (число/дата), не закрывает окно
+    //и показывает сообщение об ошибке вместо стандартного (небезопасного) поведения ехlib
+    procedure AltConditionFormCloseQuery(Sender: TObject; var CanClose: Boolean);
+    //см. !алгоритмы.txt, 6.29. единое окно альт-фильтра с вкладками (TPageControl) - список значений,
+    //"быстрые" условия по типу поля (для чисел/дат), условие, цвет - вместо цепочки отдельных окон
+    //(6.28). Каждая вкладка применяет свое сразу по кнопке, БЕЗ закрытия окна - см. комментарий у
+    //реализации. Заменяет собой вызов ShowAltNumFilterWindow/ShowAltDateFilterWindow/
+    //ShowAltColorFilterWindow из диспетчера ShowAltColumnFilter (сами эти три процедуры, а также
+    //ShowAltValueListWindow/ShowAltConditionDialog, оставлены в коде как есть, но диспетчером больше
+    //не вызываются)
+    procedure ShowAltFullFilterWindow(Fld: TField);
+    //см. !алгоритмы.txt, 6.29. обработчики кнопок/списков вкладок ShowAltFullFilterWindow - методы
+    //класса по той же причине, что и остальные обработчики окон альт-фильтра (см. 6.25) - каждый
+    //применяет свое сразу (Set.../ClearAlt...Filter), не закрывая общее окно
+    procedure AltFullNumQuickClick(Sender: TObject);
+    procedure AltFullDatePeriodListClick(Sender: TObject);
+    procedure AltFullDateApplyRangeClick(Sender: TObject);
+    procedure AltFullDateApplyRelClick(Sender: TObject);
+    procedure AltFullValueListApplyClick(Sender: TObject);
+    procedure AltFullConditionApplyClick(Sender: TObject);
+    procedure AltFullColorGetColorsClick(Sender: TObject);
+    procedure AltFullColorApplyClick(Sender: TObject);
+    procedure AltFullResetClick(Sender: TObject);
+    procedure AltFullClearAllClick(Sender: TObject);
+    //см. !алгоритмы.txt, 6.30. множество ключей значений, встречающихся среди строк, проходящих ВСЕ
+    //фильтры, КРОМЕ фильтров по этому же полю (все виды - число/дата/диапазон/цвет/список значений/
+    //условие для этого Fld временно снимаются, считается фильтрованный набор, потом фильтры
+    //возвращаются как были) - используется на вкладке "Значения", чтобы поднять такие значения наверх
+    //списка и подсветить остальные (без единой подходящей строки при текущих ОСТАЛЬНЫХ фильтрах)
+    //красным, см. AltValueListBoxDrawItem. Результат нужно освободить (Free) вызывающей стороне
+    function GetPresentValueKeysExcludingOwnFilters(Fld: TField; Cat: Integer): TDictionary<string, Boolean>;
+    //см. !алгоритмы.txt, 6.30. отрисовка одного пункта FAltValueListBox (вкладка "Значения") - обычный
+    //чекбокс TCheckListBox рисует сам (Style=lbOwnerDrawFixed + OnDrawItem не отключает его отрисовку,
+    //Rect уже приходит БЕЗ области чекбокса - см. VCL Vcl.CheckLst), здесь рисуется только текст,
+    //красным - если значения нет в FAltValueListPresentKeys (при текущих ОСТАЛЬНЫХ фильтрах по этому
+    //значению нет ни одной строки)
+    procedure AltValueListBoxDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+    //см. !алгоритмы.txt, 6.30. кнопка "Инвертировать" на вкладке "Значения"
+    procedure AltValueListInvertClick(Sender: TObject);
  end;
 
 
@@ -2106,6 +2269,8 @@ begin
   FColorCacheParams := TColCellParamsEh.Create;
   //см. !алгоритмы.txt, 6.27
   FTitleDefaultFont := TObjectDictionary<string, TFont>.Create([doOwnsValues]);
+  //см. !алгоритмы.txt, 6.28
+  FAltValueListFilters := TObjectDictionary<string, TStringList>.Create([doOwnsValues]);
 end;
 
 destructor TFrDBGridEh.Destroy;
@@ -2131,6 +2296,8 @@ begin
   FColorCache.Free;
   //см. !алгоритмы.txt, 6.27
   FTitleDefaultFont.Free;
+  //см. !алгоритмы.txt, 6.28
+  FAltValueListFilters.Free;
   inherited;
 //  MadExcept.GetLeakReport;
 end;
@@ -2430,7 +2597,22 @@ end;
 
 procedure TFrDBGridEh.DbGridEh1ContextPopup(Sender: TObject; MousePos: TPoint;  var Handled: Boolean);
 //сюда попадем при вызове контектного меню
+//см. !алгоритмы.txt, 6.30: если включен ALT_FILTER_CUSTOM_HEADER_BUTTON и правый клик пришелся на
+//строку заголовка - не показываем стандартное контекстное меню грида (PmGrid). В 6.29 ошибочно
+//предполагалось, что ПКМ по заголовку ничем не занято (см. комментарий в DbGridEh1MouseDown) - по факту
+//(тест пользователя после включения константы) меню грида все равно всплывало поверх уже обработанного
+//там же кастомного фильтра. MousePos - клиентские координаты DBGridEh1 при вызове мышью; (-1,-1), если
+//меню вызвано с клавиатуры (Shift+F10/клавиша Menu) - в этом случае ничего не трогаем, ведет себя как раньше
+var
+  Coord: TGridCoord;
 begin
+  if ALT_FILTER_CUSTOM_HEADER_BUTTON and (MousePos.X >= 0) and (MousePos.Y >= 0) then begin
+    Coord := DBGridEh1.MouseCoord(MousePos.X, MousePos.Y);
+    if Coord.Y = 0 then begin
+      Handled := True;
+      Exit;
+    end;
+  end;
   ChangeSelectedData;
   inherited;
 end;
@@ -2581,8 +2763,37 @@ end;
 
 procedure TFrDBGridEh.DbGridEh1MouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 //клик мышкой
+//см. !алгоритмы.txt, 6.29 (ЭКСПЕРИМЕНТАЛЬНО, ALT_FILTER_CUSTOM_HEADER_BUTTON): кастомная кнопка
+//фильтра в заголовке столбца. ПЕРЕДЕЛАНО с левого клика по узкой "кнопочной" зоне (последние 18
+//пикселей ячейки заголовка) на ПРАВЫЙ клик по всей ячейке заголовка - по факту (сообщение
+//пользователя после тестирования) левый клик даже вне этой зоны все равно перехватывался штатной
+//сортировкой ехlib раньше, чем срабатывала наша проверка, и координатное вычисление "кнопочной"
+//зоны в принципе ненадежно (тот же вывод у пользователя был и раньше, при решении похожей задачи).
+//С сортировкой (срабатывает по ЛЕВОЙ кнопке) правый клик не конфликтует - но, как показал реальный тест
+//(6.30), ПКМ по заголовку ВСЕ ЖЕ было занято - всплывало стандартное контекстное меню грида (PmGrid),
+//предположение в предыдущей версии этого комментария о том, что оно относится только к области данных,
+//было ошибочным. Исправлено в DbGridEh1ContextPopup (см. там) - меню принудительно подавляется
+//(Handled := True), если клик пришелся на строку заголовка и константа включена
+var
+  Coord: TGridCoord;
+  ColIdx: Integer;
 begin
-//
+  if not ALT_FILTER_CUSTOM_HEADER_BUTTON then
+    Exit;
+  if Button <> mbRight then
+    Exit;
+  Coord := DBGridEh1.MouseCoord(X, Y);
+  //строка заголовка - индекс строки грида 0 (см. аналогичное допущение в комментарии у константы -
+  //не проверено, в некоторых конфигурациях DBGridEh заголовок может иметь другой Row)
+  if (Coord.Y <> 0) or (Coord.X < 0) then
+    Exit;
+  ColIdx := GetCol(Coord.X);
+  if (ColIdx < 0) or (ColIdx > DBGridEh1.Columns.Count - 1) or (DBGridEh1.Columns[ColIdx].Field = nil) then
+    Exit;
+  //выставим текущий столбец, чтобы отложенный вызов ShowAltColumnFilter (использующий GetCol/
+  //DBGridEh1.Col без параметра) сработал именно для кликнутого столбца
+  DBGridEh1.Col := Coord.X;
+  PostMessage(Handle, WM_MY_ALTCOLUMNFILTER, 0, 0);
 end;
 
 procedure TFrDBGridEh.DbGridEh1MouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -2813,6 +3024,12 @@ begin
     //ломало диалог условия. Костыли (клик по гриду, F3) оставлены как есть, на всякий случай - вреда от
     //них при InstantApply=True никакого, а перестраховка не помешает.
     DBGridEh1.STFilter.InstantApply := True;
+    //см. !алгоритмы.txt, 6.28 (ЭКСПЕРИМЕНТАЛЬНО, ALT_FILTER_CUSTOM_HEADER_BUTTON): если включен режим
+    //кастомной кнопки фильтра в заголовке - отключим стандартную кнопку ехlib в каждом столбце, чтобы
+    //они не накладывались друг на друга визуально и по обработке клика
+    if ALT_FILTER_CUSTOM_HEADER_BUTTON then
+      for i := 0 to DBGridEh1.Columns.Count - 1 do
+        DBGridEh1.Columns[i].STFilter.Visible := False;
   end;
   //фильтр или поиск в панели
   b:=(myogPanelFilter in FOptions) or (myogPanelFind  in FOptions); //(myogColumnFilter in FOptions) or
@@ -5445,26 +5662,26 @@ begin
   Fld := DBGridEh1.Columns[GetCol].Field;
   if Fld = nil then
     Exit;
-  if Fld.DataType in [ftSmallint, ftInteger, ftWord, ftLargeint, ftFloat, ftCurrency, ftBCD, ftFMTBcd] then
-    ShowAltNumFilterWindow(Fld)
-  else if Fld.DataType in [ftDate, ftDateTime, ftTimeStamp, ftTime] then
-    ShowAltDateFilterWindow(Fld)
-  else
-    ShowAltColorFilterWindow(Fld);
+  //см. !алгоритмы.txt, 6.29: единое окно с вкладками вместо отдельного окна на тип поля
+  ShowAltFullFilterWindow(Fld);
 end;
 
 procedure TFrDBGridEh.ShowAltNumFilterWindow(Fld: TField);
-//см. !алгоритмы.txt, 6.23/6.26. окно альтернативного фильтра для числового столбца - кнопки "Больше 0"/
-//"Меньше 0"/"Равно 0", сброс, и (6.26) "Цвет..." - открывает ShowAltColorFilterWindow ПОСЛЕ закрытия
-//этого окна (см. OpenColorFilter ниже) - т.к. нельзя открыть второе модальное окно, не закрыв текущее
+//см. !алгоритмы.txt, 6.23/6.26/6.28. окно альтернативного фильтра для числового столбца - кнопки
+//"Больше 0"/"Меньше 0"/"Равно 0", сброс, (6.26) "Цвет...", (6.28) "Значения..."/"Условие..."/"Снять
+//все фильтры" - "Цвет..."/"Значения..."/"Условие..." открывают соответствующее окно ПОСЛЕ закрытия
+//этого (см. OpenColorFilter/OpenValueList/OpenCondition ниже) - т.к. нельзя открыть второе модальное
+//окно, не закрыв текущее
 var
   frm: TForm;
+  lbl: TLabel;
   btn: TButton;
   CellR: TRect;
   pt: TPoint;
   i, y: Integer;
   CurrCondition: string;
-  OpenColorFilter: Boolean;
+  HasExtra: Boolean;
+  OpenColorFilter, OpenValueList, OpenCondition: Boolean;
 
   procedure AddBtn(ACaption: string; AModalResult: TModalResult; AEnabled, ABold: Boolean);
   begin
@@ -5481,10 +5698,16 @@ var
 
 begin
   OpenColorFilter := False;
+  OpenValueList := False;
+  OpenCondition := False;
   CurrCondition := '';
   i := A.PosInArray(LowerCase(Fld.FieldName), FAltNumFilters, 0, True);
   if i >= 0 then
     CurrCondition := VarToStr(FAltNumFilters[i][1]);
+  //см. !алгоритмы.txt, 6.28: "Сбросить фильтр по столбцу" должна быть доступна и если активен только
+  //один из новых альт-фильтров (список значений/условие), даже без CurrCondition
+  HasExtra := FAltValueListFilters.ContainsKey(LowerCase(Fld.FieldName)) or
+    (A.PosInArray(LowerCase(Fld.FieldName), FAltConditionFilters, 0, True) >= 0);
   frm := TForm.CreateNew(Application, 0);
   try
     frm.BorderStyle := bsToolWindow;
@@ -5493,23 +5716,41 @@ begin
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.ClientWidth := 180;
-    frm.ClientHeight := 5 * 28 + 8;
     CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
     y := 4;
+    //см. !алгоритмы.txt, 6.28: название столбца отдельной надписью - в заголовке окна не всегда видно
+    //целиком, если оно длинное
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.WordWrap := True;
+    lbl.AutoSize := True;
+    lbl.Width := frm.ClientWidth - 8;
+    lbl.Left := 4;
+    lbl.Top := y;
+    lbl.Font.Style := lbl.Font.Style + [fsBold];
+    lbl.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    y := y + lbl.Height + 6;
     AddBtn('Больше 0', mrYes, True, CurrCondition = '>0');
     AddBtn('Меньше 0', mrNo, True, CurrCondition = '<0');
     AddBtn('Равно 0', mrAll, True, CurrCondition = '=0');
     AddBtn('Цвет...', mrRetry, True, False);
-    AddBtn('Сбросить фильтр по столбцу', mrIgnore, CurrCondition <> '', False);
+    AddBtn('Значения...', mrNoToAll, True, False);
+    AddBtn('Условие...', mrClose, True, False);
+    AddBtn('Сбросить фильтр по столбцу', mrIgnore, (CurrCondition <> '') or HasExtra, False);
+    AddBtn('Снять все фильтры', mrAbort, True, False);
+    frm.ClientHeight := y;
     case frm.ShowModal of
       mrYes: SetAltNumFilter(Fld.FieldName, '>0');
       mrNo: SetAltNumFilter(Fld.FieldName, '<0');
       mrAll: SetAltNumFilter(Fld.FieldName, '=0');
       mrRetry: OpenColorFilter := True;
-      mrIgnore: SetAltNumFilter(Fld.FieldName, '');
+      mrNoToAll: OpenValueList := True;
+      mrClose: OpenCondition := True;
+      mrIgnore: ClearAllAltFiltersForField(Fld.FieldName);
+      mrAbort: ClearAllFilters;
       //mrCancel (Esc, или системное закрытие крестиком/Alt+F4 - VCL сам подставляет mrCancel,
       //если оно не было явно установлено) - ничего не делаем, оставляем фильтр как был
     end;
@@ -5518,15 +5759,20 @@ begin
   end;
   if OpenColorFilter then
     ShowAltColorFilterWindow(Fld);
+  if OpenValueList then
+    ShowAltValueListWindow(Fld);
+  if OpenCondition then
+    ShowAltConditionDialog(Fld);
 end;
 
 procedure TFrDBGridEh.ShowAltDateFilterWindow(Fld: TField);
-//см. !алгоритмы.txt, 6.24/6.26/6.27. окно альтернативного фильтра для столбца с датой/датой-временем -
-//быстрый выбор периода (список DatePeriods, как в uFrmXDedtGridFilter/PmPeriodClick, только для
-//отбора уже загруженных строк, а не для условия в SQL), произвольный период "с..по", (6.27) диапазон
-//дней от сегодня (вперед/назад, могут быть отрицательными - например "от -7 до +2" - неделю назад -
-//послезавтра), сброс, и (6.26) "Цвет..." - открывает ShowAltColorFilterWindow ПОСЛЕ закрытия этого
-//окна (см. OpenColorFilter ниже)
+//см. !алгоритмы.txt, 6.24/6.26/6.27/6.28. окно альтернативного фильтра для столбца с датой/датой-
+//временем - быстрый выбор периода (список DatePeriods, как в uFrmXDedtGridFilter/PmPeriodClick,
+//только для отбора уже загруженных строк, а не для условия в SQL), произвольный период "с..по",
+//(6.27) диапазон дней от сегодня (вперед/назад, могут быть отрицательными - например "от -7 до +2" -
+//неделю назад - послезавтра), сброс, (6.26) "Цвет...", (6.28) "Значения..."/"Условие..."/"Снять все
+//фильтры" - "Цвет.../Значения.../Условие..." открывают соответствующее окно ПОСЛЕ закрытия этого
+//(см. OpenColorFilter/OpenValueList/OpenCondition ниже)
 var
   frm: TForm;
   lst: TListBox;
@@ -5537,15 +5783,17 @@ var
   CellR: TRect;
   pt: TPoint;
   i, y: Integer;
-  HasCurr, HasCurrRel: Boolean;
+  HasCurr, HasCurrRel, HasExtra: Boolean;
   CurrFrom, CurrTo: TDateTime;
   CurrDaysForward, CurrDaysBack: Integer;
-  OpenColorFilter: Boolean;
+  OpenColorFilter, OpenValueList, OpenCondition: Boolean;
 begin
   //выбор пункта списка периодов обрабатывается методом AltDateFilterListClick (см. !алгоритмы.txt,
   //6.25) - нельзя было использовать вложенную процедуру этой процедуры для OnClick, т.к. это
   //"обычная процедура", а не "процедура объекта" (несовместимые типы для TNotifyEvent)
   OpenColorFilter := False;
+  OpenValueList := False;
+  OpenCondition := False;
   FAltDateFilterPickedPeriod := -1;
   HasCurr := False;
   CurrFrom := Date;
@@ -5565,6 +5813,8 @@ begin
     CurrDaysForward := FAltDateRelFilters[i][1];
     CurrDaysBack := FAltDateRelFilters[i][2];
   end;
+  HasExtra := FAltValueListFilters.ContainsKey(LowerCase(Fld.FieldName)) or
+    (A.PosInArray(LowerCase(Fld.FieldName), FAltConditionFilters, 0, True) >= 0);
   frm := TForm.CreateNew(Application, 0);
   try
     frm.BorderStyle := bsToolWindow;
@@ -5579,6 +5829,18 @@ begin
     frm.Top := pt.Y;
 
     y := 4;
+    //см. !алгоритмы.txt, 6.28: название столбца отдельной надписью - в заголовке окна не всегда видно
+    //целиком, если оно длинное
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.WordWrap := True;
+    lbl.AutoSize := True;
+    lbl.Width := frm.ClientWidth - 8;
+    lbl.Left := 4;
+    lbl.Top := y;
+    lbl.Font.Style := lbl.Font.Style + [fsBold];
+    lbl.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    y := y + lbl.Height + 6;
     lst := TListBox.Create(frm);
     lst.Parent := frm;
     for i := 0 to High(DatePeriods) do
@@ -5660,10 +5922,31 @@ begin
 
     btn := TButton.Create(frm);
     btn.Parent := frm;
+    btn.Caption := 'Значения...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrNoToAll;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Условие...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrClose;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
     btn.Caption := 'Сбросить фильтр по столбцу';
     btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
     btn.ModalResult := mrIgnore;
-    btn.Enabled := HasCurr or HasCurrRel;
+    btn.Enabled := HasCurr or HasCurrRel or HasExtra;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Снять все фильтры';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrAbort;
     y := y + btn.Height + 4;
 
     frm.ClientHeight := y;
@@ -5684,10 +5967,10 @@ begin
         SetAltDateRelFilter(Fld.FieldName, StrToIntDef(Trim(edtDaysForward.Text), 0),
           StrToIntDef(Trim(edtDaysBack.Text), 0));
       mrRetry: OpenColorFilter := True;
-      mrIgnore: begin
-        ClearAltDateFilter(Fld.FieldName);
-        ClearAltDateRelFilter(Fld.FieldName);
-      end;
+      mrNoToAll: OpenValueList := True;
+      mrClose: OpenCondition := True;
+      mrIgnore: ClearAllAltFiltersForField(Fld.FieldName);
+      mrAbort: ClearAllFilters;
       //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
     end;
   finally
@@ -5695,6 +5978,10 @@ begin
   end;
   if OpenColorFilter then
     ShowAltColorFilterWindow(Fld);
+  if OpenValueList then
+    ShowAltValueListWindow(Fld);
+  if OpenCondition then
+    ShowAltConditionDialog(Fld);
 end;
 
 procedure TFrDBGridEh.SetAltNumFilter(FieldName: string; Condition: string);
@@ -6148,27 +6435,35 @@ begin
 end;
 
 procedure TFrDBGridEh.ShowAltColorFilterWindow(Fld: TField);
-//см. !алгоритмы.txt, 6.26. окно альтернативного фильтра по цвету - список реально встречающихся в
-//столбце форматов (GetDistinctColorFmtsForField), с чекбоксами (условие ИЛИ), плюс сброс. Доступно для
-//столбца любого типа - см. диспетчер ShowAltColumnFilter, а также кнопка "Цвет..." в окнах числового и
+//см. !алгоритмы.txt, 6.26/6.28. окно альтернативного фильтра по цвету - список реально встречающихся
+//в столбце форматов (GetDistinctColorFmtsForField), с чекбоксами (условие ИЛИ), плюс сброс, (6.28)
+//"Значения..."/"Условие..."/"Снять все фильтры". Доступно для столбца любого типа - см. диспетчер
+//ShowAltColumnFilter (для нечисловых/недатовых столбцов - единственное окно альт-фильтра, отсюда и
+//добавление сюда же "Значения.../Условие..."), а также кнопка "Цвет..." в окнах числового и
 //датового альт-фильтров
 var
   frm: TForm;
+  lbl: TLabel;
   lst: TListBox;
-  btnApply, btnReset: TButton;
+  btnApply, btnReset, btn: TButton;
   CellR: TRect;
   pt: TPoint;
   i: Integer;
   y: Integer;
-  HasCurr: Boolean;
+  HasCurr, HasExtra: Boolean;
   CurFormats: TList<TCellColorFmt>;
   AcceptedList: TList<TCellColorFmt>;
   j: Integer;
   Checked: Boolean;
+  OpenValueList, OpenCondition: Boolean;
 begin
+  OpenValueList := False;
+  OpenCondition := False;
   FColorFilterFormats := GetDistinctColorFmtsForField(Fld.FieldName);
   SetLength(FColorFilterChecked, Length(FColorFilterFormats));
   HasCurr := FAltColorFilters.TryGetValue(LowerCase(Fld.FieldName), CurFormats);
+  HasExtra := FAltValueListFilters.ContainsKey(LowerCase(Fld.FieldName)) or
+    (A.PosInArray(LowerCase(Fld.FieldName), FAltConditionFilters, 0, True) >= 0);
   for i := 0 to High(FColorFilterFormats) do begin
     Checked := False;
     if HasCurr then
@@ -6194,6 +6489,18 @@ begin
     frm.Top := pt.Y;
 
     y := 4;
+    //см. !алгоритмы.txt, 6.28: название столбца отдельной надписью - в заголовке окна не всегда видно
+    //целиком, если оно длинное
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.WordWrap := True;
+    lbl.AutoSize := True;
+    lbl.Width := frm.ClientWidth - 8;
+    lbl.Left := 4;
+    lbl.Top := y;
+    lbl.Font.Style := lbl.Font.Style + [fsBold];
+    lbl.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    y := y + lbl.Height + 6;
     lst := TListBox.Create(frm);
     lst.Parent := frm;
     lst.Style := lbOwnerDrawFixed;
@@ -6213,13 +6520,34 @@ begin
     btnApply.ModalResult := mrYes;
     y := y + btnApply.Height + 3;
 
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Значения...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrNoToAll;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Условие...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrClose;
+    y := y + btn.Height + 3;
+
     btnReset := TButton.Create(frm);
     btnReset.Parent := frm;
     btnReset.Caption := 'Сбросить фильтр по столбцу';
     btnReset.SetBounds(4, y, frm.ClientWidth - 8, 25);
     btnReset.ModalResult := mrIgnore;
-    btnReset.Enabled := HasCurr;
-    y := y + btnReset.Height + 4;
+    btnReset.Enabled := HasCurr or HasExtra;
+    y := y + btnReset.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Снять все фильтры';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrAbort;
+    y := y + btn.Height + 4;
 
     frm.ClientHeight := y;
     case frm.ShowModal of
@@ -6234,30 +6562,41 @@ begin
           AcceptedList.Free;
         end;
       end;
-      mrIgnore: ClearAltColorFilter(Fld.FieldName);
+      mrNoToAll: OpenValueList := True;
+      mrClose: OpenCondition := True;
+      mrIgnore: ClearAllAltFiltersForField(Fld.FieldName);
+      mrAbort: ClearAllFilters;
       //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
     end;
   finally
     frm.Free;
   end;
+  if OpenValueList then
+    ShowAltValueListWindow(Fld);
+  if OpenCondition then
+    ShowAltConditionDialog(Fld);
 end;
 
 procedure TFrDBGridEh.MemTableEh1FilterRecord(DataSet: TDataSet; var Accept: Boolean);
-//см. !алгоритмы.txt, 6.20/6.24/6.26/6.27. проверка альтернативных числовых (FAltNumFilters), по дате
-//(FAltDateFilters), по диапазону дней от сегодня (FAltDateRelFilters) и по цвету (FAltColorFilters)
+//см. !алгоритмы.txt, 6.20/6.24/6.26/6.27/6.28. проверка альтернативных числовых (FAltNumFilters), по
+//дате (FAltDateFilters), по диапазону дней от сегодня (FAltDateRelFilters), по цвету
+//(FAltColorFilters), по списку значений (FAltValueListFilters) и по условию (FAltConditionFilters)
 //фильтров (Alt-F) - работает независимо от и вместе со стандартным постолбцовым фильтром ехлиб
 //(см. комментарий у объявления FAltNumFilters) - TDataSet.Filtered учитывает Filter и OnFilterRecord
 //одновременно, через И
 var
   i, j: Integer;
-  v: Double;
-  vd, TodayD: TDateTime;
+  v, v1, v2: Double;
+  vd, vd1, vd2, TodayD: TDateTime;
   DaysForward, DaysBack: Integer;
   Fld: TField;
   ColorPair: TPair<string, TList<TCellColorFmt>>;
   CurFmt: TCellColorFmt;
   CurID: Integer;
   ColorMatched: Boolean;
+  ValPair: TPair<string, TStringList>;
+  CondOp, s, s1: string;
+  CondMatched: Boolean;
 begin
   Accept := True;
   for i := 0 to High(FAltNumFilters) do begin
@@ -6353,6 +6692,82 @@ begin
       end;
     end;
   end;
+  //см. !алгоритмы.txt, 6.28: фильтр "список значений" - для каждого поля с активным фильтром текущая
+  //запись должна иметь одно из ПРИНЯТЫХ значений (условие ИЛИ внутри одного поля, И между полями - как
+  //и у остальных альт-фильтров)
+  if FAltValueListFilters.Count > 0 then
+    for ValPair in FAltValueListFilters do begin
+      Fld := DataSet.FindField(ValPair.Key);
+      if Fld = nil then
+        Continue; //поля с таким именем нет в этом наборе данных - пропустим это условие
+      if ValPair.Value.IndexOf(GetFieldValueKey(Fld.Value, GetFilterFieldCategory(Fld))) < 0 then begin
+        Accept := False;
+        Exit;
+      end;
+    end;
+  //см. !алгоритмы.txt, 6.28: фильтр "условие" - категория поля определяется заново (GetFilterFieldCategory),
+  //а не хранится вместе с условием, чтобы не дублировать её отдельным полем в FAltConditionFilters
+  for i := 0 to High(FAltConditionFilters) do begin
+    Fld := DataSet.FindField(VarToStr(FAltConditionFilters[i][0]));
+    if Fld = nil then
+      Continue; //поля с таким именем нет в этом наборе данных - пропустим это условие
+    CondOp := VarToStr(FAltConditionFilters[i][1]);
+    CondMatched := True;
+    try
+      case GetFilterFieldCategory(Fld) of
+        0: begin //числовое
+          v := Fld.AsFloat;
+          v1 := FAltConditionFilters[i][2];
+          if CondOp = '=' then CondMatched := v = v1
+          else if CondOp = '<>' then CondMatched := v <> v1
+          else if CondOp = '>' then CondMatched := v > v1
+          else if CondOp = '>=' then CondMatched := v >= v1
+          else if CondOp = '<' then CondMatched := v < v1
+          else if CondOp = '<=' then CondMatched := v <= v1
+          else if CondOp = 'между' then begin
+            v2 := FAltConditionFilters[i][3];
+            CondMatched := (v >= Min(v1, v2)) and (v <= Max(v1, v2));
+          end;
+        end;
+        1: begin //дата/время
+          vd := Fld.AsDateTime;
+          vd1 := VarToDateTime(FAltConditionFilters[i][2]);
+          //как и у FAltDateFilters/FAltDateRelFilters - верхняя граница не включительно и увеличена
+          //на 1 день, чтобы захватить весь день независимо от временной части значения поля
+          if CondOp = '=' then CondMatched := (vd >= vd1) and (vd < vd1 + 1)
+          else if CondOp = '>' then CondMatched := vd >= vd1 + 1
+          else if CondOp = '>=' then CondMatched := vd >= vd1
+          else if CondOp = '<' then CondMatched := vd < vd1
+          else if CondOp = '<=' then CondMatched := vd < vd1 + 1
+          else if CondOp = 'между' then begin
+            vd2 := VarToDateTime(FAltConditionFilters[i][3]);
+            CondMatched := (vd >= Min(vd1, vd2)) and (vd < Max(vd1, vd2) + 1);
+          end;
+        end;
+      else begin //строка и все прочие типы
+        s := Fld.AsString;
+        s1 := VarToStr(FAltConditionFilters[i][2]);
+        if CondOp = '=' then CondMatched := SameText(s, s1)
+        else if CondOp = '<>' then CondMatched := not SameText(s, s1)
+        else if CondOp = 'содержит' then CondMatched := Pos(AnsiUpperCase(s1), AnsiUpperCase(s)) > 0
+        else if CondOp = 'не содержит' then CondMatched := Pos(AnsiUpperCase(s1), AnsiUpperCase(s)) = 0
+        else if CondOp = 'начинается с' then
+          CondMatched := (Length(s) >= Length(s1)) and SameText(Copy(s, 1, Length(s1)), s1)
+        else if CondOp = 'заканчивается на' then
+          CondMatched := (Length(s) >= Length(s1)) and
+            SameText(Copy(s, Length(s) - Length(s1) + 1, Length(s1)), s1);
+      end;
+      end;
+    except
+      //как и у остальных альт-фильтров (см. FAltNumFilters/FAltDateFilters выше) - при ошибке доступа
+      //или преобразования значения не роняем фильтр целиком, просто пропускаем это условие
+      CondMatched := True;
+    end;
+    if not CondMatched then begin
+      Accept := False;
+      Exit;
+    end;
+  end;
 end;
 
 procedure TFrDBGridEh.UpdateFilterActiveIndicators;
@@ -6387,7 +6802,9 @@ begin
       (A.PosInArray(FieldNameLower, FAltNumFilters, 0, True) >= 0) or
       (A.PosInArray(FieldNameLower, FAltDateFilters, 0, True) >= 0) or
       (A.PosInArray(FieldNameLower, FAltDateRelFilters, 0, True) >= 0) or
-      FAltColorFilters.ContainsKey(FieldNameLower);
+      FAltColorFilters.ContainsKey(FieldNameLower) or
+      FAltValueListFilters.ContainsKey(FieldNameLower) or
+      (A.PosInArray(FieldNameLower, FAltConditionFilters, 0, True) >= 0);
     Col.Title.Font.Assign(DefFont);
     if IsFiltered then begin
       Col.Title.Font.Style := Col.Title.Font.Style + [fsBold];
@@ -6408,12 +6825,1236 @@ begin
   FAltDateFilters := [];
   FAltDateRelFilters := [];
   FAltColorFilters.Clear;
+  FAltValueListFilters.Clear;
+  FAltConditionFilters := [];
   //если стандартный фильтр был запомнен (Ctrl-Q) - раз мы сбрасываем вообще все, забудем и его тоже,
   //иначе следующий Ctrl-Q неожиданно восстановил бы то, что пользователь только что явно сбросил
   FLastFilter := [];
   MemTableEh1.Filtered := False;
   MemTableEh1.Filtered := True;
   UpdateFilterActiveIndicators;
+end;
+
+function TFrDBGridEh.GetFilterFieldCategory(Fld: TField): Integer;
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления функции в интерфейсной части
+begin
+  if Fld.DataType in [ftSmallint, ftInteger, ftWord, ftLargeint, ftFloat, ftCurrency, ftBCD, ftFMTBcd] then
+    Result := 0
+  else if Fld.DataType in [ftDate, ftDateTime, ftTimeStamp, ftTime] then
+    Result := 1
+  else
+    Result := 2;
+end;
+
+function TFrDBGridEh.GetFieldValueKey(const V: Variant; Cat: Integer): string;
+//см. !алгоритмы.txt, 6.29. см. комментарий у объявления функции в интерфейсной части
+begin
+  if VarIsNull(V) or VarIsEmpty(V) then
+    Result := '(пусто)'
+  else
+    case Cat of
+      //FloatToStr/DateTimeToStr - фиксированное представление, НЕ зависящее от DisplayFormat/EditFormat
+      //конкретного столбца (в отличие от прежнего Fld.AsString) - ровно поэтому важно, что и здесь, и
+      //при проверке записи в MemTableEh1FilterRecord значение приводится к строке ОДНОЙ и той же этой
+      //функцией, а не сравнивается с каким-то другим представлением
+      0: Result := FloatToStr(Double(V));
+      1: Result := DateTimeToStr(VarToDateTime(V));
+    else
+      Result := VarToStr(V);
+    end;
+end;
+
+function TFrDBGridEh.GetDistinctFieldValues(Fld: TField): TArray<string>;
+//см. !алгоритмы.txt, 6.29. см. комментарий у объявления функции в интерфейсной части
+var
+  SL: TStringList;
+  i, Cnt, Cat: Integer;
+  FieldNameOnly: string;
+begin
+  SL := TStringList.Create;
+  try
+    SL.Sorted := True;
+    SL.Duplicates := dupIgnore;
+    FieldNameOnly := S.GetFieldNameOnly(Fld.FieldName);
+    Cat := GetFilterFieldCategory(Fld);
+    Cnt := GetCount(False); //без учета фильтров - см. комментарий у объявления функции
+    for i := 0 to Cnt - 1 do
+      SL.Add(GetFieldValueKey(GetValue(FieldNameOnly, i, False), Cat));
+    //не полагаемся на TStringList.ToStringArray (может отсутствовать в используемой версии Delphi) -
+    //собираем массив вручную
+    SetLength(Result, SL.Count);
+    for i := 0 to SL.Count - 1 do
+      Result[i] := SL[i];
+  finally
+    SL.Free;
+  end;
+end;
+
+procedure TFrDBGridEh.SetAltValueListFilter(FieldName: string; const AValues: TArray<string>);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  SL: TStringList;
+  i: Integer;
+begin
+  FieldName := LowerCase(FieldName);
+  if Length(AValues) = 0 then
+    FAltValueListFilters.Remove(FieldName)
+  else begin
+    SL := TStringList.Create;
+    SL.Sorted := True;
+    SL.Duplicates := dupIgnore;
+    for i := 0 to High(AValues) do
+      SL.Add(AValues[i]);
+    //TObjectDictionary с doOwnsValues сам освободит предыдущее значение по этому ключу, если оно было
+    FAltValueListFilters.AddOrSetValue(FieldName, SL);
+  end;
+  //переприменим фильтр - переключением Filtered (см. аналогичный комментарий у SetAltNumFilter)
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAltValueListFilter(FieldName: string);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+begin
+  FieldName := LowerCase(FieldName);
+  if FAltValueListFilters.ContainsKey(FieldName) then begin
+    FAltValueListFilters.Remove(FieldName);
+    MemTableEh1.Filtered := False;
+    MemTableEh1.Filtered := True;
+  end;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.SetAltConditionFilter(FieldName: string; const Op: string; Val1, Val2: Variant);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  i: Integer;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltConditionFilters, 0, True);
+  if i >= 0
+    then FAltConditionFilters[i] := [FieldName, Op, Val1, Val2]
+    else FAltConditionFilters := FAltConditionFilters + [[FieldName, Op, Val1, Val2]];
+  MemTableEh1.Filtered := False;
+  MemTableEh1.Filtered := True;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAltConditionFilter(FieldName: string);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  i, j: Integer;
+  va2: TVarDynArray2;
+begin
+  FieldName := LowerCase(FieldName);
+  i := A.PosInArray(FieldName, FAltConditionFilters, 0, True);
+  if i >= 0 then begin
+    va2 := [];
+    for j := 0 to High(FAltConditionFilters) do
+      if j <> i then
+        va2 := va2 + [FAltConditionFilters[j]];
+    FAltConditionFilters := va2;
+    MemTableEh1.Filtered := False;
+    MemTableEh1.Filtered := True;
+  end;
+  UpdateFilterActiveIndicators;
+end;
+
+procedure TFrDBGridEh.ClearAllAltFiltersForField(FieldName: string);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+begin
+  SetAltNumFilter(FieldName, '');
+  ClearAltDateFilter(FieldName);
+  ClearAltDateRelFilter(FieldName);
+  ClearAltColorFilter(FieldName);
+  ClearAltValueListFilter(FieldName);
+  ClearAltConditionFilter(FieldName);
+end;
+
+procedure TFrDBGridEh.AltValueListSelectAllClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.28. кнопка "Выбрать все" в ShowAltValueListWindow
+var
+  i: Integer;
+begin
+  for i := 0 to FAltValueListBox.Items.Count - 1 do
+    FAltValueListBox.Checked[i] := True;
+end;
+
+procedure TFrDBGridEh.AltValueListSelectNoneClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.28. кнопка "Снять все" в ShowAltValueListWindow
+var
+  i: Integer;
+begin
+  for i := 0 to FAltValueListBox.Items.Count - 1 do
+    FAltValueListBox.Checked[i] := False;
+end;
+
+procedure TFrDBGridEh.ShowAltValueListWindow(Fld: TField);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  frm: TForm;
+  lbl: TLabel;
+  btnSelAll, btnSelNone, btn: TButton;
+  CellR: TRect;
+  pt: TPoint;
+  i, y: Integer;
+  Values: TArray<string>;
+  Current: TStringList;
+  HasCurr: Boolean;
+  Checked: TArray<string>;
+  OpenCondition: Boolean;
+begin
+  Values := GetDistinctFieldValues(Fld);
+  HasCurr := FAltValueListFilters.TryGetValue(LowerCase(Fld.FieldName), Current);
+  OpenCondition := False;
+
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsSizeToolWin;
+    frm.Caption := 'Значения: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.ClientWidth := 240;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+
+    y := 4;
+    //см. !алгоритмы.txt, 6.28: название столбца отдельной надписью - в заголовке окна не всегда видно
+    //целиком, если оно длинное
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.WordWrap := True;
+    lbl.AutoSize := True;
+    lbl.Width := frm.ClientWidth - 8;
+    lbl.Left := 4;
+    lbl.Top := y;
+    lbl.Font.Style := lbl.Font.Style + [fsBold];
+    lbl.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    y := y + lbl.Height + 6;
+
+    FAltValueListBox := TCheckListBox.Create(frm);
+    FAltValueListBox.Parent := frm;
+    FAltValueListBox.SetBounds(4, y, frm.ClientWidth - 8, 200);
+    for i := 0 to High(Values) do begin
+      FAltValueListBox.Items.Add(Values[i]);
+      FAltValueListBox.Checked[i] := not HasCurr or (Current.IndexOf(Values[i]) >= 0);
+    end;
+    y := y + FAltValueListBox.Height + 4;
+
+    btnSelAll := TButton.Create(frm);
+    btnSelAll.Parent := frm;
+    btnSelAll.Caption := 'Выбрать все';
+    btnSelAll.SetBounds(4, y, (frm.ClientWidth - 12) div 2, 25);
+    btnSelAll.OnClick := AltValueListSelectAllClick;
+
+    btnSelNone := TButton.Create(frm);
+    btnSelNone.Parent := frm;
+    btnSelNone.Caption := 'Снять все';
+    btnSelNone.SetBounds(btnSelAll.Left + btnSelAll.Width + 4, y, (frm.ClientWidth - 12) div 2, 25);
+    btnSelNone.OnClick := AltValueListSelectNoneClick;
+    y := y + btnSelAll.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Применить список';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrOk;
+    btn.Default := True;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Условие...';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrClose;
+    y := y + btn.Height + 6;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Сбросить фильтр по столбцу';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrIgnore;
+    btn.Enabled := HasCurr;
+    y := y + btn.Height + 3;
+
+    btn := TButton.Create(frm);
+    btn.Parent := frm;
+    btn.Caption := 'Снять все фильтры';
+    btn.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btn.ModalResult := mrAbort;
+    y := y + btn.Height + 4;
+
+    frm.ClientHeight := y;
+    case frm.ShowModal of
+      mrOk: begin
+        Checked := [];
+        for i := 0 to FAltValueListBox.Items.Count - 1 do
+          if FAltValueListBox.Checked[i] then
+            Checked := Checked + [FAltValueListBox.Items[i]];
+        if Length(Checked) = Length(Values)
+          then ClearAltValueListFilter(Fld.FieldName) //отмечены все значения - фильтр фактически не действует
+          else SetAltValueListFilter(Fld.FieldName, Checked);
+      end;
+      mrClose: OpenCondition := True;
+      mrIgnore: ClearAltValueListFilter(Fld.FieldName);
+      mrAbort: ClearAllFilters;
+      //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
+    end;
+  finally
+    FAltValueListBox := nil;
+    frm.Free;
+  end;
+  if OpenCondition then
+    ShowAltConditionDialog(Fld);
+end;
+
+procedure TFrDBGridEh.AltConditionOperatorChange(Sender: TObject);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  IsBetween: Boolean;
+begin
+  if (FCondCombo = nil) or (FCondEdt2 = nil) then
+    Exit;
+  IsBetween := (FCondCombo.ItemIndex >= 0) and (FCondCombo.Items[FCondCombo.ItemIndex] = 'между');
+  FCondEdt2.Visible := IsBetween;
+  if FCondLbl2 <> nil then
+    FCondLbl2.Visible := IsBetween;
+end;
+
+procedure TFrDBGridEh.AltConditionFormCloseQuery(Sender: TObject; var CanClose: Boolean);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части. При успешной
+//проверке фильтр применяется здесь же (SetAltConditionFilter) - к моменту возврата из ShowModal уже
+//поздно возвращать результат обычным способом (окно уже закрывается), а откладывать разбор введенных
+//значений на "после ShowModal" означало бы разбирать их дважды - тут для проверки, там для применения
+var
+  Cat: Integer;
+  Op: string;
+  v1, v2: Double;
+  d1, d2: TDateTime;
+begin
+  if TForm(Sender).ModalResult <> mrOk then begin
+    CanClose := True;
+    Exit;
+  end;
+  CanClose := False;
+  Op := FCondOps[FCondCombo.ItemIndex];
+  Cat := GetFilterFieldCategory(FCondFld);
+  case Cat of
+    0: begin //числовое
+      if not TryStrToFloat(Trim(FCondEdt1.Text), v1) then begin
+        Application.MessageBox('Введите корректное число в поле "Значение"', 'Ошибка', MB_ICONERROR);
+        FCondEdt1.SetFocus;
+        Exit;
+      end;
+      v2 := 0;
+      if Op = 'между' then
+        if not TryStrToFloat(Trim(FCondEdt2.Text), v2) then begin
+          Application.MessageBox('Введите корректное число в поле "До"', 'Ошибка', MB_ICONERROR);
+          FCondEdt2.SetFocus;
+          Exit;
+        end;
+      SetAltConditionFilter(FCondFld.FieldName, Op, v1, v2);
+    end;
+    1: begin //дата/время
+      if not TryStrToDateTime(Trim(FCondEdt1.Text), d1) then begin
+        Application.MessageBox('Введите корректную дату в поле "Значение" (например, 31.12.2026)',
+          'Ошибка', MB_ICONERROR);
+        FCondEdt1.SetFocus;
+        Exit;
+      end;
+      d2 := 0;
+      if Op = 'между' then
+        if not TryStrToDateTime(Trim(FCondEdt2.Text), d2) then begin
+          Application.MessageBox('Введите корректную дату в поле "До" (например, 31.12.2026)',
+            'Ошибка', MB_ICONERROR);
+          FCondEdt2.SetFocus;
+          Exit;
+        end;
+      SetAltConditionFilter(FCondFld.FieldName, Op, d1, d2);
+    end;
+  else //строка и все прочие типы - проверка типа не нужна, значение всегда валидно
+    SetAltConditionFilter(FCondFld.FieldName, Op, Trim(FCondEdt1.Text), '');
+  end;
+  CanClose := True;
+end;
+
+procedure TFrDBGridEh.ShowAltConditionDialog(Fld: TField);
+//см. !алгоритмы.txt, 6.28. см. комментарий у объявления процедуры в интерфейсной части
+var
+  frm: TForm;
+  lbl, lbl1: TLabel;
+  btnOk, btnCancel, btnReset: TButton;
+  CellR: TRect;
+  pt: TPoint;
+  i, y, Cat: Integer;
+  CurOp: string;
+  CurVal1, CurVal2: Variant;
+  HasCurr: Boolean;
+begin
+  Cat := GetFilterFieldCategory(Fld);
+  case Cat of
+    0: FCondOps := ['=', '<>', '>', '>=', '<', '<=', 'между'];
+    1: FCondOps := ['=', '>', '>=', '<', '<=', 'между'];
+  else
+    FCondOps := ['=', '<>', 'содержит', 'не содержит', 'начинается с', 'заканчивается на'];
+  end;
+
+  CurOp := '';
+  CurVal1 := Null;
+  CurVal2 := Null;
+  i := A.PosInArray(LowerCase(Fld.FieldName), FAltConditionFilters, 0, True);
+  HasCurr := i >= 0;
+  if HasCurr then begin
+    CurOp := VarToStr(FAltConditionFilters[i][1]);
+    CurVal1 := FAltConditionFilters[i][2];
+    CurVal2 := FAltConditionFilters[i][3];
+  end;
+
+  FCondFld := Fld;
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsToolWindow;
+    frm.Caption := 'Условие: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.OnCloseQuery := AltConditionFormCloseQuery;
+    frm.ClientWidth := 220;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+
+    y := 4;
+    lbl := TLabel.Create(frm);
+    lbl.Parent := frm;
+    lbl.WordWrap := True;
+    lbl.AutoSize := True;
+    lbl.Width := frm.ClientWidth - 8;
+    lbl.Left := 4;
+    lbl.Top := y;
+    lbl.Font.Style := lbl.Font.Style + [fsBold];
+    lbl.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    y := y + lbl.Height + 6;
+
+    FCondCombo := TComboBox.Create(frm);
+    FCondCombo.Parent := frm;
+    FCondCombo.Style := csDropDownList;
+    FCondCombo.SetBounds(4, y, frm.ClientWidth - 8, 21);
+    for i := 0 to High(FCondOps) do
+      FCondCombo.Items.Add(FCondOps[i]);
+    FCondCombo.ItemIndex := 0;
+    if HasCurr then begin
+      i := FCondCombo.Items.IndexOf(CurOp);
+      if i >= 0 then
+        FCondCombo.ItemIndex := i;
+    end;
+    FCondCombo.OnChange := AltConditionOperatorChange;
+    y := y + FCondCombo.Height + 6;
+
+    lbl1 := TLabel.Create(frm);
+    lbl1.Parent := frm;
+    lbl1.SetBounds(4, y + 4, 40, 17);
+    lbl1.Caption := 'Значение:';
+    FCondEdt1 := TEdit.Create(frm);
+    FCondEdt1.Parent := frm;
+    FCondEdt1.SetBounds(48, y, frm.ClientWidth - 52, 21);
+    if HasCurr then
+      case Cat of
+        0: FCondEdt1.Text := FloatToStr(Double(CurVal1));
+        1: FCondEdt1.Text := DateToStr(VarToDateTime(CurVal1));
+      else
+        FCondEdt1.Text := VarToStr(CurVal1);
+      end;
+    y := y + FCondEdt1.Height + 4;
+
+    FCondLbl2 := TLabel.Create(frm);
+    FCondLbl2.Parent := frm;
+    FCondLbl2.SetBounds(4, y + 4, 40, 17);
+    FCondLbl2.Caption := 'До:';
+    FCondEdt2 := TEdit.Create(frm);
+    FCondEdt2.Parent := frm;
+    FCondEdt2.SetBounds(48, y, frm.ClientWidth - 52, 21);
+    if HasCurr and (CurOp = 'между') then
+      case Cat of
+        0: FCondEdt2.Text := FloatToStr(Double(CurVal2));
+        1: FCondEdt2.Text := DateToStr(VarToDateTime(CurVal2));
+      end;
+    y := y + FCondEdt2.Height + 6;
+
+    AltConditionOperatorChange(FCondCombo); //покажем/скроем второе значение по текущей операции
+
+    btnOk := TButton.Create(frm);
+    btnOk.Parent := frm;
+    btnOk.Caption := 'ОК';
+    btnOk.SetBounds(4, y, (frm.ClientWidth - 12) div 2, 25);
+    btnOk.ModalResult := mrOk;
+    btnOk.Default := True;
+
+    btnCancel := TButton.Create(frm);
+    btnCancel.Parent := frm;
+    btnCancel.Caption := 'Отмена';
+    btnCancel.SetBounds(btnOk.Left + btnOk.Width + 4, y, (frm.ClientWidth - 12) div 2, 25);
+    btnCancel.ModalResult := mrCancel;
+    btnCancel.Cancel := True;
+    y := y + btnOk.Height + 3;
+
+    if HasCurr then begin
+      btnReset := TButton.Create(frm);
+      btnReset.Parent := frm;
+      btnReset.Caption := 'Сбросить фильтр по столбцу';
+      btnReset.SetBounds(4, y, frm.ClientWidth - 8, 25);
+      btnReset.ModalResult := mrIgnore;
+      y := y + btnReset.Height + 3;
+    end;
+
+    frm.ClientHeight := y;
+    case frm.ShowModal of
+      mrIgnore: ClearAltConditionFilter(Fld.FieldName);
+      //mrOk - уже применено внутри AltConditionFormCloseQuery, см. комментарий там - здесь
+      //дополнительно ничего делать не нужно
+      //mrCancel (Esc/крестик) - ничего не делаем, оставляем фильтр как был
+    end;
+  finally
+    FCondFld := nil;
+    FCondCombo := nil;
+    FCondEdt1 := nil;
+    FCondEdt2 := nil;
+    FCondLbl2 := nil;
+    frm.Free;
+  end;
+end;
+
+procedure TFrDBGridEh.AltFullNumQuickClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопки "Больше 0"/"Меньше 0"/"Равно 0" на вкладке "Быстрое" - различаются
+//по Tag (0/1/2), применяются сразу, без закрытия общего окна
+var
+  Cond: string;
+begin
+  case TButton(Sender).Tag of
+    0: Cond := '>0';
+    1: Cond := '<0';
+    2: Cond := '=0';
+  else
+    Cond := '';
+  end;
+  SetAltNumFilter(FAltFullFld.FieldName, Cond);
+end;
+
+procedure TFrDBGridEh.AltFullDatePeriodListClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. клик по пункту списка периодов на вкладке "Быстрое" - аналог
+//AltDateFilterListClick, но применяет фильтр сразу, не закрывая окно (Sender - тот же TListBox)
+var
+  ItemIdx: Integer;
+  CurrFrom, CurrTo: TDateTime;
+begin
+  ItemIdx := TListBox(Sender).ItemIndex;
+  if ItemIdx < 0 then
+    Exit;
+  S.GetDatePeriod(ItemIdx, Date, CurrFrom, CurrTo);
+  SetAltDateFilter(FAltFullFld.FieldName, CurrFrom, CurrTo);
+end;
+
+procedure TFrDBGridEh.AltFullDateApplyRangeClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Применить период" на вкладке "Быстрое" (даты)
+begin
+  if FAltFullDtpTo.Date < FAltFullDtpFrom.Date
+    then SetAltDateFilter(FAltFullFld.FieldName, FAltFullDtpTo.Date, FAltFullDtpFrom.Date)
+    else SetAltDateFilter(FAltFullFld.FieldName, FAltFullDtpFrom.Date, FAltFullDtpTo.Date);
+end;
+
+procedure TFrDBGridEh.AltFullDateApplyRelClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Применить диапазон" (от сегодня) на вкладке "Быстрое" (даты)
+begin
+  SetAltDateRelFilter(FAltFullFld.FieldName, StrToIntDef(Trim(FAltFullEdtFwd.Text), 0),
+    StrToIntDef(Trim(FAltFullEdtBack.Text), 0));
+end;
+
+procedure TFrDBGridEh.AltFullValueListApplyClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Применить список" на вкладке "Значения"
+var
+  i: Integer;
+  Checked: TArray<string>;
+begin
+  Checked := [];
+  for i := 0 to FAltValueListBox.Items.Count - 1 do
+    if FAltValueListBox.Checked[i] then
+      Checked := Checked + [FAltValueListBox.Items[i]];
+  if Length(Checked) = Length(FAltFullValueListAll)
+    then ClearAltValueListFilter(FAltFullFld.FieldName) //отмечены все значения - фильтр не ограничивает
+    else SetAltValueListFilter(FAltFullFld.FieldName, Checked);
+end;
+
+procedure TFrDBGridEh.AltFullConditionApplyClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Применить условие" на вкладке "Условие" - аналог прежнего
+//AltConditionFormCloseQuery (см. 6.28), но не привязан к закрытию окна - общее окно теперь не
+//закрывается по применению одной из вкладок, поэтому проверка и применение сделаны прямо в обработчике
+//клика, а не в TForm.OnCloseQuery
+var
+  Cat: Integer;
+  Op: string;
+  v1, v2: Double;
+  d1, d2: TDateTime;
+begin
+  Op := FCondOps[FCondCombo.ItemIndex];
+  Cat := GetFilterFieldCategory(FAltFullFld);
+  case Cat of
+    0: begin //числовое
+      if not TryStrToFloat(Trim(FCondEdt1.Text), v1) then begin
+        Application.MessageBox('Введите корректное число в поле "Значение"', 'Ошибка', MB_ICONERROR);
+        FCondEdt1.SetFocus;
+        Exit;
+      end;
+      v2 := 0;
+      if Op = 'между' then
+        if not TryStrToFloat(Trim(FCondEdt2.Text), v2) then begin
+          Application.MessageBox('Введите корректное число в поле "До"', 'Ошибка', MB_ICONERROR);
+          FCondEdt2.SetFocus;
+          Exit;
+        end;
+      SetAltConditionFilter(FAltFullFld.FieldName, Op, v1, v2);
+    end;
+    1: begin //дата/время
+      if not TryStrToDateTime(Trim(FCondEdt1.Text), d1) then begin
+        Application.MessageBox('Введите корректную дату в поле "Значение" (например, 31.12.2026)',
+          'Ошибка', MB_ICONERROR);
+        FCondEdt1.SetFocus;
+        Exit;
+      end;
+      d2 := 0;
+      if Op = 'между' then
+        if not TryStrToDateTime(Trim(FCondEdt2.Text), d2) then begin
+          Application.MessageBox('Введите корректную дату в поле "До" (например, 31.12.2026)',
+            'Ошибка', MB_ICONERROR);
+          FCondEdt2.SetFocus;
+          Exit;
+        end;
+      SetAltConditionFilter(FAltFullFld.FieldName, Op, d1, d2);
+    end;
+  else //строка и все прочие типы - проверка типа не нужна
+    SetAltConditionFilter(FAltFullFld.FieldName, Op, Trim(FCondEdt1.Text), '');
+  end;
+end;
+
+procedure TFrDBGridEh.AltFullColorGetColorsClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Получить цвета" на вкладке "Цвет" (только если строк больше
+//ALT_COLOR_FILTER_LAZY_THRESHOLD - иначе список считается сразу при построении окна, см.
+//ShowAltFullFilterWindow) - расчет форматов (полный проход по столбцу) и заполнение списка
+var
+  i, j: Integer;
+  CurFormats: TList<TCellColorFmt>;
+  HasCurr, Checked: Boolean;
+begin
+  FColorFilterFormats := GetDistinctColorFmtsForField(FAltFullFld.FieldName);
+  SetLength(FColorFilterChecked, Length(FColorFilterFormats));
+  HasCurr := FAltColorFilters.TryGetValue(LowerCase(FAltFullFld.FieldName), CurFormats);
+  for i := 0 to High(FColorFilterFormats) do begin
+    Checked := False;
+    if HasCurr then
+      for j := 0 to CurFormats.Count - 1 do
+        if SameColorFmt(CurFormats[j], FColorFilterFormats[i]) then begin
+          Checked := True;
+          Break;
+        end;
+    FColorFilterChecked[i] := Checked;
+  end;
+  FAltFullColorListBox.Items.Clear;
+  for i := 0 to High(FColorFilterFormats) do
+    FAltFullColorListBox.Items.Add(''); //текст не используется - рисуется вручную в ColorFilterListDrawItem
+  FAltFullColorListBox.Visible := True;
+  if Assigned(FAltFullColorGetBtn) then
+    FAltFullColorGetBtn.Visible := False;
+end;
+
+procedure TFrDBGridEh.AltFullColorApplyClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Применить" на вкладке "Цвет"
+var
+  i: Integer;
+  AcceptedList: TList<TCellColorFmt>;
+begin
+  AcceptedList := TList<TCellColorFmt>.Create;
+  try
+    for i := 0 to High(FColorFilterFormats) do
+      if FColorFilterChecked[i] then
+        AcceptedList.Add(FColorFilterFormats[i]);
+    SetAltColorFilter(FAltFullFld.FieldName, AcceptedList.ToArray);
+  finally
+    AcceptedList.Free;
+  end;
+end;
+
+procedure TFrDBGridEh.AltFullResetClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Сбросить фильтр по столбцу" (общая для всех вкладок)
+begin
+  ClearAllAltFiltersForField(FAltFullFld.FieldName);
+end;
+
+procedure TFrDBGridEh.AltFullClearAllClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.29. кнопка "Снять все фильтры" (общая для всех вкладок) = ClearAllFilters
+begin
+  ClearAllFilters;
+end;
+
+procedure TFrDBGridEh.AltValueListInvertClick(Sender: TObject);
+//см. !алгоритмы.txt, 6.30. кнопка "Инвертировать" на вкладке "Значения"
+var
+  i: Integer;
+begin
+  for i := 0 to FAltValueListBox.Items.Count - 1 do
+    FAltValueListBox.Checked[i] := not FAltValueListBox.Checked[i];
+end;
+
+function TFrDBGridEh.GetPresentValueKeysExcludingOwnFilters(Fld: TField; Cat: Integer): TDictionary<string, Boolean>;
+//см. !алгоритмы.txt, 6.30. см. подробный комментарий у объявления функции в интерфейсной части. Ключевая
+//идея: на время снимаем ВСЕ виды альт-фильтра по этому же полю (запомнив точное состояние каждого, чтобы
+//вернуть как было), делаем ОДИН пересчет фильтра (через ClearAllAltFiltersForField - он сам вызывает
+//Set*/Clear* по каждому виду, у каждого свое переключение MemTableEh1.Filtered, что в сумме несколько
+//пересчетов, но это разовая операция при открытии окна, а не при каждом изменении фильтра, поэтому
+//не считаем это критичным для производительности), считаем по БЫСТРОЙ схеме (GetCount(True)/
+//GetValue(...,True), без курсора датасета - как и GetDistinctFieldValues) множество ключей значений,
+//встречающихся в результате, потом восстанавливаем снятые фильтры (тоже через Set*, тоже с
+//пересчетом) - и еще раз пересчитываем итоговый (уже прежний) фильтр. DisableControls/EnableControls и
+//сохранение/восстановление RecNo - чтобы грид под модальным окном не мигал и не терял текущую позицию
+//на время этого временного пересчета (см. похожий прием в RefreshColorCacheAll/RefreshColorCacheField)
+var
+  FieldNameLower, FieldNameOnly: string;
+  i, j, Cnt, rn: Integer;
+  HadNum, HadDate, HadDateRel, HadColor, HadValueList, HadCondition: Boolean;
+  NumCond: string;
+  DateFrom, DateTo: TDateTime;
+  DaysFwd, DaysBack: Integer;
+  SavedColors: TArray<TCellColorFmt>;
+  SavedValues: TArray<string>;
+  CondOp: string;
+  CondVal1, CondVal2: Variant;
+  CurList: TList<TCellColorFmt>;
+  CurSL: TStringList;
+begin
+  Result := TDictionary<string, Boolean>.Create;
+  FieldNameLower := LowerCase(Fld.FieldName);
+  FieldNameOnly := S.GetFieldNameOnly(Fld.FieldName);
+
+  //запомним точное состояние всех видов альт-фильтра по этому полю
+  i := A.PosInArray(FieldNameLower, FAltNumFilters, 0, True);
+  HadNum := i >= 0;
+  if HadNum then
+    NumCond := VarToStr(FAltNumFilters[i][1]);
+
+  i := A.PosInArray(FieldNameLower, FAltDateFilters, 0, True);
+  HadDate := i >= 0;
+  if HadDate then begin
+    DateFrom := FAltDateFilters[i][1];
+    DateTo := FAltDateFilters[i][2];
+  end;
+
+  i := A.PosInArray(FieldNameLower, FAltDateRelFilters, 0, True);
+  HadDateRel := i >= 0;
+  if HadDateRel then begin
+    DaysFwd := FAltDateRelFilters[i][1];
+    DaysBack := FAltDateRelFilters[i][2];
+  end;
+
+  HadColor := FAltColorFilters.TryGetValue(FieldNameLower, CurList);
+  if HadColor then
+    SavedColors := CurList.ToArray;
+
+  HadValueList := FAltValueListFilters.TryGetValue(FieldNameLower, CurSL);
+  if HadValueList then begin
+    SetLength(SavedValues, CurSL.Count);
+    for j := 0 to CurSL.Count - 1 do
+      SavedValues[j] := CurSL[j];
+  end;
+
+  i := A.PosInArray(FieldNameLower, FAltConditionFilters, 0, True);
+  HadCondition := i >= 0;
+  if HadCondition then begin
+    CondOp := VarToStr(FAltConditionFilters[i][1]);
+    CondVal1 := FAltConditionFilters[i][2];
+    CondVal2 := FAltConditionFilters[i][3];
+  end;
+
+  rn := MemTableEh1.RecNo;
+  MemTableEh1.DisableControls;
+  try
+    ClearAllAltFiltersForField(Fld.FieldName);
+    try
+      Cnt := GetCount(True);
+      for i := 0 to Cnt - 1 do
+        Result.AddOrSetValue(GetFieldValueKey(GetValue(FieldNameOnly, i, True), Cat), True);
+    finally
+      //вернем все как было
+      if HadNum then
+        SetAltNumFilter(Fld.FieldName, NumCond);
+      if HadDate then
+        SetAltDateFilter(Fld.FieldName, DateFrom, DateTo);
+      if HadDateRel then
+        SetAltDateRelFilter(Fld.FieldName, DaysFwd, DaysBack);
+      if HadColor then
+        SetAltColorFilter(Fld.FieldName, SavedColors);
+      if HadValueList then
+        SetAltValueListFilter(Fld.FieldName, SavedValues);
+      if HadCondition then
+        SetAltConditionFilter(Fld.FieldName, CondOp, CondVal1, CondVal2);
+    end;
+  finally
+    MemTableEh1.EnableControls;
+    MemTableEh1.RecNo := rn;
+  end;
+end;
+
+procedure TFrDBGridEh.AltValueListBoxDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
+//см. !алгоритмы.txt, 6.30. см. подробный комментарий у объявления процедуры в интерфейсной части - рисуем
+//только текст (TCheckListBox сам рисует чекбокс и передает сюда Rect уже без области чекбокса), красным -
+//если значения нет в FAltValueListPresentKeys
+var
+  Cnv: TCanvas;
+  Present: Boolean;
+  ItemText: string;
+begin
+  Cnv := TCheckListBox(Control).Canvas;
+  ItemText := TCheckListBox(Control).Items[Index];
+  if odSelected in State then begin
+    Cnv.Brush.Color := clHighlight;
+    Cnv.Font.Color := clHighlightText;
+  end
+  else begin
+    Cnv.Brush.Color := clWindow;
+    Present := True;
+    if Assigned(FAltValueListPresentKeys) then
+      Present := FAltValueListPresentKeys.ContainsKey(ItemText);
+    if Present
+      then Cnv.Font.Color := clWindowText
+      else Cnv.Font.Color := clRed;
+  end;
+  Cnv.FillRect(Rect);
+  Cnv.Brush.Style := bsClear;
+  Cnv.TextOut(Rect.Left + 2, Rect.Top + 1, ItemText);
+  Cnv.Brush.Style := bsSolid;
+end;
+
+procedure TFrDBGridEh.ShowAltFullFilterWindow(Fld: TField);
+//см. !алгоритмы.txt, 6.29. см. подробный комментарий у объявления процедуры в интерфейсной части.
+//Компоновка: заголовок (название столбца) + TPageControl (вкладки "Значения" - всегда первая/активная
+//по умолчанию, "Быстрое" - только для чисел/дат, "Условие" - всегда, "Цвет" - всегда) + внизу общие
+//кнопки "Сбросить фильтр по столбцу"/"Снять все фильтры"/"Закрыть". ПЕРВАЯ ПОПЫТКА такой раскладки -
+//альтернатива (просил пользователь посмотреть) - расположить все части не по вкладкам, а рядом по
+//горизонтали; выбраны вкладки как более простой и надежный в реализации вариант (обычный TPageControl,
+//без необходимости вручную считать три колонки переменной высоты) - при необходимости можно
+//пересмотреть после того, как пользователь увидит результат
+var
+  frm: TForm;
+  lblTitle, lbl, lbl1: TLabel;
+  pc: TPageControl;
+  tsValues, tsQuick, tsCondition, tsColor: TTabSheet;
+  btn, btnReset, btnClearAll, btnClose: TButton;
+  lst: TListBox;
+  CellR: TRect;
+  pt: TPoint;
+  Cat, i, y, PcHeight: Integer;
+  CurrCondition: string;
+  HasCurr, HasCurrRel: Boolean;
+  CurrFrom, CurrTo: TDateTime;
+  CurrDaysForward, CurrDaysBack: Integer;
+  Values, PresentPart, AbsentPart: TArray<string>;
+  CurrValueList: TStringList;
+  HasValueList: Boolean;
+  SavedW, SavedH: Integer;
+  btnInvert: TButton;
+begin
+  FAltFullFld := Fld;
+  Cat := GetFilterFieldCategory(Fld);
+  //см. !алгоритмы.txt, 6.30: увеличено с 260 - на вкладке "Быстрое" для дат (список периодов + диапазон
+  //дат + диапазон дней от сегодня) содержимое не помещалось при 260 (жалоба пользователя после теста)
+  PcHeight := 340;
+
+  frm := TForm.CreateNew(Application, 0);
+  try
+    frm.BorderStyle := bsSizeToolWin;
+    frm.Caption := 'Фильтр: ' + DbGridEh1.Columns[GetCol].Title.Caption;
+    frm.Position := poDesigned;
+    frm.KeyPreview := True;
+    frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    frm.ClientWidth := 290;
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
+    frm.Left := pt.X;
+    frm.Top := pt.Y;
+
+    y := 4;
+    lblTitle := TLabel.Create(frm);
+    lblTitle.Parent := frm;
+    lblTitle.WordWrap := True;
+    lblTitle.AutoSize := True;
+    lblTitle.Width := frm.ClientWidth - 8;
+    lblTitle.Left := 4;
+    lblTitle.Top := y;
+    lblTitle.Font.Style := lblTitle.Font.Style + [fsBold];
+    lblTitle.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
+    lblTitle.Anchors := [akLeft, akTop, akRight];
+    y := y + lblTitle.Height + 6;
+
+    pc := TPageControl.Create(frm);
+    pc.Parent := frm;
+    pc.SetBounds(4, y, frm.ClientWidth - 8, PcHeight);
+    pc.Anchors := [akLeft, akTop, akRight, akBottom];
+
+    //--- Вкладка "Значения" (всегда первая и активная по умолчанию - см. 6.29, жалоба на неудобство
+    //прежней схемы, где список значений был спрятан за отдельной кнопкой/окном) ---
+    tsValues := TTabSheet.Create(pc);
+    tsValues.PageControl := pc;
+    tsValues.Caption := 'Значения';
+
+    Values := GetDistinctFieldValues(Fld);
+
+    //см. !алгоритмы.txt, 6.30: множество значений, реально встречающихся среди строк, проходящих ВСЕ
+    //ОСТАЛЬНЫЕ фильтры (кроме фильтров по этому же полю) - используется и чтобы поднять такие значения
+    //наверх списка, и чтобы подсветить остальные (нет ни одной строки под них) красным в
+    //AltValueListBoxDrawItem
+    FAltValueListPresentKeys := GetPresentValueKeysExcludingOwnFilters(Fld, Cat);
+    PresentPart := [];
+    AbsentPart := [];
+    for i := 0 to High(Values) do
+      if FAltValueListPresentKeys.ContainsKey(Values[i])
+        then PresentPart := PresentPart + [Values[i]]
+        else AbsentPart := AbsentPart + [Values[i]];
+    Values := PresentPart + AbsentPart;
+    FAltFullValueListAll := Values;
+    HasValueList := FAltValueListFilters.TryGetValue(LowerCase(Fld.FieldName), CurrValueList);
+
+    FAltValueListBox := TCheckListBox.Create(tsValues);
+    FAltValueListBox.Parent := tsValues;
+    FAltValueListBox.Style := lbOwnerDrawFixed;
+    FAltValueListBox.OnDrawItem := AltValueListBoxDrawItem;
+    FAltValueListBox.SetBounds(4, 4, tsValues.ClientWidth - 8, PcHeight - 127);
+    FAltValueListBox.Anchors := [akLeft, akTop, akRight, akBottom];
+    for i := 0 to High(Values) do begin
+      FAltValueListBox.Items.Add(Values[i]);
+      FAltValueListBox.Checked[i] := not HasValueList or (CurrValueList.IndexOf(Values[i]) >= 0);
+    end;
+
+    btn := TButton.Create(tsValues);
+    btn.Parent := tsValues;
+    btn.Caption := 'Выбрать все';
+    btn.SetBounds(4, PcHeight - 115, (tsValues.ClientWidth - 12) div 2, 25);
+    btn.Anchors := [akLeft, akBottom];
+    btn.OnClick := AltValueListSelectAllClick;
+
+    btn := TButton.Create(tsValues);
+    btn.Parent := tsValues;
+    btn.Caption := 'Снять все';
+    btn.SetBounds(4 + (tsValues.ClientWidth - 12) div 2 + 4, PcHeight - 115, (tsValues.ClientWidth - 12) div 2, 25);
+    btn.Anchors := [akLeft, akRight, akBottom];
+    btn.OnClick := AltValueListSelectNoneClick;
+
+    //см. !алгоритмы.txt, 6.30: "Инвертировать" - по просьбе пользователя
+    btnInvert := TButton.Create(tsValues);
+    btnInvert.Parent := tsValues;
+    btnInvert.Caption := 'Инвертировать';
+    btnInvert.SetBounds(4, PcHeight - 84, tsValues.ClientWidth - 8, 25);
+    btnInvert.Anchors := [akLeft, akRight, akBottom];
+    btnInvert.OnClick := AltValueListInvertClick;
+
+    btn := TButton.Create(tsValues);
+    btn.Parent := tsValues;
+    btn.Caption := 'Применить список';
+    btn.SetBounds(4, PcHeight - 53, tsValues.ClientWidth - 8, 25);
+    btn.Anchors := [akLeft, akRight, akBottom];
+    btn.Default := True;
+    btn.OnClick := AltFullValueListApplyClick;
+
+    //--- Вкладка "Быстрое" - только для чисел/дат ---
+    if Cat = 0 then begin
+      tsQuick := TTabSheet.Create(pc);
+      tsQuick.PageControl := pc;
+      tsQuick.Caption := 'Быстрое';
+
+      CurrCondition := '';
+      i := A.PosInArray(LowerCase(Fld.FieldName), FAltNumFilters, 0, True);
+      if i >= 0 then
+        CurrCondition := VarToStr(FAltNumFilters[i][1]);
+
+      y := 4;
+      btn := TButton.Create(tsQuick);
+      btn.Parent := tsQuick;
+      btn.Caption := 'Больше 0';
+      btn.Tag := 0;
+      btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      if CurrCondition = '>0' then
+        btn.Font.Style := btn.Font.Style + [fsBold];
+      btn.OnClick := AltFullNumQuickClick;
+      y := y + btn.Height + 3;
+
+      btn := TButton.Create(tsQuick);
+      btn.Parent := tsQuick;
+      btn.Caption := 'Меньше 0';
+      btn.Tag := 1;
+      btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      if CurrCondition = '<0' then
+        btn.Font.Style := btn.Font.Style + [fsBold];
+      btn.OnClick := AltFullNumQuickClick;
+      y := y + btn.Height + 3;
+
+      btn := TButton.Create(tsQuick);
+      btn.Parent := tsQuick;
+      btn.Caption := 'Равно 0';
+      btn.Tag := 2;
+      btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      if CurrCondition = '=0' then
+        btn.Font.Style := btn.Font.Style + [fsBold];
+      btn.OnClick := AltFullNumQuickClick;
+    end
+    else if Cat = 1 then begin
+      tsQuick := TTabSheet.Create(pc);
+      tsQuick.PageControl := pc;
+      tsQuick.Caption := 'Быстрое';
+
+      FAltDateFilterPickedPeriod := -1;
+      HasCurr := False;
+      CurrFrom := Date;
+      CurrTo := Date;
+      i := A.PosInArray(LowerCase(Fld.FieldName), FAltDateFilters, 0, True);
+      if i >= 0 then begin
+        HasCurr := True;
+        CurrFrom := FAltDateFilters[i][1];
+        CurrTo := FAltDateFilters[i][2];
+      end;
+      HasCurrRel := False;
+      CurrDaysForward := 0;
+      CurrDaysBack := 0;
+      i := A.PosInArray(LowerCase(Fld.FieldName), FAltDateRelFilters, 0, True);
+      if i >= 0 then begin
+        HasCurrRel := True;
+        CurrDaysForward := FAltDateRelFilters[i][1];
+        CurrDaysBack := FAltDateRelFilters[i][2];
+      end;
+
+      y := 4;
+      lst := TListBox.Create(tsQuick);
+      lst.Parent := tsQuick;
+      for i := 0 to High(DatePeriods) do
+        lst.Items.Add(DatePeriods[i]);
+      lst.SetBounds(4, y, tsQuick.ClientWidth - 8, 110);
+      lst.OnClick := AltFullDatePeriodListClick;
+      y := y + lst.Height + 6;
+
+      lbl := TLabel.Create(tsQuick);
+      lbl.Parent := tsQuick;
+      lbl.SetBounds(4, y + 4, 16, 17);
+      lbl.Caption := 'с';
+      FAltFullDtpFrom := TDateTimePicker.Create(tsQuick);
+      FAltFullDtpFrom.Parent := tsQuick;
+      FAltFullDtpFrom.Kind := dtkDate;
+      FAltFullDtpFrom.SetBounds(24, y, tsQuick.ClientWidth - 28, 21);
+      FAltFullDtpFrom.Date := CurrFrom;
+      y := y + FAltFullDtpFrom.Height + 4;
+
+      lbl := TLabel.Create(tsQuick);
+      lbl.Parent := tsQuick;
+      lbl.SetBounds(4, y + 4, 16, 17);
+      lbl.Caption := 'по';
+      FAltFullDtpTo := TDateTimePicker.Create(tsQuick);
+      FAltFullDtpTo.Parent := tsQuick;
+      FAltFullDtpTo.Kind := dtkDate;
+      FAltFullDtpTo.SetBounds(24, y, tsQuick.ClientWidth - 28, 21);
+      FAltFullDtpTo.Date := CurrTo;
+      y := y + FAltFullDtpTo.Height + 4;
+
+      btn := TButton.Create(tsQuick);
+      btn.Parent := tsQuick;
+      btn.Caption := 'Применить период';
+      btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.OnClick := AltFullDateApplyRangeClick;
+      y := y + btn.Height + 6;
+
+      lbl := TLabel.Create(tsQuick);
+      lbl.Parent := tsQuick;
+      lbl.SetBounds(4, y + 4, 46, 17);
+      lbl.Caption := 'вперед';
+      FAltFullEdtFwd := TEdit.Create(tsQuick);
+      FAltFullEdtFwd.Parent := tsQuick;
+      FAltFullEdtFwd.SetBounds(54, y, tsQuick.ClientWidth - 58, 21);
+      FAltFullEdtFwd.Text := IntToStr(CurrDaysForward);
+      y := y + FAltFullEdtFwd.Height + 4;
+
+      lbl := TLabel.Create(tsQuick);
+      lbl.Parent := tsQuick;
+      lbl.SetBounds(4, y + 4, 46, 17);
+      lbl.Caption := 'назад';
+      FAltFullEdtBack := TEdit.Create(tsQuick);
+      FAltFullEdtBack.Parent := tsQuick;
+      FAltFullEdtBack.SetBounds(54, y, tsQuick.ClientWidth - 58, 21);
+      FAltFullEdtBack.Text := IntToStr(CurrDaysBack);
+      y := y + FAltFullEdtBack.Height + 4;
+
+      btn := TButton.Create(tsQuick);
+      btn.Parent := tsQuick;
+      btn.Caption := 'Применить диапазон (от сегодня)';
+      btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.OnClick := AltFullDateApplyRelClick;
+    end;
+
+    //--- Вкладка "Условие" - всегда ---
+    tsCondition := TTabSheet.Create(pc);
+    tsCondition.PageControl := pc;
+    tsCondition.Caption := 'Условие';
+
+    case Cat of
+      0: FCondOps := ['=', '<>', '>', '>=', '<', '<=', 'между'];
+      1: FCondOps := ['=', '>', '>=', '<', '<=', 'между'];
+    else
+      FCondOps := ['=', '<>', 'содержит', 'не содержит', 'начинается с', 'заканчивается на'];
+    end;
+    FCondFld := Fld;
+
+    y := 4;
+    FCondCombo := TComboBox.Create(tsCondition);
+    FCondCombo.Parent := tsCondition;
+    FCondCombo.Style := csDropDownList;
+    FCondCombo.SetBounds(4, y, tsCondition.ClientWidth - 8, 21);
+    for i := 0 to High(FCondOps) do
+      FCondCombo.Items.Add(FCondOps[i]);
+    FCondCombo.ItemIndex := 0;
+    FCondCombo.OnChange := AltConditionOperatorChange;
+    y := y + FCondCombo.Height + 6;
+
+    lbl1 := TLabel.Create(tsCondition);
+    lbl1.Parent := tsCondition;
+    lbl1.SetBounds(4, y + 4, 40, 17);
+    lbl1.Caption := 'Значение:';
+    FCondEdt1 := TEdit.Create(tsCondition);
+    FCondEdt1.Parent := tsCondition;
+    FCondEdt1.SetBounds(48, y, tsCondition.ClientWidth - 52, 21);
+    y := y + FCondEdt1.Height + 4;
+
+    FCondLbl2 := TLabel.Create(tsCondition);
+    FCondLbl2.Parent := tsCondition;
+    FCondLbl2.SetBounds(4, y + 4, 40, 17);
+    FCondLbl2.Caption := 'До:';
+    FCondEdt2 := TEdit.Create(tsCondition);
+    FCondEdt2.Parent := tsCondition;
+    FCondEdt2.SetBounds(48, y, tsCondition.ClientWidth - 52, 21);
+    y := y + FCondEdt2.Height + 6;
+
+    AltConditionOperatorChange(FCondCombo); //покажем/скроем второе значение по текущей операции
+
+    btn := TButton.Create(tsCondition);
+    btn.Parent := tsCondition;
+    btn.Caption := 'Применить условие';
+    btn.SetBounds(4, y, tsCondition.ClientWidth - 8, 25);
+    btn.OnClick := AltFullConditionApplyClick;
+
+    //--- Вкладка "Цвет" - всегда, но с ленивой загрузкой на больших таблицах (см.
+    //ALT_COLOR_FILTER_LAZY_THRESHOLD) ---
+    tsColor := TTabSheet.Create(pc);
+    tsColor.PageControl := pc;
+    tsColor.Caption := 'Цвет';
+
+    y := 4;
+    FAltFullColorGetBtn := TButton.Create(tsColor);
+    FAltFullColorGetBtn.Parent := tsColor;
+    FAltFullColorGetBtn.Caption := 'Получить цвета';
+    FAltFullColorGetBtn.SetBounds(4, y, tsColor.ClientWidth - 8, 25);
+    FAltFullColorGetBtn.OnClick := AltFullColorGetColorsClick;
+
+    FAltFullColorListBox := TListBox.Create(tsColor);
+    FAltFullColorListBox.Parent := tsColor;
+    FAltFullColorListBox.Style := lbOwnerDrawFixed;
+    FAltFullColorListBox.ItemHeight := 20;
+    FAltFullColorListBox.OnDrawItem := ColorFilterListDrawItem;
+    FAltFullColorListBox.OnClick := ColorFilterListClick;
+    FAltFullColorListBox.OnKeyPress := ColorFilterListKeyPress;
+    FAltFullColorListBox.SetBounds(4, y, tsColor.ClientWidth - 8, PcHeight - 90);
+    FAltFullColorListBox.Anchors := [akLeft, akTop, akRight, akBottom];
+    FAltFullColorListBox.Visible := False;
+
+    btn := TButton.Create(tsColor);
+    btn.Parent := tsColor;
+    btn.Caption := 'Применить';
+    btn.SetBounds(4, PcHeight - 53, tsColor.ClientWidth - 8, 25);
+    btn.Anchors := [akLeft, akRight, akBottom];
+    btn.OnClick := AltFullColorApplyClick;
+
+    //см. !алгоритмы.txt, 6.30: сравниваем с GetCount(True) (отфильтрованный набор), а не GetCount(False) -
+    //именно отфильтрованный набор реально сканирует RefreshColorCacheField (замечание пользователя)
+    if GetCount(True) > ALT_COLOR_FILTER_LAZY_THRESHOLD then begin
+      FAltFullColorListBox.Visible := False;
+      FAltFullColorGetBtn.Visible := True;
+    end
+    else begin
+      FAltFullColorGetBtn.Visible := False;
+      AltFullColorGetColorsClick(nil);
+    end;
+
+    pc.ActivePage := tsValues;
+
+    //--- Общие кнопки внизу окна ---
+    y := 4 + lblTitle.Height + 6 + PcHeight + 6;
+    btnReset := TButton.Create(frm);
+    btnReset.Parent := frm;
+    btnReset.Caption := 'Сбросить фильтр по столбцу';
+    btnReset.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btnReset.Anchors := [akLeft, akRight, akBottom];
+    btnReset.OnClick := AltFullResetClick;
+    y := y + btnReset.Height + 3;
+
+    btnClearAll := TButton.Create(frm);
+    btnClearAll.Parent := frm;
+    btnClearAll.Caption := 'Снять все фильтры';
+    btnClearAll.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btnClearAll.Anchors := [akLeft, akRight, akBottom];
+    btnClearAll.OnClick := AltFullClearAllClick;
+    y := y + btnClearAll.Height + 3;
+
+    btnClose := TButton.Create(frm);
+    btnClose.Parent := frm;
+    btnClose.Caption := 'Закрыть';
+    btnClose.SetBounds(4, y, frm.ClientWidth - 8, 25);
+    btnClose.Anchors := [akLeft, akRight, akBottom];
+    btnClose.ModalResult := mrCancel;
+    btnClose.Cancel := True;
+    y := y + btnClose.Height + 4;
+
+    frm.ClientHeight := y;
+
+    //см. !алгоритмы.txt, 6.30: восстановление размеров окна - ОДНО, общее на все столбцы и гриды
+    //("сквозняком", по просьбе пользователя - см. ALT_FULL_FILTER_WINDOW_SECTION), а не что-то вида
+    //Section + FieldName. Позиция (Left/Top) не сохраняется - окно, как и раньше, открывается у
+    //текущей ячейки; сохраняется/восстанавливается только размер. Ограничим минимальный размер, чтобы
+    //случайно сохраненное слишком маленькое значение не сделало вкладки нечитаемыми
+    frm.Constraints.MinWidth := 250;
+    frm.Constraints.MinHeight := 300;
+    SavedW := StrToIntDef(Settings.ReadProperty(ALT_FULL_FILTER_WINDOW_SECTION, 'width', ''), 0);
+    SavedH := StrToIntDef(Settings.ReadProperty(ALT_FULL_FILTER_WINDOW_SECTION, 'height', ''), 0);
+    if SavedW > 0 then
+      frm.Width := SavedW;
+    if SavedH > 0 then
+      frm.Height := SavedH;
+
+    frm.ShowModal;
+
+    Settings.WriteProperty(ALT_FULL_FILTER_WINDOW_SECTION, 'width', IntToStr(frm.Width));
+    Settings.WriteProperty(ALT_FULL_FILTER_WINDOW_SECTION, 'height', IntToStr(frm.Height));
+  finally
+    FAltFullFld := nil;
+    FAltValueListBox := nil;
+    FCondFld := nil;
+    FCondCombo := nil;
+    FCondEdt1 := nil;
+    FCondEdt2 := nil;
+    FCondLbl2 := nil;
+    FAltFullDtpFrom := nil;
+    FAltFullDtpTo := nil;
+    FAltFullEdtFwd := nil;
+    FAltFullEdtBack := nil;
+    FAltFullColorListBox := nil;
+    FAltFullColorGetBtn := nil;
+    FreeAndNil(FAltValueListPresentKeys);
+    frm.Free;
+  end;
 end;
 
 procedure TFrDBGridEh.DataGrouping;

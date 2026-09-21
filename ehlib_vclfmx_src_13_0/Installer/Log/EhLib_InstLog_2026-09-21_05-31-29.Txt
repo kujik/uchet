@@ -1,0 +1,373 @@
+
+Installation Environment:
+  EhLibInstaller version: 12.0.17
+  EhLib version: EhLib.VclFmx 13.0 Build 13.0.010 source included version (Professional Edition).
+  OS Name: Windows 11
+  OS Version: Windows 11 (Version 25H2, OS Build 26200.5710, 64-bit Edition)
+  IDE for Installation: RADStudio 11 (Delphi)
+  RAD Studio Edition: Enterprise/Architect/Ultimate
+  RAD Studio Installed Updates: Delphi 11 and C++Builder 11 Update 3
+  EhLib Installation path: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib"
+  EhLib Default language resources: Russian [RUS]
+  IDE Path: "C:\Program Files (x86)\Embarcadero\Studio\22.0"
+  DCP output directory: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp"
+  Package output directory: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl"
+
+Istalling the library:Installer ver. 12.0.17;  EhLib.VclFmx 13.0 Build 13.0.010 source included version (Professional Edition).
+==========
+
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\RADSpecific\RADStudioXE11\*.* C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src :Ok
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\DEMOS C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib :Ok
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\DataDrivers C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib :Ok
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\DataService C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib :Ok
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\HLP C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib :Ok
+Copy R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\*.* C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib :Ok
+
+INFO: Compilation packages for Platform/BuildConfig: "Win32/Release" is starting.
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibRtl.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:01.07
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:01.07
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibVcl.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+&&copy Vcl\*.res ..\Lib\Win32\Release
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibVcl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:01.54
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:01.54
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibADODataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibADODataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.44
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.44
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibDBXDataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibDBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.45
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.45
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibIBXDataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibIBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.40
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.40
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibFmx.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:01.71
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:01.71
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibRtl.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibRtl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.57
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.57
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibVcl.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibVcl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.51
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.51
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibADODataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibADODataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.50
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.50
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibDBXDataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibDBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.54
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.54
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibIBXDataDrivers.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibIBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.50
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.50
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibFmx.dproj /t:Build /p:Config=Release /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.69
+
+INFO: Compilation packages is finished.
+
+Copying *.bpl, *.dcp, *.bpi, *.lib files are not required.
+Copying *.dcu, *.dfm, *.fmx, *.res, *.hpp files are not required.
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibRtl280.bpl" value "Dcl EhLib Rtl Package"
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibVcl280.bpl" value "Dcl EhLib Vcl Package"
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibADODataDrivers280.bpl" value "Dcl EhLib ADO DataDrivers Package"
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibDBXDataDrivers280.bpl" value "Dcl EhLib DBX DataDrivers Package"
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibIBXDataDrivers280.bpl" value "Dcl EhLib IBX DataDrivers Package"
+Reg: Reg Path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages" - Write RegName: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibFmx280.bpl" value "Dcl EhLib Fmx Package"
+Reg: Path - "$(BDSLIB)\$(Platform)\release;$(BDSUSERDIR)\Imports;$(BDSUSERDIR)\Imports\$(Platform);$(BDS)\Imports;$(BDSCOMMONDIR)\Dcp;$(BDS)\include;C:\Program Files (x86)\madCollection\madBasic\BDS22\win32;C:\Program Files (x86)\madCollection\madDisAsm\BDS22\win32;C:\Program Files (x86)\madCollection\madExcept\BDS22\win32;C:\Program Files (x86)\madCollection\madExcept\..\Plugins\win32;C:\Program Files (x86)\madCollection\madKernel\BDS22\win32;C:\Program Files (x86)\madCollection\madSecurity\BDS22\win32;C:\Program Files (x86)\madCollection\madShell\BDS22\win32;C:\ProgramData\FastReport\LibD28;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" added in RegValueName: OK
+Reg: Path - "$(BDSLIB)\$(Platform)\release;$(BDSUSERDIR)\Imports;$(BDSUSERDIR)\Imports\$(Platform);$(BDS)\Imports;$(BDSCOMMONDIR)\Dcp;$(BDS)\include;C:\Program Files (x86)\madCollection\madBasic\BDS22\win32;C:\Program Files (x86)\madCollection\madDisAsm\BDS22\win32;C:\Program Files (x86)\madCollection\madExcept\BDS22\win32;C:\Program Files (x86)\madCollection\madExcept\..\Plugins\win32;C:\Program Files (x86)\madCollection\madKernel\BDS22\win32;C:\Program Files (x86)\madCollection\madSecurity\BDS22\win32;C:\Program Files (x86)\madCollection\madShell\BDS22\win32;C:\ProgramData\FastReport\LibD28;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Win32\Release" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl" added in RegValueName: OK
+Reg: Path - "$(BDS)\OCX\Servers;$(BDS)\SOURCE\VCL;$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\win;$(BDS)\source\rtl\win\winrt;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\ado;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\data\vclctrls;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;C:\Program Files (x86)\madCollection\madBasic\Sources;C:\Program Files (x86)\madCollection\madKernel\Sources;C:\Program Files (x86)\madCollection\madSecurity\Sources;C:\Program Files (x86)\madCollection\madShell\Sources;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Vcl" added in RegValueName: OK
+
+INFO: Compilation packages for Platform/BuildConfig: "Win32/Debug" is starting.
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.69
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibRtl.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.90
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.90
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibVcl.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+&&copy Vcl\*.res ..\Lib\Win32\Debug
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibVcl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:01.45
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:01.45
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibADODataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibADODataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.42
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.42
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibDBXDataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibDBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.52
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.52
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibIBXDataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibIBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.46
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.46
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibFmx.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:01.93
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:01.93
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibRtl.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibRtl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.54
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.54
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibVcl.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibVcl.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.54
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.54
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibADODataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibADODataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.50
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.50
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibDBXDataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibDBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.51
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.51
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibIBXDataDrivers.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibIBXDataDrivers.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.50
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.50
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild DclEhLibFmx.dproj /t:Build /p:Config=Debug /p:platform=Win32 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\DclEhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:00.93
+
+INFO: Compilation packages is finished.
+
+Copying *.bpl, *.dcp, *.bpi, *.lib files are not required.
+Copying *.dcu, *.dfm, *.fmx, *.res, *.hpp files are not required.
+Don't register packages in Debug compile configuration. :Ok
+Reg: Path - "$(BDSLIB)\$(Platform)\debug;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Win32\Debug" added in RegValueName: OK
+
+INFO: Compilation packages for Platform/BuildConfig: "Android64/Release" is starting.
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:00.93
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibRtl.dproj /t:Build /p:Config=Release /p:platform=Android64 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj" (Build target(s)).
+Построение успешно завершено.
+  Rtl\EhLibUtils.pas(2793): Hint warning H2586: Legacy '$IFEND' directive found. Consider changing to '$ENDIF' or enable $LEGACYIFEND [C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj]
+    Ошибок: 0
+Затраченное время: 00:00:03.90
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:03.90
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibFmx.dproj /t:Build /p:Config=Release /p:platform=Android64 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:10.50
+
+INFO: Compilation packages is finished.
+
+Copying *.bpl, *.dcp, *.bpi, *.lib files are not required.
+Copying *.dcu, *.dfm, *.fmx, *.res, *.hpp files are not required.
+Don't register design packages for Platform:  (Android64) :Ok
+Reg: Path - "$(BDSLIB)\$(PLATFORM)\Release;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" added in RegValueName: OK
+Reg: Path - "$(BDSLIB)\$(PLATFORM)\Release;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Android64\Release" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl" added in RegValueName: OK
+Reg: Path - "$(BDS)\source\rtl\common;$(BDS)\SOURCE\RTL\SYS;$(BDS)\source\rtl\android;$(BDS)\source\ToolsAPI;$(BDS)\SOURCE\IBX;$(BDS)\source\Internet;$(BDS)\SOURCE\PROPERTY EDITORS;$(BDS)\source\soap;$(BDS)\SOURCE\XML;$(BDS)\source\Indy10\Core;$(BDS)\source\Indy10\System;$(BDS)\source\Indy10\Protocols;$(BDS)\source\fmx;$(BDS)\source\databinding\components;$(BDS)\source\databinding\engine;$(BDS)\source\databinding\graph;$(BDS)\source\data;$(BDS)\source\data\cloud;$(BDS)\source\data\datasnap;$(BDS)\source\data\dbx;$(BDS)\source\data\dsnap;$(BDS)\source\rtl\posix;$(BDS)\source\rtl\posix\osx;$(BDS)\source\data\datasnap\connectors;$(BDS)\source\data\datasnap\proxygen;$(BDS)\source\DataExplorer;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\Common\dunit;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\Common;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject;$(BDS)\source\DUnit\Contrib\DUnitWizard\Source\DelphiExperts\DUnitProject\dunit;$(BDS)\source\DUnit\src;$(BDS)\source\DUnit\tests;$(BDS)\source\Experts;$(BDS)\source\indy\abstraction;$(BDS)\source\indy\implementation;$(BDS)\source\indyimpl;$(BDS)\source\Property Editors\Indy10;$(BDS)\source\soap\wsdlimporter;$(BDS)\source\Visualizers;$(BDS)\source\DUnit\Contrib\XMLReporting;$(BDS)\source\DUnit\Contrib\XPGen;$(BDS)\source\data\rest;$(BDS)\source\data\firedac;$(BDS)\source\tethering;$(BDS)\source\DUnitX;$(BDS)\source\data\ems;$(BDS)\source\rtl\net;$(BDS)\source\FlatBox2D;$(BDSCOMMONDIR)\Dcp\$(PLATFORM);C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Vcl" added in RegValueName: OK
+
+INFO: Compilation packages for Platform/BuildConfig: "Android64/Debug" is starting.
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:10.50
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibRtl.dproj /t:Build /p:Config=Debug /p:platform=Android64 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj" (Build target(s)).
+Построение успешно завершено.
+  Rtl\EhLibUtils.pas(2793): Hint warning H2586: Legacy '$IFEND' directive found. Consider changing to '$ENDIF' or enable $LEGACYIFEND [C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibRtl.dproj]
+    Ошибок: 0
+Затраченное время: 00:00:03.66
+
+cmd.exe /c "R:\Разработка\EhLib\!!!MY\ehlib_vclfmx_src_13_0\Installer\Compile.Cmd"
+Затраченное время: 00:00:03.66
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>Call "C:\Program Files (x86)\Embarcadero\Studio\22.0\Bin\rsvars.bat" 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>SET BDSLIB= 
+C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src>REM C:\Windows\Microsoft.NET\Framework\v4.0.30319\MSBuild EhLibFmx.dproj /t:Build /p:Config=Debug /p:platform=Android64 
+(C) Корпорация Майкрософт (Microsoft Corporation). Все права защищены.
+Done Building Project "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\EhLibFmx.dproj" (Build target(s)).
+    Ошибок: 0
+Затраченное время: 00:00:18.20
+
+INFO: Compilation packages is finished.
+
+Copying *.bpl, *.dcp, *.bpi, *.lib files are not required.
+Copying *.dcu, *.dfm, *.fmx, *.res, *.hpp files are not required.
+Don't register packages in Debug compile configuration. :Ok
+Reg: Path - "$(BDSLIB)\$(PLATFORM)\debug;C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Android64\Debug" added in RegValueName: OK
+Path: "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design\sql_text.sql" added to Registry "\SOFTWARE\Embarcadero\BDS\22.0\EhLib"
+Installation completed.

@@ -119,6 +119,7 @@ const
 //  TASK_MAILING_PRODUCTION_ORDERS_LAST_MONTH = 33;
 //  TASK_MAILING_SHIPMENT_ORDERS_LAST_MONTH = 34;
   TASK_MAILING_MATERIAL_OPEN_REQUIREMENTS = 35;
+  TASK_MAILING_SHIPPED_NOT_CLOSED_BY_MANAGER_ORDERS = 36;
   //пользователь (подпись) для служебных почтовых рассылок
   TASK_DEFAULT_SENDER = 'Учёт';
 
@@ -343,6 +344,7 @@ begin
     [TASK_MAILING_OVERDUE_PRODUCTION_ORDERS, 'Просроченные производственные заказы', 1040],
     [TASK_MAILING_OVERDUE_SHIPMENT_ORDERS, 'Просроченные отгрузочные заказы', 1050],
     [TASK_MAILING_OVERDUE_ORDERS_BY_PRODUCTION_START_DATE, 'Просроченные по дате начала производства заказы', 1060],
+    [TASK_MAILING_SHIPPED_NOT_CLOSED_BY_MANAGER_ORDERS, 'Заказы, которые уже отгружены, но при этом не закрыты менеджером', 1070],
 
     [TASK_MAILING_ACTS_WRITEOFF_RECEIPT, 'Акты списания и оприходования за вчерашний день', 2000],
     [TASK_MAILING_EARLY_COMPLETION_ACTS, 'Преждевременно созданные АВР', 2010],

@@ -1,0 +1,92 @@
+
+Unistalling the library:RADStudio 11 - EhLib.VclFmx 12.0 Build 12.0.035 source included version (Professional Edition).
+==========
+
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\DataDrivers" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\DataService" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Demos" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\EhLib.VclFmx 12.0 Release Notes Eng.docx" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\EhLib.VclFmx 12.0 Release Notes Rus.docx" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Hlp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Hpp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\license.rus" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\license.txt" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\readme.rus" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\readme.txt" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\Android64\EhLibFmx.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\Android64\EhLibRtl.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibADODataDrivers.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibADODataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibADODataDrivers.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibDBXDataDrivers.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibDBXDataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibDBXDataDrivers.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibFmx.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibFmx.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibFmx.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibIBXDataDrivers.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibIBXDataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibIBXDataDrivers.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibRtl.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibRtl.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibRtl.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibVcl.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibVcl.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\EhLibVcl.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibADODataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibDBXDataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibFmx.bpi" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibFmx.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibFmx.lib" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibIBXDataDrivers.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibRtl.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\DclEhLibVcl.dcp" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\Android64\libEhLibFmx.a" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Dcp\Android64\libEhLibRtl.a" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibADODataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibDBXDataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibFmx280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibIBXDataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibRtl280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\EhLibVcl280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibADODataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibDBXDataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibFmx280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibIBXDataDrivers280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibRtl280.bpl" deleted
+File or Folder :"C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibVcl280.bpl" deleted
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Vcl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Android64\Debug" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Debug DCU Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Android64\Release" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Search Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Android64:Search Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Vcl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Rtl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Fmx" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Vcl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Fmx" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design.Data" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Design" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Data" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Browsing Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Win32\Debug" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Debug DCU Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Lib\Win32\Release" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Search Path
+Path "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Components\EhLib\Src\Incl" deleted in SOFTWARE\Embarcadero\BDS\22.0\Library\Win32:Search Path
+Registry Key "\SOFTWARE\Embarcadero\BDS\22.0\C++\Paths" does not exist.
+Registry paths for C++ Builder will not be removed.
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibRtl280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibVcl280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibADODataDrivers280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibDBXDataDrivers280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibIBXDataDrivers280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Reg Value "C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\DclEhLibFmx280.bpl" deleted in path: "SOFTWARE\Embarcadero\BDS\22.0\Known Packages"
+Uninstalling completed.

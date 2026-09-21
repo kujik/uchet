@@ -236,6 +236,8 @@ type
     procedure ReportForPlannedShipments;
     //материалы, по которым не закрыта потребность
     procedure ReportForOpenMaterialRequirements;
+    //заказы, которые уже отгружены, но при этом не закрыты менеджером
+    procedure ReportForShippedNotClosedByManagerOrders;
   end;
 
 var
@@ -561,6 +563,7 @@ begin
   AddTask('Потребность в материалах на завтра', '', '0 8 * * *', procedure begin TasksS.ReportForRequiredMaterialsForPlannedOrdersTomorrow; end);
   AddTask('Материалы, по которым не закрыта потребность', '', '0 8 * * *', procedure begin TasksS.ReportForOpenMaterialRequirements; end);
   AddTask('Заказы, запланированные к отгрузке (сегодня/завтра/послезавтра)', '', '0 8 * * *', procedure begin TasksS.ReportForPlannedShipments; end);
+  AddTask('Заказы, которые уже отгружены, но при этом не закрыты менеджером', '', '0 8 * * *', procedure begin TasksS.ReportForShippedNotClosedByManagerOrders; end);
   //задачи по понедельникам - день недели проверяется внутри задачи, см.
   //комментарий к InitScheduledTasks выше
   AddTask('Производственные заказы за прошедшую неделю', 'выполняется только по понедельникам', '0 8 * * *',
@@ -1973,6 +1976,44 @@ begin
     HTML := TopSt + ', отсутствуют.';
   Tasks.SendMail(TASK_MAILING_MATERIAL_OPEN_REQUIREMENTS, Title, HTML, FileToSendArr, '~');
 end;
+
+procedure TTasksS.ReportForShippedNotClosedByManagerOrders;
+//заказы, которые уже отгружены, но при этом не закрыты менеджером
+var
+  naOrders, naItems: TNamedArr;
+  FieldsOrders, FieldsItems: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Заказы, уже отгруженные, но не закрытые менеджером';
+  TopSt := Title + ' на' + DateTimeToStr(Date);
+  FieldsOrders := [
+    ['ornum$s', 'Заказ', '90'],
+    ['dt_beg$d', 'Дата создания', '100'],
+    ['managername$s', 'Vtytl;ер', '150'],
+    ['customer$s', 'Покупатель', '300;h'],
+    ['project$s', 'Проект', '300;h'],
+    ['cost$f', 'Стоимость заказа', '100', 'f=#:', 'r'],
+    ['dt_otgr$d', 'Дата отгрузки', '100']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_shipped_not_closed_by_manager_orders', FieldsOrders.Col(0).Implode(';')) + ' order by dt_otgr, ornum', [], naOrders);
+  HTML := '';
+  FileToSendArr := [];
+  if naOrders.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(naOrders, FieldsOrders, 1, 2, 0) + '<br>';
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, naOrders, FieldsOrders, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := TopSt + ', отсутствуют.<br>';
+  Tasks.SendMail(TASK_MAILING_SHIPPED_NOT_CLOSED_BY_MANAGER_ORDERS, Title, HTML, FileToSendArr, '~');
+end;
+
 
 end.
 

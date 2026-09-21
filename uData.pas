@@ -1491,7 +1491,7 @@ const
   (Bt: mbtCustom_DataCheck_ViewEstimate; Pict: ''; Caption: 'Смета изделия'; hint: ''),
   (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: ''),
   (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: ''),
-  (Bt: mbtClearAllGridFilters; Pict: ''; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
+  (Bt: mbtClearAllGridFilters; Pict: 'clearfilters'; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')

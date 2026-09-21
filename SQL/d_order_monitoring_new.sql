@@ -1409,3 +1409,22 @@ where
 order by 
   i.ornum, i.dt_otgr, i.pos
 ;
+
+create or replace view v_rep_shipped_not_closed_by_manager_orders as
+select
+--заказы, ужк отгруженные, но не завершённые менеджером
+--(только по отгрузочным заказам)
+  id, ornum, dt_beg, customer, project, cost, dt_otgr, managername
+from
+  v_orders
+where
+  id > 0
+  --менеджеры завершают отгрузочные, притом по Н - только рекламации
+  and id_organization <> -1
+  and dt_beg > date '2026-01-01'
+  and not (prefix = 'Н' and nvl(is_complaint, 0) = 0)
+  and dt_from_sgp is not null
+  and dt_end_manager is null
+order by 
+  dt_otgr, ornum
+;
