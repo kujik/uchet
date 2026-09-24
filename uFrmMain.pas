@@ -567,6 +567,8 @@ begin
     ['Сервис'],
     ['Пользователи в AD', myfrm_Adm_LdapUsers, User.Role(rAdm_ActiveDirectoryUsers)],
     ['Пользователи в сети', myfrm_Adm_DomainUsers,  User.Role(rAdm_LanUsers)],
+    //см. !алгоритмы.txt, раздел "Компьютеры домена": справочник по данным резидентного агента (Firebird)
+    ['Компьютеры домена', myfrm_Adm_DomainComputers, User.Role(rAdm_LanComputers)],
     [],
     ['Установщик модулей Учета', myfrm_Adm_Installer, User.IsDeveloper],
     [],

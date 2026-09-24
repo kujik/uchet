@@ -53,6 +53,7 @@ uses
   SysUtils,
   uUpdater in 'uUpdater.pas',
   uDBParsec in 'uDBParsec.pas' {myDBParsec: TDataModule},
+  uDBFirebird in 'uDBFirebird.pas' {myDBFirebird: TDataModule},
   uMessages in 'uMessages.pas',
   uFields in 'uFields.pas',
   uLabelColors in 'uLabelColors.pas',
@@ -316,6 +317,7 @@ begin
   //создаем форму данных (разныые объекты данных программы)
   Application.CreateForm(TMyData, MyData);
   Application.CreateForm(TmyDBParsec, myDBParsec);
+  Application.CreateForm(TmyDBFirebird, myDBFirebird);
   //!!!!
   //создаем форму работы с отчетами fr3
   Application.CreateForm(TPrintReport, PrintReport);
@@ -332,6 +334,12 @@ begin
   Q := TmyDBOra.CreateObject(Application, 'connect', True, ReadAppDbBackend('Oracle', mydbbFireDac));
   //Создаем экземпляр БД типа MsSQL для подключения Парсек
   myDBParsec := TmyDBParsec.CreateObject(Application, 'parsec', False);
+  //см. !алгоритмы.txt, раздел "Компьютеры домена": БД резидентного агента (Firebird, fresh.fdb) -
+  //собирает данные о компьютерах пользователей домена. Подключаемся лениво (AConnectAfterCreate =
+  //False), как и к Парсеку выше - справочник "Компьютеры домена" сам вызывает Connect при открытии
+  //(см. uFrmAGlstDomainComputers.PrepareForm), поэтому недоступность этого сервера при старте
+  //программы никак не должна задерживать/ломать запуск остальной части приложения
+  myDBFirebird := TmyDBFirebird.CreateObject(Application, 'firebird', False);
 
   AfterProgramStart := true;
 

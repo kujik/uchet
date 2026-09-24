@@ -960,6 +960,9 @@ const
   myfrm_Rep_PayrollsSum='Rep_PayrollsSum';
   myfrm_Adm_DomainUsers = 'Adm_DomainUsers';
   myfrm_Adm_LdapUsers = 'Adm_LdapUsers';
+  //см. !алгоритмы.txt, раздел "Компьютеры домена": справочник "Компьютеры домена"
+  //(uFrmAGlstDomainComputers.pas) - данные резидентного агента (БД Firebird, myDBFirebird)
+  myfrm_Adm_DomainComputers = 'Adm_DomainComputers';
   myfrm_Adm_UserInterface = 'Adm_UserInterface';
   myfrm_Ref_JobsNeeded = 'Ref_JobsNeeded';
   myfrm_R_OrderProperties='R_OrderProperties';
@@ -1491,7 +1494,7 @@ const
   (Bt: mbtCustom_DataCheck_ViewEstimate; Pict: ''; Caption: 'Смета изделия'; hint: ''),
   (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: ''),
   (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: ''),
-  (Bt: mbtClearAllGridFilters; Pict: 'clearfilters'; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
+  (Bt: mbtClearAllGridFilters; Pict: ''; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
@@ -1582,6 +1585,9 @@ const
   rAdm_ActiveDirectoryUsers_ChAll = '0-14';
   rAdm_ActiveDirectoryUsers_ABook = '0-15';
   rAdm_DeleteOutdatedOrdersAndAccounts = '0-16';
+  //право на доступ к справочнику "Компьютеры домена" (myfrm_Adm_DomainComputers, см. !алгоритмы.txt,
+  //раздел "Компьютеры домена")
+  rAdm_LanComputers = '0-17';
 
   rPC_R_Exp_Change = '1-01';
   rPC_R_Sp_Add = '1-02';
@@ -1858,7 +1864,7 @@ const
 
 
   const
-  URights : array [0..288] of array [0..3] of string = (
+  URights : array [0..289] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1883,6 +1889,7 @@ const
     (rAdm_ActiveDirectoryUsers_ChAll,'','Разное','Пользователи AD, редактирование всех записей'),
     (rAdm_ActiveDirectoryUsers_ABook,'','Разное','Пользователи AD, обновление адресной книги'),
     (rAdm_LanUsers,'','Разное','Пользователи компьютеров'),
+    (rAdm_LanComputers,'','Разное','Компьютеры домена (данные резидентного агента)'),
 
 
     (rPC_R_Exp_Access,'Модуль "Платежный календарь"','Справочник: Статьи расходов','Доступ к справочнику'),

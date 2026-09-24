@@ -37,7 +37,9 @@ uses
   FireDAC.Stan.Param;
 
 type
-  TmydbType = (mydbtOra, mydbtMsSql, mydbtSqLite);
+  //см. !алгоритмы.txt, раздел "Компьютеры домена": mydbtFirebird добавлен для БД резидентного агента
+  //(fresh.fdb на 10.1.1.4), собирающего данные о компьютерах пользователей - см. uDBFirebird.pas
+  TmydbType = (mydbtOra, mydbtMsSql, mydbtSqLite, mydbtFirebird);
   //бэкенд, через который TmyDB реально исполняет запросы (см. TmyDB.Backend) - ОБА бэкенда доступны
   //параллельно на одном объекте, ADO при этом не отключается и не заменяется (см. раздел 6 !алгоритмы.txt)
   TmyDbBackend = (mydbbAdo, mydbbFireDac);
@@ -419,6 +421,8 @@ begin
   case FDbType of
     mydbtOra: Result := 'Oracle';
     mydbtMsSql: Result := 'MSSQL';
+    //см. !алгоритмы.txt, раздел "Компьютеры домена": секция [Firebird]/[Firebird.FireDAC] в uchet.cfg
+    mydbtFirebird: Result := 'Firebird';
   else
     Result := '';
   end;
@@ -575,6 +579,29 @@ var
   i: Integer;
   ok: Boolean;
 begin
+  //см. !алгоритмы.txt, раздел "Компьютеры домена": Firebird ВСЕГДА подключается только через FireDAC -
+  //у ADO нет надежного штатного OLEDB-провайдера для Firebird (в отличие от Oracle/MSSQL), поэтому,
+  //в отличие от остальных типов БД, здесь нет и не предполагается ADO-режим вообще (ABackend всегда
+  //mydbbFireDac - см. TmyDBFirebird.CreateObject, uDBFirebird.pas). Ветка ниже (для mydbtOra) и
+  //ветка "else" (для mydbtMsSql/mydbtSqLite, всегда ADO) для Firebird не используются - отдельная
+  //проверка ДО них, по той же схеме, что и Oracle+FireDAC чуть ниже (только статус уже
+  //установленного соединения; здесь, в отличие от остальных веток, ошибка НЕ проглатывается молча -
+  //ее текст запоминается в FErrorState, см. ниже, чтобы вызывающий код (см.
+  //uFrmAGlstDomainComputers.PrepareForm) мог показать пользователю точную причину, а не просто
+  //"не удалось подключиться")
+  if FDbType = mydbtFirebird then begin
+    ok := False;
+    try
+      ok := FdConnection.Connected;
+    except
+      //GetFdConnection в случае неудачи перевызывает исключение с уже человекочитаемым текстом,
+      //включающим и исходную ошибку FireDAC/Firebird (сеть недоступна, неверный логин/пароль и т.п.)
+      on E: Exception do
+        FErrorState := E.Message;
+    end;
+    Result := ok;
+    Exit;
+  end;
   if FDbType = mydbtOra then begin
   //МИГРАЦИЯ НА FIREDAC (см. !алгоритмы.txt, раздел 6.10): при Backend = mydbbFireDac устанавливаем
   //ТОЛЬКО FireDAC-подключение, ADO вообще не трогаем - раньше при переключении Backend на FireDAC

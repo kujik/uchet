@@ -112,7 +112,7 @@ uses
   uSnCalendar,
   uOrders,
 
-  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmADedtMainSettings, uFrmADedtModuleSettings,
+  uFrmAGlstDomainUsers, uFrmAGLstLdapUsers, uFrmAGlstDomainComputers, uFrmADedtMainSettings, uFrmADedtModuleSettings,
   uFrmADedtMailingSettings,
 
   uFrmCDedtAccount,
@@ -734,6 +734,9 @@ begin
     TFrmAGlstDomainUsers.Show(Application, AFormType, [myfoSizeable], fNone, Null, Null)
   else if AFormType = myfrm_Adm_LdapUsers then
     TFrmAGlstLdapUsers.Show(Application, AFormType, [myfoSizeable], fNone, Null, Null)
+  //см. !алгоритмы.txt, раздел "Компьютеры домена"
+  else if AFormType = myfrm_Adm_DomainComputers then
+    TFrmAGlstDomainComputers.Show(Application, AFormType, [myfoSizeable], fNone, Null, Null)
   else if AFormType = myfrm_F_UsersAndRoles then
     TFrmAWUsersAndRoles.Show(Application, AFormType, [myfoSizeable, myfoDialog], fNone, Null, Null)
   else if AFormType = myfrm_Dlg_Rep_FinByOrders then
@@ -894,7 +897,7 @@ begin
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])
   else if AFormType = myfrm_Dlg_R_CarTypes then
-    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_sn_cartypes', 'Типы транспортных средств', 400, 100,
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'ref_otk_reject_reasons', 'Типы транспортных средств', 400, 100,
       [['name$s', cntEdit, 'Тип','1:100'],
        ['active$i', cntCheckX, 'Используется']],
       [['caption dlgedit dlgactive']])
