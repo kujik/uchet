@@ -692,6 +692,11 @@ begin
     //если слишком длинная строка, очистим ее
     if Length(St) > 4000 then St:='';
     MC.WriteString(Section, Format('%s.%s', [Grid.Name, '(Filter)']), St+#1+';');
+    //см. !алгоритмы.txt, 6.33: наши альт-фильтры (Alt-F, число/дата/диапазон дней/цвет/список значений/
+    //условие, см. TFrDBGridEh.SerializeAltFilters) сохраняем В ТОМ ЖЕ УСЛОВИИ, что и стандартный
+    //постолбцовый фильтр ехlib чуть выше (myogSaveFilter/IsPresetMode) - по просьбе пользователя,
+    //"сохранять и восстанавливать как и стандартный фильтр"
+    MC.WriteString(Section, Format('%s.%s', [Grid.Name, '(AltFilter)']), Grid.SerializeAltFilters);
   end;
   //параметры фильтра в окне
   MC.WriteString(Section, Format('%s.%s', [Grid.Name, '(DefFilter)']), Grid.Opt.FilterResult);
@@ -885,6 +890,14 @@ begin
             end;
           end;
         end;
+        //см. !алгоритмы.txt, 6.33: восстанавливаем наши альт-фильтры (Alt-F) в ТОМ ЖЕ УСЛОВИИ, что и
+        //стандартный постолбцовый фильтр ехlib выше (см. симметричную запись в WriteFrDBGridEhSettings).
+        //Читаем по той же логике M/MC, что и si (обычная логика всегда из M, пресет - из MC).
+        //DeserializeAltFilters сама ищет поля/столбцы по имени - не зависит от порядка/видимости
+        //столбцов, которые восстанавливаются позже в этой же процедуре, поэтому можно применить сразу
+        if IsPresetMode
+          then Grid.DeserializeAltFilters(MC.ReadString(Section, Format('%s.%s', [Grid.Name, '(AltFilter)']), ''))
+          else Grid.DeserializeAltFilters(M.ReadString(Section, Format('%s.%s', [Grid.Name, '(AltFilter)']), ''));
       end;
     end;
 
@@ -1209,6 +1222,12 @@ begin
     Gh.GridFilterClear(Grid.DbGridEh1, True, False);
     if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
       Gh.GridFilterClear(Grid.Grid2.DbGridEh1, True, False);
+    //см. !алгоритмы.txt, 6.33: RestoreFrDBGridEhSettings выше уже применила наши альт-фильтры (Alt-F)
+    //из пресета безусловно (см. там) - если пресет создавался без "фильтров столбцов", откатываем их
+    //здесь же, вместе со стандартным постолбцовым фильтром ехlib
+    Grid.ClearAllAltFilters;
+    if Assigned(Grid.Grid2) and Grid.Grid2.IsPrepared then
+      Grid.Grid2.ClearAllAltFilters;
   end;
   if not IncludeGridFilter then begin
     Grid.Opt.FilterResult := '';
