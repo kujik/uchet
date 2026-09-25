@@ -1,12 +1,16 @@
 --------------------------------------------------------------------------------
---профессии
+--таблица w_jobs
+--должности /официальные/
+--
 create table w_jobs(
   id number(11),
-  name varchar2(400),
-  comm varchar2(400),
-  has_milk_compensation number(1) default 0,
+  id_job_internal number(11),                        --айди привязанной внутренней должности
+  name varchar2(400),                                --наименование должности
+  comm varchar2(400),                                --произвольный комментарий
+  has_milk_compensation number(1) default 0,         --положена ли выплата на молоко  
   active number(1),
-  constraint pk_w_jobs primary key (id)
+  constraint pk_w_jobs primary key (id),
+  constraint fk_w_jobs_id_job_internal foreign key (id_job_internal) references w_jobs_internal(id) 
 );
 
 create unique index idx_w_jobs on w_jobs(lower(name)); 
@@ -18,6 +22,29 @@ begin
   select nvl(:new.id, sq_w_jobs.nextval) into :new.id from dual;
 end;
 /
+
+
+--таблица w_jobs_internal
+--должности /укрупненно, внутри организации/
+--
+create table w_jobs_internal(
+  id number(11) primary key,
+  name varchar2(400),
+  comm varchar2(400),
+  active number(1)
+);
+
+create unique index idx_w_jobs_internal on w_jobs_internal(lower(name)); 
+
+create sequence sq_w_jobs_internal start with 1000 nocache;
+
+create or replace trigger trg_w_jobs_internal_bi_r before insert on w_jobs_internal for each row
+begin
+  select nvl(:new.id, sq_w_jobs_internal.nextval) into :new.id from dual;
+end;
+/
+
+
 
 --таблица w_job_salaries
 --плановые начисления (фиксированная и стимулирующая часть) по должностям за каждый месяц

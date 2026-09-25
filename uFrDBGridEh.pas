@@ -308,6 +308,15 @@ const
   //единого окна альт-фильтра (ShowAltFullFilterWindow) - специально НЕ включает имя столбца/грида
   ALT_FULL_FILTER_WINDOW_SECTION = 'ALT_FULL_FILTER_WINDOW';
 
+  //см. !алгоритмы.txt, 6.51: текст строки-переключателя в самом верху списка вкладки "Значения" (только
+  //если в списке реально есть значение "(пусто)", см. GetFieldValueKey) - клик по ней массово
+  //отмечает/снимает отметку со всех ОСТАЛЬНЫХ, ТЕКУЩИХ (видимых, с учетом поиска) строк списка, кроме
+  //"(пусто)" - быстрый способ выбрать "все, кроме пустых" без ручного снятия галки с одной лишь строки
+  //"(пусто)". Не настоящее значение поля - в FAltFullValueListAll не попадает и потому не может случайно
+  //стать частью самого фильтра (см. AltFullValueListApplyClick - строит список отмеченных только по
+  //FAltFullValueListAll)
+  ALT_VALUE_LIST_NONEMPTY_ROW = '(непустые)';
+
   //см. !алгоритмы.txt, 6.28. ЭКСПЕРИМЕНТАЛЬНО: True - вместо (точнее, в дополнение к) вызова окна
   //альт-фильтра по Alt-F пытаемся рисовать и обрабатывать кастомную кнопку прямо в заголовке столбца
   //(правая часть заголовка), заменяя тем самым необходимость пользоваться стандартной кнопкой фильтра
@@ -955,6 +964,11 @@ type
     FIsAddControlsLoaded: Boolean;
     //последней применный фильтр, для быстрой отмены/восстановления
     FLastFilter: TVarDynArray2;
+    //см. !алгоритмы.txt, [ClearOrRestoreFilter/альт-фильтры]: то же самое, но для наших альт-фильтров
+    //(число/дата/диапазон дней/цвет/список значений/условие) - сериализовано через SerializeAltFilters
+    //(6.33), т.к. в отличие от FLastFilter (простой массив колонка->текст), у альт-фильтров несколько
+    //разнородных внутренних хранилищ (FAltNumFilters/FAltDateFilters/... ) сразу
+    FLastAltFilterSt: string;
     //поля ID для таблицы, по которым есть метки
     FGridLabelsIds: TVarDynArray2;
     //был клик по иконке фильтра в столбце
@@ -1035,7 +1049,15 @@ type
     FAltValueListBox: TCheckListBox;
     FCondFld: TField;
     FCondCombo: TComboBox;
-    FCondEdt1, FCondEdt2: TEdit;
+    //см. !алгоритмы.txt, [условие/комбобокс значений] и [условие/комбобокс до]: FCondEdt1 ("Значение:") и
+    //FCondEdt2 ("До:", только для операции "между") были TEdit - по просьбе пользователя оба стали
+    //TComboBox (Style = csDropDown, а не csDropDownList - именно поэтому просто TComboBox, а не что-то
+    //более сложное: csDropDown позволяет и выбрать значение из списка, и ввести произвольное, не входящее
+    //в список) со списком всех реально встречающихся значений столбца (см. GetDistinctFieldValues) -
+    //используются и в новом окне (вкладка "Условие", ShowAltFullFilterWindow), и в старом
+    //(ShowAltConditionDialog, 6.28) - оба места создают/используют одни и те же поля
+    FCondEdt1: TComboBox;
+    FCondEdt2: TComboBox;
     FCondLbl2: TLabel;
     FCondOps: TArray<string>;
     //см. !алгоритмы.txt, 6.29: единое окно альт-фильтра с вкладками (ShowAltFullFilterWindow) - поле,
@@ -1047,6 +1069,14 @@ type
     FAltFullEdtFwd, FAltFullEdtBack: TEdit;
     FAltFullColorListBox: TListBox;
     FAltFullColorGetBtn: TButton;
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: кнопки "Сортировать по возрастанию"/"...по убыванию"
+    //(вызывают SortByField) и иконка-подсказка (Cth.SetInfoIcon) - одна строка сразу под заголовком окна
+    //(lblTitle), над вкладками. Ссылки нужны обработчику-методу AltFullSortRowResize (тот же прием, что и
+    //у FAltFullValBtnSelAll/Invert/SelNone, см. 6.37) - поддерживает якорение по правому краю при
+    //изменении ширины окна без потери равной ширины между двумя кнопками
+    FAltFullBtnSortAsc: TButton;
+    FAltFullBtnSortDesc: TButton;
+    FAltFullHelpImg: TImage;
     //см. !алгоритмы.txt, 6.37: кнопки "Выбрать все"/"Инвертировать"/"Снять все" на вкладке "Значения" -
     //в одну строку, равными по ширине - ссылки нужны обработчику-методу AltFullValueListRowResize
     //(вложенная процедура/анонимный метод не подходят - см. комментарий у FAltValueListBox выше)
@@ -1068,6 +1098,11 @@ type
     //проверкой Assigned
     FAltFullValSearchEdit: TEdit;
     FAltValueListChecked: TDictionary<string, Boolean>;
+    //см. !алгоритмы.txt, 6.51: True, если в FAltFullValueListAll реально есть значение "(пусто)" - только
+    //тогда в FAltValueListBox (и после AltValueListSearchChange) добавляется строка-переключатель
+    //ALT_VALUE_LIST_NONEMPTY_ROW самой первой; иначе она не нужна (нечего "исключать" - все значения и
+    //так не пустые, "Выбрать все" делает то же самое)
+    FAltValueListShowNonEmptyRow: Boolean;
     //см. !алгоритмы.txt, 6.30: множество ключей значений (см. GetFieldValueKey), встречающихся среди
     //строк, проходящих ВСЕ ОСТАЛЬНЫЕ активные фильтры (кроме фильтров по этому же полю) - используется
     //на вкладке "Значения" единого окна, чтобы поднять такие значения наверх списка и подсветить
@@ -1075,6 +1110,13 @@ type
     //GetPresentValueKeysExcludingOwnFilters/AltValueListBoxDrawItem. Заполняется заново при каждом
     //открытии окна, освобождается в ShowAltFullFilterWindow
     FAltValueListPresentKeys: TDictionary<string, Boolean>;
+    //см. !алгоритмы.txt, [дата/сортировка+подсветка сегодня]: аналогично FAltValueListPresentKeys выше,
+    //но для подсветки СИНИМ значений с сегодняшней датой (без учета времени - значений на сегодня может
+    //быть несколько, если в столбце дата+время) на вкладке "Значения" - см.
+    //GetDistinctFieldValues (заполняется там же, в том же проходе по данным, только для полей-дат) и
+    //AltValueListBoxDrawItem. Заполняется заново при каждом открытии окна, освобождается в
+    //ShowAltFullFilterWindow
+    FAltValueListTodayKeys: TDictionary<string, Boolean>;
     //произвольно задаваемый тект для статусбара; если не задан, то будет инфа о количестве записей; задается публичной процедурой
     FStatusBarText: string;
     //последний тект в статусбаре (чтобы не перерисовывать постоянно; при этом тормозит)
@@ -1554,7 +1596,10 @@ type
     //RecordsList) - по тому же принципу, что и существующие GetValue/GetCount(False) в этом же модуле,
     //без обращения к курсору датасета вообще. Не учитывает текущие фильтры (всегда по ВСЕМ загруженным
     //строкам, Filtered=False) - иначе, однажды сузив список выбранных значений, нельзя было бы вернуть
-    //снятые обратно, т.к. они пропали бы из самого списка. Отсортирован, без повторов
+    //снятые обратно, т.к. они пропали бы из самого списка. Отсортирован, без повторов - по возрастанию
+    //(алфавит отформатированной строки) для чисел/строк, по убыванию РЕАЛЬНОГО значения даты (не строки)
+    //для дат (см. !алгоритмы.txt, [дата/сортировка+подсветка сегодня]) - заодно для дат заполняет
+    //FAltValueListTodayKeys (подсветка сегодняшних значений, см. AltValueListBoxDrawItem)
     function GetDistinctFieldValues(Fld: TField): TArray<string>;
     //см. !алгоритмы.txt, 6.28. установить (AValues - принимаемые значения, см. GetFieldValueKey) или
     //сбросить (AValues = []) альтернативный фильтр "список значений" по указанному полю, и немедленно
@@ -1573,6 +1618,24 @@ type
     //столбцу" в окнах ShowAltNumFilterWindow/ShowAltDateFilterWindow/ShowAltColorFilterWindow, т.к.
     //в одном окне теперь может быть отмечена комбинация разных видов альт-фильтра по одному полю
     procedure ClearAllAltFiltersForField(FieldName: string);
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: сортирует грид по указанному полю (по возрастанию
+    //или убыванию) - кнопки "По возрастанию"/"По убыванию" в едином окне альт-фильтра
+    //(ShowAltFullFilterWindow), по просьбе пользователя (многие пользователи не знают, что можно
+    //сортировать кликом по заголовку столбца - решили продублировать это тут же, рядом с фильтром).
+    //ДЕЛАЕТ ТО ЖЕ САМОЕ, что и обычный клик по заголовку столбца при стандартной сортировке ехlib
+    //(см. dghAutoSortMarking/dghMultiSortMarking, TFrDBGridEh.SetOptions) - тот же
+    //Column.Title.SortMarker/SortIndex + DBGridEh1.DefaultApplySorting, что уже используется в проекте
+    //для программного управления сортировкой (см. TSettings.ApplyGridPreset, uSettings.pas). Сортировка
+    //всегда становится ОДНОКОЛОНОЧНОЙ (по одному полю) - маркеры на остальных столбцах сбрасываются, как
+    //при обычном (не Shift+) клике по заголовку
+    procedure SortByField(FieldName: string; Ascending: Boolean);
+    //см. !алгоритмы.txt, [условие/маска Oracle]: сравнение строки S с шаблоном APattern в стиле Oracle
+    //LIKE - % (любая последовательность символов, включая пустую) и _ (ровно один произвольный символ).
+    //Регистронезависимо. Используется в MemTableEh1FilterRecord для строковых операций вкладки
+    //"Условие" (=, <>, содержит, не содержит, начинается с, заканчивается на) - все они теперь построены
+    //через эту единую функцию (см. там), поэтому мгновенно и равномерно приобретают поддержку масок,
+    //если пользователь наберет % или _ в значении
+    function MatchesLikePattern(const S, APattern: string): Boolean;
     //см. !алгоритмы.txt, 6.33. сброс ТОЛЬКО наших альт-фильтров (все поля, все виды) - без стандартного
     //постолбцового фильтра ехlib и текста в SearchPanel (в отличие от ClearAllFilters, 6.27). Нужен
     //отдельно для отката альт-фильтров при восстановлении пресета без фильтров столбцов - см.
@@ -1632,17 +1695,39 @@ type
     //списка и подсветить остальные (без единой подходящей строки при текущих ОСТАЛЬНЫХ фильтрах)
     //красным, см. AltValueListBoxDrawItem. Результат нужно освободить (Free) вызывающей стороне
     function GetPresentValueKeysExcludingOwnFilters(Fld: TField; Cat: Integer): TDictionary<string, Boolean>;
-    //см. !алгоритмы.txt, 6.30. отрисовка одного пункта FAltValueListBox (вкладка "Значения") - обычный
-    //чекбокс TCheckListBox рисует сам (Style=lbOwnerDrawFixed + OnDrawItem не отключает его отрисовку,
-    //Rect уже приходит БЕЗ области чекбокса - см. VCL Vcl.CheckLst), здесь рисуется только текст,
-    //красным - если значения нет в FAltValueListPresentKeys (при текущих ОСТАЛЬНЫХ фильтрах по этому
-    //значению нет ни одной строки)
+    //см. !алгоритмы.txt, 6.30, 6.50, 6.51 и 6.52. отрисовка одного пункта FAltValueListBox (вкладка
+    //"Значения") - обычный чекбокс TCheckListBox рисует сам (Style=lbOwnerDrawFixed + OnDrawItem не
+    //отключает его отрисовку, Rect уже приходит БЕЗ области чекбокса - см. VCL Vcl.CheckLst), здесь
+    //рисуется текст - красным, если значения нет в FAltValueListPresentKeys (при текущих ОСТАЛЬНЫХ
+    //фильтрах по этому значению нет ни одной строки), синим - если это сегодняшняя дата
+    //(FAltValueListTodayKeys, см. 6.46).
+    //см. !алгоритмы.txt, 6.50 (не удалось) и 6.51: пробовали подключить тот же обработчик и к комбобоксам
+    //FCondEdt1/FCondEdt2 вкладки "Условие" через Style = csOwnerDrawEditableFixed - такого стиля не
+    //оказалось в этой версии VCL/Delphi, откачено обратно на обычный csDropDown - используется ТОЛЬКО
+    //FAltValueListBox.
+    //см. !алгоритмы.txt, 6.50/6.51/6.52: если у столбца через FPic настроена картинка по значению (см.
+    //TColumnEh.ImageList/KeyList/NotInKeyListIndex, Gh.SetGridInCellImagesAdd в uForms.pas - тот же
+    //механизм, которым сама EhLib рисует картинки в ячейках грида) - рисует её слева от текста значения
+    //(см. предупреждение о неполной проверенности соответствия "текст значения" -> "ключ в KeyList" для
+    //числовых полей у реализации); если картинки через FPic нет, но поле - чекбокс (FChb/FChbt, см.
+    //Opt.GetFieldRec) - рисует картинку из MyData.IL_CellButtons по индексу 0/1 для значений "0"/"1"
+    //(в 6.51 по описке было сделано наоборот - для полей-"комбобоксов" вместо чекбоксов, исправлено в
+    //6.52). Поля-"комбобоксы" (выпадающий список редактирования в ячейке, Column.PickList, см.
+    //Opt.SetPick) этой логикой не обрабатываются вообще - по прямому указанию пользователя
     procedure AltValueListBoxDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
     //см. !алгоритмы.txt, 6.30. кнопка "Инвертировать" на вкладке "Значения"
     procedure AltValueListInvertClick(Sender: TObject);
     //см. !алгоритмы.txt, 6.37. обработчик OnResize вкладки "Значения" (ShowAltFullFilterWindow) -
     //поддерживает равную ширину кнопок "Выбрать все"/"Инвертировать"/"Снять все" в одной строке
     procedure AltFullValueListRowResize(Sender: TObject);
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]. обработчик OnResize формы ShowAltFullFilterWindow -
+    //поддерживает равную ширину кнопок "Сортировать по возрастанию"/"...по убыванию" и якорение иконки-
+    //подсказки по правому краю при изменении ширины окна (тот же прием, что и AltFullValueListRowResize)
+    procedure AltFullSortRowResize(Sender: TObject);
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]. кнопки "Сортировать по возрастанию"/"...по убыванию"
+    //(ShowAltFullFilterWindow) - вызывают SortByField(FAltFullFld.FieldName, True/False)
+    procedure AltFullSortAscClick(Sender: TObject);
+    procedure AltFullSortDescClick(Sender: TObject);
     //см. !алгоритмы.txt, 6.41. живой поиск/фильтр по списку значений (вкладка "Значения") - обработчик
     //OnChange строки поиска FAltFullValSearchEdit
     procedure AltValueListSearchChange(Sender: TObject);
@@ -4959,22 +5044,35 @@ begin
 end;
 
 procedure TFrDBGridEh.ClearOrRestoreFilter;
+//по Ctrl-Q ("Снять/восстановить фильтр") - установка/сброс фильтра в столбцах
+//если есть фильтр в столбцах и нет запомненного фильтра, то запомним текущий и снимим фильтр в столбцах
+//если есть запомненный, то восстановим его, независимо от того есть ли фильтр в столбцах сейчас
+//все без вопросов/подтверждений
+//см. !алгоритмы.txt, [ClearOrRestoreFilter/альт-фильтры] (правка по жалобе: пункт меню "работал только
+//для стандартного фильтра"): раньше учитывался ТОЛЬКО стандартный постолбцовый фильтр ехlib
+//(Gh.GridFilterInColumnUsed/Save/Clear/Restore, через FLastFilter) - наши альт-фильтры (числа/даты/
+//диапазон дней/цвет/список значений/условие, см. ShowAltFullFilterWindow и т.п.) этой командой вообще
+//не затрагивались: если активен был только альт-фильтр (без стандартного), Ctrl-Q считал, что снимать
+//нечего, и ничего не делал. Теперь запоминает/снимает/восстанавливает оба вида фильтра ОДНИМ
+//переключением, как единое целое - разделять их отдельными горячими клавишами/пунктами меню смысла нет,
+//пользователь воспринимает это как "фильтр грида" целиком. Альт-фильтры сериализуются в FLastAltFilterSt
+//через уже существующие SerializeAltFilters/DeserializeAltFilters (6.33, до этого использовались только
+//для сохранения пользовательских настроек грида в конфиге)
 begin
-    //по Ctrl-Q - установка/сброс фильтра в столбцах
-    //если есть фильтр в столбцах и нет запомненного фильтра, то запомним текущий и снимим фильтр в столбцах
-    //если есть запомненный, то восстановим его, независимо от того есть ли фильтр в столбцах сейчас
-    //все без вопросов/подтверждений
-    if (Length(FLastFilter) = 0) and not Gh.GridFilterInColumnUsed(DbGridEh1) then
+    if (Length(FLastFilter) = 0) and (FLastAltFilterSt = '')
+      and not Gh.GridFilterInColumnUsed(DbGridEh1) and (SerializeAltFilters = '') then
       Exit;
-    if Length(FLastFilter) = 0 then begin
+    if (Length(FLastFilter) = 0) and (FLastAltFilterSt = '') then begin
       FLastFilter := Gh.GridFilterSave(DbGridEh1);
+      FLastAltFilterSt := SerializeAltFilters;
       Gh.GridFilterClear(DbGridEh1, true, False);
+      ClearAllAltFilters;
     end
     else begin
-      if Length(FLastFilter) = 0 then
-        Exit;
       Gh.GridFilterRestore(DbGridEh1, FLastFilter, true, False);
+      DeserializeAltFilters(FLastAltFilterSt);
       FLastFilter := [];
+      FLastAltFilterSt := '';
     end;
     UpdateFilterActiveIndicators;
 end;
@@ -5832,7 +5930,15 @@ begin
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.ClientWidth := 180;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -5939,7 +6045,15 @@ begin
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.ClientWidth := 200;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -6606,7 +6720,15 @@ begin
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.ClientWidth := 220;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -6872,17 +6994,18 @@ begin
           end;
         end;
       else begin //строка и все прочие типы
+        //см. !алгоритмы.txt, [условие/маска Oracle]: все шесть операций теперь построены через одну
+        //MatchesLikePattern (% и _ в стиле Oracle LIKE, регистронезависимо) - значение без масок работает
+        //в точности как раньше (обычное точное/частичное совпадение), а если пользователь наберет % или _
+        //в значении - они сразу заработают как маски, единообразно для всех шести операций
         s := Fld.AsString;
         s1 := VarToStr(FAltConditionFilters[i][2]);
-        if CondOp = '=' then CondMatched := SameText(s, s1)
-        else if CondOp = '<>' then CondMatched := not SameText(s, s1)
-        else if CondOp = 'содержит' then CondMatched := Pos(AnsiUpperCase(s1), AnsiUpperCase(s)) > 0
-        else if CondOp = 'не содержит' then CondMatched := Pos(AnsiUpperCase(s1), AnsiUpperCase(s)) = 0
-        else if CondOp = 'начинается с' then
-          CondMatched := (Length(s) >= Length(s1)) and SameText(Copy(s, 1, Length(s1)), s1)
-        else if CondOp = 'заканчивается на' then
-          CondMatched := (Length(s) >= Length(s1)) and
-            SameText(Copy(s, Length(s) - Length(s1) + 1, Length(s1)), s1);
+        if CondOp = '=' then CondMatched := MatchesLikePattern(s, s1)
+        else if CondOp = '<>' then CondMatched := not MatchesLikePattern(s, s1)
+        else if CondOp = 'содержит' then CondMatched := MatchesLikePattern(s, '%' + s1 + '%')
+        else if CondOp = 'не содержит' then CondMatched := not MatchesLikePattern(s, '%' + s1 + '%')
+        else if CondOp = 'начинается с' then CondMatched := MatchesLikePattern(s, s1 + '%')
+        else if CondOp = 'заканчивается на' then CondMatched := MatchesLikePattern(s, '%' + s1);
       end;
       end;
     except
@@ -7210,19 +7333,104 @@ begin
 end;
 
 function TFrDBGridEh.GetDistinctFieldValues(Fld: TField): TArray<string>;
-//см. !алгоритмы.txt, 6.29. см. комментарий у объявления функции в интерфейсной части
+//см. !алгоритмы.txt, 6.29 и [дата/сортировка+подсветка сегодня]. см. комментарий у объявления функции в
+//интерфейсной части. ПРАВКА (жалоба пользователя: "в фильтре по дате список должен идти по убыванию,
+//сегодняшние даты подсветить синим"): для дат (Cat = 1) список ключей теперь сортируется по РЕАЛЬНОМУ
+//значению даты (а не по алфавиту уже отформатированной строки, как раньше через TStringList.Sorted) и
+//по убыванию (сначала самые поздние). Алфавитная сортировка строки вида "ДД.ММ.ГГГГ ЧЧ:ММ:СС" (см.
+//GetFieldValueKey) не совпадает с хронологическим порядком - например, "01.01.2027" по алфавиту раньше
+//"31.12.2026", хотя хронологически позже - раньше список дат из-за этого был отсортирован фактически
+//бессмысленно. Заодно, без повторного полного прохода по таблице, заполняется FAltValueListTodayKeys -
+//набор ключей значений, у которых дата (без учета времени) совпадает с сегодняшней - используется в
+//AltValueListBoxDrawItem для подсветки синим (значений на сегодня может быть несколько, если в столбце
+//дата+время - разное время в один день дает разные ключи). Для прочих категорий (числа/строки) поведение
+//не изменилось - алфавитная сортировка по возрастанию через TStringList.Sorted, как и раньше
 var
   SL: TStringList;
-  i, Cnt, Cat: Integer;
+  i, Cnt, Cat, n: Integer;
   FieldNameOnly: string;
+  V: Variant;
+  Key: string;
+  dt, TodayDt: TDateTime;
+  DateKeys: TDictionary<string, TDateTime>;
+  KeyArr: TArray<string>;
+  DtArr: TArray<TDateTime>;
+  KV: TPair<string, TDateTime>;
+
+  //простая сортировка двух параллельных массивов (ключ/дата) по убыванию даты - без новых юнитов
+  //(TComparer/TArray.Sort потребовали бы System.Generics.Defaults, нигде больше в проекте не
+  //используется) - количество РАЗЛИЧНЫХ дат в столбце обычно не настолько велико, чтобы это было
+  //критично, но на всякий случай сделано за O(n log n), а не наивной вставкой
+  procedure QuickSortDesc(L, R: Integer);
+  var
+    lo, hi: Integer;
+    pivot, tmpDt: TDateTime;
+    tmpKey: string;
+  begin
+    if L >= R then Exit;
+    lo := L; hi := R;
+    pivot := DtArr[(L + R) shr 1];
+    repeat
+      while DtArr[lo] > pivot do Inc(lo);
+      while DtArr[hi] < pivot do Dec(hi);
+      if lo <= hi then begin
+        tmpDt := DtArr[lo]; DtArr[lo] := DtArr[hi]; DtArr[hi] := tmpDt;
+        tmpKey := KeyArr[lo]; KeyArr[lo] := KeyArr[hi]; KeyArr[hi] := tmpKey;
+        Inc(lo); Dec(hi);
+      end;
+    until lo > hi;
+    if L < hi then QuickSortDesc(L, hi);
+    if lo < R then QuickSortDesc(lo, R);
+  end;
+
 begin
+  FieldNameOnly := S.GetFieldNameOnly(Fld.FieldName);
+  Cat := GetFilterFieldCategory(Fld);
+  Cnt := GetCount(False); //без учета фильтров - см. комментарий у объявления функции
+  if Cat = 1 then begin
+    FreeAndNil(FAltValueListTodayKeys);
+    FAltValueListTodayKeys := TDictionary<string, Boolean>.Create;
+    TodayDt := Date;
+    DateKeys := TDictionary<string, TDateTime>.Create;
+    try
+      for i := 0 to Cnt - 1 do begin
+        V := GetValue(FieldNameOnly, i, False);
+        Key := GetFieldValueKey(V, Cat);
+        if VarIsNull(V) or VarIsEmpty(V) then
+          //пустые даты - в самый конец списка (после сортировки по убыванию), см. также комментарий у
+          //GetFieldValueKey ('(пусто)')
+          dt := 0
+        else begin
+          dt := VarToDateTime(V);
+          if Trunc(dt) = Trunc(TodayDt) then
+            FAltValueListTodayKeys.AddOrSetValue(Key, True);
+        end;
+        //дедупликация по ключу через TDictionary (O(1) в среднем) - раньше ее делал
+        //TStringList.Duplicates := dupIgnore
+        if not DateKeys.ContainsKey(Key) then
+          DateKeys.Add(Key, dt);
+      end;
+      n := DateKeys.Count;
+      SetLength(KeyArr, n);
+      SetLength(DtArr, n);
+      i := 0;
+      for KV in DateKeys do begin
+        KeyArr[i] := KV.Key;
+        DtArr[i] := KV.Value;
+        Inc(i);
+      end;
+    finally
+      DateKeys.Free;
+    end;
+    if n > 0 then
+      QuickSortDesc(0, n - 1);
+    Result := KeyArr;
+    Exit;
+  end;
   SL := TStringList.Create;
   try
     SL.Sorted := True;
     SL.Duplicates := dupIgnore;
-    FieldNameOnly := S.GetFieldNameOnly(Fld.FieldName);
-    Cat := GetFilterFieldCategory(Fld);
-    Cnt := GetCount(False); //без учета фильтров - см. комментарий у объявления функции
     for i := 0 to Cnt - 1 do
       SL.Add(GetFieldValueKey(GetValue(FieldNameOnly, i, False), Cat));
     //не полагаемся на TStringList.ToStringArray (может отсутствовать в используемой версии Delphi) -
@@ -7317,6 +7525,81 @@ begin
   ClearAltConditionFilter(FieldName);
 end;
 
+procedure TFrDBGridEh.SortByField(FieldName: string; Ascending: Boolean);
+//см. !алгоритмы.txt, [фильтр/кнопки сортировки] и 6.49. см. комментарий у объявления процедуры в
+//интерфейсной части. Паттерн взят из TSettings.ApplyGridPreset (uSettings.pas, ветка not IncludeSort) -
+//там же и исходное предупреждение о том, что TSortMarkerEh(0) = "без сортировки" не подтверждено по
+//исходникам EhLib (их нет в этом проекте).
+//
+//см. !алгоритмы.txt, 6.49: ПЕРВОНАЧАЛЬНОЕ предположение (TSortMarkerEh(1) = "по возрастанию",
+//TSortMarkerEh(2) = "по убыванию") было ПРОВЕРЕНО пользователем на реальном экране и оказалось ОБРАТНЫМ -
+//маркер сортировки в заголовке столбца отображался верно (соответствовал переданному значению), но
+//фактическая сортировка данных при этом шла в противоположную сторону от подписи кнопки (кнопка "по
+//возрастанию" сортировала по убыванию, крупные значения сверху). То есть сам механизм
+//(SortMarker/SortIndex/DefaultApplySorting) отработал правильно - неверным было угаданное соответствие
+//числового литерала и направления сортировки. ИСПРАВЛЕНО: 1 и 2 поменяны местами - TSortMarkerEh(2) для
+//"по возрастанию", TSortMarkerEh(1) для "по убыванию"
+var
+  i: Integer;
+  Col: TColumnEh;
+begin
+  Col := DBGridEh1.FindFieldColumn(FieldName);
+  if not Assigned(Col) then
+    Exit;
+  //сортировка всегда становится одноколоночной (по одному полю) - маркеры на остальных столбцах
+  //сбрасываются, как при обычном (не Shift+) клике по заголовку
+  for i := 0 to DBGridEh1.Columns.Count - 1 do begin
+    DBGridEh1.Columns[i].Title.SortMarker := TSortMarkerEh(0);
+    DBGridEh1.Columns[i].Title.SortIndex := -1;
+  end;
+  if Ascending then
+    Col.Title.SortMarker := TSortMarkerEh(2)
+  else
+    Col.Title.SortMarker := TSortMarkerEh(1);
+  Col.Title.SortIndex := 0;
+  DBGridEh1.DefaultApplySorting;
+end;
+
+function TFrDBGridEh.MatchesLikePattern(const S, APattern: string): Boolean;
+//см. !алгоритмы.txt, [условие/маска Oracle]. см. комментарий у объявления функции в интерфейсной части.
+//Классический алгоритм сравнения строки с шаблоном (% и _) через двумерную таблицу динамического
+//программирования (не рекурсией - на длинных строках/шаблонах со многими "%" рекурсивный вариант может
+//давать экспоненциальное число вызовов). D[i, j] = True, если первые i символов US "подходят" под первые
+//j символов UPat. Регистронезависимо - сравнение идет по AnsiUpperCase от обоих аргументов.
+var
+  US, UPat: string;
+  Ls, Lp: Integer;
+  D: array of array of Boolean;
+  i, j: Integer;
+begin
+  US := AnsiUpperCase(S);
+  UPat := AnsiUpperCase(APattern);
+  Ls := Length(US);
+  Lp := Length(UPat);
+  SetLength(D, Ls + 1, Lp + 1);
+  D[0, 0] := True;
+  //пустая строка совпадает только с шаблоном из одних "%" (в т.ч. с пустым шаблоном - цикл просто не
+  //выполнится, D[0, 0] уже True)
+  for j := 1 to Lp do
+    if UPat[j] = '%' then
+      D[0, j] := D[0, j - 1]
+    else
+      D[0, j] := False;
+  for i := 1 to Ls do
+    D[i, 0] := False;
+  for i := 1 to Ls do
+    for j := 1 to Lp do
+      if UPat[j] = '%' then
+        //"%" - либо "пустая" подстановка (как D[i, j-1] - шаблон дальше сравнивается с той же позицией
+        //в US), либо поглощает еще один символ US (D[i-1, j] - шаблон остается на месте)
+        D[i, j] := D[i, j - 1] or D[i - 1, j]
+      else if (UPat[j] = '_') or (UPat[j] = US[i]) then
+        D[i, j] := D[i - 1, j - 1]
+      else
+        D[i, j] := False;
+  Result := D[Ls, Lp];
+end;
+
 procedure TFrDBGridEh.AltValueListSelectAllClick(Sender: TObject);
 //см. !алгоритмы.txt, 6.28. кнопка "Выбрать все" - используется и в ShowAltValueListWindow (6.28), и в
 //ShowAltFullFilterWindow (6.29/6.37). см. !алгоритмы.txt, 6.41: в ShowAltFullFilterWindow дополнительно
@@ -7374,7 +7657,15 @@ begin
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.ClientWidth := 240;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -7463,6 +7754,10 @@ begin
     end;
   finally
     FAltValueListBox := nil;
+    //см. !алгоритмы.txt, [дата/сортировка+подсветка сегодня]: GetDistinctFieldValues (см. выше) для дат
+    //заполняет FAltValueListTodayKeys независимо от того, какое окно ее вызвало (в т.ч. это, старое) -
+    //освобождаем и здесь, а не только в ShowAltFullFilterWindow
+    FreeAndNil(FAltValueListTodayKeys);
     frm.Free;
   end;
   if OpenCondition then
@@ -7551,6 +7846,7 @@ var
   CurOp: string;
   CurVal1, CurVal2: Variant;
   HasCurr: Boolean;
+  CondValues: TArray<string>;
 begin
   Cat := GetFilterFieldCategory(Fld);
   case Cat of
@@ -7581,7 +7877,15 @@ begin
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
     frm.OnCloseQuery := AltConditionFormCloseQuery;
     frm.ClientWidth := 220;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -7617,9 +7921,20 @@ begin
     lbl1.Parent := frm;
     lbl1.SetBounds(4, y + 4, 40, 17);
     lbl1.Caption := 'Значение:';
-    FCondEdt1 := TEdit.Create(frm);
+    //см. !алгоритмы.txt, [условие/комбобокс значений] и 6.50/6.51: TComboBox (Style = csDropDown - список
+    //плюс возможность ввести значение, не входящее в список), а не TEdit - список заполнен реально
+    //встречающимися значениями столбца (та же функция, что и на вкладке "Значения", см.
+    //GetDistinctFieldValues). В 6.50 пробовали csOwnerDrawEditableFixed (чтобы рисовать картинку и здесь,
+    //как в AltValueListBoxDrawItem) - НЕ СКОМПИЛИРОВАЛОСЬ в этой версии VCL/Delphi (идентификатор не
+    //найден, такого стиля тут нет) - в 6.51 откачено обратно на обычный csDropDown; картинка теперь
+    //рисуется только в списке чекбоксов вкладки "Значения" (пользователь подтвердил, что этого достаточно)
+    FCondEdt1 := TComboBox.Create(frm);
     FCondEdt1.Parent := frm;
+    FCondEdt1.Style := csDropDown;
     FCondEdt1.SetBounds(48, y, frm.ClientWidth - 52, 21);
+    CondValues := GetDistinctFieldValues(Fld);
+    for i := 0 to High(CondValues) do
+      FCondEdt1.Items.Add(CondValues[i]);
     if HasCurr then
       case Cat of
         0: FCondEdt1.Text := FloatToStr(Double(CurVal1));
@@ -7633,9 +7948,16 @@ begin
     FCondLbl2.Parent := frm;
     FCondLbl2.SetBounds(4, y + 4, 40, 17);
     FCondLbl2.Caption := 'До:';
-    FCondEdt2 := TEdit.Create(frm);
+    //см. !алгоритмы.txt, [условие/комбобокс до] и 6.50/6.51: аналогично FCondEdt1 (см. выше) - TComboBox
+    //с Style = csDropDown (пробовали csOwnerDrawEditableFixed в 6.50 - не скомпилировалось, откачено в
+    //6.51 - см. комментарий у FCondEdt1), тот же список CondValues (уже посчитан выше для FCondEdt1,
+    //повторно вызывать GetDistinctFieldValues не нужно)
+    FCondEdt2 := TComboBox.Create(frm);
     FCondEdt2.Parent := frm;
+    FCondEdt2.Style := csDropDown;
     FCondEdt2.SetBounds(48, y, frm.ClientWidth - 52, 21);
+    for i := 0 to High(CondValues) do
+      FCondEdt2.Items.Add(CondValues[i]);
     if HasCurr and (CurOp = 'между') then
       case Cat of
         0: FCondEdt2.Text := FloatToStr(Double(CurVal2));
@@ -7682,6 +8004,10 @@ begin
     FCondEdt1 := nil;
     FCondEdt2 := nil;
     FCondLbl2 := nil;
+    //см. !алгоритмы.txt, [условие/комбобокс значений]: GetDistinctFieldValues (см. выше, список для
+    //комбобокса) для дат заодно заполняет FAltValueListTodayKeys (не используется этим окном, но нужно
+    //освободить, как и в двух других окнах, вызывающих GetDistinctFieldValues)
+    FreeAndNil(FAltValueListTodayKeys);
     frm.Free;
   end;
 end;
@@ -7919,6 +8245,47 @@ begin
     FAltFullValBtnSelAll.Parent.ClientWidth - 4 - Left3, FAltFullValBtnSelNone.Height);
 end;
 
+procedure TFrDBGridEh.AltFullSortRowResize(Sender: TObject);
+//см. !алгоритмы.txt, [фильтр/кнопки сортировки]. см. комментарий у объявления процедуры в интерфейсной
+//части - тот же прием пересчета "равных по ширине соседних контролов", что и AltFullValueListRowResize
+//(6.37) выше, но для строки из ДВУХ кнопок сортировки + иконки-подсказки фиксированной ширины,
+//прижатой к правому краю формы
+var
+  AvailW, BtnW: Integer;
+begin
+  if not (Assigned(FAltFullBtnSortAsc) and Assigned(FAltFullBtnSortDesc)) then
+    Exit;
+  if Assigned(FAltFullHelpImg) then
+    FAltFullHelpImg.Left := FAltFullBtnSortAsc.Parent.ClientWidth - 4 - FAltFullHelpImg.Width;
+  //8 - отступы слева/справа формы (4+4), еще 4 - зазор между двумя кнопками, еще (иконка.Width + 4) -
+  //сама иконка-подсказка справа + отступ до нее
+  AvailW := FAltFullBtnSortAsc.Parent.ClientWidth - 8 - 4;
+  if Assigned(FAltFullHelpImg) then
+    AvailW := AvailW - FAltFullHelpImg.Width - 4;
+  if AvailW < 2 then
+    Exit;
+  BtnW := AvailW div 2;
+  FAltFullBtnSortAsc.SetBounds(4, FAltFullBtnSortAsc.Top, BtnW, FAltFullBtnSortAsc.Height);
+  FAltFullBtnSortDesc.SetBounds(4 + BtnW + 4, FAltFullBtnSortDesc.Top,
+    AvailW - BtnW, FAltFullBtnSortDesc.Height);
+end;
+
+procedure TFrDBGridEh.AltFullSortAscClick(Sender: TObject);
+//см. !алгоритмы.txt, [фильтр/кнопки сортировки]. см. комментарий у объявления процедуры в интерфейсной
+//части
+begin
+  if Assigned(FAltFullFld) then
+    SortByField(FAltFullFld.FieldName, True);
+end;
+
+procedure TFrDBGridEh.AltFullSortDescClick(Sender: TObject);
+//см. !алгоритмы.txt, [фильтр/кнопки сортировки]. см. комментарий у объявления процедуры в интерфейсной
+//части
+begin
+  if Assigned(FAltFullFld) then
+    SortByField(FAltFullFld.FieldName, False);
+end;
+
 procedure TFrDBGridEh.AltValueListSearchChange(Sender: TObject);
 //см. !алгоритмы.txt, 6.41. живой поиск/фильтр по списку значений (вкладка "Значения", по просьбе
 //пользователя - аналог знакомой фичи стандартного фильтра ехlib, но не подсветка, а настоящее сужение
@@ -7939,6 +8306,13 @@ begin
   FAltValueListBox.Items.BeginUpdate;
   try
     FAltValueListBox.Items.Clear;
+    //см. !алгоритмы.txt, 6.51: строка-переключатель "(непустые)" остается видимой и во время поиска -
+    //так можно, например, набрать текст и отметить "(непустые)", чтобы разом выбрать все НАЙДЕННЫЕ
+    //непустые значения (см. AltValueListBoxClickCheck - действует на ТЕКУЩИЙ, видимый сейчас список)
+    if FAltValueListShowNonEmptyRow then begin
+      FAltValueListBox.Items.Add(ALT_VALUE_LIST_NONEMPTY_ROW);
+      FAltValueListBox.Checked[FAltValueListBox.Items.Count - 1] := False;
+    end;
     for i := 0 to High(FAltFullValueListAll) do begin
       Val := FAltFullValueListAll[i];
       if (SearchText = '') or (Pos(SearchText, LowerCase(Val)) > 0) then begin
@@ -7953,19 +8327,36 @@ begin
 end;
 
 procedure TFrDBGridEh.AltValueListBoxClickCheck(Sender: TObject);
-//см. !алгоритмы.txt, 6.41. см. подробный комментарий у AltValueListSearchChange - запоминаем состояние
-//чекбокса, только что переключенного пользователем (мышью/пробелом - для программных изменений
+//см. !алгоритмы.txt, 6.41 и 6.51. см. подробный комментарий у AltValueListSearchChange - запоминаем
+//состояние чекбокса, только что переключенного пользователем (мышью/пробелом - для программных изменений
 //Checked, как в AltValueListSelectAllClick/SelectNoneClick/InvertClick, это событие не срабатывает,
 //там карта обновляется отдельно, явно), в FAltValueListChecked, по значению (тексту), а не по индексу -
-//индекс в ТЕКУЩЕМ (возможно отфильтрованном) списке не совпадает с позицией в FAltFullValueListAll
+//индекс в ТЕКУЩЕМ (возможно отфильтрованном) списке не совпадает с позицией в FAltFullValueListAll.
+//
+//см. !алгоритмы.txt, 6.51: если переключили именно строку ALT_VALUE_LIST_NONEMPTY_ROW ("(непустые)") -
+//это не настоящее значение поля (она не из FAltFullValueListAll), а массовый переключатель: ее новое
+//состояние Checked применяется ко ВСЕМ остальным ТЕКУЩИМ (видимым сейчас, с учетом поиска) строкам
+//списка, кроме "(пусто)" (и кроме самой строки-переключателя) - сама она в FAltValueListChecked не
+//попадает
 var
-  Idx: Integer;
+  Idx, i: Integer;
+  NewState: Boolean;
 begin
   if not Assigned(FAltValueListChecked) then
     Exit;
   Idx := TCheckListBox(Sender).ItemIndex;
-  if (Idx >= 0) and (Idx < FAltValueListBox.Items.Count) then
-    FAltValueListChecked.AddOrSetValue(FAltValueListBox.Items[Idx], FAltValueListBox.Checked[Idx]);
+  if (Idx < 0) or (Idx >= FAltValueListBox.Items.Count) then
+    Exit;
+  if FAltValueListBox.Items[Idx] = ALT_VALUE_LIST_NONEMPTY_ROW then begin
+    NewState := FAltValueListBox.Checked[Idx];
+    for i := 0 to FAltValueListBox.Items.Count - 1 do
+      if (i <> Idx) and (FAltValueListBox.Items[i] <> '(пусто)') then begin
+        FAltValueListBox.Checked[i] := NewState;
+        FAltValueListChecked.AddOrSetValue(FAltValueListBox.Items[i], NewState);
+      end;
+    Exit;
+  end;
+  FAltValueListChecked.AddOrSetValue(FAltValueListBox.Items[Idx], FAltValueListBox.Checked[Idx]);
 end;
 
 procedure TFrDBGridEh.SyncVertGridRows;
@@ -8158,16 +8549,49 @@ begin
 end;
 
 procedure TFrDBGridEh.AltValueListBoxDrawItem(Control: TWinControl; Index: Integer; Rect: TRect; State: TOwnerDrawState);
-//см. !алгоритмы.txt, 6.30. см. подробный комментарий у объявления процедуры в интерфейсной части - рисуем
-//только текст (TCheckListBox сам рисует чекбокс и передает сюда Rect уже без области чекбокса), красным -
-//если значения нет в FAltValueListPresentKeys
+//см. !алгоритмы.txt, 6.30, [дата/сортировка+подсветка сегодня], 6.50 и 6.51. отрисовка одного пункта
+//FAltValueListBox (вкладка "Значения") - обычный чекбокс TCheckListBox рисует сам (Style=lbOwnerDrawFixed
+//+ OnDrawItem не отключает его отрисовку, Rect уже приходит БЕЗ области чекбокса - см. VCL Vcl.CheckLst),
+//здесь рисуется текст - красным, если значения нет в FAltValueListPresentKeys (при текущих ОСТАЛЬНЫХ
+//фильтрах по этому значению нет ни одной строки), синим - если это сегодняшняя дата
+//(FAltValueListTodayKeys, см. 6.46). Если значение одновременно и "нет данных", и "сегодня" - красный
+//имеет приоритет.
+//
+//см. !алгоритмы.txt, 6.50/6.51: в 6.50 этот обработчик пробовали подключить и к TComboBox'ам FCondEdt1/
+//FCondEdt2 (вкладка "Условие") через Style = csOwnerDrawEditableFixed - такого идентификатора не
+//оказалось в этой версии VCL/Delphi (ошибка компиляции "identifier not found"), в 6.51 откачено обратно
+//на обычный csDropDown - обработчик используется ТОЛЬКО FAltValueListBox (TCheckListBox)
+//
+//см. !алгоритмы.txt, 6.50: если у столбца через FPic настроена картинка по значению (SetGridInCellImagesAdd,
+//см. там - TColumnEh.ImageList/KeyList/NotInKeyListIndex - тот же самый механизм, которым сама EhLib
+//рисует картинки в ячейках грида) - рисуем ту же картинку слева от текста значения. Соответствие "текст
+//значения из списка" -> "ключ в KeyList" ищется через Col.KeyList.IndexOf - см. предупреждение у
+//объявления функции в интерфейсной части: точное совпадение НЕ гарантировано для числовых полей
+//(GetFieldValueKey форматирует число через FloatToStr, а KeyList заполняется строками из FPic как есть -
+//на практике для целых кодов статусов обычно совпадает, но не проверено на реальных данных). Пользователь
+//подтвердил, что для этого случая (столбец с FPic) картинка в списке отображается верно.
+//
+//см. !алгоритмы.txt, 6.51 (описка, направление было перепутано) и 6.52: если у столбца НЕТ
+//Column.ImageList (FPic не настроен, или настроен, но FChbPic/FChbtPic пустой/столбец редактируемый - см.
+//RefreshGrid, там для чекбоксов в этом случае используются Checkboxes/CellButtons, а не ImageList), но
+//это поле с чекбоксом - FChb ("чекбокс в столбце") или FChbt ("чекбокс с текстом"), см. Opt.GetFieldRec -
+//по просьбе пользователя рисуем картинку из общего имиджлиста кнопок ячеек (MyData.IL_CellButtons,
+//тот же, которым сами чекбоксы рисуются в ячейках грида, см. Gh.SetGridInCellButtonsChb в uForms.pas) для
+//значения "0" - индекс 0, для значения "1" - индекс 1. Поля-"комбобоксы" (выпадающий список
+//редактирования в ячейке, Column.PickList, см. Opt.SetPick) этой логикой СОЗНАТЕЛЬНО НЕ обрабатываются -
+//по прямому указанию пользователя (в 6.51 было ошибочно наоборот - разбирались с этим отдельно, см. 6.52)
 var
   Cnv: TCanvas;
-  Present: Boolean;
+  Present, IsToday: Boolean;
   ItemText: string;
+  Col: TColumnEh;
+  Fld: TField;
+  FldRec: TFrDBGridRecFieldsList;
+  ImgIdx, TextLeft: Integer;
 begin
   Cnv := TCheckListBox(Control).Canvas;
   ItemText := TCheckListBox(Control).Items[Index];
+  Fld := FAltFullFld;
   if odSelected in State then begin
     Cnv.Brush.Color := clHighlight;
     Cnv.Font.Color := clHighlightText;
@@ -8177,13 +8601,43 @@ begin
     Present := True;
     if Assigned(FAltValueListPresentKeys) then
       Present := FAltValueListPresentKeys.ContainsKey(ItemText);
-    if Present
-      then Cnv.Font.Color := clWindowText
-      else Cnv.Font.Color := clRed;
+    IsToday := Assigned(FAltValueListTodayKeys) and FAltValueListTodayKeys.ContainsKey(ItemText);
+    if not Present then
+      Cnv.Font.Color := clRed
+    else if IsToday then
+      Cnv.Font.Color := clBlue
+    else
+      Cnv.Font.Color := clWindowText;
   end;
   Cnv.FillRect(Rect);
   Cnv.Brush.Style := bsClear;
-  Cnv.TextOut(Rect.Left + 2, Rect.Top + 1, ItemText);
+  TextLeft := Rect.Left + 2;
+  Col := nil;
+  if Assigned(Fld) then
+    Col := DBGridEh1.FindFieldColumn(Fld.FieldName);
+  if Assigned(Col) and Assigned(Col.ImageList) then begin
+    ImgIdx := Col.KeyList.IndexOf(ItemText);
+    if ImgIdx < 0 then
+      ImgIdx := Col.NotInKeyListIndex;
+    if (ImgIdx >= 0) and (ImgIdx < Col.ImageList.Count) then begin
+      Col.ImageList.Draw(Cnv, Rect.Left + 2, Rect.Top + (Rect.Height - Col.ImageList.Height) div 2, ImgIdx);
+      TextLeft := Rect.Left + 2 + Col.ImageList.Width + 4;
+    end;
+  end
+  else if Assigned(Fld) then begin
+    FldRec := Opt.GetFieldRec(Fld.FieldName);
+    if FldRec.FChb or FldRec.FChbt then begin
+      ImgIdx := -1;
+      if ItemText = '0' then ImgIdx := 0
+      else if ItemText = '1' then ImgIdx := 1;
+      if (ImgIdx >= 0) and Assigned(MyData.IL_CellButtons) and (ImgIdx < MyData.IL_CellButtons.Count) then begin
+        MyData.IL_CellButtons.Draw(Cnv, Rect.Left + 2,
+          Rect.Top + (Rect.Height - MyData.IL_CellButtons.Height) div 2, ImgIdx);
+        TextLeft := Rect.Left + 2 + MyData.IL_CellButtons.Width + 4;
+      end;
+    end;
+  end;
+  Cnv.TextOut(TextLeft, Rect.Top + 1, ItemText);
   Cnv.Brush.Style := bsSolid;
 end;
 
@@ -8228,10 +8682,22 @@ begin
     frm.Position := poDesigned;
     frm.KeyPreview := True;
     frm.OnKeyDown := AltColumnFilterFormKeyDown;
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: поддерживает равную ширину кнопок "Сортировать по
+    //возрастанию"/"...по убыванию" и якорение иконки-подсказки при изменении ширины окна - см. комментарий
+    //у AltFullSortRowResize
+    frm.OnResize := AltFullSortRowResize;
     //см. !алгоритмы.txt, 6.38: ширина по умолчанию увеличена с 290 до 380 (примерно на 30%, по просьбе
     //пользователя) - Constraints.MinWidth (см. ниже, 250) и восстановление SavedW не трогали
     frm.ClientWidth := 380;
-    CellR := DBGridEh1.CellRect(DBGridEh1.Col, DBGridEh1.Row);
+    //см. !алгоритмы.txt, [альт-фильтр/позиция окна] (правка по жалобе: "окно фильтра появляется в позиции
+    //текущей строки грида, лучше - как стандартное, под заголовком"): раньше вторым параметром был
+    //DBGridEh1.Row (грид-строка ТЕКУЩЕЙ выбранной записи) - позиция окна зависела от того, какая строка
+    //сейчас выделена и куда прокручен грид, а не от заголовка столбца. Строка 0 в координатах CellRect -
+    //это строка заголовка (титулов) грида (DBGridEh1.Row/Col - обычные grid-координаты TCustomGridEh,
+    //где при показанных заголовках (dgTitles, всегда включено в этом проекте) заголовок - нулевая
+    //строка) - то есть окно теперь всегда появляется под заголовком СВОЕГО столбца, как и стандартный
+    //постолбцовый фильтр ехlib, независимо от прокрутки и текущей выделенной строки
+    CellR := DBGridEh1.CellRect(DBGridEh1.Col, 0);
     pt := DBGridEh1.ClientToScreen(Point(CellR.Left, CellR.Bottom));
     frm.Left := pt.X;
     frm.Top := pt.Y;
@@ -8248,6 +8714,59 @@ begin
     lblTitle.Caption := DbGridEh1.Columns[GetCol].Title.Caption;
     lblTitle.Anchors := [akLeft, akTop, akRight];
     y := y + lblTitle.Height + 6;
+
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: по просьбе пользователя - кнопки стандартной
+    //сортировки по этому столбцу прямо в окне фильтра ("многие пользователи совсем на вы с компьютером и
+    //не могут догадаться как сортировать столбцы, пусть все будет в одном месте"), сразу под заголовком,
+    //над вкладками. Вызывают SortByField - тот же механизм (Title.SortMarker/SortIndex +
+    //DefaultApplySorting), что и обычный клик по заголовку столбца при стандартной сортировке ехlib.
+    //Ширина кнопок и позиция иконки-подсказки пересчитываются в AltFullSortRowResize (см. там) - и сразу
+    //здесь (начальная раскладка), и по OnResize формы (см. frm.OnResize ниже) при изменении ширины окна
+    FAltFullBtnSortAsc := TButton.Create(frm);
+    FAltFullBtnSortAsc.Parent := frm;
+    FAltFullBtnSortAsc.Caption := 'Сортировать по возрастанию';
+    FAltFullBtnSortAsc.SetBounds(4, y, (frm.ClientWidth - 8 - 24 - 4) div 2, 25);
+    FAltFullBtnSortAsc.Anchors := [akLeft, akTop];
+    FAltFullBtnSortAsc.OnClick := AltFullSortAscClick;
+
+    FAltFullBtnSortDesc := TButton.Create(frm);
+    FAltFullBtnSortDesc.Parent := frm;
+    FAltFullBtnSortDesc.Caption := 'Сортировать по убыванию';
+    FAltFullBtnSortDesc.SetBounds(FAltFullBtnSortAsc.Left + FAltFullBtnSortAsc.Width + 4, y,
+      (frm.ClientWidth - 8 - 24 - 4) div 2, 25);
+    FAltFullBtnSortDesc.Anchors := [akLeft, akTop, akRight];
+    FAltFullBtnSortDesc.OnClick := AltFullSortDescClick;
+
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: иконка-подсказка - тот же установившийся во всем
+    //проекте паттерн (InfoArray/TControlsHelper.SetInfoIcon, см. ~75 других мест, например
+    //Frg1.InfoArray в uFrmAGlstDomainComputers.pas), а не что-то специально придуманное для этого окна.
+    //Наведение - краткая подсказка (Hint), клик - то же самое полным текстом (см. TModule.InfoOnClick).
+    //Текст объясняет все 4 вкладки, поиск по списку значений, поддержку масок Oracle (%, _) на вкладке
+    //"Условие", кнопки сортировки и поведение Ctrl+Q (запомнить/восстановить фильтр целиком)
+    FAltFullHelpImg := TImage.Create(frm);
+    FAltFullHelpImg.Parent := frm;
+    FAltFullHelpImg.SetBounds(frm.ClientWidth - 4 - 20, y - 2, 20, 20);
+    FAltFullHelpImg.Anchors := [akTop, akRight];
+    Cth.SetInfoIcon(FAltFullHelpImg,
+      'Фильтр по столбцу "' + DbGridEh1.Columns[GetCol].Title.Caption + '".'#13#10 +
+      #13#10 +
+      'Вкладки:'#13#10 +
+      '- "Значения" - отметьте нужные значения из списка (есть поиск по списку сверху; значения, '#13#10 +
+      'отсутствующие среди строк, проходящих остальные фильтры, показаны красным; сегодняшние даты - '#13#10 +
+      'синим, для полей-дат список идет от самой поздней даты к самой ранней).'#13#10#13#10 +
+      '- "Быстрое" - для чисел и дат: готовые условия (диапазон, период, "от сегодня").'#13#10 +
+      '- "Условие" - операция (=, <>, "между", "содержит" и т.п.) + значение(-я); значение можно '#13#10 +
+      'выбрать из списка или ввести любое. Сравнение всегда без учета регистра. Для строковых полей '#13#10 +
+      'можно использовать маски: "%" - любая последовательность символов (в т.ч. '#13#10 +
+      'пустая), "_" - ровно один произвольный символ.'#13#10#13#10 +
+      '- "Цвет" - фильтр по цвету, которым подсвечена ячейка.'#13#10 +
+      #13#10 +
+      'Кнопки "Сортировать по возрастанию/по убыванию" здесь же выполняют обычную сортировку грида по '#13#10 +
+      'этому столбцу (то же самое, что клик по заголовку столбца).'#13#10 +
+      #13#10 +
+      'Ctrl+Q (или пункт меню "Снять/восстановить фильтр") снимает сразу все фильтры грида (и обычный, '#13#10 +
+      'и эти) с запоминанием - повторное нажатие восстанавливает их в точности как было.', 20);
+    y := y + FAltFullBtnSortAsc.Height + 6;
 
     pc := TPageControl.Create(frm);
     pc.Parent := frm;
@@ -8278,6 +8797,14 @@ begin
     Values := PresentPart + AbsentPart;
     FAltFullValueListAll := Values;
     HasValueList := FAltValueListFilters.TryGetValue(LowerCase(Fld.FieldName), CurrValueList);
+    //см. !алгоритмы.txt, 6.51: строка-переключатель "(непустые)" нужна, только если среди значений
+    //реально есть "(пусто)" (см. ALT_VALUE_LIST_NONEMPTY_ROW)
+    FAltValueListShowNonEmptyRow := False;
+    for i := 0 to High(Values) do
+      if Values[i] = '(пусто)' then begin
+        FAltValueListShowNonEmptyRow := True;
+        Break;
+      end;
 
     //см. !алгоритмы.txt, 6.38: БАГ в 6.37 - кнопка "Применить список" пропала. Причина: расчет позиций
     //внутри вкладки шел от константы PcHeight (общая высота TPageControl), но реальная высота, доступная
@@ -8314,10 +8841,20 @@ begin
     FAltValueListBox.OnClickCheck := AltValueListBoxClickCheck;
     FAltValueListBox.SetBounds(4, 29, tsValues.ClientWidth - 8, PcHeight - 96 - 25);
     FAltValueListBox.Anchors := [akLeft, akTop, akRight, akBottom];
+    //см. !алгоритмы.txt, 6.51: строка-переключатель - самая первая, не участвует в FAltFullValueListAll/
+    //FAltValueListChecked (она не настоящее значение поля - см. AltValueListBoxClickCheck), поэтому
+    //отмечаем ее индекс отдельно, а не FAltValueListBox.Checked[i] по индексу цикла ниже (после ее
+    //вставки Items[i] для реальных значений сдвинуты на 1 - используем Items.Count-1, как и в
+    //AltValueListSearchChange)
+    if FAltValueListShowNonEmptyRow then begin
+      FAltValueListBox.Items.Add(ALT_VALUE_LIST_NONEMPTY_ROW);
+      FAltValueListBox.Checked[FAltValueListBox.Items.Count - 1] := False;
+    end;
     for i := 0 to High(Values) do begin
       FAltValueListBox.Items.Add(Values[i]);
-      FAltValueListBox.Checked[i] := not HasValueList or (CurrValueList.IndexOf(Values[i]) >= 0);
-      FAltValueListChecked.AddOrSetValue(Values[i], FAltValueListBox.Checked[i]);
+      FAltValueListBox.Checked[FAltValueListBox.Items.Count - 1] :=
+        not HasValueList or (CurrValueList.IndexOf(Values[i]) >= 0);
+      FAltValueListChecked.AddOrSetValue(Values[i], FAltValueListBox.Checked[FAltValueListBox.Items.Count - 1]);
     end;
 
     //см. !алгоритмы.txt, 6.37: по просьбе пользователя - "Выбрать все"/"Инвертировать"/"Снять все" в
@@ -8379,6 +8916,8 @@ begin
       btn.Caption := 'Больше 0';
       btn.Tag := 0;
       btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      //см. !алгоритмы.txt, [фильтр/анкоры вкладок Быстрое и Условие]
+      btn.Anchors := [akLeft, akTop, akRight];
       if CurrCondition = '>0' then
         btn.Font.Style := btn.Font.Style + [fsBold];
       btn.OnClick := AltFullNumQuickClick;
@@ -8389,6 +8928,7 @@ begin
       btn.Caption := 'Меньше 0';
       btn.Tag := 1;
       btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.Anchors := [akLeft, akTop, akRight];
       if CurrCondition = '<0' then
         btn.Font.Style := btn.Font.Style + [fsBold];
       btn.OnClick := AltFullNumQuickClick;
@@ -8399,6 +8939,7 @@ begin
       btn.Caption := 'Равно 0';
       btn.Tag := 2;
       btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.Anchors := [akLeft, akTop, akRight];
       if CurrCondition = '=0' then
         btn.Font.Style := btn.Font.Style + [fsBold];
       btn.OnClick := AltFullNumQuickClick;
@@ -8434,6 +8975,11 @@ begin
       for i := 0 to High(DatePeriods) do
         lst.Items.Add(DatePeriods[i]);
       lst.SetBounds(4, y, tsQuick.ClientWidth - 8, 110);
+      //см. !алгоритмы.txt, [фильтр/анкоры вкладок Быстрое и Условие]: только akRight - не akBottom, т.к.
+      //ниже по вкладке есть еще несколько контролов на фиксированных Top, растягивать список по высоте
+      //при изменении высоты окна здесь, в отличие от вкладки "Значения" (где список - последний крупный
+      //элемент перед кнопкой, прибитой к низу), означало бы наезжать на них
+      lst.Anchors := [akLeft, akTop, akRight];
       lst.OnClick := AltFullDatePeriodListClick;
       y := y + lst.Height + 6;
 
@@ -8445,6 +8991,7 @@ begin
       FAltFullDtpFrom.Parent := tsQuick;
       FAltFullDtpFrom.Kind := dtkDate;
       FAltFullDtpFrom.SetBounds(24, y, tsQuick.ClientWidth - 28, 21);
+      FAltFullDtpFrom.Anchors := [akLeft, akTop, akRight];
       FAltFullDtpFrom.Date := CurrFrom;
       y := y + FAltFullDtpFrom.Height + 4;
 
@@ -8456,6 +9003,7 @@ begin
       FAltFullDtpTo.Parent := tsQuick;
       FAltFullDtpTo.Kind := dtkDate;
       FAltFullDtpTo.SetBounds(24, y, tsQuick.ClientWidth - 28, 21);
+      FAltFullDtpTo.Anchors := [akLeft, akTop, akRight];
       FAltFullDtpTo.Date := CurrTo;
       y := y + FAltFullDtpTo.Height + 4;
 
@@ -8463,6 +9011,7 @@ begin
       btn.Parent := tsQuick;
       btn.Caption := 'Применить период';
       btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.Anchors := [akLeft, akTop, akRight];
       btn.OnClick := AltFullDateApplyRangeClick;
       y := y + btn.Height + 6;
 
@@ -8473,6 +9022,7 @@ begin
       FAltFullEdtFwd := TEdit.Create(tsQuick);
       FAltFullEdtFwd.Parent := tsQuick;
       FAltFullEdtFwd.SetBounds(54, y, tsQuick.ClientWidth - 58, 21);
+      FAltFullEdtFwd.Anchors := [akLeft, akTop, akRight];
       FAltFullEdtFwd.Text := IntToStr(CurrDaysForward);
       y := y + FAltFullEdtFwd.Height + 4;
 
@@ -8483,6 +9033,7 @@ begin
       FAltFullEdtBack := TEdit.Create(tsQuick);
       FAltFullEdtBack.Parent := tsQuick;
       FAltFullEdtBack.SetBounds(54, y, tsQuick.ClientWidth - 58, 21);
+      FAltFullEdtBack.Anchors := [akLeft, akTop, akRight];
       FAltFullEdtBack.Text := IntToStr(CurrDaysBack);
       y := y + FAltFullEdtBack.Height + 4;
 
@@ -8490,6 +9041,7 @@ begin
       btn.Parent := tsQuick;
       btn.Caption := 'Применить диапазон (от сегодня)';
       btn.SetBounds(4, y, tsQuick.ClientWidth - 8, 25);
+      btn.Anchors := [akLeft, akTop, akRight];
       btn.OnClick := AltFullDateApplyRelClick;
     end;
 
@@ -8511,6 +9063,11 @@ begin
     FCondCombo.Parent := tsCondition;
     FCondCombo.Style := csDropDownList;
     FCondCombo.SetBounds(4, y, tsCondition.ClientWidth - 8, 21);
+    //см. !алгоритмы.txt, [фильтр/анкоры вкладок Быстрое и Условие]: правка по жалобе - контролы этой
+    //вкладки (как и вкладки "Быстрое" ниже) не были заанкорены по правому краю (в отличие от вкладок
+    //"Значения"/"Цвет", см. 6.29/6.38) - при изменении ширины окна (оно изменяемого размера,
+    //bsSizeToolWin) не растягивались вместе с окном
+    FCondCombo.Anchors := [akLeft, akTop, akRight];
     for i := 0 to High(FCondOps) do
       FCondCombo.Items.Add(FCondOps[i]);
     FCondCombo.ItemIndex := 0;
@@ -8521,18 +9078,37 @@ begin
     lbl1.Parent := tsCondition;
     lbl1.SetBounds(4, y + 4, 40, 17);
     lbl1.Caption := 'Значение:';
-    FCondEdt1 := TEdit.Create(tsCondition);
+    //см. !алгоритмы.txt, [условие/комбобокс значений] и 6.50/6.51: по просьбе пользователя - TComboBox
+    //(Style = csDropDown, список плюс возможность ввести значение, не входящее в список), а не TEdit, со
+    //списком реально встречающихся значений столбца - переиспользуем уже посчитанный
+    //FAltFullValueListAll (та же вкладка "Значения" этого же окна, см. выше) вместо повторного вызова
+    //GetDistinctFieldValues. В 6.50 пробовали csOwnerDrawEditableFixed (чтобы рисовать картинку и здесь,
+    //как в AltValueListBoxDrawItem) - НЕ СКОМПИЛИРОВАЛОСЬ в этой версии VCL/Delphi (идентификатор не
+    //найден) - в 6.51 откачено обратно на обычный csDropDown; картинка теперь рисуется только в списке
+    //чекбоксов вкладки "Значения" (пользователь подтвердил, что этого достаточно)
+    FCondEdt1 := TComboBox.Create(tsCondition);
     FCondEdt1.Parent := tsCondition;
+    FCondEdt1.Style := csDropDown;
     FCondEdt1.SetBounds(48, y, tsCondition.ClientWidth - 52, 21);
+    FCondEdt1.Anchors := [akLeft, akTop, akRight];
+    for i := 0 to High(FAltFullValueListAll) do
+      FCondEdt1.Items.Add(FAltFullValueListAll[i]);
     y := y + FCondEdt1.Height + 4;
 
     FCondLbl2 := TLabel.Create(tsCondition);
     FCondLbl2.Parent := tsCondition;
     FCondLbl2.SetBounds(4, y + 4, 40, 17);
     FCondLbl2.Caption := 'До:';
-    FCondEdt2 := TEdit.Create(tsCondition);
+    //см. !алгоритмы.txt, [условие/комбобокс до] и 6.50/6.51: аналогично FCondEdt1 (см. выше) - TComboBox
+    //с Style = csDropDown (пробовали csOwnerDrawEditableFixed в 6.50 - не скомпилировалось, откачено в
+    //6.51), тот же FAltFullValueListAll
+    FCondEdt2 := TComboBox.Create(tsCondition);
     FCondEdt2.Parent := tsCondition;
+    FCondEdt2.Style := csDropDown;
     FCondEdt2.SetBounds(48, y, tsCondition.ClientWidth - 52, 21);
+    FCondEdt2.Anchors := [akLeft, akTop, akRight];
+    for i := 0 to High(FAltFullValueListAll) do
+      FCondEdt2.Items.Add(FAltFullValueListAll[i]);
     y := y + FCondEdt2.Height + 6;
 
     AltConditionOperatorChange(FCondCombo); //покажем/скроем второе значение по текущей операции
@@ -8541,6 +9117,7 @@ begin
     btn.Parent := tsCondition;
     btn.Caption := 'Применить условие';
     btn.SetBounds(4, y, tsCondition.ClientWidth - 8, 25);
+    btn.Anchors := [akLeft, akTop, akRight];
     btn.OnClick := AltFullConditionApplyClick;
 
     //--- Вкладка "Цвет" - всегда, но с ленивой загрузкой на больших таблицах (см.
@@ -8554,6 +9131,11 @@ begin
     FAltFullColorGetBtn.Parent := tsColor;
     FAltFullColorGetBtn.Caption := 'Получить цвета';
     FAltFullColorGetBtn.SetBounds(4, y, tsColor.ClientWidth - 8, 25);
+    //см. !алгоритмы.txt, [фильтр/анкоры вкладок Быстрое и Условие]: этой кнопке (в отличие от
+    //FAltFullColorListBox/FAltFullColorApplyBtn ниже, на той же вкладке) анкор по правому краю не был
+    //задан при первоначальной реализации (6.29) - та же по сути причина, что и на вкладках "Быстрое"/
+    //"Условие", исправлено заодно
+    FAltFullColorGetBtn.Anchors := [akLeft, akTop, akRight];
     FAltFullColorGetBtn.OnClick := AltFullColorGetColorsClick;
 
     FAltFullColorListBox := TListBox.Create(tsColor);
@@ -8720,6 +9302,10 @@ begin
     //потенциальной проблеме (тот же паттерн Anchors) - переустановлена на всякий случай тоже
     lblTitle.Width := frm.ClientWidth - 8;
     FAltFullValSearchEdit.Width := tsValues.ClientWidth - 8;
+    //см. !алгоритмы.txt, [фильтр/кнопки сортировки]: строка кнопок сортировки/иконка-подсказка подвержены
+    //той же потенциальной проблеме (тот же паттерн Anchors, см. комментарий выше) - пересчитана здесь же,
+    //тем же вызовом, что и по OnResize (AltFullSortRowResize), на всякий случай
+    AltFullSortRowResize(frm);
 
     TabCH := tsValues.ClientHeight;
     //см. !алгоритмы.txt, 6.41: -121 вместо -96 - на 25px меньше (высота строки поиска с отступом),
@@ -8747,6 +9333,9 @@ begin
     FCondEdt1 := nil;
     FCondEdt2 := nil;
     FCondLbl2 := nil;
+    FAltFullBtnSortAsc := nil;
+    FAltFullBtnSortDesc := nil;
+    FAltFullHelpImg := nil;
     FAltFullDtpFrom := nil;
     FAltFullDtpTo := nil;
     FAltFullEdtFwd := nil;
@@ -8763,6 +9352,8 @@ begin
     FAltFullValSearchEdit := nil;
     FreeAndNil(FAltValueListChecked);
     FreeAndNil(FAltValueListPresentKeys);
+    //см. !алгоритмы.txt, [дата/сортировка+подсветка сегодня]
+    FreeAndNil(FAltValueListTodayKeys);
     frm.Free;
   end;
 end;
