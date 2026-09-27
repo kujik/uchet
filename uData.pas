@@ -843,6 +843,12 @@ const
 
   myfrm_R_Workers = 'myfrm_R_Workers';
   myfrm_R_Jobs = 'myfrm_R_Jobs';
+  myfrm_R_JobsInternal = 'myfrm_R_JobsInternal';
+  myfrm_R_MotivationNegRemarks = 'myfrm_R_MotivationNegRemarks';
+  myfrm_R_MotivationEmergencies = 'myfrm_R_MotivationEmergencies';
+  myfrm_J_MotivationNegRemarksByJob = 'myfrm_J_MotivationNegRemarksByJob';
+  myfrm_J_MotivationEmergenciesByJob = 'myfrm_J_MotivationEmergenciesByJob';
+  myfrm_R_MotivationCoeffs = 'myfrm_R_MotivationCoeffs';
   myfrm_R_TurvCodes = 'myfrm_R_TurvCodes';
   myfrm_R_PayrollMethods = 'R_PayrollMethods';
   myfrm_R_Divisions = 'R_Divisions';
@@ -1004,6 +1010,10 @@ const
   myfrm_Dlg_CashRevision = 'Dlg_CashRevision';
   myfrm_Dlg_R_Workers = 'Dlg_R_Workers';
   myfrm_Dlg_R_Jobs = 'Dlg_R_Jobs';
+  myfrm_Dlg_R_JobsInternal = 'Dlg_R_JobsInternal';
+  myfrm_Dlg_R_MotivationNegRemarks = 'Dlg_R_MotivationNegRemarks';
+  myfrm_Dlg_R_MotivationEmergencies = 'Dlg_R_MotivationEmergencies';
+  myfrm_Dlg_R_MotivationCoeffs = 'Dlg_R_MotivationCoeffs';
   myfrm_Dlg_R_TurvCodes = 'Dlg_R_TurvCodes';
   myfrm_Dlg_R_PayrollMethods = 'Dlg_R_PayrollMethods';
   myfrm_Dlg_R_Divisions = 'Dlg_R_Divisions';
@@ -1257,6 +1267,12 @@ const
   mbtCustom_DataCheck_OpenItem2 = 129;         //отчет по проблемам в БД - открыть изделие (2)
   mbtCustom_DataCheck_ViewEstimate2 = 130;     //отчет по проблемам в БД - показать смету изделия (2)
   mbtClearAllGridFilters = 131;                //сбросить ВСЕ фильтры грида (стандартный постолбцовый во всех столбцах + все альт-фильтры) - TFrDBGridEh.ClearAllFilters
+  mbtMoveUp = 132;                             //переместить строку выше (перестановка pos через p_ExchangePositions, см. !алгоритмы.txt)
+  mbtMoveDown = 133;                           //переместить строку ниже (перестановка pos через p_ExchangePositions, см. !алгоритмы.txt)
+  mbtCustom_MotivationAddGlobalRemarks = 134;  //Мотивация: добавить в список должности все глобальные замечания/ЧС (см. uFrmWGjrnMotivationRemarks, !алгоритмы.txt)
+  mbtCustom_MotivationCoeffSetValue = 135;     //Мотивация: ввести текущее значение коэффициента и выбрать оценку (см. uFrmWGjrnMotivationCoefficients)
+  mbtCustom_MotivationCoeffValueSetters = 136; //Мотивация: выбрать пользователей, которым разрешено задавать значение коэффициента (см. uFrmWGjrnMotivationCoefficients)
+  mbtCustom_SqlUpd_ProcessAllChanges = 137;    //SqlUpdater: "Обработать все изменения" - как полная обработка, но без общей проверки/синхронизации комментариев по всем объектам файла - комментарий выставляется только для только что созданной/добавленной таблицы или столбца (см. uFrmXAdmSqlUpdater.pas)
 
 
 
@@ -1375,7 +1391,7 @@ const
 
   //массив предопределенных кнопок
   //айди кнопки, название картинки, заголовок, подсказка (не используется), клавиатурное сокращение (используется при построении меню)
-  myDefaultBtns :  array[0..-1 + 5 + 111 + 4] of TmybtRec = (
+  myDefaultBtns :  array[0..-1 + 5 + 113 + 4] of TmybtRec = (
   (Bt: mbtDividor; Pict: ''; Caption: ''),
   (Bt: mbtDividorM; Pict: ''; Caption: ''; hint: ''),
   (Bt: mbtSpace; Pict: ''; Caption: ''; hint: ''),
@@ -1495,6 +1511,8 @@ const
   (Bt: mbtCustom_DataCheck_OpenItem2; Pict: ''; Caption: 'Открыть изделие (2)'; hint: ''),
   (Bt: mbtCustom_DataCheck_ViewEstimate2; Pict: ''; Caption: 'Смета изделия (2)'; hint: ''),
   (Bt: mbtClearAllGridFilters; Pict: ''; Caption: 'Сбросить все фильтры'; hint: ''; ShortCut: scCtrl + scShift + ord('Q')),
+  (Bt: mbtMoveUp; Pict: 'arrow_up'; Caption: 'Вверх'; hint: ''),
+  (Bt: mbtMoveDown; Pict: 'arrow_down'; Caption: 'Вниз'; hint: ''),
 
 
   (Bt: 100000; Pict: ''; Caption: ''; hint: '')
@@ -1646,6 +1664,14 @@ const
   rW_R_Workers_Ch = '2-02';
   rW_R_Jobs_V = '2-11';
   rW_R_Jobs_Ch = '2-12';
+  rW_R_JobsInternal_V = '2-27';
+  rW_R_JobsInternal_Ch = '2-28';
+  rW_Mtvn_Remarks_V = '2-29';
+  rW_Mtvn_Remarks_Ch = '2-30';
+  rW_Mtvn_Emerg_V = '2-33';
+  rW_Mtvn_Emerg_Ch = '2-34';
+  rW_Mtvn_Coeffs_V = '2-43';
+  rW_Mtvn_Coeffs_Ch = '2-44';
   rW_R_TurvCode_V = '2-31';
   rW_R_TurvCode_Ch = '2-32';
   rW_R_Divisions_V = '2-41';
@@ -1864,7 +1890,7 @@ const
 
 
   const
-  URights : array [0..289] of array [0..3] of string = (
+  URights : array [0..297] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1949,6 +1975,14 @@ const
 
     (rW_R_Jobs_V,'Модуль "Работники"','Справочник: Должности','Доступ к справочнику'),
     (rW_R_Jobs_Ch,'Модуль "Работники"','Справочник: Должности','Добавление, изменение, удаление'),
+    (rW_R_JobsInternal_V,'Модуль "Работники"','Справочник: Внутренние должности','Доступ к справочнику'),
+    (rW_R_JobsInternal_Ch,'Модуль "Работники"','Справочник: Внутренние должности','Добавление, изменение, удаление'),
+    (rW_Mtvn_Remarks_V,'Модуль "Работники"','Мотивация: Грубые замечания','Доступ (список по должностям и общий справочник всех замечаний)'),
+    (rW_Mtvn_Remarks_Ch,'Модуль "Работники"','Мотивация: Грубые замечания','Добавление, изменение, удаление, изменение позиции'),
+    (rW_Mtvn_Emerg_V,'Модуль "Работники"','Мотивация: Чрезвычайные ситуации','Доступ (список по должностям и общий справочник всех записей)'),
+    (rW_Mtvn_Emerg_Ch,'Модуль "Работники"','Мотивация: Чрезвычайные ситуации','Добавление, изменение, удаление, изменение позиции'),
+    (rW_Mtvn_Coeffs_V,'Модуль "Работники"','Мотивация: Коэффициенты','Доступ к справочнику коэффициентов'),
+    (rW_Mtvn_Coeffs_Ch,'Модуль "Работники"','Мотивация: Коэффициенты','Добавление, изменение, удаление коэффициентов, их пороговых значений и списка пользователей'),
     (rW_R_TurvCode_V,'Модуль "Работники"','Справочник: Обозначения ТУРВ','Доступ к справочнику'),
     (rW_R_TurvCode_Ch,'Модуль "Работники"','Справочник: Обозначения ТУРВ','Добавление, изменение, удаление'),
     (rW_R_Divisions_V,'Модуль "Работники"','Справочник: Подразделения','Доступ к справочнику'),

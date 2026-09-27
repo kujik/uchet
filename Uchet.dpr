@@ -217,6 +217,8 @@ uses
   uFrmOWrepEstimateChanges in 'uFrmOWrepEstimateChanges.pas' {FrmOWrepEstimateChanges},
   uFrmOWrepStdItemsGroupCheck in 'uFrmOWrepStdItemsGroupCheck.pas' {FrmOWrepStdItemsGroupCheck},
   uFrmWGjrnJobSalaries in 'uFrmWGjrnJobSalaries.pas' {FrmWGjrnJobSalaries},
+  uFrmWGjrnMotivationRemarks in 'uFrmWGjrnMotivationRemarks.pas' {FrmWGjrnMotivationRemarks},
+  uFrmWGjrnMotivationCoefficients in 'uFrmWGjrnMotivationCoefficients.pas' {FrmWGjrnMotivationCoefficients},
   uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt};
 
 var

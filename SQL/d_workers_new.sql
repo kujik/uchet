@@ -52,7 +52,6 @@ end;
 create table w_job_salaries(
   id_job number(11),
   dt date,
---  planned_pay number,             --плановое начисление
   fixed_pay number,               --постоянная часть
   variable_pay number,            --стимулирующая часть
   constraint pk_w_job_salaries primary key (id_job, dt),
@@ -1310,12 +1309,15 @@ create table w_ref_staff_schedule(
 
  
 
-create or replace view v_w_staff_schedule as
+create or replace view v_w_staff_schedule as --$+
 select
   --штатное расписание на заданную дату:
   --профессии, итоговое количестов работников данной профессии по отделам и всего (пуста стока division),
   --текущая потребность по профессиии для каждого отдела
-  t.id_job, 
+  --salary_plan - плановая з/п по официальной должности за месяц заданной даты (из w_job_salaries,
+  --fixed_pay + variable_pay - см. также uFrmWGjrnJobSalaries.pas); раньше бралась из ручного ввода
+  --в w_ref_staff_schedule (type = 2) - этот столбец там больше не используется
+  t.id_job,
   t.id_departament,
   j.name as job,
   d.name as departament,
@@ -1329,7 +1331,7 @@ select
   qn.value as qnt_plan,
   decode(qn.value, null, null, qn.value - t.qnt) as qnt_need,
   t.schedulecode as schedule,
-  slp.value as salary_plan,
+  case when sp.id_job is null then to_number(null) else nvl(sp.fixed_pay, 0) + nvl(sp.variable_pay, 0) end as salary_plan,
   sls.value as salary_sity
 from  
 /*  (select 
@@ -1343,8 +1345,8 @@ from
     v_turv_workers
   where
     id_departament > 3  --исключаем тестовые
-    and dt1p <= nvl(get_context('staff_schedule_dt'),sysdate) 
-    and dt2p >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt1p <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
+    and dt2p >= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
     and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = office) 
     and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname) 
   group by
@@ -1369,17 +1371,17 @@ from
   (select id_departament, id_job, value from ( 
     select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
       from w_ref_staff_schedule
-      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 1
+      where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) and type = 1
   ) where rn = 1) qn,
-  (select id_departament, id_job, value from ( 
+  (select id_job, fixed_pay, variable_pay from (
+    select id_job, fixed_pay, variable_pay, row_number() over (partition by id_job order by dt desc) as rn
+      from w_job_salaries
+      where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate)
+  ) where rn = 1) sp,
+  (select id_departament, id_job, value from (
     select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
       from w_ref_staff_schedule
-      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 2
-  ) where rn = 1) slp,
-  (select id_departament, id_job, value from ( 
-    select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
-      from w_ref_staff_schedule
-      where dt <= nvl(get_context('staff_schedule_dt'),sysdate) and type = 3
+      where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) and type = 3
   ) where rn = 1) sls
 where
   j.active = 1
@@ -1388,13 +1390,163 @@ where
   --and t.id_job = wn.id_job(+)
   --and t.id_departament = wn.id_departament(+)
   and qn.id_departament (+) = t.id_departament and qn.id_job (+) = t.id_job
-  and slp.id_job (+) = t.id_job  
-  and sls.id_job (+) = t.id_job  
+  and sp.id_job (+) = t.id_job
+  and sls.id_job (+) = t.id_job
 order by
   j.name, d.name       
 ; 
 
 select * from v_w_staff_schedule;
+
+--------------------------------------------------------------------------------
+--v_w_staff_schedule_internal - аналог v_w_staff_schedule (см. комментарий там), но с группировкой
+--по внутренним должностям (w_jobs_internal) вместо официальных - для отчета "Штатное расписание" в
+--режиме "по внутренним должностям" (см. uFrmWGrepStaffSchedule.pas). Нескольким официальным
+--должностям может соответствовать одна внутренняя (w_jobs.id_job_internal) - тогда qnt/qnt_wo_org/
+--qnt_plan суммируются по всем официальным должностям этой внутренней, а плановая з/п (из
+--w_job_salaries) и рынок (из w_ref_staff_schedule, type = 3) - усредняются по этим официальным
+--должностям, т.к. привязаны именно к официальной должности, а не к внутренней. Усреднение дается в
+--двух вариантах сразу - простое среднее (_avg) и средневзвешенное по фактически занятой численности
+--(_wavg) - выбор между ними сделан константой в коде отчета (cUseWeightedInternalAvg), т.к. пока не
+--очевидно, какой вариант будет удобнее для бухгалтерии.
+--Если у официальной должности внутренняя не задана - используется сама официальная как единственная
+--в своей "внутренней" группе. Чтобы не путать эти две группы идентификаторов (у w_jobs и у
+--w_jobs_internal отдельные последовательности, обе начинаются с 1000 - значения могут совпадать),
+--такая "официальная как единственная внутренняя" группа кодируется ОТРИЦАТЕЛЬНЫМ id (минус id самой
+--официальной должности) - см. coalesce(id_job_internal, -id) везде ниже.
+--
+create or replace view v_w_staff_schedule_internal as --$+
+with jm as (
+  --официальные должности с эффективным "внутренним" id (см. комментарий выше про отрицательный id)
+  select id as id_job_official, coalesce(id_job_internal, -id) as id_job_eff
+  from w_jobs
+  where active = 1
+),
+qcnt as (
+  --фактическая занятая численность по официальной должности (для средневзвешенного среднего)
+  select id_job, sum(qnt) as qnt
+  from v_w_staff_schedule_add
+  group by id_job
+),
+t as (
+  select
+    coalesce(jm.id_job_eff, -a.id_job) as id_job,
+    a.id_departament,
+    sum(a.qnt) as qnt,
+    sum(a.qnt_wo_org) as qnt_wo_org,
+    max(a.is_office) as is_office,
+    max(a.area_shortname) as area_shortname,
+    max(nvl(a.schedulecode, ' ')) as schedulecode
+  from
+    v_w_staff_schedule_add a
+    left outer join jm on jm.id_job_official = a.id_job
+  group by
+    rollup(coalesce(jm.id_job_eff, -a.id_job), a.id_departament)
+),
+qn as (
+  --плановая численность (w_ref_staff_schedule, type = 1) - суммируется по внутренней должности
+  select coalesce(jm.id_job_eff, -r.id_job) as id_job, r.id_departament, sum(r.value) as value
+  from
+    (select id_departament, id_job, value from (
+      select id_departament, id_job, value, row_number() over (partition by id_departament, id_job, type order by dt desc) as rn
+        from w_ref_staff_schedule
+        where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) and type = 1
+    ) where rn = 1) r
+    left outer join jm on jm.id_job_official = r.id_job
+  group by
+    coalesce(jm.id_job_eff, -r.id_job), r.id_departament
+),
+sp as (
+  --плановая з/п (w_job_salaries) - последняя запись с dt <= заданной даты (та же схема, что и
+  --для qn/ss выше) - среднее по внутренней должности. get_context('staff_schedule_dt') - varchar2
+  --(из Delphi, FormatSettings.ShortDateFormat = 'dd.mm.yyyy'), поэтому явный to_date(...,
+  --'dd.mm.yyyy') - NLS_DATE_FORMAT сессии Дельфи-приложения (ADO/OleDB) не совпадает с тем, что
+  --использует Toad - без явного формата неявное приведение char->date дает ORA-01861 из Дельфи
+  --(хотя тот же select из Toad работает)
+  select
+    jm.id_job_eff as id_job,
+    --js.id_job is null - у этой официальной должности нет записи в w_job_salaries за месяц; такую
+    --должность нужно ИСКЛЮЧИТЬ из среднего (а не считать ее з/п нулевой) - иначе она тянет среднее
+    --вниз (как в обычном режиме - см. case when sp.id_job is null then to_number(null)... в
+    --v_w_staff_schedule выше); avg/sum сами игнорируют null, поэтому здесь важно не заворачивать
+    --в nvl(...,0) ДО агрегации
+    avg(case when js.id_job is null then to_number(null) else nvl(js.fixed_pay, 0) + nvl(js.variable_pay, 0) end) as salary_plan_avg,
+    sum(case when js.id_job is null then to_number(null) else (nvl(js.fixed_pay, 0) + nvl(js.variable_pay, 0)) * nvl(qcnt.qnt, 0) end)
+      / nullif(sum(case when js.id_job is null then to_number(null) else nvl(qcnt.qnt, 0) end), 0) as salary_plan_wavg
+  from
+    jm
+    left outer join (
+      select id_job, fixed_pay, variable_pay from (
+        select id_job, fixed_pay, variable_pay, row_number() over (partition by id_job order by dt desc) as rn
+          from w_job_salaries
+          where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate)
+      ) where rn = 1
+    ) js on js.id_job = jm.id_job_official
+    left outer join qcnt on qcnt.id_job = jm.id_job_official
+  group by
+    jm.id_job_eff
+),
+ss as (
+  --рынок (w_ref_staff_schedule, type = 3) - среднее по внутренней должности
+  select
+    jm.id_job_eff as id_job,
+    avg(r.value) as salary_sity_avg,
+    --аналогично sp выше - должности без записи рынка (r.value is null) исключаются и из числителя,
+    --и из знаменателя средневзвешенного, а не считаются нулевыми
+    sum(case when r.value is null then to_number(null) else r.value * nvl(qcnt.qnt, 0) end)
+      / nullif(sum(case when r.value is null then to_number(null) else nvl(qcnt.qnt, 0) end), 0) as salary_sity_wavg
+  from
+    jm
+    left outer join (
+      select id_job, value from (
+        select id_job, value, row_number() over (partition by id_job order by dt desc) as rn
+          from w_ref_staff_schedule
+          where dt <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) and type = 3
+      ) where rn = 1
+    ) r on r.id_job = jm.id_job_official
+    left outer join qcnt on qcnt.id_job = jm.id_job_official
+  group by
+    jm.id_job_eff
+)
+select
+  t.id_job,
+  t.id_departament,
+  nvl(ji.name, jf.name) as job,
+  d.name as departament,
+  t.area_shortname,
+  d.is_office,
+  case when d.is_office = 1 then 'офис' when d.is_office = 0 then 'цех' end as office,
+  t.qnt,
+  t.qnt_wo_org,
+  qn.value as qnt_plan,
+  decode(qn.value, null, null, qn.value - t.qnt) as qnt_need,
+  t.schedulecode as schedule,
+  sp.salary_plan_avg,
+  sp.salary_plan_wavg,
+  ss.salary_sity_avg,
+  ss.salary_sity_wavg
+from
+  t,
+  w_departaments d,
+  w_jobs_internal ji,
+  w_jobs jf,
+  qn,
+  sp,
+  ss
+where
+  t.id_departament = d.id(+)
+  and ji.id (+) = t.id_job
+  and jf.id (+) = -t.id_job
+  and qn.id_departament (+) = t.id_departament and qn.id_job (+) = t.id_job
+  and sp.id_job (+) = t.id_job
+  and ss.id_job (+) = t.id_job
+order by
+  job, departament
+;
+
+exec set_context_value('staff_schedule_dt', to_char(sysdate,'dd.mm.yyyy'));
+select * from v_w_staff_schedule_internal;
+
 
 create or replace view v_w_staff_schedule_add as
  select
@@ -1413,8 +1565,8 @@ create or replace view v_w_staff_schedule_add as
   where
     id_departament > 3 and  --исключаем тестовые
     is_terminated <> 1
-    and dt_beg <= nvl(get_context('staff_schedule_dt'),sysdate) 
-    and nvl(dt_end, sysdate) >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt_beg <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
+    and nvl(dt_end, sysdate) >= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
     and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = is_office) 
     and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname)
 ;
@@ -1437,8 +1589,8 @@ select * from
   where
     id_departament > 3 and  --исключаем тестовые
     is_terminated <> 1
-    and dt_beg <= nvl(get_context('staff_schedule_dt'),sysdate) 
-    and nvl(dt_end, sysdate) >= nvl(get_context('staff_schedule_dt'),sysdate) 
+    and dt_beg <= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
+    and nvl(dt_end, sysdate) >= nvl(to_date(get_context('staff_schedule_dt'), 'dd.mm.yyyy'), sysdate) 
     and (get_context('staff_schedule_office') is null or get_context('staff_schedule_office') = is_office) 
     and (get_context('staff_schedule_area') is null or get_context('staff_schedule_area') = area_shortname)
 --исключаем переходы по графику работы и другие (которыых пока нет)     

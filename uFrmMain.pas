@@ -456,12 +456,20 @@ begin
 end;
 
 procedure TFrmMain.CreateMainMenu;
+//см. !алгоритмы.txt, [главное меню] - формат MenuDef и поддержка вложенных подменю 3+ уровня.
+type
+  //один открытый на данный момент уровень меню (пункт верхнего уровня либо вложенное подменю) -
+  //хранится в стеке Stack, самый глубокий (текущий) уровень - последний элемент
+  TMenuStackItem = record
+    Item: TMenuItem;         //сам пункт меню (контейнер), в который добавляются дочерние пункты
+    RealCount: Integer;      //кол-во добавленных РЕАЛЬНЫХ (не разделителей) дочерних пунктов
+    LastChild: TMenuItem;    //последний добавленный дочерний пункт (для отрезания висячего разделителя)
+    LastWasDivider: Boolean; //последний добавленный дочерний пункт был разделителем '-'
+  end;
 var
-  i, j, k : Integer;
+  i : Integer;
   st : string;
-  MainMenuItem, SubMenuItem: TMenuItem;
-  IsLatItemDividor: Boolean;
-  b: Boolean;
+  Stack: array of TMenuStackItem;
 
 function CreateMenuItem(const ACaption, AName: string; AOnClick: TNotifyEvent): TMenuItem;
 begin
@@ -472,40 +480,97 @@ begin
   Result.Visible := True;
 end;
 
+procedure PushContainer(AItem: TMenuItem);
+begin
+  SetLength(Stack, Length(Stack) + 1);
+  Stack[High(Stack)].Item := AItem;
+  Stack[High(Stack)].RealCount := 0;
+  Stack[High(Stack)].LastChild := nil;
+  Stack[High(Stack)].LastWasDivider := False;
+end;
+
+//закрывает текущий (самый глубокий) открытый уровень меню: отрезает висячий разделитель в его
+//конце, и если в нем не оказалось ни одного РЕАЛЬНОГО (не разделителя) пункта - скрывает
+//(удаляет) сам этот уровень целиком (пофикшенный баг - раньше пункт верхнего уровня оставался
+//видимым, если в его подменю были только разделители без единого настоящего пункта). Если же
+//уровень не пустой - засчитывает его как один реальный пункт родительскому уровню (если есть).
+procedure PopContainer;
+var
+  Closed: TMenuStackItem;
+begin
+  if Length(Stack) = 0 then Exit;
+  Closed := Stack[High(Stack)];
+  SetLength(Stack, Length(Stack) - 1);
+  if Closed.RealCount = 0 then begin
+    Closed.Item.Destroy;
+    Exit;
+  end;
+  if Closed.LastWasDivider and (Closed.LastChild <> nil) then
+    Closed.LastChild.Destroy;
+  if Length(Stack) > 0 then begin
+    Inc(Stack[High(Stack)].RealCount);
+    Stack[High(Stack)].LastChild := Closed.Item;
+    Stack[High(Stack)].LastWasDivider := False;
+  end;
+end;
+
 begin
   DefineMainMenu;
   for i := MainMenu.Items.Count - 2 downto 0 do
     MainMenu.Items[i].Destroy;
-  MainMenuItem := nil;
-  SubMenuItem := nil;
+  SetLength(Stack, 0);
   for i := 0 to High(MenuDef) do begin
     st := 'MmI' + S.Right('00' + IntToStr(i), 3);
     if Length(MenuDef[i]) = 1 then begin
-      if (SubMenuItem <> nil) and (SubMenuItem.Caption = '-') then
-        SubMenuItem.Destroy;
-      if (MainMenuItem <> nil) and (MainMenuItem.Count = 0) then
-        MainMenuItem.Destroy;
-      MainMenuItem := CreateMenuItem(MenuDef[i][0], st, nil);
-      MainMenu.Items.Insert(MainMenu.Items.Count - 1, MainMenuItem);
-      IsLatItemDividor := True;
+      //новый пункт верхнего уровня (в строке меню) - закрываем все, что было открыто до этого
+      //(вложенные подменю и предыдущий пункт верхнего уровня), с проверкой на пустоту каждого
+      while Length(Stack) > 0 do
+        PopContainer;
+      var NewTop := CreateMenuItem(MenuDef[i][0], st, nil);
+      MainMenu.Items.Insert(MainMenu.Items.Count - 1, NewTop);
+      PushContainer(NewTop);
     end
-    else if (Length(MenuDef[i]) = 0) then begin
-      SubMenuItem := CreateMenuItem('-', st, nil);
-      MainMenuItem.Add(SubMenuItem);
-      IsLatItemDividor := True;
+    else if Length(MenuDef[i]) = 0 then begin
+      //разделитель в ТЕКУЩЕМ (самом глубоком) открытом уровне - не добавляем висячий разделитель
+      //в начале уровня и не дублируем разделители подряд, если между ними не оказалось реальных пунктов
+      if (Length(Stack) > 0) and (Stack[High(Stack)].RealCount > 0) and (not Stack[High(Stack)].LastWasDivider) then begin
+        var Dividor := CreateMenuItem('-', st, nil);
+        Stack[High(Stack)].Item.Add(Dividor);
+        Stack[High(Stack)].LastChild := Dividor;
+        Stack[High(Stack)].LastWasDivider := True;
+      end;
+    end
+    else if (Length(MenuDef[i]) = 2) and (VarToStr(MenuDef[i][1]) = '>') then begin
+      //открыть вложенное подменю (3-й и глубже уровень) с заголовком MenuDef[i][0] внутри
+      //текущего открытого уровня - см. !алгоритмы.txt про формат
+      if Length(Stack) > 0 then begin
+        var NewSub := CreateMenuItem(MenuDef[i][0], st, nil);
+        Stack[High(Stack)].Item.Add(NewSub);
+        Stack[High(Stack)].LastChild := NewSub;
+        Stack[High(Stack)].LastWasDivider := False;
+        PushContainer(NewSub);
+      end;
+    end
+    else if (Length(MenuDef[i]) = 2) and (VarToStr(MenuDef[i][1]) = '<') then begin
+      //закрыть текущее вложенное подменю, вернуться к его родителю (сам пункт верхнего уровня
+      //этой командой не закрывается - для него достаточно одного открытого уровня в стеке)
+      if Length(Stack) > 1 then
+        PopContainer;
     end
     else begin
-      if (High(MenuDef[i]) >= 2) and (MenuDef[i][2] = True) then begin
-        SubMenuItem := CreateMenuItem(MenuDef[i][0], st, ExecuteMainMenuItem);
-        MainMenuItem.Add(SubMenuItem);
-        IsLatItemDividor := False;
+      //обычный пункт меню-команда - добавляется в ТЕКУЩИЙ (самый глубокий) открытый уровень,
+      //будь то пункт верхнего уровня или вложенное подменю любой глубины
+      if (High(MenuDef[i]) >= 2) and (MenuDef[i][2] = True) and (Length(Stack) > 0) then begin
+        var Leaf := CreateMenuItem(MenuDef[i][0], st, ExecuteMainMenuItem);
+        Stack[High(Stack)].Item.Add(Leaf);
+        Stack[High(Stack)].LastChild := Leaf;
+        Stack[High(Stack)].LastWasDivider := False;
+        Inc(Stack[High(Stack)].RealCount);
       end;
     end;
   end;
-  if (SubMenuItem <> nil) and (SubMenuItem.Caption = '-') then
-    SubMenuItem.Destroy;
-  if (MainMenuItem <> nil) and (MainMenuItem.Count = 0) then
-    MainMenuItem.Destroy;
+  while Length(Stack) > 0 do
+    PopContainer;
 end;
 
 
@@ -525,11 +590,9 @@ begin
     ['SQL монитор', myfrm_Srv_SqlMonitor, True],
     ['Сброс Oracle', '_', True],
     [],
-    //['Комментарии к столбцам из SQL-скриптов в БД', myfrm_Adm_SqlCommentSync, User.IsDeveloper],
     ['SqlUpdater - обработка SQL-скриптов', myfrm_Adm_SqlUpdater, User.IsDeveloper],
-    //журнал ошибок - в общем разделе меню (а не только в {$IFDEF ADMIN}), чтобы был доступен разработчику из
-    //любого модуля (Заказы, Работники, Планирование, Платежный календарь, Сервер), а не только из Администрирования
     ['Журнал ошибок', myfrm_J_Error_Log, User.IsDeveloper],
+    ['Пользователи и роли', myfrm_F_UsersAndRoles, User.IsDeveloper],
     [],
     ['Тестовый справочник', myfrm_R_Test, User.IsDeveloper],
     ['Тест 1', '_', User.IsDeveloper],
@@ -622,6 +685,16 @@ begin
     {$IFDEF  TURV}
     ['Справочники'],
     ['Должности', myfrm_R_Jobs, User.Role(rW_R_Jobs_V)],
+    ['Внутренние должности', myfrm_R_JobsInternal, User.Role(rW_R_JobsInternal_V)],
+    ['Мотивация', '>'],
+      ['Все грубые замечания', myfrm_R_MotivationNegRemarks, User.Roles([], [rW_Mtvn_Remarks_V, rW_Mtvn_Remarks_Ch])],
+      ['Грубые замечания по должностям', myfrm_J_MotivationNegRemarksByJob, User.Roles([], [rW_Mtvn_Remarks_V, rW_Mtvn_Remarks_Ch])],
+      [],
+      ['Все чрезвычайные ситуации', myfrm_R_MotivationEmergencies, User.Roles([], [rW_Mtvn_Emerg_V, rW_Mtvn_Emerg_Ch])],
+      ['Чрезвычайные ситуации по должностям', myfrm_J_MotivationEmergenciesByJob, User.Roles([], [rW_Mtvn_Emerg_V, rW_Mtvn_Emerg_Ch])],
+      [],
+      ['Коэффициенты', myfrm_R_MotivationCoeffs, User.Roles([], [rW_Mtvn_Coeffs_V, rW_Mtvn_Coeffs_Ch])],
+    ['', '<'],
     ['Подразделения', myfrm_R_Divisions, User.Role(rW_R_Divisions_V)],
     ['Графики работы', myfrm_R_Work_Chedules, User.Roles([], [rW_R_Work_Chedules_V, rW_R_Work_Chedules_Ch])],
     ['Виды персональных надбавок', myfrm_R_PersBonus, User.Roles([], [rW_R_PersBonus_V, rW_R_PersBonus_Ch])],

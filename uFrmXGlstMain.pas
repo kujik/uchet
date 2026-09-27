@@ -647,6 +647,61 @@ begin
       'Удалить можно только ту запись, которая не используется более нигде в данных.'#13#10
     ]];
   end
+  else if FormDoc = myfrm_R_JobsInternal then begin
+    Caption:='Внутренние должности';
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['name','Наименование','300'],
+      ['comm','Комментарий','200;h'],
+      ['active$i','Используется','75','pic']
+    ]);
+    Frg1.Opt.SetTable('w_jobs_internal');
+    Frg1.Opt.SetButtons(1, 'rveacds', User.Role(rW_R_JobsInternal_Ch));
+    Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_JobsInternal;
+    Frg1.InfoArray:=[[Caption + #13#10 +
+      'Справочник внутренних (неофициальных) должностей - используется для объединения нескольких'#13#10 +
+      'официальных должностей из справочника "Должности" в одну группу (например, "Конструктор",'#13#10 +
+      '"Ведущий конструктор" и "Конструктор по металлоизделиям" могут относиться к одной внутренней должности).'#13#10 +
+      'Каждой официальной должности обязательно назначается одна внутренняя должность из этого списка.'#13#10 +
+      'Используйте кнопки в заголовке таблицы для действий с данными и настройки вида таблицы.'#13#10 +
+      'Если запись больше не планируется использовать, снимите галочку "используется".'#13#10 +
+      'Удалить можно только ту запись, которая не используется более нигде в данных.'#13#10
+    ]];
+  end
+  else if A.InArray(FormDoc, [myfrm_R_MotivationNegRemarks, myfrm_R_MotivationEmergencies]) then begin
+    //оба справочника ("Все замечания" и "Все чрезвычайные ситуации") структурно идентичны -
+    //см. w_motivation_negative_remarks / w_motivation_w_work_emergencies - и обслуживаются
+    //одним и тем же блоком, различается только заголовок/таблица/права/подсказка.
+    //Каждая запись используется как элемент справочника, привязываемый к нужным должностям на
+    //экране "... по должностям" (myfrm_J_MotivationNegRemarksByJob/EmergenciesByJob) - привязка
+    //не хранится здесь, поэтому кнопки добавления/удаления доступны без ограничений (кроме роли).
+    //Порядок записей здесь фиксированный (is_global desc, pos, name) и кнопками не меняется -
+    //ручной порядок (отдельно для локальных и для глобальных записей) задаётся уже в привязке
+    //к конкретной должности, см. uFrmWGjrnMotivationRemarks.pas.
+    var LIsRemarks := FormDoc = myfrm_R_MotivationNegRemarks;
+    var LChRole := S.IIf(LIsRemarks, User.Role(rW_Mtvn_Remarks_Ch), User.Role(rW_Mtvn_Emerg_Ch));
+    Caption := S.IIfStr(LIsRemarks, 'Мотивация - Все замечания', 'Мотивация - Все чрезвычайные ситуации');
+    Frg1.Opt.SetFields([
+      ['id$i','_id','40'],
+      ['pos$i','_pos','40'],
+      ['is_global$i','Гло-'#13#10'бальное','60','pic'],
+      ['name','Текст','500'],
+      ['comm','Комментарий','200;h'],
+      ['active$i','Используется','80','pic']
+    ]);
+    Frg1.Opt.SetTable(S.IIfStr(LIsRemarks, 'w_motivation_negative_remarks', 'w_motivation_w_work_emergencies'));
+    Frg1.Opt.SetWhere('order by is_global desc, pos, name');
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[],[mbtView],[mbtEdit,LChRole],[mbtAdd,LChRole],
+      [mbtCopy,LChRole],[mbtDelete,LChRole],[],[mbtGridSettings]]);
+    Frg1.Opt.DialogFormDoc := S.IIfStr(LIsRemarks, myfrm_Dlg_R_MotivationNegRemarks, myfrm_Dlg_R_MotivationEmergencies);
+    Frg1.InfoArray:=[[Caption + #13#10#13#10 +
+      'Общий справочник формулировок, из которого они добавляются в список конкретной должности'#13#10 +
+      '(см. "'+S.IIfStr(LIsRemarks,'Грубые замечания','Чрезвычайные ситуации')+' по должностям").'#13#10 +
+      'Запись с галочкой "Глобальное" считается общей для всех должностей - такие записи показываются'#13#10 +
+      'здесь первыми, и именно их добавляет кнопка "Добавить общие замечания" на экране по должностям.'#13#10 +
+      'Порядок записей здесь не меняется - менять его можно только в привязке к конкретной должности.'#13#10
+    ]];
+  end
   else if FormDoc = myfrm_R_TurvCodes then begin
     Caption:='Обозначения ТУРВ';
     Frg1.Opt.SetFields([
@@ -2385,7 +2440,7 @@ v:=True;
     Frg1.Opt.SetWhere('where id >= 100 order by pos');
     Frg1.Opt.SetTable('order_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderTypes;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[mbtMoveUp],[mbtMoveDown],[],[mbtGridSettings]]);
     Frg2.Opt.SetFields([
       ['id$i','_id','40'],
       ['name$d','Свойство заказа','200'],
@@ -2409,7 +2464,7 @@ v:=True;
     Frg1.Opt.SetWhere('order by pos');
     Frg1.Opt.SetTable('order_properties');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_OrderProperties;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[mbtMoveUp],[mbtMoveDown],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[
     ];
   end
@@ -2426,7 +2481,7 @@ v:=True;
     Frg1.Opt.SetWhere('where id >= 100 order by pos');
     Frg1.Opt.SetTable('work_cell_types');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_WorkCellTypes;
-    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[1001, 'Выше', 'arrow_up'],[1002, 'Ниже', 'arrow_down'],[],[mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh],[], [mbtEdit],[mbtAdd,1],[mbtDelete,1],[],[mbtMoveUp],[mbtMoveDown],[],[mbtGridSettings]]);
     Frg1.InfoArray:=[
     ];
   end
@@ -2560,7 +2615,7 @@ v:=True;
     Frg1.Opt.SetWhere('order by pos');
     Frg1.Opt.DialogFormDoc := myfrm_Dlg_R_PnlOpsPainting;
     Frg1.Opt.SetTable('pnl_ref_ops_painting');
-    Frg1.Opt.SetButtons(1,[[mbtRefresh], [], [mbtEdit, User.Role(rPln_R_PnlOpsPainting_Ch)], [mbtAdd,1],[mbtDelete,1], [], [1001, 1, 'Выше', 'arrow_up'], [1002, 1, 'Ниже', 'arrow_down'], [], [mbtGridSettings]]);
+    Frg1.Opt.SetButtons(1,[[mbtRefresh], [], [mbtEdit, User.Role(rPln_R_PnlOpsPainting_Ch)], [mbtAdd,1],[mbtDelete,1], [], [mbtMoveUp, 1], [mbtMoveDown, 1], [], [mbtGridSettings]]);
     Frg1.InfoArray:=[[Caption + #13#10#13#10 +
       'Задайте операции, используя диалог ввода.'#13#10+
       'С помощью кнопок Вверх и Вниз можно изменить порядок операции,'#13#10+
@@ -2994,12 +3049,13 @@ begin
   //----------------------------------------------------------------------------
   //общее
 
-  //перемещение строки вверх/вниз
-  else if A.InArray(FormDoc, [myfrm_R_OrderTypes, myfrm_R_OrderProperties, myfrm_R_WorkCellTypes, myfrm_R_PnlOpsPainting]) then begin
-    if (Tag = 1001) or (Tag = 1002) then begin
-      Q.QCallStoredProc('p_ExchangePositions', 'ATable$s;AField$s;APos$i;ADirection$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = 1001, -1, 1)]);
-      Fr.RefreshGrid;
-    end;
+  //перемещение строки вверх/вниз (см. !алгоритмы.txt про mbtMoveUp/mbtMoveDown, uData.pas) -
+  //этот же блок теперь общий для ЛЮБОГО FormDoc, у которого в кнопках заданы mbtMoveUp/mbtMoveDown
+  //(раньше список FormDoc-ов, где это разрешено, был захардкожен здесь же перечислением - это
+  //больше не нужно, т.к. сама кнопка появляется только там, где ее явно поставили в SetButtons)
+  else if (Tag = mbtMoveUp) or (Tag = mbtMoveDown) then begin
+    Q.QCallStoredProc('p_ExchangePositions', 'ATable$s;AField$s;APos$i;ADirection$i', [Fr.Opt.Sql.Table, 'pos', Fr.GetValue('pos'), S.IIf(Tag = mbtMoveUp, -1, 1)]);
+    Fr.RefreshGrid;
   end
 
   else if (FormDoc = myfrm_R_StdPspFormats) and (Tag = -1007) then begin

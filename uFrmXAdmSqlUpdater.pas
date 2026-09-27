@@ -26,6 +26,12 @@ SqlUpdater - обработка sql-скриптов проекта (катал�
     "Выполнить GO.sql") - GO.sql (тем же движком - комментарии/теги/go-блоки, а не как единый
     скрипт), и в конце - пересборка схемы. Перед стартом показывается сводка (сколько
     объектов/столбцов добавится/удалится, сколько go-блоков выполнится);
+  - Обработать все изменения - то же самое, что "Полная обработка" (теги + go-блоки + GO.sql +
+    пересборка схемы), но БЕЗ отдельного общего SyncTableComments (который иначе проверяет/
+    сверяет с бд комментарии у ВСЕХ таблиц/столбцов файла, не только у затронутых); вместо этого
+    комментарий выставляется сразу после успешного --!+ - только для только что созданной
+    таблицы или добавленного столбца. На все не затронутые этим прогоном объекты и столбцы
+    комментарии не проверяются и не трогаются - быстрее для больших файлов/частых прогонов;
   - Обновить - перечитывает список файлов и переразбирает признаки в колонках;
   - Снять --!!! / Снять го-блоки - для отмеченных файлов убирает соответствующие маркеры
     из текста (--!!! удаляется совсем, --!go begin отключается добавлением дефиса);
@@ -70,6 +76,7 @@ type
     procedure ViewFileByRow(ARow: Integer);
     procedure RunCommentsOnly;
     procedure RunFullProcess;
+    procedure RunProcessAllChanges;
     procedure RunAfterImport;
     procedure ViewLogsList;
     procedure RunClearAttention;
@@ -108,6 +115,7 @@ begin
     [mbtCustom_SqlUpd_Refresh, True, 'Обновить', 'refresh'],[],
     [-mbtCustom_SqlUpd_ViewFile, True, 'Открыть файл'],
     [-mbtCustom_SqlUpd_FullProcess, True, 'Полная обработка'],
+    [-mbtCustom_SqlUpd_ProcessAllChanges, True, 'Обработать все изменения'],
     [-mbtCustom_SqlUpd_Comments, True, 'Установка комментариев'],[],
     [mbtCustom_SqlUpd_ClearAttention, True, 140, 'Снять --!!!', ''],
     [mbtCustom_SqlUpd_DisableGoBlocks, True, 150, 'Снять го-блоки', ''],[],
@@ -141,6 +149,12 @@ begin
     '  объектов/столбцов добавится/удалится, сколько go-блоков выполнится) с запросом подтверждения.'#13#10 +
     '  При первой же ошибке выполнения (не при установке комментариев - те только пишутся в лог)'#13#10 +
     '  показывается окно с вопросом "Продолжить?".'#13#10 +
+    'Обработать все изменения - то же самое, что "Полная обработка", но без отдельной проверки/'#13#10 +
+    '  синхронизации комментариев по ВСЕМ таблицам/столбцам файла - комментарий выставляется'#13#10 +
+    '  сразу только для только что созданной (--!+) таблицы или добавленного (--!+) столбца, без'#13#10 +
+    '  проверки текущего значения в БД. Прочие, не затронутые этим прогоном объекты и столбцы -'#13#10 +
+    '  комментарии по ним не проверяются и не меняются. Быстрее "Полной обработки" на больших'#13#10 +
+    '  файлах/частых прогонах, но не гарантирует полную синхронизацию комментариев по всему файлу.'#13#10 +
     'Установка комментариев - только синхронизация комментариев к таблицам/столбцам с БД, без'#13#10 +
     '  тегов и go-блоков.'#13#10 +
     'Снять --!!! - убирает из отмеченных файлов все строки-метки внимания --!!! (см. ниже).'#13#10 +
@@ -231,6 +245,8 @@ begin
     LoadFileList
   else if Tag = mbtCustom_SqlUpd_FullProcess then
     RunFullProcess
+  else if Tag = mbtCustom_SqlUpd_ProcessAllChanges then
+    RunProcessAllChanges
   else if Tag = mbtCustom_SqlUpd_Comments then
     RunCommentsOnly
   else if Tag = mbtCustom_SqlUpd_ClearAttention then
@@ -560,6 +576,99 @@ begin
       ', выполнено операторов: ' + IntToStr(TotalStmts) + S.IIf(Aborted, ' (прервано пользователем)', ''));
     if TotalTags > 0 then
       Log.Add('успешно выполненные теги --!+/--!- автоматически помечены обработанными (--$+/--$-) в тексте файлов.');
+
+    ShowResultLog(Log);
+  finally
+    Log.Free;
+  end;
+end;
+
+procedure TFrmXAdmSqlUpdater.RunProcessAllChanges;
+//как RunFullProcess (теги --!+/--!-, блоки --!go begin/end, GO.sql, пересборка схемы), но без
+//отдельного общего SyncTableComments (проверка/синхронизация комментариев по ВСЕМ таблицам и
+//столбцам файла, с обращением в бд на каждый) - вместо этого ProcessFileTags вызывается с
+//ASetNewComments = True и сам выставляет комментарий сразу после успешного создания таблицы
+//или добавления столбца (--!+), без проверки текущего значения. На все не затронутые этим
+//прогоном объекты/столбцы комментарии не проверяются и не трогаются.
+var
+  Files, AllFiles: TStringDynArray;
+  i, TotalStmts, TotalTags: Integer;
+  ObjAdd, ColAdd, ObjDel, ColDel, GoBlocksCnt: Integer;
+  ErrMsg: string;
+  Log: TStringList;
+  Aborted, RunGoSql: Boolean;
+begin
+  Files := GetCheckedFiles;
+  if Length(Files) = 0 then begin
+    MyWarningMessage('Не отмечено ни одного файла.');
+    Exit;
+  end;
+  RunGoSql := Frg1.GetControlValue('ChbRunGoSql') = 1;
+
+  CountPendingTags(Files, ObjAdd, ColAdd, ObjDel, ColDel, GoBlocksCnt);
+  if MyQuestionMessage('Сводка перед обработкой ' + IntToStr(Length(Files)) + ' отмеченных файлов ' +
+    '(без проверки/синхронизации комментариев на не затронутых объектах):'#13#10 +
+    'объектов будет добавлено/пересоздано: ' + IntToStr(ObjAdd) + #13#10 +
+    'столбцов будет добавлено: ' + IntToStr(ColAdd) + #13#10 +
+    'объектов будет удалено: ' + IntToStr(ObjDel) + #13#10 +
+    'столбцов будет удалено: ' + IntToStr(ColDel) + #13#10 +
+    'go-блоков выполнится: ' + IntToStr(GoBlocksCnt) +
+    S.IIf(RunGoSql, #13#10 + '+ GO.sql', '') + #13#10#13#10'Продолжить?') <> mrYes then
+    Exit;
+
+  AllFiles := GetAllGridFiles;
+  if TFile.Exists(cGoSqlFile) then begin
+    SetLength(AllFiles, Length(AllFiles) + 1);
+    AllFiles[High(AllFiles)] := cGoSqlFile;
+  end;
+
+  Log := TStringList.Create;
+  try
+    Log.Add('SqlUpdater - обработать все изменения (без общей проверки/синхронизации комментариев), ' + DateTimeToStr(Now));
+    Log.Add('');
+    TotalStmts := 0;
+    TotalTags := 0;
+    Aborted := False;
+    Cth.SetWaitCursor(True);
+    try
+      for i := 0 to High(Files) do begin
+        if Aborted then
+          Break;
+        Log.Add('=== ' + ExtractFileName(Files[i]) + ' ===');
+        TotalTags := TotalTags + ProcessFileTags(Files[i], AllFiles, Log, Aborted, True);
+        if not Aborted then
+          TotalStmts := TotalStmts + ProcessFileGoBlocks(Files[i], AllFiles, Log, Aborted);
+      end;
+
+      if (not Aborted) and RunGoSql then begin
+        if TFile.Exists(cGoSqlFile) then begin
+          Log.Add('=== GO.sql ===');
+          //GO.sql обрабатывается тем же движком, что и обычные файлы, тем же порядком
+          TotalTags := TotalTags + ProcessFileTags(cGoSqlFile, AllFiles, Log, Aborted, True);
+          if not Aborted then
+            TotalStmts := TotalStmts + ProcessFileGoBlocks(cGoSqlFile, AllFiles, Log, Aborted);
+        end
+        else
+          Log.Add('GO.sql не найден, пропущено: ' + cGoSqlFile);
+      end;
+
+      if not Aborted then begin
+        Log.Add('=== пересборка схемы ===');
+        if ExecRawSql('begin sys.dbms_utility.compile_schema(schema => user); end;', ErrMsg) then
+          Log.Add('OK: compile_schema')
+        else
+          Log.Add('ОШИБКА compile_schema: ' + ErrMsg);
+      end;
+    finally
+      Cth.SetWaitCursor(False);
+    end;
+
+    Log.Add('');
+    Log.Add('Выполнено тегов --!+/--!-: ' + IntToStr(TotalTags) +
+      ', выполнено операторов: ' + IntToStr(TotalStmts) + S.IIf(Aborted, ' (прервано пользователем)', ''));
+    if TotalTags > 0 then
+      Log.Add('успешно выполненные теги --!+/--!- автоматически помечены обработанными (--$+/--$-) в тексте файлов; ' +
+        'комментарии выставлены только для только что созданных/добавленных таблиц и столбцов - на прочие объекты не проверялись и не менялись.');
 
     ShowResultLog(Log);
   finally

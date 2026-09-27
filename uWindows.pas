@@ -119,6 +119,7 @@ uses
   uFrmCDedtExpenseItem,
 
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGJrnJobSalaries,
+  uFrmWGjrnMotivationRemarks, uFrmWGjrnMotivationCoefficients,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
   uFrmWGrepTurv,
@@ -584,6 +585,9 @@ begin
     myfrm_Rep_Purchase_Prices,
     myfrm_R_TurvCodes,
     myfrm_R_Jobs,
+    myfrm_R_JobsInternal,
+    myfrm_R_MotivationNegRemarks,
+    myfrm_R_MotivationEmergencies,
     myfrm_R_Work_Chedules,
     myfrm_R_Divisions,
     myfrm_J_WorkerStatus,
@@ -751,6 +755,12 @@ begin
     TFrmWGjrnEmployees.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_J_JobSalaries then
     TFrmWGJrnJobSalaries.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if A.InArray(AFormType, [myfrm_J_MotivationNegRemarksByJob, myfrm_J_MotivationEmergenciesByJob]) then
+    //один и тот же класс обслуживает оба FormDoc (список должностей + список замечаний/ЧС по
+    //выбранной должности) - см. TFrmWGjrnMotivationRemarks.PrepareForm, ветвление по FormDoc
+    TFrmWGjrnMotivationRemarks.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if AFormType = myfrm_R_MotivationCoeffs then
+    TFrmWGjrnMotivationCoefficients.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_Rep_OrdersFinMonitoring then
     TFrmOGrepOrdersFinMonitoring.Show(AOwner, AFormType, Opt, fView, Null, Null)
   else if AFormType = myfrm_Dlg_ExportTurvToXls then
@@ -794,12 +804,42 @@ begin
 
   // ---- список зарегистрированных диалогов ----
   if AFormType = myfrm_Dlg_R_Jobs then
-    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_jobs', 'Должность', 400, 100,
+    TFrmBasicInput.ShowDialogDB3(AOwner, AFormType, DefOpts, AMode, AId, 'w_jobs', 'Должность', 400, 130,
       [['name$s', cntEdit, 'Должность','1:400::T'],
+       ['id_job_internal$i', cntComboLK, 'Внутренняя должность','1:400'],
        ['comm$s', cntEdit, 'Комментарий','0:400::T'],
        ['has_milk_compensation$i', cntCheck, 'Компенсация'#13#10'за молоко'],
        ['active$i', cntCheckX, 'Используется']],
+      [],
+      ['select name, id from w_jobs_internal where active = 1 order by name'],
       [['caption dlgedit dlgactive']])
+  else if AFormType = myfrm_Dlg_R_JobsInternal then
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_jobs_internal', 'Внутренняя должность', 400, 100,
+      [['name$s', cntEdit, 'Наименование','1:400::T'],
+       ['comm$s', cntEdit, 'Комментарий','0:400::T'],
+       ['active$i', cntCheckX, 'Используется']],
+      [['caption dlgedit dlgactive']])
+  else if AFormType = myfrm_Dlg_R_MotivationNegRemarks then
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_motivation_negative_remarks', 'Замечание', 500, 130,
+      [['name$s', cntEdit, 'Текст замечания','1:1000::T'],
+       ['comm$s', cntEdit, 'Комментарий','0:400::T'],
+       ['is_global$i', cntCheck, 'Глобальное'#13#10'(общее для всех должностей)'],
+       ['active$i', cntCheckX, 'Используется']],
+      [['caption dlgedit dlgactive']])
+  else if AFormType = myfrm_Dlg_R_MotivationEmergencies then
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_motivation_w_work_emergencies', 'Чрезвычайная ситуация', 500, 130,
+      [['name$s', cntEdit, 'Текст записи','1:1000::T'],
+       ['comm$s', cntEdit, 'Комментарий','0:400::T'],
+       ['is_global$i', cntCheck, 'Глобальное'#13#10'(общее для всех должностей)'],
+       ['active$i', cntCheckX, 'Используется']],
+      [['caption dlgedit dlgactive']])
+  else if AFormType = myfrm_Dlg_R_MotivationCoeffs then
+    TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_motivation_coefficients', 'Коэффициент', 1000, 115,
+      [['name$s', cntEdit, 'Наименование','1:150::T'],
+       ['is_personal$i', cntCheck, 'Персональный'#13#10'(задаётся индивидуально по каждому сотруднику)'],
+       ['description$s', cntEdit, 'Описание','0:1000::N'],
+       ['comm_for_eval$s', cntEdit, 'Комментарий к '#13#10'выставлению оценки','0:1000::N']],
+      [['caption dlgedit']])
   else if AFormType = myfrm_Dlg_R_TurvCodes then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_turvcodes', 'Обозначение ТУРВ', 450, 130,
       [['code$s', cntEdit, 'Код','1:25::T'],

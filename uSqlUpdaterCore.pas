@@ -153,7 +153,12 @@ function ExecColumnAdd(const ATableName: string; const ACol: TSqlColumnComment; 
 function ExecColumnDrop(const ATableName, AColName: string; out ErrMsg: string): Boolean;
 function ExecObjectTag(const ATag: TSqlObjectTagInfo; const AAllFiles: TStringDynArray; out ErrMsg: string): Boolean;
 procedure CountPendingTags(const AFiles: TStringDynArray; out AObjAdd, AColAdd, AObjDel, AColDel, AGoBlocks: Integer);
-function ProcessFileTags(const AFileName: string; const AAllFiles: TStringDynArray; ALog: TStrings; var AAborted: Boolean): Integer;
+//ASetNewComments - см. "Обработать все изменения" (uFrmXAdmSqlUpdater.pas): вместо общей проверки/
+//синхронизации комментариев по ВСЕМ объектам файла (SyncTableComments, с этим по умолчанию не
+//вызывается) - комментарий выставляется сразу, без проверки текущего значения в бд, только для
+//только что созданной (--!+) таблицы или добавленного (--!+) столбца; на все не затронутые этим
+//прогоном объекты/столбцы комментарии не проверяются и не трогаются
+function ProcessFileTags(const AFileName: string; const AAllFiles: TStringDynArray; ALog: TStrings; var AAborted: Boolean; ASetNewComments: Boolean = False): Integer;
 function MarkObjectDroppedInFiles(const AFiles: TStringDynArray; const AObjectName: string): Boolean;
 
 //----------------------------- очистка текста файлов после выполнения ---------------------
@@ -1405,6 +1410,34 @@ begin
   end;
 end;
 
+procedure SetCommentForNewTable(const ATable: TSqlTableInfo; ALog: TStrings);
+//используется сразу после успешного создания таблицы (--!+, "Обработать все изменения") - в
+//отличие от SyncTableComments, без предварительной проверки текущего значения в бд (таблица
+//только что создана - сравнивать не с чем)
+var
+  ErrMsg: string;
+begin
+  if (not ATable.HasComment) or (Trim(ATable.Comment) = '') then
+    Exit;
+  if ExecRawSql('comment on table ' + ATable.TableName + ' is ''' + EscapeSqlLiteral(ATable.Comment) + '''', ErrMsg) then
+    ALog.Add(FormatDateTime('hh:nn:ss', Now) + '  OK: комментарий к таблице ' + ATable.TableName)
+  else
+    ALog.Add('ОШИБКА (комментарий к таблице ' + ATable.TableName + '): ' + ErrMsg);
+end;
+
+procedure SetCommentForNewColumn(const ATableName: string; const ACol: TSqlColumnComment; ALog: TStrings);
+//аналогично SetCommentForNewTable, для только что добавленного (--!+) столбца
+var
+  ErrMsg: string;
+begin
+  if Trim(ACol.Comment) = '' then
+    Exit;
+  if ExecRawSql('comment on column ' + ATableName + '.' + ACol.ColName + ' is ''' + EscapeSqlLiteral(ACol.Comment) + '''', ErrMsg) then
+    ALog.Add(FormatDateTime('hh:nn:ss', Now) + '  OK: комментарий к столбцу ' + ATableName + '.' + ACol.ColName)
+  else
+    ALog.Add('ОШИБКА (комментарий к столбцу ' + ATableName + '.' + ACol.ColName + '): ' + ErrMsg);
+end;
+
 {------------------------------------------------------------------------------------------}
 {  теги --!+/--!- на столбцах и объектах - проверка существования, выполнение              }
 {------------------------------------------------------------------------------------------}
@@ -1551,18 +1584,20 @@ begin
   end;
 end;
 
-function ProcessFileTags(const AFileName: string; const AAllFiles: TStringDynArray; ALog: TStrings; var AAborted: Boolean): Integer;
+function ProcessFileTags(const AFileName: string; const AAllFiles: TStringDynArray; ALog: TStrings; var AAborted: Boolean; ASetNewComments: Boolean): Integer;
 //выполняет взведенные ("!") теги --!+/--!- на столбцах и объектах одного файла: сначала
 //добавление/пересоздание объектов (--!+), затем добавление столбцов (--!+), затем удаление
 //столбцов (--!-), затем удаление объектов (--!-). при ошибке - как и для --!go блоков -
 //диалог Продолжить/Отменить. каждый успешно выполненный тег сразу же помечается обработанным
 //(--!+/--!- -> --$+/--$-) прямо в тексте файла - это позволяет повторный запуск того же файла
 //пропустить уже сделанное и, если что-то не выполнилось, продолжить именно с этого места.
+//ASetNewComments - см. комментарий у объявления в интерфейсе (SetCommentForNewTable/Column
+//сразу после успешного --!+, вместо отдельного общего SyncTableComments).
 var
   RawText, StrippedText, ErrMsg: string;
   Tables: TSqlTableInfoArray;
   ObjTags: TSqlObjectTagInfoArray;
-  i, j: Integer;
+  i, j, k: Integer;
   Ok, Changed: Boolean;
 begin
   Result := 0;
@@ -1591,6 +1626,12 @@ begin
       Inc(Result);
       if MarkLineTagProcessed(RawText, ObjTags[i].LinePos, '+') then
         Changed := True;
+      if ASetNewComments and SameText(ObjTags[i].ObjType, 'table') then
+        for k := 0 to High(Tables) do
+          if SameText(Tables[k].TableName, ObjTags[i].ObjectName) then begin
+            SetCommentForNewTable(Tables[k], ALog);
+            Break;
+          end;
     end
     else begin
       ALog.Add(FormatDateTime('hh:nn:ss', Now) + '  ОШИБКА: --!+ ' + ObjTags[i].ObjType + ' ' + ObjTags[i].ObjectName + ' -- ' + ErrMsg);
@@ -1612,6 +1653,8 @@ begin
         Inc(Result);
         if MarkLineTagProcessed(RawText, Tables[i].Columns[j].LinePos, '+') then
           Changed := True;
+        if ASetNewComments then
+          SetCommentForNewColumn(Tables[i].TableName, Tables[i].Columns[j], ALog);
       end
       else begin
         ALog.Add(FormatDateTime('hh:nn:ss', Now) + '  ОШИБКА: --!+ столбец ' + Tables[i].TableName + '.' + Tables[i].Columns[j].ColName + ' -- ' + ErrMsg);

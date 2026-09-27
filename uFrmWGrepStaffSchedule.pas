@@ -1,5 +1,25 @@
 ﻿{
-Штатное расписание
+Штатное расписание (27.09.2026, см. !алгоритмы.txt).
+
+Обычный режим - по официальным должностям (w_jobs, вью v_w_staff_schedule). Галочка "По внутренним
+должностям" (chbInternal) переключает на вью v_w_staff_schedule_internal - группировка по
+внутренним должностям (w_jobs_internal); нескольким официальным должностям может соответствовать
+одна внутренняя - численность суммируется, а плановая з/п и рынок усредняются по входящим в нее
+официальным должностям (простое или средневзвешенное по занятой численности среднее - см. константу
+cUseWeightedInternalAvg). Если у официальной должности внутренняя не задана - используется сама
+официальная как единственная в своей группе. В этом режиме ввод данных (плановая численность, рынок)
+недоступен - это агрегат по нескольким официальным должностям, редактировать нечего одно конкретное;
+"Начисленная з/п (средняя)" (из фактических ведомостей, привязана к официальной должности) в этом
+режиме не считается - остается пустой.
+
+Плановая з/п (salary_plan) в обоих режимах берется из w_job_salaries (см. uFrmWGjrnJobSalaries.pas) -
+раньше бралась из ручного ввода в таблицу w_ref_staff_schedule (type = 2), сейчас этот столбец там
+больше не используется, значение только для просмотра (не редактируется через этот отчет).
+
+Также попутно исправлены две устаревшие ссылки на переименованные объекты бд (остались после
+переименования в w_ref_staff_schedule/v_w_staff_schedule): запись плановой численности/рынка и
+импорт из Excel писали в несуществующую уже "ref_staff_schedule" (без w_), а выборка начисленной
+средней з/п (ArSalary, см. GetData) джойнилась со старой "v_staff_schedule" (без w_).
 }
 
 unit uFrmWGrepStaffSchedule;
@@ -41,6 +61,16 @@ uses
 
 {$R *.dfm}
 
+const
+  //режим "По внутренним должностям" (см. GetData) - плановая з/п и рынок по внутренней должности
+  //считаются как среднее по официальным должностям, которые в нее входят (несколько официальных
+  //могут соответствовать одной внутренней) - выбор способа усреднения пока не очевиден для
+  //бухгалтерии, поэтому сделан константой, а не настройкой в интерфейсе:
+  //False - простое среднее по официальным должностям, True - средневзвешенное по фактически занятой
+  //численности (см. v_w_staff_schedule_internal, salary_plan_avg/salary_plan_wavg, salary_sity_avg/
+  //salary_sity_wavg - SQL/d_workers_new.sql)
+  cUseWeightedInternalAvg = False;
+
 function TFrmWGrepStaffSchedule.PrepareForm: Boolean;
 var
   NoSum: boolean;
@@ -62,7 +92,7 @@ begin
     ['qnt_need$i','Потребность в работниках','100','f=f:'],
     ['schedule$s','График работы','100'],
     ['salary_avg$i','Начисленная з/п (средняя)','100','f=f','t=1'],
-    ['salary_plan$i','Начисленная з/п (плановая)','100','f=f','e','t=1'],
+    ['salary_plan$i','Начисленная з/п (плановая)','100','f=f','t=1'],
     ['salary_wo_ndfl$i','з/п после вычета НДФЛ','100','f=f','t=1'],
     ['salary_sity$i','Рынок, начисл.','100','f=f','e','t=1'],
     ['budget$i','Бюджет исходя из кол-во факт. занятых ставок','100','f=f','t=1'],
@@ -78,6 +108,7 @@ begin
     Frg1.CreateAddControls('1', cntCheck, 'Данные по з/п', 'chbSalary', '', -1, yrefC, 100);
   if User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C, rW_Rep_StaffSchedule_Ch_SP, rW_Rep_StaffSchedule_Ch_SS]) then
     Frg1.CreateAddControls('1', cntCheck, 'Ввод данных', 'chbEdit', '', -1, yrefC, 100);
+  Frg1.CreateAddControls('1', cntCheck, 'По внутренним должностям', 'chbInternal', '', -1, yrefC, 160);
   Q.QLoadToDBComboBoxEh('select ''Все'' from dual union select distinct area_shortname || '' - '' || office from v_w_departaments where active = 1 order by 1', [], TDBComboBoxEh(Frg1.FindComponent('cmbArea')), cntComboL);
   Frg1.InfoArray:=[[
     'Штатное расписание.'#13#10
@@ -129,8 +160,8 @@ var
 begin
   t := A.PosInArray(FieldName, ['','qnt_plan','salary_plan','salary_sity']);
   if t > 0 then begin
-    Q.QExecSql('delete from ref_staff_schedule where id_departament = :id_departament$i and id_job = :id_job$i and dt = :dt$d and type = :t$i', [Fr.GetValue('id_departament'), Fr.GetValue('id_job'), Date, t]);
-    Q.QExecSql('insert into ref_staff_schedule (id_departament, id_job, dt, type, value) values (:id_departament$i, :id_job$i, :dt$d, :t$i, :value$i)', [Fr.GetValue('id_departament'), Fr.GetValue('id_job'), Date, t, S.NullIf0(Value)]);
+    Q.QExecSql('delete from w_ref_staff_schedule where id_departament = :id_departament$i and id_job = :id_job$i and dt = :dt$d and type = :t$i', [Fr.GetValue('id_departament'), Fr.GetValue('id_job'), Date, t]);
+    Q.QExecSql('insert into w_ref_staff_schedule (id_departament, id_job, dt, type, value) values (:id_departament$i, :id_job$i, :dt$d, :t$i, :value$i)', [Fr.GetValue('id_departament'), Fr.GetValue('id_job'), Date, t, S.NullIf0(Value)]);
   end;
 end;
 
@@ -141,13 +172,17 @@ end;
 
 procedure TFrmWGrepStaffSchedule.SetMode;
 var
-  b : Boolean;
+  b, bInternal : Boolean;
 begin
   b := Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) and (Frg1.GetControlValue('edtd1') = Date);
+  bInternal := Frg1.GetControlValue('chbInternal') = 1;
   Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
-  Frg1.Opt.SetColFeature('qnt_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1)  and b and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
-  Frg1.Opt.SetColFeature('salary_plan', 'e', (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SP), False);
-  Frg1.Opt.SetColFeature('salary_sity', 'e', (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  //в режиме "по внутренним должностям" qnt_plan/salary_sity - агрегаты по нескольким официальным
+  //должностям, править их через этот отчет нельзя (см. заголовочный комментарий модуля)
+  Frg1.Opt.SetColFeature('qnt_plan', 'e', (not bInternal) and (Frg1.GetControlValue('chbEdit') = 1)  and b and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
+  //salary_plan теперь в обоих режимах берется из w_job_salaries и правится через uFrmWGjrnJobSalaries.pas,
+  //через этот отчет больше не редактируется (см. заголовочный комментарий модуля)
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (not bInternal) and (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
   Frg1.SetColumnsVisible;
   Frg1.DbGridEh1.Invalidate;
 end;
@@ -161,9 +196,11 @@ var
   ArSalary, ArSalaryPlan, ArSalarySity, ArQntPlan: TVarDynArray2;
   v1: Variant;
   dt1, dt2, dtsal: TDateTime;
+  bInternal: Boolean;
 begin
   if (not Cth.DteValueIsDate(Frg1.FindComponent('edtd1'))) or (S.NSt(Frg1.GetControlValue('cmbArea')) = '') then
     Exit;
+  bInternal := Frg1.GetControlValue('chbInternal') = 1;
   if Frg1.GetControlValue('cmbArea')  <> 'Все' then begin
     i := Pos(' - ', Frg1.GetControlValue('cmbArea'));
     Q.QSetContextValue('staff_schedule_office', S.IIf(Copy(Frg1.GetControlValue('cmbArea'), i + 3) = 'офис' , 1, 0));
@@ -174,11 +211,24 @@ begin
     Q.QSetContextValue('staff_schedule_area', '');
   end;
   Q.QSetContextValue('staff_schedule_dt', Frg1.GetControlValue('edtd1'));
-  Q.QLoad(
-    'select rownum, 0 as is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, '+
-    'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
-    'from v_w_staff_schedule',
-  [], na);
+  //в режиме "по внутренним должностям" - v_w_staff_schedule_internal, salary_plan/salary_sity берутся
+  //как среднее (простое или средневзвешенное - см. cUseWeightedInternalAvg) по официальным должностям,
+  //т.к. привязаны именно к ним (см. заголовочный комментарий модуля и комментарий к view в d_workers_new.sql)
+  if bInternal then
+    Q.QLoad(
+      'select rownum, 0 as is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, '+
+      'null as salary_avg, '+S.IIf(cUseWeightedInternalAvg, 'salary_plan_wavg', 'salary_plan_avg')+' as salary_plan, '+
+      'null as salary_wo_ndfl, null as salary_diff, '+
+      S.IIf(cUseWeightedInternalAvg, 'salary_sity_wavg', 'salary_sity_avg')+' as salary_sity, '+
+      'null as budget, null as budget_sity, null as budget_diff '+
+      'from v_w_staff_schedule_internal',
+    [], na)
+  else
+    Q.QLoad(
+      'select rownum, 0 as is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, '+
+      'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
+      'from v_w_staff_schedule',
+    [], na);
   dt2 := Turv.GetTurvBegDate(Turv.GetTurvBegDate(Turv.GetTurvBegDate(Date)));
   //дата для выборки з/п - самая поздняя по закрытой полной ведомости
   ArSalary := [];
@@ -187,7 +237,7 @@ begin
     dtsal := v1;
     ArSalary := Q.QLoad(
       'select pi.id_job, round(avg((total_pay - nvl(non_work_pay,0) - nvl(penalty,0)) / hours_worked * period_hours_norm)) sumall ' +
-      'from v_w_payroll_calc_item pi, v_staff_schedule ss ' +
+      'from v_w_payroll_calc_item pi, v_w_staff_schedule ss ' +
       'where ' +
       'nvl(total_pay, 0) <> 0 and nvl(hours_worked,0) <> 0 ' +
       'and ss.id_job = pi.id_job ' +
@@ -201,8 +251,8 @@ begin
 
 {
   ArSalaryPlan := Q.QLoad(
-    'select id_departament, id_job, value from ref_staff_schedule where dt = ( '+
-    'select max(dt) from ref_staff_schedule '+
+    'select id_departament, id_job, value from w_ref_staff_schedule where dt = ( '+
+    'select max(dt) from w_ref_staff_schedule '+
     'where dt < :dt$d and type = 2 '+
     'group by id_departament, id_job)',
     [Frg1.GetControlValue('edtd1')]
@@ -271,9 +321,14 @@ begin
       na.SetValue(i, 'schedule', null);
     end;
     if (na.G(i, 'is_title') = 1) or (na.G(i, 'id_departament') = null) then begin
-      j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
-      if j >= 0 then
-        na.SetValue(i, 'salary_avg', ArSalary[j][1]);
+      //в режиме "по внутренним должностям" id_job - не официальный id (см. GetData/v_w_staff_schedule_internal),
+      //ArSalary же ключуется официальным id_job из v_w_payroll_calc_item - поиск по нему здесь неверен и
+      //пропускается, salary_avg остается пустым (см. заголовочный комментарий модуля)
+      if not bInternal then begin
+        j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
+        if j >= 0 then
+          na.SetValue(i, 'salary_avg', ArSalary[j][1]);
+      end;
 //      j := A.PosInArray(na.G(i, 'id_job'), ArSalaryPlan, 0);
       na.SetValue(i, 'salary_wo_ndfl', Round(na.G(i, 'salary_avg').AsInteger * 0.87));
       na.SetValue(i, 'budget', na.G(i, 'salary_plan').AsInteger * na.G(i, 'qnt').AsInteger);
@@ -316,7 +371,7 @@ begin
       break;
     j:=a.PosInArray(sh.Cells[0, i].Value.AsString, va2, 1);
     if j >= 0 then begin
-      Q.QExecSql('insert into ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[16, i].Value.AsInteger]);
+      Q.QExecSql('insert into w_ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[16, i].Value.AsInteger]);
     end;
   end;
   sh := XlsFile.Workbook.Worksheets[1];
@@ -325,12 +380,12 @@ begin
       break;
     j:=a.PosInArray(sh.Cells[0, i].Value.AsString, va2, 1);
     if j >= 0 then begin
-      Q.QExecSql('insert into ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[13, i].Value.AsInteger]);
+      Q.QExecSql('insert into w_ref_staff_schedule (id_job, dt, type, value) values (:j$i, :dt$d, 3, :v$i)', [va2[j][0], Date, sh.Cells[13, i].Value.AsInteger]);
     end;
   end;
   for i := 0 to Frg1.GetCount - 1 do
    if Frg1.GetValue('id_departament', i) <> null then
-     Q.QExecSql('insert into ref_staff_schedule (id_job, id_departament, dt, type, value) values (:j$i, :d$i, :dt$d, 1, :v$i)',
+     Q.QExecSql('insert into w_ref_staff_schedule (id_job, id_departament, dt, type, value) values (:j$i, :d$i, :dt$d, 1, :v$i)',
        [Frg1.GetValue('id_job',i), Frg1.GetValue('id_departament',i), Date,Frg1.GetValue('qnt',i)]);
 end;
 
