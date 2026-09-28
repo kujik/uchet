@@ -219,7 +219,9 @@ uses
   uFrmWGjrnJobSalaries in 'uFrmWGjrnJobSalaries.pas' {FrmWGjrnJobSalaries},
   uFrmWGjrnMotivationRemarks in 'uFrmWGjrnMotivationRemarks.pas' {FrmWGjrnMotivationRemarks},
   uFrmWGjrnMotivationCoefficients in 'uFrmWGjrnMotivationCoefficients.pas' {FrmWGjrnMotivationCoefficients},
-  uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt};
+  uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt},
+  uMotivationGridPanel in 'uMotivationGridPanel.pas',
+  uFrmWMotivationTest in 'uFrmWMotivationTest.pas' {FrmWMotivationTest};
 
 var
   MT: Integer;

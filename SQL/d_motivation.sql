@@ -19,7 +19,7 @@
 --
 create table w_motivation_coefficients (
   id number(11) primary key,
-  pos number,                             --позиция в списке (только для сортировки, см. комментарий выше) --$+
+  pos number,                             --позиция в списке (только для сортировки, см. комментарий выше) --!+
   name varchar2(150) not null,           --наименование коэффициента
   is_personal number(1) default 0,       --коэффициент задается индивидуально для каждого сотрудника
   description varchar2(4000),            --описание
@@ -34,7 +34,7 @@ create unique index idx_w_motivation_coefficients on w_motivation_coefficients(l
 
 create sequence sq_w_motivation_coefficients nocache start with 1;
 
-create or replace trigger trg_w_motivation_coefficients_bi_r --$+
+create or replace trigger trg_w_motivation_coefficients_bi_r --!+
   before insert on w_motivation_coefficients for each row
 begin
   :new.id := sq_w_motivation_coefficients.nextval;
@@ -42,9 +42,9 @@ begin
 end;
 /
 
---$go begin
+--!go begin
 update w_motivation_coefficients set pos = id where pos is null;
---$go end
+--!go end
 
 --------------------------------------------------------------------------------
 --w_motivation_coefficients_rates - пороговые значения коэффициента по 4 фиксированным оценкам.
@@ -129,7 +129,7 @@ where
 --и текстовым списком имён пользователей, которым разрешено задавать значение (getusernames - см.
 --использование в v_w_departaments, d_workers_new.sql)
 --
-create or replace view v_w_motivation_coefficients as --$+
+create or replace view v_w_motivation_coefficients as --!+
 select 
 --коэффициент вместе с выбранной оценкой (если выбрана) и именами тех, кто может задать значение
   c.id,
@@ -206,17 +206,86 @@ end;
 /
 */
 --------------------------------------------------------------------------------
---таблица w_motivation_coefficients
---значений коэффициентов и их интервалы применительно к оценке работы сотрудника на каждый календарный месяц 
+--w_motivation_coefficient_for_job - привязка коэффициента мотивации (общий справочник, см.
+--w_motivation_coefficients выше) к конкретной внутренней должности - для отображения набора
+--критериев по должности/сотруднику (см. uFrmWMotivationTest.pas, форма "Мотивация - Тест").
+--weight - доля вознаграждения, которую этот критерий занимает в общей премии по данной должности
+--(0..1, как доля, не проценты - на экране отображается умноженной на 100); у разных должностей
+--один и тот же коэффициент может иметь разный вес (или не использоваться вовсе). pos - порядок
+--отображения критериев для данной должности (присваивается по порядку добавления через кнопку
+--"Добавить критерий..." в форме - отдельного экрана для его смены пока нет).
 --
-
-create table pk_w_motivation_coefficient_for_job (
+--примечание (28.09.2026): до этой правки в файле лежала незавершенная, никогда не выполнявшаяся
+--(без тега --!/--$) заготовка "pk_w_motivation_coefficient_for_job" - без сиквенса/триггера на id
+--и без поля веса; переименована в общепринятое для этого файла именование (w_..._for_job, как у
+--w_motivation_negative_remarks_for_job/w_motivation_w_work_emergencies_for_job выше) и дополнена.
+--
+create table w_motivation_coefficient_for_job (
   id number(11) primary key,
-  id_job_internal number(11),      --айди должности (внутренней)  
-  id_coefficient number(11),       --айди коэффициента в родительской таблице
-  pos number,                      --позиция в расчете 
-  constraint fk_w_motivation_coefficient_for_job_id_job_internal foreign key (id_job_internal) references w_jobs_internal(id) 
+  id_job_internal number(11) not null,   --айди должности (внутренней)
+  id_coefficient number(11) not null,    --айди коэффициента в общем справочнике (w_motivation_coefficients)
+  pos number,                            --порядок отображения критериев для данной должности
+  weight number(5,4),                    --доля вознаграждения (0..1), null - вес не задан
+  constraint fk_w_motivation_coeff_for_job_id_job_internal foreign key (id_job_internal) references w_jobs_internal(id),
+  constraint fk_w_motivation_coeff_for_job_id_coefficient foreign key (id_coefficient) references w_motivation_coefficients(id)
 );
+
+create unique index idx_w_motivation_coeff_for_job on w_motivation_coefficient_for_job(id_job_internal, id_coefficient);
+
+create sequence sq_w_motivation_coefficient_for_job nocache start with 1;
+
+create or replace trigger trg_w_motivation_coeff_for_job_bi_r
+  before insert on w_motivation_coefficient_for_job for each row
+begin
+  :new.id := sq_w_motivation_coefficient_for_job.nextval;
+end;
+/
+
+--------------------------------------------------------------------------------
+--вью для формы отображения (uFrmWMotivationTest.pas) - привязка коэффициента к должности вместе с
+--его данными из общего справочника (имя/описание/персональный ли)
+--
+create or replace view v_w_motivation_coefficient_for_job as
+select
+  f.id,
+  f.id_job_internal,
+  f.id_coefficient,
+  f.pos,
+  f.weight,
+  c.name,
+  c.description,
+  c.is_personal,
+  c.comm_for_eval
+from
+  w_motivation_coefficient_for_job f,
+  w_motivation_coefficients c
+where
+  c.id = f.id_coefficient
+;
+
+--------------------------------------------------------------------------------
+--вью для выбора сотрудника в форме отображения (uFrmWMotivationTest.pas, режим "по сотруднику") -
+--текущая (последняя, без учета увольнения) официальная и внутренняя должность работающего
+--сотрудника; та же идиома "последняя запись по id_employee", что и в last_any_event внутри
+--v_w_employees (см. d_workers_new.sql).
+--
+create or replace view v_w_motivation_employees_by_job as
+select
+  e.id,
+  f_fio(e.f, e.i, e.o) as name,
+  a.id_job,
+  j.id_job_internal
+from
+  w_employees e,
+  (select id_employee, id_job, is_terminated,
+     row_number() over (partition by id_employee order by id desc) as rn
+     from w_employee_properties where is_terminated <> 1) a,
+  w_jobs j
+where
+  a.id_employee = e.id
+  and a.rn = 1
+  and j.id = a.id_job
+;
 
 
 --------------------------------------------------------------------------------

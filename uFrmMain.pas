@@ -694,6 +694,8 @@ begin
       ['Чрезвычайные ситуации по должностям', myfrm_J_MotivationEmergenciesByJob, User.Roles([], [rW_Mtvn_Emerg_V, rW_Mtvn_Emerg_Ch])],
       [],
       ['Коэффициенты', myfrm_R_MotivationCoeffs, User.Roles([], [rW_Mtvn_Coeffs_V, rW_Mtvn_Coeffs_Ch])],
+      [],
+      ['Тест', myfrm_Rep_MotivationTest, User.IsDeveloper],
     ['', '<'],
     ['Подразделения', myfrm_R_Divisions, User.Role(rW_R_Divisions_V)],
     ['Графики работы', myfrm_R_Work_Chedules, User.Roles([], [rW_R_Work_Chedules_V, rW_R_Work_Chedules_Ch])],

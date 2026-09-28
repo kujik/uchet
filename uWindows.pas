@@ -119,7 +119,7 @@ uses
   uFrmCDedtExpenseItem,
 
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGJrnJobSalaries,
-  uFrmWGjrnMotivationRemarks, uFrmWGjrnMotivationCoefficients,
+  uFrmWGjrnMotivationRemarks, uFrmWGjrnMotivationCoefficients, uFrmWMotivationTest,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
   uFrmWGrepTurv,
@@ -761,6 +761,8 @@ begin
     TFrmWGjrnMotivationRemarks.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_R_MotivationCoeffs then
     TFrmWGjrnMotivationCoefficients.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if AFormType = myfrm_Rep_MotivationTest then
+    TFrmWMotivationTest.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_Rep_OrdersFinMonitoring then
     TFrmOGrepOrdersFinMonitoring.Show(AOwner, AFormType, Opt, fView, Null, Null)
   else if AFormType = myfrm_Dlg_ExportTurvToXls then

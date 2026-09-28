@@ -849,6 +849,7 @@ const
   myfrm_J_MotivationNegRemarksByJob = 'myfrm_J_MotivationNegRemarksByJob';
   myfrm_J_MotivationEmergenciesByJob = 'myfrm_J_MotivationEmergenciesByJob';
   myfrm_R_MotivationCoeffs = 'myfrm_R_MotivationCoeffs';
+  myfrm_Rep_MotivationTest = 'myfrm_Rep_MotivationTest'; //экран для разработчика (28.09.2026, см. uFrmWMotivationTest.pas)
   myfrm_R_TurvCodes = 'myfrm_R_TurvCodes';
   myfrm_R_PayrollMethods = 'R_PayrollMethods';
   myfrm_R_Divisions = 'R_Divisions';
