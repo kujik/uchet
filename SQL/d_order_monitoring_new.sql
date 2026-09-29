@@ -1233,18 +1233,23 @@ where
   id_organization = -1 and dt_otgr < nvl(dt_to_sgp, trunc(sysdate)) and dt_beg >= date '2023-06-01' order by dt_beg
 ;
 
+
 create or replace view v_rep_overdue_shipment_orders as
 select
 --отчет по заказм, просроченным по плановой  дате отгрузки
 --по отгрузочныым, контролируем дату отгрузки с сгп
-  id, ornum, dt_beg, customer, project, dt_otgr, dt_to_prod, dt_to_sgp, dt_from_sgp, area_short, or_reference,
-  dt_from_sgp as dt_control, 
-  nvl(dt_from_sgp, trunc(sysdate)) - dt_otgr as overdue_days 
+--исключаем с полностью нулевым количеством
+  o.id, o.ornum, o.dt_beg,o.customer, o.project, o.dt_otgr, o.dt_to_prod, o.dt_to_sgp, o.dt_from_sgp, o.area_short, o.or_reference,
+  o.dt_from_sgp as dt_control, 
+  nvl(o.dt_from_sgp, trunc(sysdate)) - o.dt_otgr as overdue_days 
 from 
-  v_orders 
+  v_orders o,
+  (select sum(qnt) as qnt, id_order from order_items group by id_order) oi
 where 
-  id > 0 and
-  id_organization <> -1 and dt_otgr < nvl(dt_from_sgp, trunc(sysdate)) and dt_beg >= date '2023-06-01' /*and dt_from_sgp is null */ order by dt_beg
+  o.id > 0
+  and oi.id_order = o.id 
+  and oi.qnt > 0
+  and o.id_organization <> -1 and o.dt_otgr < nvl(o.dt_from_sgp, trunc(sysdate)) and o.dt_beg >= date '2023-06-01' /*and dt_from_sgp is null */ order by o.dt_beg
 ;
 
 
@@ -1366,21 +1371,34 @@ where
 
 --------------------------------------------------------------------------------
 
+
 create or replace view v_rep_planned_shipments_orders as
 select
 --заказы, запланированные к отгрузке сегодня, завтра и псолезавтра
---(информация п осами мзаказам)
-  id, ornum, dt_beg, customer, project, cost, dt_otgr
+--(информация по отгрузочным заказам заказам соотвествующему им произщводственному)
+  v.id, 
+  v.ornum, 
+  v.dt_beg, 
+  v.customer, 
+  v.project, 
+  v.cost, 
+  v.dt_otgr,
+  o.ornum as p_ornum,
+  o.dt_beg as p_dt_beg
 from
-  v_orders
+  v_orders v,
+  orders o
 where
-  id > 0
-  and id_organization <> -1
-  and trunc(dt_otgr) between trunc(sysdate) and trunc(sysdate) + 2
-  and dt_from_sgp is null
+  v.id > 0
+  and v.id_organization <> -1
+  and trunc(v.dt_otgr) between trunc(sysdate) and trunc(sysdate) + 2
+  and v.dt_from_sgp is null
+  --получим П-заказ для данного О, его номер прописан в дополнении к О заказу
+  and o.ornum (+) = substr(v.comm, 1, 7) 
 order by 
-  dt_otgr, ornum
+  v.dt_otgr, v.ornum
 ;
+
 
 
 create or replace view v_rep_planned_shipments_items as
@@ -1394,6 +1412,8 @@ select
   i.customer, 
   i.project, 
   i.dt_otgr,
+  op.ornum as p_ornum,
+  op.dt_beg as p_dt_beg,
   i.pos, 
   i.fullitemname, 
   i.qnt, 
@@ -1401,14 +1421,20 @@ select
   case when sgp.qnt < i.qnt then i.qnt - sgp.qnt else null end as qnt_shortage   
 from
   v_order_items i,
+  orders os,
+  orders op,
   v_sgp_items sgp
 where
   i.id_order in (select id from v_rep_planned_shipments_orders)
-  and sgp.id = i.id_std_item
+  and sgp.id (+) = i.id_std_item
+  --получим П-заказ для данного О, его номер прописан в дополнении к О заказу
+  and os.id = i.id_order
+  and op.ornum (+) = substr(os.comm, 1, 7) 
   and i.qnt > 0
 order by 
   i.ornum, i.dt_otgr, i.pos
 ;
+
 
 create or replace view v_rep_shipped_not_closed_by_manager_orders as
 select

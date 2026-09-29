@@ -67,6 +67,7 @@ function TFrmExportToXlsx.RunExport(const AFileName: string; const AData: TNamed
 begin
   Result := True;
   try
+    Frg1.MemTableEh1.Fields.Clear;
     Frg1.OnColumnsGetCellParams := Frg1ColumnsGetCellParams;
     Frg1.Opt.SetFields(AFields);
     Frg1.SetInitData(AData);

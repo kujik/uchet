@@ -1916,12 +1916,17 @@ select
   case when v.need > 0 then 0 else abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need)) end as need_cost,
   v.need_m,
   abs(round(nvl(v.price_main, nvl(v.price_check, 0)) * v.need_m)) as need_m_cost,
+  substr(v.ornumwoqnt, 1, 7) as ornumwoqnt,
+  o.dt_beg,
+  o.dt_otgr,
   v.id_category,
   nvl(c.name, 'без категории') as category_name
 from
   v_spl_minremains v
   left outer join spl_categoryes c
   on c.id = v.id_category
+  left outer join orders o
+  on substr(v.ornumwoqnt, 1, 7) = o.ornum
 ;
 
 select * from v_rep_suppliers_negative_demand where need_m < 0 order by category_name, need_m;

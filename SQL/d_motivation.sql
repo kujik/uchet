@@ -25,7 +25,7 @@ create table w_motivation_coefficients (
   description varchar2(4000),            --описание
   comm_for_eval varchar2(4000),          --комментарий к выставлению оценки
   fact_value number,                     --текущее значение производственного показателя
-  selected_rating number(1),             --выбранная оценка (см. w_motivation_coefficients_rates.rating)
+  selected_rating number(1),             --выбранная оценка)
   ids_value_setters varchar2(400),       --айди пользователей, которым разрешено задавать пороги/значение
   constraint ck_w_motivation_coefficients_sel_rating check (selected_rating between 1 and 4)
 );

@@ -44,6 +44,29 @@ begin
 end;
 /
 
+/*
+insert into w_jobs_internal (id, name, active)
+select null, wj.name, 1
+from w_jobs wj
+where wj.active = 1
+  and not exists (
+    select 1 from w_jobs_internal wi
+    where lower(wi.name) = lower(wj.name)
+  );
+  
+update w_jobs w
+set    w.id_job_internal = (
+select wi.id
+from   w_jobs_internal wi
+where  lower(wi.name) = lower(w.name)
+)
+where  w.id_job_internal is null
+and  exists (
+select 1
+from   w_jobs_internal wi
+where  lower(wi.name) = lower(w.name)
+);  
+*/
 
 
 --таблица w_job_salaries

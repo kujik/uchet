@@ -284,6 +284,7 @@ var
   st: string;
 begin
 TasksS.ReportForPlannedShipments; Exit;
+
 TasksS.ReportForSuppliersNegativeDemand; Exit;
 
 TasksS.ReportForNegativeQuantityOnSgp;
