@@ -2716,7 +2716,7 @@ ORDER BY personnel_number;
       select id_employee, null as id_organization, personnel_number, pay_cash from v_w_advance_transfer_item where id_employee = 10015;
       
       
-      
+
   
         
       

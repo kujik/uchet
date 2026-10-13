@@ -45,6 +45,17 @@
   при работе под ide запись дампа и запись лога в базу можно отключить константами, которые здесь ниже
 
   убрал запись данных на диск вообще, вся информация, включая полный дамп и картинку, пишется в БД, так быстрее
+
+  ПОЛЬЗОВАТЕЛЬСКИЕ ИСКЛЮЧЕНИЯ PL/SQL (raise_application_error, ORA-20000 ... ORA-20999)
+  Если такая ошибка дошла до обработчика (не перехвачена в try-except), то это штатное сообщение пользователю
+  (например, "данные заблокированы", "нельзя удалить - есть связанные записи"): выводится только его текст через
+  MyWarningMessage, без окна madExcept и без записи в журнал ошибок БД (adm_error_log).
+  Диапазон cOraUserFatalFrom ... cOraUserFatalTo (ORA-20900 ... ORA-20999) выделен под пользовательские исключения,
+  которые надо считать именно ОШИБКОЙ (внутренняя проверка в PL/SQL "такого быть не должно" и т.п.) - для них
+  логика прежняя: окно madExcept, запись в БД, запрос и параметры для разработчика.
+  Явная обработка имеет приоритет: если сообщение подменено через Errors.SetParam (текст с "*"), оно используется
+  вместо текста PL/SQL, но все так же как предупреждение; ошибки из списка известных (PreSetKnownErrors) - как раньше.
+  Для модуля Сервер (директива SRV) логика прежняя.
 }
 
 interface
@@ -78,6 +89,14 @@ const
   cmyerrBugReportFileName = 'bugreport.txt';
   cmyerrScreenShotFileName = 'bugreport.png';
   cmyerrBugReportFullFileName = 'bugreport_full.txt';
+
+  //пользовательские исключения PL/SQL (raise_application_error): -20000 ... -20999
+  //по умолчанию - штатное сообщение пользователю (MyWarningMessage, без записи в лог ошибок)
+  cOraUserErrFrom = 20000;
+  cOraUserErrTo = 20999;
+  //диапазон, где пользовательское исключение расценивается как ОШИБКА (логика прежняя: окно madExcept и запись в БД)
+  cOraUserFatalFrom = 20900;
+  cOraUserFatalTo = 20999;
 
   //писать ли ошибки в лог базы данных и на диск при запуске из-под ИДЕ
   cmyDebugSendErrToDB = True;
@@ -152,6 +171,9 @@ type
     function IsOraDisconnect(const AEMessage: string; var handled: Boolean): Boolean;
     //вычленяем из строки сообщения об ошибке Oracle имена ошибки, схемы, таблицы и столбца
     {ORA-01400: cannot insert NULL into ("UCHET22"."TEST_3"."V1")}
+    //пользовательское исключение PL/SQL (ORA-20000..20999)? возвращает код (без минуса) и текст сообщения пользователю
+    //(от ": " после кода до следующего "ORA-", т.е. без стека ORA-06512 / ORA-04088); AIsFatal - код в диапазоне ошибок
+    function GetOraUserError(const AEMessage: string; var ACode: Integer; var AText: string; var AIsFatal: Boolean): Boolean;
     procedure GetOraItemsFromErrorMessage(const AEMessage: string; var AError: string; var AShema: string; var ATable: string; var AColumn: string);
     procedure PreSetKnownErrors;
     function GetKnownErrorMessage(const AErrorMessage: string): string;
@@ -167,10 +189,58 @@ type
 var
   Errors: TmyErrors;
 
+//аварийное завершение процесса без финализации и без каких-либо окон: пишет
+//причину в файловый лог (и, если соединение живо, в БД), после чего вызывает
+//TerminateProcess для самого себя. Обычный Halt/Close для этого не годится -
+//при возникновении ошибки процесс часто в "плохом" состоянии (недоступна БД,
+//сетевая папка, повисшая нить), а Halt запускает финализацию всех модулей
+//(закрытие соединений с БД по мёртвой сети и т.п.), которая может зависнуть
+//на минуты и дольше; процесс при этом остаётся в памяти и держит мютекс
+//единственного экземпляра - новый запуск невозможен. Для страховки (если
+//зависнет сама запись лога) до записи стартует отдельная нить, которая через
+//10 секунд убьёт процесс в любом случае
+procedure HardTerminateProcess(const AReason: string; AExitCode: Integer = 1);
+
 implementation
 
 uses
   uFrmXDmsgNoConnection, uFrmXWOracleError, uMessages, uFrmMain, uSys, uDBOra, uModule;
+
+var
+  GTerminating: Integer = 0;
+
+function HardKillThreadProc(AParam: Pointer): DWORD; stdcall;
+//страховочная нить для HardTerminateProcess - только Sleep и TerminateProcess,
+//никаких выделений памяти и обращений к VCL
+begin
+  Sleep(Cardinal(NativeUInt(AParam)));
+  TerminateProcess(GetCurrentProcess, 1);
+  Result := 0;
+end;
+
+procedure HardTerminateProcess(const AReason: string; AExitCode: Integer);
+var
+  ThreadId: DWORD;
+begin
+  //под отладчиком (IDE) процесс не убиваем - пусть работает обычная обработка ошибок
+  if DebugHook <> 0 then
+    Exit;
+  //повторный вход (ошибка уже во время аварийного завершения) - не мудрим, убиваем сразу
+  if InterlockedExchange(GTerminating, 1) <> 0 then
+    TerminateProcess(GetCurrentProcess, AExitCode);
+  CreateThread(nil, 0, @HardKillThreadProc, Pointer(10000), 0, ThreadId);
+  try
+    if Module <> nil then
+      Module.ToLogFile('Аварийное завершение процесса: ' + AReason);
+  except
+  end;
+  try
+    if (Q <> nil) and Q.Connected then
+      Q.QLog('Аварийное завершение', AReason);
+  except
+  end;
+  TerminateProcess(GetCurrentProcess, AExitCode);
+end;
 
 constructor TmyErrors.Create;
 //инициализация
@@ -251,8 +321,14 @@ var
   b: Boolean;
   KnownErrMsg: string;
   IsOraError: Boolean;
+  UserCode: Integer;
+  UserMsg: string;
+  UserFatal: Boolean;
 begin
   if FIsExceptionHandlerDisabled then begin
+    {$IFDEF SRV}
+    HardTerminateProcess('повторная ошибка после отключения обработчика: ' + exceptIntf.ExceptMessage);
+    {$ENDIF}
     handled := True;
     Exit;
   end;
@@ -262,7 +338,7 @@ begin
     Exit;
 
   //если включен таймер закрытия – ошибки игнорируем
-  if FrmMain.TimerSrvClose.Enabled then begin
+  if (FrmMain <> nil) and FrmMain.TimerSrvClose.Enabled then begin
     handled := True;
     Exit;
   end;
@@ -273,6 +349,25 @@ begin
     SetParam;
     Exit;
   end;
+
+  {$IFNDEF SRV}
+  //пользовательское исключение PL/SQL (ORA-20000..20999, кроме диапазона ошибок) - только сообщение пользователю,
+  //без окна madExcept и записи в БД. Известные ошибки (PreSetKnownErrors) обрабатываются ниже, как раньше
+  if GetOraUserError(exceptIntf.ExceptMessage, UserCode, UserMsg, UserFatal) and not UserFatal and
+    (GetKnownErrorMessage(exceptIntf.ExceptMessage) = '')
+  then begin
+    //если сообщение подменено явно через SetParam - "*" заменяется на текст из PL/SQL
+    if ErrorMessage <> '' then
+      UserMsg := StringReplace(ErrorMessage, '*', UserMsg, []);
+    handled := True;
+    SetParam;
+    try
+      MyWarningMessage(UserMsg);
+    except
+    end;
+    Exit;
+  end;
+  {$ENDIF}
 
   //полное сообщение об ошибке
   FErrMessageFull := S.IIf(ErrorMessage = '', exceptIntf.ExceptMessage, StringReplace(ErrorMessage, '*', exceptIntf.ExceptMessage, []));
@@ -301,6 +396,23 @@ begin
   //добавим информацию об активной форме и контроле
   exceptIntf.BugReportHeader['Active form'] := S.IIf(Screen.ActiveForm = nil, 'нет', Screen.ActiveForm.Name + ' (' + Screen.ActiveForm.Caption + ')');
   exceptIntf.BugReportHeader['Active control'] := S.IIf(Screen.ActiveControl = nil, 'нет', Screen.ActiveControl.Name);
+
+  {$IFDEF SRV}
+  //модуль Сервер работает без присмотра - любая ошибка, дошедшая до madExcept
+  //(не обработанная ни в RunLoggedTask, ни в обработчиках таймеров сторожа),
+  //означает, что процесс в неопределённом состоянии: пишем ошибку в журнал
+  //(в БД и в файл) и жёстко завершаемся, вместо окна madExcept, которое
+  //останавливало бы выполнение задач до ручного вмешательства. процесс будет
+  //перезапущен сторожевым заданием планировщика Windows (см. заголовок
+  //uServerTasks.pas)
+  try
+    FErrDbRow := High(Q.LogArray);
+    GetBugReportToArr(exceptIntf);
+    LogToDB(exceptIntf);
+  except
+  end;
+  HardTerminateProcess(FErrMessageFull);
+  {$ENDIF}
 
   try
     KnownErrMsg := GetKnownErrorMessage(FErrMessageFull);
@@ -472,11 +584,11 @@ begin
   if b then begin
     IsExceptionHandlerDisabled := True;
     {$IFDEF SRV}
-    Halt;
+    HardTerminateProcess('потеряно соединение с БД: ' + AEMessage);
     Exit;
     {$ENDIF}
     if FrmXDmsgNoConnection.Visible then
-      Halt;
+      HardTerminateProcess('потеряно соединение с БД (повторно): ' + AEMessage);
     FrmXDmsgNoConnection.ShowModal;
     handled := True;
     Result := True;
@@ -529,7 +641,7 @@ var
 begin
   if (Pos('ORA-03114', AEMessage) > 0) or (Pos('ORA-12170', AEMessage) > 0) then begin
     {$IFDEF SRV}
-    FrmMain.Close;
+    HardTerminateProcess('потеряно соединение с БД: ' + AEMessage);
     Exit;
     {$ENDIF}
     FrmXDmsgNoConnection.ShowModal;
@@ -655,6 +767,45 @@ begin
     MyInfoMessage('except');
   end;
   MyInfoMessage('end');
+end;
+
+function TMyErrors.GetOraUserError(const AEMessage: string; var ACode: Integer; var AText: string; var AIsFatal: Boolean): Boolean;
+//разбор сообщения Oracle: пользовательское исключение (raise_application_error, ORA-20000..20999)?
+//формат: "ORA-20010: текст сообщения" + строки стека "ORA-06512: ..." / "ORA-04088: ..." (для триггеров)
+var
+  p, i, n: Integer;
+  st: string;
+begin
+  Result := False;
+  ACode := 0;
+  AText := '';
+  AIsFatal := False;
+  p := 0;
+  //ищем первое "ORA-2xxxx:" с кодом из диапазона пользовательских исключений
+  i := 1;
+  while i <= Length(AEMessage) - 9 do begin
+    if (AEMessage[i] = 'O') and (Copy(AEMessage, i, 4) = 'ORA-') then begin
+      st := Copy(AEMessage, i + 4, 5);
+      n := StrToIntDef(st, 0);
+      if (Length(st) = 5) and (AEMessage[i + 9] = ':') and (n >= cOraUserErrFrom) and (n <= cOraUserErrTo) then begin
+        ACode := n;
+        p := i + 10;
+        Break;
+      end;
+    end;
+    Inc(i);
+  end;
+  if p = 0 then Exit;
+  //текст - до следующего "ORA-" (стек вызовов), если сообщение содержит его
+  st := Copy(AEMessage, p, Length(AEMessage));
+  n := Pos('ORA-', st);
+  if n > 0 then
+    st := Copy(st, 1, n - 1);
+  AText := Trim(st);
+  if AText = '' then
+    AText := 'Операция не выполнена (код ' + IntToStr(ACode) + ').';
+  AIsFatal := (ACode >= cOraUserFatalFrom) and (ACode <= cOraUserFatalTo);
+  Result := True;
 end;
 
 procedure TMyErrors.GetOraItemsFromErrorMessage(const AEMessage: string; var AError, AShema, ATable, AColumn: string);

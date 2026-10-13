@@ -42,10 +42,8 @@ Windows - соответствующие им параметры командн�
 минута, час, день месяца, месяц, день недели; поддерживаются "*", списки,
 диапазоны и шаг - см. CronMatches/CronFieldMatches) и признак Active
 (разрешено ли автоматическое выполнение по расписанию). Массив заполняется
-один раз при старте резидентного процесса (см. InitScheduledTasks) - в
-код перенесены все задачи из прежней TTasksS.HourlyTasks (время каждой из
-них было и раньше жёстко задано в коде - здесь оно просто выражено в виде
-cron вместо вложенных if), после чего Cron и Active каждой задачи
+один раз при старте резидентного процесса (см. InitScheduledTasks),
+после чего Cron и Active каждой задачи
 переопределяются значениями из таблицы adm_scheduled_tasks, если для неё
 там задана своя настройка - см. раздел "Настройка расписания через модуль
 Администратор" ниже. Задачи, время которых не привязано к уже
@@ -238,6 +236,8 @@ type
     procedure ReportForOpenMaterialRequirements;
     //заказы, которые уже отгружены, но при этом не закрыты менеджером
     procedure ReportForShippedNotClosedByManagerOrders;
+    //состояние склада брака: номенклатура с ненулевым остатком на складе брака
+    procedure ReportForDefectStock;
   end;
 
 var
@@ -268,7 +268,8 @@ uses
   Controls,
   ExtCtrls,
   IOUtils,
-  uWaitForm
+  uWaitForm,
+  uErrors
   ;
 
 var
@@ -564,6 +565,7 @@ begin
   AddTask('Материалы, по которым не закрыта потребность', '', '0 8 * * *', procedure begin TasksS.ReportForOpenMaterialRequirements; end);
   AddTask('Заказы, запланированные к отгрузке (сегодня/завтра/послезавтра)', '', '0 8 * * *', procedure begin TasksS.ReportForPlannedShipments; end);
   AddTask('Заказы, которые уже отгружены, но при этом не закрыты менеджером', '', '0 8 * * *', procedure begin TasksS.ReportForShippedNotClosedByManagerOrders; end);
+  AddTask('Состояние склада брака', '', '0 8 * * *', procedure begin TasksS.ReportForDefectStock; end);
   //задачи по понедельникам - день недели проверяется внутри задачи, см.
   //комментарий к InitScheduledTasks выше
   AddTask('Производственные заказы за прошедшую неделю', 'выполняется только по понедельникам', '0 8 * * *',
@@ -719,10 +721,19 @@ begin
   FIsBusy := True;
   try
     UpdaterDir := ExtractFilePath(ParamStr(0)) + 'Updater' + PathDelim;
-    if not GetUpdateServerBasePath(UpdaterDir, ServerBasePath) then
-      Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
-    if not IsExeUpdateAvailable(ServerBasePath) then
-      Exit;
+    try
+      if not GetUpdateServerBasePath(UpdaterDir, ServerBasePath) then
+        Exit; //нет updater.dir рядом с exe - обновление для этого расположения не настроено
+      if not IsExeUpdateAvailable(ServerBasePath) then
+        Exit;
+    except
+      on E: Exception do begin
+        //сетевая папка с дистрибутивом недоступна и т.п. - это не повод для
+        //окна madExcept, просто логируем и пробуем снова через 5 минут
+        LogTaskEvent('Сервер', 'не удалось проверить наличие обновления: ' + E.Message);
+        Exit;
+      end;
+    end;
     LogTaskEvent('Сервер', 'обнаружена новая версия ' + ExtractFileName(ParamStr(0)) + ' - запускается обновление, процесс завершается');
     ScanApi.Stop;
     try
@@ -746,21 +757,34 @@ end;
 procedure TServerWatchdog.MinutelyTimerTimer(Sender: TObject);
 //раз в минуту - проверка соединения с БД (при его отсутствии дальнейшая
 //работа невозможна ни для сканирования, ни для прочих задач - процесс сразу
-//завершается), и, если разрешено расписание (см. IsScheduleEnabled),
-//выполнение задач расписания за все минуты, прошедшие с прошлой проверки
-//(см. ProcessScheduledTasks - обычно это ровно одна минута, но может быть
-//больше, если предыдущий тик долго выполнял задачу, см. заголовок модуля).
+//ЖЁСТКО завершается, см. HardTerminateProcess в uErrors.pas: обычный Halt
+//здесь не годится - он запускает финализацию модулей, в т.ч. закрытие
+//соединений с БД, которое при недоступном сервере может зависнуть, и
+//процесс (вместе с мютексом) остаётся висеть), и, если разрешено расписание
+//(см. IsScheduleEnabled), выполнение задач расписания за все минуты,
+//прошедшие с прошлой проверки (см. ProcessScheduledTasks - обычно это ровно
+//одна минута, но может быть больше, если предыдущий тик долго выполнял
+//задачу, см. заголовок модуля).
 //Ошибки внутри самих задач логируются и не прерывают их выполнение - см.
 //RunLoggedTask, используемый внутри ProcessScheduledTasks; внешний
 //try/except здесь - дополнительная защита на случай ошибки в самой логике
-//планирования
+//планирования. Сам обработчик таймера не должен пропускать наружу ни одного
+//исключения (иначе оно попадёт в madExcept) - поэтому и проверка соединения
+//обёрнута в try/except: ошибка при проверке считается потерей соединения
 //см. комментарий у TServerWatchdog (защита от реентрантного вызова, FIsBusy)
 var
   CheckFrom, CheckTo: TDateTime;
+  IsConnected: Boolean;
 begin
-  if not Q.Connected then begin
+  try
+    IsConnected := Q.Connected;
+  except
+    IsConnected := False;
+  end;
+  if not IsConnected then begin
     LogTaskEvent('Сервер', 'потеряно соединение с БД - процесс завершается');
-    Halt;
+    HardTerminateProcess('потеряно соединение с БД');
+    Exit;
   end;
   if not IsScheduleEnabled then
     Exit;
@@ -1376,7 +1400,7 @@ begin
     [IncDay(Date, -1)],
     naP
   );
-  Q.QLoad(
+{  Q.QLoad(
     'select o.ornum , o.customer, o.project, dt_beg, a.actdate '+
     'from v_orders o, dv.acts a '+
     'where o.id_itm = a.id_zakaz and o.dt_to_sgp is null and o.id_organization <> -1 and a.actdate = :dt$d ' +
@@ -1385,6 +1409,8 @@ begin
     naO
   );
   if (naP.Count = 0) and (naO.Count = 0) then
+    Exit;}
+  if (naP.Count = 0) then
     Exit;
   HTML := '<b>Вчера были преждевременно созданы АВР</b><br>';
   if naP.Count > 0 then begin
@@ -1393,12 +1419,12 @@ begin
       S.ConcatStP(HTML, naP.G(i, 'ornum') + '  ' + DateToStr(naP.G(i, 'dt_beg')) {+ '  ' + DateToStr(naP.G(i, 'actdate'))} + '"   "' + naP.G(i, 'project') + '"', '<br>');
     end;
   end;
-  if naO.Count > 0 then begin
+(*  if naO.Count > 0 then begin
     HTML := HTML + '<br><br><b>По отгрузочным заказам:</b><br>';
     for var i := 0 to naO.High do begin
       S.ConcatStP(HTML, naO.G(i, 'ornum') + '  ' + DateToStr(naO.G(i, 'dt_beg')) {+ '  ' + DateToStr(naO.G(i, 'actdate'))} + '   "' + naO.G(i, 'customer') + '"   "' + naO.G(i, 'project') + '"', '<br>');
     end;
-  end;
+  end;*)
   Tasks.SendMail(TASK_MAILING_EARLY_COMPLETION_ACTS, 'Преждевременно созданы АВР', HTML, [], '~');
 end;
 
@@ -1667,8 +1693,8 @@ procedure TTasksS.ReportForSuppliersNegativeDemand;
 //Потребность в материалах
 //отчет по сырью, у которого есть отрицательная (с учетом минимального остатка) потребность на текущий момент
 var
-  na, naCats: TNamedArr;
-  Fields: TVarDynArray2;
+  na, naCats, naAll: TNamedArr;
+  Fields, FieldsAll: TVarDynArray2;
   FileToSend: string;
   FileToSendArr: TVarDynArray;
   Tbl: THTMLTable;
@@ -1710,6 +1736,18 @@ begin
       HTML := HTML + '<b>' + CatName + ':</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0) + '<br>';
       FileToSend := Sys.GetWinTemp + '\' + TopSt + ' - ' + CatName + '.xlsx';
       ExportToXlsx(FileToSend, na, Fields, TopSt + ' - ' + CatName, '', True);
+      FileToSendArr := FileToSendArr + [FileToSend];
+    end;
+  end;
+  //сводный файл по всем категориям одним вложением (с колонкой "Категория"); в тело письма таблица не добавляется
+  if naCats.Count > 0 then begin
+    FieldsAll := [['category_name$s', 'Категория', '150']];
+    FieldsAll := FieldsAll + Fields;
+    Q.QLoad(Q.QGetSql('A', 'v_rep_suppliers_negative_demand', FieldsAll.Col(0).Implode(';'))+
+      ' where need_m < 0 order by nvl(id_category, 999999), category_name, need_m asc', [], naAll);
+    if naAll.Count > 0 then begin
+      FileToSend := Sys.GetWinTemp + '\' + TopSt + ' - Все категории.xlsx';
+      ExportToXlsx(FileToSend, naAll, FieldsAll, TopSt + ' - Все категории', '', True);
       FileToSendArr := FileToSendArr + [FileToSend];
     end;
   end;
@@ -1894,7 +1932,8 @@ begin
     ['cost$f', 'Стоимость заказа', '100', 'f=#:', 'r'],
     ['dt_otgr$d', 'Дата отгрузки', '100'],
     ['p_ornum$s', 'Заказ П', '90'],
-    ['p_dt_beg$d', 'Дата создания П', '100']
+    ['p_dt_beg$d', 'Дата создания П', '100'],
+    ['p_dt_otgr$d', 'Дата отгрузки', '100']
   ];
   FieldsItems := [
     ['ornum$s', 'Заказ', '90'],
@@ -2005,7 +2044,8 @@ begin
     ['cost$f', 'Стоимость заказа', '100', 'f=#:', 'r'],
     ['dt_otgr$d', 'Дата отгрузки', '100']
   ];
-  Q.QLoad(Q.QGetSql('A', 'v_rep_shipped_not_closed_by_manager_orders', FieldsOrders.Col(0).Implode(';')) + ' order by dt_otgr, ornum', [], naOrders);
+  //выбираем только еще не закрытые заказы /рекламации закрываются вручную без закрытия менеджером/
+  Q.QLoad(Q.QGetSql('A', 'v_rep_shipped_not_closed_by_manager_orders', FieldsOrders.Col(0).Implode(';')) + ' where dt_end is null order by dt_otgr, ornum', [], naOrders);
   HTML := '';
   FileToSendArr := [];
   if naOrders.Count > 0 then begin
@@ -2021,6 +2061,39 @@ begin
   Tasks.SendMail(TASK_MAILING_SHIPPED_NOT_CLOSED_BY_MANAGER_ORDERS, Title, HTML, FileToSendArr, '~');
 end;
 
+
+procedure TTasksS.ReportForDefectStock;
+//состояние склада брака: номенклатура с ненулевым остатком на складе брака (v_rep_defect_stock, d_order_monitoring_new.sql)
+var
+  na: TNamedArr;
+  Fields: TVarDynArray2;
+  FileToSend: string;
+  FileToSendArr: TVarDynArray;
+  Tbl: THTMLTable;
+  HTML, Title, TopSt: string;
+begin
+  Title := 'Состояние склада брака';
+  TopSt := Title + ' на ' + DateTimeToStr(Date);
+  Fields := [
+    ['name$s', 'Наименование', '500;h'],
+    ['name_unit$s', 'Ед. изм.', '80'],
+    ['qnt$f', 'Количество', '100', 'r']
+  ];
+  Q.QLoad(Q.QGetSql('A', 'v_rep_defect_stock', Fields.Col(0).Implode(';')) + ' order by name', [], na);
+  HTML := '';
+  FileToSendArr := [];
+  if na.Count > 0 then begin
+    Tbl.InitDefaults;
+    Tbl.SetOptions('report-table', '—', True, '0.00', 'dd.mm.yyyy', 'dd.mm.yyyy hh:nn:ss', True, True);
+    HTML := '<b>' + TopSt + '</b><br>' + Tbl.GenerateEmail(na, Fields, 1, 2, 0);
+    FileToSend := Sys.GetWinTemp + '\' + TopSt + '.xlsx';
+    ExportToXlsx(FileToSend, na, Fields, TopSt, '', True);
+    FileToSendArr := [FileToSend];
+  end
+  else
+    HTML := 'На складе брака нет позиций.';
+  Tasks.SendMail(TASK_MAILING_DEFECT_STOCK, Title, HTML, FileToSendArr, '~');
+end;
 
 end.
 

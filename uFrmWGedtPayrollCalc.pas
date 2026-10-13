@@ -411,6 +411,31 @@ begin
             S.ConcatStP(st2, '   ' + Frg1.GetColumnCaption(fld) + ':   ' + '"' + v1.AsString + '" -> "' + v2.AsString + '"', #13#10);
           end;
         end;
+      //плановое начисление и фиксированная часть - из справочника "Плановые начисления по должностям" (по должности):
+      //обновляются ВСЕГДА, а не только в пустых ячейках, изменения попадают в отчет и ставят признак изменения грида.
+      //если должности нет в справочнике за этот месяц - значения в ведомости не трогаем
+      for k := 0 to naprev.High do
+        if na.G(i, 'id_job') = naprev.G(k, 'id_job') then begin
+          for var q := 0 to 1 do begin
+            var pf: string;
+            if q = 0 then
+              pf := 'planned_pay'
+            else
+              pf := 'fixed_pay';
+            v1 := na.G(i, pf);
+            v2 := naprev.G(k, pf);
+            //плановое начисление 0 = не задано (null); у постоянной части 0 и null различаются (см. расчет переменной части)
+            if q = 0 then
+              v2 := v2.NullIf0;
+            var Null1: Boolean := VarIsNull(v1) or VarIsEmpty(v1);
+            var Null2: Boolean := VarIsNull(v2) or VarIsEmpty(v2);
+            if (Null1 <> Null2) or (not Null1 and (Abs(v1.AsFloat - v2.AsFloat) > 0.001)) then begin
+              na.SetValue(i, pf, v2);
+              S.ConcatStP(st2, '   ' + Frg1.GetColumnCaption(pf) + ':   ' + '"' + v1.AsString + '" -> "' + v2.AsString + '"', #13#10);
+            end;
+          end;
+          Break;
+        end;
       if st2 <> '' then begin
         st1 := '';
         for k := 0 to High(flds2) do
@@ -434,14 +459,15 @@ begin
   //end;
 
   //теперь сопоставляем только по должности - плановое начисление и фиксированная часть из
-  //справочника устанавливаются всем работникам с данной должностью (08.09.2026)
+  //справочника устанавливаются всем работникам с данной должностью (08.09.2026).
+  //для строк, уже бывших в ведомости, это сделано выше (с обновлением непустых значений и отчетом об изменениях,
+  //12.10.2026); здесь - только для вновь добавленных строк (они в отчете уже учтены как внесенные)
   for i := 0 to na.High do
+  if na.G(i, 'temp').AsIntegerM = -1 then
   for j := 0 to naprev.High do begin
     if na.G(i, 'id_job') = naprev.G(j, 'id_job') then begin
-      if na.G(i, 'planned_pay') = null then
-        na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay'));
-      if na.G(i, 'fixed_pay') = null then
-        na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
+      na.SetValue(i, 'planned_pay', naprev.G(j, 'planned_pay').NullIf0);
+      na.SetValue(i, 'fixed_pay', naprev.G(j, 'fixed_pay'));
       Break;
     end;
   end;

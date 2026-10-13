@@ -23,7 +23,7 @@ TMotGridData описывает один такой блок: массив ши�
 interface
 
 uses
-  Windows, SysUtils, Classes, Graphics, Types, Math;
+  Windows, SysUtils, Classes, Graphics, Types, Math, Forms;
 
 type
   TMotGridHAlign = (mghLeft, mghCenter, mghRight);
@@ -70,11 +70,20 @@ procedure MotGridSetCell(var AData: TMotGridData; ARow, ACol: Integer; const ACe
 //MotEmptyCell в остальные позиции, покрытые этим объединением
 
 function MotGridWidth(const AData: TMotGridData): Integer;
+function MotGridCellRect(const AData: TMotGridData; ARow, ACol, ARowSpan, AColSpan: Integer): TRect;
+//прямоугольник ячейки (с учётом объединения) в координатах блока - для определения ячейки по положению мыши
 function MotGridHeight(const AData: TMotGridData): Integer;
 
-procedure DrawMotGridPanel(ACanvas: TCanvas; ALeft, ATop: Integer; const AData: TMotGridData);
+procedure DrawMotGridPanel(ACanvas: TCanvas; ALeft, ATop: Integer; const AData: TMotGridData; AScale: Double = 0);
 //рисует панель на произвольном канвасе начиная с левого верхнего угла (ALeft, ATop) - см. описание
-//модуля выше про WYSIWYG печать
+//модуля выше про WYSIWYG печать. AScale = 0 - рисование на экране как есть (размеры в пикселях, шрифт в кеглях);
+//AScale > 0 - рисование с масштабом (для печати): размеры ячеек, толщина линий и отступы умножаются на AScale, высота
+//шрифта = кегль x Screen.PixelsPerInch / 72 x AScale пикселей - то есть вид блока тот же, что на экране
+
+function MotGridCanCutAfter(const AData: TMotGridData; ARow: Integer): Boolean;
+//можно ли разрезать блок после строки ARow, не разорвав ни одной объединённой по строкам ячейки
+function MotGridSlice(const AData: TMotGridData; AFirstRow, ALastRow: Integer): TMotGridData;
+//часть блока - строки AFirstRow..ALastRow (для переноса очень высокого блока на следующую страницу при печати)
 
 implementation
 
@@ -150,6 +159,23 @@ begin
     Result := Result + AData.ColWidths[i];
 end;
 
+function MotGridCellRect(const AData: TMotGridData; ARow, ACol, ARowSpan, AColSpan: Integer): TRect;
+var
+  i: Integer;
+begin
+  Result := Rect(0, 0, 0, 0);
+  for i := 0 to Min(ACol, Length(AData.ColWidths)) - 1 do
+    Result.Left := Result.Left + AData.ColWidths[i];
+  Result.Right := Result.Left;
+  for i := ACol to Min(ACol + Max(AColSpan, 1), Length(AData.ColWidths)) - 1 do
+    Result.Right := Result.Right + AData.ColWidths[i];
+  for i := 0 to Min(ARow, Length(AData.RowHeights)) - 1 do
+    Result.Top := Result.Top + AData.RowHeights[i];
+  Result.Bottom := Result.Top;
+  for i := ARow to Min(ARow + Max(ARowSpan, 1), Length(AData.RowHeights)) - 1 do
+    Result.Bottom := Result.Bottom + AData.RowHeights[i];
+end;
+
 function MotGridHeight(const AData: TMotGridData): Integer;
 var
   i: Integer;
@@ -159,7 +185,7 @@ begin
     Result := Result + AData.RowHeights[i];
 end;
 
-procedure DrawCellText(ACanvas: TCanvas; ARect: TRect; const AText: string; AHAlign: TMotGridHAlign; AWordWrap: Boolean);
+procedure DrawCellText(ACanvas: TCanvas; ARect: TRect; const AText: string; AHAlign: TMotGridHAlign; AWordWrap: Boolean; AScale: Double);
 //DT_VCENTER (вертикальное центрирование) в Windows API работает ТОЛЬКО вместе с DT_SINGLELINE -
 //для переносимого (многострочного) текста центрирование по вертикали приходится делать вручную:
 //сначала DT_CALCRECT считает, сколько реально займет текст при данной ширине, затем рисуем с
@@ -171,7 +197,7 @@ var
 begin
   if AText = '' then Exit;
   R := ARect;
-  InflateRect(R, -4, -2);
+  InflateRect(R, -Round(4 * AScale), -Round(2 * AScale));
   if (R.Right <= R.Left) or (R.Bottom <= R.Top) then Exit;
 
   Flags := DT_NOPREFIX;
@@ -192,30 +218,32 @@ begin
     Windows.DrawText(ACanvas.Handle, PChar(AText), Length(AText), R, Flags or DT_SINGLELINE or DT_END_ELLIPSIS or DT_VCENTER);
 end;
 
-procedure DrawMotGridPanel(ACanvas: TCanvas; ALeft, ATop: Integer; const AData: TMotGridData);
+procedure DrawMotGridPanel(ACanvas: TCanvas; ALeft, ATop: Integer; const AData: TMotGridData; AScale: Double = 0);
 var
   ColX, RowY: array of Integer;
+  LScale: Double;
   r, c: Integer;
   Cell: TMotGridCell;
   CellRect: TRect;
   ColEnd, RowEnd: Integer;
 begin
   if (Length(AData.ColWidths) = 0) or (Length(AData.RowHeights) = 0) then Exit;
+  if AScale > 0 then LScale := AScale else LScale := 1;
 
   SetLength(ColX, Length(AData.ColWidths) + 1);
   ColX[0] := ALeft;
   for c := 0 to High(AData.ColWidths) do
-    ColX[c + 1] := ColX[c] + AData.ColWidths[c];
+    ColX[c + 1] := ColX[c] + Round(AData.ColWidths[c] * LScale);
 
   SetLength(RowY, Length(AData.RowHeights) + 1);
   RowY[0] := ATop;
   for r := 0 to High(AData.RowHeights) do
-    RowY[r + 1] := RowY[r] + AData.RowHeights[r];
+    RowY[r + 1] := RowY[r] + Round(AData.RowHeights[r] * LScale);
 
   ACanvas.Font.Name := 'Tahoma';
   ACanvas.Pen.Color := clBlack;
   ACanvas.Pen.Style := psSolid;
-  ACanvas.Pen.Width := 1;
+  ACanvas.Pen.Width := Max(1, Round(LScale));
 
   for r := 0 to High(AData.Rows) do
     for c := 0 to High(AData.Rows[r]) do begin
@@ -237,17 +265,57 @@ begin
       else
         ACanvas.Font.Style := ACanvas.Font.Style - [fsBold];
       ACanvas.Font.Color := Cell.FontColor;
-      if Cell.FontSize > 0 then
+      if AScale > 0 then begin
+        //печать: высота шрифта в пикселях целевого устройства, пропорционально размерам ячеек
+        if Cell.FontSize > 0 then
+          ACanvas.Font.Height := -Max(1, Round(Cell.FontSize * Screen.PixelsPerInch / 72 * AScale))
+        else
+          ACanvas.Font.Height := -Max(1, Round(8 * Screen.PixelsPerInch / 72 * AScale));
+      end
+      else if Cell.FontSize > 0 then
         ACanvas.Font.Size := Cell.FontSize
       else
         ACanvas.Font.Size := 8;
       ACanvas.Brush.Style := bsClear;
-      DrawCellText(ACanvas, CellRect, Cell.Text, Cell.HAlign, Cell.WordWrap);
+      DrawCellText(ACanvas, CellRect, Cell.Text, Cell.HAlign, Cell.WordWrap, LScale);
 
       ACanvas.Brush.Style := bsClear;
       ACanvas.Pen.Color := clBlack;
       ACanvas.Rectangle(CellRect);
     end;
+end;
+
+function MotGridCanCutAfter(const AData: TMotGridData; ARow: Integer): Boolean;
+var
+  r, c: Integer;
+begin
+  Result := True;
+  for r := 0 to Min(ARow, High(AData.Rows)) do
+    for c := 0 to High(AData.Rows[r]) do
+      if (AData.Rows[r, c].ColSpan > 0) and (r + Max(AData.Rows[r, c].RowSpan, 1) - 1 > ARow) then
+        Result := False;
+end;
+
+function MotGridSlice(const AData: TMotGridData; AFirstRow, ALastRow: Integer): TMotGridData;
+var
+  r, c, n: Integer;
+begin
+  n := ALastRow - AFirstRow + 1;
+  SetLength(Result.ColWidths, Length(AData.ColWidths));
+  for c := 0 to High(AData.ColWidths) do
+    Result.ColWidths[c] := AData.ColWidths[c];
+  SetLength(Result.RowHeights, n);
+  SetLength(Result.Rows, n);
+  for r := 0 to n - 1 do begin
+    Result.RowHeights[r] := AData.RowHeights[AFirstRow + r];
+    SetLength(Result.Rows[r], Length(AData.Rows[AFirstRow + r]));
+    for c := 0 to High(Result.Rows[r]) do begin
+      Result.Rows[r, c] := AData.Rows[AFirstRow + r, c];
+      //объединение по строкам, выходящее за границу среза, обрезаем
+      if (Result.Rows[r, c].ColSpan > 0) and (r + Max(Result.Rows[r, c].RowSpan, 1) > n) then
+        Result.Rows[r, c].RowSpan := n - r;
+    end;
+  end;
 end;
 
 end.

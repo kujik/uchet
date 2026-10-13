@@ -2870,7 +2870,7 @@ begin
     res := TFrmBasicInput.ShowDialogDB3(AOwner, '', [dbioModal, dbioStatusBar], AMode, AId, 'w_employee_pers_bonus', 'Персональная надбавка', 600, 70, [
       ['id_pers_bonus$i', cntComboLK, 'Вид надбавки','1:400'],
       ['dt_beg$d', cntDEdit, 'C',':'],
-      ['dt_end$d', cntDEdit, 'По',':']],
+      ['dt_end$d', cntDEdit, 'По','']],
       [],
       ['select name, id from w_pers_bonus where active = 1 order by name'],
       [['caption dlgedit']]
@@ -2898,7 +2898,7 @@ var
 begin
   Result := False;
   LDate := ADt;
-  if User.IsDeveloper then begin
+  if User.IsDataEditor then begin
     if TFrmBasicInput.ShowDialog(AOwner, '', [], fEdit, '~Дата для создаваемых ТУРВ', 370, 80,
       [[cntDtEdit, 'Дата', '*:*']], [ADt], va4, [['Любая дата внутри периода для создаваемых ТУРВ']], nil
     ) < 0 then Exit;

@@ -848,6 +848,10 @@ const
   myfrm_R_MotivationEmergencies = 'myfrm_R_MotivationEmergencies';
   myfrm_J_MotivationNegRemarksByJob = 'myfrm_J_MotivationNegRemarksByJob';
   myfrm_J_MotivationEmergenciesByJob = 'myfrm_J_MotivationEmergenciesByJob';
+  myfrm_J_MotivationCoeffsByJob = 'myfrm_J_MotivationCoeffsByJob'; //коэффициенты по должностям с долями вознаграждения (04.10.2026, см. uFrmWGjrnMotivationCoeffsByJob.pas)
+  myfrm_J_MotivationSpecItems = 'myfrm_J_MotivationSpecItems';   //специальные коэффициенты (культура производства, качество работы): позиции по должностям (05.10.2026, см. uFrmWGjrnMotivationSpecial.pas)
+  myfrm_J_MotivationSpecRanges = 'myfrm_J_MotivationSpecRanges'; //специальные коэффициенты: диапазоны итоговых баллов по должностям
+  myfrm_J_MotivationSpecValues = 'myfrm_J_MotivationSpecValues'; //специальные коэффициенты: ввод оценки показателя по сотрудникам/специальностям
   myfrm_R_MotivationCoeffs = 'myfrm_R_MotivationCoeffs';
   myfrm_Rep_MotivationTest = 'myfrm_Rep_MotivationTest'; //экран для разработчика (28.09.2026, см. uFrmWMotivationTest.pas)
   myfrm_R_TurvCodes = 'myfrm_R_TurvCodes';
@@ -1274,6 +1278,10 @@ const
   mbtCustom_MotivationCoeffSetValue = 135;     //Мотивация: ввести текущее значение коэффициента и выбрать оценку (см. uFrmWGjrnMotivationCoefficients)
   mbtCustom_MotivationCoeffValueSetters = 136; //Мотивация: выбрать пользователей, которым разрешено задавать значение коэффициента (см. uFrmWGjrnMotivationCoefficients)
   mbtCustom_SqlUpd_ProcessAllChanges = 137;    //SqlUpdater: "Обработать все изменения" - как полная обработка, но без общей проверки/синхронизации комментариев по всем объектам файла - комментарий выставляется только для только что созданной/добавленной таблицы или столбца (см. uFrmXAdmSqlUpdater.pas)
+  mbtCustom_MotivationWeightsNormalize = 138;  //Мотивация: привести доли критериев должности к 100% пропорционально текущим (см. uFrmWGjrnMotivationCoeffsByJob.pas)
+  mbtCustom_MotivationSpecSetValue = 140;      //Мотивация: ввести оценку показателя по позиции специального коэффициента (см. uFrmWGjrnMotivationSpecial.pas)
+  mbtCustom_MotivationSpecSetters = 141;       //Мотивация: выбрать пользователей, которым разрешено вводить оценку по позиции специального коэффициента (см. uFrmWGjrnMotivationSpecial.pas)
+  mbtCustom_MotivationWeightsEqual = 139;      //Мотивация: поровну разделить 100% между критериями должности (см. uFrmWGjrnMotivationCoeffsByJob.pas)
 
 
 
@@ -1673,6 +1681,8 @@ const
   rW_Mtvn_Emerg_Ch = '2-34';
   rW_Mtvn_Coeffs_V = '2-43';
   rW_Mtvn_Coeffs_Ch = '2-44';
+  rW_Mtvn_Lock_Set = '2-107';
+  rW_Mtvn_Lock_Clear = '2-108';
   rW_R_TurvCode_V = '2-31';
   rW_R_TurvCode_Ch = '2-32';
   rW_R_Divisions_V = '2-41';
@@ -1891,7 +1901,7 @@ const
 
 
   const
-  URights : array [0..297] of array [0..3] of string = (
+  URights : array [0..299] of array [0..3] of string = (
     (rAdm_R_Change,'Модуль "Администрирование"','Роли','Создание, изменение, удаление'),
     (rAdm_U_Change,'Модуль "Администрирование"','Пользователи','Создание, изменение, удаление'),
     (rAdm_U_ChangeRole,'','','Только назначение ролей'),
@@ -1984,6 +1994,8 @@ const
     (rW_Mtvn_Emerg_Ch,'Модуль "Работники"','Мотивация: Чрезвычайные ситуации','Добавление, изменение, удаление, изменение позиции'),
     (rW_Mtvn_Coeffs_V,'Модуль "Работники"','Мотивация: Коэффициенты','Доступ к справочнику коэффициентов'),
     (rW_Mtvn_Coeffs_Ch,'Модуль "Работники"','Мотивация: Коэффициенты','Добавление, изменение, удаление коэффициентов, их пороговых значений и списка пользователей'),
+    (rW_Mtvn_Lock_Set,'Модуль "Работники"','Мотивация: Блокировка данных','Установка блокировки корректировки данных мотивации (после неё нельзя менять коэффициенты, диапазоны, формулы и значения)'),
+    (rW_Mtvn_Lock_Clear,'Модуль "Работники"','Мотивация: Блокировка данных','Снятие блокировки корректировки данных мотивации'),
     (rW_R_TurvCode_V,'Модуль "Работники"','Справочник: Обозначения ТУРВ','Доступ к справочнику'),
     (rW_R_TurvCode_Ch,'Модуль "Работники"','Справочник: Обозначения ТУРВ','Добавление, изменение, удаление'),
     (rW_R_Divisions_V,'Модуль "Работники"','Справочник: Подразделения','Доступ к справочнику'),

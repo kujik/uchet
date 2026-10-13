@@ -1,5 +1,5 @@
 ﻿{
-Штатное расписание (27.09.2026, см. !алгоритмы.txt).
+Штатное расписание.
 
 Обычный режим - по официальным должностям (w_jobs, вью v_w_staff_schedule). Галочка "По внутренним
 должностям" (chbInternal) переключает на вью v_w_staff_schedule_internal - группировка по
@@ -16,10 +16,12 @@ cUseWeightedInternalAvg). Если у официальной должности 
 раньше бралась из ручного ввода в таблицу w_ref_staff_schedule (type = 2), сейчас этот столбец там
 больше не используется, значение только для просмотра (не редактируется через этот отчет).
 
-Также попутно исправлены две устаревшие ссылки на переименованные объекты бд (остались после
-переименования в w_ref_staff_schedule/v_w_staff_schedule): запись плановой численности/рынка и
-импорт из Excel писали в несуществующую уже "ref_staff_schedule" (без w_), а выборка начисленной
-средней з/п (ArSalary, см. GetData) джойнилась со старой "v_staff_schedule" (без w_).
+Вид отчета : группируемые чекбоксы "Вид 1" (прежний: строки по специальностям
+с итогом по каждой и разбивкой по подразделениям) и "Вид 2" (по подразделениям: сверху сплошной строкой подразделение и
+общее количество работающих в нем, под ней список специальностей этого подразделения). В виде 2 нет столбцов "офис /цех"
+и "Подразделение", ввод данных не доступен. Данные в обоих видах читаются из одних и тех же вью (v_w_staff_schedule /
+v_w_staff_schedule_internal), вид 2 строится в BuildView2.
+
 }
 
 unit uFrmWGrepStaffSchedule;
@@ -36,14 +38,18 @@ uses
 type
   TFrmWGrepStaffSchedule = class(TFrmBasicGrid2)
   private
+    //включен вид 2 (по подразделениям), устанавливается в SetMode
+    FView2: Boolean;
     function  PrepareForm: Boolean; override;
     procedure Frg1ButtonClick(var Fr: TFrDBGridEh; const No: Integer; const Tag: Integer; const fMode: TDialogType; var Handled: Boolean); override;
     procedure Frg1ColumnsGetCellParams(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; FieldName: string; EditMode: Boolean; Params: TColCellParamsEh); override;
     procedure Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean); override;
     procedure Frg1CellValueSave(var Fr: TFrDBGridEh; const No: Integer; FieldName: string; Value: Variant; var Handled: Boolean); override;
     procedure Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject); override;
+    procedure Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
     procedure SetMode;
     procedure GetData;
+    procedure BuildView2(var na: TNamedArr; const ArSalary: TVarDynArray2; bInternal: Boolean);
     procedure FromExcel;
   public
   end;
@@ -70,6 +76,10 @@ const
   //численности (см. v_w_staff_schedule_internal, salary_plan_avg/salary_plan_wavg, salary_sity_avg/
   //salary_sity_wavg - SQL/d_workers_new.sql)
   cUseWeightedInternalAvg = False;
+  //вид 2: строка-заголовок подразделения рисуется сплошной на всю ширину таблицы (см. Frg1DbGridEh1AdvDrawDataCell).
+  //если при отрисовке будут артефакты (например при горизонтальной прокрутке) - поставить False, тогда это обычная
+  //строка с серым фоном и жирным текстом в первом столбце
+  cSpanTitleRows = True;
 
 function TFrmWGrepStaffSchedule.PrepareForm: Boolean;
 var
@@ -104,6 +114,9 @@ begin
   Frg1.Opt.SetButtonsIfEmpty([mbtGo]);
   Frg1.CreateAddControls('1', cntDTEdit, 'Дата', 'edtd1', ':',30, yrefC, 85);
   Frg1.CreateAddControls('1', cntComboL, 'Площадка', 'cmbArea', ':', 30 + 65 + 80, yrefC, 100);
+  //вид отчета - группа чекбоксов с тегом -1 (радио: нельзя снять оба, см. TFrDBGridEh.AddControlChange)
+  Frg1.CreateAddControls('1', cntCheck, 'Вид 1', 'chbView1', '', -1, yrefC, 55, -1);
+  Frg1.CreateAddControls('1', cntCheck, 'Вид 2', 'chbView2', '', -1, yrefC, 55, -1);
   if User.Roles([], [rW_Rep_StaffSchedule_V_S]) then
     Frg1.CreateAddControls('1', cntCheck, 'Данные по з/п', 'chbSalary', '', -1, yrefC, 100);
   if User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C, rW_Rep_StaffSchedule_Ch_SP, rW_Rep_StaffSchedule_Ch_SS]) then
@@ -111,11 +124,21 @@ begin
   Frg1.CreateAddControls('1', cntCheck, 'По внутренним должностям', 'chbInternal', '', -1, yrefC, 160);
   Q.QLoadToDBComboBoxEh('select ''Все'' from dual union select distinct area_shortname || '' - '' || office from v_w_departaments where active = 1 order by 1', [], TDBComboBoxEh(Frg1.FindComponent('cmbArea')), cntComboL);
   Frg1.InfoArray:=[[
-    'Штатное расписание.'#13#10
+    'Штатное расписание.'#13#10#13#10+
+    'Данные по составу работников фолрмируются строго по состоянию на (произвольный) указанный день.'#13#10+
+    'можно сформировать отчет как по всему предприятию, так и отдельно по площадкам (с учетом признака Цех/Офис").'#13#10+
+    'Вид 1 - по специальностям (с итогом по каждой и разбивкой по подразделениям), вид 2 - по подразделениям: '#13#10+
+    'сверху подразделение и общее количество работающих в нем, под ним список специальностей.'#13#10+
+    'В виде 2 ввод данных недоступен.'#13#10+
+    'Возвоможен вывод штатного расписания как по официальным, так и внутренним должностям.'#13#10+
+    'Данные по заработной плате берутся из журнала "Плановые начисления по должностям" на период, содержащий дапту формирования ведомости." '#13#10+
+    ''#13#10
   ]];
   //данные из массива
   Frg1.SetInitData([]);
   Result := Inherited;
+  //отрисовка строки-заголовка подразделения в виде 2 (событие грида, как в uFrmWGedtTurvN)
+  Frg1.DbGridEh1.OnAdvDrawDataCell := Frg1DbGridEh1AdvDrawDataCell;
   SetMode;
 end;
 
@@ -138,6 +161,9 @@ begin
     Params.Background := clmyYelow
   else if (Fr.GetValue('id_departament') = null) or (Fr.GetValue('is_title') = 1) then
     Params.Background := clmyGray;
+  //вид 2: строки-заголовки подразделений выделим жирным
+  if FView2 and (Fr.GetValue('is_title') = 1) then
+    Params.Font.Style := Params.Font.Style + [fsBold];
   if (FieldName = 'qnt_need') and (Fr.GetValue('qnt_need') <> null) then begin
     if Fr.GetValue('qnt_need') < 0 then
       Params.Background := clmyPink
@@ -148,7 +174,8 @@ end;
 
 procedure TFrmWGrepStaffSchedule.Frg1GetCellReadOnly(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject; var ReadOnly: Boolean);
 begin
-  ReadOnly := (Fr.GetValue('id_departament') = null) or (
+  //в виде 2 ввод данных недоступен
+  ReadOnly := FView2 or (Fr.GetValue('id_departament') = null) or (
     (Fr.CurrField = 'qnt_plan') and (
     ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C)) or
     ((Fr.GetValue('office') = 'цех') and not User.Role(rW_Rep_StaffSchedule_Ch_C))));
@@ -168,21 +195,40 @@ end;
 procedure TFrmWGrepStaffSchedule.Frg1AddControlChange(var Fr: TFrDBGridEh; const No: Integer; Sender: TObject);
 begin
   SetMode;
+  //при смене вида перечитаем данные, если они уже были загружены (структура строк у видов разная)
+  if (TControl(Sender).Name = 'chbView1') or (TControl(Sender).Name = 'chbView2') then
+    if Fr.IsPrepared and (Fr.GetCount(False) > 0) then begin
+      GetData;
+      Fr.RefreshGrid;
+    end;
 end;
 
 procedure TFrmWGrepStaffSchedule.SetMode;
 var
-  b, bInternal : Boolean;
+  b, bInternal, bView2 : Boolean;
+  c: TComponent;
 begin
   b := Cth.DteValueIsDate(Frg1.FindComponent('edtd1')) and (Frg1.GetControlValue('edtd1') = Date);
   bInternal := Frg1.GetControlValue('chbInternal') = 1;
+  //вид отчета: если ни один не выбран (первый запуск) - вид 1
+  if (not (Frg1.GetControlValue('chbView1') = 1)) and (not (Frg1.GetControlValue('chbView2') = 1)) then
+    Frg1.SetControlValue('chbView1', 1);
+  bView2 := Frg1.GetControlValue('chbView2') = 1;
+  FView2 := bView2;
   Frg1.Opt.SetColFeature('1', 'i', not ((Frg1.GetControlValue('chbSalary') = 1) and User.Role(rW_Rep_StaffSchedule_V_S)), True);
   //в режиме "по внутренним должностям" qnt_plan/salary_sity - агрегаты по нескольким официальным
   //должностям, править их через этот отчет нельзя (см. заголовочный комментарий модуля)
-  Frg1.Opt.SetColFeature('qnt_plan', 'e', (not bInternal) and (Frg1.GetControlValue('chbEdit') = 1)  and b and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
+  Frg1.Opt.SetColFeature('qnt_plan', 'e', (not bInternal) and (not bView2) and (Frg1.GetControlValue('chbEdit') = 1)  and b and User.Roles([], [rW_Rep_StaffSchedule_Ch_O, rW_Rep_StaffSchedule_Ch_C]), False);
   //salary_plan теперь в обоих режимах берется из w_job_salaries и правится через uFrmWGjrnJobSalaries.pas,
   //через этот отчет больше не редактируется (см. заголовочный комментарий модуля)
-  Frg1.Opt.SetColFeature('salary_sity', 'e', (not bInternal) and (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  Frg1.Opt.SetColFeature('salary_sity', 'e', (not bInternal) and (not bView2) and (Frg1.GetControlValue('chbEdit') = 1) and b and User.Role(rW_Rep_StaffSchedule_Ch_SS), False);
+  //вид 2: нет столбцов "офис /цех" и "Подразделение" (подразделение - в строке-заголовке); этот вызов должен идти после
+  //вызова SetColFeature с очисткой признака 'i' выше
+  Frg1.Opt.SetColFeature('office;departament', 'i', bView2, False);
+  //в виде 2 нет ввода данных - блокируем соответствующий чекбокс
+  c := Frg1.FindComponent('chbEdit');
+  if c is TControl then
+    TControl(c).Enabled := not bView2;
   Frg1.SetColumnsVisible;
   Frg1.DbGridEh1.Invalidate;
 end;
@@ -196,11 +242,13 @@ var
   ArSalary, ArSalaryPlan, ArSalarySity, ArQntPlan: TVarDynArray2;
   v1: Variant;
   dt1, dt2, dtsal: TDateTime;
-  bInternal: Boolean;
+  bInternal, bView2: Boolean;
+  sPlan, sCity: string;
 begin
   if (not Cth.DteValueIsDate(Frg1.FindComponent('edtd1'))) or (S.NSt(Frg1.GetControlValue('cmbArea')) = '') then
     Exit;
   bInternal := Frg1.GetControlValue('chbInternal') = 1;
+  bView2 := Frg1.GetControlValue('chbView2') = 1;
   if Frg1.GetControlValue('cmbArea')  <> 'Все' then begin
     i := Pos(' - ', Frg1.GetControlValue('cmbArea'));
     Q.QSetContextValue('staff_schedule_office', S.IIf(Copy(Frg1.GetControlValue('cmbArea'), i + 3) = 'офис' , 1, 0));
@@ -214,7 +262,25 @@ begin
   //в режиме "по внутренним должностям" - v_w_staff_schedule_internal, salary_plan/salary_sity берутся
   //как среднее (простое или средневзвешенное - см. cUseWeightedInternalAvg) по официальным должностям,
   //т.к. привязаны именно к ним (см. заголовочный комментарий модуля и комментарий к view в d_workers_new.sql)
-  if bInternal then
+  if bView2 then begin
+    //вид 2: только строки "специальность в подразделении" (без итогов по специальности и общего), упорядоченные по
+    //подразделению и специальности; поля те же и в том же порядке, что и в виде 1 (см. BuildView2)
+    if bInternal then begin
+      sPlan := S.IIf(cUseWeightedInternalAvg, 'salary_plan_wavg', 'salary_plan_avg') + ' as salary_plan';
+      sCity := S.IIf(cUseWeightedInternalAvg, 'salary_sity_wavg', 'salary_sity_avg') + ' as salary_sity';
+    end
+    else begin
+      sPlan := 'salary_plan';
+      sCity := 'salary_sity';
+    end;
+    Q.QLoad(
+      'select rownum, 0 as is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, '+
+      'null as salary_avg, salary_plan, null as salary_wo_ndfl, null as salary_diff, salary_sity, null as budget, null as budget_sity, null as budget_diff '+
+      'from (select id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, ' + sPlan + ', ' + sCity + ' ' +
+      'from ' + S.IIf(bInternal, 'v_w_staff_schedule_internal', 'v_w_staff_schedule') + ' where id_departament is not null order by departament, job)',
+    [], na);
+  end
+  else if bInternal then
     Q.QLoad(
       'select rownum, 0 as is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need, schedule, '+
       'null as salary_avg, '+S.IIf(cUseWeightedInternalAvg, 'salary_plan_wavg', 'salary_plan_avg')+' as salary_plan, '+
@@ -257,6 +323,12 @@ begin
     'group by id_departament, id_job)',
     [Frg1.GetControlValue('edtd1')]
   );}
+  //вид 2 строится отдельно
+  if bView2 then begin
+    BuildView2(na, ArSalary, bInternal);
+    Frg1.SetInitData(na);
+    Exit;
+  end;
   //посчитаем итоги по цеху и офису
   qc := 0;
   qo := 0;
@@ -341,6 +413,140 @@ begin
   Frg1.SetInitData(na);
 end;
 
+
+procedure TFrmWGrepStaffSchedule.BuildView2(var na: TNamedArr; const ArSalary: TVarDynArray2; bInternal: Boolean);
+//вид 2: na - строки "специальность в подразделении", упорядоченные по подразделению и специальности (см. GetData).
+//перед строками каждого подразделения вставляем строку-заголовок (is_title = 1): подразделение и общее количество
+//работающих в нем (сумма численности по специальностям; для з/п - суммы бюджета), в конце - итоги по офису, цеху и всего.
+//порядок полей: rownum, is_title, id_job, id_departament, office, job, departament, qnt, qnt_wo_org, qnt_plan, qnt_need,
+//schedule, salary_avg, salary_plan, salary_wo_ndfl, salary_diff, salary_sity, budget, budget_sity, budget_diff
+var
+  i, j, k, t, n, qt, qwo, qo, qc, qon, qcn, bud, bsc: Integer;
+  rows: TVarDynArray2;
+  dep: Variant;
+begin
+  n := na.Count;
+  rows := [];
+  qo := 0;
+  qc := 0;
+  qon := 0;
+  qcn := 0;
+  i := 0;
+  while i < n do begin
+    dep := na.G(i, 'id_departament');
+    qt := 0;
+    qwo := 0;
+    j := i;
+    while (j < n) and (na.G(j, 'id_departament') = dep) do begin
+      qt := qt + na.G(j, 'qnt').AsInteger;
+      qwo := qwo + na.G(j, 'qnt_wo_org').AsInteger;
+      Inc(j);
+    end;
+    if na.G(i, 'office') = 'цех' then begin
+      qc := qc + qt;
+      qcn := qcn + qwo;
+    end
+    else begin
+      qo := qo + qt;
+      qon := qon + qwo;
+    end;
+    //строка-заголовок подразделения
+    rows := rows + [[0, 1, null, dep, na.G(i, 'office'), na.G(i, 'departament').AsString + '   -   работающих: ' + IntToStr(qt), na.G(i, 'departament'),
+      qt, qwo, null, null, null, null, null, null, null, null, null, null, null]];
+    for k := i to j - 1 do
+      rows := rows + [na.V[k]];
+    i := j;
+  end;
+  //итоги
+  rows := rows + [[0, null, null, null, 'Итого:', 'Итого: офис', 'офис', qo, qon, null, null, null, null, null, null, null, null, null, null, null]];
+  rows := rows + [[0, null, null, null, 'Итого:', 'Итого: цех', 'цех', qc, qcn, null, null, null, null, null, null, null, null, null, null, null]];
+  rows := rows + [[0, null, null, null, 'Итого:', 'Итого: всего', 'всего', qc + qo, qon + qcn, null, null, null, null, null, null, null, null, null, null, null]];
+  na.V := rows;
+  for i := 0 to na.Count - 1 do
+    na.SetValue(i, 'rownum', i + 1);
+  //данные по з/п для строк "специальность в подразделении" (для режима по внутренним должностям средняя начисленная не считается,
+  //см. заголовок модуля)
+  for i := 0 to na.Count - 1 do
+    if (na.G(i, 'is_title') <> 1) and (na.G(i, 'id_departament') <> null) then begin
+      if not bInternal then begin
+        j := A.PosInArray(na.G(i, 'id_job'), ArSalary, 0);
+        if j >= 0 then
+          na.SetValue(i, 'salary_avg', ArSalary[j][1]);
+      end;
+      na.SetValue(i, 'salary_wo_ndfl', Round(na.G(i, 'salary_avg').AsInteger * 0.87));
+      na.SetValue(i, 'budget', na.G(i, 'salary_plan').AsInteger * na.G(i, 'qnt').AsInteger);
+      na.SetValue(i, 'salary_diff', na.G(i, 'salary_avg').AsInteger - na.G(i, 'salary_sity').AsInteger);
+      na.SetValue(i, 'budget_sity', na.G(i, 'salary_sity').AsInteger * na.G(i, 'qnt').AsInteger);
+      na.SetValue(i, 'budget_diff', na.G(i, 'budget').AsInteger - na.G(i, 'budget_sity').AsInteger);
+    end;
+  //суммы бюджета в строках-заголовках подразделений
+  t := -1;
+  bud := 0;
+  bsc := 0;
+  for i := 0 to na.Count do begin
+    if (i = na.Count) or (na.G(i, 'is_title') = 1) or (na.G(i, 'id_departament') = null) then begin
+      if t >= 0 then begin
+        na.SetValue(t, 'budget', S.NullIf0(bud));
+        na.SetValue(t, 'budget_sity', S.NullIf0(bsc));
+        na.SetValue(t, 'budget_diff', S.NullIf0(bud - bsc));
+      end;
+      t := -1;
+      if (i < na.Count) and (na.G(i, 'is_title') = 1) then begin
+        t := i;
+        bud := 0;
+        bsc := 0;
+      end;
+    end
+    else if t >= 0 then begin
+      bud := bud + na.G(i, 'budget').AsInteger;
+      bsc := bsc + na.G(i, 'budget_sity').AsInteger;
+    end;
+  end;
+end;
+
+procedure TFrmWGrepStaffSchedule.Frg1DbGridEh1AdvDrawDataCell(Sender: TCustomDBGridEh; Cell, AreaCell: TGridCoord; Column: TColumnEh; const ARect: TRect; var Params: TColCellParamsEh; var Processed: Boolean);
+//вид 2: строка-заголовок подразделения рисуется сплошной на всю ширину видимых столбцов. все ячейки строки до последней
+//рисуются стандартно (серый фон, жирный текст в первом столбце - это же и запасной вариант отображения), а в ячейке последнего
+//видимого столбца поверх них рисуется сплошная полоса с текстом от левого края первого столбца
+var
+  i, LastVis, SumW, x1, y: Integer;
+  R: TRect;
+  st: string;
+begin
+  if (not cSpanTitleRows) or (not FView2) then
+    Exit;
+  if not (Frg1.GetValue('is_title') = 1) then
+    Exit;
+  LastVis := -1;
+  SumW := 0;
+  for i := 0 to Sender.Columns.Count - 1 do
+    if Sender.Columns[i].Visible then begin
+      LastVis := i;
+      SumW := SumW + Sender.Columns[i].Width;
+    end;
+  if Column.Index <> LastVis then
+    Exit;
+{  if Column.Index = 1 then begin
+    Processed := True;
+    Exit;
+  end;}
+  //левый край первого видимого столбца (при горизонтальной прокрутке будет за краем, тогда рисуем от левого края грида)
+  x1 := Max(ARect.Right + 1 - SumW, 0);
+  //x1 - 16 !--- иначе в заголовке выглядывает текст первого с толдбца
+  R := Rect(x1 - 16, ARect.Top, ARect.Right, ARect.Bottom);
+  st := Frg1.GetValue('job').AsString;
+  with Sender.Canvas do begin
+    Brush.Style := bsSolid;
+    Brush.Color := Params.Background;
+    FillRect(R);
+    Font.Assign(Params.Font);
+    Font.Style := [fsBold];
+    Brush.Style := bsClear;
+    y := R.Top + (R.Bottom - R.Top - TextHeight(st)) div 2;
+    TextOut(R.Left + 4, y, st);
+  end;
+  Processed := True;
+end;
 
 procedure TFrmWGrepStaffSchedule.FromExcel;
 var

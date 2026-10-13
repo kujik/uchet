@@ -973,6 +973,13 @@ Break;
     MyInfoMessage('Данные загружены.');
 end;*)
 
+{$IFDEF NDFL_LOAD_OLD}
+(* СТАРАЯ ВЕРСИЯ (до переработки, 08.10.2026) - не компилируется, оставлена для справки.
+   проблемы: сопоставление только по ФИО (табельный номер и организация не учитывались), первая найденная строка
+   файла брала на себя всю сумму, для совместителей суммировались ВСЕ строки с таким ФИО и ставились в КАЖДУЮ строку
+   ведомости этого работника (при нескольких организациях - дублирование сумм); строки файлов, которых нет в
+   ведомости, не выводились вообще; в сообщении не было сумм. включить обратно - определить NDFL_LOAD_OLD, при этом
+   нужно переименовать одну из процедур *)
 procedure TFrmWGedtPayrollTransfer.GetNdflFromExcelZup;
 //файлы выгружаются из ЗУП в формате, нечитаемом в этой программе.
 //необходимо перед загрузкой открыть в экселе и пересохранить
@@ -1131,7 +1138,429 @@ begin
   else
     MyInfoMessage('Данные загружены.');
 end;
+{$ENDIF}
 
+type
+  //одна строка из файла выгрузки ЗУП (карты)
+  TNdflXlsRow = record
+    FileName: string;   //имя файла (без расширения) - обычно название организации
+    OrgKey: string;     //нормализованное имя файла, для сравнения с организацией в ведомости
+    Doc: string;        //номер ведомости в банк (столбец "Ссылка")
+    Fio: string;
+    FioKey: string;     //нормализованное ФИО
+    Tab: string;
+    TabKey: string;     //нормализованный табельный номер
+    XlsRow: Integer;    //номер строки в файле
+    Card: Extended;     //к выплате (на карту)
+    Ndfl: Extended;
+    IsConc: Boolean;    //работник - совместитель (по справочнику работников)
+    Used: Boolean;      //строка уже отнесена к какой-либо строке ведомости
+  end;
+
+function NdflNormStr(const AStr: string): string;
+//нормализация для сравнения ФИО/названий: без пробелов по краям и двойных, в верхнем регистре, Ё=Е
+begin
+  Result := StringReplace(AStr, #160, ' ', [rfReplaceAll]);
+  Result := AnsiUpperCase(Trim(Result));
+  Result := StringReplace(Result, 'Ё', 'Е', [rfReplaceAll]);
+  while Pos('  ', Result) > 0 do
+    Result := StringReplace(Result, '  ', ' ', [rfReplaceAll]);
+end;
+
+function NdflNormTab(const ATab: string): string;
+//нормализация табельного номера: чисто цифровые - без ведущих нулей ("00001" = "1"), остальные - как строка в верхнем регистре
+var
+  i: Integer;
+  IsDigits: Boolean;
+begin
+  Result := NdflNormStr(ATab);
+  IsDigits := Result <> '';
+  for i := 1 to Length(Result) do
+    if not CharInSet(Result[i], ['0'..'9']) then
+      IsDigits := False;
+  if IsDigits then begin
+    while (Length(Result) > 1) and (Result[1] = '0') do
+      Delete(Result, 1, 1);
+  end;
+end;
+
+procedure TFrmWGedtPayrollTransfer.GetNdflFromExcelZup;
+//загрузка карт (столбец "Карта", pay_card) из файлов выгрузки ЗУП - по одному файлу на организацию.
+//файлы выгружаются из ЗУП в формате, нечитаемом в этой программе.
+//необходимо перед загрузкой открыть в экселе и пересохранить
+//например, в пустой части верха документа ввести что-то в ячейку и сохранить. этого достаточно!!!
+//
+//сопоставление строк файлов со строками ведомости. у обычного работника строка ведомости = работник + организация +
+//табельный номер (человек может быть и дважды в одной организации). совместитель (w_employees.is_concurrent = 1)
+//представлен в ведомости ОДНОЙ строкой (организация и табельный номер в ней могут быть любыми), а в файлах может быть
+//в нескольких организациях - для него суммируются ВСЕ строки всех файлов с его ФИО (проход 0). для остальных
+//сопоставление выполняется в три прохода, строка файла может быть отнесена только к одной строке ведомости:
+// 1) ФИО + табельный номер (нормализованные: регистр, Ё/Е, пробелы, ведущие нули у цифровых номеров);
+// 2) ФИО + организация (название файла содержится в названии организации ведомости);
+// 3) только ФИО - если в ведомости у этого работника ровно одна строка, ей достаются все оставшиеся строки файлов с этим ФИО.
+//строки файлов, не попавшие в ведомость, и строки ведомости, для которых ничего не найдено, выводятся в подробный
+//лог (в нём отдельно перечислены совместители, и их строки помечены "(совместитель)"; он сохраняется в текстовый файл во временной папке и открывается, а краткие итоги показываются в сообщении).
+//значения у не найденных строк ведомости не изменяются.
+//до переработки (08.10.2026) см. старую версию выше (NDFL_LOAD_OLD)
+var
+  i, j, k, n, cnt: Integer;
+  st, CopyName, FileTitle, LogFileName: string;
+  XlsFile: TXlsMemFileEh;
+  sh: TXlsWorksheetEh;
+  Xls: array of TNdflXlsRow;
+  files: TArray<string>;
+  FileRows: array of Integer;     //число строк, прочитанных из каждого файла
+  FileCard: array of Extended;    //сумма карт по каждому файлу (точно)
+  FileNdfl: array of Extended;
+  VCard: array of Extended;       //набранная для строки ведомости сумма (точно)
+  VNdfl: array of Extended;
+  VCnt: array of Integer;         //число строк файлов, отнесённых к строке ведомости
+  VTier: array of Integer;        //0 - не найдена, 1/2/3 - номер прохода, 4 - совместитель (проход 0)
+  VConc: array of Boolean;        //работник строки ведомости - совместитель
+  EmplCn: TVarDynArray;           //id совместителей
+  ConcFio: TVarDynArray;          //нормализованные ФИО совместителей
+  VFioKey, VTabKey, VOrgKey: array of string;
+  VOld: array of Extended;        //значение pay_card в ведомости до загрузки
+  e: Extended;
+  b: Boolean;
+  Lg, LgNotFound, LgNotInVed, LgChanged: string;
+  SumXls, SumNdflXls, SumLoaded, SumRound, SumNotInVed, SumVedAfter, SumVedBefore, SumVedNotFound, SumVedMatchedOld: Extended;
+  CntNotFoundNonZero: Integer;
+  CntChanged, CntSame, CntNotFound, CntNotInVed, CntT1, CntT2, CntT3, CntT4: Integer;
+  TierTxt: array[1..4] of string;
+  LgConc, LgConcRows: string;
+  CntConc: Integer;
+
+function Fmt(AValue: Extended): string;
+//сумма для лога, два знака после запятой
+begin
+  Result := FormatFloat('0.00', AValue);
+end;
+
+function RowTxt(AIdx: Integer): string;
+//описание строки ведомости для лога
+begin
+  Result := Frg1.GetValueS('employee', AIdx, False) + #9 + Frg1.GetValueS('organization', AIdx, False) + #9 +
+    'таб.№ ' + Frg1.GetValueS('personnel_number', AIdx, False) + S.IIFStr(VConc[AIdx], #9 + '(совместитель)', '');
+end;
+
+function GetSelectedFiles(OpenDialog: TFileOpenDialog): TArray<string>;
+var
+  i: Integer;
+  ShellItemArray: IShellItemArray;
+  ShellItem: IShellItem;
+  pszPath: PWideChar;
+  Count: DWORD;
+begin
+  SetLength(Result, 0);
+
+  ShellItemArray := OpenDialog.ShellItems;
+
+  if ShellItemArray = nil then
+    Exit;
+
+  if Failed(ShellItemArray.GetCount(Count)) then
+    Exit;
+
+  SetLength(Result, Count);
+
+  for i := 0 to Count - 1 do
+  begin
+    if Failed(ShellItemArray.GetItemAt(i, ShellItem)) then
+      Continue;
+
+    if Succeeded(ShellItem.GetDisplayName(SIGDN_FILESYSPATH, pszPath)) then
+    begin
+      Result[i] := pszPath;
+      CoTaskMemFree(pszPath);
+    end;
+  end;
+end;
+
+begin
+  TierTxt[1] := 'ФИО + таб.№';
+  TierTxt[2] := 'ФИО + организация';
+  TierTxt[3] := 'только ФИО';
+  TierTxt[4] := 'совместитель: сумма всех строк файлов по ФИО';
+  //выберем файлы
+  MyData.FileOpenDialog1.Options := MyData.FileOpenDialog1.Options + [fdoAllowMultiSelect];
+  MyData.FileOpenDialog1.FileTypes.Clear;
+  with MyData.FileOpenDialog1.FileTypes.Add do begin DisplayName := 'файлы Excel (*.xlsx)'; FileMask := '*.xlsx'; end;
+  if not MyData.FileOpenDialog1.Execute then
+    Exit;
+  files := GetSelectedFiles(MyData.FileOpenDialog1);
+  if Length(files) = 0 then
+    Exit;
+
+  //список совместителей (id и ФИО)
+  EmplCn := Q.QLoadCol('select id from w_employees where is_concurrent = 1', []);
+  ConcFio := Q.QLoadCol('select f || '' '' || i || nvl2(o, '' '' || o, '''') from w_employees where is_concurrent = 1', []);
+  for i := 0 to High(ConcFio) do
+    ConcFio[i] := NdflNormStr(VarToStr(ConcFio[i]));
+
+  //загрузим в массив данные из эксель, со строки 5 до первой пустой (ссылка и ФИО пусты)
+  SetLength(Xls, 0);
+  SetLength(FileRows, Length(files));
+  SetLength(FileCard, Length(files));
+  SetLength(FileNdfl, Length(files));
+  Lg := 'Загрузка карт из файлов выгрузки ЗУП, ' + DateTimeToStr(Now) + #13#10 + 'Ведомость: ' + Caption + #13#10#13#10;
+  for k := 0 to High(files) do begin
+    if not CreateTXlsMemFileEhFromExists(files[k], True, '$2', XlsFile, CopyName) then begin
+      MyWarningMessage('Не удалось прочитать файл:' + #13#10 + files[k] + #13#10#13#10 + 'Загрузка прервана, ничего не изменено.');
+      Exit;
+    end;
+    FileTitle := ChangeFileExt(ExtractFileName(files[k]), '');
+    FileRows[k] := 0;
+    FileCard[k] := 0;
+    FileNdfl[k] := 0;
+    sh := XlsFile.Workbook.Worksheets[0];
+    for i := 4 to 2000 do begin
+      if (sh.Cells[2 - 1, i].Value.AsString = '') and (sh.Cells[4 - 1, i].Value.AsString = '') then
+        Break;
+      if sh.Cells[4 - 1, i].Value.AsString = '' then
+        Continue;
+      n := Length(Xls);
+      SetLength(Xls, n + 1);
+      Xls[n].FileName := FileTitle;
+      Xls[n].OrgKey := NdflNormStr(FileTitle);
+      Xls[n].Doc := sh.Cells[2 - 1, i].Value.AsString;
+      Xls[n].Fio := sh.Cells[4 - 1, i].Value.AsString;
+      Xls[n].FioKey := NdflNormStr(Xls[n].Fio);
+      Xls[n].Tab := sh.Cells[5 - 1, i].Value.AsString;
+      Xls[n].TabKey := NdflNormTab(Xls[n].Tab);
+      Xls[n].XlsRow := i + 1;
+      Xls[n].Card := sh.Cells[6 - 1, i].Value.AsFloat;
+      Xls[n].Ndfl := sh.Cells[8 - 1, i].Value.AsFloat;
+      Xls[n].IsConc := A.InArray(Xls[n].FioKey, ConcFio);
+      Xls[n].Used := False;
+      Inc(FileRows[k]);
+      FileCard[k] := FileCard[k] + Xls[n].Card;
+      FileNdfl[k] := FileNdfl[k] + Xls[n].Ndfl;
+    end;
+    sh.Free;
+    XlsFile.Free;
+    Lg := Lg + 'Файл ' + files[k] + ': строк ' + IntToStr(FileRows[k]) + ', сумма "К выплате" (карта) ' + Fmt(FileCard[k]) +
+      ', НДФЛ ' + Fmt(FileNdfl[k]) + #13#10;
+  end;
+
+  //данные строк ведомости
+  n := Frg1.GetCount(False);
+  SetLength(VCard, n);
+  SetLength(VNdfl, n);
+  SetLength(VCnt, n);
+  SetLength(VTier, n);
+  SetLength(VConc, n);
+  SetLength(VFioKey, n);
+  SetLength(VTabKey, n);
+  SetLength(VOrgKey, n);
+  SetLength(VOld, n);
+  SumVedBefore := 0;
+  for i := 0 to n - 1 do begin
+    VCard[i] := 0;
+    VNdfl[i] := 0;
+    VCnt[i] := 0;
+    VTier[i] := 0;
+    VConc[i] := A.InArray(Frg1.GetValueF('id_employee', i, False), EmplCn);
+    VFioKey[i] := NdflNormStr(Frg1.GetValueS('employee', i, False));
+    VTabKey[i] := NdflNormTab(Frg1.GetValueS('personnel_number', i, False));
+    VOrgKey[i] := NdflNormStr(Frg1.GetValueS('organization', i, False));
+    VOld[i] := Frg1.GetValueF('pay_card', i, False);
+    SumVedBefore := SumVedBefore + VOld[i];
+  end;
+
+  //проход 0: совместители - одна строка ведомости на человека, берутся все строки всех файлов с этим ФИО
+  //(организация и табельный номер не важны). если строк ведомости у совместителя несколько - данные получает первая
+  for i := 0 to n - 1 do begin
+    if (not VConc[i]) or (VFioKey[i] = '') then
+      Continue;
+    b := False;
+    for k := 0 to i - 1 do
+      if VConc[k] and (VFioKey[k] = VFioKey[i]) then
+        b := True;
+    if b then
+      Continue;
+    for j := 0 to High(Xls) do
+      if (not Xls[j].Used) and (Xls[j].FioKey = VFioKey[i]) then begin
+        Xls[j].Used := True;
+        VCard[i] := VCard[i] + Xls[j].Card;
+        VNdfl[i] := VNdfl[i] + Xls[j].Ndfl;
+        Inc(VCnt[i]);
+        VTier[i] := 4;
+      end;
+  end;
+  //проход 1: ФИО + табельный номер
+  for i := 0 to n - 1 do begin
+    if VConc[i] or (VFioKey[i] = '') or (VTabKey[i] = '') then
+      Continue;
+    for j := 0 to High(Xls) do
+      if (not Xls[j].Used) and (Xls[j].FioKey = VFioKey[i]) and (Xls[j].TabKey = VTabKey[i]) then begin
+        Xls[j].Used := True;
+        VCard[i] := VCard[i] + Xls[j].Card;
+        VNdfl[i] := VNdfl[i] + Xls[j].Ndfl;
+        Inc(VCnt[i]);
+        VTier[i] := 1;
+      end;
+  end;
+  //проход 2: ФИО + организация (название файла входит в название организации)
+  for i := 0 to n - 1 do begin
+    if VConc[i] or (VTier[i] <> 0) or (VFioKey[i] = '') or (VOrgKey[i] = '') then
+      Continue;
+    for j := 0 to High(Xls) do
+      if (not Xls[j].Used) and (Xls[j].FioKey = VFioKey[i]) and (Xls[j].OrgKey <> '') and (Pos(Xls[j].OrgKey, VOrgKey[i]) > 0) then begin
+        Xls[j].Used := True;
+        VCard[i] := VCard[i] + Xls[j].Card;
+        VNdfl[i] := VNdfl[i] + Xls[j].Ndfl;
+        Inc(VCnt[i]);
+        VTier[i] := 2;
+      end;
+  end;
+  //проход 3: только ФИО, если в ведомости у работника ровно одна строка - ей достаётся всё оставшееся
+  for i := 0 to n - 1 do begin
+    if VConc[i] or (VTier[i] <> 0) or (VFioKey[i] = '') then
+      Continue;
+    cnt := 0;
+    for k := 0 to n - 1 do
+      if VFioKey[k] = VFioKey[i] then
+        Inc(cnt);
+    if cnt <> 1 then
+      Continue;
+    for j := 0 to High(Xls) do
+      if (not Xls[j].Used) and (Xls[j].FioKey = VFioKey[i]) then begin
+        Xls[j].Used := True;
+        VCard[i] := VCard[i] + Xls[j].Card;
+        VNdfl[i] := VNdfl[i] + Xls[j].Ndfl;
+        Inc(VCnt[i]);
+        VTier[i] := 3;
+      end;
+  end;
+
+  //применим к ведомости, и сформируем лог
+  CntChanged := 0; CntSame := 0; CntNotFound := 0; CntNotInVed := 0; CntT1 := 0; CntT2 := 0; CntT3 := 0; CntT4 := 0; CntConc := 0;
+  SumLoaded := 0; SumRound := 0; SumNotInVed := 0; SumVedAfter := 0; SumVedNotFound := 0; SumVedMatchedOld := 0; CntNotFoundNonZero := 0;
+  LgNotFound := ''; LgNotInVed := ''; LgChanged := ''; LgConc := '';
+  b := False;
+  for i := 0 to n - 1 do begin
+    if VConc[i] then
+      Inc(CntConc);
+    if VTier[i] = 0 then begin
+      Inc(CntNotFound);
+      SumVedNotFound := SumVedNotFound + VOld[i];
+      if VOld[i] <> 0 then
+        Inc(CntNotFoundNonZero);
+      LgNotFound := LgNotFound + RowTxt(i) + #9 + 'К выплате ' + Fmt(Frg1.GetValueF('total_pay', i, False)) +
+        #9 + 'Карта ' + Fmt(VOld[i]) + #9 + 'Наличные ' + Fmt(Frg1.GetValueF('pay_cash', i, False)) +
+        #9 + 'НДФЛ ' + Fmt(Frg1.GetValueF('deduct_ndfl', i, False)) + #9 + 'Удержано ' + Fmt(Frg1.GetValueF('deduct_enf', i, False));
+      //подсказка: есть ли в файлах строки с таким ФИО, не попавшие ни к кому (скорее всего, расхождение табельного номера/организации)
+      for j := 0 to High(Xls) do
+        if (not Xls[j].Used) and (Xls[j].FioKey = VFioKey[i]) then
+          LgNotFound := LgNotFound + #13#10 + #9 + '  возможно, это: ' + Xls[j].FileName + ', таб.№ ' + Xls[j].Tab + ', карта ' + Fmt(Xls[j].Card);
+      //если карта в ведомости уже не нулевая - ищем среди неиспользованных строк файлов близкую по сумме (разница не более рубля)
+      if VOld[i] <> 0 then begin
+        LgNotFound := LgNotFound + #13#10 + #9 + '  !!! карта в ведомости не нулевая (' + Fmt(VOld[i]) + '), но в файлах эта строка не найдена - эта сумма входит в итог ведомости, но не в итог по файлам';
+        for j := 0 to High(Xls) do
+          if (not Xls[j].Used) and (Abs(Xls[j].Card - VOld[i]) <= 1) then
+            LgNotFound := LgNotFound + #13#10 + #9 + '  по сумме похоже на строку файла: ' + Xls[j].Fio + ', ' + Xls[j].FileName + ', таб.№ ' + Xls[j].Tab + ', карта ' + Fmt(Xls[j].Card);
+      end;
+      if VConc[i] then begin
+        b := False;
+        for k := 0 to i - 1 do
+          if VConc[k] and (VFioKey[k] = VFioKey[i]) then
+            b := True;
+        if b then
+          LgNotFound := LgNotFound + #13#10 + #9 + '  у совместителя в ведомости должна быть одна строка - это повторная, данные из файлов получила первая строка этого работника'
+        else
+          LgNotFound := LgNotFound + #13#10 + #9 + '  совместитель: в файлах загрузки строк с таким ФИО нет';
+      end;
+      LgNotFound := LgNotFound + #13#10;
+      SumVedAfter := SumVedAfter + VOld[i];
+      Continue;
+    end;
+    case VTier[i] of
+      1: Inc(CntT1);
+      2: Inc(CntT2);
+      3: Inc(CntT3);
+      4: Inc(CntT4);
+    end;
+    e := Round(VCard[i]);
+    SumLoaded := SumLoaded + VCard[i];
+    SumVedMatchedOld := SumVedMatchedOld + VOld[i];
+    SumRound := SumRound + e;
+    SumVedAfter := SumVedAfter + e;
+    if VOld[i] <> e then begin
+      Inc(CntChanged);
+      LgChanged := LgChanged + RowTxt(i) + #9 + 'Карта: было ' + Fmt(VOld[i]) + ', стало ' + Fmt(e) + ' (в файлах ' + Fmt(VCard[i]) +
+        ', строк файлов ' + IntToStr(VCnt[i]) + ', сопоставление: ' + TierTxt[VTier[i]] + ')' + #13#10;
+      Frg1.SetValue('pay_card', i, False, S.NullIf0(e));
+      Frg1.SetState(True, null, null);
+      b := True;
+    end
+    else
+      Inc(CntSame);
+  end;
+  for j := 0 to High(Xls) do
+    if not Xls[j].Used then begin
+      Inc(CntNotInVed);
+      SumNotInVed := SumNotInVed + Xls[j].Card;
+      LgNotInVed := LgNotInVed + Xls[j].Fio + S.IIFStr(Xls[j].IsConc, ' (совместитель)', '') + #9 + Xls[j].FileName + #9 + 'таб.№ ' + Xls[j].Tab + #9 + 'карта ' + Fmt(Xls[j].Card) +
+        #9 + 'НДФЛ ' + Fmt(Xls[j].Ndfl) + #9 + '(' + Xls[j].Doc + ', строка файла ' + IntToStr(Xls[j].XlsRow) + ')' + #13#10;
+      //по сумме ищем среди не найденных строк ведомости с ненулевой картой (скорее всего, это она же, но с другим ФИО/таб.№/организацией)
+      for i := 0 to n - 1 do
+        if (VTier[i] = 0) and (VOld[i] <> 0) and (Abs(Xls[j].Card - VOld[i]) <= 1) then
+          LgNotInVed := LgNotInVed + #9 + '  по сумме похоже на строку ведомости: ' + RowTxt(i) + ', карта ' + Fmt(VOld[i]) + #13#10;
+    end;
+  //список совместителей ведомости: что набрано по файлам
+  for i := 0 to n - 1 do
+    if VConc[i] then begin
+      LgConc := LgConc + RowTxt(i) + #9 + 'в ведомости было ' + Fmt(VOld[i]) + ', по файлам ' + Fmt(VCard[i]) + ' (строк файлов ' + IntToStr(VCnt[i]) + ')' + #13#10;
+      if VTier[i] = 4 then begin
+        for j := 0 to High(Xls) do
+          if Xls[j].Used and (Xls[j].FioKey = VFioKey[i]) then
+            LgConc := LgConc + #9 + '  ' + Xls[j].FileName + ', таб.№ ' + Xls[j].Tab + ', карта ' + Fmt(Xls[j].Card) + ' (' + Xls[j].Doc + ', строка файла ' + IntToStr(Xls[j].XlsRow) + ')' + #13#10;
+      end
+      else
+        LgConc := LgConc + #9 + '  в файлах загрузки не найден (или повторная строка ведомости)' + #13#10;
+    end;
+  SumXls := 0;
+  SumNdflXls := 0;
+  for k := 0 to High(files) do begin
+    SumXls := SumXls + FileCard[k];
+    SumNdflXls := SumNdflXls + FileNdfl[k];
+  end;
+
+  //пересчитаем таблицу
+  CalculateAll;
+
+  //итоговый лог
+  Lg := Lg + #13#10 + '=== СВЕРКА СУММ (столбец "Карта") ===' + #13#10 +
+    'Всего в файлах: ' + IntToStr(Length(Xls)) + ' строк, ' + Fmt(SumXls) + #13#10 +
+    'отнесено к строкам ведомости: ' + Fmt(SumLoaded) + ' (после округления каждой строки до рубля: ' + Fmt(SumRound) + ', разница округления ' + Fmt(SumRound - SumLoaded) + ')' + #13#10 +
+    'не найдено в ведомости: ' + IntToStr(CntNotInVed) + ' строк, ' + Fmt(SumNotInVed) + #13#10 +
+    'проверка: отнесено + не найдено = ' + Fmt(SumLoaded + SumNotInVed) + ' (должно совпасть с суммой по файлам ' + Fmt(SumXls) + ')' + #13#10 +
+    'Из суммы карт в ведомости: у сопоставленных строк (до загрузки) ' + Fmt(SumVedMatchedOld) + ', у строк, не найденных в файлах, ' + Fmt(SumVedNotFound) + ' (строк с ненулевой картой: ' + IntToStr(CntNotFoundNonZero) + ')' + #13#10 +
+    'Сумма карт в ведомости: до загрузки ' + Fmt(SumVedBefore) + ', после загрузки ' + Fmt(SumVedAfter) + #13#10 +
+    'Разница "ведомость после загрузки" - "файлы" = ' + Fmt(SumVedAfter - SumXls) + ' (складывается из округления, значений в ведомости у строк, не найденных в файлах, и сумм из файлов, не попавших в ведомость)' + #13#10 +
+    'Строк ведомости: ' + IntToStr(n) + ', сопоставлено ' + IntToStr(n - CntNotFound) + ' (по ФИО+таб.№ ' + IntToStr(CntT1) + ', по ФИО+организации ' + IntToStr(CntT2) + ', по одному ФИО ' + IntToStr(CntT3) + ', совместители ' + IntToStr(CntT4) + '), изменено ' + IntToStr(CntChanged) + ', без изменений ' + IntToStr(CntSame) + #13#10;
+  Lg := Lg + #13#10 + '=== СОВМЕСТИТЕЛИ В ВЕДОМОСТИ: ' + IntToStr(CntConc) + ' (одна строка на человека, суммируются все строки всех файлов с его ФИО) ===' + #13#10 + LgConc;
+  Lg := Lg + #13#10 + '=== НЕ НАЙДЕНЫ В ФАЙЛАХ ЗАГРУЗКИ (есть в ведомости): ' + IntToStr(CntNotFound) + ' ===' + #13#10 +
+    '(значения в ведомости оставлены как были)' + #13#10 + LgNotFound;
+  Lg := Lg + #13#10 + '=== НАЙДЕНЫ В ФАЙЛАХ, НО НЕ НАЙДЕНЫ В ВЕДОМОСТИ: ' + IntToStr(CntNotInVed) + ', на сумму карт ' + Fmt(SumNotInVed) + ' ===' + #13#10 + LgNotInVed;
+  Lg := Lg + #13#10 + '=== ИЗМЕНЕНИЯ В ВЕДОМОСТИ: ' + IntToStr(CntChanged) + ' ===' + #13#10 + LgChanged;
+
+  //сохраним лог в файл и откроем
+  LogFileName := Sys.GetWinTemp + '\' + 'Загрузка карт ' + FormatDateTime('yyyy-mm-dd_hh-nn-ss', Now) + '.txt';
+  if Sys.SaveTextToFile(LogFileName, Lg) then
+    Sys.ExecFile(LogFileName);
+
+  //краткое сообщение
+  st := 'Загрузка карт завершена.' + #13#10#13#10 +
+    'В файлах: ' + IntToStr(Length(Xls)) + ' строк, ' + Fmt(SumXls) + #13#10 +
+    'Изменено строк ведомости: ' + IntToStr(CntChanged) + ' (без изменений ' + IntToStr(CntSame) + ')' + #13#10 +
+    'Карты в ведомости: было ' + Fmt(SumVedBefore) + ', стало ' + Fmt(SumVedAfter) + #13#10#13#10 +
+    'НЕ НАЙДЕНЫ В ФАЙЛАХ (есть в ведомости): ' + IntToStr(CntNotFound) + #13#10 +
+    'НАЙДЕНЫ В ФАЙЛАХ, НО НЕТ В ВЕДОМОСТИ: ' + IntToStr(CntNotInVed) + ', на сумму ' + Fmt(SumNotInVed) + #13#10#13#10 +
+    'Подробный лог сохранён в файл:' + #13#10 + LogFileName;
+  MyInfoMessage(st, 1);
+end;
 
 procedure TFrmWGedtPayrollTransfer.GetAdvanceFromExcelZup;
 //файлы выгружаются из ЗУП в формате, нечитаемом в этой программе.

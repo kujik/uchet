@@ -1,42 +1,10 @@
 inherited FrmExportToXlsx: TFrmExportToXlsx
   Caption = ''
-  ClientHeight = 535
-  ExplicitWidth = 800
   TextHeight = 13
   inherited pnlFrmMain: TPanel
-    Height = 519
-    ExplicitHeight = 518
     inherited pnlFrmClient: TPanel
-      Height = 470
-      inherited pnlBottom: TPanel
-        Top = 424
-      end
-      inherited pnlLeft: TPanel
-        Height = 415
-      end
       inherited pnlGrid1: TPanel
-        Height = 415
         inherited Frg1: TFrDBGridEh
-          Height = 413
-          inherited pnlGrid: TPanel
-            Height = 359
-            inherited DbGridEh1: TDBGridEh
-              Width = 762
-              Height = 337
-            end
-            inherited pnlStatusBar: TPanel
-              Top = 338
-              Width = 762
-              ExplicitTop = 338
-              ExplicitWidth = 762
-            end
-          end
-          inherited pnlLeft: TPanel
-            Height = 359
-          end
-          inherited pnlBottom: TPanel
-            Top = 413
-          end
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -52,18 +20,8 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
         end
       end
       inherited pnlFrg2: TPanel
-        Top = 429
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 772
-          inherited pnlGrid: TPanel
-            inherited DbGridEh1: TDBGridEh
-              Width = 772
-            end
-            inherited pnlStatusBar: TPanel
-              Width = 772
-              ExplicitWidth = 772
-            end
-          end
+          ExplicitWidth = 776
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -80,19 +38,23 @@ inherited FrmExportToXlsx: TFrmExportToXlsx
           end
         end
       end
-      inherited pnlRight: TPanel
-        Height = 415
-      end
     end
     inherited pnlFrmBtns: TPanel
-      Top = 475
+      ExplicitWidth = 778
+      inherited pnlFrmBtnsContainer: TPanel
+        ExplicitWidth = 776
+        inherited pnlFrmBtnsChb: TPanel
+          ExplicitLeft = 449
+        end
+      end
     end
   end
   inherited pnlStatusBar: TPanel
-    Top = 519
     inherited lblStatusBarR: TLabel
-      Left = 723
-      ExplicitLeft = 723
+      Height = 14
+    end
+    inherited lblStatusBarL: TLabel
+      Height = 14
     end
   end
 end

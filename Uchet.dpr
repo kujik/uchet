@@ -219,7 +219,10 @@ uses
   uFrmWGjrnJobSalaries in 'uFrmWGjrnJobSalaries.pas' {FrmWGjrnJobSalaries},
   uFrmWGjrnMotivationRemarks in 'uFrmWGjrnMotivationRemarks.pas' {FrmWGjrnMotivationRemarks},
   uFrmWGjrnMotivationCoefficients in 'uFrmWGjrnMotivationCoefficients.pas' {FrmWGjrnMotivationCoefficients},
+  uFrmWGjrnMotivationCoeffsByJob in 'uFrmWGjrnMotivationCoeffsByJob.pas' {FrmWGjrnMotivationCoeffsByJob},
+  uFrmWGjrnMotivationSpecial in 'uFrmWGjrnMotivationSpecial.pas' {FrmWGjrnMotivationSpecial},
   uFrmOGedtDistributeQnt in 'uFrmOGedtDistributeQnt.pas' {FrmOGedtDistributeQnt},
+  uMotivationCalc in 'uMotivationCalc.pas',
   uMotivationGridPanel in 'uMotivationGridPanel.pas',
   uFrmWMotivationTest in 'uFrmWMotivationTest.pas' {FrmWMotivationTest};
 
@@ -227,19 +230,46 @@ var
   MT: Integer;
   NamedMutex: string;
   MNum: integer;
+  //дескриптор мютекса единственного экземпляра - хранится глобально на всё
+  //время работы процесса (см. CheckInstance, ReleaseInstanceMutex)
+  GInstanceMutex: THandle = 0;
+
+procedure ReleaseInstanceMutex;
+//освобождает и закрывает мютекс единственного экземпляра. вызывается через
+//AddExitProc САМЫМ ПЕРВЫМ при завершении (Halt/нормальный выход) - ещё до
+//финализации модулей: если финализация зависнет (например, при закрытии
+//соединения с БД по оборванной сети), процесс останется в памяти, но
+//мютекс уже будет свободен и новый экземпляр сможет запуститься
+begin
+  if GInstanceMutex <> 0 then begin
+    ReleaseMutex(GInstanceMutex);
+    CloseHandle(GInstanceMutex);
+    GInstanceMutex := 0;
+  end;
+end;
 
 function CheckInstance(Name: PChar): Integer;
-//проверка, запущен ли экземпляр прлграммы
+//проверка, запущен ли экземпляр программы. возвращает 0, если мютекс с таким
+//именем уже существует (программа уже запущена), иначе ненулевое значение.
+//признак "уже существует" - строго ERROR_ALREADY_EXISTS (а не любой ненулевой
+//GetLastError, как было раньше - он мог остаться от предыдущих вызовов API)
 var
-  r: integer;
-  Mutex: Integer;
+  r: DWORD;
+  Mutex: THandle;
 begin
-  Mutex := CreateMutex(nil, true, Name);
+  Mutex := CreateMutex(nil, True, Name);
   r := GetLastError();
-  if (r <> 0) then
-    Result := 0
-  else
-    Result := Mutex;
+  if (Mutex = 0) or (r = ERROR_ALREADY_EXISTS) then begin
+    //уже запущен (или мютекс чужой и недоступен - ERROR_ACCESS_DENIED)
+    if Mutex <> 0 then
+      CloseHandle(Mutex);
+    Result := 0;
+  end
+  else begin
+    GInstanceMutex := Mutex;
+    AddExitProc(ReleaseInstanceMutex);
+    Result := 1;
+  end;
 end;
 
 //включим ресурсы
@@ -294,7 +324,9 @@ begin
   //процессы, запущенные с разными параметрами, могли бы работать резидентно
   //одновременно, дублируя выполнение задач и конкурируя за порт сканера
   //штрихкодов
-  MT := CheckInstance(pChar(ModuleRecArr[cMainModule].FileNameEn + '-SrvOneOnly'));
+  //префикс Global\ - мютекс общий для всех сессий Windows (сервер может быть
+  //запущен планировщиком в одной сессии, а вручную - в другой по RDP)
+  MT := CheckInstance(pChar('Global\' + ModuleRecArr[cMainModule].FileNameEn + '-SrvOneOnly'));
   {$ELSE}
   //для других модулей (не сервер)
   //получем мютекс с учетом имени модуля

@@ -364,6 +364,30 @@ having
 ; 
 
 
+/*==============================================================================
+  поставим дату завершения менеджером для уэе закрытых рекламаций
+*/
+select dt_beg, dt_end, dt_end_manager, ornum, id_organization 
+from orders 
+where
+id_type2 = 106 
+order by dt_beg desc;
+
+update orders set dt_end_manager = dt_end where id_organization = 7 and dt_end_manager is null and dt_end is not null;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 --================================================================================
 

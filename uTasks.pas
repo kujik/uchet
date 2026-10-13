@@ -120,6 +120,7 @@ const
 //  TASK_MAILING_SHIPMENT_ORDERS_LAST_MONTH = 34;
   TASK_MAILING_MATERIAL_OPEN_REQUIREMENTS = 35;
   TASK_MAILING_SHIPPED_NOT_CLOSED_BY_MANAGER_ORDERS = 36;
+  TASK_MAILING_DEFECT_STOCK = 37;
   //пользователь (подпись) для служебных почтовых рассылок
   TASK_DEFAULT_SENDER = 'Учёт';
 
@@ -349,6 +350,7 @@ begin
     [TASK_MAILING_ACTS_WRITEOFF_RECEIPT, 'Акты списания и оприходования за вчерашний день', 2000],
     [TASK_MAILING_EARLY_COMPLETION_ACTS, 'Преждевременно созданные АВР', 2010],
     [TASK_MAILING_NEGATIVE_QUANTITY_ON_STOCKS, 'Отрицательные остатки на складах', 2020],
+    [TASK_MAILING_DEFECT_STOCK, 'Состояние склада брака', 2030],
 
     [TASK_MAILING_NEGATIVE_QUANTITY_ON_SGP, 'Отрицательные остатки на СГП', 3000],
     [TASK_MAILING_NEGATIVE_NEED_BY_SGP, 'Отрицательная потребность по текущему состоянию СГП', 3010],

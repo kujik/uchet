@@ -1,15 +1,15 @@
 inherited FrmWGrepStaffSchedule: TFrmWGrepStaffSchedule
   Caption = 'FrmWGrepStaffSchedule'
-  ExplicitWidth = 812
-  ExplicitHeight = 575
+  ExplicitWidth = 804
+  ExplicitHeight = 573
   TextHeight = 13
   inherited pnlFrmMain: TPanel
     inherited pnlFrmClient: TPanel
-      ExplicitWidth = 786
+      ExplicitWidth = 778
       inherited pnlGrid1: TPanel
-        ExplicitWidth = 776
+        ExplicitWidth = 768
         inherited Frg1: TFrDBGridEh
-          ExplicitWidth = 774
+          ExplicitWidth = 766
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F
@@ -27,9 +27,9 @@ inherited FrmWGrepStaffSchedule: TFrmWGrepStaffSchedule
         end
       end
       inherited pnlFrg2: TPanel
-        ExplicitWidth = 786
+        ExplicitWidth = 778
         inherited Frg2: TFrDBGridEh
-          ExplicitWidth = 784
+          ExplicitWidth = 776
           inherited PrintDBGridEh1: TPrintDBGridEh
             BeforeGridText_Data = {
               7B5C727466315C616E73695C616E7369637067313235315C64656666305C6E6F

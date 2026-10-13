@@ -1384,7 +1384,8 @@ select
   v.cost, 
   v.dt_otgr,
   o.ornum as p_ornum,
-  o.dt_beg as p_dt_beg
+  o.dt_beg as p_dt_beg,
+  o.dt_otgr as p_dt_otgr
 from
   v_orders v,
   orders o
@@ -1440,7 +1441,7 @@ create or replace view v_rep_shipped_not_closed_by_manager_orders as
 select
 --заказы, ужк отгруженные, но не завершЄнные менеджером
 --(только по отгрузочным заказам)
-  id, ornum, dt_beg, customer, project, cost, dt_otgr, managername
+  id, ornum, dt_beg, customer, project, cost, dt_otgr, dt_end, managername
 from
   v_orders
 where
@@ -1454,3 +1455,32 @@ where
 order by 
   dt_otgr, ornum
 ;
+
+
+create or replace view v_rep_defect_stock as --!+
+select 
+--состояние склада брака
+  v.id_nomencl,
+  n.name,
+  u.name_unit,
+  qnt
+from (
+  select
+    id_nomencl, 
+    id_sklad,
+    sum(quantity) as qnt
+  from 
+    dv.stock s 
+  where 
+    s.doctype <> 27 and id_sklad = 1122 --склад брака 
+  group by 
+    s.id_nomencl, s.id_sklad
+) v,
+dv.nomenclatura n,
+dv.unit u
+where
+  n.id_nomencl = v.id_nomencl
+  and u.id_unit = n.id_unit
+  and qnt <> 0
+;
+

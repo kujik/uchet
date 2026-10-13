@@ -1416,6 +1416,11 @@ type
     //настройка параметров полецй Opt.SetColFeature
     //функция удалит и пересоздаст элементы, которые нельзя перенастроить
     procedure SetColumnsPropertyes;
+    //полный сброс структуры грида (датасет, поля и ВСЕ столбцы) для повторного использования фрейма с другим набором полей
+    //(например, форма экспорта в xlsx, один экземпляр которой используется многократно): вызывать ПЕРЕД Opt.SetFields / Prepare.
+    //одного только MemTableEh1.Fields.Clear недостаточно - столбцы DBGridEh1.Columns при этом остаются (от прошлого набора полей,
+    //с прежними заголовками и настройками), см. SetColumnsAndEvents. оставляется один "чистый" столбец с событиями из дизайнтайма
+    procedure ResetColumns;
     //обновим данные всей таблицы
     procedure RefreshGrid(AfMode: TDialogType = fView; AFastMode: Integer = -1; AID: Integer = MaxInt);
     //обновляем текущую строку грида, при ошибке выдаем сообщение об отсутсвии записи
@@ -3618,10 +3623,43 @@ procedure TFrDBGridEh.GetColumnEvents;
 var
   i: Integer;
 begin
+  //при повторном вызове (Prepare вызван снова) освободим прежний временный столбец, чтобы не терять память
+  if ColumnTemp <> nil then
+    FreeAndNil(ColumnTemp);
   ColumnTemp := TColumnEh.Create(nil);
   ColumnTemp.OnCellDataLinkClick := DbGridEh1.Columns[0].OnCellDataLinkClick;
   ColumnTemp.OnDropDownBoxTitleBtnClick := DbGridEh1.Columns[0].OnDropDownBoxTitleBtnClick;
   ColumnTemp.OnAdvDrawDataCell := DbGridEh1.Columns[0].OnAdvDrawDataCell;
+end;
+
+procedure TFrDBGridEh.ResetColumns;
+//полный сброс структуры грида (см. описание в объявлении)
+var
+  Col: TColumnEh;
+begin
+  //события столбца, заданные в дизайнтайме, запоминаются в ColumnTemp (GetColumnEvents) - если это еще не делалось
+  //(фрейм не был подготовлен), то столбцы в гриде еще "первозданные", запомним события до того, как столбцы будут удалены
+  if ColumnTemp = nil then
+    GetColumnEvents;
+  //закрываем датасет (событие BeforeClose сбросит FIsPrepared), удаляем поля и их определения
+  MemTableEh1.Active := False;
+  MemTableEh1.Fields.Clear;
+  MemTableEh1.FieldDefs.Clear;
+  //удаляем все столбцы грида и создаем один чистый (в Prepare/SetColumnsAndEvents нужен хотя бы один столбец с событиями дизайнтайма:
+  //если столбцов нет совсем, то грид покажет столбцы по всем полям датасета "по умолчанию" и наши настройки к ним не применятся)
+  DBGridEh1.Columns.BeginUpdate;
+  try
+    DBGridEh1.Columns.Clear;
+    Col := DBGridEh1.Columns.Add;
+    Col.OnCellDataLinkClick := ColumnTemp.OnCellDataLinkClick;
+    Col.OnDropDownBoxTitleBtnClick := ColumnTemp.OnDropDownBoxTitleBtnClick;
+    Col.OnAdvDrawDataCell := ColumnTemp.OnAdvDrawDataCell;
+  finally
+    DBGridEh1.Columns.EndUpdate;
+  end;
+  DBGridEh1.FooterRowCount := 0;
+  DBGridEh1.SumList.Active := False;
+  FIsPrepared := False;
 end;
 
 procedure TFrDBGridEh.SetColumnsAndEvents;

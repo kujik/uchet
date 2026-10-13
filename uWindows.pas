@@ -119,7 +119,7 @@ uses
   uFrmCDedtExpenseItem,
 
   uFrmWDedtDivision, uFrmWGrepPersonal1, uFrmWGrepStaffSchedule, uFrmWGjrnEmployees, uFrmWGJrnJobSalaries,
-  uFrmWGjrnMotivationRemarks, uFrmWGjrnMotivationCoefficients, uFrmWMotivationTest,
+  uFrmWGjrnMotivationRemarks, uFrmWGjrnMotivationCoefficients, uFrmWGjrnMotivationCoeffsByJob, uFrmWGjrnMotivationSpecial, uFrmWMotivationTest,
   uFrmWGEdtTurvN, uFrmWWedtWorkSchedule, uFrmWGedtPayrollTransfer,
   uFrmWGedtPayrollCash, uFrmWGedtAdvance, uFrmWGedtAdvanceTransfer, uFrmWGedtAdvanceCash, uFrmWGedtPayrollCalc,
   uFrmWGrepTurv,
@@ -759,6 +759,11 @@ begin
     //один и тот же класс обслуживает оба FormDoc (список должностей + список замечаний/ЧС по
     //выбранной должности) - см. TFrmWGjrnMotivationRemarks.PrepareForm, ветвление по FormDoc
     TFrmWGjrnMotivationRemarks.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if AFormType = myfrm_J_MotivationCoeffsByJob then
+    TFrmWGjrnMotivationCoeffsByJob.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
+  else if A.InArray(AFormType, [myfrm_J_MotivationSpecItems, myfrm_J_MotivationSpecRanges, myfrm_J_MotivationSpecValues]) then
+    //один класс обслуживает три FormDoc (позиции / диапазоны / оценки по сотрудникам) - ветвление по FormDoc в PrepareForm
+    TFrmWGjrnMotivationSpecial.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_R_MotivationCoeffs then
     TFrmWGjrnMotivationCoefficients.Show(AOwner, AFormType, Opt + [myfoSizeable], fView, Null, Null)
   else if AFormType = myfrm_Rep_MotivationTest then
@@ -838,6 +843,7 @@ begin
   else if AFormType = myfrm_Dlg_R_MotivationCoeffs then
     TFrmBasicInput.ShowDialogDB(AOwner, AFormType, DefOpts, AMode, AId, 'w_motivation_coefficients', 'Коэффициент', 1000, 115,
       [['name$s', cntEdit, 'Наименование','1:150::T'],
+       ['unit_name$s', cntEdit, 'Ед. изм.','0:30::N', 150],
        ['is_personal$i', cntCheck, 'Персональный'#13#10'(задаётся индивидуально по каждому сотруднику)'],
        ['description$s', cntEdit, 'Описание','0:1000::N'],
        ['comm_for_eval$s', cntEdit, 'Комментарий к '#13#10'выставлению оценки','0:1000::N']],

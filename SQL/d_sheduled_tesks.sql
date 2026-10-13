@@ -150,7 +150,7 @@ exception
 end p_run_w_job_salaries_fill_next_month;
 /
 
-
+exec p_run_w_job_salaries_fill_next_month;
 
 
 --==============================================================================
@@ -264,3 +264,4 @@ exception
 end p_run_purge_scheduler_log;
 /
 
+select * from adm_oracle_scheduler_log where job_name = 'update_estimates_depend_job';
